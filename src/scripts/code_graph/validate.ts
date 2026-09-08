@@ -4,7 +4,9 @@
  */
 import type { CodeGraph } from './types.js';
 
-const RELATIONS = new Set(['calls', 'imports', 'uses', 'inherits', 'member']);
+/** Mirrors `Relation` in types.ts. `tests` is derived by the build pass (3.2),
+ * not extracted, and is validated on exactly the same terms as the rest. */
+const RELATIONS = new Set(['calls', 'imports', 'uses', 'inherits', 'member', 'tests']);
 const CONFIDENCES = new Set(['EXTRACTED', 'INFERRED', 'AMBIGUOUS']);
 /** Mirrors `ResolvedVia` in types.ts — the full union, including the four
  * values no build emits yet (2.3 and Phase 3 add them). */

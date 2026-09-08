@@ -19,7 +19,7 @@
  * `.augment/` projections.
  *
  * NOTE (faithful literal): the thin-entry pointer keeps the verbatim
- * `Body: [`{rule_id}`](../../.agent-src.uncondensed/rules/{rule_id}.md)`
+ * `Body: [`{rule_id}`](../../dist/agent-src/rules/{rule_id}.md)`
  * Markdown link from the retired Python implementation. The same-basename `.py` twin
  * carries that literal, so the ADR-051 legacy-path guard exempts this `.ts`
  * file by twin-parity.
@@ -35,6 +35,11 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import {
+    pathOnlyRuleIds,
+    triggerlessRuleIds,
+    type Router,
+} from './_lib/rule_injection.js';
 import * as token_count from './_lib/token_count.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -77,19 +82,87 @@ export function kernel_ids(): Set<string> {
  * visible instead of being absorbed into the pointer count
  * (road-to-trigger-delivered-rule-bodies 1.3).
  */
+/**
+ * Rules whose ONLY triggers are path-shaped — reachable from `pre_tool_use`
+ * and from no other slot (road-to-delivery-for-every-host 3.2).
+ *
+ * They must never be thinned while the delivery concern is NOT bound on
+ * `pre_tool_use`, because a stub plus a slot nobody listens on is a rule that
+ * reaches the model at no scope at all. This is the same failure the
+ * `no_trigger_ids` exemption prevents, one step out: there the rule has nothing
+ * to match on, here it has nothing to match ON.
+ *
+ * Stated as a PROPERTY rather than a list of ids. If the concern is ever bound
+ * on `pre_tool_use` again, this exemption is what should be reconsidered — not
+ * three names someone has to remember.
+ *
+ * WHAT THIS EXEMPTION DOES **NOT** COVER — recorded 2026-09-08, R2 finding 1,
+ * because the silence read as coverage. The predicate is `every` trigger
+ * path-shaped. A rule with BOTH path and non-path triggers is therefore THINNED,
+ * and its path-shaped half then has no carrier at all: the stub carries no
+ * frontmatter (`condense.ts` writes it with `_writeText`, bypassing
+ * `_emit_claude_rule`'s host-native `paths:` key), `pre_tool_use` lost the
+ * binding under owner ruling E2, and `user_prompt_submit` never populates
+ * `openFiles`. Measured over the current `dist/router.json`: **18 such rules**,
+ * all non-kernel and all thinned — augment-edit-discipline, design-fidelity,
+ * doc-screenshot-hygiene, domain-adoption-policy,
+ * framework-neutrality-in-generic-skills, image-likeness-and-rights,
+ * laravel-translations, lethal-trifecta-guard, linked-projects-onboarding-gate,
+ * low-impact-corpus-privacy-floor, markdown-safe-codeblocks, onboarding-gate,
+ * persona-governance, php-coding, provider-lifecycle-discipline,
+ * roadmap-ci-steps-policy, roadmap-progress-sync, settings-ask-protocol.
+ *
+ * They do NOT reach the model at no scope: every non-path route
+ * (keyword / phrase / command) still delivers the body through the concern, and
+ * on `claude-code` they never had a separate host-native path route to lose —
+ * `_claude_paths_plan` emits no `paths:` for a mixed-trigger rule on purpose, so
+ * under `eager-all` they loaded UNCONDITIONALLY. What is lost is the difference
+ * between unconditional and prompt-triggered: a session that touches a matching
+ * file and says nothing that matches gets nothing.
+ *
+ * The labelled corpus cannot see this and the endpoint says so rather than
+ * implying otherwise — `model_rule_injection --endpoints` (b) now publishes the
+ * shipped `user_prompt_submit` reach beside the pre-registered reading, and
+ * every one of these 18 has at least one prompt-matching positive, so none
+ * appears in its "reachable only via a path trigger" column.
+ *
+ * WHY THIS IS NOT WIDENED TO `some` HERE. Measured: exempting all 18 moves the
+ * thin rule layer 23,592 -> 39,921 GPT tok (+16,329, +69 %), which is a budget
+ * move of a magnitude no agent may take, and it would erase most of the saving
+ * the flip is licensed on. Restoring a path route needs either that exemption
+ * under a re-anchored baseline or a `pre_tool_use` binding under a raised slot
+ * cap — both owner-reserved, so the closure is tracked rather than taken here.
+ * ADR-267's Consequences section names the receiver.
+ */
+/**
+ * ONE spelling of the router-derived sets, shared with the injector (R2
+ * finding 11).
+ *
+ * `path_only_ids` and `no_trigger_ids` were each a second, hand-rolled
+ * implementation of `_lib/rule_injection.ts::pathOnlyRuleIds` /
+ * `triggerlessRuleIds` — verified identical over the current router at the time
+ * (symmetric difference empty), so drift risk rather than a live defect. It is
+ * exactly the hazard `THIN_ENTRY_MARKER`'s own comment argues against one
+ * screen below ("a gate that re-spelled this string would drift from the writer
+ * silently"), and the two consumers here are the PROJECTOR's exemption set and
+ * the INJECTOR's reachability set: they must not be able to disagree about which
+ * rules the delivery path can reach.
+ *
+ * The finding named `path_only_ids`. The defect-pattern sweep found the SECOND
+ * instance one function down — `no_trigger_ids` against `triggerlessRuleIds` —
+ * and it is delegated in the same change. Count: 2 of 2 duplicated
+ * router-derived sets in this file, 0 remaining.
+ */
+function _router(): Router {
+    return JSON.parse(fs.readFileSync(ROUTER, 'utf-8')) as Router;
+}
+
+export function path_only_ids(): Set<string> {
+    return pathOnlyRuleIds(_router());
+}
+
 export function no_trigger_ids(): Set<string> {
-    const data = JSON.parse(fs.readFileSync(ROUTER, 'utf-8')) as Record<string, unknown>;
-    const out = new Set<string>();
-    for (const tier of ['tier_1', 'tier_2']) {
-        const entries = data[tier];
-        if (!Array.isArray(entries)) continue;
-        for (const e of entries) {
-            const obj = e as Record<string, unknown>;
-            const t = obj.triggers;
-            if (!Array.isArray(t) || t.length === 0) out.add(String(obj.id));
-        }
-    }
-    return out;
+    return new Set(triggerlessRuleIds(_router()));
 }
 
 /**
@@ -196,6 +269,45 @@ function _title(s: string): string {
     return s.replace(/[A-Za-z]+/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
 }
 
+/**
+ * The marker that makes a projected entry recognisable as a stub.
+ *
+ * Exported so the WRITER and every DETECTOR share one definition. A gate that
+ * re-spelled this string would drift from the writer silently, and the failure
+ * would be invisible in exactly the direction that matters: a stub the gate
+ * fails to recognise reads as a complete rule body.
+ */
+export const THIN_ENTRY_MARKER = '> Routed rule — load the body on trigger-match.';
+
+/** Is this projected entry a pointer stub rather than a rule body? */
+export function is_thin_entry(text: string): boolean {
+    return text.includes(THIN_ENTRY_MARKER);
+}
+
+/**
+ * Where a stub tells a reader the body actually is.
+ *
+ * FIXED 2026-09-07: this pointed into the uncondensed source tree ADR-051
+ * retired — the literal path is deliberately NOT reproduced here, because
+ * `check_no_uncondensed_refs` matches the string and cannot tell a repair
+ * record from a live reference; `git log -S` on this file finds the old value.
+ * It exists in no checkout, so EVERY stub's fallback pointer
+ * resolved to nothing — invisible under `delivery`, where the hook loads the
+ * body from `dist/agent-src/rules` and never follows this link, and total under
+ * `thin`, where the pointer is the only path to the body there is.
+ *
+ * KNOWN LIMIT, stated rather than discovered later: one relative prefix cannot
+ * be right for every tree, because they sit at different depths — `.claude/rules`
+ * and `.cursor/rules` are two levels below the repo root and `.clinerules` is
+ * one. `../../` is correct for the first two, which are the only trees the
+ * shipped `lean_projection.hosts` default can thin. A stub in `.clinerules`
+ * needs an operator to have added `cline` to that list, and its pointer is off
+ * by one level. That is strictly better than the previous state, where the
+ * pointer was dead in all three, and it is recorded here so the remaining case
+ * is a known limit rather than a surprise.
+ */
+const BODY_LINK_PREFIX = '../../dist/agent-src/rules/';
+
 /** Build the minimal progressive-disclosure pointer for a non-kernel rule. */
 export function thin_entry(rule_id: string, text: string): string {
     const [fm] = split_frontmatter(text);
@@ -205,8 +317,8 @@ export function thin_entry(rule_id: string, text: string): string {
     const fires = hint ? ` Fires on: ${hint}.` : '';
     return (
         `## ${title}\n` +
-        `> Routed rule — load the body on trigger-match.${fires} ${desc} ` +
-        `Body: [\`${rule_id}\`](../../.agent-src.uncondensed/rules/${rule_id}.md)\n`
+        `${THIN_ENTRY_MARKER}${fires} ${desc} ` +
+        `Body: [\`${rule_id}\`](${BODY_LINK_PREFIX}${rule_id}.md)\n`
     );
 }
 
@@ -214,9 +326,21 @@ export function thin_entry(rule_id: string, text: string): string {
 export function build_thin(
     rules_dir: string = RULES_SOURCE,
     scope: readonly string[] | null = null,
+    /**
+     * Optional sink for the D3 diagnostic
+     * (road-to-delivery-for-every-host 2.2).
+     *
+     * An `auto` rule the router gives NO trigger is already kept full-bodied by
+     * `noTrigger` below, which is the substantive protection and predates this
+     * roadmap. What did not exist is any way to SEE it happen: the rule is
+     * silently exempted, so an author who removes a rule's last trigger gets a
+     * silently eager rule and no signal. The line makes the exemption audible.
+     */
+    announce: ((message: string) => void) | null = null,
 ): Map<string, string> {
     const kernel = kernel_ids();
     const noTrigger = no_trigger_ids();
+    const pathOnly = path_only_ids();
     const wsMap = scope !== null ? rule_workspaces_map() : new Map<string, string[]>();
     const out = new Map<string, string>();
     for (const p of _globSortedMd(rules_dir)) {
@@ -225,7 +349,16 @@ export function build_thin(
         if (!id_in_scope(stem, scope, kernel, wsMap, fm_workspaces(text))) {
             continue; // out of workspace scope — no body, no pointer line
         }
-        const full = kernel.has(stem) || noTrigger.has(stem);
+        const full = kernel.has(stem) || noTrigger.has(stem) || pathOnly.has(stem);
+        if (announce !== null && noTrigger.has(stem) && !kernel.has(stem)) {
+            announce(`D3: trigger-less auto rule ${path.basename(p)} — kept full-bodied, never thinned`);
+        }
+        if (announce !== null && pathOnly.has(stem) && !kernel.has(stem) && !noTrigger.has(stem)) {
+            announce(
+                `E2: path-only auto rule ${path.basename(p)} — kept full-bodied; its only triggers ` +
+                    `are path-shaped and the delivery concern is not bound on pre_tool_use`,
+            );
+        }
         out.set(path.basename(p), full ? text : thin_entry(stem, text));
     }
     return out;

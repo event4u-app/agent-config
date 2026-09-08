@@ -110,3 +110,88 @@ export function leanProjectionModeRaw(root: string): string {
     }
     return '';
 }
+
+/**
+ * Raw `lean_projection.hosts` list out of `.agent-settings.yml`, or `[]`.
+ *
+ * Same indentation-shaped discipline as `leanProjectionModeRaw` above and for
+ * the same reason — a hook must never fail a tool call because a YAML parser
+ * could not load — extended to the three list shapes a human writes:
+ *
+ *     lean_projection:
+ *       hosts: [claude-code]          # inline
+ *     lean_projection:
+ *       hosts:                        # block, indented under the key
+ *         - claude-code
+ *     lean_projection:
+ *       hosts:                        # block, at the key's own indent
+ *       - claude-code
+ *
+ * All three are legal YAML and `js-yaml` loads them identically; the third was
+ * read as `[]` until 2026-09-08 (R2 finding 2) and is covered by three fixtures
+ * in `tests/scripts/lean_projection_hosts.test.ts`.
+ *
+ * Interpretation is NOT done here. `[]` means "nothing was written", and
+ * `_lib/lean_projection_mode.ts::resolveLeanProjectionHosts` decides that this
+ * means the default rather than "no host" — keeping that decision in one place
+ * is what stops the projector and the delivery concern from disagreeing, which
+ * is the whole reason the mode reader is split this way.
+ */
+export function leanProjectionHostsRaw(root: string): string[] {
+    const file = path.join(root, SETTINGS_FILE);
+    let text: string;
+    try {
+        if (!fs.statSync(file).isFile()) return [];
+        text = fs.readFileSync(file, 'utf-8');
+    } catch {
+        return [];
+    }
+    const strip = (s: string): string => s.trim().replace(/^["']|["']$/g, '');
+    let inSection = false;
+    let inBlock = false;
+    let blockIndent = -1;
+    const out: string[] = [];
+    for (const raw of text.split(/\r\n|\r|\n/)) {
+        const line = raw.replace(/\s+$/, '');
+        if (!line || line.replace(/^\s+/, '').startsWith('#')) continue;
+        if (!(line.startsWith(' ') || line.startsWith('\t'))) {
+            inSection = /^lean_projection\s*:\s*$/.test(line);
+            inBlock = false;
+            continue;
+        }
+        if (!inSection) continue;
+        const indent = (/^\s*/.exec(line) as RegExpExecArray)[0].length;
+        if (inBlock) {
+            const item = /^\s*-\s*(\S.*)$/.exec(line);
+            // `>=`, not `>`: YAML lets a block sequence sit at its KEY's own
+            // indent, and `js-yaml` — the parser `condense` uses on this same
+            // file — loads that shape identically to the deeper-indented one.
+            // With `>` the same-indent form parsed as `[]`, which
+            // `resolveLeanProjectionHosts` reads as "nothing was written" and
+            // answers with the default `[claude-code]` while the projector
+            // thins whatever the file actually says. Two readers disagreeing
+            // about the delivery-host set is the one failure this split exists
+            // to prevent (R2 finding 2). A SHALLOWER item still ends the block:
+            // it belongs to a different mapping level, never to `hosts`.
+            if (item !== null && indent >= blockIndent) {
+                const v = strip(item[1] ?? '');
+                if (v !== '') out.push(v);
+                continue;
+            }
+            inBlock = false;
+        }
+        const inline = /^\s+hosts\s*:\s*\[([^\]]*)\]\s*$/.exec(line);
+        if (inline !== null) {
+            for (const part of (inline[1] ?? '').split(',')) {
+                const v = strip(part);
+                if (v !== '') out.push(v);
+            }
+            continue;
+        }
+        if (/^\s+hosts\s*:\s*$/.test(line)) {
+            inBlock = true;
+            blockIndent = indent;
+        }
+    }
+    return out;
+}

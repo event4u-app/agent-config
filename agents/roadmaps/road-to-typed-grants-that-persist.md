@@ -9,6 +9,12 @@ estate_growth_exempt: >-
   work with no receiver in the estate. Three stems land the set; this is one of them, and the
   owner recorded their precedence in ADR-268 § 11 on 2026-09-08. Also grows open_blockers by
   two, both ordering constraints that close inside Phase 0.
+estate_offset_exempt: >-
+  First of three receiver roadmaps that land as one set. No active roadmap can be offset
+  against them: none of the eight covers the authority model, and the set exists because
+  ADR-260 Consequences records its own sections 2-3 as having no receiver in the estate.
+  Archiving an unrelated roadmap to buy the slot would be the gate-gaming this key exists to
+  make visible instead. Owner-recorded precedence, ADR-268 section 11, 2026-09-08.
 design_validated: >-
   Owner rulings of 2026-09-08 transcribed in ADR-268 §§ 1-6; ADR-260 §§ 2-3 (2026-09-07);
   ADR-262 (2026-09-08).

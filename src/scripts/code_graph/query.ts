@@ -47,6 +47,15 @@ export interface LoadedGraph {
      */
     graph: CodeGraph | null;
     source: string; // attribution path
+    /**
+     * The on-disk path the answer came from.
+     *
+     * Distinct from `source`, which is a display string (`native:relpath`) and
+     * cannot be handed to a freshness check. A verb that prints staleness has
+     * to describe THIS file, not a conventional cache path — see
+     * `cli.ts::stateOf`.
+     */
+    answeredBy: string;
     byId: NodeLookup;
     out: AdjacencyLookup;
     in: AdjacencyLookup;
@@ -54,6 +63,16 @@ export interface LoadedGraph {
     idsByLabel(label: string, limit: number): string[];
     /** Non-file nodes declared in any of `files`. */
     idsInFiles(files: readonly string[]): string[];
+    /**
+     * Every node id, sorted.
+     *
+     * A whole-table read, and unlike {@link LoadedGraph.lex} it is not lazy —
+     * because the one verb that calls it (`dead`, 3.3) is defined over every
+     * node by construction: "zero accepted in-edges" is not a question you can
+     * ask about a frontier. Nothing else may use it; a verb that walks from a
+     * seed has `idsByLabel` / `idsInFiles` for that.
+     */
+    allNodeIds(): string[];
     /**
      * BM25 fallback corpus, LAZY.
      *
@@ -78,7 +97,7 @@ export interface LoadedGraph {
  * same label repeatedly while rendering edge lines, and that repetition is
  * cheap to remove and expensive to leave.
  */
-function indexBackedGraph(index: GraphIndex, source: string): LoadedGraph {
+function indexBackedGraph(index: GraphIndex, source: string, answeredBy: string): LoadedGraph {
     const nodeCache = new Map<string, CodeNode | undefined>();
     const readNode = (id: string): CodeNode | undefined => {
         if (nodeCache.has(id)) return nodeCache.get(id);
@@ -90,11 +109,13 @@ function indexBackedGraph(index: GraphIndex, source: string): LoadedGraph {
     return {
         graph: null,
         source,
+        answeredBy,
         byId: { get: readNode, has: (id) => readNode(id) !== undefined },
         out: { get: (id) => index.edgesFrom(id) },
         in: { get: (id) => index.edgesTo(id) },
         idsByLabel: (labelText, limit) => index.idsByLabel(labelText, limit),
         idsInFiles: (files) => index.idsInFiles(files),
+        allNodeIds: () => index.allNodeIds(),
         lex: () => {
             lexical ??= new LexicalIndex(index.lexicalCorpus());
             return lexical;
@@ -111,7 +132,7 @@ export function loadGraph(graphPath: string, source = graphPath): LoadedGraph {
     // made it a cheaper blob transport rather than an index.
     const index = openGraphIndex(graphPath);
     if (index) {
-        if (index.edgeCount >= INDEXED_READ_MIN_EDGES) return indexBackedGraph(index, source);
+        if (index.edgeCount >= INDEXED_READ_MIN_EDGES) return indexBackedGraph(index, source, graphPath);
         // Small graph: the in-memory path is cheaper. Release the handle rather
         // than leaking a database for the life of the process.
         index.close();
@@ -146,6 +167,7 @@ export function loadGraph(graphPath: string, source = graphPath): LoadedGraph {
     return {
         graph,
         source,
+        answeredBy: graphPath,
         byId,
         out: outM,
         in: inM,
@@ -155,6 +177,7 @@ export function loadGraph(graphPath: string, source = graphPath): LoadedGraph {
             const set = new Set(files);
             return graph.nodes.filter((n) => set.has(n.source_file) && n.kind !== 'file').map((n) => n.id);
         },
+        allNodeIds: () => graph.nodes.map((n) => n.id).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)),
         lex: () => lex,
         close: () => {
             /* nothing held */

@@ -28,6 +28,20 @@
  * `agents/runtime/state/code-graph-v1.json`) is local-only and disposable —
  * gitignored, rebuildable from source at any time; never a source of truth.
  *
+ *   impact    --diff <rev> [--depth N]      callers/dependents/test files
+ *                                             reachable from the changed
+ *                                             symbols over ACCEPTED edges
+ *   tests-for <symbol>                        test files importing the symbol
+ *   untested  --diff <rev>                    changed symbols no test imports
+ *   dead      [--entry-points F]              zero accepted in-edges, minus
+ *             [--accept-missing-exports]      declared entry points; REFUSES
+ *                                             when a source is unavailable
+ *
+ * The four gate verbs (3.1–3.3) each print the `resolved_via` histogram of the
+ * edges they accepted AND of the edges they refused to walk, plus the graph's
+ * three-state staleness — so a caller can tell "no callers" from "no callers I
+ * would trust", and "dead" from "dead as of a graph 40 commits behind".
+ *
  * Query subcommands (query/path/explain/affected) are added by the Phase-3
  * query tier. Deterministic, LLM-free, no network. Exit codes:
  * 0 ok · 1 not-found / validation-failed / refresh-budget-exceeded ·
@@ -49,8 +63,8 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
-import { buildFromRepo, sidecarPath } from './build.js';
-import { computeVerdict, detectSources, pickSource } from './detect.js';
+import { buildFromRepo, isTestFile, sidecarPath } from './build.js';
+import { computeVerdict, detectSources, type GraphState, graphState, pickSource } from './detect.js';
 import { suggestVerb } from './intent.js';
 import {
     affected,
@@ -65,6 +79,18 @@ import {
 import { openGraphIndex, sqliteTwinPath } from './sqlite_store.js';
 import type { CodeGraph } from './types.js';
 import { validateGraph } from './validate.js';
+import {
+    dead,
+    type DeadResult,
+    entryPointsFromFile,
+    impact,
+    type ImpactResult,
+    repoEntryPoints,
+    testsFor,
+    type TestsForResult,
+    untested,
+    type UntestedResult,
+} from './verbs.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..', '..');
@@ -258,10 +284,18 @@ function budgetOf(argv: string[]): number {
     return Number.isFinite(b) && b > 0 ? b : 1500;
 }
 
-function changedNodeSeeds(g: LoadedGraph, root: string, ref: string): string[] {
-    let files: string[];
+/**
+ * Files changed between `ref` and `HEAD`, repo-relative.
+ *
+ * Extracted from `changedNodeSeeds` so the Phase-3 verbs seed from the same
+ * diff reading as `affected --since`. `null` distinguishes "git refused" (a bad
+ * rev, not a repository) from "nothing changed" — a verb that reports an empty
+ * impact set for a rev git could not resolve is asserting something it never
+ * measured.
+ */
+export function changedFiles(root: string, ref: string): string[] | null {
     try {
-        files = execFileSync('git', ['-C', root, 'diff', '--name-only', `${ref}..HEAD`], {
+        return execFileSync('git', ['-C', root, 'diff', '--name-only', `${ref}..HEAD`], {
             env: hardenedSpawnEnv(),
             encoding: 'utf-8',
             stdio: ['ignore', 'pipe', 'ignore'],
@@ -270,8 +304,13 @@ function changedNodeSeeds(g: LoadedGraph, root: string, ref: string): string[] {
             .map((s) => s.trim())
             .filter(Boolean);
     } catch {
-        return [];
+        return null;
     }
+}
+
+function changedNodeSeeds(g: LoadedGraph, root: string, ref: string): string[] {
+    const files = changedFiles(root, ref);
+    if (files === null) return [];
     // Served by the `nodes_source_file` index on the SQLite path, so a wide
     // diff does not force the whole node table into memory to answer it.
     return g.idsInFiles(files);
@@ -320,6 +359,213 @@ function cmdQuery(kind: 'query' | 'explain' | 'affected' | 'path', argv: string[
 function isFlagValue(argv: string[], token: string): boolean {
     const i = argv.indexOf(token);
     return i > 0 && (argv[i - 1] as string).startsWith('--');
+}
+
+// Phase-3 gate verbs (3.1-3.3).
+
+/** The staleness token every gate verb prints, per step 3.1–3.3's shared
+ * verify: "each prints `resolved_via` counts and the staleness state". */
+/**
+ * The staleness of the graph the verb is ACTUALLY reading.
+ *
+ * `answeredBy` is `resolveGraph`'s own picked path when it has one. Without it
+ * the two disagreed on the case `resolveRoot`'s docstring exists for: with
+ * `--root <other repo>` the verb answers from `DEFAULT_CACHE` (anchored to the
+ * package tree) while `graphState` looked under the OTHER root, so the printed
+ * staleness described a cache the answer never came from. An independent review
+ * found the `--graph` half fixed and this half open.
+ */
+function stateOf(argv: string[], answeredBy?: string): GraphState {
+    const explicit = flag(argv, '--graph');
+    return graphState(resolveRoot(argv), explicit ?? answeredBy);
+}
+
+/** The two histogram lines + the staleness line, in one place so the four
+ * verbs cannot drift apart in how they report their own filtering. */
+function renderEnvelope(r: { source: string; state: GraphState; accepted_via: string; rejected_via: string }): void {
+    process.stdout.write(`source: ${r.source}\nstaleness: ${r.state}\n`);
+    process.stdout.write(`accepted resolved_via: ${r.accepted_via}\n`);
+    process.stdout.write(`rejected resolved_via: ${r.rejected_via}\n`);
+}
+
+function renderReads(reads: readonly { path: string; lines: [number, number] | null }[]): void {
+    if (!reads.length) return;
+    process.stdout.write('minimal read set:\n');
+    for (const r of reads) process.stdout.write(`  ${r.path}${r.lines ? `:${r.lines[0]}-${r.lines[1]}` : ''}\n`);
+}
+
+/**
+ * `impact --diff <rev>` (3.1) — callers, dependents and test files reachable
+ * from the changed symbols over ACCEPTED edges, plus the producing edges and a
+ * minimal read set.
+ */
+function cmdImpact(argv: string[]): number {
+    const ref = flag(argv, '--diff');
+    if (ref === null) {
+        process.stderr.write('usage: code_graph/cli.ts impact --diff <rev> [--graph P] [--depth N]\n');
+        return 2;
+    }
+    const root = resolveRoot(argv);
+    const files = changedFiles(root, ref);
+    if (files === null) {
+        process.stderr.write(`code-graph: cannot resolve rev '${ref}' in ${root}\n`);
+        return 1;
+    }
+    const r = resolveGraph(argv);
+    if ('err' in r) {
+        process.stderr.write(`code-graph: ${r.err}\n`);
+        return 1;
+    }
+    try {
+        const depth = Number(flag(argv, '--depth'));
+        const res: ImpactResult = impact(
+            r.g,
+            files,
+            stateOf(argv, r.g.answeredBy),
+            Number.isFinite(depth) && depth > 0 ? depth : 2,
+            isTestFile,
+        );
+        renderEnvelope(res);
+        process.stdout.write(`changed files: ${files.length} · seeds: ${res.seeds.length}\n`);
+        if (res.unresolved_files.length)
+            process.stdout.write(`unresolved changed files (no node in the graph): ${res.unresolved_files.join(', ')}\n`);
+        process.stdout.write(`dependents (${res.dependents.length}):\n`);
+        for (const d of res.dependents) process.stdout.write(`  ${d}\n`);
+        process.stdout.write(`test files (${res.test_files.length}):\n`);
+        for (const t of res.test_files) process.stdout.write(`  ${t}\n`);
+        process.stdout.write(`producing edges (${res.producing_edges.length}):\n`);
+        for (const e of res.producing_edges) process.stdout.write(`  ${e}\n`);
+        renderReads(res.recommended_reads);
+        return 0;
+    } finally {
+        r.g.close();
+    }
+}
+
+/** `tests-for <symbol>` (3.2) — the test files that import the symbol. */
+function cmdTestsFor(argv: string[]): number {
+    const positional = argv.filter((a) => !a.startsWith('--') && !isFlagValue(argv, a));
+    const symbol = positional[0];
+    if (!symbol) {
+        process.stderr.write('usage: code_graph/cli.ts tests-for <symbol> [--graph P]\n');
+        return 2;
+    }
+    const r = resolveGraph(argv);
+    if ('err' in r) {
+        process.stderr.write(`code-graph: ${r.err}\n`);
+        return 1;
+    }
+    try {
+        const res: TestsForResult = testsFor(r.g, symbol, stateOf(argv, r.g.answeredBy));
+        renderEnvelope(res);
+        process.stdout.write(`seeds: ${res.seeds.join(', ') || '(none)'}\n`);
+        process.stdout.write(`tests (${res.tests.length}):\n`);
+        for (const t of res.tests) process.stdout.write(`  ${t}\n`);
+        renderReads(res.recommended_reads);
+        return 0;
+    } finally {
+        r.g.close();
+    }
+}
+
+/** `untested --diff <rev>` (3.2) — changed symbols no test file imports. */
+function cmdUntested(argv: string[]): number {
+    const ref = flag(argv, '--diff');
+    if (ref === null) {
+        process.stderr.write('usage: code_graph/cli.ts untested --diff <rev> [--graph P]\n');
+        return 2;
+    }
+    const root = resolveRoot(argv);
+    const files = changedFiles(root, ref);
+    if (files === null) {
+        process.stderr.write(`code-graph: cannot resolve rev '${ref}' in ${root}\n`);
+        return 1;
+    }
+    const r = resolveGraph(argv);
+    if ('err' in r) {
+        process.stderr.write(`code-graph: ${r.err}\n`);
+        return 1;
+    }
+    try {
+        const res: UntestedResult = untested(r.g, files, stateOf(argv, r.g.answeredBy));
+        renderEnvelope(res);
+        process.stdout.write(`changed files: ${files.length} · changed symbols: ${res.tested.length + res.untested.length}\n`);
+        if (res.unresolved_files.length)
+            process.stdout.write(`unresolved changed files (no node in the graph): ${res.unresolved_files.join(', ')}\n`);
+        process.stdout.write(`tested (${res.tested.length}) · untested (${res.untested.length}):\n`);
+        for (const u of res.untested) process.stdout.write(`  ${u}\n`);
+        renderReads(res.recommended_reads);
+        return 0;
+    } finally {
+        r.g.close();
+    }
+}
+
+/**
+ * `dead` (3.3) — symbols with zero accepted in-edges that no declared entry
+ * point names. REFUSES by default when an entry-point source is unavailable;
+ * see `verbs.ts::dead` for why that refusal is not relaxable by an options bag.
+ */
+function cmdDead(argv: string[]): number {
+    const r = resolveGraph(argv);
+    if ('err' in r) {
+        process.stderr.write(`code-graph: ${r.err}\n`);
+        return 1;
+    }
+    try {
+        const root = resolveRoot(argv);
+        const sources = repoEntryPoints(root);
+        const listFile = flag(argv, '--entry-points');
+        if (listFile !== null) {
+            if (!fs.existsSync(listFile)) {
+                process.stderr.write(`code-graph: entry-point list not found: ${listFile}\n`);
+                return 1;
+            }
+            // An operator-supplied list SUPPLIES the missing source, so the
+            // `exports` row stops being a gap rather than being ignored: the
+            // caller has stated the entry points the graph could not.
+            const supplied = entryPointsFromFile(listFile);
+            const patched = sources.map((srcRow) =>
+                srcRow.name === 'exports'
+                    ? { ...srcRow, status: 'read' as const, detail: `supplied by ${listFile}`, entries: [] }
+                    : srcRow,
+            );
+            patched.push(supplied);
+            const res: DeadResult = dead(r.g, patched, stateOf(argv, r.g.answeredBy));
+            return renderDead(res);
+        }
+        const res: DeadResult = dead(r.g, sources, stateOf(argv, r.g.answeredBy), {
+            acceptMissingExports: argv.includes('--accept-missing-exports'),
+        });
+        return renderDead(res);
+    } finally {
+        r.g.close();
+    }
+}
+
+function renderDead(res: DeadResult): number {
+    // The envelope FIRST, on both branches. It used to print only after the
+    // refusal check, so the default invocation in this repository — where
+    // `exports` is always unavailable — printed neither histogram nor the
+    // staleness line, and 3.1-3.3's shared verify ("each prints `resolved_via`
+    // counts and the staleness state") held only on the branch that answers.
+    // A reader of a refusal wants the staleness most of all: it says whether
+    // re-running after a rebuild could change anything.
+    renderEnvelope(res);
+    process.stdout.write('entry-point sources consulted:\n');
+    for (const srcRow of res.sources)
+        process.stdout.write(
+            `  ${srcRow.name.padEnd(13)} ${srcRow.status}${srcRow.detail ? ` — ${srcRow.detail}` : ''} · ${srcRow.entries.length} entr${srcRow.entries.length === 1 ? 'y' : 'ies'}\n`,
+        );
+    if (res.refusal !== null) {
+        process.stderr.write(`❌  dead refused: ${res.refusal}\n`);
+        return 1;
+    }
+    process.stdout.write(`excluded as declared entry points: ${res.excluded.length}\n`);
+    process.stdout.write(`dead (${res.dead.length}):\n`);
+    for (const d of res.dead) process.stdout.write(`  ${d}\n`);
+    renderReads(res.recommended_reads);
+    return 0;
 }
 
 function cmdDetect(argv: string[]): number {
@@ -462,9 +708,14 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'refresh') return cmdRefresh(argv.slice(1));
         if (sub === 'query' || sub === 'explain' || sub === 'affected' || sub === 'path')
             return cmdQuery(sub, argv.slice(1));
+        if (sub === 'impact') return cmdImpact(argv.slice(1));
+        if (sub === 'tests-for') return cmdTestsFor(argv.slice(1));
+        if (sub === 'untested') return cmdUntested(argv.slice(1));
+        if (sub === 'dead') return cmdDead(argv.slice(1));
         if (sub === 'suggest-verb') return cmdSuggestVerb(argv.slice(1));
         process.stderr.write(
-            'usage: code_graph/cli.ts <build|validate|detect|refresh|query|explain|affected|path|suggest-verb> [options]\n',
+            'usage: code_graph/cli.ts <build|validate|detect|refresh|query|explain|affected|path|' +
+                'impact|tests-for|untested|dead|suggest-verb> [options]\n',
         );
         return 2;
     } catch (e) {

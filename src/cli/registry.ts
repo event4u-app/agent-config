@@ -83,7 +83,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'affected', disposition: 'delegate', synopsis: 'Artefacts related to <artefact> via the discovery relation-graph (BFS).' },
     { name: 'graph-explain', disposition: 'delegate', synopsis: 'Seed on a <concept>, expand 2 hops over the discovery relation-graph with a node budget.' },
     { name: 'benchmark', disposition: 'delegate', synopsis: 'Report context-token reduction vs the full always-loaded projection.' },
-    { name: 'code-graph', disposition: 'delegate', synopsis: 'Deterministic code-graph engine: build|detect|query|affected|path|explain|validate.' },
+    { name: 'code-graph', disposition: 'delegate', synopsis: 'Deterministic code-graph engine: build|detect|refresh|validate|query|affected|path|explain, plus the gate verbs impact|tests-for|untested|dead.' },
     { name: 'hooks:install', disposition: 'delegate', synopsis: 'Install the combined pre-commit hook.' },
     { name: 'hooks:status', disposition: 'delegate', synopsis: 'Print the runtime hook matrix (per-platform install + bindings).' },
     { name: 'hooks:doctor', disposition: 'delegate', synopsis: 'Diagnose hook health: concerns, posture, missing trampolines (read-only).' },

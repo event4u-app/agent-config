@@ -1,0 +1,8 @@
+rule: playbook-precedence
+positives:
+  - prompt: "Add a component to the web package the way this repo normally does it."
+  - prompt: "Does our own generator handle a new package, or do I scaffold it by hand?"
+  - prompt: "Is there a playbook for adding a route in this codebase?"
+near_misses:
+  - prompt: "Explain what a factory pattern is in plain terms."
+  - prompt: "Rename the build output directory in the bundler config."

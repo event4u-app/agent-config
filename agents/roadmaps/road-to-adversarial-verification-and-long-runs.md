@@ -20,6 +20,11 @@ estate_growth_exempt: >-
   the Hard Floor something other than a removal. Owner-recorded precedence, ADR-268 § 11,
   2026-09-08. Also grows open_blockers by two, one of which is a per-host capability
   measurement rather than a decision.
+estate_offset_exempt: >-
+  Third of the same three-roadmap set, and the one that carries the replacement control. It
+  cannot be offset or deferred: without it, narrowing the Hard Floor in the first stem is a
+  removal rather than a migration, which ADR-268 section 0 forbids as a break of the protected
+  outcome.
 design_validated: >-
   Owner rulings of 2026-09-08 transcribed in ADR-268 §§ 6-9; runtime permitted by ADR-249.
 capability_gap: >-

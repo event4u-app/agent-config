@@ -34,6 +34,7 @@ import {
     type EdgeConfidence,
     EXPECTED_GRAMMAR_ABI,
     EXT_LANG,
+    isStatedResolution,
     type Lang,
     type ResolvedVia,
     SCHEMA_VERSION,
@@ -612,6 +613,52 @@ export function buildGraph(
         });
     }
 
+    // DERIVED `tests` edges (3.2).
+    //
+    // A test file that imports an in-repo symbol from a NON-test file is
+    // asserted to test it. Derived here rather than extracted because the
+    // predicate is a property of the two PATHS, which no grammar can see, and
+    // because `buildGraph` already holds every `imports` edge plus the node
+    // table needed to reject cross-test and out-of-repo targets.
+    //
+    // Three exclusions, each of which would otherwise manufacture a false
+    // `tests` edge:
+    //   · target outside the repository (`external:*` / `symbol:*`) — there is
+    //     no subject to test;
+    //   · target in another TEST file — a shared test helper is not a subject;
+    //   · target is the subject FILE node rather than a symbol in it, which is
+    //     kept: a test that imports a module tests that module, and the file
+    //     node is the only handle a caller has for a module with no exported
+    //     symbol the extractor named;
+    //   · THE SOURCE IMPORT IS ITSELF A GUESS. Added after an independent review
+    //     demonstrated the laundering: a PHP `use Two\Mailer` with no
+    //     `composer.json` binds by BASE NAME, so the `imports` edge is
+    //     `name-lookup` and can point at `One\Mailer` — and a `tests` edge
+    //     derived from it, stamped `test-import`, made that wrong target
+    //     TRUSTWORTHY to every consumer of the accepted-edge filter. Measured
+    //     consequences on a two-namespace fixture: `tests-for One\Mailer`
+    //     named a test that does not test it, `tests-for Two\Mailer` reported
+    //     none, `untested` inverted the pair, and `dead` called the tested class
+    //     dead. A derived edge may never be more trustworthy than the edge it
+    //     was derived from.
+    const nodeSourceFile = new Map(nodes.map((n) => [n.id, n.source_file]));
+    for (const e of [...edges]) {
+        if (e.relation !== 'imports') continue;
+        if (!isStatedResolution(e.resolved_via)) continue;
+        const from = nodeSourceFile.get(e.source);
+        if (from === undefined || !isTestFile(from)) continue;
+        const to = nodeSourceFile.get(e.target);
+        if (to === undefined || isTestFile(to)) continue;
+        emit({
+            source: e.source,
+            target: e.target,
+            relation: 'tests',
+            confidence: 'INFERRED',
+            resolved_via: 'test-import',
+            provider: 'native',
+        });
+    }
+
     // deterministic ordering
     nodes.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
     edges.sort((a, b) => {
@@ -675,6 +722,38 @@ export function buildGraph(
 function ambiguousTarget(candidates: readonly string[], targetName: string): string {
     if (candidates.length === 1) return candidates[0] as string;
     return `symbol:${targetName}`;
+}
+
+/**
+ * Is `relPath` a test file?
+ *
+ * A deterministic PATH predicate — no content read, no heuristic on the file's
+ * body. It is the input to the derived `tests` relation (3.2), so it has to be
+ * conservative in one direction only: a subject wrongly classified as a test
+ * silently loses its `tests` edges, while a test wrongly classified as a
+ * subject would make a test file look like a tested surface. Both are wrong;
+ * the second is worse, because `untested` would then report a real subject as
+ * covered.
+ *
+ * The four conventions are the ones this launch set actually uses, and each is
+ * anchored rather than substring-matched so a directory called
+ * `src/latest/thing.ts` is not a test:
+ *
+ *   · a `tests/` or `test/` path segment (this repository's own layout);
+ *   · a `__tests__/` segment (the JS convention);
+ *   · a `.test.` / `.spec.` filename infix (Vitest / Jest / Pest-JS);
+ *   · a `Test.php` / `test.php` filename suffix, or a `_test.php` infix
+ *     (PHPUnit's `*Test.php` and Go-style `_test` both appear in PHP trees).
+ */
+export function isTestFile(relPath: string): boolean {
+    const p = relPath.split(path.sep).join('/');
+    const segments = p.split('/');
+    if (segments.some((seg) => seg === 'tests' || seg === 'test' || seg === '__tests__')) return true;
+    const base = segments[segments.length - 1] ?? '';
+    if (/\.(test|spec)\./i.test(base)) return true;
+    if (/(^|[._-])test\.php$/i.test(base)) return true;
+    if (/Test\.php$/.test(base)) return true;
+    return false;
 }
 
 export function serializeGraph(g: CodeGraph): string {

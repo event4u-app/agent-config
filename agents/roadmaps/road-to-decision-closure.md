@@ -17,6 +17,11 @@ estate_growth_exempt: >-
   Second of the three receiver roadmaps ADR-260 § Consequences records as missing; it owns
   ADR-268 § 10's ownership axis, which neither sibling can hold without splitting the routing
   table from the grant model. Owner-recorded precedence, ADR-268 § 11, 2026-09-08.
+estate_offset_exempt: >-
+  Second of the same three-roadmap set. Offsetting it individually is not possible without
+  splitting the set, and the set is the unit ADR-268 section 11 gives precedence to. The
+  three-versus-one shape was argued in ADR-268 Alternatives: one file would separate no owner
+  question from another and could not be reviewed.
 design_validated: >-
   Owner rulings of 2026-09-08 transcribed in ADR-268 § 10 and §§ 5-7; the native-ask form
   directive of 2026-09-05.

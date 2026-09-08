@@ -185,7 +185,7 @@ Two decisions are therefore separated on purpose:
 | Decision | Who made it | Status |
 |---|---|---|
 | This roadmap will not implement `--merge` | AI council, 2026-08-22 | **settled** |
-| Preauthorized merge authority is granted or refused | owner | **open** |
+| Preauthorized merge authority is granted or refused | owner | **settled for `/pr:merge`** by [`ADR-266`](ADR-266-explicit-pr-merge-invocation-is-the-this-turn-confirmation.md), 2026-09-08 — still open for `/roadmap:process-full` |
 
 **Why the flag was removed rather than left inert.** An archived roadmap must
 not leave latent executable authority behind a documented switch. `--merge` is
@@ -341,3 +341,34 @@ rather than a reconstruction.
 4. **It is not a merge confirmation.** No standing instruction and no council
    record is same-turn user confirmation for any merge, and nothing in this
    record may be cited as one.
+
+## Owner ruling — 2026-09-08, `/pr:merge` § 9 activated
+
+Appended, not a rewrite. The owner made the ruling this record left open, in
+the scope this record left it open in.
+
+**Outcome:** `/pr:merge` § 9 is active.
+[`ADR-266`](ADR-266-explicit-pr-merge-invocation-is-the-this-turn-confirmation.md)
+records the amendment — an explicit `/pr:merge` invocation typed by the owner is
+the this-turn confirmation `non-destructive-by-default` requires, bounded to the
+PRs § 1's manifest snapshotted from that invocation.
+
+**Both of this record's conditions were met, and neither was waived.** § Disposition
+demanded owner approval *and* a design that is target-bound, head-SHA-bound,
+tamper-resistant, agent-unwritable and kill-switch-subject. The approval arrived
+on 2026-09-08. The design condition was already satisfied by the shipped
+command, and its fourth term is satisfied more strongly than when this record
+was written: the agent-writable ledger the concern was about was deleted by
+[`ADR-254`](ADR-254-git-authorization-enforcement-removed.md), so there is no
+authorization store for an agent to write at all. ADR-266 § Why this satisfies
+the Hard Floor checks all five terms against the command text.
+
+**What this does NOT reach.** Steps 4.4 and 4.7 stay `[-]` cancelled and
+`--merge` stays absent from `/roadmap:process-full` — a roadmap drain's
+invocation names a roadmap, not a merge, so ADR-266's argument does not
+transfer to it. That half of the table above is still `owner` / `open`.
+
+**One sentence above is now stale and is corrected here rather than edited
+there:** § Disposition's *"Its merge step stays unreachable from any autonomous
+path"* held while the step was inert. It is now reachable from exactly one
+path — an owner-typed `/pr:merge` invocation — and from no other.

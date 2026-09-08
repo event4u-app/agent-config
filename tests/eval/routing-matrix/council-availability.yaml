@@ -1,0 +1,8 @@
+rule: council-availability
+positives:
+  - prompt: "Is the council configured here, or do I need to set it up first?"
+  - prompt: "Get me a second opinion on this roadmap before I commit to it."
+  - prompt: "Can you cross-check with another model whether this design holds?"
+near_misses:
+  - prompt: "Summarise what the three reviewers said in the pull request thread."
+  - prompt: "Ask the team lead whether this belongs in the next release."

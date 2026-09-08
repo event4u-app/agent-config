@@ -73,6 +73,13 @@ tasks:
       # (.claude/rules holding 92 of 108 rules, last generated 2026-07-05) has
       # already been repaired in-place and the check is a fixpoint. 0.7s measured.
       - ./scripts-run src/scripts/check_rule_projection_integrity --quiet
+      # Byte-identity for every host OUTSIDE lean_projection.hosts
+      # (road-to-delivery-for-every-host 1.4). The gate above reads the trees as
+      # they stand and can see a stub in the wrong tree; it cannot see any other
+      # divergence, and the acceptance criterion is byte-identity. This one
+      # generates both projections into a temp root it owns and diffs them, so
+      # its position in the chain does not matter — it touches no tree here.
+      - ./scripts-run src/scripts/check_host_tree_parity --quiet
       - ./scripts-run src/scripts/check_bridge_derivation
       # Evidence artifacts added on this branch declare what KIND of evidence
       # they are (road-to-release-review-p0 Phase 2). Diff-scoped against the
@@ -2174,6 +2181,15 @@ tasks:
       does NOT regenerate, which is what lets it see a stale tree at all.
       Run it BEFORE anything that regenerates.
     cmd: ./scripts-run src/scripts/check_rule_projection_integrity {{.CLI_ARGS}}
+
+  check-host-tree-parity:
+    silent: true
+    desc: |
+      Every host NOT in lean_projection.hosts receives exactly what an
+      `eager-all` projection writes — road-to-delivery-for-every-host 1.4.
+      Generates both projections into a temporary root and diffs them; it never
+      writes into the checkout, so it is safe to run at any point in a chain.
+    cmd: ./scripts-run src/scripts/check_host_tree_parity {{.CLI_ARGS}}
 
   check-detector-corpus:
     silent: true

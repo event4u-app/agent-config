@@ -195,8 +195,23 @@ rule_loading_tier: __RULE_LOADING_TIER__
 #             validate with `task bench:ab:live` before flipping, and
 #             keep `task trigger-coverage` at 100%. One-flip revert:
 #             set eager-all + `task generate-tools`.
+# delivery  = the `thin` projection PLUS the `rule-inject` hook concern, which
+#             delivers a rule body back on trigger match. SHIPPED DEFAULT for
+#             Claude Code since ADR-267. Measured over the frozen routing-matrix
+#             corpus: 616/616 byte-equal deliveries, 101/101 labelled rules
+#             reachable, 0 of 212 near-misses fired. Rollback is this one
+#             setting: `mode: eager-all` + `task generate-tools`.
+#
+# `hosts` scopes WHICH hosts are thinned. Every host outside the list receives
+# exactly what `eager-all` writes, asserted byte-for-byte in CI by
+# `check_host_tree_parity`. The default has one member because Claude Code is
+# the only host that both binds the concern's slots and acts on its verdict
+# (docs/enforcement-by-host.md); thinning a host with no bound slot would remove
+# a body and put nothing in its place. Only `claude-code`, `cursor` and `cline`
+# are thinnable at all - any other id is dropped with a warning.
 lean_projection:
-  mode: eager-all
+  mode: delivery
+  hosts: [claude-code]
 
 # --- Telegraph condensation (output-side) ---
 #

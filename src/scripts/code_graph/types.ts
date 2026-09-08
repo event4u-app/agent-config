@@ -14,8 +14,21 @@ export type Lang = 'php' | 'typescript' | 'javascript';
 /** Same scale as `discovery_graph.ts::EdgeConfidence` (reused, not forked). */
 export type EdgeConfidence = 'EXTRACTED' | 'INFERRED' | 'AMBIGUOUS';
 
-/** Relations the extractor emits. */
-export type Relation = 'calls' | 'imports' | 'uses' | 'inherits' | 'member';
+/**
+ * Relations the graph carries.
+ *
+ * `calls` / `imports` / `uses` / `inherits` / `member` come from the extractor.
+ * `tests` is DERIVED in the build pass (`road-to-a-graph-that-is-shipped` 3.2):
+ * a test file that imports an in-repo symbol from a non-test file is asserted
+ * to test it, `resolved_via: 'test-import'`, `confidence: 'INFERRED'`. The two
+ * halves of that are deliberately split across the two axes — the import is a
+ * syntactic fact, so it is EXTRACTED evidence, while "this test tests that
+ * subject" is an inference from a naming convention, which is what INFERRED
+ * says. Deriving it in `buildGraph` rather than in the extractor keeps the
+ * extractor per-file and pure: the predicate needs only the two paths, and no
+ * grammar can see whether a file is a test.
+ */
+export type Relation = 'calls' | 'imports' | 'uses' | 'inherits' | 'member' | 'tests';
 
 /**
  * HOW an edge's target was arrived at — the mechanism, not the confidence.
@@ -65,6 +78,33 @@ export type ResolvedVia =
  * stays a single-member union until a decision changes that.
  */
 export type EdgeProvider = 'native';
+
+/**
+ * The two mechanisms that are GUESSES rather than statements.
+ *
+ * `name-lookup` is the repo-wide same-name table (or a lookup that found
+ * nothing); `dynamic` is a receiver the extractor cannot type. Everything else
+ * names where the target came from.
+ *
+ * Declared HERE, beside `ResolvedVia`, rather than in the query tier that first
+ * needed it — because the BUILD pass needs it too, and the reason is a defect an
+ * independent review demonstrated: a derived edge stamped with a trustworthy
+ * mechanism while its own evidence was a guess LAUNDERS the guess. A PHP
+ * `use Two\Mailer` with no `composer.json` binds by base name, so the `imports`
+ * edge is `name-lookup` and may point at `One\Mailer`; deriving a `tests` edge
+ * from it and tagging that `test-import` made a wrong target trustworthy to
+ * every consumer of the filter. One set, two readers, and the build pass can no
+ * longer disagree with the query tier about what a guess is.
+ */
+export const GUESS_RESOLVED_VIA: ReadonlySet<ResolvedVia> = new Set<ResolvedVia>([
+    'name-lookup',
+    'dynamic',
+]);
+
+/** Does this edge's target rest on a stated fact rather than a guess? */
+export function isStatedResolution(resolved_via: ResolvedVia): boolean {
+    return !GUESS_RESOLVED_VIA.has(resolved_via);
+}
 
 export interface CodeNode {
     /** Path-qualified from day one: `<relpath>#<symbol>` (collision-free). */
@@ -162,6 +202,15 @@ export interface CodeGraph {
 }
 
 /**
+ * Bumped 3 → 4 by `road-to-a-graph-that-is-shipped` 3.2: the `Relation` union
+ * gained `tests`, and the build pass now derives those edges. A cached sidecar
+ * written at v3 carries per-file extracts that are still correct — `tests` is
+ * derived from `imports`, not extracted — but `readSidecar` refuses a version
+ * mismatch anyway, and that refusal is the right conservative default: the
+ * alternative is a version check that has to reason about WHICH schema changes
+ * a sidecar survives, which is a rule that rots silently the first time someone
+ * adds an extractor field. A full re-extraction is the cost of being sure.
+ *
  * Bumped 2 → 3 by `road-to-a-graph-that-is-shipped` 2.2: every `CodeEdge` now
  * carries `resolved_via` and `provider`. A cached sidecar written at v2 has
  * neither, so `--update` would reuse untagged edges beside tagged ones and
@@ -178,7 +227,7 @@ export interface CodeGraph {
  * file — a silently mixed graph. `readSidecar` refuses a version mismatch, so
  * the bump is what makes that impossible rather than merely unlikely.
  */
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 /** Deterministic per-file byte cap — files above this become a SKIPPED node. */
 export const MAX_FILE_BYTES = 1_000_000;
