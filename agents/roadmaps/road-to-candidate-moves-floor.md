@@ -533,9 +533,11 @@ original prediction stays legible; row 6 is new. **Outcomes, per row:**
 5. **Fired as predicted; mitigation held.** Both results files state the gap in
    bold; the verdict is band-scoped. Still dark, now a named follow-up
    precondition.
-6. **Fired, caught mid-run** by the paid capture rather than by review. 16
-   tests across the two instruments pin both directions; the same blind spot in
-   the shipped `lint_mandated_lines` is a recorded, unfixed finding.
+6. **Fired, caught mid-run** by the paid capture rather than by review. Pinned
+   by 13 tests on the counter — which had none — plus a 3-test
+   emphasis-regression block on the checker carrying the real `**Candidates:**`
+   line from the run. The same blind spot in the shipped `lint_mandated_lines`
+   is a recorded, unfixed finding.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
