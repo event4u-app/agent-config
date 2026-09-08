@@ -224,6 +224,23 @@ procedure when [`roadmap-management`](../roadmap-management/SKILL.md)
 spawns a follow-up). Bare `[~]` / `[-]` is allowed; annotated is
 preferred.
 
+#### A prohibition-shaped step closes with `[x]`
+
+A step whose content is a **prohibition** (*"Do not build the enforcement"*) has
+no artifact to point at. `[~]` invents receiver work nobody owes, `[-]` mislabels
+restraint as cancellation, `[ ]` makes an honoured bounded obligation
+unarchivable. It closes with **`[x]`** — the obligation was discharged, and `[x]`
+never required that something was created. Its `verify:` must name every
+implementation, registration and semantically-equivalent surface (a structural
+check, not one literal grep, which misses aliases and generated code); **fail if
+an expected search root is missing**, checked BEFORE the absence check, because a
+glob over a vanished directory returns nothing and reads as success; scope the
+claim to the branch diff — *"this change introduced no enforcement"*, never the
+unprovable *"enforcement exists nowhere"*; and be re-run at archival. Not for a
+prohibition meant to hold indefinitely — that belongs in a rule, test or linter,
+because a closed step stops watching. Council convention, 2026-09-08 (2 seats,
+convergent); falsified if tooling defines `[x]` as requiring a positive mutation.
+
 ### 7. Follow-up roadmaps spawn from deferred items — frontmatter shape
 
 When a parent roadmap closes with `[~]` items, the
