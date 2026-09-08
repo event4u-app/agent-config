@@ -143,9 +143,67 @@ export const CAPSULE_SCHEMA_VERSION = 4;
  */
 export const ACCEPTED_CAPSULE_VERSIONS: readonly number[] = [3, 4];
 
-/** The two CHECKPOINT variants sharing this schema. */
-export const CAPSULE_VARIANTS = ['worker', 'main_session'] as const;
+/** The three CHECKPOINT variants sharing this schema. */
+export const CAPSULE_VARIANTS = ['worker', 'main_session', 'continuity_record'] as const;
 export type CapsuleVariant = (typeof CAPSULE_VARIANTS)[number];
+
+/**
+ * `continuity_record` — the DETERMINISTIC main-session variant.
+ *
+ * Why a variant and not a relaxed `main_session`. `main_session` requires
+ * `failed_approaches` and `successful_approaches` with at least one entry each,
+ * and requires the explicit token `none` when nothing failed or worked — the
+ * whole point of those fields being that silence and "nothing was abandoned"
+ * stay distinguishable. A writer that runs without model spend cannot know
+ * either. It could only write `none`, which asserts a judgement nobody made.
+ *
+ * The AI council of 2026-09-07 ruled exactly this: add a variant rather than
+ * stuffing absence markers into `main_session`, because explicit absence
+ * markers "misrepresent unavailable model judgments as values". This constant
+ * set is that ruling in code.
+ *
+ * The fields below are FORBIDDEN on this variant rather than optional, and the
+ * distinction is load-bearing. Optional would leave the door open for a later
+ * writer to fill one with a guess and for a reader to be unable to tell a
+ * derived record from a judged one. Forbidden makes the variant's meaning
+ * checkable: everything a `continuity_record` carries was computed from disk.
+ *
+ * Nothing here is invented — every name is an existing key of this same schema.
+ * The council's constraint was explicit: the required fields "must be derived
+ * from the existing validated envelope contract; this ruling does not authorize
+ * inventing parallel identity or directive fields."
+ *
+ * Version compatibility is unchanged and envelope-wide: a `continuity_record`
+ * declares the same `capsule_version`, and a reader that does not know the
+ * variant refuses it by name (see `validateRecycleEnvelope`) rather than
+ * guessing at its required set.
+ */
+export const CONTINUITY_RECORD_FORBIDDEN_KEYS: ReadonlySet<string> = new Set([
+    'decisions',
+    'constraints',
+    'do_not_touch',
+    'assumptions',
+    'failed_approaches',
+    'successful_approaches',
+    'open_questions',
+    'not_carried_forward',
+    'status_summary',
+    'suggested_skills',
+    'open_worker_envelopes',
+]);
+
+/** Required on a `continuity_record` — each one computable from on-disk state. */
+export const CONTINUITY_RECORD_REQUIRED_KEYS: readonly string[] = [
+    'capsule_version',
+    'variant',
+    'summary',
+    'task',
+    'workspace',
+    'written_at',
+    'acceptance_criteria',
+    'remaining',
+    'predecessor',
+];
 
 /** A single-line token no longer than `max` chars. Rejects any body-shaped value. */
 function isShortLine(value: unknown, max: number): value is string {
@@ -757,6 +815,31 @@ export function validateRecycleEnvelope(input: unknown): string[] {
         }
     }
 
+    // VARIANT FIRST, then version. The order is the contract, not a style
+    // choice. Required fields are variant-specific, so a reader that does not
+    // recognise the variant cannot know what to demand — and a reader that
+    // reports twenty field violations against a variant it never understood has
+    // told the operator nothing useful and, worse, has implied the record was
+    // malformed when the truth is that the reader is old. One refusal naming
+    // the variant is the honest output, and it is what makes an old reader
+    // meeting a new record a legible event rather than a pile of noise.
+    const variant = e['variant'];
+    if (typeof variant !== 'string' || !(CAPSULE_VARIANTS as readonly string[]).includes(variant)) {
+        return [
+            `unknown variant ${JSON.stringify(variant)} — this reader knows ` +
+                `${CAPSULE_VARIANTS.join(' | ')}. A reader that does not know a variant must not ` +
+                'guess at its required fields, so no further field checks were run.',
+        ];
+    }
+    if (variant === 'worker') {
+        return [
+            "variant 'worker' is a subagent generation handover and is validated by the worker " +
+                'path, not by the main-session recycle validator — routing it here would apply ' +
+                'the wrong required set to a well-formed record.',
+        ];
+    }
+    const isDerived = variant === 'continuity_record';
+
     const version = e['capsule_version'];
     if (typeof version !== 'number' || !ACCEPTED_CAPSULE_VERSIONS.includes(version)) {
         errors.push(`capsule_version must be one of ${ACCEPTED_CAPSULE_VERSIONS.join(' | ')}`);
@@ -766,9 +849,35 @@ export function validateRecycleEnvelope(input: unknown): string[] {
     // Demanding the new fields of an already-written record would be a
     // retroactive requirement, which is the one thing the recorded schema lock
     // forbids ("add fields or variants, never repurpose or remove one").
-    const atV4 = version === 4;
-    if (e['variant'] !== 'main_session') {
-        errors.push("variant must be 'main_session'");
+    //
+    // A `continuity_record` is exempt from the two v4 judgement fields for the
+    // opposite reason: it is forbidden from carrying them at all (below), so
+    // requiring them would make the variant unsatisfiable.
+    const atV4 = version === 4 && !isDerived;
+
+    if (isDerived) {
+        // Forbidden, not merely absent: a derived record that carries a
+        // judgement field is either a `main_session` mislabelled, or a
+        // deterministic writer that invented a value. Both are worth refusing
+        // loudly, and neither is distinguishable after the fact.
+        for (const key of Object.keys(e)) {
+            if (CONTINUITY_RECORD_FORBIDDEN_KEYS.has(key)) {
+                errors.push(
+                    `field "${key}" is forbidden on variant 'continuity_record' — it carries a ` +
+                        'model judgement, and a record written without model spend cannot have made ' +
+                        "one. Use variant 'main_session' for a judged record.",
+                );
+            }
+        }
+        for (const key of CONTINUITY_RECORD_REQUIRED_KEYS) {
+            if (e[key] === undefined) {
+                errors.push(
+                    `field "${key}" is required on variant 'continuity_record' — it is computable ` +
+                        'from on-disk state, so its absence is a writer defect rather than an ' +
+                        'unavailable judgement.',
+                );
+            }
+        }
     }
     if (!isShortLine(e['summary'], MAX_LINE_CHARS)) {
         errors.push(`summary must be a single line of 1–${MAX_LINE_CHARS} chars`);
@@ -789,7 +898,7 @@ export function validateRecycleEnvelope(input: unknown): string[] {
         errors.push('acceptance_criteria must carry at least one entry — the successor cannot know "done" without it');
     }
     checkList(errors, 'remaining', e['remaining'], MAX_LINE_CHARS, true);
-    checkList(errors, 'not_carried_forward', e['not_carried_forward'], MAX_LINE_CHARS, true);
+    checkList(errors, 'not_carried_forward', e['not_carried_forward'], MAX_LINE_CHARS, !isDerived);
     checkList(errors, 'decisions', e['decisions'], MAX_LINE_CHARS, false);
     errors.push(...decisionTagErrors(e['decisions']));
     checkList(errors, 'constraints', e['constraints'], MAX_LINE_CHARS, false);
@@ -809,7 +918,7 @@ export function validateRecycleEnvelope(input: unknown): string[] {
 
     // Required with ≥ 1 entry (Phase 2.3): a session that abandoned nothing
     // writes `none`. Absence must never be readable as "nothing failed".
-    checkList(errors, 'failed_approaches', e['failed_approaches'], MAX_LINE_CHARS, true);
+    checkList(errors, 'failed_approaches', e['failed_approaches'], MAX_LINE_CHARS, !isDerived);
     if (Array.isArray(e['failed_approaches']) && e['failed_approaches'].length === 0) {
         errors.push(
             'failed_approaches must carry at least one entry — write "none" explicitly, so ' +
@@ -835,7 +944,7 @@ export function validateRecycleEnvelope(input: unknown): string[] {
     // is a reader waiting for something that will not arrive.
     const predecessor = e['predecessor'];
     if (predecessor === undefined) {
-        if (atV4) {
+        if (atV4 || isDerived) {
             errors.push(
                 'predecessor is required — name the session this one continues, or write "none" ' +
                     'explicitly for the first session in a workspace',
