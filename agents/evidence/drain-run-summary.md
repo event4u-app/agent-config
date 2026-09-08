@@ -1,5 +1,18 @@
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-09-06 -->
 
+> **Superseded as the latest run by run 22 (2026-09-08), recorded at
+> [`drain-run-summary-run-22.md`](drain-run-summary-run-22.md).** This file is left
+> describing run 21 rather than rewritten: it is a 1,272-line record of a specific run,
+> and overwriting it would destroy that record to keep a pointer current. Read run 22 for
+> the latest state; read on here for run 21's.
+>
+> Run 22 continues four things this file left open, and contradicts none of them: the
+> ADR-number collision it descoped **recurred** at ADR-263 within a day (see
+> `stubs/road-to-adr-number-uniqueness.md` § It recurred); `road-to-skill-menu-economy`
+> gained one of its five blocker conditions; `road-to-delivery-on-hook-hosts` received a
+> council disposition rather than a closure; and `road-to-candidate-moves-floor`, which
+> this file records at 16/20, closed at 20/20.
+
 # Autonomous roadmap drain — run 21, 2026-09-08
 
 Owner-delegated drain run under a standing autonomy mandate: token spend, paid AI-council
