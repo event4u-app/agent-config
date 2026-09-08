@@ -145,8 +145,29 @@ is filed as `blocker: skill-surface-framing-ab-choice` below, where a gate can r
 
 ### blocker: skill-surface-framing-ab-choice
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** owner
+- **Resolution, 2026-09-08:** **Option B**, recorded as
+  [`ADR-263`](../../docs/decisions/ADR-263-skills-are-explicitly-invoked-reference-material.md).
+  The `Resolved when` below asks for "a decision record for A or B"; ADR-263 is that
+  record for B. Decided by an AI council under a written owner delegation covering this
+  autonomous drain run — the delegation, and the fact that the reserved set itself is
+  unchanged, are recorded in ADR-263 § Authority.
+  **The council locked B conditionally** and named one precondition: document which hosts
+  were census-tested and whether they claim frontmatter routing, failing which Option D
+  (close the menu) was the honest closure. The precondition was discharged before the ADR
+  was written —
+  [`skill-trigger-frontmatter-has-no-host-reader-2026-09-08.md`](../evidence/analysis/skill-trigger-frontmatter-has-no-host-reader-2026-09-08.md),
+  pinned to `8a3160242`: one host was tested (a single Claude Code store), the key IS
+  delivered (`src/`, `dist/agent-src/` and `.augment/` agree; `condense.ts:1623-1627`
+  substitutes only `model_tier:` → `model:`), and nothing reads it —
+  `dist/router.json` carries no skills key, `compile_router.ts` contains zero occurrences
+  of `skills`, and the one in-tree reader indexes the field **only under `keyword-v2`**
+  (`score_skill_relevance.ts:170`) while the default scores `name + description`
+  (`:261-262`). So the zero is not a mechanism that failed; no mechanism exists.
+  **Read at its real strength:** the council was `⚠️ DEGRADED`, 1 of 2 seats present
+  (openai returned `os_error: ENOBUFS`). A single-seat verdict is a considered opinion,
+  not convergence.
 - **Blocks:** Options A and B; the file stays live as a deferral destination until
   one is taken up or the menu is closed
 - **What to do:** choose A (build a host-side activation path for the 12 skills that
