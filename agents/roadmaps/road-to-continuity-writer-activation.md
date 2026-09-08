@@ -83,7 +83,7 @@ councils required puts them there on purpose:
       `tests/scripts/_lib_continuity_slot.test.ts`, all green; sensitivity shown
       by neutralising the foreign-refusal, the monotonic guard and
       quarantine-not-delete in turn and watching the matching fixture go red.
-- [ ] **1.2 A deterministic writer that runs without model spend, default-off.**
+- [x] **1.2 A deterministic writer that runs without model spend, default-off.**
       It emits the `continuity_record` variant, computes every field from
       on-disk state, and is gated by its own settings switch defaulting to
       `false`. Default-off is not caution for its own sake: until 1.1 is
@@ -93,6 +93,25 @@ councils required puts them there on purpose:
       spend; a session that did nothing substantive leaves none; the count comes
       from the concern's own state, never from file presence; with the switch at
       its default the tree behaves exactly as it does today.
+      landed: `src/scripts/_lib/continuity_writer.ts` builds the record from
+      on-disk state only, and `writeContinuityRecord` in
+      `src/scripts/hooks/session_eol_hook.ts` publishes it through step 1.1's
+      slot. The handler sits INSIDE the existing `session-eol` concern, so
+      `concern_count` stays at its floor of 58 — the manifest split is step 2.1
+      and stays blocked. Armed by `continuity.auto_record`, which ships `off`
+      (`src/config/agent-settings.template.yml`, class C in
+      `docs/contracts/settings-classes.md`). It fires from the raw recycle
+      threshold rather than the once-per-session advisory stamp, so a later Stop
+      supersedes rather than freezing the record at the moment the session
+      crossed. Two bounds are stated rather than hidden: a session with no
+      claimed roadmap leaves NO record, because the only deterministic source of
+      an `acceptance_criteria` entry in this tree is the claimed roadmap and a
+      placeholder would assert a definition of done nobody set; and the anchor
+      fields `session:recycle` collects with `git status` are omitted, trading
+      one drift line for a Stop path that spawns nothing. 17 fixtures in
+      `tests/scripts/continuity_writer.test.ts`, all green; sensitivity shown by
+      forcing the switch hard-on (3 red), hard-off (3 red), and by neutralising
+      the substantive gate (2 red) and the claim gate (1 red) in turn.
 - [ ] **1.3 Parity, in the two halves the 2026-09-08 council separated.**
       Transformation parity is a fixture suite — recorded transcripts and
       roadmap states in, field-by-field comparison out, written to a scratch

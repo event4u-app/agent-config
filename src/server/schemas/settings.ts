@@ -438,6 +438,11 @@ export const settingsSchema = z.object({
             ),
         }),
     }),
+    continuity: z.object({
+        auto_record: z.enum(['on', 'off']).default('off').describe(
+            'Deterministic continuity-record writer at session end (road-to-continuity-writer-activation Phase 1). on = the session-eol concern writes the continuity_record capsule variant on Stop for a substantive session that has claimed a roadmap; every field is computed from on-disk state, with no model spend and no subprocess. off (default) = no automatic record — while session:recycle is still the normal path, a second producer on it before the parity evidence is in would be unverified.',
+        ),
+    }),
     memory: z.object({
         cadence: memoryCadence.default('always').describe(
             'Cadence of the 🧠 memory-visibility line after a memory-consulting step. always (default) = show whenever a memory type was asked; auto = show only when 3+ types were consulted (less noise); never = suppress. Distinct from rule_loading_tier — owns its own key since the 2026-06-01 untangle.',

@@ -56,6 +56,11 @@ import {
 } from '../_lib/session_eol.js';
 import { readContextObservation } from '../_lib/context_observation.js';
 import { buildCheckpoint, writeCheckpoint } from '../_lib/run_checkpoint.js';
+import {
+    auto_record_enabled,
+    buildContinuityRecord,
+} from '../_lib/continuity_writer.js';
+import { publishContinuityRecord } from '../_lib/continuity_slot.js';
 import { read_claimed_slug } from '../session_register_hook.js';
 import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
@@ -411,6 +416,8 @@ export function main(): number {
         }
     }
 
+    writeContinuityRecord(workspaceRoot, rawSessionId, counters, threshold, tokens);
+
     if (shouldAdvise && threshold !== null && tokens !== null) {
         process.stdout.write(
             `${JSON.stringify({
@@ -432,6 +439,56 @@ export function main(): number {
         return EXIT_WARN;
     }
     return 0;
+}
+
+/**
+ * The continuity-record handler — one of the three lifecycle handlers this
+ * concern carries, and independently switchable from the other two.
+ *
+ * `road-to-continuity-writer-activation` step 1.2, and it lands INSIDE this
+ * concern rather than as a fourth concern id on purpose: `check_estate_count`
+ * ratchets `concern_count` with allowance 0, and the 2026-09-08 AI council
+ * refused a temporary allowance 2/2. The substance the 2026-09-07 council's D2
+ * asked for is independent switching and failure isolation, and a handler
+ * behind its own settings key inside a `try` gives both without a manifest
+ * split. The split itself is step 2.1 and stays blocked until a concern is
+ * retired to pay for it.
+ *
+ * Fires from the recycle THRESHOLD, not from the once-per-session advisory
+ * stamp: the stamp fires once, so a record written from it would be frozen at
+ * the moment the session crossed the threshold and would go stale as the
+ * session continued. Driving it from the raw threshold condition instead means
+ * every later Stop supersedes the record under the slot's own policy, so what a
+ * successor reads is always the newest state, and the write rate is still
+ * bounded to the end phase of a session rather than every turn of it.
+ *
+ * Best-effort throughout, like the checkpoint above it: a continuity record is
+ * a recovery aid, and a recovery aid that can fail a Stop is a liability.
+ */
+function writeContinuityRecord(
+    workspaceRoot: string,
+    rawSessionId: string | null,
+    counters: EolCounters,
+    threshold: number | null,
+    tokens: number | null,
+): void {
+    if (threshold === null || tokens === null || tokens < threshold) return;
+    const sessionId = String(rawSessionId ?? '').trim();
+    if (sessionId === '') return;
+    try {
+        if (!auto_record_enabled(workspaceRoot)) return;
+        const slug = read_claimed_slug(workspaceRoot, sessionId);
+        const decision = buildContinuityRecord({
+            root: workspaceRoot,
+            sessionId,
+            slug,
+            counters,
+        });
+        if (decision.record === null) return;
+        publishContinuityRecord(workspaceRoot, sessionId, decision.record);
+    } catch {
+        // never block the Stop path, and never suppress a sibling handler
+    }
 }
 
 // Bundle-safety: never auto-run when inlined into an esbuild bundle, where
