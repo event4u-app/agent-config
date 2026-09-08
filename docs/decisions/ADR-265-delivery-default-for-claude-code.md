@@ -17,6 +17,7 @@ evidence:
   basis:
     - docs/CLAIMS.md
     - internal/bench/reports/thin-inject-2026-08-23.md
+    - internal/bench/reports/thin-inject-2026-09-08.md
     - agents/evidence/analysis/standing-payload-by-host-2026-09.md
     - src/scripts/_lib/lean_projection_mode.ts
     - src/scripts/condense.ts
@@ -110,6 +111,34 @@ That is why the host axis exists and why its default has exactly one member.
 - Every non-Claude host's rule tree is now under a CI byte-identity assertion it
   did not have before. That is a tightening, and it is the half of this change
   that survives even if the default is rolled back.
+- **A fourth residue class, added 2026-09-08 by the R2 completion review of the
+  implementing branch (finding 1), because the three above read as exhaustive
+  and are not.** 18 rules carry BOTH path-shaped and non-path triggers, and
+  `path_only_ids` exempts a rule only when EVERY trigger is path-shaped, so all
+  18 are thinned and their path-shaped half has no carrier: `pre_tool_use` lost
+  the binding, and `user_prompt_submit` never populates `openFiles`. They are
+  NOT unreachable — every keyword / phrase / command route still delivers the
+  body, and the shipped `user_prompt_submit` reach over the frozen corpus is
+  98/101 labelled rules with no thinned rule among the three that differ. And
+  they never had a separate host-native path route on this host:
+  `src/install/claudePathsPlan.ts:250` emits no `paths:` for a mixed-trigger
+  rule on purpose, so under `eager-all` they loaded UNCONDITIONALLY. What is
+  lost is the difference between unconditional and prompt-triggered. Restoring
+  a path route costs either +16,329 GPT tok on the thin rule layer (+69 %) or a
+  raise of the 2,048-byte `pre_tool_use` slot sum this record keeps unchanged —
+  both owner-reserved, so the closure is a stub
+  (`agents/roadmaps/stubs/road-to-a-path-route-under-delivery.md`) and not a
+  silent amendment here.
+- **`review_trigger` evaluated 2026-09-08, and the answer is a qualified no.**
+  The trigger names "a labelled rule unreachable in the recall endpoint" as a
+  reopening condition. Measured on the shipped reach rather than the endpoint's
+  `open_files`-honoured reading: zero labelled rules are unreachable, and the
+  three reachable only via a path trigger are the path-only rules the exemption
+  already keeps full-bodied. So the trigger did not fire on its own terms. It
+  came close enough that the instrument was changed rather than the record:
+  `model_rule_injection --endpoints` (b) now publishes the shipped reach beside
+  the pre-registered one, so a future run measures this condition instead of
+  inferring it. This decision is NOT reopened, and nothing here supersedes it.
 
 ## What this does NOT reopen
 
@@ -141,8 +170,8 @@ That is why the host axis exists and why its default has exactly one member.
 
 | Claim | Basis |
 |---|---|
-| Delivery is byte-equal to eager projection on a trigger match | `internal/bench/reports/thin-inject-2026-08-23.md` — 616/616 byte-equal deliveries over the frozen `tests/eval/routing-matrix` corpus |
-| Every labelled rule stays reachable under delivery | Same report — 101/101 labelled rules reachable; 0 of 212 near-misses fired |
+| Delivery is byte-equal to eager projection on a trigger match | `internal/bench/reports/thin-inject-2026-09-08.md` — 591/591 byte-equal deliveries, 0 unequal, over the frozen `tests/eval/routing-matrix` corpus. REPOINTED 2026-09-08 (R2 finding 7): this row cited `thin-inject-2026-08-23.md`, which carries 579/579 over a 94-rule corpus and could not have carried the figure attributed to it. The count fell 616 → 591 because `CAP_BYTES` was lowered onto the slot row (finding 3), which withholds more bodies on large fires; the bar is `unequal == 0` and is unaffected by the count |
+| Every labelled rule stays reachable under delivery | Same report — 101/101 labelled rules reachable with `open_files` honoured, which is the MECHANISM's reach; **98/101 on the shipped `user_prompt_submit` reach**, the three that differ being the path-only rules the always-eager residue keeps full-bodied, so no THINNED rule is unreachable. 0 of 212 near-misses fired. The second reading was added 2026-09-08 (R2 finding 1) because the first credits a route no shipped slot supplies |
 | The per-slot activation charge is measured, not chosen | `src/config/hook-token-budget.json` — `user_prompt_submit` raised to the p90 gate-open fire size rounded up to 512 B; distribution p50 6,674 B, p90 16,188 B, max 20,406 B over 318 gate-open fires |
 | Hosts outside `lean_projection.hosts` receive what `eager-all` writes | `src/scripts/check_host_tree_parity.ts` asserts it byte-for-byte in CI |
 | `delivery` was accepted by the resolver long before the schema admitted it | `src/scripts/_lib/lean_projection_mode.ts` accepted the value while `agent-settings.schema.json` did not, so a consumer setting the documented value failed validation |
@@ -163,5 +192,9 @@ disclosure.
 - `agents/evidence/analysis/standing-payload-by-host-2026-09.md` — the per-host
   baseline and the per-slot fire-size distribution behind the cap.
 - `docs/CLAIMS.md` — `thin-inject-delivery-equivalence`.
-- `internal/bench/reports/thin-inject-2026-08-23.md` — the four endpoints.
+- `internal/bench/reports/thin-inject-2026-09-08.md` — the four endpoints as
+  re-scored after the R2 completion review, and the record of what moved.
+- `internal/bench/reports/thin-inject-2026-08-23.md` — the earlier run, over the
+  94-rule corpus. Kept: the corpora differ, so no delta may be computed across
+  the two sets.
 - `src/scripts/check_host_tree_parity.ts` — the byte-identity assertion.

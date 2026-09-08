@@ -35,6 +35,11 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import {
+    pathOnlyRuleIds,
+    triggerlessRuleIds,
+    type Router,
+} from './_lib/rule_injection.js';
 import * as token_count from './_lib/token_count.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -90,38 +95,74 @@ export function kernel_ids(): Set<string> {
  * Stated as a PROPERTY rather than a list of ids. If the concern is ever bound
  * on `pre_tool_use` again, this exemption is what should be reconsidered — not
  * three names someone has to remember.
+ *
+ * WHAT THIS EXEMPTION DOES **NOT** COVER — recorded 2026-09-08, R2 finding 1,
+ * because the silence read as coverage. The predicate is `every` trigger
+ * path-shaped. A rule with BOTH path and non-path triggers is therefore THINNED,
+ * and its path-shaped half then has no carrier at all: the stub carries no
+ * frontmatter (`condense.ts` writes it with `_writeText`, bypassing
+ * `_emit_claude_rule`'s host-native `paths:` key), `pre_tool_use` lost the
+ * binding under owner ruling E2, and `user_prompt_submit` never populates
+ * `openFiles`. Measured over the current `dist/router.json`: **18 such rules**,
+ * all non-kernel and all thinned — augment-edit-discipline, design-fidelity,
+ * doc-screenshot-hygiene, domain-adoption-policy,
+ * framework-neutrality-in-generic-skills, image-likeness-and-rights,
+ * laravel-translations, lethal-trifecta-guard, linked-projects-onboarding-gate,
+ * low-impact-corpus-privacy-floor, markdown-safe-codeblocks, onboarding-gate,
+ * persona-governance, php-coding, provider-lifecycle-discipline,
+ * roadmap-ci-steps-policy, roadmap-progress-sync, settings-ask-protocol.
+ *
+ * They do NOT reach the model at no scope: every non-path route
+ * (keyword / phrase / command) still delivers the body through the concern, and
+ * on `claude-code` they never had a separate host-native path route to lose —
+ * `_claude_paths_plan` emits no `paths:` for a mixed-trigger rule on purpose, so
+ * under `eager-all` they loaded UNCONDITIONALLY. What is lost is the difference
+ * between unconditional and prompt-triggered: a session that touches a matching
+ * file and says nothing that matches gets nothing.
+ *
+ * The labelled corpus cannot see this and the endpoint says so rather than
+ * implying otherwise — `model_rule_injection --endpoints` (b) now publishes the
+ * shipped `user_prompt_submit` reach beside the pre-registered reading, and
+ * every one of these 18 has at least one prompt-matching positive, so none
+ * appears in its "reachable only via a path trigger" column.
+ *
+ * WHY THIS IS NOT WIDENED TO `some` HERE. Measured: exempting all 18 moves the
+ * thin rule layer 23,592 -> 39,921 GPT tok (+16,329, +69 %), which is a budget
+ * move of a magnitude no agent may take, and it would erase most of the saving
+ * the flip is licensed on. Restoring a path route needs either that exemption
+ * under a re-anchored baseline or a `pre_tool_use` binding under a raised slot
+ * cap — both owner-reserved. Receiver:
+ * `agents/roadmaps/stubs/road-to-a-path-route-under-delivery.md`.
  */
+/**
+ * ONE spelling of the router-derived sets, shared with the injector (R2
+ * finding 11).
+ *
+ * `path_only_ids` and `no_trigger_ids` were each a second, hand-rolled
+ * implementation of `_lib/rule_injection.ts::pathOnlyRuleIds` /
+ * `triggerlessRuleIds` — verified identical over the current router at the time
+ * (symmetric difference empty), so drift risk rather than a live defect. It is
+ * exactly the hazard `THIN_ENTRY_MARKER`'s own comment argues against one
+ * screen below ("a gate that re-spelled this string would drift from the writer
+ * silently"), and the two consumers here are the PROJECTOR's exemption set and
+ * the INJECTOR's reachability set: they must not be able to disagree about which
+ * rules the delivery path can reach.
+ *
+ * The finding named `path_only_ids`. The defect-pattern sweep found the SECOND
+ * instance one function down — `no_trigger_ids` against `triggerlessRuleIds` —
+ * and it is delegated in the same change. Count: 2 of 2 duplicated
+ * router-derived sets in this file, 0 remaining.
+ */
+function _router(): Router {
+    return JSON.parse(fs.readFileSync(ROUTER, 'utf-8')) as Router;
+}
+
 export function path_only_ids(): Set<string> {
-    const data = JSON.parse(fs.readFileSync(ROUTER, 'utf-8')) as Record<string, unknown>;
-    const pathKinds = new Set(['path_prefix', 'file_pattern']);
-    const out = new Set<string>();
-    for (const tier of ['tier_1', 'tier_2']) {
-        const entries = data[tier];
-        if (!Array.isArray(entries)) continue;
-        for (const e of entries) {
-            const obj = e as Record<string, unknown>;
-            const t = obj.triggers;
-            if (!Array.isArray(t) || t.length === 0) continue;
-            const kinds = t.flatMap((x) => Object.keys(x as Record<string, unknown>));
-            if (kinds.every((k) => pathKinds.has(k))) out.add(String(obj.id));
-        }
-    }
-    return out;
+    return pathOnlyRuleIds(_router());
 }
 
 export function no_trigger_ids(): Set<string> {
-    const data = JSON.parse(fs.readFileSync(ROUTER, 'utf-8')) as Record<string, unknown>;
-    const out = new Set<string>();
-    for (const tier of ['tier_1', 'tier_2']) {
-        const entries = data[tier];
-        if (!Array.isArray(entries)) continue;
-        for (const e of entries) {
-            const obj = e as Record<string, unknown>;
-            const t = obj.triggers;
-            if (!Array.isArray(t) || t.length === 0) out.add(String(obj.id));
-        }
-    }
-    return out;
+    return new Set(triggerlessRuleIds(_router()));
 }
 
 /**
