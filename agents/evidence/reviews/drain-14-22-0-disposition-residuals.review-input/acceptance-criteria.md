@@ -4,7 +4,7 @@
       the locked upstream, proven by a check that has been observed failing on
       mutated bytes. A manifest-internal check does not satisfy this.
       Met 2026-09-09. `src/scripts/_lib/vendored_grammar_upstream.ts` +
-      `tests/scripts/vendored_grammar_upstream.test.ts` (13 cases). Observed
+      `tests/scripts/vendored_grammar_upstream.test.ts` (16 cases). Observed
       failing twice on mutated bytes: once by hand on the real committed
       `tree-sitter-php.wasm` (one byte flipped, `1 failed | 12 passed`, restored
       and re-hashed to its committed sha256), and once as a permanent suite case

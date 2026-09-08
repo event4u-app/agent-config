@@ -31,10 +31,10 @@ index 62f5a406c014334b08f6e8e814b6ed17881ccf53..7183c1c7eece7ed2ca3c4682de46381a
      },
 diff --git a/agents/roadmaps/archive/road-to-the-14-22-0-disposition-residuals.md b/agents/roadmaps/archive/road-to-the-14-22-0-disposition-residuals.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..294cb3b5c8bc6485e53bb5b7622c2670e626107a
+index 0000000000000000000000000000000000000000..8cd717a96b76f1bff3e971a404f104955a891c1d
 --- /dev/null
 +++ b/agents/roadmaps/archive/road-to-the-14-22-0-disposition-residuals.md
-@@ -0,0 +1,265 @@
+@@ -0,0 +1,272 @@
 +---
 +complexity: lightweight
 +status: ready
@@ -101,7 +101,14 @@ index 0000000000000000000000000000000000000000..294cb3b5c8bc6485e53bb5b7622c2670
 +      version + `integrity`), asserts the INSTALLED version equals the locked
 +      one, and byte-compares every grammar the manifest admits against
 +      `node_modules/tree-sitter-wasms/out/`. Exercised by
-+      `tests/scripts/vendored_grammar_upstream.test.ts` — 13 cases, all green.
++      `tests/scripts/vendored_grammar_upstream.test.ts` — 16 cases, all green.
++      (13 at the first commit; three added by the R2 completion review below,
++      which found the vendored side resolving by BASENAME rather than by the
++      entry's own path. Two rows sharing a filename in different directories
++      would have anchored to the same file — one admitted binary silently
++      unanchored while the verdict reported full coverage, the false green this
++      module exists to remove. Fixed with a refusal for the ambiguous case and a
++      sabotage-proven test for the resolution.)
 +      **Refusal, never a pass, is the load-bearing half** and it is what Risk 1
 +      asks for: an absent upstream, an installed version that is not the locked
 +      one, a lock row with no `integrity`, a missing counterpart, a missing
@@ -267,7 +274,7 @@ index 0000000000000000000000000000000000000000..294cb3b5c8bc6485e53bb5b7622c2670
 +      the locked upstream, proven by a check that has been observed failing on
 +      mutated bytes. A manifest-internal check does not satisfy this.
 +      Met 2026-09-09. `src/scripts/_lib/vendored_grammar_upstream.ts` +
-+      `tests/scripts/vendored_grammar_upstream.test.ts` (13 cases). Observed
++      `tests/scripts/vendored_grammar_upstream.test.ts` (16 cases). Observed
 +      failing twice on mutated bytes: once by hand on the real committed
 +      `tree-sitter-php.wasm` (one byte flipped, `1 failed | 12 passed`, restored
 +      and re-hashed to its committed sha256), and once as a permanent suite case
@@ -507,10 +514,27 @@ index 70deeaa8e7c186c6c586b033b8d19b58f1fde266..b7e6ebaa3ac90999b380a12968312d98
  - evidence: exec:check_skill_activation_claim -> 0
  - non_inference: This is a reading of ONE transcript store on one machine, so it bounds this package's own maintainer sessions and licenses nothing about consumer installs, other hosts, or any period outside the 30 sessions scanned. The store is rolling rather than append-only, so a later re-derivation can legitimately report FEWER assistant turns than an earlier one; a rise or fall between two readings is not a trend. Zero invocations is NOT evidence that the skills are useless, unreachable, or wrongly written — the census names its own leading unmeasured cause, that the host's injected catalogue may carry bare names rather than descriptions past roughly the first forty entries, and that catalogue is not persisted in the transcript so nothing here tests it. The three population counts partition the 299 by what each skill DECLARES, not by what any host does with it: they do not establish that the 189 are unreachable, that the 12 are reachable, or that the split is the right one. The number is also not a rate: with a zero numerator there is no denominator question to answer. It says nothing about whether `lean_projection.mode: delivery` would move activation; that needs the flip, which is owner-reserved. And it must not be read as a verdict on the corpus wave, which raised testability and was never a delivery mechanism.
 diff --git a/docs/decisions/ADR-263-skills-are-explicitly-invoked-reference-material.md b/docs/decisions/ADR-263-skills-are-explicitly-invoked-reference-material.md
-index 19ab113b2d5b30b71a3dbedd45bde8af536fde74..7d5fd3df5fb9b959ea7d4c11d4a2f99e74416044 100644
+index 19ab113b2d5b30b71a3dbedd45bde8af536fde74..dc39663cc47a06ef2d2eaae2d5a85ad7c28075db 100644
 --- a/docs/decisions/ADR-263-skills-are-explicitly-invoked-reference-material.md
 +++ b/docs/decisions/ADR-263-skills-are-explicitly-invoked-reference-material.md
-@@ -113,6 +113,9 @@ Two wording points are load-bearing and are recorded rather than left implicit:
+@@ -104,6 +104,16 @@ supplied the replacement wording, and it is adopted verbatim as the target:
+ > All 299 require explicit invocation until a named host with a documented
+ > routing contract demonstrates otherwise.
+ 
++**The third bullet of that block is WRONG and is corrected by Amendment 1
++(2026-09-09): read `189`, not `187`.** The block is quoted verbatim rather than
++edited, because it is the wording the council adopted and rewriting a quoted
++verdict hides that a correction happened. Reading it, take the third line as
++`189 skills declare neither trigger nor eval data` — and note that the three
++lines only reconcile once the overlap is named, because 12 + 100 + 189 = 301
++while 12 + 100 − 2 + 189 = 299. The published wording therefore owes the
++2-skill overlap a mention that the adopted block does not carry. Amendment 1
++states both sites.
++
+ Two wording points are load-bearing and are recorded rather than left implicit:
+ 
+ - **"by observation", never "by design".** The council rejected "reference
+@@ -113,6 +123,9 @@ Two wording points are load-bearing and are recorded rather than left implicit:
  - **187, not 189.** 12 declare a trigger key and 100 carry a corpus, of which 2
    do both, so 110 are in at least one set and **187** are in neither. The 189 in
    the earlier framing counted the two overlaps twice out of the remainder.
@@ -520,16 +544,30 @@ index 19ab113b2d5b30b71a3dbedd45bde8af536fde74..7d5fd3df5fb9b959ea7d4c11d4a2f99e
  
  **Option A is rejected**, on two grounds the council named: there is no host
  contract to build against, and shipping a documented routing capability that
-@@ -123,6 +126,47 @@ consumers would cite the claim as a bug.
+@@ -123,6 +136,61 @@ consumers would cite the claim as a bug.
  honest closure only if the provenance hole could not be closed, and it was
  closed.
  
 +## Amendment 1 (2026-09-09) — the `187` figure is an arithmetic error; 189 stands
 +
 +Scope, stated first so it cannot be misread: this amendment corrects **one
-+number in a supporting bullet**. The Decision is untouched — Option B stands, in
++figure, at the two places it appears**. The Decision is untouched — Option B stands, in
 +the "by observation" form, Option A stays rejected, Option D stays not-taken, and
 +nothing this record locks is reopened.
++
++**Where it appears — TWO sites, not one.** Corrected 2026-09-09 within the same
++change, on an R2 completion-review finding against the first draft of this
++amendment: the figure is in the § Decision blockquote (`:102`, the wording the
++Decision introduces as adopted verbatim) as well as in the supporting bullet
++below it. An amendment naming only the bullet leaves the authoritative half of
++the record contradicting the ledger, and no gate covers that — the census gate
++reads `docs/CLAIMS.md` against the record and exits 0 with this file still
++wrong. Both sites now carry a pointer here; neither is rewritten.
++
++**A figure swap alone would not have been enough**, which is why the note above
++the bullets says so: 12 + 100 + 189 = 301. The adopted block never named the
++2-skill overlap, so its three lines reconcile to 299 only with the `− 2` the
++reconciliation below carries.
 +
 +**What is wrong.** The bullet states the union correctly at 110 and then
 +subtracts 112. With `total = 299`, `trigger key = 12`, `corpus = 100` and
@@ -642,10 +680,10 @@ index 8a907bfe24c327ef8428b96ade2b8acffed47125..8ba106786a9525830078414693c7c6f5
  import * as fs from 'node:fs';
 diff --git a/src/scripts/_lib/vendored_grammar_upstream.ts b/src/scripts/_lib/vendored_grammar_upstream.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..3e1b09c7f97193886568d9631fe9358744270d83
+index 0000000000000000000000000000000000000000..8976b5f1bab3c7f2259acf2eda4bcf05021123e2
 --- /dev/null
 +++ b/src/scripts/_lib/vendored_grammar_upstream.ts
-@@ -0,0 +1,213 @@
+@@ -0,0 +1,246 @@
 +/**
 + * The vendored grammars' one anchor outside the manifest.
 + *
@@ -684,8 +722,18 @@ index 0000000000000000000000000000000000000000..3e1b09c7f97193886568d9631fe93587
 + * An upstream comparison is trivially written so that it passes when the
 + * upstream is absent, which is a green that verifies nothing — the exact shape
 + * of the eleven conditions it is here to supplement. So an absent package, a
-+ * version that is not the locked one, an absent counterpart file, and an empty
-+ * claim set are all refusals, never passes.
++ * version that is not the locked one, an absent counterpart file, an empty
++ * claim set, and two admitted entries sharing a filename are all refusals,
++ * never passes.
++ *
++ * The last of those is the subtlest, and it was added on an R2 review finding
++ * rather than foreseen: the upstream keeps its grammars in one flat directory,
++ * so the counterpart is addressed by basename. Two manifest rows with the same
++ * filename in different directories would anchor to the same upstream file —
++ * one admitted binary silently unanchored while the verdict reported full
++ * coverage, which is the false green this module exists to remove. The vendored
++ * side resolves the entry's OWN repo-relative path, never a basename under a
++ * fixed directory, for the same reason.
 + */
 +import { createHash } from 'node:crypto';
 +import * as fs from 'node:fs';
@@ -734,8 +782,13 @@ index 0000000000000000000000000000000000000000..3e1b09c7f97193886568d9631fe93587
 +    readonly repoRoot: string;
 +    /** Defaults to `<repoRoot>/node_modules/<UPSTREAM_PACKAGE>`. Fixture seam. */
 +    readonly upstreamPackageDir?: string;
-+    /** Defaults to `<repoRoot>/src/vendor/grammars`. Fixture seam. */
-+    readonly vendoredDir?: string;
++    /**
++     * Root the manifest's repo-relative `path` values resolve against.
++     * Defaults to `repoRoot`. Fixture seam — NOT a grammar directory: resolving
++     * by directory would discard the entry's own path, and two rows sharing a
++     * basename in different directories would then anchor to the same file.
++     */
++    readonly vendoredRoot?: string;
 +    /** Defaults to the manifest at `<repoRoot>/src/config/…`. Fixture seam. */
 +    readonly manifest?: PackedBinaryManifest;
 +}
@@ -801,7 +854,7 @@ index 0000000000000000000000000000000000000000..3e1b09c7f97193886568d9631fe93587
 +export function verifyVendoredGrammarsAgainstUpstream(options: UpstreamAnchorOptions): UpstreamAnchorVerdict {
 +    const { repoRoot } = options;
 +    const upstreamDir = options.upstreamPackageDir ?? path.join(repoRoot, 'node_modules', UPSTREAM_PACKAGE);
-+    const vendoredDir = options.vendoredDir ?? path.join(repoRoot, 'src', 'vendor', 'grammars');
++    const vendoredRoot = options.vendoredRoot ?? repoRoot;
 +    const manifest = options.manifest ?? readManifest(repoRoot);
 +
 +    const pin = readLockPin(repoRoot);
@@ -810,6 +863,24 @@ index 0000000000000000000000000000000000000000..3e1b09c7f97193886568d9631fe93587
 +    if (claims.length === 0) {
 +        throw new UpstreamAnchorRefusal(
 +            `the manifest admits no \`${VERIFIABLE_KIND}\` entry — nothing was compared, and reporting that as a pass would be a green over an empty corpus`,
++        );
++    }
++
++    // The upstream keeps its grammars in one flat directory, so the counterpart
++    // is addressed by basename. Two admitted entries sharing a basename would
++    // therefore point at the same upstream file, which is an ambiguous anchor
++    // rather than a comparison — refuse instead of picking one.
++    const byBase = new Map<string, string[]>();
++    for (const e of claims) {
++        const base = path.basename(e.path);
++        byBase.set(base, [...(byBase.get(base) ?? []), e.path]);
++    }
++    const ambiguous = [...byBase.entries()].filter(([, paths]) => paths.length > 1);
++    if (ambiguous.length > 0) {
++        throw new UpstreamAnchorRefusal(
++            `two or more admitted entries share a filename, so they would anchor to the same upstream file: ${ambiguous
++                .map(([base, paths]) => `${base} <- ${paths.join(', ')}`)
++                .join('; ')}`,
 +        );
 +    }
 +
@@ -830,7 +901,7 @@ index 0000000000000000000000000000000000000000..3e1b09c7f97193886568d9631fe93587
 +    const divergences: string[] = [];
 +
 +    for (const entry of claims) {
-+        const vendoredPath = path.join(vendoredDir, path.basename(entry.path));
++        const vendoredPath = path.join(vendoredRoot, entry.path);
 +        const upstreamPath = path.join(upstreamDir, UPSTREAM_GRAMMAR_SUBDIR, path.basename(entry.path));
 +        if (!fs.existsSync(vendoredPath)) {
 +            throw new UpstreamAnchorRefusal(`the manifest admits ${entry.path} but ${vendoredPath} does not exist`);
@@ -854,7 +925,7 @@ index 0000000000000000000000000000000000000000..3e1b09c7f97193886568d9631fe93587
 +    return {
 +        lockedVersion: pin.version,
 +        lockedIntegrity: pin.integrity,
-+        installedVersion: pin.version,
++        installedVersion: installed.version,
 +        comparisons,
 +        divergences,
 +    };
@@ -893,10 +964,10 @@ index e95bf7ba1847d7f326c84ee5f20e2f2ee5586870..b2f0ef1c6c975659da9321696bbc953c
  The pair is ABI-coupled and must move together:
 diff --git a/tests/scripts/vendored_grammar_upstream.test.ts b/tests/scripts/vendored_grammar_upstream.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..9e4820fb20e5acf3ddb3e89ed87d1c98b3dab28f
+index 0000000000000000000000000000000000000000..99dac360f53ad9959ff20e6962be698ef854e1e2
 --- /dev/null
 +++ b/tests/scripts/vendored_grammar_upstream.test.ts
-@@ -0,0 +1,195 @@
+@@ -0,0 +1,272 @@
 +/**
 + * The vendored grammars' anchor outside their own manifest.
 + *
@@ -979,10 +1050,12 @@ index 0000000000000000000000000000000000000000..9e4820fb20e5acf3ddb3e89ed87d1c98
 +    fs.mkdirSync(path.join(root, 'src', 'config'), { recursive: true });
 +    fs.writeFileSync(path.join(root, 'src', 'config', 'packed-binary-manifest.json'), JSON.stringify({ schema_version: 1, entries }));
 +
-+    const vendoredDir = path.join(root, 'src', 'vendor', 'grammars');
-+    fs.mkdirSync(vendoredDir, { recursive: true });
 +    const vendored = over.vendoredBytes ?? Buffer.from([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00]);
-+    for (const entry of entries) fs.writeFileSync(path.join(vendoredDir, path.basename(entry.path)), vendored);
++    for (const entry of entries) {
++        const target = path.join(root, entry.path);
++        fs.mkdirSync(path.dirname(target), { recursive: true });
++        fs.writeFileSync(target, vendored);
++    }
 +
 +    if (over.installedVersion !== null) {
 +        const pkgDir = path.join(root, 'node_modules', UPSTREAM_PACKAGE);
@@ -1014,13 +1087,24 @@ index 0000000000000000000000000000000000000000..9e4820fb20e5acf3ddb3e89ed87d1c98
 +        expect(pin.integrity.startsWith('sha512-')).toBe(true);
 +    });
 +
-+    it('covers every grammar the manifest admits, so no admitted file is unanchored', () => {
++    it('covers every grammar the manifest admits, by full path, so no admitted file is unanchored', () => {
 +        const manifest = JSON.parse(
 +            fs.readFileSync(path.join(REPO_ROOT, 'src', 'config', 'packed-binary-manifest.json'), 'utf-8'),
 +        ) as PackedBinaryManifest;
-+        const admitted = manifest.entries.filter((e) => e.kind === VERIFIABLE_KIND).map((e) => e.path);
++        const admitted = manifest.entries.filter((e) => e.kind === VERIFIABLE_KIND).map((e) => path.join(REPO_ROOT, e.path));
 +        const verdict = verifyVendoredGrammarsAgainstUpstream({ repoRoot: REPO_ROOT });
-+        expect(verdict.comparisons.map((c) => path.basename(c.vendoredPath)).sort()).toEqual(admitted.map((p) => path.basename(p)).sort());
++        // Compared on the FULL path, not the basename: comparing basenames here
++        // would apply the same collapse the module was found doing, so the test
++        // could not catch it. R2 finding 2, 2026-09-09.
++        expect(verdict.comparisons.map((c) => c.vendoredPath).sort()).toEqual(admitted.sort());
++    });
++
++    it('reports the version it actually read from node_modules, not the one it read from the lock', () => {
++        const verdict = verifyVendoredGrammarsAgainstUpstream({ repoRoot: REPO_ROOT });
++        const installed = JSON.parse(
++            fs.readFileSync(path.join(REPO_ROOT, 'node_modules', UPSTREAM_PACKAGE, 'package.json'), 'utf-8'),
++        ) as { version: string };
++        expect(verdict.installedVersion).toBe(installed.version);
 +    });
 +});
 +
@@ -1090,5 +1174,69 @@ index 0000000000000000000000000000000000000000..9e4820fb20e5acf3ddb3e89ed87d1c98
 +        const root = makeFixture();
 +        fs.rmSync(path.join(root, 'src', 'vendor', 'grammars', 'tree-sitter-fixture.wasm'));
 +        expect(() => verifyVendoredGrammarsAgainstUpstream({ repoRoot: root })).toThrow(/does not exist/);
++    });
++
++    it('refuses two admitted entries that share a filename in different directories', () => {
++        // The upstream is one flat directory, so both rows would anchor to the
++        // same file and one admitted binary would be silently unverified while
++        // the verdict claimed full coverage. R2 finding 2, 2026-09-09.
++        const root = makeFixture({
++            entries: [
++                {
++                    path: 'src/vendor/grammars/tree-sitter-fixture.wasm',
++                    sha256: 'unused-by-this-module',
++                    size: 8,
++                    kind: VERIFIABLE_KIND,
++                    grammar_id: 'fixture',
++                    abi: 14,
++                },
++                {
++                    path: 'src/vendor/other/tree-sitter-fixture.wasm',
++                    sha256: 'unused-by-this-module',
++                    size: 8,
++                    kind: VERIFIABLE_KIND,
++                    grammar_id: 'fixture',
++                    abi: 14,
++                },
++            ] as PackedBinaryManifest['entries'],
++        });
++        expect(() => verifyVendoredGrammarsAgainstUpstream({ repoRoot: root })).toThrow(/share a filename/);
++    });
++
++    it('resolves the vendored file by its own manifest path, not by basename under one directory', () => {
++        // Sensitivity for the fix: the second row lives elsewhere and carries
++        // DIFFERENT bytes. Under the basename collapse both rows read the first
++        // file and the divergence disappears.
++        const root = makeFixture({
++            entries: [
++                {
++                    path: 'src/vendor/grammars/tree-sitter-a.wasm',
++                    sha256: 'unused-by-this-module',
++                    size: 8,
++                    kind: VERIFIABLE_KIND,
++                    grammar_id: 'a',
++                    abi: 14,
++                },
++                {
++                    path: 'src/vendor/other/tree-sitter-b.wasm',
++                    sha256: 'unused-by-this-module',
++                    size: 8,
++                    kind: VERIFIABLE_KIND,
++                    grammar_id: 'b',
++                    abi: 14,
++                },
++            ] as PackedBinaryManifest['entries'],
++        });
++        fs.writeFileSync(
++            path.join(root, 'src', 'vendor', 'other', 'tree-sitter-b.wasm'),
++            Buffer.from([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x01]),
++        );
++        const verdict = verifyVendoredGrammarsAgainstUpstream({ repoRoot: root });
++        expect(verdict.comparisons.map((c) => c.vendoredPath)).toEqual([
++            path.join(root, 'src/vendor/grammars/tree-sitter-a.wasm'),
++            path.join(root, 'src/vendor/other/tree-sitter-b.wasm'),
++        ]);
++        expect(verdict.divergences).toHaveLength(1);
++        expect(verdict.divergences[0]).toContain('src/vendor/other/tree-sitter-b.wasm');
 +    });
 +});
