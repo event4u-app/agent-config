@@ -1,7 +1,7 @@
 ---
 complexity: lightweight
 review_by: 2026-12-07
-design_validated: "AI council 2026-09-06 (unanimous, 2 seats) picked the slot: post_tool_use, observe-only. AI council 2026-09-07 (2 seats, convergent) ruled that executing it inside road-to-scan-that-fails-closed would falsify that roadmap's own AC-8, and that amending AC-8 to permit it is goalpost movement. Record: agents/roadmaps/road-to-scan-that-fails-closed.md, blocker: mcp-fingerprint-slot. The parent stays ACTIVE — its AC-6 is open on out-of-scope work — so this path is the active tree, not archive/."
+design_validated: "AI council 2026-09-06 (unanimous, 2 seats) picked the slot: post_tool_use, observe-only. AI council 2026-09-07 (2 seats, convergent) ruled that executing it inside road-to-scan-that-fails-closed would falsify that roadmap's own AC-8, and that amending AC-8 to permit it is goalpost movement. Record: agents/roadmaps/archive/road-to-scan-that-fails-closed.md, blocker: mcp-fingerprint-slot. CORRECTED 2026-09-07: the parent no longer stays active. Its AC-6 closed on the conservative reading — a second council round moved `binary` and `archive` to closed classes at an observed zero — and the roadmap archived, which is why the record path above moved. This stub is unaffected and stays in the ACTIVE tree: the wiring it holds was never the parent's to do, and an archived parent cannot do it either."
 capability_gap: none
 blocker_class: estate
 blocker_opened: 2026-09-07

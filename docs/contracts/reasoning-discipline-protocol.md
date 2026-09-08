@@ -1,7 +1,20 @@
 ---
 stability: beta
-keep-beta-until: 2026-09-14
+keep-beta-until: 2026-12-06
 ---
+
+<!-- keep-beta-until extended 2026-09-14 -> 2026-12-06 on 2026-09-07, with the
+     reason rather than as a bare re-date. The contract is not promotable yet
+     because the measurement that decides one of its own obligations has not
+     run: `road-to-candidate-moves-floor` Phase 3 scores whether generating a
+     second solution FORM before the Plan step changes anything, against a
+     baseline read off the 32 stored L6N transcripts, and its 3.3 carries a
+     DELETE branch. Promoting the contract to stable while a step inside it may
+     still be deleted would freeze a surface the evidence has not settled.
+     Extending is therefore the honest option and leaving it is the wrong one —
+     `check_beta_review_markers` lists this file as a FRESH lapse, so on
+     2026-09-14 it becomes an error rather than an inherited warning.
+     Re-date again only with a new reason; the next one is Phase 3's verdict. -->
 
 # Reasoning Discipline Protocol (RDP) — User Contract
 
