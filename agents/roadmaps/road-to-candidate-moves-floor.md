@@ -239,26 +239,23 @@ played.
       local transcript files (3,739 JSON/JSONL, string leaves decoded), 400
       merged PR bodies (0), full `git log --all` (0 — and not a normative
       surface anyway). No threshold was set in advance.
-      **The first reading of this counter was wrong and the correction is
-      recorded rather than quietly replaced.** It said `population 0`, because
-      it imported the shipped `INTENT_RE`, which matches no markdown emphasis —
-      so `**Intent:**` was invisible to it. The paid Phase 3 run proved the gap
-      by emitting its one compliant line as `**Candidates:**` and being scored
-      absent. A counter must be wider than the gate it reports on, or the null
-      is self-confirming. Widening with an `i` flag then over-corrected to 172,
-      almost all lowercase `intent:` YAML keys; the pattern is
-      emphasis-tolerant and case-sensitive. The same blind spot in
-      `lint_mandated_lines`' own `INTENT_RE` and `AUTHORIZATION_RE` is recorded
-      as a finding, not fixed — that gate is adjacent to the blocked contract
-      and widening what it accepts is its own change.
-      The finding the lock did not anticipate: the null is **not specific to the
-      intent line**. Across all five labels there are six labelled matches and
-      at most one arguably well-formed line, and two `Authorization:` matches
-      paraphrase instead of quoting — the
-      documentation-is-not-authorization failure the contract denies outright.
-      That is a carrier-reach defect, ruled out of scope for this roadmap but
-      **shipment-gating** by the 2026-09-08 council (D3) — no efficacy reading
-      may authorise a sixth line while the first five reach nothing.
+      **The first reading was wrong and the correction is recorded rather than
+      quietly replaced** — it said `population 0`, because it imported the
+      shipped `INTENT_RE`, which matches no emphasis, so `**Intent:**` was
+      invisible. The paid Phase 3 run proved the gap by emitting its one
+      compliant line as `**Candidates:**`. A counter must be wider than the
+      gate it reports on or the null is self-confirming; widening with an `i`
+      flag then over-corrected to 172 lowercase `intent:` YAML keys, so the
+      pattern is emphasis-tolerant *and* case-sensitive. Risk 6 records the
+      class. The same blind spot in `lint_mandated_lines`' `INTENT_RE` and
+      `AUTHORIZATION_RE` is a recorded, unfixed finding — that gate abuts the
+      blocked contract and widening it is its own change.
+      The finding the lock did not anticipate: the null is **not specific to
+      the intent line**. Across all five labels, six labelled matches, at most
+      one well-formed, and two `Authorization:` matches paraphrase instead of
+      quoting — the documentation-is-not-authorization failure the contract
+      denies outright. A carrier-reach defect: out of scope here but
+      **shipment-gating** per the 2026-09-08 council (D3).
 - [ ] **2.1 Add the sixth mandated line.**
       <!-- blocked-by: sixth-line-shipping-blocked | asked: no — autonomous drain lane, no interactive user reachable this run -->
 
@@ -516,7 +513,29 @@ played.
 - **Resolved when:** 3.4 carries a disposition the archival sweep accepts.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-07 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-09-08 | reviewer: claude/host -->
+
+Re-reviewed 2026-09-08 after Phases 2 and 3 ran. Rows 1-5 are unchanged so the
+original prediction stays legible; row 6 is new. **Outcomes, per row:**
+
+1. **Fired, unforeseen shape.** It predicted a line reconstructed after the
+   choice; the line was barely produced at all (1/32), so axis-distinctness
+   never got a corpus to bite on. Mitigation untested, and unneeded —
+   attribution failed first.
+2. **Fired; mitigation held — the register's best call.** The transfer did not
+   reproduce (0/4 → 4/4 there, 1/32 here; 6 of 9 points from no-line
+   transcripts). The prior justified trying and did not survive keeping,
+   exactly as the mitigation scoped it.
+3. **Not reached.** No floor shipped, so no ask surface existed. The not-owed
+   and forced-form cases are fixture-tested only.
+4. **Not reached.** Still five lines. The dim-1 tripwire rose anyway
+   (2.906 → 3.000).
+5. **Fired as predicted; mitigation held.** Both results files state the gap in
+   bold; the verdict is band-scoped. Still dark, now a named follow-up
+   precondition.
+6. **Fired, caught mid-run** by the paid capture rather than by review. 16
+   tests across the two instruments pin both directions; the same blind spot in
+   the shipped `lint_mandated_lines` is a recorded, unfixed finding.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -525,6 +544,7 @@ played.
 | 3 | The floor turns into an interview | product | Every generated choice invites an ask, and `feature-planning:117` shows the shape it takes. A floor that asks at each form choice makes routine development worse than no floor | 2.3's not-owed classes; 2.6's forced-form case; the discriminator is an *observation* the agent takes, and the user is reached only when the deciding fact is genuinely theirs | Phase 2 — The one artifact, owed by decision class and not by file count |
 | 4 | The reply grows a process framework | product | `Intent:` `Authorization:` `Pending:` `Sibling:` `Commit:` and now `Candidates:` — six mandated lines read as ceremony, and the suite's own value is that it reads like a good engineer | The compact one-line form; dim 1 as the tripwire in 3.3; the line is scoped as a bootstrap and measurement device, so its removal from the user-facing reply is a later step and not a reversal | Phase 3 — Measure it, then keep it or delete it |
 | 5 | The strong-host half stays dark | implementation | The published bar wants no regression on a strong-reasoning host and the stored corpus has no strong-band transcript. A standard-band-only reading can pass while the case that produced this round — maintainer work on a strong host — is unmeasured | 1.4 states the gap in the results file; the verdict in 3.3 is scoped to the band it measured and claims nothing about the other | Phase 1 — Take the calendar and the free baseline |
+| 6 | The instrument shares the gate's blind spot | implementation | Added 2026-09-08 because it materialised in this run rather than being foreseen. A checker built from a shipped gate's own pattern inherits its blind spot, so the null it publishes is self-confirming: the gate cannot see the artifact, therefore the counter cannot, therefore the counter reports the artifact absent — a fact about the regex reported as a fact about the tree. Both instruments in this roadmap did it, and the false zero survived until the paid run produced a real `**Candidates:**` line for it to miss | An instrument is built wider than the gate it reports on and never by importing its matcher; every widening is checked in BOTH directions, since the over-correction (an `i` flag took one population from 0 to 172 lowercase YAML keys) publishes a false population, which looks like evidence and is worse than a false null; the real missed artifact is pinned as a regression fixture | Phase 3 — Measure it, then keep it or delete it |
 
 ## Acceptance Criteria
 
