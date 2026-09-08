@@ -1,6 +1,6 @@
 # Completion review — drain/lane1-base
 
-**Skipped:** no code surface for this completion — this change parks a roadmap, repoints two inbound pointers and records an AI-council disposition; the gate itself measures 0 code path(s) of 4 changed file(s), all under agents/, and no src/ file is touched at all (git diff origin/main HEAD --quiet -- src/ exits 0), scope e0984e9d36ad672df0995e93c4f53774fa7cda72a41bbad696b7a3d7626e7365, declared 2026-09-08
+**Skipped:** no code surface for this completion — this change parks a roadmap, repoints two inbound pointers and records an AI-council disposition; the gate itself measures 0 code path(s) of 4 changed file(s), all under agents/, and no src/ file is touched at all (git diff origin/main HEAD --quiet -- src/ exits 0), scope a30c445476f1fc703e2e370aaacb9bb2b2597eec354bd0fc032083d931ea0757, declared 2026-09-08
 
 No findings table is present, and that is deliberate: a `**Skipped:**`
 declaration and a findings table in the same file is a `contradictory artifact`
