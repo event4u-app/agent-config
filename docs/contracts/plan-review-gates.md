@@ -9,9 +9,10 @@ keep-beta-reason: >-
   its Stage-A advisory window, which closes on a count of ten `r2_review` events:
   `agents/evidence/metrics/gate-metrics.jsonl` holds one line and zero such
   events, 32 days in, and the follow-up roadmap is parked in `later/` recording
-  that no work inside it can advance the count. The § 1 exemption table also
-  gained a `carrier` row on 2026-09-02, inside the 14-day no-breaking-change
-  window, which alone defers promotion to 2026-09-16. Anchor: the baseline
+  that no work inside it can advance the count. The § 1 exemption table gained a
+  `carrier` row on 2026-09-02, inside the 14-day no-breaking-change window, and
+  LOST it again on 2026-09-08 when ADR-262 deleted the status; the row's whole
+  life sat inside that window, so it defers nothing. Anchor: the baseline
   `clear_by: 2026-11-23`, the date by which `agents-layout.md` must have left the
   baseline or the cadence itself reopens. Before the window ends: that
   disposition lands, and the Stage-A window either closes or its metrics producer
@@ -47,23 +48,22 @@ the pre-push hook is defence-in-depth, the agent-side step is advisory.
 ## 1. Gate R1 — Risk Register grammar (`risk-review: v1`)
 
 A **ready** plan file under a roadmaps directory MUST contain a
-`## Risk Register` section. Two frontmatter statuses exempt it, and the
-validator reports each under its own name so its output never names a state it
+`## Risk Register` section. One frontmatter status exempts it, and the
+validator reports it under its own name so its output never names a state it
 did not act on:
 
 | `status:` | Reported as | Exempt because |
 |---|---|---|
 | `draft` | `draft-exempt` | not yet a plan — the exemption lifts when it flips to ready |
-| `carrier` | `carrier-exempt` | not a plan at all — it holds obligations deferred out of an archived parent, each with an unmet resumption trigger, so a plan risk register for it would be manufactured rather than reported |
 
-`carrier` was added on 2026-09-02, when that status shipped, and this table is
-where it becomes contract rather than validator behavior: the validator had
-been exempting it against a § 1 that named only `draft`, which this file's own
-header defines as a validator bug. The category reason is the one that also
-exempts a carrier from `check_roadmap_trackable`'s `## Phase` requirement, and
-the exemption is not free — `lint_carrier_integrity` requires every live
-carrier to be named by some archived parent's `deferred-resolution:
-carried-to=` annotation, so the status cannot be worn to collect exclusions.
+A second row, `carrier` / `carrier-exempt`, existed between 2026-09-02 and
+2026-09-08. **ADR-262 deleted the status and this exemption with it**: a
+receiver of deferred work is an ordinary plan and carries a real risk register
+like any other. The exemption's own reason is what killed it — it was granted on
+the file's ANCESTRY (an archived parent deferred work here) rather than on any
+present property, which is the type error the ADR records. A surviving
+`status: carrier` is now rejected by `check_roadmap_trackable` with a migration
+diagnostic rather than exempted here.
 
 **Enforced corpus — narrower than the obligation (R2 round-3 finding 9).**
 The validator's corpus is the **top level of `agents/roadmaps/` only**.
@@ -607,8 +607,9 @@ branch, and § 2.6's selection rule for R2 is untouched.
 **What it deliberately does not check.** Reference *shape*. The first draft
 resolved a `fixed` ref via `rev-parse` and a `deferred` ref via a path probe;
 measured against the real corpus it produced eight blocks, every one a
-pre-existing record whose reference is prose describing the change or a carrier
-named by bare slug — none of them the failure this gate exists to catch. Archived
+pre-existing record whose reference is prose describing the change or a
+deferral receiver named by bare slug — none of them the failure this gate exists
+to catch. Archived
 records are frozen, so a shape rule cannot be satisfied retroactively without
 editing them, and a gate whose only output is unfixable blocks is the gate that
 gets switched off. The rule is therefore: terminal status, non-empty

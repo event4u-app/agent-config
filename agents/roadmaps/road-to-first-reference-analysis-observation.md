@@ -1,5 +1,5 @@
 ---
-complexity: lightweight
+complexity: structural
 status: draft
 parent_roadmap: road-to-bounded-reference-harvest-loop
 execution:
@@ -13,6 +13,16 @@ estate_growth_exempt: "Receiver for two steps carried out of road-to-bounded-ref
 > steps 5.2 and 5.3 on 2026-09-07, by AI-council decision on a split verdict.
 > Council record: `agents/evidence/council/bounded-harvest-observation-slot.md`
 > (2 seats, anthropic + openai, subscription transport, $0.0000).
+
+> **`complexity: lightweight` → `structural`, 2026-09-08.** Stated rather than
+> flipped silently: the 2026-09-08 corrections took the file past the
+> 600-line lightweight cap, and the two legal responses are to trim or to
+> retag. Trimming to fit would have meant deleting council-verdict evidence and
+> the pin verification, so retagging is the honest one — and the tag is accurate
+> on substance, since this roadmap carries a frozen experimental protocol, a
+> nine-condition authorization record, three frozen counting rules and two
+> blockers. It stays one phase and six steps; the tag reflects the document,
+> not a widened scope.
 
 ## Goal
 
@@ -106,6 +116,86 @@ both require the outbound fetch.
 The 361-line figure independently corroborates the pin: the parent roadmap cited
 "361 lines" for the pre-upgrade command when it was authored, against a tree it
 verified at `93d63073e`.
+
+> **REFUTED 2026-09-08 — this pin is a POST-upgrade text, and the corroboration
+> above is why nobody noticed.** The paragraph is left standing rather than
+> rewritten: it is the record of how the error survived, and deleting it would
+> delete the evidence. The pin itself is NOT amended here — see
+> § Blockers → `shadow-pin-is-post-upgrade` for the diagnostic, the correct
+> coordinates, and why re-pinning is not this lane's call.
+>
+> The upgrade commit is `5bee62a5828ba6d3cf38a7d5d685004716d8addf` (2026-08-12,
+> *"anchor-first direction, claim gate, interop probe and bounded --deep"*), and
+> `git merge-base --is-ancestor 5bee62a58 537e7c86e` returns **true**: the
+> pinned shadow post-dates the upgrade by almost a month. All five mechanisms the
+> claim says were folded in are present in the pinned text — `### 1b. Anchor
+> table first`, `### 2b. Deep verification tier`, `### 3b. Interop probe`,
+> `### 5b. Converge the verdict table`, and the bound-claim collision gate inside
+> § 5.
+>
+> `93d63073e` (2026-09-05) is ALSO post-upgrade, which is the whole mechanism of
+> the error: 361 lines was measured twice, against two trees that both already
+> carried the upgrade, and two measurements of the same wrong thing agreeing
+> reads exactly like verification. A corroboration that shares the defect it is
+> meant to catch confirms nothing.
+
+### Pin status after council ratification — 2026-09-08
+
+**The pin above stays exactly as frozen, and it is known-invalid.** Those are
+not in tension: the frozen coordinate is preserved as the historically
+authorized one, and its invalidity is recorded beside it rather than edited
+into it. The corrected coordinates in § Blockers →
+`shadow-pin-is-post-upgrade` are a **proposal**, deliberately NOT operative.
+
+**Independently re-verified 2026-09-08**, on a second lane, against the actual
+objects rather than against the prior lane's report — every element of the
+diagnostic reproduces:
+
+| Check | Result |
+|---|---|
+| Pinned blob at `537e7c86e` | `b2ea4fa61d4c8fa1ec737cad95699bd5d8be4a7f` — matches the pin |
+| Pinned size / sha256 | 361 lines · 15466 bytes · `6ea17929…8134ba` — all match |
+| Upgrade `5bee62a58` is an ancestor of the pin | **true** — the pin is post-upgrade |
+| Five mechanism markers in the pinned text | **1 occurrence each** (all five present) |
+| Corrected blob at `97e293760` | `0e805c5d6ee7139e76199738be67ed5c8a105a9e` · 207 lines · 6790 bytes · `ddb6c19b…2c6756` |
+| Five mechanism markers in the corrected text | **0 occurrences each** |
+| `93d63073e` (the corroborating tree) is post-upgrade | **true** |
+
+One thing the earlier record did not establish, and it strengthens the
+correction rather than changing it: `97e293760` is the **immediate parent** of
+the upgrade commit `5bee62a58`. It is therefore not merely *a* pre-upgrade
+commit but the last state of that text before the upgrade landed — the
+uniquely determined comparator, fixed by ancestry rather than chosen.
+
+**One precision, adopted from both council seats and correcting the framing
+above.** "The observation could neither pass nor fail the bar" is too absolute.
+An upgraded-versus-upgraded run could mechanically satisfy or miss the numeric
+thresholds at `docs/CLAIMS.md:488`; what is true, and is the reason the defect
+is fatal, is that **either result would be inadmissible for the pre-registered
+causal comparison**, because the shadow arm would not be testing pre-upgrade
+behaviour at all. The earlier wording is left standing above for the same
+reason the corroboration paragraph is — it is the record — and this is the
+correction to read it with.
+
+**Council, 2026-09-08 — Q1 verdict (b), unanimous across 2 seats**
+(anthropic/claude-sonnet-4-5, openai/codex-default; 2 rounds; quorum 2/2,
+threshold 1; subscription transport, $0.0000). The question put was the narrow
+one the blocker routed: does the granted verdict (c) survive replacing one
+frozen coordinate? Answer: **no.** The comparator commit is part of the
+experimental design, not clerical metadata, so replacing it materially changes
+the shadow arm that the earlier unanimous round authorized. Both seats held
+that the correction is right, uniquely determined and untainted by data — and
+that ratifying it is nonetheless not a thing this round may do on its own.
+Record the existing pin as invalid, keep the authorized protocol intact as
+historical evidence, and carry the corrected coordinate as a fully specified
+proposal awaiting ratification by a full-strength council or the owner.
+
+Recorded and not adopted, because inventing it here is the thing the seat
+warned against: one seat recommended that the project establish an explicit
+standing rule for **pre-run, uniquely determined errata** — a class this defect
+fits exactly — so that a future correction of this shape does not need a round
+of its own. That is a governance change with no owner in this lane, and it is
+noted here rather than written anywhere it would take effect.
 
 ## Frozen counting rules — established 2026-09-07, before either arm runs
 
@@ -301,6 +391,54 @@ Council records: `2026-09-07-outbound-fetch-run-authorization.md` under
 `agents/runtime/council/responses/` — local-only, since `agents/runtime/` is
 gitignored, so the substance is transcribed here rather than linked.
 
+### Authority boundary — appended 2026-09-08, nothing above is rewritten
+
+The section above is preserved **verbatim**. This is an interpretive note about
+what its verdict is authority for, not a revision of what it said: recasting a
+stronger body's historical decision in weaker language is the failure this
+whole apparatus exists to prevent, and it would be no better for being done in
+a cautious direction.
+
+**Verdict (c) is a readiness and protocol-adequacy clearance. It is NOT
+authority to perform the outbound third-party fetch.** The fetch stays exactly
+where the tree already put it: owner-reserved.
+
+Three tree facts, none of which a council can vote away:
+
+1. [`non-destructive-by-default`](../../src/rules/non-destructive-by-default.md)
+   makes an **irreversible external action** — outbound, externally-visible acts
+   the user cannot un-see — a **Hard Floor** trigger requiring explicit user
+   confirmation **on this turn**, and states in its own Iron Law that no
+   autonomy setting, no roadmap step and no standing instruction bypasses it.
+2. [`roadmap-execution-contract`](../../src/agent-src/contexts/execution/roadmap-execution-contract.md)
+   § 5 "What acceptance can NEVER cover" lists "Any
+   `non-destructive-by-default` trigger beyond the two named grants". No
+   roadmap-execution acceptance, at any mode, reaches an outbound fetch.
+3. The parked stub already said so and was right: its **named re-entry
+   producer** is the repository maintainer operating an approved outbound-fetch
+   environment, "no command in this repository is permitted to spend on
+   third-party fetches unattended", and "none of the three [probes] is
+   agent-buildable".
+
+So this is a **disambiguation, not a discovery of overreach**. The Hard Floor
+constrained verdict (c) from the moment it was granted; what was missing was
+any sentence saying so, and an autonomous lane reading "rungs 1.1, 1.3 and 1.4
+are authorized" would reasonably have read it as permission. Step 1.1's own
+`verify:` requires that "a read-only fetch of that commit succeeds", which is
+the act in question — so the gap was not theoretical.
+
+**Council, 2026-09-08 — Q2 verdict (b), unanimous across 2 seats**
+(anthropic/claude-sonnet-4-5, openai/codex-default; 2 rounds; quorum 2/2,
+threshold 1; subscription transport, $0.0000). One seat noted it was confident
+here even under a degraded-attendance framing precisely because the finding
+enforces a pre-existing constraint rather than creating one; the other supplied
+the append-don't-rewrite refinement this note follows.
+
+**What this changes in practice.** The three `UNBLOCKED 2026-09-07` notes on
+steps 1.1, 1.3 and 1.4 are correct that the *protocol* question is settled and
+wrong if read as "an agent may now run these". Each carries a 2026-09-08
+correction below. The blocker `fetch-is-owner-reserved` records the act itself.
+
 ## Phase 1 — Readiness, then the atomic pair
 
 - [ ] **1.1 Pin the reference.** Name one small public repository and one
@@ -318,6 +456,28 @@ gitignored, so the substance is transcribed here rather than linked.
       10 MiB of analyzable text** (workload, never storage), `agents/.harvest-local/`
       is confirmed empty first, and the tracked tree records **no repository
       name, URL, commit SHA or distinctive path** for it.
+      **NOT STARTED 2026-09-08 — halted at the gating condition, before anything
+      was pinned and before any network operation.** Conditions 6 and 7 were run
+      first, as they gate. Condition 6 passed: `agents/.harvest-local/` did not
+      exist, so the isolation baseline was clean. Condition 7's shadow half then
+      FAILED in a way no field of the pin can show — all four pinned fields
+      reproduce exactly, and the text they identify is the wrong text. Diagnostic,
+      correct coordinates and disposition: § Blockers →
+      `shadow-pin-is-post-upgrade`.
+      **No reference was named, no commit was pinned, no fetch was issued.** The
+      confidentiality test of condition 4 was therefore never reached — there is
+      no reference to test derivability against, and recording a "pass" for a test
+      with no subject would be worse than recording that it was not reached.
+      **STILL NOT EXECUTABLE BY AN AGENT, corrected 2026-09-08.** The
+      `UNBLOCKED 2026-09-07` line above is right about the protocol and wrong if
+      read as permission. This step's own `verify:` requires that "a read-only
+      fetch of that commit succeeds" — an outbound third-party fetch, which is a
+      **Hard Floor** act reserved to the owner and reachable by no council
+      verdict and no roadmap acceptance. Ratified 2026-09-08, Q2 verdict (b),
+      2 seats unanimous: see § Authority boundary above and § Blockers →
+      `fetch-is-owner-reserved`. Two blockers now stand between this step and
+      execution — the pin must be ratified, and the fetch must be performed by
+      the named producer. Neither is an effort question.
 - [x] **1.2 Freeze the counting rules before either arm is inspected.** What
       counts as an interop-probe finding at `file:line` precision, what counts
       as a bound-claim routing, and how a `consumer not locatable` probe is
@@ -349,6 +509,20 @@ gitignored, so the substance is transcribed here rather than linked.
       first — `agents/.harvest-local/` is confirmed empty, so a stale artefact
       from an earlier attempt cannot be mistaken for this run's output.
       Executable once 1.1 is done.
+      **NOT RUN 2026-09-08.** 1.1 did not complete, so this step has no reference
+      snapshot to validate a harness against. Nothing was invoked, nothing was
+      captured, and `agents/.harvest-local/` is back to not existing — the
+      shadow-command extract taken while checking condition 7 was removed, so the
+      next attempt's condition-6 check meets a clean baseline rather than this
+      run's leftovers. That is condition 6 applied to my own working files, which
+      is the point of it.
+      **STILL NOT RUN, and re-checked 2026-09-08 on a second lane.** Condition 6
+      holds: `agents/.harvest-local/` still does not exist, so the isolation
+      baseline the previous lane left behind is intact and this lane added
+      nothing to it. Beyond 1.1's incompleteness, this step is now also gated by
+      § Blockers → `fetch-is-owner-reserved`: both arms it validates are
+      fetch-dependent, so a harness check has nothing to invoke until the owner
+      performs the run. Nothing was invoked and nothing was captured here either.
 - [ ] **1.4 Run both arms as one observation.** Upgraded and shadow, identical
       reference snapshot and identical inputs.
       verify: two artefact sets exist under the gitignored area, the upgraded
@@ -367,6 +541,25 @@ gitignored, so the substance is transcribed here rather than linked.
       is invoked, never counted afterwards, and `git rev-parse HEAD` is
       confirmed against the pinned SHA on BOTH sides before analysis begins.
       Executable once 1.1 and 1.3 are done.
+      **NOT RUN 2026-09-08, and NO SLOT CONSUMED.** This is administrative
+      invalidity under condition 5 in its clearest form — "wrong snapshot" — and
+      it is the branch of that condition that carries no cost: the defect was
+      found BEFORE any arm was invoked, so there was no correctly-invoked arm to
+      score and nothing to distinguish from a measured failure. Zero fetches were
+      issued, no budget was spent, no reference was exposed.
+      Condition 3's ceiling instrumentation was consequently not built. Stating
+      that plainly rather than reporting it as satisfied: the condition says the
+      mechanism must exist BEFORE the arm is invoked, and no arm was invoked, so
+      the honest record is "not reached", not "met".
+      **STILL NOT RUN 2026-09-08, STILL NO SLOT CONSUMED, and the reason is now
+      two-fold rather than one.** The wrong-snapshot defect above stands and was
+      re-verified independently. On top of it, this step is the one that spends
+      money outbound to a third party, which § Authority boundary establishes is
+      Hard Floor and owner-reserved: verdict (c) cleared the protocol, never the
+      act. So even a ratified re-pin does not make this step agent-executable —
+      it makes it ready for the named producer. Zero fetches were issued on this
+      lane, no budget was spent, no reference was named or exposed, and the
+      isolation baseline was left as it was found.
 - [ ] **1.5 Write the outcome into `docs/CLAIMS.md`.** Pass → keep
       `status: unbacked`, record "observation 1/2 passed" with opaque
       provenance, leave `last_verified` empty. Fail → record the pre-registered
@@ -381,6 +574,14 @@ gitignored, so the substance is transcribed here rather than linked.
       untouched: the row keeps `status: unbacked` and an EMPTY `last_verified`
       (`docs/CLAIMS.md:491-492`), because dating a partial observation would read as
       verification. Closes with 1.4.
+      **RE-CONFIRMED 2026-09-08, and deliberately left untouched.** Verified at
+      this commit rather than recalled: `docs/CLAIMS.md:487` is the
+      `reference-loop-upgrade-value` header, `:491` reads `- status: unbacked`
+      and `:492` reads `- last_verified:` with nothing after the colon. Both
+      council seats confirmed this is the state that matches what the run
+      produced, which is nothing. `build_proof` is therefore **not** re-run:
+      its trigger is a change to this file, and the correct action here was to
+      make none.
 - [ ] **1.6 Dispose of the parked stub.** Archive
       `agents/roadmaps/stubs/road-to-first-reference-analysis-run.md` and record
       that the fetch boundary was resolved by a **run-specific council
@@ -395,6 +596,219 @@ gitignored, so the substance is transcribed here rather than linked.
       false ground that Phases 3-4 cleared it, and the disposal note must say
       exactly that. Still gated on 1.4 having actually run: an authorization to
       fetch is not an observation.
+      **STILL GATED 2026-09-08, and the disposal note this step owes has grown a
+      second clause.** The stub stays in place, cross-referenced to this roadmap
+      as point 2 of § Why this is carried requires — verified at this commit: the
+      stub's § Status names this roadmap as the receiver and states the fetch
+      boundary is NOT resolved. Q2 verdict (b) sharpens what the eventual note
+      must say: the boundary is cleared by a run-specific authorization **plus**
+      the owner performing the Hard-Floor act, never by the authorization alone.
+      A note attributing the resolution to verdict (c) on its own would be the
+      same category of false attribution as crediting Phases 3-4, which is the
+      error this step was written to avoid.
+
+## Blockers
+
+### blocker: shadow-pin-is-post-upgrade
+- **Status:** OPEN
+- **Owner:** council
+- **Blocks:** steps 1.1, 1.3 and 1.4, and therefore 1.5 and 1.6. The
+  authorization to fetch is unaffected and unspent — this is not a permission
+  problem, it is a measurement-validity one.
+- **What it is:** § Frozen protocol pins the shadow arm at commit
+  `537e7c86e7646d50bf10d8b3e7ec8655239bceab`, and the text at that commit is a
+  **post-upgrade** text. The upgrade landed in
+  `5bee62a5828ba6d3cf38a7d5d685004716d8addf` on 2026-08-12 —
+  *"anchor-first direction, claim gate, interop probe and bounded --deep"* — and
+  that commit is an ANCESTOR of the pin, which post-dates it by almost a month.
+  All five mechanisms `docs/CLAIMS.md:488` says were folded in are present in the
+  pinned text: `### 1b. Anchor table first`, `### 2b. Deep verification tier`,
+  `### 3b. Interop probe`, `### 5b. Converge the verdict table`, and the
+  bound-claim collision gate in § 5.
+
+  The consequence is not cosmetic. Falsification criterion 1 of the claim
+  (`docs/CLAIMS.md:490`) decides "could not have produced" by **diffing two
+  documents**. With this pin both documents carry the mechanisms, so the diff
+  answers a question nobody asked and the observation could neither pass nor
+  fail the bar it was pre-registered against. An upgraded-vs-upgraded comparison
+  is not a weak measurement; it is a different measurement.
+
+  All four pinned fields reproduce byte-exactly, which is why the pin verified
+  clean on 2026-09-07 and again today. The fields identify the text correctly —
+  the text is the wrong one, and no field of a pin can express that.
+- **What to do:**
+  1. Do **not** re-pin inside this roadmap on an autonomous lane's judgement.
+     § Run-specific fetch authorization condition 1 makes the frozen protocol a
+     dated version whose amendment record is named and closed; the council
+     granted verdict (c) over that frozen set. Editing a frozen element after the
+     grant, without a round, changes the basis the grant was given on.
+  2. Route the re-pin to the council that granted (c) — it is the same body, the
+     record is `2026-09-07-outbound-fetch-run-authorization.md`, and the question
+     is narrow: does the grant survive replacing one frozen coordinate, or does
+     the corrected protocol need its own round?
+  3. The correct coordinates are already derived, so the re-freeze is one edit
+     rather than an investigation:
+
+     | Field | Correct pre-upgrade value |
+     |---|---|
+     | Shadow base commit | `97e293760e6b05af3a64b5a0cb34f581ab855e4c` (2026-08-12) |
+     | Shadow blob id | `0e805c5d6ee7139e76199738be67ed5c8a105a9e` |
+     | Shadow content sha256 | `ddb6c19b8d620caebd8e6c0dfbb3a2592528233274d790bcb4c104f6652c6756` |
+     | Shadow size | 207 lines · 6790 bytes |
+     | Shadow path at that commit | `src/domains/analysis-workbench/analyze/reference-repo/command.md` <!-- ref-ignore --> |
+
+     Recover it with
+     `git show 97e293760e6b05af3a64b5a0cb34f581ab855e4c:src/domains/analysis-workbench/analyze/reference-repo/command.md`.
+     Verified 2026-09-08: that text contains **zero** occurrences of all five
+     mechanism markers, against one each in the currently pinned text.
+  4. When re-freezing, replace the corroboration sentence rather than keeping it.
+     "361 lines" was measured against `93d63073e` (2026-09-05), which is **also**
+     post-upgrade, so the two readings agreed because they measured the same
+     wrong text twice. The pre-upgrade figure is 207 lines.
+- **Recommendation:** re-pin and run, once the council answers point 2. Nothing
+  about the reference, the counting rules, the size envelope or the
+  confidentiality rules is affected by this defect — only the shadow coordinate
+  is wrong, and the corrected one is above. The slot is unspent and the
+  authorization is intact.
+- **If you do nothing:** the roadmap stays executable-looking and its first real
+  execution attempt spends the authorization on a comparison that cannot answer
+  the pre-registered question. That is the one outcome condition 5 was written to
+  prevent, arrived at from the direction it did not anticipate — not a retry
+  after a failure, but a first run against a protocol that was wrong before it
+  started.
+- **Council answer, 2026-09-08 — point 2 is DISCHARGED; the blocker stays OPEN
+  on a narrower question.** The re-pin was routed as instructed. Verdict on
+  Q1: **(b)**, unanimous across 2 seats (anthropic/claude-sonnet-4-5,
+  openai/codex-default; 2 rounds; quorum 2/2, threshold 1; subscription
+  transport, $0.0000). **The grant does NOT carry over.** The comparator commit
+  is part of the experimental design rather than clerical metadata, so replacing
+  it materially changes the shadow arm the earlier unanimous round authorized.
+  Both seats held the correction itself to be right, uniquely determined by
+  ancestry, and untainted by data — and held equally that ratifying it was not
+  theirs to do in that round.
+
+  So point 1 above still binds and point 3's table stays a **proposal**: the
+  frozen pin is untouched, marked invalid in place (§ Pin status after council
+  ratification), and the corrected coordinates await ratification by a
+  full-strength council convened on this question, or by the owner. Point 4 is
+  likewise not executed — the corroboration sentence keeps its 361-line figure,
+  with the refutation recorded beside it, because rewriting it is part of the
+  re-freeze that has not been authorized.
+
+  What this lane added to point 3 rather than acting on it: every coordinate in
+  that table was re-verified independently against the objects, and
+  `97e293760` was established to be the **immediate parent** of the upgrade
+  commit — so the proposed comparator is fixed by ancestry, not chosen.
+
+  **One defect in this round, recorded because it bears on the verdict's
+  weight.** The round was framed to the seats as DEGRADED, 1 of 2 present, on
+  the strength of a pre-run availability probe
+  (`agents/runtime/state/council-probes.json` recorded the anthropic seat as an
+  unclassifiable failure). Both seats then reasoned partly from that premise —
+  one opened by naming its own insufficiency as a single seat. The probe was
+  **stale**: the post-run quorum line reports `2/2 present`, and both seats
+  answered. The verdict is therefore unanimous at full attendance while its
+  stated reasoning leans on an attendance figure that was wrong.
+
+  It is **not** re-run, and that is deliberate. Re-running a round after reading
+  an unwelcome verdict — with a framing correction that happens to remove the
+  objection blocking the answer this lane would prefer — is verdict shopping,
+  which [`evaluator-independence`](../../src/rules/evaluator-independence.md)
+  forbids in exactly this shape. Two things make (b) safe to adopt anyway: it is
+  the conservative branch, so it sits inside both seats' authorized sets under
+  either attendance reading, and its load-bearing argument does not depend on
+  seat count at all — it depends on a **later** round amending an **earlier**
+  frozen grant, which is true however many seats are present. A full-strength
+  round convened without the stale framing is precisely the ratification venue
+  verdict (b) asks for, so the discrepancy points at the next step rather than
+  away from it.
+
+  **The one field below that was REPLACED rather than appended to, with its
+  original text preserved here.** Every other correction on 2026-09-08 sits
+  beside what it corrects; `Resolved when:` could not, because a blocker may
+  carry exactly one live resolution condition and two contradictory ones would
+  be worse than either. The prior lane wrote, verbatim:
+
+  > **Resolved when:** § Frozen protocol carries the pre-upgrade coordinates
+  > above, the corroboration sentence states 207 lines against a pre-upgrade
+  > tree, and the council has recorded whether verdict (c) carries over to the
+  > corrected protocol or needs a new round.
+
+  Its third clause is now satisfied — the council has recorded exactly that —
+  and its first two describe the re-freeze that verdict (b) declined to
+  authorize, so leaving the field as written would have read as though this lane
+  were free to perform them.
+- **Resolved when:** a ratification round (or the owner) has recorded whether
+  the corrected coordinates may replace the frozen ones; and if so, § Frozen
+  protocol carries the pre-upgrade coordinates as operative and the
+  corroboration sentence states 207 lines against a pre-upgrade tree. Point 2 —
+  routing the question to the council — is discharged as of 2026-09-08 and is
+  not the open part any more.
+
+### blocker: fetch-is-owner-reserved
+- **Status:** OPEN
+- **Owner:** maintainer
+- **Blocks:** steps 1.1, 1.3 and 1.4 directly, and 1.5 and 1.6 through them.
+  Independent of `shadow-pin-is-post-upgrade`: ratifying the corrected pin does
+  not clear this, and clearing this does not validate the pin. Both must fall.
+- **What it is:** § Run-specific fetch authorization records verdict (c) as
+  authorizing "rungs 1.1, 1.3 and 1.4", and step 1.1's own `verify:` requires
+  that "a read-only fetch of that commit succeeds" against a third-party
+  repository. An outbound third-party fetch is an **irreversible external
+  action** — a Hard Floor trigger under
+  [`non-destructive-by-default`](../../src/rules/non-destructive-by-default.md),
+  requiring explicit user confirmation on the turn it happens, lifted by no
+  autonomy setting, no roadmap step and no standing instruction.
+  [`roadmap-execution-contract`](../../src/agent-src/contexts/execution/roadmap-execution-contract.md)
+  § 5 says the same from the other side: no roadmap-execution acceptance, at any
+  mode, reaches a `non-destructive-by-default` trigger. And the parked stub
+  already named the right producer — the repository maintainer, operating an
+  approved outbound-fetch environment — and stated that no command here may
+  spend on third-party fetches unattended.
+
+  This is a **disambiguation, not an overreach discovered after the fact**. The
+  Hard Floor bounded verdict (c) from the moment it was granted; what was
+  missing was a sentence saying so. An autonomous lane reading "rungs 1.1, 1.3
+  and 1.4 are authorized" would reasonably have read it as permission to fetch,
+  and two lanes have now stopped at this line instead.
+- **What to do:** the named producer performs the run. Concretely, and in this
+  order, because two of the three gate:
+  1. Resolve `shadow-pin-is-post-upgrade` first — a fetch against an
+     unratified protocol spends the slot on a comparison that cannot answer the
+     pre-registered question.
+  2. Confirm conditions 6 and 7 of § Run-specific fetch authorization
+     (`agents/.harvest-local/` empty — verified absent at this commit; snapshot
+     identity checked bidirectionally on both sides).
+  3. Instrument the 40-fetch ceiling **before** invoking the shadow arm
+     (condition 3), then run both arms as one atomic observation, then run the
+     confidentiality test of condition 4 against the actual reference.
+- **Recommendation:** leave this to the owner and do not attempt to route around
+  it. There is no re-scoping that makes the observation reachable without the
+  fetch: falsification criterion 1 at `docs/CLAIMS.md:490` decides the claim by
+  comparing two runs **against the same external reference**, so the reference
+  is constitutive of the measurement rather than an input to it. An
+  upgraded-only or reference-free substitute is already inadmissible by point 4
+  of § Why this is carried and consumes no slot. The honest options are the
+  owner running it, or the claim's 180-day window expiring — which the claim
+  itself pre-registers as the bar not cleared, with its bound reversions.
+- **If you do nothing:** the window (180 days from 2026-08-12) expires, which
+  falsification criterion 3 counts as the bar not cleared. The interop-probe,
+  convergence and `--deep` mechanisms then revert per the pre-registered
+  consequence bound; the anchor-table and bound-claim-gate mechanisms stay
+  either way. That is a defined, non-catastrophic outcome and it is the reason
+  this blocker is filed rather than escalated as urgent — but it is a real cost
+  and it arrives by default rather than by decision.
+- **Resolved when:** either an atomic upgraded-plus-shadow pair has been run by
+  the named producer against a ratified protocol, or the owner has recorded a
+  decision not to spend the slot and the claim's window consequence is allowed
+  to fire.
+- **Asked:** no. This lane is autonomous by mandate and routes every decision to
+  the AI council rather than to the owner, so the question of whether to perform
+  the fetch was never put to the person who alone may answer it. Recorded
+  explicitly rather than left implicit: a decision only the owner can make,
+  filed in a roadmap without ever being asked, is a park wearing a blocker's
+  clothes. This one is genuinely un-askable from here, and the field says which
+  of the two it is.
 
 ## Reopening trigger — observation-based, not calendar-based
 
@@ -412,6 +826,24 @@ adopted: it proposed "30 days remain in the 180-day window" as a fallback. Both
 seats agreed a calendar trigger conflicts with the observation-based
 requirement, so it is **not** a trigger here. The window is a fact about the
 claim, stated in `docs/CLAIMS.md`, and it is the maintainer's to act on.
+
+**Condition 1 is now known to be insufficient, 2026-09-08 — and it is left
+standing.** "The shadow SHA and content hash still resolve and reproduce" was
+satisfied on 2026-09-07, satisfied again on 2026-09-08, and satisfied a third
+time on an independent re-verification — while the text those coordinates
+identify is the wrong text. A pin can only attest that a coordinate still
+points where it pointed; it cannot attest that the coordinate was ever the
+right one. The condition is not amended here, for the same reason the pin is
+not: it belongs to the authorizing seat's trigger set, and this lane holds no
+authority to redraw that. What a ratification round should consider adding is
+the check that would have caught it — *is the pinned commit an ancestor of the
+upgrade commit?* — which is one command and has a decidable answer.
+
+Two blockers now stand alongside these three conditions and neither is
+observable-by-waiting: `shadow-pin-is-post-upgrade` needs a ratification
+decision, and `fetch-is-owner-reserved` needs the owner. Reading the trigger
+set alone would suggest this roadmap becomes workable when three observations
+line up; it does not.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-07 | reviewer: claude/host -->
@@ -432,6 +864,14 @@ claim, stated in `docs/CLAIMS.md`, and it is the maintainer's to act on.
       does not exist. Left unticked rather than ticked on the "or" limb, because
       the tick would read as the observation being settled when the slot is
       still unspent.
+      STILL OPEN 2026-09-08, and the second limb is now fully discharged while
+      the first is further from reach than it looked. The reason no pair has run
+      is recorded in two blockers rather than one: the protocol's shadow arm was
+      pinned to a post-upgrade text (`shadow-pin-is-post-upgrade`), and the
+      outbound fetch is a Hard-Floor act reserved to the owner
+      (`fetch-is-owner-reserved`) — which the 2026-09-07 note above got wrong in
+      one direction, since a run-specific council authorization does now exist
+      and is still not sufficient. Left unticked for the same reason as before.
 - [ ] AC-2 — The claim row at `docs/CLAIMS.md` states an outcome that matches
       what the run produced, with no rule edited after the data.
       OPEN 2026-09-07. The run produced nothing, so the matching state is the
@@ -440,8 +880,22 @@ claim, stated in `docs/CLAIMS.md`, and it is the maintainer's to act on.
       requires. The second limb is now checkable rather than aspirational: the
       counting rules were frozen and dated before any arm ran, so a later edit
       to them is detectable.
+      STILL OPEN 2026-09-08, and the row is verified untouched at this commit:
+      `docs/CLAIMS.md:491` reads `- status: unbacked` and `:492` reads
+      `- last_verified:` with nothing after the colon. The second limb held
+      under pressure, which is the part worth recording — a defect was found in
+      a frozen element and the correction was NOT applied, because applying it
+      after the authorizing grant is itself the class of edit this criterion
+      exists to detect. R1-R3 are byte-unchanged.
 - [ ] AC-3 — The parked stub is disposed of, and its disposal note attributes
       the fetch boundary's resolution to a run-specific authorization rather
       than to Phases 3-4.
       OPEN 2026-09-07 — see 1.6. The stub stays, which is the outcome point 2 of
       § Why this is carried mandates while the fetch boundary survives.
+      STILL OPEN 2026-09-08, with the criterion itself sharpened: Q2 verdict (b)
+      establishes that a run-specific authorization is **necessary but not
+      sufficient** for the fetch boundary, so the eventual disposal note must
+      attribute the resolution to the authorization **plus** the owner's
+      Hard-Floor act. Attributing it to verdict (c) alone would be the same
+      false attribution as crediting Phases 3-4 — the error this criterion was
+      written to catch, arriving in a new costume.
