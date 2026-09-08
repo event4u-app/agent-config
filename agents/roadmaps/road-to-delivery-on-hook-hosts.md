@@ -17,7 +17,7 @@ relates:
     note: >
       Archived. Its 2026-09-07 host table is the input to Phase 1; this file turns
       that table's slot counts into a measured injection verdict per host.
-estate_growth_exempt: "Owner-instructed 2026-09-07. Charges +1 active roadmap against the origin/main `active_roadmaps` floor of 4 measured at 0918def55 — the floor is the base-ref measurement, not a stored number (ADR-243). Successor of road-to-delivery-for-every-host Phase 1; every step here can only make a non-Claude host cheaper while keeping its rule bodies reachable, and each step is gated on an observation the tree does not yet hold."
+estate_growth_exempt: "Owner-instructed 2026-09-08, second charge: +1 concern_count for `chain-nudge`, the pre_tool_use carrier that delivers token-efficiency's one-command-per-Bash-call rule at tool-call time. It is charged HERE rather than against a new roadmap because this file is the one whose subject is exactly that — turning per-host slot counts into a measured injection verdict — and opening a roadmap to hold a claim would charge +1 active_roadmaps to avoid charging +1 concern_count. The concern is bound on the three platforms already carrying code-graph-nudge, never denies, and fires once per session, so it adds no refusal surface to any host. PRIOR CHARGE — Owner-instructed 2026-09-07. Charges +1 active roadmap against the origin/main `active_roadmaps` floor of 4 measured at 0918def55 — the floor is the base-ref measurement, not a stored number (ADR-243). Successor of road-to-delivery-for-every-host Phase 1; every step here can only make a non-Claude host cheaper while keeping its rule bodies reachable, and each step is gated on an observation the tree does not yet hold."
 estate_offset_exempt: "Offsets nothing. It retires the L4 'no equivalent today' row at docs/enforcement-by-host.md:176, which is a sentence rather than a roadmap, so there is no archive move available to satisfy the one-in-one-out half in this change."
 ---
 
@@ -43,13 +43,36 @@ each phase.
 
 - [ ] Predecessor Phase 1 merged (`lean_projection.hosts` exists, non-regression gate
       green).
-- [ ] Read `docs/enforcement-by-host.md:18-28` (2026-09-07 host table),
+      NOT MET 2026-09-08, and it is met on a branch rather than on `origin/main`.
+      `road-to-delivery-for-every-host` Phase 1 is complete and green on
+      `drain/delivery-for-every-host` — `lean_projection.hosts` exists, the stub write is
+      host-gated, `check_rule_projection_integrity` carries the host axis and
+      `check_host_tree_parity` asserts byte-identity for every non-delivery host — but that
+      branch is unmerged, so `lean_projection.hosts` does not exist on this branch's base.
+      This blocks Phase 2 entirely, since 2.1's whole action is adding a host to a list that
+      is not there yet. It blocks nothing in Phase 1 or Phase 3, both of which measure and
+      emit rather than project.
+- [x] Read `docs/enforcement-by-host.md:18-28` (2026-09-07 host table),
       `src/scripts/hook_manifest.yaml:1266-1322` (per-host bindings),
       `src/scripts/hook_effect_doctor.ts` (the "is any of this taking effect" doctor), and
       `src/scripts/_lib/host_capability.ts:168,183` (the committed registry and its
       observation protocol).
-- [ ] Run `agent-config roadmap:context --roadmap road-to-delivery-on-hook-hosts` and record
+      Done 2026-09-08. Two facts from the reading that the Context states and this run
+      re-derived rather than trusted: `rule-inject` is absent from BOTH the Cursor
+      (`:1300`) and Cline (`:1315`) `user_prompt_submit` lists, which are byte-identical to
+      each other; and `host_capability.ts:180-188` requires a four-part citation per field —
+      host, host version, transcript or artefact reference, date — with "a row without all
+      four is not admissible, and no row may be filled from a host's documentation". That
+      last clause is E3 one layer down, and it is what the new record enforces in code.
+- [x] Run `agent-config roadmap:context --roadmap road-to-delivery-on-hook-hosts` and record
       the probe's `scanned:` line against the `relates:` block above.
+      Done 2026-09-08. `scanned:` lines: **3 PRs · 901 roadmap file(s) across
+      active/later/stubs/archive · 433 remote branch(es) · 2 live session record(s) · 0
+      inbox file name(s)**. Fingerprint `d47387413ee6e2e1` (base `d327ef947`). Against the
+      `relates:` block: no remote branch carries either declared slug, no sibling roadmap on
+      the topic, and none of the three open PRs (#1919, #1920, #1921) overlaps a file this
+      roadmap touches. The `depends` edge on `road-to-delivery-for-every-host` is real and
+      is exactly what prerequisite 1 records as unmet.
 
 ## Context
 
@@ -100,15 +123,69 @@ admission. Cowork is excluded by the existing measurement.
       (`src/scripts/_lib/host_capability.ts:183`), with a transcript pointer.
       verify: doctor output shows the dimension for the current host; a run on Claude Code
       records `observed-true` with a transcript.
-- [ ] **1.2 Run 1.1 on Cursor and Cline** (the two hosts binding `user_prompt_submit` with a
+      **First limb DONE, second limb NOT MET — left unticked. 2026-09-08.**
+      The dimension exists and prints: `hooks:effect --host claude` now renders an
+      `injection_effect` block with two lines that are deliberately different axes —
+      `rule-inject bound on user_prompt_submit  yes  [computed]` and
+      `body observed reaching the model  unobserved  [observed]` — plus the citation and the
+      reason. `src/scripts/_lib/injection_effect.ts` owns the states, the loader and the
+      citation check; `src/config/host-injection-effect.json` is the record; 16 unit tests
+      in `tests/scripts/injection_effect.test.ts`.
+      **The design decision, because the step's wording invites the opposite one.** The
+      doctor is an in-process probe. It CANNOT see the model's next turn, so it cannot
+      compute whether a delivered body was acted on — and a dimension that quietly reported
+      the binding under an "effect" heading would be the exact conflation E3 and K1 forbid.
+      So the module has no code path from the computed axis to the observed one:
+      `stateFor` reads the record and nothing else, `concernBound` reads the manifest and
+      nothing else, and their names are chosen so the two cannot be confused at a call site.
+      **The second limb fails honestly: Claude Code is `unobserved`, not `observed-true`.**
+      E3 wants one transcript in which a model VISIBLY ACTS on a delivered body. What exists
+      is delivery EQUIVALENCE (616/616 byte-equal) and cost, which is a different claim, and
+      no such transcript exists at all: `lean_projection.mode` resolved to `eager-all`
+      across the whole recorded history, so the concern emitted zero bytes in every session
+      on record. Writing `observed-true` from the byte-equality measurement is K1 one layer
+      in, and refusing to do that is the point of the mechanism.
+      What closes it: one Claude Code session with `delivery` live, a prompt that trips a
+      labelled rule, and a transcript reference showing the next turn reflecting the body.
+      The record has the slot waiting and the citation check will refuse a partial one.
+- [x] **1.2 Run 1.1 on Cursor and Cline** (the two hosts binding `user_prompt_submit` with a
       `.md` rule tree). Record Windsurf, Gemini and Augment as `unobserved` unless a session
       exists.
       verify: the census artefact carries one line per host; no `observed-*` value without a
       transcript pointer.
-- [ ] **1.3 Resolve Cursor double carry by observation:** does Cursor load
+      Done 2026-09-08 for what is observable from here, which is the census and one row.
+      `agents/evidence/analysis/host-injection-effect-2026-09.md`, generated by
+      `report_host_injection_effect.ts`, pinned and byte-identical on re-run at the same pin.
+      Nine hosts, one line each: **1 `observed-false` (cowork), 8 `unobserved`**. No
+      `observed-*` value carries an absent pointer — enforced rather than reviewed, since
+      `recordProblems` refuses an `observed-*` row missing host version, transcript or date,
+      and the generator exits 1 before writing anything if any row is inadmissible.
+      Cursor and Cline are `unobserved` and cannot be otherwise from a Claude Code session.
+      Windsurf, Gemini and Augment likewise, as the step anticipates. Augment additionally
+      has no `user_prompt_submit` slot at all — a declared gap in the manifest — so the
+      delivery path being measured does not exist there today; recorded in its row.
+      **Cowork is the one substantive row and it is `observed-false`,** carried across from
+      the existing measurement at `docs/enforcement-by-host.md:21`. Its citation is
+      deliberately incomplete and says so: the host version was not captured when that
+      observation was made, so `host_version` records that fact rather than inventing one.
+      **A one-row disagreement with the host table was found and fixed while generating
+      this.** The slot column first read `copilot: 1` against the table's 0, because the
+      count included the `fallback_only` marker, which is not a lifecycle slot. Excluded,
+      named in the code, and pinned by a test. Every other count now matches the table
+      exactly: claude 9, cowork 8, augment/cursor/cline/gemini 5, windsurf 3, codex 0.
+- [x] **1.3 Resolve Cursor double carry by observation:** does Cursor load
       `.cursor/rules/*.md` alongside `*.mdc`?
       verify: census line `cursor.md_tree_loaded: observed-true | observed-false |
       unobserved` with a pointer.
+      Done 2026-09-08, and the answer is `unobserved`. The census carries the line under its
+      own § `cursor.md_tree_loaded` with the reason: both trees ARE written today —
+      `condense` writes the `.cursor/rules` symlink tree in the `TOOL_DIRS` loop and
+      `_emit_cursor_mdc` writes the `.mdc` companions — so a double carry is possible by
+      construction and unmeasured in fact. It cannot be observed from a Claude Code session.
+      Recorded under an underscore key rather than in the host namespace, because it is a
+      property of a TREE and putting it on `cursor` would make one row answer two different
+      questions.
+      K4 is therefore live and nothing was removed. 3.2 is gated on this and says so below.
 
 ## Phase 2: Admit hosts that pass (E3)
 
@@ -119,14 +196,33 @@ admission. Cowork is excluded by the existing measurement.
       byte-equal to the eager body on the routing corpus.
       verify: `./scripts-run src/scripts/model_rule_injection --endpoints` passes on the
       host's binding; census shows the host's rules bucket ≤ 20,000 tok.
-- [ ] **2.2 For each host `observed-false` or `unobserved`:** nothing changes in projection;
+      BLOCKED 2026-09-08, on both of its inputs, and neither is a scheduling excuse.
+      (a) **No host qualifies.** The census records 8 `unobserved` and 1 `observed-false`;
+      `admissibleUnderE3` returns true for nothing, which a test pins. There is no host to
+      add, and adding one anyway is K1.
+      (b) **The list does not exist on this branch.** `lean_projection.hosts` lives on
+      `drain/delivery-for-every-host`, unmerged, so 2.1's action has no target here.
+      Closes when a host has an `observed-true` row with a full citation AND the predecessor
+      is merged. The record has the slot and the citation check will refuse a partial one.
+- [x] **2.2 For each host `observed-false` or `unobserved`:** nothing changes in projection;
       write the result into the host table with an expiry per the table's own discipline.
       verify: the host's rule tree is byte-identical to `eager-all` (predecessor 1.4 gate
       green).
+      Done 2026-09-08 — and the honest form of "done" here is that NOTHING CHANGED, which is
+      exactly what this step asks for. Every host is `observed-false` or `unobserved`, so the
+      whole estate falls under this step and no projection was touched: no host was added to
+      any list, no tree was thinned, no body was removed.
+      The result is written into the host table by 4.1 below, with an expiry of 2026-12-08 —
+      the table's own discipline, since this is a snapshot of an observation state that is
+      expected to change.
+      The byte-identity limb is asserted by `check_host_tree_parity`, which lives on the
+      unmerged predecessor branch. Naming that honestly: on THIS branch the assertion is not
+      running, because the gate is not here. It is green there, over the same corpus, and it
+      will cover these hosts the moment the two branches meet.
 
 ## Phase 3: Native lazy forms get the triggers they need
 
-- [ ] **3.1 Lower keyword and phrase triggers into the Cursor and Windsurf description
+- [x] **3.1 Lower keyword and phrase triggers into the Cursor and Windsurf description
       field.** Append `Applies when: <up to N trigger terms>` to the emitted description in
       `_emit_cursor_mdc` and `_emit_windsurf_rule`, capped by the host's description length;
       measure by string match on the routing corpus — no LLM judge. The population is the
@@ -134,22 +230,84 @@ admission. Cowork is excluded by the existing measurement.
       number in the commit so the win is not re-derived from the draft's 114.
       verify: for 102 `auto` rules the emitted description contains ≥ 1 of the rule's own
       triggers; string-match recall over corpus positives ≥ pre-change.
-- [ ] **3.2 If 1.3 observed double carry:** make `.cursor/rules` mdc-only for `auto` rules;
+      Done 2026-09-08. `applies_when` / `trigger_terms` in
+      `src/install/claudePathsPlan.ts`, called by both `_emit_cursor_mdc` and
+      `_emit_windsurf_rule`. 9 unit tests in `tests/scripts/applies_when.test.ts`.
+      **The population is 97 of 105, not 102 of 102, and the correction is arithmetic rather
+      than a re-scope.** 105 rules carry `type: auto` (102 quoted + 3 bare, the same split
+      the predecessor's 0.2 corrected). Of those, **8 carry no keyword or phrase trigger at
+      all**, so there is nothing to lower: four are the trigger-less rules
+      (`no-roadmap-references`, `rule-type-governance`, `skill-quality`,
+      `source-confidentiality`) and four are path-only
+      (`design-review-after-ui-write`, `roadmap-progress-sync`, `source-of-truth`,
+      `ui-audit-gate`), which Cursor and Windsurf already route natively through `globs` —
+      the better mechanism, not a gap. 97 is therefore the whole of the lowerable set, and
+      every member of it now carries at least one of its own terms.
+      **Second limb, measured by string match on the frozen corpus as K2 requires and with
+      no LLM judge anywhere near it:** over the 309 corpus positives belonging to `auto`
+      rules, description-only string match rises **179 → 284, i.e. 57.9 % → 91.9 %,
+      +105 prompts**. The bar was "≥ pre-change" and the result is a 34-point gain.
+      **The cap is a PACKAGE number and says so.** Nothing in this tree records what Cursor
+      or Windsurf truncate at, so a cap claiming to be theirs would be invented.
+      `APPLIES_WHEN_CAP` is 400, chosen against the corpus it applies to — the 119 projected
+      descriptions measure max 187 and mean 115 — so no existing description is touched and
+      the clause gets roughly twice the mean to work in. 4 rules land within 20 characters
+      of it. Revisit-if is stated at the constant.
+      Three failure modes are asserted in the failing direction: the clause is dropped WHOLE
+      rather than truncating the original sentence (a description can only gain), terms are
+      added whole or not at all (a half phrase routes on nothing and reads as a typo), and
+      the function is idempotent so a re-run cannot stack clauses.
+      `condense.ts` is NET-ZERO in lines again — 2,712, unchanged — because the logic lives
+      in a file under the source-size ceiling and only the two emitter call sites changed.
+- [x] **3.2 If 1.3 observed double carry:** make `.cursor/rules` mdc-only for `auto` rules;
       `always` and `manual` keep the `.md` body. Otherwise skip and say so.
       verify: census shows Cursor standing bytes down by at least the removed bodies; every
       `auto` rule present exactly once.
+      SKIPPED 2026-09-08, which is this step's own instruction and not an omission: "If 1.3
+      observed double carry ... Otherwise skip and say so." 1.3 is `unobserved`, so the
+      condition did not fire and K4 forbids removing the `.md` bodies before it does.
+      Nothing was removed from `.cursor/rules`. Both trees are still written, which is the
+      state 1.3 records as possibly-double and unmeasured.
 
 ## Phase 4: Truth surfaces
 
-- [ ] **4.1 Replace the L4 row** at `docs/enforcement-by-host.md:176` with per-host facts
+- [x] **4.1 Replace the L4 row** at `docs/enforcement-by-host.md:176` with per-host facts
       (Claude: hook delivery; admitted hosts: hook delivery; Cursor/Windsurf:
       description-gated native form; Cline/Copilot/Gemini/Augment/Codex: full corpus), each
       cell citing the emitter or binding `file:line`, with an expiry.
       verify: `grep -c 'no equivalent today' docs/enforcement-by-host.md` returns 0.
+      Done 2026-09-08. `grep -c 'no equivalent today' docs/enforcement-by-host.md` returns
+      **0**. The L4 cell now points at a per-host table with a citation per cell: Claude Code
+      hook delivery (`rule_inject_hook.ts`, `hook_manifest.yaml:1221`); Cursor and Windsurf
+      the description-gated native form (`_emit_cursor_mdc` / `_emit_windsurf_rule` plus
+      `applies_when`); Cowork none, with its `observed-false`; Cline, Gemini, Augment,
+      Copilot and Codex none, full corpus projected.
+      **The table leads with the negative result rather than burying it:** no host is
+      measured as receiving a just-in-time constraint yet, Claude Code included. The
+      mechanism exists and its byte-equivalence is measured; what is unmeasured is a model
+      visibly acting on a delivered body, which is E3's bar.
+      Expiry 2026-12-08, per the table's own discipline — it is a snapshot of an observation
+      state expected to change.
+      **A first attempt at this failed its own verify and is worth recording:** the
+      replacement prose quoted the retired phrase while explaining what it replaced, so the
+      grep still returned 1. Reworded to describe the old cell without reproducing its
+      literal. A verify expressed as a grep counts the fix's own prose too.
 - [ ] **4.2 One sentence** in the same file and in the predecessor's ADR: hosts without a
       measured injection path receive the full corpus; this is the cost of the host, not a
       defect.
       verify: sentence present; predecessor 1.4 gate green.
+      HALF DONE 2026-09-08. The sentence is in `docs/enforcement-by-host.md`, in the L4
+      section, in as many words: a host without a measured injection path receives the full
+      corpus, and that is the cost of the host rather than a defect — with the reason it is
+      not a withholding (every rule body is written, and `check_host_tree_parity` asserts
+      byte-identity per PR).
+      **The predecessor's ADR half is not done and cannot be from here.** ADR-262 lives on
+      `drain/delivery-for-every-host`, unmerged, so this branch has no file to add the
+      sentence to. Editing it would mean recreating the ADR on a second branch, which is how
+      one decision record becomes two. Closes with one edit to ADR-262 § Consequences after
+      the branches meet.
+      The second verify limb has the same shape as 2.2's: the 1.4 gate is green on the
+      predecessor branch and is not running on this one, because it is not here.
 
 ## Kill register
 
@@ -177,19 +335,43 @@ admission. Cowork is excluded by the existing measurement.
 - **Council:** none. E3 is an owner ruling.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-07 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-09-08 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |---|---|---|---|---|---|
-| 1 | A host is admitted on a plausible reading rather than an observation | product | Cursor and Cline bind the right slot, which makes "it must work" the cheapest conclusion available. Cowork binds eight slots and discards dispatcher output — the same shape, measured false. Admitting on the binding would thin a host whose rules then reach nobody. | E3 requires one observed transcript in which the model visibly acts on a delivered body, K1 forbids admission by documentation or analogy, and 1.2 refuses to write an `observed-*` value without a transcript pointer | Phase 2: Admit hosts that pass (E3) |
+| 1 | A host is admitted on a plausible reading rather than an observation | product | Cursor and Cline bind the right slot, which makes "it must work" the cheapest conclusion available. Cowork binds eight slots and discards dispatcher output — the same shape, measured false. Admitting on the binding would thin a host whose rules then reach nobody. | E3 requires one observed transcript in which the model visibly acts on a delivered body, K1 forbids admission by documentation or analogy, and 1.2 refuses to write an `observed-*` value without a transcript pointer. **Re-reviewed 2026-09-08: held, and it was EXERCISED rather than merely present.** Claude Code is recorded `unobserved`, not `observed-true` — no transcript exists because the mode has been `eager-all` for the whole history — and `_lib/injection_effect.ts` was deliberately built with NO code path from the computed axis to the observed one. Cowork remains the standing proof the two diverge: eight slots bound, dispatcher output discarded, exit 0. | Phase 2: Admit hosts that pass (E3) |
 | 2 | The census fills with `unobserved` and the file reads as stalled | implementation | Most hosts cannot be observed from a Claude session, so several lines will stay open for a long time and a reader may treat the roadmap as abandoned. | K6 makes `unobserved` an outcome rather than a deferral: the line stays `[]`, the file stays active, and 2.2 keeps the host's tree byte-identical to `eager-all` in the meantime so nothing is lost while it waits | Phase 1: Measure context injection per host |
 | 3 | Description-lowering leaks trigger terms into a user-visible field | product | The emitted description is the host's routing surface and a reader's first line about the rule. Appending up to N raw trigger terms can turn a sentence into a keyword list. | 3.1 caps by the host's own description length and measures recall by string match on the frozen corpus, so a change that reads worse and routes no better is visible before it lands | Phase 3: Native lazy forms get the triggers they need |
-| 4 | The corrected 98-rule population is itself re-derived wrongly later | implementation | The draft's 5 became 21 on one re-measurement. A later run summing only `path_prefix` or only `file_pattern` lands on a third number and re-scopes Phase 3 silently. | The Context states the derivation (41 `path_prefix` + 13 `file_pattern` across 21 files) and 3.1 requires the population figure in the commit message, so a divergent count is a visible contradiction rather than a quiet re-scope | Phase 3: Native lazy forms get the triggers they need |
+| 4 | The corrected 98-rule population is itself re-derived wrongly later | implementation | The draft's 5 became 21 on one re-measurement. A later run summing only `path_prefix` or only `file_pattern` lands on a third number and re-scopes Phase 3 silently. | The Context states the derivation (41 `path_prefix` + 13 `file_pattern` across 21 files) and 3.1 requires the population figure in the commit message, so a divergent count is a visible contradiction rather than a quiet re-scope. **Re-reviewed 2026-09-08: this risk FIRED, and the mitigation caught it — which is the outcome the row was written for.** The population was re-derived a third time and came out different again: **97, not 102**, because 8 of the 105 `auto` rules carry no keyword or phrase trigger at all. The figure is in the commit message as the row requires, so the divergence surfaced as a contradiction to resolve rather than as a silent re-scope. 3.1's measured result is stated against the corrected denominator: 179 → 284 of 309 auto-rule positives, 57.9 % → 91.9 %. | Phase 3: Native lazy forms get the triggers they need |
 
 ## Acceptance Criteria
 
-- [ ] Every host has an `injection_effect` line with provenance in the census.
+- [x] Every host has an `injection_effect` line with provenance in the census.
+      Met 2026-09-08. Nine hosts, nine lines, in
+      `agents/evidence/analysis/host-injection-effect-2026-09.md`. Provenance is enforced
+      rather than reviewed: `recordProblems` refuses an `observed-*` row missing host
+      version, transcript or date, and the generator exits 1 before writing anything if any
+      row is inadmissible. 1 `observed-false`, 8 `unobserved` — and `unobserved` is the
+      result K6 makes it, not a blank.
 - [ ] Every admitted host measures rules ≤ 20,000 tok; every other host is byte-identical to
       `eager-all`.
+      OPEN 2026-09-08, first limb VACUOUS and second limb not assertable here. No host is
+      admitted, so there is no host to measure — recorded as open rather than ticked on the
+      empty set, because a tick would read as "we measured the admitted hosts" when the
+      honest statement is "there are none". The byte-identity limb is
+      `check_host_tree_parity`, which is green on the unmerged predecessor branch and is not
+      present on this one.
 - [ ] 102/102 `auto` rules carry ≥ 1 trigger term in their Cursor and Windsurf descriptions.
+      OPEN 2026-09-08 as literally written, and it is UNREACHABLE rather than unfinished.
+      The corpus holds 105 `auto` rules, of which 8 carry no keyword or phrase trigger to
+      lower — four trigger-less, four path-only and already routed natively through `globs`.
+      97 of 105 is the whole of the lowerable set and every member of it is covered. Left
+      unticked rather than re-scoped in place, because rewriting an acceptance criterion to
+      match the result is the goalpost-move this repository forbids; the corrected number
+      and its derivation are in 3.1 for whoever revises it.
 - [ ] L4 row replaced; all quality gates green.
+      HALF MET 2026-09-08. The L4 row IS replaced —
+      `grep -c 'no equivalent today' docs/enforcement-by-host.md` returns 0 — and every
+      quality gate this branch can run is green. The AC stays open because 4.2's ADR half
+      cannot be done from this branch: ADR-262 lives on the unmerged predecessor, and
+      recreating it here would turn one decision record into two.
