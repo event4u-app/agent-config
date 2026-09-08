@@ -12,13 +12,37 @@ review_by: 2026-10-07
 > by [`/analyze:inbox`](../../../src/domains/analysis-workbench/analyze/inbox/command.md)
 > on an unrelated round, from a CI red inherited from `main`.
 
-> **Arrivals:** 4 — latest 2026-09-08 (release 14.22.0, **instance NOT closed**, see
+> **Arrivals:** 4 — latest 2026-09-08 (release 14.22.0, **instance CLOSED the same
+> day by PR #1947**, `71510872c` — see the arrival-4 note, corrected below), see
 > below); earlier: 2026-09-07 (release 14.21.0, closed in the change that created
 > this stub), [`road-to-the-unwritten-ledger.md`](../archive/road-to-the-unwritten-ledger.md)
 > (fixed 14.16.0) and [`road-to-the-ledger-two-releases-skipped.md`](../archive/road-to-the-ledger-two-releases-skipped.md)
 > (recorded 14.17.0 + 14.18.0, arrivals 2). Both archived. Every arrival before
 > the fourth fixed its instance and left the mechanism in place — which is why
 > the count is written here rather than only in a commit message.
+
+> **CORRECTED 2026-09-08, hours after it was written: the instance WAS closed,
+> by a different lane.** PR #1947 (`71510872c`, "disposition the eleven 14.22.0
+> blocking findings") landed `agents/evidence/release-findings/14.22.0.json` on
+> `main` at `55ba5d2ce`, and `check_finding_dispositions --release 14.22.0` now
+> exits 0. So arrival 4 joins the other three: **every arrival so far has fixed
+> its instance and left the mechanism in place**, which is the sentence this
+> stub's whole existence rests on and which the paragraph below temporarily
+> contradicted. The instance record
+> (`road-to-the-14-22-0-findings-ledger.md`) is deleted in the same change, on
+> its own stated criterion — the ledger exists and the gate exits 0.
+>
+> Two things survive the correction, and they are why this is a correction
+> rather than a deletion. The count is now **4 arrivals, 4 instance fixes, 0
+> mechanism fixes** — a cleaner statement of the problem than "three fixed, one
+> open" was. And the discovery path is unchanged and still the finding: a
+> code-graph delivery branch with no release surface in it was where this
+> surfaced, because the gate fires one release too late for anyone but a
+> bystander to notice.
+>
+> The paragraph below is kept verbatim as it was written, including its "first
+> instance nobody closed" claim, because a stub that silently edits its own
+> arrival record is a stub whose count cannot be trusted.
 
 > **Arrival 4 — 2026-09-08, release 14.22.0, and it is the first that did NOT fix
 > its instance.** Found while settling CI on `drain/graph-shipped-close`, a
