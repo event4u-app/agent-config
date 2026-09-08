@@ -31,7 +31,8 @@ const confidenceBand = z.enum(['off', 'low', 'medium', 'high']);
 const onBlock = z.enum(['stop', 'ask', 'warn']);
 const onBlockFallback = z.enum(['stop', 'warn']);
 const modelAutoSwitch = z.enum(['auto', 'suggest', 'off']);
-const leanProjectionMode = z.enum(['eager-all', 'thin']);
+const leanProjectionMode = z.enum(['eager-all', 'thin', 'delivery']);
+const leanProjectionHost = z.enum(['claude-code', 'cursor', 'cline']);
 const projectionMode = z.enum(['legacy-all', 'scoped']);
 const memoryCadence = z.enum(['auto', 'always', 'never']);
 const projectAudience = z.enum(['self', 'internal', 'client', 'public']);
@@ -64,9 +65,19 @@ export const settingsSchema = z.object({
     ),
     lean_projection: z.object({
         mode: leanProjectionMode.default('eager-all').describe(
-            'How the per-tool projector emits the rule layer. eager-all = every rule body inlined into every projection (default, safe). thin = kernel rules full-bodied + non-kernel rules as router-resolved pointers (~45k GPT-tok lighter per session). EXPERIMENTAL: validate with the live A/B before flipping; one-flip revert to eager-all.',
+            'How the per-tool projector emits the rule layer. eager-all = every rule body inlined into every projection (safe; what an ABSENT key still resolves to, per ADR-267 decision point 4). thin = kernel rules full-bodied + non-kernel rules as router-resolved pointers (~45k GPT-tok lighter per session), with no delivery mechanism. delivery = thin stubs PLUS the rule-inject hook concern, which delivers a body back on a trigger match; this is the value the SHIPPED TEMPLATE carries for Claude Code since ADR-267, and the activation charge for it is paid in src/config/hook-token-budget.json (user_prompt_submit slot sum 4,096 -> 16,384).',
         ),
-    }).default({ mode: 'eager-all' }),
+        hosts: z.array(leanProjectionHost).default(['claude-code']).describe(
+            'Which hosts a thinning mode may thin (ADR-267). Absent resolves to [claude-code]. '
+            + 'Only the three hosts with a per-rule rule tree are accepted, and this enum is the '
+            + 'AUTHORING layer: an id outside it is a hard validation FAILURE here and under '
+            + 'validate_agent_settings, never a warning. resolveLeanProjectionHosts is the '
+            + 'READ-TIME backstop for a hand-edited .agent-settings.yml that passed neither, and '
+            + 'THERE the id is dropped with a warning (R2 finding 6 — the two layers answer '
+            + 'differently and neither said so). Every host outside this list receives exactly '
+            + 'what eager-all writes, asserted byte-for-byte by check_host_tree_parity.',
+        ),
+    }).default({ mode: 'eager-all', hosts: ['claude-code'] }),
     cost: z.object({
         budgets: z.object({
             daily: z.number().min(0).default(0).describe(

@@ -1,0 +1,8 @@
+rule: fix-what-you-see
+positives:
+  - prompt: "CI is red on this branch and the failing test is not mine."
+  - prompt: "The type check fails after your last edit - whose test is that?"
+  - prompt: "There is a regression in the export job and nobody owns that file."
+near_misses:
+  - prompt: "Add a new integration test for the invoice exporter."
+  - prompt: "Explain how the CI pipeline is structured across the workflows."

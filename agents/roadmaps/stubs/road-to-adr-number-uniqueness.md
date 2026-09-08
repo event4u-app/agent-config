@@ -61,6 +61,78 @@ stalled branch would leave 263 unused and 264 taken if #1923 is abandoned. Both 
 commented instead, so neither merges into the collision unaware. That is mitigation, not
 a fix — the fix is still the durable one this stub asks for.
 
+## It recurred a THIRD and a FOURTH time, in one merge session — recorded 2026-09-08
+
+| # | PR | Branch | File |
+|---|---|---|---|
+| 3 | #1923 | `drain/delivery-for-every-host` | `ADR-265-delivery-default-for-claude-code.md` |
+| 3 | merged | `main` (iron-law-reserve lane) | `ADR-265-iron-law-reserve-refused-verifier-inside-the-change.md` |
+| 4 | #1923 | `drain/delivery-for-every-host` | `ADR-266-delivery-default-for-claude-code.md` — the renumber that resolved collision 3 |
+| 4 | merged | `main` (pr-merge-authority lane) | `ADR-266-explicit-pr-merge-invocation-is-the-this-turn-confirmation.md` |
+
+**The sequence on one branch is now 262 → 263 → 265 → 266 → 267, four collisions in four
+renumbers.** The fourth is the sharpest evidence in this file, because it was not found by a
+later run: the same merge session renumbered 265 → 266 to clear collision 3, fetched `main`
+again **minutes later** for a push-freshness check, and the fetch brought a fresh `ADR-266`.
+The repair and the next collision are inside one session, which removes the last reading in
+which *"take the next free number"* is a fix rather than a delay. The stub's own sentence
+holds verbatim: *"Renumbering is not a fix; it is the defect moving."*
+
+**Both fourth-collision records are about merge authority**, which is worth stating because it
+raises the odds rather than lowering them: two lanes working the same subject converge on the
+same frontier number at the same time, so the collision rate is highest exactly where two
+lanes are most likely to need cross-references to each other.
+
+Four things are new, and they are why this is written here rather than left to a fourth
+discovery:
+
+1. **One side is MERGED this time.** The two earlier instances were open-PR-vs-open-PR, so
+   the council's tie-break — *the earlier-opened PR keeps the number* — had two movable
+   candidates. Here `main` already carries its 265, and renumbering a landed record would
+   rewrite the identity of a decision every other branch already cites. **The direction is
+   therefore forced by evidence rather than chosen**, and the tie-break above does not apply:
+   its precondition (both unmerged) is gone.
+2. **It is no longer silent.** The earlier instances passed `check_adr_frontmatter` (exit 0,
+   measured above) and were found by a human. This one **reds CI**:
+   `.github/workflows/rule-backstops.yml:403` runs
+   `adr/regenerate_index --dir docs/decisions --check`, and the generator fails hard with
+   `error: ADR-265 duplicate: … and …`. So the single-tree half of the fix partly exists
+   already — in the *index generator*, not in the gate the stub proposed extending.
+   `check_adr_frontmatter` still passes on a flat duplicate, so the § What the fix looks like
+   analysis stands; what changed is that the collision now reaches a red check instead of
+   `main`.
+3. **The renumber cost 11 files of prose.** `ADR-265` was cited from 15 files, of which
+   **four mean main's record and must not move** (`road-to-iron-law-reserve-activation.md`,
+   `council-2026-09-08-iron-law-reserve-store.md`, `check_preamble_payload_budget.ts`,
+   `standing_bound_ratchet.ts`). A sweep over the bare string would have silently re-pointed
+   four references to the wrong decision — which is exactly the harm § Why nothing catches it
+   names, arriving through the *repair* rather than through the collision.
+4. **Checking the number against open PR heads was NOT sufficient, and this is the finding
+   the § What the fix looks like cross-branch half was written for.** Before taking 267 the
+   run did exactly what this stub prescribes at renumber time — verified it free on
+   `origin/main` and across every open PR head, of which there was **one** (#1923 itself).
+   The check passed and is still not a guarantee: `main` moves independently of the open-PR
+   set, and collision 4 arrived from a lane that had **already merged** rather than from a
+   competing PR. So a CI job reading open PR heads would not have caught either of today's
+   last two collisions. Only a **reserved-number ledger a lane appends to when it opens an
+   ADR** covers this shape, which is the more intrusive of the two options above and now has
+   the stronger evidence behind it.
+5. **A parallel uncommitted lane also held an `ADR-266`, and its subject overlaps main's.**
+   #1923 moved to 267 rather than yielding, per this stub's own reasoning that a number
+   yielded to a lane without a live PR leaves the number unused and the next one taken. That
+   uncommitted lane must now move to 268 — and it carries a `superseded_by: 266` pointer it
+   wrote onto ADR-239, which `main` has since re-pointed at its own 266. An uncommitted
+   record is the cheaper one to renumber; a stale cross-reference into a landed record is the
+   expensive part, and it is the second way this defect costs more than a filename.
+
+**The entry condition below is met.** *"When: the next time two lanes collide on an ADR
+number"* — this is that time, for the third time, and the disposition *record and defer* has
+now been falsified twice by observation. Per
+[`recurring-criticism`](../../../src/rules/recurring-criticism.md) the burden sits with
+whoever keeps the deferral; which of its three outcomes applies is still not settled here,
+for the same reason run 22 gave — the merge run that found this owns no authority over how a
+lane opens an ADR, and guessing would repeat the error a fourth time.
+
 ## Why nothing catches it — measured, not assumed
 
 Two independent reasons, and the second is the one that makes this worth a record.

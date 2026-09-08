@@ -60,6 +60,7 @@ import {
     loadRuleBody,
     matchTierRules,
     pathCapableRuleIds,
+    pathOnlyRuleIds,
     selectForInjection,
     triggerlessRuleIds,
     type Router,
@@ -101,6 +102,18 @@ export interface CorpusCase {
     rule: string;
     prompt: string;
     openFiles: string[] | null;
+    /**
+     * The slash command the case declares, or `null` (R2 finding 1).
+     *
+     * The loader DROPPED this field, so every `command:` trigger scored as an
+     * unmatched plain prompt. Two entries in the frozen corpus carry one —
+     * `roadmap-progress-sync` and `user-interrupt-priority` — and the shipped
+     * concern DOES reach command triggers: `hooks/rule_inject_hook.ts` extracts
+     * a leading `/command` from the prompt text and passes it to
+     * `matchTierRules`. Dropping the field made the shipped-reach reading
+     * falsely low in exactly the two places it mattered.
+     */
+    command: string | null;
     label: 'positive' | 'near_miss';
     file: string;
 }
@@ -119,10 +132,12 @@ function _asCases(
         const prompt = typeof o['prompt'] === 'string' ? o['prompt'] : null;
         if (prompt === null) continue;
         const of = o['open_files'];
+        const cmd = o['command'];
         out.push({
             rule,
             prompt,
             openFiles: Array.isArray(of) ? of.map((x) => String(x)) : null,
+            command: typeof cmd === 'string' && cmd !== '' ? cmd : null,
             label,
             file,
         });
@@ -618,17 +633,54 @@ export function runEndpoints(corpusDir: string): EndpointResult[] {
     }
 
     // (b) No labelled rule may end with ZERO matched positives.
-    const byRule = new Map<string, { hit: number; total: number }>();
+    //
+    // TWO READINGS SINCE 2026-09-08 (R2 finding 1), and the second one is the
+    // honest half. The pre-registered bar is scored with `open_files` HONOURED,
+    // which is the reach of the MECHANISM. It is not the reach of the SHIPPED
+    // BINDING: `rule-inject` is bound on `user_prompt_submit` + `pre_compact`
+    // only (the `pre_tool_use` binding was removed under owner ruling E2), and
+    // `user_prompt_submit` never populates `openFiles` — the payload carries no
+    // open-file list. So a rule whose only matching positives carry
+    // `open_files` is credited as reachable while no shipped slot can deliver
+    // it on that route.
+    //
+    // The bar is UNCHANGED (it is pre-registered; see
+    // `internal/bench/thin-inject-PREREG.md`). What is added is the column: the
+    // same recall computed with `open_files` ignored, and the names of the rules
+    // that differ between the two. A rule in that difference is either kept
+    // full-bodied by the always-eager residue — in which case it is reachable
+    // by projection rather than by delivery — or it is thinned, in which case it
+    // reaches a Claude Code session on the prompt route only.
+    const reach = (c: CorpusCase, honourOpenFiles: boolean): boolean =>
+        matchTierRules(
+            router,
+            c.prompt,
+            honourOpenFiles ? c.openFiles : null,
+            c.command,
+        ).some((m) => m.id === c.rule);
+
+    const byRule = new Map<string, { hit: number; total: number; shipped: number }>();
     for (const c of positives) {
-        const e = byRule.get(c.rule) ?? { hit: 0, total: 0 };
+        const e = byRule.get(c.rule) ?? { hit: 0, total: 0, shipped: 0 };
         e.total += 1;
-        if (matchTierRules(router, c.prompt, c.openFiles).some((m) => m.id === c.rule)) e.hit += 1;
+        if (reach(c, true)) e.hit += 1;
+        if (reach(c, false)) e.shipped += 1;
         byRule.set(c.rule, e);
     }
     const unreachable = [...byRule.entries()].filter(([, v]) => v.hit === 0).map(([k]) => k);
     const partial = [...byRule.entries()]
         .filter(([, v]) => v.hit > 0 && v.hit < v.total)
         .map(([k, v]) => `${k} ${v.hit}/${v.total}`);
+    const pathOnlyReach = [...byRule.entries()]
+        .filter(([, v]) => v.hit > 0 && v.shipped === 0)
+        .map(([k]) => k)
+        .sort();
+    const alwaysEager = new Set([
+        ...triggerlessRuleIds(router),
+        ...pathOnlyRuleIds(router),
+        ...kernelIds(router),
+    ]);
+    const thinnedAndPathOnly = pathOnlyReach.filter((id) => !alwaysEager.has(id));
 
     // (c) A near-miss must never deliver its labelled rule.
     const exact = scoreExact(router, cases, true);
@@ -659,7 +711,12 @@ export function runEndpoints(corpusDir: string): EndpointResult[] {
             reading:
                 `${byRule.size - unreachable.length}/${byRule.size} rules reachable; ` +
                 `unreachable: ${unreachable.length === 0 ? 'none' : unreachable.join(', ')}; ` +
-                `partial: ${partial.length === 0 ? 'none' : partial.join(', ')}`,
+                `partial: ${partial.length === 0 ? 'none' : partial.join(', ')}` +
+                ` | shipped user_prompt_submit reach (open_files IGNORED): ` +
+                `${byRule.size - pathOnlyReach.length}/${byRule.size}; reachable only via a ` +
+                `path trigger: ${pathOnlyReach.length === 0 ? 'none' : pathOnlyReach.join(', ')}` +
+                ` (of which thinned, i.e. at no scope on that route: ` +
+                `${thinnedAndPathOnly.length === 0 ? 'none' : thinnedAndPathOnly.join(', ')})`,
             bar: 'unreachable == 0 (a rule with zero matched positives is a rule the mode removed)',
             passed: unreachable.length === 0,
         },
