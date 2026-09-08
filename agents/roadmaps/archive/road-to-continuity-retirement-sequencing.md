@@ -81,13 +81,14 @@ surfaces were candidates and every one has a recorded obstacle:
 | `chat-history:checkpoint` name | Owner-reserved (D2). See the blocker. |
 | `run_checkpoint` | KEEP, and that is the answer 4.1 asked for in writing, not a failure to retire. |
 
-**The four blockers live on the receiver, not here**, and that is deliberate
+**The five blockers live on the receiver, not here**, and that is deliberate
 rather than tidy-mindedness: `archive_completed_roadmaps` refuses to archive a
 roadmap carrying open blockers, and it is right to — a blocker on a dead roadmap
 is a blocker nobody reads. They are `capture-endpoint-rename-is-owner-reserved`,
 `context-fill-retirement-has-a-parked-consumer`,
-`chat-history-command-retirement-has-documented-dependencies` and
-`three-concern-split-is-unpaid-under-the-concern-ratchet`, all in
+`chat-history-command-retirement-has-documented-dependencies`,
+`three-concern-split-is-unpaid-under-the-concern-ratchet` and
+`the-command-usage-telemetry-cannot-prove-non-use`, all in
 `road-to-continuity-writer-activation`, each with the five-field contract and
 the evidence that produced it.
 
