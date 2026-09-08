@@ -2,7 +2,7 @@
  * Binary-payload eligibility — the mechanically verified predicate that
  * reopened the `binary` class.
  *
- * ## What this is, said plainly
+ * WHAT THIS IS, SAID PLAINLY.
  *
  * `f573d628c` closed `binary` as a hard zero on 2026-09-07. This REOPENS it,
  * 24 hours later, and that IS A WEAKENING OF A CONTROL. An AI council
@@ -13,7 +13,7 @@
  * weakening. It is written down here rather than softened because a control
  * that gets quietly relaxed is worse than one that never existed.
  *
- * ## Why the closure was wrong
+ * WHY THE CLOSURE WAS WRONG.
  *
  * Decision A over-generalised. Its reasoning was "the three observed binaries
  * are unused, therefore no binary can ever be required" — an invalid
@@ -23,7 +23,7 @@
  * PNGs nothing decoded; for a grammar it does not degrade a fixture, it breaks
  * the engine.
  *
- * ## What replaces the hard zero — and what does NOT
+ * WHAT REPLACES THE HARD ZERO — AND WHAT DOES NOT.
  *
  * Not a prose exception. A binary is admitted only when EVERY condition below
  * is verified mechanically, on the bytes that are actually in the tarball:
@@ -48,13 +48,13 @@
  * 10 and 11 run on every invocation, not in a separate test, because a
  * predicate whose refusals nobody exercises is a predicate nobody has checked.
  *
- * ## `archive` is NOT reopened
+ * `archive` IS NOT REOPENED.
  *
  * This collision produced evidence about grammars and none whatsoever about
  * archives. `archive` stays a hard zero with no manifest path, and this module
  * offers none.
  *
- * ## Eligibility never touches the measurement
+ * ELIGIBILITY NEVER TOUCHES THE MEASUREMENT.
  *
  * The gate reports `observed` as the true count and byte total on every run.
  * Compliance is `observed <= allowed`, where `allowed` is the number of entries
