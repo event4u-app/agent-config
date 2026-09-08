@@ -77,7 +77,7 @@ The substitutions are mechanical and each is also the clearer command:
 | `D=/repo; cd $D && git status` | `git -C /repo status` |
 | `V=$(git rev-parse HEAD); echo $V` | two calls, the second using the printed value |
 | `mkdir -p x && cp a x/` | two calls in the same block |
-| `cd sub && npm test` | `npm test --prefix sub` |
+| `cd sub && <cmd>` | the directory flag the tool already has (`-C`, `--cwd`, `--prefix`) |
 
 **Still fine, and not what this forbids:** a pipe whose segments are all
 ordinary filters (`grep foo file | head`) — that is one command with a filter,
