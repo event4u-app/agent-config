@@ -41,6 +41,27 @@ they are annotated MIT in `REUSE.toml` and credited in `CREDITS.md`.
 are refreshed from, and the ABI smoke test in `tests/scripts/code_graph.test.ts`
 runs against it. It is deliberately not a runtime dependency.
 
+## Verification
+
+Two checks, and they answer different questions.
+
+`src/config/packed-binary-manifest.json` plus `_lib/packed_binary_predicate.ts`
+verify that these bytes are what the manifest says they are — eleven conditions,
+all of them re-derived from the bytes. Every one of them reads the manifest, so
+a commit that edits a row and its file together satisfies all eleven.
+
+`_lib/vendored_grammar_upstream.ts` verifies that these bytes are what the
+**locked upstream** says they are: it byte-compares each file against
+`node_modules/tree-sitter-wasms/out/`, after asserting that the installed
+version is the one `package-lock.json` pins. An absent or unlocked upstream is a
+refusal, never a pass. It is exercised by
+`tests/scripts/vendored_grammar_upstream.test.ts`, which also drives every
+refusal path and a real mutated grammar to failure.
+
+What neither check covers is a `package-lock.json` row pointing at a hostile
+package; that is review's job, and `packed_binary_predicate.ts`'s docblock says
+so in those words.
+
 ## Refreshing
 
 The pair is ABI-coupled and must move together:
