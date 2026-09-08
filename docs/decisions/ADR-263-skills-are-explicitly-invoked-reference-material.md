@@ -140,6 +140,29 @@ closed.
   unvalidated metadata with no host contract, which is what they are, and they
   remain the thing a future host contract would bind to.
 
+## Evidence
+
+Every row is verifiable in the tree at `8a3160242`, the commit this record was
+written against.
+
+| Claim | Where |
+|---|---|
+| The census is zero over one store | `agents/evidence/metrics/skill-activation-census.json` — `invocations: 0`, `distinct_skills_invoked: 0`, `sessions: 30`, `assistant_turns: 11338`, and a `stores` array with exactly one entry, a Claude Code project store |
+| Twelve skills declare the key, not thirteen | Parsing the frontmatter block of `src/skills/*/SKILL.md` yields 12, matching the census's `with_trigger_key: 12`. A bare `grep -l '^triggers:'` returns 13 because `rule-writing` carries the token in its body |
+| The projection delivers the key unchanged | `src/scripts/condense.ts:1623-1627` — `_render_native_model_md` performs one substitution, `model_tier:` → `model:`, and returns the rest of the file. `src/skills/`, `dist/agent-src/skills/` and `.augment/skills/` agree file-for-file |
+| The earlier "projection strips it" reading was wrong | `agents/evidence/analysis/skill-trigger-frontmatter-has-no-host-reader-2026-09-08.md` § 3 — the comparison was against gitignored install artifacts dated `Jul 5`, whose `dist/` sources are dated `Aug 23`. Retracted there, in that document, rather than quietly dropped |
+| The rule router does not read skill triggers | `dist/router.json` carries `schema_version`, `kernel`, `tier_1`, `tier_2`, `profiles` and no skills key; `src/scripts/compile_router.ts` contains zero occurrences of `skills` |
+| The one in-tree reader is off by default | `src/scripts/skill_tools/score_skill_relevance.ts:170` — "`triggers[].keyword` / `.phrase` prose. Indexed only under keyword-v2"; `:261-262` — under keyword-v1, the default, `skill.terms` is `tokenize(name + ' ' + description)` |
+| `evals/triggers.json` was already known not to be a host input | `docs/CLAIMS.md:245` — a test fixture read by `check_routing_coverage` / `lint_skill_trigger_corpus` / `check_trigger_evals`, "no host reads it at routing time" |
+| The council reached B on one seat, not two | `council:run` recorded quorum `1/2 present`, status `concluded`, marked `⚠️ DEGRADED`; the openai seat returned `os_error: ENOBUFS`. Stated again in § Authority so a reader meets it without opening the session record |
+
+**What this record does not establish.** It does not measure the eight hosts the
+census never saw — the router and ranker rows above are facts about this tree and
+hold host-independently, but the "one host was tested" row bounds the census
+itself to Claude Code. It does not establish that skills are unreachable:
+`suggest_skill_for_task` ranks name and description and is a real path. And it
+does not establish what `keyword-v2` would measure, because no such run exists.
+
 ## Alternatives considered
 
 - **A — build a host-side activation path for the 12.** Rejected above.
