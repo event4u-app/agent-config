@@ -34,7 +34,7 @@
  * NEVER BLOCKS. Every failure path returns 0: unreadable stdin, malformed JSON,
  * missing router, unreadable body, unwritable state. The one non-zero exit is
  * the host's advisory context channel (exit 2 + `decision: "warn"`), the same
- * channel `ui-route-nudge` and `code-graph-nudge` already use on `pre_tool_use`
+ * channel `ui-route-nudge` and `code-graph-context` already use on `pre_tool_use`
  * with `severity: advisory` — a warn there is an injection, not a deny.
  *
  * HOST BOUNDARY, STATED RATHER THAN IMPLIED. `user_prompt_submit` and

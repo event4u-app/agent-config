@@ -19,6 +19,7 @@
     "src/agent-src/scripts/",
     "src/agent-src/templates/scripts/",
     "src/templates/",
+    "src/vendor/grammars/",
     "tests/fixtures/hooks/",
     "AGENTS.md",
     "CHANGELOG.md",
@@ -61,7 +62,8 @@
     "vendor/"
   ],
   "npmignore_shadowed": [
-    "agents/"
+    "agents/",
+    "vendor/"
   ],
-  "shadowed_measured_in": "built tree (payload carries dist/cli/**)"
+  "shadowed_measured_in": "unbuilt tree (payload carries no dist/cli/**)"
 }
