@@ -37,9 +37,32 @@ A CALL THAT DOES NOT READ THE PREVIOUS RESULT IS NOT A SECOND TURN.
 
 The ceiling above forbids repetition; this forbids splitting work that had no
 reason to be split — measured mean batch size **1.01**, i.e. fully serial. The
-discriminator is the dependency, never the count. NOT "write shorter commands":
-the long commands are already the batching. `instruction-only` — nothing can
-observe a call that was not batched. Evidence + the absent-cause finding:
+discriminator is the dependency, never the count. `instruction-only` — nothing
+can observe a call that was not batched. Evidence + the absent-cause finding:
+[`token-efficiency-mechanics`](../contexts/communication/rules-auto/token-efficiency-mechanics.md).
+
+## One command per Bash call
+
+```
+ONE COMMAND PER BASH CALL. NEVER CHAIN WORK STEPS WITH `;`, `&&` OR `||`,
+AND NEVER CARRY STATE FORWARD IN A LEADING `VAR=…` ASSIGNMENT.
+N COMMANDS GO IN N CALLS IN ONE BLOCK — THAT IS WHAT A BATCH IS.
+A CHAINED CALL IS AUTHORIZED ONLY AS STRONGLY AS ITS WEAKEST SEGMENT.
+```
+
+A permission rule, not a token one — which is why it is not folded into the
+section above. The host splits a compound command on the shell operators and
+requires **each segment to match the allowlist independently**, so one
+unmatched segment sends the whole call down the permission path even when
+every other segment was already allowed. Chaining converts N cheap
+authorizations into one expensive one. `D=/repo; cd $D && git status` is
+`git -C /repo status`.
+
+**Not forbidden:** a pipe of ordinary filters, a redirect, a heredoc — one
+command with a filter or with input, not two work steps. Carried at tool-call
+time by the `chain-nudge` `pre_tool_use` concern, which is advisory and never
+blocks, so compliance stays model-carried. Measured numbers, the substitution
+table and the carrier's limits:
 [`token-efficiency-mechanics`](../contexts/communication/rules-auto/token-efficiency-mechanics.md).
 
 ## Enumerated file sets are ONE operation, not N repetitions

@@ -155,3 +155,72 @@ could have shared. `probe_turnaround` reports the rate afterwards and refuses to
 gate on a store CI does not have. This paragraph is the whole mechanism, and the
 roadmap that added it pre-committed to recording a null if the rate does not
 move rather than repeating the reminder more loudly.
+
+## One command per Bash call — the detail
+
+Migrated from `token-efficiency` § One command per Bash call on 2026-09-08,
+because that rule's body is re-written on every subagent spawn while this file
+is loaded on demand. The Iron Law stays in the rule; everything below is
+lookup material.
+
+### Why chaining costs more, not less
+
+The host splits a compound command on `&&`, `||`, `;`, `|`, `|&`, `&` and
+newlines and requires **each segment to match the allowlist independently**.
+A single unmatched segment sends the whole call down the permission path even
+when every other segment was already allowed. So chaining does not save a
+round-trip — it converts N cheap authorizations into one expensive one.
+
+### The measurement
+
+Over 40,268 real Bash calls from one maintainer's transcripts:
+
+- **97.7 %** carry a shell metacharacter. The package's own category-A
+  classifier (`permission_gate` + `category_a.ts`) is therefore reachable on
+  **2.3 %** of real calls; the host allowlist decides the rest.
+- **17.9 %** have a head token matching no allowlist pattern. Distribution:
+  a leading `VAR=…` assignment 5,215×, `./scripts-run` 520×, `python3` 518×,
+  shell loop keywords 460×, `sleep` 155×, `mkdir` 71×, `cp` 49×.
+- Of those 5,215 assignments, **5,037 are genuinely standalone** (`F=/path; …`)
+  and only 178 are env prefixes (`VAR=v cmd`). The distinction was checked
+  rather than assumed, because a review had claimed the whole class was a
+  measurement artifact. It is not: that shape cannot be written as an
+  allowlist pattern at all, so it shrinks only by not being written.
+
+### The substitutions
+
+| Instead of | Write |
+|---|---|
+| `D=/repo; cd $D && git status` | `git -C /repo status` |
+| `V=$(git rev-parse HEAD); echo $V` | two calls, the second using the printed value |
+| `mkdir -p x && cp a x/` | two calls in the same block |
+| `cd sub && <cmd>` | the directory flag the tool already has (`-C`, `--cwd`, `--prefix`) |
+
+A loop that genuinely cannot be expressed without the shell stays a loop —
+prefer a script file over an inline `for` when it recurs.
+
+### What the carrier does and does not do
+
+`chain-nudge` (`src/scripts/hooks/chain_nudge_hook.ts`) is a `pre_tool_use`
+concern bound on the three hook-capable platforms. It reads
+`tool_input.command`, strips quoted spans and heredoc bodies so an operator
+inside a string literal cannot be misread, and injects one advisory line the
+first time a session chains work. It is ON by default with
+`hooks.chain_nudge.enabled: false` as the opt-out — inverting
+`code-graph-nudge`, which gates on a project capability that may be absent,
+because the fact this one carries is a property of the host's permission
+matcher and holds in every consumer.
+
+**It never blocks, and it fires once.** So it changes what the agent knows,
+not what the agent may do: compliance stays model-carried, and the concern's
+tests establish detector behavior, not adherence. On a host with no
+`pre_tool_use` slot nothing fires at all and the rule is model-carried end to
+end — `agent-config hooks:status` reports which slots are bound where you are.
+
+### The sentence this replaced
+
+Until 2026-09-08 the batching paragraph in the rule ended "NOT write shorter
+commands: the long commands are already the batching." That was written about
+token cost, where it holds, and it is wrong about the permission layer below —
+a batch is N tool calls in ONE block, never N shell commands in ONE call. The
+old wording collapsed the two and so encouraged the most expensive shape.
