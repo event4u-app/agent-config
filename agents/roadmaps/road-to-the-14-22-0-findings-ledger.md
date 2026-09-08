@@ -15,9 +15,15 @@ execution:
 
 ## Goal
 
-`agents/evidence/release-findings/14.22.0.json` exists, its blocking findings
-carry real dispositions, and `check_finding_dispositions` is green — so the only
-required status check on this repository stops refusing every pull request.
+`agents/evidence/release-findings/14.22.0.json` <!-- ref-ignore --> exists, its
+blocking findings carry real dispositions, and `check_finding_dispositions` is
+green — so the only required status check on this repository stops refusing
+every pull request.
+
+The marker is there because the path deliberately does not resolve yet: its
+absence IS the finding, and `check_references` flagged it as broken on the first
+CI run — which is the defect arriving from a second direction rather than a
+nuisance. It comes off in step 1.1, together with the file appearing.
 
 ## What is actually wrong
 
