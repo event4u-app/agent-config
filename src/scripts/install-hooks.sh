@@ -30,6 +30,18 @@ if [ -n "${AGENT_CONFIG_HOOKS_DIR+set}" ]; then
         exit 2
     fi
     HOOKS_DIR="$AGENT_CONFIG_HOOKS_DIR"
+elif CONFIGURED_HOOKS_PATH="$(git -C "$PROJECT_ROOT" config --get core.hooksPath 2>/dev/null)" \
+    && [ -n "$CONFIGURED_HOOKS_PATH" ]; then
+    # core.hooksPath wins over .git/hooks WHEREVER IT IS SET — git stops looking
+    # in the common dir entirely once it is configured. Installing into
+    # .git/hooks while git reads somewhere else writes six hooks that never run,
+    # and the freshness gate would then compare the copy nothing executes.
+    # Resolved relative to PROJECT_ROOT because git interprets a relative
+    # core.hooksPath against the top level of the working tree, not against CWD.
+    case "$CONFIGURED_HOOKS_PATH" in
+        /*) HOOKS_DIR="$CONFIGURED_HOOKS_PATH" ;;
+        *) HOOKS_DIR="$PROJECT_ROOT/$CONFIGURED_HOOKS_PATH" ;;
+    esac
 elif COMMON_GIT_DIR="$(git -C "$PROJECT_ROOT" rev-parse --git-common-dir 2>/dev/null)"; then
     case "$COMMON_GIT_DIR" in /*) : ;; *) COMMON_GIT_DIR="$PROJECT_ROOT/$COMMON_GIT_DIR" ;; esac
     HOOKS_DIR="$COMMON_GIT_DIR/hooks"
@@ -574,3 +586,73 @@ EOF
 append_auto_sync_block "post-merge"    "1"
 append_auto_sync_block "post-checkout" "3"
 echo "✅  Auto-sync block appended to post-merge / post-checkout hooks." >&2
+
+# Code-graph freshness, from git, with no daemon ----------------------------
+#
+# road-to-a-graph-that-is-shipped 1.3. A code graph goes stale the moment a
+# commit lands, and the only thing that knew were the reader — after it had
+# already answered from a stale index. These two hooks close that without a
+# resident process: git tells us HEAD moved, and a detached child rebuilds.
+#
+# Four properties, each load-bearing:
+#
+#   · BACKGROUND. The refresh is `&`-detached with stdout/stderr closed, so a
+#     commit never waits on a parse. Git's own runtime is unchanged.
+#   · SINGLE-FLIGHT. `mkdir` is atomic on every POSIX filesystem, so of two
+#     concurrent commits exactly one creates the lock and exactly one refresh
+#     runs. This is Risk 3 in the roadmap's register — "git hooks pile up
+#     rebuilds" — and a lock file written with `>` would not have closed it,
+#     because two processes can both truncate-and-write the same path.
+#   · BUDGETED. `--budget-seconds` is the engine's own wall-clock ceiling; a
+#     child that exceeds it is SIGKILLed and the OLD cache is left untouched
+#     (cli.ts's refresh contract). Kill register K7 — never block on a stale
+#     graph — holds by construction here, since nothing waits at all.
+#   · NEVER BUILDS ONE UNBIDDEN. The block is a no-op unless a cache already
+#     exists. Building a graph for someone who never asked for one is the pure
+#     cost Risk 1 names; refreshing one they built is the service.
+#
+# The lock is a directory under the gitignored runtime state, so a crashed
+# child leaves a stale lock that the next refresh clears by age rather than
+# blocking forever.
+
+append_code_graph_refresh_block() {
+    local name="$1"
+    cat >> "$HOOKS_DIR/$name" << EOF
+
+# --- code-graph background refresh ------------------------------------------
+EOF
+    if [ "$name" = "post-checkout" ]; then
+        cat >> "$HOOKS_DIR/$name" << 'EOF'
+# A file-checkout ($3 = 0) moves no commits, so there is nothing to be behind.
+if [ "${3:-1}" = "0" ]; then
+    exit 0
+fi
+EOF
+    fi
+    cat >> "$HOOKS_DIR/$name" << 'EOF'
+cg_cache="agents/runtime/state/code-graph-v1.json"
+cg_lock="agents/runtime/state/code-graph-refresh.lock"
+if [ -f "$cg_cache" ] && [ -x ./agent-config ]; then
+    # Clear a lock left by a killed child: older than the largest budget any
+    # caller passes, so it cannot race a refresh that is legitimately running.
+    if [ -d "$cg_lock" ]; then
+        if [ -z "$(find "$cg_lock" -maxdepth 0 -mmin -5 2>/dev/null)" ]; then
+            rmdir "$cg_lock" 2>/dev/null || true
+        fi
+    fi
+    # Atomic: exactly one of N concurrent hooks wins this, and the losers do
+    # nothing rather than queueing a second rebuild behind the first.
+    if mkdir "$cg_lock" 2>/dev/null; then
+        (
+            trap 'rmdir "$cg_lock" 2>/dev/null || true' EXIT
+            ./agent-config code-graph refresh --budget-seconds 60 >/dev/null 2>&1 || true
+        ) >/dev/null 2>&1 &
+    fi
+fi
+exit 0
+EOF
+}
+
+append_code_graph_refresh_block "post-commit"
+append_code_graph_refresh_block "post-checkout"
+echo "✅  Code-graph refresh block appended to post-commit / post-checkout hooks." >&2

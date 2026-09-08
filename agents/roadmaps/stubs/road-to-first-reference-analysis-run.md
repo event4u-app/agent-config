@@ -43,10 +43,22 @@ resolution to a **run-specific authorization** rather than structurally to
 Phases 3-4.
 
 **Receiver:**
-[`road-to-first-reference-analysis-observation`](../road-to-first-reference-analysis-observation.md)
+[`road-to-first-reference-analysis-observation`](../later/road-to-first-reference-analysis-observation.md)
 now owns the run, carries the frozen shadow-arm protocol, and holds the
 observation-based reopening trigger. This stub is disposed of by that roadmap's
 step 1.6, not before.
+
+**Path updated 2026-09-08 — the receiver is PARKED, not archived, and still owns
+the run.** It moved from `agents/roadmaps/` to `agents/roadmaps/later/` by AI
+council decision (2026-09-08, Q1 verdict (a), **1 of 2 seats present —
+DEGRADED**), because five of its six steps are gated behind two blockers no
+agent can clear. Nothing about this stub's own disposition changed: step 1.6 is
+still the disposer, it is still un-run, and the receiver's link above now points
+at the parked path so it keeps resolving. A parked roadmap is a live receiver —
+`agents/roadmaps/later/` is one of the two destinations the archival sweep
+accepts for a carried item — so the chain from
+`road-to-bounded-reference-harvest-loop` through this stub to the observation is
+unbroken.
 
 ## Update 2026-09-08 — two findings the named producer needs before running
 

@@ -12,6 +12,7 @@ import {
     sqliteTwinPath,
     twinCounts,
 } from '../../src/scripts/code_graph/sqlite_store.js';
+import type { CodeGraph } from '../../src/scripts/code_graph/types.js';
 import { isSqliteAvailableSync, loadSqliteSync, stampUserVersion } from '../../src/scripts/_lib/sqlite_guard.js';
 
 const sqliteOk = isSqliteAvailableSync();
@@ -53,7 +54,12 @@ describe.runIf(sqliteOk)('code-graph SQLite twin (ADR-129)', () => {
         const viaTwin = loadGraph(jsonPath);
         fs.rmSync(sqliteTwinPath(jsonPath));
         const viaJson = loadGraph(jsonPath);
-        expect(serializeGraph(viaTwin.graph)).toBe(serializeGraph(viaJson.graph));
+        // `graph` is nullable since 2.1 — it is null on the INDEXED path, which
+        // this fixture never takes: the corpus is far below
+        // INDEXED_READ_MIN_EDGES, so both loads materialize it.
+        expect(viaTwin.graph).not.toBeNull();
+        expect(viaJson.graph).not.toBeNull();
+        expect(serializeGraph(viaTwin.graph as CodeGraph)).toBe(serializeGraph(viaJson.graph as CodeGraph));
         expect(query(viaTwin, 'caller')).toEqual(query(viaJson, 'caller'));
         expect(affected(viaTwin, 'callee')).toEqual(affected(viaJson, 'callee'));
     });
@@ -73,7 +79,7 @@ describe.runIf(sqliteOk)('code-graph SQLite twin (ADR-129)', () => {
         expect(loadSerializedFromTwin(jsonPath)).toBeNull();
         expect(fs.existsSync(twin)).toBe(false); // dropped for re-emission
         const g = loadGraph(jsonPath); // loads fine via JSON
-        expect(g.graph.nodes.length).toBeGreaterThan(0);
+        expect((g.graph as CodeGraph).nodes.length).toBeGreaterThan(0);
         expect(fs.existsSync(twin)).toBe(true); // zero-touch re-emit happened
     });
 
@@ -94,7 +100,7 @@ describe.runIf(sqliteOk)('code-graph SQLite twin (ADR-129)', () => {
         const before = fs.readFileSync(jsonPath, 'utf8');
         fs.rmSync(sqliteTwinPath(jsonPath));
         expect(fs.readFileSync(jsonPath, 'utf8')).toBe(before);
-        expect(loadGraph(jsonPath).graph.nodes.length).toBeGreaterThan(0);
+        expect((loadGraph(jsonPath).graph as CodeGraph).nodes.length).toBeGreaterThan(0);
     });
 });
 

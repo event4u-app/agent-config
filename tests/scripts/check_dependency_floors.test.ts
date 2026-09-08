@@ -39,17 +39,29 @@ describe('check_dependency_floors', () => {
     });
 
     it('GREEN: an exact pin listed in EXACT_PIN_EXCEPTIONS passes', () => {
-        // Injected list: the shipped one is empty since the code-graph parser
-        // pair left `dependencies`, but the branch must still work for the next
-        // exception — a fake production entry would be the dishonest alternative.
+        // Injected list rather than the shipped one, deliberately: this pins the
+        // BRANCH, and injecting keeps it true whatever the shipped list happens
+        // to hold. The shipped list's own contents are asserted separately below.
         expect(
             evaluate({ 'some-abi-locked-pkg': '0.24.7' }, { 'some-abi-locked-pkg': 'ABI-locked' }),
         ).toEqual([]);
     });
 
-    it('RED: the shipped exception list is empty — no exact pin is grandfathered', () => {
-        expect(Object.keys(EXACT_PIN_EXCEPTIONS)).toEqual([]);
-        expect(evaluate({ 'web-tree-sitter': '0.24.7' })).toHaveLength(1);
+    it('RED: the shipped exception list is exactly one entry, and it carries its reason', () => {
+        // This assertion used to read `toEqual([])` and used `web-tree-sitter`
+        // as its own negative example. ADR-259 (amended 2026-09-07) returned the
+        // parser to `dependencies` under an ABI lock, so the shipped state
+        // legitimately changed and the assertion moved with it.
+        //
+        // The RATCHET IS NOT WIDENED, and that is what the second half pins: a
+        // SECOND exception still reds this test, and an entry whose reason does
+        // not name the ABI coupling reds it too — so the escape stays one
+        // reviewed pin with a stated cause rather than a list that can grow.
+        expect(Object.keys(EXACT_PIN_EXCEPTIONS)).toEqual(['web-tree-sitter']);
+        expect(EXACT_PIN_EXCEPTIONS['web-tree-sitter']).toMatch(/ABI/);
+        // Excepted, so it passes — the refusal case moved to the test below,
+        // which uses a package that is NOT listed.
+        expect(evaluate({ 'web-tree-sitter': '0.24.7' })).toEqual([]);
     });
 
     it('RED: an exact pin NOT listed is rejected', () => {

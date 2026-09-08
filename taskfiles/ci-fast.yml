@@ -1274,6 +1274,32 @@ tasks:
         if [ "$rc" = "2" ]; then echo "⚠️  lint_evidence_artifacts: internal error — degraded advisory mode, allowing (exit-code contract §6)"; else exit "$rc"; fi;
       }
 
+  check-continuity-surface:
+    silent: true
+    desc: |
+      Continuity-surface ratchet (road-to-continuity-retirement-sequencing 4.2 /
+      AC-8). Publishes the five end-state numbers of
+      road-to-one-continuity-record — public continuity commands, session resume
+      pickers, persistent continuity artefacts, continuity schemas, normal-path
+      manual actions — derived from src/config/continuity-surface.json rather
+      than asserted, and refuses growth in any of them above the base ref.
+
+      The artefact axis is discovered BEHAVIOURALLY: every distinct leaf under
+      agents/runtime/state/ that any source names must be disposed of in the
+      inventory as counted or excluded-with-a-reason. That is deliberate. The AI
+      council of 2026-09-07 found that a count keyed on the word "continuity" is
+      gameable by renaming, and required the rule to read "any persisted state
+      written for later session/run recovery, verification, or context
+      restoration ... whether or not it is labeled continuity", with exclusions
+      staying visible. `checkpoints/` is the worked example the same council
+      named, and its exclusion is printed on every run.
+
+      It does NOT fail on distance-to-target. The targets are the roadmap's
+      destination, not an admission criterion: failing on them would red the
+      tree on debt the landing change did not cause, which this repository
+      reverts rather than adopts.
+    cmd: ./scripts-run src/scripts/check_continuity_surface
+
   check-estate-count:
     silent: true
     desc: |

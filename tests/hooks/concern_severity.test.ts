@@ -187,11 +187,11 @@ describe('hook concern severity declarations', () => {
     });
 
     it('the four self-declared-advisory PreToolUse concerns are advisory', () => {
-        // design-slop, code-graph-nudge and rtk-wrap all say "never blocks" in
+        // design-slop, code-graph-context and rtk-wrap all say "never blocks" in
         // their own headers; block-config-weakening's baselines path does too,
         // but it keeps `blocking` severity because its non-baseline path is a
         // real refusal — its advisory branch is handled by the WARN mapping.
-        for (const name of ['design-slop', 'code-graph-nudge', 'rtk-wrap']) {
+        for (const name of ['design-slop', 'code-graph-context', 'rtk-wrap']) {
             expect(concerns[name]?.severity, `${name} must be advisory`).toBe('advisory');
         }
     });

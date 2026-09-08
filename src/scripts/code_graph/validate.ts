@@ -6,6 +6,19 @@ import type { CodeGraph } from './types.js';
 
 const RELATIONS = new Set(['calls', 'imports', 'uses', 'inherits', 'member']);
 const CONFIDENCES = new Set(['EXTRACTED', 'INFERRED', 'AMBIGUOUS']);
+/** Mirrors `ResolvedVia` in types.ts — the full union, including the four
+ * values no build emits yet (2.3 and Phase 3 add them). */
+const RESOLVED_VIA = new Set([
+    'same-file',
+    'import-specifier',
+    'path-alias',
+    'psr4',
+    'route-table',
+    'test-import',
+    'name-lookup',
+    'dynamic',
+]);
+const PROVIDERS = new Set(['native']);
 const KINDS = new Set([
     'file',
     'class',
@@ -57,6 +70,16 @@ export function validateGraph(g: unknown): ValidateResult {
         if (!RELATIONS.has(ee['relation'] as string)) push(`edge[${i}].relation invalid: ${String(ee['relation'])}`);
         if (!CONFIDENCES.has(ee['confidence'] as string))
             push(`edge[${i}].confidence invalid: ${String(ee['confidence'])}`);
+        // Both are REQUIRED (2.2). Checked as presence-and-membership rather
+        // than membership alone, because an absent field and a misspelled one
+        // are different defects: absent means the build did not tag the edge,
+        // misspelled means the taxonomy drifted.
+        if (ee['resolved_via'] === undefined) push(`edge[${i}].resolved_via is required`);
+        else if (!RESOLVED_VIA.has(ee['resolved_via'] as string))
+            push(`edge[${i}].resolved_via invalid: ${String(ee['resolved_via'])}`);
+        if (ee['provider'] === undefined) push(`edge[${i}].provider is required`);
+        else if (!PROVIDERS.has(ee['provider'] as string))
+            push(`edge[${i}].provider invalid: ${String(ee['provider'])}`);
         // a source must be a known node; targets may be unresolved `symbol:` refs
         if (typeof ee['source'] === 'string' && !ids.has(ee['source'] as string))
             push(`edge[${i}].source is not a known node: ${String(ee['source'])}`);

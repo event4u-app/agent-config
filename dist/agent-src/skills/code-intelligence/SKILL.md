@@ -182,6 +182,28 @@ consumer-shipped SCIP index. Literal-string probes are reported as a separate
 cannot answer them at all, which is where grep stays necessary rather than a
 defect in the engine.
 
+## Staleness delivery — which hosts get it for free, and which do not
+
+Migrated verbatim from `external-code-graph-interop` so the obligation stays in
+the rule and the per-host delivery detail is paid only on activation.
+
+On a host with a verified `pre_tool_use` contract, the `code-graph-context`
+concern supplies this for free: once per session, on the first search or
+code read, it delivers the graph's state as structured `additionalContext` —
+`code-graph: fresh` or `code-graph: N commit(s) behind`. It is silent when no
+graph exists, so hearing nothing is not evidence that the graph is fresh.
+
+**On every other host that carrier does not exist**, and this section is the
+delivery: run `agent-config code-graph detect --format json` before trusting a
+relationship answer, and say which state you got. Which hosts those are is
+`agent-config hooks:status` — resolved from the platform table, never guessed
+from the host's name.
+
+Either way the disposition is the same: `behind:N` → `agent-config code-graph
+refresh` first, or use grep and say so. This is a freshness obligation, not an
+ordering claim; the rule's query-first ordering still governs which source to
+reach for.
+
 ## Do NOT
 
 - Do NOT rebuild a **fresh** consumer-shipped index — query it (interop
@@ -199,3 +221,6 @@ defect in the engine.
   discipline; the graph is one evidence source, still confirmed against the real
   code when load-bearing.
 - `agent-config code-graph` — the CLI surface over the engine (build / query / detect / affected).
+- [`discovery_graph`](../../scripts/discovery_graph.ts) — this suite's OWN
+  artifact relation-graph (`affected`/`explain`). The external code-graph is the
+  *source-code* analogue; keep the two apart when answering.

@@ -130,6 +130,25 @@
 # decision records in agents/decisions/.
 /agents/runtime/
 
+# Agent config — code-graph index, its derived SQLite twin, and the
+# single-flight refresh lock. REDUNDANT with the /agents/runtime/ catch-all
+# above, and named anyway rather than left implicit — do not delete as
+# duplication:
+#
+#   · Some hosts key a prompt cache on a hash of the workspace file list. The
+#     index is rewritten by post-commit and post-checkout (road-to-a-graph-that
+#     -is-shipped 1.3), so it is the most frequently-changing file a consumer
+#     never edits. An entry a reader can find by grepping the index's own name
+#     is what makes that cost traceable.
+#   · The twin and the lock are created beside the index by machinery a
+#     consumer never invokes directly; naming them says they are ours.
+#
+# All three are derived and disposable (ADR-129): rollback is `rm`, and the
+# next build or refresh re-creates them.
+/agents/runtime/state/code-graph-v1.json
+/agents/runtime/state/code-graph-v1.sqlite3
+/agents/runtime/state/code-graph-refresh.lock/
+
 # Agent config — Tier 1 hook + wizard runtime state (machine-generated,
 # regenerated on demand, never committed). Holds the dispatcher lock,
 # per-rule hook state (context-hygiene, verify-before-complete,

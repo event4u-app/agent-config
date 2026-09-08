@@ -124,10 +124,20 @@ stops holding the moment the store the census reads stops being the only one ava
 A consumer install, a second host, or a CI-visible corpus each ends it, and the choice
 returns.
 
-This file remains the live destination the parent's `[~]` step 3.1 and AC-6 carry to,
-which `deferralProblems` (`src/agent-src/scripts/archive_completed_roadmaps.ts:414`)
-verifies from both ends; archiving it would make that destination dead. That is why it
-stays live — not a status, and not a flip anyone is waiting for. The open A/B decision
+**Superseded 2026-09-08, and the correction is recorded rather than the text
+quietly swapped.** This file used to say it must stay live because archiving it
+"would make that destination dead". That reading was wrong about the mechanism.
+`archive_completed_roadmaps` MIGRATES a destination when it moves one — the run
+that archived this file reported `4 ref(s) migrated`, rewriting the carry
+pointers in the archived parent, in `road-to-skill-menu-economy`, in
+`stubs/road-to-carrier-transition-vocabulary.md` and in ADR-263 — and
+`lint_deferral_integrity` re-ran green afterwards over 701 dead roadmaps, "every
+annotated carry resolves". So being a deferral destination never required staying
+in the active directory; it required the destination to keep resolving, which the
+sweep guarantees. What actually held this file open was the blocker, and the
+blocker is resolved.
+
+The open A/B decision
 is filed as `blocker: skill-surface-framing-ab-choice` below, where a gate can read it.
 
 ## Acceptance Criteria
@@ -145,8 +155,29 @@ is filed as `blocker: skill-surface-framing-ab-choice` below, where a gate can r
 
 ### blocker: skill-surface-framing-ab-choice
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** owner
+- **Resolution, 2026-09-08:** **Option B**, recorded as
+  [`ADR-263`](../../docs/decisions/ADR-263-skills-are-explicitly-invoked-reference-material.md).
+  The `Resolved when` below asks for "a decision record for A or B"; ADR-263 is that
+  record for B. Decided by an AI council under a written owner delegation covering this
+  autonomous drain run — the delegation, and the fact that the reserved set itself is
+  unchanged, are recorded in ADR-263 § Authority.
+  **The council locked B conditionally** and named one precondition: document which hosts
+  were census-tested and whether they claim frontmatter routing, failing which Option D
+  (close the menu) was the honest closure. The precondition was discharged before the ADR
+  was written —
+  [`skill-trigger-frontmatter-has-no-host-reader-2026-09-08.md`](../evidence/analysis/skill-trigger-frontmatter-has-no-host-reader-2026-09-08.md),
+  pinned to `8a3160242`: one host was tested (a single Claude Code store), the key IS
+  delivered (`src/`, `dist/agent-src/` and `.augment/` agree; `condense.ts:1623-1627`
+  substitutes only `model_tier:` → `model:`), and nothing reads it —
+  `dist/router.json` carries no skills key, `compile_router.ts` contains zero occurrences
+  of `skills`, and the one in-tree reader indexes the field **only under `keyword-v2`**
+  (`score_skill_relevance.ts:170`) while the default scores `name + description`
+  (`:261-262`). So the zero is not a mechanism that failed; no mechanism exists.
+  **Read at its real strength:** the council was `⚠️ DEGRADED`, 1 of 2 seats present
+  (openai returned `os_error: ENOBUFS`). A single-seat verdict is a considered opinion,
+  not convergence.
 - **Blocks:** Options A and B; the file stays live as a deferral destination until
   one is taken up or the menu is closed
 - **What to do:** choose A (build a host-side activation path for the 12 skills that
@@ -185,4 +216,4 @@ The routing unit is the transition, not the document.
 |------|------|-----------|-------------|------------|----------------|
 | 1 | The zero is published with a reason and then read as settled | product | Option C records why 0 of 299 skills were invoked over 11,338 turns. A recorded reason next to a claim reads as a resolved question, and the surface question stays open behind it. | The blocker keeps A and B live rather than closed; C's own falsifier is recorded beside the claim and ends the option the moment a second store exists. | Blockers |
 | 2 | The census generalises from one machine's store | implementation | The reading is one local transcript store over 30 sessions. It bounds nothing beyond that store, and a consumer install or a second host would be a different population. | The falsifier is stated in the option and in the ledger entry: the reason stops holding the moment the store stops being the only one available. | The measurement this decision sits on |
-| 3 | The file is archived because its own checkboxes are complete | implementation | Phase 1 and both ACs are `[x]`. An archival sweep reading progress alone would move it, stranding the parent's `[~]` step 3.1 and AC-6 carries. | `lint_deferral_integrity` reds on a destination archived with the carry unresolved; the open blocker keeps the file out of a completed-roadmap sweep. | Decision, 2026-09-07 — what was recorded and what was NOT |
+| 3 | The file is archived because its own checkboxes are complete | implementation | RETIRED 2026-09-08 — this risk did not exist. The concern was that an archival sweep reading progress alone would strand the parent's `[~]` step 3.1 and AC-6 carries. `archive_completed_roadmaps` migrates a destination when it moves one: the run that archived this file reported `4 ref(s) migrated` and `lint_deferral_integrity` re-ran green over 701 dead roadmaps. | None needed. The mitigation this row named — "the open blocker keeps the file out of a completed-roadmap sweep" — described a side effect of the blocker, never a deferral-integrity mechanism. | Decision, 2026-09-07 — what was recorded and what was NOT |

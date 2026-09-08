@@ -447,6 +447,19 @@ jobs:
         # gate-coverage manifest exists to prevent.
         run: ./scripts-run src/scripts/check_estate_count
 
+      - name: Continuity-surface ratchet + behavioural inventory
+        # Same no-warn-and-allow stance as the estate ratchet above, and for the
+        # same reason: exit 2 here means the inventory could not be read against
+        # the tree, and a surface count that passes when it read nothing is
+        # exactly the false green the gate-coverage manifest exists to prevent.
+        run: ./scripts-run src/scripts/check_continuity_surface
+
+      - name: Continuity-surface gate self-test
+        # The negative control the row in gate-coverage.yml points at instead of
+        # a planted canary: 7 cases, 4 rejecting, covering every failure class in
+        # both directions against throwaway repositories.
+        run: ./scripts-run src/scripts/check_continuity_surface --self-test
+
       - name: Gate R1 — plan Risk Registers (plan-review-gates §1)
         # Exit-code contract §6: 2 = internal error → degraded advisory
         # (warn-and-allow — a broken gate never blocks its own fix).
@@ -648,11 +661,21 @@ jobs:
         # retried or explained at runtime, only prevented here.
         run: task check-dependency-floors
 
-      - name: Payload budget — compressed tarball + per-skill share
+      - name: Payload budget — compressed tarball + per-skill share + binary eligibility
         # Buildless (`npm pack --ignore-scripts`), so it runs on EVERY PR in
         # seconds and catches content accretion where it happens. The built
         # artifact's unpacked size stays owned by the release-time
         # evaluator-umbrella budget; this is not a second gate on that number.
+        #
+        # Since 2026-09-08 this step ALSO runs the binary-eligibility predicate,
+        # which re-derives every admitted binary from the packed bytes and
+        # probes each one through the engine's own loader. It must run on every
+        # manifest change rather than on request, or
+        # `src/config/packed-binary-manifest.json` drifts from the production
+        # loader and the gate starts certifying a claim nobody re-checked. The
+        # `src/**` path filter above already covers the manifest, the predicate
+        # and the vendored grammars themselves — named here so a future filter
+        # narrowing does not silently drop the coverage.
         run: task check-pack-size
 
       - name: Payload delta vs base — reported, never gated
