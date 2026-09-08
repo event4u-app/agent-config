@@ -3,7 +3,7 @@
 The trigger layer (`trigger-fixtures.json`) answers *did the right discipline
 fire?* This rubric answers *did firing it produce better work?* — the quality
 half of the hybrid eval. Transcripts are **hand-scored** (no app runtime to
-auto-judge), 4 dimensions × 4 points each (0–3), per the L8 fail thresholds.
+auto-judge), 5 dimensions × 4 points each (0–3), per the L8 fail thresholds.
 
 ## The 12 slots
 
@@ -22,7 +22,7 @@ Each slot is run **twice**: **baseline** (suite without RDP) and **treatment**
 (suite + RDP). Store both transcripts in `golden-transcripts/<NN>-<slug>.md`
 (see `_template.md`).
 
-## The four dimensions (score each 0–3)
+## The five dimensions (score each 0–3)
 
 1. **Notes-first adherence** — reasoning (hypotheses, predictions, decisions)
    lives in notes, NOT echoed into the response. `3` = clean separation;
@@ -36,6 +36,31 @@ Each slot is run **twice**: **baseline** (suite without RDP) and **treatment**
 4. **Coherence / re-grounded summary** — the final summary is readable by someone
    who saw none of the working thread (outcome-first, no arrow-chain shorthand).
    `3` = clean re-ground; `0` = dense working-shorthand mush.
+5. **Form-alternative surfacing** — was a materially different **solution form**
+   generated and discriminated *before* the choice, rather than the one form the
+   run started with being verified afterwards? Dim 3 scores sequencing INSIDE a
+   chosen form (which unknown was resolved first); this scores whether a second
+   form was ever on the table at all. The two are independent — a run can be
+   perfectly risk-first inside the only shape it ever considered.
+   - `0` = **one form only.** A single approach appears and everything after it
+     is verification. This is what a run generating one form scores, and no
+     amount of good execution raises it.
+   - `1` = a second form is *mentioned* but not discriminated — no axis it
+     differs on, or no reason given for dropping it.
+   - `2` = a second form is named on a stated axis, but nothing observable
+     decides between them; the choice reads as preference.
+   - `3` = a second form is named on a stated axis **and** the observation that
+     decided between them is stated. `K0` — keep the current form, change
+     nothing — counts as a form.
+
+   **Forced-form carve-out:** where exactly one form is admissible (the framework
+   fixes the extension point, an existing contract fixes the location), a run that
+   names the constraint foreclosing the alternatives scores `3`, not `0`. The
+   obligation is to check whether a material alternative exists and to say what
+   rules it out — never to invent one so the dimension looks full.
+
+   **Materially different** means differing on an axis, not in placement: three
+   candidates that differ only in where a helper lives are one candidate.
 
 ## Scoring & thresholds (per L8)
 
@@ -52,10 +77,10 @@ Each slot is run **twice**: **baseline** (suite without RDP) and **treatment**
 
 ## Scoring sheet (fill during Phase 7)
 
-| slot | host band | dim1 notes | dim2 ground | dim3 premature | dim4 coherence | mean | variant |
-|------|-----------|------------|-------------|----------------|----------------|------|---------|
-| 01 |  |  |  |  |  |  | baseline / treatment |
-| … |  |  |  |  |  |  |  |
+| slot | host band | dim1 notes | dim2 ground | dim3 premature | dim4 coherence | dim5 form-alt | mean | variant |
+|------|-----------|------------|-------------|----------------|----------------|---------------|------|---------|
+| 01 |  |  |  |  |  |  |  | baseline / treatment |
+| … |  |  |  |  |  |  |  |  |
 
 Two raters where possible; record disagreement. Single rater is acceptable for a
 first pass but note it as a confidence caveat.

@@ -65,7 +65,7 @@
  */
 
 import * as path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 import * as fs from 'node:fs';
 import { spawnSync } from 'node:child_process';
 
@@ -79,6 +79,8 @@ import { probeLater, type ResumeFinding } from './resume_probe.js';
 import { execute } from './gate_execute.js';
 import { listPending } from '../templates/scripts/work_engine/hooks/builtin/staged_confirmation_store.js';
 import type { StagedAction } from '../templates/scripts/work_engine/hooks/builtin/staged_confirmation.js';
+
+import { isCliEntry } from './_cli_entry.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -928,26 +930,8 @@ function main(argv?: readonly string[]): number {
     return 0;
 }
 
-function _isCliEntry(): boolean {
-    if (process.argv[1] === undefined) {
-        return false;
-    }
-    const argvPath = path.resolve(process.argv[1]);
-    if (import.meta.url === pathToFileURL(argvPath).href) {
-        return true;
-    }
-    // A symlinked invocation (`.augment/scripts` → `dist/agent-src/scripts`, or
-    // macOS /var → /private/var) makes the raw URLs differ: import.meta.url is
-    // the resolved real path while argv[1] keeps the symlink. Compare realpaths
-    // so the entry guard still fires through the projection.
-    try {
-        return fs.realpathSync(_HERE) === fs.realpathSync(argvPath);
-    } catch {
-        return false;
-    }
-}
 
-if (_isCliEntry()) {
+if (isCliEntry(import.meta.url, 'roadmap_gates')) {
     process.exitCode = main();
 }
 
