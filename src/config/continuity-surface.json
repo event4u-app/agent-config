@@ -1,0 +1,502 @@
+{
+    "$comment": "Behavioural continuity-surface inventory. See src/scripts/_lib/continuity_surface.ts for the contract and src/scripts/check_continuity_surface.ts for the gate. Rows are validated against the tree on every run: every `locus` must resolve, and every persisted-state leaf under agents/runtime/state/ that any source file names must appear here with a disposition. Retiring a surface means DELETING its row — that is what makes a retirement measured rather than claimed.",
+    "axis_contract": {
+        "public_continuity_commands": "A public CLI verb or slash command that a normal user must invoke for continuity to happen. An optional affordance is excluded WITH its reason, never silently.",
+        "session_resume_pickers": "An interactive surface that asks a human to choose which prior session to resume.",
+        "persistent_continuity_artefacts": "Persisted state written for later session recovery, verification, or context restoration — whether or not it is labelled continuity. Corpus discovered behaviourally from agents/runtime/state/, never from the word.",
+        "continuity_schemas": "A distinct schema definition for a record a successor session reads to restore state.",
+        "normal_path_manual_actions": "A manual step a normal user must take on the normal path for continuity to work."
+    },
+    "targets": {
+        "public_continuity_commands": 0,
+        "session_resume_pickers": 0,
+        "persistent_continuity_artefacts": 1,
+        "continuity_schemas": 1,
+        "normal_path_manual_actions": 0
+    },
+    "rows": [
+        {
+            "id": "schema:capsule",
+            "axis": "continuity_schemas",
+            "disposition": "counted",
+            "locus": "src/scripts/_lib/subagent_capsule.ts:112",
+            "reason": "The one continuity-record schema: version 4, variant-discriminated, accepting v3 and v4. A recorded lock governs it — one schema, variant-discriminated, no new format, adding fields or variants but never repurposing or removing one. This is the surviving `1`."
+        },
+        {
+            "id": "schema:context-observation",
+            "axis": "continuity_schemas",
+            "disposition": "excluded",
+            "locus": "src/scripts/_lib/context_observation.ts:55",
+            "reason": "A recorded probe of external context (the fingerprint a checkpoint may carry). An input to a record, never a record."
+        },
+        {
+            "id": "schema:run-checkpoint",
+            "axis": "continuity_schemas",
+            "disposition": "excluded",
+            "locus": "src/scripts/_lib/run_checkpoint.ts:45",
+            "reason": "Run-integrity evidence, excluded on the same recorded D2 ruling that excludes the `checkpoints/` artefact: different key (run id), different consumer (`run:supervise`), different failure semantics (an integrity alarm, not a degraded resume)."
+        },
+        {
+            "id": "schema:session-eol-state",
+            "axis": "continuity_schemas",
+            "disposition": "excluded",
+            "locus": "src/scripts/_lib/session_eol.ts:55",
+            "reason": "The writer`s own bookkeeping, not a record a successor reads. It holds counters and advisory stamps used across Stops within one session; nothing restores a session from it."
+        },
+        {
+            "id": "manual:run-session-recycle-before-clear",
+            "axis": "normal_path_manual_actions",
+            "disposition": "counted",
+            "locus": "src/scripts/hooks/session_eol_hook.ts:258",
+            "reason": "The advisory the stop slot injects past the recycle threshold instructs a human to run `agent-config session:recycle`, wait for the absolute path it prints, and only then `/clear`. That is a manual action on the normal path, and it exists precisely because no automatic writer does. It is what step 3.1 removes the need for."
+        },
+        {
+            "id": ".dispatcher",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/hooks/cline-dispatcher.sh:77",
+            "reason": "The cline dispatcher marker file. Host wiring, not session state."
+        },
+        {
+            "id": ".dispatcher.lock",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/context_hygiene_hook.ts:36",
+            "reason": "A concurrency lock for the dispatcher. Held within one invocation."
+        },
+        {
+            "id": "ai-video-telemetry.jsonl",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/media/lib/telemetry.sh:7",
+            "reason": "Media-pipeline telemetry. A different subsystem entirely."
+        },
+        {
+            "id": "audit",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/_lib/activation_receipt_producer.ts:322",
+            "reason": "The append-only orchestration audit log. Telemetry and cost reporting; no restore path reads it."
+        },
+        {
+            "id": "chain-nudge.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/hooks/chain_nudge_hook.ts:190",
+            "reason": "Once-per-session nudge latch."
+        },
+        {
+            "id": "checkpoints",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/_lib/headless_invocation.ts:48",
+            "reason": "Run-integrity evidence, not conversational state. Excluded on the recorded ruling of the AI council of 2026-09-07 (D2): a run checkpoint is keyed by RUN id, consumed by `run:supervise`, and a disagreement there is an integrity alarm; a continuity record is keyed by SESSION, consumed by resume, and a gap there is a degraded resume. Different lifecycle, consumer, key and failure semantics. This is the exclusion the same council named as the gaming vector, which is exactly why it is printed rather than hidden in a predicate."
+        },
+        {
+            "id": "code-graph-nudge.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/hooks/code_graph_nudge_hook.ts:101",
+            "reason": "Once-per-session nudge latch."
+        },
+        {
+            "id": "code-graph-v1.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/code_graph/cli.ts:28",
+            "reason": "A derived code-intelligence index. A cache of the source tree, rebuildable from it, and never session state."
+        },
+        {
+            "id": "config-weakening.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/hooks/block_config_weakening.ts:211",
+            "reason": "Per-session allowlist-growth counters for the config-weakening guard."
+        },
+        {
+            "id": "context-fill.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "counted",
+            "locus": "src/scripts/hooks/session_eol_hook.ts:31",
+            "reason": "Machine-readable fill level plus threshold state, overwritten every Stop. Written for later verification of whether the session crossed the recycle threshold; it has a producer and no in-repository consumer, and the council of 2026-09-07 (D2) authorised retiring it with the concern."
+        },
+        {
+            "id": "context-hygiene.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/_cli/cmd_analyze_session.ts:15",
+            "reason": "Turn and loop counters for the context-hygiene carrier. Read within a session to decide whether to warn; never read by a successor."
+        },
+        {
+            "id": "council-probes.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/ai_council/probe_store.ts:52",
+            "reason": "Council seat availability probe cache. Provider state."
+        },
+        {
+            "id": "decisions",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/_dispatch.bash:1302",
+            "reason": "Decision memos written during a run and rendered by `run:supervise`. A record of what was decided, not state a successor resumes from."
+        },
+        {
+            "id": "design-pass-hook.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/hooks/design_pass_hook.ts:66",
+            "reason": "Design-pass hook latch."
+        },
+        {
+            "id": "design-slop-hook.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/hooks/design_slop_hook.ts:18",
+            "reason": "Design-slop hook latch."
+        },
+        {
+            "id": "discovery-graph-v1.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/complexity_report.ts:223",
+            "reason": "A derived artefact-relation cache. Rebuildable from the tree."
+        },
+        {
+            "id": "dispatch-issues.jsonl",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/hooks/dispatch_issues.ts:12",
+            "reason": "Dispatcher self-diagnostics. Read by `hooks_doctor`."
+        },
+        {
+            "id": "edit-shape",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/hooks/edit_shape_hook.ts:46",
+            "reason": "Edit-shape hook per-file state, scoped to one session."
+        },
+        {
+            "id": "end-review-nudge",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/hooks/end_review_nudge_hook.ts:138",
+            "reason": "Once-per-session nudge latch."
+        },
+        {
+            "id": "gate-budget-ledger.jsonl",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/server/schemas/settings.ts:208",
+            "reason": "Gate-budget accounting. CI cost bookkeeping."
+        },
+        {
+            "id": "handoff-context.md",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "counted",
+            "locus": "src/scripts/_cli/cmd_handoff.ts:9",
+            "reason": "A second, prose-shaped session handoff written by `agent-config handoff` and injected once at the next `session_start`. Same job as the record, different format and different lifecycle — a competing mental model, which is what the count exists to expose."
+        },
+        {
+            "id": "hot-context.md",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "counted",
+            "locus": "src/scripts/hot_context_hook.ts:11",
+            "reason": "A working-memory cache rebuilt on stop/session_end/pre_compact and restored at session_start. Persisted state written for context restoration, so the behavioural rule counts it whatever it is called."
+        },
+        {
+            "id": "injection-census.jsonl",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/bench_hook_injection.ts:42",
+            "reason": "Hook-injection benchmark output. Measurement, not state."
+        },
+        {
+            "id": "injection-turn",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/hooks/injection_budget.ts:349",
+            "reason": "Per-turn injection budget accounting. Lives and dies inside one turn."
+        },
+        {
+            "id": "interruptions.jsonl",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/hooks/interruption_ledger_hook.ts:6",
+            "reason": "An interruption ledger for reporting. Analysis input, never a restore source."
+        },
+        {
+            "id": "memory-index-v1.sqlite3",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/_lib/memory_fts_index.ts:36",
+            "reason": "The memory full-text index. A derived cache over `agents/memory/`, rebuildable, and not session state."
+        },
+        {
+            "id": "onboarding-gate.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/onboarding_gate_hook.ts:13",
+            "reason": "Onboarding latch. Same class as the disclosure latch."
+        },
+        {
+            "id": "probe-throttle",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/hooks/probe_throttle.ts:9",
+            "reason": "Generic probe throttling stamps."
+        },
+        {
+            "id": "quota-parked",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/_lib/quota_parked.ts:38",
+            "reason": "Council seat quota parking. Provider state, unrelated to session recovery."
+        },
+        {
+            "id": "recycle-envelope.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "counted",
+            "locus": "src/scripts/_cli/cmd_session_recycle.ts:9",
+            "reason": "The continuity record itself: written by `session:recycle`, resolved per session by `resolveContinuityRecord`, consumed once at `session_start` by the handoff-context concern. This is the artefact the whole roadmap is collapsing the others INTO — the surviving `1`."
+        },
+        {
+            "id": "render",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/_dispatch.bash:77",
+            "reason": "Scratch render output for the UI surfaces."
+        },
+        {
+            "id": "reread-guard",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/hooks/reread_guard_hook.ts:21",
+            "reason": "Per-file re-read guard stamps, scoped to one session and never restored into another."
+        },
+        {
+            "id": "review-axis",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/review_axis_report.ts:209",
+            "reason": "Review-axis report state. Analysis output."
+        },
+        {
+            "id": "routing-telemetry.jsonl",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/_cli/cmd_route_audit.ts:48",
+            "reason": "Router match telemetry for `route:audit`. Opt-in measurement."
+        },
+        {
+            "id": "rule-inject",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/hooks/rule_inject_hook.ts:124",
+            "reason": "Rule-injection dedupe state, scoped to one session."
+        },
+        {
+            "id": "rule-trips.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/_cli/cmd_route_audit.ts:17",
+            "reason": "Rule-trip counters for `route:audit`. Measurement."
+        },
+        {
+            "id": "run-continuation.jsonl",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/hooks/run_continuation_hook.ts:41",
+            "reason": "An append-only event ledger for the stop-slot continuation gate. It records what the gate decided, and nothing reads it to restore a session."
+        },
+        {
+            "id": "session-eol",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "counted",
+            "locus": "src/scripts/_cli/handoff_sessions.ts:102",
+            "reason": "Per-session end-of-life counters plus the advisory stamps. Persisted for VERIFICATION across Stops (the \"advised, but no envelope exists\" counter-check) and read by `handoff_sessions.ts` to populate the resume picker, so it is in scope under the behavioural rule even though it restores nothing itself."
+        },
+        {
+            "id": "skill-tiers.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/_lib/mcp_bridge.ts:319",
+            "reason": "Computed skill tiers. A derived cache over `src/skills/`."
+        },
+        {
+            "id": "source-first-gate.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/hooks/source_first_gate_hook.ts:95",
+            "reason": "Source-first gate latch state."
+        },
+        {
+            "id": "source-first-gate.jsonl",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/hooks/source_first_gate_hook.ts:93",
+            "reason": "Source-first gate event ledger."
+        },
+        {
+            "id": "subagent-ledger",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/_lib/host_capability.ts:219",
+            "reason": "Subagent return envelopes. Worker-generation lifecycle, explicitly a different subject from main-session continuity — the parent roadmap named the two-envelope vocabulary collision and kept them distinct."
+        },
+        {
+            "id": "suggestion-latch.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/hooks/suggestion_capture_hook.ts:58",
+            "reason": "Once-per-session suggestion latch."
+        },
+        {
+            "id": "supervise-relaunches.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/interruption_report.ts:264",
+            "reason": "Relaunch counters for the supervisor. Run-lifecycle bookkeeping under the run-integrity exclusion above."
+        },
+        {
+            "id": "surface-probe.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/surface_probe_hook.ts:15",
+            "reason": "Surface-probe throttle state."
+        },
+        {
+            "id": "team-review-gate.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/ai_team/review_gate.ts:102",
+            "reason": "Team review-gate latch, consumed within the session that set it."
+        },
+        {
+            "id": "telemetry-disclosure.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/telemetry_disclosure_hook.ts:26",
+            "reason": "A once-per-project disclosure latch. It records that a notice was shown, which is consent bookkeeping rather than context."
+        },
+        {
+            "id": "test-results.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/_lib/test_red_state.ts:2",
+            "reason": "Last test-run red state, read by the verification gates within a run."
+        },
+        {
+            "id": "tool-result-census.jsonl",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/hooks/tool_result_bytes_hook.ts:92",
+            "reason": "Tool-result byte census. Measurement output."
+        },
+        {
+            "id": "turn-end-gate",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/_lib/turn_end_refusals.ts:73",
+            "reason": "Refusal records for the turn-end quality gate. Consumed by the gate and by `hooks_doctor`, not by a successor session."
+        },
+        {
+            "id": "ui-audit.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/_dispatch.bash:74",
+            "reason": "UI audit output. Analysis result."
+        },
+        {
+            "id": "ui-route-nudge.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/hooks/ui_route_nudge_hook.ts:174",
+            "reason": "Once-per-session nudge latch."
+        },
+        {
+            "id": "unattended-budget.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/_lib/unattended_guard.ts:45",
+            "reason": "Unattended-run budget accounting."
+        },
+        {
+            "id": "unattended-jobs.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/_lib/unattended_guard.ts:46",
+            "reason": "Unattended job records."
+        },
+        {
+            "id": "verify-before-complete.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/_lib/envelope_grounding.ts:130",
+            "reason": "Verification-gate state, consumed within the run that wrote it."
+        },
+        {
+            "id": "work",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/explain_run.ts:725",
+            "reason": "Work-engine decision traces under `work/<id>/`. Per-run explainability output consumed by `explain_run`, not a restore source."
+        },
+        {
+            "id": "x.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/check_prefix_stable_mutation.ts:268",
+            "reason": "Not a surface: a string literal inside `check_prefix_stable_mutation`s own fixture, which the discovery walk sees because it scans source text. Listed rather than filtered out, because a filter is where a real leaf would eventually hide."
+        },
+        {
+            "id": "verb:chat-history:checkpoint",
+            "axis": "public_continuity_commands",
+            "disposition": "excluded",
+            "locus": "src/cli/registry.ts:113",
+            "reason": "Also capture, and out of scope on the same ground. What step 4.1b targets is the colliding NAME, not the capability: the verb dispatches to `chat_history.ts hook-append --event phase` and has four live producers in generated git hooks."
+        },
+        {
+            "id": "verb:chat-history:hook",
+            "axis": "public_continuity_commands",
+            "disposition": "excluded",
+            "locus": "src/cli/registry.ts:112",
+            "reason": "Chat-history CAPTURE, which the parent roadmap places out of scope by decision: it is the only cross-host transcript source and has no substitute on hosts with no native transcript."
+        },
+        {
+            "id": "verb:handoff",
+            "axis": "public_continuity_commands",
+            "disposition": "excluded",
+            "locus": "src/cli/registry.ts:62",
+            "reason": "An OPTIONAL affordance, not a required step. The parent roadmap`s blocker resolution of 2026-09-06 explicitly preserved `handoff` and `/agent-handoff` as the surviving verb and command, and its goal states the target as \"no continuity-specific command is REQUIRED\" rather than none existing. Excluded on that wording — and the tension is recorded rather than hidden: read as a bare count of existing public commands, the parent`s target of 0 is unreachable while its own resolution keeps this verb alive."
+        },
+        {
+            "id": "verb:session:recycle",
+            "axis": "public_continuity_commands",
+            "disposition": "counted",
+            "locus": "src/cli/registry.ts:73",
+            "reason": "REQUIRED on the normal path today: it is the only writer of the continuity record in the tree, so continuity does not happen unless a human runs it. That is what makes it a continuity command rather than an affordance, and it is on the owner-authorised retirement set of 2026-09-06."
+        },
+        {
+            "id": "command:chat-history",
+            "axis": "session_resume_pickers",
+            "disposition": "excluded",
+            "locus": "src/domains/meta/chat-history/command.md:3",
+            "reason": "The orchestrator shell that routes to the import picker; it presents no picker of its own. Counting both would double-count one surface. It is retired together with the picker it routes to, so the row disappears with it."
+        },
+        {
+            "id": "picker:agent-handoff",
+            "axis": "session_resume_pickers",
+            "disposition": "counted",
+            "locus": "src/domains/meta/agent-handoff/command.md:41",
+            "reason": "A numbered-options block asking a human which prior session to resume. It is a picker by construction, and the parent`s target of 0 pickers is in tension with its preservation of this command — recorded here so the tension is visible in the count rather than argued away."
+        },
+        {
+            "id": "picker:chat-history-import",
+            "axis": "session_resume_pickers",
+            "disposition": "counted",
+            "locus": "src/domains/meta/chat-history/import/command.md:77",
+            "reason": "A numbered-table session picker plus a resume offer — a second, competing answer to \"which prior session do I continue from\". On the owner-authorised retirement set of 2026-09-06."
+        }
+    ]
+}

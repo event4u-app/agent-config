@@ -1299,6 +1299,23 @@ gates:
       or if a drop to 0 is ever traced to a scanner defect rather than to an
       empty corpus.
 
+  - id: check_continuity_surface
+    argv: []
+    min_scanned: 40
+    corpus: "the rows of src/config/continuity-surface.json PLUS every distinct persisted-state leaf under agents/runtime/state/ that any source file under src/scripts, src/agent-src/scripts, src/cli, src/shared, src/server or src/install names (69 rows + 57 discovered leaves = 126 at introduction). The floor is 40 rather than ~120 because the roadmap this gate serves is SUBTRACTIVE by design: rows are meant to disappear as surfaces are retired, and a floor set near the live number would red on the very drawdown the gate exists to encourage. It is still far above a collapse — the discovery walking a moved root reads 0, and a taxonomy that dropped to a handful of hand-picked rows would trip it."
+    status: enforced
+    no_canary_reason: >-
+      the negative control is the gate's own --self-test, run in CI: 7 cases, 4
+      rejecting, covering every failure class in BOTH directions — an
+      undisposed persisted-state leaf, a row whose locus no longer resolves, a
+      counted axis above the base-ref floor, and a row with no reason of
+      substance, against three accepting cases including the shipped inventory
+      over the shipped tree. It builds throwaway repositories rather than
+      touching this one. A planted canary here would mean committing a real
+      undisposed state path into src/ and removing it again, and a forgotten one
+      is precisely the defect this gate exists to catch — the same argument
+      check_gate_reachability records for itself one row below.
+
   - id: check_gate_reachability
     script: src/scripts/check_gate_reachability.ts
     min_scanned: 10
