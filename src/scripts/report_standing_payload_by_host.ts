@@ -367,16 +367,29 @@ export function renderArtifact(root: string, pin: string): string {
     L.push('');
     L.push('## The two units, recorded once');
     L.push('');
-    L.push('- **chars/4** is what `check_preamble_payload_budget` reports, and its measured total at');
-    L.push('  this pin is **138,200 tok** across three buckets (project-scope rules 122,608 ·');
-    L.push('  preloaded skills catalog 14,846 · CLAUDE.md hierarchy 746).');
+    // The rules bucket is DERIVED here, never a literal. The two figures below
+    // it are readings of another gate and are dated rather than recomputed —
+    // this script does not own them, and a stale literal presented as live is
+    // the defect class R2 findings 8/9/14 are about (spotted while fixing them:
+    // `122,608` had gone stale and contradicted the computed sum three
+    // paragraphs down, inside the same emitted artifact).
+    const censusTok = tokensChars4(perTreeChars) + tokensChars4(manualCorpusChars(root));
+    const SKILLS_CATALOG_TOK = 14846;
+    const CLAUDE_MD_TOK = 746;
+    L.push('- **chars/4** is what `check_preamble_payload_budget` reports. Its rules bucket is');
+    L.push(`  derived here as **${String(censusTok)} tok** (every \`.md\` in the projection directory).`);
+    L.push('  The other two buckets are that gate\'s own readings, last taken 2026-09-08 and NOT');
+    L.push(`  recomputed by this script: preloaded skills catalog ${String(SKILLS_CATALOG_TOK)} ·`);
+    L.push(`  CLAUDE.md hierarchy ${String(CLAUDE_MD_TOK)}, for a measured total of`);
+    L.push(`  **${String(censusTok + SKILLS_CATALOG_TOK + CLAUDE_MD_TOK)} tok**. Re-read it with`);
+    L.push('  `./scripts-run src/scripts/check_preamble_payload_budget` rather than quoting this line.');
     L.push('- **Exact BPE** is the unit `docs/CLAIMS.md:365` uses for the delivery experiment:');
     L.push('  120,582 → 18,573 exact-BPE standing tokens for the rule corpus under');
     L.push('  `lean_projection.mode: delivery`. The two units are NOT interchangeable and no delta');
     L.push('  is computed between them here.');
     L.push('');
     L.push('**Reconciling the two rule figures, because they differ and both are right.** The');
-    L.push('census bucket reads 122,608 chars/4 tok over the projection directory; the projected-set');
+    L.push(`census bucket reads ${String(censusTok)} chars/4 tok over the projection directory; the projected-set`);
     const manualChars = manualCorpusChars(root);
     L.push(`row above reads ${String(tokensChars4(perTreeChars))}. The gap is the ${String(corpus.manual)} \`type: manual\` rules: the census counts every`);
     L.push(`\`.md\` in the directory, this table counts only what a per-tool tree receives. ${String(manualChars)} bytes`);
