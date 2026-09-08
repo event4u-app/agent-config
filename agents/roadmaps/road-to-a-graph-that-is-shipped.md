@@ -1003,7 +1003,13 @@ the alternative was to present a pass nobody attended as convergence. -->
   section rejects.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-07 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-09-08 | reviewer: claude/host -->
+
+<!-- RE-REVIEWED 2026-09-08 at 25/25, and this is a re-reading of all five rows rather
+than a date bump. The `Post-close` column is what changed; the five items, their ranks and
+their mitigations are the ones the plan was accepted with. Two rows are now DISCHARGED by
+measurement, two are mitigated as designed, and one is REFRAMED because the mechanism it
+worried about turned out to be a different mechanism. -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |---|---|---|---|---|---|
@@ -1012,6 +1018,46 @@ the alternative was to present a pass nobody attended as convergence. -->
 | 3 | Git hooks pile up rebuilds | implementation | Concurrent refreshes saturate CPU on a busy branch — the known failure of every commit-triggered indexer. | Single-flight lock, the existing `--budget-seconds`, and the hook returns immediately; K7 forbids blocking on a stale graph | Phase 1 — Delivered on install |
 | 4 | `dead` reports entry points as dead | product | A confident false "dead" is worse than no verb: it invites a deletion the graph cannot justify. | 3.3 enumerates the declared entry-point sources — routes, exports, `src/cli/registry.ts`, the hook manifest — and requires a fixture with a route-only symbol | Phase 3 — Three verbs a gate can read |
 | 5 | Phase 2.1 is scoped from a corrected reading and could still be wrong | implementation | The draft's read-path claim did not survive reproduction (D6). The corrected claim — twin returns a serialized blob, so both paths deserialize everything — was verified at one pin and could shift again. | 2.1's verify traces the actual parse rather than asserting it; a re-read of `query.ts:27-41` is a Prerequisite, not an assumption | Phase 2 — Indexed store |
+
+### Re-review at close — 2026-09-08, all five rows
+
+The table above is the plan as accepted and is unedited. This is the re-reading the
+`reviewed:` date claims: two rows discharged by measurement, two mitigated (one by a
+different mechanism than planned), one discharged with its own failure mode recurring
+elsewhere.
+
+- **Rank 1 — MITIGATED as designed, and the growth is smaller than priced.** The
+  vendored-wired-set amendment landed 3.63 MiB, not 8.69. Readers shipped with it: 3.4 (the
+  regression selector reads the native graph), 4.1 (five MCP tools, catalogue 36) and the
+  four CLI verbs, so the reader count is no longer the D9 three. What is NOT claimed: an
+  available reader is not a used one, and usage is unmeasured.
+- **Rank 2 — DISCHARGED by measurement.** AC-6's rerun after all phases compared 126 metric
+  fields field-by-field against the 2026-09-04 reference: **0 differences**. The mitigation
+  was the right one and it held.
+- **Rank 3 — DISCHARGED, with a sensitivity case.** Single-flight is an atomic `mkdir`, not
+  a lock file, so two processes cannot both win. Neutralising the guard makes the same two
+  commits produce 2 refreshes instead of 1, so the assertion is known to have teeth rather
+  than assumed to.
+- **Rank 4 — MITIGATED by a STRONGER mechanism than the plan named, because the planned one
+  was unavailable.** The plan assumed all four entry-point sources could be enumerated;
+  `exports` cannot — the extractor records no exportedness. So `dead` REFUSES (exit 1,
+  empty list) while any source is unreadable, unless the caller supplies it or states the
+  gap. Both branches are fixtured, including the exit code, since a refusal that exited 0
+  would read to a CI step as an empty dead list.
+- **Rank 5 — DISCHARGED, and the same failure mode recurred once more where nobody had
+  looked, which is this row's whole point.** 2.1 held: the parse is traced to zero on the
+  indexed arm. But 2.3's verify rested on an unreproduced assumption too, and reproduction
+  refuted it — the tsconfig tier changes no confidence count at any root, and the clause
+  "INFERRED falls" now points the wrong way once 3.2's derived `tests` edges exist. Two of
+  this roadmap's clauses were written against assumptions about the repository that
+  measurement broke; a third roadmap in this family should expect a third.
+
+**One risk the plan did not carry, added at close rather than back-dated:** the MCP standing
+cost. Registering five tools moved the kernel `tools/list` payload 3,886 → 4,876 tokens
+(+25 %), a cost every session with that server pays upfront. It is ~4x under the Tool Search
+deferral threshold so it still loads eagerly, and it is now asserted by test rather than
+only recorded — but the plan priced the payload in MiB on disk and never in context tokens,
+which is the budget a consumer actually feels first.
 
 ## Acceptance Criteria
 
