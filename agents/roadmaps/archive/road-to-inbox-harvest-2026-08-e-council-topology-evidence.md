@@ -52,7 +52,7 @@ estate_growth_exempt: "open_blockers +1 net, and the +1 is the Phase-2 entry alo
 > **The receiver is a real roadmap, not a stub**, because `deferralProblems`
 > resolves a destination only against `agents/roadmaps/<slug>.md` or
 > `agents/roadmaps/later/<slug>.md` and requires a `parent_roadmap:` back-link:
-> [`road-to-council-topology-evidence-followups.md`](../road-to-council-topology-evidence-followups.md),
+> [`road-to-council-topology-evidence-followups.md`](../later/road-to-council-topology-evidence-followups.md),
 > `status: draft`, which keeps it off the dashboard until a human flips it to
 > `ready`. Estate change is net zero — this file archives, one draft is added.
 >

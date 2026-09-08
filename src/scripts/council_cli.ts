@@ -93,6 +93,7 @@ import {
     _quorum_min_present_from,
     _quorum_setting_from,
 } from './ai_council/quorum_wiring.js';
+import { measureDeliberation, runCallsFrom } from './ai_council/deliberation_metrics.js';
 import { formatQualificationLine, type MemberQualification } from './ai_council/qualification.js';
 import {
     absenceReasonFor,
@@ -2730,18 +2731,15 @@ function cmd_run(
     }
     const estimated_total = estimates.reduce((acc, e) => acc + _total_usd(e), 0.0);
     let actual_total = 0.0;
-    const all_responses: CouncilResponse[] = [...responses];
-    if (peer_review !== null) {
-        all_responses.push(...peer_review.responses);
-    }
-    if (consensus !== null) {
-        all_responses.push(...consensus.extraction_responses);
-        all_responses.push(...consensus.scoring_responses);
-    }
-    if (chairman !== null && chairman.response !== null) {
-        all_responses.push(chairman.response);
-    }
-    all_responses.push(...stance_repairs);
+    const run_calls = runCallsFrom({
+        deliberation: responses,
+        peerReview: peer_review?.responses ?? null,
+        consensusExtraction: consensus?.extraction_responses ?? null,
+        consensusScoring: consensus?.scoring_responses ?? null,
+        chairman: chairman?.response ?? null,
+        stanceRepairs: stance_repairs,
+    });
+    const all_responses: CouncilResponse[] = run_calls.responses;
     // Billable-aware: a subscription-CLI seat spent nothing, so pricing it at
     // API rates and calling the figure "actual" is a false statement about
     // money. See pricing.ts § billable-aware aggregation.
@@ -2791,6 +2789,7 @@ function cmd_run(
     // one for a machine consumer), even when every field is `null`: the
     // work-order envelope for whatever executes on this verdict next.
     payload['handoff'] = handoff;
+    payload['deliberation'] = measureDeliberation(run_calls.calls);
     const out_path = _validate_council_output_path(args.output as string, {
         kind: 'responses',
         subcommand: 'run',
