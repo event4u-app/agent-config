@@ -52,14 +52,18 @@
 #                of them.
 #   canary       optional mutation recipe (Phase 7) — see CANARY below
 #
-# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-28)
+# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-09-08)
 # ----------------------------------------------------------
-# 306 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 322 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
-# re-run on the tree carrying these rows, which now include the four gates the
-# two runtime-cost roadmaps add: check_prefix_stable_mutation,
-# check_loss_class_declared, check_benchmark_report_fields, and
-# check_no_currency_in_cost_surfaces).
+# re-run on the tree carrying these rows. Re-measured 2026-09-08 from the 306
+# recorded on 2026-08-28: the tree had drifted to 321 without the header moving,
+# which is 15 — exactly the drift tolerance in
+# `check_gate_coverage.test.ts` § states an honest denominator — so the next
+# single addition was always going to red it. `check_candidate_lines` from
+# `road-to-candidate-moves-floor` was that addition. The number is re-measured
+# rather than the tolerance widened: a stated population that nobody re-measures
+# is the un-asserted count this whole manifest exists to refuse.)
 # **78 of them emit the machine-readable `scanned: <N>` line under their
 # CI-identical argv, and 75 of those 78 are listed below.** The manifest is
 # complete for every gate that can carry a floor, covering ~25 % of the population.

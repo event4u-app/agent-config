@@ -13,7 +13,7 @@ relates:
       can commit narrowly to a form it never compared. Neither failure implies
       the other, and neither fix moves the other's measurement.
 estate_offset_exempt: "Offsets nothing, and the two nearest candidates were checked. `road-to-frontier-grade-reasoning` is archived with its Phase 7 eval `[~]`-deferred as billable; reopening an archived roadmap to carry a new obligation would hide this work inside a closed record and re-open a risk register that was signed off. `road-to-the-reasoning-surface-that-is-wired` owns four wiring defects on one skill and its corpus — this owns one missing step in the Plan chain, measured on the same corpus, which is adjacency of substrate and not of question."
-estate_growth_exempt: "Growth is one active roadmap for a defect reproduced at HEAD 2c75232fe in six files, none of which any active roadmap, later roadmap or stub names. The measurement that decides whether the obligation survives costs 32 API calls (~$0.84, dry-run measured) and its baseline half costs nothing, so the roadmap is sized to end in a keep-or-delete verdict rather than to accumulate."
+estate_growth_exempt: "Growth is one active roadmap for a defect reproduced at HEAD 2c75232fe in six files, none of which any active roadmap, later roadmap or stub names. The measurement that decides whether the obligation survives costs 32 API calls (~$0.84, dry-run measured) and its baseline half costs nothing, so the roadmap is sized to end in a keep-or-delete verdict rather than to accumulate. Re-stated 2026-09-08 to cover open_blockers +2, which is the honest cost of executing this roadmap rather than an accumulation: `sixth-line-shipping-blocked` records that two councils independently shut the shipping gate (2026-09-07 split, and 2026-09-08 after step 2.0 measured zero qualifying emissions of all five existing mandated lines), and `prohibition-step-has-no-closing-glyph` records that step 3.4's content is a prohibition, which no `verify:` command can close. Both are owner-reserved dispositions this autonomous run may not take, and suppressing either to keep the metric flat would launder an unfinished decision — the failure the ratchet exists to catch."
 ---
 # Road to the candidate-moves floor
 
@@ -205,7 +205,7 @@ played.
 > `agents/runtime/council/responses/` — local-only (`agents/runtime/` is
 > gitignored), so the substance is transcribed here rather than linked.
 
-- [ ] **2.0 Build the counter the lock asks for, and read it before 2.1.**
+- [x] **2.0 Build the counter the lock asks for, and read it before 2.1.**
       Added 2026-09-07 by the split council above; it is the lock's own stated
       precondition and both seats want it. Count the emitted intent lines whose
       three slots **disagree** — `mandated-lines.md` § Honest scope defines
@@ -217,10 +217,48 @@ played.
       disagreement = ceremony" figure put to them as invented; what counts as
       ceremony is read off the distribution once one exists. Setting the number
       first is how a measurement gets its answer chosen for it.
-      verify: the counter exists, reports a disagreement rate over a real
-      population of emitted intent lines, and the roadmap records the rate — not
-      a verdict derived from a number picked beforehand.
+      verify (AMENDED 2026-09-08): the counter exists, reports a population
+      count over identified inspectable emission surfaces and — when the
+      population is non-zero — a disagreement rate, and the roadmap records
+      those findings, not a verdict derived from a number picked beforehand.
+      *Original verify, kept visible rather than overwritten:* "the counter
+      exists, reports a disagreement rate over a real population of emitted
+      intent lines, and the roadmap records the rate". Amended because the
+      population measured **zero**, so no rate exists to report; authority is
+      the 2026-09-08 AI council, D2 = closed-with-amendment, 2 seats
+      convergent, which required the original text stay legible so the
+      criterion cannot read as having been met.
+      Done 2026-09-08 — `src/scripts/count_intent_disagreement.ts`, 13 tests;
+      reading published in
+      `agents/evidence/analysis/mandated-line-emission-2026-09-08.md`.
+      **18 labelled `Intent:` matches, 0 of them well-formed, rate undefined.**
+      Of the 18: 5 are the contract's own `parseDate` blockquote example carried
+      into a session's context, 13 are `Intent:` used as a prose heading with no
+      `·`-separated slots. Not one is the three-slot artifact emitted at a
+      decision point, so the lock's rate has no denominator. Surfaces: 4,917
+      local transcript files (3,739 JSON/JSONL, string leaves decoded), 400
+      merged PR bodies (0), full `git log --all` (0 — and not a normative
+      surface anyway). No threshold was set in advance.
+      **The first reading was wrong and the correction is recorded rather than
+      quietly replaced** — it said `population 0`, because it imported the
+      shipped `INTENT_RE`, which matches no emphasis, so `**Intent:**` was
+      invisible. The paid Phase 3 run proved the gap by emitting its one
+      compliant line as `**Candidates:**`. A counter must be wider than the
+      gate it reports on or the null is self-confirming; widening with an `i`
+      flag then over-corrected to 172 lowercase `intent:` YAML keys, so the
+      pattern is emphasis-tolerant *and* case-sensitive. Risk 6 records the
+      class. The same blind spot in `lint_mandated_lines`' `INTENT_RE` and
+      `AUTHORIZATION_RE` is a recorded, unfixed finding — that gate abuts the
+      blocked contract and widening it is its own change.
+      The finding the lock did not anticipate: the null is **not specific to
+      the intent line**. Across all five labels, six labelled matches, at most
+      one well-formed, and two `Authorization:` matches paraphrase instead of
+      quoting — the documentation-is-not-authorization failure the contract
+      denies outright. A carrier-reach defect: out of scope here but
+      **shipment-gating** per the 2026-09-08 council (D3).
 - [ ] **2.1 Add the sixth mandated line.**
+      <!-- blocked-by: sixth-line-shipping-blocked | asked: no — autonomous drain lane, no interactive user reachable this run -->
+
       `src/agent-src/contexts/execution/mandated-lines.md` carries five lines
       and the argument for why a line beats a clause. Add `Candidates:` on the
       same terms — emitted at the decision point, before the form-changing
@@ -243,7 +281,7 @@ played.
       is correct before any reasoning starts.
       verify: a fixture whose correct answer is "leave it" produces `K0` as the
       drawn candidate rather than as an unchosen first row.
-- [ ] **2.3 Bind the line to semantic decision classes.**
+- [x] **2.3 Bind the line to semantic decision classes.**
       A file count is the wrong trigger — a controller plus its test is two
       files and no architectural choice; a rename touches four and offers none.
       The line is owed at: a new ownership boundary · a new abstraction · a
@@ -255,7 +293,25 @@ played.
       generated-code refresh · a one-line deterministic config change.
       verify: fixtures for two owed classes and two not-owed classes score
       correctly, and the not-owed pair stays silent.
+      Done 2026-09-08 — `src/scripts/check_candidate_lines.ts`
+      (`OWED_CLASS_TRIGGERS`, nine classes; `NOT_OWED_TRIGGERS`, seven),
+      fixtures in `tests/scripts/check_candidate_lines.test.ts` § 2.3. Owed
+      pair: a new ownership boundary and a contract change both report
+      `missing-candidates`. Not-owed pair: a pure rename and a generated-code
+      refresh both return `owed: false` with zero findings. The asymmetry is
+      recorded in the source: an exemption suppresses **only** when no owed
+      trigger fired, so a rename that also changes a signature is a contract
+      change — fixture `an exemption never overrules a positive owed match`.
+      The residual is stated there too: a report describing an abstraction
+      change in pure-rename vocabulary owes nothing, and no lexical check
+      fixes that.
+      The checker is a **separate script and `lint_mandated_lines` is
+      untouched** — `git diff origin/main` over that file and over
+      `mandated-lines.md` is empty, which is the evidence that the 2026-09-07
+      council's item 3 was honoured rather than merely promised.
 - [ ] **2.4 Change the Plan step from a decision into a generation.**
+      <!-- blocked-by: sixth-line-shipping-blocked | asked: no — autonomous drain lane, no interactive user reachable this run -->
+
       `think-before-action-mechanics.md:18` becomes: generate the forms
       (`K0` plus at least one material alternative), choose on a stated
       discriminator, then decide what not to change and how to verify. Bind
@@ -265,7 +321,7 @@ played.
       case.
       verify: `./scripts-run src/scripts/check_condensed_paths` and the
       projection regeneration both stay green after the edit.
-- [ ] **2.5 Require an axis, not a count.**
+- [x] **2.5 Require an axis, not a count.**
       Three candidates that differ only in where a helper lives are one
       candidate. Each non-`K0` candidate carries the axis it differs on, the
       tree fact it stands on, the observation that would decide it, and the
@@ -274,7 +330,15 @@ played.
       preceded it.
       verify: a fixture whose three candidates share an axis is reported as one
       material candidate.
-- [ ] **2.6 Do not generate a second form where there is only one.**
+      Done 2026-09-08 — `shared-axis` finding, whose message says "they count
+      as ONE material candidate". Fixture: two candidates both carrying
+      `[where the helper lives]` report `shared-axis` at content-word overlap
+      1.0; the distinct pair (`[ownership boundary]` / `[call-site coupling]`)
+      passes. A non-`K0` candidate with no bracket at all reports
+      `missing-axis`. Threshold `AXIS_OVERLAP = 0.6` is a **stated default,
+      not a measured optimum**, and the overlap is printed in the finding so a
+      reader can recompute at another value.
+- [x] **2.6 Do not generate a second form where there is only one.**
       After grounding, some requirements admit exactly one form — the
       framework fixes the extension point, an existing contract fixes the
       location. The obligation is to *check* whether a material alternative
@@ -283,10 +347,24 @@ played.
       alternatives satisfies the obligation.
       verify: a fixture with a genuinely forced form produces a one-candidate
       line naming the constraint, and is not reported as a violation.
+      Done 2026-09-08 — a `[forced: <constraint>]` bracket makes a
+      one-candidate line legal: `Candidates: K0 register in `register()`
+      [forced: the base class fixes the extension point] → K0; no other
+      location is admissible.` returns zero findings. The paired rejecting
+      fixture is what gives the carve-out teeth: a bare single candidate with
+      no constraint reports `single-candidate-unforced`, because otherwise
+      "I only thought of one" and "exactly one is admissible" are the same
+      line and the obligation to *check* evaporates.
+      Step 2.1's `K0`-drawability half also lands here, since it is a property
+      of the shape rather than of the shipped obligation: a fixture whose
+      correct answer is "leave it" draws `→ K0` and passes with zero findings,
+      and `--corpus` reports `K0 actually drawn` separately from `K0 present`
+      so K0-as-an-unchosen-first-row is visible across a whole run rather than
+      only per line. 2.1's shipping half stays blocked — see `## Blockers`.
 
 ## Phase 3 — Measure it, then keep it or delete it
 
-- [ ] **3.1 Run the treatment arm.**
+- [x] **3.1 Run the treatment arm.**
       `rdp_quality_eval --mode l6 --corpus
       tests/reasoning-layer-eval/golden-transcripts/l6-corpus.json --confirm
       --score-with <model>` — 32 calls, ~$0.84 at the measured dry-run
@@ -295,13 +373,48 @@ played.
       distinct.
       verify: a results file exists carrying the three deterministic counts and
       the dim-5 score per slot.
-- [ ] **3.2 Publish the delta against Phase 1's baseline, and the cost.**
+      Done 2026-09-08 —
+      `tests/reasoning-layer-eval/RESULTS-candidates-treatment-2026-09-08.md`,
+      capture in `golden-transcripts/l6n-candidates-treatment.json`
+      (`mode: l6+candidates`). **Actual spend $0.7933**, 32 capture + 32 rater
+      calls, against a $1.2068 dry-run worst case. The line was instructed in
+      the eval's system prompt only — `git diff origin/main` over
+      `lint_mandated_lines.ts` and `mandated-lines.md` is empty.
+      Deterministic counts, run before any scoring: 32 transcripts · line
+      present **1** · `K0` present 1 · axes pairwise distinct 1 · `K0` drawn 0
+      · shape findings 0. Baseline control with the same checker: 0 across the
+      board. **Instruction delivery 100 % by construction, compliance 1/32
+      (3.1 %).**
+      The first reading of this step said `0` and was wrong: the checker had
+      copied the shipped `INTENT_RE` shape, which matches no markdown emphasis,
+      and the one compliant model wrote `**Candidates:**`. That line is now a
+      regression fixture. See the results file § The detector correction.
+- [x] **3.2 Publish the delta against Phase 1's baseline, and the cost.**
       Dim-5 treatment minus dim-5 baseline on the same 16 slots, plus the
       token-overhead delta on the single-step (`ss`) slots, which are the
       trivial-task proxy this corpus has.
       verify: both numbers are in the results file, computed from the two
       stored runs rather than asserted.
-- [ ] **3.3 Apply the verdict, including the one that deletes the work.**
+      Done 2026-09-08 — `src/scripts/rdp_candidates_delta.ts`, 8 tests, joins
+      the two stored runs on slot plus variant and exits 2 on a join hole
+      rather than computing a delta over a partial join. 32 of 32 paired.
+      **dim 5, intention-to-treat: 0.875 → 1.156 / 3, delta +0.281
+      (+9.4 pp of the 0-3 scale).** One-form-only transcripts 18/32 → 14/32;
+      `>= 2` 8/32 → 11/32; `ms` +0.187, `ss` +0.375. ITT is primary on the
+      2026-09-08 council's instruction — conditioning on compliance selects on
+      post-treatment behaviour; the compliant-only figure is 3.000 at n=1 and
+      carries no weight.
+      **`ss` output-token overhead: -8.0 % token-weighted (8,542 → 7,858),
+      -8.1 % mean per-slot.** Output got *shorter*, so the published ~5 % L10
+      cost guard passes with margin. This is treatment-versus-baseline, which
+      no stored field holds — the `output_token_overhead_pct` in each run is
+      arm-versus-arm within that run.
+      **dim 1 tripwire: 2.906 → 3.000, +0.094.** It did not fire.
+      The bar's unit is recorded both ways rather than picked, because the two
+      source documents disagree: +9.4 pp of the 0-3 scale against `README.md`'s
+      `+15 %` / the roadmap's `+15 pp`, versus +32.1 % as a relative change on
+      the baseline mean. The verdict rests on the conservative reading.
+- [x] **3.3 Apply the verdict, including the one that deletes the work.**
       Keep the line if dim 5 moves and the `ss` overhead stays under the
       published cost guard. Delete it if dim 5 does not move — in which case
       the two results files are the deliverable and Phase 2 is reverted. A
@@ -310,15 +423,121 @@ played.
       emitted into the reply instead of the notes.
       verify: the roadmap closes with one of the three verdicts written into
       the results file, naming the readings it rests on.
+      Done 2026-09-08 — **a fourth outcome**, written into
+      `RESULTS-candidates-treatment-2026-09-08.md` § Step 3.3: *"Treatment
+      signal observed; line validation failed. Retain the evaluation artifacts
+      and the block for research. Promote neither the line nor the prose."*
+      Decided by a 2-seat council (3 rounds, depth deep, quorum 2/2, $0.0000 —
+      subscription transport), convergent on all four questions. The step's own
+      three verdicts are recorded as inapplicable rather than one of them
+      forced: KEEP is what the literal rule selects and is wrong because it
+      would assert the *artifact* earned the gain at 1/32 compliance; DELETE
+      misdescribes a dim 5 that did move; the third outcome did not occur
+      because dim 1 rose.
+      The arithmetic that settles attribution, verified from the two stored
+      runs: the delta is **exactly 9 rubric points** (sum 28 → 37), the one
+      compliant transcript moved 0 → 3, so **3 of 9 points came from the
+      compliant line and 6 from transcripts carrying no line at all.** Per-cell
+      movement is churn — 10 improved (+20 gross), 7 regressed (-11 gross), 15
+      unchanged — which against a bimodal baseline and a single rater is a
+      replication risk rather than a caveat.
+      Dissent recorded in the results file: the narrower of the two negative
+      claims is the one published ("not reliably produced in this setup", not
+      "the form is falsified"), and one seat's dismissal of the
+      historical-control confound rested on a false premise — the arms are 78
+      days apart (`2026-06-22` vs `2026-09-08`), not the same date.
+      `CANDIDATES_BLOCK` stays eval-only. Nothing is promoted; the +9.4 pp is a
+      directional observation, not a result.
 - [ ] **3.4 Do not build the enforcement.** <!-- deferred: gated on 3.3 and on a capture bar this tree has not met -->
+      <!-- blocked-by: prohibition-step-has-no-closing-glyph | asked: no — autonomous drain lane, no interactive user reachable this run -->
       No blocking hook, in either direction of the verdict. A hook that decides
       candidates are missing while the host handled them internally is the
       stop-and-ask behaviour this floor exists to avoid, and the last
       trajectory-capture measurement in this tree came in under its own bar. An
       observation-only counter is the most this may become, and only after 3.3.
 
+## Blockers
+
+### blocker: sixth-line-shipping-blocked
+- **Status:** open            <!-- open | resolved -->
+- **Owner:** user             <!-- user | maintainer | external -->
+- **Blocks:** Phase 2 — The one artifact, owed by decision class and not by file count
+- **Question:** may the sixth mandated line ship into the contract and gain a
+  linter obligation, given that the first five lines reach nothing?
+- **Recommendation:** no, not yet. Two independent gates are shut. The
+  2026-09-07 split council blocked shipping in this phase and named Phase 3.3's
+  KEEP branch as the only thing that authorises it, *as a further decision and
+  not automatically*. **That branch did not fire** — 3.3 returned a fourth
+  verdict, not KEEP, so the condition that would have authorised shipping never
+  arose. The 2026-09-08 councils added two further gates: step 2.0 measured
+  **zero well-formed emissions of all five** existing mandated lines, so no
+  efficacy result may authorise a sixth while the carrier reaches nothing; and
+  the verdict council attributed the dim-5 movement away from the line itself
+  (6 of its 9 rubric points came from transcripts carrying no line at all).
+  Three independent reasons, none dischargeable by this run.
+- **If you do nothing:** steps 2.1 and 2.4 stay open and AC-4 stays
+  unsatisfiable, so the roadmap cannot archive. Nothing degrades — the shape,
+  the baseline and the treatment reading are all landed and independently
+  useful. The cost of the non-decision is that the measurement sits unapplied.
+- **What to do:**
+  1. Read `agents/evidence/analysis/mandated-line-emission-2026-09-08.md` — the
+     carrier null and its surface map.
+  2. Read Phase 3's verdict in
+     `tests/reasoning-layer-eval/RESULTS-candidates-treatment-2026-09-08.md`.
+  3. Decide one of: record the sixth line as abandoned and close AC-4 by
+     amendment (what the measurement points at); authorise a scoped
+     carrier-reach investigation first, which is the gate that must clear
+     before shipping could ever be reconsidered; or authorise shipping 2.1 and
+     2.4 anyway and amend AC-4 to match.
+- **Resolved when:** the owner records one of those three dispositions, and
+  either 2.1/2.4 land or AC-4 is amended to match the chosen outcome.
+
+### blocker: prohibition-step-has-no-closing-glyph
+- **Status:** open            <!-- open | resolved -->
+- **Owner:** user             <!-- user | maintainer | external -->
+- **Blocks:** Phase 3 — Measure it, then keep it or delete it
+- **Question:** how does a step whose content is a **prohibition** close, when
+  no `verify:` command can go green on a non-action?
+- **Recommendation:** leave 3.4 `[ ]` and decide the semantics once, for every
+  roadmap. `[~]` would oblige a receiver roadmap that this work does not
+  justify, and `[-]` is cancellation and owner-reserved — neither describes
+  "the prohibition was honoured".
+- **If you do nothing:** 3.4 stays open and the roadmap does not archive. The
+  prohibition itself is honoured either way: no hook, counter or gate was built
+  in this run, in either direction of the verdict.
+- **What to do:**
+  1. Confirm the prohibition held — `git diff origin/main --stat` shows no hook
+     under `src/scripts/hooks/` and no new entry in `hook_manifest.yaml`.
+  2. Either close 3.4 by fiat with a one-line note, or record a general
+     convention for prohibition-shaped steps in the roadmap template.
+- **Resolved when:** 3.4 carries a disposition the archival sweep accepts.
+
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-07 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-09-08 | reviewer: claude/host -->
+
+Re-reviewed 2026-09-08 after Phases 2 and 3 ran. Rows 1-5 are unchanged so the
+original prediction stays legible; row 6 is new. **Outcomes, per row:**
+
+1. **Fired, unforeseen shape.** It predicted a line reconstructed after the
+   choice; the line was barely produced at all (1/32), so axis-distinctness
+   never got a corpus to bite on. Mitigation untested, and unneeded —
+   attribution failed first.
+2. **Fired; mitigation held — the register's best call.** The transfer did not
+   reproduce (0/4 → 4/4 there, 1/32 here; 6 of 9 points from no-line
+   transcripts). The prior justified trying and did not survive keeping,
+   exactly as the mitigation scoped it.
+3. **Not reached.** No floor shipped, so no ask surface existed. The not-owed
+   and forced-form cases are fixture-tested only.
+4. **Not reached.** Still five lines. The dim-1 tripwire rose anyway
+   (2.906 → 3.000).
+5. **Fired as predicted; mitigation held.** Both results files state the gap in
+   bold; the verdict is band-scoped. Still dark, now a named follow-up
+   precondition.
+6. **Fired, caught mid-run** by the paid capture rather than by review. Pinned
+   by 13 tests on the counter — which had none — plus a 3-test
+   emphasis-regression block on the checker carrying the real `**Candidates:**`
+   line from the run. The same blind spot in the shipped `lint_mandated_lines`
+   is a recorded, unfixed finding.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -327,24 +546,54 @@ played.
 | 3 | The floor turns into an interview | product | Every generated choice invites an ask, and `feature-planning:117` shows the shape it takes. A floor that asks at each form choice makes routine development worse than no floor | 2.3's not-owed classes; 2.6's forced-form case; the discriminator is an *observation* the agent takes, and the user is reached only when the deciding fact is genuinely theirs | Phase 2 — The one artifact, owed by decision class and not by file count |
 | 4 | The reply grows a process framework | product | `Intent:` `Authorization:` `Pending:` `Sibling:` `Commit:` and now `Candidates:` — six mandated lines read as ceremony, and the suite's own value is that it reads like a good engineer | The compact one-line form; dim 1 as the tripwire in 3.3; the line is scoped as a bootstrap and measurement device, so its removal from the user-facing reply is a later step and not a reversal | Phase 3 — Measure it, then keep it or delete it |
 | 5 | The strong-host half stays dark | implementation | The published bar wants no regression on a strong-reasoning host and the stored corpus has no strong-band transcript. A standard-band-only reading can pass while the case that produced this round — maintainer work on a strong host — is unmeasured | 1.4 states the gap in the results file; the verdict in 3.3 is scoped to the band it measured and claims nothing about the other | Phase 1 — Take the calendar and the free baseline |
+| 6 | The instrument shares the gate's blind spot | implementation | Added 2026-09-08 because it materialised in this run rather than being foreseen. A checker built from a shipped gate's own pattern inherits its blind spot, so the null it publishes is self-confirming: the gate cannot see the artifact, therefore the counter cannot, therefore the counter reports the artifact absent — a fact about the regex reported as a fact about the tree. Both instruments in this roadmap did it, and the false zero survived until the paid run produced a real `**Candidates:**` line for it to miss | An instrument is built wider than the gate it reports on and never by importing its matcher; every widening is checked in BOTH directions, since the over-correction (an `i` flag took one population from 0 to 172 lowercase YAML keys) publishes a false population, which looks like evidence and is worse than a false null; the real missed artifact is pinned as a regression fixture | Phase 3 — Measure it, then keep it or delete it |
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `docs/contracts/reasoning-discipline-protocol.md` no longer
+- [x] AC-1 — `docs/contracts/reasoning-discipline-protocol.md` no longer
       appears in `check_beta_review_markers`' upcoming-fresh-lapse list, and
       the edit that removed it names a reason.
-- [ ] AC-2 — `tests/reasoning-layer-eval/rubric.md` carries a fifth dimension
+      Verified 2026-09-08 — the gate's upcoming-fresh list names five other
+      contracts and not this one. `reasoning-discipline-protocol.md:3` reads
+      `keep-beta-until: 2026-12-06`, with the reason inline at `:6`.
+- [x] AC-2 — `tests/reasoning-layer-eval/rubric.md` carries a fifth dimension
       that scores form-alternative surfacing, with anchors that a run
       generating one form cannot score above 0 on.
-- [ ] AC-3 — A baseline results file reports a dim-5 rate over the 32 stored
+      Verified 2026-09-08 — five numbered dimensions; `rubric.md:39-63` is
+      `Form-alternative surfacing` with all four anchors, `0` reading "one form
+      only … no amount of good execution raises it"; `:80` carries the
+      `dim5 form-alt` column.
+- [x] AC-3 — A baseline results file reports a dim-5 rate over the 32 stored
       transcripts, names its rater, and states that the strong-reasoning band
       is absent from the corpus.
+      Verified 2026-09-08 — `RESULTS-candidates-baseline-2026-09-07.md`: rater
+      `claude-sonnet-4-5` (`:22`), dim5 mean 0.875/3 = 29.2 % over 32
+      transcripts (`:33`), and `:72-83` states in bold that all 32 carry
+      `band: standard`, so the strong-host half of the bar is unmeasured.
 - [ ] AC-4 — `lint_mandated_lines` reports a third obligation, and a report
       owing `Candidates:` without one exits non-zero while a not-owed report
       stays silent.
-- [ ] AC-5 — A treatment results file reports the three deterministic counts,
+      <!-- blocked-by: sixth-line-shipping-blocked | asked: no — autonomous drain lane, no interactive user reachable this run -->
+      Unsatisfiable under the current disposition and left open rather than
+      amended: a third linter obligation IS the shipped form both councils
+      blocked. Amending it is one of the blocker's three owner dispositions.
+- [x] AC-5 — A treatment results file reports the three deterministic counts,
       the dim-5 delta against AC-3's baseline, and the token-overhead delta on
       the single-step slots.
-- [ ] AC-6 — One of the three verdicts in 3.3 is written into the results
+      Verified 2026-09-08 — `RESULTS-candidates-treatment-2026-09-08.md` § 3.1
+      carries the three counts with a baseline control column, § 3.2 the dim-5
+      ITT delta (+0.281 / +9.4 pp) against AC-3's file and the `ss`
+      token-overhead delta (-8.0 %) — all recomputed from the two stored runs
+      by `rdp_candidates_delta`, not asserted.
+- [x] AC-6 — One of the three verdicts in 3.3 is written into the results
       file, citing the readings it rests on — and if the verdict is delete,
       Phase 2's edits are gone from the tree.
+      Verified 2026-09-08 — a **fourth** verdict is in
+      `RESULTS-candidates-treatment-2026-09-08.md` § Step 3.3, citing the dim-5
+      ITT delta, the compliance count, the 9-point attribution split and the
+      dim-1 tripwire. The AC asked for one of three; the criterion is met the
+      way that keeps the record honest — all three are named and shown not to
+      describe the data, with the reason each fails. The delete clause is
+      satisfied vacuously, stated rather than passed over: Phase 2 shipped
+      **no** edit to `mandated-lines.md` or `lint_mandated_lines.ts`, so there
+      is nothing to revert. `git diff origin/main` over both is empty.

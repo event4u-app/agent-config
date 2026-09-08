@@ -108,6 +108,50 @@ Coordinate the links; do not let later steps run before earlier ones. On a
 trivial or fully-specified task, do NOT force the chain (that is over-process) —
 engage it only where the task is genuinely complex/ambiguous/interdependent.`;
 
+/**
+ * The candidate-forms treatment, appended to EVERY arm by `--candidates`.
+ *
+ * Step 3.1 of `road-to-candidate-moves-floor`. The 2026-09-07 split council
+ * authorised instructing this line to the model under test in the treatment
+ * arm, "where it can be measured without being a shipped obligation on
+ * anyone", and blocked the shipped form. So it lives here, in the eval's own
+ * system prompt, and nowhere in `src/rules/` or `mandated-lines.md`.
+ *
+ * Appended to BOTH l6 arms rather than becoming a third arm, because the
+ * corpus has no per-slot field for a treatment and the baseline this must be
+ * compared against is the 32 stored transcripts — 16 slots × the same two RDP
+ * framings. Appending to both keeps the candidates block the single variable.
+ *
+ * The grammar is the one `check_candidate_lines.ts` parses, so compliance is
+ * measurable rather than eyeballed.
+ */
+const CANDIDATES_BLOCK = `## Candidate forms before the choice
+
+Before you settle on HOW to solve this, generate the candidate solution FORMS
+and emit one line naming them. Do this at the decision point, before the
+answer — not as a trailing summary.
+
+Emit exactly one line in this shape:
+
+  Candidates: K0 <keep the current form / change nothing> · A <form> [<the axis
+  it differs on>] · B <form> [<axis>] → <chosen id>; <the observation that
+  decided it>
+
+Rules:
+- \`K0\` is "keep the current form / change nothing". It is listed FIRST and it
+  is a real option — draw it when it is right.
+- Each non-K0 candidate carries, in brackets, the AXIS it differs on. Three
+  candidates that differ only in where a helper lives are one candidate.
+- The axes must be pairwise distinct.
+- End with the choice and the OBSERVATION that decided between them — not a
+  preference.
+- Where exactly one form is admissible (a framework fixes the extension point,
+  an existing contract fixes the location), emit a single candidate carrying
+  \`[forced: <the constraint>]\` and say what it forecloses. Never invent a
+  second form so the line looks full.
+- On a genuinely trivial or fully-specified task, this line is not owed. Do not
+  emit it to prove you read this.`;
+
 interface Slot {
     n: string;
     slug: string;
@@ -127,18 +171,22 @@ interface Variant {
     score?: Record<string, unknown>;
 }
 
-function buildArms(mode: string): Array<[string, string]> {
+function buildArms(mode: string, candidates = false): Array<[string, string]> {
     const treat = `${BASE_SYSTEM}\n\n${RDP_BLOCK}`;
-    if (mode === 'l6') {
-        return [
-            ['distributed', treat],
-            ['orchestrated', `${treat}\n\n${ORCHESTRATOR_PREAMBLE}`],
-        ];
-    }
-    return [
-        ['baseline', BASE_SYSTEM],
-        ['treatment', treat],
-    ];
+    const arms: Array<[string, string]> =
+        mode === 'l6'
+            ? [
+                  ['distributed', treat],
+                  ['orchestrated', `${treat}\n\n${ORCHESTRATOR_PREAMBLE}`],
+              ]
+            : [
+                  ['baseline', BASE_SYSTEM],
+                  ['treatment', treat],
+              ];
+    if (!candidates) return arms;
+    // Appended to EVERY arm: the candidates block is the single variable
+    // against the stored run, so it must not co-vary with the arm.
+    return arms.map(([name, sys]) => [name, `${sys}\n\n${CANDIDATES_BLOCK}`]);
 }
 
 function approxTokens(text: string): number {
@@ -398,9 +446,13 @@ async function main(): Promise<number> {
         return await scoreOnly(scoreOnlyPath, scoreWith, resultsPath, Boolean(args.confirm));
     }
 
+    const withCandidates = Boolean(args.candidates);
     const slots = loadSlots(corpusPath, selected);
-    const arms = buildArms(mode);
+    const arms = buildArms(mode, withCandidates);
     const variantNames = arms.map((a) => a[0]);
+    if (withCandidates) {
+        out('  treatment: +CANDIDATES_BLOCK on every arm (step 3.1 — instructed, not shipped)');
+    }
 
     // ---- cost preview --------------------------------------------------------
     let total = 0;
@@ -491,7 +543,7 @@ async function main(): Promise<number> {
             rater2_mean: { [v0]: m0, [v1]: m1 },
             rater2_delta: m0 !== null && m1 !== null ? Math.round((m1 - m0) * 100) / 100 : null,
         });
-        writeTranscript(s, variants, ts, overhead, variantNames, mode);
+        writeTranscript(s, variants, ts, overhead, variantNames, mode, withCandidates);
     }
 
     fs.writeFileSync(
@@ -499,7 +551,9 @@ async function main(): Promise<number> {
         JSON.stringify(
             {
                 date: ts,
-                mode,
+                // Self-describing: a results file whose arms carried the
+                // candidates block must not be readable as a plain l6 run.
+                mode: withCandidates ? `${mode}+candidates` : mode,
                 standard_model: standardModel,
                 strong_model: strongModel,
                 scorer_model: scoreWith ?? null,
@@ -516,6 +570,18 @@ async function main(): Promise<number> {
     return 0;
 }
 
+/**
+ * The transcript filename is keyed on the MODE, so a run under a different
+ * treatment must not reuse it.
+ *
+ * Found the hard way on 2026-09-08: `--candidates` reused the plain `l6n-`
+ * prefix and silently overwrote all 16 committed June baseline transcripts
+ * mid-run. The measurement survived — `--results` had been pointed at a new
+ * path and every transcript body is stored in that JSON — but the baseline's
+ * human-readable artefacts were replaced by treatment ones under the baseline's
+ * own names, which is the worst kind of quiet: a later reader comparing the
+ * markdown would have compared the treatment against itself.
+ */
 function writeTranscript(
     slot: Slot,
     variants: Record<string, Variant>,
@@ -523,8 +589,10 @@ function writeTranscript(
     overhead: number | null,
     variantNames: string[],
     mode: string,
+    withCandidates = false,
 ): void {
-    const prefix = mode === 'l6' ? 'l6n-' : '';
+    const base = mode === 'l6' ? 'l6n-' : '';
+    const prefix = withCandidates ? `${base}cand-` : base;
     const p = path.join(GT_DIR, `${prefix}${slot.n}-${slot.slug}.md`);
     const L: string[] = [
         `# Transcript — slot ${slot.n}: ${slot.slug}`,
