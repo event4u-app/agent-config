@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: draft
+status: ready
 parent_roadmap: road-to-continuity-retirement-sequencing
 execution:
   mode: phase-checkpoints
@@ -16,6 +16,16 @@ estate_offset_exempt: "Offset in the same change by archiving agents/roadmaps/ar
 > and 2026-09-08 (transcribed verbatim in
 > `agents/evidence/analysis/council-2026-09-08-continuity-retirement-scope.md`).
 > Nothing here is a new proposal; every item arrives with its ruling attached.
+
+> **`status: ready`, deliberately, and the alternative was measured.** With
+> `status: draft` this file is invisible to `check_estate_count`: the estate
+> reads 8 active roadmaps and 38 open blockers, and the five blockers below
+> count for nothing. With `ready` it reads 9 and 43, the growth is attributed
+> to this file's `estate_growth_exempt` claim, and the gate passes on the
+> claim rather than on the invisibility. Both readings were taken. Shipping the
+> first would be using a status word to dodge a count — the same
+> gameable-by-naming failure the 2026-09-08 council flagged on the continuity
+> axis, applied to the estate axis instead. The work is real, so it is counted.
 
 ## Goal
 
