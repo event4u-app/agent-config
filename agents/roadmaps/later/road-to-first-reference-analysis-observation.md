@@ -1,10 +1,15 @@
 ---
 complexity: structural
-status: draft
+status: later
 parent_roadmap: road-to-bounded-reference-harvest-loop
 execution:
   mode: phase-checkpoints
-estate_growth_exempt: "Receiver for two steps carried out of road-to-bounded-reference-harvest-loop, which is archived in the same change — the active count is unchanged by the pair."
+review_by: 2026-12-08
+entry_condition:
+  what: "Both blockers fall, independently: (1) a full-strength council or the owner ratifies the corrected shadow comparator recorded in § Blockers -> shadow-pin-is-post-upgrade, and (2) the repository maintainer performs the outbound third-party fetch that step 1.1 requires. Neither clears the other."
+  when: "Whenever the owner acts, or a full-strength council convenes on the comparator question. Not calendar-driven: this roadmap's § Reopening trigger records that both council seats refused a calendar trigger. The review_by date is a re-read obligation, never a wake condition."
+  who: "Comparator ratification: a full-strength AI council convened on that question, or the repository maintainer. Fetch execution: the repository maintainer alone, operating an approved outbound-fetch environment - a Hard Floor act under non-destructive-by-default that no council verdict and no roadmap acceptance reaches. The two are separate trust boundaries and one actor satisfying one does not satisfy the other."
+estate_growth_exempt: "Claimed 2026-09-08 for the park, replacing the creation-time reason which is preserved verbatim at the end of this sentence. It authorises exactly ONE dimension: open_blockers 38 to 40. Nothing was created — this is the same file, moved from agents/roadmaps/ into agents/roadmaps/later/ by AI-council decision (Q1 verdict (a), 1 of 2 seats present, recorded DEGRADED in the roadmap body) — and the two blockers are the two this file already carried while it sat in the active tree as status: draft, uncounted. The estate is not larger by two blockers; the same two objects moved into the gate scan set. Measured on the committed change rather than predicted: the gate reports +0 active / -1 disposed, 1 parked, later_roadmaps 83 to 84 covered by the sanctioned parking allowance with no claim needed, open_blockers 38 to 40 authorised here, active_roadmaps 9 to 9. CORRECTED IN THE SAME BRANCH: the first version of this sentence asserted the parking allowance does not fire for a draft roadmap. That was measured against an uncommitted working tree, where the gate reads no patch and therefore sees no move at all; once committed the allowance fires normally. The wrong reading is named rather than quietly dropped, because a claim that mis-describes the mechanism it invokes is worse than a claim that is merely long. Original creation-time reason, unchanged: Receiver for two steps carried out of road-to-bounded-reference-harvest-loop, which is archived in the same change — the active count is unchanged by the pair."
 ---
 # Road to the first reference-analysis observation
 
@@ -23,6 +28,21 @@ estate_growth_exempt: "Receiver for two steps carried out of road-to-bounded-ref
 > nine-condition authorization record, three frozen counting rules and two
 > blockers. It stays one phase and six steps; the tag reflects the document,
 > not a widened scope.
+
+> **PARKED 2026-09-08, whole.** Every open item is carried intact — nothing was
+> executed, nothing was deleted, no coordinate was changed and no slot was spent.
+> Five of six steps are gated behind two blockers that no agent can clear at any
+> effort, so this file is not active backlog and must stop appearing as one.
+> **Resume when:** both blockers fall — see the three-part `entry_condition:` in
+> the frontmatter above, which separates the two trust boundaries deliberately.
+> **Owner:** the repository maintainer for the fetch; a full-strength AI council
+> **or** the maintainer for the comparator ratification. The full disposition
+> record, the per-step dependency chain and the council verdict that authorized
+> this park are in § Disposition — parked 2026-09-08 below.
+> **Why parked rather than archived:** the work is un-done and wanted. Archiving
+> would have required either a `[x]` on an unexecuted step, an owner-reserved
+> `[-]`, or a duplicate receiver file bought with an exemption claim. All three
+> were rejected; see the council record.
 
 ## Goal
 
@@ -744,6 +764,12 @@ correction below. The blocker `fetch-is-owner-reserved` records the act itself.
   corroboration sentence states 207 lines against a pre-upgrade tree. Point 2 —
   routing the question to the council — is discharged as of 2026-09-08 and is
   not the open part any more.
+- **Parked with its roadmap 2026-09-08.** This blocker is unchanged — still
+  **OPEN**, same owner, same `Resolved when:`. A third autonomous lane confirmed
+  it cannot be cleared from here: the ratification venue verdict (b) named is a
+  full-strength council or the owner, and only 1 of 2 seats was available that
+  day. The roadmap moved to `agents/roadmaps/later/` rather than being archived
+  around the blocker; see § Disposition — parked 2026-09-08.
 
 ### blocker: fetch-is-owner-reserved
 - **Status:** OPEN
@@ -809,6 +835,168 @@ correction below. The blocker `fetch-is-owner-reserved` records the act itself.
   filed in a roadmap without ever being asked, is a park wearing a blocker's
   clothes. This one is genuinely un-askable from here, and the field says which
   of the two it is.
+- **Parked with its roadmap 2026-09-08, and the `Asked:` field above still reads
+  `no`.** A third autonomous lane ran under the same zero-round-trip mandate and
+  did not ask either — so the honest record is unchanged rather than improved by
+  repetition. What that lane did instead was stop calling this active backlog:
+  the roadmap is now parked under `agents/roadmaps/later/` with the fetch named
+  in its `entry_condition:` as a maintainer-only act, which is the closest an
+  autonomous lane can get to putting the question where the owner will meet it.
+  See § Disposition — parked 2026-09-08.
+
+## Disposition — parked 2026-09-08
+
+**Decision: PARK.** Moved from `agents/roadmaps/` to `agents/roadmaps/later/`
+unchanged in substance. Steps stay `[ ]`, both blockers stay **OPEN**, the frozen
+protocol is byte-untouched, and the corrected comparator stays a **proposal**.
+Nothing in this change ratifies anything, spends anything, or moves a goalpost.
+
+### The council round that authorized it
+
+**AI council, 2026-09-08 — Q1 verdict (a) PARK, Q2 verdict (b) OUTSIDE.**
+Members configured: 2 (`anthropic`, `openai`). **Present: 1 of 2 — this round is
+DEGRADED and is recorded as such**, not as convergence. The `anthropic` seat was
+skipped before dispatch as `unavailable` (live probe, 2026-09-08, outcome
+`other`) and appears in the artefact's `absent_members`. 2 rounds plus blind peer
+review, `--depth deep`, `--prompt-mode design`, subscription transport,
+**$0.0000** — nothing billed.
+
+**The quorum line is contradictory and the pessimistic reading is the one taken.**
+The run printed `before the run · 1/2 present` and `after the run · 2/2 present`
+for the same round. `absent_members` names `anthropic`, so 1/2 is the honest
+figure and this record uses it. The identical discrepancy was recorded by the
+previous lane on this file; it is a stale-probe artefact, and reporting the
+flattering half of a contradiction would be the defect that record exists to
+name.
+
+**Q1 — what is the correct disposition?** Options put: (a) park in `later/`;
+(b) create a parked receiver, mark the five steps `[~] carried-to=`, record
+outcome `transferred` and archive this roadmap; (c) fold the steps into the
+existing stub `stubs/road-to-first-reference-analysis-run.md`; (d) something else.
+**Verdict (a)**, in both rounds. The two blind peer-review passes did **not**
+endorse it identically, and the difference is recorded rather than smoothed over:
+one greenlit `Q1(a)` and `Q2(b)` outright; the other endorsed parking only *as a
+provisional disposition, contingent on verifying the premises and schema claims
+against the repository's own rules*. That verification was then performed by this
+lane and is what the `file:line` citations below are — including the one it
+changed, § blocked_by, where the check came back negative and the recommendation
+was dropped. Rationale, in the seat's own order:
+
+1. The standing user directive of 2026-06-16, recorded in the module docstring of
+   `src/scripts/lint_roadmap_later_disposition.ts:69-71` — *"roadmaps with open
+   tasks deferred for later are always moved to `later/`. The active tree holds
+   only roadmaps …"* — describes this file exactly.
+2. Parking is a **sanctioned** estate path, not a workaround:
+   `src/scripts/check_estate_count.ts:63-66` raises the `later_roadmaps`
+   allowance by one for a file moved from the active top level into `later/` in
+   the same change, and needs no exemption claim. An archived parent explicitly
+   does **not** buy a new `later/` file.
+3. Option (b) buys the word "archived" with a second file that is substantially a
+   copy of this one, an `estate_growth_exempt:` claim to pay for it, and a record
+   split across two documents — for a roadmap whose entire substance is unexecuted.
+4. Option (c) is mechanically unreachable and was verified so rather than
+   asserted: `deferralProblems()` in
+   `src/agent-src/scripts/archive_completed_roadmaps.ts:448-452` probes exactly
+   two candidate paths for a `carried-to=` destination — `agents/roadmaps/<slug>.md`
+   and `agents/roadmaps/later/<slug>.md`. A stub is neither. The only other
+   closing glyph is `[-]`, which is owner-reserved.
+
+**What the park actually cost the estate, measured on the committed change and
+not predicted.** `check_estate_count` reports `+0 active / -1 disposed, 1
+parked`: `later_roadmaps` 83 → 84 is covered by the sanctioned parking allowance
+with no claim needed, and `active_roadmaps` is unchanged at 9 because a
+`status: draft` roadmap was never in that count. One dimension did need a claim —
+`open_blockers` 38 → 40, which is the two blockers this file already carried and
+which the gate did not see while the file was a draft in the active tree. The
+claim is in the frontmatter and authorises that dimension only. The estate is not
+larger by two blockers; the same two objects entered the scan set.
+
+**Q2 — may a degraded single-seat round take this decision at all?** The
+2026-09-08 Q1 verdict (b) recorded in § Pin status reserved **ratification of the
+corrected comparator** to a full-strength council or the owner, and this round is
+not full-strength. **Verdict (b) — OUTSIDE the reserved set.** The reservation
+binds the *experimental design* — which commit the shadow arm reads. Parking
+selects no comparator, resolves no blocker, authorizes no fetch, consumes no
+observation slot and touches no Hard Floor; it is reversible internal estate
+management. Both rounds attached the same condition, and it is honoured
+throughout this change: **the corrected comparator remains an unratified
+proposal and is nowhere described as approved, selected, or frozen.**
+
+**One council recommendation was NOT adopted, and the reason is a verified fact
+rather than a preference.** Both rounds asked for per-step `blocked_by:`
+metadata. `blocked_by` is a field of the **ticket** schema
+(`agents/roadmaps/archive/road-to-ticket-bundles.md:121`), not of a roadmap step;
+no roadmap in this tree carries it, and one peer-review pass flagged exactly this
+as `needs-verification` — *"verify that `status: later`, `entry_condition`,
+`review_by` and per-step `blocked_by` are valid schema rather than invented
+structure"*. Three of the four are; the fourth is not. Inventing a step-level
+frontmatter key to satisfy a recommendation would be the schema fabrication that
+flag exists to catch, so the dependency chain is recorded as the table below
+instead — the same information, in a form this repository already reads.
+
+The *other* peer-review pass — the one that greenlit the verdict — reached the
+same place from the opposite direction: the seat's five proposed lifecycle
+controls belong on a **reactivation** checklist, not on parking prerequisites,
+because none of them makes parking invalid *now*. They are recorded in § On the
+`review_by` date rather than imposed as conditions of the park.
+
+**One peer-review point is recorded and NOT acted on here, because it is not
+about this roadmap.** The same pass asked for a parked-roadmap observability
+mechanism — an index or review queue surfacing parked items, their blockers and
+their `review_by` dates — on the ground that without one, "park it" decays into
+"forget it" as `later/` grows. Partial coverage exists already:
+`lint_roadmap_later_disposition` enforces a wake condition and a `review_by:` on
+every parked roadmap, and `agent-config stubs:due` does the overdue query for the
+sibling `stubs/` directory. What has no reader is the parked-**roadmap** date, and
+building one is an estate-wide change with no owner in this lane. Noted here
+rather than written anywhere it would take effect.
+
+### The dependency chain, once, in full
+
+| Step | Blocked by | Why it cannot be reached by an agent |
+|---|---|---|
+| 1.1 Pin the reference | `fetch-is-owner-reserved` (directly) · `shadow-pin-is-post-upgrade` (validity) | Its own `verify:` requires "a read-only fetch of that commit succeeds" — an outbound third-party fetch, a Hard Floor act. Running it against an unratified comparator would additionally spend the slot on an inadmissible comparison. |
+| 1.3 Harness-only validation | 1.1, and `fetch-is-owner-reserved` directly | Its `verify:` requires that **both arms produce an artefact directory** under `agents/.harvest-local/`. Both arms are fetch-dependent, so there is nothing to invoke — the step is not merely waiting on 1.1's output, it is independently fetch-gated. (Recorded explicitly: one peer-review pass correctly noted the earlier text asserted 1.3's unreachability without demonstrating it.) |
+| 1.4 Run both arms | 1.1 · 1.3 · `fetch-is-owner-reserved` · `shadow-pin-is-post-upgrade` | This is the step that spends outbound to a third party. Both blockers bear on it directly. |
+| 1.5 Write the outcome into `docs/CLAIMS.md` | 1.4 | Its `verify:` requires the row to match "the branch of this step that actually fired". No branch has fired, so the matching state is the untouched row — which is what the tree already carries. |
+| 1.6 Dispose of the parked stub | 1.4 | An authorization to fetch is not an observation, and point 2 of § Why this is carried forbids disposal while the fetch boundary survives. |
+
+Step **1.2 is done** and stays done: the three counting rules are frozen, dated
+before any arm ran, and byte-unchanged by this change.
+
+### On the `review_by:` date
+
+`review_by: 2026-12-08` is a **re-read obligation, never a wake condition** — the
+wake condition is the `entry_condition:` mapping, and § Reopening trigger records
+that both seats of the authorizing round refused a calendar trigger for this
+roadmap.
+
+The date is chosen rather than defaulted: the claim's 180-day window runs from
+2026-08-12 (`docs/CLAIMS.md:488-490`) and therefore closes on 2027-02-08, so a
+re-read on 2026-12-08 leaves roughly two months in which the owner can still act
+before falsification criterion 3 fires by default.
+
+**What happens on that date, named because a date with no action is a field that
+certifies attention nobody paid.** The maintainer re-reads this file and records
+one of exactly four outcomes: continue parking with a new date and a reason;
+reactivate, because a blocker fell; replace, because the claim or the command
+changed under it; or accept the window consequence deliberately rather than by
+default. The fourth is a real option and is the one that arrives on its own if
+nobody chooses — `blocker: fetch-is-owner-reserved` § If you do nothing states
+its cost.
+
+### What this park does NOT do
+
+- It does not ratify the corrected comparator. That stays a proposal.
+- It does not resolve either blocker. Both stay **OPEN**, with their owners and
+  their `Resolved when:` fields unchanged.
+- It does not touch `docs/CLAIMS.md`. The row keeps `status: unbacked` and an
+  empty `last_verified`, verified again at this commit
+  (`docs/CLAIMS.md:491-492`), which is the state point 3 of § Why this is carried
+  requires while no valid observation exists.
+- It does not edit R1-R3, the frozen protocol, the size envelope, the
+  confidentiality rules or the authorization record. All are byte-unchanged.
+- It spends no observation slot. The claim's two slots are both still unspent.
 
 ## Reopening trigger — observation-based, not calendar-based
 
@@ -845,6 +1033,14 @@ decision, and `fetch-is-owner-reserved` needs the owner. Reading the trigger
 set alone would suggest this roadmap becomes workable when three observations
 line up; it does not.
 
+**Superseded as the operative wake condition, 2026-09-08 — and left standing as
+the record.** The three conditions above belong to the authorizing seat's trigger
+set and this lane holds no authority to redraw them, so they are not edited. What
+changed is that they are no longer what a reader should act on: the frontmatter's
+three-part `entry_condition:` is, because it names the two blockers, their two
+distinct trust boundaries and the actor for each — which the three conditions
+above predate and do not cover.
+
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-07 | reviewer: claude/host -->
 
@@ -872,6 +1068,9 @@ line up; it does not.
       (`fetch-is-owner-reserved`) — which the 2026-09-07 note above got wrong in
       one direction, since a run-specific council authorization does now exist
       and is still not sufficient. Left unticked for the same reason as before.
+      PARKED 2026-09-08 and still unticked. Neither limb moved: no pair has run,
+      and the reason recorded in two blockers is unchanged. The roadmap left the
+      active tree rather than this criterion changing — see § Disposition.
 - [ ] AC-2 — The claim row at `docs/CLAIMS.md` states an outcome that matches
       what the run produced, with no rule edited after the data.
       OPEN 2026-09-07. The run produced nothing, so the matching state is the
@@ -887,6 +1086,10 @@ line up; it does not.
       a frozen element and the correction was NOT applied, because applying it
       after the authorizing grant is itself the class of edit this criterion
       exists to detect. R1-R3 are byte-unchanged.
+      PARKED 2026-09-08, and the second limb held a third time. The park changed
+      no rule, no coordinate and no claim row: `docs/CLAIMS.md:491-492` still
+      reads `- status: unbacked` and an empty `- last_verified:`, verified at
+      this commit, and R1-R3 are byte-unchanged again.
 - [ ] AC-3 — The parked stub is disposed of, and its disposal note attributes
       the fetch boundary's resolution to a run-specific authorization rather
       than to Phases 3-4.
@@ -899,3 +1102,6 @@ line up; it does not.
       Hard-Floor act. Attributing it to verdict (c) alone would be the same
       false attribution as crediting Phases 3-4 — the error this criterion was
       written to catch, arriving in a new costume.
+      PARKED 2026-09-08. The stub stays in place and was updated only to repoint
+      its receiver link at the parked path and to record the park — no disposal,
+      no attribution written, because neither is earned yet.
