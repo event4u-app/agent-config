@@ -24,6 +24,43 @@ Two open pull requests each shipped a different architectural decision record nu
 Both branches carry an identical ADR-260 and ADR-261, so 262 was simply the first free
 number each lane took independently. Neither lane can see the other from inside itself.
 
+## It recurred, once, within a day — recorded 2026-09-08 by drain run 22
+
+The disposition above was *record and defer*. **That disposition did not hold.** The
+same defect fired again on the very next drain run, at the next number:
+
+| PR | Branch | File |
+|---|---|---|
+| #1923 | `drain/delivery-for-every-host` | `ADR-263-delivery-default-for-claude-code.md` |
+| #1932 | `drain/skill-surface-option-b` | `ADR-263-skills-are-explicitly-invoked-reference-material.md` |
+
+Three things make this more than a repeat count, and they are why the recurrence is
+written here rather than left to a third discovery:
+
+1. **`#1923` is in both collisions.** It was one of the two ADR-262 branches above, and
+   its head commit is literally `4788ba195` — *"Merge origin/main into
+   drain/delivery-for-every-host, and renumber ADR-262 -> ADR-263"*. So the branch
+   dodged the first collision by taking the next free number and **landed directly in
+   the second one**. Renumbering is not a fix; it is the defect moving.
+2. **The stub predicted the mechanism exactly** and the prediction cost nothing to
+   verify: a lane takes the first free number it can see, and it cannot see the other
+   lane. Recording that and waiting produced a second instance with the same shape.
+3. **The interval was under 24 hours.** Both collisions are dated 2026-09-08.
+
+Per [`recurring-criticism`](../../../src/rules/recurring-criticism.md), a recurrence is
+evidence about the **system**, not only about the item — and the burden shifts to
+whoever keeps the deferral. Which of the three outcomes applies is not settled here,
+because run 22 did not have the authority to settle it and guessing would repeat the
+error: the disposition may have been wrong, or right-but-unreachable, and the difference
+matters for what gets built. What run 22 can say is that "record and defer" has now been
+falsified once by observation.
+
+**Run 22 did not renumber either branch**, and the reasoning is worth keeping because it
+is the same trap: #1932 was green and #1923 stalled, so pre-emptively yielding 263 to a
+stalled branch would leave 263 unused and 264 taken if #1923 is abandoned. Both PRs were
+commented instead, so neither merges into the collision unaware. That is mitigation, not
+a fix — the fix is still the durable one this stub asks for.
+
 ## Why nothing catches it — measured, not assumed
 
 Two independent reasons, and the second is the one that makes this worth a record.
