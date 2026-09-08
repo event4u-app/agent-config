@@ -321,12 +321,17 @@ describe('rule-inject — never blocks (1.5)', () => {
         fs.rmSync(root, { recursive: true, force: true });
     });
 
-    it('the per-prompt cap is the derived p90, expressed in the budget row\'s unit', () => {
-        // 5,000 exact-BPE tok (the measured p90 rounded up to 500) at the ~4
-        // bytes/token this corpus reads. Bytes, not tokens, so the concern's
-        // module graph carries no tokenizer into a dispatch it will not use —
-        // see the constant's own docstring.
-        expect(CAP_BYTES).toBe(20480);
+    it('the per-prompt cap is the measured p90 FIRE SIZE in bytes', () => {
+        // 16,384 B — the p90 gate-open fire size rounded up to 512, which is
+        // the activation charge owner ruling E2 specifies and the number the
+        // `user_prompt_submit` slot sum already carried. It was 20,480 until
+        // 2026-09-08 (R2 finding 3): the p90 of the matched-body TOKEN
+        // distribution converted at ~4 B/tok, i.e. a second statistic in a
+        // second unit that licensed this one concern 25 % above the whole
+        // slot's registered sum. Bytes, not tokens, so the concern's module
+        // graph carries no tokenizer into a dispatch it will not use — see the
+        // constant's own docstring.
+        expect(CAP_BYTES).toBe(16384);
     });
 
     it('carries no tokenizer in its module graph — the hot-path invariant', () => {
@@ -344,5 +349,39 @@ describe('rule-inject — never blocks (1.5)', () => {
         );
         expect(lib).not.toMatch(/^import .*token_count/m);
         expect(hook).not.toMatch(/^import .*token_count/m);
+    });
+});
+
+describe('the runtime cap and the registered budget rows are ONE number (R2 finding 3)', () => {
+    /**
+     * The three numbers used to be two statistics in two units: `CAP_BYTES` was
+     * the p90 of the matched-body TOKEN distribution rounded to 500 tok and
+     * converted at ~4 B/tok (20,480 B), while the `user_prompt_submit` slot sum
+     * was the p90 gate-open FIRE SIZE in bytes rounded up to 512 (16,384 B) —
+     * the activation charge owner ruling E2 specifies. With the concern's own
+     * cap 25 % above the whole slot's registered sum, the top decile of fires
+     * alone exceeded the slot budget for a slot carrying 12 other concerns, so
+     * the overrun was designed in rather than accidental.
+     */
+    const budget = JSON.parse(
+        fs.readFileSync(
+            path.join(process.cwd(), 'src', 'config', 'hook-token-budget.json'),
+            'utf-8',
+        ),
+    ) as {
+        per_concern_caps_bytes: Record<string, number | string>;
+        per_slot_sum_caps_bytes: Record<string, number | string>;
+    };
+
+    it('CAP_BYTES equals the registered rule-inject concern row', () => {
+        expect(budget.per_concern_caps_bytes['rule-inject']).toBe(CAP_BYTES);
+    });
+
+    it('CAP_BYTES does not exceed the user_prompt_submit slot sum', () => {
+        // One concern may not be licensed to emit more than the whole slot is
+        // registered for. Equality is the ceiling case, not the target.
+        expect(CAP_BYTES).toBeLessThanOrEqual(
+            budget.per_slot_sum_caps_bytes['user_prompt_submit'] as number,
+        );
     });
 });

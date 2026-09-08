@@ -512,6 +512,20 @@ Defects this roadmap repairs:
       is the 3.1 distribution, not this probe.
       `block_config_weakening` behaved as E2 predicts — `*-budget.json` is `advisory`
       (`:96-98`), so its path returns `warn`, never a block.
+      **AMENDED 2026-09-08 by the R2 completion review, finding 3.** The clause above —
+      "the `rule-inject` row at 20,480" — was honoured literally and was wrong to honour:
+      it left ONE concern licensed 25 % above the whole slot's registered sum on a slot
+      carrying 12 other concerns, because the two numbers were the same statistic in two
+      units (p90 matched-body TOKENS at ~4 B/tok vs p90 gate-open FIRE SIZE in bytes).
+      The row and `hooks/rule_inject_hook.ts::CAP_BYTES` are now **16,384**, reconciled
+      DOWNWARD onto E2's own charge rather than by raising any cap. Measured cost over the
+      same corpus, with the command path included (330 fires): p90 16,865 → 14,507 B,
+      max 20,406 → 16,348 B, fires truncated 33 → 45, bodies withheld to fit the cap
+      63 → 88. A tripwire in `tests/scripts/rule_inject_hook.test.ts` now holds the cap
+      equal to the concern row and at or below the slot sum, so the two units cannot drift
+      apart again unnoticed. The residue is NOT closed: the cross-concern slot sum is an
+      authoring-time control only — the runtime enforces
+      `per_turn_aggregate_bytes.ceiling_bytes` and reads no per-slot row.
 - [x] **3.3 Latency gate green:** `pre_tool_use` p95 ≤ 175 ms, `user_prompt_submit`
       gate-open measured and recorded.
       verify: CI latency gate green on the flipped repo.

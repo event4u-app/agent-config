@@ -119,15 +119,38 @@ const EXIT_WARN = 2;
  * slot, for a concern that is default-OFF and emits nothing. Measured: 202 ms
  * -> 196 ms on the `pre_tool_use` p95 when the concern is unbound entirely, and
  * the CI latency gate went red on the branch that introduced it while passing
- * on main. So the runtime cap is the same bound in the unit
+ * on main. So the runtime cap is stated in the unit
  * `hook-token-budget.json` already enforces — 5,000 tok at the ~4 bytes/token
- * this corpus measures is 20,480 B, which is exactly this concern's registered
- * row. Cap and budget row are now one number instead of two units.
+ * this corpus measures was 20,480 B, and that WAS this concern's registered
+ * row until 2026-09-08. It matched the concern row and not the slot row; see
+ * the correction below.
+ *
+ * LOWERED 20480 -> 16384 on 2026-09-08 (R2 finding 3), and the paragraphs above
+ * are kept because they record how the retired number was derived. The defect
+ * was that the derivation above and the one behind the
+ * `user_prompt_submit` slot row were TWO STATISTICS IN TWO UNITS: this cap was
+ * the p90 of the matched-body TOKEN distribution, converted at ~4 B/tok; the
+ * slot row is the p90 gate-open FIRE SIZE in bytes, which is the activation
+ * charge owner ruling E2 specifies. They disagreed by 25 %, in the direction
+ * that licensed ONE concern to emit more than the whole slot — carrying 12
+ * other concerns — is registered for. Reconciled downward onto the slot row,
+ * because that is the owner-specified charge; the cost is measured and recorded
+ * in `hook-token-budget.json`'s own `rule-inject_reason` (33 -> 45 fires
+ * truncated, 63 -> 88 bodies withheld over 330 corpus fires).
+ *
+ * WHAT THIS CAP DOES, precisely: `selectForInjection` drops whole bodies to
+ * stay under it, so a fire is TRUNCATED and never over-emitted. It is the only
+ * number that acts on a single fire — the per-slot sums are an authoring-time
+ * control read by `bench_hook_injection`, and the runtime dispatcher enforces
+ * only `per_turn_aggregate_bytes.ceiling_bytes`.
  *
  * Re-run that command if the corpus or the bodies move; a cap copied from a
- * stale measurement is worse than no cap, because it looks derived.
+ * stale measurement is worse than no cap, because it looks derived. The
+ * tripwire in `tests/scripts/rule_inject_hook.test.ts` holds this equal to the
+ * registered concern row and at or below the slot sum, so the two units cannot
+ * drift apart again unnoticed.
  */
-export const CAP_BYTES = 20480;
+export const CAP_BYTES = 16384;
 
 /** Tools whose input names a file this concern can match path triggers against. */
 export const FILE_TOOLS = new Set(['Write', 'Edit', 'NotebookEdit', 'Read', 'MultiEdit']);
