@@ -44,7 +44,8 @@ grounds the notes file:
 Use the sections that apply — record what the work actually surfaced.
 
 - `## In-Task Hypothesis Log` — competing explanations under consideration.
-- `## Killed beliefs` — each discarded hypothesis + the evidence that killed it.
+- `## Killed beliefs` — each discarded hypothesis + the `killed-if` that killed
+  it.
 - `## Predictions` — **chosen form** · prediction · confidence · result · lesson.
 - `## Decisions` — decision · alternatives · reason · revisit-if ·
   **next-commitment**. Tactical decisions stay here; **escalate to

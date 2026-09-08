@@ -113,7 +113,8 @@ the escape hatch for the first two cases and it does not exist for an Iron Law.
       verify: the two recorded raises satisfy the shape retroactively, or the
       shape is wrong.
 
-- [ ] **1.3 If the answer is that it may not: give the ceiling headroom.**
+- [~] **1.3 If the answer is that it may not: give the ceiling headroom.**
+      <!-- deferred-resolution: carried-to=road-to-iron-law-reserve-activation -->
       A ceiling pinned to HEAD reds on the first token and teaches readers to
       route around it. Whatever the mechanism — a stated band, a per-PR
       allowance, a scheduled re-measure — the property to buy is that a PR
@@ -122,7 +123,53 @@ the escape hatch for the first two cases and it does not exist for an Iron Law.
       `check_preamble_payload_budget` without any config edit in its own diff.
       <!-- blocked-by: iron-law-reserve-needs-protected-approval | asked: no — owner-delegated drain run, council decided the design and blocked the shipping -->
 
-      **Open, and the mechanism is designed rather than missing.** ADR-264 carries the
+      **DEFERRED 2026-09-08, and the reason is a refusal rather than an omission.** An
+      AI council (anthropic/claude-sonnet-4-5 + openai/codex-default, 2 of 2 present,
+      **converged**) was asked item 1 of the blocker — where an approval record may live
+      such that a PR author cannot create it — and rejected the axis. Recorded as
+      [`ADR-265`](../../docs/decisions/ADR-265-iron-law-reserve-refused-verifier-inside-the-change.md);
+      carried to [`road-to-iron-law-reserve-activation`](road-to-iron-law-reserve-activation.md).
+
+      **The finding: no choice of store closes the gap, because the verifier is inside the
+      change it authorises.** openai — *"The checker, its imports, token census, workflow,
+      and status context are all part of the trusted computing base. A PR author who can
+      change any of them may bypass a perfectly protected approval record."* So the
+      blocker's own claim that *"everything after it is mechanical"* is refuted, and the
+      three candidate stores it named could not have produced an answer: each protects the
+      record and none protects the reader.
+
+      **Three further defects, each independently sufficient.** The proposed trust root is
+      false under the live ruleset — `required_approving_review_count: 0`, so a two-PR
+      sequence *"separates time, not authority"*. Concurrent consumption is unresolved: two
+      PRs read the same base, see the same capacity, and both pass, and the staleness
+      survives the first merge. And `ci_delivery.honest_limit` is an *advisory* precedent,
+      so citing it to authorise a mechanism claiming independent authorization is incoherent
+      (anthropic).
+
+      **This step's verify cannot be met honestly, which is why it is `[~]` and not `[x]`.**
+      It asks for a fixture PR adding ~120 standing tokens to pass without a config edit —
+      and satisfying that means activating the mechanism the council refused. Advisory-only
+      was offered by one seat and refused by the other as an answer to this step: *"an
+      advisory message followed by a successful status is not a gate and does not resolve
+      the blocker"*. Reporting it as done either way would have been the laundering the
+      `[~]` glyph exists to prevent.
+
+      **What shipped instead** — `src/scripts/_lib/standing_bound_ratchet.ts`: the grace
+      ceiling is compared against the value at the base ref and a rise refuses the run,
+      whether it arrives by editing the config or by passing a larger `--ceiling`. That is
+      not headroom and does not close this step. It is the enforcement ADR-264's decision
+      never had — that record kept *"It may never move UP"* while leaving the sentence
+      carried by prose, and this file's own § finding is that the prose lost twice. Both
+      seats endorsed the direction while refusing the reserve: *"The ordinary ceiling check
+      must still run"* (openai); anthropic's own first recommendation was the strict
+      mechanical ceiling.
+
+      **The reserve implementation was deleted, not parked behind a zero constant.** It was
+      built first, with all eight of ADR-264's fixtures passing and six rejecting, then
+      removed on the precedent `/roadmap:process-full` § Merging sets: *"an archived roadmap
+      must not leave latent executable authority behind a documented switch"*.
+
+      **Superseded reading, kept because it was this file's own.** ADR-264 carries the
       full shape: a 128-token **aggregate** reserve above the grace ceiling, consumable
       only by the net delta of independently authorized fenced Iron Law blocks, never
       following `HEAD`, ratcheting downward as reductions land. Aggregate and not
@@ -141,7 +188,7 @@ the escape hatch for the first two cases and it does not exist for an Iron Law.
 
 ### blocker: iron-law-reserve-needs-protected-approval
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Asked:** 2026-09-08, owner-delegated drain run; the design was decided by AI
   council the same day (2 seats present, split, resolved on the dissent's own
@@ -177,6 +224,23 @@ the escape hatch for the first two cases and it does not exist for an Iron Law.
 - **Resolved when:** a PR adding ~120 authorized fenced Iron Law tokens passes
   `check_preamble_payload_budget` with no budget-config edit in its own diff, and
   the five negative fixtures above fail as specified.
+- **Resolved 2026-09-08 — with a NO, not with a store.** Item 1 was put to an AI
+  council (anthropic/claude-sonnet-4-5 + openai/codex-default, 2 of 2, converged)
+  and the answer is that no store closes the gap while the verifier ships inside
+  the change: *"the checker, its imports, token census, workflow, and status
+  context are all part of the trusted computing base"*. Items 2 to 4 were built —
+  binding, base-ref-only reads, hash invalidation, a relabelling anchor, all eight
+  fixtures passing with six rejecting — and then **deleted**, because shipping them
+  would have opened the trust gap inside the config this roadmap exists to police.
+  The recommendation above ("build the approval store before the config sentence")
+  held: the store was built first, and building it is what proved it insufficient.
+  Record: [`ADR-265`](../../docs/decisions/ADR-265-iron-law-reserve-refused-verifier-inside-the-change.md).
+  The five activation prerequisites — trusted verifier path, unforgeable status
+  identity, protected store with named approvers, merge-time serialisation,
+  fail-closed on any missing component — are all repository-administrator actions
+  and live in [`road-to-iron-law-reserve-activation`](road-to-iron-law-reserve-activation.md).
+  **The "if you do nothing" clause above is now the standing state**, and the
+  ratchet makes it bite rather than depend on a reader noticing a sentence.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-08 | reviewer: claude/host -->

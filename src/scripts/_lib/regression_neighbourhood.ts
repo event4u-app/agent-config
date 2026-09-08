@@ -12,30 +12,33 @@
  * > neighbourhood names, and a fixture proves a neighbour regression is
  * > caught.**
  *
- * ## Which graph, and why it is not the one the step names
+ * TWO GRAPHS, BOTH DELIBERATE — the substitution is retired.
  *
- * The step says "the code graph". This tree has two graph surfaces and only one
- * of them resolves here, so the substitution is STATED rather than hidden.
+ * The step says "the code graph". Until 2026-09-08 this module could not read
+ * it: `agent-config code-graph detect` answered `no code-graph source detected`
+ * in a fresh checkout, so it selected over the artefact graph instead and said
+ * so. `road-to-a-graph-that-is-shipped` removed that premise — Phase 0.1 ships
+ * the parsers, Phase 1 builds the graph on install, and 3.1 added
+ * `impact --diff`, which is the reverse-reachability query this selector needs.
  *
- *   · `agent-config code-graph` — the native code-graph engine (ADR-124). It
- *     shipped `hooks.code_graph.enabled: false` (a flag retired 2026-09-07)
- *     (`src/config/agent-settings.template.yml:1373-1374`), and
- *     `agent-config code-graph detect` in this checkout answers
- *     `no code-graph source detected`. There is no index to select against.
- *   · `src/scripts/discovery_graph.ts` — this suite's OWN artefact relation
- *     graph, five typed edges extracted from the discovery manifest's
- *     structured fields, with an `affected` BFS already implemented and
- *     answering. That is the surface this module builds on.
+ * So both surfaces are now first-class, and which one a candidate uses is a
+ * property OF THE CANDIDATE rather than of what happened to resolve:
  *
- * The substitution changes what a "neighbourhood" means, and the difference is
- * worth naming: the native engine would neighbour a candidate by SYMBOL
- * relations, while `discovery_graph` neighbours it by ARTEFACT relations
- * (`supersedes`, `routes_to`, `references_adr`, pack and workspace membership).
- * For this roadmap's candidates — rules, skills, guidelines — the artefact
- * graph is the one that carries the coupling a rewrite can break. For a
- * candidate that edits a `.ts` symbol, it is the weaker surface, and this
- * module says so through {@link selectionVerdict}: a touched surface absent
- * from the graph is REFUSED, never silently neighboured with the empty set.
+ *   · **Code candidates** — a diff that edits `.ts` / `.php` symbols. Use
+ *     {@link selectRegressionsFromCode}, which neighbours by SYMBOL relations
+ *     over the native graph, filtered to accepted mechanisms
+ *     (`resolved_via` not in `{name-lookup, dynamic}`) so a same-name guess
+ *     never selects a regression.
+ *   · **Artefact candidates** — a diff that edits rules, skills, guidelines.
+ *     Use {@link selectRegressions}, which neighbours by ARTEFACT relations
+ *     over `src/scripts/discovery_graph.ts` (`supersedes`, `routes_to`,
+ *     `references_adr`, pack and workspace membership). For a rule rewrite that
+ *     is the graph carrying the coupling a change can break; the code graph
+ *     does not model it at all.
+ *
+ * Neither is a fallback for the other, and neither is silent: both paths REFUSE
+ * through {@link selectionVerdict} when a touched surface is absent from the
+ * graph they read, because an unknown neighbourhood is not an empty one.
  *
  * ## Why an unresolved surface refuses instead of selecting nothing
  *
@@ -55,6 +58,9 @@
  * A test asserts that identity rather than an id match, because an id match
  * would also be satisfied by a synthesized spec carrying a copied id.
  */
+import type { GraphState } from '../code_graph/detect.js';
+import type { LoadedGraph } from '../code_graph/query.js';
+import { impact } from '../code_graph/verbs.js';
 import { affected, isSyntheticNode, type Graph } from '../discovery_graph.js';
 
 /**
@@ -106,6 +112,48 @@ export interface NeighbourhoodReport {
     selected: readonly Selection[];
     /** Registry entries whose guards intersect nothing in the neighbourhood. */
     skipped: readonly string[];
+    /**
+     * Which graph answered. Present so a verdict record can never be read as a
+     * claim about the other surface — the failure the retired substitution
+     * section describes, arriving through the report instead of through the
+     * docstring.
+     */
+    graph: 'artefact' | 'code';
+    /**
+     * The graph's freshness at selection time: `fresh` / `behind:N` / `absent`
+     * on the code path, `null` on the artefact path (which is derived from the
+     * committed manifest and has no staleness axis).
+     *
+     * Added after an independent review found the code path hardcoding
+     * `'absent'` and dropping the value: the verbs are required to report
+     * staleness, `verbs.ts` argues the whole point is telling "dead" from "dead
+     * as of a graph 40 commits behind" — and the one in-repo CONSUMER of those
+     * verbs discarded it, so no selection could refuse on a stale graph.
+     */
+    graph_state: GraphState | null;
+    /**
+     * Touched files in a language the code graph does not index. NOT a refusal
+     * reason: an unindexed `.md` is a file with no symbols, which is a fact
+     * about the language set rather than an unknown neighbourhood.
+     */
+    not_indexed: readonly string[];
+    /**
+     * The edges that produced the neighbourhood, rendered, sorted.
+     *
+     * Required by step 3.4: *"the selected regressions and the producing edges
+     * enter the verdict record"*. Empty on the artefact path, whose `affected`
+     * BFS returns a relation name per hop rather than an edge — stated rather
+     * than faked, because an empty list a reader can attribute is better than a
+     * synthesised one they cannot.
+     */
+    producing_edges: readonly string[];
+    /**
+     * The `resolved_via` histogram of the edges the walk REFUSED, on the code
+     * path. A selection that looks narrow because half the graph was a guess
+     * reads very differently from one that looks narrow because the code is
+     * decoupled, and this is the only field that distinguishes them.
+     */
+    rejected_via: string;
     /**
      * Literal 0. This module selects from a registry; a non-zero value here
      * would mean it authored a task, which is K9.
@@ -196,6 +244,80 @@ export function selectRegressions(
         unresolved: unresolvedSurfaces(graph, candidate),
         selected: selected.sort((a, b) => a.spec.id.localeCompare(b.spec.id)),
         skipped: skipped.sort((a, b) => a.localeCompare(b)),
+        graph: 'artefact',
+        graph_state: null,
+        not_indexed: [],
+        producing_edges: [],
+        rejected_via: '(not applicable — the artefact graph has no mechanism axis)',
+        authored: 0,
+    };
+}
+
+/**
+ * The code-graph path (step 3.4).
+ *
+ * Neighbours a candidate by the symbols its diff touched, over the native code
+ * graph, using the same `impact --diff` reverse walk the CLI verb exposes. The
+ * neighbourhood's nodes are the seeds at depth 0 (`touched`) plus every
+ * accepted reverse-reachable node at its shallowest depth (`neighbour`), which
+ * is the identical shape {@link neighbourhood} produces for the artefact graph
+ * — so `selectRegressions`' matching logic is reused rather than forked.
+ *
+ * `touches` is read as FILE paths here, not artefact ids: a code candidate is a
+ * diff, and a diff names files. A touched file with no node in the graph lands
+ * in `unresolved` and therefore refuses through {@link selectionVerdict}, on
+ * exactly the terms the artefact path already uses.
+ */
+export function selectRegressionsFromCode(
+    g: LoadedGraph,
+    candidate: Candidate,
+    registry: readonly RegressionSpec[],
+    depth: number = DEFAULT_NEIGHBOURHOOD_DEPTH,
+    isTest: (relPath: string) => boolean = () => false,
+    graphState: GraphState = 'absent',
+): NeighbourhoodReport {
+    const res = impact(g, candidate.touches, graphState, depth, isTest);
+    const best = new Map<string, NeighbourhoodNode>();
+    for (const seed of res.seeds) {
+        best.set(seed, { node: seed, reason: 'touched', depth: 0, via: '', synthetic: false });
+    }
+    for (const r of res.reached) {
+        if (best.has(r.node)) continue;
+        best.set(r.node, {
+            node: r.node,
+            reason: 'neighbour',
+            depth: r.depth,
+            via: `${r.via}/${r.resolved_via}`,
+            synthetic: false,
+        });
+    }
+    const hood = [...best.values()].sort((a, b) => a.depth - b.depth || a.node.localeCompare(b.node));
+    const reasonOf = new Map<string, NeighbourReason>(hood.map((n) => [n.node, n.reason]));
+    const selected: Selection[] = [];
+    const skipped: string[] = [];
+    for (const spec of registry) {
+        const matched = spec.guards.filter((x) => reasonOf.has(x)).sort((a, b) => a.localeCompare(b));
+        if (matched.length === 0) {
+            skipped.push(spec.id);
+            continue;
+        }
+        selected.push({
+            spec,
+            matched,
+            reason: matched.some((m) => reasonOf.get(m) === 'touched') ? 'touched' : 'neighbour',
+        });
+    }
+    return {
+        candidate_id: candidate.id,
+        neighbourhood: hood,
+        unresolved: [...res.unresolved_files].sort((a, b) => a.localeCompare(b)),
+        selected: selected.sort((a, b) => a.spec.id.localeCompare(b.spec.id)),
+        skipped: skipped.sort((a, b) => a.localeCompare(b)),
+        graph: 'code',
+        graph_state: graphState,
+        not_indexed: [...res.not_indexed_files].sort((a, b) => a.localeCompare(b)),
+        producing_edges: [...res.producing_edges].sort(),
+        rejected_via: res.rejected_via,
         authored: 0,
     };
 }
@@ -209,9 +331,24 @@ export function selectRegressions(
  */
 export function selectionVerdict(report: NeighbourhoodReport): readonly string[] | null {
     const reasons: string[] = [];
-    if (report.unresolved.length > 0) {
+    // An ABSENT graph is the case the artefact path's own docstring warns
+    // about in the other direction: a lookup that cannot resolve and then
+    // selects nothing reports a clean sheet. `behind:N` is deliberately NOT a
+    // refusal — a stale graph still answers, and blocking on staleness would
+    // be the blocking-gate-on-a-stale-graph that K7 forbids. It is surfaced
+    // through `graph_state` so a caller that wants to refuse can.
+    if (report.graph === 'code' && report.graph_state === 'absent') {
         reasons.push(
-            `touched surfaces absent from the relation graph: ${report.unresolved.join(', ')} — ` +
+            'the code graph is absent — a neighbourhood computed over no graph is empty for a ' +
+                'reason that has nothing to do with the candidate. Run `agent-config code-graph build`.',
+        );
+    }
+    if (report.unresolved.length > 0) {
+        // Named per graph: a code-path refusal that said "relation graph" would
+        // point a reader at the wrong surface to go fix.
+        const which = report.graph === 'code' ? 'code graph' : 'artefact relation graph';
+        reasons.push(
+            `touched surfaces absent from the ${which}: ${report.unresolved.join(', ')} — ` +
                 'their neighbourhood is unknown, and an unknown neighbourhood is not an empty one',
         );
     }

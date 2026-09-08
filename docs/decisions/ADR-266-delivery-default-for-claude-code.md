@@ -1,5 +1,5 @@
 ---
-adr: 265
+adr: 266
 status: accepted
 date: 2026-09-07
 decision: delivery-default-for-claude-code
@@ -32,7 +32,7 @@ review_trigger: >-
   protection here.
 ---
 
-# ADR-265 — `delivery` is the shipped default for Claude Code, and for no other host
+# ADR-266 — `delivery` is the shipped default for Claude Code, and for no other host
 
 ## Status
 

@@ -18,7 +18,7 @@ evidence:
   basis:
     - src/config/preamble-payload-budget.json
     - src/scripts/check_condensation.ts
-    - agents/roadmaps/road-to-a-standing-budget-with-headroom.md
+    - agents/roadmaps/archive/road-to-a-standing-budget-with-headroom.md
     - src/rules/preservation-guard.md
 review_trigger: >-
   A third raise of the grace ceiling occurs, in either direction of this

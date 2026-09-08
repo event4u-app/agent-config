@@ -15953,6 +15953,14 @@ var settingsSchema = external_exports.object({
       )
     })
   }),
+  continuity: external_exports.object({
+    auto_record: external_exports.enum(["on", "off"]).default("off").describe(
+      "Deterministic continuity-record writer at session end (road-to-continuity-writer-activation Phase 1). on = the session-eol concern writes the continuity_record capsule variant on Stop for a substantive session that has claimed a roadmap; every field is computed from on-disk state, with no model spend and no subprocess. off (default) = no automatic record \u2014 while session:recycle is still the normal path, a second producer on it before the parity evidence is in would be unverified."
+    ),
+    run_checkpoints: external_exports.enum(["on", "off"]).default("on").describe(
+      "Deterministic run-checkpoint production at session end (road-to-continuity-writer-activation Phase 1.4). on (default) = a session above the recycle threshold and inside a running roadmap contract leaves agents/runtime/state/checkpoints/<run>.json, so a killed run resumes from a derived checkpoint rather than from bookkeeping. off = no checkpoint; continuity writing, the recycle advisory and the context-fill surface are unaffected. Default ON because it is the behaviour the tree already had \u2014 the switch exists to make the three session-end handlers independently disableable, not to change what ships."
+    )
+  }),
   memory: external_exports.object({
     cadence: memoryCadence.default("always").describe(
       "Cadence of the \u{1F9E0} memory-visibility line after a memory-consulting step. always (default) = show whenever a memory type was asked; auto = show only when 3+ types were consulted (less noise); never = suppress. Distinct from rule_loading_tier \u2014 owns its own key since the 2026-06-01 untangle."

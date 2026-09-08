@@ -65,10 +65,10 @@ export const settingsSchema = z.object({
     ),
     lean_projection: z.object({
         mode: leanProjectionMode.default('eager-all').describe(
-            'How the per-tool projector emits the rule layer. eager-all = every rule body inlined into every projection (safe; what an ABSENT key still resolves to, per ADR-265 decision point 4). thin = kernel rules full-bodied + non-kernel rules as router-resolved pointers (~45k GPT-tok lighter per session), with no delivery mechanism. delivery = thin stubs PLUS the rule-inject hook concern, which delivers a body back on a trigger match; this is the value the SHIPPED TEMPLATE carries for Claude Code since ADR-265, and the activation charge for it is paid in src/config/hook-token-budget.json (user_prompt_submit slot sum 4,096 -> 16,384).',
+            'How the per-tool projector emits the rule layer. eager-all = every rule body inlined into every projection (safe; what an ABSENT key still resolves to, per ADR-266 decision point 4). thin = kernel rules full-bodied + non-kernel rules as router-resolved pointers (~45k GPT-tok lighter per session), with no delivery mechanism. delivery = thin stubs PLUS the rule-inject hook concern, which delivers a body back on a trigger match; this is the value the SHIPPED TEMPLATE carries for Claude Code since ADR-266, and the activation charge for it is paid in src/config/hook-token-budget.json (user_prompt_submit slot sum 4,096 -> 16,384).',
         ),
         hosts: z.array(leanProjectionHost).default(['claude-code']).describe(
-            'Which hosts a thinning mode may thin (ADR-265). Absent resolves to [claude-code]. '
+            'Which hosts a thinning mode may thin (ADR-266). Absent resolves to [claude-code]. '
             + 'Only the three hosts with a per-rule rule tree are accepted, and this enum is the '
             + 'AUTHORING layer: an id outside it is a hard validation FAILURE here and under '
             + 'validate_agent_settings, never a warning. resolveLeanProjectionHosts is the '
@@ -448,6 +448,14 @@ export const settingsSchema = z.object({
                 'Optional glob list that makes API-endpoint detection explicit instead of heuristic (e.g. ["app/Http/Controllers/Api/**", "src/pages/api/**"]). Empty (default) = a light path/extension heuristic that fails open.',
             ),
         }),
+    }),
+    continuity: z.object({
+        auto_record: z.enum(['on', 'off']).default('off').describe(
+            'Deterministic continuity-record writer at session end (road-to-continuity-writer-activation Phase 1). on = the session-eol concern writes the continuity_record capsule variant on Stop for a substantive session that has claimed a roadmap; every field is computed from on-disk state, with no model spend and no subprocess. off (default) = no automatic record — while session:recycle is still the normal path, a second producer on it before the parity evidence is in would be unverified.',
+        ),
+        run_checkpoints: z.enum(['on', 'off']).default('on').describe(
+            'Deterministic run-checkpoint production at session end (road-to-continuity-writer-activation Phase 1.4). on (default) = a session above the recycle threshold and inside a running roadmap contract leaves agents/runtime/state/checkpoints/<run>.json, so a killed run resumes from a derived checkpoint rather than from bookkeeping. off = no checkpoint; continuity writing, the recycle advisory and the context-fill surface are unaffected. Default ON because it is the behaviour the tree already had — the switch exists to make the three session-end handlers independently disableable, not to change what ships.',
+        ),
     }),
     memory: z.object({
         cadence: memoryCadence.default('always').describe(

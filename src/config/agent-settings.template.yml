@@ -197,7 +197,7 @@ rule_loading_tier: __RULE_LOADING_TIER__
 #             set eager-all + `task generate-tools`.
 # delivery  = the `thin` projection PLUS the `rule-inject` hook concern, which
 #             delivers a rule body back on trigger match. SHIPPED DEFAULT for
-#             Claude Code since ADR-265. Measured over the frozen routing-matrix
+#             Claude Code since ADR-266. Measured over the frozen routing-matrix
 #             corpus: 616/616 byte-equal deliveries, 101/101 labelled rules
 #             reachable, 0 of 212 near-misses fired. Rollback is this one
 #             setting: `mode: eager-all` + `task generate-tools`.
@@ -1107,6 +1107,37 @@ commands:
     # e.g. ui_paths: ["resources/views/**", "src/pages/**"].
     ui_paths: []
     api_paths: []
+
+# --- Continuity ---
+#
+# Automatic session-continuity production. The continuity record is the one
+# artefact a successor session resumes from; see
+# docs/contracts/continuity-record-slot.md for the slot's capacity policy and
+# docs/contracts/continuity-rollback.md for what each switch here undoes.
+continuity:
+  # Deterministic continuity-record writer at session end
+  # (road-to-continuity-writer-activation Phase 1). When `on`, the session-eol
+  # concern writes the `continuity_record` capsule variant on Stop for a
+  # SUBSTANTIVE session that has claimed a roadmap — every field computed from
+  # on-disk state, no model spend, nothing shelled out. Default OFF: while the
+  # manual writer (`agent-config session:recycle`) is still the normal path,
+  # arming this by default would put a second producer on it before the parity
+  # evidence is in.
+  #   off = (default) no automatic record; the tree behaves as it does today.
+  #   on  = write the record at session end.
+  auto_record: "off"
+
+  # Deterministic run-checkpoint production at session end
+  # (road-to-continuity-writer-activation Phase 1.4). When `on`, a session
+  # above the recycle threshold and inside a running roadmap contract leaves
+  # agents/runtime/state/checkpoints/<run>.json behind, so a killed session can
+  # be resumed by the watcher rather than by bookkeeping. Default ON: this is
+  # the behaviour the tree already had, and the switch exists so an operator can
+  # disable checkpointing WITHOUT disabling continuity writing or the recycle
+  # advisory.
+  #   on  = (default) write the checkpoint.
+  #   off = no checkpoint; every other session-end handler is unaffected.
+  run_checkpoints: "on"
 
 # --- Memory ---
 #

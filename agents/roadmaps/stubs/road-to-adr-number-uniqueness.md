@@ -61,6 +61,55 @@ stalled branch would leave 263 unused and 264 taken if #1923 is abandoned. Both 
 commented instead, so neither merges into the collision unaware. That is mitigation, not
 a fix — the fix is still the durable one this stub asks for.
 
+## It recurred a THIRD time, same PR, next number — recorded 2026-09-08 by the merge that hit it
+
+| PR | Branch | File |
+|---|---|---|
+| #1923 | `drain/delivery-for-every-host` | `ADR-265-delivery-default-for-claude-code.md` |
+| merged | `main` (from the iron-law-reserve lane) | `ADR-265-iron-law-reserve-refused-verifier-inside-the-change.md` |
+
+**The sequence on one branch is now 262 → 263 → 265, three collisions in three
+renumbers**, which is the stub's own prediction landing for the third time: *"Renumbering is
+not a fix; it is the defect moving."*
+
+Four things are new, and they are why this is written here rather than left to a fourth
+discovery:
+
+1. **One side is MERGED this time.** The two earlier instances were open-PR-vs-open-PR, so
+   the council's tie-break — *the earlier-opened PR keeps the number* — had two movable
+   candidates. Here `main` already carries its 265, and renumbering a landed record would
+   rewrite the identity of a decision every other branch already cites. **The direction is
+   therefore forced by evidence rather than chosen**, and the tie-break above does not apply:
+   its precondition (both unmerged) is gone.
+2. **It is no longer silent.** The earlier instances passed `check_adr_frontmatter` (exit 0,
+   measured above) and were found by a human. This one **reds CI**:
+   `.github/workflows/rule-backstops.yml:403` runs
+   `adr/regenerate_index --dir docs/decisions --check`, and the generator fails hard with
+   `error: ADR-265 duplicate: … and …`. So the single-tree half of the fix partly exists
+   already — in the *index generator*, not in the gate the stub proposed extending.
+   `check_adr_frontmatter` still passes on a flat duplicate, so the § What the fix looks like
+   analysis stands; what changed is that the collision now reaches a red check instead of
+   `main`.
+3. **The renumber cost 11 files of prose.** `ADR-265` was cited from 15 files, of which
+   **four mean main's record and must not move** (`road-to-iron-law-reserve-activation.md`,
+   `council-2026-09-08-iron-law-reserve-store.md`, `check_preamble_payload_budget.ts`,
+   `standing_bound_ratchet.ts`). A sweep over the bare string would have silently re-pointed
+   four references to the wrong decision — which is exactly the harm § Why nothing catches it
+   names, arriving through the *repair* rather than through the collision.
+4. **The 264 gap the stub predicted did not open, and 266 nearly did.** A parallel
+   uncommitted branch held an `ADR-266`. #1923 took 266 anyway — it is the branch with a live
+   PR, and the stub's own reasoning is that yielding a number to a stalled lane leaves the
+   number unused and the next one taken. The uncommitted lane moves instead, because an
+   uncommitted record is the cheaper one to renumber.
+
+**The entry condition below is met.** *"When: the next time two lanes collide on an ADR
+number"* — this is that time, for the third time, and the disposition *record and defer* has
+now been falsified twice by observation. Per
+[`recurring-criticism`](../../../src/rules/recurring-criticism.md) the burden sits with
+whoever keeps the deferral; which of its three outcomes applies is still not settled here,
+for the same reason run 22 gave — the merge run that found this owns no authority over how a
+lane opens an ADR, and guessing would repeat the error a fourth time.
+
 ## Why nothing catches it — measured, not assumed
 
 Two independent reasons, and the second is the one that makes this worth a record.

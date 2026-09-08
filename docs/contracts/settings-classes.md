@@ -247,8 +247,33 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 26 |
 | B — consent | 3 |
-| C — guarded | 111 |
-| **Total** | **140** |
+| C — guarded | 113 |
+| **Total** | **142** |
+
+It rose to 142 on 2026-09-08 from two independent additions that landed in the same
+day and are counted together here: `lean_projection.hosts` (one C, `policy`, from
+`road-to-delivery-for-every-host`) and the two continuity keys below. The merge that
+combined them re-derived the total from the class table rather than adding either
+side's figure to the other, which is the arithmetic `lint_settings_classes` checks.
+
+It rose on 2026-09-08 when `road-to-continuity-writer-activation`
+step 1.2 added `continuity.auto_record` — one C, `consent`: it arms an automatic
+producer on the normal session-end path, and the roadmap step requires the
+default to stay `off` until parity is measured, which is a decision no agent may
+take by writing the key. Step 1.4 added
+`continuity.run_checkpoints` the same day — a second C, shipping `on` because
+that is the behavior the tree already had. It exists so the three session-end
+handlers are independently disableable, which is what the 2026-09-07 council's
+D2 asked for; it changes nothing that ships.
+
+Its disposition is `consent`, and `derivable` was considered first and rejected:
+`derivable` is the **deletion queue**, a claim that the key disappears once the
+mechanism it names exists. This one is an operator kill switch over a recovery
+artifact, so it is meant to survive — and nothing in the tree can derive whether
+an operator wants resumability traded for quiet. It sits in the same shape as the
+kill switches already classified `consent` (`knowledge.global_sharing.enabled`
+and its allowlist): the mechanism's own preconditions are computable, the
+operator's decision to suppress it is not.
 
 The total was 140 until 2026-08-12, when five of the six keys no code path read were
 deleted, minus the one held open (§ The six unread keys, below): one A
@@ -338,9 +363,9 @@ the template, which is the drift this contract exists to prevent.
 |---|---|
 | derivable | 83 |
 | un-inferrable | 9 |
-| consent | 41 |
+| consent | 43 |
 | policy | 7 |
-| **Total** | **140** |
+| **Total** | **142** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -444,7 +469,7 @@ Rows follow template order, so a diff against the template reads straight down.
 | `discipline_profile` | C | `__DISCIPLINE_PROFILE__` | master switch for the discipline rule tier | derivable — its own `auto` resolution against `src/config/host-capabilities.yml` |
 | `rule_loading_tier` | C | `__RULE_LOADING_TIER__` | legacy master switch for rule loading | derivable — `discipline_profile` supersedes it with a documented mapping (minimal→off, balanced→essential, full→full) |
 | `lean_projection.mode` | C | `eager-all` | `thin` removes rule bodies from the agent's context | derivable — `probe_host_compliance.ts` already computes the per-host thin/eager recommendation |
-| `lean_projection.hosts` | C | `[claude-code]` | decides WHICH hosts a thinning mode may thin, so an added id removes rule bodies from that host's context | policy — the value is a package-level decision the tree already holds: ADR-265 scopes the shipped `delivery` flip to `claude-code` alone. NOT `derivable`, and the distinction is the whole reason for this row: the mechanism that would compute an admissible host set, `admissibleUnderE3` in `src/scripts/_lib/injection_effect.ts`, admits **nothing** today — `src/config/host-injection-effect.json` carries 1 `observed-false` and 8 `unobserved` rows and no `observed-true` — so a derivation would yield `[]` rather than the shipped `[claude-code]`. Naming a mechanism that returns empty as the replacement would put a key in the deletion queue whose deletion would silently change the default. Move target: the ADR plus that census, once a host earns an `observed-true` row |
+| `lean_projection.hosts` | C | `[claude-code]` | decides WHICH hosts a thinning mode may thin, so an added id removes rule bodies from that host's context | policy — the value is a package-level decision the tree already holds: ADR-266 scopes the shipped `delivery` flip to `claude-code` alone. NOT `derivable`, and the distinction is the whole reason for this row: the mechanism that would compute an admissible host set, `admissibleUnderE3` in `src/scripts/_lib/injection_effect.ts`, admits **nothing** today — `src/config/host-injection-effect.json` carries 1 `observed-false` and 8 `unobserved` rows and no `observed-true` — so a derivation would yield `[]` rather than the shipped `[claude-code]`. Naming a mechanism that returns empty as the replacement would put a key in the deletion queue whose deletion would silently change the default. Move target: the ADR plus that census, once a host earns an `observed-true` row |
 | `telegraph.speak` | C | `false` | ships a rule body; a token-cost lever in both directions | derivable — the telegraph kill-criterion bench verdict is a package-level decision, not a per-install one |
 | `tokens.rich_skills` | C | `"on"` | token-spend lever | derivable — the skill's own `token_budget_class: rich` declaration plus the CI ceiling in `lint_token_budget_discipline.ts` |
 | `cost.budgets.daily` | C | `0` | rolling spend ceiling | consent |
@@ -542,6 +567,8 @@ Rows follow template order, so a diff against the template reads straight down.
 | `commands.create_pr.screenshots` | C | `false` | puts captured screenshots into a published PR body | consent |
 | `commands.create_pr.ui_paths` | C | `[]` | glob allowlist | derivable — the frontend-surface heuristic the PR-description flow already applies when the glob list is empty |
 | `commands.create_pr.api_paths` | C | `[]` | glob allowlist | derivable — the API-endpoint heuristic the same flow already applies as its documented empty-list fallback |
+| `continuity.auto_record` | C | `"off"` | arms an automatic producer on the normal session-end path | consent |
+| `continuity.run_checkpoints` | C | `"on"` | disabling it removes a recovery artifact a killed run resumes from | consent |
 | `memory.cadence` | C | `always` | suppressing the visibility line hides what the agent learned from the user | derivable — the hits/asks count the memory-visibility summary already computes; the line only exists when memory was consulted |
 | `memory.review_threshold` | A | `10` | when a review preview surfaces; governs no gate | derivable — the unreviewed-intake count `/memory load` already computes before rendering its preview |
 | `memory.redact_patterns` | C | `[]` | deny-list of secret and PII regexes | policy |

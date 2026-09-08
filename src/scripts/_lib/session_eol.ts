@@ -269,6 +269,50 @@ export function readEolCounters(
     }
 }
 
+/**
+ * Committed substantive-content floor, in parsed transcript tokens (billable
+ * input of the last main-chain assistant record, per `cc_transcript.ts`) — the
+ * OR-arm for a session that produced real discussion without ever calling a
+ * tool.
+ *
+ * Derivation (`agents/evidence/analysis/handoff-substantive-threshold.md`,  code-comment-allow provenance-comment -- unchanged relocation of a docblock whose whole point is that this threshold may only move on cited evidence
+ * 217 sessions of the local Claude store, 2026-08-10): 206 of the 207 sessions
+ * carrying an assistant record also carry a `tool_use` block, so this arm
+ * serves the ~0.5 % tail and the hosts whose transcripts log no tool blocks at
+ * all. 10 000 sits **25× below** the p10 of real working sessions (254 939),
+ * so it cannot hide one, and above a single trivial exchange. Changing it is a
+ * PR citing evidence, never a drive-by edit.
+ */
+export const SUBSTANTIVE_TOKEN_FLOOR = 10_000;
+
+/**
+ * Does this session hold anything worth resuming?
+ *
+ * `≥ 1 assistant turn AND (≥ 1 tool call OR parsed tokens ≥ the committed
+ * floor)`, read from the counts-only session-eol state.
+ *
+ * **Fail-open, deliberately** (Phase 1.2): absent, unreadable or mis-shaped
+ * state LISTS the candidate rather than filtering it, and a `tool_calls` key
+ * missing from a state file written before that counter existed reads as
+ * *unknown*, never as zero. A wrongly listed candidate is noise the user
+ * scrolls past; a wrongly hidden one is data loss they cannot even see.
+ */
+export function is_substantive(counters: StoredEolCounters | null): boolean {
+    if (counters === null) return true;
+    // Every "unknown" below is a NUMBER test, not an `=== undefined` test.
+    // Absent, null and NaN are all unknown, and each one reaches this code by
+    // a real path: a state file written before the counter existed is absent,
+    // `JSON.stringify` turns NaN into null on the way to disk, and a
+    // half-written file yields a parseable object with missing keys. Reading
+    // any of them as "counted zero" hides a session that did real work.
+    if (!Number.isFinite(counters.assistant_records)) return true;
+    if ((counters.assistant_records as number) < 1) return false;
+    if (!Number.isFinite(counters.tool_calls)) return true;
+    if ((counters.tool_calls as number) >= 1) return true;
+    if (!Number.isFinite(counters.final_context_tokens)) return true;
+    return (counters.final_context_tokens as number) >= SUBSTANTIVE_TOKEN_FLOOR;
+}
+
 export interface NewLinesRead {
     /** The complete lines appended since `fromByte` (possibly empty). */
     text: string;

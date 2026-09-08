@@ -184,3 +184,41 @@ export function computeVerdict(root: string, nativeCache: string): VerdictJSON {
         sources,
     };
 }
+
+/** Cache path a repository root's native graph lives at, repo-relative. */
+export const NATIVE_CACHE_REL = path.join('agents', 'runtime', 'state', 'code-graph-v1.json');
+
+/**
+ * The three-state staleness token every consumer of the graph reports.
+ *
+ * Lives HERE rather than in the PreToolUse hook that first needed it
+ * (`hooks/code_graph_context_hook.ts`, step 1.2). Phase 3's verbs must each
+ * print the staleness state, and an engine module importing a hook module to
+ * learn it would invert the dependency direction D9 measures — the hook imports
+ * the engine, never the other way round. The hook re-exports this so its own
+ * consumers are unaffected.
+ */
+export type GraphState = 'absent' | 'fresh' | `behind:${number}`;
+
+/**
+ * Resolve the graph's state for `root`.
+ *
+ * `absent` means no source at all — the silent case. A picked source whose
+ * staleness is UNKNOWN reads as `fresh`, mirroring {@link computeVerdict}'s own
+ * `picked.stale ? STALE : FRESH`: unknown is not treated as stale, because
+ * inventing a commit count would be worse than reporting none.
+ *
+ * `nativeCache` overrides where the native graph is looked for. It exists
+ * because a verb invoked with an explicit `--graph <path>` would otherwise
+ * report `absent` while answering from that very file — the state of a cache
+ * nobody asked about. Passing the graph the verb is actually reading makes the
+ * printed staleness a statement about the answer rather than about a
+ * convention.
+ */
+export function graphState(root: string, nativeCache?: string): GraphState {
+    const picked = pickSource(detectSources(root, nativeCache ?? path.join(root, NATIVE_CACHE_REL)));
+    if (!picked) return 'absent';
+    if (picked.stale !== true) return 'fresh';
+    const behind = picked.commits_behind;
+    return `behind:${typeof behind === 'number' ? behind : 0}`;
+}

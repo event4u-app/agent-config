@@ -18,7 +18,24 @@
  * bucket has no local source at all — the census reports that one as an explicit
  * residual rather than pretending to measure it.
  *
- * Exit codes: 0 within budget · 1 over budget · 2 misuse / unreadable budget.
+ * THE BOUND IS SHRINK-ONLY, AND NOW CHECKED
+ * ------------------------------------------
+ * `ci_delivery.why_a_grace_ceiling` says of the grace ceiling *"It may never
+ * move UP"*, and `grace_ceiling_history` in the same file records it moving up
+ * twice. ADR-264 resolved that against the practice — the sentence stands — and
+ * left the sentence unenforced, which is exactly the state that produced both
+ * raises. `_lib/standing_bound_ratchet.ts` is the enforcement: the effective
+ * ceiling is compared against the one at the base ref and a rise refuses the run,
+ * whether it arrived by editing the config or by passing a bigger `--ceiling`.
+ *
+ * It is also ALL that `road-to-a-standing-budget-with-headroom` step 1.3 ships.
+ * That step designed a 128-token Iron Law reserve; an AI council refused to
+ * activate it 2/2 on 2026-09-08 because the verifier is inside the change under
+ * review, so a protected approval record grants nothing. ADR-265 carries the
+ * verdict and the activation prerequisites.
+ *
+ * Exit codes: 0 within budget · 1 over budget or the bound rose · 2 misuse /
+ * unreadable budget.
  */
 import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
@@ -29,6 +46,13 @@ import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { censusClaudeMdHierarchy, censusRuleDir, censusSkillsCatalog } from './preamble_byte_census.js';
 import { PREFIX_STABLE_SURFACES, prefixStableRoots } from './_lib/prefix_stable_surfaces.js';
 import { attributeGrowth, buildLedger, renderAttribution } from './_lib/asset_delivery_ledger.js';
+import { resolveBaseRef } from './_lib/ratchet_base_ref.js';
+import {
+    assertBoundsDidNotRise,
+    type BoundsRatchetVerdict,
+    type GitRunner,
+    realGit,
+} from './_lib/standing_bound_ratchet.js';
 
 const HERE = path.dirname(new URL(import.meta.url).pathname);
 const REPO_ROOT = path.resolve(HERE, '..', '..');
@@ -38,6 +62,15 @@ interface Budget {
     baseline_tokens: number;
     headroom_pct: number;
     target_tokens: { median: number; p95: number };
+    /**
+     * `ci_delivery.grace_ceiling`, or `null` when the file carries none.
+     *
+     * Read here only so the shrink-only ratchet has a head-side value on a local
+     * run that passes no `--ceiling`. The number the payload is COMPARED against
+     * still arrives through the flag, so this does not become a second home for
+     * the ceiling.
+     */
+    grace_ceiling: number | null;
 }
 
 export interface BudgetVerdict {
@@ -60,10 +93,13 @@ export function readBudget(file: string = BUDGET_FILE): Budget {
         throw new Error(`${file}: baseline_tokens and headroom_pct must both be numbers`);
     }
     const target = (raw['target_tokens'] ?? {}) as Record<string, unknown>;
+    const delivery = (raw['ci_delivery'] ?? {}) as Record<string, unknown>;
+    const grace = Number(delivery['grace_ceiling']);
     return {
         baseline_tokens: baseline,
         headroom_pct: headroom,
         target_tokens: { median: Number(target['median']), p95: Number(target['p95']) },
+        grace_ceiling: Number.isFinite(grace) ? grace : null,
     };
 }
 
@@ -143,6 +179,47 @@ export function evaluate(repoRoot?: string, budgetFile?: string, overrideCeiling
 }
 
 /**
+ * The measurement plus the shrink-only bound check.
+ *
+ * `evaluate` above answers "how big is the tree" and touches no ref;
+ * this answers "may this tree ship" and needs the base one. They stay separate
+ * because a census that silently depended on a remote ref would behave
+ * differently in a shallow clone, and the census is the half other callers use.
+ */
+export interface Decision {
+    verdict: BudgetVerdict;
+    bounds: BoundsRatchetVerdict;
+    /** False when the payload is over the ceiling, or the ceiling itself rose. */
+    ok: boolean;
+}
+
+export interface DecideOptions {
+    repoRoot?: string;
+    budgetFile?: string;
+    overrideCeiling?: number;
+    env?: NodeJS.ProcessEnv;
+    git?: GitRunner;
+    /** Test seam: pin the base ref instead of resolving it. `null` = none resolved. */
+    baseRef?: string | null;
+}
+
+export function decide(opts: DecideOptions = {}): Decision {
+    const repoRoot = opts.repoRoot ?? REPO_ROOT;
+    const git = opts.git ?? realGit;
+    const budget = readBudget(opts.budgetFile);
+    const verdict = evaluate(repoRoot, opts.budgetFile, opts.overrideCeiling);
+    const baseRef =
+        opts.baseRef !== undefined ? opts.baseRef : resolveBaseRef(repoRoot, opts.env ?? process.env, git);
+    const bounds = assertBoundsDidNotRise({
+        repoRoot,
+        baseRef,
+        git,
+        headGraceCeiling: opts.overrideCeiling ?? budget.grace_ceiling ?? 0,
+    });
+    return { verdict, bounds, ok: bounds.ok && verdict.withinBudget };
+}
+
+/**
  * Per-asset attribution for a refusal, against the merge-base tree.
  *
  * Reads the base tree through `git worktree`-free plumbing: the ledger is built
@@ -203,6 +280,26 @@ function attributeGrowthAgainstBase(): string[] | null {
     }
 }
 
+/**
+ * The bound check, rendered for a human — on BOTH paths, green and red.
+ *
+ * A check that only speaks when it fails is a check nobody audits until it is
+ * already load-bearing. Printing the compared ref and the earlier bound on the
+ * passing path is also the only way a reader can tell "verified and unchanged"
+ * from "skipped because no base ref resolved", which are different facts.
+ */
+function renderBounds(b: BoundsRatchetVerdict): string {
+    if (b.note !== null) {
+        return `  ${'grace ceiling ratchet'.padEnd(38)} ${'SKIPPED'.padStart(8)} — ${b.note}\n`;
+    }
+    const base = b.baseGraceCeiling === null ? 'n/a' : String(b.baseGraceCeiling);
+    const state = b.ok ? 'ok' : 'ROSE';
+    return (
+        `  ${'grace ceiling ratchet'.padEnd(38)} ${state.padStart(8)} — ` +
+        `${base} at ${b.baseRef ?? 'n/a'}, shrink-only (ADR-264)\n`
+    );
+}
+
 export function main(argv: string[] = process.argv.slice(2)): number {
     const json = argv.includes('--format=json') || argv.includes('--json');
     // `--ceiling <n>`: the grace ceiling the CI step reads out of
@@ -211,13 +308,14 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     // tighter-than-design value is IGNORED rather than honoured — see `evaluate`.
     const ci = argv.indexOf('--ceiling');
     const override = ci !== -1 && argv[ci + 1] !== undefined ? Number(argv[ci + 1]) : undefined;
-    let verdict: BudgetVerdict;
+    let decision: Decision;
     try {
-        verdict = evaluate(undefined, undefined, override);
+        decision = decide(override === undefined ? {} : { overrideCeiling: override });
     } catch (err) {
         process.stderr.write(`❌  preamble-payload budget: ${(err as Error).message}\n`);
         return 2;
     }
+    const verdict = decision.verdict;
 
     // A ratchet over a measurement of nothing always passes: move
     // `dist/agent-src/` and every census returns zero, which is trivially under
@@ -239,8 +337,24 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     }
 
     if (json) {
-        process.stdout.write(JSON.stringify(verdict, null, 2) + '\n');
-        return verdict.withinBudget ? 0 : 1;
+        process.stdout.write(
+            JSON.stringify(
+                {
+                    ...verdict,
+                    ok: decision.ok,
+                    bound_ratchet: {
+                        ok: decision.bounds.ok,
+                        base_ref: decision.bounds.baseRef,
+                        base_grace_ceiling: decision.bounds.baseGraceCeiling,
+                        note: decision.bounds.note,
+                        violations: decision.bounds.violations,
+                    },
+                },
+                null,
+                2,
+            ) + '\n',
+        );
+        return decision.ok ? 0 : 1;
     }
 
     for (const b of verdict.buckets) {
@@ -252,6 +366,20 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         `  ${'measured total'.padEnd(38)} ${String(verdict.measured).padStart(8)} tok ` +
             `(baseline ${verdict.baseline}, ${sign}${delta}; ceiling ${verdict.ceiling})\n`,
     );
+    process.stdout.write(renderBounds(decision.bounds));
+
+    // The bound is checked BEFORE the size question and independently of it. A
+    // change that lifts its own ceiling has already defeated the gate, and
+    // reporting that as "within budget" would be the config-weakening move
+    // wearing a green checkmark.
+    if (!decision.bounds.ok) {
+        process.stderr.write(
+            '❌  the standing-payload ceiling rose in this change:\n' +
+                decision.bounds.violations.map((v) => `      · ${v}\n`).join(''),
+        );
+        return 1;
+    }
+
     if (!verdict.withinBudget) {
         // road-to-delivered-cost-truth 2.2 — a gate names its own "no". The
         // ceiling message alone states a fact and leaves the reader to find the
@@ -268,8 +396,9 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         process.stderr.write(
             `❌  per-spawn preamble payload grew past the ratchet: ${verdict.measured} > ${verdict.ceiling} tok.\n` +
                 `    Every rule and skill description here is re-written on EVERY subagent spawn, so growth\n` +
-                `    is paid per spawn, not once. Either shrink the addition, or raise baseline_tokens in\n` +
-                `    src/config/preamble-payload-budget.json with the reason in the same commit.\n`,
+                `    is paid per spawn, not once. Shrink the addition, or migrate the prose out of the\n` +
+                `    standing rule. The grace ceiling may NOT be raised to fit it: ADR-264, enforced by\n` +
+                `    the shrink-only ratchet above.\n`,
         );
         // Three distinct states, and conflating the last two is a diagnostic
         // defect rather than a cosmetic one: "I could not look" and "I looked

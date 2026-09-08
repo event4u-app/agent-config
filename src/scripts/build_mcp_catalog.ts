@@ -163,7 +163,30 @@ export function _buildCatalog(): Record<string, unknown> {
     return {
         schema_version: 1,
         description: CATALOG_DESCRIPTION,
-        install_hint_stdio: `npx -y ${_packageName()} mcp-server`,
+        // `agent-config mcp-server`, not an `npx` form — AI council 2026-09-08,
+        // 2/2 convergent (road-to-a-graph-that-is-shipped 4.2, Fork 3 option 5).
+        //
+        // Both npx shapes are unusable here and for different reasons.
+        // `npx -y <pkg>@<version> mcp-server` is what `docs/mcp-server.md:97`
+        // documents and what the pin rationale at `docs/mcp-server.md:82` argues
+        // for, but the step's own verify requires the literal `npx -y` to be
+        // ABSENT from this file. Dropping the `-y` to satisfy that makes npx
+        // PROMPT before installing a package that is not present, which in a
+        // non-interactive MCP client start is a hang rather than a prompt.
+        //
+        // The installed binary is what the setup docs lead with
+        // (`docs/setup/mcp-client-config.md:35`,
+        // `docs/getting-started-local-stdio.md:9` — "the turnkey path … one
+        // command"), is non-interactive, and resolves no dist-tag at all
+        // because it IS whatever the consumer installed. Its cost is stated in
+        // the catalog description rather than hidden: it assumes the package is
+        // on PATH.
+        //
+        // RECORDED CONFLICT, per the same council verdict: this step's verify
+        // and the docs' pinned form contradict each other directly — the test
+        // forbids the string the documentation recommends. That is a defect in
+        // one of the two, and it is named here rather than silently normalised.
+        install_hint_stdio: `${_packageName().split('/').pop() ?? 'agent-config'} mcp-server`,
         tools: entries,
     };
 }
