@@ -22,6 +22,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 
 import { type PackedBinaryManifest, VERIFIABLE_KIND } from '../../src/scripts/_lib/packed_binary_predicate.js';
 import {
+    buildVerdict,
     readLockPin,
     UPSTREAM_PACKAGE,
     UpstreamAnchorRefusal,
@@ -129,12 +130,65 @@ describe('the real tree', () => {
         expect(verdict.comparisons.map((c) => c.vendoredPath).sort()).toEqual(admitted.sort());
     });
 
-    it('reports the version it actually read from node_modules, not the one it read from the lock', () => {
+    it('reports an installed version equal to the locked one, because anything else refuses', () => {
         const verdict = verifyVendoredGrammarsAgainstUpstream({ repoRoot: REPO_ROOT });
-        const installed = JSON.parse(
-            fs.readFileSync(path.join(REPO_ROOT, 'node_modules', UPSTREAM_PACKAGE, 'package.json'), 'utf-8'),
-        ) as { version: string };
-        expect(verdict.installedVersion).toBe(installed.version);
+        expect(verdict.installedVersion).toBe(verdict.lockedVersion);
+    });
+});
+
+describe('the verdict fields — which source each one came from', () => {
+    // The whole-function path CANNOT tell these apart: the strict guard refuses
+    // unless the installed version equals the locked one, so on any tree the
+    // check accepts, both sourcings produce the same string. The round-1
+    // regression test for exactly this defect passed with the defect restored
+    // (R2 finding 1, 2026-09-09). `buildVerdict` is the seam where the two can
+    // differ, which is the only place the distinction is observable.
+    const pin = { version: '0.1.13', integrity: 'sha512-locked' };
+
+    it('takes installedVersion from what was READ, not from the lock pin', () => {
+        const verdict = buildVerdict({ pin, installedVersion: '9.9.9-observed', comparisons: [], divergences: [] });
+        expect(verdict.installedVersion).toBe('9.9.9-observed');
+        expect(verdict.installedVersion).not.toBe(pin.version);
+    });
+
+    it('takes lockedVersion and lockedIntegrity from the pin', () => {
+        const verdict = buildVerdict({ pin, installedVersion: '9.9.9-observed', comparisons: [], divergences: [] });
+        expect(verdict.lockedVersion).toBe('0.1.13');
+        expect(verdict.lockedIntegrity).toBe('sha512-locked');
+    });
+});
+
+describe('the fixture seams — exercised, so they are not unverified API', () => {
+    // R2 finding 3, 2026-09-09: all three options were documented "fixture
+    // seam" and no caller passed any of them, so the docblocks stated a purpose
+    // nothing exercised. Each seam gets one case that only passes if the option
+    // is actually honoured.
+    it('honours `upstreamPackageDir` — an upstream somewhere else is still compared', () => {
+        const root = makeFixture();
+        const moved = path.join(root, 'elsewhere', UPSTREAM_PACKAGE);
+        fs.mkdirSync(path.dirname(moved), { recursive: true });
+        fs.renameSync(path.join(root, 'node_modules', UPSTREAM_PACKAGE), moved);
+        expect(() => verifyVendoredGrammarsAgainstUpstream({ repoRoot: root })).toThrow(/is not installed/);
+        const verdict = verifyVendoredGrammarsAgainstUpstream({ repoRoot: root, upstreamPackageDir: moved });
+        expect(verdict.divergences).toEqual([]);
+        expect(verdict.comparisons).toHaveLength(1);
+    });
+
+    it('honours `vendoredRoot` — the manifest path resolves against it, not against repoRoot', () => {
+        const root = makeFixture();
+        const altRoot = path.join(root, 'alt');
+        const altFile = path.join(altRoot, 'src/vendor/grammars/tree-sitter-fixture.wasm');
+        fs.mkdirSync(path.dirname(altFile), { recursive: true });
+        fs.writeFileSync(altFile, Buffer.from([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x01]));
+        const verdict = verifyVendoredGrammarsAgainstUpstream({ repoRoot: root, vendoredRoot: altRoot });
+        expect(verdict.comparisons[0]?.vendoredPath).toBe(altFile);
+        expect(verdict.divergences).toHaveLength(1);
+    });
+
+    it('honours `manifest` — an injected claim set replaces the one on disk', () => {
+        const root = makeFixture();
+        const injected = { schema_version: 1, entries: [] } as unknown as PackedBinaryManifest;
+        expect(() => verifyVendoredGrammarsAgainstUpstream({ repoRoot: root, manifest: injected })).toThrow(/nothing was compared/);
     });
 });
 

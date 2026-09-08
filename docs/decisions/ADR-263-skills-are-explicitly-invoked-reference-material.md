@@ -198,6 +198,17 @@ unaffected — it governs reopening the decision, which this does not do.
   wrong and is superseded by this record. Correcting the ledger text, and the
   consumer-facing surfaces that imply topic-matched selection, is the execution
   of this decision and is tracked as work rather than performed here.
+  **DONE for the ledger text, 2026-09-09 — this bullet's present tense is
+  falsified and is kept rather than rewritten, on the same reasoning as the two
+  `187` sites Amendment 1 marks.** `docs/CLAIMS.md:245` now reads that the zero
+  *was* published as a defect and that this record supersedes that reading; the
+  work was performed by `road-to-the-14-22-0-disposition-residuals` step 1.3
+  rather than left tracked. The pointer sits here because a reader who greps for
+  `docs/CLAIMS.md:245`, or who reads this section top-down, would otherwise land
+  on a falsifiable statement with nothing beside it. **NOT done:** the second
+  limb — the consumer-facing surfaces that imply topic-matched selection — has
+  no named receiver, and no sweep has established whether any such surface
+  exists.
 - `road-to-the-skill-surface-framing-choice`'s blocker
   `skill-surface-framing-ab-choice` resolves: its `Resolved when` is satisfied by
   the existence of a decision record for A or B, and this is that record for B.

@@ -53,7 +53,7 @@ import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { VERIFIABLE_KIND, type PackedBinaryManifest } from './packed_binary_predicate.js';
+import { loadManifest, VERIFIABLE_KIND, type PackedBinaryManifest } from './packed_binary_predicate.js';
 
 /**
  * The upstream this repository copies from. Hardcoded rather than derived: the
@@ -107,7 +107,7 @@ export interface UpstreamAnchorOptions {
     readonly manifest?: PackedBinaryManifest;
 }
 
-interface LockPin {
+export interface LockPin {
     readonly version: string;
     readonly integrity: string;
 }
@@ -143,12 +143,26 @@ export function readLockPin(repoRoot: string): LockPin {
     return { version: row.version, integrity: row.integrity };
 }
 
+/**
+ * The manifest, read through the predicate's own reader.
+ *
+ * A second reader would drift: a shape condition added there — a
+ * `schema_version` check, a kind allowlist — would leave this module accepting
+ * a manifest the predicate rejects, and this module's whole value is that it
+ * covers what the manifest admits. So `loadManifest` is the reader and this
+ * wrapper only re-types its failures as refusals, because an unreadable
+ * manifest means the anchor was not established rather than that it failed.
+ * R2 finding 2, 2026-09-09 — the duplicate reader this replaces was one
+ * identifier away from the import already at the top of this file.
+ */
 function readManifest(repoRoot: string): PackedBinaryManifest {
-    const p = path.join(repoRoot, 'src', 'config', 'packed-binary-manifest.json');
-    if (!fs.existsSync(p)) throw new UpstreamAnchorRefusal(`no packed-binary manifest at ${p}`);
-    const raw = JSON.parse(fs.readFileSync(p, 'utf-8')) as PackedBinaryManifest;
-    if (!Array.isArray(raw.entries)) throw new UpstreamAnchorRefusal(`packed-binary-manifest: entries must be an array (${p})`);
-    return raw;
+    try {
+        return loadManifest(repoRoot);
+    } catch (err) {
+        throw new UpstreamAnchorRefusal(
+            `the packed-binary manifest could not be read, so nothing was compared: ${err instanceof Error ? err.message : String(err)}`,
+        );
+    }
 }
 
 function sha256(file: string): string {
@@ -236,11 +250,31 @@ export function verifyVendoredGrammarsAgainstUpstream(options: UpstreamAnchorOpt
         }
     }
 
+    return buildVerdict({ pin, installedVersion: installed.version, comparisons, divergences });
+}
+
+/**
+ * Assemble the verdict from the two version sources, kept separate.
+ *
+ * Extracted so the sourcing is testable at all. On any tree the check accepts,
+ * `pin.version` and the installed version are equal — the strict guard above
+ * refuses otherwise — so a test driving the whole function can never tell which
+ * of the two the `installedVersion` field came from, and the round-1 regression
+ * test for exactly that defect passed with the defect restored. R2 finding 1,
+ * 2026-09-09. Here the two can be given different values, which is the only
+ * place the distinction is observable.
+ */
+export function buildVerdict(args: {
+    readonly pin: LockPin;
+    readonly installedVersion: string;
+    readonly comparisons: readonly GrammarComparison[];
+    readonly divergences: readonly string[];
+}): UpstreamAnchorVerdict {
     return {
-        lockedVersion: pin.version,
-        lockedIntegrity: pin.integrity,
-        installedVersion: installed.version,
-        comparisons,
-        divergences,
+        lockedVersion: args.pin.version,
+        lockedIntegrity: args.pin.integrity,
+        installedVersion: args.installedVersion,
+        comparisons: args.comparisons,
+        divergences: args.divergences,
     };
 }
