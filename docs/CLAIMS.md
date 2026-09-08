@@ -916,11 +916,19 @@ is the named exception in the claim itself.
 - last_verified: 2026-08-24
 
 ### claim: mcp-registered-server-standing-cost
-- claim: Registering an MCP server with this package costs standing context on every session, and the kernel server's 20-tool surface costs 3,886 tokens of it while the two-tool lite surface is capped at 600.
+- claim: Registering an MCP server with this package costs standing context on every session, and the kernel server's 25-tool surface costs 4,876 tokens of it while the two-tool lite surface is capped at 600.
 - kind: quant
 - evidence: agents/evidence/metrics/mcp-tool-standing-cost.jsonl#tool_search_threshold
 - status: backed
-- last_verified: 2026-08-23
+- last_verified: 2026-09-08
+<!-- FIGURE MOVED 2026-09-08, and the claim is restated rather than re-verified at the old
+     number: `road-to-a-graph-that-is-shipped` 4.1 registered five code-graph tools, taking
+     the kernel surface 20 -> 25 tools and 3,886 -> 4,876 payload tokens (+25 %). The five
+     measure 993 tokens in isolation. The 2026-08-23 reading was true of the tree it was
+     taken on and is kept as the prior row in the evidence ledger rather than overwritten —
+     this line is what stops the ledger's newest row and this claim from disagreeing. The
+     rest of the claim is unchanged and still holds: the cost is standing, it is paid on
+     every session, and the lite surface's 600-token cap is untouched. -->
 
 ### claim: skill-tiering-h1-unmeasured
 - claim: Whether serving low-priority skills over MCP instead of listing them natively improves skill selection (H1) is NOT established, and `projection.mode: tiered` therefore stays opt-in.
