@@ -216,6 +216,20 @@ describe('kernel server standing cost — the Phase 0.2 figures', () => {
     // ~20,000-token Tool Search threshold at a 200k window, so the surface
     // continues to load upfront — which is why the number is a budget and not a
     // curiosity.
+    //
+    // RE-MEASURED AGAIN THE SAME DAY, and this time the figures moved DOWN:
+    // 2,236 -> 2,035 descriptions and 4,876 -> 4,603 payload, because the
+    // `check_token_regression` gate red on `mcp_schemas` (+19.2%) forced a trim
+    // pass over the five tools' descriptions and their per-property schema
+    // prose BEFORE any re-baseline was allowed. The five now cost 244
+    // description / 720 payload tokens between them, down from 446 / 993.
+    //
+    // THIS TEST CAUGHT ITS OWN BAND, which is the reason the band is narrow:
+    // 2,035 fell through the 2,050 floor set hours earlier and reddened the
+    // suite. A wider band would have absorbed a 201-token improvement silently
+    // — and a budget that cannot see a saving cannot see the next cost either.
+    // Re-pinned to the post-trim measurement rather than widened, on the same
+    // reasoning as the rise above.
     const names = Object.keys(ALLOWLIST).sort();
     const descriptionChars = names.reduce((n, k) => n + ALLOWLIST[k]!.description.length, 0);
     const payloadChars = JSON.stringify({ tools: names.map((n) => to_mcp_tool_meta(ALLOWLIST[n]!)) }).length;
@@ -224,16 +238,16 @@ describe('kernel server standing cost — the Phase 0.2 figures', () => {
         expect(names.length).toBe(25);
     });
 
-    it('costs about 2,236 tokens in descriptions alone', () => {
+    it('costs about 2,035 tokens in descriptions alone', () => {
         const tok = Math.round(descriptionChars / 4);
-        expect(tok, `kernel descriptions are ${tok} tok`).toBeGreaterThan(2_050);
-        expect(tok).toBeLessThan(2_450);
+        expect(tok, `kernel descriptions are ${tok} tok`).toBeGreaterThan(1_900);
+        expect(tok).toBeLessThan(2_200);
     });
 
-    it('costs about 4,876 tokens as the payload the host loads — schemas included', () => {
+    it('costs about 4,603 tokens as the payload the host loads — schemas included', () => {
         const tok = Math.round(payloadChars / 4);
-        expect(tok, `kernel tools/list is ${tok} tok`).toBeGreaterThan(4_600);
-        expect(tok).toBeLessThan(5_200);
+        expect(tok, `kernel tools/list is ${tok} tok`).toBeGreaterThan(4_400);
+        expect(tok).toBeLessThan(4_900);
     });
 
     it('stays far below the Tool Search deferral threshold, so it still loads upfront', () => {

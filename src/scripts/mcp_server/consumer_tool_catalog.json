@@ -224,7 +224,7 @@
     },
     {
       "name": "graph_dead",
-      "description": "Symbols with no accepted reference that no declared entry point names. It REFUSES rather than answering while an entry-point source cannot be read — this engine records no exportedness, so without a supplied list every exported-but-unimported public symbol would report as dead, and a confident false \"dead\" invites a deletion the graph cannot justify. Pass an entry-point file, or accept the gap explicitly. Nothing here says a listed symbol should be deleted. Read-only.",
+      "description": "Symbols with no accepted reference that no declared entry point names. REFUSES (status `refused`) while a source is unreadable: with no exportedness recorded, an exported-but-unimported symbol is indistinguishable from a dead one. Never a deletion recommendation.",
       "side_effect": "ro",
       "implemented_on": [
         "stdio"
@@ -234,12 +234,12 @@
         "properties": {
           "entry_points": {
             "type": "string",
-            "description": "Path (under this root) to a newline-separated list of entry-point ids or labels; `#` comments allowed."
+            "description": "Path under this root to a newline-separated id/label list; `#` comments ok."
           },
           "accept_missing_exports": {
             "type": "boolean",
             "default": false,
-            "description": "Answer anyway, accepting that exported-but-unimported symbols may appear. Never a default."
+            "description": "Answer anyway, accepting the gap. Never a default."
           }
         },
         "additionalProperties": false
@@ -250,7 +250,7 @@
     },
     {
       "name": "graph_impact",
-      "description": "What a diff can break: callers, dependents and test files reachable from the changed symbols over the code graph. Only edges whose resolution mechanism is a stated fact are walked — a same-name guess never produces a dependent, and the guesses it refused are reported so a narrow answer is distinguishable from a decoupled one. Returns the dependents, the test files among them, the edges that produced them, a minimal read set, and how stale the graph is. Runs `git diff --name-only` to resolve the rev.",
+      "description": "What a diff can break: callers, dependents and test files reaching the changed symbols. Walks only stated-fact edges, never a same-name guess, and reports the guesses refused. Runs `git diff` for the rev.",
       "side_effect": "shell",
       "implemented_on": [
         "stdio"
@@ -263,18 +263,18 @@
         "properties": {
           "diff": {
             "type": "string",
-            "description": "Git rev to diff HEAD against, e.g. `origin/main` or `HEAD~1`."
+            "description": "Git rev to diff HEAD against, e.g. `HEAD~1`."
           },
           "depth": {
             "type": "integer",
             "minimum": 1,
             "default": 2,
-            "description": "Reverse-reachability hop limit. Defaults to 2."
+            "description": "Hop limit."
           },
           "untested_only": {
             "type": "boolean",
             "default": false,
-            "description": "Return the changed symbols no test file imports, instead of the impact set."
+            "description": "Instead return changed symbols no test imports."
           }
         },
         "additionalProperties": false
@@ -285,7 +285,7 @@
     },
     {
       "name": "graph_path",
-      "description": "The shortest relation chain between two symbols in the code graph, with each hop's direction preserved. Use to answer \"how does A reach B\" without reading the files in between. Returns `(no path found)` when they are unconnected, which is an answer. Read-only.",
+      "description": "The shortest relation chain between two symbols, direction preserved. Answers \"how does A reach B\" without reading the files between. `(no path found)` when unconnected is an answer.",
       "side_effect": "ro",
       "implemented_on": [
         "stdio"
@@ -299,17 +299,17 @@
         "properties": {
           "from": {
             "type": "string",
-            "description": "Start node id, exact label, or free text."
+            "description": "Start node id, label, or free text."
           },
           "to": {
             "type": "string",
-            "description": "Goal node id, exact label, or free text."
+            "description": "Goal node id, label, or free text."
           },
           "budget": {
             "type": "integer",
             "minimum": 1,
             "default": 1500,
-            "description": "Approximate token budget for the returned lines. Defaults to 1500."
+            "description": "Token budget for lines."
           }
         },
         "additionalProperties": false
@@ -320,7 +320,7 @@
     },
     {
       "name": "graph_query",
-      "description": "A symbol's direct outgoing relations from the code graph — what it calls, imports, uses and inherits, each line carrying the confidence and the mechanism that resolved it. Use for \"what does this touch\" before reading a file. Read-only.",
+      "description": "A symbol's direct outgoing relations — calls, imports, uses, inherits — each line carrying its confidence and resolution mechanism. For \"what does this touch\" before reading a file.",
       "side_effect": "ro",
       "implemented_on": [
         "stdio"
@@ -333,13 +333,13 @@
         "properties": {
           "symbol": {
             "type": "string",
-            "description": "Node id, exact label, or free text to rank."
+            "description": "Node id, label, or free text."
           },
           "budget": {
             "type": "integer",
             "minimum": 1,
             "default": 1500,
-            "description": "Approximate token budget for the returned lines. Defaults to 1500."
+            "description": "Token budget for lines."
           }
         },
         "additionalProperties": false
@@ -350,7 +350,7 @@
     },
     {
       "name": "graph_tests_for",
-      "description": "Which test files exercise a symbol, from the code graph. A `tests` edge is derived from a test file importing the symbol or its module, so the answer is what the tree states rather than what a naming convention suggests. An empty list means no test file imports it — which is a finding, not an error. Read-only.",
+      "description": "Which test files exercise a symbol, derived from a test file importing it or its module. Empty means no test imports it — a finding, not an error.",
       "side_effect": "ro",
       "implemented_on": [
         "stdio"
@@ -363,7 +363,7 @@
         "properties": {
           "symbol": {
             "type": "string",
-            "description": "Node id (`<relpath>#<symbol>`), an exact label, or free text to rank."
+            "description": "Node id `<relpath>#<sym>`, label, or free text."
           }
         },
         "additionalProperties": false
