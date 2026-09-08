@@ -293,10 +293,61 @@ describe('3.4 — selection over the native code graph', () => {
 
     it('refuses a touched file the graph does not carry, rather than selecting nothing', async () => {
         const g = await codeGraph();
-        const r = selectRegressionsFromCode(g, { id: 'cand-ghost', touches: ['src/ghost.ts'] }, CODE_REGISTRY, 2);
+        const r = selectRegressionsFromCode(
+            g,
+            { id: 'cand-ghost', touches: ['src/ghost.ts'] },
+            CODE_REGISTRY,
+            2,
+            isTestFile,
+            'fresh',
+        );
         expect(r.unresolved).toEqual(['src/ghost.ts']);
-        expect(selectionVerdict(r)).not.toBeNull();
-        expect(selectionVerdict(r)?.[0]).toMatch(/absent from the code graph/);
+        expect(selectionVerdict(r)?.join(' ')).toMatch(/absent from the code graph/);
+    });
+
+    it('does NOT refuse for a touched file the graph never indexes', async () => {
+        // A `.md` in the diff is not an unknown neighbourhood. Without this
+        // case the selector refused unconditionally for any candidate that
+        // touched a doc, a `.json` or a `.yaml` — which is most of them.
+        const g = await codeGraph();
+        const r = selectRegressionsFromCode(
+            g,
+            { id: 'cand-doc', touches: ['src/subject.ts', 'README.md'] },
+            CODE_REGISTRY,
+            2,
+            isTestFile,
+            'fresh',
+        );
+        expect(r.not_indexed).toEqual(['README.md']);
+        expect(r.unresolved).toEqual([]);
+        expect(selectionVerdict(r)).toBeNull();
+    });
+
+    it('the graph state reaches the verdict record, and an ABSENT graph refuses', async () => {
+        // `graph_state` used to be hardcoded `'absent'` and then dropped, so no
+        // selection could refuse on a graph that does not exist — a lookup that
+        // cannot resolve and then selects nothing reports a clean sheet, which
+        // is the failure this module's own docstring names.
+        const g = await codeGraph();
+        const fresh = selectRegressionsFromCode(g, CODE_CANDIDATE, CODE_REGISTRY, 2, isTestFile, 'fresh');
+        expect(fresh.graph_state).toBe('fresh');
+        expect(selectionVerdict(fresh)).toBeNull();
+
+        const behind = selectRegressionsFromCode(g, CODE_CANDIDATE, CODE_REGISTRY, 2, isTestFile, 'behind:40');
+        expect(behind.graph_state).toBe('behind:40');
+        // `behind:N` still ANSWERS — K7 forbids blocking on a stale graph. It is
+        // surfaced so a caller that wants to refuse can, not refused here.
+        expect(selectionVerdict(behind)).toBeNull();
+
+        const absent = selectRegressionsFromCode(g, CODE_CANDIDATE, CODE_REGISTRY, 2, isTestFile, 'absent');
+        expect(selectionVerdict(absent)?.join(' ')).toMatch(/code graph is absent/);
+    });
+
+    it('the artefact path carries no graph state, and says so rather than guessing one', () => {
+        const report = selectRegressions(graph(), CANDIDATE, REGISTRY);
+        expect(report.graph).toBe('artefact');
+        expect(report.graph_state).toBeNull();
+        expect(report.not_indexed).toEqual([]);
     });
 
     it('a name-lookup caller does NOT select its regression, and is counted as rejected', async () => {

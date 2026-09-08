@@ -35,7 +35,7 @@ import type { GraphState } from './detect.js';
 import type { LoadedGraph, RecommendedRead } from './query.js';
 import { resolveSeeds } from './query.js';
 import { sanitizeLabel } from './sanitize.js';
-import type { CodeEdge, ResolvedVia } from './types.js';
+import { type CodeEdge, EXT_LANG, GUESS_RESOLVED_VIA, isStatedResolution, type ResolvedVia } from './types.js';
 
 /**
  * Mechanisms a gate-facing verb refuses to walk.
@@ -46,10 +46,10 @@ import type { CodeEdge, ResolvedVia } from './types.js';
  * have silently excluded each new mechanism until someone remembered to add it.
  * A denylist of the two guesses is the invariant.
  */
-export const NON_ACCEPTED_VIA: ReadonlySet<ResolvedVia> = new Set<ResolvedVia>(['name-lookup', 'dynamic']);
+export const NON_ACCEPTED_VIA: ReadonlySet<ResolvedVia> = GUESS_RESOLVED_VIA;
 
 export function isAcceptedEdge(e: CodeEdge): boolean {
-    return !NON_ACCEPTED_VIA.has(e.resolved_via);
+    return isStatedResolution(e.resolved_via);
 }
 
 /**
@@ -134,8 +134,17 @@ export interface ReachedNode {
 export interface ImpactResult extends VerbReport {
     /** Node ids the diff touched that the graph knows. */
     seeds: string[];
-    /** Touched files with no node in the graph — reported, never silently dropped. */
+    /**
+     * Touched files the graph SHOULD know and does not — a real gap.
+     *
+     * A file in a language the engine indexes (php / ts / js) that carries no
+     * node. Distinct from {@link ImpactResult.not_indexed_files}, and the
+     * distinction is the finding: an unindexed `.md` is not an unknown
+     * neighbourhood.
+     */
     unresolved_files: string[];
+    /** Touched files in a language the engine does not index. Not a gap. */
+    not_indexed_files: string[];
     /** Reverse-reachable callers/dependents over accepted edges, sorted. */
     dependents: string[];
     /**
@@ -163,15 +172,36 @@ export interface ImpactResult extends VerbReport {
  * rather than by changing `idsInFiles`, whose two existing callers want the
  * symbol-only behaviour.
  */
-export function seedsForFiles(g: LoadedGraph, files: readonly string[]): { seeds: string[]; unresolved: string[] } {
+export function seedsForFiles(
+    g: LoadedGraph,
+    files: readonly string[],
+): { seeds: string[]; unresolved: string[]; not_indexed: string[] } {
     const symbols = g.idsInFiles(files);
     const seeds = new Set(symbols);
     const unresolved: string[] = [];
+    const notIndexed: string[] = [];
     for (const f of files) {
-        if (g.byId.has(f)) seeds.add(f);
-        else if (!symbols.some((s) => s.startsWith(`${f}#`))) unresolved.push(f);
+        if (g.byId.has(f)) {
+            seeds.add(f);
+            continue;
+        }
+        if (symbols.some((s) => s.startsWith(`${f}#`))) continue;
+        // A `.md`, `.json` or `.yaml` the engine never indexes is NOT an
+        // unknown neighbourhood — it is a file with no symbols, which is a fact
+        // about the language set and not a gap in the graph. Conflating the two
+        // made `selectionVerdict` refuse unconditionally for any candidate that
+        // touched a doc, and made `impact --diff` print a long
+        // "unresolved changed files" list on every normal diff. Found by an
+        // independent review, demonstrated with `touches: ['…Mailer.php',
+        // 'README.md']`.
+        if (EXT_LANG[path.extname(f).toLowerCase()] === undefined) notIndexed.push(f);
+        else unresolved.push(f);
     }
-    return { seeds: [...seeds].sort(), unresolved: unresolved.sort() };
+    return {
+        seeds: [...seeds].sort(),
+        unresolved: unresolved.sort(),
+        not_indexed: notIndexed.sort(),
+    };
 }
 
 /**
@@ -189,7 +219,7 @@ export function impact(
     depth = 2,
     isTest: (relPath: string) => boolean = () => false,
 ): ImpactResult {
-    const { seeds, unresolved } = seedsForFiles(g, files);
+    const { seeds, unresolved, not_indexed } = seedsForFiles(g, files);
     const accepted: CodeEdge[] = [];
     const rejected: CodeEdge[] = [];
     const seen = new Set(seeds);
@@ -230,6 +260,7 @@ export function impact(
         rejected_via: viaHistogram(rejected),
         seeds,
         unresolved_files: unresolved,
+        not_indexed_files: not_indexed,
         dependents: deps,
         reached: deps.map((d) => reached.get(d) as ReachedNode),
         test_files: testFiles,
@@ -249,6 +280,11 @@ export interface TestsForResult extends VerbReport {
     seeds: string[];
     /** Test-file node ids whose `tests` edge reaches a seed, sorted. */
     tests: string[];
+    /** The `tests` edges this walk accepted — so a caller aggregating several
+     * symbols reports the histogram of the walk the decision came from. */
+    accepted_edges: CodeEdge[];
+    /** The `tests` edges this walk refused, for the same reason. */
+    rejected_edges: CodeEdge[];
 }
 
 /**
@@ -290,6 +326,8 @@ export function testsFor(g: LoadedGraph, symbol: string, state: GraphState): Tes
         rejected_via: viaHistogram(rejected),
         seeds,
         tests: list,
+        accepted_edges: accepted,
+        rejected_edges: rejected,
         lines: list,
         recommended_reads: dedupeReads(list.map((t) => readFor(g, t))),
     };
@@ -298,6 +336,7 @@ export function testsFor(g: LoadedGraph, symbol: string, state: GraphState): Tes
 export interface UntestedResult extends VerbReport {
     seeds: string[];
     unresolved_files: string[];
+    not_indexed_files: string[];
     /** Changed nodes with no `tests` edge reaching them or their file. */
     untested: string[];
     /** Changed nodes that do have one — reported so the ratio is readable. */
@@ -312,25 +351,33 @@ export interface UntestedResult extends VerbReport {
  * count and make the ratio meaningless.
  */
 export function untested(g: LoadedGraph, files: readonly string[], state: GraphState): UntestedResult {
-    const { seeds, unresolved } = seedsForFiles(g, files);
+    const { seeds, unresolved, not_indexed } = seedsForFiles(g, files);
     const accepted: CodeEdge[] = [];
+    const rejected: CodeEdge[] = [];
     const tested: string[] = [];
     const bare: string[] = [];
     for (const s of seeds) {
         if (g.byId.get(s)?.kind === 'file') continue;
         const r = testsFor(g, s, state);
-        if (r.tests.length) {
-            tested.push(s);
-            accepted.push(...(g.in.get(s) ?? []).filter((e) => e.relation === 'tests'));
-        } else bare.push(s);
+        // Both histograms come from the SAME walk the decision came from —
+        // `testsFor`, which also consults the declaring FILE's edges. They used
+        // to be assembled here from the seed's own edges with `rejected_via`
+        // hardcoded to `(none)`, so the envelope could report "nothing was
+        // rejected" without measuring, and "accepted: (none)" for a symbol it
+        // had just called tested. An independent review found both.
+        accepted.push(...r.accepted_edges);
+        rejected.push(...r.rejected_edges);
+        if (r.tests.length) tested.push(s);
+        else bare.push(s);
     }
     return {
         source: g.source,
         state,
         accepted_via: viaHistogram(accepted),
-        rejected_via: '(none)',
+        rejected_via: viaHistogram(rejected),
         seeds,
         unresolved_files: unresolved,
+        not_indexed_files: not_indexed,
         untested: bare.sort(),
         tested: tested.sort(),
         lines: bare.sort(),
@@ -458,11 +505,40 @@ export function dead(
 
 // Entry-point providers.
 
-/** Identifier-shaped tokens in `text` — the crude, deterministic reading a
- * registry / manifest scan needs. Never a parse: a provider that half-parses a
- * TypeScript module is a provider that goes wrong quietly. */
-function identifiers(text: string): string[] {
-    return [...new Set(text.match(/[A-Za-z_$][A-Za-z0-9_$]*/g) ?? [])];
+/**
+ * DECLARED names in a registry or manifest — quoted string literals and YAML
+ * scalar values, never every identifier in the file.
+ *
+ * The first version matched `/[A-Za-z_$][A-Za-z0-9_$]*​/g` over the whole file,
+ * which on this tree yielded ~2,595 tokens including `name`, `build`, `query`,
+ * `path`, `main`, `run`, `get`, `set`, `value` and `status`. Every symbol whose
+ * LABEL happened to be one of those was silently excluded from `dead` and
+ * dumped into a list described as "the audit trail for the exclusion" — at that
+ * size unable to distinguish a declared entry point from a coincidental word.
+ * An independent review measured it.
+ *
+ * A registry and a manifest both DECLARE by value: `{ name: 'code-graph', … }`,
+ * `id: code-graph-context`. So the extraction is quoted strings plus
+ * `key: value` scalars, which is narrower by construction and still a scan
+ * rather than a parse — a provider that half-parses a TypeScript module is a
+ * provider that goes wrong quietly.
+ *
+ * Still a heuristic, and the direction is the safe one: a missed declaration
+ * makes `dead` report a real entry point (loud, and caught by the reader), a
+ * spurious one makes it miss a dead symbol (quiet). That asymmetry is why the
+ * narrowing is worth the risk of missing one.
+ */
+function declaredNames(text: string): string[] {
+    const out = new Set<string>();
+    for (const m of text.matchAll(/'([^'\n]{1,120})'|"([^"\n]{1,120})"|`([^`\n]{1,120})`/g)) {
+        const v = (m[1] ?? m[2] ?? m[3] ?? '').trim();
+        if (v !== '') out.add(v);
+    }
+    for (const m of text.matchAll(/^[ \t-]*[A-Za-z_][\w-]*:[ \t]+([^\n#]{1,120})$/gm)) {
+        const v = (m[1] ?? '').trim().replace(/^['"]|['"]$/g, '');
+        if (v !== '') out.add(v);
+    }
+    return [...out];
 }
 
 /**
@@ -477,14 +553,14 @@ export function repoEntryPoints(root: string): EntryPointSource[] {
 
     const registry = path.join(root, 'src', 'cli', 'registry.ts');
     if (fs.existsSync(registry)) {
-        out.push({ name: 'cli-registry', status: 'read', entries: identifiers(fs.readFileSync(registry, 'utf-8')) });
+        out.push({ name: 'cli-registry', status: 'read', entries: declaredNames(fs.readFileSync(registry, 'utf-8')) });
     } else {
         out.push({ name: 'cli-registry', status: 'empty', entries: [] });
     }
 
     const manifest = path.join(root, 'src', 'scripts', 'hook_manifest.yaml');
     if (fs.existsSync(manifest)) {
-        out.push({ name: 'hook-manifest', status: 'read', entries: identifiers(fs.readFileSync(manifest, 'utf-8')) });
+        out.push({ name: 'hook-manifest', status: 'read', entries: declaredNames(fs.readFileSync(manifest, 'utf-8')) });
     } else {
         out.push({ name: 'hook-manifest', status: 'empty', entries: [] });
     }

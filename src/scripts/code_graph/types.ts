@@ -79,6 +79,33 @@ export type ResolvedVia =
  */
 export type EdgeProvider = 'native';
 
+/**
+ * The two mechanisms that are GUESSES rather than statements.
+ *
+ * `name-lookup` is the repo-wide same-name table (or a lookup that found
+ * nothing); `dynamic` is a receiver the extractor cannot type. Everything else
+ * names where the target came from.
+ *
+ * Declared HERE, beside `ResolvedVia`, rather than in the query tier that first
+ * needed it — because the BUILD pass needs it too, and the reason is a defect an
+ * independent review demonstrated: a derived edge stamped with a trustworthy
+ * mechanism while its own evidence was a guess LAUNDERS the guess. A PHP
+ * `use Two\Mailer` with no `composer.json` binds by base name, so the `imports`
+ * edge is `name-lookup` and may point at `One\Mailer`; deriving a `tests` edge
+ * from it and tagging that `test-import` made a wrong target trustworthy to
+ * every consumer of the filter. One set, two readers, and the build pass can no
+ * longer disagree with the query tier about what a guess is.
+ */
+export const GUESS_RESOLVED_VIA: ReadonlySet<ResolvedVia> = new Set<ResolvedVia>([
+    'name-lookup',
+    'dynamic',
+]);
+
+/** Does this edge's target rest on a stated fact rather than a guess? */
+export function isStatedResolution(resolved_via: ResolvedVia): boolean {
+    return !GUESS_RESOLVED_VIA.has(resolved_via);
+}
+
 export interface CodeNode {
     /** Path-qualified from day one: `<relpath>#<symbol>` (collision-free). */
     id: string;

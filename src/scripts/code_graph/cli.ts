@@ -365,9 +365,19 @@ function isFlagValue(argv: string[], token: string): boolean {
 
 /** The staleness token every gate verb prints, per step 3.1–3.3's shared
  * verify: "each prints `resolved_via` counts and the staleness state". */
-function stateOf(argv: string[]): GraphState {
+/**
+ * The staleness of the graph the verb is ACTUALLY reading.
+ *
+ * `answeredBy` is `resolveGraph`'s own picked path when it has one. Without it
+ * the two disagreed on the case `resolveRoot`'s docstring exists for: with
+ * `--root <other repo>` the verb answers from `DEFAULT_CACHE` (anchored to the
+ * package tree) while `graphState` looked under the OTHER root, so the printed
+ * staleness described a cache the answer never came from. An independent review
+ * found the `--graph` half fixed and this half open.
+ */
+function stateOf(argv: string[], answeredBy?: string): GraphState {
     const explicit = flag(argv, '--graph');
-    return graphState(resolveRoot(argv), explicit ?? undefined);
+    return graphState(resolveRoot(argv), explicit ?? answeredBy);
 }
 
 /** The two histogram lines + the staleness line, in one place so the four
@@ -411,7 +421,7 @@ function cmdImpact(argv: string[]): number {
         const res: ImpactResult = impact(
             r.g,
             files,
-            stateOf(argv),
+            stateOf(argv, r.g.answeredBy),
             Number.isFinite(depth) && depth > 0 ? depth : 2,
             isTestFile,
         );
@@ -446,7 +456,7 @@ function cmdTestsFor(argv: string[]): number {
         return 1;
     }
     try {
-        const res: TestsForResult = testsFor(r.g, symbol, stateOf(argv));
+        const res: TestsForResult = testsFor(r.g, symbol, stateOf(argv, r.g.answeredBy));
         renderEnvelope(res);
         process.stdout.write(`seeds: ${res.seeds.join(', ') || '(none)'}\n`);
         process.stdout.write(`tests (${res.tests.length}):\n`);
@@ -477,7 +487,7 @@ function cmdUntested(argv: string[]): number {
         return 1;
     }
     try {
-        const res: UntestedResult = untested(r.g, files, stateOf(argv));
+        const res: UntestedResult = untested(r.g, files, stateOf(argv, r.g.answeredBy));
         renderEnvelope(res);
         process.stdout.write(`changed files: ${files.length} · changed symbols: ${res.tested.length + res.untested.length}\n`);
         if (res.unresolved_files.length)
@@ -521,10 +531,10 @@ function cmdDead(argv: string[]): number {
                     : srcRow,
             );
             patched.push(supplied);
-            const res: DeadResult = dead(r.g, patched, stateOf(argv));
+            const res: DeadResult = dead(r.g, patched, stateOf(argv, r.g.answeredBy));
             return renderDead(res);
         }
-        const res: DeadResult = dead(r.g, sources, stateOf(argv), {
+        const res: DeadResult = dead(r.g, sources, stateOf(argv, r.g.answeredBy), {
             acceptMissingExports: argv.includes('--accept-missing-exports'),
         });
         return renderDead(res);
@@ -534,6 +544,14 @@ function cmdDead(argv: string[]): number {
 }
 
 function renderDead(res: DeadResult): number {
+    // The envelope FIRST, on both branches. It used to print only after the
+    // refusal check, so the default invocation in this repository — where
+    // `exports` is always unavailable — printed neither histogram nor the
+    // staleness line, and 3.1-3.3's shared verify ("each prints `resolved_via`
+    // counts and the staleness state") held only on the branch that answers.
+    // A reader of a refusal wants the staleness most of all: it says whether
+    // re-running after a rebuild could change anything.
+    renderEnvelope(res);
     process.stdout.write('entry-point sources consulted:\n');
     for (const srcRow of res.sources)
         process.stdout.write(
@@ -543,7 +561,6 @@ function renderDead(res: DeadResult): number {
         process.stderr.write(`❌  dead refused: ${res.refusal}\n`);
         return 1;
     }
-    renderEnvelope(res);
     process.stdout.write(`excluded as declared entry points: ${res.excluded.length}\n`);
     process.stdout.write(`dead (${res.dead.length}):\n`);
     for (const d of res.dead) process.stdout.write(`  ${d}\n`);

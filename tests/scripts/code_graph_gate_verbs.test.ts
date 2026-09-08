@@ -141,6 +141,54 @@ describe('the derived `tests` relation (3.2)', () => {
         expect(graph.edges.filter((e) => e.relation === 'tests')).toStrictEqual([]);
     });
 
+    it('NEVER derives from a guessed import — a derived edge cannot outrank its evidence', async () => {
+        // The laundering an independent review demonstrated 2026-09-08, pinned.
+        // Two classes named `Mailer` in different namespaces and NO
+        // `composer.json`, which is this repository's own state: the PHP `use`
+        // binds by BASE NAME, so the `imports` edge is `INFERRED / name-lookup`
+        // and can point at the WRONG one. Deriving `tests` from it and stamping
+        // that `test-import` made the wrong target trustworthy to the
+        // accepted-edge filter — and the measured blast radius was every verb:
+        // `tests-for` named a test that does not test the class, the class the
+        // test actually imports reported no test, `untested` inverted the pair,
+        // and `dead` called the tested class dead.
+        const dir = rig({
+            'src/One/Mailer.php':
+                '<?php\n\nnamespace One;\n\nclass Mailer\n{\n    public function send(): void\n    {\n    }\n}\n',
+            'src/Two/Mailer.php':
+                '<?php\n\nnamespace Two;\n\nclass Mailer\n{\n    public function send(): void\n    {\n    }\n}\n',
+            'tests/MailerTest.php':
+                '<?php\n\nuse Two\\Mailer;\n\nclass MailerTest\n{\n    public function testSend(): void\n    {\n        (new Mailer())->send();\n    }\n}\n',
+        });
+        const { graph } = await buildFromRepo(dir, path.join(dir, 'g5.json'));
+        const imports = graph.edges.filter((e) => e.relation === 'imports' && e.source === 'tests/MailerTest.php');
+        // The premise of the case: the import IS a guess. If the extractor ever
+        // resolves it exactly, this assertion fails and the case needs a new
+        // guess to stand on — which is the right failure, not a false green.
+        expect(imports.map((e) => e.resolved_via)).toStrictEqual(['name-lookup']);
+        expect(graph.edges.filter((e) => e.relation === 'tests')).toStrictEqual([]);
+    });
+
+    it('DOES derive once the mapping is declared — the fix bounds the derivation, it does not disable it', async () => {
+        // The paired half. Same source, plus the `composer.json` that turns the
+        // base-name guess into a declared PSR-4 mapping. Without this case a
+        // derivation that never fired would also pass the case above.
+        const dir = rig({
+            'composer.json': JSON.stringify({ autoload: { 'psr-4': { 'Two\\': 'src/Two/' } } }),
+            'src/Two/Mailer.php':
+                '<?php\n\nnamespace Two;\n\nclass Mailer\n{\n    public function send(): void\n    {\n    }\n}\n',
+            'tests/MailerTest.php':
+                '<?php\n\nuse Two\\Mailer;\n\nclass MailerTest\n{\n    public function testSend(): void\n    {\n        (new Mailer())->send();\n    }\n}\n',
+        });
+        const { graph } = await buildFromRepo(dir, path.join(dir, 'g6.json'));
+        const imported = graph.edges.find((e) => e.relation === 'imports' && e.source === 'tests/MailerTest.php');
+        expect(imported?.resolved_via).toBe('psr4');
+        const derived = graph.edges.filter((e) => e.relation === 'tests');
+        expect(derived.map((e) => `${e.source} -> ${e.target}`)).toStrictEqual([
+            'tests/MailerTest.php -> src/Two/Mailer.php#Mailer',
+        ]);
+    });
+
     it('does not derive a tests edge between two test files', async () => {
         const dir = rig({
             ...FIXTURE,
@@ -207,10 +255,16 @@ describe('impact --diff (3.1)', () => {
         expect(r.accepted_via).not.toBe('(none)');
     });
 
-    it('reports a changed file the graph does not know instead of dropping it', async () => {
+    it('splits a changed file the graph does not know from one it never indexes', async () => {
+        // The two are different facts and used to be one list. `README.md` is
+        // not an unknown neighbourhood — the engine indexes php/ts/js and a
+        // markdown file has no symbols by construction. `src/ghost.ts` IS a
+        // gap: an indexable language with no node. Conflating them made a
+        // consumer refuse for every candidate that touched a doc.
         const g = await graphOf(rig());
-        const r = impact(g, ['src/app/service.ts', 'README.md'], 'fresh', 2, isTestFile);
-        expect(r.unresolved_files).toStrictEqual(['README.md']);
+        const r = impact(g, ['src/app/service.ts', 'README.md', 'src/ghost.ts'], 'fresh', 2, isTestFile);
+        expect(r.not_indexed_files).toStrictEqual(['README.md']);
+        expect(r.unresolved_files).toStrictEqual(['src/ghost.ts']);
     });
 
     it('SENSITIVITY: a name-lookup caller is kept OUT and is counted as rejected', async () => {

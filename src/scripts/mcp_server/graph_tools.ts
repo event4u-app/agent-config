@@ -37,6 +37,7 @@ import * as path from 'node:path';
 
 import { changedFiles } from '../code_graph/cli.js';
 import { detectSources, graphState, NATIVE_CACHE_REL, pickSource } from '../code_graph/detect.js';
+import { resolvePath } from './path_util.js';
 import { isTestFile } from '../code_graph/build.js';
 import { loadGraph, type LoadedGraph, path as graphPathVerb, query as graphQueryVerb } from '../code_graph/query.js';
 import {
@@ -76,7 +77,16 @@ function withGraph<T extends Record<string, unknown>>(
     if (!picked || picked.kind === 'scip') return noGraph(root);
     const g = loadGraph(picked.path, `${picked.kind}:${path.relative(root, picked.path)}`);
     try {
-        return { status: 'ok', ...fn(g) };
+        const out = fn(g);
+        // `status` is DERIVED from the answer, never prefixed onto it. An
+        // independent review found `graph_dead`'s refusal returning
+        // `{status:'ok', refusal:'…', dead:[]}` — the same status a real answer
+        // carries, so a caller branching on `status` (which every fixture here
+        // trains it to do) read the refusal as "nothing is dead". That is the
+        // false negative the CLI's exit 1 exists to prevent, arriving over the
+        // wire instead. A refusal is its own status.
+        const refused = typeof out['refusal'] === 'string' && out['refusal'] !== '';
+        return { status: refused ? 'refused' : 'ok', ...out };
     } finally {
         g.close();
     }
@@ -205,8 +215,18 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = {
             const listArg = str(args, 'entry_points');
             let sources = repoEntryPoints(root);
             if (listArg !== '') {
-                const abs = path.resolve(root, listArg);
-                if (!abs.startsWith(path.resolve(root) + path.sep)) {
+                // REALPATH containment, matching the sibling pattern in
+                // `tools.ts` rather than reimplementing a weaker one — an
+                // independent review found this check using `path.resolve` +
+                // `startsWith`, which a symlink inside the root walks straight
+                // through, in the same change that extracted `resolvePath` for
+                // reuse. `fs.readFileSync` would then follow the link, and
+                // because the file's lines used to be echoed back in the
+                // response (see `entry_count` below) that was an
+                // arbitrary-file-read path.
+                const abs = resolvePath(path.resolve(root, listArg));
+                const rootReal = resolvePath(path.resolve(root));
+                if (abs !== rootReal && !abs.startsWith(rootReal + path.sep)) {
                     return { status: 'error', error: `path escapes consumer_root: ${abs}` };
                 }
                 if (!fs.existsSync(abs)) return { status: 'error', error: `entry-point list not found: ${listArg}` };
@@ -219,9 +239,27 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = {
                     entryPointsFromFile(abs),
                 ];
             }
-            return withGraph(root, (g) => ({
-                ...dead(g, sources, state, { acceptMissingExports: args['accept_missing_exports'] === true }),
-            }));
+            return withGraph(root, (g) => {
+                const r = dead(g, sources, state, {
+                    acceptMissingExports: args['accept_missing_exports'] === true,
+                });
+                // The `entries` arrays are NOT returned. On this repository they
+                // are ~2,595 identifier strings — an unbounded per-call payload
+                // beside the standing-cost row this change itself adds — and
+                // returning a file the caller named is what made the
+                // containment check above a read primitive. A count answers the
+                // question a caller actually has ("was this source read, and did
+                // it have anything in it") without shipping the contents.
+                return {
+                    ...r,
+                    sources: r.sources.map((srcRow) => ({
+                        name: srcRow.name,
+                        status: srcRow.status,
+                        ...(srcRow.detail === undefined ? {} : { detail: srcRow.detail }),
+                        entry_count: srcRow.entries.length,
+                    })),
+                };
+            });
         },
     },
 

@@ -58,6 +58,7 @@
  * A test asserts that identity rather than an id match, because an id match
  * would also be satisfied by a synthesized spec carrying a copied id.
  */
+import type { GraphState } from '../code_graph/detect.js';
 import type { LoadedGraph } from '../code_graph/query.js';
 import { impact } from '../code_graph/verbs.js';
 import { affected, isSyntheticNode, type Graph } from '../discovery_graph.js';
@@ -118,6 +119,24 @@ export interface NeighbourhoodReport {
      * docstring.
      */
     graph: 'artefact' | 'code';
+    /**
+     * The graph's freshness at selection time: `fresh` / `behind:N` / `absent`
+     * on the code path, `null` on the artefact path (which is derived from the
+     * committed manifest and has no staleness axis).
+     *
+     * Added after an independent review found the code path hardcoding
+     * `'absent'` and dropping the value: the verbs are required to report
+     * staleness, `verbs.ts` argues the whole point is telling "dead" from "dead
+     * as of a graph 40 commits behind" — and the one in-repo CONSUMER of those
+     * verbs discarded it, so no selection could refuse on a stale graph.
+     */
+    graph_state: GraphState | null;
+    /**
+     * Touched files in a language the code graph does not index. NOT a refusal
+     * reason: an unindexed `.md` is a file with no symbols, which is a fact
+     * about the language set rather than an unknown neighbourhood.
+     */
+    not_indexed: readonly string[];
     /**
      * The edges that produced the neighbourhood, rendered, sorted.
      *
@@ -226,6 +245,8 @@ export function selectRegressions(
         selected: selected.sort((a, b) => a.spec.id.localeCompare(b.spec.id)),
         skipped: skipped.sort((a, b) => a.localeCompare(b)),
         graph: 'artefact',
+        graph_state: null,
+        not_indexed: [],
         producing_edges: [],
         rejected_via: '(not applicable — the artefact graph has no mechanism axis)',
         authored: 0,
@@ -253,8 +274,9 @@ export function selectRegressionsFromCode(
     registry: readonly RegressionSpec[],
     depth: number = DEFAULT_NEIGHBOURHOOD_DEPTH,
     isTest: (relPath: string) => boolean = () => false,
+    graphState: GraphState = 'absent',
 ): NeighbourhoodReport {
-    const res = impact(g, candidate.touches, 'absent', depth, isTest);
+    const res = impact(g, candidate.touches, graphState, depth, isTest);
     const best = new Map<string, NeighbourhoodNode>();
     for (const seed of res.seeds) {
         best.set(seed, { node: seed, reason: 'touched', depth: 0, via: '', synthetic: false });
@@ -292,6 +314,8 @@ export function selectRegressionsFromCode(
         selected: selected.sort((a, b) => a.spec.id.localeCompare(b.spec.id)),
         skipped: skipped.sort((a, b) => a.localeCompare(b)),
         graph: 'code',
+        graph_state: graphState,
+        not_indexed: [...res.not_indexed_files].sort((a, b) => a.localeCompare(b)),
         producing_edges: [...res.producing_edges].sort(),
         rejected_via: res.rejected_via,
         authored: 0,
@@ -307,6 +331,18 @@ export function selectRegressionsFromCode(
  */
 export function selectionVerdict(report: NeighbourhoodReport): readonly string[] | null {
     const reasons: string[] = [];
+    // An ABSENT graph is the case the artefact path's own docstring warns
+    // about in the other direction: a lookup that cannot resolve and then
+    // selects nothing reports a clean sheet. `behind:N` is deliberately NOT a
+    // refusal — a stale graph still answers, and blocking on staleness would
+    // be the blocking-gate-on-a-stale-graph that K7 forbids. It is surfaced
+    // through `graph_state` so a caller that wants to refuse can.
+    if (report.graph === 'code' && report.graph_state === 'absent') {
+        reasons.push(
+            'the code graph is absent — a neighbourhood computed over no graph is empty for a ' +
+                'reason that has nothing to do with the candidate. Run `agent-config code-graph build`.',
+        );
+    }
     if (report.unresolved.length > 0) {
         // Named per graph: a code-path refusal that said "relation graph" would
         // point a reader at the wrong surface to go fix.

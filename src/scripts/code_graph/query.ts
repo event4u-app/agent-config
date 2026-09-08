@@ -47,6 +47,15 @@ export interface LoadedGraph {
      */
     graph: CodeGraph | null;
     source: string; // attribution path
+    /**
+     * The on-disk path the answer came from.
+     *
+     * Distinct from `source`, which is a display string (`native:relpath`) and
+     * cannot be handed to a freshness check. A verb that prints staleness has
+     * to describe THIS file, not a conventional cache path — see
+     * `cli.ts::stateOf`.
+     */
+    answeredBy: string;
     byId: NodeLookup;
     out: AdjacencyLookup;
     in: AdjacencyLookup;
@@ -88,7 +97,7 @@ export interface LoadedGraph {
  * same label repeatedly while rendering edge lines, and that repetition is
  * cheap to remove and expensive to leave.
  */
-function indexBackedGraph(index: GraphIndex, source: string): LoadedGraph {
+function indexBackedGraph(index: GraphIndex, source: string, answeredBy: string): LoadedGraph {
     const nodeCache = new Map<string, CodeNode | undefined>();
     const readNode = (id: string): CodeNode | undefined => {
         if (nodeCache.has(id)) return nodeCache.get(id);
@@ -100,6 +109,7 @@ function indexBackedGraph(index: GraphIndex, source: string): LoadedGraph {
     return {
         graph: null,
         source,
+        answeredBy,
         byId: { get: readNode, has: (id) => readNode(id) !== undefined },
         out: { get: (id) => index.edgesFrom(id) },
         in: { get: (id) => index.edgesTo(id) },
@@ -122,7 +132,7 @@ export function loadGraph(graphPath: string, source = graphPath): LoadedGraph {
     // made it a cheaper blob transport rather than an index.
     const index = openGraphIndex(graphPath);
     if (index) {
-        if (index.edgeCount >= INDEXED_READ_MIN_EDGES) return indexBackedGraph(index, source);
+        if (index.edgeCount >= INDEXED_READ_MIN_EDGES) return indexBackedGraph(index, source, graphPath);
         // Small graph: the in-memory path is cheaper. Release the handle rather
         // than leaking a database for the life of the process.
         index.close();
@@ -157,6 +167,7 @@ export function loadGraph(graphPath: string, source = graphPath): LoadedGraph {
     return {
         graph,
         source,
+        answeredBy: graphPath,
         byId,
         out: outM,
         in: inM,

@@ -234,14 +234,31 @@ staleness — so a narrow answer is distinguishable from a decoupled one:
   confident false "dead" invites a deletion the graph cannot justify. Nothing it
   lists is a deletion recommendation.
 
-The same five answers reach an agent over MCP without shelling out —
-`graph_impact`, `graph_tests_for`, `graph_dead`, `graph_query`, `graph_path`.
-`graph_impact` is the only one that is not read-only, because it runs
-`git diff --name-only` to resolve its rev.
+These answers reach an agent over MCP without shelling out, and the mapping is
+**not** one tool per verb — corrected after an independent review found this
+paragraph claiming "the same five answers" directly after a list of four:
 
-**No ordering claim is added here.** These verbs are cheaper than reconstructing
-the same relationship by hand; nothing on this page says they beat grep, and
-§ Measured twice still governs that question.
+| MCP tool | answers |
+|---|---|
+| `graph_impact` | `impact --diff`, **and** `untested --diff` via `untested_only: true` |
+| `graph_tests_for` | `tests-for` |
+| `graph_dead` | `dead` |
+| `graph_query` | `query` |
+| `graph_path` | `path` |
+
+`untested` has no tool of its own; it is a flag on `graph_impact`, because the
+two answer the same question over the same diff and a sixth tool would have cost
+standing context for a boolean. `graph_impact` is the only one that is not
+read-only — it runs `git diff --name-only` to resolve its rev — and
+`graph_dead`'s refusal arrives as `status: "refused"`, never as `status: "ok"`
+with an empty list.
+
+**No ordering claim is added here, and no measurement claim either.** These
+verbs are cheaper than reconstructing the same relationship by hand — that is a
+claim about the ALTERNATIVE being a manual reconstruction, not about grep.
+Nothing on this page says they beat grep, none of the four appears in the v2
+benchmark corpus (which measures `callers`, `transitive-impact`, `path-between`
+and `references`), and § Measured twice still governs that question.
 
 ## Do NOT
 

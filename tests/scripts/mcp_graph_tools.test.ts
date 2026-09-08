@@ -151,6 +151,60 @@ describe('4.1 — a fixture session, dispatched through the real ToolCache', () 
         expect(r['error']).toMatch(/no code-graph source found/);
     }, 60_000);
 
+    it('a refusal carries status "refused", never "ok"', async () => {
+        // `withGraph` used to prefix `status: 'ok'` onto every answer, so a
+        // refusal arrived as {status:'ok', refusal:'…', dead:[]} — the same
+        // status a real answer carries. A caller branching on `status`, which
+        // every other case here trains it to do, read that as "nothing is
+        // dead": the false negative the CLI's exit 1 exists to prevent,
+        // arriving over the wire instead.
+        const root = await consumerRig();
+        const cache = new ToolCache();
+        const refused = await cache.dispatch('graph_dead', {}, root);
+        expect(refused['status']).toBe('refused');
+        expect(refused['refusal']).toMatch(/entry-point source\(s\) unavailable/);
+
+        const answered = await cache.dispatch('graph_dead', { accept_missing_exports: true }, root);
+        expect(answered['status']).toBe('ok');
+        expect(answered['refusal']).toBeNull();
+    }, 60_000);
+
+    it('never returns the entry-point lists themselves — a count, not the contents', async () => {
+        // Two reasons, both measured. The `entries` arrays are ~2,595 strings
+        // on this repository, an unbounded per-call payload beside the
+        // standing-cost row this change itself adds; and returning a file the
+        // caller named turned the containment check below into a read
+        // primitive. A count answers "was this source read, and did it hold
+        // anything" without shipping the contents.
+        const root = await consumerRig();
+        const cache = new ToolCache();
+        const r = await cache.dispatch('graph_dead', { accept_missing_exports: true }, root);
+        const sources = r['sources'] as Record<string, unknown>[];
+        expect(sources.length).toBeGreaterThan(0);
+        for (const srcRow of sources) {
+            expect(srcRow['entries'], 'the entry list must not be returned').toBeUndefined();
+            expect(typeof srcRow['entry_count']).toBe('number');
+        }
+    }, 60_000);
+
+    it('refuses an entry-point path that reaches outside the root THROUGH A SYMLINK', async () => {
+        // The containment check was `path.resolve` + `startsWith`, which a
+        // symlink inside the root walks straight through — in the same change
+        // that extracted `resolvePath` (realpath) for reuse. `readFileSync`
+        // then follows the link. Asserted with a real symlink rather than a
+        // `..` path, because the `..` case passed both the weak and the strong
+        // check and therefore discriminated nothing.
+        const root = await consumerRig();
+        const outside = path.join(os.tmpdir(), `mcp-graph-outside-${process.pid}.txt`);
+        fs.writeFileSync(outside, 'secret\n');
+        fs.symlinkSync(outside, path.join(root, 'link.txt'));
+        const cache = new ToolCache();
+        const r = await cache.dispatch('graph_dead', { entry_points: 'link.txt' }, root);
+        fs.rmSync(outside, { force: true });
+        expect(r['status']).toBe('error');
+        expect(r['error']).toMatch(/path escapes consumer_root/);
+    }, 60_000);
+
     it('refuses an entry-point path that escapes the consumer root', async () => {
         const root = await consumerRig();
         const cache = new ToolCache();

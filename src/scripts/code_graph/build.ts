@@ -34,6 +34,7 @@ import {
     type EdgeConfidence,
     EXPECTED_GRAMMAR_ABI,
     EXT_LANG,
+    isStatedResolution,
     type Lang,
     type ResolvedVia,
     SCHEMA_VERSION,
@@ -628,10 +629,22 @@ export function buildGraph(
     //   · target is the subject FILE node rather than a symbol in it, which is
     //     kept: a test that imports a module tests that module, and the file
     //     node is the only handle a caller has for a module with no exported
-    //     symbol the extractor named.
+    //     symbol the extractor named;
+    //   · THE SOURCE IMPORT IS ITSELF A GUESS. Added after an independent review
+    //     demonstrated the laundering: a PHP `use Two\Mailer` with no
+    //     `composer.json` binds by BASE NAME, so the `imports` edge is
+    //     `name-lookup` and can point at `One\Mailer` — and a `tests` edge
+    //     derived from it, stamped `test-import`, made that wrong target
+    //     TRUSTWORTHY to every consumer of the accepted-edge filter. Measured
+    //     consequences on a two-namespace fixture: `tests-for One\Mailer`
+    //     named a test that does not test it, `tests-for Two\Mailer` reported
+    //     none, `untested` inverted the pair, and `dead` called the tested class
+    //     dead. A derived edge may never be more trustworthy than the edge it
+    //     was derived from.
     const nodeSourceFile = new Map(nodes.map((n) => [n.id, n.source_file]));
     for (const e of [...edges]) {
         if (e.relation !== 'imports') continue;
+        if (!isStatedResolution(e.resolved_via)) continue;
         const from = nodeSourceFile.get(e.source);
         if (from === undefined || !isTestFile(from)) continue;
         const to = nodeSourceFile.get(e.target);

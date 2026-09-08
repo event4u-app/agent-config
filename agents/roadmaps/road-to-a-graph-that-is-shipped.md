@@ -787,10 +787,14 @@ built for.
       enforces as a shrink-only ratchet, so five records with their schemas would have cost
       ~250 units of excess there and cost nothing in a file under the cap. `tools.ts`
       spreads them into `ALLOWLIST` in two lines, and those two were PAID FOR rather than
-      baselined: `_strip` / `_resolvePath` moved out to `mcp_server/path_util.ts`, taking
-      tools.ts 2,025 → 2,013. Net −10 for a branch that added a feature; baseline lowered
-      17,973 → 17,963 with the reading recorded at
-      `src/config/gate-violation-baselines.json`.
+      baselined: `_strip` / `_resolvePath` moved out to `mcp_server/path_util.ts`.
+      The accounting, corrected 2026-09-08 after an independent review checked it against
+      the tree: −12 from the extraction and +2 from the registration, so tools.ts is
+      2,025 → **2,015**, net −10. The earlier note said "2,025 → 2,013. Net −10", which
+      is two different measurements added together — 2,013 was the intermediate value
+      before the registration's two lines, and 2,025 → 2,013 is −12 rather than −10.
+      Baseline lowered 17,973 → 17,963 (the TOTAL was always right); the reading is
+      recorded at `src/config/gate-violation-baselines.json`.
 
       THE STANDING COST ROSE, AND IS RECORDED AS A RISE. `agents/evidence/metrics/
       mcp-tool-standing-cost.jsonl` gains a 2026-09-08 row: 20 → 25 tools, 1,791 → 2,236
