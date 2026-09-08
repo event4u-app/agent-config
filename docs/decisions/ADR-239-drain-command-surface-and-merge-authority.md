@@ -4,7 +4,7 @@ status: accepted
 date: 2026-08-21
 decision: drain-command-surface-and-merge-authority
 supersedes: —
-superseded_by: —
+superseded_by: 268 (§ 3 only)
 phase: —
 type: structural
 review_trigger: >-

@@ -148,6 +148,14 @@ ONE THAT MOVES MORE CHECKBOXES. PICKING BY CHECKBOX COUNT IS THE
 GOODHART MOVE THIS PACKAGE'S OWN DISCIPLINE FORBIDS.
 ```
 
+**An owner-recorded precedence outranks the severity read.** Where an accepted ADR
+states that a named roadmap or set is worked first, that record is the ranking and
+this section does not re-derive one — the owner has already made the call the
+council would otherwise settle. Precedence is not a bypass: a precedent roadmap
+still passes every disqualifier in step 2, and a disqualified precedent roadmap is
+skipped with its disqualifier named like any other. A `proposed` record carries no
+precedence.
+
 - **Exactly one survivor, or one that dominates** → take it, state the
   one-line reason inline, proceed. Do not ask
   ([`no-cheap-questions`](../../rules/no-cheap-questions.md)).
