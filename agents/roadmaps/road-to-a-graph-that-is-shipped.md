@@ -556,12 +556,61 @@ built for.
       re-exported from the hook so no importer changed: an engine module importing a hook
       module to learn the token would invert exactly the dependency direction D9 measures.
       -->
-- [ ] **3.4 `regression_neighbourhood` reads this graph** via `impact --diff`; the selected
+- [x] **3.4 `regression_neighbourhood` reads this graph** via `impact --diff`; the selected
       regressions and the producing edges enter the verdict record. Retires the
       substitute-graph section at `regression_neighbourhood.ts:15-26`.
       verify: the fixture that proves a neighbour regression is caught runs on the native
       graph; `grep -c 'no index to select against' src/scripts/_lib/regression_neighbourhood.ts`
       is 0.
+
+      <!-- verified 2026-09-08.
+
+      BOTH VERIFY CLAUSES:
+        · `grep -c 'no index to select against' src/scripts/_lib/regression_neighbourhood.ts`
+          → **0**.
+        · THE FIXTURE RUNS ON THE NATIVE GRAPH. `selectRegressionsFromCode` neighbours a
+          candidate by SYMBOL relations over a graph built by `buildFromRepo` from a real
+          TS tree — subject ← direct caller ← caller-of-the-caller — using the same
+          reverse walk `impact --diff` exposes. `reg-neighbour` guards `src/mid.ts#mid`,
+          a surface the diff never touches, and the fixture feeds the FULL registry's
+          outcomes to `catchReport`: `caught: ['reg-neighbour'] · missed: []`.
+          FALSIFIABLE ARM, and it is the half that makes the first one mean anything: the
+          same call at depth 0 — the diff-scoped selector this step replaces — yields
+          `caught: [] · missed: ['reg-neighbour']`.
+        tests/scripts/regression_neighbourhood.test.ts → 20 passed (13 pre-existing on the
+        artefact path, all still green, plus 7 new).
+
+      THE PRODUCING EDGES ENTER THE VERDICT RECORD. `NeighbourhoodReport` gains three
+      fields: `producing_edges` (rendered, sorted, so two runs over one graph produce
+      byte-identical records), `rejected_via` (the histogram of edges the walk refused),
+      and `graph: 'artefact' | 'code'`. The third is the one that keeps the retired
+      substitution retired: a verdict record can no longer be read as a claim about the
+      other surface, which is the failure the deleted docstring section described in prose.
+
+      THE MECHANISM AXIS IS WHAT MAKES THIS DIFFERENT FROM THE ARTEFACT PATH, and it has
+      its own case: a bare PHP `helper()` with no `use` resolves through the repo-wide
+      same-name table, so it is a REAL caller the graph cannot vouch for. Selecting a
+      regression on it would be selecting on a guess. The fixture asserts
+      `selected: [] · skipped: ['reg-php-caller'] · rejected_via: 'name-lookup 1'` — the
+      artefact graph has no axis on which that distinction can even be expressed.
+
+      BOTH SURFACES KEPT, and this is a deliberate reading of "retires the
+      substitute-graph section" rather than a hedge. What was retired is the
+      SUBSTITUTION — the module no longer reads the artefact graph *because the code graph
+      does not resolve*, which was the whole content of the deleted section. It still
+      reads the artefact graph for artefact candidates, because for a rule or skill
+      rewrite `supersedes` / `routes_to` / pack membership is the coupling a change
+      breaks and the code graph does not model it at all. Deleting that path would have
+      removed a capability this roadmap never proposed to remove. The docstring now states
+      the two surfaces, which candidate class each serves, and that neither is a fallback
+      for the other; `selectionVerdict` names the graph it refused against, so a code-path
+      refusal no longer points a reader at the wrong surface.
+
+      `impact` gained `reached: ReachedNode[]` — the same set as `dependents`, carrying
+      hop depth and the reaching relation. Two shapes for one set on purpose: `dependents`
+      is what a human reads and what the goldens pin, while a consumer that must explain
+      WHY a node is in the set needs the depth, and reconstructing it by re-running the
+      walk at increasing depths would be the same BFS N times. -->
 
 ## Phase 4 — Reaches the agent
 

@@ -120,6 +120,17 @@ function dedupeReads(reads: readonly (RecommendedRead | null)[]): RecommendedRea
 
 // ── 3.1 impact ──────────────────────────────────────────────────────────────
 
+/** One reverse-reachable node, with how far away it is and what reached it. */
+export interface ReachedNode {
+    node: string;
+    /** Hop distance from the nearest seed. Never 0 — a seed is not a dependent. */
+    depth: number;
+    /** The relation of the edge that FIRST reached it, at its shallowest depth. */
+    via: CodeEdge['relation'];
+    /** That edge's mechanism. */
+    resolved_via: ResolvedVia;
+}
+
 export interface ImpactResult extends VerbReport {
     /** Node ids the diff touched that the graph knows. */
     seeds: string[];
@@ -127,6 +138,16 @@ export interface ImpactResult extends VerbReport {
     unresolved_files: string[];
     /** Reverse-reachable callers/dependents over accepted edges, sorted. */
     dependents: string[];
+    /**
+     * The same set as `dependents`, carrying depth and the reaching relation.
+     *
+     * Two shapes for one set, deliberately: `dependents` is what a human reads
+     * and what the golden fixtures pin, while a consumer that has to explain
+     * WHY a node is in the set — the regression selector, 3.4 — needs the hop
+     * count and the relation, and reconstructing them by re-running the walk at
+     * increasing depths would be the same BFS three times.
+     */
+    reached: ReachedNode[];
     /** The subset of `dependents` declared in a test file. */
     test_files: string[];
     /** The edges that produced `dependents`, rendered. */
@@ -172,7 +193,7 @@ export function impact(
     const accepted: CodeEdge[] = [];
     const rejected: CodeEdge[] = [];
     const seen = new Set(seeds);
-    const dependents = new Set<string>();
+    const reached = new Map<string, ReachedNode>();
     let frontier = [...seeds];
     for (let d = 0; d < depth && frontier.length; d += 1) {
         const next: string[] = [];
@@ -188,13 +209,18 @@ export function impact(
                 accepted.push(e);
                 if (seen.has(e.source)) continue;
                 seen.add(e.source);
-                dependents.add(e.source);
+                reached.set(e.source, {
+                    node: e.source,
+                    depth: d + 1,
+                    via: e.relation,
+                    resolved_via: e.resolved_via,
+                });
                 next.push(e.source);
             }
         }
         frontier = next;
     }
-    const deps = [...dependents].sort();
+    const deps = [...reached.keys()].sort();
     const fileOf = (id: string): string => g.byId.get(id)?.source_file ?? '';
     const testFiles = [...new Set(deps.map(fileOf).filter((f) => f !== '' && isTest(f)))].sort();
     return {
@@ -205,6 +231,7 @@ export function impact(
         seeds,
         unresolved_files: unresolved,
         dependents: deps,
+        reached: deps.map((d) => reached.get(d) as ReachedNode),
         test_files: testFiles,
         producing_edges: accepted.map(renderEdge).sort(),
         lines: deps.map((d) => `${d}`),
