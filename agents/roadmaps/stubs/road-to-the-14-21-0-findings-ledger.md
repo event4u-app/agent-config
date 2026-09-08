@@ -37,6 +37,50 @@ set, and the set was never ingested. The ledger is missing because the ingest
 step did not run — a different defect from the four nulls, and one the existing
 prose would otherwise absorb as "the fifth consecutive null".
 
+## It recurred at 14.22.0 — recorded 2026-09-08 by the R2 remediation lane
+
+`14.22.0` is tagged, `agents/evidence/release-findings/14.22.0.json` <!-- ref-ignore -->
+does not exist on `origin/main`, and `check_finding_dispositions` therefore reds with the same
+sentence one version later:
+
+```
+14.22.0 has shipped and carries no findings ledger at
+agents/evidence/release-findings/14.22.0.json
+```
+
+**The prediction in § What is different about this one holds a second time, and
+sharpens.** The gate did not go neutral: PR **#1943** (`release: 14.22.0`, merged
+2026-09-08T10:31:34Z) carries a `release-findings-json` machine block with **56
+findings** — 3 `critical`, 12 `high`, 27 `medium`, 14 `low`; by kind 8 `security`,
+12 `claim`, 27 `correctness`, 9 `style`. **11 of them are blocking** under
+`check_finding_dispositions.isBlocking` (security/claim × critical/high), and the
+three criticals are:
+
+| Severity | Kind | Title | File |
+|---|---|---|---|
+| critical | security | Self-review gate has reviewed nothing for four consecutive releases | `agents/evidence/release-findings/14.21.0.json` <!-- ref-ignore --> |
+| critical | security | ADR-262 deletes `status: carrier` without migrating enforcement | `docs/decisions/ADR-262-carrier-status-deleted-no-repo-authored-human-gate.md` |
+| critical | security | Vendored grammars added without supply-chain verification surface | `src/vendor/grammars/` |
+
+So the review ran, produced a real finding set naming its own prior silence as a
+critical, and the set was again never ingested. **Two consecutive releases now, same
+mechanism: the gate succeeds and the ingest step does not run.** That makes it a
+process defect in the release flow rather than a per-release omission, and it is why
+this section extends this stub instead of creating a second one.
+
+Reproduce the block:
+
+```bash
+gh pr view 1943 --json comments --jq '.comments[].body' \
+  | grep -o '<!-- release-findings-json: .* -->'
+```
+
+**Not ingested here, deliberately.** `--ingest` merges findings with an EMPTY
+disposition, so the gate stays red until a human writes 11 blocking dispositions —
+and writing another release's dispositions is not something an unrelated
+remediation lane may do. The lane that found this was dispositioning the R2 review
+of PR #1923; it reports the red as inherited and leaves it tracked here.
+
 ## Why not fixed in place
 
 Writing the ledger means **dispositioning 39 findings**, three of them critical
