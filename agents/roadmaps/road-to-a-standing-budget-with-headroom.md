@@ -3,6 +3,7 @@ complexity: lightweight
 status: draft
 execution:
   mode: phase-checkpoints
+estate_offset_exempt: "Offsets nothing, and the reason is the roadmap's own subject. It records a policy defect the PR-drain run of 2026-09-08 hit three times and had no authority to fix: the standing-payload grace ceiling sits on HEAD by construction while its own file says it may never rise. Offsetting would mean archiving or parking an unrelated roadmap to buy room for a finding — which is the laundering the estate ratchet exists to prevent, done in the ratchet's name. One other roadmap mentions the budget — `grep -rl preamble-payload agents/roadmaps/*.md` returns `road-to-delivery-for-every-host.md` besides this file — and it is not a fold-in candidate on two counts: its subject is the delivery-mode flip and the ceiling appears there only as a cost it pays, and it is itself unmerged and blocked on an owner decision, so folding into it would park this finding behind that one. (An earlier draft of this line claimed the grep returned nothing; it was run, it did not, and the claim is corrected rather than removed.) It ships `status: draft` precisely so it costs no active slot until a maintainer decides Phase 1.1, which is a decision step with no implementation attached."
 ---
 # Road to a standing budget with headroom
 
