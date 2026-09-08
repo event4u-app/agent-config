@@ -9,7 +9,7 @@ entry_condition:
   what: "Both blockers fall, independently: (1) a full-strength council or the owner ratifies the corrected shadow comparator recorded in § Blockers -> shadow-pin-is-post-upgrade, and (2) the repository maintainer performs the outbound third-party fetch that step 1.1 requires. Neither clears the other."
   when: "Whenever the owner acts, or a full-strength council convenes on the comparator question. Not calendar-driven: this roadmap's § Reopening trigger records that both council seats refused a calendar trigger. The review_by date is a re-read obligation, never a wake condition."
   who: "Comparator ratification: a full-strength AI council convened on that question, or the repository maintainer. Fetch execution: the repository maintainer alone, operating an approved outbound-fetch environment - a Hard Floor act under non-destructive-by-default that no council verdict and no roadmap acceptance reaches. The two are separate trust boundaries and one actor satisfying one does not satisfy the other."
-estate_growth_exempt: "Re-claimed 2026-09-08 for the park, replacing the creation-time reason which is preserved verbatim at the end of this sentence. Nothing was created: this is the same file, moved from agents/roadmaps/ into agents/roadmaps/later/ by AI-council decision (Q1 verdict (a), 1 of 2 seats present, recorded DEGRADED in the roadmap body). The gate nonetheless reads the move as pure growth, and the mechanism is worth naming because it will recur: this roadmap was status: draft, so it never counted toward active_roadmaps, which means the sanctioned parking allowance at check_estate_count.ts:63-66 — which raises the later_roadmaps allowance by one for a file that LEAVES the active top level — does not fire. The offsets ledger reads +0 active / -0 disposed and its parked set is empty, so parking a draft is indistinguishable from conjuring a later/ file. Measured on this change: later_roadmaps 83 to 84 (+1), open_blockers 38 to 40 (+2, the same two blockers this file already carried and which were uncounted while it was a draft), active_roadmaps 9 to 9 (+0). The estate is not larger by one roadmap or by two blockers; the same objects moved into the scan set. Original creation-time reason, unchanged: Receiver for two steps carried out of road-to-bounded-reference-harvest-loop, which is archived in the same change — the active count is unchanged by the pair."
+estate_growth_exempt: "Claimed 2026-09-08 for the park, replacing the creation-time reason which is preserved verbatim at the end of this sentence. It authorises exactly ONE dimension: open_blockers 38 to 40. Nothing was created — this is the same file, moved from agents/roadmaps/ into agents/roadmaps/later/ by AI-council decision (Q1 verdict (a), 1 of 2 seats present, recorded DEGRADED in the roadmap body) — and the two blockers are the two this file already carried while it sat in the active tree as status: draft, uncounted. The estate is not larger by two blockers; the same two objects moved into the gate scan set. Measured on the committed change rather than predicted: the gate reports +0 active / -1 disposed, 1 parked, later_roadmaps 83 to 84 covered by the sanctioned parking allowance with no claim needed, open_blockers 38 to 40 authorised here, active_roadmaps 9 to 9. CORRECTED IN THE SAME BRANCH: the first version of this sentence asserted the parking allowance does not fire for a draft roadmap. That was measured against an uncommitted working tree, where the gate reads no patch and therefore sees no move at all; once committed the allowance fires normally. The wrong reading is named rather than quietly dropped, because a claim that mis-describes the mechanism it invokes is worse than a claim that is merely long. Original creation-time reason, unchanged: Receiver for two steps carried out of road-to-bounded-reference-harvest-loop, which is archived in the same change — the active count is unchanged by the pair."
 ---
 # Road to the first reference-analysis observation
 
@@ -894,6 +894,16 @@ Rationale, in the seat's own order:
    two candidate paths for a `carried-to=` destination — `agents/roadmaps/<slug>.md`
    and `agents/roadmaps/later/<slug>.md`. A stub is neither. The only other
    closing glyph is `[-]`, which is owner-reserved.
+
+**What the park actually cost the estate, measured on the committed change and
+not predicted.** `check_estate_count` reports `+0 active / -1 disposed, 1
+parked`: `later_roadmaps` 83 → 84 is covered by the sanctioned parking allowance
+with no claim needed, and `active_roadmaps` is unchanged at 9 because a
+`status: draft` roadmap was never in that count. One dimension did need a claim —
+`open_blockers` 38 → 40, which is the two blockers this file already carried and
+which the gate did not see while the file was a draft in the active tree. The
+claim is in the frontmatter and authorises that dimension only. The estate is not
+larger by two blockers; the same two objects entered the scan set.
 
 **Q2 — may a degraded single-seat round take this decision at all?** The
 2026-09-08 Q1 verdict (b) recorded in § Pin status reserved **ratification of the
