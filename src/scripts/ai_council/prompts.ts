@@ -25,6 +25,7 @@
 import { wrapUntrustedBlocks } from '../_lib/untrusted_content.js';
 
 import type { ProjectContext } from './project_context.js';
+import { RESOLVING_EVIDENCE_SECTION } from './synthesis_disagreement.js';
 
 // Python: NEUTRALITY_PREAMBLE = """\...""".strip()
 export const NEUTRALITY_PREAMBLE = `You are an independent reviewer. You have NOT seen any prior reasoning,
@@ -302,6 +303,8 @@ read it directly from a response.
 A single sentence: which course the host agent should advise the
 user to take, grounded in the strongest converged point.
 
+${RESOLVING_EVIDENCE_SECTION}
+
 ### Kill criteria
 Observable conditions that would falsify this recommendation without
 re-convening the council. Each entry names a threshold or a specific
@@ -328,6 +331,8 @@ and the host agent confirms are load-bearing. Maximum five.
 ### Recommendation
 APPROVE / REQUEST_CHANGES / REJECT and a single sentence justifying
 the verdict, anchored on the strongest consensus or must-fix line.
+
+${RESOLVING_EVIDENCE_SECTION}
 
 ### Kill criteria
 Observable conditions that would falsify this verdict without re-convening
@@ -363,6 +368,8 @@ separate certainty word for that; \`evidence:\` measures how well a
 finding is supported, and being alone in raising it is a different
 property the section already carries.
 
+${RESOLVING_EVIDENCE_SECTION}
+
 ### Kill criteria
 Observable conditions that would falsify the analysis's leading finding
 without re-convening the council. Each entry names a threshold or event.
@@ -380,6 +387,8 @@ turn.`;
 export const CREATIVE_SYNTHESIS = `Write a free-form convergence / divergence
 synthesis of the council in prose — no fixed section shape for the body.
 Then close with exactly these two sections:
+
+${RESOLVING_EVIDENCE_SECTION}
 
 ### Kill criteria
 Observable conditions that would falsify the direction you converged on,
