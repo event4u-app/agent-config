@@ -192,8 +192,13 @@ this record should be read at that strength.
 
 ## References
 
-- Council question: `agents/runtime/council/questions/q-skill-surface-framing.md`
-  (gitignored; its text is reproduced in the PR that lands this ADR).
+- Council convergence, 2026-09-08 — seats `anthropic/claude-sonnet-4-5` (answered,
+  2 rounds) and `openai/codex-default` (`os_error: ENOBUFS`, no answer); quorum
+  1 of 2, `concluded`, `⚠️ DEGRADED`. Verdict: Option B with corrections, held
+  conditional on the provenance precondition, with Option D named as the fallback
+  had it stayed open. The question packet is not linked: council artefacts are
+  gitignored and auto-pruned, so a path here would rot into a broken reference
+  for every reader. Its substance is § Context and § The finding that decided it.
 - `agents/evidence/analysis/skill-trigger-frontmatter-has-no-host-reader-2026-09-08.md`
 - `agents/roadmaps/road-to-the-skill-surface-framing-choice.md`
 - `docs/CLAIMS.md:245` — the claim this decision corrects.
