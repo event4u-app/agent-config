@@ -321,6 +321,31 @@ admission. Cowork is excluded by the existing measurement.
       would add this sentence to the wrong decision. Match on the **filename and the
       subject**, never on the number, until one of the two is renumbered. This lane owns
       neither PR and renumbered nothing.
+      **Nothing in the repository catches this, measured rather than assumed.** The two
+      filenames differ, so git produces no conflict and both files would simply coexist on
+      `main`. Both were materialised into one tree and `./scripts-run
+      src/scripts/check_adr_frontmatter` was run over it: **exit 0, "no errors"**, with both
+      files declaring `adr: 262`. The gate builds a number index and its own source comments
+      discuss collisions, but it does not fail on two records sharing a number. The probe
+      files were removed and neither lane's ADR is committed here.
+      **Recommended owner action, AI council 2 seats (anthropic + openai) 2026-09-08,
+      subscription transport, $0.0000, quorum 2/2 after the run, unanimous option B
+      (record + propose a tie-break):** the **earlier-opened PR keeps the number**, because
+      it is deterministic and readable from GitHub metadata and does not leave the citation
+      unstable until merge time. So **#1923 keeps ADR-262 and #1926 renumbers to ADR-263**,
+      applied by the owner of #1926 before merge. ADR-263 was checked rather than guessed:
+      across `origin/main` and all five open-PR branches the union of records at 260 and
+      above is exactly ADR-260, ADR-261, ADR-262, so 263 is genuinely free as of this run —
+      re-check at renumber time, since another lane may claim it in between.
+      **Why this lane did not comment on the two PRs, which both seats asked for.**
+      `agent-config settings:get personal.pr_progress_comments` reports *not set in any
+      settings file, default false*, and `no-pr-progress-comments` says an unsolicited
+      comment is gated and that an author unsure whether a comment qualifies must treat it
+      as gated. An ADR numbering collision does not clear that rule's safety carve-out,
+      which is for security, data-loss or production-impact findings. The council
+      anticipated exactly this and stated the fallback itself: *if commenting on the PRs is
+      also outside the lane's delegated authority, choose A operationally while recording B
+      as the recommended owner action.* That is what this note is.
 
 ## Blockers
 
