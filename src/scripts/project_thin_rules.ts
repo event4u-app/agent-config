@@ -131,8 +131,8 @@ export function kernel_ids(): Set<string> {
  * move of a magnitude no agent may take, and it would erase most of the saving
  * the flip is licensed on. Restoring a path route needs either that exemption
  * under a re-anchored baseline or a `pre_tool_use` binding under a raised slot
- * cap — both owner-reserved. Receiver:
- * `agents/roadmaps/stubs/road-to-a-path-route-under-delivery.md`.
+ * cap — both owner-reserved, so the closure is tracked rather than taken here.
+ * ADR-265's Consequences section names the receiver.
  */
 /**
  * ONE spelling of the router-derived sets, shared with the injector (R2
