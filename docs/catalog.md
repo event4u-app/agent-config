@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **739 public artefacts** shipped by
+Consumer-facing catalog of all **740 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -659,7 +659,7 @@ are excluded.
 | command | [`worktree-status`](../dist/agent-src/commands/worktree/status.md) | cluster: worktree | List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence |
 | command | [`worktree-verify`](../dist/agent-src/commands/worktree/verify.md) | cluster: worktree | Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline |
 
-## Guidelines (118)
+## Guidelines (119)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -708,6 +708,7 @@ are excluded.
 | guideline | [`missing-tool-handling`](../docs/guidelines/agent-infra/missing-tool-handling.md) | agent-infra |  |
 | guideline | [`model-recommendation`](../docs/guidelines/agent-infra/model-recommendation.md) | agent-infra |  |
 | guideline | [`naming`](../docs/guidelines/agent-infra/naming.md) | agent-infra |  |
+| guideline | [`notes-horizon-mechanics`](../docs/guidelines/agent-infra/notes-horizon-mechanics.md) | agent-infra |  |
 | guideline | [`output-patterns`](../docs/guidelines/agent-infra/output-patterns.md) | agent-infra |  |
 | guideline | [`recurring-criticism-mechanics`](../docs/guidelines/agent-infra/recurring-criticism-mechanics.md) | agent-infra |  |
 | guideline | [`reuse-verdict-mechanics`](../docs/guidelines/agent-infra/reuse-verdict-mechanics.md) | agent-infra |  |

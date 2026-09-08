@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **740 artefacts** in this package.
+Maintainer-facing index of all **741 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -644,7 +644,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`worktree-status`](../src/domains/engineering-base/worktree/status/command.md) | cluster: worktree | List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence |
 | command | [`worktree-verify`](../src/domains/engineering-base/worktree/verify/command.md) | cluster: worktree | Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline |
 
-## Guidelines (118)
+## Guidelines (119)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -693,6 +693,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | guideline | [`missing-tool-handling`](../docs/guidelines/agent-infra/missing-tool-handling.md) | agent-infra |  |
 | guideline | [`model-recommendation`](../docs/guidelines/agent-infra/model-recommendation.md) | agent-infra |  |
 | guideline | [`naming`](../docs/guidelines/agent-infra/naming.md) | agent-infra |  |
+| guideline | [`notes-horizon-mechanics`](../docs/guidelines/agent-infra/notes-horizon-mechanics.md) | agent-infra |  |
 | guideline | [`output-patterns`](../docs/guidelines/agent-infra/output-patterns.md) | agent-infra |  |
 | guideline | [`recurring-criticism-mechanics`](../docs/guidelines/agent-infra/recurring-criticism-mechanics.md) | agent-infra |  |
 | guideline | [`reuse-verdict-mechanics`](../docs/guidelines/agent-infra/reuse-verdict-mechanics.md) | agent-infra |  |
