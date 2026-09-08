@@ -31,6 +31,50 @@ Accepted 2026-07-31.
 > this ADR to that gate as "the confirming measurement" describe the state
 > at acceptance time.
 
+> **Update 2026-09-07 — the same gap existed one root over, and is now closed.**
+> This ADR scoped the fix to `src/scripts/_cli/`. Three consumer-reachable
+> surfaces stayed on `npx tsx` and were found when a consumer project pinning
+> `devEngines.runtime: ">=24.0.0 <26"` on Node v26.7.0 could run no roadmap
+> command at all:
+>
+> - `dist/agent-src/scripts/` — the roadmap family (`roadmap:progress`,
+>   `roadmap:set-step`, `roadmap:archive`, `gates`, `stubs:due`), reached through
+>   `resolve_script`, which `cli_delegate_bundle()` did not map.
+> - `maybe_pin_reexec` and `run_update_check_banner` — their own soft tsx probes,
+>   running before and after EVERY command, so the consumer's npm error printed
+>   on every invocation regardless of which command was run.
+> - `archive_completed_roadmaps._regen_dashboard` — spawns the dashboard twin and
+>   fell through to `npx tsx` itself.
+>
+> All three now resolve a `dist/cli-delegate/` bundle first
+> (`build:agent-src-delegate`, `build:delegate-aux`), and the two per-invocation
+> probes have **no** `npx` last resort left: a missing runner means no pin
+> re-exec and no banner, which is the best-effort outcome both already accepted.
+> The `--splitting` hazard this ADR records for `cmd_migrate` applies verbatim to
+> the new entries — a hoisted module body makes `import.meta.url` name the CHUNK,
+> the entry guard never fires, and the command exits 0 having done nothing
+> (reproduced on `update_roadmap_progress` before the guard was added). The same
+> `__AGENT_CONFIG_CLI_DELEGATE__` basename check fixes it. Verified with `tsx`
+> physically removed, in a scratch consumer carrying the hostile `devEngines`
+> pin: `roadmap:progress`, `roadmap:set-step` and `roadmap:archive` all complete
+> with zero npm invocations. Contract pinned in
+> `tests/scripts/runtime_dependencies.test.ts`; both removal paths probed red.
+>
+> **And the fast path was not reaching anyone.** `cli_delegate_bundle_is_stale`
+> tested `-d "$PACKAGE_ROOT/src"` as its dev-tree discriminator, on the premise
+> that a consumer install ships no `src/`. It does — files[] carries
+> `src/scripts/` and `src/agent-src/scripts/` — and npm leaves those sources
+> newer than the prepack-built bundle. Measured on a global 14.21.0 install:
+> 1348 shipped `src/**/*.ts` newer than `dist/cli-delegate/cmd_versions.js`, so
+> `cli_delegate_bundle` returned empty and `agent-config versions` fell through
+> to `npx tsx` — traced with `bash -x` against the installed dispatcher. Every
+> delegate command in every published install took the slow, consumer-npm-bound
+> path this ADR exists to remove. The discriminator is now package-local **tsx**:
+> where none exists the alternative to a "stale" bundle is `npx tsx`, which is
+> strictly worse than a compile that may lag a source edit no consumer can make.
+> Dev-tree behaviour is unchanged, and both directions are pinned in
+> `tests/scripts/cli_delegate_bundle_freshness.test.ts`.
+
 ## Context
 
 `tsx` is a devDependency, so the published package ships no `tsx`. That is

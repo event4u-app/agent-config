@@ -463,8 +463,9 @@ print_version() {
 # dependency since the road-to-credible-install Phase 1 flip — the consumer
 # runtime tree ships no tsx, so every consumer-reachable surface must resolve
 # a precompiled bundle instead (hooks → dist/hooks/dispatch.js, mcp:run →
-# dist/mcp/server.mjs, the `_cli` delegate commands → dist/cli-delegate/,
-# see exec_ts below). This resolver therefore only ever fires in a DEV tree
+# dist/mcp/server.mjs, the `_cli` AND `dist/agent-src/scripts/` delegate
+# commands → dist/cli-delegate/, see exec_ts below). This resolver therefore
+# only ever fires in a DEV tree
 # (node_modules/.bin/tsx present) or as a genuine last-resort fallback.
 # `npx tsx` is that last resort: npx runs against the CONSUMER project's cwd,
 # so its npm config and devEngines/engines constraints apply — a consumer
@@ -495,14 +496,23 @@ require_tsx() {
   exit 127
 }
 
-# Map a `src/scripts/_cli/<name>.ts` path to its precompiled bundle entry
-# under `dist/cli-delegate/<name>.js`, echoing the bundle path when it exists
-# and node is available. Empty output means "no bundle — use the tsx path".
+# Map a delegate source path to its precompiled bundle entry under
+# `dist/cli-delegate/<name>.js`, echoing the bundle path when it exists and node
+# is available. Empty output means "no bundle — use the tsx path".
 #
-# Scoped to `_cli/` on purpose: that directory is the consumer-tier delegate
-# command surface (`sync`, `doctor`, `validate`, `upgrade`, …) and its
-# basenames are unique, so the mapping is collision-free. Other exec_ts
-# callers (resolve_script results, the work engine, …) are unaffected.
+# TWO source roots are mapped, both bundled into that one outdir:
+#   - `src/scripts/_cli/` — the consumer-tier delegate commands (`sync`,
+#     `doctor`, `validate`, `upgrade`, …), per ADR-204.
+#   - `dist/agent-src/scripts/` — the roadmap command family (`roadmap:progress`,
+#     `roadmap:set-step`, `roadmap:archive`, `roadmap:gates`, `stubs:due`).
+#     ADR-204 closed the `npx tsx` exposure for `_cli/` and left this root on it:
+#     these commands still reached `require_tsx`, and `npx` resolves against the
+#     CONSUMER's cwd, so a project pinning `devEngines.runtime` away from the
+#     local Node hard-failed with EBADDEVENGINES.
+#
+# Basenames are unique ACROSS both roots (`_cli/` is all `cmd_*`, agent-src is
+# none), so one flat outdir stays collision-free. Other exec_ts callers (the
+# remaining resolve_script results, the work engine, …) are unaffected.
 #
 # In a DEV tree the bundle is also suppressed when any `src/**/*.ts` is newer
 # than it — see cli_delegate_bundle_is_stale.
@@ -510,6 +520,7 @@ cli_delegate_bundle() {
   local ts_abs="$1"
   case "$ts_abs" in
     "$PACKAGE_ROOT/src/scripts/_cli/"*) ;;
+    "$PACKAGE_ROOT/dist/agent-src/scripts/"*) ;;
     *) return 0 ;;
   esac
   local name
@@ -540,10 +551,38 @@ cli_delegate_bundle() {
 # edit is never silently ignored in favour of a stale compile.
 cli_delegate_bundle_is_stale() {
   local bundle="$1"
+  # The dev-tree test is package-local tsx, NOT `-d src`. The published tarball
+  # SHIPS `src/` (files[] carries `src/scripts/` and `src/agent-src/scripts/`),
+  # so the `-d src` test called every consumer install a dev tree — and npm's
+  # extraction leaves shipped sources newer than the prepack-built bundle.
+  # Measured 2026-09-07 on a global 14.21.0 install: 1348 shipped `src/**/*.ts`
+  # were newer than `dist/cli-delegate/cmd_versions.js`, so `cli_delegate_bundle`
+  # returned empty and `agent-config versions` fell through to `npx tsx` —
+  # ADR-204's fast path was inert in every published install, which is also why
+  # it never protected the roadmap family this change adds.
+  # Without a local tsx the only alternative to a "stale" bundle is `npx tsx`
+  # against the CONSUMER's npm config, which is strictly worse than a compile
+  # that may lag a source edit no consumer can make.
+  [[ -x "$PACKAGE_ROOT/node_modules/.bin/tsx" ]] || return 1
   [[ -d "$PACKAGE_ROOT/src" ]] || return 1
   local newer
   newer="$(find "$PACKAGE_ROOT/src" -name '*.ts' -newer "$bundle" -print -quit 2>/dev/null)"
   [[ -n "$newer" ]]
+}
+
+# Echo a usable `dist/cli-delegate/` bundle for a path RELATIVE to that dir, or
+# nothing. Used by the two probes that run on EVERY invocation — the pin
+# resolver and the update banner — which have their own soft tsx lookup rather
+# than going through exec_ts. Both reached `npx tsx` in a consumer install and
+# therefore printed the consumer's own npm failure (EBADDEVENGINES on a
+# mismatched `devEngines`) on stderr before every single command.
+delegate_aux_bundle() {
+  local rel="$1"
+  local bundle="$PACKAGE_ROOT/dist/cli-delegate/$rel"
+  [[ -f "$bundle" ]] || return 0
+  command -v node >/dev/null 2>&1 || return 0
+  cli_delegate_bundle_is_stale "$bundle" && return 0
+  printf '%s' "$bundle"
 }
 
 # Run an absolute script path. The argument is an absolute path that may carry
@@ -1622,20 +1661,28 @@ maybe_pin_reexec() {
     help|--help|-h|--version|-V|update|migrate|init|"") return 0 ;;
   esac
   # Best-effort: soft tsx probe (no hard-exit — this runs around dispatch).
-  local tsx_bin=""
-  if [[ -x "$PACKAGE_ROOT/node_modules/.bin/tsx" ]]; then
-    tsx_bin="$PACKAGE_ROOT/node_modules/.bin/tsx"
-  elif command -v npx >/dev/null 2>&1; then
-    tsx_bin="npx tsx"
+  local runner=""
+  local target=""
+  local aux
+  aux="$(delegate_aux_bundle '_lib/pin_resolver.js')"
+  if [[ -n "$aux" ]]; then
+    runner="node"
+    target="$aux"
+  elif [[ -x "$PACKAGE_ROOT/node_modules/.bin/tsx" ]]; then
+    runner="$PACKAGE_ROOT/node_modules/.bin/tsx"
+    target="$PACKAGE_ROOT/src/scripts/_lib/pin_resolver.ts"
   else
+    # Deliberately NO `npx tsx` last resort here: this probe runs before EVERY
+    # command, and npx resolves against the CONSUMER's cwd, so a project whose
+    # `devEngines` rejects the local Node made every invocation print npm's
+    # error. A missing runner means no pin re-exec, which is the same
+    # best-effort outcome the `|| true` below already accepts.
     return 0
   fi
   local installed
   installed="$(print_version)"
   [[ -z "$installed" || "$installed" == "unknown" ]] && return 0
-  # shellcheck disable=SC2086
-  $tsx_bin "$PACKAGE_ROOT/src/scripts/_lib/pin_resolver.ts" \
-    --cwd "$CONSUMER_ROOT" --installed "$installed" -- "$@" || true
+  "$runner" "$target" --cwd "$CONSUMER_ROOT" --installed "$installed" -- "$@" || true
 }
 
 # Post-subcommand banner: best-effort daily update-check notice on
@@ -1649,19 +1696,22 @@ run_update_check_banner() {
   case "$cmd" in
     help|--help|-h|--version|-V|"") return 0 ;;
   esac
-  # Best-effort: soft tsx probe (no hard-exit — banner is post-dispatch).
-  local tsx_bin=""
-  if [[ -x "$PACKAGE_ROOT/node_modules/.bin/tsx" ]]; then
-    tsx_bin="$PACKAGE_ROOT/node_modules/.bin/tsx"
-  elif command -v npx >/dev/null 2>&1; then
-    tsx_bin="npx tsx"
+  # Best-effort: bundle first, then a dev-tree tsx. No `npx tsx` last resort —
+  # same reason as maybe_pin_reexec: npx runs against the CONSUMER's npm config.
+  local runner=""
+  local target=""
+  local aux
+  aux="$(delegate_aux_bundle 'check_update_banner.js')"
+  if [[ -n "$aux" ]]; then
+    runner="node"
+    target="$aux"
+  elif [[ -x "$PACKAGE_ROOT/node_modules/.bin/tsx" && -f "$PACKAGE_ROOT/src/scripts/check_update_banner.ts" ]]; then
+    runner="$PACKAGE_ROOT/node_modules/.bin/tsx"
+    target="$PACKAGE_ROOT/src/scripts/check_update_banner.ts"
   else
     return 0
   fi
-  local banner_script="$PACKAGE_ROOT/src/scripts/check_update_banner.ts"
-  [[ -f "$banner_script" ]] || return 0
-  # shellcheck disable=SC2086
-  $tsx_bin "$banner_script" --cwd "$CONSUMER_ROOT" 2>/dev/null || true
+  "$runner" "$target" --cwd "$CONSUMER_ROOT" 2>/dev/null || true
 }
 
 # Global `--root <path>` / `--root=<path>` parsing (Step 8 A3).

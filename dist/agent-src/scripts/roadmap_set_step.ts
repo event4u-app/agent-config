@@ -30,7 +30,9 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
+
+import { isCliEntry } from './_cli_entry.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -246,8 +248,9 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     }
 }
 
+
 /* c8 ignore start */
-if (process.argv[1] !== undefined && pathToFileURL(path.resolve(process.argv[1])).href === pathToFileURL(_HERE).href) {
+if (isCliEntry(import.meta.url, 'roadmap_set_step')) {
     process.exit(main());
 }
 /* c8 ignore stop */
