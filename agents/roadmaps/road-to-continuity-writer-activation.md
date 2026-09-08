@@ -5,7 +5,7 @@ parent_roadmap: road-to-continuity-retirement-sequencing
 execution:
   mode: phase-checkpoints
 estate_growth_exempt: "Receiver for five items carried out of road-to-continuity-retirement-sequencing, which is archived by the same change — the estate is flat, not larger. It cannot be folded into any active roadmap: the carried items are the automatic writer and the retirements that depend on it, and the only other file that ever owned them is the one being archived. Its predecessor road-to-one-continuity-record is archived too. The alternative to this file is dropping five items an owner authorised and two councils sequenced, which is the outcome both councils named as the failure mode."
-estate_offset_exempt: "Offset in the same change by archiving agents/roadmaps/road-to-continuity-retirement-sequencing.md, which reaches 100% with this file as its declared carry destination. Recorded rather than omitted because the archival and the addition are one commit and a reader should not have to reconstruct that they pay for each other."
+estate_offset_exempt: "Offset in the same change by archiving agents/roadmaps/archive/road-to-continuity-retirement-sequencing.md, which reaches 100% with this file as its declared carry destination. Recorded rather than omitted because the archival and the addition are one commit and a reader should not have to reconstruct that they pay for each other."
 ---
 # Road to continuity writer activation
 

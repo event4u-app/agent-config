@@ -11,13 +11,20 @@ review_by: 2026-10-07
 > environment this run did not have — a downstream installation to observe, and
 > an observation window to run a parity comparison in.
 >
-> The **steps** live in the receiver
-> `agents/roadmaps/road-to-continuity-retirement-sequencing.md`, which is what
+> The **steps** lived in the receiver
+> `agents/roadmaps/archive/road-to-continuity-retirement-sequencing.md`, which is what
 > the parent's `carried-to=` annotations point at, because the archival sweep
 > resolves a carry destination only under `agents/roadmaps/` or
 > `agents/roadmaps/later/`. This file carries the **ruling, the refuted premise
 > and the promoting probe** — the things that would otherwise die with the
 > parent.
+>
+> **Updated 2026-09-08.** That receiver ran and archived at 100%, closing five
+> of its nine items. The remaining four moved on again, to
+> `agents/roadmaps/road-to-continuity-writer-activation.md` — that is where the
+> live work is now, and this file's rulings still govern it. The probe readings
+> below are re-measured in a section of their own at the end rather than edited
+> in place, so the 2026-09-07 baseline stays readable next to what changed.
 
 ## Ownership
 
@@ -267,3 +274,48 @@ unchanged except for `HANDOFF.md`, and the parent's own Risk 1 — *the record i
 added and nothing is retired* — is still live for the transferred half. The
 parent says so in its own body; this paragraph is the same statement from the
 receiving end, so neither file can be read alone and give the wrong impression.
+
+## Probe re-reading, 2026-09-08
+
+The baselines above are the transfer-date readings and are left untouched. This
+is the same four probes measured again after
+`road-to-continuity-retirement-sequencing` closed.
+
+**P1 — independent handlers exist, and one failing does not suppress another.**
+**Still FALSE, and now with a named reason rather than an absence.** No concern
+was split, because `check_estate_count` ratchets `concern_count` off
+`src/scripts/hook_manifest.yaml` with allowance 0, a three-way split is +2, and
+no concern retirement was inside the authorised scope. Both seats of the
+2026-09-08 council raised this unprompted and refused a temporary allowance.
+Tracked as `three-concern-split-is-unpaid-under-the-concern-ratchet`.
+
+**P2 — every capsule reader dispatches on `variant` before rejecting on
+version, and a test pins an unknown variant being refused without corrupting a
+known one. → TRUE.** The baseline recorded this as PARTIAL and untestable "by
+construction" because no third variant existed. `continuity_record` exists now
+(`src/scripts/_lib/subagent_capsule.ts`), the validator resolves `variant`
+first and short-circuits on one it does not know, and both halves are pinned:
+an unknown variant is refused by name with no field checks run, and the next
+known record still validates. Three cases at the validator, one more at the
+consumer.
+
+**P3 — a parity comparison has run with outputs physically separated.** Still
+FALSE, and the requirement changed shape. The 2026-09-08 council split it:
+fixture equivalence discharges *transformation* parity only, while activation,
+consumption, publication and failure isolation need integration evidence
+against the real dispatcher and storage adapter with controlled failures — but
+a wall-clock soak is explicitly NOT required, which removes the part of this
+probe no in-session run could ever have satisfied. Carried as step 1.3 of the
+new receiver.
+
+**P4 — an UPGRADED downstream installation shows the migration landed.** Still
+FALSE, and now known to be gated on an owner decision rather than on
+environment: the surviving capture endpoint's NAME is owner-reserved
+(2026-09-08 D2, tracked as `capture-endpoint-rename-is-owner-reserved`), so
+there is no migration to observe until that is chosen. `install-hooks.sh:459-484`
+still emits the old name.
+
+**What the re-reading changes about promotion.** One probe flipped, and the
+other three now each name the specific thing they wait on — a paid-for concern
+retirement, an integration test suite, and one owner decision — rather than
+waiting on an unspecified future environment.
