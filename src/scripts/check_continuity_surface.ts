@@ -307,7 +307,6 @@ export function run(opts: RunOptions = {}): number {
     return 1;
 }
 
-// ── self-test ────────────────────────────────────────────────────────────
 function _mkRepo(dir: string, rows: unknown[]): void {
     fs.mkdirSync(path.join(dir, 'src', 'config'), { recursive: true });
     fs.mkdirSync(path.join(dir, 'src', 'scripts'), { recursive: true });
