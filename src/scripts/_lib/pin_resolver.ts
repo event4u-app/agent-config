@@ -253,9 +253,22 @@ function _parse_cli(argv: string[]): { cwd: string; installed: string; forward: 
 }
 
 // Script entry — mirrors the Python `if __name__ == "__main__"` block.
+// `build:delegate-aux` bundles this file with `--splitting`, which can move the
+// module body into a shared chunk: `import.meta.url` then names the CHUNK, the
+// URL comparison below never matches, and the entry silently no-ops. Inside that
+// bundle the invoked file name is the reliable signal (same pattern as
+// src/scripts/_cli/cmd_migrate.ts). Defined by that build only.
+declare const __AGENT_CONFIG_CLI_DELEGATE__: boolean | undefined;
 function _isCliEntry(): boolean {
     if (process.argv[1] === undefined) {
         return false;
+    }
+    if (typeof __AGENT_CONFIG_CLI_DELEGATE__ !== 'undefined' && __AGENT_CONFIG_CLI_DELEGATE__) {
+        // A miss falls THROUGH to the URL comparison below, which is the
+        // symlinked-invocation case that fallback exists for.
+        if (path.basename(process.argv[1], '.js') === 'pin_resolver') {
+            return true;
+        }
     }
     const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
     if (import.meta.url === argvUrl) {

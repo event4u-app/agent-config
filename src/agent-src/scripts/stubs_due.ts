@@ -42,7 +42,9 @@
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
+
+import { isCliEntry } from './_cli_entry.js';
 
 const STUB_DIR = path.join('agents', 'roadmaps', 'stubs');
 
@@ -459,24 +461,8 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     return 0;
 }
 
-function _isCliEntry(): boolean {
-    if (process.argv[1] === undefined) {
-        return false;
-    }
-    const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
-    if (import.meta.url === argvUrl) {
-        return true;
-    }
-    try {
-        const here = fs.realpathSync(fileURLToPath(import.meta.url));
-        const argv = fs.realpathSync(path.resolve(process.argv[1]));
-        return here === argv;
-    } catch {
-        return false;
-    }
-}
 
-if (_isCliEntry() || process.argv[1] === _HERE) {
+if (isCliEntry(import.meta.url, 'stubs_due')) {
     process.exitCode = main();
 }
 
