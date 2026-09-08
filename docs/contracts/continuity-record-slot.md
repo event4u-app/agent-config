@@ -109,7 +109,7 @@ be unreadable, and the lock is the older decision.
 An unusable resident is moved to `recycle_quarantine_rel(session_id)`, never
 unlinked. The reader already discards a malformed, invalid or expired record
 loudly, so nothing is lost by taking it out of the authoritative name — but the
-evidence of *why* a resume did not happen is the only artefact anyone debugging
+evidence of *why* a resume did not happen is the only artifact anyone debugging
 a missed resume has, and deleting it deletes that.
 
 Quarantine is deliberately **not** the consumed name. `.consumed.json` is a
@@ -126,7 +126,7 @@ policy: the locked form is a read-modify-write, so the resident is inspected and
 the decision taken **inside** the exclusion that stops a peer publishing between
 the inspection and the write. `atomic_write_json` has no such window and cannot
 express a refusal — it is last-writer-wins on a whole file, which is exactly the
-undecided behaviour this contract replaces.
+undecided behavior this contract replaces.
 
 `update_json_under_lock` fails closed: a held lock returns `failed` and the
 publish reports a refusal rather than working around the exclusion.

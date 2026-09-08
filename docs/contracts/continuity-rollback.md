@@ -6,8 +6,8 @@ keep-beta-until: 2026-12-07
 # Continuity rollback — which switch undoes what, and what no switch can undo
 
 > Three session-lifecycle handlers, three independent switches. Disabling one
-> restores pre-change behaviour **for that handler only**; the other two keep
-> firing. This document names the residual behaviour of each switch and the
+> restores pre-change behavior **for that handler only**; the other two keep
+> firing. This document names the residual behavior of each switch and the
 > criteria that should make an operator throw one.
 >
 > Written for `road-to-continuity-writer-activation` step 1.4, which required
@@ -17,15 +17,15 @@ keep-beta-until: 2026-12-07
 ## The two kinds of undo, and why they are not interchangeable
 
 ```
-DISABLING NEW BEHAVIOUR IS A SWITCH. REVERTING A DELETION IS A COMMIT.
+DISABLING NEW BEHAVIOR IS A SWITCH. REVERTING A DELETION IS A COMMIT.
 NEVER OFFER A SWITCH AS THE ROLLBACK FOR A REMOVAL.
 ```
 
-- **Disabling new behaviour** — the handler stops running and the tree behaves
+- **Disabling new behavior** — the handler stops running and the tree behaves
   as it did before the handler existed. One settings key, effective on the next
   session-lifecycle event, no data migration, nothing to restore. Every row in
   the table below is this kind.
-- **Reverting a deletion** — a command, a concern, an artefact or a documented
+- **Reverting a deletion** — a command, a concern, an artifact or a documented
   affordance has been removed from the tree. No settings key brings it back;
   the only undo is a revert of the commit that removed it, plus whatever
   regeneration that commit performed. Phase 3 of the roadmap is entirely this
@@ -38,7 +38,7 @@ been told something true about Phase 1 and false about Phase 3.
 
 ## The three switches
 
-| Handler | Key | Ships | What OFF restores | Residual behaviour when OFF |
+| Handler | Key | Ships | What OFF restores | Residual behavior when OFF |
 |---|---|---|---|---|
 | Continuity-record writer | `continuity.auto_record` | `"off"` | the pre-change tree exactly: no automatic record producer | `session:recycle` remains the only writer, so a record exists only when a human runs it. The recycle advisory and its counter-check still fire, and the counter-check still reports "advised, no envelope written" — which is the correct reading, because with this switch off that is the true state |
 | Run-checkpoint producer | `continuity.run_checkpoints` | `"on"` | no `agents/runtime/state/checkpoints/<run>.json` is written | A killed session inside a roadmap contract can no longer be resumed from a derived checkpoint; `run:supervise` falls back to whatever the roadmap file itself says. Continuity writing, the context-fill surface and both advisory lanes are unaffected |

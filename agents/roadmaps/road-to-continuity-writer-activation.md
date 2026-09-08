@@ -158,7 +158,7 @@ councils required puts them there on purpose:
       fire; the rollback note names the residual behaviour of each switch and
       the trip criteria that should cause an operator to throw one.
       landed: `continuity.auto_record` (new, ships `off`),
-      `continuity.run_checkpoints` (new, ships `on` — that is the behaviour the
+      `continuity.run_checkpoints` (new, ships `on` — that is the behavior the
       tree already had) and `memory.session_index` (pre-existing, ships `off`).
       The two new readers have deliberately OPPOSITE failure polarity, and both
       directions are pinned by fixtures: `auto_record_enabled` fails closed so an
@@ -166,8 +166,8 @@ councils required puts them there on purpose:
       `run_checkpoints_enabled` fails open so the same cascade never silently
       removes a recovery aid the tree already had. Rollback note in
       `docs/contracts/continuity-rollback.md`, which leads with the distinction
-      the step asked for — disabling new behaviour is a switch, reverting a
-      deletion is a commit — and names, per switch, the residual behaviour and
+      the step asked for — disabling new behavior is a switch, reverting a
+      deletion is a commit — and names, per switch, the residual behavior and
       the trip criteria, plus a closing section on what no switch can undo
       (a retired command, concern, advisory, or an already-written record).
       6 fixtures in `tests/hooks/continuity_switches.test.ts` over the real
@@ -524,7 +524,7 @@ maintainer-owned blockers were not touched.
       `1 / 2 / 5 / 1 / 1` when this roadmap was written.
       **Still `1 / 2 / 5 / 1 / 1`, measured 2026-09-08 after Phase 1 closed** —
       unchanged, and unchanged on purpose. Phase 1 adds a producer for the
-      artefact that is already counted (`recycle-envelope.json`), so it moves no
+      artifact that is already counted (`recycle-envelope.json`), so it moves no
       axis; Phase 3 is where every axis moves, and none of its four steps is
       done. This is Risk 1 of this roadmap holding exactly as written: the
       writer landed, the retirements did not, and the gate's own output is what

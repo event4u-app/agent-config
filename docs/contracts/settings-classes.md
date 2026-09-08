@@ -256,14 +256,14 @@ producer on the normal session-end path, and the roadmap step requires the
 default to stay `off` until parity is measured, which is a decision no agent may
 take by writing the key. Step 1.4 added
 `continuity.run_checkpoints` the same day — a second C, shipping `on` because
-that is the behaviour the tree already had. It exists so the three session-end
+that is the behavior the tree already had. It exists so the three session-end
 handlers are independently disableable, which is what the 2026-09-07 council's
 D2 asked for; it changes nothing that ships.
 
 Its disposition is `consent`, and `derivable` was considered first and rejected:
 `derivable` is the **deletion queue**, a claim that the key disappears once the
 mechanism it names exists. This one is an operator kill switch over a recovery
-artefact, so it is meant to survive — and nothing in the tree can derive whether
+artifact, so it is meant to survive — and nothing in the tree can derive whether
 an operator wants resumability traded for quiet. It sits in the same shape as the
 kill switches already classified `consent` (`knowledge.global_sharing.enabled`
 and its allowlist): the mechanism's own preconditions are computable, the
@@ -557,7 +557,7 @@ Rows follow template order, so a diff against the template reads straight down.
 | `commands.create_pr.ui_paths` | C | `[]` | glob allowlist | derivable — the frontend-surface heuristic the PR-description flow already applies when the glob list is empty |
 | `commands.create_pr.api_paths` | C | `[]` | glob allowlist | derivable — the API-endpoint heuristic the same flow already applies as its documented empty-list fallback |
 | `continuity.auto_record` | C | `"off"` | arms an automatic producer on the normal session-end path | consent |
-| `continuity.run_checkpoints` | C | `"on"` | disabling it removes a recovery artefact a killed run resumes from | consent |
+| `continuity.run_checkpoints` | C | `"on"` | disabling it removes a recovery artifact a killed run resumes from | consent |
 | `memory.cadence` | C | `always` | suppressing the visibility line hides what the agent learned from the user | derivable — the hits/asks count the memory-visibility summary already computes; the line only exists when memory was consulted |
 | `memory.review_threshold` | A | `10` | when a review preview surfaces; governs no gate | derivable — the unreviewed-intake count `/memory load` already computes before rendering its preview |
 | `memory.redact_patterns` | C | `[]` | deny-list of secret and PII regexes | policy |
