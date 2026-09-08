@@ -40,6 +40,77 @@ executed as written — `chat-history:checkpoint` reaches a real handler
 producers (`install-hooks.sh:408-424`), and the append it performs is
 chat-history capture, which the parent's goal places out of scope by decision.
 
+## Drain-run disposition, 2026-09-08 — NOT EXECUTED, and this is the record
+
+An autonomous drain run was instructed to carry **every** active roadmap under
+`agents/roadmaps/` to completion, deciding every blocker by AI council rather
+than by reaching the user. It reached this file, read the promoting probe, and
+**stopped**. This section is what it recorded instead of executing.
+
+**Council verdict: (a) No — a `status: carrier` roadmap is human-gated and an
+autonomous run may not execute, promote, close, or advance it.** Two seats, deep
+tier, unanimous on the verdict and convergent on every sub-ruling.
+
+**The argument, in one line:** *scope is not authority*. The drain instruction
+sets what the run should look at; this file sets who may act on it. "Nothing here
+is scheduled work", "a human flips it to `ready`", and the stub's explicit owner
+reservation are a narrower authority boundary than the word "every", and a run
+that is the interested party must not resolve that ambiguity by enlarging its own
+authority.
+
+**What "active" means here, and why this file is not it.** This roadmap's own
+header states that `carrier` keeps it off the dashboard, out of
+`check_roadmap_trackable` and out of the plan risk register. One seat made that
+the operative point rather than an aside: those exclusions *define* what active
+means in this system, so a file deliberately excluded from active tracking is not
+active for execution purposes regardless of where it sits on disk.
+
+**The probe as measured, 2026-09-07 — unchanged and re-read rather than assumed:
+P1 FALSE · P2 PARTIAL · P3 FALSE · P4 FALSE.** None of the three handlers exists
+as a concern, no shadow writer exists, and `install-hooks.sh:408-424` still emits
+the retired name with no migration path.
+
+### Four rulings that bind a future run, not just this one
+
+1. **The P1 / step-3.1 overlap makes the gate MISDRAWN, not soft.** P1 cannot
+   become true without substantially performing carried step 3.1. Both seats
+   ruled that circular authorisation language is a **drafting defect its owner
+   repairs** — circularity does not manufacture authority for whoever notices it.
+2. **Probe-true does not equal promoted.** Even with P1-P4 all true, a human
+   still flips `carrier` → `ready`. The probe tests readiness preconditions; it
+   does not grant promotion authority, and *"may execute it once the probe reads
+   true"* means "when promoted AND probe-true", never "promote when probe-true".
+3. **The measured-null exit is owner-reserved.** This file permits closing in the
+   other direction, and that exit is **not** available to an autonomous run. Both
+   seats were explicit: a run that may close a roadmap by declaring its work not
+   worth doing holds *more* authority than one that may build it, not less.
+4. **The run owes evidence anyway.** One seat added an affirmative obligation:
+   staying silent about evidence bearing on measured-null fails the maintainer,
+   even though the run cannot adopt that closure. Discharged below.
+
+### The evidence this run owes, per ruling 4
+
+**No measured-null is recommended, and the reason is not neutrality.** P1, P3 and
+P4 are all FALSE and all three are **internal, buildable and reversible** —
+splitting three writers into separate concerns with kill switches, a shadow
+writer plus a recorded parity comparison, and a migration path in
+`install-hooks.sh`. Nothing external is being waited on and no dependency is
+missing. Evidence that a retirement is not worth the migration would have to
+look like an unavailable prerequisite or a cost that exceeds the benefit, and
+neither is present. **What the readings show is unbuilt work, not a dead end** —
+which argues for doing it under a human promotion, not for closing it.
+
+The one cost worth putting in front of the owner: the parent's Risk 1 — *the
+record is added and nothing is retired* — has been live since the parent
+archived, and every day this stays `carrier` is a day that risk stands. That is
+an argument for **promoting** this file, not for closing it.
+
+*Reopening:* a human flips `status` to `ready`, or the owner records a
+measured-null closure. Neither is this run's to do.
+
+Council record: `2026-09-08-carrier-roadmaps-in-an-autonomous-drain.md` under
+`agents/runtime/council/responses/` — local-only, since `agents/runtime/` is
+gitignored, so the substance is transcribed here rather than linked.
 ## Carried steps
 
 - [ ] **3.1 One concern writes the record at the moments context ends.** Carried
