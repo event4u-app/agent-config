@@ -184,3 +184,43 @@ export async function getParser(lang: Lang): Promise<TsParser> {
 export function nodeHasError(n: TsNode): boolean {
     return typeof n.hasError === 'function' ? n.hasError() : n.hasError;
 }
+
+/**
+ * Load an ARBITRARY grammar file through the production loader and report what
+ * it actually is.
+ *
+ * Exists for `check_pack_size`'s binary-eligibility predicate, and the "through
+ * the production loader" part is the whole point: the gate must not re-implement
+ * grammar loading, because a second implementation could accept bytes the engine
+ * rejects — which is precisely the gap that would let a broken grammar ship
+ * while the gate reported it valid. Same `_Parser()` instance, same
+ * `Language.load`, same ABI reading as `loadLanguage`.
+ *
+ * `grammar_id` comes from the module's exported `tree_sitter_<id>` symbol rather
+ * than from the `Language` object, because web-tree-sitter 0.24's `Language`
+ * exposes `version` and no name. `WebAssembly.Module.exports` is the runtime's
+ * own parser, so the id is read rather than guessed.
+ *
+ * Throws on anything it cannot establish — a caller that wants a verdict rather
+ * than an exception should catch. Never silently returns a partial answer.
+ */
+export async function probeGrammarFile(wasmPath: string): Promise<{ abi: number; grammar_id: string }> {
+    const bytes = fs.readFileSync(wasmPath);
+    const mod = new WebAssembly.Module(bytes);
+    // A grammar module exports `tree_sitter_<id>` plus, usually, a family of
+    // `tree_sitter_<id>_external_scanner_*` helpers — measured: 6 such exports
+    // on php, 7 on typescript and javascript. The language id is the one
+    // WITHOUT the scanner suffix, and filtering for it leaves exactly one.
+    const ids = WebAssembly.Module.exports(mod)
+        .map((e) => e.name)
+        .filter((n) => n.startsWith('tree_sitter_') && !n.includes('_external_scanner_'))
+        .map((n) => n.slice('tree_sitter_'.length));
+    if (ids.length !== 1) {
+        throw new Error(
+            `grammar probe: expected exactly one tree_sitter_* export in ${wasmPath}, found ${String(ids.length)}`,
+        );
+    }
+    await _init();
+    const language = await _Parser().Language.load(wasmPath);
+    return { abi: language.version, grammar_id: ids[0] as string };
+}
