@@ -56,8 +56,33 @@ const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 
 const SLOT_SEPARATOR = '·';
 
-/** `Candidates: …` — one physical line after `unwrapLines`. */
-export const CANDIDATES_RE = /^[ \t]*(?:>[ \t]*)?Candidates(?:[ \t]*\([^)]*\))?:[ \t]*(.+)$/gim;
+/**
+ * `Candidates: …` — one physical line, EMPHASIS-TOLERANT.
+ *
+ * The optional `**`/`__`/`*`/`_` runs are not cosmetic tolerance; they are the
+ * difference between a reading and an artefact. The first version copied the
+ * shipped `INTENT_RE` shape, which anchors the label at line start with no
+ * emphasis allowed. The 2026-09-08 treatment run then emitted its ONE
+ * compliant line as `**Candidates:** K0 …` — markdown bold, which every
+ * assistant reaches for on a labelled line — and the checker reported
+ * `Candidates line present: 0` over 32 transcripts. A detector that cannot see
+ * the thing it counts reproduces the defect it is measuring, and it does so
+ * silently, in the direction that confirms the null.
+ *
+ * The same gap exists in `lint_mandated_lines.ts`'s `INTENT_RE` and in the four
+ * other shipped labels. It is recorded as a finding rather than fixed here:
+ * that file is a shipped gate with 19 tests of its own, adjacent to the
+ * contract the 2026-09-07 council blocked, and widening its discrimination is
+ * its own change.
+ *
+ * CASE-SENSITIVE on the label. Widening with an `i` flag was tried on the
+ * sibling counter and took its population from 0 to 172, almost all of them
+ * lowercase `intent:` YAML keys in config — a line anchor turned into a prose
+ * detector. The instructed label is `Candidates:` and that is what the one
+ * real emission carried.
+ */
+export const CANDIDATES_RE =
+    /^[ \t]*(?:>[ \t]*)?(?:[-*+][ \t]+)?(?:\*\*|__|\*|_)?Candidates(?:\*\*|__|\*|_)?(?:[ \t]*\([^)]*\))?(?:\*\*|__|\*|_)?:(?:\*\*|__|\*|_)?[ \t]*(.+)$/gm;
 
 /**
  * Decision classes where a form choice actually exists — step 2.3.
@@ -164,7 +189,10 @@ function fires(text: string, triggers: readonly (readonly [string, RegExp])[]): 
     return hit;
 }
 
-export function parseLine(body: string): ParsedLine {
+export function parseLine(rawBody: string): ParsedLine {
+    // A line the model wrapped in emphasis leaves its closing run at the end,
+    // where it would otherwise be read as part of the deciding observation.
+    const body = rawBody.replace(/(?:\*\*|__|\*|_)+[ \t]*$/, '').trim();
     const arrowIdx = Math.max(body.indexOf('→'), body.indexOf('->'));
     const listPart = arrowIdx === -1 ? body : body.slice(0, arrowIdx);
     const decisionPart = arrowIdx === -1 ? '' : body.slice(arrowIdx).replace(/^(→|->)\s*/, '');

@@ -152,6 +152,38 @@ describe('fence stripping — the contract illustration is not an emission', () 
     });
 });
 
+describe('emphasis tolerance — the detector must not share the gate blind spot', () => {
+    // Regression, from the real thing. The 2026-09-08 paid treatment run
+    // emitted its ONE compliant line as `**Candidates:**` and the first
+    // version of this checker reported "Candidates line present: 0" across 32
+    // transcripts. A detector that cannot see what it counts confirms its own
+    // null, silently, in the direction that looks like a finding.
+    const REAL =
+        '**Candidates:** K0 <keep searching for existing utility> · ' +
+        'A `retryWithExponentialBackoff` [naming: verb-first, descriptive] · ' +
+        'B `exponentialBackoffRetry` [naming: adjective-first, concise] → A; verb-first reads as an action.';
+
+    it('sees the bold label the treatment run actually produced', () => {
+        const v = checkReport(`Introduced an abstraction for the retry name.\n\n${REAL}\n`);
+        expect(v.lines).toHaveLength(1);
+        expect(v.lines[0]?.candidates.map((c) => c.id)).toEqual(['K0', 'A', 'B']);
+        expect(v.lines[0]?.chosen).toBe('A');
+        expect(v.findings).toEqual([]);
+    });
+
+    it('sees the other emphasis forms and a list bullet', () => {
+        for (const label of ['__Candidates__:', '*Candidates*:', '_Candidates_:', '- **Candidates:**']) {
+            const line = `${label} K0 keep it · A extract a service [ownership boundary] → A; three callers already build it.`;
+            expect(checkReport(`Extracted a service.\n\n${line}\n`).lines, label).toHaveLength(1);
+        }
+    });
+
+    it('strips a trailing emphasis run out of the deciding observation', () => {
+        const l = parseLine('K0 keep it · A extract a service [ownership boundary] → A; three callers already build it.**');
+        expect(l.observation).toBe('three callers already build it.');
+    });
+});
+
 describe('parseLine — the grammar', () => {
     it('separates id, description, axis, choice and observation', () => {
         const l = parseLine(

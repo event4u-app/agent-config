@@ -18,13 +18,24 @@ first reading.
 ## The reading
 
 ```
-population of emitted intent lines:  0
-disagreement rate:                   undefined (no denominator)
+labelled `Intent:` matches:            18
+  of which the contract's own example:  5   (`parseDate …`, quoted verbatim)
+  of which prose section labels:       13   (fewer than three slots)
+well-formed three-slot intent lines:    0
+disagreement rate:                  undefined (no denominator)
 ```
 
-The counter exits 2 rather than 0 on this, on the repository's own dead-scope
-discipline (`src/scripts/_lib/scan_scope.ts:80-95`): a rate over an empty
-population is not a reading, and an empty scan must never present as a pass.
+**Corrected mid-run, and the correction is the more useful half of this file.**
+The first reading of this counter said `population 0`, and it was wrong for a
+reason that would have made the null self-confirming — see § The correction
+below. The number that survives scrutiny is not zero labelled matches; it is
+**zero well-formed lines**, which is what the lock's rate needs a denominator
+of.
+
+Every one of the 18 is either the contract's own blockquote example carried into
+a session's context, or `Intent:` used as a prose heading in a prompt or roadmap
+carrying no `·`-separated slots at all. Not one is the three-slot artifact the
+contract specifies, emitted at a decision point.
 
 ## Surface map — normative surface versus inspected surface
 
@@ -32,46 +43,92 @@ The council of 2026-09-08 required this table before the null could be worded,
 on the ground that absence from a surface where a line is not owed is not
 evidence of anything.
 
-| Surface | Normative for these lines? | Inspectable here? | Units read | Emissions |
-|---|---|---|---|---|
-| Assistant reply at the decision point | **Yes — all five.** `mandated-lines.md:38-42`, `:114-117` | Yes, via the local session store | 35,516 assistant text blocks in 2,535 transcript files | **0** |
-| Pull-request body | **Yes for `Pending`.** `mandated-lines.md:98-102` names the PR reviewer as the line's recipient | Yes | 400 merged PR bodies | **0** |
-| Commit message | **No.** The `Commit` line is emitted in the reply *before* committing (`:78-84`), not into the message | Yes | full `git log --all` | 0 — **not evidence** |
-| Tracked tree | No | Yes | `src`, `docs`, `agents`, `tests` | only `mandated-lines.md`'s own examples |
+| Surface | Normative for these lines? | Inspectable here? | Units read | Labelled matches | Well-formed lines |
+|---|---|---|---|---|---|
+| Assistant reply at the decision point | **Yes — all five.** `mandated-lines.md:38-42`, `:114-117` | Yes, via the local session store | 4,917 files, 3,739 of them JSON/JSONL with string leaves decoded | 18 | **0** |
+| Pull-request body | **Yes for `Pending`.** `mandated-lines.md:98-102` names the PR reviewer as the line's recipient | Yes | 400 merged PR bodies | 0 | **0** |
+| Commit message | **No.** The `Commit` line is emitted in the reply *before* committing (`:78-84`), not into the message | Yes | full `git log --all` | 0 | 0 — **not evidence** |
+| Tracked tree | No | Yes | `src`, `docs`, `agents`, `tests` | only `mandated-lines.md`'s own examples | — |
 
 Both surfaces where a line is genuinely owed, and which can be inspected at all,
-read zero.
+yield zero well-formed lines.
 
 ## The null is not specific to the intent line
 
-The step asked only about the intent line. Extending the same extraction to all
-five labels over assistant prose only, with fenced blocks stripped:
+The step asked only about the intent line. Extending an emphasis-tolerant
+extraction to all five labels over assistant prose only, with fenced blocks
+stripped:
 
-| Label | Emitted (outside fences) | Occurrences incl. fenced |
+| Label | Labelled matches | Well-formed per the contract |
 |---|---|---|
-| `Intent:` | **0** | 2 |
-| `Authorization:` | **0** | 0 |
-| `Commit:` | **0** | 2 |
-| `Pending:` | **0** | 0 |
-| `Sibling search:` | **0** | 0 |
+| `Intent:` | 1 | 0 — German prose, no three slots |
+| `Authorization:` | 3 | 1 at best — one quotes (`"execute this irreversible operation"`), two paraphrase |
+| `Commit:` | 2 | 0 — both are commit-status reports (`` `0eb145b5d` on `drain/…` ``), not the three-slot pre-commit line |
+| `Pending:` | 0 | 0 |
+| `Sibling search:` | 0 | 0 |
 
-The four fenced occurrences are verbatim quotations of the contract's own
-`parseDate` and merged-block examples. Fence-stripping is what separates them
-from an emission, and it is the linter's own pass
-(`src/scripts/lint_mandated_lines.ts:107-122`), reused rather than reimplemented
-— that file records the same illustration as a working bypass when it is not
-applied.
+Six labelled matches across 35,612 assistant text blocks in 2,537 files. The two
+paraphrasing `Authorization:` lines are notable in their own right: *"Within
+autonomous authority as defect repair"* is exactly the
+documentation-is-not-authorization failure `mandated-lines.md:64-68` denies in
+as many words, so where the mechanism does fire it fires in the form the
+contract rejects.
 
-`Sibling search` appears somewhere in 71 transcript files and `Commit:
-authorized` 17 times, both as prose inside quoted rule text rather than as a
-line at the start of an emitted reply. The distinction is the whole measurement.
+Fence-stripping is what separates a quoted illustration from an emission, and it
+is the linter's own pass (`src/scripts/lint_mandated_lines.ts:107-122`), reused
+rather than reimplemented — that file records its own § Brevity example as a
+working bypass when the pass is not applied.
+
+## The correction — how the first reading was wrong, and why it mattered
+
+The first version of this counter imported `INTENT_RE` from
+`lint_mandated_lines.ts`, reasoning that reusing the shipped gate's own pattern
+makes the reading authoritative. **That was backwards, and it produced a false
+null.** The shipped pattern anchors the bare label at line start and matches no
+markdown emphasis, so `**Intent:**` — the form an assistant actually writes for
+a labelled line — is invisible to it.
+
+This is not a hypothetical. The paid treatment run described in
+`RESULTS-candidates-treatment-2026-09-08.md` emitted its one compliant line as
+`**Candidates:**`, and a checker built on the shipped pattern shape reported
+`Candidates line present: 0` across 32 transcripts. A detector that cannot see
+what it counts reports that the thing was not emitted, silently, in the
+direction that looks like a finding.
+
+**A counter must be wider than the gate it reports on.** Sharing the gate's
+blind spot makes the null self-confirming: the gate cannot see the line, so the
+counter cannot see the line, so the counter reports the line is not emitted —
+which is a fact about the regex, not about the tree.
+
+Widening was then wrong in the other direction on the first attempt. Adding an
+`i` flag took the count from 0 to **172**, and essentially every new match was a
+lowercase `intent:` YAML key in a prompt-pattern or command config — a line
+anchor turned into a prose detector. The label is capitalised in the contract, so
+the pattern is emphasis-tolerant and **case-sensitive**. Replacing a false null
+with a false population would have been the worse error, because a population
+looks like evidence.
+
+## The shipped gap, recorded rather than fixed
+
+`lint_mandated_lines.ts`'s `INTENT_RE` and `AUTHORIZATION_RE` carry the same
+blind spot: a report emitting `**Intent:** a · b · c` satisfies the contract and
+fails the gate, and a report claiming a behaviour change while emitting only a
+bolded intent line is reported as `missing-intent`.
+
+Not fixed in this change, deliberately. That file is a shipped gate with 19
+tests of its own, sitting against the contract the 2026-09-07 council blocked
+from changing, and widening its discrimination changes what it accepts from
+every future report — its own change, with its own review. It is named here so
+the next reader does not have to rediscover it.
 
 ## What this does and does not establish
 
-**Establishes:** zero qualifying emissions on every inspected durable surface,
-for all five lines. The store demonstrably captures the normative surface — it
-holds 35,516 assistant text blocks — so for the assistant-reply surface this is
-not an observability artefact. The lines are not there.
+**Establishes:** zero well-formed emissions on every inspected durable surface,
+for all five lines, with at most one arguable `Authorization:` line. The store
+demonstrably captures the normative surface — it holds 35,612 assistant text
+blocks — so for the assistant-reply surface this is not an observability
+artefact. The labels appear a handful of times; the artifact the contract
+specifies does not.
 
 **Does not establish** that the obligation has never been emitted anywhere. The
 transcript store is one machine's local history, spans several projects, and is
@@ -108,17 +165,25 @@ gh pr list --state merged --limit 400 --json number,body > /tmp/prs.json
   --git-log \
   --pr-bodies /tmp/prs.json \
   --dir ~/.claude/projects
-# exit 2, population 0
+# 18 labelled matches; 13 malformed, 5 the contract's own example
 ```
 
-Sensitivity, run before the null was trusted — the counter separates all three
-classes on a synthetic report:
+The local session store is one machine's and is not tracked, so the third source
+is not reproducible off this machine. The first two are.
+
+Sensitivity — the counter separates all three classes on a synthetic report,
+and `tests/scripts/count_intent_disagreement.test.ts` pins it:
 
 ```
 1. [distinct]    overlap=0.111  three slots that disagree
 2. [restatement] overlap=0.667  three slots that restate each other
 3. [malformed]   overlap=0      two slots
 ```
+
+The test file also pins the two directions the correction above was wrong in: a
+bold, underscored, starred, blockquoted and bulleted label must all be seen, and
+an empty population must exit 2 while warning against the "no disagreements
+found" reading rather than merely avoiding the phrase.
 
 The per-line `overlap` figure is published for every line the counter reports so
 a later reader can recompute at a threshold other than the stated default of

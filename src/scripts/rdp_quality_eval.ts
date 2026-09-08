@@ -543,7 +543,7 @@ async function main(): Promise<number> {
             rater2_mean: { [v0]: m0, [v1]: m1 },
             rater2_delta: m0 !== null && m1 !== null ? Math.round((m1 - m0) * 100) / 100 : null,
         });
-        writeTranscript(s, variants, ts, overhead, variantNames, mode);
+        writeTranscript(s, variants, ts, overhead, variantNames, mode, withCandidates);
     }
 
     fs.writeFileSync(
@@ -570,6 +570,18 @@ async function main(): Promise<number> {
     return 0;
 }
 
+/**
+ * The transcript filename is keyed on the MODE, so a run under a different
+ * treatment must not reuse it.
+ *
+ * Found the hard way on 2026-09-08: `--candidates` reused the plain `l6n-`
+ * prefix and silently overwrote all 16 committed June baseline transcripts
+ * mid-run. The measurement survived — `--results` had been pointed at a new
+ * path and every transcript body is stored in that JSON — but the baseline's
+ * human-readable artefacts were replaced by treatment ones under the baseline's
+ * own names, which is the worst kind of quiet: a later reader comparing the
+ * markdown would have compared the treatment against itself.
+ */
 function writeTranscript(
     slot: Slot,
     variants: Record<string, Variant>,
@@ -577,8 +589,10 @@ function writeTranscript(
     overhead: number | null,
     variantNames: string[],
     mode: string,
+    withCandidates = false,
 ): void {
-    const prefix = mode === 'l6' ? 'l6n-' : '';
+    const base = mode === 'l6' ? 'l6n-' : '';
+    const prefix = withCandidates ? `${base}cand-` : base;
     const p = path.join(GT_DIR, `${prefix}${slot.n}-${slot.slug}.md`);
     const L: string[] = [
         `# Transcript — slot ${slot.n}: ${slot.slug}`,

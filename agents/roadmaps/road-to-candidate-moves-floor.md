@@ -228,21 +228,37 @@ played.
       the 2026-09-08 AI council, D2 = closed-with-amendment, 2 seats
       convergent, which required the original text stay legible so the
       criterion cannot read as having been met.
-      Done 2026-09-08 — `src/scripts/count_intent_disagreement.ts`; reading
-      published in `agents/evidence/analysis/mandated-line-emission-2026-09-08.md`.
-      **Population 0, rate undefined.** Zero qualifying emissions on every
-      inspected durable surface: 35,516 assistant text blocks across 2,535
-      transcript files, 400 merged PR bodies, full `git log --all`. The counter
-      exits 2 on an empty population rather than 0 — a rate over nothing is not
-      a reading. Sensitivity was proven before the null was trusted: it
-      separates a disagreeing line (overlap 0.111), a line whose slots restate
-      each other (0.667) and a two-slot line. No threshold was set in advance.
+      Done 2026-09-08 — `src/scripts/count_intent_disagreement.ts`, 13 tests;
+      reading published in
+      `agents/evidence/analysis/mandated-line-emission-2026-09-08.md`.
+      **18 labelled `Intent:` matches, 0 of them well-formed, rate undefined.**
+      Of the 18: 5 are the contract's own `parseDate` blockquote example carried
+      into a session's context, 13 are `Intent:` used as a prose heading with no
+      `·`-separated slots. Not one is the three-slot artifact emitted at a
+      decision point, so the lock's rate has no denominator. Surfaces: 4,917
+      local transcript files (3,739 JSON/JSONL, string leaves decoded), 400
+      merged PR bodies (0), full `git log --all` (0 — and not a normative
+      surface anyway). No threshold was set in advance.
+      **The first reading of this counter was wrong and the correction is
+      recorded rather than quietly replaced.** It said `population 0`, because
+      it imported the shipped `INTENT_RE`, which matches no markdown emphasis —
+      so `**Intent:**` was invisible to it. The paid Phase 3 run proved the gap
+      by emitting its one compliant line as `**Candidates:**` and being scored
+      absent. A counter must be wider than the gate it reports on, or the null
+      is self-confirming. Widening with an `i` flag then over-corrected to 172,
+      almost all lowercase `intent:` YAML keys; the pattern is
+      emphasis-tolerant and case-sensitive. The same blind spot in
+      `lint_mandated_lines`' own `INTENT_RE` and `AUTHORIZATION_RE` is recorded
+      as a finding, not fixed — that gate is adjacent to the blocked contract
+      and widening what it accepts is its own change.
       The finding the lock did not anticipate: the null is **not specific to the
-      intent line**. All five mandated lines read 0 emissions; the four
-      occurrences found anywhere are fenced quotations of the contract's own
-      examples. That is a carrier-reach defect, ruled out of scope for this
-      roadmap but **shipment-gating** by the same council (D3) — no efficacy
-      reading may authorise a sixth line while the first five reach nothing.
+      intent line**. Across all five labels there are six labelled matches and
+      at most one arguably well-formed line, and two `Authorization:` matches
+      paraphrase instead of quoting — the
+      documentation-is-not-authorization failure the contract denies outright.
+      That is a carrier-reach defect, ruled out of scope for this roadmap but
+      **shipment-gating** by the 2026-09-08 council (D3) — no efficacy reading
+      may authorise a sixth line while the first five reach nothing.
 - [ ] **2.1 Add the sixth mandated line.**
       <!-- blocked-by: sixth-line-shipping-blocked | asked: no — autonomous drain lane, no interactive user reachable this run -->
 

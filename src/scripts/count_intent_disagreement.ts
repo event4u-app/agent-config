@@ -68,7 +68,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { INTENT_RE, stripFences, unwrapLines } from './lint_mandated_lines.js';
+import { stripFences, unwrapLines } from './lint_mandated_lines.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -76,6 +76,40 @@ const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 
 /** The slot separator the contract specifies. */
 const SLOT_SEPARATOR = '·';
+
+/**
+ * `Intent: …` — EMPHASIS-TOLERANT, and deliberately NOT the shipped `INTENT_RE`.
+ *
+ * The first version of this counter imported `INTENT_RE` from
+ * `lint_mandated_lines.ts` on the reasoning that reusing the gate's own pattern
+ * makes the reading authoritative. That was backwards. The shipped pattern
+ * anchors the bare label at line start and matches no emphasis, so
+ * `**Intent:**` — the form an assistant actually writes for a labelled line —
+ * is invisible to it. Measured 2026-09-08: the paid treatment run emitted its
+ * one compliant candidates line as `**Candidates:**` and a pattern of the
+ * shipped shape scored it absent.
+ *
+ * A COUNTER MUST BE WIDER THAN THE GATE IT REPORTS ON. Sharing the gate's blind
+ * spot makes the null self-confirming: the gate cannot see the line, so the
+ * counter cannot see the line, so the counter reports that the line is not
+ * emitted — which is a fact about the regex, not about the tree.
+ *
+ * The shipped gap is REAL and is recorded as a finding rather than fixed here:
+ * `lint_mandated_lines.ts` is a shipped gate with its own 19 tests, sitting
+ * against the contract the 2026-09-07 council blocked from changing, so
+ * widening its discrimination is its own change with its own review.
+ *
+ * CASE-SENSITIVE, and that is the other half of the correction. Widening the
+ * pattern with an `i` flag took the count from 0 to 172, and essentially every
+ * new match was a lowercase `intent:` YAML key in a prompt-pattern or command
+ * config — a line anchor turned into a prose detector. The contract specifies
+ * the label `Intent:` capitalised, an emitted line carries it that way, and a
+ * lowercase `intent:` at line start is data. Widening in one direction and not
+ * checking the other would have replaced a false null with a false population,
+ * which is the worse error: it looks like evidence.
+ */
+export const INTENT_LABEL_RE =
+    /^[ \t]*(?:>[ \t]*)?(?:[-*+][ \t]+)?(?:\*\*|__|\*|_)?Intent(?:\*\*|__|\*|_)?(?:[ \t]*\([^)]*\))?(?:\*\*|__|\*|_)?:(?:\*\*|__|\*|_)?[ \t]*(.+)$/gm;
 
 /**
  * Words carrying no discriminating content.
@@ -170,8 +204,10 @@ export function classify(body: string, source: string): ClassifiedLine {
  */
 export function extract(text: string, source: string): ClassifiedLine[] {
     const prepared = unwrapLines(stripFences(text));
-    INTENT_RE.lastIndex = 0;
-    return [...prepared.matchAll(INTENT_RE)].map((m) => classify(m[1] ?? '', source));
+    INTENT_LABEL_RE.lastIndex = 0;
+    return [...prepared.matchAll(INTENT_LABEL_RE)].map((m) =>
+        classify((m[1] ?? '').replace(/(?:\*\*|__|\*|_)+[ \t]*$/, '').trim(), source),
+    );
 }
 
 /**
