@@ -17,7 +17,7 @@ relates:
     note: >
       Archived. Its 2026-09-07 host table is the input to Phase 1; this file turns
       that table's slot counts into a measured injection verdict per host.
-estate_growth_exempt: "Owner-instructed 2026-09-08, second charge: +1 concern_count for `chain-nudge`, the pre_tool_use carrier that delivers token-efficiency's one-command-per-Bash-call rule at tool-call time. It is charged HERE rather than against a new roadmap because this file is the one whose subject is exactly that — turning per-host slot counts into a measured injection verdict — and opening a roadmap to hold a claim would charge +1 active_roadmaps to avoid charging +1 concern_count. The concern is bound on the three platforms already carrying code-graph-nudge, never denies, and fires once per session, so it adds no refusal surface to any host. PRIOR CHARGE — Owner-instructed 2026-09-07. Charges +1 active roadmap against the origin/main `active_roadmaps` floor of 4 measured at 0918def55 — the floor is the base-ref measurement, not a stored number (ADR-243). Successor of road-to-delivery-for-every-host Phase 1; every step here can only make a non-Claude host cheaper while keeping its rule bodies reachable, and each step is gated on an observation the tree does not yet hold."
+estate_growth_exempt: "Owner-delegated drain run 2026-09-08, THIRD CHARGE: +2 open_blockers, for two entries this file owed and did not carry. Three of its steps (1.1, 2.1, 4.2) record themselves BLOCKED in their own bodies while the file had no `## Blockers` section at all, so the dashboard read 0 blockers for it and `check_estate_count` — where `open_blockers` is a RATCHETED metric — was ratcheting on an undercount. This is a CORRECTION of a miscount rather than new estate: the blockages already existed, in prose, in this file. The gate has no field for that distinction, so it takes the claim path like any growth. SECOND CHARGE — Owner-instructed 2026-09-08: +1 concern_count for `chain-nudge`, the pre_tool_use carrier that delivers token-efficiency's one-command-per-Bash-call rule at tool-call time. It is charged HERE rather than against a new roadmap because this file is the one whose subject is exactly that — turning per-host slot counts into a measured injection verdict — and opening a roadmap to hold a claim would charge +1 active_roadmaps to avoid charging +1 concern_count. The concern is bound on the three platforms already carrying code-graph-nudge, never denies, and fires once per session, so it adds no refusal surface to any host. PRIOR CHARGE — Owner-instructed 2026-09-07. Charges +1 active roadmap against the origin/main `active_roadmaps` floor of 4 measured at 0918def55 — the floor is the base-ref measurement, not a stored number (ADR-243). Successor of road-to-delivery-for-every-host Phase 1; every step here can only make a non-Claude host cheaper while keeping its rule bodies reachable, and each step is gated on an observation the tree does not yet hold."
 estate_offset_exempt: "Offsets nothing. It retires the L4 'no equivalent today' row at docs/enforcement-by-host.md:176, which is a sentence rather than a roadmap, so there is no archive move available to satisfy the one-in-one-out half in this change."
 ---
 
@@ -308,6 +308,60 @@ admission. Cowork is excluded by the existing measurement.
       the branches meet.
       The second verify limb has the same shape as 2.2's: the 1.4 gate is green on the
       predecessor branch and is not running on this one, because it is not here.
+      **ADR-262 IS CONTESTED — do not follow this number blindly. Found 2026-09-08.** Two
+      open PRs each ship a different ADR numbered 262, and neither is merged:
+      `drain/delivery-for-every-host` (PR #1923) has
+      `docs/decisions/ADR-262-delivery-default-for-claude-code.md`, which is the one this
+      step means, and `drain/abolish-carrier-gate` (PR #1926) has
+      `docs/decisions/ADR-262-carrier-status-deleted-no-repo-authored-human-gate.md`, a
+      decision on an unrelated subject. Both branches carry an identical ADR-260 and
+      ADR-261, so 262 was simply the first free number each lane took independently.
+      Consequence for this step specifically: if #1926 merges first, "the predecessor's ADR"
+      resolves by number to the carrier-status record, and a reader who trusted the number
+      would add this sentence to the wrong decision. Match on the **filename and the
+      subject**, never on the number, until one of the two is renumbered. This lane owns
+      neither PR and renumbered nothing.
+
+## Blockers
+
+> **Added 2026-09-08 by the owner-delegated drain run, as a correction rather than as news.**
+> Steps 1.1, 2.1 and 4.2 each recorded themselves BLOCKED in their own bodies, and this file
+> carried no `## Blockers` section, so `update_roadmap_progress` parsed zero blockers for it
+> and the dashboard printed `0`. `lint_roadmap_blockers` passed the file vacuously — it
+> validates the blockers it parses, so a file with none is clean by construction — and
+> `check_estate_count`, where `open_blockers` is a ratcheted metric, was ratcheting on the
+> undercount. Nothing below is a new blockage. The two entries are the two distinct root
+> causes the three steps actually have.
+
+### blocker: predecessor-delivery-for-every-host-unmerged
+
+- **Status:** open
+- **Owner:** maintainer
+- **Asked:** 2026-09-08, owner-delegated drain run.
+- **Blocks:** step 2.1 limb (b), step 4.2 second half, and step 1.1 second limb by way of its precondition. Steps 1.2, 1.3, 2.2, 3.1, 3.2 and 4.1 are done and unaffected.
+- **Recommendation:** none from this lane — it does not own PR #1923 and will not push to another lane branch. The three steps below stay open and honest until the branches meet.
+- **If you do nothing:** three steps stay blocked and the two verify limbs that name gates living on the predecessor branch (`check_host_tree_parity`, the 1.4 gate) keep asserting nothing here, as steps 2.2 and 4.2 already say in their own bodies.
+- **What to do:**
+  1. Resolve PR #1923 (`drain/delivery-for-every-host`), which GitHub reports `mergeable: CONFLICTING` / `mergeStateStatus: DIRTY` and which carries 4 of 6 of its own Phase 4; at `origin/main` that Phase is 0 of 6, so nothing it provides is available here yet.
+  2. Then add the missing sentence to `docs/decisions/ADR-262-delivery-default-for-claude-code.md` § Consequences, which closes step 4.2 with one edit — but read the ADR-262 collision note under step 4.2 first, because that filename may not survive the merge.
+  3. Or, if the predecessor is being abandoned rather than merged, say so, and this roadmap needs re-scoping rather than unblocking: `lean_projection.hosts` is the axis step 2.1 adds a host to, and it exists on no merged ref.
+- **Resolved when:** `road-to-delivery-for-every-host` Phase 4 is merged to `main`, so `lean_projection.hosts` exists on a merged ref and the predecessor ADR is a file this repository has.
+- **Review trigger:** re-read when PR #1923 closes in either direction, merged or abandoned. Its being abandoned is the case that changes this roadmap most and is the one nobody is watching for.
+
+### blocker: no-host-observed-true-injection
+
+- **Status:** open
+- **Owner:** maintainer
+- **Asked:** 2026-09-08, owner-delegated drain run.
+- **Blocks:** step 1.1 second limb, step 2.1 limb (a), and acceptance criteria depending on an admitted host.
+- **Recommendation:** none on the substance. What this lane can say is that the gap is real and is not an artefact of missing effort: `agents/evidence/analysis/host-injection-effect-2026-09.md` records 1 `observed-false` and 8 `unobserved` across nine hosts, and `admissibleUnderE3` returns true for nothing, which a test pins.
+- **If you do nothing:** Phase 2 has an empty input set forever, and the temptation the roadmap names in K1 stays live — writing `observed-true` off the byte-equivalence measurement, which is a different claim.
+- **What to do:**
+  1. Produce the transcript step 1.1 asks for: one Claude Code session with `delivery` live in `.agent-settings.yml`, a prompt that trips a labelled rule, and a transcript reference showing the next turn reflecting the delivered body. Then fill the waiting slot in `src/config/host-injection-effect.json`; the citation check in `src/scripts/_lib/injection_effect.ts` refuses a partial row.
+  2. Note the ordering trap: `delivery` going live in this repository is the predecessor Phase 4.2 flip, so this blocker cannot be discharged before the one above it, even though the two are otherwise independent.
+  3. Or decide that E3's bar is not reachable for any host this year and re-scope Phase 2 rather than leaving it waiting on an empty set — an owner decision, since E3 is an owner ruling.
+- **Resolved when:** at least one host carries an `observed-true` row in `src/config/host-injection-effect.json` with a full citation (host version, transcript pointer, date), and `report_host_injection_effect` regenerates the census with that row admissible.
+- **Review trigger:** re-read when the blocker above resolves, since `delivery` going live is its precondition; otherwise 2026-12-08, matching the expiry the host table already carries for this observation state.
 
 ## Kill register
 
