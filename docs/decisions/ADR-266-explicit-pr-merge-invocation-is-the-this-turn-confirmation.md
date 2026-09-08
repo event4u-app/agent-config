@@ -97,15 +97,49 @@ than asserted:
 
 | Requirement | Where it is met |
 |---|---|
-| target-bound | § 1's immutable `(PR number, head SHA)` manifest; a changed number is branch substitution and is refused |
+| target-bound | the `(PR number, head SHA)` pairs § 1 snapshots from the invocation, re-read against `observed_head` before § 9; a changed number is branch substitution and is refused |
 | head-SHA-bound | § 1 re-reads the live head before every merge and refuses when it is neither the snapshot head nor the head this run itself pushed |
-| tamper-resistant | ADR-254 removed the writable ledger the original concern was about; the authorization is now a turn in the conversation, which no run can rewrite |
+| tamper-resistant | **partially — the limit is named in § What this record does not claim.** ADR-254 removed the writable ledger the original concern was about, and the authorization is now a turn in the conversation that no run can rewrite; the manifest itself is model-held, so what binds the target is the pre-merge re-read rather than storage |
 | agent-unwritable | same reason, and stronger than the ledger was: there is no authorization store for an agent to write. The command introduces none (§ Rules) |
 | kill-switch-subject | § 8's six switches, armed during preparation and not only before a merge |
 
 The fourth row is why this is not the design ADR-239 declined. That record was
 written while an agent-writable ledger was the authorization; ADR-254 deleted
 it. The remaining authorization channel is the owner's own words.
+
+## What this record does not claim
+
+Three findings from an adversarial review of this record (owner-reported,
+2026-09-08) are dispositioned here rather than in a side artifact, because each
+of them qualifies a claim the table above makes. Their provenance is stated
+plainly: the review was not run by the session that wrote this record, and its
+prompt is not in this tree, so this section records the findings and their
+dispositions and claims nothing about the review's own independence.
+
+**1 — the control is model-carried; no mechanism enforces it.** Accepted as
+known, and § Consequences already says it in those words. The mechanical half
+is designed and deliberately not shipped here: forge auto-merge with branch
+protection as the gate, and a typed-grant check (`check_typed_op_grant`) that
+reads an object-bound grant instead of a prose sentence. Both belong to the
+mission-scoped authority work, named without a path because an accepted ADR
+outlives a roadmap ([`no-roadmap-references`](../../src/rules/no-roadmap-references.md)).
+
+**2 — a CI-side agent can merge, and this record does not reach it.** Real, and
+outside this record's scope in a way worth stating rather than implying. A
+workflow holding a write-scoped token — `pull_request_target` being the usual
+shape — merges through the API regardless of what any rule text says, and no
+prose in this tree sits in that path. The control there is forge-side: required
+reviews and branch protection on the base, which bind a token exactly as they
+bind a person. This record governs the agent-in-a-session path only, and a
+green CI is not evidence that the CI path is gated.
+
+**3 — "immutable" and "tamper-resistant" were overclaims; the table above is
+corrected.** The manifest lives in the run's own context, not in a file
+anything can verify, so nothing makes it immutable and no check would notice if
+it changed. What actually binds the target is the pre-merge re-read of the live
+head against `observed_head` (§ 1) — a check that fires, rather than a property
+that holds. The rows now say that, and § 1's heading no longer says "immutable"
+either.
 
 ## Not reopened
 
@@ -127,6 +161,16 @@ still in force:
   different shape: a roadmap drain's invocation names a roadmap, not a merge,
   so the "the confirmation is the invocation" argument does not transfer to it.
   Reopening it is a separate owner decision.
+
+  **That is a statement about this record's reach, never a finding that the
+  transfer is wrong** — and the distinction is load-bearing, because the broader
+  question is live. Whether a roadmap-scoped or mission-scoped grant may carry
+  merge authority, and whether a grant persists past the turn that gave it, is
+  owner-reserved and is settled by its own record. A later record deciding it in
+  the affirmative **supersedes this bullet** and does not have to argue against
+  it. Citing this record as evidence *against* mission-scoped merge authority
+  misreads a scope note as a verdict, and the answer is written here rather than
+  left to a session's memory.
 
 ## Consequences
 
