@@ -164,6 +164,37 @@ still in force:
    switch". `--no-merge` as the opt-*out* keeps that property: the quiet path is
    the one that does less.
 
+## Evidence
+
+Graded `E0` with `authority_basis: owner_intent`, and the two halves of this
+record rest on different things — which is the reason to write the section
+rather than let the grade stand alone.
+
+**The decision rests on ownership of purpose, and on nothing empirical.** No
+measurement says a merge command should merge; the owner does, and
+[`adr-layout`](../contracts/adr-layout.md) § `authority_basis` is explicit that
+a human product decision records `E0` rather than faking a grade. `discovery:
+incomplete` is the honest value: no evidence search was run, because none would
+settle the question.
+
+**The design-requirement claims are checkable, and were checked rather than
+asserted.** § Why this satisfies the Hard Floor maps each of ADR-239's five
+terms onto a numbered section of
+[`/pr:merge`](../../src/domains/git/pr/merge/command.md) — § 1 for target- and
+head-binding, § 8 for the kill-switch set, § Rules for the no-new-store
+property — and the agent-unwritable term onto the deletion recorded in
+[`ADR-254`](ADR-254-git-authorization-enforcement-removed.md), verified in the
+tree: no `block_unauthorized_git.ts` remains under `src/scripts/hooks/`, while
+`src/scripts/git_authorization_hook.ts` still writes the audit ledger. Any
+reader can re-run those five reads.
+
+**What is deliberately not claimed.** That the activation is safe *because*
+something enforces it. Nothing does, and § Consequences says so in those words.
+The control is this record plus the command's own manifest and switches, which
+is a model-carried control — the same honesty boundary
+[`security-sensitive-stop`](../../src/rules/security-sensitive-stop.md) states
+for its own obligation.
+
 ## References
 
 - [`ADR-237`](ADR-237-end-to-end-execution-authority.md) § 1, § 4 — the grant this amends, and the argument it reuses.
