@@ -113,6 +113,9 @@ Two wording points are load-bearing and are recorded rather than left implicit:
 - **187, not 189.** 12 declare a trigger key and 100 carry a corpus, of which 2
   do both, so 110 are in at least one set and **187** are in neither. The 189 in
   the earlier framing counted the two overlaps twice out of the remainder.
+  **WRONG — see Amendment 1 (2026-09-09). This bullet is kept as written because
+  an amendment that edits the error away leaves the next reader unable to tell a
+  correction from a decision. 189 is the figure that stands.**
 
 **Option A is rejected**, on two grounds the council named: there is no host
 contract to build against, and shipping a documented routing capability that
@@ -122,6 +125,47 @@ consumers would cite the claim as a bug.
 **Option D is not taken**, because its trigger condition did not fire: it was the
 honest closure only if the provenance hole could not be closed, and it was
 closed.
+
+## Amendment 1 (2026-09-09) — the `187` figure is an arithmetic error; 189 stands
+
+Scope, stated first so it cannot be misread: this amendment corrects **one
+number in a supporting bullet**. The Decision is untouched — Option B stands, in
+the "by observation" form, Option A stays rejected, Option D stays not-taken, and
+nothing this record locks is reopened.
+
+**What is wrong.** The bullet states the union correctly at 110 and then
+subtracts 112. With `total = 299`, `trigger key = 12`, `corpus = 100` and
+`both = 2`, the union is 12 + 100 − 2 = 110 and the remainder is
+299 − 110 = **189**. The bullet's diagnosis is also inverted: 189 is the
+inclusion–exclusion result, and 187 is what you get by removing the two
+overlapping skills a second time — from a remainder they were never in.
+
+**How it was established.** `populations()` in
+`src/scripts/report_skill_activation.ts:226-237` computes the remainder as
+`census.total - eitherOne.size`, where `eitherOne` is the set union. The
+implementation is the definition, so no reading of "human-named only" produces
+187 without changing that line. Run today, the report prints its own
+reconciliation: `12 + 100 - 2 + 189 = 299 of 299`. The committed record
+`agents/evidence/metrics/skill-activation-census.json` holds
+`human_named_only: 189`, and `check_skill_activation_claim` is green against
+`docs/CLAIMS.md` at that figure.
+
+**What this changes downstream.** The § Consequences bullet below says correcting
+the ledger text is tracked as work rather than performed here. That work is
+`road-to-the-14-22-0-disposition-residuals` step 1.3, and it lands the *prose*
+half only: the claim's sentence that both alternatives "stay OPEN rather than
+closed" is false after this record and is corrected, while the figure 189 is
+left exactly as it is. The census was deliberately **not** re-emitted — see that
+step for the measurement, in short: the only transcript store reachable from the
+executing worktree is a 2-session one, and re-emitting would have replaced a
+30-session zero-invocation reading with it.
+
+**Authority.** AI council 2026-09-09, 2 seats (anthropic, openai), both
+converging on this disposition: the defect is here rather than in the ledger, an
+arithmetic correction that touches no floor and no commitment is
+council-decidable under `decision-revisit-gate`, and the original bullet is
+preserved rather than rewritten. `reopen_policy: owner` on this record is
+unaffected — it governs reopening the decision, which this does not do.
 
 ## Consequences
 
