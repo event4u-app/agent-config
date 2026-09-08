@@ -1112,6 +1112,18 @@ continuity:
   #   on  = write the record at session end.
   auto_record: "off"
 
+  # Deterministic run-checkpoint production at session end
+  # (road-to-continuity-writer-activation Phase 1.4). When `on`, a session
+  # above the recycle threshold and inside a running roadmap contract leaves
+  # agents/runtime/state/checkpoints/<run>.json behind, so a killed session can
+  # be resumed by the watcher rather than by bookkeeping. Default ON: this is
+  # the behaviour the tree already had, and the switch exists so an operator can
+  # disable checkpointing WITHOUT disabling continuity writing or the recycle
+  # advisory.
+  #   on  = (default) write the checkpoint.
+  #   off = no checkpoint; every other session-end handler is unaffected.
+  run_checkpoints: "on"
+
 # --- Memory ---
 #
 # Engineering memory consolidation behaviour. Memory is entirely

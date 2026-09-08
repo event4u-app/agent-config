@@ -70,6 +70,32 @@ export function auto_record_enabled(root: string): boolean {
     return false;
 }
 
+/** Settings key that governs run-checkpoint production. Ships `on`. */
+export const RUN_CHECKPOINTS_KEY = 'continuity.run_checkpoints';
+
+/**
+ * Read `continuity.run_checkpoints` from the merged settings cascade.
+ *
+ * Fails OPEN, unlike its sibling above, and the asymmetry is the point: this
+ * switch governs behaviour the tree already had, so an unreadable cascade must
+ * leave it running. Its sibling arms something new, so an unreadable cascade
+ * must leave that disarmed. A single helper with one polarity would have been
+ * wrong for one of the two.
+ */
+export function run_checkpoints_enabled(root: string): boolean {
+    try {
+        const settings = load_agent_settings({ cwd: root });
+        const section = settings['continuity'];
+        if (section && typeof section === 'object' && !Array.isArray(section)) {
+            const v = (section as Record<string, unknown>)['run_checkpoints'];
+            if (v === 'off' || v === false) return false;
+        }
+    } catch {
+        // fail-open: an unreadable cascade never silently removes a recovery aid
+    }
+    return true;
+}
+
 /** Why no record was built, when none was. Always a stated reason. */
 export interface WriterDecision {
     record: Record<string, unknown> | null;

@@ -59,6 +59,7 @@ import { buildCheckpoint, writeCheckpoint } from '../_lib/run_checkpoint.js';
 import {
     auto_record_enabled,
     buildContinuityRecord,
+    run_checkpoints_enabled,
 } from '../_lib/continuity_writer.js';
 import { publishContinuityRecord } from '../_lib/continuity_slot.js';
 import { read_claimed_slug } from '../session_register_hook.js';
@@ -394,7 +395,7 @@ export function main(): number {
     // Best-effort throughout. A checkpoint is a recovery aid, and a
     // recovery aid that can fail a Stop is a liability.
     const checkpointRunId = payloadSessionId(payload, envelope);
-    if (shouldAdvise && checkpointRunId !== '') {
+    if (shouldAdvise && checkpointRunId !== '' && run_checkpoints_enabled(workspaceRoot)) {
         try {
             const slug = read_claimed_slug(workspaceRoot, checkpointRunId);
             if (slug !== null) {

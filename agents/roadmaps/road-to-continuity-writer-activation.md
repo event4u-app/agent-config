@@ -148,7 +148,7 @@ councils required puts them there on purpose:
       that returns a refusal before any write. Sensitivity: removing the handler
       call from the hook reds 4 of the 8 runtime fixtures, and neutralising the
       foreign-refusal reds the no-overwrite fixture.
-- [ ] **1.4 Independent kill switches, and a rollback note that distinguishes
+- [x] **1.4 Independent kill switches, and a rollback note that distinguishes
       the two kinds of undo.** The continuity writer, `run_checkpoint`
       production and the session-index restore each get their own switch, and
       disabling one restores pre-change behaviour for that handler only.
@@ -157,6 +157,30 @@ councils required puts them there on purpose:
       verify: a test disables each switch in turn and shows the other two still
       fire; the rollback note names the residual behaviour of each switch and
       the trip criteria that should cause an operator to throw one.
+      landed: `continuity.auto_record` (new, ships `off`),
+      `continuity.run_checkpoints` (new, ships `on` — that is the behaviour the
+      tree already had) and `memory.session_index` (pre-existing, ships `off`).
+      The two new readers have deliberately OPPOSITE failure polarity, and both
+      directions are pinned by fixtures: `auto_record_enabled` fails closed so an
+      unreadable cascade leaves the new producer disarmed, while
+      `run_checkpoints_enabled` fails open so the same cascade never silently
+      removes a recovery aid the tree already had. Rollback note in
+      `docs/contracts/continuity-rollback.md`, which leads with the distinction
+      the step asked for — disabling new behaviour is a switch, reverting a
+      deletion is a commit — and names, per switch, the residual behaviour and
+      the trip criteria, plus a closing section on what no switch can undo
+      (a retired command, concern, advisory, or an already-written record).
+      6 fixtures in `tests/hooks/continuity_switches.test.ts` over the real
+      dispatcher on both slots: an all-armed baseline, then one case per switch
+      asserting all THREE outcomes, so an entanglement fails rather than
+      passing. Sensitivity: forcing `auto_record` on reds 2, forcing
+      `run_checkpoints` on reds 1, inverting the checkpoint guard reds 5.
+      One claim was NARROWED on measurement rather than asserted: with
+      `memory.session_index` armed the fixture emits no `memory-index` block,
+      because a scratch workspace carries no curated corpus to index — measured
+      `false`, so the case now claims only what it observes (the stop handlers
+      are identical either way, and OFF injects nothing) and points at
+      `tests/scripts/session_memory_index.test.ts` for the injection half.
 
 ## Phase 2 — the split the concern ratchet currently forbids
 
