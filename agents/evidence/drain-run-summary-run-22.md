@@ -45,7 +45,9 @@ independent seats.
   "roadmaps_active_at_start": 10,
   "roadmaps_active_at_end": 8,
   "roadmaps_archived_this_run": 3,
-  "roadmaps_parked_this_run": 2
+  "roadmaps_parked_this_run": 1,
+  "roadmaps_parked_pending_merge": 1,
+  "_parked_note": "1 parked and merged (first-reference-analysis-observation, PR 1934); 1 parked on an unmerged branch (council-topology-evidence-followups, PR 1939). Counted separately rather than summed, because a park on an open PR has not happened yet."
 }
 ```
 
