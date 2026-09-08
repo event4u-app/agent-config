@@ -672,3 +672,235 @@ blocked-external, still held by the peer session whose checkout carries the
 uncommitted work above — the same session whose hook install produced the guard
 finding. The queue this run was given went six to zero; the one PR that remains
 arrived with an owner.
+# PR drain run — 2026-09-08
+
+The mandate named a six-PR queue and `#1499` as the first merge. **The
+recomputed queue held four open PRs and `#1499` was already merged**, as were
+the other five the mandate named. That correction is the first row-level fact
+below rather than a footnote.
+
+## Step 0 — the authorisation premise, and why it read false
+
+The mandate asserted `LEDGER_MAX_AGE_MS = 6h` in the effective bundle. Verified
+read-only: the constant **exists nowhere in the tree** — not in
+`dist/hooks/dispatch.js`, not under `src/`, and the file it lived in
+(`src/scripts/hooks/block_unauthorized_git.ts`) is gone. The single
+`30 * 60 * 1e3` literal in the bundle is `WALL_CLOCK_ARMS_MS`, an unrelated
+duration table.
+
+**The premise was true and became stale, which is worth stating precisely
+because the mandate is not wrong so much as dated.** The 2026-08-29 section of
+this same file records `dist/hooks/dispatch.js:26307` reading
+`6 * 60 * 60 * 1e3`. ADR-254 (2026-09-04) then removed the git-authorization
+enforcement outright, and its own Evidence table gives the reason: *"the clock
+had been hand-widened twice under this pressure"* — quoting sentences from this
+mandate verbatim. So the mechanism the mandate relies on was deleted BECAUSE of
+what runs under this mandate did to it.
+
+Reported as a single fact and the run stopped, per the mandate's own Step 0.
+The merges then proceeded on the operator's explicit re-authorisation instead,
+which is a different basis and is recorded as such. Nothing in the guard or the
+bundle was modified; verification was read-only throughout.
+
+## Rows
+
+| # | Queue pos | Sync conflicts → resolution class | CI iters | Disposition |
+|---|---|---|---|---|
+| 1493 | pre-run | — | — | merged before this run |
+| 1488 | pre-run | — | — | merged before this run |
+| 1480 | pre-run | — | — | merged before this run |
+| 1489 | pre-run | — | — | merged before this run |
+| 1482 | pre-run | — | — | merged before this run |
+| 1499 | pre-run | — | — | merged before this run — the mandate's "merge this first" target |
+| 1924 | 1 (green) | none | 1 | **merged `00f006c59`** |
+| 1921 | 2 (smallest) | `pack.yaml` → generated, regenerated · re-synced twice as main moved | 3 | **blocked-external** — 117 tok over a ceiling with no headroom; see § 1921 |
+| 1923 | 3 | `hook_manifest.{yaml,json}` → authored union + regenerated · `INDEX.md` + census → regenerated · ADR-262 renumbered to 263 | 4 | **blocked-external** — owner-reserved flip; see § 1923 |
+| 1920 | 4 | 5 paths → authored union · generated · append-only · re-synced as main moved | 6 | **merged `afd0f7b11`** (64/64 green) |
+| 1927, 1929, 1930 | not in queue | — | — | merged mid-run by other sessions; main moved under all three open PRs |
+| 1931, 1932 | not in queue | — | — | opened mid-run by other sessions. Deliberately NOT absorbed: the authorisation names *this* queue, and a queue that admits every arrival cannot satisfy the mandate's own 'the queue must always shrink' |
+
+## What a "CI iteration" fixed, per PR
+
+Every fix below is a root cause. **No threshold was loosened in this run.** One
+baseline moved and it moved DOWN (canonical terms 1006 → 1005, on the gate's own
+request). One baseline gained an entry that an accepted, already-merged ADR
+mandates, and the pre-commit hook's loosening warning is answered in that
+commit.
+
+### #1924 — merged
+
+Sync clean. One real defect: `src/install/claudePathsPlan.ts` gained
+`APPLIES_WHEN_CAP`, `trigger_terms` and `applies_when`, and the committed tsc
+output was never rebuilt, so `dist/install/` disagreed with its source.
+`install.mjs` was already fresh. CI 45/45 green, merged.
+
+### #1921 — blocked on 117 tokens
+
+Payload: the branch grew `notes-first-reasoning` by **+786 delivered tokens**
+against a grace ceiling `main` sits on exactly, so `Standing payload delta` and
+the budget gate's own test both red.
+
+Fixed at the source, the way the 2026-08-29 run fixed the identical collision
+and for the reason that run recorded: raising the ceiling is the
+config-weakening move this repository refuses. Both new Iron Law blocks stayed
+in the rule verbatim; the boundary list, the reversibility table, the ladder
+ceiling, the two reopen consequences, the Predictions/Decisions field detail and
+the rule's own pre-existing grounding moved verbatim into a new guideline,
+`notes-horizon-mechanics` under `docs/guidelines/agent-infra/` — named without a
+resolvable path on purpose, because it exists only on the unmerged branch and a
+path here would be a broken reference until #1921 lands. Also repaired: the
+branch's insertion had left the `## Uncertainty` bullet orphaned three sections
+away from the list it belongs to.
+
+**+786 → +178 tokens; 139,291 → 138,607 against 138,490.** Still 117 over, and
+the residual is irreducible here: the rule is +478 chars over `main` and the two
+new Iron Law blocks are ~480 chars, so the entire remaining growth IS them.
+`preservation-guard` forbids condensing them further and `main` has zero
+headroom. Everything else on the PR is green.
+
+### #1923 — blocked on an owner-reserved flip
+
+Six root causes fixed: the derived `per_turn_aggregate_bytes.ceiling_bytes`
+(the branch raised `user_prompt_submit` 4096 → 16384 under owner ruling E2 and
+never propagated the arithmetic); the routing-coverage seed (the branch authored
+seven routing-matrix fixtures, 94 → 101 of 105, and the file's own test asserts
+seed == live measurement in both directions); the gate-coverage honest
+denominator 306 → 322; one `behavioural` → `behavioral`, line-scoped; ADR-262's
+missing `## Evidence` section; the ADR census, twice.
+
+Payload measures **138,488 — two tokens under the ceiling**. It passes.
+
+What remains red is the `lean_projection.mode: delivery` flip and nothing else.
+`tests/scripts/_lib/lean_projection_shipped_default.test.ts` is a tripwire whose
+own header names the failure it guards against: *"A prepared change set one
+approval away is exactly the state where an autonomous run talks itself into
+landing it."* The authorising record, ADR-262, is added BY this PR, and
+`road-to-delivery-for-every-host` states plainly that *"the authorization for
+E1/E2 rests on the owner instruction of 2026-09-07 alone"* — not reconstructible
+from the tree. Left for the owner, deliberately.
+
+**An ADR number collision, found by a gate that only one tool catches.** The
+re-sync onto the moved main refused: two lanes had each taken ADR-262 as their
+first free number — this PR's `delivery-default-for-claude-code` and #1926's
+`carrier-status-deleted-no-repo-authored-human-gate`. #1926 merged first, so
+that record keeps 262 and this one moved to **ADR-263**, which is the direction
+`road-to-delivery-on-hook-hosts` had already anticipated in a CONTESTED block
+telling readers to match on filename and subject *"until one of the two is
+renumbered"*. Swept: frontmatter, title, the settings-template comment, both
+schema descriptions, the CLAIMS row, two roadmap references, and the
+regenerated INDEX, census and `proof.md`. `check_adr_citations` reads 203
+distinct references, 0 unresolved.
+
+`check_adr_frontmatter` does **not** fail on two records sharing a number —
+measured by the lane that found the collision: exit 0 with both files declaring
+`adr: 262`. Only `regenerate_index` refuses it, and only when someone runs it.
+That is why the collision reached a merge attempt at all.
+
+### #1920 — merged `afd0f7b11`, eight root causes
+
+Five conflicts resolved by class: `hook_manifest.yaml` and `concern_registry.ts`
+as the union of both intents (main adds `chain-nudge`, the branch renames
+`code-graph-nudge` → `code-graph-context`); `hook_manifest.json` and `pack.yaml`
+regenerated, never hand-merged; the guard-coverage evidence table as a sorted
+union.
+
+Then: five markdown headings in the `packed_binary_predicate` docstring became
+house dialect, wording preserved; `estate_growth_exempt` re-claimed for the
+open-blocker dimension (29 → 30) that the branch's own recorded blocker causes,
+whose fix its Recommendation field puts out of reach of an execution run; the
+install-friction baseline gained `web-tree-sitter@0.24.7`, mandated by ADR-259
+already on the trunk; a taxonomy rule for `src/vendor/grammars/` with the
+version bump the file's contract requires; the concern-admissions row the rename
+left missing.
+
+Payload: **+298 → −4 tokens**, by migrating the per-host staleness prose into
+`code-intelligence` § Staleness delivery and condensing three pre-existing
+reference passages. The depth budget went back to baseline by removing a
+sentence the branch had made FALSE — *"`classifyLookup` reads the flag, so
+turning it on is the whole change"*, said of a flag the same branch retired.
+
+And one contradiction reconciled rather than guessed: four surfaces disagreed
+about `hooks.code_graph.enabled`. `docs/MIGRATION.md`, edited by this branch,
+commits to *"the surfaces stay registered and disabled"*; the settings-classes
+row said REMOVED; the hook header says the premise is gone; the template still
+declares the key. All four are true at once if the key stays **registered and
+inert**, which is what the row now says — and that single change cleared all
+three `lint_settings_classes` findings and both derived counts.
+
+The last red was a witness test, `reach_doctor_readonly`, asserting that
+`reach:doctor` writes nothing into the worktree — it reported one modified path
+in CI and passed 6/6 locally on the same commit. Diagnosed before retrying
+rather than after: the signature is a witness test on state that parallel
+shards share, so the mandate's one authorised rerun applied. `gh run rerun
+--failed` came back with `failing: []` and the run settled **64/64 green**.
+Merged `afd0f7b11`.
+
+Iteration count is 6 because main moved three times underneath it — #1927,
+#1929 and #1930 landed mid-run from other sessions, and the second of those
+brought the ADR collision described under #1923.
+
+## Tooling findings
+
+`ci_settle` returns **exit 0 in all three outcomes** — SETTLED GREEN, SETTLED
+RED, and DID NOT SETTLE. A caller trusting the exit code reads red and
+no-verdict as green, and the push hook that recommends it documents the opposite
+contract. It also refuses windows over ~30 min with exit 144 while this repo's
+CI (64 checks, one macOS shard alone 13 min) regularly does not settle in 28.
+
+`sync_pr_branch` classifies `src/domains/meta/pack.yaml` as GENERATED but its
+`--auto-resolve-generated` path reported "regeneration failed" on a conflict set
+that was exactly that one file.
+
+`check_estate_count` reads its `estate_growth_exempt` claim from the **committed**
+diff, so an uncommitted claim is invisible and the first fix attempt fails for a
+reason the message does not state.
+
+`sync_pr_branch` also classifies `agents/evidence/analysis/adr-evidence-census-*`
+as AUTHORED — a human decision, read both sides — when `adr/evidence_census`
+writes it. Second such gap after `pack.yaml`, and both cost a wrong first move.
+
+`adr/regenerate_index` defaults to `--dir docs/adr/` while this repository keeps
+its records in `docs/decisions/`, so the bare invocation fails with
+`adr-dir not found` and `--help` prints the same error instead of usage.
+
+## The systemic finding
+
+The grace ceiling is, by its own documentation, *"set AT the measurement so
+growth beyond today reds immediately"* — so it always sits exactly on HEAD
+(138,490 = `main`'s own measurement). The same file says *"It may never move
+UP."* Together those two make any standing-rule growth in any PR red, and the
+only practised resolution is the raise the file forbids: twice recorded, on
+2026-09-02 and 2026-09-08.
+
+This is the third occurrence of the identical collision — the 2026-08-29 run,
+then #1921, then #1920. Two were closed by migrating prose out of the rule; the
+third cannot be, because what remains is an Iron Law. A policy whose only exits
+are a forbidden raise or deleting an obligation is not a budget, and three
+occurrences make it a finding about the policy rather than about three PRs.
+
+## Dropped edits
+
+None. Every passage moved out of a rule in this run is verbatim in the receiver
+named beside it, `check_condensation` is byte-exact on every push, and
+`check_references` resolves.
+
+## Queue accounting
+
+The queue went **four to two**: `#1924` (`00f006c59`) and `#1920`
+(`afd0f7b11`) merged; `#1921` and `#1923` end **blocked-external**, which is one
+of the three endings the mandate permits. Neither is twice-exhausted — both are
+fully diagnosed and each waits on exactly one owner decision:
+
+- **`#1921`** — 117 tokens over a ceiling that has no headroom by construction.
+  The rule is +478 chars over `main` and its two new Iron Law blocks are ~480,
+  so the residual IS them. Closing it needs the ceiling to move or a rule this
+  PR does not touch to shed the tokens.
+- **`#1923`** — the `lean_projection.mode: delivery` flip. Its guard test names
+  an autonomous run landing it as the failure it exists to prevent, and the
+  authorising ADR arrives inside the PR on an owner instruction the tree cannot
+  corroborate. Everything else on it is fixed and it is now renumbered and
+  synced, so an owner's yes is one merge away.
+
+`#1931` and `#1932` opened mid-run from other sessions and were left outside:
+the authorisation names *this* queue, and admitting every arrival contradicts
+the mandate's own shrink requirement.
