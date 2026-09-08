@@ -24,11 +24,8 @@ obligation_frequency: "per-turn"
 # Notes-First Reasoning
 
 Part of the Reasoning Discipline Protocol. Engage per
-[`rdp-gate`](../contexts/execution/rdp-gate.md) (settings + task-signal + host
-self-assessment) — skip on trivial tasks; apply lightly on a strong-reasoning
-host. The notes file is grounded in the documented cross-run lessons memory
-(consolidated via [`memory-consolidation`](../skills/memory-consolidation/SKILL.md));
-the in-task sections below are a local derivation for within-task scope.
+[`rdp-gate`](../contexts/execution/rdp-gate.md) — skip on trivial tasks, apply
+lightly on a strong-reasoning host.
 
 ## The Iron Law
 
@@ -38,36 +35,49 @@ NOTES FILE — NEVER ECHOED INTO THE RESPONSE.
 THE RESPONSE CARRIES CONCLUSIONS + EVIDENCE ONLY.
 ```
 
-Reasoning dumped into the user-facing answer is both noise and a
-`reasoning_extraction` refusal risk (see `rdp-gate`). Keep it in the notes file.
-This is not "show your work in the reply" — it is the opposite.
+This is not "show your work in the reply" — it is the opposite. Why, and what
+grounds the notes file:
+[`notes-horizon-mechanics`](../docs/guidelines/agent-infra/notes-horizon-mechanics.md).
 
 ## Notes file structure (the file, not the response)
 
-Use the sections that apply; the structure carries the enumeration, so there is
-no "write N hypotheses" instruction — record what the work actually surfaced.
+Use the sections that apply — record what the work actually surfaced.
 
 - `## In-Task Hypothesis Log` — competing explanations under consideration.
 - `## Killed beliefs` — each discarded hypothesis + the evidence that killed it.
-- `## Predictions` — prediction · confidence · result · lesson (the calibration
-  loop: hypothesis → prediction → reality → calibration).
-- `## Decisions` — decision · alternatives · reason · revisit-if. Tactical,
-  in-task decisions stay here; **escalate to
-  [`decision-record`](../skills/decision-record/SKILL.md)/ADR** when the decision
-  is cross-task or architectural (litmus: would a dev on a different component
-  next month need this context?).
+- `## Predictions` — **chosen form** · prediction · confidence · result · lesson.
+- `## Decisions` — decision · alternatives · reason · revisit-if ·
+  **next-commitment**. Tactical decisions stay here; **escalate to
+  [`decision-record`](../skills/decision-record/SKILL.md)/ADR** when cross-task
+  or architectural.
 - `## Uncertainty` — per-dimension score (e.g. architecture/implementation/
   requirements: high/medium/low); feeds the adaptive-effort decision.
 
+### The horizon — where `next-commitment` ends
+
+```
+A CHOICE AUTHORISES WORK UP TO THE NEXT EVIDENCE-PRODUCING BOUNDARY.
+NAME THE BOUNDARY FROM THE LIST. NEVER "THE WORK THE EVIDENCE SUPPORTS" —
+THAT IS A JUDGEMENT, AND A JUDGEMENT IS NOT A HORIZON.
+```
+
+### Reopening — once, on contradiction, never on a schedule
+
+```
+AN OBSERVATION THAT CONTRADICTS THE PREDICTION REOPENS THE CHOICE BEFORE THE
+NEXT STEP — FROM THE CANDIDATE LIST THAT ALREADY EXISTS, NEVER A FRESH
+ENUMERATION. ONE REOPEN PER CANDIDATE. THE SECOND CONTRADICTION HANDS OVER TO
+THE RETRY-BUDGET LADDER RATHER THAN REOPENING AGAIN.
+```
+
 ## What stays out of notes
 
-User-attribute facts, transient TODOs, and durable cross-run lessons — those go
-to the memory system (`memory-consolidation`), not the in-task notes.
+User-attribute facts, transient TODOs, and durable cross-run lessons go to the
+memory system (`memory-consolidation`), not the in-task notes.
 
 ## See also
 
-- [`rdp-gate`](../contexts/execution/rdp-gate.md) — the table-free engagement gate.
-- [`memory-consolidation`](../skills/memory-consolidation/SKILL.md) — promotes
-  durable lessons across runs.
-- [`verify-before-complete`](verify-before-complete.md) — the evidence the
-  response carries comes from real tool results.
+[`notes-horizon-mechanics`](../docs/guidelines/agent-infra/notes-horizon-mechanics.md)
+— every mechanic this rule points at. Also
+[`rdp-gate`](../contexts/execution/rdp-gate.md) and
+[`verify-before-complete`](verify-before-complete.md).
