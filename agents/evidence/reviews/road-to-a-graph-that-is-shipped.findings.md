@@ -1,12 +1,12 @@
 # Findings: road-to-a-graph-that-is-shipped
-<!-- completion-review: v1 | reviewed: 2026-09-08 | scope: a88118710653489dd56769b913f2c665c697dd0035a8884f703fa3e5a93a6cd4 | diff: 7c7d2f76d3b9a1d4edb4a59863ebd735da1c5ce7 | reviewer: r2-fresh-subagent-road-to-a-graph-that-is-shipped | prompt_hash: f54fd9713fd056d48488083e492026245e1387a3b7e61e6fe8587cf9a39373ef -->
+<!-- completion-review: v1 | reviewed: 2026-09-08 | scope: f6b8411c50bfdd289bcafcc60a920ee774eb36409c9bcd4671e37b3fed37e5a1 | diff: f639efbe945702ec9520e7ecdbe3827e917618ff | reviewer: r2-fresh-subagent-road-to-a-graph-that-is-shipped | prompt_hash: f54fd9713fd056d48488083e492026245e1387a3b7e61e6fe8587cf9a39373ef -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-road-to-a-graph-that-is-shipped"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-09-08 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 7c7d2f76d3b9a1d4edb4a59863ebd735da1c5ce7
-  scope_hash: a88118710653489dd56769b913f2c665c697dd0035a8884f703fa3e5a93a6cd4
+  diff_sha: f639efbe945702ec9520e7ecdbe3827e917618ff
+  scope_hash: f6b8411c50bfdd289bcafcc60a920ee774eb36409c9bcd4671e37b3fed37e5a1
   roadmap: agents/roadmaps/archive/road-to-a-graph-that-is-shipped.md
   roadmap_hash: d7dabce5c428797236278657bcf7882594e5162307cbb689ac47cc0b0e7d7c1a
   ac_hash: fa5c74717041aac251b69a4b976622477de8eb631315a8f5b97c7965c1c8218f
