@@ -35,25 +35,21 @@ NOTES FILE — NEVER ECHOED INTO THE RESPONSE.
 THE RESPONSE CARRIES CONCLUSIONS + EVIDENCE ONLY.
 ```
 
-This is not "show your work in the reply" — it is the opposite. Why (noise plus
-a `reasoning_extraction` refusal risk), and what grounds the notes file:
+This is not "show your work in the reply" — it is the opposite. Why, and what
+grounds the notes file:
 [`notes-horizon-mechanics`](../docs/guidelines/agent-infra/notes-horizon-mechanics.md).
 
 ## Notes file structure (the file, not the response)
 
-Use the sections that apply; the structure carries the enumeration, so there is
-no "write N hypotheses" instruction — record what the work actually surfaced.
+Use the sections that apply — record what the work actually surfaced.
 
 - `## In-Task Hypothesis Log` — competing explanations under consideration.
 - `## Killed beliefs` — each discarded hypothesis + the evidence that killed it.
 - `## Predictions` — **chosen form** · prediction · confidence · result · lesson.
-  Form first: a prediction with no subject cannot be contradicted, so nothing
-  reopens.
 - `## Decisions` — decision · alternatives · reason · revisit-if ·
   **next-commitment**. Tactical decisions stay here; **escalate to
   [`decision-record`](../skills/decision-record/SKILL.md)/ADR** when cross-task
-  or architectural. `next-commitment` is the boundary this choice authorises
-  work up to — not the plan for it.
+  or architectural.
 - `## Uncertainty` — per-dimension score (e.g. architecture/implementation/
   requirements: high/medium/low); feeds the adaptive-effort decision.
 
@@ -74,8 +70,6 @@ ENUMERATION. ONE REOPEN PER CANDIDATE. THE SECOND CONTRADICTION HANDS OVER TO
 THE RETRY-BUDGET LADDER RATHER THAN REOPENING AGAIN.
 ```
 
-A reopen driven by ritual rather than by contradicting evidence is ceremony.
-
 ## What stays out of notes
 
 User-attribute facts, transient TODOs, and durable cross-run lessons go to the
@@ -84,7 +78,6 @@ memory system (`memory-consolidation`), not the in-task notes.
 ## See also
 
 [`notes-horizon-mechanics`](../docs/guidelines/agent-infra/notes-horizon-mechanics.md)
-— boundary list, reversibility table, ladder ceiling, the two reopen
-consequences, and the field detail this rule points at. Also
+— every mechanic this rule points at. Also
 [`rdp-gate`](../contexts/execution/rdp-gate.md) and
 [`verify-before-complete`](verify-before-complete.md).

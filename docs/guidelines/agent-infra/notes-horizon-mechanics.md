@@ -22,6 +22,11 @@ gate itself reads settings + task-signal + host self-assessment.
 
 ### The two section fields, in full
 
+The rule lists the sections and no count. That is deliberate: the structure
+carries the enumeration, so there is no "write N hypotheses" instruction to
+follow — a run records what the work actually surfaced, and an empty section is
+a fact about the work rather than a gap in the notes.
+
 `## Predictions` carries **chosen form** · prediction · confidence · result ·
 lesson — the calibration loop: hypothesis → prediction → reality →
 calibration. The form is named first because a prediction with no subject
