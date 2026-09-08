@@ -388,6 +388,60 @@ admission. Cowork is excluded by the existing measurement.
 - **Resolved when:** at least one host carries an `observed-true` row in `src/config/host-injection-effect.json` with a full citation (host version, transcript pointer, date), and `report_host_injection_effect` regenerates the census with that row admissible.
 - **Review trigger:** re-read when the blocker above resolves, since `delivery` going live is its precondition; otherwise 2026-12-08, matching the expiry the host table already carries for this observation state.
 
+## Disposition, 2026-09-08 — K6 is honoured; this roadmap stays active
+
+An autonomous drain run instructed to carry every roadmap to completion reached
+this file, found both blockers undischargeable by any action available to it, and
+put the disposition to an AI council under the maintainer's written delegation.
+The council was **`⚠️ DEGRADED`, 1 of 2 seats** — the anthropic seat returned
+`exit_1` and did not answer — so what follows is a considered single-seat opinion,
+not convergence, and is recorded at that strength.
+
+**Verdict: Q2-a — honour K6.** The affected lines stay `[ ]`, both blockers stay
+open and accurate, and this roadmap does **not** move to `later/` and is **not**
+re-scoped so it can close. The active directory does not empty, and that is the
+correct outcome rather than a missed step.
+
+Three things the seat said that this file did not already say:
+
+1. **"PR #1923 merged" is an insufficient wake condition.** The real ordering is
+   `compatible predecessor merged` → `lean_projection.hosts` available →
+   `delivery` enabled → qualifying live session → admissible observation →
+   host-dependent acceptance criteria evaluated. A merge does not prove the merged
+   revision carries the expected schema, that Phase 4.2 is live, or that any
+   qualifying observation has occurred.
+2. **Q2-c (re-scope so the roadmap can close) is rejected outright.** Rewriting
+   the acceptance criteria to exclude the missing implementation and evidence
+   *"would convert an unfinished delivery obligation into a completed
+   documentation exercise. That is precisely the false closure K6 guards
+   against."*
+3. **A fourth revisit condition, which this file was missing.** If repeated
+   qualifying sessions produce no `observed-true` result, that calls the
+   acceptance premise itself into question — requiring an `observed-true` outcome
+   makes closure depend on obtaining a *desired empirical result* rather than on
+   conducting a valid observation. The roadmap must be able to distinguish
+   "feature assumption falsified" from "evidence still missing". It cannot today,
+   and that is now on the record rather than latent.
+
+**What a kill-register entry is worth, answered generally because the shape
+recurs:** it is a **binding local decision constraint, defeasible through explicit
+supersession** — more than advice, since ordinary roadmap execution must obey it;
+less than absolute, since a council holding delegated disposition authority can
+overrule it. But *authority alone is not a rationale*. A valid override must
+record the original failure mode, the changed or disproven premise, the
+replacement safeguard, rollback criteria, and a falsifier. Here no premise behind
+K6 has changed, so overruling it merely to empty a directory would be arbitrary.
+
+**Falsifier for this disposition:** an equivalent, stable implementation of
+`lean_projection.hosts` already exists independently of PR #1923, or repository
+history shows K6 addressed a former dependency shape that no longer exists.
+
+**Live state at the time of writing, read rather than recalled:** PR #1923
+(`drain/delivery-for-every-host`) is `OPEN`, `mergeable: CONFLICTING`,
+`mergeStateStatus: DIRTY`, last updated `2026-09-08T06:51:58Z`. Its mergeability
+has been observed to flip within the same run, so read it live rather than from
+this line.
+
 ## Kill register
 
 - **K1** Admitting a host from documentation or by analogy to Claude.
