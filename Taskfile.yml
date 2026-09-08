@@ -213,6 +213,11 @@ tasks:
       # walk down only, and a new active roadmap pays for itself in the same
       # change (road-to-estate-drawdown T2 + T3).
       - task: check-estate-count
+      # The CONTINUITY estate, which check-estate-count does not read: the
+      # five end-state numbers of road-to-one-continuity-record, derived from a
+      # behaviourally-discovered inventory rather than from the word
+      # "continuity" (road-to-continuity-retirement-sequencing 4.2 / AC-8).
+      - task: check-continuity-surface
       - task: lint-tickets
       - task: lint-commit-subjects
       - task: lint-discovery-vocab

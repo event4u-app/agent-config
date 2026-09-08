@@ -14,6 +14,11 @@
  *     separate file.
  *   - Staleness: a `Generated:` stamp older than 48 h (or unparseable)
  *     discards without injecting.
+ *   - Source-gated (road-to-continuity-retirement-sequencing 3.3): a
+ *     `session_start` carries a `source`, and `resume` / `fork` / anything
+ *     unrecognised inject NOTHING. The gate runs before either consumer, so a
+ *     suppressed source never destroys the file it declined to read — see
+ *     {@link sourceGate}.
  *   - Never blocks: exit 0 on every path; failures are silent (stderr note).
  *   - `AGENT_CONFIG_REPLAY=1` → no-op (replay fixtures never mutate state).
  *
@@ -281,6 +286,67 @@ export function consume_recycle_envelope(
     );
 }
 
+/**
+ * What a `session_start` `source` means for the continuity record
+ * (road-to-continuity-retirement-sequencing 3.3).
+ *
+ * A `session_start` is not one event. The host says WHY the session started,
+ * and reading the wrong record for the wrong reason is how a continuation
+ * acquires a stranger's state — the failure this step exists to prevent.
+ *
+ *   - `startup` (and an ABSENT source) — a fresh session. Inject: this is the
+ *     ordinary case and the one every existing fixture exercises.
+ *   - `clear` — the operator wrote the record and cleared. Inject. This is the
+ *     recycle path the record was built for, and suppressing it would defeat
+ *     the mechanism. Note that hot-context DISCARDS on the same source, and the
+ *     two are right for opposite reasons: hot-context is a cache of a session
+ *     that was deliberately thrown away, while the record is the thing the
+ *     operator wrote in order to survive throwing it away.
+ *   - `compact` — the SAME session continuing past a compaction. Inject: the
+ *     resolver keys on session id, so what comes back is this session's own
+ *     record rather than a predecessor's. That identity is the reason this is
+ *     an inject rather than a suppression.
+ *   - `resume` / `fork` — the host has already restored the conversation.
+ *     Inject NOTHING. On `resume` an injection would duplicate context the host
+ *     just replayed; on `fork` it is worse than duplication, because the fork
+ *     would consume a record belonging to a session that is still alive.
+ *   - anything else — inject nothing. An unrecognised source is a host this
+ *     code has not been taught, and guessing is the failure mode, not the
+ *     conservative choice.
+ *
+ * SUPPRESSION MUST NOT CONSUME. The gate runs BEFORE
+ * {@link consume_recycle_envelope}, never inside it, because that function
+ * moves the file aside on every outcome except `absent`. Calling it and then
+ * discarding the result would destroy the record without anyone reading it —
+ * the operator's recycle would silently evaporate on a `resume`.
+ */
+export const INJECTING_SOURCES: ReadonlySet<string> = new Set(['', 'startup', 'clear', 'compact']);
+
+export interface SourceGate {
+    inject: boolean;
+    reason: string;
+}
+
+export function sourceGate(source: string): SourceGate {
+    const s = source.trim();
+    if (INJECTING_SOURCES.has(s)) {
+        return { inject: true, reason: `source=${s === '' ? 'absent' : s}` };
+    }
+    if (s === 'resume' || s === 'fork') {
+        return {
+            inject: false,
+            reason: `source=${s} — the host already restored this conversation; injecting would ` +
+                (s === 'fork'
+                    ? "consume a record belonging to a session that is still running"
+                    : 'duplicate context the host just replayed'),
+        };
+    }
+    return {
+        inject: false,
+        reason: `source=${s} is not a source this reader knows — injecting nothing rather than guessing`,
+    };
+}
+
 // ---------------------------------------------------------------------
 // CLI — dispatcher concern entry point
 // ---------------------------------------------------------------------
@@ -307,6 +373,19 @@ export function main(): number {
             return 0; // replay fixtures: read-only, no state mutation
         }
         if (event === 'session_start') {
+            const payload =
+                envelope.payload && typeof envelope.payload === 'object' && !Array.isArray(envelope.payload)
+                    ? (envelope.payload as Record<string, unknown>)
+                    : {};
+            // 3.3. The gate is evaluated FIRST and short-circuits, because both
+            // consumers below move their file aside on every non-absent
+            // outcome. Consuming and then dropping the result would delete the
+            // record a suppressed source was supposed to leave alone.
+            const gate = sourceGate(String(payload['source'] ?? envelope['source'] ?? ''));
+            if (!gate.inject) {
+                process.stderr.write(`handoff-context-hook: no injection (${gate.reason})\n`);
+                return 0;
+            }
             const handoff = consume_handoff_context(root);
             const recycle = consume_recycle_envelope(
                 root,
