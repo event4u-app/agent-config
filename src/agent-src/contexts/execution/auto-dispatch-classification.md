@@ -233,12 +233,10 @@ NEVER A SILENTLY DEGRADED ANSWER. NO LLM CLASSIFIER FALLBACK (CUT C3).
 behind the `code-graph-retrieval-null` claim (`docs/CLAIMS.md`) measured
 native-graph recall 0.365 vs grep 0.797 on graph-shaped questions — an
 indexing gap that kept `code_graph.enabled` false BY DEFAULT until that flag
- was retired (2026-09-07); the accelerant is now reached only when a caller
- passes a usable graph, which no production caller yet does — not
-permanently: the 2026-08-15 withdrawal retracted that, and the figures predate
-the 2026-08-22 extractor repair. The accelerant clause above is that bound's
-escape hatch; `classifyLookup` reads the flag, so turning it on is the whole
-change.
+was retired (2026-09-07) — not permanently: the 2026-08-15 withdrawal retracted
+that, and the figures predate the 2026-08-22 extractor repair. The accelerant
+clause above is that bound's escape hatch, reached only when a caller passes a
+usable graph, which no production caller yet does.
 
 **Escalation, not degradation:** a primitive that returns nothing (index miss,
 pattern too ambiguous, report script absent) — **or an unusable result**

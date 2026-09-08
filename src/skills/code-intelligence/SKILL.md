@@ -222,5 +222,5 @@ reach for.
   code when load-bearing.
 - `agent-config code-graph` — the CLI surface over the engine (build / query / detect / affected).
 - [`discovery_graph`](../../scripts/discovery_graph.ts) — this suite's OWN
-  artefact relation-graph (`affected`/`explain`). The external code-graph is the
+  artifact relation-graph (`affected`/`explain`). The external code-graph is the
   *source-code* analogue; keep the two apart when answering.

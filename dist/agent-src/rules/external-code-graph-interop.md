@@ -81,6 +81,6 @@ Query-first is an **ordering** heuristic, never a claim the index answers better
 
 - [`code-intelligence`](../skills/code-intelligence/SKILL.md) — the executable
   routing skill, the measured figures, staleness delivery per host, and the
-  pointer to this suite's OWN artefact relation-graph (`discovery_graph`).
+  pointer to this suite's OWN artifact relation-graph (`discovery_graph`).
 - [`think-before-action`](think-before-action.md) — analyze with the best
   available tool before grepping blind.
