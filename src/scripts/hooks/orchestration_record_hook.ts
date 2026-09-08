@@ -16,7 +16,7 @@
  * Fires only on an `Agent` / `Task` tool-use completion (the two names this
  * repo has observed for the subagent-dispatch tool across hosts/versions).
  * Every other tool call is a silent no-op — same tool-filter discipline as
- * `code-graph-nudge` (`tools: [Agent, Task]` in the manifest entry keeps the
+ * `code-graph-context` (`tools: [Agent, Task]` in the manifest entry keeps the
  * dispatcher from paying this concern's cost on unrelated calls).
  *
  * Sync vs async (road-to-orchestrator-first-execution measured: 326 of 370
@@ -89,7 +89,7 @@ export const DISPATCH_TOOL_NAMES: ReadonlySet<string> = new Set(['Agent', 'Task'
  * Unwrap the dispatcher envelope (`{schema_version, platform, event,
  * payload}`) down to the platform-native payload. Falls back to the
  * top-level object for direct/legacy invocation (same shape both
- * `pr_url_reminder_hook.ts` and `code_graph_nudge_hook.ts` handle).
+ * `pr_url_reminder_hook.ts` and `code_graph_context_hook.ts` handle).
  */
 export function unwrapPayload(envelope: JsonObject): JsonObject {
     const inner = envelope['payload'];

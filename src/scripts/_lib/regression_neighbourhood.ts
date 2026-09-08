@@ -18,7 +18,7 @@
  * of them resolves here, so the substitution is STATED rather than hidden.
  *
  *   · `agent-config code-graph` — the native code-graph engine (ADR-124). It
- *     ships `hooks.code_graph.enabled: false`
+ *     shipped `hooks.code_graph.enabled: false` (a flag retired 2026-09-07)
  *     (`src/config/agent-settings.template.yml:1373-1374`), and
  *     `agent-config code-graph detect` in this checkout answers
  *     `no code-graph source detected`. There is no index to select against.

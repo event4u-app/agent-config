@@ -9,22 +9,114 @@ import * as fs from 'node:fs';
 
 import { LexicalIndex, tokenize } from '../_lib/lexical_index.js';
 import { sanitizeLabel } from './sanitize.js';
-import { emitSqliteTwin, loadSerializedFromTwin } from './sqlite_store.js';
-import type { CodeEdge, CodeGraph } from './types.js';
+import {
+    emitSqliteTwin,
+    type GraphIndex,
+    INDEXED_READ_MIN_EDGES,
+    loadSerializedFromTwin,
+    openGraphIndex,
+} from './sqlite_store.js';
+import type { CodeEdge, CodeGraph, CodeNode } from './types.js';
 import { validateGraph } from './validate.js';
 
 const APPROX_CHARS_PER_TOKEN = 4;
 
+/**
+ * The node/adjacency reads every verb performs.
+ *
+ * Declared as interfaces rather than `Map` so one set of verbs runs over two
+ * stores. `Map` satisfies both structurally, so the in-memory path is unchanged
+ * and needed no edits; the SQLite path supplies objects with the same two
+ * methods that hit an index instead of a heap.
+ */
+export interface NodeLookup {
+    get(id: string): CodeNode | undefined;
+    has(id: string): boolean;
+}
+export interface AdjacencyLookup {
+    get(id: string): CodeEdge[] | undefined;
+}
+
 export interface LoadedGraph {
-    graph: CodeGraph;
+    /**
+     * The whole deserialized graph — `null` on the indexed path, where not
+     * materializing it is the entire point. Nothing in this module reads it;
+     * the two callers that used to (`resolveSeedsTiered`, the CLI's
+     * changed-file seeds) go through `idsByLabel` / `idsInFiles` instead, which
+     * answer the same questions from an index.
+     */
+    graph: CodeGraph | null;
     source: string; // attribution path
-    byId: Map<string, CodeGraph['nodes'][number]>;
-    out: Map<string, CodeEdge[]>;
-    in: Map<string, CodeEdge[]>;
-    lex: LexicalIndex;
+    byId: NodeLookup;
+    out: AdjacencyLookup;
+    in: AdjacencyLookup;
+    /** Exact-label resolution. */
+    idsByLabel(label: string, limit: number): string[];
+    /** Non-file nodes declared in any of `files`. */
+    idsInFiles(files: readonly string[]): string[];
+    /**
+     * BM25 fallback corpus, LAZY.
+     *
+     * A function rather than a field because on the indexed path building it
+     * reads every node — the one whole-table scan left — and a seed that
+     * resolves by exact id or exact label must never pay for it. On the
+     * in-memory path the corpus is already in hand and this just returns it.
+     */
+    lex(): LexicalIndex;
+    /** Release any handle the store holds. No-op for the in-memory path. */
+    close(): void;
+}
+
+/**
+ * A `LoadedGraph` backed by the SQLite index — no `JSON.parse`, no whole-graph
+ * `Map`.
+ *
+ * The adjacency lookups are per-call SQL against `edges_source` / `edges_target`
+ * rather than a materialized map, which is the difference the threshold buys: a
+ * 2-hop `affected` touches the rows for its frontier, not every edge in the
+ * repository. Node reads are memoized per handle because a BFS asks for the
+ * same label repeatedly while rendering edge lines, and that repetition is
+ * cheap to remove and expensive to leave.
+ */
+function indexBackedGraph(index: GraphIndex, source: string): LoadedGraph {
+    const nodeCache = new Map<string, CodeNode | undefined>();
+    const readNode = (id: string): CodeNode | undefined => {
+        if (nodeCache.has(id)) return nodeCache.get(id);
+        const n = index.getNode(id);
+        nodeCache.set(id, n);
+        return n;
+    };
+    let lexical: LexicalIndex | null = null;
+    return {
+        graph: null,
+        source,
+        byId: { get: readNode, has: (id) => readNode(id) !== undefined },
+        out: { get: (id) => index.edgesFrom(id) },
+        in: { get: (id) => index.edgesTo(id) },
+        idsByLabel: (labelText, limit) => index.idsByLabel(labelText, limit),
+        idsInFiles: (files) => index.idsInFiles(files),
+        lex: () => {
+            lexical ??= new LexicalIndex(index.lexicalCorpus());
+            return lexical;
+        },
+        close: () => index.close(),
+    };
 }
 
 export function loadGraph(graphPath: string, source = graphPath): LoadedGraph {
+    // Above the threshold, read through the INDEX: the twin's rows answer
+    // per-node and per-edge questions directly, so neither `JSON.parse` nor the
+    // two whole-graph `Map`s below ever run. This is the D6 repair — the twin
+    // used to be preferred and still returned the entire serialization, which
+    // made it a cheaper blob transport rather than an index.
+    const index = openGraphIndex(graphPath);
+    if (index) {
+        if (index.edgeCount >= INDEXED_READ_MIN_EDGES) return indexBackedGraph(index, source);
+        // Small graph: the in-memory path is cheaper. Release the handle rather
+        // than leaking a database for the life of the process.
+        index.close();
+    }
+
     // Prefer the derived SQLite twin (ADR-129): checksum/stat-verified against
     // the canonical JSON, byte-identical content, ~1/90 the load cost at
     // consumer scale. Fallback = parse the JSON — and best-effort re-emit the
@@ -51,7 +143,23 @@ export function loadGraph(graphPath: string, source = graphPath): LoadedGraph {
         add(inM, e.target, e);
     }
     const lex = new LexicalIndex(graph.nodes.map((n) => ({ id: n.id, text: `${n.label} ${n.id}` })));
-    return { graph, source, byId, out: outM, in: inM, lex };
+    return {
+        graph,
+        source,
+        byId,
+        out: outM,
+        in: inM,
+        idsByLabel: (labelText, limit) =>
+            graph.nodes.filter((n) => n.label === labelText).slice(0, limit).map((n) => n.id),
+        idsInFiles: (files) => {
+            const set = new Set(files);
+            return graph.nodes.filter((n) => set.has(n.source_file) && n.kind !== 'file').map((n) => n.id);
+        },
+        lex: () => lex,
+        close: () => {
+            /* nothing held */
+        },
+    };
 }
 
 interface SeedResolution {
@@ -64,9 +172,11 @@ interface SeedResolution {
 /** Resolve a free-text seed to node ids: exact id → exact label → BM25. */
 function resolveSeedsTiered(g: LoadedGraph, seed: string, limit = 5): SeedResolution {
     if (g.byId.has(seed)) return { ids: [seed], weak: false };
-    const exactLabel = g.graph.nodes.filter((n) => n.label === seed).map((n) => n.id);
-    if (exactLabel.length) return { ids: exactLabel.slice(0, limit), weak: false };
-    const ranked = g.lex.rank(tokenize(seed)).filter((r) => r.score > 0);
+    const exactLabel = g.idsByLabel(seed, limit);
+    if (exactLabel.length) return { ids: exactLabel, weak: false };
+    // Only here does the BM25 corpus get built — the one whole-table read on
+    // the indexed path, and unreachable when the seed resolved exactly.
+    const ranked = g.lex().rank(tokenize(seed)).filter((r) => r.score > 0);
     return { ids: ranked.slice(0, limit).map((r) => r.id), weak: true };
 }
 

@@ -25,11 +25,10 @@ obligation_frequency: "per-turn"
 
 Some repos commit a pre-built code-intelligence index — a `graph.json`-shaped
 artifact or a SCIP index (`index.scip`, `*.scip`). One that exists is already
-built and structured, so it is the cheap first question for "who calls X",
-"where is Y used", "what does this import". This suite is an **orchestrator
-first, owner where it wins** (ADR-124): query a consumer-shipped index when it
-is present and fresh; where none is shipped, the native engine (default-off,
-benchmark-gated) covers the gap.
+built, so it is the cheap first question for "who calls X", "where is Y used",
+"what does this import". This suite is an **orchestrator first, owner where it
+wins** (ADR-124): query a shipped index when present and fresh; otherwise the
+native engine covers the gap (shipped since ADR-259 — no manual install).
 
 ## The rule
 
@@ -40,6 +39,17 @@ NOT THE FIRST MOVE. NEVER REBUILD A FRESH CONSUMER-SHIPPED INDEX.
 NO FRESH INDEX SHIPPED → THE NATIVE ENGINE MAY BUILD ONE (ADR-124); STILL
 GREP-FALLBACK FOR WHAT THE GRAPH DOES NOT ANSWER, AND SAY WHICH SOURCE ANSWERED.
 ```
+
+## Staleness is part of the answer
+
+```
+AN ANSWER FROM AN INDEX N COMMITS BEHIND IS WORTH LESS THAN THE SAME ANSWER
+FROM A FRESH ONE. NEVER REPORT A GRAPH ANSWER WITHOUT KNOWING WHICH IT WAS.
+```
+
+`behind:N` → refresh first, or grep and say so. Silence is not freshness.
+Delivery per host: [`code-intelligence`](../skills/code-intelligence/SKILL.md)
+§ Staleness delivery.
 
 ## When it fires
 
@@ -58,9 +68,8 @@ AND the repo contains a detectable index:
 3. **Fall back to `grep`/read** only for what the index does not cover, and say
    so ("the index has no entry for X, so I grepped").
 
-Query-first is an **ordering** heuristic, never a claim the index answers better:
-measured 2026-08-28, zero of four graph-shaped classes beat `grep`, so no class
-is graph-first. Routing changes; permission does not. Figures:
+Query-first is an **ordering** heuristic, never a claim the index answers better
+— no measured class beat `grep`. Figures:
 [`code-intelligence`](../skills/code-intelligence/SKILL.md) § Measured.
 
 ## When NOT to fire
@@ -71,11 +80,7 @@ is graph-first. Routing changes; permission does not. Figures:
 ## See also
 
 - [`code-intelligence`](../skills/code-intelligence/SKILL.md) — the executable
-  routing skill (`agent-config code-graph detect|query|affected|path`), the
-  measured per-class figures, and the hook-vs-instruction-file surface question
-  (`agent-config hooks:status`, never a guess from the host name).
-- [`discovery_graph`](../scripts/discovery_graph.ts) — this suite's OWN artefact
-  relation-graph (`affected`/`explain`); the external code-graph is the
-  *source-code* analogue this rule defers to for code questions.
+  routing skill, the measured figures, staleness delivery per host, and the
+  pointer to this suite's OWN artifact relation-graph (`discovery_graph`).
 - [`think-before-action`](think-before-action.md) — analyze with the best
   available tool before grepping blind.
