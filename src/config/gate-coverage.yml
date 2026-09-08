@@ -52,9 +52,9 @@
 #                of them.
 #   canary       optional mutation recipe (Phase 7) — see CANARY below
 #
-# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-28)
+# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-09-08)
 # ----------------------------------------------------------
-# 306 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 322 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
 # re-run on the tree carrying these rows, which now include the four gates the
 # two runtime-cost roadmaps add: check_prefix_stable_mutation,
