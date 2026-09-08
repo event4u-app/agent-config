@@ -1,6 +1,6 @@
 {
-  "taxonomy_version": "1.0.0",
-  "updated": "2026-09-04",
+  "taxonomy_version": "1.1.0",
+  "updated": "2026-09-08",
   "contract": "docs/decisions/ADR-253-per-pr-user-artifact-gate-declined.md",
   "reader": "src/scripts/measure_release_mix.ts",
   "note": [
@@ -62,6 +62,7 @@
     { "prefix": "src/install/", "category": "consumer" },
     { "prefix": "src/server/", "category": "consumer" },
     { "prefix": "src/ui/", "category": "consumer" },
+    { "prefix": "src/vendor/grammars/", "category": "consumer" },
     { "prefix": "src/shared/", "category": "unclassified" },
 
     { "prefix": "src/scripts/", "category": "maintenance" },

@@ -191,8 +191,8 @@ export function classifyLookup(
                 reason:
                     primitive === p.primitive
                         ? `lookup-class ${p.cls} — deterministic primitive, no spawn`
-                        : `lookup-class ${p.cls} — capped grep; the code-graph accelerant is ` +
-                          'gated on hooks.code_graph.enabled and it is not on',
+                        : `lookup-class ${p.cls} — capped grep; the code-graph accelerant needs a ` +
+                          'usable graph and the caller passed none',
             };
         }
     }

@@ -13,6 +13,7 @@ contributors whose skills, rules or commands were merged.
 | `design-intelligence` (`ui-styling`-derived assets) | "claudekit" | Apache-2.0 | [`LICENSE.apache-2.0.txt`](src/skills/design-intelligence/LICENSE.apache-2.0.txt) + modified-file markers per §4b |
 | `corpus-grounding`, `design-tokens`, `react-shadcn-ui`, `tailwind-engineer` (derived slices) | see per-skill notices | MIT / Apache-2.0 | ADR-061 — the per-skill attribution notice is authoritative |
 | `src/scripts/cost/budget.mjs`, `src/scripts/cost/track.mjs` | ruvnet/ruflo — `plugins/ruflo-cost-tracker` | MIT | full notice below; transformation record in [`provenance/borrows.jsonl`](provenance/borrows.jsonl) and [`docs/THIRD-PARTY-NOTICES.md`](docs/THIRD-PARTY-NOTICES.md) |
+| `src/vendor/grammars/*.wasm` (3 compiled tree-sitter grammars) | `tree-sitter/tree-sitter-{php,typescript,javascript}`, packaged by `tree-sitter-wasms` (Unlicense) | MIT | full notice below; provenance and refresh procedure in [`src/vendor/grammars/README.md`](src/vendor/grammars/README.md) |
 
 #### MIT notice — ruvnet/ruflo
 
@@ -27,6 +28,42 @@ require one.
 
 ```
 Copyright (c) 2024-2026 ruvnet
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+```
+
+#### MIT notice — tree-sitter grammars
+
+Reproduced in full for the same reason as the notice above: the three
+WebAssembly grammars under `src/vendor/grammars/` are **verbatim, unmodified
+binary copies**, which is the clearest possible case of "copies or substantial
+portions of the Software". They ship in the npm package (`package.json` →
+`files`), so this file travels with them and discharges the obligation for a
+consumer who receives them from the registry.
+
+The compiled `.wasm` artefacts are built from the upstream `tree-sitter`
+grammar repositories (MIT) and were obtained through `tree-sitter-wasms@0.1.13`
+(Unlicense — public domain, imposing no attribution obligation of its own). The
+MIT notice below is the one that travels, because it is the grammars' licence,
+not the packager's.
+
+```
+Copyright (c) 2018-2026 Max Brunsfeld and the tree-sitter grammar authors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in

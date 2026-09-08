@@ -22,7 +22,7 @@
  * Exit codes: 0 green · 1 over budget · 2 misuse / unreadable input.
  */
 
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -30,6 +30,12 @@ import { fileURLToPath } from 'node:url';
 
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { runSelfTest } from './_lib/gate_self_test.js';
+import {
+    type EligibilityVerdict,
+    evaluateEntry,
+    type GrammarProbe,
+    loadManifest,
+} from './_lib/packed_binary_predicate.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const BUDGET_PATH = path.join(REPO_ROOT, 'src', 'config', 'pack-size-budget.json');
@@ -308,9 +314,13 @@ export function payloadFingerprint(entryPath: string, size: number): string {
 /**
  * Bound exceptions exist for `dotfile` and `no-extension` ONLY.
  *
- * `binary` and `archive` are not exceptable: `classifyPayloadTypes` never
- * consults this table for either class, so both are the OBSERVED count and
- * cannot be excepted to zero. That is AC-6 of
+ * `binary` and `archive` are not exceptable HERE and never will be: this table
+ * is prose-bound, and prose is exactly what a binary must not be admitted on.
+ * `archive` remains a hard zero with no admission path of any kind. `binary`
+ * has one since 2026-09-08 — `src/config/packed-binary-manifest.json`, gated by
+ * the mechanically verified predicate in `_lib/packed_binary_predicate.ts`,
+ * which re-derives every claim from the packed bytes. Adding a `binary` row to
+ * the table below still does nothing. That is AC-6 of
  * `road-to-scan-that-fails-closed` read literally, after an AI council
  * (2026-09-07, 2 seats, unanimous over two rounds) resolved the split between
  * reading "at zero" as the ratchet and as the observed count. It chose the
@@ -363,16 +373,25 @@ export interface TypeClassification {
 /**
  * Classify the whole payload by type and report what is not accounted for.
  *
- * `archive` and `binary` are closed classes: no exception is consulted for
- * either, so each is the observed count and an entry in one is always a
- * violation. Dotfile and extensionless entries are each bound to a path AND a
- * size, so replacing one with different content re-fires the check on that
- * entry rather than passing inside a count.
+ * `archive` stays a closed class: no admission path, so an entry in it is
+ * always a violation. `binary` is admitted only through `eligible` — the
+ * caller supplies the verdicts, this function never decides eligibility itself
+ * — and an INELIGIBLE binary is unaccounted exactly as before.
+ *
+ * The counts are the OBSERVED payload and are never reduced by eligibility. A
+ * caller compares `observed` against `allowed` (the number of entries that
+ * passed the predicate); nothing here subtracts an excused file from a count,
+ * because a measurement an exception can move is not a measurement.
+ *
+ * Dotfile and extensionless entries are each bound to a path AND a size, so
+ * replacing one with different content re-fires the check on that entry rather
+ * than passing inside a count.
  */
 export function classifyPayloadTypes(
     files: readonly PackFile[],
     root = REPO_ROOT,
     head: (p: string) => Uint8Array | null = (p) => readHead(p, root),
+    eligible: ReadonlySet<string> = new Set<string>(),
 ): TypeClassification {
     const counts: Record<PayloadType | 'unreadable', number> = {
         archive: 0,
@@ -390,7 +409,10 @@ export function classifyPayloadTypes(
         counts[type] += 1;
         if (type === 'text') continue;
         const fingerprint = payloadFingerprint(f.path, f.size);
-        // `binary` and `archive` have no exception path — see BOUND_PAYLOAD_EXCEPTIONS.
+        // A binary is accounted for ONLY by the mechanical predicate. It is
+        // never matched against the prose table, so a `binary` row added there
+        // would still do nothing.
+        if (type === 'binary' && eligible.has(f.path)) continue;
         if (type !== 'binary' && type !== 'archive' && byFingerprint.has(fingerprint)) {
             used.add(fingerprint);
             continue;
@@ -402,6 +424,127 @@ export function classifyPayloadTypes(
         unbound,
         unusedExceptions: BOUND_PAYLOAD_EXCEPTIONS.filter((e) => !used.has(e.fingerprint)).map((e) => e.path),
     };
+}
+
+/**
+ * Binary eligibility over the packed payload.
+ *
+ * The probe is a CHILD PROCESS running the engine's own loader
+ * (`code_graph/grammar_probe.ts`), not a reimplementation here: a second
+ * loader inside the gate could accept bytes the engine rejects, which is the
+ * one failure mode that would let a broken grammar ship while the gate called
+ * it valid.
+ *
+ * A probe that cannot run at all yields `null` for every file, which FAILS
+ * conditions 8 and 9 rather than passing them — an unverifiable binary is not
+ * an eligible one.
+ */
+export interface BinaryEligibilityReport {
+    /** Paths that passed every condition. */
+    readonly eligible: ReadonlySet<string>;
+    /** Every packed binary, eligible or not, with its failing conditions. */
+    readonly verdicts: readonly EligibilityVerdict[];
+    /** True count of binaries in the payload — never reduced by eligibility. */
+    readonly observedCount: number;
+    /** True byte total of those binaries. */
+    readonly observedBytes: number;
+    /** Entries that passed the predicate. Compliance is observed <= allowed. */
+    readonly allowedCount: number;
+    /** Byte total of the allowed entries. */
+    readonly allowedBytes: number;
+}
+
+export function evaluateBinaryEligibility(
+    files: readonly PackFile[],
+    root = REPO_ROOT,
+    probeAll: (paths: readonly string[]) => Map<string, GrammarProbe | null> = probeGrammars,
+): BinaryEligibilityReport {
+    const manifest = loadManifest(root);
+    const packedPaths = new Set(files.map((f) => f.path));
+    const binaries = files.filter((f) => classifyEntry(f.path, readHead(f.path, root)) === 'binary');
+    const probes = probeAll(binaries.map((b) => b.path));
+
+    const verdicts: EligibilityVerdict[] = [];
+    for (const b of binaries) {
+        let bytes: Uint8Array | null = null;
+        try {
+            bytes = fs.readFileSync(path.join(root, b.path));
+        } catch {
+            bytes = null;
+        }
+        verdicts.push(
+            evaluateEntry({
+                filePath: b.path,
+                packedPaths,
+                manifest,
+                bytes,
+                probe: probes.get(b.path) ?? null,
+            }),
+        );
+    }
+    const eligible = new Set(verdicts.filter((v) => v.eligible).map((v) => v.path));
+    const sizeOf = new Map(files.map((f) => [f.path, f.size]));
+    return {
+        eligible,
+        verdicts,
+        observedCount: binaries.length,
+        observedBytes: binaries.reduce((n, b) => n + b.size, 0),
+        allowedCount: eligible.size,
+        allowedBytes: [...eligible].reduce((n, p) => n + (sizeOf.get(p) ?? 0), 0),
+    };
+}
+
+/** Run the production loader over `paths` in one child process. */
+function probeGrammars(paths: readonly string[]): Map<string, GrammarProbe | null> {
+    const out = new Map<string, GrammarProbe | null>();
+    for (const p of paths) out.set(p, null);
+    if (paths.length === 0) return out;
+    const script = path.join(REPO_ROOT, 'src/scripts/code_graph/grammar_probe.ts');
+    const res = spawnSync('npx', ['tsx', script, ...paths.map((p) => path.join(REPO_ROOT, p))], {
+        cwd: REPO_ROOT,
+        encoding: 'utf-8',
+    });
+    if (res.status !== 0 || !res.stdout.trim()) return out;
+    try {
+        const rows = JSON.parse(res.stdout.trim()) as Array<{
+            path: string;
+            ok: boolean;
+            abi?: number;
+            grammar_id?: string;
+        }>;
+        for (const r of rows) {
+            const rel = path.relative(REPO_ROOT, r.path);
+            if (r.ok && typeof r.abi === 'number' && typeof r.grammar_id === 'string') {
+                out.set(rel, { abi: r.abi, grammar_id: r.grammar_id });
+            }
+        }
+    } catch {
+        /* an unparseable probe leaves every entry null, which fails 8 and 9 */
+    }
+    return out;
+}
+
+/** The always-printed binary line: the measurement, then the allowance. */
+export function binaryLine(r: BinaryEligibilityReport): string {
+    return (
+        `binary: observed ${String(r.observedCount)} (${r.observedBytes.toLocaleString('en-US')} B) · ` +
+        `allowed ${String(r.allowedCount)} (${r.allowedBytes.toLocaleString('en-US')} B)`
+    );
+}
+
+/**
+ * Compliance is `observed <= allowed`.
+ *
+ * Stated as its own check rather than inferred from the unaccounted list,
+ * because the two can only ever agree by construction and a gate that relies on
+ * that is one refactor away from silently accepting an excess.
+ */
+export function binaryComplianceViolations(r: BinaryEligibilityReport): string[] {
+    if (r.observedCount <= r.allowedCount) return [];
+    return [
+        `binary payload: observed ${String(r.observedCount)} entries but only ${String(r.allowedCount)} are ` +
+            'allowed by src/config/packed-binary-manifest.json under the eligibility predicate',
+    ];
 }
 
 /** One line naming every type class and its count. */
@@ -417,13 +560,17 @@ export function typeClassViolations(c: TypeClassification): string[] {
     return c.unbound.map(
         (u) =>
             `payload type \`${u.type}\`: ${u.path} (${String(u.size)} bytes) is not accounted for. ` +
-            (u.type === 'archive' || u.type === 'binary'
-                ? 'This class is empty by observation and carries no exception path. ' +
-                  'Exclude it from package.json files[], or ship a textual placeholder at the same path ' +
-                  '(the media fixtures use `FIXTURE-<adapter-id>-<ext>`).'
-                : 'Every dotfile and extensionless entry is carried by a path-and-size-bound exception. ' +
-                  `If it belongs in the published surface, add a BoundPayloadException with ` +
-                  `fingerprint sha256:${u.fingerprint} and a reason; otherwise exclude it from package.json files[].`),
+            (u.type === 'archive'
+                ? 'Archive is a closed class with no admission path of any kind. ' +
+                  'Exclude it from package.json files[].'
+                : u.type === 'binary'
+                  ? 'A binary ships only via src/config/packed-binary-manifest.json, and only when every ' +
+                    'condition of the eligibility predicate holds on the packed bytes ' +
+                    '(_lib/packed_binary_predicate.ts). Add or correct its manifest entry, or exclude it ' +
+                    'from package.json files[]. The failing conditions are listed above.'
+                  : 'Every dotfile and extensionless entry is carried by a path-and-size-bound exception. ' +
+                    `If it belongs in the published surface, add a BoundPayloadException with ` +
+                    `fingerprint sha256:${u.fingerprint} and a reason; otherwise exclude it from package.json files[].`),
     );
 }
 
@@ -671,14 +818,55 @@ function selfTest(): number {
                         : 0,
             },
             {
-                // THE CLOSED-CLASS SENSITIVITY PROOF. `LICENSE` at 1064 bytes
+                // THE PROSE-PATH SENSITIVITY PROOF. `LICENSE` at 1064 bytes
                 // carries a real bound exception, so under the pre-2026-09-07
                 // code this entry passed. It is fed binary head bytes here, and
                 // binary outranks no-extension in `classifyEntry`, so a
-                // still-exceptable `binary` class would accept it. It must not:
-                // AC-6 of road-to-scan-that-fails-closed reads "at zero" as the
-                // OBSERVED count, and this row is what would go red if the
-                // exception path were ever reopened for the class.
+                // prose-exceptable `binary` class would accept it. It must not.
+                //
+                // STILL LOAD-BEARING after the 2026-09-08 reopening, and more
+                // so: `binary` is admissible again, but ONLY through the
+                // mechanically verified manifest. This row is what goes red if
+                // anyone ever wires the prose table back into the class.
+                name: 'type/binary: a manifest-eligible binary IS admitted',
+                expect: 'accept',
+                // THE OPEN-PATH ACCEPTING CONTROL. The council's own argument
+                // against the closed class was that a control nobody saw fire
+                // is a claim; the same holds in reverse for a path nobody saw
+                // accept. Without this row every binary assertion here is a
+                // rejection, and a predicate that only ever refuses is
+                // indistinguishable from the hard zero it replaced.
+                run: () =>
+                    typeClassViolations(
+                        classifyPayloadTypes(
+                            [{ path: 'src/vendor/grammars/tree-sitter-php.wasm', size: 812594 }],
+                            REPO_ROOT,
+                            () => Uint8Array.from([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00]),
+                            new Set(['src/vendor/grammars/tree-sitter-php.wasm']),
+                        ),
+                    ).length > 0
+                        ? 1
+                        : 0,
+            },
+            {
+                name: 'type/binary: the SAME path is refused when eligibility did not pass',
+                expect: 'reject',
+                // The paired negative. Same path, same bytes, empty eligible
+                // set — so the admission demonstrably comes from the predicate
+                // and not from the path looking familiar.
+                run: () =>
+                    typeClassViolations(
+                        classifyPayloadTypes(
+                            [{ path: 'src/vendor/grammars/tree-sitter-php.wasm', size: 812594 }],
+                            REPO_ROOT,
+                            () => Uint8Array.from([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00]),
+                            new Set<string>(),
+                        ),
+                    ).length > 0
+                        ? 1
+                        : 0,
+            },
+            {
                 name: 'type/binary: an entry with a VALID bound exception is still refused once it reads binary',
                 expect: 'reject',
                 run: () =>
@@ -821,11 +1009,15 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     // still knows the population it was red over.
     process.stdout.write(`scanned: ${String(pack.files.length)}\n`);
 
-    const types = classifyPayloadTypes(pack.files);
+    // Binary eligibility, decided on the PACKED bytes before classification so
+    // the classifier is told which paths passed and never decides itself.
+    const binaryReport = evaluateBinaryEligibility(pack.files);
+    const types = classifyPayloadTypes(pack.files, REPO_ROOT, (p) => readHead(p, REPO_ROOT), binaryReport.eligible);
     const errors = [
         ...evaluate(budget, pack),
         ...classifyPayload(pack.files),
         ...typeClassViolations(types),
+        ...binaryComplianceViolations(binaryReport),
     ];
     const { perSkill, total } = skillBytes(pack.files);
     if (argv.includes('--json')) {
@@ -838,6 +1030,13 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     // what a reader needs to judge a violation: "one unaccounted binary" reads
     // very differently against a payload of 3 binaries than against one of 0.
     process.stdout.write(`    payload types: ${payloadTypeLine(types)}\n`);
+    // The observed binary count and byte total on EVERY run, green or red.
+    // Eligibility must never move a measurement, so both totals are printed
+    // beside the allowance rather than folded into it.
+    process.stdout.write(`    ${binaryLine(binaryReport)}\n`);
+    for (const v of binaryReport.verdicts.filter((x) => !x.eligible)) {
+        for (const f of v.failures) process.stdout.write(`      ${v.path}: ${f}\n`);
+    }
     for (const unused of types.unusedExceptions) {
         // Not an error: an unbuilt tree legitimately packs fewer files. Named
         // so a stale exception is visible rather than accumulating unread.
