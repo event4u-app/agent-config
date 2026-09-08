@@ -80,10 +80,12 @@ function makeFixture(over: {
     fs.mkdirSync(path.join(root, 'src', 'config'), { recursive: true });
     fs.writeFileSync(path.join(root, 'src', 'config', 'packed-binary-manifest.json'), JSON.stringify({ schema_version: 1, entries }));
 
-    const vendoredDir = path.join(root, 'src', 'vendor', 'grammars');
-    fs.mkdirSync(vendoredDir, { recursive: true });
     const vendored = over.vendoredBytes ?? Buffer.from([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00]);
-    for (const entry of entries) fs.writeFileSync(path.join(vendoredDir, path.basename(entry.path)), vendored);
+    for (const entry of entries) {
+        const target = path.join(root, entry.path);
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(target, vendored);
+    }
 
     if (over.installedVersion !== null) {
         const pkgDir = path.join(root, 'node_modules', UPSTREAM_PACKAGE);
@@ -115,13 +117,24 @@ describe('the real tree', () => {
         expect(pin.integrity.startsWith('sha512-')).toBe(true);
     });
 
-    it('covers every grammar the manifest admits, so no admitted file is unanchored', () => {
+    it('covers every grammar the manifest admits, by full path, so no admitted file is unanchored', () => {
         const manifest = JSON.parse(
             fs.readFileSync(path.join(REPO_ROOT, 'src', 'config', 'packed-binary-manifest.json'), 'utf-8'),
         ) as PackedBinaryManifest;
-        const admitted = manifest.entries.filter((e) => e.kind === VERIFIABLE_KIND).map((e) => e.path);
+        const admitted = manifest.entries.filter((e) => e.kind === VERIFIABLE_KIND).map((e) => path.join(REPO_ROOT, e.path));
         const verdict = verifyVendoredGrammarsAgainstUpstream({ repoRoot: REPO_ROOT });
-        expect(verdict.comparisons.map((c) => path.basename(c.vendoredPath)).sort()).toEqual(admitted.map((p) => path.basename(p)).sort());
+        // Compared on the FULL path, not the basename: comparing basenames here
+        // would apply the same collapse the module was found doing, so the test
+        // could not catch it. R2 finding 2, 2026-09-09.
+        expect(verdict.comparisons.map((c) => c.vendoredPath).sort()).toEqual(admitted.sort());
+    });
+
+    it('reports the version it actually read from node_modules, not the one it read from the lock', () => {
+        const verdict = verifyVendoredGrammarsAgainstUpstream({ repoRoot: REPO_ROOT });
+        const installed = JSON.parse(
+            fs.readFileSync(path.join(REPO_ROOT, 'node_modules', UPSTREAM_PACKAGE, 'package.json'), 'utf-8'),
+        ) as { version: string };
+        expect(verdict.installedVersion).toBe(installed.version);
     });
 });
 
@@ -191,5 +204,69 @@ describe('the refusals — an unestablished anchor is never a pass', () => {
         const root = makeFixture();
         fs.rmSync(path.join(root, 'src', 'vendor', 'grammars', 'tree-sitter-fixture.wasm'));
         expect(() => verifyVendoredGrammarsAgainstUpstream({ repoRoot: root })).toThrow(/does not exist/);
+    });
+
+    it('refuses two admitted entries that share a filename in different directories', () => {
+        // The upstream is one flat directory, so both rows would anchor to the
+        // same file and one admitted binary would be silently unverified while
+        // the verdict claimed full coverage. R2 finding 2, 2026-09-09.
+        const root = makeFixture({
+            entries: [
+                {
+                    path: 'src/vendor/grammars/tree-sitter-fixture.wasm',
+                    sha256: 'unused-by-this-module',
+                    size: 8,
+                    kind: VERIFIABLE_KIND,
+                    grammar_id: 'fixture',
+                    abi: 14,
+                },
+                {
+                    path: 'src/vendor/other/tree-sitter-fixture.wasm',
+                    sha256: 'unused-by-this-module',
+                    size: 8,
+                    kind: VERIFIABLE_KIND,
+                    grammar_id: 'fixture',
+                    abi: 14,
+                },
+            ] as PackedBinaryManifest['entries'],
+        });
+        expect(() => verifyVendoredGrammarsAgainstUpstream({ repoRoot: root })).toThrow(/share a filename/);
+    });
+
+    it('resolves the vendored file by its own manifest path, not by basename under one directory', () => {
+        // Sensitivity for the fix: the second row lives elsewhere and carries
+        // DIFFERENT bytes. Under the basename collapse both rows read the first
+        // file and the divergence disappears.
+        const root = makeFixture({
+            entries: [
+                {
+                    path: 'src/vendor/grammars/tree-sitter-a.wasm',
+                    sha256: 'unused-by-this-module',
+                    size: 8,
+                    kind: VERIFIABLE_KIND,
+                    grammar_id: 'a',
+                    abi: 14,
+                },
+                {
+                    path: 'src/vendor/other/tree-sitter-b.wasm',
+                    sha256: 'unused-by-this-module',
+                    size: 8,
+                    kind: VERIFIABLE_KIND,
+                    grammar_id: 'b',
+                    abi: 14,
+                },
+            ] as PackedBinaryManifest['entries'],
+        });
+        fs.writeFileSync(
+            path.join(root, 'src', 'vendor', 'other', 'tree-sitter-b.wasm'),
+            Buffer.from([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x01]),
+        );
+        const verdict = verifyVendoredGrammarsAgainstUpstream({ repoRoot: root });
+        expect(verdict.comparisons.map((c) => c.vendoredPath)).toEqual([
+            path.join(root, 'src/vendor/grammars/tree-sitter-a.wasm'),
+            path.join(root, 'src/vendor/other/tree-sitter-b.wasm'),
+        ]);
+        expect(verdict.divergences).toHaveLength(1);
+        expect(verdict.divergences[0]).toContain('src/vendor/other/tree-sitter-b.wasm');
     });
 });

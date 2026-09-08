@@ -64,7 +64,14 @@ a rationale paragraph that named it and stopped.
       version + `integrity`), asserts the INSTALLED version equals the locked
       one, and byte-compares every grammar the manifest admits against
       `node_modules/tree-sitter-wasms/out/`. Exercised by
-      `tests/scripts/vendored_grammar_upstream.test.ts` — 13 cases, all green.
+      `tests/scripts/vendored_grammar_upstream.test.ts` — 16 cases, all green.
+      (13 at the first commit; three added by the R2 completion review below,
+      which found the vendored side resolving by BASENAME rather than by the
+      entry's own path. Two rows sharing a filename in different directories
+      would have anchored to the same file — one admitted binary silently
+      unanchored while the verdict reported full coverage, the false green this
+      module exists to remove. Fixed with a refusal for the ambiguous case and a
+      sabotage-proven test for the resolution.)
       **Refusal, never a pass, is the load-bearing half** and it is what Risk 1
       asks for: an absent upstream, an installed version that is not the locked
       one, a lock row with no `integrity`, a missing counterpart, a missing
@@ -230,7 +237,7 @@ a rationale paragraph that named it and stopped.
       the locked upstream, proven by a check that has been observed failing on
       mutated bytes. A manifest-internal check does not satisfy this.
       Met 2026-09-09. `src/scripts/_lib/vendored_grammar_upstream.ts` +
-      `tests/scripts/vendored_grammar_upstream.test.ts` (13 cases). Observed
+      `tests/scripts/vendored_grammar_upstream.test.ts` (16 cases). Observed
       failing twice on mutated bytes: once by hand on the real committed
       `tree-sitter-php.wasm` (one byte flipped, `1 failed | 12 passed`, restored
       and re-hashed to its committed sha256), and once as a permanent suite case

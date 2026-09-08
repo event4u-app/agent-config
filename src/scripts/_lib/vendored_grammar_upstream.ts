@@ -36,8 +36,18 @@
  * An upstream comparison is trivially written so that it passes when the
  * upstream is absent, which is a green that verifies nothing — the exact shape
  * of the eleven conditions it is here to supplement. So an absent package, a
- * version that is not the locked one, an absent counterpart file, and an empty
- * claim set are all refusals, never passes.
+ * version that is not the locked one, an absent counterpart file, an empty
+ * claim set, and two admitted entries sharing a filename are all refusals,
+ * never passes.
+ *
+ * The last of those is the subtlest, and it was added on an R2 review finding
+ * rather than foreseen: the upstream keeps its grammars in one flat directory,
+ * so the counterpart is addressed by basename. Two manifest rows with the same
+ * filename in different directories would anchor to the same upstream file —
+ * one admitted binary silently unanchored while the verdict reported full
+ * coverage, which is the false green this module exists to remove. The vendored
+ * side resolves the entry's OWN repo-relative path, never a basename under a
+ * fixed directory, for the same reason.
  */
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
@@ -86,8 +96,13 @@ export interface UpstreamAnchorOptions {
     readonly repoRoot: string;
     /** Defaults to `<repoRoot>/node_modules/<UPSTREAM_PACKAGE>`. Fixture seam. */
     readonly upstreamPackageDir?: string;
-    /** Defaults to `<repoRoot>/src/vendor/grammars`. Fixture seam. */
-    readonly vendoredDir?: string;
+    /**
+     * Root the manifest's repo-relative `path` values resolve against.
+     * Defaults to `repoRoot`. Fixture seam — NOT a grammar directory: resolving
+     * by directory would discard the entry's own path, and two rows sharing a
+     * basename in different directories would then anchor to the same file.
+     */
+    readonly vendoredRoot?: string;
     /** Defaults to the manifest at `<repoRoot>/src/config/…`. Fixture seam. */
     readonly manifest?: PackedBinaryManifest;
 }
@@ -153,7 +168,7 @@ function sha256(file: string): string {
 export function verifyVendoredGrammarsAgainstUpstream(options: UpstreamAnchorOptions): UpstreamAnchorVerdict {
     const { repoRoot } = options;
     const upstreamDir = options.upstreamPackageDir ?? path.join(repoRoot, 'node_modules', UPSTREAM_PACKAGE);
-    const vendoredDir = options.vendoredDir ?? path.join(repoRoot, 'src', 'vendor', 'grammars');
+    const vendoredRoot = options.vendoredRoot ?? repoRoot;
     const manifest = options.manifest ?? readManifest(repoRoot);
 
     const pin = readLockPin(repoRoot);
@@ -162,6 +177,24 @@ export function verifyVendoredGrammarsAgainstUpstream(options: UpstreamAnchorOpt
     if (claims.length === 0) {
         throw new UpstreamAnchorRefusal(
             `the manifest admits no \`${VERIFIABLE_KIND}\` entry — nothing was compared, and reporting that as a pass would be a green over an empty corpus`,
+        );
+    }
+
+    // The upstream keeps its grammars in one flat directory, so the counterpart
+    // is addressed by basename. Two admitted entries sharing a basename would
+    // therefore point at the same upstream file, which is an ambiguous anchor
+    // rather than a comparison — refuse instead of picking one.
+    const byBase = new Map<string, string[]>();
+    for (const e of claims) {
+        const base = path.basename(e.path);
+        byBase.set(base, [...(byBase.get(base) ?? []), e.path]);
+    }
+    const ambiguous = [...byBase.entries()].filter(([, paths]) => paths.length > 1);
+    if (ambiguous.length > 0) {
+        throw new UpstreamAnchorRefusal(
+            `two or more admitted entries share a filename, so they would anchor to the same upstream file: ${ambiguous
+                .map(([base, paths]) => `${base} <- ${paths.join(', ')}`)
+                .join('; ')}`,
         );
     }
 
@@ -182,7 +215,7 @@ export function verifyVendoredGrammarsAgainstUpstream(options: UpstreamAnchorOpt
     const divergences: string[] = [];
 
     for (const entry of claims) {
-        const vendoredPath = path.join(vendoredDir, path.basename(entry.path));
+        const vendoredPath = path.join(vendoredRoot, entry.path);
         const upstreamPath = path.join(upstreamDir, UPSTREAM_GRAMMAR_SUBDIR, path.basename(entry.path));
         if (!fs.existsSync(vendoredPath)) {
             throw new UpstreamAnchorRefusal(`the manifest admits ${entry.path} but ${vendoredPath} does not exist`);
@@ -206,7 +239,7 @@ export function verifyVendoredGrammarsAgainstUpstream(options: UpstreamAnchorOpt
     return {
         lockedVersion: pin.version,
         lockedIntegrity: pin.integrity,
-        installedVersion: pin.version,
+        installedVersion: installed.version,
         comparisons,
         divergences,
     };

@@ -104,6 +104,16 @@ supplied the replacement wording, and it is adopted verbatim as the target:
 > All 299 require explicit invocation until a named host with a documented
 > routing contract demonstrates otherwise.
 
+**The third bullet of that block is WRONG and is corrected by Amendment 1
+(2026-09-09): read `189`, not `187`.** The block is quoted verbatim rather than
+edited, because it is the wording the council adopted and rewriting a quoted
+verdict hides that a correction happened. Reading it, take the third line as
+`189 skills declare neither trigger nor eval data` — and note that the three
+lines only reconcile once the overlap is named, because 12 + 100 + 189 = 301
+while 12 + 100 − 2 + 189 = 299. The published wording therefore owes the
+2-skill overlap a mention that the adopted block does not carry. Amendment 1
+states both sites.
+
 Two wording points are load-bearing and are recorded rather than left implicit:
 
 - **"by observation", never "by design".** The council rejected "reference
@@ -129,9 +139,23 @@ closed.
 ## Amendment 1 (2026-09-09) — the `187` figure is an arithmetic error; 189 stands
 
 Scope, stated first so it cannot be misread: this amendment corrects **one
-number in a supporting bullet**. The Decision is untouched — Option B stands, in
+figure, at the two places it appears**. The Decision is untouched — Option B stands, in
 the "by observation" form, Option A stays rejected, Option D stays not-taken, and
 nothing this record locks is reopened.
+
+**Where it appears — TWO sites, not one.** Corrected 2026-09-09 within the same
+change, on an R2 completion-review finding against the first draft of this
+amendment: the figure is in the § Decision blockquote (`:102`, the wording the
+Decision introduces as adopted verbatim) as well as in the supporting bullet
+below it. An amendment naming only the bullet leaves the authoritative half of
+the record contradicting the ledger, and no gate covers that — the census gate
+reads `docs/CLAIMS.md` against the record and exits 0 with this file still
+wrong. Both sites now carry a pointer here; neither is rewritten.
+
+**A figure swap alone would not have been enough**, which is why the note above
+the bullets says so: 12 + 100 + 189 = 301. The adopted block never named the
+2-skill overlap, so its three lines reconcile to 299 only with the `− 2` the
+reconciliation below carries.
 
 **What is wrong.** The bullet states the union correctly at 110 and then
 subtracts 112. With `total = 299`, `trigger key = 12`, `corpus = 100` and
