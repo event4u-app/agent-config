@@ -267,7 +267,7 @@ import { rule_in_scope } from '../install/ruleInScope.js';
 import { pruneEmptyDirs } from './_lib/prune_empty_dirs.js';
 import { claudeLayerHolds, commandWithheld, keepInProjectLayer, personaPartition } from '../install/partitionEligibility.js'; // ADR-236
 import { dedupableRules, partitionRulesForDir } from '../install/ruleLayerPartition.js'; // ADR-236, per-host evidence
-import { _claude_paths_plan, derive_trigger_globs } from '../install/claudePathsPlan.js';
+import { _claude_paths_plan, applies_when, derive_trigger_globs } from '../install/claudePathsPlan.js';
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url)); // <repo>/src/scripts
 const _DEFAULT_PROJECT_ROOT = path.resolve(_HERE, '..', '..');
@@ -1298,7 +1298,7 @@ export function _emit_cursor_mdc(source: string, target: string): void {
     const globs = always_apply ? [] : derive_trigger_globs(meta);
     const lines = [
         '---',
-        `description: ${_yaml_scalar(description)}`,
+        `description: ${_yaml_scalar(always_apply ? description : applies_when(description, meta))}`,
         `globs: ${globs.join(',')}`,
         `alwaysApply: ${always_apply ? 'true' : 'false'}`,
         '---',
@@ -1320,7 +1320,7 @@ export function _emit_windsurf_rule(source: string, target: string): void {
     const lines = [
         '---',
         `trigger: ${trigger}`,
-        `description: ${_yaml_scalar(description)}`,
+        `description: ${_yaml_scalar(always_apply ? description : applies_when(description, meta))}`,
         `globs: ${globs.join(',')}`,
         '---',
         '',
