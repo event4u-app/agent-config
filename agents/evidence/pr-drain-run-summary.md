@@ -745,8 +745,10 @@ and for the reason that run recorded: raising the ceiling is the
 config-weakening move this repository refuses. Both new Iron Law blocks stayed
 in the rule verbatim; the boundary list, the reversibility table, the ladder
 ceiling, the two reopen consequences, the Predictions/Decisions field detail and
-the rule's own pre-existing grounding moved verbatim into
-`docs/guidelines/agent-infra/notes-horizon-mechanics.md`. Also repaired: the
+the rule's own pre-existing grounding moved verbatim into a new guideline,
+`notes-horizon-mechanics` under `docs/guidelines/agent-infra/` — named without a
+resolvable path on purpose, because it exists only on the unmerged branch and a
+path here would be a broken reference until #1921 lands. Also repaired: the
 branch's insertion had left the `## Uncertainty` bullet orphaned three sections
 away from the list it belongs to.
 
