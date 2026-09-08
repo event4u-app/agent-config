@@ -367,7 +367,7 @@ played.
 
 ## Phase 3 — Measure it, then keep it or delete it
 
-- [ ] **3.1 Run the treatment arm.**
+- [x] **3.1 Run the treatment arm.**
       `rdp_quality_eval --mode l6 --corpus
       tests/reasoning-layer-eval/golden-transcripts/l6-corpus.json --confirm
       --score-with <model>` — 32 calls, ~$0.84 at the measured dry-run
@@ -376,12 +376,47 @@ played.
       distinct.
       verify: a results file exists carrying the three deterministic counts and
       the dim-5 score per slot.
-- [ ] **3.2 Publish the delta against Phase 1's baseline, and the cost.**
+      Done 2026-09-08 —
+      `tests/reasoning-layer-eval/RESULTS-candidates-treatment-2026-09-08.md`,
+      capture in `golden-transcripts/l6n-candidates-treatment.json`
+      (`mode: l6+candidates`). **Actual spend $0.7933**, 32 capture + 32 rater
+      calls, against a $1.2068 dry-run worst case. The line was instructed in
+      the eval's system prompt only — `git diff origin/main` over
+      `lint_mandated_lines.ts` and `mandated-lines.md` is empty.
+      Deterministic counts, run before any scoring: 32 transcripts · line
+      present **1** · `K0` present 1 · axes pairwise distinct 1 · `K0` drawn 0
+      · shape findings 0. Baseline control with the same checker: 0 across the
+      board. **Instruction delivery 100 % by construction, compliance 1/32
+      (3.1 %).**
+      The first reading of this step said `0` and was wrong: the checker had
+      copied the shipped `INTENT_RE` shape, which matches no markdown emphasis,
+      and the one compliant model wrote `**Candidates:**`. That line is now a
+      regression fixture. See the results file § The detector correction.
+- [x] **3.2 Publish the delta against Phase 1's baseline, and the cost.**
       Dim-5 treatment minus dim-5 baseline on the same 16 slots, plus the
       token-overhead delta on the single-step (`ss`) slots, which are the
       trivial-task proxy this corpus has.
       verify: both numbers are in the results file, computed from the two
       stored runs rather than asserted.
+      Done 2026-09-08 — `src/scripts/rdp_candidates_delta.ts`, 8 tests, joins
+      the two stored runs on slot plus variant and exits 2 on a join hole
+      rather than computing a delta over a partial join. 32 of 32 paired.
+      **dim 5, intention-to-treat: 0.875 → 1.156 / 3, delta +0.281
+      (+9.4 pp of the 0-3 scale).** One-form-only transcripts 18/32 → 14/32;
+      `>= 2` 8/32 → 11/32; `ms` +0.187, `ss` +0.375. ITT is primary on the
+      2026-09-08 council's instruction — conditioning on compliance selects on
+      post-treatment behaviour; the compliant-only figure is 3.000 at n=1 and
+      carries no weight.
+      **`ss` output-token overhead: -8.0 % token-weighted (8,542 → 7,858),
+      -8.1 % mean per-slot.** Output got *shorter*, so the published ~5 % L10
+      cost guard passes with margin. This is treatment-versus-baseline, which
+      no stored field holds — the `output_token_overhead_pct` in each run is
+      arm-versus-arm within that run.
+      **dim 1 tripwire: 2.906 → 3.000, +0.094.** It did not fire.
+      The bar's unit is recorded both ways rather than picked, because the two
+      source documents disagree: +9.4 pp of the 0-3 scale against `README.md`'s
+      `+15 %` / the roadmap's `+15 pp`, versus +32.1 % as a relative change on
+      the baseline mean. The verdict rests on the conservative reading.
 - [ ] **3.3 Apply the verdict, including the one that deletes the work.**
       Keep the line if dim 5 moves and the `ss` overhead stays under the
       published cost guard. Delete it if dim 5 does not move — in which case
@@ -463,21 +498,40 @@ played.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `docs/contracts/reasoning-discipline-protocol.md` no longer
+- [x] AC-1 — `docs/contracts/reasoning-discipline-protocol.md` no longer
       appears in `check_beta_review_markers`' upcoming-fresh-lapse list, and
       the edit that removed it names a reason.
-- [ ] AC-2 — `tests/reasoning-layer-eval/rubric.md` carries a fifth dimension
+      Verified 2026-09-08 — the gate's upcoming-fresh list names
+      `release-sizing`, `harness-expectations`, `install-layout`,
+      `install-scopes` and `surface-tiers`, and not this contract.
+      `docs/contracts/reasoning-discipline-protocol.md:3` reads
+      `keep-beta-until: 2026-12-06` and `:6` carries the reason inline.
+- [x] AC-2 — `tests/reasoning-layer-eval/rubric.md` carries a fifth dimension
       that scores form-alternative surfacing, with anchors that a run
       generating one form cannot score above 0 on.
-- [ ] AC-3 — A baseline results file reports a dim-5 rate over the 32 stored
+      Verified 2026-09-08 — five numbered dimensions; `rubric.md:39-63` is
+      `Form-alternative surfacing` with all four anchors, `0` reading "one form
+      only … no amount of good execution raises it"; the scoring sheet at `:80`
+      carries the `dim5 form-alt` column.
+- [x] AC-3 — A baseline results file reports a dim-5 rate over the 32 stored
       transcripts, names its rater, and states that the strong-reasoning band
       is absent from the corpus.
+      Verified 2026-09-08 — `RESULTS-candidates-baseline-2026-09-07.md`:
+      rater `claude-sonnet-4-5` (`:22`), dim5 mean 0.875/3 = 29.2 % over 32
+      transcripts (`:33`), and § What this corpus cannot answer (`:72-83`)
+      states in bold that all 32 carry `band: standard` so the strong-host half
+      of the bar is unmeasured.
 - [ ] AC-4 — `lint_mandated_lines` reports a third obligation, and a report
       owing `Candidates:` without one exits non-zero while a not-owed report
       stays silent.
-- [ ] AC-5 — A treatment results file reports the three deterministic counts,
+- [x] AC-5 — A treatment results file reports the three deterministic counts,
       the dim-5 delta against AC-3's baseline, and the token-overhead delta on
       the single-step slots.
+      Verified 2026-09-08 — `RESULTS-candidates-treatment-2026-09-08.md` § 3.1
+      carries the three counts with a baseline control column, § 3.2 the dim-5
+      ITT delta (+0.281 / +9.4 pp) against AC-3's file, and the `ss`
+      token-overhead delta (-8.0 % token-weighted). All three are recomputed
+      from the two stored JSON runs by `rdp_candidates_delta`, not asserted.
 - [ ] AC-6 — One of the three verdicts in 3.3 is written into the results
       file, citing the readings it rests on — and if the verdict is delete,
       Phase 2's edits are gone from the tree.
