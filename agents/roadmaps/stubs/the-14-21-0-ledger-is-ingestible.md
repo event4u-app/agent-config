@@ -12,12 +12,41 @@ review_by: 2026-10-07
 > by [`/analyze:inbox`](../../../src/domains/analysis-workbench/analyze/inbox/command.md)
 > on an unrelated round, from a CI red inherited from `main`.
 
-> **Arrivals:** 3 — latest 2026-09-07 (release 14.21.0, closed in this change);
-> earlier: [`road-to-the-unwritten-ledger.md`](../archive/road-to-the-unwritten-ledger.md)
+> **Arrivals:** 4 — latest 2026-09-08 (release 14.22.0, **instance NOT closed**, see
+> below); earlier: 2026-09-07 (release 14.21.0, closed in the change that created
+> this stub), [`road-to-the-unwritten-ledger.md`](../archive/road-to-the-unwritten-ledger.md)
 > (fixed 14.16.0) and [`road-to-the-ledger-two-releases-skipped.md`](../archive/road-to-the-ledger-two-releases-skipped.md)
-> (recorded 14.17.0 + 14.18.0, arrivals 2). Both archived. Every arrival so far
-> has fixed its instance and left the mechanism in place — including this one,
-> which is why the count is written here rather than only in a commit message.
+> (recorded 14.17.0 + 14.18.0, arrivals 2). Both archived. Every arrival before
+> the fourth fixed its instance and left the mechanism in place — which is why
+> the count is written here rather than only in a commit message.
+
+> **Arrival 4 — 2026-09-08, release 14.22.0, and it is the first that did NOT fix
+> its instance.** Found while settling CI on `drain/graph-shipped-close`, a
+> code-graph delivery branch with no release surface in it. Exactly the shape this
+> stub predicts: `Self-review gate` on `release: 14.22.0` (run `34214806821`)
+> **succeeded** and uploaded artifact `10051643231` — 56 findings, 3 critical,
+> 12 high, coverage 253/253 — and nothing ingested it, so
+> `Sync + Generate Tools Consistency` reds on `main` at `2cc536be2` and on every
+> branch inheriting it. § What closes it below was already correct before this
+> arrival; the arrival adds no new mechanism, only the fourth data point and the
+> first instance nobody closed.
+>
+> **Why this one was left open**, stated because the three before it were closed:
+> the finding set is 56 items against a release that branch did not produce, three
+> of them critical and five of them security. § What this stub deliberately does
+> not claim already says the dispositions are the judgement and stay human — and
+> the 14.21.0 closure measured what that judgement costs: ten blocking findings
+> split one fix / three accepted risks / six false positives, three of which cited
+> line numbers that no longer resolved. A run that closed 56 of those in a
+> delivery branch would be manufacturing the ledger, not writing it. The instance
+> record, with the artifact id and the finding breakdown, is
+> [`road-to-the-14-22-0-findings-ledger.md`](road-to-the-14-22-0-findings-ledger.md).
+>
+> **What the fourth arrival changes about the priority, and nothing else.** Three
+> arrivals could each be read as an unlucky release. Four, with the mechanism
+> measured and three named options sitting unchosen since 2026-09-07, is the
+> mechanism being left in place deliberately. The options are unchanged and still
+> need the same owner call; this line is only the count.
 
 ## The mechanism, measured
 
