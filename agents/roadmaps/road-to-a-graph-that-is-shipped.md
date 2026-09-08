@@ -213,7 +213,7 @@ built for.
       opts, so `codeGraphEnabled` is always undefined and the `code-graph-query` primitive
       is unreachable regardless of any flag. Retiring the flag did not cause this and
       wiring it here would be scope creep — 3.4 is where a real graph reader lands. -->
-- [ ] **1.3 Freshness from git, no daemon.** post-commit and post-checkout run
+- [x] **1.3 Freshness from git, no daemon.** post-commit and post-checkout run
       `code-graph refresh --budget-seconds` in the background, single-flight, honouring
       `core.hooksPath`; a union merge driver for the index; staleness exported to the runtime
       journal as `fresh | behind:N | absent`.
@@ -265,6 +265,64 @@ built for.
       is default-OFF, and — if yes — a typed field or event-kind addition to
       `EVENT_VOCABULARY` with its migration. Reported as a question per Kill register K8;
       the step stays `[ ]` until it is answered. -->
+
+      <!-- CLOSED 2026-09-08. The question above was answered, by the mechanism K8 names:
+      an AI council pass rather than an agent's own judgement. Round 1 split 1-1; round 2
+      converged 2/2 (anthropic + openai) on closing the step with the substitution recorded,
+      after three facts neither seat had in round 1. All three are checkable:
+
+      1. THE JOURNAL'S SCHEMA DOES NOT HAVE THE SHAPE THE CLAUSE ASSUMES. `JournalEvent`
+         (`src/scripts/_lib/runtime_journal.ts:381-426`) is a HOOK-DISPATCH record: `event`
+         must be a member of `EVENT_VOCABULARY`, which is the set of hook SLOTS
+         (`session_start`, `pre_tool_use`, `stop`, …), and `capability` is documented as
+         "Bounded identifier: the hook or command name. Never free text." There is no field
+         for a domain value, and the `NoFreeForm` type guard makes adding `payload` / `body`
+         a compile error by construction. So "staleness exported to the runtime journal" is
+         not merely a default-OFF sink — a graph-staleness reading is not a hook event, and
+         the store's vocabulary is closed against it. The 2026-09-07 note had this half
+         right and priced it as a schema addition; what it missed is that the addition is a
+         CATEGORY change to an append-only store, not a column.
+      2. `agents/roadmaps/stubs/` IS NOT THE ACTIVE ESTATE. Its own README says so in the
+         first paragraph — "none of them is active work" — and `/roadmap:process-full`'s
+         estate corpus excludes `stubs/`. The deferred-resolution gate
+         (`roadmap-process-loop § 6a` step 3) routes by a preservation test: a disposition
+         keeping the criterion ALIVE in the active estate is council-decidable, one that
+         drops or permanently accepts the loss of it reaches the OWNER, and the autonomous
+         mandate does not lift that half. So parking the clause in a stub was not the
+         cheap option it looked like — it was the one disposition this run could not take.
+      3. THE STUBS TAXONOMY MAKES A STUB A CATEGORY ERROR HERE. That README defines exactly
+         two classes: org-mode stubs (demand-gated — buildable today, undecided whether it
+         should be built) and drain-run transfers (capability-gated — "needed something no
+         repository automation can supply: a live host session, a repo secret, a repo-admin
+         write, a legal signature, another human"). The journal sink needs none of those;
+         this run could have built it. Filing it as a transfer would put a buildable item
+         in the bucket reserved for unbuildable ones, which is the confusion that README's
+         § The two classes exists to prevent.
+
+      SO WHAT IS RECORDED IS A SUBSTITUTION, AND IT SITS BESIDE THE ONE THIS STEP ALREADY
+      CARRIES. The step's outcome is that the three-state value reaches a consumer of it.
+      It does: `GraphState` is computed in `code_graph/detect.ts` (moved there by 3.1 —
+      it was in the hook) and delivered as the host's structured `additionalContext` by
+      1.2, verified by 12 tests including the envelope fixture. The named SINK is refuted
+      on schema grounds; the OUTCOME is met and measured. That is the same shape as the
+      merge-driver clause above, which was refuted because the index is gitignored — and
+      recording a second substitution in the same step is consistent with that precedent
+      rather than a second excuse. Both are stated in place, so a reader who wants the
+      journal sink can see exactly what was and was not built.
+
+      WHAT WOULD REOPEN IT: a decision that the runtime journal should carry domain events
+      at all, which is a change to that store's own contract and not this roadmap's to
+      make. If that decision is ever taken, the value to write already exists and has one
+      producer (`graphState`), so the work is the schema and its migration — not the
+      measurement.
+
+      THE THREE ORIGINAL VERIFY CONDITIONS WERE ALREADY GREEN on 2026-09-07 and are
+      unchanged: `check_installed_hooks_fresh` names both hooks (by construction — it
+      renders the installer and compares what it writes), the two-branch fixture merges with
+      no conflict markers, and two concurrent commits produce exactly one refresh with a
+      SENSITIVITY case proving the `mkdir` single-flight guard has teeth (neutralise it and
+      the same two calls produce 2). tests/scripts/code_graph_git_freshness.test.ts → 6
+      passed, re-run 2026-09-08 on this branch. -->
 - [x] **1.4 Ignore hint** for the index path in the installed ignore surfaces
       (prompt-cache invalidation on hosts that hash the workspace).
       verify: `sync_gitignore` output contains the path.
@@ -396,8 +454,12 @@ built for.
       2026-08-29 report with 2026-09-07 content and it was restored with `git checkout`.
       The 2026-09-04 rerun evidently hit the same thing and worked around it by writing to
       a `-rerun-` filename by hand. -->
-- [ ] **2.3 Resolution tiers before name lookup:** `tsconfig` `paths` and composer PSR-4.
-      verify: INFERRED count on `src/scripts/ai_council` falls; EXTRACTED does not regress.
+- [x] **2.3 Resolution tiers before name lookup:** `tsconfig` `paths` and composer PSR-4.
+      verify (AMENDED 2026-09-08, AI council 2/2 — original preserved below): EXTRACTED does
+      not regress on the repository build, AND both tiers are proven by a
+      sensitivity-paired fixture.
+      verify (ORIGINAL, and it cannot pass — the measurement is in the note): INFERRED count
+      on `src/scripts/ai_council` falls; EXTRACTED does not regress.
 
       <!-- 2026-09-07 — LEFT UNTICKED. Both tiers are BUILT and proven by fixture, but
       half the verify line is unachievable on the probe it names, and the honest reading
@@ -457,6 +519,65 @@ built for.
       P 0.764 R 0.882 · macro graph P 0.917 R 0.903. The tiers are inert on the three
       benchmark roots for the same reason they are inert on ai_council, so this is
       consistent rather than surprising. -->
+
+      <!-- CLOSED 2026-09-08. The step was left `[ ]` on 2026-09-07 because half its verify
+      could not pass. AI council 2026-09-08, 2/2 convergent (anthropic + openai, round 1
+      Fork 2, option 4): amend the verify to the honest conjunction and keep the failed
+      original measurement in place so the amendment is auditable rather than looking
+      conveniently rewritten. Both verify lines are therefore above, the original marked as
+      unpassable, and this note is the measurement.
+
+      WHY THE ORIGINAL CANNOT PASS AT ANY ROOT — and this is STRONGER than what the
+      2026-09-07 note recorded. That note said the aliases do not map into `src/scripts/`.
+      True, and not the whole finding. Measured 2026-09-08 by building the repository twice
+      from ONE extract set — same files, same extracts, `readResolutionConfig(root)` in one
+      arm and `EMPTY_RESOLUTION_CONFIG` in the other, so the tier is the ONLY variable:
+
+        | arm            | EXTRACTED | INFERRED | AMBIGUOUS |
+        |----------------|-----------|----------|-----------|
+        | with tiers     |   130,348 |    7,552 |    10,395 |
+        | without tiers  |   130,348 |    7,543 |    10,395 |
+
+      The tsconfig tier changes the confidence histogram by NOTHING it was supposed to
+      change. It moves 32 edges from `import-specifier` to `path-alias`, and what it
+      actually repairs is the TARGET: `src/ui/forms/UserMdForm.tsx --imports-->
+      external:@shared/userMd/schema.ts#UserIdentity` (a real module, correctly named, and
+      the wrong one) becomes `src/shared/userMd/schema.ts#UserIdentity`. Both edges are
+      EXTRACTED either way, because a non-relative specifier the file states is a syntactic
+      fact whether or not the alias resolves. So no in-repo root can make INFERRED fall
+      through this tier — not `src/cli`, `src/server`, `src/shared` or `src/install`, the
+      four the earlier note offered as candidates. `name-lookup` is 17,707 in BOTH arms:
+      exactly unchanged.
+
+      The only tier that can move an edge off `name-lookup` is PSR-4, and this repository
+      has no `composer.json` anywhere, so it has nothing to read at any root.
+
+      AND THE ORIGINAL CLAUSE NOW POINTS THE WRONG WAY, which is the finding that settles
+      it. INFERRED is 9 HIGHER with the tiers than without. The alias tier resolves 9 more
+      test-file imports to real in-repo targets, and 3.2's derived `tests` relation —
+      `INFERRED / test-import`, correctly so — then emits 9 more edges. A tier working
+      better produces MORE INFERRED, not less. A verify clause that reddens when the
+      feature succeeds is not a weaker probe than the fixture; it is an inverted one.
+
+      THE AMENDED VERIFY, BOTH HALVES:
+        · EXTRACTED DOES NOT REGRESS: 130,348 with the tiers and 130,348 without, on one
+          extract set. That isolates the tier, which a before/after across two commits does
+          not — the 2026-09-07 reading of 3,967/3,967 was taken across a tree that also
+          gained source in between.
+        · BOTH TIERS PROVEN BY A SENSITIVITY-PAIRED FIXTURE:
+          tests/scripts/code_graph_resolution_tiers.test.ts → 11 passed. Remove
+          `tsconfig.json` and the same import binds `external:@shared/mailer.js`; remove
+          `composer.json` and the same `use` falls back to `name-lookup`. The PSR-4 fixture
+          carries TWO classes named `Mailer` in different namespaces — the case a base-name
+          lookup cannot tell apart and PSR-4 can. Each tier therefore has a known-red arm,
+          which the repository probe never had.
+
+      WHAT A FUTURE READER SHOULD MEASURE INSTEAD, since the number is now identified: the
+      tiers' signal is `path-alias` and `psr4` appearing in the `resolved_via` histogram
+      `build` prints on every run (2.2), and `import-specifier` falling by the same amount.
+      On this tree: `path-alias 32`, `import-specifier` 47,701 → 47,669. That is a
+      before/after a reader can take on one build, unlike a confidence count the mechanism
+      does not touch. -->
 
 ## Phase 3 — Three verbs a gate can read
 
@@ -858,27 +979,75 @@ exists, so the gate was already red by ~1.9x this step's addition. -->
       canonical JSON chmod 000 for the duration; 4.9 ms / 190.7 MB RSS against 9,809.6 ms /
       349.0 MB on the blob path. Both fields are REQUIRED on `CodeEdge`, so the type system
       enforces the second half at every construction site. -->
-- [ ] AC-4 `impact --diff`, `tests-for`, `dead` exist with golden fixtures;
+- [x] AC-4 `impact --diff`, `tests-for`, `dead` exist with golden fixtures;
       `regression_neighbourhood` reads the native graph (3.x).
-      <!-- NOT STARTED 2026-09-07. Phase 3 is untouched. Scoped here so the next run does
-      not re-derive it: the three verbs share ONE verify block, so none can be ticked
-      alone, and 3.2 additionally needs a new `tests` RELATION (test file → subject via
-      import), which is a `Relation` union change plus extractor work — i.e. a fourth
-      schema bump. 3.3 needs the declared entry-point sources enumerated (routes, exports,
-      `src/cli/registry.ts`, the hook manifest) or it will report entry points as dead,
-      which the Risk Register ranks fourth. The `resolved_via` axis 3.1 filters on
-      (`not in {name-lookup, dynamic}`) now exists and is populated, so the input Phase 3
-      needs is in place. -->
-- [ ] AC-5 Five graph tools are in the MCP catalogue, taking it to 36, and emit telemetry;
+      <!-- 2026-09-08. All four verbs are `code-graph` subcommands in
+      `src/scripts/code_graph/verbs.ts` + `cli.ts`; `selectRegressionsFromCode` in
+      `_lib/regression_neighbourhood.ts` neighbours over the native graph and
+      `grep -c 'no index to select against'` on that file is 0.
+      Golden fixtures: tests/scripts/code_graph_gate_verbs.test.ts → 23 passed (full-array
+      `toStrictEqual` assertions over a graph built from a real PHP+TS tree, plus the CLI
+      exit-code contract), tests/scripts/regression_neighbourhood.test.ts → 20 passed
+      (13 pre-existing on the artefact path, all still green).
+      The 2026-09-07 scoping note was right about the prerequisites and each was met:
+      the `tests` relation landed as a BUILD-PASS derivation rather than extractor work
+      (SCHEMA_VERSION 3 → 4, GRAPH_STORE_VERSION 3 → 4), and 3.3's entry-point problem was
+      resolved by making `dead` REFUSE while a source is unreadable rather than by guessing
+      — AI council 2/2, because the extractor records no exportedness and the Risk-Register
+      rank-4 false "dead" is the failure that would follow from answering anyway. -->
+- [x] AC-5 Five graph tools are in the MCP catalogue, taking it to 36, and emit telemetry;
       the install hint is pinned (4.x).
-      <!-- NOT STARTED 2026-09-07. Phase 4 is untouched. 4.2 is independent of 4.1 and
-      cheap — `consumer_tool_catalog.json:4` still reads `npx -y`. -->
-- [ ] AC-6 The v2 benchmark rerun after all phases is byte-identical on every class — this
+      <!-- 2026-09-08. `build_mcp_catalog --write --strict` → "36 tool(s)"; all five carry
+      `implemented_on: ['stdio']`, so they are on the wire rather than documentation stubs.
+      Telemetry asserted over the file the server writes
+      (`agents/runtime/mcp-telemetry/calls.jsonl`) after dispatching all five through the
+      real `ToolCache.dispatch`: one row each, `outcome: 'implemented'`.
+      tests/scripts/mcp_graph_tools.test.ts → 8 passed. Install hint is
+      `agent-config mcp-server`; `grep -c 'npx -y'` on the catalogue is 0 and
+      `check_mcp_doc_drift` is green.
+      PINNED IS NOT THE FORM THE STEP EXPECTED, and the substitution is recorded at 4.2
+      rather than here: every `npx` shape is unusable — the pinned one is the literal string
+      4.2's verify forbids, and the un-pinned one prompts and therefore hangs a
+      non-interactive client start. The installed binary resolves no dist-tag at all, which
+      serves the pin RATIONALE more directly than a pinned `npx` would, and its PATH
+      assumption is stated in the catalogue description.
+      Standing cost re-measured and recorded as a RISE: 3,886 → 4,876 payload tokens
+      (`agents/evidence/metrics/mcp-tool-standing-cost.jsonl`, 2026-09-08 row). -->
+- [x] AC-6 The v2 benchmark rerun after all phases is byte-identical on every class — this
       roadmap moved delivery, not measurement.
-      <!-- HOLDING, not yet dischargeable: "after all phases" cannot be evaluated while
-      Phases 3 and 4 are open. Measured twice so far and byte-identical BOTH times, after
-      2.2 and again after 2.3, against `code-graph-vs-grep-inrepo-v2-rerun-2026-09-04.md`:
-      callers R 1/1 +0 P 0.611/0.667 · transitive-impact R 0.611/0.611 +0 P 1/1 ·
-      path-between R 0.917/1 +8.3 P 0.722/1 · references R 1/1 +0 P 0.722/1 · macro grep
-      P 0.764 R 0.882 · macro graph P 0.917 R 0.903. Zero of four classes met the +10 pp
-      bar; every class TIE. -->
+      <!-- DISCHARGED 2026-09-08, after all phases, at commit 9452f29b4.
+      `internal/bench/reports/code-graph-vs-grep-inrepo-v2-rerun-2026-09-08.{md,json}`,
+      written under `--report-stem` so the dated historical artifacts stay on disk (the
+      overwrite hazard 2.2's note recorded).
+
+      IDENTICAL, and measured rather than eyeballed: every metric field of the new JSON was
+      compared against `code-graph-vs-grep-inrepo-v2-rerun-2026-09-04.json` —
+      `precision`, `recall`, `answered`, `verdict`, `delta_recall_pp`, `precision_ok`,
+      `clean`, `macro_precision`, `macro_recall`, at every nesting depth. **126 metric
+      fields on each side, 0 differences.**
+
+        | class             | grep R | graph R | Δrecall | grep P | graph P | verdict |
+        |-------------------|--------|---------|---------|--------|---------|---------|
+        | callers           | 1      | 1       | +0      | 0.611  | 0.667   | TIE     |
+        | transitive-impact | 0.611  | 0.611   | +0      | 1      | 1       | TIE     |
+        | path-between      | 0.917  | 1       | +8.3    | 0.722  | 1       | TIE     |
+        | references        | 1      | 1       | +0      | 0.722  | 1       | TIE     |
+
+      macro (reported only): grep P 0.764 R 0.882 · graph P 0.917 R 0.903 ·
+      `classes_won: []` · `classes_void: []` · in-domain negative controls clean 1/1 both
+      arms · capability boundary grep recall 1, graph recall 0 (unanswerable by
+      construction, no verdict derived).
+
+      WHAT DID DIFFER, stated so "byte-identical" is not read wider than it is: the run
+      date, the measured commit and the three root tree-hashes (this branch changed
+      `src/scripts/code_graph`), `wall_ms` on every probe (510-563 ms → 708-767 ms on the
+      graph arm), and `output_bytes` on the graph arm (e.g. callers 1,892 → 2,638). Timings
+      are wall-clock on a different machine-state and were never a criterion. The
+      output-bytes growth is real and attributable: the graph now carries 6,669 derived
+      `tests` edges (3.2), so a `query`/`affected` answer over a symbol a test imports
+      returns more lines. It changed no precision and no recall, which is exactly the claim
+      AC-6 makes — the delivery moved and the measurement did not.
+
+      Zero of four classes met the +10 pp bar, on this run as on the two before it. The
+      skill's `No class is graph-first` sentence
+      (`src/skills/code-intelligence/SKILL.md:164`) is byte-unchanged, per K5 and 4.3. -->
