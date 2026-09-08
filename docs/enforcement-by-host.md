@@ -173,8 +173,39 @@ migration toward it is scheduled.
 | L1 `impossible` | The violating action cannot be expressed (capability removed, API absent) | — (no per-rule tier; this is tool-grant design, see `tool-safety`) |
 | L2 `blocked` | A deterministic gate rejects the action at call time | `validator` (CI-reachable), or a `fail_closed: true` hook |
 | L3 `verified` | The action runs; a check detects the violation after the fact and fails a build | `validator` / `validator-local` |
-| L4 `just-in-time` | The constraint is injected into context at the moment of relevance, not always-loaded | *no equivalent today* — the one genuinely new level; worth a future look (hook-capable hosts only) |
+| L4 `just-in-time` | The constraint is injected into context at the moment of relevance, not always-loaded | per host — see the L4 table below; no host is measured as receiving one yet |
 | L5 `prose` | The constraint is instructed, model-cooperatively | `observer` / `none` (honest prose, per the compile-time-first stance above) |
+
+### L4 per host — what each one actually has (2026-09-08)
+
+Replaces the L4 row's former "nothing here has one" cell, which was true when
+the ladder was written and stopped being true when the delivery concern shipped.
+Every cell cites the emitter or the binding that produces it.
+
+| Host | L4 mechanism | Cited at | Measured to reach the model? |
+|---|---|---|---|
+| Claude Code | hook delivery — `rule-inject` on `user_prompt_submit`, re-armed on `pre_compact` | `src/scripts/hooks/rule_inject_hook.ts`, `hook_manifest.yaml:1221` | `unobserved` |
+| Cursor | description-gated native form — `alwaysApply: false` plus globs, with the rule's own trigger terms lowered into the description | `src/scripts/condense.ts::_emit_cursor_mdc`, `src/install/claudePathsPlan.ts::applies_when` | n/a — no hook delivery bound |
+| Windsurf | description-gated native form — `trigger: model_decision`, same lowering | `src/scripts/condense.ts::_emit_windsurf_rule` | n/a — no hook delivery bound |
+| Cowork | none | — | `observed-false`: the trampoline discards dispatcher output and exits 0 |
+| Cline · Gemini · Augment · Copilot · Codex | none — the full corpus is projected instead | `src/scripts/condense.ts` `TOOL_DIRS` loop | `unobserved` |
+
+**No host is measured as receiving a just-in-time constraint yet, Claude Code
+included.** The mechanism exists and its byte-equivalence is measured; what is
+not measured is a model visibly acting on a delivered body, which is the bar
+owner ruling E3 sets and which no transcript in this tree meets. The per-host
+record and its citation requirement are
+`src/config/host-injection-effect.json` and
+`agents/evidence/analysis/host-injection-effect-2026-09.md`.
+
+**A host without a measured injection path receives the full corpus, and that
+is the cost of the host rather than a defect.** Nothing is withheld from it: the
+projection writes every rule body, and `check_host_tree_parity` asserts per PR
+that such a host's tree is byte-identical to an `eager-all` run.
+
+**Expiry: 2026-12-08.** This table is a snapshot of an observation state that is
+expected to change; re-derive it from the record above rather than trusting the
+cells after that date.
 
 The ladder is descriptive vocabulary. The measured stance stands: lead
 with compile-time prose everywhere, bind deterministic checks where a host
