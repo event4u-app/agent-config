@@ -64,7 +64,7 @@ export function recycleFixture(): MainSessionRecycleEnvelope {
     };
 }
 
-describe('anti-fork: both variants validate through the one module', () => {
+describe('anti-fork: every variant validates through the one module', () => {
     it('the worker fixture passes the worker validator', () => {
         expect(validateCapsule(workerFixture())).toEqual([]);
     });
@@ -74,10 +74,23 @@ describe('anti-fork: both variants validate through the one module', () => {
     });
 
     it('the variant vocabulary is pinned', () => {
-        expect([...CAPSULE_VARIANTS]).toEqual(['worker', 'main_session']);
+        // `continuity_record` added by road-to-continuity-retirement-sequencing
+        // 3.2. The pin is doing its job by having failed here: a variant is a
+        // vocabulary change, and the recorded schema lock permits adding one
+        // only deliberately. The reason it was added, rather than relaxing
+        // `main_session`: that variant REQUIRES `failed_approaches` and
+        // `successful_approaches` with an explicit `none`, and a writer running
+        // without model spend cannot know either — it could only assert a
+        // judgement nobody made. The AI council of 2026-09-07 ruled that
+        // explicit absence markers "misrepresent unavailable model judgments as
+        // values", so the deterministic record gets its own variant on which
+        // those fields are forbidden outright.
+        expect([...CAPSULE_VARIANTS]).toEqual(['worker', 'main_session', 'continuity_record']);
         // 3 since road-to-cost-parity-3 Phase 2 — the bump is deliberate:
         // `failed_approaches` became REQUIRED, so a v2 envelope must fail
-        // loudly rather than be read as "nothing was abandoned".
+        // loudly rather than be read as "nothing was abandoned". The version is
+        // envelope-wide and did NOT move for the third variant: adding a
+        // variant is not a version event under the lock.
         expect(CAPSULE_SCHEMA_VERSION).toBe(4);
     });
 

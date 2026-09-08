@@ -101,9 +101,38 @@ describe('recycle envelope — one mutation, one rejection', () => {
         expect(validateRecycleEnvelope(e).some((v) => v.includes('predecessor'))).toBe(true);
     });
 
-    it('rejects the wrong variant', () => {
+    it('routes a `worker` record away rather than failing it on the wrong required set', () => {
+        // Changed with the `continuity_record` variant. The validator now
+        // dispatches on variant BEFORE anything else, so a `worker` record —
+        // which is a well-formed record of a DIFFERENT variant, not a malformed
+        // main-session one — is refused by routing rather than by being
+        // measured against a required set that was never its own.
         const e = { ...validEnvelope(), variant: 'worker' };
-        expect(validateRecycleEnvelope(e)).toContain("variant must be 'main_session'");
+        const errors = validateRecycleEnvelope(e);
+        expect(errors).toHaveLength(1);
+        expect(errors[0]).toContain("variant 'worker'");
+        expect(errors[0]).toContain('validated by the worker path');
+    });
+
+    it('refuses an UNKNOWN variant by name and runs no field checks against it', () => {
+        // The council of 2026-09-07 required readers to dispatch on variant
+        // before rejecting on version, and probe P2 of the transfer stub
+        // recorded this branch as untestable "by construction" because no third
+        // variant existed. It exists now, so the branch is reachable and pinned.
+        const e = { ...validEnvelope(), variant: 'continuity_v2_speculative' };
+        const errors = validateRecycleEnvelope(e);
+        expect(errors).toHaveLength(1);
+        expect(errors[0]).toContain('unknown variant');
+        expect(errors[0]).toContain('no further field checks were run');
+    });
+
+    it('refusing an unknown variant does not corrupt a known one', () => {
+        // The second half of P2: a reader that met an unknown variant must
+        // still validate the next known record normally. Shared mutable state
+        // in the validator is the way that breaks, and it is invisible unless
+        // the two are exercised in sequence.
+        validateRecycleEnvelope({ ...validEnvelope(), variant: 'nonesuch' });
+        expect(validateRecycleEnvelope(validEnvelope())).toEqual([]);
     });
 
     it('rejects an unknown key — free-form additions are schema-invalid', () => {
@@ -142,11 +171,17 @@ describe('recycle envelope — one mutation, one rejection', () => {
     });
 
     it('reports EVERY violation, not just the first — a partial list hides work', () => {
-        const e = { ...validEnvelope(), capsule_version: 0, variant: 'worker', junk: 1 };
+        // Exhaustiveness holds WITHIN a recognised variant, which is where it
+        // was always the useful property. The variant is left valid here on
+        // purpose: with an unrecognised one the required set is unknown, and a
+        // list of field violations measured against a guess would be noise
+        // wearing completeness. That narrowing is the whole content of the
+        // variant-first dispatch, so this case now pins the half that survives.
+        const e = { ...validEnvelope(), capsule_version: 0, task: '', junk: 1 };
         const errors = validateRecycleEnvelope(e);
         expect(errors.length).toBeGreaterThanOrEqual(3);
         expect(errors.some((v) => v.startsWith('capsule_version'))).toBe(true);
-        expect(errors.some((v) => v.startsWith('variant'))).toBe(true);
+        expect(errors.some((v) => v.startsWith('task'))).toBe(true);
         expect(errors.some((v) => v.includes('unknown field "junk"'))).toBe(true);
     });
 });

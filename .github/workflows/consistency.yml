@@ -447,6 +447,19 @@ jobs:
         # gate-coverage manifest exists to prevent.
         run: ./scripts-run src/scripts/check_estate_count
 
+      - name: Continuity-surface ratchet + behavioural inventory
+        # Same no-warn-and-allow stance as the estate ratchet above, and for the
+        # same reason: exit 2 here means the inventory could not be read against
+        # the tree, and a surface count that passes when it read nothing is
+        # exactly the false green the gate-coverage manifest exists to prevent.
+        run: ./scripts-run src/scripts/check_continuity_surface
+
+      - name: Continuity-surface gate self-test
+        # The negative control the row in gate-coverage.yml points at instead of
+        # a planted canary: 7 cases, 4 rejecting, covering every failure class in
+        # both directions against throwaway repositories.
+        run: ./scripts-run src/scripts/check_continuity_surface --self-test
+
       - name: Gate R1 — plan Risk Registers (plan-review-gates §1)
         # Exit-code contract §6: 2 = internal error → degraded advisory
         # (warn-and-allow — a broken gate never blocks its own fix).

@@ -304,7 +304,7 @@ THE RECORD IS ADDED AND NOTHING IS RETIRED — IS STILL LIVE FOR THE
 TRANSFERRED HALF. A COMPLETED ROADMAP HERE IS NOT AN ACHIEVED GOAL.
 ```
 
-Receiver: `agents/roadmaps/road-to-continuity-retirement-sequencing.md`
+Receiver: `agents/roadmaps/archive/road-to-continuity-retirement-sequencing.md`
 (`status: carrier`, paid for by archiving this roadmap in the same change).
 Disposition record, promoting probe and the refuted premise:
 `agents/roadmaps/stubs/road-to-continuity-retirement-sequencing.md`.
