@@ -47,13 +47,20 @@ const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..')
  * cached or it is not), but it also forfeits patch fixes — so each one is
  * named here rather than silently tolerated.
  *
- * Empty since the code-graph parser pair (`web-tree-sitter` /
- * `tree-sitter-wasms`) left `dependencies` — it was the only entry. The pair's
- * ABI pin now lives in `code_graph/loader.ts`'s install hint, because that is
- * the only place a re-enabler reads it; this gate scans `dependencies` and so
- * no longer sees the pair at all.
+ * `web-tree-sitter` returned to `dependencies` under ADR-259 (amended
+ * 2026-09-07), so this gate sees it again and it needs its exception back. The
+ * grammars it loads are vendored at `src/vendor/grammars/` rather than pulled
+ * from `tree-sitter-wasms`, which stays a devDependency and is therefore still
+ * outside this gate's scope.
  */
-export const EXACT_PIN_EXCEPTIONS: Readonly<Record<string, string>> = {};
+export const EXACT_PIN_EXCEPTIONS: Readonly<Record<string, string>> = {
+    'web-tree-sitter': 
+        'ABI-coupled to the vendored grammar set (grammar ABI 14, ' +
+        '`EXPECTED_GRAMMAR_ABI` in code_graph/types.ts). A patch bump can move the ABI, ' +
+        'which would make every grammar load throw rather than degrade — so the runtime ' +
+        'and its grammars move together, in one reviewed change, or not at all. ' +
+        'Refresh procedure: src/vendor/grammars/README.md.',
+};
 
 /**
  * Floors that are non-settled ON PURPOSE, because every version below them is

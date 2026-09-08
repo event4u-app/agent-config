@@ -12,3 +12,19 @@ path = "**"
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2025-2026 event4u"
 SPDX-License-Identifier = "MIT"
+
+# Vendored third-party grammars (ADR-259). The blanket `**` block above is a
+# first-party MIT declaration; these three compiled WebAssembly artifacts are
+# NOT first-party, so they carry their own annotation rather than inheriting a
+# copyright line that would be false. `precedence = "override"` makes this block
+# win over the aggregate one for these paths.
+#
+# Packaged by tree-sitter-wasms@0.1.13 (Unlicense); compiled from the upstream
+# tree-sitter/tree-sitter-{php,typescript,javascript} grammars, which are MIT.
+# The compiled artifact is a derivative of the MIT grammar source, so MIT is the
+# licence that travels with it. Provenance: src/vendor/grammars/README.md.
+[[annotations]]
+path = "src/vendor/grammars/**.wasm"
+precedence = "override"
+SPDX-FileCopyrightText = "2018-2026 Max Brunsfeld and the tree-sitter grammar authors"
+SPDX-License-Identifier = "MIT"
