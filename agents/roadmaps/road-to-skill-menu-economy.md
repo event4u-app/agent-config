@@ -17,7 +17,7 @@ relates:
     note: >
       A carrier for one deferred census item, not an owner of the catalog bucket —
       it holds a framing question, this file holds the standing bytes.
-estate_growth_exempt: "Owner-instructed 2026-09-07. Charges +1 active roadmap against the origin/main `active_roadmaps` floor of 4 measured at 0918def55 — the floor is the base-ref measurement, not a stored number (ADR-243). The 14,846-token skill catalog is the second-largest standing bucket and is held by no active roadmap; `road-to-the-skill-surface-framing-choice.md` carries `status: carrier` for one deferred census item and does not own the bucket."
+estate_growth_exempt: "Owner-instructed 2026-09-07. Charges +1 active roadmap against the origin/main `active_roadmaps` floor of 4 measured at 0918def55 — the floor is the base-ref measurement, not a stored number (ADR-243). The 14,846-token skill catalog is the second-largest standing bucket and is held by no active roadmap; `road-to-the-skill-surface-framing-choice.md` carries `status: carrier` for one deferred census item and does not own the bucket. AMENDED 2026-09-08 (owner-delegated drain run), and the amendment is what makes this claim diff-scoped rather than banked: this change also adds ONE blocker entry (`step-1-2-menu-exclusion-lever-unbuilt`), which grows `open_blockers` by 1 against the origin/main floor. `open_blockers` carries no growth allowance by policy, so a claim is the only green path. The rise is a NEW recorded blocker, not a repaired undercount: the mechanism defect it names was reproduced at e010b1c2f and no blocker described it before."
 estate_offset_exempt: "Offsets nothing. It disposes no roadmap and archives nothing, so the one-in-one-out half has no move available and is claimed here instead."
 ---
 
@@ -150,12 +150,24 @@ invariant holds either way: no skill leaves the install.
       skill; nothing static proves the menu never does. So `command-only` and `flow-only`
       name **105 candidates**, never 105 marking decisions — which is Risk 1, and 1.2's
       per-skill invocation fixture is where it is discharged.
-- [ ] **1.2 Mark command-only and flow-only skills `user-invocable: false`** in frontmatter;
-      the projector drops them from the model menu but leaves the skill directory installed.
-      verify: skill count on disk 299; `check_preamble_payload_budget` catalog bucket drops
-      by the marked skills' name+description bytes; a fixture invokes each marked skill via
-      its command successfully.
-      BLOCKED 2026-09-07, on two independent things and neither is a scheduling excuse.
+- [ ] **1.2 Exclude the command-only and flow-only skills from the model menu** — once a
+      field that actually does so exists. Requires: a mechanism that removes a skill from the
+      **delivered** model catalog while preserving its command and flow invocability; the 105
+      candidates marked with it; and each marked skill still reachable by its command.
+      verify: skill count on disk 299; the catalog bucket drops by the marked skills'
+      name+description bytes **as measured against the delivered menu, not file presence**;
+      a fixture invokes each marked skill via its command successfully.
+      **Corrected 2026-09-08 — this step named a mechanism that does not exist.** It read
+      "Mark command-only and flow-only skills `user-invocable: false` in frontmatter; the
+      projector drops them from the model menu but leaves the skill directory installed",
+      and its verify asked the catalog bucket to drop by the marked bytes. Both halves are
+      refuted at `e010b1c2f` by
+      `agents/evidence/analysis/skill-menu-exclusion-lever-2026-09-08.md`, and the step is
+      restated above as the requirement it actually is rather than left as an instruction a
+      later reader would execute. The correction is not a re-scope: the goal is untouched and
+      no work moved out of this file. Summary of the three surfaces, which is finding (c)
+      below.
+      BLOCKED 2026-09-08, on three independent things and none is a scheduling excuse.
       (a) The Prerequisites' first line is unmet — `road-to-delivery-for-every-host`
       Phase 4 is entirely unticked, and this file's own header says it runs after that
       Phase so the measurement lands on the post-flip baseline. Marking now would measure
@@ -165,7 +177,30 @@ invariant holds either way: no skill leaves the install.
       on a static scan. The verify's own third limb — a fixture that invokes each marked
       skill via its command — is the mitigation, and building a 105-skill invocation
       fixture is the substance of this step rather than a formality around it.
-      Closes when Phase 4 of the predecessor is merged and that fixture exists.
+      (c) **The mechanism this step named does not exist in the tree.** Three surfaces,
+      full evidence in `agents/evidence/analysis/skill-menu-exclusion-lever-2026-09-08.md`.
+      · `censusSkillsCatalog` (`src/scripts/preamble_byte_census.ts:290-310`) sums
+        `` `- ${name}: ${description}\n` `` over every `SKILL.md` and filters on nothing —
+        it reads neither `user-invocable` nor `disable-model-invocation`. Measured: marking
+        all 105 candidates moves 104 of them by **exactly 0** chars, count 299 → 299. The
+        one non-zero is `mcp`, and it is a probe defect (`src/skills/mcp/SKILL.md:5` already
+        carries the key, so the probe wrote a duplicate and the description parsed empty),
+        recorded rather than dropped.
+      · `user-invocable: false` has **inverted** semantics here:
+        `src/scripts/lint_agent_skill_names.ts:104` calls it opting out of *slash
+        registration*, and `:198-207` says it "keeps the skill model-loadable while the host
+        retains the /name". It would cost the user's slash access to exactly the 105 skills
+        whose one established entry path is a command or a flow — Risk 1 arriving from the
+        opposite direction. `disable-model-invocation` is no substitute: it is a **required
+        field of a command** (`src/scripts/schemas/command.schema.json:9`).
+      · Corroborating, one host on one date: all three skills already carrying one of the two
+        fields — `mcp`, `code-review` (`user-invocable: false`), `command-writing`
+        (`disable-model-invocation: true`) — were present in the model-visible catalog
+        delivered to the session that recorded this. The census's own `on menu` column reads
+        `no` for the first two.
+      Closes when Phase 4 of the predecessor is merged, a real exclusion mechanism exists,
+      the measurement reads the delivered menu, and that fixture exists. See
+      § Blockers → `step-1-2-menu-exclusion-lever-unbuilt`.
 - [x] **1.3 Orphans are reported, not deleted.** Any `orphan` row is listed in the PR body
       with its last command reference; no removal.
       verify: `grep -c orphan <census>` equals the PR-body count.
@@ -206,6 +241,24 @@ invariant holds either way: no skill leaves the install.
       verify: table equals census.
       BLOCKED 2026-09-07 — the predecessor's Phase 7.2 generates the table this step
       updates, and that Phase is unticked too. Closes after Phases 1 and 2 here.
+
+## Blockers
+
+### blocker: step-1-2-menu-exclusion-lever-unbuilt
+
+- **Status:** open
+- **Owner:** maintainer
+- **Asked:** 2026-09-08, in the owner-delegated drain run; dispositioned by AI council the same day (2 seats, anthropic + openai, subscription transport, $0.0000, quorum 2/2 after the run).
+- **Blocks:** steps 1.2, 2.1, 2.2 and 3.1, and acceptance criteria 1 and 3. Steps 1.1 and 1.3 are done and unaffected; the published census stands.
+- **Recommendation:** none on the mechanism itself — choosing or building a model-menu exclusion path asserts a behaviour of a host this repository does not own, and that is the owner-reserved decision held in `road-to-the-skill-surface-framing-choice.md`. The council's recommendation was procedural only: record the defect, correct the false step text, keep the roadmap at 4/12, and pin explicit unblock conditions so "blocked" does not decay into "abandoned in place".
+- **If you do nothing:** step 1.2 stays phrased as a mechanism that measurably does nothing, and a later reader executes it — marking 105 skills, moving the catalog bucket by 0 bytes, and removing the user's slash access to exactly the skills whose only entry path is a command. That is Risk 1 realised from the opposite direction, and every file-count check passes while it happens.
+- **What to do:**
+  1. Read `agents/evidence/analysis/skill-menu-exclusion-lever-2026-09-08.md` (three surfaces, pinned to `e010b1c2f`), then decide the surface question in `agents/roadmaps/road-to-the-skill-surface-framing-choice.md` — it is owner-reserved and no agent may pick either of its options.
+  2. Or build a delivered-menu census first, so the measurement this roadmap depends on reads the model's catalog rather than file presence: `src/scripts/preamble_byte_census.ts:290-310` is the function that would have to change, and `agents/evidence/analysis/skill-menu-census-2026-09.md:62` is the artifact whose `on menu` column already disagrees with it.
+  3. Or state that the catalog bucket is not reducible by marking, in which case acceptance criterion 1 is retired by owner decision and this roadmap's Phase 1 ends at the published census.
+- **Resolved when:** all five hold — (i) `road-to-delivery-for-every-host` Phase 4 is merged, so 1.2 measures the post-flip baseline; (ii) the owner-reserved surface decision in `road-to-the-skill-surface-framing-choice.md` is recorded; (iii) a mechanism that removes a skill from the **delivered** model catalog while preserving command and flow invocability is identified or built; (iv) the measurement in 1.2's verify reads the delivered menu rather than `SKILL.md` file presence; (v) the 105 candidates are revalidated per-skill, because the census establishes candidates and never sole entry path.
+- **Review trigger:** re-read this blocker when `road-to-delivery-for-every-host` archives, or on 2026-12-08, whichever is first. Condition (i) is the only one that can close on its own; if it closes and (ii)-(v) have not moved, that is the signal to take the disposition back to the council rather than to leave the file open another quarter.
+- **Why this is a blocker and not a re-scope.** The council considered re-scoping the goal to what the tree can already establish and rejected it 2/2 — on K5 (the openai seat read the narrowing as the forbidden carrier move) and, independently, because the narrowed goal would have been a false claim: proving that *no* shipped field removes a skill from the model's menu is a statement about the **delivered** menu, and this tree has no delivered-menu census. Deleting the roadmap was rejected as an unauthorised retirement. Building the lever was rejected as crossing the owner-reserved boundary. Option A was unanimous.
 
 ## Kill register
 
@@ -250,6 +303,13 @@ invariant holds either way: no skill leaves the install.
       would otherwise re-derive it, and because 105 sits close enough to 100 that a small
       change in the reference rule could flip the hatch — the rule the number came from
       is published in the artifact for exactly that reason.
+      **Corrected 2026-09-08 — the byte limb is not merely blocked, it is unreachable by the
+      mechanism Phase 1 named.** Marking moves the measured bucket by 0 (evidence:
+      `agents/evidence/analysis/skill-menu-exclusion-lever-2026-09-08.md`), so this criterion
+      cannot be met by 1.2 as it was written and is restated as depending on a real exclusion
+      mechanism plus a delivered-menu measurement. Both limbs are now negative against the
+      current tree: the escape hatch does not fire (105 ≥ 100) and the byte limb has no lever.
+      See § Blockers → `step-1-2-menu-exclusion-lever-unbuilt`.
 - [ ] 299 skills installed; every marked skill callable by its command.
       OPEN 2026-09-07. First limb holds and was checked: 299 skill directories with a
       `SKILL.md` on disk, unchanged by this work — nothing was marked, moved or removed.
