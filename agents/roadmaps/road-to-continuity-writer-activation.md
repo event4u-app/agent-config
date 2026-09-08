@@ -57,7 +57,7 @@ councils required puts them there on purpose:
 
 ## Phase 1 — the writer, behind its own switch
 
-- [ ] **1.1 Settle the authoritative record slot before anything writes to it.**
+- [x] **1.1 Settle the authoritative record slot before anything writes to it.**
       The producer, the single consume-by-rename record and the
       validating-and-destructive consumer form a one-slot queue with no
       documented conflict ownership. Automatic production changes contention
@@ -69,7 +69,21 @@ councils required puts them there on purpose:
       storage-adapter test interrupts before and after the atomic rename and
       shows no partial authoritative record in either case; a retry over an
       occupied slot neither overwrites nor destroys the unconsumed record.
-- [ ] **1.2 A deterministic writer that runs without model spend, default-off.**
+      landed: policy `supersede-own · refuse-foreign · quarantine-unusable ·
+      never-go-backwards`, written in `docs/contracts/continuity-record-slot.md`
+      and implemented by `src/scripts/_lib/continuity_slot.ts`. Both rejected
+      alternatives are rejected on tree evidence: create-if-absent IS Risk 2 of
+      this roadmap, and a bounded multi-record queue needs the recency
+      resolution `src/scripts/_lib/recycle_envelope_paths.ts:61-66` locks out
+      and `resolveContinuityRecord` refuses. `consuming` is a transition and not
+      a disk state, because both publication
+      (`src/scripts/hooks/state_io.ts:495-499`) and consumption
+      (`src/scripts/handoff_context_hook.ts:199`) are one `renameSync` inside
+      one directory. 15 fixtures in
+      `tests/scripts/_lib_continuity_slot.test.ts`, all green; sensitivity shown
+      by neutralising the foreign-refusal, the monotonic guard and
+      quarantine-not-delete in turn and watching the matching fixture go red.
+- [x] **1.2 A deterministic writer that runs without model spend, default-off.**
       It emits the `continuity_record` variant, computes every field from
       on-disk state, and is gated by its own settings switch defaulting to
       `false`. Default-off is not caution for its own sake: until 1.1 is
@@ -79,7 +93,26 @@ councils required puts them there on purpose:
       spend; a session that did nothing substantive leaves none; the count comes
       from the concern's own state, never from file presence; with the switch at
       its default the tree behaves exactly as it does today.
-- [ ] **1.3 Parity, in the two halves the 2026-09-08 council separated.**
+      landed: `src/scripts/_lib/continuity_writer.ts` builds the record from
+      on-disk state only, and `writeContinuityRecord` in
+      `src/scripts/hooks/session_eol_hook.ts` publishes it through step 1.1's
+      slot. The handler sits INSIDE the existing `session-eol` concern, so
+      `concern_count` stays at its floor of 58 — the manifest split is step 2.1
+      and stays blocked. Armed by `continuity.auto_record`, which ships `off`
+      (`src/config/agent-settings.template.yml`, class C in
+      `docs/contracts/settings-classes.md`). It fires from the raw recycle
+      threshold rather than the once-per-session advisory stamp, so a later Stop
+      supersedes rather than freezing the record at the moment the session
+      crossed. Two bounds are stated rather than hidden: a session with no
+      claimed roadmap leaves NO record, because the only deterministic source of
+      an `acceptance_criteria` entry in this tree is the claimed roadmap and a
+      placeholder would assert a definition of done nobody set; and the anchor
+      fields `session:recycle` collects with `git status` are omitted, trading
+      one drift line for a Stop path that spawns nothing. 17 fixtures in
+      `tests/scripts/continuity_writer.test.ts`, all green; sensitivity shown by
+      forcing the switch hard-on (3 red), hard-off (3 red), and by neutralising
+      the substantive gate (2 red) and the claim gate (1 red) in turn.
+- [x] **1.3 Parity, in the two halves the 2026-09-08 council separated.**
       Transformation parity is a fixture suite — recorded transcripts and
       roadmap states in, field-by-field comparison out, written to a scratch
       directory that is neither the authoritative filename nor the authoritative
@@ -94,7 +127,28 @@ councils required puts them there on purpose:
       integration tests show at-most-one authoritative publication, no
       overwrite, no partial file, retry-safe convergence, correct source
       routing, and one handler's failure not suppressing another's.
-- [ ] **1.4 Independent kill switches, and a rollback note that distinguishes
+      landed: transformation parity in
+      `tests/scripts/continuity_parity_fixtures.test.ts` — 12 fixtures over all
+      eight named cases, each carried through the REAL consumer
+      (`consume_recycle_envelope`) rather than only through the writer, because
+      a writer whose own consumer refuses its shape has parity with nothing.
+      Every built record is parked in `<scratch>/parity-out/`, and a closing
+      fixture walks the whole scratch tree to prove the suite created no
+      authoritative record anywhere. Runtime parity in
+      `tests/hooks/continuity_writer_dispatch.test.ts` — 8 fixtures driving the
+      real `dispatch_hook` over the real manifest with a real `stop` and
+      `session_start` envelope: at-most-one publication, no overwrite of a peer
+      session's record, no temp litter, retry-safe convergence across repeated
+      Stops, `source=resume` not consuming while `source=startup` does, and both
+      directions of failure isolation. No wall-clock soak, per the 2026-09-08
+      council. One fixture was CORRECTED before landing: planting a directory at
+      the record name does not refuse a publish — the slot policy quarantines it
+      by rename and then succeeds — so the test asserted isolation without ever
+      failing; it now blocks the quarantine DESTINATION, which is the one branch
+      that returns a refusal before any write. Sensitivity: removing the handler
+      call from the hook reds 4 of the 8 runtime fixtures, and neutralising the
+      foreign-refusal reds the no-overwrite fixture.
+- [x] **1.4 Independent kill switches, and a rollback note that distinguishes
       the two kinds of undo.** The continuity writer, `run_checkpoint`
       production and the session-index restore each get their own switch, and
       disabling one restores pre-change behaviour for that handler only.
@@ -103,6 +157,30 @@ councils required puts them there on purpose:
       verify: a test disables each switch in turn and shows the other two still
       fire; the rollback note names the residual behaviour of each switch and
       the trip criteria that should cause an operator to throw one.
+      landed: `continuity.auto_record` (new, ships `off`),
+      `continuity.run_checkpoints` (new, ships `on` — that is the behavior the
+      tree already had) and `memory.session_index` (pre-existing, ships `off`).
+      The two new readers have deliberately OPPOSITE failure polarity, and both
+      directions are pinned by fixtures: `auto_record_enabled` fails closed so an
+      unreadable cascade leaves the new producer disarmed, while
+      `run_checkpoints_enabled` fails open so the same cascade never silently
+      removes a recovery aid the tree already had. Rollback note in
+      `docs/contracts/continuity-rollback.md`, which leads with the distinction
+      the step asked for — disabling new behavior is a switch, reverting a
+      deletion is a commit — and names, per switch, the residual behavior and
+      the trip criteria, plus a closing section on what no switch can undo
+      (a retired command, concern, advisory, or an already-written record).
+      6 fixtures in `tests/hooks/continuity_switches.test.ts` over the real
+      dispatcher on both slots: an all-armed baseline, then one case per switch
+      asserting all THREE outcomes, so an entanglement fails rather than
+      passing. Sensitivity: forcing `auto_record` on reds 2, forcing
+      `run_checkpoints` on reds 1, inverting the checkpoint guard reds 5.
+      One claim was NARROWED on measurement rather than asserted: with
+      `memory.session_index` armed the fixture emits no `memory-index` block,
+      because a scratch workspace carries no curated corpus to index — measured
+      `false`, so the case now claims only what it observes (the stop handlers
+      are identical either way, and OFF injects nothing) and points at
+      `tests/scripts/session_memory_index.test.ts` for the injection half.
 
 ## Phase 2 — the split the concern ratchet currently forbids
 
@@ -133,6 +211,44 @@ councils required puts them there on purpose:
       for the same inputs; the trust contract is written and each of its six
       properties has a test; `check_continuity_surface` shows the artefact axis
       one lower.
+      measured 2026-09-08, so the next lane re-decides rather than re-derives.
+      **Five of the six trust properties do not exist yet**, which makes this
+      step feature work on a trust boundary and not a relocation:
+      `src/scripts/session_memory_index.ts` (94 lines) implements SIZE LIMITS
+      only (`SESSION_INDEX_ROW_CAP` at `:28`, double-capped at `:57-65`), and
+      carries no repository/worktree identity check, no path canonicalization,
+      no freshness bound, no declared ordering and no duplicate-invocation
+      latch — grepped for each at HEAD, all zero hits. D3 requires a test per
+      property, so five have to be BUILT first.
+      The rest of the surface, enumerated: the concern id appears **17 times**
+      in platform slot lists across 7 hosts plus its definition and 5 comments
+      (`src/scripts/hook_manifest.yaml:49`, `:55-59`, `:64`, `:609`, `:692`,
+      `:1263`, `:1265`, `:1270`, `:1272`, `:1284`, `:1292`, `:1314`, `:1326`,
+      `:1349`, `:1351`, `:1364`, `:1366`, `:1383`, `:1384`, `:1400`, `:1402`);
+      `src/scripts/hooks/concern_registry.ts:28` and `:91` (keyed by SCRIPT
+      path, not concern id — the surface most often missed);
+      `src/config/hook-token-budget.json:11-12` and `:66`;
+      `src/config/continuity-surface.json:207-213`, whose `locus` is a
+      file:line pointer the gate resolves; `src/scripts/lint_knowledge_scale.ts`
+      `:21`, `:42`, `:209-228`; prose in `src/scripts/routing_doctor.ts:28`,
+      `src/scripts/_lib/obligation_frequency.ts:245`,
+      `src/config/agent-settings.template.yml:1128` and
+      `src/server/schemas/settings.ts:452`; and 5 test files.
+      Two constraints that shape it: the MODULE must survive the concern's
+      retirement, because `src/scripts/_cli/handoff_generate.ts:12`, `:17` reuse
+      `build_hot_context` and `src/scripts/_lib/loss_class.ts:7` plus
+      `src/scripts/check_loss_class_declared.ts:29` name `hot_context_hook` as
+      the ONE module qualifying `ephemeral-lossy`; and the byte-identity proof
+      needs a non-empty curated memory corpus, which no fixture in the tree has
+      — measured during step 1.4, an armed `memory.session_index` emits no
+      `memory-index` block in a scratch workspace, so a byte-identity fixture
+      built today would compare two empty strings.
+      NOT attempted in the 2026-09-08 writer lane, and the reason is the same
+      falsifier openai named for Phase 1: five new trust properties, 17
+      bindings across 7 hosts and a corpus fixture do not fit one atomic review
+      unit. What would falsify the descope: a lane that can carry the five
+      properties with their tests, the corpus fixture, and the 17 bindings in
+      one reviewable change.
 - [ ] **3.2 `session:recycle` — retire the manual writer once the automatic one
       is proven.** It is the only writer today, so this step is gated on Phase 1
       in full, not merely started. The advisory that instructs a human to run it
@@ -141,6 +257,21 @@ councils required puts them there on purpose:
       verify: `check_continuity_surface` shows `public_continuity_commands` and
       `normal_path_manual_actions` both one lower; no reader of the retired verb
       remains in the tree.
+      **A gate this step did not state, found 2026-09-08 when Phase 1 closed.**
+      Phase 1 is now complete in full, so this step's own precondition is met —
+      and it still cannot land, because 1.2's `verify:` REQUIRES the automatic
+      writer to ship `off` (`continuity.auto_record`, and the tree must "behave
+      exactly as it does today" at that default). Retiring the manual writer
+      while the automatic one is disarmed would leave the normal path with NO
+      writer at all, which is a continuity hole rather than a retirement. The
+      missing intermediate is a default flip from `off` to `on`, which this
+      roadmap does not carry as a step and which no agent may take: the key is
+      class C (`docs/contracts/settings-classes.md`), so `settings:set` refuses
+      it by construction, and 1.2 records the reason the default is off — the
+      parity evidence exists (step 1.3) but the decision to put a second
+      producer on the normal path is a maintainer's. So this step is gated on
+      "Phase 1 in full AND the default flipped", and only the first half is
+      done.
 - [ ] **3.3 `context-fill.json` — retire it, or record that its parked consumer keeps it.** <!-- blocked-by: context-fill-retirement-has-a-parked-consumer | asked: yes -->
       Authorised by the 2026-09-08 council on producer/no-consumer
       evidence that turned out incomplete: there is no consumer in code, but
@@ -204,7 +335,11 @@ in this change; the fourth is not, and the reason is stated rather than implied:
    explicitly names documentation, and the audit found documentation. The
    condition is unmet, so the maintainer's decision is genuinely outstanding.
 4. **A bounded, default-off Phase 1 vertical slice** — **NOT attempted.** This is
-   a descope, not an oversight.
+   a descope, not an oversight. **Superseded 2026-09-08 by the second lane
+   below, which carried Phase 1 in full** — the falsifier openai named for this
+   descope fired. Left standing rather than deleted: the reasoning is what the
+   next descope has to clear, and a record that only shows the outcome cannot
+   be argued with.
 
 ### Why Phase 1 was not attempted, and what would falsify that
 
@@ -239,6 +374,49 @@ recorded here rather than discarded because the two seats did not agree on it.
 code on the continuity path. `check_continuity_surface` reads `1 / 2 / 5 / 1 / 1`
 before and after — verified, not assumed. The one behavioural artefact it
 touches is a metrics report that was never evidence.
+
+## Disposition, 2026-09-08 (second lane) — Phase 1 closed, no axis moved
+
+The descope the section above recorded has been **falsified in the direction it
+named**. openai's falsifier was *"a lane that can carry the state machine, the
+writer, the failure tests and the rollback in one reviewable change"*, and
+anthropic's bounded-slice shape was *"the shape to try first"*. Phase 1 landed
+in full — 1.1, 1.2, 1.3 and 1.4 — in four chunked commits, so item 4 of that
+section ("NOT attempted") is superseded rather than contradicted.
+
+**What did NOT happen, and it is the more important half.** No axis moved.
+`check_continuity_surface` reads `1 / 2 / 5 / 1 / 1` before and after — measured
+at the start of the lane and again after the last commit. Risk 1 of this roadmap
+is *"the writer lands and the retirements never do… that would look like
+completion"*, and this change is exactly that shape. It is reported rather than
+narrated past, which is what the risk's own mitigation asks of the gate's output.
+
+Three findings correct the record rather than adding work:
+
+1. **The concern-split payment does not add up.** The blocker below instructed
+   "land Phase 3 first, retiring `hot-context` is the payment". Measured:
+   `concern_count` is 58 at HEAD against a floor of 58, the retirement takes it
+   to 57, and a three-way split lands at 59 (+2) or 60 (+3). The reorder is
+   necessary and no longer sufficient; the entry now carries the arithmetic.
+2. **Step 3.1 is feature work, not a relocation.** Five of the six trust
+   properties D3 requires a test for do not exist in
+   `src/scripts/session_memory_index.ts` — only size limits do. Step 3.1 now
+   carries the full measured surface so the next lane re-decides instead of
+   re-deriving.
+3. **Step 3.2 has a gate it never stated.** Its precondition ("Phase 1 in full")
+   is now met and it still cannot land: 1.2 requires the automatic writer to
+   ship `off`, so retiring the only manual writer would leave the normal path
+   with none. The missing intermediate is a default flip, which is a class-C key
+   no agent may write.
+
+Phase 1 was carried WITHOUT the council: both configured seats read
+`50/50 · exhausted` on `council_cli quota` at the start of the lane, and
+`council_cli status` additionally reported anthropic `unavailable`. Nothing was
+put to a council and no verdict is claimed. Every decision this lane took inside
+Phase 1 was bounded by a recorded prior ruling (the 2026-09-07 D2 on independent
+switching, the 2026-09-08 refusal of a temporary allowance, the 2026-09-08
+separation of the two parity halves and its rejection of a soak); the three
+maintainer-owned blockers were not touched.
 
 ## Blockers
 
@@ -303,9 +481,10 @@ touches is a metrics report that was never evidence.
 - **Status:** open
 - **Owner:** implementer
 - **Blocks:** step 2.1 only. Phase 1 is unaffected — a writer whose handlers are independently switchable inside existing concerns satisfies everything the 2026-09-07 council's D2 asked for in substance.
-- **Recommendation:** reorder rather than negotiate the ratchet — do Phase 3 first and let step 3.1's retirement of the `hot-context` concern pay for the split. It is the only one of the three resolutions the 2026-09-08 council left standing (anthropic listed changing the countable unit, introducing an allowance, and deferring the split; openai struck the first two with *"No temporary allowance"*), and it is also the cheapest: the retirement is authorised work this roadmap already carries, so the payment costs nothing that was not already planned.
-- **If you do nothing:** step 2.1 stays unreachable and the three handlers stay inside existing concerns. That is a smaller loss than it sounds — independent kill switches and failure isolation are the substance the 2026-09-07 D2 required, and Phase 1 delivers both without the manifest split. What is actually lost is per-concern observability and the ability to drop one handler from one host's slot list, and a later reader who does not know that will read the open box as a gap in safety rather than in ergonomics.
-- **What to do:** land Phase 3 first. `check_estate_count` measures `concern_count` from `src/scripts/hook_manifest.yaml` against the base ref with allowance 0 (`src/scripts/check_estate_count.ts:156`, `:841`), so the +2 that a three-way split costs has to be paid by a concern that goes away. Retiring `hot-context` (step 3.1) is the payment. Both seats of the 2026-09-08 council refused the alternatives explicitly — openai: *"No temporary allowance."*
+- **Recommendation:** reorder rather than negotiate the ratchet — do Phase 3 first — but note first that the arithmetic below shows the reorder alone does not pay, so this recommendation is now necessary-but-insufficient rather than a route to green. Step 3.1's retirement of the `hot-context` concern pays one of the two or three the split costs. It is the only one of the three resolutions the 2026-09-08 council left standing (anthropic listed changing the countable unit, introducing an allowance, and deferring the split; openai struck the first two with *"No temporary allowance"*), and it is also the cheapest: the retirement is authorised work this roadmap already carries, so the payment costs nothing that was not already planned.
+- **If you do nothing:** step 2.1 stays unreachable and the three handlers stay inside existing concerns. That is a smaller loss than it sounds, and as of 2026-09-08 it is measured rather than argued: Phase 1 shipped the three handlers with three independent switches and a fault-injection fixture per switch (`tests/hooks/continuity_switches.test.ts`), which is the substance the 2026-09-07 D2 required, delivered with `concern_count` unchanged at 58. What is actually lost is per-concern observability and the ability to drop one handler from one host's slot list, and a later reader who does not know that will read the open box as a gap in safety rather than in ergonomics.
+- **What to do:** the instruction this entry carried — *"land Phase 3 first, retiring `hot-context` is the payment"* — is **arithmetically insufficient, measured 2026-09-08**, and that is now the first thing to know. `concern_count` reads **58** at HEAD against a floor of **58** (`countConcerns` over the `concerns:` block of `src/scripts/hook_manifest.yaml`, `src/scripts/_lib/concern_estate.ts:53-73`, called at `src/scripts/check_estate_count.ts:512`, allowance 0 at `:156`). Retiring `hot-context` takes it to **57**. A three-way split then lands at **59** if it dissolves one existing concern into three (+2) or at **60** if it adds three ids beside the two concerns that keep other work (+3). Both exceed 58. Retiring one concern buys one, and the split costs two or three, so **the payment is short by one or two whichever way the split is drawn**. The reordering is therefore still necessary and is no longer sufficient. What would actually pay: a second concern retirement (none is authorised in this roadmap — 3.2, 3.3 and 3.4 retire a CLI verb, a state file and two command documents, none of which is a concern), or a split that costs +1 rather than +2, or a maintainer decision on the ratchet itself. The first is the only agent-reachable option and it needs a candidate this roadmap does not carry. Both seats of the 2026-09-08 council refused a temporary allowance — openai: *"No temporary allowance."* — so widening it is not on the table either.
+- **What to do (unchanged half):** whatever pays for it, the split's own shape is settled — three ids in `hook_manifest.yaml` plus the fault-injection test over every handler combination, per step 2.1.
 - **Resolved when:** `concern_count` at HEAD is at or below the base ref's floor with the three ids declared, proven by `./scripts-run src/scripts/check_estate_count` exiting 0 on the branch that adds them.
 
 ## Risk Register
@@ -321,15 +500,47 @@ touches is a metrics report that was never evidence.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A session ending at a bound slot leaves a continuity record without
+- [x] AC-1 — A session ending at a bound slot leaves a continuity record without
       model spend, and a session that did nothing substantive leaves none. The
       count comes from the concern's own state, never from file presence.
       Carried from the predecessor's AC-5.
+      Measured 2026-09-08 through the real dispatcher, under
+      `continuity.auto_record: on`: one authoritative record and no temp litter
+      (`tests/hooks/continuity_writer_dispatch.test.ts`), none for a session
+      that crosses the recycle threshold but not the substantive floor, and none
+      for a session with no claimed roadmap. The threshold-crossed-but-not-
+      substantive fixture is the one that separates the two: it proves the
+      decision comes from the counters and not from the threshold, and a
+      further fixture shows an existing record in the slot does not change the
+      transformation. No provider, network or child-process import reaches the
+      writer, asserted statically over its own import list.
+      The default stays `off` per 1.2, so this criterion describes a capability
+      the tree HAS and does not exercise by default — stated here rather than
+      left for a reader to infer from a green box.
 - [ ] AC-2 — `./scripts-run src/scripts/check_continuity_surface` reports
       exactly `0 / 0 / 1 / 1 / 0`, and no exclusion in its inventory represents
       a normal-path continuity mechanism that would change the vector if
       counted. Carried from the predecessor's AC-7b; the vector read
       `1 / 2 / 5 / 1 / 1` when this roadmap was written.
-- [ ] AC-3 — Disabling any one of the three lifecycle switches restores
+      **Still `1 / 2 / 5 / 1 / 1`, measured 2026-09-08 after Phase 1 closed** —
+      unchanged, and unchanged on purpose. Phase 1 adds a producer for the
+      artifact that is already counted (`recycle-envelope.json`), so it moves no
+      axis; Phase 3 is where every axis moves, and none of its four steps is
+      done. This is Risk 1 of this roadmap holding exactly as written: the
+      writer landed, the retirements did not, and the gate's own output is what
+      makes that impossible to narrate past.
+- [x] AC-3 — Disabling any one of the three lifecycle switches restores
       pre-change behaviour for that handler and leaves the other two firing,
       proven by a test rather than by the rollback note that describes it.
+      Measured 2026-09-08: `tests/hooks/continuity_switches.test.ts` drives the
+      real dispatcher on both slots with an all-armed baseline and then one case
+      per switch, each asserting ALL THREE outcomes so an entanglement fails
+      rather than passes. Sensitivity: forcing `continuity.auto_record` on reds
+      2 cases, forcing `continuity.run_checkpoints` on reds 1, inverting the
+      checkpoint guard reds 5.
+      One limit, named rather than papered over: for `memory.session_index` the
+      case proves the OFF direction and the independence (the stop handlers are
+      byte-for-byte identical either way), NOT the ON injection — with the
+      switch armed a scratch workspace emits no `memory-index` block, because
+      it carries no curated corpus. The injection half is covered by
+      `tests/scripts/session_memory_index.test.ts`.

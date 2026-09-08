@@ -103,7 +103,7 @@ before-the-proof ordering this round's self-critique flagged.
 > minimum depth; 2.3's ladder now names the candidate-list check as stage 0 with
 > the N=3 counting explicitly unchanged.
 
-- [ ] **1.1 Name the boundary set instead of the judgement.**
+- [x] **1.1 Name the boundary set instead of the judgement.**
       A commitment horizon ends at the next observation that produces evidence
       about the choice: a test result · a type or schema inspection · a
       compile · a runtime probe · a call-site inventory · a dry run · a browser
@@ -112,7 +112,7 @@ before-the-proof ordering this round's self-critique flagged.
       evidence supports" is not.
       verify: a fixture whose chosen form needs a call-site inventory produces
       a horizon that stops at the inventory, not at the implementation.
-- [ ] **1.2 Scale the horizon by reversibility, not by task size.**
+- [x] **1.2 Scale the horizon by reversibility, not by task size.**
       A reversible local edit may take a whole implementation slice — stopping
       there costs more than it saves. A stateful or cross-layer action stops at
       the next boundary from 1.1. An irreversible or public-contract action
@@ -141,7 +141,7 @@ before-the-proof ordering this round's self-critique flagged.
 
 ## Phase 2 — Reopen once, on contradiction, without looping
 
-- [ ] **2.1 Reopen on a missed prediction, not on a schedule.**
+- [x] **2.1 Reopen on a missed prediction, not on a schedule.**
       When an observation contradicts the prediction attached to the chosen
       form, the decision reopens before the next step — using the candidate
       list that already exists, not a fresh enumeration. A reopen driven by
@@ -149,7 +149,7 @@ before-the-proof ordering this round's self-critique flagged.
       roadmap is trying not to add.
       verify: a fixture whose first probe contradicts the rollout draws the
       second candidate and produces no second candidate list.
-- [ ] **2.2 Cap it at one reopen per candidate.**
+- [x] **2.2 Cap it at one reopen per candidate.**
       An uncapped reopen is a loop with better manners, and this tree already
       recorded that decision. The second contradiction on the same candidate
       hands over to the existing retry-budget ladder rather than reopening
@@ -163,7 +163,7 @@ before-the-proof ordering this round's self-critique flagged.
       ladder is unchanged — this adds a branch, it does not move the budget.
       verify: the ladder text names the candidate-list check before retry 1,
       and the N=3 counting is unchanged.
-- [ ] **2.4 Revive a candidate whose rejection has been falsified.**
+- [x] **2.4 Revive a candidate whose rejection has been falsified.**
       A candidate killed by an assumption that later turns out false is not
       killed — it is un-evaluated. The `killed-if` condition is what makes this
       checkable, and it is the reason the field is worth carrying at all.
@@ -223,18 +223,18 @@ outcome and not a failure of this roadmap.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The horizon is defined by an enumerated boundary set, and a
+- [x] AC-1 — The horizon is defined by an enumerated boundary set, and a
       horizon that names no boundary from that set is reportable as malformed.
-- [ ] AC-2 — Three reversibility classes produce three different horizon
+- [x] AC-2 — Three reversibility classes produce three different horizon
       widths from one candidate shape, with the reversible-local case wider
       than the irreversible case.
-- [ ] AC-3 — `src/rules/notes-first-reasoning.md` binds the prediction to the
+- [x] AC-3 — `src/rules/notes-first-reasoning.md` binds the prediction to the
       chosen form and carries the next-commitment boundary, without adding a
       section or a store, and the projection regenerates byte-identically.
-- [ ] AC-4 — A contradicted prediction reopens the decision from the existing
+- [x] AC-4 — A contradicted prediction reopens the decision from the existing
       candidate list exactly once, and the second contradiction escalates
       through the unchanged retry ladder.
-- [ ] AC-5 — A falsified `killed-if` returns its candidate to the set.
-- [ ] AC-6 — Every Phase-3 step is `[~]` or `[-]` and carries its entry
+- [x] AC-5 — A falsified `killed-if` returns its candidate to the set.
+- [x] AC-6 — Every Phase-3 step is `[~]` or `[-]` and carries its entry
       condition or its cancellation reason inline, so no step in it is
       executable without the floor roadmap's published verdict.

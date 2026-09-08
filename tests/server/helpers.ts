@@ -108,7 +108,7 @@ export function fixtureSettings(overlay: Record<string, unknown> = {}): Record<s
         personal: {}, project: {}, github: {}, augment: {}, eloquent: {},
         chat_history: { text_limits: {} }, pipelines: {}, roadmap: {},
         quality: {}, subagents: {}, worktrees: {}, onboarding: {},
-        commands: { suggestion: {}, create_pr: {} }, memory: {},
+        commands: { suggestion: {}, create_pr: {} }, continuity: {}, memory: {},
         hooks: { concern_budget: {} }, decision_engine: {},
         update_check: {}, explain: {}, verbosity: {},
     });
