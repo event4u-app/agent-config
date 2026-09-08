@@ -55,6 +55,16 @@ export interface LoadedGraph {
     /** Non-file nodes declared in any of `files`. */
     idsInFiles(files: readonly string[]): string[];
     /**
+     * Every node id, sorted.
+     *
+     * A whole-table read, and unlike {@link LoadedGraph.lex} it is not lazy —
+     * because the one verb that calls it (`dead`, 3.3) is defined over every
+     * node by construction: "zero accepted in-edges" is not a question you can
+     * ask about a frontier. Nothing else may use it; a verb that walks from a
+     * seed has `idsByLabel` / `idsInFiles` for that.
+     */
+    allNodeIds(): string[];
+    /**
      * BM25 fallback corpus, LAZY.
      *
      * A function rather than a field because on the indexed path building it
@@ -95,6 +105,7 @@ function indexBackedGraph(index: GraphIndex, source: string): LoadedGraph {
         in: { get: (id) => index.edgesTo(id) },
         idsByLabel: (labelText, limit) => index.idsByLabel(labelText, limit),
         idsInFiles: (files) => index.idsInFiles(files),
+        allNodeIds: () => index.allNodeIds(),
         lex: () => {
             lexical ??= new LexicalIndex(index.lexicalCorpus());
             return lexical;
@@ -155,6 +166,7 @@ export function loadGraph(graphPath: string, source = graphPath): LoadedGraph {
             const set = new Set(files);
             return graph.nodes.filter((n) => set.has(n.source_file) && n.kind !== 'file').map((n) => n.id);
         },
+        allNodeIds: () => graph.nodes.map((n) => n.id).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)),
         lex: () => lex,
         close: () => {
             /* nothing held */
