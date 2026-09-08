@@ -323,9 +323,12 @@ admission. Cowork is excluded by the existing measurement.
       neither PR and renumbered nothing.
       **RESOLVED 2026-09-08, in the direction this block anticipated.** #1926 merged first,
       so the carrier-status record keeps 262 on `main` and the delivery-default record was
-      renumbered to `docs/decisions/ADR-263-delivery-default-for-claude-code.md` on
+      renumbered to `docs/decisions/ADR-265-delivery-default-for-claude-code.md` on
       `drain/delivery-for-every-host` — by the PR-drain run that hit the collision when
-      `regenerate_index` refused the duplicate. The match-on-filename instruction above is
+      `regenerate_index` refused the duplicate. **It renumbered TWICE: 262 → 263 on
+      2026-09-08, then 263 → 265 the same day, because `main` subsequently took both 263
+      and 264 while the branch sat open. The number below reads 263 because that is what
+      the council was told; the record's live number is 265.** The match-on-filename instruction above is
       no longer needed for these two, and is kept because the reasoning generalises: the
       number is a lane's first free pick, not an identity.
       **Nothing in the repository catches this, measured rather than assumed.** The two
@@ -375,7 +378,7 @@ admission. Cowork is excluded by the existing measurement.
 - **If you do nothing:** three steps stay blocked and the two verify limbs that name gates living on the predecessor branch (`check_host_tree_parity`, the 1.4 gate) keep asserting nothing here, as steps 2.2 and 4.2 already say in their own bodies.
 - **What to do:**
   1. Resolve PR #1923 (`drain/delivery-for-every-host`), which carries 4 of 6 of its own Phase 4 while at `origin/main` that Phase is 0 of 6, so nothing it provides is available here yet. Its mergeability is volatile and is therefore dated rather than asserted: `mergeable: CONFLICTING` / `mergeStateStatus: DIRTY` when this blocker was written, and `MERGEABLE` / `BLOCKED` about ninety minutes later in the same run — someone resolved the conflicts while this change was in flight. Read it live with `gh pr view 1923 --json mergeable,mergeStateStatus` rather than from this line; the durable half of the claim is the 0-of-6 on `main`, which a `grep` of the predecessor's Phase 4 checkboxes re-derives.
-  2. Then add the missing sentence to `docs/decisions/ADR-262-delivery-default-for-claude-code.md` <!-- ref-ignore --> § Consequences, which closes step 4.2 with one edit — but read the ADR-262 collision note under step 4.2 first, because that filename may not survive the merge. The marker is there because the path deliberately does not resolve here: the file lives on the unmerged predecessor branch, and `check_references` flagged it as broken on the first run, which is the collision finding arriving from a third direction.
+  2. Then add the missing sentence to `docs/decisions/ADR-265-delivery-default-for-claude-code.md` <!-- ref-ignore --> § Consequences, which closes step 4.2 with one edit — but read the ADR-262 collision note under step 4.2 first, because that filename may not survive the merge. The marker is there because the path deliberately does not resolve here: the file lives on the unmerged predecessor branch, and `check_references` flagged it as broken on the first run, which is the collision finding arriving from a third direction.
   3. Or, if the predecessor is being abandoned rather than merged, say so, and this roadmap needs re-scoping rather than unblocking: `lean_projection.hosts` is the axis step 2.1 adds a host to, and it exists on no merged ref.
 - **Resolved when:** `road-to-delivery-for-every-host` Phase 4 is merged to `main`, so `lean_projection.hosts` exists on a merged ref and the predecessor ADR is a file this repository has.
 - **Review trigger:** re-read when PR #1923 closes in either direction, merged or abandoned. Its being abandoned is the case that changes this roadmap most and is the one nobody is watching for.
@@ -394,6 +397,60 @@ admission. Cowork is excluded by the existing measurement.
   3. Or decide that E3's bar is not reachable for any host this year and re-scope Phase 2 rather than leaving it waiting on an empty set — an owner decision, since E3 is an owner ruling.
 - **Resolved when:** at least one host carries an `observed-true` row in `src/config/host-injection-effect.json` with a full citation (host version, transcript pointer, date), and `report_host_injection_effect` regenerates the census with that row admissible.
 - **Review trigger:** re-read when the blocker above resolves, since `delivery` going live is its precondition; otherwise 2026-12-08, matching the expiry the host table already carries for this observation state.
+
+## Disposition, 2026-09-08 — K6 is honoured; this roadmap stays active
+
+An autonomous drain run instructed to carry every roadmap to completion reached
+this file, found both blockers undischargeable by any action available to it, and
+put the disposition to an AI council under the maintainer's written delegation.
+The council was **`⚠️ DEGRADED`, 1 of 2 seats** — the anthropic seat returned
+`exit_1` and did not answer — so what follows is a considered single-seat opinion,
+not convergence, and is recorded at that strength.
+
+**Verdict: Q2-a — honour K6.** The affected lines stay `[ ]`, both blockers stay
+open and accurate, and this roadmap does **not** move to `later/` and is **not**
+re-scoped so it can close. The active directory does not empty, and that is the
+correct outcome rather than a missed step.
+
+Three things the seat said that this file did not already say:
+
+1. **"PR #1923 merged" is an insufficient wake condition.** The real ordering is
+   `compatible predecessor merged` → `lean_projection.hosts` available →
+   `delivery` enabled → qualifying live session → admissible observation →
+   host-dependent acceptance criteria evaluated. A merge does not prove the merged
+   revision carries the expected schema, that Phase 4.2 is live, or that any
+   qualifying observation has occurred.
+2. **Q2-c (re-scope so the roadmap can close) is rejected outright.** Rewriting
+   the acceptance criteria to exclude the missing implementation and evidence
+   *"would convert an unfinished delivery obligation into a completed
+   documentation exercise. That is precisely the false closure K6 guards
+   against."*
+3. **A fourth revisit condition, which this file was missing.** If repeated
+   qualifying sessions produce no `observed-true` result, that calls the
+   acceptance premise itself into question — requiring an `observed-true` outcome
+   makes closure depend on obtaining a *desired empirical result* rather than on
+   conducting a valid observation. The roadmap must be able to distinguish
+   "feature assumption falsified" from "evidence still missing". It cannot today,
+   and that is now on the record rather than latent.
+
+**What a kill-register entry is worth, answered generally because the shape
+recurs:** it is a **binding local decision constraint, defeasible through explicit
+supersession** — more than advice, since ordinary roadmap execution must obey it;
+less than absolute, since a council holding delegated disposition authority can
+overrule it. But *authority alone is not a rationale*. A valid override must
+record the original failure mode, the changed or disproven premise, the
+replacement safeguard, rollback criteria, and a falsifier. Here no premise behind
+K6 has changed, so overruling it merely to empty a directory would be arbitrary.
+
+**Falsifier for this disposition:** an equivalent, stable implementation of
+`lean_projection.hosts` already exists independently of PR #1923, or repository
+history shows K6 addressed a former dependency shape that no longer exists.
+
+**Live state at the time of writing, read rather than recalled:** PR #1923
+(`drain/delivery-for-every-host`) is `OPEN`, `mergeable: CONFLICTING`,
+`mergeStateStatus: DIRTY`, last updated `2026-09-08T06:51:58Z`. Its mergeability
+has been observed to flip within the same run, so read it live rather than from
+this line.
 
 ## Kill register
 

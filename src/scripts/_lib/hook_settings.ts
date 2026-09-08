@@ -3,7 +3,7 @@
  * `.agent-settings.yml` without dragging a YAML parser into a hook.
  *
  * Every default-OFF hook needs the same two-level lookup, and the tree already
- * carries two hand-rolled copies of it (`code_graph_nudge_hook.enabled` and the
+ * carries two hand-rolled copies of it (`code_graph_context_hook (no flag)` and the
  * equivalent inside `design_slop_hook`). Adding a third copy for the route
  * nudge is what this file prevents; the two existing copies are pre-existing
  * duplication and are deliberately left alone — folding them in is a separate,

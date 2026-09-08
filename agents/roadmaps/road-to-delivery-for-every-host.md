@@ -547,10 +547,19 @@ Defects this roadmap repairs:
       `adr/regenerate_index --dir docs/decisions` and `adr/evidence_census`.
       verify: ADR exists; `DEFAULT_LEAN_PROJECTION_MODE` and the hosts default match it;
       `Rule backstops` CI job green on census freshness.
-      Done 2026-09-07. `docs/decisions/ADR-263-delivery-default-for-claude-code.md`,
-      `status: accepted`, `reopen_policy: owner`, evidence `E1`. `adr_cite_check ADR-263`
+      Done 2026-09-07. `docs/decisions/ADR-265-delivery-default-for-claude-code.md`,
+      `status: accepted`, `reopen_policy: owner`, evidence `E1`. `adr_cite_check ADR-265`
       reports **LIVE** with all seven basis paths `[found]`. `check_adr_frontmatter`: no
-      errors. Index regenerated (`201 numbered, 1 legacy`) and the evidence census re-run
+      errors.
+      **Renumbered a SECOND time, 2026-09-08, 263 → 265.** While this branch sat open,
+      `main` took 263 (`ADR-263-skills-are-explicitly-invoked-reference-material.md`) AND
+      264 (`ADR-264-standing-payload-grace-ceiling-may-not-rise.md`), so the number this
+      record picked collided again and the `docs/decisions/INDEX.md` merge conflicted on
+      exactly that row. This is the twice-in-one-run case the collision stub predicts:
+      the free number is read at renumber time, never carried from an earlier reading.
+      The figures in the next sentence are the 263-era measurement and are left as
+      measured rather than restated — the index and census were regenerated on the
+      merged tree, and their post-merge counts are the ones the committed artifacts carry. Index regenerated (`201 numbered, 1 legacy`) and the evidence census re-run
       (`E0=75 E1=69 E2=44 E3=21 · human=13 agentic=122 mixed=21 unknown=53`).
       **The verify's middle limb needed a decision, and the ADR now carries it as § Decision
       point 4.** `DEFAULT_LEAN_PROJECTION_MODE` is deliberately NOT flipped to `delivery`.

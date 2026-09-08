@@ -40,12 +40,12 @@
         "mode": {
           "type": "string",
           "enum": ["eager-all", "thin", "delivery"],
-          "description": "eager-all = every rule body projected into every host tree. thin = pointer stubs with no delivery mechanism. delivery = thin stubs PLUS the rule-inject hook concern, which delivers a body back on trigger match; shipped default for Claude Code since ADR-263. `delivery` was MISSING from this enum until 2026-09-07 while _lib/lean_projection_mode.ts had accepted it for months, so a consumer who set the documented value failed validation."
+          "description": "eager-all = every rule body projected into every host tree. thin = pointer stubs with no delivery mechanism. delivery = thin stubs PLUS the rule-inject hook concern, which delivers a body back on trigger match; shipped default for Claude Code since ADR-265. `delivery` was MISSING from this enum until 2026-09-07 while _lib/lean_projection_mode.ts had accepted it for months, so a consumer who set the documented value failed validation."
         },
         "hosts": {
           "type": "array",
           "items": { "type": "string", "enum": ["claude-code", "cursor", "cline"] },
-          "description": "Which hosts a thinning mode may thin (ADR-263). Absent resolves to [claude-code]. Only the three hosts with a per-rule rule tree are accepted: naming any other id is a request to thin a surface no per-rule stub shape exists for, and resolveLeanProjectionHosts drops it with a warning. Every host outside this list receives exactly what eager-all writes, asserted byte-for-byte by check_host_tree_parity."
+          "description": "Which hosts a thinning mode may thin (ADR-265). Absent resolves to [claude-code]. Only the three hosts with a per-rule rule tree are accepted: naming any other id is a request to thin a surface no per-rule stub shape exists for, and resolveLeanProjectionHosts drops it with a warning. Every host outside this list receives exactly what eager-all writes, asserted byte-for-byte by check_host_tree_parity."
         }
       }
     },

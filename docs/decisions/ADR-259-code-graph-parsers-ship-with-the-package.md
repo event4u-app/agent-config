@@ -105,6 +105,73 @@ whose *existence* it withholds.
   trade this record makes deliberately, and the parent roadmap's Risk Register ranks it
   first.
 
+## Amendment — 2026-09-07 · vendored-wired-set
+
+**What changed:** Decision points 1 and 2 named a delivery mechanism that does
+not do what this record's own Context argues for. The amendment replaces the
+mechanism and keeps the decision. Delivery still happens; it happens by
+vendoring three grammars rather than by depending on thirty-six and shipping a
+companion package for the rest.
+
+**Authority.** Owner standing direction for the `road-to-a-graph-that-is-shipped`
+execution run (2026-09-07): amending a recorded ADR is authorized where it
+blocks the graph, and the amendment is recorded in the same change rather than
+the step descoped. `reopen_policy: owner` is satisfied by that direction, not
+bypassed. The decision — parsers reach consumers — is untouched; only the
+mechanism moves, and it moves to a strictly smaller one.
+
+**Why the original mechanism could not be built as written.** Points 1 and 2 are
+mutually inconsistent, and each half fails on its own measurement:
+
+1. *"move to `dependencies`"* and *"the published package carries the
+   thirteen-grammar default set, listed in `package.json` `files`"* are two
+   different mechanisms. A dependency's files live in the consumer's
+   `node_modules` and are never in this package's `files[]`. Only vendoring puts
+   named grammars in `files[]`.
+2. Depending on `tree-sitter-wasms` delivers **all 36** grammars (51,765,657 B
+   apparent, 49 MiB on disk) — the outcome this record's own Alternatives
+   section rejects by name. It would also leave the companion package with
+   nothing to carry.
+3. Vendoring the 13-grammar set measures **1,016,804 B compressed**, which puts
+   the unbuilt tarball at ≈10.84 MB against `budgets.packed_size_mb.max = 9.1`
+   in `src/config/pack-size-budget.json` — a maintainer-owned ratchet this run
+   is not authorized to raise.
+4. Ten of those thirteen grammars cannot be loaded at all. `GRAMMAR_WASM` in
+   `src/scripts/code_graph/types.ts` has exactly three entries — php,
+   typescript, javascript. Shipping the other ten is payload with no reader,
+   which is precisely the shape the parent roadmap's Risk Register ranks first.
+
+**Amended decision.**
+
+1. `web-tree-sitter@0.24.7` moves to `dependencies`. (Unchanged.)
+2. The **three loadable grammars** — php, typescript (which also serves `.tsx`),
+   javascript — are vendored at `src/vendor/grammars/` and listed in
+   `package.json` `files`. Measured cost: 3,802,618 B on disk, **+373,922 B
+   compressed** on the tarball (9,821,600 → 10,195,522 B).
+3. `tree-sitter-wasms` **stays a devDependency**. It is the source the vendored
+   copies are refreshed from and the ABI smoke test's fixture — not a runtime
+   dependency. The loader prefers the vendored set and falls back to this pack,
+   so this repository's dev flow and any consumer holding the full pack are
+   unchanged.
+4. The companion package `@event4u/agent-config-grammars` is **not built**. It
+   existed to carry the 23 grammars the 13-set left behind; with the wired set
+   at three and the remaining 33 unloadable, it would ship grammars no code path
+   can reach. Wiring a fourth language is `later/road-to-a-graph-that-wins.md`'s
+   work, gated on a fixture per language (Kill register K6), and whichever
+   mechanism delivers that grammar is a decision for that roadmap.
+
+**What is NOT amended.** The Context, the Consequences, the Alternatives, and
+the decoupling of delivery from measurement all stand. `enabled: false` remains
+the default, `src/skills/code-intelligence/SKILL.md:164` is untouched, and no
+routing or wording claim changes. Kill register K1 (no runtime grammar fetch) is
+satisfied more strictly than before: the grammars are in the tarball, so there
+is no registry resolution step for them at all.
+
+**Consequence this amendment adds.** The consumer cost falls from the 8.69 MiB
+this record accepted to 3.63 MiB on disk / 0.357 MiB compressed. The trade the
+record made deliberately is therefore smaller than the one it recorded, in the
+same direction.
+
 ## Alternatives
 
 - Keep devDependencies and document a manual install — rejected: it is the state that

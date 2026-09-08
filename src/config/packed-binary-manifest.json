@@ -1,0 +1,33 @@
+{
+  "_comment": "Every binary entry the published tarball is allowed to carry, one entry per file. Consulted by check_pack_size's binary-eligibility predicate; an entry is ALLOWED only when every mechanical condition in that predicate holds, so a row here is a claim the gate re-verifies rather than a permission it grants. Path-exact by construction: no wildcards, no directory grants, and a second row for the same path is a hard failure. AUTHORITY: AI council 2026-09-08, 2 seats, unanimous, deep tier — it reopened the `binary` class that f573d628c closed 24 hours earlier. `archive` is NOT reopened and this file may never carry one: that collision supplied zero evidence about archives.",
+  "schema_version": 1,
+  "entries": [
+    {
+      "path": "src/vendor/grammars/tree-sitter-php.wasm",
+      "sha256": "55bb617b6f01e14bab997861f0b20a2420cf6ba3199ffeb295b9ec398966d8a3",
+      "size": 812594,
+      "kind": "tree-sitter-wasm-grammar",
+      "grammar_id": "php",
+      "abi": 14,
+      "why": "The PHP grammar the code-graph engine loads. ADR-259 ships the parsers so a consumer install can build a graph with no manual step; compiled WebAssembly is the only form a grammar has, and the production loader reads these exact bytes."
+    },
+    {
+      "path": "src/vendor/grammars/tree-sitter-typescript.wasm",
+      "sha256": "8515404dceed38e1ed86aa34b09fcf3379fff1b4ff9dd3967bcd6d1eb5ac3d8f",
+      "size": 2342690,
+      "kind": "tree-sitter-wasm-grammar",
+      "grammar_id": "typescript",
+      "abi": 14,
+      "why": "The TypeScript grammar, which also serves .tsx. Same reason as the php entry."
+    },
+    {
+      "path": "src/vendor/grammars/tree-sitter-javascript.wasm",
+      "sha256": "63812b9e275d26851264734868d27a1656bd44a2ef6eb3e85e6b03728c595ab5",
+      "size": 647334,
+      "kind": "tree-sitter-wasm-grammar",
+      "grammar_id": "javascript",
+      "abi": 14,
+      "why": "The JavaScript grammar. Same reason as the php entry."
+    }
+  ]
+}

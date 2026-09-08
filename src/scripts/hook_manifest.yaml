@@ -347,12 +347,34 @@ concerns:
     fail_closed: false
     severity: advisory
     needs_payload_bodies: [input]
-  # ADR-124 Phase 4 — OPTIONAL PreToolUse code-graph nudge. When a code-graph
-  # source is present and the agent is about to search/read source, WARNS
-  # (exit 2) once per session to query the graph first (or rebuild if stale,
-  # or build if absent). Never blocks — Source G's strict block-first-read
-  # mode is deliberately un-ported. Default-OFF (hooks.code_graph.enabled).
-  # fail_closed: false.
+  # road-to-a-graph-that-is-shipped 1.2 — PreToolUse code-graph CONTEXT line,
+  # replacing the ADR-124 Phase 4 nudge concern, whose hook was deleted in the
+  # same change. (Its file name is deliberately not spelled here: step 1.2's
+  # own verify greps this manifest for it and requires zero hits, so naming it
+  # would fail the check that proves it is gone.)
+  #
+  # Why a replacement and not a rename. The nudge shipped default-OFF behind
+  # `hooks.code_graph.enabled`, a flag the settings table described as
+  # "deprecated — honest null 2026-07-28" and which required manually installing
+  # the ABI-locked parser pair. Phase 0.1 ships the parsers, so the flag's
+  # premise is gone. Two behavioural changes came with it:
+  #
+  #   · it speaks ONLY on `fresh` / `behind:N`, never on ABSENT. The nudge's
+  #     common case was advertising a capability the consumer had not built and,
+  #     before 0.1, could not build. Absent → silent is what makes default-on
+  #     defensible: a consumer who never builds a graph never hears from it.
+  #   · it carries STATE, not an instruction. `behind:N` is the fact that
+  #     changes a decision, and only the hook knows N.
+  #
+  # Delivery is the dispatcher's: `warn` + reason is lowered by `emitFor` to the
+  # host's structured envelope — on Claude Code `hookSpecificOutput.
+  # additionalContext` at exit 0. Never a plain echo. On a host with no verified
+  # PreToolUse contract the dispatcher swallows concern stdout, so the same line
+  # travels as a rule (`external-code-graph-interop`) instead. Which hosts those
+  # are resolves from `VERIFIED_PLATFORMS` in hooks/host_semantics.ts, never
+  # from a host name.
+  #
+  # No settings flag. fail_closed: false — every error path returns allow.
   # road-to-suggestion-block-capture Phase 2 — the capture instrument.
   # TWO SLOTS, and the split is the whole design: `stop` reads
   # `last_assistant_message` (a payload field, no transcript file read) to latch
@@ -396,7 +418,7 @@ concerns:
   #
   # Warn-only, once per session, ON by default with `hooks.chain_nudge.enabled:
   # false` as the opt-out. The inverted default is deliberate and differs from
-  # `code-graph-nudge` below: that one gates on a project capability that may
+  # `code-graph-context` below: that one gates on a project capability that may
   # be absent, while the fact this one carries is a property of the HOST's
   # permission matcher and therefore holds in every consumer.
   #
@@ -410,8 +432,8 @@ concerns:
     fail_closed: false
     severity: advisory
     needs_payload_bodies: [input]
-  code-graph-nudge:
-    script: src/scripts/hooks/code_graph_nudge_hook.ts
+  code-graph-context:
+    script: src/scripts/hooks/code_graph_context_hook.ts
     args: []
     fail_closed: false
     severity: advisory
@@ -422,7 +444,7 @@ concerns:
     #
     # This set is not a guess: the hook's entire branch surface is
     # `name === 'Grep' || name === 'Glob'` and `name === 'Read'`
-    # (code_graph_nudge_hook.ts), and a test pins the manifest list against it.
+    # (code_graph_context_hook.ts), and a test pins the manifest list against it.
     #
     # Deliberately NOT declared on the three blocking PreToolUse guards
     # (block-no-verify, block-kernel-rule-writes, block-config-weakening): their
@@ -1241,7 +1263,7 @@ platforms:
     session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
     session_end:      [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush]
     stop:             [chat-history, hot-context, verify-before-complete, self-repair, session-register, roadmap-progress, design-pass-stop]
-    pre_tool_use:     [block-no-verify, evidence-independence, block-kernel-rule-writes, block-config-weakening, block-speaking-inbox-dir, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, chain-nudge, ship-diff-volume, reread-guard]
+    pre_tool_use:     [block-no-verify, evidence-independence, block-kernel-rule-writes, block-config-weakening, block-speaking-inbox-dir, rtk-wrap, design-slop, ui-route-nudge, code-graph-context, chain-nudge, ship-diff-volume, reread-guard]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape, comment-discipline, design-pass]
 
   claude:
@@ -1258,7 +1280,7 @@ platforms:
     # source-of-truth, ui-audit-gate — lose nothing: `project_thin_rules.path_only_ids`
     # keeps a path-only rule full-bodied, the same exemption a trigger-less rule
     # already had, so they are projected eagerly instead of delivered.
-    pre_tool_use:     [block-no-verify, evidence-independence, block-kernel-rule-writes, block-config-weakening, block-speaking-inbox-dir, one-question-per-ask, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, chain-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow, source-first-gate]
+    pre_tool_use:     [block-no-verify, evidence-independence, block-kernel-rule-writes, block-config-weakening, block-speaking-inbox-dir, one-question-per-ask, rtk-wrap, design-slop, ui-route-nudge, code-graph-context, chain-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow, source-first-gate]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape, comment-discipline, language-mirror, design-pass, journal-record]
     # `language-mirror` — round-5 § 6.1. `pre_compact` sets a pin-lost marker;
     # the `post_tool_use` entry above re-emits the pin exactly once while that
@@ -1312,7 +1334,7 @@ platforms:
     # still costs the dispatch, and its entire output is thrown away.
     stop:             [chat-history, hot-context, verify-before-complete, self-repair, session-register, roadmap-progress, design-pass-stop]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
-    pre_tool_use:     [block-no-verify, evidence-independence, block-kernel-rule-writes, block-config-weakening, block-speaking-inbox-dir, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, chain-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow, source-first-gate]
+    pre_tool_use:     [block-no-verify, evidence-independence, block-kernel-rule-writes, block-config-weakening, block-speaking-inbox-dir, rtk-wrap, design-slop, ui-route-nudge, code-graph-context, chain-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow, source-first-gate]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape, comment-discipline, design-pass]
     # subagent-ledger IS bound here, unlike the two nudges above, and the
     # difference is the delivery channel rather than the platform: the nudges

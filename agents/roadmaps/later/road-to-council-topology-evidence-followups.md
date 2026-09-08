@@ -1,8 +1,13 @@
 ---
 complexity: structural
-status: ready
+status: later
 parent_roadmap: road-to-inbox-harvest-2026-08-e-council-topology-evidence
-estate_growth_exempt: Neither metric grew — both counting rules changed in this commit and the files are the same files on both sides. ADR-262 deleted `status: carrier`, so `collect()` now sees three roadmaps it previously dropped, and two of those had no `## Phase` headings, which is why the floor recomputed with the new code over the base tree reads 7 where the pre-change code read 9 over that same tree; the drop is an artefact of measuring a migration mid-flight, not a disposal anyone performed. The four new open_blockers are the same capacity constraints these roadmaps already carried as body prose (three provider seats short of the pre-registered n >= 5, and a 50-call-per-provider-per-UTC-day cap at `src/scripts/ai_council/cli_call_budget.ts:60`) — moving a constraint out of prose into the machine-readable place a gate reads is the whole point of ADR-262, and counting that move as new obligation would price the fix higher than the defect. No work was created by this change and none was hidden.
+review_by: 2026-12-08
+entry_condition:
+  what: "A DISJUNCTION — any one branch reactivates its own phase, and none of them waits on the others. PHASE A: `agent-config council:status` reports `5 enabled` or more AND a verified 20-consecutive-UTC-day reservation of that capacity exists, the applicable pre-registered floor (`>= 5` or `>= 10`) being read item by item. PHASE B: two consecutive UTC days on which the per-provider cap is free in both are reserved, AND a production caller exists for `collectGuesses` and `scoreRecognition` in `src/scripts/ai_council/provider_leakage_bench.ts`. PHASE C2: a qualifying live run exists whose provenance is sufficient for the seven guards — the tested commit, the configuration and the run identity, not merely an artefact. PHASE C3: the comparison method was frozen BEFORE collection AND at least ten qualifying real analysis runs exist. Phase C1 carries no branch: it is closed. THE FLAT THREE-PART SHAPE IS DELIBERATE AND IS NOT THE PHASE-NESTED SHAPE THE 2026-09-08 DEGRADED RULING ASKED FOR — `entryConditionParts` in `src/scripts/lint_roadmap_later_disposition.ts` parses indented `key: value` lines with no phase awareness, so a nested per-phase mapping is FLATTENED LAST-WINS and three of the four branches would disappear from the recorded condition with no error. Both seats of the 2026-09-08 full-strength council refused that shape outright."
+  when: "Whenever a branch above becomes true. Not calendar-driven: Phase A and Phase B turn on capacity that no instruction can create, and Phase C2 and C3 turn on runs nobody has allocated. The `review_by` date is a re-read obligation, never a wake condition."
+  who: "Phase A and Phase B: the maintainer alone — configuring seats and reserving UTC days are acts outside any agent's reach. Phase C2 and Phase C3: the maintainer allocates the runs; an agent may then execute and score them. Reactivation itself is MANUAL AND WHOLE-ROADMAP: no consumer of `entry_condition` other than the linter exists today, nothing parses phase identity, and no automation moves or reactivates a parked roadmap. If a second consumer that reads phase identity ever lands, this flat shape stops being sufficient and the schema change the 2026-09-08 council called Option C becomes required."
+estate_growth_exempt: "Claimed 2026-09-08 for the PARK, and it authorises exactly one dimension: later_roadmaps 84 -> 85. The same change takes active_roadmaps 9 -> 8, so the file moved and the estate did not grow -- but the two metrics ratchet independently and a drawdown on one does not pay for a rise on the other, which is why the claim is written rather than assumed from the arithmetic. No work was created: Phase C1 CLOSED in this change (3 items, verified against a full-strength council run of 2026-09-08), and the remaining 38 items are the same 38 obligations this file already carried, now parked behind a four-branch disjunctive entry_condition instead of sitting in the active backlog for every drain run to re-read. open_blockers is unchanged at 41 because that metric sums the active and later corpora and the three blockers moved with the file. The 38 deferral edges from the archived parent are unaffected: lint_deferral_integrity resolves a destination by logical slug and accepts later/ as live, verified by its own accept self-test, and the one literal markdown link into this file was re-depthed in the same commit. PRIOR ENTRY, preserved verbatim because it records the estate accounting of the change that wrote it: Neither metric grew — both counting rules changed in this commit and the files are the same files on both sides. ADR-262 deleted `status: carrier`, so `collect()` now sees three roadmaps it previously dropped, and two of those had no `## Phase` headings, which is why the floor recomputed with the new code over the base tree reads 7 where the pre-change code read 9 over that same tree; the drop is an artefact of measuring a migration mid-flight, not a disposal anyone performed. The four new open_blockers are the same capacity constraints these roadmaps already carried as body prose (three provider seats short of the pre-registered n >= 5, and a 50-call-per-provider-per-UTC-day cap at `src/scripts/ai_council/cli_call_budget.ts:60`) — moving a constraint out of prose into the machine-readable place a gate reads is the whole point of ADR-262, and counting that move as new obligation would price the fix higher than the defect. No work was created by this change and none was hidden."
 ---
 
 # Road to the deferred council-topology evidence
@@ -22,9 +27,9 @@ exists, the package claims nothing about topology.
 The three stubs hold the design detail, the pre-registrations and the forbidden
 claims. They are not duplicated here:
 
-- [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md) — Phase A
-- [`stubs/road-to-provider-leakage-bench-execution.md`](stubs/road-to-provider-leakage-bench-execution.md) — Phase B
-- [`stubs/road-to-council-topology-instrumentation.md`](stubs/road-to-council-topology-instrumentation.md) — Phase C
+- [`stubs/road-to-council-topology-benchmark-execution.md`](../stubs/road-to-council-topology-benchmark-execution.md) — Phase A
+- [`stubs/road-to-provider-leakage-bench-execution.md`](../stubs/road-to-provider-leakage-bench-execution.md) — Phase B
+- [`stubs/road-to-council-topology-instrumentation.md`](../stubs/road-to-council-topology-instrumentation.md) — Phase C
 
 ## Status correction, 2026-09-08
 
@@ -128,24 +133,74 @@ runner and two clear UTC days.
 
 ## Phase C — instrumentation
 
-Split deliberately. **C1 is buildable now and is not blocked by anything.** Its
-three mechanisms do not exist in any form today; building them does not require
-a council run, only running them does. Blanket-deferring C1 behind "no
-qualifying live run" is the error this phase separation corrects.
+Split deliberately. **C1 was buildable and is now built.** Its three mechanisms
+existed in no form; building them did not require a council run, only running
+them did. Blanket-deferring C1 behind "no qualifying live run" was the error the
+phase separation corrected, and the three items closed on 2026-09-08 against a
+full-strength council run that supplied every population their verify clauses
+name.
+
+**The roadmap's own contradiction, named because a 2026-09-08 council seat named
+it.** "Buildable now" and three verify clauses that are runtime observations
+cannot both be the whole truth. The resolution taken here is the third of the
+three that seat listed: the mechanisms were built AND the observations were made,
+in one change, so no clause was retroactively relaxed and none was closed on a
+build alone. Had the run lacked dissent, corrections or calls, the affected item
+would have stayed open — both seats were explicit that an empty population is not
+affirmative verification, and that a carried marker with no valid receiver is
+another form of premature closure.
 
 ### C1 — mechanisms that can be built today
 
-- [ ] **C5.4** Final synthesis retains unresolved disagreement. The remaining gap
-      is one element of three: no template asks what evidence would resolve the
+- [x] **C5.4** Final synthesis retains unresolved disagreement. The remaining gap
+      was one element of three: no template asked what evidence would resolve the
       disagreement.
-      verify: a run with real dissent renders all three elements
-- [ ] **C10.2** Attribute each useful correction to its first stage. `StageOutput`
-      has zero production importers today.
+      verify: a run with real dissent renders all three elements — EXERCISED
+      2026-09-08. `RESOLVING_EVIDENCE_SECTION`
+      (`src/scripts/ai_council/synthesis_disagreement.ts:60`) is interpolated into
+      all four lens templates at `src/scripts/ai_council/prompts.ts:306`, `:335`,
+      `:371` and `:391`, so there is ONE copy of the contract rather than five.
+      `auditSynthesisElements` (`synthesis_disagreement.ts:134`) makes the answer
+      decidable instead of hoped-for — both 2026-09-01 seats refused a prose-only
+      build. A full-strength council run of 2026-09-08 (2/2 present) produced real
+      dissent on three named clashes; the synthesis of it reports
+      `complete=true dissentPresent=true source=text`, all three elements present.
+      Transcript, synthesis and audit output:
+      [`topology-c1-closure-and-park-2026-09-08`](../evidence/analysis/topology-c1-closure-and-park-2026-09-08.md).
+- [x] **C10.2** Attribute each useful correction to its first stage. `StageOutput`
+      had zero production importers; `StageProduction`
+      (`src/scripts/ai_council/deliberation_metrics.ts:89`) is now its first
+      producer, filled from a real run rather than from a test.
       verify: the emitter exists and is reachable from the live path; one
-      recorded run yields a per-correction stage attribution
-- [ ] **C10.3** Emit `zero_marginal_value_call_rate`. The metric does not exist
-      in any form.
-      verify: the rate is emitted and is non-null on a run that produced calls
+      recorded run yields a per-correction stage attribution — BOTH EXERCISED
+      2026-09-08. `measureDeliberation` runs unconditionally in `cmd_run`
+      (`src/scripts/council_cli.ts:2792`) over `runCallsFrom`'s six labelled
+      stages, so the emitter is on the live path by construction, not by a caller
+      remembering. One recorded run yielded **28** attributions, each carrying
+      `firstStage`, `firstMember` and `firstCallIndex`, across two stages
+      (`deliberation` 26, `peer-review` 2). SCOPE: it decides ATTRIBUTION, never
+      USEFULNESS — whether a correction improved the verdict is a benchmark
+      question and the benchmark has not run.
+      [`topology-c1-closure-and-park-2026-09-08`](../evidence/analysis/topology-c1-closure-and-park-2026-09-08.md).
+- [x] **C10.3** Emit `zero_marginal_value_call_rate`. The metric existed in no
+      form; it is defined at
+      `src/scripts/ai_council/deliberation_metrics.ts:221` as the share of
+      scorable calls whose text near-duplicates something the run had ALREADY
+      received, judged by the shipped `is_near_duplicate` bar rather than by a
+      second similarity notion.
+      verify: the rate is emitted and is non-null on a run that produced calls —
+      EXERCISED 2026-09-08. The run made 4 calls, 3 scorable (one peer-review call
+      returned `exit_1`), and emitted `zero_marginal_value_call_rate: 0`.
+      Non-null, and stronger than non-null: `calls_zero_marginal`, `calls_scored`
+      and `novelty_threshold` ship beside it, so the number is re-derivable by
+      hand and its domain is `[0, 1]` — the 2026-09-08 council's own objection
+      that a literal non-null test would pass a sentinel or a wrong denominator.
+      A run with NO scorable call emits `null` with a stated reason, never `0`.
+      SCOPE: this measures textual novelty. It does not measure whether a call
+      changed the verdict, and no consumer may read it as decision-quality
+      evidence. It has no automated consumer yet — C10.6, which would be one, is
+      blocked; that is a stated gap, not a silent one.
+      [`topology-c1-closure-and-park-2026-09-08`](../evidence/analysis/topology-c1-closure-and-park-2026-09-08.md).
 
 ### C2 — guards built and red-proven, waiting on a real population
 
@@ -179,11 +234,48 @@ blocked work — what is blocked is the live-run evidence that closes the item.
       verify: gate met, or the null result is recorded and the change reverts to
       extraction-always
 
+## Parked 2026-09-08 — what moved, and what stayed unresolved
+
+Phase C1 is closed. Everything else is blocked on capacity or on allocated runs
+that no instruction can create, so the file is parked under
+`agents/roadmaps/later/` rather than left in the active backlog to be re-read by
+every drain run. It is parked **intact**: the 38 deferral edges from the archived
+parent resolve by logical slug, and `later` is a live destination the resolver
+accepts with a dedicated self-test, so nothing is stranded and no edge is
+redirected to a stub.
+
+**The council was split on this, and the split is recorded rather than
+resolved.** A full-strength run of 2026-09-08 (`anthropic/claude-sonnet-4-5` +
+`openai/codex-default`, 2/2 present, 2 rounds, depth deep, peer review on, $0 —
+all seats subscription-authed) converged that the phase-nested `entry_condition`
+the earlier DEGRADED ruling asked for is categorically unsafe, because the gate's
+parser flattens it last-wins and silently discards three of the four branches.
+It did **not** converge on what to do instead:
+
+- the anthropic seat holds that parking format and C1 closure are separable, and
+  that the flat disjunction is the non-destructive choice if parking happens now;
+- the openai seat holds that the schema and every consumer should be extended
+  first and the roadmap left active until then, and would accept the flat shape
+  permanently only against five stated conditions.
+
+The flat shape is adopted **as a documented compatibility bridge**, and the four
+of those five conditions that are checkable here hold today: the linter is the
+only consumer of `entry_condition`, nothing parses phase identity, no automation
+moves or reactivates a parked roadmap, and reactivation is therefore manual and
+whole-roadmap — which the `who` field now says out loud rather than leaving to be
+discovered. **What would resolve the disagreement:** an inventory of every
+consumer of `entry_condition`. One reader and no mutator, and the flat shape is
+permanent; a second reader that parses phase identity, and the schema change is
+required. That inventory is not performed here and the disagreement stays open.
+
+Full transcript, the synthesis, and the verification evidence for all three C1
+items: [`topology-c1-closure-and-park-2026-09-08`](../evidence/analysis/topology-c1-closure-and-park-2026-09-08.md).
+
 ## Blockers
 
 ### blocker: council-seats-below-five
 
-- **Status:** open
+- **Status:** open — and since 2026-09-08 it gates a PARKED roadmap under `agents/roadmaps/later/`, not an active one. Parking relocates the obligation; it does not discharge it, and it does not change what resolves this blocker. The wake condition for Phase A (24 items) is the branch named for it in this file's `entry_condition`.
 - **Owner:** maintainer
 - **Blocks:** every item in Phase A (24 items)
 - **What to do:** configure at least three further council seats (gemini, xai
@@ -217,7 +309,7 @@ third provider seat.
 
 ### blocker: leakage-bench-two-day-window
 
-- **Status:** open
+- **Status:** open — and since 2026-09-08 it gates a PARKED roadmap under `agents/roadmaps/later/`, not an active one. Parking relocates the obligation; it does not discharge it, and it does not change what resolves this blocker. The wake condition for Phase B (2 items) is the branch named for it in this file's `entry_condition`.
 - **Owner:** maintainer
 - **Blocks:** Phase B (2 items)
 - **What to do:** reserve two consecutive UTC days on which the per-provider cap
@@ -245,7 +337,7 @@ nothing usable rather than a partial answer.
 
 ### blocker: no-qualifying-live-run
 
-- **Status:** open
+- **Status:** open — and since 2026-09-08 it gates a PARKED roadmap under `agents/roadmaps/later/`, not an active one. Parking relocates the obligation; it does not discharge it, and it does not change what resolves this blocker. The wake condition for Phase C2 (7 items) and Phase C3 (2 items) is the branch named for it in this file's `entry_condition`.
 - **Owner:** maintainer
 - **Blocks:** Phase C2 (7 items) and Phase C3 (2 items)
 - **What to do:** allocate representative council runs against the guarded

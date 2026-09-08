@@ -37,7 +37,7 @@ somewhere in `tests/`" because the looser form hides exactly the gap below.
 | `block-speaking-inbox-dir` | `src/scripts/hooks/block_speaking_inbox_dir.ts` | covered | 1 |
 | `block-unauthorized-git` | `src/scripts/hooks/block_unauthorized_git.ts` | covered | 6 |
 | `chain-nudge` | `src/scripts/hooks/chain_nudge_hook.ts` | covered | 1 |
-| `code-graph-nudge` | `src/scripts/hooks/code_graph_nudge_hook.ts` | covered | 1 |
+| `code-graph-context` | `src/scripts/hooks/code_graph_context_hook.ts` | covered | 1 |
 | `design-slop` | `src/scripts/hooks/design_slop_hook.ts` | **UNCOVERED** | 0 — see below |
 | `evidence-independence` | `src/scripts/hooks/evidence_independence.ts` | covered | 2 |
 | `one-question-per-ask` | `src/scripts/hooks/one_question_per_ask_hook.ts` | covered | 1 |

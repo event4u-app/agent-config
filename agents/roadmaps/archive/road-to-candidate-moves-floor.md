@@ -256,8 +256,7 @@ played.
       quoting — the documentation-is-not-authorization failure the contract
       denies outright. A carrier-reach defect: out of scope here but
       **shipment-gating** per the 2026-09-08 council (D3).
-- [ ] **2.1 Add the sixth mandated line.**
-      <!-- blocked-by: sixth-line-shipping-blocked | asked: no — autonomous drain lane, no interactive user reachable this run -->
+- [-] **2.1 Add the sixth mandated line.** <!-- CANCELLED 2026-09-08 by council decision D1-a; see blocker sixth-line-shipping-blocked -->
 
       `src/agent-src/contexts/execution/mandated-lines.md` carries five lines
       and the argument for why a line beats a clause. Add `Candidates:` on the
@@ -281,6 +280,36 @@ played.
       is correct before any reasoning starts.
       verify: a fixture whose correct answer is "leave it" produces `K0` as the
       drawn candidate rather than as an unchosen first row.
+
+      **CANCELLED 2026-09-08.** Disposition **D1-a** — record the sixth line as
+      abandoned — decided by an AI council under the owner delegation covering this
+      autonomous drain run. Quorum **2 of 2, convergent**; both seats reached D1-a
+      independently and both rejected D1-b (investigate first) on the same ground:
+      the investigation's outcome does not change this line's fate in either branch.
+
+      The reasons, none of which this run can discharge:
+      1. **Carrier null.** Step 2.0 measured zero well-formed emissions of all five
+         EXISTING mandated lines over the 32-transcript corpus
+         (`agents/evidence/analysis/mandated-line-emission-2026-09-08.md`). Adding a
+         sixth obligation to a carrier that reaches nothing widens the spec-reality
+         gap and changes no behaviour.
+      2. **The delta is unattributable.** 6 of the 9 rubric points came from
+         transcripts carrying no line at all; the one compliant transcript
+         contributed 3.
+      3. **The arms are 78 days apart** (2026-06-22 vs 2026-09-08) — a historical
+         control, with a single rater and per-cell churn of 10 up / 7 down / 15
+         unchanged.
+      4. **The authorising branch never fired.** The 2026-09-07 split council named
+         Phase 3.3's KEEP branch as the only thing that could authorise shipping, as
+         a further decision and not automatically. 3.3 returned a fourth outcome.
+
+      `[-]` and not `[~]`: this is cancellation, not transfer. There is no receiver
+      roadmap and the council explicitly declined to create one — "creating a
+      mandatory receiver would convert inconclusive research into new committed
+      scope". The glyph is owner-reserved and is used here on the delegated
+      council's recorded decision, which is named in the annotation so a later
+      reader can find the authority rather than infer it.
+
 - [x] **2.3 Bind the line to semantic decision classes.**
       A file count is the wrong trigger — a controller plus its test is two
       files and no architectural choice; a rename touches four and offers none.
@@ -309,8 +338,7 @@ played.
       untouched** — `git diff origin/main` over that file and over
       `mandated-lines.md` is empty, which is the evidence that the 2026-09-07
       council's item 3 was honoured rather than merely promised.
-- [ ] **2.4 Change the Plan step from a decision into a generation.**
-      <!-- blocked-by: sixth-line-shipping-blocked | asked: no — autonomous drain lane, no interactive user reachable this run -->
+- [-] **2.4 Change the Plan step from a decision into a generation.** <!-- CANCELLED 2026-09-08 by council decision D1-a; see blocker sixth-line-shipping-blocked -->
 
       `think-before-action-mechanics.md:18` becomes: generate the forms
       (`K0` plus at least one material alternative), choose on a stated
@@ -321,6 +349,15 @@ played.
       case.
       verify: `./scripts-run src/scripts/check_condensed_paths` and the
       projection regeneration both stay green after the edit.
+
+      **CANCELLED 2026-09-08**, same council decision D1-a, and for a reason of its
+      own that both seats raised independently: 2.4 is a **second, separately
+      unjustified intervention** bundled with 2.1. Converting the Plan step from
+      "decide" to "generate" changes reasoning semantics; it is not wording needed
+      to support the sixth line. Shipping it would carry that confound into the
+      contract itself, where neither intervention could afterwards be attributed.
+      The openai seat put it as: "Step 2.4 must not proceed independently."
+
 - [x] **2.5 Require an axis, not a count.**
       Three candidates that differ only in where a helper lives are one
       candidate. Each non-`K0` candidate carries the axis it differs on, the
@@ -448,69 +485,124 @@ played.
       days apart (`2026-06-22` vs `2026-09-08`), not the same date.
       `CANDIDATES_BLOCK` stays eval-only. Nothing is promoted; the +9.4 pp is a
       directional observation, not a result.
-- [ ] **3.4 Do not build the enforcement.** <!-- deferred: gated on 3.3 and on a capture bar this tree has not met -->
-      <!-- blocked-by: prohibition-step-has-no-closing-glyph | asked: no — autonomous drain lane, no interactive user reachable this run -->
+- [x] **3.4 Do not build the enforcement.**
       No blocking hook, in either direction of the verdict. A hook that decides
       candidates are missing while the host handled them internally is the
       stop-and-ask behaviour this floor exists to avoid, and the last
       trajectory-capture measurement in this tree came in under its own bar. An
       observation-only counter is the most this may become, and only after 3.3.
+      verify: `test -d src/scripts/hooks` (fails if the search root is gone, so the
+      absence checks cannot pass vacuously) AND no file under `src/scripts/hooks/`
+      matches `*candidate*` AND `src/scripts/hook_manifest.yaml` registers no
+      candidates concern AND the branch diff adds no hook — the claim is "this
+      roadmap introduced no enforcement", never the stronger and unprovable
+      "enforcement exists nowhere".
+      **CLOSED 2026-09-08 as a satisfied prohibition, under the convention the same
+      council settled** (Decision 2, quorum 2 of 2, convergent). Exercised at
+      `8a3160242`, all four limbs:
+      · `test -d src/scripts/hooks` → the directory exists, so the absence checks
+        below are non-vacuous.
+      · `ls src/scripts/hooks/*candidate*` → exit 1, no match.
+      · `grep -in candidate src/scripts/hook_manifest.yaml` → 4 hits, all four
+        prose comments at `:207`, `:1101`, `:1122`, `:1206` ("the candidate NAMES
+        that library matches", "three candidate threshold pairs", "four candidate
+        gating", "no longer the only candidate"). No concern registration.
+      · `git diff origin/main --name-only -- src/scripts/hooks src/scripts/hook_manifest.yaml`
+        on this branch → no hook added by this roadmap.
+      Why `[x]` and not another glyph, per the council: `[x]` means the obligation
+      was discharged and need not mean a positive artifact was created. `[~]`
+      invents receiver work this roadmap does not justify, `[-]` misstates
+      successful restraint as cancellation, and `[ ]` makes an honoured bounded
+      obligation permanently unarchivable. The convention is written into the
+      roadmap-authoring skill in this same change, so the next prohibition-shaped
+      step does not re-derive it.
 
 ## Blockers
 
 ### blocker: sixth-line-shipping-blocked
-- **Status:** open            <!-- open | resolved -->
+- **Status:** resolved       <!-- open | resolved -->
 - **Owner:** user             <!-- user | maintainer | external -->
 - **Blocks:** Phase 2 — The one artifact, owed by decision class and not by file count
 - **Question:** may the sixth mandated line ship into the contract and gain a
   linter obligation, given that the first five lines reach nothing?
-- **Recommendation:** no, not yet. Two independent gates are shut. The
-  2026-09-07 split council blocked shipping in this phase and named Phase 3.3's
-  KEEP branch as the only thing that authorises it, *as a further decision and
-  not automatically*. **That branch did not fire** — 3.3 returned a fourth
-  verdict, not KEEP, so the condition that would have authorised shipping never
-  arose. The 2026-09-08 councils added two further gates: step 2.0 measured
-  **zero well-formed emissions of all five** existing mandated lines, so no
-  efficacy result may authorise a sixth while the carrier reaches nothing; and
-  the verdict council attributed the dim-5 movement away from the line itself
-  (6 of its 9 rubric points came from transcripts carrying no line at all).
-  Three independent reasons, none dischargeable by this run.
-- **If you do nothing:** steps 2.1 and 2.4 stay open and AC-4 stays
-  unsatisfiable, so the roadmap cannot archive. Nothing degrades — the shape,
-  the baseline and the treatment reading are all landed and independently
-  useful. The cost of the non-decision is that the measurement sits unapplied.
-- **What to do:**
-  1. Read `agents/evidence/analysis/mandated-line-emission-2026-09-08.md` — the
-     carrier null and its surface map.
-  2. Read Phase 3's verdict in
-     `tests/reasoning-layer-eval/RESULTS-candidates-treatment-2026-09-08.md`.
-  3. Decide one of: record the sixth line as abandoned and close AC-4 by
-     amendment (what the measurement points at); authorise a scoped
-     carrier-reach investigation first, which is the gate that must clear
-     before shipping could ever be reconsidered; or authorise shipping 2.1 and
-     2.4 anyway and amend AC-4 to match.
+- **Resolution, 2026-09-08 — disposition D1-a, abandon.** Decided by an AI
+  council under the written owner delegation covering this autonomous drain run.
+  **Quorum 2 of 2, convergent** — both seats reached D1-a independently, and both
+  rejected D1-b (authorise a carrier-reach investigation first) on the same
+  ground: the investigation's outcome does not change this line's fate in either
+  branch, and "creating a mandatory receiver would convert inconclusive research
+  into new committed scope". The delegation is the authority; a council does not
+  hold this decision generally, and the owner-reserved set is unchanged.
+  What landed: steps **2.1** and **2.4** are `[-]` with the reasoning inline at
+  each, and **AC-4** is amended to the council's own replacement wording, which
+  asserts the four things the evaluation actually established instead of a linter
+  obligation the disposition forbids. Nothing shipped into the contract; nothing
+  shipped into `lint_mandated_lines`.
+  The seats added one point the roadmap had not: **2.4 is a second, separately
+  unjustified intervention.** Converting the Plan step from "decide" to
+  "generate" changes reasoning semantics and is not wording needed to support the
+  sixth line — bundling them would have carried a confound into the contract
+  where neither could afterwards be attributed.
+  **Falsifier, recorded so the decision can fail:** a contemporaneous,
+  pre-registered evaluation showing (i) the contract reaching representative
+  supported hosts, (ii) materially non-zero well-formed compliance of the
+  existing mandated lines, (iii) `Candidates:` isolated as the single
+  intervention, and (iv) blinded multi-rater agreement that the gain tracks the
+  compliant emissions. **Revisit-if:** all of those hold, as a NEW decision — the
+  archived roadmap does not reopen automatically.
+- **What to do:** nothing further. The three dispositions the entry offered are
+  spent: D1-a was taken.
 - **Resolved when:** the owner records one of those three dispositions, and
-  either 2.1/2.4 land or AC-4 is amended to match the chosen outcome.
+  either 2.1/2.4 land or AC-4 is amended to match the chosen outcome. — **Met**:
+  D1-a recorded above, AC-4 amended to match.
 
 ### blocker: prohibition-step-has-no-closing-glyph
-- **Status:** open            <!-- open | resolved -->
+- **Status:** resolved       <!-- open | resolved -->
 - **Owner:** user             <!-- user | maintainer | external -->
 - **Blocks:** Phase 3 — Measure it, then keep it or delete it
 - **Question:** how does a step whose content is a **prohibition** close, when
   no `verify:` command can go green on a non-action?
-- **Recommendation:** leave 3.4 `[ ]` and decide the semantics once, for every
-  roadmap. `[~]` would oblige a receiver roadmap that this work does not
-  justify, and `[-]` is cancellation and owner-reserved — neither describes
-  "the prohibition was honoured".
-- **If you do nothing:** 3.4 stays open and the roadmap does not archive. The
-  prohibition itself is honoured either way: no hook, counter or gate was built
-  in this run, in either direction of the verdict.
-- **What to do:**
-  1. Confirm the prohibition held — `git diff origin/main --stat` shows no hook
-     under `src/scripts/hooks/` and no new entry in `hook_manifest.yaml`.
-  2. Either close 3.4 by fiat with a one-line note, or record a general
-     convention for prohibition-shaped steps in the roadmap template.
-- **Resolved when:** 3.4 carries a disposition the archival sweep accepts.
+- **Resolution, 2026-09-08 — `[x]`, with a scoped negative-existence verify.**
+  Same council, **quorum 2 of 2, convergent**, decided as a general convention
+  rather than one file's fiat, because the entry itself asked for that: the shape
+  recurs and deciding it per-roadmap re-derives it every time.
+  The convention, in the form an agent can apply mechanically:
+  1. **Glyph:** `[x]`. The obligation was discharged; `[x]` does not require that
+     a positive artifact was created.
+  2. **Evidence:** a reproducible `verify:` that names every implementation and
+     registration surface, **fails if an expected search root is missing**, and
+     exits zero only when the forbidden state is absent. The
+     root-existence check is what stops a vacuous pass — a glob over a directory
+     that no longer exists returns nothing and looks like success.
+  3. **Scope:** the claim is "this change introduced no enforcement", proven
+     against the branch diff — never the stronger and unprovable "enforcement
+     exists nowhere".
+  4. **Archival:** `[x]` is closed; the sweep treats it like any other completed
+     obligation, and the verify is re-run at archival time.
+  5. **Where it is written down:** `src/skills/roadmap-writing/SKILL.md` in this
+     same change, so the next prohibition-shaped step reads it instead of
+     reopening this question.
+  Why not the alternatives, in the council's words: `[~]` "invents unjustified
+  future work", `[-]` "mislabels successful restraint as cancellation", and `[ ]`
+  "makes an honoured bounded obligation permanently unarchivable".
+  **Risks the council named and this entry keeps visible:** a negative check can
+  pass vacuously, search the wrong scope, miss an alias or a semantically
+  equivalent implementation, be deliberately narrowed, or go stale after the
+  checked commit. The root-existence limb, the multi-surface scope and the
+  archival re-run reduce those; they do not eliminate semantic evasion, and code
+  review remains part of the trust boundary.
+  **Falsifier:** repository tooling is found to define `[x]` as requiring a
+  positive mutation, or repeated audits show a scoped negative verify cannot
+  distinguish an honoured prohibition from a violation — in which case a
+  dedicated closed-prohibition glyph is introduced and every parser, template and
+  archival path is updated atomically. **Revisit-if:** a verify is observed
+  passing while the forbidden artifact exists, or prohibition steps exceed ~10 %
+  of steps across five or more roadmaps, which would suggest they belong in rules
+  rather than roadmaps.
+- **What to do:** nothing further. 3.4 carries `[x]` with its four-limb verify
+  exercised and recorded at the step.
+- **Resolved when:** 3.4 carries a disposition the archival sweep accepts. —
+  **Met**: `[x]`.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-08 | reviewer: claude/host -->
@@ -570,13 +662,28 @@ original prediction stays legible; row 6 is new. **Outcomes, per row:**
       `claude-sonnet-4-5` (`:22`), dim5 mean 0.875/3 = 29.2 % over 32
       transcripts (`:33`), and `:72-83` states in bold that all 32 carry
       `band: standard`, so the strong-host half of the bar is unmeasured.
-- [ ] AC-4 — `lint_mandated_lines` reports a third obligation, and a report
-      owing `Candidates:` without one exits non-zero while a not-owed report
-      stays silent.
-      <!-- blocked-by: sixth-line-shipping-blocked | asked: no — autonomous drain lane, no interactive user reachable this run -->
-      Unsatisfiable under the current disposition and left open rather than
-      amended: a third linter obligation IS the shipped form both councils
-      blocked. Amending it is one of the blocker's three owner dispositions.
+- [x] AC-4 — **Evaluation outcome recorded.** The retained evidence establishes
+      that: (a) zero of the 32 evaluated transcripts emitted all five existing
+      mandated lines in well-formed form; (b) the treatment arm's Dimension 5 score
+      exceeded the 78-day-old historical baseline by 9 rubric points; (c) only 3 of
+      those 9 net points occurred in the sole transcript with a compliant
+      `Candidates:` line, while the remaining 6 occurred without that line; and (d)
+      because the arms were non-contemporaneous and scored by one rater, the
+      experiment does not establish that the `Candidates:` requirement caused the
+      observed delta. This roadmap introduces neither a `Candidates:` contract
+      requirement nor a corresponding `lint_mandated_lines` obligation.
+      **AMENDED 2026-09-08 by council decision D1-a** (quorum 2 of 2, convergent);
+      the replacement text above is the openai seat's wording, which the anthropic
+      seat's independent draft matched limb for limb. The criterion it replaces —
+      "`lint_mandated_lines` reports a third obligation, and a report owing
+      `Candidates:` without one exits non-zero while a not-owed report stays
+      silent" — was unsatisfiable by construction under the disposition taken: a
+      third linter obligation IS the shipped form both councils blocked, so the old
+      AC could only ever have been met by doing the thing the decision forbids.
+      Verified 2026-09-08 against the four readings it names: (a)
+      `agents/evidence/analysis/mandated-line-emission-2026-09-08.md`; (b)-(d)
+      `tests/reasoning-layer-eval/RESULTS-candidates-treatment-2026-09-08.md`
+      §§ 3.1-3.2 and § Step 3.3.
 - [x] AC-5 — A treatment results file reports the three deterministic counts,
       the dim-5 delta against AC-3's baseline, and the token-overhead delta on
       the single-step slots.

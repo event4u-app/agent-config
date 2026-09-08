@@ -197,7 +197,7 @@ rule_loading_tier: __RULE_LOADING_TIER__
 #             set eager-all + `task generate-tools`.
 # delivery  = the `thin` projection PLUS the `rule-inject` hook concern, which
 #             delivers a rule body back on trigger match. SHIPPED DEFAULT for
-#             Claude Code since ADR-263. Measured over the frozen routing-matrix
+#             Claude Code since ADR-265. Measured over the frozen routing-matrix
 #             corpus: 616/616 byte-equal deliveries, 101/101 labelled rules
 #             reachable, 0 of 212 near-misses fired. Rollback is this one
 #             setting: `mode: eager-all` + `task generate-tools`.

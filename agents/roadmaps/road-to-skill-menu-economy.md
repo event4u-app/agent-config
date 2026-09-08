@@ -253,9 +253,31 @@ invariant holds either way: no skill leaves the install.
 - **Recommendation:** none on the mechanism itself — choosing or building a model-menu exclusion path asserts a behaviour of a host this repository does not own, and that is the owner-reserved decision held in `road-to-the-skill-surface-framing-choice.md`. The council's recommendation was procedural only: record the defect, correct the false step text, keep the roadmap at 4/12, and pin explicit unblock conditions so "blocked" does not decay into "abandoned in place".
 - **If you do nothing:** step 1.2 stays phrased as a mechanism that measurably does nothing, and a later reader executes it — marking 105 skills, moving the catalog bucket by 0 bytes, and removing the user's slash access to exactly the skills whose only entry path is a command. That is Risk 1 realised from the opposite direction, and every file-count check passes while it happens.
 - **What to do:**
-  1. Read `agents/evidence/analysis/skill-menu-exclusion-lever-2026-09-08.md` (three surfaces, pinned to `e010b1c2f`), then decide the surface question in `agents/roadmaps/road-to-the-skill-surface-framing-choice.md` — it is owner-reserved and no agent may pick either of its options.
+  1. Read `agents/evidence/analysis/skill-menu-exclusion-lever-2026-09-08.md` (three surfaces, pinned to `e010b1c2f`), then decide the surface question in `agents/roadmaps/archive/road-to-the-skill-surface-framing-choice.md` — it is owner-reserved and no agent may pick either of its options.
   2. Or build a delivered-menu census first, so the measurement this roadmap depends on reads the model's catalog rather than file presence: `src/scripts/preamble_byte_census.ts:290-310` is the function that would have to change, and `agents/evidence/analysis/skill-menu-census-2026-09.md:62` is the artifact whose `on menu` column already disagrees with it.
   3. Or state that the catalog bucket is not reducible by marking, in which case acceptance criterion 1 is retired by owner decision and this roadmap's Phase 1 ends at the published census.
+- **Condition (ii) satisfied 2026-09-08 — one of five, and the roadmap stays blocked.**
+  The owner-reserved surface decision is recorded as
+  [`ADR-263`](../../docs/decisions/ADR-263-skills-are-explicitly-invoked-reference-material.md):
+  **Option B** — the package does not support automatic skill routing as a
+  capability; skills are indexed reference material reached by explicit invocation
+  or by this package's own ranker over name and description. Decided by an AI
+  council under the owner delegation covering the 2026-09-08 drain run, and
+  `⚠️ DEGRADED` at 1 of 2 seats, which ADR-263 states in its own § Authority.
+  **What it changes here, and what it does not.** It closes the "no agent may pick
+  either option" wall this blocker's `What to do` step 1 pointed at — that
+  sentence is now historical. It does **not** supply the exclusion mechanism:
+  conditions (i), (iii), (iv) and (v) are untouched, and (iii) is the load-bearing
+  one, because ADR-263 settles what the package *claims* about routing and not how
+  a skill is removed from a delivered catalog.
+  It also **strengthens** the case that this roadmap's Phase 1 has no lever. The
+  evidence discharging ADR-263's precondition
+  (`agents/evidence/analysis/skill-trigger-frontmatter-has-no-host-reader-2026-09-08.md`)
+  establishes that nothing reads a skill's `triggers:` frontmatter — the router
+  carries no skills key and the one in-tree reader indexes the field only under a
+  non-default mode — which is a second, independent reading of the same shape
+  `skill-menu-exclusion-lever-2026-09-08.md` measured for marking: a declaration
+  the delivered surface does not act on.
 - **Resolved when:** all five hold — (i) `road-to-delivery-for-every-host` Phase 4 is merged, so 1.2 measures the post-flip baseline; (ii) the owner-reserved surface decision in `road-to-the-skill-surface-framing-choice.md` is recorded; (iii) a mechanism that removes a skill from the **delivered** model catalog while preserving command and flow invocability is identified or built; (iv) the measurement in 1.2's verify reads the delivered menu rather than `SKILL.md` file presence; (v) the 105 candidates are revalidated per-skill, because the census establishes candidates and never sole entry path.
 - **Review trigger:** re-read this blocker when `road-to-delivery-for-every-host` archives, or on 2026-12-08, whichever is first. Condition (i) is the only one that can close on its own; if it closes and (ii)-(v) have not moved, that is the signal to take the disposition back to the council rather than to leave the file open another quarter.
 - **Why this is a blocker and not a re-scope.** The council considered re-scoping the goal to what the tree can already establish and rejected it 2/2 — on K5 (the openai seat read the narrowing as the forbidden carrier move) and, independently, because the narrowed goal would have been a false claim: proving that *no* shipped field removes a skill from the model's menu is a statement about the **delivered** menu, and this tree has no delivered-menu census. Deleting the roadmap was rejected as an unauthorised retirement. Building the lever was rejected as crossing the owner-reserved boundary. Option A was unanimous.

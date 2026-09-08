@@ -65,7 +65,7 @@ transitions above is genuinely needed and is currently being worked around.
 > because the trigger one section above is a promise to notice, and it fired
 > without anything noticing.
 
-**A second carrier exists.** `agents/roadmaps/road-to-the-skill-surface-framing-choice.md`
+**A second carrier exists.** `agents/roadmaps/archive/road-to-the-skill-surface-framing-choice.md`
 declares `status: carrier` with `parent_roadmap: road-to-the-activation-census-consequence`,
 and landed on `main` on **2026-09-07** in `a42179585` (PR #1884,
 `drain/the-activation-census-consequence`). Measured, not inferred:
@@ -112,5 +112,5 @@ run happened to read the file.
 
 - `src/scripts/lint_carrier_integrity.ts` — the standing validator whose
   refusals this vocabulary would replace with declarations.
-- `agents/roadmaps/road-to-council-topology-evidence-followups.md` — the one
+- `agents/roadmaps/later/road-to-council-topology-evidence-followups.md` — the one
   carrier, and § Unguarded-carrier gap for what does and does not guard it.
