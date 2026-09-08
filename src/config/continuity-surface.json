@@ -93,11 +93,18 @@
             "reason": "Run-integrity evidence, not conversational state. THE KEEP/RETIRE QUESTION IS ANSWERED HERE, IN WRITING, and the answer is KEEP \u2014 which is what roadmap step 4.1's third verify clause asks for, recorded at the point where the count is computed rather than in a document nobody opens. The AI council of 2026-09-07 (D2) ruled it: a run checkpoint is keyed by RUN id, consumed by `run:supervise` and `latestCheckpointFor`, and a disagreement there is an integrity alarm; a continuity record is keyed by SESSION, consumed by resume, and a gap there is a degraded resume. Different lifecycle, consumer, key and failure semantics, so one concern owning both would be \"a lifecycle subsystem wearing a continuity name\". Excluded from the continuity axis on that ruling \u2014 and this is the exclusion the same council named as the gaming vector for position 3, which is exactly why it is printed on every run instead of living inside a predicate."
         },
         {
-            "id": "code-graph-nudge.json",
+            "id": "code-graph-context.json",
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",
-            "locus": "src/scripts/hooks/code_graph_nudge_hook.ts:101",
-            "reason": "Once-per-session nudge latch."
+            "locus": "src/scripts/hooks/code_graph_context_hook.ts:90",
+            "reason": "Code-intelligence context state for the code-graph hook. A derived cache over the source tree, rebuildable from it, and read within the session that wrote it \u2014 it restores no conversation and no run."
+        },
+        {
+            "id": "code-graph-refresh.lock",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "reason": "A concurrency lock guarding the code-graph refresh so two checkouts do not rebuild the index at once. Held for the duration of one refresh; it carries no state anyone reads afterwards.",
+            "locus": "src/scripts/install-hooks.sh:634"
         },
         {
             "id": "code-graph-v1.json",
