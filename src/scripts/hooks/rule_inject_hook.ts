@@ -11,12 +11,23 @@
  * the 36.2 %-against-48 % run at `docs/CLAIMS.md:188-189`. Whatever that
  * instrument's flaws — and ADR-202 closed it — it points one way.
  *
- * DEFAULT OFF, AND OFF MEANS ZERO BYTES. The concern registers on two slots but
- * returns before reading the router unless `lean_projection.mode: delivery` is
- * set. Under every shipped default it emits nothing, costs no injection budget,
- * and leaves the standing corpus exactly as it is today. That is why its
- * `hook-token-budget.json` row is registered against the per-prompt cap rather
- * than a measured emission: there is no measured emission to register yet.
+ * SHIPPED ON FOR CLAUDE CODE SINCE ADR-265 — corrected 2026-09-08 (R2 finding
+ * 4), because this paragraph read "DEFAULT OFF, AND OFF MEANS ZERO BYTES …
+ * under every shipped default it emits nothing … there is no measured emission
+ * to register yet" and all four clauses became false in the same change that
+ * edited the paragraph below it. The shipped template carries
+ * `lean_projection.mode: delivery` with `hosts: [claude-code]`
+ * (`src/config/agent-settings.template.yml`), `gateOpen` returns true on that
+ * pair, and the emission IS measured: p50 6,674 B, p90 16,188 B, max 20,406 B
+ * over 318 gate-open fires on the frozen corpus, which is the distribution the
+ * `user_prompt_submit` slot raise in `src/config/hook-token-budget.json` is
+ * derived from.
+ *
+ * OFF STILL MEANS ZERO BYTES, and that half is unchanged: the concern returns
+ * before reading the router unless the resolved (mode, hosts) pair actually
+ * thins THIS host — see `gateOpen`, which checks both, because the projector
+ * does. On any other host, and on a `lean_projection.mode: eager-all` rollback,
+ * it emits nothing.
  *
  * ONE MATCHER, SHARED WITH THE OFFLINE MODEL. Everything about selection,
  * ordering, capping and body loading comes from `_lib/rule_injection.ts`, which
@@ -77,8 +88,12 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { hookSectionEnabled, leanProjectionModeRaw } from '../_lib/hook_settings.js';
-import { deliversBodies, normalizeLeanProjectionMode } from '../_lib/lean_projection_mode.js';
+import { hookSectionEnabled, leanProjectionHostsRaw, leanProjectionModeRaw } from '../_lib/hook_settings.js';
+import {
+    deliversBodies,
+    normalizeLeanProjectionMode,
+    resolveLeanProjectionHosts,
+} from '../_lib/lean_projection_mode.js';
 import {
     loadRuleBody,
     loadRouter,
@@ -240,17 +255,43 @@ export function buildInjection(
 // ── main ─────────────────────────────────────────────────────────────────
 
 /**
+ * The one host this concern is bound on.
+ *
+ * The manifest binds `rule-inject` under `claude` alone, so the host axis
+ * `gateOpen` has to consult is a constant here rather than something read off
+ * the envelope — the envelope carries no host id, and inventing one from the
+ * process environment would be a guess where the manifest is a fact.
+ */
+export const DELIVERY_HOST = 'claude-code';
+
+/**
  * Whether the settings gate applies.
  *
- * Through the dispatcher the gate is absolute: no `lean_projection.mode:
- * delivery`, no bytes. A DIRECT CLI invocation is a probe by definition — an
- * operator piping an envelope into this file is asking to see what it would
- * deliver — so there the mode defaults to on. `AGENT_CONFIG_REPLAY` re-imposes
- * the gate, which is what keeps `bench_hook_injection` measuring the shipped
- * default (zero bytes) rather than the probe.
+ * BOTH AXES, because the projector reads both. Until 2026-09-08 this keyed on
+ * `lean_projection.mode` alone while `condense` gates stub-writing on
+ * `thinsHost(mode, hosts, host)` (R2 finding 5). The two disagreed in exactly
+ * the states the host axis exists for: `mode: delivery` with a `hosts:` list
+ * that does not resolve to `claude-code` — the documented "thin no host"
+ * state, which a fully typo'd list also produces — left this host with a
+ * FULL-BODIED tree while the hook kept injecting on a match, so every matched
+ * rule was delivered twice. `hosts: [cursor]` was the same defect with a
+ * second half: cursor received stubs with no bound slot to deliver them back.
+ *
+ * `deliversBodies` is checked separately from the host list rather than via
+ * `thinsHost`, which is true for `thin` as well: `thin` writes the same stubs
+ * and binds NO delivery concern, so it must never open this gate.
+ *
+ * An explicit `hooks.rule_inject` opt-in still opens it — that is an operator
+ * asking for the concern by name, independent of the projection mode. A DIRECT
+ * CLI invocation is a probe by definition — an operator piping an envelope into
+ * this file is asking to see what it would deliver — so there the gate defaults
+ * to open. `AGENT_CONFIG_REPLAY` re-imposes it, which is what keeps
+ * `bench_hook_injection` measuring the configured tree rather than the probe.
  */
 export function gateOpen(root: string, cliEntry: boolean): boolean {
-    if (deliversBodies(normalizeLeanProjectionMode(leanProjectionModeRaw(root)))) return true;
+    const mode = normalizeLeanProjectionMode(leanProjectionModeRaw(root));
+    const hosts = resolveLeanProjectionHosts(leanProjectionHostsRaw(root)).hosts;
+    if (deliversBodies(mode) && hosts.includes(DELIVERY_HOST)) return true;
     if (hookSectionEnabled(root, 'rule_inject')) return true;
     return cliEntry && process.env['AGENT_CONFIG_REPLAY'] !== '1';
 }

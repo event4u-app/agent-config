@@ -45,7 +45,7 @@ const BODIES: Record<string, string> = {
 };
 
 /** A tree carrying a router, bodies, and optionally the delivery-mode setting. */
-function makeRoot(opts: { delivery: boolean }): string {
+function makeRoot(opts: { delivery: boolean; hosts?: string }): string {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'rule-inject-hook-'));
     fs.mkdirSync(path.join(root, 'dist', 'agent-src', 'rules'), { recursive: true });
     fs.writeFileSync(path.join(root, 'dist', 'router.json'), JSON.stringify(ROUTER), 'utf-8');
@@ -54,7 +54,8 @@ function makeRoot(opts: { delivery: boolean }): string {
     }
     fs.writeFileSync(
         path.join(root, '.agent-settings.yml'),
-        opts.delivery ? 'lean_projection:\n  mode: delivery\n' : 'lean_projection:\n  mode: thin\n',
+        `lean_projection:\n  mode: ${opts.delivery ? 'delivery' : 'thin'}\n`
+            + (opts.hosts === undefined ? '' : `  hosts: ${opts.hosts}\n`),
         'utf-8',
     );
     return root;
@@ -108,6 +109,46 @@ describe('rule-inject — default OFF means zero bytes', () => {
         const root = makeRoot({ delivery: false });
         expect(gateOpen(root, false)).toBe(false);
         expect(gateOpen(root, true)).toBe(true); // a direct CLI invocation is a probe
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    // R2 finding 5: the gate keyed on `mode` alone while the PROJECTOR gates
+    // stub-writing on mode AND `hosts` (`thinsHost`). With `mode: delivery` and
+    // a hosts list that does not carry `claude-code`, this host keeps a
+    // FULL-BODIED tree and the hook still injected on a match — every matched
+    // rule delivered twice, standing plus injected.
+    it('gateOpen is false when hosts does not carry claude-code', () => {
+        const root = makeRoot({ delivery: true, hosts: '[cursor]' });
+        expect(gateOpen(root, false)).toBe(false);
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('gateOpen is false when a fully-invalid hosts list thins nothing', () => {
+        // The documented "thin no host" state, which a typo'd list also
+        // produces (`resolveLeanProjectionHosts` never falls back to the
+        // default from a non-empty list).
+        const root = makeRoot({ delivery: true, hosts: '[clod-code]' });
+        expect(gateOpen(root, false)).toBe(false);
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('gateOpen is true when hosts explicitly carries claude-code', () => {
+        const root = makeRoot({ delivery: true, hosts: '[claude-code]' });
+        expect(gateOpen(root, false)).toBe(true);
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('gateOpen is true for an absent hosts key — absent resolves to [claude-code]', () => {
+        const root = makeRoot({ delivery: true });
+        expect(gateOpen(root, false)).toBe(true);
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('a hosts list carrying claude-code does not open the gate under thin', () => {
+        // `thin` writes the same stubs and binds NO delivery concern; only
+        // `delivery` may inject. `thinsHost` alone is true for both.
+        const root = makeRoot({ delivery: false, hosts: '[claude-code]' });
+        expect(gateOpen(root, false)).toBe(false);
         fs.rmSync(root, { recursive: true, force: true });
     });
 });

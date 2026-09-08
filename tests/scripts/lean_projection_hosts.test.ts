@@ -135,6 +135,38 @@ describe('leanProjectionHostsRaw reads both YAML list shapes', () => {
         expect(leanProjectionHostsRaw(root)).toEqual(['claude-code']);
     });
 
+    // A block sequence written at the KEY's own indent is legal YAML and is what
+    // `js-yaml` loads identically to the deeper-indented form. The reader
+    // required `indent > blockIndent`, so this shape parsed as `[]` — which
+    // `resolveLeanProjectionHosts` then reads as "nothing was written" and
+    // answers with the default `[claude-code]`, while `condense`'s real YAML
+    // parse of the same file thins `cursor`. Projector and gates then disagree
+    // about which host was thinned (R2 finding 2).
+    it('block sequence at the key\'s own indent — the same-indent shape', () => {
+        const root = repoWith('lean_projection:\n  mode: delivery\n  hosts:\n  - cursor\n  - cline\n');
+        expect(leanProjectionHostsRaw(root)).toEqual(['cursor', 'cline']);
+    });
+
+    it('a same-indent block list ends at the next key at that level', () => {
+        const root = repoWith('lean_projection:\n  hosts:\n  - cursor\n  mode: delivery\n');
+        expect(leanProjectionHostsRaw(root)).toEqual(['cursor']);
+        expect(leanProjectionModeRaw(root)).toBe('delivery');
+    });
+
+    it('a same-indent list does not fall back to the default host', () => {
+        const root = repoWith('lean_projection:\n  mode: delivery\n  hosts:\n  - cursor\n');
+        const res = resolveLeanProjectionHosts(leanProjectionHostsRaw(root));
+        expect(res.hosts).toEqual(['cursor']);
+        expect(res.usedDefault).toBe(false);
+    });
+
+    it('a sequence item SHALLOWER than the hosts key ends the block', () => {
+        // Guard on the widening: `>=` must not become `>=0`. An item outdented
+        // past the key belongs to a different mapping level, never to `hosts`.
+        const root = repoWith('lean_projection:\n  mode: delivery\n    hosts:\n  - cursor\n');
+        expect(leanProjectionHostsRaw(root)).toEqual([]);
+    });
+
     it('quotes and stray whitespace are stripped', () => {
         const root = repoWith('lean_projection:\n  hosts: [ "claude-code" , \'cursor\' ]\n');
         expect(leanProjectionHostsRaw(root)).toEqual(['claude-code', 'cursor']);
