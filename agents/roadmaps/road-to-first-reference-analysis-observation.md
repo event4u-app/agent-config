@@ -107,6 +107,28 @@ The 361-line figure independently corroborates the pin: the parent roadmap cited
 "361 lines" for the pre-upgrade command when it was authored, against a tree it
 verified at `93d63073e`.
 
+> **REFUTED 2026-09-08 — this pin is a POST-upgrade text, and the corroboration
+> above is why nobody noticed.** The paragraph is left standing rather than
+> rewritten: it is the record of how the error survived, and deleting it would
+> delete the evidence. The pin itself is NOT amended here — see
+> § Blockers → `shadow-pin-is-post-upgrade` for the diagnostic, the correct
+> coordinates, and why re-pinning is not this lane's call.
+>
+> The upgrade commit is `5bee62a5828ba6d3cf38a7d5d685004716d8addf` (2026-08-12,
+> *"anchor-first direction, claim gate, interop probe and bounded --deep"*), and
+> `git merge-base --is-ancestor 5bee62a58 537e7c86e` returns **true**: the
+> pinned shadow post-dates the upgrade by almost a month. All five mechanisms the
+> claim says were folded in are present in the pinned text — `### 1b. Anchor
+> table first`, `### 2b. Deep verification tier`, `### 3b. Interop probe`,
+> `### 5b. Converge the verdict table`, and the bound-claim collision gate inside
+> § 5.
+>
+> `93d63073e` (2026-09-05) is ALSO post-upgrade, which is the whole mechanism of
+> the error: 361 lines was measured twice, against two trees that both already
+> carried the upgrade, and two measurements of the same wrong thing agreeing
+> reads exactly like verification. A corroboration that shares the defect it is
+> meant to catch confirms nothing.
+
 ## Frozen counting rules — established 2026-09-07, before either arm runs
 
 Written while **no arm has been invoked and no arm output exists**, so nothing
@@ -318,6 +340,18 @@ gitignored, so the substance is transcribed here rather than linked.
       10 MiB of analyzable text** (workload, never storage), `agents/.harvest-local/`
       is confirmed empty first, and the tracked tree records **no repository
       name, URL, commit SHA or distinctive path** for it.
+      **NOT STARTED 2026-09-08 — halted at the gating condition, before anything
+      was pinned and before any network operation.** Conditions 6 and 7 were run
+      first, as they gate. Condition 6 passed: `agents/.harvest-local/` did not
+      exist, so the isolation baseline was clean. Condition 7's shadow half then
+      FAILED in a way no field of the pin can show — all four pinned fields
+      reproduce exactly, and the text they identify is the wrong text. Diagnostic,
+      correct coordinates and disposition: § Blockers →
+      `shadow-pin-is-post-upgrade`.
+      **No reference was named, no commit was pinned, no fetch was issued.** The
+      confidentiality test of condition 4 was therefore never reached — there is
+      no reference to test derivability against, and recording a "pass" for a test
+      with no subject would be worse than recording that it was not reached.
 - [x] **1.2 Freeze the counting rules before either arm is inspected.** What
       counts as an interop-probe finding at `file:line` precision, what counts
       as a bound-claim routing, and how a `consumer not locatable` probe is
@@ -349,6 +383,13 @@ gitignored, so the substance is transcribed here rather than linked.
       first — `agents/.harvest-local/` is confirmed empty, so a stale artefact
       from an earlier attempt cannot be mistaken for this run's output.
       Executable once 1.1 is done.
+      **NOT RUN 2026-09-08.** 1.1 did not complete, so this step has no reference
+      snapshot to validate a harness against. Nothing was invoked, nothing was
+      captured, and `agents/.harvest-local/` is back to not existing — the
+      shadow-command extract taken while checking condition 7 was removed, so the
+      next attempt's condition-6 check meets a clean baseline rather than this
+      run's leftovers. That is condition 6 applied to my own working files, which
+      is the point of it.
 - [ ] **1.4 Run both arms as one observation.** Upgraded and shadow, identical
       reference snapshot and identical inputs.
       verify: two artefact sets exist under the gitignored area, the upgraded
@@ -367,6 +408,16 @@ gitignored, so the substance is transcribed here rather than linked.
       is invoked, never counted afterwards, and `git rev-parse HEAD` is
       confirmed against the pinned SHA on BOTH sides before analysis begins.
       Executable once 1.1 and 1.3 are done.
+      **NOT RUN 2026-09-08, and NO SLOT CONSUMED.** This is administrative
+      invalidity under condition 5 in its clearest form — "wrong snapshot" — and
+      it is the branch of that condition that carries no cost: the defect was
+      found BEFORE any arm was invoked, so there was no correctly-invoked arm to
+      score and nothing to distinguish from a measured failure. Zero fetches were
+      issued, no budget was spent, no reference was exposed.
+      Condition 3's ceiling instrumentation was consequently not built. Stating
+      that plainly rather than reporting it as satisfied: the condition says the
+      mechanism must exist BEFORE the arm is invoked, and no arm was invoked, so
+      the honest record is "not reached", not "met".
 - [ ] **1.5 Write the outcome into `docs/CLAIMS.md`.** Pass → keep
       `status: unbacked`, record "observation 1/2 passed" with opaque
       provenance, leave `last_verified` empty. Fail → record the pre-registered
@@ -395,6 +446,80 @@ gitignored, so the substance is transcribed here rather than linked.
       false ground that Phases 3-4 cleared it, and the disposal note must say
       exactly that. Still gated on 1.4 having actually run: an authorization to
       fetch is not an observation.
+
+## Blockers
+
+### blocker: shadow-pin-is-post-upgrade
+- **Status:** OPEN
+- **Owner:** council
+- **Blocks:** steps 1.1, 1.3 and 1.4, and therefore 1.5 and 1.6. The
+  authorization to fetch is unaffected and unspent — this is not a permission
+  problem, it is a measurement-validity one.
+- **What it is:** § Frozen protocol pins the shadow arm at commit
+  `537e7c86e7646d50bf10d8b3e7ec8655239bceab`, and the text at that commit is a
+  **post-upgrade** text. The upgrade landed in
+  `5bee62a5828ba6d3cf38a7d5d685004716d8addf` on 2026-08-12 —
+  *"anchor-first direction, claim gate, interop probe and bounded --deep"* — and
+  that commit is an ANCESTOR of the pin, which post-dates it by almost a month.
+  All five mechanisms `docs/CLAIMS.md:488` says were folded in are present in the
+  pinned text: `### 1b. Anchor table first`, `### 2b. Deep verification tier`,
+  `### 3b. Interop probe`, `### 5b. Converge the verdict table`, and the
+  bound-claim collision gate in § 5.
+
+  The consequence is not cosmetic. Falsification criterion 1 of the claim
+  (`docs/CLAIMS.md:490`) decides "could not have produced" by **diffing two
+  documents**. With this pin both documents carry the mechanisms, so the diff
+  answers a question nobody asked and the observation could neither pass nor
+  fail the bar it was pre-registered against. An upgraded-vs-upgraded comparison
+  is not a weak measurement; it is a different measurement.
+
+  All four pinned fields reproduce byte-exactly, which is why the pin verified
+  clean on 2026-09-07 and again today. The fields identify the text correctly —
+  the text is the wrong one, and no field of a pin can express that.
+- **What to do:**
+  1. Do **not** re-pin inside this roadmap on an autonomous lane's judgement.
+     § Run-specific fetch authorization condition 1 makes the frozen protocol a
+     dated version whose amendment record is named and closed; the council
+     granted verdict (c) over that frozen set. Editing a frozen element after the
+     grant, without a round, changes the basis the grant was given on.
+  2. Route the re-pin to the council that granted (c) — it is the same body, the
+     record is `2026-09-07-outbound-fetch-run-authorization.md`, and the question
+     is narrow: does the grant survive replacing one frozen coordinate, or does
+     the corrected protocol need its own round?
+  3. The correct coordinates are already derived, so the re-freeze is one edit
+     rather than an investigation:
+
+     | Field | Correct pre-upgrade value |
+     |---|---|
+     | Shadow base commit | `97e293760e6b05af3a64b5a0cb34f581ab855e4c` (2026-08-12) |
+     | Shadow blob id | `0e805c5d6ee7139e76199738be67ed5c8a105a9e` |
+     | Shadow content sha256 | `ddb6c19b8d620caebd8e6c0dfbb3a2592528233274d790bcb4c104f6652c6756` |
+     | Shadow size | 207 lines · 6790 bytes |
+     | Shadow path at that commit | `src/domains/analysis-workbench/analyze/reference-repo/command.md` <!-- ref-ignore --> |
+
+     Recover it with
+     `git show 97e293760e6b05af3a64b5a0cb34f581ab855e4c:src/domains/analysis-workbench/analyze/reference-repo/command.md`.
+     Verified 2026-09-08: that text contains **zero** occurrences of all five
+     mechanism markers, against one each in the currently pinned text.
+  4. When re-freezing, replace the corroboration sentence rather than keeping it.
+     "361 lines" was measured against `93d63073e` (2026-09-05), which is **also**
+     post-upgrade, so the two readings agreed because they measured the same
+     wrong text twice. The pre-upgrade figure is 207 lines.
+- **Recommendation:** re-pin and run, once the council answers point 2. Nothing
+  about the reference, the counting rules, the size envelope or the
+  confidentiality rules is affected by this defect — only the shadow coordinate
+  is wrong, and the corrected one is above. The slot is unspent and the
+  authorization is intact.
+- **If you do nothing:** the roadmap stays executable-looking and its first real
+  execution attempt spends the authorization on a comparison that cannot answer
+  the pre-registered question. That is the one outcome condition 5 was written to
+  prevent, arrived at from the direction it did not anticipate — not a retry
+  after a failure, but a first run against a protocol that was wrong before it
+  started.
+- **Resolved when:** § Frozen protocol carries the pre-upgrade coordinates above,
+  the corroboration sentence states 207 lines against a pre-upgrade tree, and the
+  council has recorded whether verdict (c) carries over to the corrected protocol
+  or needs a new round.
 
 ## Reopening trigger — observation-based, not calendar-based
 
