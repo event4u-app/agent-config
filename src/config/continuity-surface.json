@@ -1,9 +1,9 @@
 {
-    "$comment": "Behavioural continuity-surface inventory. See src/scripts/_lib/continuity_surface.ts for the contract and src/scripts/check_continuity_surface.ts for the gate. Rows are validated against the tree on every run: every `locus` must resolve, and every persisted-state leaf under agents/runtime/state/ that any source file names must appear here with a disposition. Retiring a surface means DELETING its row — that is what makes a retirement measured rather than claimed.",
+    "$comment": "Behavioural continuity-surface inventory. See src/scripts/_lib/continuity_surface.ts for the contract and src/scripts/check_continuity_surface.ts for the gate. Rows are validated against the tree on every run: every `locus` must resolve, and every persisted-state leaf under agents/runtime/state/ that any source file names must appear here with a disposition. Retiring a surface means DELETING its row \u2014 that is what makes a retirement measured rather than claimed.",
     "axis_contract": {
         "public_continuity_commands": "A public CLI verb or slash command that a normal user must invoke for continuity to happen. An optional affordance is excluded WITH its reason, never silently.",
         "session_resume_pickers": "An interactive surface that asks a human to choose which prior session to resume.",
-        "persistent_continuity_artefacts": "Persisted state written for later session recovery, verification, or context restoration — whether or not it is labelled continuity. Corpus discovered behaviourally from agents/runtime/state/, never from the word.",
+        "persistent_continuity_artefacts": "Persisted state written for later session recovery, verification, or context restoration \u2014 whether or not it is labelled continuity. Corpus discovered behaviourally from agents/runtime/state/, never from the word.",
         "continuity_schemas": "A distinct schema definition for a record a successor session reads to restore state.",
         "normal_path_manual_actions": "A manual step a normal user must take on the normal path for continuity to work."
     },
@@ -20,7 +20,7 @@
             "axis": "continuity_schemas",
             "disposition": "counted",
             "locus": "src/scripts/_lib/subagent_capsule.ts:112",
-            "reason": "The one continuity-record schema: version 4, variant-discriminated, accepting v3 and v4. A recorded lock governs it — one schema, variant-discriminated, no new format, adding fields or variants but never repurposing or removing one. This is the surviving `1`."
+            "reason": "The one continuity-record schema: version 4, variant-discriminated, accepting v3 and v4. A recorded lock governs it \u2014 one schema, variant-discriminated, no new format, adding fields or variants but never repurposing or removing one. This is the surviving `1`."
         },
         {
             "id": "schema:context-observation",
@@ -90,7 +90,7 @@
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",
             "locus": "src/scripts/_lib/headless_invocation.ts:48",
-            "reason": "Run-integrity evidence, not conversational state. Excluded on the recorded ruling of the AI council of 2026-09-07 (D2): a run checkpoint is keyed by RUN id, consumed by `run:supervise`, and a disagreement there is an integrity alarm; a continuity record is keyed by SESSION, consumed by resume, and a gap there is a degraded resume. Different lifecycle, consumer, key and failure semantics. This is the exclusion the same council named as the gaming vector, which is exactly why it is printed rather than hidden in a predicate."
+            "reason": "Run-integrity evidence, not conversational state. THE KEEP/RETIRE QUESTION IS ANSWERED HERE, IN WRITING, and the answer is KEEP \u2014 which is what roadmap step 4.1's third verify clause asks for, recorded at the point where the count is computed rather than in a document nobody opens. The AI council of 2026-09-07 (D2) ruled it: a run checkpoint is keyed by RUN id, consumed by `run:supervise` and `latestCheckpointFor`, and a disagreement there is an integrity alarm; a continuity record is keyed by SESSION, consumed by resume, and a gap there is a degraded resume. Different lifecycle, consumer, key and failure semantics, so one concern owning both would be \"a lifecycle subsystem wearing a continuity name\". Excluded from the continuity axis on that ruling \u2014 and this is the exclusion the same council named as the gaming vector for position 3, which is exactly why it is printed on every run instead of living inside a predicate."
         },
         {
             "id": "code-graph-nudge.json",
@@ -118,7 +118,7 @@
             "axis": "persistent_continuity_artefacts",
             "disposition": "counted",
             "locus": "src/scripts/hooks/session_eol_hook.ts:31",
-            "reason": "Machine-readable fill level plus threshold state, overwritten every Stop. Written for later verification of whether the session crossed the recycle threshold; it has a producer and no in-repository consumer, and the council of 2026-09-07 (D2) authorised retiring it with the concern."
+            "reason": "Machine-readable fill level plus threshold state, overwritten every Stop. Written for later verification of whether the session crossed the recycle threshold. AUTHORISED FOR RETIREMENT and NOT RETIRED \u2014 the authorisation (AI council 2026-09-08 D1, resting on producer/no-consumer evidence) was obtained on incomplete facts. There is no consumer in code, but `agents/roadmaps/later/road-to-cost-parity-2-state-aware-dispatch.md` is a live parked roadmap whose open steps 1.1 and 1.4c read this file as a planned input, and 1.4c is specifically about bounding its staleness. The same council's own qualification anticipated this: \"no consumer in the tree\" proves no in-repository consumer, and a planned consumer inside the tree is a stronger objection than an external one because it is checkable. Retiring it is a decision for that roadmap's owner, not a side effect of this one. Blocker: `context-fill-retirement-has-a-parked-consumer`."
         },
         {
             "id": "context-hygiene.json",
@@ -195,7 +195,7 @@
             "axis": "persistent_continuity_artefacts",
             "disposition": "counted",
             "locus": "src/scripts/_cli/cmd_handoff.ts:9",
-            "reason": "A second, prose-shaped session handoff written by `agent-config handoff` and injected once at the next `session_start`. Same job as the record, different format and different lifecycle — a competing mental model, which is what the count exists to expose."
+            "reason": "A second, prose-shaped session handoff written by `agent-config handoff` and injected once at the next `session_start`. Same job as the record, different format and different lifecycle \u2014 a competing mental model, which is what the count exists to expose."
         },
         {
             "id": "hot-context.md",
@@ -258,7 +258,7 @@
             "axis": "persistent_continuity_artefacts",
             "disposition": "counted",
             "locus": "src/scripts/_cli/cmd_session_recycle.ts:9",
-            "reason": "The continuity record itself: written by `session:recycle`, resolved per session by `resolveContinuityRecord`, consumed once at `session_start` by the handoff-context concern. This is the artefact the whole roadmap is collapsing the others INTO — the surviving `1`."
+            "reason": "The continuity record itself: written by `session:recycle`, resolved per session by `resolveContinuityRecord`, consumed once at `session_start` by the handoff-context concern. This is the artefact the whole roadmap is collapsing the others INTO \u2014 the surviving `1`."
         },
         {
             "id": "render",
@@ -342,7 +342,7 @@
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",
             "locus": "src/scripts/_lib/host_capability.ts:219",
-            "reason": "Subagent return envelopes. Worker-generation lifecycle, explicitly a different subject from main-session continuity — the parent roadmap named the two-envelope vocabulary collision and kept them distinct."
+            "reason": "Subagent return envelopes. Worker-generation lifecycle, explicitly a different subject from main-session continuity \u2014 the parent roadmap named the two-envelope vocabulary collision and kept them distinct."
         },
         {
             "id": "suggestion-latch.json",
@@ -468,7 +468,7 @@
             "axis": "public_continuity_commands",
             "disposition": "excluded",
             "locus": "src/cli/registry.ts:62",
-            "reason": "An OPTIONAL affordance, not a required step. The parent roadmap`s blocker resolution of 2026-09-06 explicitly preserved `handoff` and `/agent-handoff` as the surviving verb and command, and its goal states the target as \"no continuity-specific command is REQUIRED\" rather than none existing. Excluded on that wording — and the tension is recorded rather than hidden: read as a bare count of existing public commands, the parent`s target of 0 is unreachable while its own resolution keeps this verb alive."
+            "reason": "An OPTIONAL affordance, not a required step. The parent roadmap`s blocker resolution of 2026-09-06 explicitly preserved `handoff` and `/agent-handoff` as the surviving verb and command, and its goal states the target as \"no continuity-specific command is REQUIRED\" rather than none existing. Excluded on that wording \u2014 and the tension is recorded rather than hidden: read as a bare count of existing public commands, the parent`s target of 0 is unreachable while its own resolution keeps this verb alive."
         },
         {
             "id": "verb:session:recycle",
@@ -489,14 +489,14 @@
             "axis": "session_resume_pickers",
             "disposition": "counted",
             "locus": "src/domains/meta/agent-handoff/command.md:41",
-            "reason": "A numbered-options block asking a human which prior session to resume. It is a picker by construction, and the parent`s target of 0 pickers is in tension with its preservation of this command — recorded here so the tension is visible in the count rather than argued away."
+            "reason": "A numbered-options block asking a human which prior session to resume. It is a picker by construction, and the parent`s target of 0 pickers is in tension with its preservation of this command \u2014 recorded here so the tension is visible in the count rather than argued away."
         },
         {
             "id": "picker:chat-history-import",
             "axis": "session_resume_pickers",
             "disposition": "counted",
             "locus": "src/domains/meta/chat-history/import/command.md:77",
-            "reason": "A numbered-table session picker plus a resume offer — a second, competing answer to \"which prior session do I continue from\". On the owner-authorised retirement set of 2026-09-06."
+            "reason": "A numbered-table session picker plus a resume offer \u2014 a second, competing answer to \"which prior session do I continue from\". On the owner-authorised retirement set of 2026-09-06."
         }
     ]
 }
