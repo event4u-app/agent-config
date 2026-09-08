@@ -360,6 +360,130 @@ function _countRoadmapTree(dir: string): number {
     return n;
 }
 
+/**
+ * Blocker ids declared `Status: open` in one file, by id.
+ *
+ * Reads exactly one fact per blocker — id and open-ness. It is deliberately
+ * NOT `_scanBoth`: the five-field contract, the class taxonomy and the
+ * decidability ratchet are not applied here, because the corpus this runs over
+ * includes `archive/` and applying the contract there lands 23 findings on day
+ * one against a change that caused none of them. That shape has been reverted
+ * twice in this repository — `lint_roadmap_later_disposition` at 68 files and
+ * `check_no_new_legacy_path` at 46 — and the exclusion also protects a true
+ * thing an archived roadmap is allowed to say: a blocker genuinely unresolved
+ * when its roadmap closed is history, not a defect.
+ */
+function _openBlockerIds(text: string): Set<string> {
+    const stripped = _stripFencedCode(text);
+    const out = new Set<string>();
+    const sectionMatch = BLOCKERS_SECTION_RE.exec(stripped);
+    if (!sectionMatch) {
+        return out;
+    }
+    const sectionStart = sectionMatch.index + sectionMatch[0].length;
+    const rest = stripped.slice(sectionStart);
+    const h2 = NEXT_H2_RE.exec(rest);
+    const section = stripped.slice(sectionStart, h2 ? sectionStart + h2.index : stripped.length);
+
+    BLOCKER_HEADING_RE.lastIndex = 0;
+    const heads: Array<{ end: number; start: number; id: string }> = [];
+    let hm: RegExpExecArray | null;
+    while ((hm = BLOCKER_HEADING_RE.exec(section)) !== null) {
+        heads.push({ start: hm.index, end: hm.index + hm[0].length, id: (hm[1] as string).trim() });
+        if (hm.index === BLOCKER_HEADING_RE.lastIndex) {
+            BLOCKER_HEADING_RE.lastIndex++;
+        }
+    }
+    for (let i = 0; i < heads.length; i++) {
+        const cur = heads[i] as { end: number; start: number; id: string };
+        const bodyEnd =
+            i + 1 < heads.length ? (heads[i + 1] as { start: number }).start : section.length;
+        const body = section.slice(cur.end, bodyEnd);
+        // Resolved is a prefix test for the same reason `blocker_is_resolved`
+        // makes it one: `resolved 2026-09-08 by …` is resolved.
+        if (!/^-[ \t]*\*\*Status:\*\*[ \t]*resolved\b/im.test(body)) {
+            out.add(cur.id);
+        }
+    }
+    return out;
+}
+
+/** Sorted `*.md` directly under the archive directory. */
+function _globArchivedRoadmaps(): string[] {
+    const dir = path.join(REPO_ROOT, 'agents', 'roadmaps', 'archive');
+    let entries: fs.Dirent[];
+    try {
+        entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+        return [];
+    }
+    return entries
+        .filter((e) => e.isFile() && e.name.endsWith('.md'))
+        .map((e) => path.join(dir, e.name))
+        .sort();
+}
+
+interface Overlap {
+    id: string;
+    active: string[];
+    archived: string[];
+}
+
+/** id → the files (repo-relative, sorted by input order) declaring it open. */
+function _openIdIndex(files: string[]): Map<string, string[]> {
+    const index = new Map<string, string[]>();
+    for (const f of files) {
+        const rel = _relPosix(f, REPO_ROOT);
+        for (const id of _openBlockerIds(fs.readFileSync(f, 'utf-8'))) {
+            const hits = index.get(id);
+            if (hits === undefined) {
+                index.set(id, [rel]);
+            } else {
+                hits.push(rel);
+            }
+        }
+    }
+    return index;
+}
+
+/**
+ * Blocker ids declared open in BOTH an active and an archived roadmap.
+ *
+ * The assertion is the one an archived record cannot legitimately make: a
+ * blocker still being decided in the active tree, simultaneously declared open
+ * in a file that says the work closed. The transition check in
+ * `archive_completed_roadmaps` catches the archival that produces this state;
+ * this catches it however else it arrives — a hand edit, a bad merge, or a
+ * commit that shipped stale index content.
+ *
+ * `open_blockers` is a shrink-only ratchet over the ACTIVE tree only, so
+ * without this the count is satisfiable by archiving rather than by resolving.
+ *
+ * Deliberately NOT "no id open in more than one file". Two ACTIVE roadmaps may
+ * legitimately share one cross-cutting blocker, and forbidding that would break
+ * a real pattern to catch a different defect (AI council 2026-09-08, 2/2
+ * present: the unscoped form "forbids legitimate cross-cutting blockers in
+ * multiple active roadmaps"). Two ARCHIVED files sharing an open id is out of
+ * scope for the same day-one reason as the contract itself: measured at 2 on
+ * this tree, so a hard assertion there would red the build on records this
+ * change did not create.
+ */
+function _archiveOverlap(
+    activeFiles: string[] = _globRoadmaps(),
+    archivedFiles: string[] = _globArchivedRoadmaps(),
+): Overlap[] {
+    const active = _openIdIndex(activeFiles);
+    const archived = _openIdIndex(archivedFiles);
+    const out: Overlap[] = [];
+    for (const [id, activeHits] of [...active.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
+        const archivedHits = archived.get(id);
+        if (archivedHits !== undefined) {
+            out.push({ id, active: activeHits, archived: archivedHits });
+        }
+    }
+    return out;
+}
+
 function main(): number {
     try {
         assertScanned({
@@ -411,6 +535,38 @@ function main(): number {
         return 1;
     }
 
+    // An archived roadmap says the work closed. An open blocker declared in one
+    // AND in an active roadmap therefore contradicts itself, and the shrink-only
+    // `open_blockers` ratchet reads the active tree only — so without this the
+    // count is satisfiable by archiving rather than by resolving.
+    //
+    // HARD rather than ratcheted, and measured before it shipped: 0 overlapping
+    // ids on this tree at 2026-09-08 (12 active open ids, 33 archived), so on
+    // the day it lands it fires on nothing and there is no backlog to
+    // grandfather — the same argument the `Class:` contract above makes.
+    const overlap = _archiveOverlap();
+    if (overlap.length > 0) {
+        process.stderr.write(
+            `\n❌  ${overlap.length} blocker id(s) declared open in both an active ` +
+                'and an archived roadmap\n',
+        );
+        for (const o of overlap) {
+            process.stderr.write(`    ${o.id}\n`);
+            for (const rel of o.active) {
+                process.stderr.write(`        active:   ${rel}\n`);
+            }
+            for (const rel of o.archived) {
+                process.stderr.write(`        archived: ${rel}\n`);
+            }
+        }
+        process.stderr.write(
+            '\n    Resolve it in one place. An archived record may keep a blocker that\n' +
+                '    was genuinely unresolved when its roadmap closed; it may not keep one\n' +
+                '    the active tree is still deciding.\n',
+        );
+        return 1;
+    }
+
     // The decidability ratchet. A blocker that names no option, no command and
     // no recommendation is a research task handed to the person with the least
     // context — the defect this half of the gate exists to stop growing.
@@ -434,6 +590,10 @@ function main(): number {
     }
     if (!QUIET) {
         process.stdout.write(`\n✅  ${roadmaps.length} roadmap(s) blocker-contract-clean\n`);
+        process.stdout.write(
+            `✅  0 blocker id(s) open in both an active and an archived roadmap ` +
+                `(${_globArchivedRoadmaps().length} archived file(s) read)\n`,
+        );
         process.stdout.write(`✅  ${verdict.message}\n`);
     }
     return 0;
@@ -477,6 +637,9 @@ export {
     _scan,
     _scanBoth,
     _globRoadmaps,
+    _globArchivedRoadmaps,
+    _openBlockerIds,
+    _archiveOverlap,
     main,
 };
-export type { Violation, ScanResult };
+export type { Violation, ScanResult, Overlap };

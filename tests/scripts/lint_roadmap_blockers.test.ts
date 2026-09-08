@@ -4,11 +4,17 @@
 // pure `_scan(text)` function directly (no filesystem / CLI plumbing —
 // REPO_ROOT is fixed relative to the script location, same convention as
 // the sibling linters in this family).
-import { describe, expect, it } from 'vitest';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
+    _archiveOverlap,
     _blockerClass,
     _hasExecutableSubstance,
+    _openBlockerIds,
     _scan,
     _scanBoth,
 } from '../../src/scripts/lint_roadmap_blockers.js';
@@ -348,5 +354,100 @@ describe('lint_roadmap_blockers — _scan', () => {
         const violations = _scan(text);
         expect(violations.length).toBe(1);
         expect(violations[0]!.message).toContain("blocker 'incomplete-one' missing");
+    });
+});
+// The active-vs-archived open-blocker overlap assertion
+// (`road-to-a-blocker-that-cannot-hide-in-the-archive` Phase 1).
+//
+// `_archiveOverlap` takes its two corpora as arguments so the polarity can be
+// driven from fixtures. Its defaults read the real tree, where the answer is
+// permanently 0 — a test against that would assert nothing, which is the
+// gate-scanning-nothing shape this repository rejects elsewhere.
+describe('lint_roadmap_blockers — active/archived open-blocker overlap', () => {
+    let tmp: string;
+    beforeEach(() => {
+        tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'lrb-overlap-'));
+    });
+    afterEach(() => {
+        fs.rmSync(tmp, { recursive: true, force: true });
+    });
+
+    function fixture(name: string, ...ids: Array<[string, 'open' | 'resolved']>): string {
+        const lines = ['# Fixture', '', '## Blockers', ''];
+        for (const [id, status] of ids) {
+            lines.push(
+                `### blocker: ${id}`,
+                `- **Status:** ${status}`,
+                '- **Owner:** maintainer',
+                '- **Blocks:** nothing',
+                '- **What to do:** decide',
+                '- **Resolved when:** decided',
+                '',
+            );
+        }
+        const fp = path.join(tmp, name);
+        fs.writeFileSync(fp, lines.join('\n'), 'utf-8');
+        return fp;
+    }
+
+    it('reports an id declared open in both an active and an archived roadmap', () => {
+        const active = fixture('active.md', ['b-relocated', 'open']);
+        const archived = fixture('archived.md', ['b-relocated', 'open']);
+
+        const overlap = _archiveOverlap([active], [archived]);
+
+        expect(overlap.length).toBe(1);
+        expect(overlap[0]!.id).toBe('b-relocated');
+        expect(overlap[0]!.active.length).toBe(1);
+        expect(overlap[0]!.archived.length).toBe(1);
+    });
+
+    it('reports nothing when the ids differ', () => {
+        const active = fixture('active.md', ['b-one', 'open']);
+        const archived = fixture('archived.md', ['b-two', 'open']);
+        expect(_archiveOverlap([active], [archived])).toEqual([]);
+    });
+
+    // The exclusion the archive is entitled to: a blocker genuinely unresolved
+    // when its roadmap closed is history. Only an OPEN pair contradicts itself.
+    it('reports nothing when the archived copy is resolved', () => {
+        const active = fixture('active.md', ['b-shared', 'open']);
+        const archived = fixture('archived.md', ['b-shared', 'resolved']);
+        expect(_archiveOverlap([active], [archived])).toEqual([]);
+    });
+
+    // Two ACTIVE roadmaps sharing one cross-cutting blocker is legitimate, and
+    // the unscoped "no id open in more than one file" form would forbid it.
+    it('reports nothing for an id open in two ACTIVE roadmaps', () => {
+        const a1 = fixture('a1.md', ['b-crosscutting', 'open']);
+        const a2 = fixture('a2.md', ['b-crosscutting', 'open']);
+        expect(_archiveOverlap([a1, a2], [])).toEqual([]);
+    });
+
+    it('_openBlockerIds treats a `resolved <date> by …` status as resolved', () => {
+        const text = [
+            '## Blockers',
+            '',
+            '### blocker: b-closed',
+            '- **Status:** resolved 2026-09-08 by the council',
+            '',
+            '### blocker: b-live',
+            '- **Status:** open',
+            '',
+        ].join('\n');
+        expect([..._openBlockerIds(text)]).toEqual(['b-live']);
+    });
+
+    it('_openBlockerIds ignores a fenced documentation example', () => {
+        const text = [
+            '## Blockers',
+            '',
+            '```',
+            '### blocker: example-only',
+            '- **Status:** open',
+            '```',
+            '',
+        ].join('\n');
+        expect([..._openBlockerIds(text)]).toEqual([]);
     });
 });
