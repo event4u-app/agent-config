@@ -8,12 +8,10 @@ import {
     auditCarries,
     carryProblems,
     deadRoadmaps,
-    declaresCarrier,
     frontmatter,
     hasOpenStep,
-    liveCarriers,
     selfTestCases,
-} from '../../src/scripts/lint_carrier_integrity.js';
+} from '../../src/scripts/lint_deferral_integrity.js';
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 
@@ -35,10 +33,8 @@ const FENCE_DOC = '---\ncomplexity: bounded\n---\n# R\n\n```markdown\n---\nstatu
 /** A back-link that only ever appears in the body — a mention, not a declaration. */
 const BODY_ONLY_BACKLINK = '---\ncomplexity: bounded\n---\n# R\n\n```yaml\nparent_roadmap: road-to-parent\nrelates:\n  - slug: road-to-parent\n    relation: extends\n```\n';
 
-const CARRIER = '---\ncomplexity: bounded\nstatus: carrier\n---\n# R\n';
-
 beforeEach(() => {
-    dir = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'carrier-unit-'));
+    dir = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'deferral-unit-'));
 });
 
 afterEach(() => {
@@ -120,10 +116,10 @@ describe('the self-test suite itself', () => {
 });
 
 describe('structural tests read declarations, not documentation', () => {
-    it('reads status: carrier from the frontmatter and not from a fenced example', () => {
-        expect(declaresCarrier('---\nstatus: carrier\n---\n# R\n')).toBe(true);
-        expect(declaresCarrier(FENCE_DOC)).toBe(false);
+    it('reads the frontmatter block and not a fenced example of one', () => {
         expect(frontmatter(FENCE_DOC)).toBe('complexity: bounded');
+        expect(frontmatter('---\nstatus: ready\n---\n# R\n')).toBe('status: ready');
+        expect(frontmatter('# R\n\nno frontmatter here\n')).toBe('');
     });
 
     it('sees an open step outside a fence, in either bullet grammar, and none inside one', () => {
@@ -158,53 +154,7 @@ describe('structural tests read declarations, not documentation', () => {
     });
 });
 
-describe('the live-carrier enumeration', () => {
-    it('lists carriers at the top level and under later/, and nothing else', () => {
-        plant('agents/roadmaps/road-to-a-carrier.md', CARRIER);
-        plant('agents/roadmaps/later/road-to-parked-carrier.md', CARRIER);
-        plant('agents/roadmaps/road-to-ordinary.md', '---\ncomplexity: bounded\n---\n# R\n');
-        plant('agents/roadmaps/archive/road-to-archived-carrier.md', CARRIER);
-        plant('agents/roadmaps/README.md', CARRIER);
-        expect(liveCarriers(dir)).toEqual([
-            'agents/roadmaps/road-to-a-carrier.md',
-            'agents/roadmaps/later/road-to-parked-carrier.md',
-        ]);
-    });
-
-    it('reds a carrier that no dead roadmap names with carried-to', () => {
-        plant('agents/roadmaps/road-to-self-declared.md', CARRIER);
-        const { problems, carriers } = auditCarries(dir);
-        expect(carriers).toEqual(['agents/roadmaps/road-to-self-declared.md']);
-        expect(problems).toHaveLength(1);
-        expect(problems[0]!.source).toBe('agents/roadmaps/road-to-self-declared.md');
-        expect(problems[0]!.cls).toBe('broken-destination');
-        expect(problems[0]!.detail).toContain('only legitimate for the');
-    });
-
-    it('accepts a carrier an archived parent actually names', () => {
-        plant('agents/roadmaps/archive/road-to-parent.md', PARENT);
-        plant(
-            'agents/roadmaps/road-to-receiver.md',
-            '---\ncomplexity: bounded\nstatus: carrier\nparent_roadmap: road-to-parent\n---\n# R\n',
-        );
-        expect(auditCarries(dir).problems).toEqual([]);
-    });
-
-    it('does not accept a carrier named only by a merged-into annotation', () => {
-        plant(
-            'agents/roadmaps/archive/road-to-parent.md',
-            PARENT.replace('carried-to=', 'merged-into='),
-        );
-        plant(
-            'agents/roadmaps/road-to-receiver.md',
-            '---\ncomplexity: bounded\nstatus: carrier\nparent_roadmap: road-to-parent\n---\n# R\n',
-        );
-        const orphans = auditCarries(dir).problems.filter(
-            (p) => p.source === 'agents/roadmaps/road-to-receiver.md',
-        );
-        expect(orphans).toHaveLength(1);
-    });
-
+describe('auditCarries reuses a caller-supplied walk', () => {
     it('reuses a caller-supplied walk instead of repeating it', () => {
         plant('agents/roadmaps/archive/road-to-parent.md', PARENT);
         plant('agents/roadmaps/archive/road-to-other.md', BARE_PARENT);

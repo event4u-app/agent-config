@@ -48,6 +48,29 @@ now owns the run, carries the frozen shadow-arm protocol, and holds the
 observation-based reopening trigger. This stub is disposed of by that roadmap's
 step 1.6, not before.
 
+## Update 2026-09-08 — two findings the named producer needs before running
+
+Both are recorded in full in the receiver roadmap; repeated here in one
+paragraph each because this stub is what the maintainer reaches first, and
+running against the first defect would spend an observation slot on a
+comparison that cannot answer the pre-registered question.
+
+- **The frozen shadow pin is a POST-upgrade text — do not run against it.** The
+  receiver's frozen protocol pins the shadow arm at a commit that post-dates the
+  upgrade being measured by almost a month, so both arms of the comparison carry
+  all five mechanisms. Every field of the pin reproduces byte-exactly, which is
+  why it verified clean three times; the fields identify the text correctly and
+  the text is the wrong one. The corrected comparator is derived, independently
+  re-verified, and awaiting ratification — it is **not** yet operative. Receiver:
+  `blocker: shadow-pin-is-post-upgrade`.
+- **This stub was right about the authority, and that is now ratified.** An AI
+  council granted a run-specific fetch authorization on 2026-09-07, and a second
+  round on 2026-09-08 (2 seats, unanimous) established that the grant is a
+  protocol-readiness clearance and **not** authority for the outbound fetch: the
+  fetch is a Hard Floor act, and this stub's own naming of the maintainer as the
+  producer stands unchanged. Two autonomous lanes have now stopped at that line
+  rather than crossing it. Receiver: `blocker: fetch-is-owner-reserved`.
+
 ## Transferred work — quoted as it stood
 
 Phase 2 Step 1, verbatim from `road-to-distillation-followups.md` at the
