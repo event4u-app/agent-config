@@ -42,6 +42,62 @@ reason, which no arithmetic can.
 or that promises a future breaking removal, gets a row here in the same commit
 that makes the promise. A promise with no row is not tracked and will be missed.
 
+## 14.22.x — the code-graph engine gets readers, and the MCP install hint changes
+
+💡 advisory · 🔄 automatic — **one exception, below.**
+
+The 14.21.x entry above shipped the engine to consumers. This one ships the
+things that read it (`road-to-a-graph-that-is-shipped`, Phases 3 and 4).
+
+### Additive — nothing to do
+
+- **Four new `code-graph` subcommands**, all answering questions about a DIFF
+  rather than a symbol: `impact --diff <rev>`, `tests-for <symbol>`,
+  `untested --diff <rev>`, `dead`. Each prints the resolution mechanisms it
+  accepted, the mechanisms it refused, and the graph's three-state staleness.
+  No existing subcommand changed, and no new top-level verb was added.
+- **Five new MCP tools** on the existing stdio server — `graph_impact`,
+  `graph_tests_for`, `graph_dead`, `graph_query`, `graph_path` — taking the
+  catalogue from 31 tools to 36. Four are read-only; `graph_impact` runs
+  `git diff --name-only` to resolve its rev and declares `side_effect: shell`
+  for that reason.
+- **A new `tests` edge relation**, derived in the build pass from a test file's
+  imports. `SCHEMA_VERSION` 3 → 4 and `GRAPH_STORE_VERSION` 3 → 4, so an
+  existing cache and its SQLite twin are refused and rebuilt on the next
+  `code-graph build`. The cache is derived and disposable
+  (ADR-129) — there is nothing to migrate, and a rebuild takes seconds.
+
+### The one thing to check — `dead` refuses by default
+
+`agent-config code-graph dead` exits **1** with an empty list unless you either
+supply an entry-point list (`--entry-points <file>`) or accept the gap
+(`--accept-missing-exports`). That is deliberate: this engine records no
+exportedness, so without a supplied list an exported-but-not-yet-imported public
+symbol is indistinguishable from a dead one, and a confident false "dead" invites
+a deletion the graph cannot justify. If you wire `dead` into a script, handle the
+refusal — an exit 1 here is not a crash, and treating it as an empty dead list
+is the false negative the refusal exists to prevent.
+
+### One consumer-visible string changed
+
+`install_hint_stdio` in the published MCP tool catalogue was
+`npx -y @event4u/agent-config mcp-server` and is now **`agent-config mcp-server`**
+— the installed-binary form the setup docs already lead with. It resolves no
+dist-tag, so the server you run is the version you installed rather than
+whatever the registry served most recently. **It assumes `agent-config` is on
+PATH.** If you read that field programmatically and rely on `npx`, keep using
+the pinned form from [`mcp-server.md`](mcp-server.md) —
+`npx -y @event4u/agent-config@<version> mcp-server` — which is unchanged and
+still the documented client configuration.
+
+### Standing context cost
+
+Registering the stdio MCP server now costs **4,876 tokens** of standing context
+per session, up from 3,886 — the five graph tools measure 993 between them. It
+remains roughly 4x under the ~20,000-token Tool Search deferral threshold at a
+200k window, so the surface still loads upfront. Measured, with the prior reading
+kept: `agents/evidence/metrics/mcp-tool-standing-cost.jsonl`.
+
 ## 14.21.x — the code-graph engine ships to consumers
 
 💡 advisory · 🔄 automatic — no action required.
