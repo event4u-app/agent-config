@@ -6,7 +6,15 @@ probe: none
 
 # Stub: road to the owner-reserved authority decisions
 
-> **Arrivals:** 4 (at least) — latest `inbox-2026-09-m` (2026-09-05); earlier: agents/roadmaps/archive/road-to-gate-autonomy.md, agents/roadmaps/archive/road-to-user-out-of-the-loop.md, one untracked prior round.
+> **Arrivals:** 5 (at least) — latest `inbox-2026-09-w` (2026-09-08); earlier: `inbox-2026-09-m`
+> (2026-09-05), agents/roadmaps/archive/road-to-gate-autonomy.md,
+> agents/roadmaps/archive/road-to-user-out-of-the-loop.md, one untracked prior round. The
+> 2026-09-08 round carried two challenge-me interviews in which the owner **answered
+> Decisions 2 and 3**, and the owner then directed acceptance of the transcription in the same
+> session. Both are recorded in
+> [`ADR-268`](../../../docs/decisions/ADR-268-mission-scoped-authority-persistence-and-ratified-self-amendment.md),
+> `status: accepted`. **The counter stops at five**: the sixth arrival is what the acceptance
+> prevented, and the two entries below now carry the ruling rather than the question.
 
 > **Stub — not active work.** A **drain-run transfer**, created 2026-08-22 when
 > [`road-to-evidence-based-adr-governance.md`](../archive/road-to-evidence-based-adr-governance.md)
@@ -61,6 +69,15 @@ excluded list verbatim (trunk, deploy, prod data, irreversible external).
 
 ## Unresolved decision 2 — ADR-005 § 1, auto-merge of ranked candidates
 
+> **ANSWERED — owner ruling, 2026-09-08, accepted.** A merge grant may come from the prompt,
+> an invoked command, ticket text, the roadmap **or** a standing setting; it defaults `off`
+> and persists to the final green head through fixes, syncs and intermediate questions.
+> Recorded as [`ADR-268`](../../../docs/decisions/ADR-268-mission-scoped-authority-persistence-and-ratified-self-amendment.md)
+> § 3, which supersedes ADR-239 § 3 and carries the reciprocal pointer there. **The
+> competitive-run half below is NOT covered:** ADR-268 § "Not reopened" scopes itself to the
+> mission-delivery merge and leaves a judge-ranked integration merge open, so this entry
+> narrows rather than closes. What remains open is ADR-005 § 1 and nothing else.
+
 From the parent's step 0B.2.
 
 ADR-005 predates ADR-237's authority model; competitive runs terminate at a human
@@ -70,6 +87,24 @@ merge even for integration branches.
 > judge-ranked candidates, with trunk staying excluded?
 
 ## Unresolved decision 3 — grade-derived authority, and its kill switch
+
+> **PARTLY ANSWERED — owner ruling, 2026-09-08, accepted.** The *governance self-amendment*
+> half that ADR-255 § 4 refused is decided: the agent may edit its own constitution and extend
+> its boundary, but may **never ratify** the extension — an independent session, then the
+> council, then a different provider, then the owner; provider diversity required where two
+> providers are configured. Recorded as
+> [`ADR-268`](../../../docs/decisions/ADR-268-mission-scoped-authority-persistence-and-ratified-self-amendment.md)
+> § 4, which supersedes ADR-255 § 4 only and carries the reciprocal pointer there. **The
+> grade-derived-authority question below is untouched** — nothing in the 2026-09-08 rulings
+> mentions an evidence grade reducing an authorization burden, and the round-5 finding that
+> fusing a grade with authority lets the grading party gain from its own grade is the same
+> objection ADR-268 § 4 encodes for ratification. The six reopening preconditions stand
+> unchanged.
+>
+> **ADR-268 was itself the worked example.** The drafting run wrote it `proposed` and refused
+> to accept it, on this section's own ground; the owner then directed acceptance. That is the
+> ladder terminating in the owner, not an exception to it — and it is the shape any future
+> authority expansion is measured against.
 
 From the parent's Phase 7 (steps 7.1 and 7.2), transferred whole.
 

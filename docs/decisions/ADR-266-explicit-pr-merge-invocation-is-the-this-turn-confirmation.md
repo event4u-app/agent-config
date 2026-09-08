@@ -4,7 +4,7 @@ status: accepted
 date: 2026-09-08
 decision: explicit-pr-merge-invocation-is-the-this-turn-confirmation
 supersedes: ADR-237 (§ 4 merge clause · /pr:merge only)
-superseded_by: —
+superseded_by: 268 (§ Not reopened · the roadmap-grant non-transfer bullet only)
 type: structural
 reopen_policy: owner
 protected_dimensions: security_floor
@@ -127,6 +127,16 @@ still in force:
   different shape: a roadmap drain's invocation names a roadmap, not a merge,
   so the "the confirmation is the invocation" argument does not transfer to it.
   Reopening it is a separate owner decision.
+
+  > **Lineage, added 2026-09-08 — this bullet only.** That separate owner decision was taken
+  > the same day and is recorded as
+  > [`ADR-268 § 12`](ADR-268-mission-scoped-authority-persistence-and-ratified-self-amendment.md),
+  > which accepts `granted_by: roadmap:<slug>` as an object-bound grant source and resolves
+  > ADR-239 § 3. It does not overturn this record's argument: the *invocation-is-the-confirmation*
+  > reasoning still does not transfer to a roadmap invocation, and § 12's grant does not rest on
+  > it — it reads a typed object the owner wrote into the roadmap rather than inferring authority
+  > from an invocation. **Every other bullet in this section stands unchanged**, including the
+  > per-object confirmation for closing a PR the owner did not open. A pointer, not a rewrite.
 
 ## Consequences
 
