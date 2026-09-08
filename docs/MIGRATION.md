@@ -17,7 +17,7 @@ releaser here on every `release:major`.
 | Surface | Committed | Deprecation notice due | Removal due | Reversal condition |
 |---|---|---|---|---|
 | Free-text `compatibility` skill-frontmatter field (`src/scripts/schemas/skill.schema.json`) | 2026-08-14 | shipped 2026-08-14 — `deprecated: true` + superseded-by note in the schema; `harness_compat` lands beside it, additively | next major after the notice — **not pinned here** (removal date is maintainer-owned, same stance as the manifest `tier` entry, whose `sunset` shipped `null`) | The public Agent-Skills spec makes `compatibility` load-bearing for cross-host portability, or an external consumer is found reading it. `harness_compat` is package-local; `compatibility` mirrors the public spec, so keeping the mirror stays cheaply reversible. Superseded by `harness_compat` (class) + `runtime_requires` (probeable detail); both users (`docx-authoring`, `pdf-tools`) already carry both fields, so nothing breaks on removal day. |
-| `code_graph` native code-graph engine (`code_graph.enabled`, the `code-intelligence` skill's native arm, `code_graph_nudge_hook`) | 2026-07-28 | next major after 9.x | **REVISED 2026-08-15 — no removal date; see below** | A consumer case the graph answers and disciplined grep cannot. Measured null: recall 0.365 vs grep 0.797 (`docs/CLAIMS.md` `code-graph-retrieval-null`), measured 2026-07-28 against a build predating the 2026-08-22 extractor repair. `enabled: false` stays the DEFAULT — "permanent" is retracted here on 2026-08-26, because this row's own revision below withdraws the removal commitment and a withdrawn schedule cannot leave a permanence behind it. **Revision (ADR-232 track, maintainer decision 2026-08-15).** The original row committed removal to 11.0; the tree reached 12.0.0 with the runtime paths still registered, i.e. the commitment was missed. Rather than quietly re-dating it, the commitment is withdrawn with its reason recorded, because the measurement changed what removal is worth: **the payload this deprecation existed for has already shipped** — the parser pair (`web-tree-sitter@0.24.7` / `tree-sitter-wasms@0.1.13`, ~51 MB unpacked) moved from `dependencies` to `devDependencies` ahead of schedule, so no consumer installs it. What source removal would still free is ~112 K against a 27 M tree (0.4 %). Against that it costs a breaking change across four consumer-visible surfaces (CLI verb, `code-intelligence` skill, `external-code-graph-interop` rule, `hooks.code_graph.enabled`) plus one surface that is re-plumbing rather than deletion: `_lib/auto_dispatch.ts` routes the `definition` / `references` lookup classes to `primitive: 'code-graph-query'`, and `_lib/judgment_ladder.ts` calls that live at Rung 0. There is also no cheap middle — `code_graph/detect.ts` handles the `consumer` / `scip` / `native` source kinds in one type union, so stripping only the native engine while keeping consumer-index interop is a redesign. **New commitment:** the surfaces stay registered and disabled; removal happens when a concrete reason appears (a maintenance cost that bites, a conflicting redesign, or a consumer asking), not on a date. This row stays in the table so the decision is visible rather than forgotten — a withdrawn commitment recorded is not the folklore this table exists to prevent; an unrecorded one would be. |
+| `code_graph` native code-graph engine (`code_graph.enabled`, the `code-intelligence` skill's native arm, `code_graph_nudge_hook`) | 2026-07-28 | next major after 9.x | **REVISED 2026-08-15 — no removal date; see below** | A consumer case the graph answers and disciplined grep cannot. Measured null: recall 0.365 vs grep 0.797 (`docs/CLAIMS.md` `code-graph-retrieval-null`), measured 2026-07-28 against a build predating the 2026-08-22 extractor repair. `enabled: false` stays the DEFAULT — "permanent" is retracted here on 2026-08-26, because this row's own revision below withdraws the removal commitment and a withdrawn schedule cannot leave a permanence behind it. **Revision (ADR-232 track, maintainer decision 2026-08-15).** The original row committed removal to 11.0; the tree reached 12.0.0 with the runtime paths still registered, i.e. the commitment was missed. Rather than quietly re-dating it, the commitment is withdrawn with its reason recorded, because the measurement changed what removal is worth: **the payload this deprecation existed for has already shipped** — the parser pair (`web-tree-sitter@0.24.7` / `tree-sitter-wasms@0.1.13`, ~51 MB unpacked) moved from `dependencies` to `devDependencies` ahead of schedule, so no consumer installed it. **REVERSED 2026-09-07 by ADR-259 (as amended) — this clause no longer holds and is kept only so the reversal is legible.** Delivery and measurement are decoupled: `web-tree-sitter` is a runtime `dependency` again and the three loadable grammars are vendored at `src/vendor/grammars/`, so a consumer now DOES install the engine. The measured null above is untouched and `enabled: false` stays the default — what changed is that the reopen trigger ("a consumer case the graph answers") became reachable at all, which it was not while no consumer could receive the engine. The install delta is recorded below under "14.21.x — the code-graph engine ships to consumers". What source removal would still free is ~112 K against a 27 M tree (0.4 %). Against that it costs a breaking change across four consumer-visible surfaces (CLI verb, `code-intelligence` skill, `external-code-graph-interop` rule, `hooks.code_graph.enabled`) plus one surface that is re-plumbing rather than deletion: `_lib/auto_dispatch.ts` routes the `definition` / `references` lookup classes to `primitive: 'code-graph-query'`, and `_lib/judgment_ladder.ts` calls that live at Rung 0. There is also no cheap middle — `code_graph/detect.ts` handles the `consumer` / `scip` / `native` source kinds in one type union, so stripping only the native engine while keeping consumer-index interop is a redesign. **New commitment:** the surfaces stay registered and disabled; removal happens when a concrete reason appears (a maintenance cost that bites, a conflicting redesign, or a consumer asking), not on a date. This row stays in the table so the decision is visible rather than forgotten — a withdrawn commitment recorded is not the folklore this table exists to prevent; an unrecorded one would be. |
 | `telegraph-speak` condenser (`telegraph.speak`, `src/rules/telegraph-speak.md`, `src/scripts/_lib/compile_time_toggles.ts`, `src/scripts/validate_telegraph_carveouts.ts`) | 2026-07-29 | shipped 2026-07-29 — dormant by default, `speak` defaults `false` | **not pinned here** — removal is authorized in principle and deliberately not executed (ADR `telegraph/0002` § Decision part 3), pending a `prose_only` bench (~$0.80). The date is maintainer-owned, same stance as the `compatibility` row above | An output-side bench clears the kill-criterion bar, at which point `telegraph.speak: true` restores the feature intact. Measured basis for dormancy: median vs_terse **−9.27 %** (API) / −5.47 % (exact `cl100k_base`) — the condenser emits MORE than a plain "be terse". Tracked as a row rather than left dormant-and-unlisted: dormancy without a row is untracked in *both* directions, neither scheduled nor recorded as a keep. Deliberately NOT a due version (that would invent a commitment ADR 0002 declined to make) and NOT a permanent keep (that would contradict its authorized removal). |
 
 ### Row status — what is currently late, and who owns it
@@ -41,6 +41,54 @@ reason, which no arithmetic can.
 **Adding a row:** any change that ships a capability as default-off-pending-removal,
 or that promises a future breaking removal, gets a row here in the same commit
 that makes the promise. A promise with no row is not tracked and will be missed.
+
+## 14.21.x — the code-graph engine ships to consumers
+
+💡 advisory · 🔄 automatic — no action required.
+
+`npm install @event4u/agent-config` now carries everything the native
+code-graph engine needs, so `agent-config code-graph build` works on the next
+command with no manual parser install (ADR-259, as amended 2026-09-07).
+
+### What changed
+
+- `web-tree-sitter@0.24.7` moved from `devDependencies` to `dependencies`.
+- Three compiled tree-sitter grammars are **vendored** in the published tarball
+  at `src/vendor/grammars/` — php, typescript (which also serves `.tsx`), and
+  javascript. These are the three `GRAMMAR_WASM` entries the engine can load.
+- `tree-sitter-wasms` stays a `devDependency`. It is the source the vendored
+  copies are refreshed from, not a runtime dependency, so consumers do **not**
+  receive the 36-grammar pack.
+
+### Install delta, measured
+
+Measured on 2026-09-07 with `npm pack --dry-run --json --ignore-scripts`,
+against the same tree with the vendored directory excluded from `files[]`:
+
+| Axis | Before | After | Delta |
+|---|---|---|---|
+| Compressed tarball | 9,821,600 B | 10,195,522 B | **+373,922 B** (+0.357 MiB) |
+| Vendored grammars, on disk | 0 B | 3,802,618 B | **+3,802,618 B** (+3.63 MiB) |
+| `web-tree-sitter` in `node_modules` | 0 B (dev-only) | ~389,120 B | **+~380 KiB** |
+
+Per-grammar, uncompressed: `tree-sitter-php.wasm` 812,594 B ·
+`tree-sitter-typescript.wasm` 2,342,690 B · `tree-sitter-javascript.wasm`
+647,334 B.
+
+For contrast, the two rejected shapes: depending on `tree-sitter-wasms`
+directly would have delivered all 36 grammars (51,765,657 B apparent, 49 MiB on
+disk), and the 13-grammar set ADR-259 originally named measures 9,085,798 B
+apparent / 1,016,804 B compressed — the latter would have put the tarball at
+~10.84 MB. Only three grammars are loadable today, so the other ten would have
+been payload with no reader.
+
+### Rolling back
+
+Set `hooks.code_graph.enabled: false` — which is already the default; the
+engine ships disabled. Nothing runs the parsers unless you build a graph. To
+drop the payload entirely, remove `src/vendor/grammars/` from `files[]` and
+move `web-tree-sitter` back to `devDependencies`; the loader falls back to the
+`tree-sitter-wasms` pack, which is this repository's own dev path.
 
 ## 8.x → 9.0.0 — consumer rule projection scoped by default
 

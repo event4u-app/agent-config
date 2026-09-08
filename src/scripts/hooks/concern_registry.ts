@@ -58,7 +58,7 @@ import { main as oneQuestionPerAskMain } from './one_question_per_ask_hook.js';
 import { main as rtkWrapMain } from './rtk_wrap_hook.js';
 import { _main as designPassMain } from './design_pass_hook.js';
 import { main as designSlopMain } from './design_slop_hook.js';
-import { main as codeGraphNudgeMain } from './code_graph_nudge_hook.js';
+import { main as codeGraphContextMain } from './code_graph_context_hook.js';
 import { main as chainNudgeMain } from './chain_nudge_hook.js';
 import { main as suggestionCaptureMain } from './suggestion_capture_hook.js';
 import { main as uiRouteNudgeMain } from './ui_route_nudge_hook.js';
@@ -121,7 +121,7 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
     'src/scripts/hooks/rtk_wrap_hook.ts': rtkWrapMain as ConcernMain,
     'src/scripts/hooks/design_pass_hook.ts': designPassMain as ConcernMain,
     'src/scripts/hooks/design_slop_hook.ts': designSlopMain as ConcernMain,
-    'src/scripts/hooks/code_graph_nudge_hook.ts': codeGraphNudgeMain as ConcernMain,
+    'src/scripts/hooks/code_graph_context_hook.ts': codeGraphContextMain as ConcernMain,
     'src/scripts/hooks/chain_nudge_hook.ts': chainNudgeMain as ConcernMain,
     'src/scripts/hooks/suggestion_capture_hook.ts': suggestionCaptureMain as ConcernMain,
     'src/scripts/hooks/ui_route_nudge_hook.ts': uiRouteNudgeMain as ConcernMain,

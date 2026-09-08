@@ -73,8 +73,17 @@ lines" for the pre-upgrade command against a tree it verified at `93d63073e`.
 
 ## Receiver
 
-`agents/roadmaps/road-to-first-reference-analysis-observation.md` owns the run,
-carries the frozen protocol and holds the observation-based trigger.
+`agents/roadmaps/later/road-to-first-reference-analysis-observation.md` owns the
+run, carries the frozen protocol and holds the observation-based trigger.
+
+**Path updated 2026-09-08 — the receiver was PARKED, and still owns the run.**
+It moved out of the active tree into `agents/roadmaps/later/` by AI-council
+decision (Q1 verdict (a), **1 of 2 seats present — DEGRADED**), because five of
+its six steps are gated behind two blockers no agent can clear: the frozen
+shadow comparator was found to be a post-upgrade text and its correction awaits
+ratification, and the outbound fetch is a Hard Floor act reserved to the owner.
+Nothing in this record's own findings changed — the pointer is repaired so it
+keeps resolving, and the substance is repeated nowhere.
 
 ## Operational note, recorded because it cost two attempts
 

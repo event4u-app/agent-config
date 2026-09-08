@@ -14,7 +14,7 @@ relates:
     relation: disjoint
     note: >
       Reference-analysis observation, not code intelligence — no shared surface.
-estate_growth_exempt: "Owner-instructed 2026-09-07. Adds one active roadmap. Measured at 0918def55: active_roadmaps floor 4 at origin/main (the floor is the base-ref measurement, ADR-243 removed the stored number), 5 files present. It repairs a shipped surface no consumer can receive — the parser pair is a devDependency (ADR-246 → ADR-259), the only always-on path is a nudge shipped default-off, the MCP server carries 31 tools and no graph tool, and no query path reads the graph without deserializing all of it. Every defect below reproduces on this tree's own source; every receiver named exists in the estate at this pin."
+estate_growth_exempt: "Owner-instructed 2026-09-07. Adds one active roadmap. Measured at 0918def55: active_roadmaps floor 4 at origin/main (the floor is the base-ref measurement, ADR-243 removed the stored number), 5 files present. It repairs a shipped surface no consumer can receive — the parser pair is a devDependency (ADR-246 → ADR-259), the only always-on path is a nudge shipped default-off, the MCP server carries 31 tools and no graph tool, and no query path reads the graph without deserializing all of it. Every defect below reproduces on this tree's own source; every receiver named exists in the estate at this pin. Re-claimed 2026-09-08 for a second dimension: open_blockers 29 → 30, the one blocker this change records — pack-size-budget-preexisting-overage. It is a gate that is ALREADY red on origin/main and that Phase 0.1 adds payload to, and its own Recommendation field puts the fix out of reach of an execution run: budgets.packed_size_mb.max is a maintainer-owned ratchet with review_by 2027-07-31. So the alternative to this growth is not a smaller estate, it is an unrecorded red gate whose next reader assumes this change caused it. Recording it is the cheaper of the two, and the count returns to the floor when the maintainer re-measures the cap."
 estate_offset_exempt: "Offsets nothing at promotion. Closing, parking or folding this work each cost more than the charge: its parent decision (ADR-259) has already landed with it, `later/road-to-a-graph-that-wins.md` is explicitly gated on this file being archived, and there is no active roadmap holding the code-graph delivery surface to fold into — the 216 commits before this pin touched `src/scripts/code_graph` in zero files."
 design_validated: "owner ruling 2026-09-07 (docs/decisions/ADR-259, ADR-260) — governance decides how safely the graph is delivered, not whether"
 capability_gap: none
@@ -41,14 +41,23 @@ built for.
 
 ## Prerequisites
 
-- [ ] Read `docs/decisions/ADR-259-code-graph-parsers-ship-with-the-package.md`,
+- [x] Read `docs/decisions/ADR-259-code-graph-parsers-ship-with-the-package.md`,
       `docs/decisions/ADR-246-code-graph-parsers-stay-devdependencies.md` (the record it
       supersedes, including its 2026-08-28 confirmation that the benchmark trigger did not
       fire), and `src/scripts/hooks/host_semantics.ts`.
-- [ ] Run `agent-config roadmap:context --roadmap road-to-a-graph-that-is-shipped` and
+- [x] Run `agent-config roadmap:context --roadmap road-to-a-graph-that-is-shipped` and
       record the probe's `scanned:` line against the `relates:` block above.
-- [ ] Run [`plan-confidence-gate`](../../src/agent-src/contexts/execution/plan-confidence-gate.md)
+      <!-- 2026-09-07: scanned 1 PR · 899 roadmap files · 431 remote branches · 3 live
+      sessions · 0 inbox names. Fingerprint bb40bb72ebfc6dd6 (base 04a9af594). No remote
+      branch carries this slug and no open PR overlaps its files, so neither `relates:`
+      entry is stale: `road-to-a-graph-that-wins` is present in `later/` (extends, still
+      parked) and `road-to-first-reference-analysis-observation` shares no surface. -->
+- [x] Run [`plan-confidence-gate`](../../src/agent-src/contexts/execution/plan-confidence-gate.md)
       before the first checkbox.
+      <!-- 2026-09-07: gate is INERT by its own § "When it fires — and when NOT" — it fires
+      on plan *authoring*, and explicitly does not fire on `/roadmap:process-*` execution
+      runs. This is an execution run against an accepted roadmap, so no marker line and no
+      interview. Recorded rather than silently skipped. -->
 
 ## Reproduced, on this tree at `0918def55`
 
@@ -80,21 +89,77 @@ built for.
 
 ## Phase 0 — The decision this depends on
 
-- [ ] **0.1 ADR-259 lands** (owner-directed): parsers move to `dependencies` as the
-      8.69 MiB default set; the remaining 23 grammars ship as
-      `@event4u/agent-config-grammars` (companion package, resolved by the package manager,
-      never fetched at runtime).
+- [x] **0.1 ADR-259 lands** (owner-directed): `web-tree-sitter` moves to `dependencies`;
+      the **three loadable grammars** are vendored at `src/vendor/grammars/` and listed in
+      `package.json` `files`. `tree-sitter-wasms` stays a devDependency as the refresh
+      source. No companion package.
       verify: `./scripts-run src/scripts/check_dependency_floors` green; `npm pack --dry-run`
-      lists the 13 wasm files and no other; ADR-246 carries `superseded_by: ADR-259`;
+      lists the vendored wasm files and no other; ADR-246 carries `superseded_by: ADR-259`;
       `./scripts-run src/scripts/adr_cite_check ADR-259` reports it live.
+
+      <!-- MECHANISM AMENDED 2026-09-07 under the owner's standing direction for this run
+      ("amend the ADR in the same change rather than descope the step"). The step as
+      written could not be built: (a) "move to `dependencies`" and "listed in `files`" are
+      two different mechanisms — a dependency's files are never in this package's `files[]`;
+      (b) depending on `tree-sitter-wasms` delivers all 36 grammars (49 MiB), the outcome
+      ADR-259's own Alternatives rejects; (c) vendoring the 13-grammar set measures
+      1,016,804 B compressed, putting the tarball at ~10.84 MB against the maintainer-owned
+      `budgets.packed_size_mb.max = 9.1`, which this run may not raise; (d) only three
+      grammars are loadable — `GRAMMAR_WASM` in code_graph/types.ts has three entries — so
+      the other ten would be payload with no reader, the Risk-1 shape. The amendment is
+      recorded at ADR-259 § "Amendment — 2026-09-07 · vendored-wired-set". Net effect is
+      strictly smaller than the record accepted: 3.63 MiB on disk / +373,922 B compressed,
+      against the 8.69 MiB ADR-259 had priced in.
+
+      verified 2026-09-07:
+        · check_dependency_floors → "✅ dependency floors settled (13 runtime deps)"
+        · npm pack --dry-run --json --ignore-scripts → exactly 3 `.wasm` entries, all under
+          src/vendor/grammars/ (php 812,594 · typescript 2,342,690 · javascript 647,334)
+        · ADR-246 frontmatter `superseded_by: 259` (pre-existing, unchanged)
+        · adr_cite_check ADR-259 → "AMENDED — read the amendment before citing"
+        · check_adr_frontmatter → "✅ no errors"
+        · check_publish_surface → "✅ in sync with package.json files[]"
+        · check_pack_size binary class → "0 unaccounted" (3 bound entries added)
+        · loader loads all three grammars from the vendored dir at ABI 14
+        · tests/scripts/code_graph.test.ts → 28 passed
+      Blocked-adjacent, NOT caused by this step: `check_pack_size` packed_size_mb — see
+      `## Blockers` → `pack-size-budget-preexisting-overage`. -->
 
 ## Phase 1 — Delivered on install
 
-- [ ] **1.1 Consumer install builds.** A throwaway directory, `npm install` of the packed
+- [x] **1.1 Consumer install builds.** A throwaway directory, `npm install` of the packed
       tarball, `agent-config code-graph build --root .` on a PHP+TS fixture.
       verify: exit 0, node/edge counts printed, no manual step; the size delta is re-measured
       and recorded in `docs/MIGRATION.md` in bytes.
-- [ ] **1.2 Retire the nudge.** Delete `src/scripts/hooks/code_graph_nudge_hook.ts` and the
+
+      <!-- verified 2026-09-07 against the real tarball (`npm pack` WITH prepack, 3,059
+      files), installed into a throwaway `/tmp/ac-consumer-rig` holding two PHP classes
+      (Controller -> Service->handle -> $this->format) and two TS modules (index -> util,
+      titleize -> slugify):
+        · npm install exit 0
+        · the consumer received src/vendor/grammars/ — 3 wasm, byte-identical sizes
+        · `tree-sitter-wasms` ABSENT from the consumer's node_modules (so the 49 MiB pack
+          is genuinely not delivered), `web-tree-sitter` PRESENT
+        · `agent-config code-graph build --root .` exit 0, NO manual parser step:
+          "✅ code-graph built — 4 files · 12 nodes · 15 edges
+           languages: php, typescript · grammar ABI 14
+           edges: EXTRACTED 12 · INFERRED 2 · AMBIGUOUS 1"
+      Size delta recorded in docs/MIGRATION.md § "14.21.x — the code-graph engine ships to
+      consumers" in bytes, per the step.
+
+      OBSERVED, pre-existing, NOT introduced here and NOT in this step's verify: the CLI
+      printed "package-local tsx not found — falling back to `npx tsx`" before succeeding.
+      `code-graph` dispatches to a tsx script while `tsx` is a devDependency, so a cold
+      consumer without a cached tsx would resolve it through npx at first use. The build
+      still exits 0 and the graph is correct. Flagged rather than fixed: it is a packaging
+      property of every tsx-dispatched verb in this CLI, not of the grammar delivery, and
+      repairing it is a change to the CLI entry surface with its own blast radius. -->
+
+      <!-- OPEN QUESTION for the PR body, per K8 — the `npx tsx` fallback above means the
+      literal claim "no network at first use" is unproven for a cold consumer, even though
+      "no manual parser install" (what this step asserts) is proven. Whether that fallback
+      is acceptable for the shipped engine is a decision this roadmap does not contain. -->
+- [x] **1.2 Retire the nudge.** Delete `src/scripts/hooks/code_graph_nudge_hook.ts` and the
       `hooks.code_graph.enabled` row; add a `hook_manifest` entry `code_graph_context`: on
       PreToolUse-capable hosts (per the `VERIFIED_PLATFORMS` table in
       `src/scripts/hooks/host_semantics.ts:61`) emit the host's structured
@@ -104,19 +169,124 @@ built for.
       verify: fixture asserts the JSON envelope; `enforced_by` per host resolved from the
       table, not from a host name; `grep -c code_graph_nudge src/scripts/hook_manifest.yaml`
       is 0; `./scripts-run src/scripts/check_enforcement_coverage` green.
+
+      <!-- verified 2026-09-07:
+        · tests/scripts/code_graph_context_hook.test.ts → 12 passed, incl. the envelope
+          fixture: emitFor('claude','pre_tool_use','warn',[line],2) yields exit 0 and
+          {"hookSpecificOutput":{"hookEventName":"PreToolUse","additionalContext":<line>}}
+          — never exit 2, never a plain echo. A companion case pins the unverified-host
+          branch (windsurf: stdout empty, legacy exit returned verbatim), which is WHY
+          the same line is carried as a rule there.
+        · grep -c code_graph_nudge src/scripts/hook_manifest.yaml → 0 (and the compiled
+          hook_manifest.json → 0)
+        · check_enforcement_coverage --check → "✅ enforcement-coverage ratchet holds"
+        · hooks.code_graph.enabled → 0 hits in src/ and dist/ settings templates
+        · tests/hooks/ → 544 passed; concern_severity + dispatch_hook + the
+          pre_tool_use guard roster all green after the concern rename
+        · npm run typecheck → clean
+
+      DESIGN NOTES, because two parts of the step needed a reading:
+
+      1. "Remove the D9 import in concern_registry.ts:61" is read as removing the NUDGE's
+         import — the file is deleted, so it must go — and registering the replacement in
+         its place. Removing the line outright would leave the new concern unregistered
+         in-process, which contradicts the same step's requirement that it emit at all.
+         D9's count of engine importers is unchanged either way: concern_registry imports
+         a HOOK, never the engine.
+      2. The replacement is default-ON with no settings flag, where the nudge was
+         default-OFF behind `hooks.code_graph.enabled`. That is safe because the new hook
+         is SILENT on ABSENT — it speaks only on `fresh` / `behind:N`. A consumer who
+         never builds a graph never hears from it, so there is nothing for a flag to
+         protect. The nudge's default-OFF existed because it fired on ABSENT, i.e.
+         advertised a capability the consumer could not then install; Phase 0.1 removed
+         that premise.
+
+      DOWNSTREAM, swept and repaired in the same change (the flag had readers beyond the
+      hook): auto_dispatch.ts's reason string and its test, regression_neighbourhood.ts's
+      rationale, auto-dispatch-classification.md, settings-reference.md,
+      settings-classes.md, hook-architecture-v1.md, and the pre_tool_use guard roster.
+      Historical surfaces — evidence artefacts, archived roadmaps, review inputs, ADR-246
+      — keep their original wording, which was true when written.
+
+      FOUND, not fixed, and it belongs to Phase 3/4: every production caller of
+      `classifyLookup` (`routing_doctor.ts:392`, `judgment_ladder.ts:354,515`) passes no
+      opts, so `codeGraphEnabled` is always undefined and the `code-graph-query` primitive
+      is unreachable regardless of any flag. Retiring the flag did not cause this and
+      wiring it here would be scope creep — 3.4 is where a real graph reader lands. -->
 - [ ] **1.3 Freshness from git, no daemon.** post-commit and post-checkout run
       `code-graph refresh --budget-seconds` in the background, single-flight, honouring
       `core.hooksPath`; a union merge driver for the index; staleness exported to the runtime
       journal as `fresh | behind:N | absent`.
       verify: `check_installed_hooks_fresh` covers both hooks; a two-branch fixture merges
       without conflict markers; two concurrent commits produce one refresh.
-- [ ] **1.4 Ignore hint** for the index path in the installed ignore surfaces
+
+      <!-- 2026-09-07 — LEFT UNTICKED DELIBERATELY. All three verify conditions pass, but
+      one clause of the step body is unbuilt and another is refuted, so ticking would
+      overstate it. What landed, what did not, and what closes it:
+
+      LANDED, and verified:
+        · post-commit and post-checkout run `code-graph refresh --budget-seconds 60`
+          detached, single-flight, never building a graph that does not already exist.
+          Single-flight is an atomic `mkdir`, not a lock FILE — two processes can both
+          truncate-and-write a path, and only one can create a directory.
+        · `core.hooksPath` is now honoured by the installer. It was not before: HOOKS_DIR
+          resolved through `--git-common-dir` only, so on a repo that sets core.hooksPath
+          the installer wrote six hooks git never reads, and the freshness gate then
+          compared the copy nothing executes.
+        · tests/scripts/code_graph_git_freshness.test.ts → 6 passed. These execute the
+          REAL rendered hooks through the installer's `AGENT_CONFIG_HOOKS_DIR` seam, not a
+          reimplementation. Includes a SENSITIVITY case: with the `mkdir` guard
+          neutralised the same two calls produce 2 refreshes instead of 1, so the
+          single-flight assertion is known to have teeth.
+        · `check_installed_hooks_fresh` names both `post-commit` and `post-checkout` in
+          its report — it renders the installer and compares whatever it writes, so
+          coverage of the two hooks is by construction.
+
+      REFUTED — "a union merge driver for the index" cannot be built, because it has no
+      object. `agents/runtime/` is gitignored (`.gitignore:196`) and ADR-129 makes the
+      cache a derived, disposable accelerator whose rollback is `rm`. Git never sees the
+      file, so it can never conflict on it and a driver would never be invoked. The
+      fixture asserts the PROPERTY the driver was meant to deliver (a two-branch merge
+      leaves no conflict markers in the index) and pins the reason — `git ls-files` on the
+      cache path returns empty. Closing this differently would mean TRACKING the index,
+      which contradicts ADR-129's invariant and is an owner decision, not a wiring fix.
+
+      NOT BUILT — "staleness exported to the runtime journal as `fresh | behind:N |
+      absent`". The three-state value is computed and already reaches the agent: it is the
+      `GraphState` union in `code_graph_context_hook.ts`, delivered as additionalContext by
+      1.2. What is missing is the JOURNAL sink. `_lib/runtime_journal.ts` is a SQLite,
+      append-only store with a closed field vocabulary and a `NoFreeForm` type guard —
+      `JournalEvent` has no field this value fits, so the export needs a schema addition
+      plus a migration on a surface that is default-OFF (`hooks.runtime_journal.enabled`)
+      and would therefore produce no data for almost every consumer. That is a governed
+      schema change with its own contract, not a line of wiring, and doing it inside this
+      step would be scope creep.
+      WHAT CLOSES IT: a decision on whether the journal is the right sink at all given it
+      is default-OFF, and — if yes — a typed field or event-kind addition to
+      `EVENT_VOCABULARY` with its migration. Reported as a question per Kill register K8;
+      the step stays `[ ]` until it is answered. -->
+- [x] **1.4 Ignore hint** for the index path in the installed ignore surfaces
       (prompt-cache invalidation on hosts that hash the workspace).
       verify: `sync_gitignore` output contains the path.
 
+      <!-- verified 2026-09-07: `sync_gitignore --path <rig> --dry-run` emits
+        +/agents/runtime/state/code-graph-v1.json
+        +/agents/runtime/state/code-graph-v1.sqlite3
+        +/agents/runtime/state/code-graph-refresh.lock/
+      sync_gitignore.test.ts + sync_gitignore_fix_fixtures.test.ts → 33 passed;
+      check_tracked_but_ignored → clean.
+
+      The entries are REDUNDANT with the existing `/agents/runtime/` catch-all, and the
+      template says so in place so a future reader does not delete them as duplication.
+      They are named anyway for the reason the step gives: a host that keys a prompt cache
+      on a workspace file-list hash pays for the index on every commit now that 1.3
+      rewrites it from post-commit and post-checkout, and an entry findable by grepping the
+      index's own name is what makes that cost traceable. The twin and the refresh lock are
+      listed with it because the same machinery creates them beside it. -->
+
 ## Phase 2 — Indexed store
 
-- [ ] **2.1 SQLite becomes the read store above 50k edges — as a queryable index, not a
+- [x] **2.1 SQLite becomes the read store above 50k edges — as a queryable index, not a
       blob.** Tables `nodes(id, kind, label, file)`, `edges(src, dst, relation, confidence,
       resolved_via, provider)`, indexes on `id`, `label`, `src`, `dst`. Add the per-node and
       per-edge read API `sqlite_store.ts` lacks today (D7), and route `affected`/`query`
@@ -125,13 +295,168 @@ built for.
       verify: `affected` on a ≥50k-edge build parses no JSON (traced); wall time and RSS
       before/after recorded in the commit; `code-graph validate` asserts twin ⇔ JSON by
       checksum.
-- [ ] **2.2 Two fields on every edge.** `resolved_via ∈ {same-file, import-specifier,
+
+      <!-- verified 2026-09-07.
+
+      MEASURED — `affected` 2 hops, 60,000-edge graph (14,131,489 B of JSON), each arm in
+      its OWN process because RSS is cumulative within one:
+
+        | arm     | wall     | RSS      | heap    | graph materialized |
+        |---------|----------|----------|---------|--------------------|
+        | indexed |     4.9 ms | 190.7 MB |  59.9 MB | no                |
+        | blob    | 9,809.6 ms | 349.0 MB | 163.0 MB | yes               |
+
+      Both arms return the same 2 lines. The blob arm's 9.8 s is dominated by
+      `validateGraph` over 120k items plus a `LexicalIndex` built across 60,001 nodes —
+      work the indexed path does not do at all, because the BM25 corpus is lazy and an
+      exact-id seed never asks for it.
+
+      TRACED, not asserted — tests/scripts/code_graph_indexed_read.test.ts → 7 passed:
+        · `JSON.parse` is wrapped and counted: ZERO calls on the indexed arm.
+        · the canonical JSON is chmod 000 for the duration, so a read is impossible
+          rather than merely observed (`statSync` still works, which is all the freshness
+          check needs). `fs.readFileSync` could not be spied: under ESM `node:fs` is a
+          frozen module namespace.
+        · SENSITIVITY: the same query below the threshold parses (>0) and materializes.
+        · both paths return identical `lines` and `recommended_reads`.
+
+      FINDING, recorded because it corrects the obvious test design: below the threshold
+      `loadGraph` STILL succeeds with the canonical JSON unreadable, because
+      `loadSerializedFromTwin` sources bytes from the twin and only falls back to the file
+      when the twin is absent or stale. So a FILE READ never discriminated the two paths —
+      which is exactly D6's corrected finding that the twin was a cheaper blob transport
+      and not an index. The parse is the discriminator, and it is what is measured.
+
+      `code-graph validate` now compares the twin's stored `source_checksum` against the
+      JSON's, with three outcomes proven by fixture: `match` (exit 0), `absent` (exit 0 —
+      a missing accelerator changes no answer), `mismatch` (exit 1). The mismatch case is
+      the teeth: `emitSqliteTwin` stats the real file, so an impostor twin is FRESH by
+      size and mtime and nothing in the freshness path catches it.
+
+      GRAPH_STORE_VERSION 1 → 2, so a v1 twin is refused and re-emitted rather than being
+      read through columns it does not have. `resolved_via` / `provider` columns exist and
+      are nullable here; 2.2 populates and enforces them. -->
+- [x] **2.2 Two fields on every edge.** `resolved_via ∈ {same-file, import-specifier,
       path-alias, psr4, route-table, test-import, name-lookup, dynamic}` and `provider`
       (`native`). Schema version bumps; `build` prints the `resolved_via` histogram.
       verify: no edge lacks either field; the v2 corpus rerun is byte-identical on recall and
       precision.
+
+      <!-- verified 2026-09-07.
+
+      NO EDGE LACKS EITHER FIELD, and it is the TYPE SYSTEM that guarantees it: both are
+      REQUIRED on `CodeEdge`, so every construction site must supply them or the build does
+      not compile. That is stronger than a linter pass after the fact — adding the fields
+      broke `sqlite_store.ts` and a test fixture at compile time, which is the check
+      working. Measured on a 3-file PHP+TS fixture: 18 edges, 0 missing `resolved_via`,
+      0 missing `provider`, 0 values outside the enum, `provider` ∈ {native}.
+      `validate` gained presence-AND-membership checks for both — SENSITIVITY proven by
+      stripping one field from one edge: "❌ graph schema invalid (1): edge[0].resolved_via
+      is required".
+
+      HISTOGRAM on every build: `resolved_via: same-file 13 · name-lookup 3 ·
+      import-specifier 2`. Printed unconditionally because it is the number that says
+      whether 2.3 worked, and the confidence split does not.
+
+      FOUR OF EIGHT values occur today, stated rather than implied: `same-file`,
+      `import-specifier`, `name-lookup`, `dynamic`. `path-alias` and `psr4` arrive with
+      2.3; `route-table` and `test-import` with Phase 3's relations. They are in the union
+      now so adding them is a build change, not a schema change.
+      Mapping decisions, recorded because they were judgement calls: an UNRESOLVED
+      `symbol:` target is `name-lookup` (a name lookup is what was performed and what
+      failed — `confidence` already carries that it failed); a `member` edge is `same-file`
+      because the member id is DERIVED from its own source node's id; a hierarchy walk is
+      `name-lookup`, not `same-file`, because the declaring class need not be local.
+
+      V2 CORPUS RERUN — BYTE-IDENTICAL on recall and precision against the reference the
+      roadmap cites (`code-graph-vs-grep-inrepo-v2-rerun-2026-09-04.md`):
+
+        | class              | rerun 2026-09-04            | this run 2026-09-07 |
+        |--------------------|-----------------------------|---------------------|
+        | callers            | R 1/1 +0 · P 0.611/0.667 TIE | identical          |
+        | transitive-impact  | R 0.611/0.611 +0 · P 1/1 TIE | identical          |
+        | path-between       | R 0.917/1 +8.3 · P 0.722/1 TIE | identical        |
+        | references         | R 1/1 +0 · P 0.722/1 TIE     | identical          |
+        | macro grep         | P 0.764 · R 0.882            | identical          |
+        | macro graph        | P 0.917 · R 0.903            | identical          |
+
+      Zero of four classes met the +10 pp bar; every class TIE. This roadmap moved
+      delivery, not measurement — which is AC-6, and it now has evidence rather than an
+      intention.
+
+      SCHEMA_VERSION 2 → 3 and GRAPH_STORE_VERSION 2 → 3. Both are needed and for
+      different reasons: a v2 SIDECAR carries untagged edges, so `--update` would mix
+      tagged and untagged and under-count the histogram; a v2 TWIN has the columns but may
+      have written them NULL, which reads back as a valid edge carrying a fabricated
+      mechanism.
+
+      FOUND, not fixed, and outside this step: `run_bench_inrepo_v2.ts` writes its report
+      to a filename stamped with the CORPUS date (`…-v2-2026-08-29.md`), not the run date,
+      so any rerun OVERWRITES a dated historical artifact in place — this run clobbered the
+      2026-08-29 report with 2026-09-07 content and it was restored with `git checkout`.
+      The 2026-09-04 rerun evidently hit the same thing and worked around it by writing to
+      a `-rerun-` filename by hand. -->
 - [ ] **2.3 Resolution tiers before name lookup:** `tsconfig` `paths` and composer PSR-4.
       verify: INFERRED count on `src/scripts/ai_council` falls; EXTRACTED does not regress.
+
+      <!-- 2026-09-07 — LEFT UNTICKED. Both tiers are BUILT and proven by fixture, but
+      half the verify line is unachievable on the probe it names, and the honest reading
+      of "the box flips when its verify passes" is that half a verify is not a pass.
+
+      BUILT, in `src/scripts/code_graph/resolution_tiers.ts`, and wired ahead of the
+      repo-wide name table:
+        · tsconfig `paths` — `@shared/x` binds to `src/shared/x` because the project
+          declares it. Longest-prefix-first, which is TypeScript's own rule. Reads JSONC,
+          because tsconfig is JSONC by convention and this repository's own carries `//`
+          comments, so `JSON.parse` throws on it.
+        · composer PSR-4 — `App\Services\Mailer` binds to `app/Services/Mailer.php`.
+          Needed a new extractor field: PHP `use A\B\C` was reduced to its BASE NAME and
+          the namespace discarded, so `fqName` now carries the qualified name — the same
+          shape as `moduleSpecifier` for TS, which the extractor's own docstring describes
+          as "the one piece of evidence that says WHERE the name came from".
+      An edge resolved through either is EXTRACTED, not INFERRED: a declared mapping is as
+      much a syntactic fact as an import specifier. Config reading is IO and lives in
+      `buildFromRepo`; `buildGraph` stays pure, so identical source plus identical config
+      still yields identical bytes.
+
+      tests/scripts/code_graph_resolution_tiers.test.ts → 11 passed, each tier with a
+      SENSITIVITY twin: remove `tsconfig.json` and the same import binds
+      `external:@shared/mailer.js`; remove `composer.json` and the same `use` falls back to
+      `name-lookup`. The PSR-4 fixture carries TWO classes named `Mailer` in different
+      namespaces — the case a base-name lookup cannot tell apart and PSR-4 can.
+
+      HALF THE VERIFY PASSES: "EXTRACTED does not regress" — 3,967 before, 3,967 after,
+      exactly unchanged.
+
+      THE OTHER HALF CANNOT PASS ON THIS PROBE, measured rather than argued. INFERRED on
+      `src/scripts/ai_council` is 11 before and 11 after, and zero of its edges resolve via
+      either new tier. Three independent reasons:
+        1. The config is read from the BUILD ROOT, and `src/scripts/ai_council/` has no
+           `tsconfig.json` of its own.
+        2. Even repo-wide it would not help: the aliases are `@cli/*`, `@server/*`,
+           `@shared/*`, `@install/*` over `baseUrl: ./src` — none maps into
+           `src/scripts/`.
+        3. There is no `composer.json` in this repository at all, so the PSR-4 tier has
+           nothing to read anywhere.
+      And the 11 INFERRED edges are not specifier or namespace cases in the first place:
+      7 are `this`-style hierarchy-method resolutions inside one file
+      (`AnthropicClient::ask -> AnthropicClient::_ask_impl`) and 4 are repo-wide
+      name-table hits (`low_impact.ts#… -> spend_gate.ts#CostBudget`). No import
+      resolution tier can move either class.
+
+      WHAT WOULD CLOSE IT: a probe root that actually exercises a tier. Either re-point
+      the verify at a fixture tree that has a tsconfig with a covering alias and a
+      composer.json (the test above is exactly that), or pick an in-repo root the existing
+      aliases cover — `src/cli`, `src/server`, `src/shared` and `src/install` are the four
+      candidates. Re-pointing the probe is a decision about the roadmap's own acceptance
+      criterion, so it is reported as a question per Kill register K8 rather than taken.
+
+      AC-6 STILL HOLDS after this step: the v2 corpus rerun is byte-identical again —
+      callers R 1/1 +0 P 0.611/0.667 · transitive-impact R 0.611/0.611 +0 P 1/1 ·
+      path-between R 0.917/1 +8.3 P 0.722/1 · references R 1/1 +0 P 0.722/1 · macro grep
+      P 0.764 R 0.882 · macro graph P 0.917 R 0.903. The tiers are inert on the three
+      benchmark roots for the same reason they are inert on ai_council, so this is
+      consistent rather than surprising. -->
 
 ## Phase 3 — Three verbs a gate can read
 
@@ -180,6 +505,46 @@ built for.
   enters a fix loop; a step that needs a decision this file does not contain is reported as
   a question in the PR body and the step stays `[ ]` with the question quoted.
 
+## Blockers
+
+### blocker: pack-size-budget-preexisting-overage
+
+- **Status:** open
+- **Owner:** maintainer
+- **Blocks:** nothing in this roadmap. Recorded because Phase 0.1 adds payload to a gate
+  that is **already** failing, and a step that makes a red gate redder should say so rather
+  than let the next reader assume it caused it.
+- **Class:** 3
+- **Recommendation:** raise `budgets.packed_size_mb.max` to a re-measured figure in a
+  dedicated change that also re-pins `last_measured`. The cap is a maintainer-owned
+  ratchet with `review_by: 2027-07-31`, so an execution run may not move it — but leaving
+  it below the tree's actual size means the gate reports the same failure on every branch
+  and stops discriminating.
+- **If you do nothing:** `check_pack_size` stays red in `task ci` and
+  `.github/workflows/consistency.yml` for every branch, this one included. The gate's
+  binary-payload half still works and still has teeth; only the size axis is dead.
+- **What to do:**
+  1. Reproduce the baseline: `npm pack --dry-run --json --ignore-scripts` on `origin/main`
+     with no local edits. Measured 2026-09-07 at base `04a9af594`: **9.8216 MB** against
+     `budgets.packed_size_mb.max = 9.1` in `src/config/pack-size-budget.json`.
+     Independently reproduced the same day in a second worktree off the same base at
+     **9.821 MB**.
+  2. Decide one: (a) re-measure and raise `max` + `last_measured` together, recording the
+     tree the figures came from as every other entry in that file does; (b) shrink the
+     payload back under 9.1; or (c) judge the unbuilt cap obsolete and gate only the
+     built surface, which `check_pack_size.ts:466-497` already implements for built
+     payloads against `built_surface_measurement_*`.
+  3. Whichever is chosen, do it in a change that is *only* that — a budget move buried in
+     a feature branch is how the 2026-08-24 cap trip became a merge artifact nobody could
+     attribute.
+- **Resolved when:** `./scripts-run src/scripts/check_pack_size` exits 0 on `origin/main`
+  with no local edits, and `pack-size-budget.json` records the tree its figures were
+  measured in.
+
+<!-- This roadmap's own contribution to the number, measured rather than estimated:
+9,821,600 B → 10,195,522 B, i.e. +373,922 B. The overage is 721,600 B before this branch
+exists, so the gate was already red by ~1.9x this step's addition. -->
+
 ## Provenance
 
 - **Source:** an owner-directed external LLM ideation round, consumed to
@@ -209,15 +574,49 @@ built for.
 
 ## Acceptance Criteria
 
-- [ ] AC-0 ADR-259 accepted; `package.json` carries the parser pair in `dependencies`.
-- [ ] AC-1 A fresh consumer install builds a graph with no manual step (1.1).
-- [ ] AC-2 The nudge hook and its flag are gone; `code_graph_context` is in the manifest with
+- [x] AC-0 ADR-259 accepted; `package.json` carries the parser pair in `dependencies`.
+      <!-- 2026-09-07, AS AMENDED. `web-tree-sitter@0.24.7` is in `dependencies`;
+      `tree-sitter-wasms` deliberately is NOT, because the three loadable grammars are
+      vendored instead and depending on the pack would deliver all 36 (49 MiB) — the
+      outcome ADR-259's own Alternatives rejects. The criterion's INTENT (a consumer
+      receives the engine) is met and verified end-to-end by AC-1; the amendment is
+      recorded at ADR-259 § "Amendment — 2026-09-07 · vendored-wired-set". -->
+- [x] AC-1 A fresh consumer install builds a graph with no manual step (1.1).
+      <!-- 2026-09-07: real tarball, throwaway install, `code-graph build --root .` exit 0
+      on a PHP+TS fixture — "4 files · 12 nodes · 15 edges, languages: php, typescript".
+      `tree-sitter-wasms` absent from the consumer's node_modules. -->
+- [x] AC-2 The nudge hook and its flag are gone; `code_graph_context` is in the manifest with
       per-host `enforced_by` resolved from the platform table (1.2).
-- [ ] AC-3 Queries above 50k edges read SQLite through a per-node/per-edge API and parse no
+      <!-- 2026-09-07: `grep -c code_graph_nudge` on the manifest (yaml and compiled json)
+      → 0; `hooks.code_graph.enabled` → 0 in both settings templates;
+      check_enforcement_coverage ratchet holds. -->
+- [x] AC-3 Queries above 50k edges read SQLite through a per-node/per-edge API and parse no
       JSON (2.1); every edge carries `resolved_via` and `provider` (2.2).
+      <!-- 2026-09-07: traced — zero `JSON.parse` calls on a 60k-edge `affected`, with the
+      canonical JSON chmod 000 for the duration; 4.9 ms / 190.7 MB RSS against 9,809.6 ms /
+      349.0 MB on the blob path. Both fields are REQUIRED on `CodeEdge`, so the type system
+      enforces the second half at every construction site. -->
 - [ ] AC-4 `impact --diff`, `tests-for`, `dead` exist with golden fixtures;
       `regression_neighbourhood` reads the native graph (3.x).
+      <!-- NOT STARTED 2026-09-07. Phase 3 is untouched. Scoped here so the next run does
+      not re-derive it: the three verbs share ONE verify block, so none can be ticked
+      alone, and 3.2 additionally needs a new `tests` RELATION (test file → subject via
+      import), which is a `Relation` union change plus extractor work — i.e. a fourth
+      schema bump. 3.3 needs the declared entry-point sources enumerated (routes, exports,
+      `src/cli/registry.ts`, the hook manifest) or it will report entry points as dead,
+      which the Risk Register ranks fourth. The `resolved_via` axis 3.1 filters on
+      (`not in {name-lookup, dynamic}`) now exists and is populated, so the input Phase 3
+      needs is in place. -->
 - [ ] AC-5 Five graph tools are in the MCP catalogue, taking it to 36, and emit telemetry;
       the install hint is pinned (4.x).
+      <!-- NOT STARTED 2026-09-07. Phase 4 is untouched. 4.2 is independent of 4.1 and
+      cheap — `consumer_tool_catalog.json:4` still reads `npx -y`. -->
 - [ ] AC-6 The v2 benchmark rerun after all phases is byte-identical on every class — this
       roadmap moved delivery, not measurement.
+      <!-- HOLDING, not yet dischargeable: "after all phases" cannot be evaluated while
+      Phases 3 and 4 are open. Measured twice so far and byte-identical BOTH times, after
+      2.2 and again after 2.3, against `code-graph-vs-grep-inrepo-v2-rerun-2026-09-04.md`:
+      callers R 1/1 +0 P 0.611/0.667 · transitive-impact R 0.611/0.611 +0 P 1/1 ·
+      path-between R 0.917/1 +8.3 P 0.722/1 · references R 1/1 +0 P 0.722/1 · macro grep
+      P 0.764 R 0.882 · macro graph P 0.917 R 0.903. Zero of four classes met the +10 pp
+      bar; every class TIE. -->

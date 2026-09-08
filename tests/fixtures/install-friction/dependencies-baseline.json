@@ -1,5 +1,5 @@
 {
-    "_comment": "Committed baseline for tests/scripts/install_friction_guard.test.ts (road-to-reachable-code-memory Phase 6). node:sqlite ships with Node itself — ADR-129's zero-new-dependencies promise means this snapshot must stay byte-identical for the SQLite substrate work; a real new runtime dependency requires updating this file deliberately, not as a side effect.",
+    "_comment": "Committed baseline for tests/scripts/install_friction_guard.test.ts (road-to-reachable-code-memory Phase 6). node:sqlite ships with Node itself — ADR-129's zero-new-dependencies promise means this snapshot must stay byte-identical for the SQLite substrate work; a real new runtime dependency requires updating this file deliberately, not as a side effect. One such deliberate update has happened since: `web-tree-sitter@0.24.7` was added on 2026-09-08 under ADR-259 (accepted, owner-directed, already on the trunk), which supersedes ADR-246 and moves the parser runtime from devDependencies to dependencies so a consumer install can actually load a grammar. ADR-129's promise is about the SQLite substrate and is untouched by it; the byte-identity sentence above should be read as scoped to that work rather than as a claim that this file never changes.",
     "dependencies": {
         "@fastify/static": "^10.1.2",
         "@modelcontextprotocol/sdk": "^1.30.0",
@@ -10,6 +10,7 @@
         "js-yaml": "^5.2.0",
         "open": "^11.0.0",
         "preact": "^10.29.0",
+        "web-tree-sitter": "0.24.7",
         "yaml": "^2.9.0",
         "zod": "^3.25.0",
         "zod-to-json-schema": "^3.25.0"

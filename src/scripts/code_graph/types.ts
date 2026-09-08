@@ -17,6 +17,55 @@ export type EdgeConfidence = 'EXTRACTED' | 'INFERRED' | 'AMBIGUOUS';
 /** Relations the extractor emits. */
 export type Relation = 'calls' | 'imports' | 'uses' | 'inherits' | 'member';
 
+/**
+ * HOW an edge's target was arrived at — the mechanism, not the confidence.
+ *
+ * The two axes are independent and conflating them is what this field fixes.
+ * `confidence` says how much to trust the target; `resolved_via` says what
+ * produced it, which is the axis a consumer filters on. Phase 3's verbs accept
+ * an edge when `resolved_via` is not in `{name-lookup, dynamic}` — a rule that
+ * cannot be expressed in the confidence scale at all, because a `name-lookup`
+ * hit and a same-file hit can both be INFERRED.
+ *
+ * Four of the eight occur today, and saying which is the point of an enum that
+ * is wider than its current population:
+ *
+ * · `same-file` — a local declaration in the using file. The language's own
+ *   shadowing rule makes this the strongest binding there is.
+ * · `import-specifier` — an import/`use` binding: the file states where the
+ *   name comes from.
+ * · `name-lookup` — the repo-wide same-name table, or an attempted lookup that
+ *   found nothing and left a `symbol:` pseudo-target. A guess either way, and
+ *   the value that says so.
+ * · `dynamic` — a receiver the extractor cannot type (`$obj->m()`, an
+ *   unresolved `C::m()`), or a hierarchy rooted outside the repository.
+ *
+ * The remaining four are declared and currently unemitted: `path-alias` and
+ * `psr4` arrive with the resolution tiers in step 2.3, and `route-table` /
+ * `test-import` with the relations Phase 3 adds. They are in the union now so
+ * that adding them later is a build change rather than a schema change.
+ */
+export type ResolvedVia =
+    | 'same-file'
+    | 'import-specifier'
+    | 'path-alias'
+    | 'psr4'
+    | 'route-table'
+    | 'test-import'
+    | 'name-lookup'
+    | 'dynamic';
+
+/**
+ * WHICH engine produced the edge.
+ *
+ * One value, and the field exists anyway: an edge with no provider is
+ * indistinguishable from an edge whose provider nobody recorded, and the whole
+ * point of a mixed graph — should one ever exist — is being able to tell them
+ * apart. Kill register K2 forbids an external provider entering `src/`, so this
+ * stays a single-member union until a decision changes that.
+ */
+export type EdgeProvider = 'native';
+
 export interface CodeNode {
     /** Path-qualified from day one: `<relpath>#<symbol>` (collision-free). */
     id: string;
@@ -45,6 +94,14 @@ export interface CodeEdge {
     target: string;
     relation: Relation;
     confidence: EdgeConfidence;
+    /**
+     * REQUIRED. Not optional, so "no edge lacks either field" is a property the
+     * type system enforces at every construction site rather than a rule a
+     * linter has to re-check afterwards.
+     */
+    resolved_via: ResolvedVia;
+    /** REQUIRED, for the same reason. */
+    provider: EdgeProvider;
     /**
      * Present only on AMBIGUOUS / multi-candidate edges: the resolved-target
      * candidates by id. An AMBIGUOUS edge is "correct" when the true target is
@@ -105,6 +162,14 @@ export interface CodeGraph {
 }
 
 /**
+ * Bumped 2 → 3 by `road-to-a-graph-that-is-shipped` 2.2: every `CodeEdge` now
+ * carries `resolved_via` and `provider`. A cached sidecar written at v2 has
+ * neither, so `--update` would reuse untagged edges beside tagged ones and
+ * produce a graph whose `resolved_via` histogram silently under-counts —
+ * exactly the mixed-graph failure the previous bump describes. `readSidecar`
+ * refuses a version mismatch, which is what makes that impossible rather than
+ * merely unlikely.
+ *
  * Bumped 1 → 2 by `road-to-the-graph-that-lies-confidently`: `CodeNode.kind`
  * gained three members, `CodeGraph` gained `suppressed_edge_counts`, and the
  * per-file extract sidecar gained the import specifier. A cached sidecar
@@ -113,7 +178,7 @@ export interface CodeGraph {
  * file — a silently mixed graph. `readSidecar` refuses a version mismatch, so
  * the bump is what makes that impossible rather than merely unlikely.
  */
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 /** Deterministic per-file byte cap — files above this become a SKIPPED node. */
 export const MAX_FILE_BYTES = 1_000_000;
