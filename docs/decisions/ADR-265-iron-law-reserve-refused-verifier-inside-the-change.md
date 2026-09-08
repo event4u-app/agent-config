@@ -233,6 +233,28 @@ Carried in `agents/roadmaps/road-to-iron-law-reserve-activation.md`
 - **Option 5 — composite.** Refused as complexity ahead of a named threat.
 - **Advisory-only.** Refused; see § What ships instead.
 
+## Evidence
+
+Verifiable in the tree at `3be6fd63c`, except the two live-state readings, which
+name the command and the date they were read.
+
+| Claim | Where |
+|---|---|
+| The council reached 2 of 2 and converged on Option 6 | `agents/evidence/analysis/council-2026-09-08-iron-law-reserve-store.md` — both seat verdicts verbatim, `quorum` 2 of 2 `concluded`, no seat error, `absent_members` empty |
+| The single branch ruleset covers only the default branch and requires zero approving reviews | `gh api repos/:owner/:repo/rulesets` and `.../rulesets/17749383`, read 2026-09-08 — one ruleset, `ref_name.include: ["~DEFAULT_BRANCH"]`, `required_approving_review_count: 0`, `require_code_owner_review: false` |
+| CODEOWNERS exists and gates nothing today | `.github/CODEOWNERS` (1,935 bytes) against `require_code_owner_review: false` in the ruleset above; the file's own header already names branch-protection enablement as the missing repo-admin half |
+| The ceiling sentence and the two raises that broke it | `src/config/preamble-payload-budget.json:86` and `.ci_delivery.grace_ceiling_history` — 138,212 → 138,273 (2026-09-02), 138,273 → 138,490 (2026-09-08) |
+| No bound moves in this change | `:81` `grace_ceiling: 138490` and `:80` `design_ceiling: 107646`, both untouched; `git diff origin/main -- src/config/preamble-payload-budget.json` is empty |
+| The ratchet refuses a raise, and the tests would not notice if it stopped | `tests/scripts/standing_bound_ratchet.test.ts` — 7 cases, 3 refusing. Sensitivity measured, not assumed: replacing `if (opts.headGraceCeiling > baseGrace)` with `if (false)` turns exactly the two bound-refusal cases red, and restoring it returns 7 of 7 |
+| The advisory precedent this record declines to stretch | `src/config/preamble-payload-budget.json` → `ci_delivery.honest_limit` |
+| Iron Law status is only syntactically checkable | `src/scripts/check_condensation.ts:196` — `IRON_LAW_HEADING`, as ADR-264 § How the split was resolved already established |
+
+**What no evidence here covers.** That the reserve implementation was correct — it
+passed its own eight fixtures and was deleted, so nothing in the tree can be
+re-run to confirm it; the fixtures are recoverable only from this record and
+ADR-264. And whether the five prerequisites are sufficient: they are two seats'
+list, and installing them is where that gets tested.
+
 ## What this record does not establish
 
 That the reserve is a bad idea in principle — anthropic argued exactly that
