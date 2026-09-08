@@ -112,5 +112,5 @@ run happened to read the file.
 
 - `src/scripts/lint_carrier_integrity.ts` — the standing validator whose
   refusals this vocabulary would replace with declarations.
-- `agents/roadmaps/road-to-council-topology-evidence-followups.md` — the one
+- `agents/roadmaps/later/road-to-council-topology-evidence-followups.md` — the one
   carrier, and § Unguarded-carrier gap for what does and does not guard it.
