@@ -158,6 +158,21 @@ describe('4.1 — a fixture session, dispatched through the real ToolCache', () 
         expect(r['status']).toBe('error');
         expect(r['error']).toMatch(/path escapes consumer_root/);
     }, 60_000);
+
+    it('ACCEPTS a nested entry-point path, and excludes what it names', async () => {
+        // The paired half of the escape case above. Without it, a containment
+        // check that rejected EVERY relative path would pass the suite: the
+        // escape test would still be green and the tool would be unusable.
+        const root = await consumerRig();
+        fs.mkdirSync(path.join(root, 'cfg'), { recursive: true });
+        fs.writeFileSync(path.join(root, 'cfg/entries.txt'), '# nested list\ncheck\n');
+        const cache = new ToolCache();
+        const r = await cache.dispatch('graph_dead', { entry_points: 'cfg/entries.txt' }, root);
+        expect(r['status']).toBe('ok');
+        expect(r['refusal']).toBeNull();
+        expect(r['excluded']).toContain('tests/service.test.ts#check');
+        expect(r['dead']).not.toContain('tests/service.test.ts#check');
+    }, 60_000);
 });
 
 describe('4.2 — the stdio install hint', () => {
