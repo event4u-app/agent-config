@@ -1,0 +1,467 @@
+{
+  "schema_version": 1,
+  "release": "14.22.0",
+  "review_independence": "single-member",
+  "context_relation": "unknown",
+  "acceptance_status": "provisional",
+  "assurance": "single-pass",
+  "reviewers": [
+    "anthropic"
+  ],
+  "coverage": {
+    "chunks": 6,
+    "filesReviewed": 253,
+    "filesTotal": 253,
+    "unreviewed": []
+  },
+  "findings": [
+    {
+      "finding_id": "e78fe9c78f27",
+      "severity": "high",
+      "kind": "security",
+      "title": "Binary eligibility check bypassed via unchecked destination in projection",
+      "detail": "ADR-259 ships compiled WebAssembly grammars (`src/vendor/grammars/*.wasm`) as admitted binaries and adds a binary-eligibility predicate that re-derives them from packed bytes. But `check_packed_binary_manifest` (the gate) only runs when `src/vendor/grammars/` changes, while the projection delivers these binaries to consumers via `dist/` → unpacked npm package. The gate cannot see if a post-build step injects a binary that bypasses the packed-binary admission. The manifest lists 3 grammars; a 4th could be added under `dist/` without tripping the eligibility check. Mitigation: the `.github/workflows/consistency.yml` diff adds this gate to the pack-size step's comment, asserting it runs on manifest changes — but the path filter `src/**` above already covers `src/vendor/grammars/` and the manifest. A future narrowing of that filter could silently drop this coverage.",
+      "file": ".github/workflows/consistency.yml"
+    },
+    {
+      "finding_id": "6aaaf4d515ff",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Hook-specific output additionalContext delivery unverified on augment/cowork",
+      "detail": "concern-admissions.jsonl (chain-nudge, code-graph-context rows) states: 'Only claude is verified to forward a warn verdict's additionalContext to the model; on augment and cowork the trampolines discard dispatcher output and exit 0, so the advisory is emitted and its delivery is unverified.' This means two of the three binding platforms for these concerns silently drop the state line, yet the admission rationale treats advisory emission as if it reaches the model. The stated mitigation is 'that costs nothing here because the concern never denies' — but if the advisory does not reach the model, the concern's entire effect on those hosts is zero, not advisory.",
+      "file": "agents/decisions/concern-admissions.jsonl"
+    },
+    {
+      "finding_id": "8c6c108f1850",
+      "severity": "high",
+      "kind": "claim",
+      "title": "Continuity-surface gate's honest denominator unbacked by shipped counter",
+      "detail": "The continuity-surface gate (`check_continuity_surface`) is added to CI and ratchets on 5 derived numbers (0/0/1/1/0 target). But the Honest scope section of `mandated-lines.md` says the counter behind that derivation 'costs one counter and is the first thing to look at before adding a sixth line' — implying a pre-existing, production-measured counter. The supplied diff adds the *gate* but not a demonstrated *measurement window* over which those 5 numbers were observed. The gate-coverage row records `min_scanned: 600` (dead roadmaps), but `continuity_surface` is a behavioral inventory over runtime artefacts, not a scan of markdown files. Without a timestamped measurement corpus (e.g., sessions observed over N days), the target vector is a specification, not an evidence-backed claim.",
+      "file": ".github/workflows/consistency.yml"
+    },
+    {
+      "finding_id": "49b944748d0b",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Estate-count ratchet correction claims subtraction but no subtraction is in the diff",
+      "detail": "CHANGELOG.md § Security and correctness says 'a counter must be wider than the gate it reports on (cc7819b)' and the concern-admissions row for chain-nudge says 'Resolve the estate-count ratchet through legitimate final-tree subtraction or an explicitly reviewed taxonomy correction. No temporary allowance.' But the diff shows *additions* to `hook_manifest.yaml` (chain-nudge, code-graph-context) and *one removal* (code-graph-nudge renamed). The net `concern_count` delta is +1 (not −1 or 0), yet `estate-count-budget.json` is not in the diff, so either the ratchet was not updated (gate will fail), or a subtraction happened outside this PR (in which case 'legitimate final-tree subtraction' is not shown in *this* diff), or the claim is wrong.",
+      "file": "CHANGELOG.md"
+    },
+    {
+      "finding_id": "ff8fa019bb99",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Payload delta reported as '-4 tokens' but check_preamble_payload_budget not in diff",
+      "detail": "The PR description says 'pay the standing-payload charge at the source, not at the ceiling' and drain-run-summary claims '#1920 — Payload: +298 → −4 tokens'. But `src/config/preamble-payload-budget.json` is absent from the diff, so either the measurement predates this PR (and the −4 is historical, not a result of this change), or the measurement artifact is out of tree (unverifiable), or the claim conflates two PRs. A token reduction is a checkable claim; without the budget file in the diff, the claim is unbacked.",
+      "file": "agents/evidence/drain-run-summary.md"
+    },
+    {
+      "finding_id": "1dc8864eb237",
+      "severity": "low",
+      "kind": "style",
+      "title": "Inconsistent filepath citation format in council transcripts",
+      "detail": "Council transcripts under `agents/evidence/analysis/` mix three citation styles: bare filename (`road-to-continuity-retirement-sequencing.md`), relative path (`agents/roadmaps/later/road-to-first-reference-analysis-observation.md`), and line-anchored (`src/scripts/lint_deferral_integrity.ts`, `_locate`). The verbatim-transcription rationale says 'nothing is paraphrased', but paraphrasing vs. citation-format are orthogonal. Standardizing on relative-from-root (as `no-roadmap-references` requires elsewhere) would make council records mechanically checkable by `check_references`.",
+      "file": "agents/evidence/analysis/council-2026-09-08-continuity-retirement-scope.md"
+    },
+    {
+      "finding_id": "877133964ef0",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "ADR-262 path updated without migrating inbound references",
+      "detail": "The 2026-09-08 drain-run record says 'the receiver was PARKED, and still owns the run' and updates one pointer to `agents/roadmaps/later/road-to-first-reference-analysis-observation.md`. But ADR-262's own § Receiver (if it cites this roadmap) is not in the diff, and the CHANGELOG § Default changes says 'migrate the three carriers to ready, and give them a plan back' — implying *three* roadmaps moved, not one. If multiple files reference the parked roadmap, all inbound refs must migrate atomically or `check_references` will red. The diff shows one ref updated; the council record implies others exist.",
+      "file": "agents/evidence/council/bounded-harvest-observation-slot.md"
+    },
+    {
+      "finding_id": "3858173bf8a7",
+      "severity": "high",
+      "kind": "claim",
+      "title": "14.21.0 findings dispositioned in 14.22.0 before 14.21.0 was released",
+      "detail": "CHANGELOG.md § Bug Fixes lists '(release): disposition the five 14.21.0 findings' and '(release-findings): disposition the 14.21.0 blocking findings'. But this *is* the 14.22.0 release PR (version bumps in marketplace.json), meaning 14.21.0's findings are being dispositioned *in the 14.22.0 commit range*. That is either: (a) 14.21.0 was never released and this is a re-scoped 14.21.0 → 14.22.0, or (b) 14.21.0 *was* released and its findings are being recorded retroactively, or (c) the commit attribution is wrong (the dispositions belong to 14.21.0's history but are reachable here). The CHANGELOG's own range is `14.21.0...HEAD`, so the commits are in *this* release's range, but the findings they address are labeled as prior-release findings.",
+      "file": "CHANGELOG.md"
+    },
+    {
+      "finding_id": "5791909a34a0",
+      "severity": "critical",
+      "kind": "security",
+      "title": "Self-review gate has reviewed nothing for four consecutive releases",
+      "detail": "CHANGELOG.md:35-87 documents that 14.17.0, 14.18.0, 14.19.0 and 14.20.0 each returned HTTP 400 'prompt is too long' and recorded an honest null. The smallest measured span (260,998 tokens) exceeds the 200,000 cap by 30.5%. The diff is now partitioned per file with a character budget, but no path larger than one request is named as unreviewed—a silently shortened diff yields findings about a fragment while reading as a review of the whole change. The coverage block must state what was not read. The request ceiling bounds the spend, a chunk whose call fails no longer discards chunks that succeeded, and dry-run warns when a span sits at the ceiling.",
+      "file": "agents/evidence/release-findings/14.21.0.json"
+    },
+    {
+      "finding_id": "fb273b66bca5",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "The 14.19.0 start-position fix shipped incomplete",
+      "detail": "CHANGELOG.md:118-128 records that preflightPosition accepts release/{target} but step 2's bump moved package.json, so re-run computed the bump from the already-bumped version. _detect_in_flight_target probes unconditionally now so an abandoned bump cannot be released as the NEXT version. The args.resume gate narrowed it to resumed runs; the probe's unit tests passed because nothing asked whether it was called unconditionally.",
+      "file": "agents/evidence/release-findings/14.21.0.json"
+    },
+    {
+      "finding_id": "401eb7d4e105",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "ADR-253 citation retargeted but section name changed",
+      "detail": "agents/evidence/reviews/release-written-answer-removal.findings.md:19 records that ADR-253's References block pointed at CHANGELOG-conventions.md § Governance-versus-product response, and this change renames that heading and inverts the section. The stale pointer was reachable and missed.",
+      "file": "agents/evidence/release-findings/14.21.0.json"
+    },
+    {
+      "finding_id": "21138804973f",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "MIX_RESPONSE_MARKER docblock claims shared consumption but only writer remains",
+      "detail": "agents/evidence/reviews/release-written-answer-removal.findings.md:22 found the docblock above MIX_RESPONSE_MARKER claimed definition shared by writer, local push guard and CI gate. After this diff exactly one consumer is left—render_mix_response writes the line. Both searchers (mix_response_blockers, check_governance_mix_response) are deleted.",
+      "file": "agents/evidence/release-findings/14.21.0.json"
+    },
+    {
+      "finding_id": "23b47309e764",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "MixObligation.triggered became write-only",
+      "detail": "agents/evidence/reviews/release-written-answer-removal.findings.md:25 records the field was set once at release_publication.ts:480 and read nowhere in the tree. The docblock justified keeping it by claiming a reader of the published line can see the verdict, but render_mix_response never receives the field and the rendered line carries only level.",
+      "file": "agents/evidence/release-findings/14.21.0.json"
+    },
+    {
+      "finding_id": "88a86c180c94",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Read-back regression block had no discriminating power",
+      "detail": "agents/evidence/reviews/release-written-answer-removal.findings.md:28 found tests/scripts/check_release_highlights.test.ts asserted only that a fixture string contains the promise phrase and that previous_changelog_version resolves. It never called main() so a partial revert re-adding an unexported refusal inside main() would leave it green while the CLI blocked a real release.",
+      "file": "agents/evidence/release-findings/14.21.0.json"
+    },
+    {
+      "finding_id": "c327bf317f90",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "guard_release_curation re-read changelog unnecessarily",
+      "detail": "agents/evidence/reviews/release-written-answer-removal.findings.md:31 notes release_publication.ts:722 re-read the changelog to build marked-lines list. That only mattered while consume_staged_answers/collect_curation_answers could rewrite between reads; both write paths deleted and curation_blockers is read-only, so second read can only return same bytes and fallback branch is unreachable.",
+      "file": "agents/evidence/release-findings/14.21.0.json"
+    },
+    {
+      "finding_id": "138f5b51777f",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "Seat policy unknown-exclusion fallback creates undetected authorization gap",
+      "detail": "src/scripts/ai_council/seat_policy.ts:68 classifies unrecognised policy_exclusion to 'policy_unknown', which resolves ABSENT (line 95). Correct fail-closed. But line 133 classifies unrecognised content_ceiling to the DEFAULT (project-content) which is the WIDEST ceiling. A typo in content_ceiling ('publci-artifact') widens the seat instead of narrowing it, opposite to the stated discipline. The two fields have opposite fail-safe directions in the same function. Mitigation: add a distinct 'unknown' content class that resolves restrictively, or throw on unrecognised ceiling values.",
+      "file": "src/scripts/ai_council/seat_policy.ts"
+    },
+    {
+      "finding_id": "c1dcd91df801",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "Loop halt-on-spin tripwire fires on metric delta, but metric is never decremented",
+      "detail": "src/domains/analysis-workbench/analyze/repo/command.md:111 says 'Two consecutive zero-delta loops → STOP' and § 5c defines the metric as 'count of ADOPT/ADAPT rows with concrete file:line on both sides'. But § 5b loop 2 (Adversary lens) asks 'what does this cost' and 'is this only different rather than better', which can produce REMOVES or REJECTS. A row removed is a NEGATIVE delta on the decidability metric, but the halt rule only checks for ZERO delta. Two loops that each remove one row (delta -1, -1) never trigger the tripwire and spin indefinitely. Mitigation: halt on 'no forward progress' not 'zero delta', or clarify that removes are not negative deltas.",
+      "file": "src/domains/analysis-workbench/analyze/repo/command.md"
+    },
+    {
+      "finding_id": "cd4de997fcf9",
+      "severity": "medium",
+      "kind": "security",
+      "title": "TTY prompt reads controlling terminal with no timeout",
+      "detail": "src/scripts/_lib/tty_prompt.ts:43-70 opens /dev/tty blocking (O_SYNC) and reads byte-by-byte until newline with no timeout. If /dev/tty is attached to a pty controlled by an attacker (e.g. in a compromised CI environment where the 'interactive' check passes but the pty is scripted), the read blocks forever and no guard cancels it. The release pipeline becomes a DOS vector. Mitigation: add a wall-clock timeout (via SIGALRM or a wrapper process) or require an explicit --interactive flag in addition to the tty check.",
+      "file": "src/scripts/_lib/tty_prompt.ts"
+    },
+    {
+      "finding_id": "b60acdec2328",
+      "severity": "medium",
+      "kind": "security",
+      "title": "Encrypted reference tokens decrypted in memory with no zeroization",
+      "detail": "src/domains/analysis-workbench/analyze/roadmap-repos/command.md:10 says tokens are decrypted by harvest_reference_tokens script, and the decrypted URLs are written to agents/.harvest-local/manifest.jsonl (gitignored). But there's no evidence the decrypted plaintext is zeroized from memory after write. If the process is attached (e.g. a debugger, a core dump from OOM), the plaintext URLs are in the heap. For 'confidential sources' (per source-confidentiality rule) this is a exposure. Mitigation: explicit zeroization after manifest write, or document that memory safety is out of scope.",
+      "file": "src/domains/analysis-workbench/analyze/roadmap-repos/command.md"
+    },
+    {
+      "finding_id": "82911d08c426",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Humanizer claim wording does not match measured corpus",
+      "detail": "docs/CLAIMS.md humanizer-tell-reduction: 'n = 20 before/after pairs, 17 length-controlled within ±25%' but then says 'judge preferred the humanized text in 16/16 of the pairs that were length-controlled when the judged run fired'. The claim body explains the 17th pair was added later and not judged, but the headline '17 length-controlled' appears to include it. A reader skimming the table sees '17' and '16/16' and infers 1 rejection. Mitigation: headline should say '16 length-controlled and judged, 1 added post-judgment' or similar.",
+      "file": "docs/CLAIMS.md"
+    },
+    {
+      "finding_id": "ac776f64b24b",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Command count in messaging (204) not verified in release",
+      "detail": "docs/CLAIMS.md command-count claim says 204, and check_artefact_count_messaging verifies it. But the diff shows only ONE new command file (analyze-roadmap-repos) while also RENAMING analyze-reference-repo to analyze-repo (3 file moves: command.md and two others). If the rename is counted as a delete and add, gross movement is +2-1=+1 which matches. But if it's counted as rename (no net change), movement is +1 which also reaches 204 from 203. The check needs to distinguish renames from adds. Mitigation: verify the command count assertion matches the packaging diff's actual command file changes.",
+      "file": "docs/CLAIMS.md"
+    },
+    {
+      "finding_id": "e85d44e4f643",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Blocked-by marker grammar allows missing reason but linter requires it only for user-decision class",
+      "detail": "src/scripts/_lib/blocked_by_marker.ts:53 regex makes the `| asked: no — <reason>` reason OPTIONAL (the `([^>]*?)?` group). Line 72 throws if asked=false and reason is empty. But the throw only fires when `renderBlockedByMarker` is called; a marker hand-written with `asked: no` and no reason would parse successfully (parseBlockedByMarker returns reason=null). The linter (mentioned in blocked_by_marker.ts:32) must check, but there's no evidence it does. Mitigation: verify lint_roadmap_blockers enforces the reason field, or make the regex itself refuse the malformed shape.",
+      "file": "src/scripts/_lib/blocked_by_marker.ts"
+    },
+    {
+      "finding_id": "be9a73a44c08",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Skill-menu census (Phase 1.1) output is marked evidence but schema requires analysis",
+      "detail": "src/domains/meta/pack.yaml roads to skill-menu-economy says Phase 1.1 publishes census in agents/evidence/analysis/skill-menu-census-2026-09.md with first line '<!-- evidence-type: analysis -->'. But road-to-skill-menu-economy.md:77 says it's a CENSUS (classification of entry paths), not an analysis with a hypothesis. Evidence-type:analysis per the schema implies a claim being tested. Mitigation: clarify if census qualifies as analysis, or use evidence-type:data.",
+      "file": "src/domains/meta/pack.yaml"
+    },
+    {
+      "finding_id": "8b693b0d3c1e",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Release highlights obligation removed but historical sections not updated",
+      "detail": "docs/contracts/CHANGELOG-conventions.md:47 says 'Historical sections keep their promise and read-back lines as published. They are release content, and nothing retro-fails.' ADR-261 removed the obligation on 2026-09-07 mid-release. If historical sections (14.18.0-14.20.0) still carry the removed markers, they now document a contract that no longer exists. Mitigation: add note in ADR-261 that old sections are historical artifacts, not current examples.",
+      "file": "docs/contracts/CHANGELOG-conventions.md"
+    },
+    {
+      "finding_id": "2a9d3619e376",
+      "severity": "low",
+      "kind": "style",
+      "title": "PROMPT_BUDGET_CHARS derivation in self-review-gate.md uses stale column name",
+      "detail": "docs/self-review-gate.md:49 table shows 'input tokens reported' but text references 'reported tokens'. The table uses past tense (14.17.0 'exceeded') but text says 'measured diff chars ÷ reported tokens'. Tense and column label should match.",
+      "file": "docs/self-review-gate.md"
+    },
+    {
+      "finding_id": "6c8b77c09434",
+      "severity": "low",
+      "kind": "style",
+      "title": "Inconsistent hyphenation in command descriptions",
+      "detail": "docs/catalog.md: 'analyze-repo' description uses 'reference repository', 'analyze-roadmap-repos' uses 'reference tokens'. The former has 'analyze/repo/' path, the latter 'analyze/roadmap-repos/'. The path suggests 'repo' is preferred short form but descriptions still use 'reference'. Pick one term.",
+      "file": "docs/catalog.md"
+    },
+    {
+      "finding_id": "685ed3974990",
+      "severity": "high",
+      "kind": "claim",
+      "title": "skill-activation-census-zero claim text modified without measurement change",
+      "detail": "docs/CLAIMS.md:245 adds 'FRAMING, RECORDED 2026-09-07...' text to the skill-activation-census-zero claim. This is claim-affecting prose added to an unbacked claim where the measurement (0 invocations over 30 sessions) is unchanged. The addition discusses alternatives NOT taken and records a publication decision, which changes what the claim asserts about the package's position on skill routing. ADR-263 makes the substantive decision (Option B: skills are explicitly-invoked reference material), but the claim text modification happened before that ADR and represents a different action (Option C: publish the zero with its reason).",
+      "file": "docs/CLAIMS.md"
+    },
+    {
+      "finding_id": "5bbf7156652e",
+      "severity": "high",
+      "kind": "claim",
+      "title": "jury-agreement-kappa claim modified with no measurement",
+      "detail": "docs/CLAIMS.md records claim 'jury-agreement-kappa' with status: unbacked and empty last_verified (was 2026-09-07, now empty). The claim was PRE-REGISTERED but the emptying of last_verified without a measurement run occurring represents a claim-state change. The text says 'BEFORE any measurement run and before any seat capable of running it is authorized' but the date removal suggests a state transition without evidence.",
+      "file": "docs/CLAIMS.md"
+    },
+    {
+      "finding_id": "da6fe4e6b757",
+      "severity": "critical",
+      "kind": "security",
+      "title": "ADR-262 deletes status: carrier without migrating enforcement",
+      "detail": "ADR-262-carrier-status-deleted-no-repo-authored-human-gate.md deletes the 'status: carrier' frontmatter value and its enforcement. The ADR states 'A legacy status: carrier is rejected, not ignored' with check_roadmap_trackable failing on it. However, the migration audit shows two live carriers were migrated to 'status: ready' but the ENFORCEMENT of what made them carriers (owner-reserved decisions, unmet resumption triggers) moved to '## Blockers' entries. The gap: a roadmap can now be 'status: ready' with blockers that are human-gated, and there's no mechanical distinction between 'blocked on human action' and 'blocked on observable event'. The decision record itself says the repository has the right vocabulary (Blockers entries, later/ with entry_condition) but doesn't establish that the migrated blockers are mechanically enforced the way the old status was meant to be (even though it wasn't).",
+      "file": "docs/decisions/ADR-262-carrier-status-deleted-no-repo-authored-human-gate.md"
+    },
+    {
+      "finding_id": "1b2a62dcec2f",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "check_source_size_budget baseline lowered by 43 without explaining full path",
+      "detail": "gate-violation-baselines.json records check_source_size_budget lowered from 18,016 to 17,973 (net -43). The note says '-42' in one place and '-43' in the accounting. The path is: 18,016 (main) -> 17,974 (fix/single-delivery-unconditional, which itself had an intra-session 17,962) -> 17,973 (drain/topology-c1). The -42 vs -43 discrepancy suggests either a typo or an unaccounted line. The note for 17,974 says 'net -42' against main but the actual delta 18,016-17,974=42, then 17,974-17,973=1, total 43. The final note says 'net -43' is unexplained by the sequence.",
+      "file": "src/config/gate-violation-baselines.json"
+    },
+    {
+      "finding_id": "70e8eb09a6aa",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "hooks.code_graph.enabled removed from settings but template carries unrelated change",
+      "detail": "docs/settings-reference.md removes hooks.code_graph.enabled (marked REMOVED 2026-09-07). src/agent-src/templates/agent-settings.md also removes the line. However, settings-classes.md marks it 'INERT since 2026-09-07' and says 'The KEY stays registered because docs/MIGRATION.md commits to exactly that'. These are contradictory: settings-reference.md removes it (no row), settings-classes.md says it stays registered but is inert. A consumer reading settings-reference.md would think the key is gone; a consumer reading settings-classes.md would think it's there but does nothing.",
+      "file": "docs/settings-reference.md"
+    },
+    {
+      "finding_id": "d4cc030bce0a",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "ADR-264 creates Iron Law reserve but doesn't ship it, creating policy/mechanism gap",
+      "detail": "ADR-264 designs an 'iron_law_reserve' of 128 tokens for fenced Iron Law content but explicitly does NOT ship the mechanism ('It is not shipped, and that is the decision, not an omission'). The ADR records the design, records that 8 fixtures must pass before it's live, but then src/config/preamble-payload-budget.json gains only a 'decision_record' pointer with no bounds change and no permissive sentence. This creates a gap: the reserve is designed, recorded in an ADR, but has no mechanical enforcement, so the next addition of Iron Law content will hit the grace ceiling with no reserve to consume. The ADR says 'enforcement, protected approval and fixtures must be active first' but provides none of them.",
+      "file": "docs/decisions/ADR-264-standing-payload-grace-ceiling-may-not-rise.md"
+    },
+    {
+      "finding_id": "6246bf6a45ef",
+      "severity": "low",
+      "kind": "style",
+      "title": "Multiple ADRs reference ADR-262 by number during number collision window",
+      "detail": "Multiple files reference 'ADR-262' during a window where two different ADR-262s existed on different branches. The references are now disambiguated by filename in some places (e.g., road-to-delivery-on-hook-hosts.md step 4.2 note) but the general pattern of citing by number is still used. The stub road-to-adr-number-uniqueness.md records this collision and recommends filename-based matching 'until one of the two is renumbered', but the renumbering happened (to ADR-263 for the skills decision) and files still cite by number.",
+      "file": "agents/roadmaps/road-to-delivery-on-hook-hosts.md"
+    },
+    {
+      "finding_id": "44294596717c",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Continuity surface inventory references undisposed leaf 'x.json'",
+      "detail": "src/config/continuity-surface.json includes entry for 'x.json' marked excluded with reason 'Not a surface: a string literal inside check_prefix_stable_mutation's own fixture'. The locus points to check_prefix_stable_mutation.ts:268. This is a test fixture, not a real persisted-state leaf, but it's listed 'because a filter is where a real leaf would eventually hide'. However, the gate check_continuity_surface is supposed to validate that every discovered leaf has a row, and a fixture leaf that's discovered but isn't actually persisted represents a false positive in the discovery walk. The note admits this but doesn't mark it as a defect.",
+      "file": "src/config/continuity-surface.json"
+    },
+    {
+      "finding_id": "f1aa131dd2e4",
+      "severity": "low",
+      "kind": "style",
+      "title": "CLI delegate bundle freshness discriminator changed without test coverage note",
+      "detail": "ADR-204 update (2026-09-07) corrects the discriminator from 'test -d src' to 'package-local tsx presence'. The note says both directions are pinned in tests/scripts/cli_delegate_bundle_freshness.test.ts, but the diff doesn't show this test file being added or modified in this release range. If the test already existed and covered both directions, the note should say 'existing test already covered'; if it's new, it should appear in the diff.",
+      "file": "docs/decisions/ADR-204-precompile-cli-delegate-commands.md"
+    },
+    {
+      "finding_id": "bb9f81e64fae",
+      "severity": "critical",
+      "kind": "security",
+      "title": "Vendored grammars added without supply-chain verification surface",
+      "detail": "src/vendor/grammars/ adds three WebAssembly grammar files (tree-sitter-php.wasm, tree-sitter-typescript.wasm, tree-sitter-javascript.wasm) totaling 3.8MB. These are binary artifacts loaded at runtime by web-tree-sitter. ADR-259 amendment says they're 'vendored' and 'refreshed from tree-sitter-wasms', but there's no documented verification that the vendored bytes match any upstream source, no subresource integrity check, and no provenance record linking them to a specific tree-sitter-wasms version. packed-binary-manifest.json records SHA256 hashes but doesn't record what those hashes were derived FROM (which tree-sitter-wasms version, which upstream tree-sitter-{lang} version). An attacker who compromises the vendoring process could inject malicious WASM with no detection.",
+      "file": "src/vendor/grammars/"
+    },
+    {
+      "finding_id": "589307ae3251",
+      "severity": "high",
+      "kind": "claim",
+      "title": "Package.json version not verified in diff",
+      "detail": "CHANGELOG.md claims this is 14.22.0, but the diff shows no package.json version change to verify that claim. The release PR must include the version bump.",
+      "file": "CHANGELOG.md"
+    },
+    {
+      "finding_id": "3da946511bd6",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Self-contradicting honest-limits correction",
+      "detail": "claudeLayerCarriage.ts claims 'the next `agent-config install` writes ~17 wrappers globally' (line ~68), then says 'the project layer carries **49** wrappers' (line ~79). Both cannot be true if 17 wrappers go global while 49 stay in the project layer. Either the 17 is the DELTA or the 49 is TOTAL — the text does not say which.",
+      "file": "src/install/claudeLayerCarriage.ts"
+    },
+    {
+      "finding_id": "2b1db2ffad54",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Unmeasured crossover threshold for indexed read",
+      "detail": "sqlite_store.ts declares INDEXED_READ_MIN_EDGES = 50_000 with 'A DECLARED threshold, not a measured crossover — nothing establishes that 50k is where the two paths actually cross.' A gate choosing a data structure on an invented number is the forbidden-claims defect.",
+      "file": "src/scripts/code_graph/sqlite_store.ts"
+    },
+    {
+      "finding_id": "03507a90a48d",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Axis-overlap threshold stated but not tuned",
+      "detail": "check_candidate_lines.ts sets AXIS_OVERLAP = 0.6 and says 'A STATED DEFAULT, not a measured optimum.' A threshold deciding whether three candidates collapse to one is load-bearing; an untuned default is a guess presented as a decision.",
+      "file": "src/scripts/check_candidate_lines.ts"
+    },
+    {
+      "finding_id": "97c5d3312c50",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Continuity-surface-count thresholds are dates-with-numbers, not derivations",
+      "detail": "preamble-payload-budget.json's target_schedule says 'They are DATES WITH NUMBERS, not a derivation - no measurement in this tree says the estate can reach 85k by a given day'. A roadmap milestone whose date has no derivation is a wish, not a plan.",
+      "file": "src/config/preamble-payload-budget.json"
+    },
+    {
+      "finding_id": "32d747389947",
+      "severity": "low",
+      "kind": "style",
+      "title": "Redundant residual clause in agent-security-review skill",
+      "detail": "agent-security-review.md carries 'Residual, stated: at an explicitly silent output level the line is dropped' in TWO consecutive sections (maybe_pin_reexec and run_update_check_banner). Same statement, same contract, one file — the second is copy-paste.",
+      "file": "src/scripts/_dispatch.bash"
+    },
+    {
+      "finding_id": "c17abdb797c9",
+      "severity": "low",
+      "kind": "style",
+      "title": "Hard-coded claim about Florence-2 model",
+      "detail": "skill-route frontmatter still carries 'Claude 3.5 Sonnet, GPT-4o, Gemini 1.5 Pro all produce valid executable code' unchanged. A routing decision frozen in 2024 is stale by construction in a file whose own adjacent diff touches three other model claims.",
+      "file": "src/agent-src/skills/skill-route/SKILL.md"
+    },
+    {
+      "finding_id": "ba8f867f900e",
+      "severity": "high",
+      "kind": "claim",
+      "title": "Baseline figure suppression in dim-5 treatment claim",
+      "detail": "RESULTS-candidates-treatment-2026-09-08.md L21 says 'Baseline compared against: `golden-transcripts/l6n-dim5-baseline.json`, captured 2026-06-22', stating this as the baseline for the dim-5 claim. Yet `l6n-dim5-baseline.json` does not exist in the diff and is not in `golden-transcripts/` on origin/main. The treatment results file (`l6n-candidates-treatment.json`) IS in the diff, with 32 scored transcripts. The caption says this is *step 3.2* of the roadmap, and the roadmap's K1 defines success as 'treatment − baseline at ≥ +15 % on a standard host' — a delta that requires both arms. The baseline file's absence means the published delta (+9.4 pp at L91–100) has no committed arithmetic verifier, and the reader must trust the prose. If the baseline JSON was captured but not committed, the finding is a packaging omission; if it was never captured, the 'June baseline' claim in the verdict is unbacked and the 0.875 / 3 figure at L84 has no source. The treatment-side delta arithmetic (37 − 28 points, 9 of 32 transcripts, compliance 1/32) is checkable from the committed treatment JSON; the baseline half is not.",
+      "file": "tests/reasoning-layer-eval/RESULTS-candidates-treatment-2026-09-08.md"
+    },
+    {
+      "finding_id": "cae953d3bb7d",
+      "severity": "medium",
+      "kind": "security",
+      "title": "Manual install step reintroduced for code-graph grammar loading",
+      "detail": "ADR-259's premise is that 'a consumer who runs npm install @event4u/agent-config can build a code graph on the next command with no manual parser install'. The three vendored .wasm files in src/vendor/grammars/ are committed and the README says they are 'in the tarball; the loader reads them from disk'. But the loader (`src/scripts/code_graph/`) is unchanged in this diff, and the roadmap step says 'Phase 0.1 ships the parsers' — 0.1, not 1.0 — so whether the loader actually finds the vendored artifacts or still expects node_modules/tree-sitter-wasms/ is unverified in the diff. If the loader path is still the old one, the consumer gets 'grammar not found' on first use despite the grammars being present, which reintroduces the manual install the ADR rejected. The diff adds the files and updates MIGRATION.md L22 with a new install-size figure, but includes no loader code pointing at src/vendor/grammars/.",
+      "file": "src/vendor/grammars/tree-sitter-php.wasm"
+    },
+    {
+      "finding_id": "71c367c0d01d",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Injection-effect record admits unverified hosts without proof",
+      "detail": "src/scripts/_lib/injection_effect.ts defines INJECTION_STATES as observed-true / observed-false / unobserved / degraded, where 'observed-true' is the admission gate for lean_projection.hosts under owner ruling E3. The record format at L29–39 requires every host to supply a 'reason' string, but the schema has no field for **transcript citation** or **date**, so a host marked observed-true need not prove which transcript it read or when. The hook_effect_doctor integration at L220–235 in hook_effect_doctor.ts adds citation + date only for hosts that have them ('obs.transcript !== null && obs.date !== null'), meaning the schema allows a host to be marked observed-true with null citation. That's the gap: a host can be admitted to the projection on an observation that names no verifier. The 2026-09-07 roadmap's step 1.1 says 'Body reaches the model' is 'observed and expensive', and E3 requires 'one transcript in which a model visibly acts on a delivered body' — a standard that cannot be satisfied by a null citation.",
+      "file": "src/scripts/_lib/injection_effect.ts"
+    },
+    {
+      "finding_id": "3655464cbbd4",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Compliance figure stated without denominator disclosure",
+      "detail": "RESULTS-candidates-treatment-2026-09-08.md L35 says 'compliance was 1 of 32 (3.1 %)'. That denominator is the 32 **generation** transcripts, clarified at L37–40 after an earlier draft said 'all 64 calls', but the 64 is billed as stated at L16 ('32 capture + 32 rater = 64'), and the cost table at L16 shows **$0.7933 actual spend** while the treatment arm alone should cost ~$0.4 for 32 captures at haiku rates. The $0.79 figure covers both generation and scoring, so the run billed 64 calls total. That makes '1 of 32' and '64 calls' appear in the same file with no flag that they count different things, and a quick reader sees 64 billed, 1 compliant, and computes 1.6 % instead of the stated 3.1 %. The denominator correction is present (L37–40), but it appears **after** the 3.1 % in a parenthetical, so the headline figure precedes its own qualifier. If the stated spend includes baseline re-scoring or another hidden leg, the 64 is explained but unlabeled; if it is exactly treatment-capture + treatment-scoring, the 64 vs 32 split should be in the compliance paragraph, not three paragraphs above it.",
+      "file": "tests/reasoning-layer-eval/RESULTS-candidates-treatment-2026-09-08.md"
+    },
+    {
+      "finding_id": "25d588b86955",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Hook manifest fingerprint change with no touched-file explanation",
+      "detail": "src/scripts/hook_manifest.json L1 changes fingerprint from '5a4e9186:85470' to '5d55db9c:88593'. The diff adds two new concerns (`chain-nudge`, `code-graph-context`) and deletes one (`code-graph-nudge`), renames one concern in every platform binding, and shifts pre_tool_use ordering in three hosts — non-trivial surgery whose scope is the manifest's advertised reason for the fingerprint. But the new concern `chain-nudge` is described as 'default-on with `hooks.chain_nudge.enabled: false` as opt-out' (hook_manifest.yaml L417), yet its script (src/scripts/hooks/chain_nudge_hook.ts) is in the diff while the **settings schema** that defines the flag is unchanged. .agent-settings.yml.schema (if present) is absent from this diff, so the new flag's **schema validation** has no committed artifact. A consumer enabling the hook tomorrow will find no autocompletion for `hooks.chain_nudge.enabled` if the schema was not regenerated, and the manifest's own fingerprint hides the gap: it proves the hook list changed, but not that the schema caught up.",
+      "file": "src/scripts/hook_manifest.json"
+    },
+    {
+      "finding_id": "0216dd7ca19f",
+      "severity": "low",
+      "kind": "style",
+      "title": "Binary placeholder not self-describing in committed fixtures",
+      "detail": "src/scripts/media/lib/adapter-contract.md L358–366 says fixtures are 'non-decodable ASCII placeholders' with documented paths whose literal is 'FIXTURE-<adapter-id>-<ext>', and 'a test that needs decodable media generates it at runtime'. The three fixture files in src/scripts/media/lib/fixtures/{flux,gemini-image,ideogram}/asset-0001.png are all replaced in this diff (all three show binary changes), but the contract does not specify that the placeholder **must** open with the FIXTURE- prefix in readable bytes — a PNG can carry the string in a tEXt chunk and still be a valid PNG, or it can be a 12-byte file whose hex is `46 49 58 54 55 52 45 ...` ('FIXTURE...'). Without opening the committed blobs, a reviewer cannot verify the fixtures are actually undecodable placeholders vs. accidentally-committed real PNGs. The contract names the intent; the diff shows binary replacement; whether the replacement honors the contract is unverifiable from the diff alone.",
+      "file": "src/scripts/media/lib/fixtures/flux/asset-0001.png"
+    },
+    {
+      "finding_id": "6fa553405489",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Deferral-integrity gate references deleted status value",
+      "detail": "src/scripts/lint_deferral_integrity.ts L11–16 says 'The reciprocal direction — every carry names a destination that exists and back-links — is this enumeration, and it is untouched' after ADR-262 deleted `status: carrier`. But the gate's own header (L2–4) says it 'Fails when a deferral carried out of an archived roadmap has lost its receiver — deleted, renamed, re-parented, skipped, or archived with open steps', with no mention that a **live** receiver was ever checked. The deleted direction is named as removed (L15–18), but the header's own list of failure modes includes 're-parented' and 'renamed', which are transitions a standing gate must check at the **destination** end, not only the archived parent. The archived-parent enumeration (L126 `deadRoadmaps`) proves the source-side walk exists; the missing leg is 'live roadmap that nobody carried to', which ADR-262 says was deleted because the exemptions it bought are gone. That removal is recorded, but the header's own 're-parent' and 'rename' checks imply a bilateral walk that no longer exists, so the header misdescribes the gate's actual coverage.",
+      "file": "src/scripts/lint_deferral_integrity.ts"
+    },
+    {
+      "finding_id": "afac6e5fdc02",
+      "severity": "low",
+      "kind": "claim",
+      "title": "Treatment cost stated without baseline cost for comparison",
+      "detail": "RESULTS-candidates-treatment-2026-09-08.md L16 says 'Actual spend: **$0.7933**' for the treatment arm, but the baseline file (l6n-dim5-baseline.json, which exists in the prose but not the diff) has no sibling results file stating baseline cost. The baseline document (RESULTS-candidates-baseline-2026-09-07.md) says at L27 'Rater cost: ~$0.3360', but that is the baseline's **rater-only** cost because it is a `--score-only` run with 'Zero capture calls' (L21). The treatment cost of $0.79 includes both capture and scoring (L16 '32 capture + 32 rater = 64'). The two figures cannot be added to compute total experiment cost because one arm captured and the other did not, and no prose paragraph states the baseline's **capture cost** from June — if it was captured then scored later, the capture bill is missing from the accounting; if it was never captured, the treatment's capture cost is the only capture spend and the baseline is free, making the $0.79 vs $0.34 comparison misleading.",
+      "file": "tests/reasoning-layer-eval/RESULTS-candidates-treatment-2026-09-08.md"
+    },
+    {
+      "finding_id": "d1696732ac28",
+      "severity": "high",
+      "kind": "security",
+      "title": "Packed binary predicate accepts mutation testing without integrity verification in production path",
+      "detail": "tests/scripts/packed_binary_predicate.test.ts introduces mutation testing (definedInvalidHeaderMutation, definedUnsupportedAbiEntry) for grammar binaries. While the test suite validates that mutated binaries are rejected, the production evaluateEntry function in src/scripts/_lib/packed_binary_predicate.ts does not appear to have a cryptographic signature verification mechanism—only sha256 hash checks against a manifest. An attacker who can modify both the manifest and the binary simultaneously (e.g., supply-chain attack on the manifest file itself) could bypass this. The manifest should be signed or the binary verification should include a separate trust anchor.",
+      "file": "tests/scripts/packed_binary_predicate.test.ts"
+    },
+    {
+      "finding_id": "95f7a42d8602",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Injection effect record E3 ruling allows observed-false to block admission despite binding",
+      "detail": "tests/scripts/injection_effect.test.ts (L115-121) demonstrates cowork is bound on 8 slots but measured observed-false, making it inadmissible under E3. The test asserts this is correct ('the whole point'). However, the binding state proves the artefact exists in the manifest—the observed-false measurement appears to override structural evidence. If a future measurement error marks a working host as observed-false, that host is excluded despite being structurally viable. Consider a two-phase admission: structural binding grants provisional admission, observed-false triggers a warning but does not block until a second independent measurement confirms.",
+      "file": "tests/scripts/injection_effect.test.ts"
+    },
+    {
+      "finding_id": "92d5b0e49313",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "SQL injection risk in code graph indexed read via unbounded user-supplied seed",
+      "detail": "tests/scripts/code_graph_indexed_read.test.ts demonstrates affected() and query() accept arbitrary node IDs from user input (e.g., 'src/f50.ts#fn50'). While the test uses synthetic IDs, the production query() in src/scripts/code_graph/query.ts likely interpolates these into SQL WHERE clauses for the SQLite twin. If the seed resolution does not use parameterized queries or sanitizes the ID before interpolation, an attacker-controlled node ID could inject SQL. Verify all seed → SQL paths use bound parameters, not string concatenation.",
+      "file": "tests/scripts/code_graph_indexed_read.test.ts"
+    },
+    {
+      "finding_id": "592698acf692",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "RDP candidates delta ignores truncated transcripts, risking false-negative compliance rate",
+      "detail": "tests/scripts/rdp_candidates_delta.test.ts (GOOD_LINE fixture) and compliance detection (L95-110) check for well-formed candidate lines. However, the test does not validate behavior when a transcript is truncated mid-line (e.g., output_tokens hit a cap). A truncated line with 'Candidates: K0 keep it · A extract' would parse as malformed (fewer than 3 slots), but the counter would not distinguish 'model produced nothing' from 'model started but was cut off'. This could undercount compliance if the treatment arm hit token limits. Add a truncation marker check or require slot count >= 3 AND a closing period.",
+      "file": "tests/scripts/rdp_candidates_delta.test.ts"
+    },
+    {
+      "finding_id": "16b16bda8a95",
+      "severity": "low",
+      "kind": "style",
+      "title": "Test suite introduces second HOME fixture seam without consolidating with existing pattern",
+      "detail": "Multiple test files (partition_delivery_topology.test.ts, single_delivery_partition.test.ts, layer_overlap_notice.test.ts) independently implement process.env.HOME = <tmp> seams. Each restores the original value in afterEach, but the pattern is duplicated across at least four files. A shared test/fixtures/withClaudeHome(fn) helper would reduce duplication and ensure consistent cleanup. Low priority but flagged for the principle: a seam duplicated N times has N chances to leak state across tests.",
+      "file": "tests/scripts/partition_delivery_topology.test.ts"
+    }
+  ]
+}
