@@ -98,6 +98,17 @@ export interface LeanProjectionHosts {
  * empty `hosts` — that is "thin no host", which is a legitimate and safe answer
  * and must not fall back to the default. Falling back there would turn a
  * fully-typo'd list into a Claude Code flip the operator never asked for.
+ *
+ * WHICH FILES REACH THIS AT ALL, stated because R2 finding 6 read the drop path
+ * as unreachable: `agent-settings.schema.json` and the wizard's Zod schema both
+ * constrain the items to an `enum`, so an out-of-vocabulary id written through
+ * either surface is a hard validation FAILURE and never arrives here. What
+ * arrives here is a HAND-EDITED `.agent-settings.yml` — the file
+ * `condense._lean_projection_settings` and `hooks/rule_inject_hook.gateOpen`
+ * both read directly, with no validation step in between. The two layers are
+ * defence in depth, not one contract stated twice: the schema is the authoring
+ * gate, this function is the read-time gate, and the drop wording below exists
+ * for the file the schema never saw.
  */
 export function resolveLeanProjectionHosts(raw: unknown): LeanProjectionHosts {
     const known = new Set(THINNABLE_HOSTS);

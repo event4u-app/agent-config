@@ -33,6 +33,37 @@
  * unit corpus already cover it; asserting it here would make this gate fail on a
  * legitimate `hosts: []`, which is the safe configuration.
  *
+ * AND IT ASSERTS NOTHING WHEN EVERY THINNABLE HOST IS ENROLLED. With
+ * `hosts: [claude-code, cursor, cline]` there is no non-delivery tree, so the
+ * comparison has no subject. That case now prints a `⚠️  NOTHING COMPARED` line
+ * naming the gate that does carry the question, instead of the `✅ … 0 …
+ * byte-identical` line it printed until 2026-09-08 (R2 finding 12) — a green
+ * sentence for an assertion that was never made.
+ *
+ * IT ALSO DOES NOT CONSULT `lean_projection.mode`, and the divergence from
+ * `check_rule_projection_integrity._lean_projection_settings_for` — which
+ * checks the mode FIRST so "a `hosts:` list left behind after a rollback
+ * exempts nothing" — is deliberate. Recorded 2026-09-08 because R2 finding 13
+ * read it as an oversight, and running the mode-first variant here reddens the
+ * gate on this repository's own settings, which carry no `lean_projection`
+ * block at all.
+ *
+ * The two gates ask different questions. The sibling asks a question ABOUT THE
+ * CURRENT TREE — "is any entry on disk a stub in a tree with no delivery
+ * slot?" — so the live mode is part of its subject. This gate asks a
+ * COUNTERFACTUAL ABOUT THE PROJECTOR — "under a thinning mode with the
+ * configured hosts, would every other host's tree still be byte-identical?" —
+ * and supplies `mode: delivery` to its own test fixture to ask it. Reading the
+ * live mode would make the exemption set and the fixture disagree: with the
+ * mode off, `configured` would be empty while the fixture still thinned, and
+ * every stub in the delivery host's tree would be reported as a parity break.
+ *
+ * The consequence the finding names is real and is not a hole: after a rollback
+ * to `eager-all`, a leftover `hosts: [claude-code]` still excludes
+ * `.claude/rules` from THIS comparison. Nothing is hidden by that, because
+ * under `eager-all` nothing is thinned and the on-disk state is the sibling
+ * gate's subject.
+ *
  * It also does not read the repository's own `.claude/rules` etc. Those are
  * gitignored and absent on a fresh CI checkout, and a gate that silently passes
  * when its subject is missing is the shape this repository's scan-scope
@@ -130,6 +161,33 @@ export function compareTrees(
     return out;
 }
 
+/**
+ * The notice for a comparison with NO SUBJECT, or `null` when there is one.
+ *
+ * R2 finding 12: with every thinnable host in `lean_projection.hosts` there is
+ * no non-delivery tree left, so this gate's assertion is VACUOUS — and it used
+ * to say so inside the same `✅ … byte-identical` sentence it prints when the
+ * assertion actually held. Zero compared is not a pass; it is an absence of
+ * subject, and the reader has to be told which gate carries the question
+ * instead.
+ *
+ * Deliberately NOT an exit-1: enrolling all three hosts is a legal
+ * configuration, and reddening a legal configuration is how a gate gets
+ * switched off. Pure and exported so the wording is under test without running
+ * the two-fixture generation.
+ */
+export function parityScopeNotice(configured: readonly string[]): string | null {
+    const comparable = Object.entries(TREES).filter(([, h]) => !configured.includes(h));
+    if (comparable.length > 0) return null;
+    return (
+        `⚠️  check_host_tree_parity: NOTHING COMPARED — every thinnable host is in ` +
+        `lean_projection.hosts [${configured.join(', ') || '(none)'}], so no non-delivery tree ` +
+        `exists and this gate asserts nothing about this configuration. A stub in a tree with ` +
+        `no bound delivery slot is reported by check_rule_projection_integrity's host axis ` +
+        `(thinnedTreeFindings); the byte-identity question here has no subject.\n`
+    );
+}
+
 export function main(argv: readonly string[] = []): number {
     const root = REPO_ROOT;
     const dist = path.join(root, 'dist', 'agent-src', 'rules');
@@ -213,6 +271,11 @@ export function main(argv: readonly string[] = []): number {
                 '(K3, and the completeness invariant). Fix the projector, never the expectation.\n',
         );
         return 1;
+    }
+    const notice = parityScopeNotice(configured);
+    if (notice !== null) {
+        process.stderr.write(notice);
+        return 0;
     }
     if (!argv.includes('--quiet')) {
         process.stdout.write(

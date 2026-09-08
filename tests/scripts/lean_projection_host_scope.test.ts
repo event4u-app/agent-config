@@ -28,7 +28,7 @@ import {
 } from '../../src/scripts/condense.js';
 import { is_thin_entry, thin_entry } from '../../src/scripts/project_thin_rules.js';
 import { thinnedTreeFindings } from '../../src/scripts/check_rule_projection_integrity.js';
-import { compareTrees } from '../../src/scripts/check_host_tree_parity.js';
+import { compareTrees, parityScopeNotice } from '../../src/scripts/check_host_tree_parity.js';
 
 const RULES = ['alpha-rule.md', 'beta-rule.md'] as const;
 
@@ -374,3 +374,21 @@ function treeContentsLocal(root: string, rel: string): Record<string, string> {
     }
     return out;
 }
+
+describe('1.4 — the parity gate never reports a vacuous comparison as a pass', () => {
+    it('all three thinnable hosts enrolled leaves NO subject, and says so', () => {
+        const notice = parityScopeNotice(['claude-code', 'cursor', 'cline']);
+        expect(notice).not.toBeNull();
+        expect(notice as string).toContain('NOTHING COMPARED');
+        // The reader has to be pointed at the gate that DOES carry the question.
+        expect(notice as string).toContain('check_rule_projection_integrity');
+    });
+
+    it('the shipped default leaves two subjects, so there is no notice', () => {
+        expect(parityScopeNotice(['claude-code'])).toBeNull();
+    });
+
+    it('an empty delivery set leaves all three subjects', () => {
+        expect(parityScopeNotice([])).toBeNull();
+    });
+});

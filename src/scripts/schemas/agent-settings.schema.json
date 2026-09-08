@@ -45,7 +45,7 @@
         "hosts": {
           "type": "array",
           "items": { "type": "string", "enum": ["claude-code", "cursor", "cline"] },
-          "description": "Which hosts a thinning mode may thin (ADR-265). Absent resolves to [claude-code]. Only the three hosts with a per-rule rule tree are accepted: naming any other id is a request to thin a surface no per-rule stub shape exists for, and resolveLeanProjectionHosts drops it with a warning. Every host outside this list receives exactly what eager-all writes, asserted byte-for-byte by check_host_tree_parity."
+          "description": "Which hosts a thinning mode may thin (ADR-265). Absent resolves to [claude-code]. Only the three hosts with a per-rule rule tree are accepted. TWO LAYERS, and they answer differently on purpose (R2 finding 6, 2026-09-08): this enum is the AUTHORING layer, so an id outside it is a hard validation FAILURE under validate_agent_settings and under the wizard's settings schema \u2014 not a warning. resolveLeanProjectionHosts is the READ-TIME backstop for a hand-edited file that never passed either, because condense._lean_projection_settings and the rule-inject hook both read .agent-settings.yml directly with no validation; there such an id is dropped with a warning worded by describeDroppedHosts, and the set never widens implicitly. Every host outside this list receives exactly what eager-all writes, asserted byte-for-byte by check_host_tree_parity."
         }
       }
     },
