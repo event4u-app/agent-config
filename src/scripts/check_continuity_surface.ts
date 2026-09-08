@@ -341,7 +341,7 @@ function selfTest(): number {
                 _mkRepo(dir, []);
                 fs.writeFileSync(
                     path.join(dir, 'src', 'scripts', 'newthing.ts'),
-                    `const P = '${_STATE_PREFIX}brand-new-cache.json';\n`,
+                    `const P = '${_STATE_PREFIX}brand-new-leaf.json';\n`,
                 );
                 return run({ repoRoot: dir, baseRef: null, quiet: true, write: silent });
             },
@@ -403,10 +403,10 @@ function selfTest(): number {
                 // isolates the ONE property under test: the `.test.ts` leaf is
                 // not flagged. Without it the gate would refuse an empty scan
                 // and the case would pass for the wrong reason.
-                _mkRepo(dir, [_row({ id: 'real-cache.json' })]);
+                _mkRepo(dir, [_row({ id: 'real-leaf.json' })]);
                 fs.writeFileSync(
                     path.join(dir, 'src', 'scripts', 'thing.ts'),
-                    `const P = '${_STATE_PREFIX}real-cache.json';\n`,
+                    `const P = '${_STATE_PREFIX}real-leaf.json';\n`,
                 );
                 fs.writeFileSync(
                     path.join(dir, 'src', 'scripts', 'thing.test.ts'),
@@ -420,10 +420,10 @@ function selfTest(): number {
             expect: 'accept',
             run: () => {
                 const dir = mk();
-                _mkRepo(dir, [_row({ id: 'real-cache.json' })]);
+                _mkRepo(dir, [_row({ id: 'real-leaf.json' })]);
                 fs.writeFileSync(
                     path.join(dir, 'src', 'scripts', 'thing.ts'),
-                    `const P = '${_STATE_PREFIX}real-cache.json';\n`,
+                    `const P = '${_STATE_PREFIX}real-leaf.json';\n`,
                 );
                 return run({ repoRoot: dir, baseRef: null, quiet: true, write: silent });
             },
