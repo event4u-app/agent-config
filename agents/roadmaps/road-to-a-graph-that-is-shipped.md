@@ -847,11 +847,22 @@ built for.
       verify: description length ≤ 200 chars (`src/scripts/schemas/skill.schema.json:28`);
       `src/skills/code-intelligence/SKILL.md:164` unchanged.
 
-      <!-- verified 2026-09-08. New description, 198 chars against the 200 hard line:
+      <!-- verified 2026-09-08. New description, 194 chars against the 200 hard line:
         "Route codebase-structure questions (who calls X, where used, change-impact) to an
-         existing code-graph first: impact, tests-for, dead are cheaper, never more precise;
+         existing code-graph first: impact, tests-for, dead cheaper, never more precise;
          grep routine. Also 'call graph'."
       `validate_frontmatter` → 450 artefacts, 0 failing, 0 warnings.
+
+      TRIMMED BY ONE WORD FOR A SECOND GATE, recorded because the wording looks arbitrary
+      otherwise. The first draft was 198 chars / **46** exact BPE tokens against the old
+      description's 45, and `check_estate_count` reds on
+      `skill_description_tokens 11460 → 11461` — the floor is the measurement at
+      `origin/main`, so there is no number to edit and nothing to walk. Dropping the single
+      word "are" brings it to 45, i.e. **+0** on that dimension, while keeping every part
+      the step and the routing need: the three verbs, `change-impact` in the trigger list,
+      `existing … first` verbatim, and `Also 'call graph'`. Measured with the repository's
+      own `gpt_tokens` (`_lib/token_count.ts`, `exact: true`) rather than a chars/4 proxy,
+      because a one-token margin is inside a proxy's error.
 
       LINE 164 IS BYTE-UNCHANGED — `sed -n '164p'` still returns
       `**No class is graph-first.** Query the index first because an index that already`.

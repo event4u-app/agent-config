@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: code-intelligence
-description: "Route codebase-structure questions (who calls X, where used, change-impact) to an existing code-graph first: impact, tests-for, dead are cheaper, never more precise; grep routine. Also 'call graph'."
+description: "Route codebase-structure questions (who calls X, where used, change-impact) to an existing code-graph first: impact, tests-for, dead cheaper, never more precise; grep routine. Also 'call graph'."
 domain: engineering
 workspaces:
   - engineering
