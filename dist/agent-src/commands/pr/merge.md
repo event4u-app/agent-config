@@ -86,7 +86,7 @@ to pick would hand back a decision the command can compute. When the open-PR
 list is empty there is nothing to select and the command reports that and
 stops.
 
-## 1. Snapshot the target — an immutable manifest
+## 1. Snapshot the target — a manifest re-checked before every merge
 
 Compute the queue ONCE at invocation and record it as a manifest of
 `(PR number, head SHA)` pairs:
@@ -107,7 +107,11 @@ other than this run" is undetectable without a base SHA to compare against.
 cap truncated.
 
 The manifest is the authorization's target set and is **never silently
-refreshed by a third party's push**. It is, by design, advanced by *this run's
+refreshed by a third party's push**. It lives in this run's own context and in
+no file, so nothing verifies it and no gate would notice if it drifted — what
+actually binds the target is the pre-merge re-read below, a check that fires,
+not a property that holds. Say "re-checked", never "immutable" (ADR-266
+§ What this record does not claim, finding 3). It is, by design, advanced by *this run's
 own* commits — § 2 merges the base in and § 5 pushes, so a prepared PR's head
 is never the snapshot head, and a naive "refuse when the SHA moved" check would
 fire on every PR the run touches.
