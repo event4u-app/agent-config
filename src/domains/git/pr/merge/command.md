@@ -4,13 +4,13 @@ name: git-pr-merge
 disable-model-invocation: true
 argument-hint: "[all|<pr-number>] [--no-merge]"
 pack: git
-intent: "Prepare an open PR to mergeable — sync the base in, resolve conflicts semantically, drive required checks green — merging itself is gated and inert"
+intent: "Prepare an open PR to mergeable — sync the base in, resolve conflicts semantically, drive required checks green — then merge what the invocation named"
 routes_to: [git-workflow, github-ci]
 replaces: []
 visibility: advanced
 cluster: git-pr-merge
 skills: [git-workflow, github-ci]
-description: Prepare one open PR to mergeable, or the whole open-PR queue with `all` — merging is specified but gated, so today every invocation stops at mergeable-and-open
+description: Prepare one open PR to mergeable, or the whole open-PR queue with `all`, then merge what the invocation named — `--no-merge` stops at mergeable-and-open
 suggestion:
   eligible: false
   rationale: "Merging is irreversible and gated on the user's own word in the invocation — a suggested merge would manufacture the authorization the Hard Floor requires the user to give."
@@ -28,10 +28,13 @@ green on the head that will actually be merged — and then merge it, if and onl
 if the invocation authorised that.
 
 ```
-THE MERGE STEP (§ 9) IS SPECIFIED AND NOT YET ACTIVE. `--no-merge` IS THE
-OPERATIVE PATH TODAY, AND A BARE INVOCATION BEHAVES AS IF IT CARRIED IT.
-ACTIVATION NEEDS THE OWNER DECISION IN THE `merge-authority` BLOCKER OF
-`road-to-drain-commands` — NEVER A COMMAND EDIT, AND NEVER A GUARD EDIT.
+THE MERGE STEP (§ 9) IS ACTIVE. THE OWNER AUTHORISED IT ON 2026-09-08 AND
+ADR-266 RECORDS THE AMENDMENT TO ADR-237 § 4 THAT ACTIVATED IT — THAT RECORD
+IS WHAT ACTIVATED IT, NEVER A COMMAND EDIT AND NEVER A GUARD EDIT.
+AN EXPLICIT `/pr:merge` INVOCATION IS THE THIS-TURN CONFIRMATION, AND IT
+REACHES EXACTLY THE PRs § 1's MANIFEST SNAPSHOTTED FROM IT. IT NEVER REACHES
+A PR THAT ARRIVED LATER, A HEAD THE MANIFEST DID NOT RECORD, OR ANY OTHER
+HARD-FLOOR ACTION. `--no-merge` STILL STOPS BEFORE § 9.
 ```
 
 **The invocation is the authorization, and nothing else is.** `pr-merge` is
@@ -42,11 +45,12 @@ authorized, and this command still reads it as an audit trail; it introduces no
 second authorization store, and it never writes one. When the work left is
 outside what the owner authorized, the run stops and reports (§ 7).
 
-Why it ships inert rather than not at all: everything before § 9 — the target
-manifest, the four conflict classes, the superseded check, the bounded CI
-repair, the cutoff — is the expensive, error-prone half, it is what the live
-runs actually proved, and none of it merges anything. `--no-merge` delivers all
-of it today.
+Why the preparation half is still the bulk of this command: everything before
+§ 9 — the target manifest, the four conflict classes, the superseded check, the
+bounded CI repair, the cutoff — is the expensive, error-prone part, and it is
+what the live runs actually proved. `--no-merge` delivers exactly that half to
+callers that want it, [`/roadmap:process-full`](../../../product-basic/roadmap/process-full/command.md)
+among them.
 
 ## Sub-commands
 
@@ -62,15 +66,16 @@ different lifecycle, not a different count.
 
 ## Dispatch
 
-Every row below **prepares** — the merge step is gated (see the banner above),
-so today every row ends at mergeable-and-open. The column says what each row
-selects, not that it merges.
+Every row below **prepares** first; the last column says whether it then
+merges. A row that merges reaches only the PRs its own manifest snapshotted
+(§ 1), and only once that PR's required checks are green on the head being
+merged (§ 5).
 
 | Invocation | Selects | Prepares | Merges |
 |---|---|---|---|
-| `/pr:merge <N>` | exactly PR N | yes | only once the gate opens |
-| `/pr:merge` | ONE PR: green first, then infrastructure/tooling before content, then smallest diff (`changedFiles`, then additions+deletions), tiebreak ascending number | yes | only once the gate opens |
-| `/pr:merge all` | the whole open-PR list, under § 6's cutoff | yes | only once the gate opens |
+| `/pr:merge <N>` | exactly PR N | yes | yes — PR N |
+| `/pr:merge` | ONE PR: green first, then infrastructure/tooling before content, then smallest diff (`changedFiles`, then additions+deletions), tiebreak ascending number | yes | yes — the one PR it selected |
+| `/pr:merge all` | the whole open-PR list, under § 6's cutoff | yes | yes — the manifest, in queue order |
 | `… --no-merge` | as above | yes | **never**, explicitly. This is the form [`/roadmap:process-full`](../../../product-basic/roadmap/process-full/command.md) calls for its delivery loop. |
 
 **Bare invocation** (`/pr:merge` with no argument) is a **documented default
@@ -195,11 +200,12 @@ AND RECORD IT AS `blocked-external`.
 ```
 
 The asymmetry is deliberate and worth stating, because it looks inconsistent:
-merging is gated on an owner *decision* recorded once in a blocker, while
-closing is gated on a *per-object* confirmation every time. Merging this run's
-own PR is an action the run's whole design is about; closing a PR someone else
-opened is not, it destroys their work in progress, and no guard in this tree
-sees it happen. The cheaper gate goes on the action nothing else watches.
+merging is authorised once by the invocation, while closing needs a *per-object*
+confirmation every time. Merging a PR this queue prepared is the action the
+run's whole design is about, and § 1's manifest already binds it to a named
+number and a recorded head; closing a PR someone else opened is neither, it
+destroys their work in progress, and no guard in this tree sees it happen. The
+stricter gate goes on the action nothing else watches.
 
 ## 5. Drive CI green — bounded
 
@@ -240,13 +246,12 @@ After each merge the base has moved, so the next PR is re-synced against the
 NEW base — that is the loop, and it is why pre-greening several PRs ahead of
 their merges is wasted work.
 
-**While the merge step is gated, that loop does not turn**, and the section
-below is written for when it does. Nothing merges, so the base does not
-advance, no PR leaves the open list, and an `all` run is a **preparation
-sweep**: it syncs, classifies, greens and reports each PR once, then stops. It
-does not re-prepare a PR its own predecessor invalidated, because it has no
-predecessor that landed. The cutoff below still bounds it; the window below
-still cannot close it, for the reason § 7 gives.
+**Under `--no-merge` that loop does not turn**, and the paragraph above is
+written for the form that does. Nothing merges, so the base does not advance,
+no PR leaves the open list, and the run is a **preparation sweep**: it syncs,
+classifies, greens and reports each PR once, then stops. It does not re-prepare
+a PR its own predecessor invalidated, because it has no predecessor that
+landed. The cutoff below bounds both forms.
 
 **Cutoff.** When the manifest is exhausted, recompute the open-PR list
 **exactly once**. PRs that appeared during the run are drained as ONE final
@@ -308,10 +313,9 @@ run, and do not proceed to the next PR.
 
 ## 8. Kill switches, and what happens after a merge
 
-**Armed during preparation, not only before a merge** — otherwise every switch
-below is unreachable while the merge step is gated, and a preparation sweep has
-no way to stop at all. Each one aborts the current PR and ends the run on any
-of:
+**Armed during preparation, not only before a merge** — otherwise a
+`--no-merge` sweep would have no way to stop at all. Each one aborts the current
+PR and ends the run on any of:
 
 - target number or head SHA differs from the manifest;
 - the base advanced by an actor other than this run;
@@ -365,9 +369,10 @@ conflict resolution. The disposition set is closed:
 
 ## Rules
 
-- **Never merge while the gate is closed.** Until the `merge-authority`
-  blocker resolves, every invocation stops at mergeable-and-open, `--no-merge`
-  or not. Once it opens, `--no-merge` is still the explicit way to say stop.
+- **Never merge a PR the invocation did not name.** The authorization is the
+  owner's own `/pr:merge` sentence and reaches exactly the manifest § 1
+  snapshotted from it; a PR that arrived afterwards needs its own go-ahead.
+  `--no-merge` is the explicit way to say stop before § 9.
 - **Never widen, patch, or rebuild-around the git guard.** Verification of the
   authorization window is read-only.
 - **Never rebase a pushed branch**; the base is merged in.
