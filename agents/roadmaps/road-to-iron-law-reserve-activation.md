@@ -11,7 +11,8 @@ execution:
 > openai/codex-default, 2 of 2 present, converged), recorded as
 > [`ADR-265`](../../docs/decisions/ADR-265-iron-law-reserve-refused-verifier-inside-the-change.md).
 > This file is the receiver for step 1.3 of
-> [`road-to-a-standing-budget-with-headroom`](road-to-a-standing-budget-with-headroom.md),
+> [`road-to-a-standing-budget-with-headroom`](archive/road-to-a-standing-budget-with-headroom.md)
+> (archived in the same change that closed it),
 > which was deferred rather than closed.
 
 > **`status: draft` deliberately.** It costs no active roadmap slot until a
