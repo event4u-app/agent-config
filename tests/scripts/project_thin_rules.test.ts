@@ -36,16 +36,20 @@ describe('project_thin_rules — pure surface', () => {
     });
     it('thin_entry points its Body link at a directory that EXISTS', () => {
         // Renamed and re-pointed 2026-09-07 (road-to-delivery-for-every-host).
-        // This assertion used to pin the link "verbatim" at
-        // `../../.agent-src.uncondensed/rules/`, faithful to the Python port and
-        // dead in every checkout since ADR-051 retired that tree. Under
+        // This assertion used to pin the link "verbatim" at a path inside the
+        // uncondensed source tree ADR-051 retired — faithful to the Python port
+        // and dead in every checkout since. The literal is deliberately NOT
+        // reproduced here: `check_no_new_legacy_path` matches the string and
+        // cannot tell a repair record from a live reference, so writing it out
+        // would make this comment fail the gate it is describing. `git log -S`
+        // on this file finds the old value. Under
         // `delivery` the hook loads the body from `dist/agent-src/rules` and
         // never follows the link, which is why nothing noticed; under `thin`
         // the link is the ONLY path to the body there is.
         //
         // Pinning a port's verbatim output is a real discipline, and it is the
         // wrong one here: what it preserved was a broken user-facing link, and
-        // the repository already ratchets `.agent-src.uncondensed` references
+        // the repository already ratchets references into that retired tree
         // down as debt.
         const text = '---\ndescription: A short desc\ntriggers:\n  - keyword: foo\n---\nBODY\n';
         const entry = ptr.thin_entry('my-rule', text);
