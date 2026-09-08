@@ -460,15 +460,102 @@ built for.
 
 ## Phase 3 — Three verbs a gate can read
 
-- [ ] **3.1 `impact --diff <rev>`** — callers, dependents and test files reachable from the
+- [x] **3.1 `impact --diff <rev>`** — callers, dependents and test files reachable from the
       changed symbols over accepted edges (`resolved_via` not in `{name-lookup, dynamic}`),
       plus the producing edges and a minimal read set.
-- [ ] **3.2 `tests-for <symbol>`** and **`untested --diff <rev>`** — needs relation `tests`
+- [x] **3.2 `tests-for <symbol>`** and **`untested --diff <rev>`** — needs relation `tests`
       (test file → subject via import); one fixture.
-- [ ] **3.3 `dead`** — zero accepted callers, excluding declared entry points: routes,
+- [x] **3.3 `dead`** — zero accepted callers, excluding declared entry points: routes,
       exports, the CLI registry (`src/cli/registry.ts`), the hook manifest.
       verify for 3.1–3.3: golden outputs on a fixture; each prints `resolved_via` counts and
       the staleness state; `describeImpact` is listed by `dead` and by nothing else.
+
+      <!-- verified 2026-09-08. All four verbs live in
+      `src/scripts/code_graph/verbs.ts` (gate-facing) and are dispatched from
+      `src/scripts/code_graph/cli.ts` as `code-graph` subcommands — no new top-level verb,
+      per K4. `src/cli/registry.ts:86` synopsis updated in the same change.
+
+      THE SHARED VERIFY, ITEM BY ITEM — tests/scripts/code_graph_gate_verbs.test.ts,
+      23 passed:
+        · GOLDEN OUTPUTS ON A FIXTURE. Every list assertion is `toStrictEqual` over the
+          full sorted array, never `toContain`, so an extra element fails. The fixture is
+          a real PHP+TS tree built through `buildFromRepo` — never a graph literal, which
+          would let the verbs pass over a shape the extractor cannot produce.
+        · EACH PRINTS `resolved_via` COUNTS AND THE STALENESS STATE. Two histograms, not
+          one: `accepted resolved_via` and `rejected resolved_via`, so a caller can tell
+          "no callers" from "no callers I would trust". Staleness is the same three-state
+          `fresh | behind:N | absent` token 1.2 delivers.
+        · `describeImpact` IS LISTED BY `dead` AND BY NOTHING ELSE. One fixture symbol,
+          declared, called by nothing, imported by nothing: absent from `impact`'s
+          dependents, absent from `tests-for`, present in `dead`. The single assertion
+          catches both over-reporting and under-reporting. It IS listed by `untested`, and
+          that is correct rather than a leak — `untested` is 3.2's second verb, not one of
+          the three the verify names, and "changed and no test imports it" is a different
+          question with the same answer here. Recorded rather than quietly excluded.
+
+      TWO SENSITIVITY PAIRS, both proven by neutralising the mechanism and watching the
+      suite go red (a test never seen red has unknown sensitivity):
+        · accepted-edge filter → `isAcceptedEdge` forced to `true`: 2 failed / 15 passed.
+          The case is a real `INFERRED / name-lookup` edge — a bare PHP `helper()` with no
+          `use` — which the filter must drop and which appears in `rejected_via: name-lookup 1`.
+        · containment filter → `member` added to `REFERENCE_RELATIONS`: 5 failed / 12 passed.
+
+      THE `tests` RELATION (3.2's prerequisite) IS DERIVED, NOT EXTRACTED. `buildGraph`
+      emits `test file --tests--> subject` for every `imports` edge whose source file is a
+      test and whose target is an in-repo node in a non-test file; `resolved_via:
+      test-import` (a value 2.2 declared and left unemitted for exactly this),
+      `confidence: INFERRED`. The two axes are split deliberately: the import is a
+      syntactic fact, so the EVIDENCE is extracted, while "this test tests that subject"
+      is an inference from a path convention. Derived in the build pass rather than in the
+      extractor because the predicate is a property of two PATHS, which no grammar can
+      see, and `buildGraph` stays pure. Three exclusions, each of which would otherwise
+      manufacture a false edge: an `external:` / `symbol:` target (no subject), a target
+      in another test file (a shared helper is not a subject), and — via the sensitivity
+      twin — the same import from a non-test path, which derives nothing.
+
+      SCHEMA_VERSION 3 → 4 and GRAPH_STORE_VERSION 3 → 4. The store bump is the
+      interesting one: NO column changed, which is precisely why it is needed. A v3 twin
+      would read back cleanly, answer `tests-for` with the empty set, and the caller could
+      not tell "nothing tests this" from "this twin predates the relation".
+
+      `dead` REFUSES BY DEFAULT, and that is a council decision rather than a design
+      preference — AI council 2026-09-08, 2/2 convergent (anthropic + openai), round 2
+      Fork 4, option 2. Step 3.3 names four entry-point sources and one of them cannot be
+      evaluated from this graph at all: the extractor records no exportedness
+      (`FileExtract` at `src/scripts/code_graph/extract.ts:82-90` carries
+      `nodes / rawEdges / inherits / parseError`; `CodeNode` carries no export flag;
+      `grep -n 'isExported\|exported\|export_statement' extract.ts` → zero). Without it
+      every exported-but-not-yet-imported public symbol reports as dead, which is Risk
+      Register rank 4 arriving through the verb rather than around it. So `dead` prints the
+      four sources with a per-source status (`read` / `empty` / `unavailable` + reason) and
+      then REFUSES — exit 1, empty list — unless the caller supplies the missing source
+      (`--entry-points <file>`) or states the gap explicitly
+      (`--accept-missing-exports`). Fail-closed in the shape `selectionVerdict`
+      (`src/scripts/_lib/regression_neighbourhood.ts`) already uses here: no option object
+      relaxes it, only a visible command line. Both branches are fixtured, and the CLI
+      cases assert the EXIT CODE — a refusal that exited 0 would read to a CI step as an
+      empty dead list, which is the false negative it exists to stop.
+
+      `routes` reads `empty`, not `unavailable`: this repository has no route table, and an
+      absent route table is a fact about the tree rather than a gap in the graph.
+
+      END-TO-END THROUGH THE CLI, on a git fixture at 2026-09-08:
+        · `impact --diff HEAD~1` → exit 0 · 4 dependents · 1 test file · 6 producing edges
+          · `accepted resolved_via: import-specifier 4 · same-file 1 · test-import 1`
+        · `tests-for handle` → exit 0 · `tests (1): tests/service.test.ts` ·
+          `accepted resolved_via: test-import 1`
+        · `untested --diff HEAD~1` → exit 0 · `tested (1) · untested (2)`
+        · `dead` → exit 1, refusal, no list · `dead --accept-missing-exports` → exit 0,
+          6 symbols · `dead --entry-points <file>` → exit 0, 5 symbols, 1 excluded
+
+      FIXED, found while wiring: `graphState` reported `absent` for a verb invoked with an
+      explicit `--graph <path>` — the state of a cache nobody asked about, printed beside
+      an answer that had just come from a different file. `graphState(root, nativeCache?)`
+      now takes the graph the verb is actually reading. Also moved `GraphState` /
+      `graphState` from `hooks/code_graph_context_hook.ts` into `code_graph/detect.ts`,
+      re-exported from the hook so no importer changed: an engine module importing a hook
+      module to learn the token would invert exactly the dependency direction D9 measures.
+      -->
 - [ ] **3.4 `regression_neighbourhood` reads this graph** via `impact --diff`; the selected
       regressions and the producing edges enter the verdict record. Retires the
       substitute-graph section at `regression_neighbourhood.ts:15-26`.
