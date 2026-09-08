@@ -547,8 +547,8 @@ Defects this roadmap repairs:
       `adr/regenerate_index --dir docs/decisions` and `adr/evidence_census`.
       verify: ADR exists; `DEFAULT_LEAN_PROJECTION_MODE` and the hosts default match it;
       `Rule backstops` CI job green on census freshness.
-      Done 2026-09-07. `docs/decisions/ADR-262-delivery-default-for-claude-code.md`,
-      `status: accepted`, `reopen_policy: owner`, evidence `E1`. `adr_cite_check ADR-262`
+      Done 2026-09-07. `docs/decisions/ADR-263-delivery-default-for-claude-code.md`,
+      `status: accepted`, `reopen_policy: owner`, evidence `E1`. `adr_cite_check ADR-263`
       reports **LIVE** with all seven basis paths `[found]`. `check_adr_frontmatter`: no
       errors. Index regenerated (`201 numbered, 1 legacy`) and the evidence census re-run
       (`E0=75 E1=69 E2=44 E3=21 · human=13 agentic=122 mixed=21 unknown=53`).

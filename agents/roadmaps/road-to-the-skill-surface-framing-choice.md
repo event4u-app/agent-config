@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: carrier
+status: ready
 parent_roadmap: road-to-the-activation-census-consequence
 ---
 
@@ -11,20 +11,20 @@ parent_roadmap: road-to-the-activation-census-consequence
 > live destination `deferralProblems`
 > (`src/agent-src/scripts/archive_completed_roadmaps.ts`) can verify from both
 > ends, and so the choice that item was written to surface is stated somewhere a
-> reader meets it. `status: carrier` keeps it off the roadmap dashboard, out of
-> `check_roadmap_trackable` and out of the plan risk register until a human
-> flips it to `ready`. It does NOT keep it out of the estate count:
-> `check_estate_count` adds top-level carriers back to `active_roadmaps`
-> deliberately, so this file was paid for by archiving its parent in the same
-> change rather than by an exemption.
+> reader meets it. Being a deferral destination is a property of the edges, not
+> of this file's status — see ADR-262, which deleted the `status: carrier` this
+> file used to carry.
 >
-> **Nothing here is scheduled work.** The parent roadmap built neither option
-> and this file builds neither. Its content is the packet: two options, the
-> count each affects, and what would falsify the one chosen.
+> **Its own work is done.** Phase 1 is `[x]` and both acceptance criteria are
+> met: Option C was recorded on 2026-09-07. What keeps the file open is the
+> blocker below, not a status.
 >
-> **The decision is owner-reserved.** It changes what the package claims to be
-> for its consumers, which is a public commitment under
-> `decision-revisit-gate`'s reserved set. An AI council dispositioned the
+> **The remaining decision is owner-reserved, and that reservation stands.** It
+> changes what the package claims to be for its consumers, which is a public
+> commitment under `decision-revisit-gate`'s reserved set — a genuine Class-1
+> dimension that ADR-262 does not touch. What ADR-262 changes is only where the
+> reservation lives: in a `## Blockers` entry a gate reads, not in a status
+> value nothing reads. An AI council dispositioned the
 > parent's blocker on 2026-09-06 and its verdict was unanimous DESCOPE — the
 > parent closes without the choice, the choice does not close. That verdict is
 > about roadmap scope only; it settles nothing about the surface.
@@ -124,11 +124,11 @@ stops holding the moment the store the census reads stops being the only one ava
 A consumer install, a second host, or a CI-visible corpus each ends it, and the choice
 returns.
 
-`status:` stays `carrier`. This file remains the live destination the parent's `[~]`
-step 3.1 and AC-6 carry to, which `deferralProblems`
-(`src/agent-src/scripts/archive_completed_roadmaps.ts:414`) verifies from both ends;
-archiving it would make that destination dead. A human flips it to `ready` if and when
-A or B is taken up.
+This file remains the live destination the parent's `[~]` step 3.1 and AC-6 carry to,
+which `deferralProblems` (`src/agent-src/scripts/archive_completed_roadmaps.ts:414`)
+verifies from both ends; archiving it would make that destination dead. That is why it
+stays live — not a status, and not a flip anyone is waiting for. The open A/B decision
+is filed as `blocker: skill-surface-framing-ab-choice` below, where a gate can read it.
 
 ## Acceptance Criteria
 
@@ -140,3 +140,49 @@ A or B is taken up.
       Green 2026-09-07: `check_claims: 9 markered claim(s) bound · ledger 99 entries
       (60 backed, 31 unbacked inventory)`, exit 0. `check_skill_activation_claim` also
       re-run and green — the appended prose does not shadow the figure regexes it parses.
+
+## Blockers
+
+### blocker: skill-surface-framing-ab-choice
+
+- **Status:** open
+- **Owner:** owner
+- **Blocks:** Options A and B; the file stays live as a deferral destination until
+  one is taken up or the menu is closed
+- **What to do:** choose A (build a host-side activation path for the 12 skills that
+  declare a machine-matchable trigger key), B (declare the 189 reference material by
+  design and bring `docs/CLAIMS.md` into line), or close the menu. Each option's
+  affected count and falsifier are stated above; the measurement they sit on is
+  `agents/evidence/metrics/skill-activation-census.json`.
+- **Recommendation:** B, and it is a recommendation rather than a decision because
+  the transition is yours. The census reads 0 invocations of 0 of 299 skills over
+  11,338 turns, and 189 of them declare no machine-matchable trigger at all — so
+  "reference material a human names" already describes what ships. A costs a host
+  integration this repository does not own and would then have to measure. But B
+  reclassifies 189 shipped artifacts in consumer-facing prose, which is exactly the
+  public commitment reserved to you.
+- **If you do nothing:** Option C holds and is honest, so nothing breaks. What
+  accumulates is a gap between what the surface implies and what it does — and C's
+  own falsifier ends it without warning the moment a second store exists (a consumer
+  install, a second host, or a CI-visible corpus), at which point the menu returns
+  with the same three options and one more round of re-derivation behind it.
+- **Resolved when:** a decision record exists for A or B, or this blocker is closed
+  with the menu withdrawn.
+
+**Why this is genuinely owner-reserved and not a self-imposed gate.** A and B each
+change what the package claims to be for its consumers. That is a public commitment —
+a named Class-1 dimension in `decision-revisit-gate`'s reserved set
+(`src/rules/decision-revisit-gate.md:146`), and one that
+[`maintainer-intent-over-repo-rules`](../../src/rules/maintainer-intent-over-repo-rules.md)
+explicitly does not lift. C, by contrast, was a reversible explanatory sentence beside
+an already-published claim, which is why an agent took it on 2026-09-07 without asking.
+The routing unit is the transition, not the document.
+
+## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-09-08 | reviewer: claude/host -->
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | The zero is published with a reason and then read as settled | product | Option C records why 0 of 299 skills were invoked over 11,338 turns. A recorded reason next to a claim reads as a resolved question, and the surface question stays open behind it. | The blocker keeps A and B live rather than closed; C's own falsifier is recorded beside the claim and ends the option the moment a second store exists. | Blockers |
+| 2 | The census generalises from one machine's store | implementation | The reading is one local transcript store over 30 sessions. It bounds nothing beyond that store, and a consumer install or a second host would be a different population. | The falsifier is stated in the option and in the ledger entry: the reason stops holding the moment the store stops being the only one available. | The measurement this decision sits on |
+| 3 | The file is archived because its own checkboxes are complete | implementation | Phase 1 and both ACs are `[x]`. An archival sweep reading progress alone would move it, stranding the parent's `[~]` step 3.1 and AC-6 carries. | `lint_deferral_integrity` reds on a destination archived with the carry unresolved; the open blocker keeps the file out of a completed-roadmap sweep. | Decision, 2026-09-07 — what was recorded and what was NOT |
