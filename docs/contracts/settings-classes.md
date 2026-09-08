@@ -247,8 +247,8 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 26 |
 | B — consent | 3 |
-| C — guarded | 110 |
-| **Total** | **139** |
+| C — guarded | 111 |
+| **Total** | **140** |
 
 The total was 140 until 2026-08-12, when five of the six keys no code path read were
 deleted, minus the one held open (§ The six unread keys, below): one A
@@ -339,8 +339,8 @@ the template, which is the drift this contract exists to prevent.
 | derivable | 83 |
 | un-inferrable | 9 |
 | consent | 41 |
-| policy | 6 |
-| **Total** | **139** |
+| policy | 7 |
+| **Total** | **140** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -355,8 +355,12 @@ mechanism it names actually exists, so 83 measures work outstanding, not keys
 about to disappear. The count is expected to fall while `un-inferrable` does not
 — those 9 plus whatever survives re-examination in `consent` are the floor this
 surface has, and stating it is the point. `policy` is the smallest class and the
-only one whose action is a *move* rather than a keep or a delete: five keys carry
-a project fact the tree could hold instead.
+only one whose action is a *move* rather than a keep or a delete: seven keys carry
+a project fact the tree could hold instead. (This sentence read "five" while the
+counts table beside it read 6, and 2026-09-08 added `lean_projection.hosts` as the
+seventh — corrected in both directions rather than only incremented, because a
+prose number that disagrees with a computed one beside it is the exact defect
+`lint_settings_classes` fails the two Total rows for.)
 
 ## The floor — the nine keys no mechanism can derive
 
@@ -440,6 +444,7 @@ Rows follow template order, so a diff against the template reads straight down.
 | `discipline_profile` | C | `__DISCIPLINE_PROFILE__` | master switch for the discipline rule tier | derivable — its own `auto` resolution against `src/config/host-capabilities.yml` |
 | `rule_loading_tier` | C | `__RULE_LOADING_TIER__` | legacy master switch for rule loading | derivable — `discipline_profile` supersedes it with a documented mapping (minimal→off, balanced→essential, full→full) |
 | `lean_projection.mode` | C | `eager-all` | `thin` removes rule bodies from the agent's context | derivable — `probe_host_compliance.ts` already computes the per-host thin/eager recommendation |
+| `lean_projection.hosts` | C | `[claude-code]` | decides WHICH hosts a thinning mode may thin, so an added id removes rule bodies from that host's context | policy — the value is a package-level decision the tree already holds: ADR-265 scopes the shipped `delivery` flip to `claude-code` alone. NOT `derivable`, and the distinction is the whole reason for this row: the mechanism that would compute an admissible host set, `admissibleUnderE3` in `src/scripts/_lib/injection_effect.ts`, admits **nothing** today — `src/config/host-injection-effect.json` carries 1 `observed-false` and 8 `unobserved` rows and no `observed-true` — so a derivation would yield `[]` rather than the shipped `[claude-code]`. Naming a mechanism that returns empty as the replacement would put a key in the deletion queue whose deletion would silently change the default. Move target: the ADR plus that census, once a host earns an `observed-true` row |
 | `telegraph.speak` | C | `false` | ships a rule body; a token-cost lever in both directions | derivable — the telegraph kill-criterion bench verdict is a package-level decision, not a per-install one |
 | `tokens.rich_skills` | C | `"on"` | token-spend lever | derivable — the skill's own `token_budget_class: rich` declaration plus the CI ceiling in `lint_token_budget_discipline.ts` |
 | `cost.budgets.daily` | C | `0` | rolling spend ceiling | consent |
