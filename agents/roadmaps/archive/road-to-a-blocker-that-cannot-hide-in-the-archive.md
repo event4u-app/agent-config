@@ -109,19 +109,171 @@ candidates differ in what they would have caught:
 (1) is the narrowest fix that would have caught the observed defect. (3) is the
 cheapest way to stop the ratchet-by-archiving hole. They are not exclusive.
 
+## The decision — taken 2026-09-08
+
+```
+CHOSEN: (1b) + (1a) AT THE TRANSITION, AND (4) OVER THE TREE.
+REJECTED: (3) THE RATCHET AT 23. REJECTED: (2) AS ORIGINALLY SCOPED.
+CORRECTED: (1) AS WRITTEN ABOVE IS INVERTED AND WOULD HAVE BEEN A NO-OP.
+```
+
+**The AI council decided this, not the run.** 2 seats present (2/2 quorum,
+`anthropic/claude-sonnet-4-5` + `openai/gpt-4o`, api transport, USD 0.0780 spent
+against a USD 0.4192 estimate), 2026-09-08. Both seats converged on
+(1b) + (1a) as the primary fix and both rejected (3); the anthropic seat
+supplied the (4) refinement and the (2) refutation, and the openai seat's
+"periodic review session" proposal was set aside as a process rather than an
+assertion.
+
+### (1) as written above is factually inverted
+
+Option (1) says *"make it re-read the file it is about to move from the working
+tree rather than trusting the index"*. The archival sweep **already** reads the
+working tree: `parse_roadmap` (`src/agent-src/scripts/update_roadmap_progress.ts:645`)
+uses `fs.readFileSync`, and `archive_completed` refuses on
+`stats.open_blockers.length > 0` computed from that reading. Implementing (1) as
+described would have changed nothing.
+
+The mechanism runs the other way. `git mv` renames the working-tree file **and
+moves the index entry**, which still holds whatever was staged; the sweep never
+`git add`s the destination. So the reading that was validated is the working
+tree and the content that gets committed is the index. On 2026-09-08 the
+unstaged removal meant those two disagreed, and the commit shipped the index.
+
+That correction also settles a second thing: **(4) is unreachable as a
+transition check.** The sweep already refuses to archive a roadmap carrying any
+open blocker in the working tree, so at the moment of archival there is never an
+open blocker to overlap with. (4) is therefore implemented as a tree-wide
+assertion, which is where the class it catches actually lives.
+
+### What shipped
+
+| # | Assertion | Where | Day-one findings |
+|---|---|---|---|
+| 1b | Refuse archival when the **staged** and **working-tree** blocker id→status maps of the file being moved disagree | `archive_completed_roadmaps.ts` — `_blockerDivergence`, checked after the changed-only skip and before `git mv` | **0** — fires only on a future archival |
+| 1a | `git add` the destination after a tracked `git mv`, so the commit carries the content the checks read | same file, immediately after the move | **0** — not an assertion |
+| 4 | No blocker id may be declared `Status: open` in **both** an active and an archived roadmap | `lint_roadmap_blockers.ts` — `_archiveOverlap`, hard, no baseline | **0**, measured |
+
+### How the day-one count was measured
+
+Not asserted — computed, twice, by two independent readers that agree:
+
+```
+# ad-hoc measurement, before the gate existed (base 5ef117448, 2026-09-08)
+active open blocker ids:   12
+archived open blocker ids: 33
+OVERLAP (open in both an active and an archived roadmap): 0
+```
+
+```
+# the shipped gate, same tree
+$ ./scripts-run src/scripts/lint_roadmap_blockers
+✅  13 roadmap(s) blocker-contract-clean
+✅  0 blocker id(s) open in both an active and an archived roadmap (699 archived file(s) read)
+✅  lint_roadmap_blockers:decidability: 0 violation(s), no baseline needed.
+```
+
+Zero, so (4) ships **hard and without a baseline** — the bar 1.1's verify sets.
+The 193 / 23 figures from § The gap, measured were re-derived on this tree and
+both still hold; they count *files*, while 33 counts *ids*, and 23 files
+carrying 33 open ids is consistent.
+
+### Why (3) was rejected
+
+A shrink-only baseline at 23 pins a number over a corpus nothing else reads, and
+its two possible readings are both bad: if the 23 are genuine history the ratchet
+forbids future genuine history, and if they are stale it preserves the staleness.
+Both seats rejected it independently. The hole it was meant to close —
+`open_blockers` being satisfiable by archiving rather than resolving — is closed
+by (4) instead, which asserts the contradiction rather than pinning the count.
+
+### Why (2) was rejected as originally scoped
+
+*"No blocker id may appear with `Status: open` in more than one file"* forbids a
+legitimate state: one cross-cutting blocker declared open in two **active**
+roadmaps. (4) narrows it to active-vs-archived, which is the pair that
+contradicts itself.
+
+### What this leaves uncovered — named, not closed
+
+- **Two blocker ids are declared open in more than one *archived* file**
+  (`background-continuation-probe`, `benchmark-spend-authorization`). In scope
+  for a hypothetical archive-vs-archive assertion, out of scope here for exactly
+  the day-one reason § The fix is a decision gives: a hard gate there would red
+  the build on 2 records this change did not create.
+- **The 23 archived files carrying open blockers are still unread.** (4) proves
+  none of them collides with the active tree, which is strictly weaker than
+  "none of them is stale".
+- **An untracked new roadmap during archival** — the council's option (1c). A
+  roadmap written but never staged can hold the same blocker while an archival
+  moves it; (1b) reads the index of the file being *moved* and sees nothing.
+  Left as a follow-up because refuse-vs-warn scoping needs its own decision.
+- **A blocker copied into an archived file with `Status: resolved`** while the
+  active copy stays open. Not a contradiction by (4)'s definition, and
+  deliberately so: a closed record of work planned elsewhere is legitimate.
+
 ## Phase 1 — Decide and implement
 
-- [ ] **1.1 Pick among (1), (2), (3)** above — or a fourth the reader sees — and
+- [x] **1.1 Pick among (1), (2), (3)** above — or a fourth the reader sees — and
       say in the same change which day-one finding count the choice carries and
       how it was measured.
       verify: the chosen assertion is implemented, its gate exits 0 on this tree
       **without a baseline** if the choice claims zero day-one findings, or with
       a baseline whose note states the measured count if it does not.
-- [ ] **1.2 A sensitivity case, not just a green run.** Reconstruct this run's
+- [x] **1.2 A sensitivity case, not just a green run.** Reconstruct this run's
       defect — an archived roadmap whose working-tree content and index content
       disagree about a blocker — and prove the new assertion goes red on it.
       verify: neutralising the assertion turns that case green again, so the
       case is known to have teeth rather than assumed to.
+
+## The sensitivity probes — each mechanism seen red
+
+Every mechanism this change adds was neutralised, watched fail, and restored by
+a reverse edit (never `git checkout` — a checkout of a file under an unstaged
+sabotage discards the surrounding work with it). Three mechanisms, three probes,
+2026-09-08:
+
+| Mechanism | Neutralisation | Result |
+|---|---|---|
+| (1b) `_blockerDivergence` | early-return `[]` unconditionally | the reconstruction test goes **red**; the other three stay green |
+| (1a) `git add` of the destination | guard the call with `false &&` | the staging-hygiene test goes **red**; the other three stay green |
+| (4) `_archiveOverlap` | guard the overlap push with `false &&` | the overlap test goes **red**; 34 of 35 stay green |
+
+The "others stay green" column is the half that matters: it shows each test is
+watching its own mechanism rather than all four failing together on any edit.
+
+After all three restores: **69 tests green** across
+`archive_index_divergence`, `lint_roadmap_blockers`, `archive_completed_roadmaps`
+and `archive_deferral_resolution` — the last two unchanged by this work, run to
+prove the transition check did not regress the sweep.
+
+The premise itself was reproduced before any test was written, so the mechanism
+is measured rather than reasoned about — see the header comment of
+`tests/scripts/archive_index_divergence.test.ts` for the six commands.
+
+### (1a) confirmed on this roadmap's own archival
+
+The sweep that archived this file exercised (1a) against the real defect shape,
+which is stronger evidence than the fixture. At the moment of the move the
+roadmap's working tree carried every edit above and the index carried the
+version committed on `main` — the two disagreed, exactly as they did on
+2026-09-08. After the sweep:
+
+```
+$ git diff --name-only -- agents/roadmaps/archive/road-to-a-blocker-…-archive.md
+(empty)
+$ git show :agents/roadmaps/archive/road-to-a-blocker-…-archive.md | grep -c 'The decision — taken 2026-09-08'
+1
+```
+
+No unstaged residue, and the staged content is the edited one. Without the
+`git add`, the index would have held the pre-edit file and the commit would have
+archived this roadmap with none of the decision it records — the same class of
+loss, on the change that fixes it.
+
+(1b) stayed silent here, correctly: this roadmap declares no blockers on either
+side, so there was no blocker disagreement to refuse. That is the narrow
+scoping doing its job rather than the check failing to fire.
 
 ## What this roadmap is NOT
 
@@ -132,6 +284,15 @@ cheapest way to stop the ratchet-by-archiving hole. They are not exclusive.
 - **Not owner-reserved.** Unlike its sibling receiver, nothing here needs an
   owner ruling: no floor is lowered and no ratchet is moved. `owner: maintainer`
   marks who should choose the assertion, not a permission gate.
+
+**AC-1 is ambiguous and both readings are met.** The council's sharpest finding
+was that *"detected by a gate"* does not distinguish **reporting** the defect
+from **preventing** it, and that the observed defect was in fact visible in
+`git status` — what failed was prevention. The criterion is left as written
+rather than rewritten mid-run, because the bar a run is measured against is not
+the run's to move. It is satisfied on both readings: (1b) refuses the archival
+with a diagnostic naming the id and both statuses, and (4) reports the
+contradiction wherever else it arrives.
 
 ## Provenance
 
@@ -155,8 +316,8 @@ cheapest way to stop the ratchet-by-archiving hole. They are not exclusive.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 An archived roadmap carrying `Status: open` is detected by a gate
+- [x] AC-1 An archived roadmap carrying `Status: open` is detected by a gate
       rather than by a human reading `git status`.
-- [ ] AC-2 The chosen assertion's day-one finding count on this tree is measured
+- [x] AC-2 The chosen assertion's day-one finding count on this tree is measured
       and recorded, and is zero unless a baseline note states otherwise.
-- [ ] AC-3 The sensitivity case from 1.2 exists and has been seen red.
+- [x] AC-3 The sensitivity case from 1.2 exists and has been seen red.

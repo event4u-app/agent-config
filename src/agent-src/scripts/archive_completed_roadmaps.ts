@@ -58,7 +58,11 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
-import { collect } from './update_roadmap_progress.js';
+import {
+    blocker_is_resolved,
+    collect,
+    parse_blockers,
+} from './update_roadmap_progress.js';
 import { guardedBaselineProblems, parseGuardedBaselines } from './guarded_baseline.js';
 
 import { isCliEntry } from './_cli_entry.js';
@@ -263,6 +267,80 @@ function _git_mv(root: string, src_rel: string, dst_rel: string, dry_run: boolea
     } catch {
         return { ok: false, tracked: false };
     }
+}
+
+// ---------------------------------------------------------------------
+// The index/working-tree blocker divergence check (1b) + staging (1a)
+// ---------------------------------------------------------------------
+//
+// The open-blocker refusal below reads the file with `fs.readFileSync`, i.e.
+// the WORKING TREE. `git mv` then moves the INDEX ENTRY, which still carries
+// whatever was staged. When the two disagree the commit ships the index
+// content — content this gate never read.
+//
+// Measured, once, at full cost (2026-09-08): an edit removing a roadmap's
+// blocker was made and never staged; `git mv` moved the stale index entry; the
+// archived file shipped a blocker declared `Status: open` that had already been
+// relocated to an active roadmap. The same blocker was open in two files at
+// once, one of them archived, and it was caught by a human reading
+// `git status` rather than by any gate.
+//
+// The check is scoped to blocker id → status and deliberately NOT to whole-file
+// equality. An unstaged typo fix in a roadmap title has nothing to do with the
+// defect, and refusing archival for it trains `git add -A`, which destroys the
+// staging discipline this check depends on. AI council 2026-09-08, 2/2 present
+// (anthropic/claude-sonnet-4-5 + openai/gpt-4o), on that scoping specifically:
+// broad scoping is "user-hostile, trains developers to `git add -A`
+// reflexively, defeating staging discipline".
+
+/** Blocker id → status, as the archive-transition check compares them. */
+function _blockerStatuses(text: string): Map<string, string> {
+    const out = new Map<string, string>();
+    for (const b of parse_blockers(text)) {
+        out.set(b.id, blocker_is_resolved(b) ? 'resolved' : 'open');
+    }
+    return out;
+}
+
+/**
+ * `git show :<rel>` — the STAGED content of a path, or null when the path has
+ * no index entry.
+ *
+ * Null is the untracked / pre-first-commit case, which `_git_mv` already
+ * handles by falling back to a plain rename. There is no index entry to
+ * disagree with, so the divergence check has nothing to assert and says so by
+ * returning null rather than by guessing at an empty string — an empty staged
+ * file and an absent one differ, and only the second is legitimate here.
+ */
+function _indexContent(root: string, rel: string): string | null {
+    const cp = _run(['git', 'show', `:${rel}`], root);
+    return cp.returncode === 0 ? cp.stdout : null;
+}
+
+/**
+ * Human-readable disagreements between the staged and working-tree blocker
+ * maps of one path. Empty array = the two agree, or there is no index entry.
+ */
+function _blockerDivergence(root: string, rel: string, workTreeText: string): string[] {
+    const staged = _indexContent(root, rel);
+    if (staged === null) {
+        return [];
+    }
+    const wt = _blockerStatuses(workTreeText);
+    const idx = _blockerStatuses(staged);
+    const ids = [...new Set([...wt.keys(), ...idx.keys()])].sort();
+    const out: string[] = [];
+    for (const id of ids) {
+        const a = idx.get(id);
+        const b = wt.get(id);
+        if (a === b) {
+            continue;
+        }
+        out.push(
+            `blocker '${id}': staged=${a ?? 'absent'} vs working tree=${b ?? 'absent'}`,
+        );
+    }
+    return out;
 }
 
 /**
@@ -547,9 +625,8 @@ function archive_completed(
         // and invisible in a sweep that only reports what it moved; a MALFORMED
         // one on `[x]` would otherwise archive with an annotation claiming the
         // opposite. Both are named here instead.
-        const guarded = parseGuardedBaselines(
-            fs.readFileSync(path.join(roadmap_root, stats.rel), 'utf-8'),
-        );
+        const roadmapText = fs.readFileSync(path.join(roadmap_root, stats.rel), 'utf-8');
+        const guarded = parseGuardedBaselines(roadmapText);
         if (guarded.length > 0) {
             process.stderr.write(
                 `  ⚠️  ${stats.rel}: ${guarded.length} guarded-baseline step(s) — ` +
@@ -603,11 +680,36 @@ function archive_completed(
         if (changed_only && !(touched as Set<string>).has(old_rel)) {
             continue; // complete, but not this branch's work
         }
+        // The gate above validated the WORKING TREE; `git mv` ships the INDEX.
+        // When they disagree about a blocker, the validated content is not the
+        // content that gets committed — see § the index/working-tree blocker
+        // divergence check above for the measured failure.
+        const divergence = _blockerDivergence(root, old_rel, roadmapText);
+        if (divergence.length > 0) {
+            process.stderr.write(
+                `  ⚠️  ${stats.rel}: staged and working-tree blockers disagree ` +
+                    `(${divergence.length}) — not archived. \`git mv\` would commit ` +
+                    'the staged content, which this sweep never validated. Stage or ' +
+                    'discard the change, then re-run.\n',
+            );
+            for (const d of divergence) {
+                process.stderr.write(`        · ${d}\n`);
+            }
+            continue;
+        }
         const new_rel = `agents/roadmaps/archive/${stats.rel}`;
         const mv = _git_mv(root, old_rel, new_rel, dry_run);
         if (!mv.ok) {
             process.stderr.write(`  ⚠️  could not archive ${old_rel} (mv failed)\n`);
             continue;
+        }
+        // `git mv` moved the index ENTRY, not the working-tree content. Staging
+        // the destination makes what gets committed identical to what the checks
+        // above read — the divergence check refuses a disagreement that exists
+        // BEFORE the move, and this closes one created by an edit between the
+        // move and the commit.
+        if (!dry_run && mv.tracked) {
+            _run(['git', 'add', '--', new_rel], root);
         }
         const refs = _inbound_ref_rewrite(root, old_rel, new_rel, dry_run, mv.tracked);
         // Stage rewritten refs only in a tracked repo; an untracked consumer's
