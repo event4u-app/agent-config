@@ -205,7 +205,7 @@ played.
 > `agents/runtime/council/responses/` — local-only (`agents/runtime/` is
 > gitignored), so the substance is transcribed here rather than linked.
 
-- [ ] **2.0 Build the counter the lock asks for, and read it before 2.1.**
+- [x] **2.0 Build the counter the lock asks for, and read it before 2.1.**
       Added 2026-09-07 by the split council above; it is the lock's own stated
       precondition and both seats want it. Count the emitted intent lines whose
       three slots **disagree** — `mandated-lines.md` § Honest scope defines
@@ -217,9 +217,32 @@ played.
       disagreement = ceremony" figure put to them as invented; what counts as
       ceremony is read off the distribution once one exists. Setting the number
       first is how a measurement gets its answer chosen for it.
-      verify: the counter exists, reports a disagreement rate over a real
-      population of emitted intent lines, and the roadmap records the rate — not
-      a verdict derived from a number picked beforehand.
+      verify (AMENDED 2026-09-08): the counter exists, reports a population
+      count over identified inspectable emission surfaces and — when the
+      population is non-zero — a disagreement rate, and the roadmap records
+      those findings, not a verdict derived from a number picked beforehand.
+      *Original verify, kept visible rather than overwritten:* "the counter
+      exists, reports a disagreement rate over a real population of emitted
+      intent lines, and the roadmap records the rate". Amended because the
+      population measured **zero**, so no rate exists to report; authority is
+      the 2026-09-08 AI council, D2 = closed-with-amendment, 2 seats
+      convergent, which required the original text stay legible so the
+      criterion cannot read as having been met.
+      Done 2026-09-08 — `src/scripts/count_intent_disagreement.ts`; reading
+      published in `agents/evidence/analysis/mandated-line-emission-2026-09-08.md`.
+      **Population 0, rate undefined.** Zero qualifying emissions on every
+      inspected durable surface: 35,516 assistant text blocks across 2,535
+      transcript files, 400 merged PR bodies, full `git log --all`. The counter
+      exits 2 on an empty population rather than 0 — a rate over nothing is not
+      a reading. Sensitivity was proven before the null was trusted: it
+      separates a disagreeing line (overlap 0.111), a line whose slots restate
+      each other (0.667) and a two-slot line. No threshold was set in advance.
+      The finding the lock did not anticipate: the null is **not specific to the
+      intent line**. All five mandated lines read 0 emissions; the four
+      occurrences found anywhere are fenced quotations of the contract's own
+      examples. That is a carrier-reach defect, ruled out of scope for this
+      roadmap but **shipment-gating** by the same council (D3) — no efficacy
+      reading may authorise a sixth line while the first five reach nothing.
 - [ ] **2.1 Add the sixth mandated line.**
       `src/agent-src/contexts/execution/mandated-lines.md` carries five lines
       and the argument for why a line beats a clause. Add `Candidates:` on the
