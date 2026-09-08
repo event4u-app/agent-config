@@ -70,6 +70,39 @@ before-the-proof ordering this round's self-critique flagged.
 
 ## Phase 1 — Define the horizon mechanically
 
+> **Fixture-gated steps, 2026-09-07 — the prose for all of them has landed; the
+> FIXTURES have not.** Steps 1.1, 1.2, 2.1, 2.2 and 2.4 each `verify:` against a
+> *fixture* — "a fixture whose chosen form needs a call-site inventory produces
+> a horizon that stops at the inventory", "three fixtures, one per class,
+> produce three different horizon widths", and so on. Their SUBSTANCE is in
+> `src/rules/notes-first-reasoning.md` as of this change: the enumerated
+> boundary set, the reversibility table with three widths, the reopen-once rule,
+> the cap, and the falsified-`killed-if` revival. **None of the five boxes is
+> ticked, because prose is not a fixture** and ticking them on the prose alone
+> is the silent-green failure this repository has recorded before.
+>
+> **What they need, precisely.** These are behavioural fixtures over agent
+> reasoning, so the harness is the one at `tests/reasoning-layer-eval/` — but
+> neither of its two existing layers fits as it stands. `trigger-fixtures.json`
+> answers *did the right discipline fire*, which is not the question here
+> (the question is *where did the run stop*), and the rubric layer scores whole
+> transcripts on 0-3 dimensions rather than asserting a boundary. A horizon
+> fixture needs a third shape: a prompt whose plan has a KNOWN nearest
+> evidence-producing boundary, and an assertion that the run stopped at it.
+> That is a corpus plus an assertion form, and it is the actual remaining work
+> of Phases 1 and 2 — not a formality on top of the prose.
+>
+> **Why the three that ARE ticked could be.** 1.3, 1.4 and 2.3 verify against
+> the TEXT, not against behaviour, and each was checked rather than assumed:
+> 1.3's field list carries the chosen form in `## Predictions` and
+> `next-commitment` in `## Decisions`, and the projection regenerates
+> byte-identically (`condense.sh --changed` → "Every .md projection matches its
+> source"); 1.4's `grep -rn 'minimum depth|three to five moves'` over
+> `src/rules/`, `src/agent-src/contexts/` and `src/skills/` returns exactly one
+> hit, which is the new ceiling sentence itself — so no artifact requires a
+> minimum depth; 2.3's ladder now names the candidate-list check as stage 0 with
+> the N=3 counting explicitly unchanged.
+
 - [ ] **1.1 Name the boundary set instead of the judgement.**
       A commitment horizon ends at the next observation that produces evidence
       about the choice: a test result · a type or schema inspection · a
@@ -87,7 +120,7 @@ before-the-proof ordering this round's self-critique flagged.
       covers it.
       verify: three fixtures, one per class, produce three different horizon
       widths from the same candidate shape.
-- [ ] **1.3 Add the two fields to the notes, next to the prediction.**
+- [x] **1.3 Add the two fields to the notes, next to the prediction.**
       `## Decisions` in `src/rules/notes-first-reasoning.md` gains
       `next-commitment` (the boundary from 1.1) beside the existing
       `revisit-if`, and the chosen form is named in `## Predictions` so the
@@ -96,7 +129,7 @@ before-the-proof ordering this round's self-critique flagged.
       verify: the rule's field list names the chosen candidate in
       `## Predictions` and the boundary in `## Decisions`, and the projection
       regenerates byte-identically.
-- [ ] **1.4 Keep the depth ladder as a ceiling, never a quota.**
+- [x] **1.4 Keep the depth ladder as a ceiling, never a quota.**
       Looking three to five moves ahead is the maximum for a forcing,
       irreversible or externally observable line. A stateful or cross-layer
       line gets two to three. A quiet reversible line gets one, deliberately.
@@ -123,7 +156,7 @@ before-the-proof ordering this round's self-critique flagged.
       again.
       verify: a fixture with two consecutive contradictions reopens once and
       then escalates through the existing ladder.
-- [ ] **2.3 Route the first failure back to the form, once.**
+- [x] **2.3 Route the first failure back to the form, once.**
       `autonomy-mechanics.md`' ladder sends the first failure to a retry of the
       same approach. Add the prior step: if a candidate list exists for this
       work, the first failure reads it before the retry. If none exists, the

@@ -193,6 +193,18 @@ decision. Engage per [`rdp-gate`](rdp-gate.md).
 The suite states three retry numbers; they are **stages of one escalation
 ladder on the same failing target**, not competing budgets:
 
+0. **Attempt 1 fails → read the candidate list, if one exists, BEFORE retry 1.**
+   Where the run recorded a candidate set for this work
+   ([`notes-first-reasoning`](../../rules/notes-first-reasoning.md)
+   § Reopening), the first failure reads it first: a failure is evidence about
+   the CHOSEN FORM, and retrying the same approach spends the budget without
+   ever reaching the second-best candidate — which is how the mechanism that
+   discovers a form was wrong never routes back to the form. Where no candidate
+   list exists the ladder is unchanged and stage 1 runs immediately.
+   **This adds a branch; it does not move the budget.** Reading the list is not
+   an attempt and is not counted, and the reopen is capped at one per candidate:
+   the second contradiction on the same candidate continues down this ladder
+   rather than reopening again.
 1. **Attempt 1 fails → up to 2 retries of the same approach**
    ([`think-before-action`](../../rules/think-before-action.md) "MAX 2
    RETRIES PER APPROACH") — the soft, agent-side stage: rethink between
