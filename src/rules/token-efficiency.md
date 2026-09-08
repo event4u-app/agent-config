@@ -37,10 +37,65 @@ A CALL THAT DOES NOT READ THE PREVIOUS RESULT IS NOT A SECOND TURN.
 
 The ceiling above forbids repetition; this forbids splitting work that had no
 reason to be split — measured mean batch size **1.01**, i.e. fully serial. The
-discriminator is the dependency, never the count. NOT "write shorter commands":
-the long commands are already the batching. `instruction-only` — nothing can
-observe a call that was not batched. Evidence + the absent-cause finding:
+discriminator is the dependency, never the count. `instruction-only` — nothing
+can observe a call that was not batched. Evidence + the absent-cause finding:
 [`token-efficiency-mechanics`](../contexts/communication/rules-auto/token-efficiency-mechanics.md).
+
+**Corrected 2026-09-08.** This paragraph used to end "NOT \"write shorter
+commands\": the long commands are already the batching." That sentence was
+written about token cost, where it was true, and it is wrong about the layer
+below — see the next section. A batch is N tool calls in ONE block; it was
+never N shell commands in ONE call, and the old wording collapsed the two.
+
+## One command per Bash call
+
+```
+ONE COMMAND PER BASH CALL. NEVER CHAIN WORK STEPS WITH `;`, `&&` OR `||`,
+AND NEVER CARRY STATE FORWARD IN A LEADING `VAR=…` ASSIGNMENT.
+N COMMANDS GO IN N CALLS IN ONE BLOCK — THAT IS WHAT A BATCH IS.
+A CHAINED CALL IS AUTHORIZED ONLY AS STRONGLY AS ITS WEAKEST SEGMENT.
+```
+
+Not a token rule — a permission rule, which is why it is not folded into the
+section above. The host splits a compound command on `&&`, `||`, `;`, `|`,
+`|&`, `&` and newlines and requires **each segment to match the allowlist
+independently**. One unmatched segment sends the whole call down the
+permission path even when every other segment was already allowed. Chaining
+therefore does not save a round-trip; it converts N cheap authorizations into
+one expensive one.
+
+Measured over 40,268 real Bash calls: 97.7 % carry a shell metacharacter, and
+17.9 % have a head token matching no pattern — of those, **5,037 are a leading
+`VAR=…` assignment**, a shape that cannot be written as an allowlist pattern
+at all. That class does not shrink by granting more permission. It shrinks
+only by not writing it.
+
+The substitutions are mechanical and each is also the clearer command:
+
+| Instead of | Write |
+|---|---|
+| `D=/repo; cd $D && git status` | `git -C /repo status` |
+| `V=$(git rev-parse HEAD); echo $V` | two calls, the second using the printed value |
+| `mkdir -p x && cp a x/` | two calls in the same block |
+| `cd sub && npm test` | `npm test --prefix sub` |
+
+**Still fine, and not what this forbids:** a pipe whose segments are all
+ordinary filters (`grep foo file | head`) — that is one command with a filter,
+not two work steps; and a redirect into a file, whose target is checked
+against the file rules on its own. A loop that genuinely cannot be expressed
+without the shell stays a loop — prefer a script file over an inline `for`
+when it recurs.
+
+**Carrier gap, named rather than implied.** This rule is `type: auto`, so its
+triggers match the PROMPT — and nothing in a prompt announces that the next
+tool call will be a chained Bash command. The obligation is therefore
+model-carried at exactly the moment it applies, on every host. `rule-inject`
+is the only `pre_tool_use` concern that could deliver a rule body at tool-call
+time, and it ships default-off (`lean_projection.mode: delivery`) and unbound
+on the default role, so it is not a carrier today. Closing this needs its own
+`pre_tool_use` concern reading `tool_input.command` — deliberately out of this
+change, and stated so a reader does not mistake a written rule for an enforced
+one.
 
 ## Enumerated file sets are ONE operation, not N repetitions
 
