@@ -722,6 +722,22 @@ correction below. The blocker `fetch-is-owner-reserved` records the act itself.
   round convened without the stale framing is precisely the ratification venue
   verdict (b) asks for, so the discrepancy points at the next step rather than
   away from it.
+
+  **The one field below that was REPLACED rather than appended to, with its
+  original text preserved here.** Every other correction on 2026-09-08 sits
+  beside what it corrects; `Resolved when:` could not, because a blocker may
+  carry exactly one live resolution condition and two contradictory ones would
+  be worse than either. The prior lane wrote, verbatim:
+
+  > **Resolved when:** § Frozen protocol carries the pre-upgrade coordinates
+  > above, the corroboration sentence states 207 lines against a pre-upgrade
+  > tree, and the council has recorded whether verdict (c) carries over to the
+  > corrected protocol or needs a new round.
+
+  Its third clause is now satisfied — the council has recorded exactly that —
+  and its first two describe the re-freeze that verdict (b) declined to
+  authorize, so leaving the field as written would have read as though this lane
+  were free to perform them.
 - **Resolved when:** a ratification round (or the owner) has recorded whether
   the corrected coordinates may replace the frozen ones; and if so, § Frozen
   protocol carries the pre-upgrade coordinates as operative and the
