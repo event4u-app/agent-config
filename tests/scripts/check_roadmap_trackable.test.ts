@@ -81,6 +81,42 @@ describe('check_roadmap_trackable — replicated dashboard helpers', () => {
         }
     });
 
+    it('violations_for: a retired status is rejected with the migration diagnostic', () => {
+        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'crt-'));
+        try {
+            // Structurally perfect apart from the frontmatter: the finding has
+            // to be the retired status and not a phase complaint riding on it.
+            const p = path.join(tmp, 'road-to-retired.md');
+            fs.writeFileSync(
+                p,
+                '---\nstatus: carrier\n---\n# Roadmap\n\n## Phase 1 — Setup\n\n- [ ] do the thing\n',
+            );
+            const v = crt.violations_for(p);
+            expect(v).toHaveLength(1);
+            expect(v[0]).toContain('status: carrier');
+            expect(v[0]).toContain('ADR-262');
+            expect(v[0]).toContain('## Blockers');
+        } finally {
+            fs.rmSync(tmp, { recursive: true, force: true });
+        }
+    });
+
+    it('violations_for: a fenced example of the retired status is not a declaration', () => {
+        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'crt-'));
+        try {
+            const p = path.join(tmp, 'road-to-documents-it.md');
+            fs.writeFileSync(
+                p,
+                '---\nstatus: ready\n---\n# Roadmap\n\n' +
+                    '```markdown\n---\nstatus: carrier\n---\n```\n\n' +
+                    '## Phase 1 — Setup\n\n- [ ] do the thing\n',
+            );
+            expect(crt.violations_for(p)).toEqual([]);
+        } finally {
+            fs.rmSync(tmp, { recursive: true, force: true });
+        }
+    });
+
     it('violations_for: dotted sub-phase ids ("1.0", "4.1") are trackable', () => {
         const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'crt-'));
         try {

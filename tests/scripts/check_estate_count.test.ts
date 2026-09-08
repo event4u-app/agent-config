@@ -41,7 +41,6 @@ import {
     countEstate,
     exemptionReason,
     growthClaims,
-    isCarrierText,
 } from '../../src/scripts/check_estate_count.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
@@ -784,82 +783,52 @@ describe('check_estate_count — the skill estate', () => {
 });
 
 // ---------------------------------------------------------------------------
-// The `status: carrier` term, which had no unit coverage at all when it landed.
+// ADR-262 deleted `status: carrier`. What used to be asserted here — the
+// frontmatter-scoped predicate, the zero-credit scoring of a carrier removal,
+// and the count-neutrality of a status flip — has no subject any more. What
+// replaces it is the ONE property the migration has to preserve: the count did
+// not fall when the receivers stopped being excluded from it.
 // ---------------------------------------------------------------------------
 
-/** A carrier, as its frontmatter declares it. */
-const CARRIER_TEXT = '---\nstatus: carrier\n---\n# Roadmap: c\n\n## Phase 1\n\n- [~] **1.1** s\n';
-
-describe('isCarrierText reads the frontmatter, and only the frontmatter', () => {
-    it('accepts the declaration and rejects every near-miss', () => {
-        expect(isCarrierText(CARRIER_TEXT)).toBe(true);
-        expect(isCarrierText('---\ncomplexity: bounded\nstatus: carrier\n---\n# c\n')).toBe(true);
-        expect(isCarrierText(null)).toBe(false);
-        expect(isCarrierText(roadmap('plain'))).toBe(false);
-        expect(isCarrierText('---\nstatus: ready\n---\n# c\n')).toBe(false);
-        // A body mention is documentation, never a declaration.
-        expect(isCarrierText('---\nstatus: ready\n---\n# c\n\nstatus: carrier\n')).toBe(false);
-        // No frontmatter block at all.
-        expect(isCarrierText('status: carrier\n# c\n')).toBe(false);
-    });
-});
-
-describe('classifyDiff scores a carrier removal at zero credit', () => {
-    const nameStatus = (status: string, file: string): string => `${status}\t${file}`;
-    const none = (): null => null;
-
-    it('gives no offset for a deleted carrier, and one for a deleted ordinary roadmap', () => {
-        const deleted = nameStatus('D', 'agents/roadmaps/road-to-x.md');
-        const asCarrier = classifyDiff(deleted, none, () => CARRIER_TEXT);
-        expect(asCarrier.offsets).toEqual([]);
-        const asOrdinary = classifyDiff(deleted, none, () => roadmap('x'));
-        expect(asOrdinary.offsets).toEqual(['agents/roadmaps/road-to-x.md']);
-    });
-
-    it('gives no offset for a carrier ARCHIVED by rename, and one for an ordinary roadmap', () => {
-        const moved = 'R100\tagents/roadmaps/road-to-x.md\tagents/roadmaps/archive/road-to-x.md';
-        expect(classifyDiff(moved, none, () => CARRIER_TEXT).offsets).toEqual([]);
-        expect(classifyDiff(moved, none, () => roadmap('x')).offsets).toEqual([
-            'agents/roadmaps/road-to-x.md',
-        ]);
-    });
-
-    it('defaults to the pre-carrier scoring when the caller supplies no base reader', () => {
-        // The documented default of `readBase`: a caller that cannot produce a
-        // pre-image keeps the old answer rather than silently getting a new one.
-        const deleted = nameStatus('D', 'agents/roadmaps/road-to-x.md');
-        expect(classifyDiff(deleted, none).offsets).toEqual(['agents/roadmaps/road-to-x.md']);
-    });
-});
-
-describe('countEstate counts a carrier as the estate it is', () => {
-    it('is unchanged by a status flip in either direction', () => {
+describe('countEstate after the carrier status was deleted', () => {
+    it('counts a roadmap that would once have been excluded for its status', () => {
         const repo = initRepo(3);
         const before = countEstate(repo).active_roadmaps;
-        write(repo, 'agents/roadmaps/road-to-2.md', CARRIER_TEXT);
-        expect(countEstate(repo).active_roadmaps).toBe(before);
-        write(repo, 'agents/roadmaps/road-to-2.md', roadmap('R2'));
-        expect(countEstate(repo).active_roadmaps).toBe(before);
-    });
-
-    it('counts an added carrier as growth rather than as free estate', () => {
-        const repo = initRepo(3);
-        const before = countEstate(repo).active_roadmaps;
-        write(repo, 'agents/roadmaps/road-to-fresh-carrier.md', CARRIER_TEXT);
+        // The exact frontmatter the deleted status used to wear. It is estate
+        // now, as it was before — the add-back that used to produce that answer
+        // is gone and `collect()` produces it directly.
+        write(
+            repo,
+            'agents/roadmaps/road-to-receiver.md',
+            '---\nstatus: carrier\n---\n# Roadmap: r\n\n## Phase 1\n\n- [~] **1.1** s\n',
+        );
         expect(countEstate(repo).active_roadmaps).toBe(before + 1);
     });
 
-    it('leaves a parked carrier out of open_blockers, exactly as it leaves a draft out', () => {
+    it('counts a parked roadmap\'s blockers whatever its status says, short of draft', () => {
         const repo = initRepo(1);
         const before = countEstate(repo).open_blockers;
         const withBlocker = roadmap('P', { blockers: 2 });
-        write(repo, 'agents/roadmaps/later/parked-carrier.md', withBlocker);
+        write(repo, 'agents/roadmaps/later/parked.md', withBlocker);
         expect(countEstate(repo).open_blockers).toBe(before + 2);
-        write(
-            repo,
-            'agents/roadmaps/later/parked-carrier.md',
-            `---\nstatus: carrier\n---\n\n${withBlocker}`,
-        );
+        write(repo, 'agents/roadmaps/later/parked.md', `---\nstatus: carrier\n---\n\n${withBlocker}`);
+        expect(countEstate(repo).open_blockers).toBe(before + 2);
+        // `draft` is the one status that still hides a file from both counts.
+        write(repo, 'agents/roadmaps/later/parked.md', `---\nstatus: draft\n---\n\n${withBlocker}`);
         expect(countEstate(repo).open_blockers).toBe(before);
+    });
+});
+
+describe('classifyDiff scores every removal alike', () => {
+    const none = (): null => null;
+
+    it('offsets a deleted roadmap regardless of what its frontmatter said', () => {
+        const deleted = 'D\tagents/roadmaps/road-to-x.md';
+        expect(classifyDiff(deleted, none).offsets).toEqual(['agents/roadmaps/road-to-x.md']);
+    });
+
+    it('offsets a roadmap archived by rename', () => {
+        const moved = 'R100\tagents/roadmaps/road-to-x.md\tagents/roadmaps/archive/road-to-x.md';
+        expect(classifyDiff(moved, none).offsets).toEqual(['agents/roadmaps/road-to-x.md']);
     });
 });

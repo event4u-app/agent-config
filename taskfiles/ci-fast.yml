@@ -786,10 +786,10 @@ tasks:
     desc: "Fail on comments in changed source that carry a non-English language, an analysis-report structure, or the provenance of the code — the carrier `code-comment-discipline` never had, and the one the `Code comments English` clause of `language-and-tone` names a `.md`-only validator for. Diff-scoped against origin/main"
     cmd: ./scripts-run src/scripts/lint_code_comments --base origin/main
 
-  lint-carrier-integrity:
+  lint-deferral-integrity:
     silent: true
     desc: "Fail when a deferral carried out of an archived roadmap has lost its receiver — deleted, renamed, re-parented, skipped, or archived with open steps. Walks from the archived parent, which is the durable record, because the archival sweep validates a carry exactly once and never sees the pair again"
-    cmd: ./scripts-run src/scripts/lint_carrier_integrity
+    cmd: ./scripts-run src/scripts/lint_deferral_integrity
 
   lint-never-silent:
     silent: true
