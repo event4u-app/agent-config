@@ -152,6 +152,30 @@ migration diagnostic naming this ADR. Removal is a one-way door and says so.
   it. It is `type: auto`: the always-rule extended budget stands at
   60,252 / 60,254 characters and cannot take a tenth kernel rule.
 
+## Evidence
+
+Every row is verifiable in the tree at `0ee772b9d`, the commit this record was
+written against.
+
+| Claim | Where |
+|---|---|
+| Nothing enforced the carrier stop | No rule file, command, hook or lint reads `status: carrier` to stop a run. The five readers are `update_roadmap_progress.ts:99`, `check_roadmap_trackable.ts:60,104,185`, `lint_plan_risk_register.ts:332-357`, `check_estate_count.ts:460,527` and `lint_carrier_integrity.ts:336-366` — dashboard, trackability, risk register, estate count, carry integrity. None of them halts execution |
+| Both drain commands include carriers in their corpus | `src/domains/product-basic/roadmap/process-full/command.md:96-98` (*"non-draft roadmaps directly under `agents/roadmaps/`"*) and `src/domains/product-basic/roadmap/next/command.md:60-62` (excludes `template.md`, `archive/`, `skipped/`, `later/`, `status: draft`). Neither names `carrier` |
+| The running command forbade the stop that was taken | `src/domains/product-basic/roadmap/process-full/command.md:262-291` — FORBIDDEN NON-HALT REASONS lists *"this step looks human-gated"* and *"a maintainer should do this" when the agent can perform the same action* |
+| The tree already lints for the shape, and misses body prose | `src/scripts/lint_roadmap_complexity.ts:306` flags `human review (required\|needed\|gate)`; `_check_human_gate_steps` (`:334`), `_check_human_gate_phase_headings` (`:351`) and `_check_human_gate_exit_criteria` (`:366`) scan `- [ ]` lines, headings and criteria blocks. All three carrier stops lived in body prose |
+| Deleting the status loses no assertion | `agents/evidence/analysis/carrier-assertion-migration-audit-2026-09-08.md` — twelve assertions enumerated, ten migrated, two deleted with a stated reason |
+| The A5 branch was already redundant | `lint_carrier_integrity.ts:294-304` justifies itself with *"none of which is an OPEN step"*. Measured against the corpus: the two live carriers held 9 and 38 `- [ ]` open steps and zero `[~]`, so `:305-312` would have caught both |
+| The estate add-back existed only for flip-neutrality | `src/config/estate-count-budget.json:10` — *"flipping one roadmap's frontmatter to status: carrier measured active_roadmaps 3 -> 2 … any roadmap can be laundered out of the count by adding one word"* |
+| The council reached Option A on both seats | `agents/evidence/analysis/council-2026-09-08-carrier-status-redefinition.md` — full transcription of both seat responses, including seat 2's dissent on the discriminator, which this record adopts |
+| The maintainer overruled the prior ruling | The instruction of 2026-09-08, quoted in § Context. Owner-directed; `provenance.kind: human`, `decision_makers: [owner]` |
+
+**What this record does not establish.** It does not measure whether any agent
+behaves differently after the change. The prose class is gated by
+`lint_self_imposed_gates`; the disposition class — a run that reads a blocking
+rule, stops, and writes a defensible record about why — is observable by nothing,
+and the 2026-09-08 stop produced a green pipeline and a merged PR. That gap is
+stated in the companion rule rather than closed here.
+
 ## Alternatives considered
 
 - **Keep `carrier`, delete only the prose.** Rejected: the token would still
