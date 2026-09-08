@@ -71,6 +71,40 @@ parent_roadmap: road-to-inbox-harvest-2026-08-e-council-topology-evidence
 > closed it, so the pointer that stood here is deliberately not replaced with
 > another.
 
+## Drain-run disposition, 2026-09-08 — NOT EXECUTED, and this is the record
+
+An autonomous drain run instructed to carry **every** active roadmap under
+`agents/roadmaps/` to completion reached this file and **stopped**. This section
+is what it recorded instead of executing 38 carried items.
+
+**Council verdict: (a) No — a `status: carrier` roadmap is human-gated and an
+autonomous run may not execute, promote, close, or advance it.** Two seats, deep
+tier, unanimous. Decided alongside `road-to-continuity-retirement-sequencing`,
+whose disposition section carries the full reasoning; only what is specific to
+**this** file is recorded here, so the two records cannot drift.
+
+**What is specific here: this file has no promoting probe at all** — its sole
+stated transition is *"a human flips it to `ready`"*. The council was asked
+directly whether that absence makes the file **more** protected or **less**,
+because the two readings are opposite and a run must not pick the convenient one.
+
+**Both seats: MORE protected.** A file with a probe at least offers an objective
+condition a future reader can evaluate. This one offers none, so there is no
+autonomous transition to satisfy — "a human flips it" is the whole path, and
+reading an absent condition as an open door inverts what the absence means.
+
+**The measured-null exit is not available here either.** The run may collect
+evidence bearing on whether these 38 items are still worth doing and recommend
+that outcome; it may not adopt it. No such recommendation is made: the run did
+not read the three stubs these groups name, so it has no evidence about the
+items' current worth and says so rather than inferring one from the file's age.
+
+*Reopening:* a human flips `status` to `ready`. Nothing else.
+
+Council record: `2026-09-08-carrier-roadmaps-in-an-autonomous-drain.md` under
+`agents/runtime/council/responses/` — local-only, since `agents/runtime/` is
+gitignored, so the substance is transcribed here and in the sibling carrier
+rather than linked.
 ## Why one receiver rather than three, and the council split behind it
 
 AI council 2026-09-01, members **anthropic (claude-sonnet-4-5)** and **openai
