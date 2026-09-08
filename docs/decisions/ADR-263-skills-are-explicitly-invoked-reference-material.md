@@ -39,7 +39,7 @@ covering an autonomous drain run; see § Authority.
 
 ## Context
 
-`agents/roadmaps/road-to-the-skill-surface-framing-choice.md` held an open,
+`agents/roadmaps/archive/road-to-the-skill-surface-framing-choice.md` held an open,
 owner-reserved menu of two substantive options plus a publication option. Option
 C (publish the zero with its reason) was taken on 2026-09-07 and did not consume
 the menu. A and B stayed open, and their staying open also held the first of five
@@ -200,5 +200,5 @@ this record should be read at that strength.
   gitignored and auto-pruned, so a path here would rot into a broken reference
   for every reader. Its substance is § Context and § The finding that decided it.
 - `agents/evidence/analysis/skill-trigger-frontmatter-has-no-host-reader-2026-09-08.md`
-- `agents/roadmaps/road-to-the-skill-surface-framing-choice.md`
+- `agents/roadmaps/archive/road-to-the-skill-surface-framing-choice.md`
 - `docs/CLAIMS.md:245` — the claim this decision corrects.
