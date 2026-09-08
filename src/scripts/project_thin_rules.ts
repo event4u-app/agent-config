@@ -246,8 +246,11 @@ export function is_thin_entry(text: string): boolean {
 /**
  * Where a stub tells a reader the body actually is.
  *
- * FIXED 2026-09-07: this was `../../.agent-src.uncondensed/rules/`, a directory
- * ADR-051 retired. It exists in no checkout, so EVERY stub's fallback pointer
+ * FIXED 2026-09-07: this pointed into the uncondensed source tree ADR-051
+ * retired — the literal path is deliberately NOT reproduced here, because
+ * `check_no_uncondensed_refs` matches the string and cannot tell a repair
+ * record from a live reference; `git log -S` on this file finds the old value.
+ * It exists in no checkout, so EVERY stub's fallback pointer
  * resolved to nothing — invisible under `delivery`, where the hook loads the
  * body from `dist/agent-src/rules` and never follows this link, and total under
  * `thin`, where the pointer is the only path to the body there is.
