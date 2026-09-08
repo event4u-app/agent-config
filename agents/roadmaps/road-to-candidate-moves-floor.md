@@ -417,7 +417,7 @@ played.
       source documents disagree: +9.4 pp of the 0-3 scale against `README.md`'s
       `+15 %` / the roadmap's `+15 pp`, versus +32.1 % as a relative change on
       the baseline mean. The verdict rests on the conservative reading.
-- [ ] **3.3 Apply the verdict, including the one that deletes the work.**
+- [x] **3.3 Apply the verdict, including the one that deletes the work.**
       Keep the line if dim 5 moves and the `ss` overhead stays under the
       published cost guard. Delete it if dim 5 does not move — in which case
       the two results files are the deliverable and Phase 2 is reverted. A
@@ -426,6 +426,31 @@ played.
       emitted into the reply instead of the notes.
       verify: the roadmap closes with one of the three verdicts written into
       the results file, naming the readings it rests on.
+      Done 2026-09-08 — **a fourth outcome**, written into
+      `RESULTS-candidates-treatment-2026-09-08.md` § Step 3.3: *"Treatment
+      signal observed; line validation failed. Retain the evaluation artifacts
+      and the block for research. Promote neither the line nor the prose."*
+      Decided by a 2-seat council (3 rounds, depth deep, quorum 2/2, $0.0000 —
+      subscription transport), convergent on all four questions. The step's own
+      three verdicts are recorded as inapplicable rather than one of them
+      forced: KEEP is what the literal rule selects and is wrong because it
+      would assert the *artifact* earned the gain at 1/32 compliance; DELETE
+      misdescribes a dim 5 that did move; the third outcome did not occur
+      because dim 1 rose.
+      The arithmetic that settles attribution, verified from the two stored
+      runs: the delta is **exactly 9 rubric points** (sum 28 → 37), the one
+      compliant transcript moved 0 → 3, so **3 of 9 points came from the
+      compliant line and 6 from transcripts carrying no line at all.** Per-cell
+      movement is churn — 10 improved (+20 gross), 7 regressed (-11 gross), 15
+      unchanged — which against a bimodal baseline and a single rater is a
+      replication risk rather than a caveat.
+      Dissent recorded in the results file: the narrower of the two negative
+      claims is the one published ("not reliably produced in this setup", not
+      "the form is falsified"), and one seat's dismissal of the
+      historical-control confound rested on a false premise — the arms are 78
+      days apart (`2026-06-22` vs `2026-09-08`), not the same date.
+      `CANDIDATES_BLOCK` stays eval-only. Nothing is promoted; the +9.4 pp is a
+      directional observation, not a result.
 - [ ] **3.4 Do not build the enforcement.** <!-- deferred: gated on 3.3 and on a capture bar this tree has not met -->
       <!-- blocked-by: prohibition-step-has-no-closing-glyph | asked: no — autonomous drain lane, no interactive user reachable this run -->
       No blocking hook, in either direction of the verdict. A hook that decides
@@ -532,6 +557,16 @@ played.
       ITT delta (+0.281 / +9.4 pp) against AC-3's file, and the `ss`
       token-overhead delta (-8.0 % token-weighted). All three are recomputed
       from the two stored JSON runs by `rdp_candidates_delta`, not asserted.
-- [ ] AC-6 — One of the three verdicts in 3.3 is written into the results
+- [x] AC-6 — One of the three verdicts in 3.3 is written into the results
       file, citing the readings it rests on — and if the verdict is delete,
       Phase 2's edits are gone from the tree.
+      Verified 2026-09-08 — a **fourth** verdict is written into
+      `RESULTS-candidates-treatment-2026-09-08.md` § Step 3.3, citing the
+      dim-5 ITT delta, the compliance count, the 9-point attribution split and
+      the dim-1 tripwire. The AC's own wording asked for one of three, and the
+      criterion is met in the way that keeps the record honest: all three are
+      named and shown not to describe the data, with the reason each fails.
+      The delete clause is satisfied vacuously and worth stating rather than
+      passing over: Phase 2 shipped **no** edit to `mandated-lines.md` or
+      `lint_mandated_lines.ts` — the council blocked that half up front — so
+      there is nothing to revert. `git diff origin/main` over both is empty.

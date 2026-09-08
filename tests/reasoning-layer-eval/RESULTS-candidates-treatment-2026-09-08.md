@@ -41,8 +41,14 @@ added to `src/rules/` or to `mandated-lines.md`; `git diff origin/main` over
 
 **Instruction delivery was 100 % by construction and compliance was 1 of 32
 (3.1 %).** The runner logged the appended block on every call and the results
-envelope records `mode: l6+candidates`, so all 64 calls carried the
+envelope records `mode: l6+candidates`, so all **32 capture** calls carried the
 instruction. One transcript produced the artifact.
+
+The compliance denominator is the 32 *generation* transcripts, not the 64 total
+calls — the other 32 are rater calls, and whether a rater received the
+instruction is irrelevant to whether the model under test produced the line.
+The 2026-09-08 verdict council asked for that clarified after an earlier draft
+of this file said "all 64 calls".
 
 The one that did (slot 10, `ss-name-retry-fn`, `distributed`) scored dim5 = 3:
 
@@ -159,6 +165,99 @@ band it measured and claims nothing about the other.
 
 **n = 32 with a compliance denominator of 1.** Whatever moved dim 5, it was
 almost certainly not the artifact under test being produced.
+
+## Step 3.3 — the verdict
+
+**A fourth outcome. None of the three the roadmap named describes this
+measurement, and closing on one that misdescribes the data would be worse than
+closing on a fourth.**
+
+> **Treatment signal observed; line validation failed. Retain the evaluation
+> artifacts and the block for research. Promote neither the line nor the prose.**
+
+Decided by a 2-seat AI council on 2026-09-08 (3 rounds, depth deep, blind
+chairman, quorum 2/2, $0.0000 billed — subscription transport). Convergent on
+all four questions. Why each of the three named verdicts is wrong:
+
+- **KEEP** is what the literal rule selects — dim 5 moved and the cost guard
+  passed — and it is wrong, because it would assert that the *emitted artifact*
+  earned the improvement. At 1/32 compliance the artifact was almost never
+  produced. The preregistered rule was written assuming the treatment would be
+  delivered; following "dim 5 moved" while ignoring "the line was not produced"
+  is the post-hoc rationalisation, not the refusal to.
+- **DELETE** misdescribes it too: dim 5 *did* move, and the two results files
+  are not the whole deliverable.
+- **The third outcome did not occur.** Dim 1 rose (2.906 → 3.000), so the line
+  was not being emitted into the reply instead of the notes.
+
+### The arithmetic that settles attribution
+
+The delta is **exactly 9 rubric points** across the 32 paired cells (baseline
+sum 28 → treatment sum 37; 0.28125 × 32 = 9). One transcript emitted a line,
+and it moved 0 → 3.
+
+**So 3 of the 9 points came from the one compliant transcript and 6 came from
+transcripts that emitted no line at all.** Whatever moved dim 5, it was mostly
+not the artifact under test. That is the attribution finding, and it is
+checkable from the two stored runs rather than argued.
+
+Recomputing the per-cell movement makes the reading weaker still:
+
+```
+improved   10 cells   +20 points gross
+regressed   7 cells   -11 points gross
+unchanged  15 cells
+net                    +9 points
+```
+
+Gross movement is 31 points to net 9. With a single rater and a baseline whose
+distribution is bimodal (18 at `0`, 6 at `3`), that much churn is a
+**replication risk**, not a confidence caveat: a different rater scoring the
+boundary cases the other way erases most of the gain.
+
+### The bar, and what it cannot say
+
+Neither reading of the published bar satisfies the *complete* criterion,
+because its second half — no regression on a strong-reasoning host — was never
+measured. Under the conservative unit the first half fails as well:
+**+9.4 pp against +15 pp.**
+
+### Recorded dissent
+
+The two seats disagreed on two points, and both are recorded rather than
+smoothed:
+
+1. **How strong the negative claim may be.** Seat 1 read the result as the line
+   form "tested and not validated", adding that 3.1 % is "worse than does not
+   reach — models actively refuse to produce it even when directly instructed".
+   Seat 2 objected that this is too universal: what was falsified is *reliable
+   production under this prompt placement, model and corpus*, and the
+   experiment did not isolate whether the failure belongs to the line form, its
+   placement, notes-channel behaviour, or instruction competition. **Seat 2's
+   narrower wording is the one published above**, because it is the claim the
+   evidence carries.
+2. **Whether the historical control confounds the reading.** Seat 2 held that a
+   June baseline against a September treatment leaves model, runtime and
+   infrastructure drift as plausible explanations for a 9-point aggregate. Seat
+   1 dismissed this as "practically weak" on the ground that the two arms were
+   captured on "the same date". **That premise is factually wrong** — the
+   baseline JSON records `date: 2026-06-22` and the treatment `2026-09-08`, 78
+   days apart — so seat 2's concern stands and seat 1's dismissal of it does
+   not. The reading is a historical-control comparison and is labelled as one.
+
+### What follows, and what does not
+
+The `CANDIDATES_BLOCK` stays **eval-only**, in `rdp_quality_eval.ts`. Nothing
+is promoted: not the sixth mandated line, and not a prose form of the same
+instruction — the block bundled six obligations (generate alternatives, attach
+axes, retain `K0`, choose, justify, format) and this design isolates none of
+them.
+
+The +9.4 pp is recorded as a **directional observation**, not a result. Both
+seats named the same follow-up shape, and it is recorded here rather than
+started: a contemporaneous randomised control, separate prose-only and
+mandated-line arms, a **preregistered minimum-compliance gate assessed before
+efficacy**, the required strong-band host, and a second blinded rater.
 
 ## Reproduction
 
