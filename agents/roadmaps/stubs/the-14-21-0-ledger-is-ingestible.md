@@ -5,6 +5,36 @@ review_by: 2026-10-07
 
 # Stub: nothing runs the ingest step, so the ledger goes missing once per release
 
+> **Arrival 5 — 2026-09-09, release 14.23.0, instance CLOSED, and option 1's open
+> question is now ANSWERED.** Found while settling CI on a roadmap-only PR
+> (#1971) that inherited the red from `main`. Count: **5 arrivals, 5 instance
+> fixes, 0 mechanism fixes.** The instance closure is
+> `agents/evidence/release-findings/14.23.0.json` — 49 findings ingested, all 13
+> blocking ones dispositioned first-hand (11 `false_positive`, 1 `fixed`, 1
+> `accepted_risk`), which reproduces the 14.21.0 and 14.22.0 mix and is the third
+> independent measurement of it.
+>
+> **What this arrival adds that the four before it could not.** § What closes it,
+> option 1, asks to "establish whether that invocation can see an un-ingested
+> artifact, because if it can, the gate is already in the right place and only
+> its trigger is wrong." It was established, and the answer is neither half:
+> **the gate is already in the right place, runs on the release PR exactly as
+> option 1 hoped, and always runs BEFORE the evidence it reads exists.** On
+> `release/14.23.0`, job `102484975847` ("Blocking review findings
+> dispositioned") ran 13:15:27 → 13:15:45 and printed `scanned: 0`; the
+> `self-review-gate` machine block it reads landed as a PR comment at **13:21:36**
+> — six minutes later. The earlier run repeats it: release-validation finished
+> 12:31:52, comment 12:36:48. The job is fast and the model call is slow, so the
+> race is not close and not intermittent; it is structural.
+>
+> So option 1 as written — move the trigger — buys nothing, because the trigger
+> is already right. What the measurement replaces it with is **1a: order the two
+> jobs, or fail closed when the self-review has not yet reported.** `scanned: 0`
+> is currently indistinguishable from "no findings" and from "the review has not
+> spoken yet", and the second is the state it is always in. That is a workflow
+> ordering change on the release path, so it stays an owner call — but it is now
+> a one-line question rather than an investigation.
+
 > **Stub — not active work.** The 14.21.0 instance is CLOSED in this change: the
 > artifact was pulled, all 40 findings ingested and all 10 blocking ones
 > dispositioned, and `check_finding_dispositions` is green. What is NOT closed is
@@ -12,7 +42,9 @@ review_by: 2026-10-07
 > by [`/analyze:inbox`](../../../src/domains/analysis-workbench/analyze/inbox/command.md)
 > on an unrelated round, from a CI red inherited from `main`.
 
-> **Arrivals:** 4 — latest 2026-09-08 (release 14.22.0, **instance CLOSED the same
+> **Arrivals:** 5 — the fifth is the block above (2026-09-09, release 14.23.0);
+> the four this paragraph counts are unchanged and it is kept as written.
+> Latest of those four: 2026-09-08 (release 14.22.0, **instance CLOSED the same
 > day by PR #1947**, `71510872c` — see the arrival-4 note, corrected below), see
 > below); earlier: 2026-09-07 (release 14.21.0, closed in the change that created
 > this stub), [`road-to-the-unwritten-ledger.md`](../archive/road-to-the-unwritten-ledger.md)
