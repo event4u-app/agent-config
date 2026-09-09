@@ -40,7 +40,9 @@ estate_offset_exempt: "Offsets nothing at promotion. Phase 7 dispositions `later
 
 ## Goal
 
-Claude Code sessions start with at most 40,000 standing tokens (rules bucket ≤ 20,000)
+Claude Code sessions start with at most 40,000 standing tokens (rules bucket
+≤ 25,375 — **superseded once, upward, from 20,000 on 2026-09-09 by ADR-272**; the
+original figure is kept here rather than rewritten away)
 instead of 138,200, every host not in `lean_projection.hosts` keeps a rule tree
 byte-identical to `eager-all`, and nothing is removed from any install — witnessed by
 `check_preamble_payload_budget` before and after, and by a per-host tree diff that is empty
@@ -597,10 +599,10 @@ Defects this roadmap repairs:
       corpus". Flipping the constant would make an unparseable settings file thin the corpus
       with nobody choosing to. So they match the ADR by the ADR saying which is which,
       rather than by both carrying the same string.
-- [ ] **4.2 Flip this repo first.** `.agent-settings.yml` → `delivery`/`[claude-code]`; full
+- [x] **4.2 Flip this repo first.** `.agent-settings.yml` → `delivery`/`[claude-code]`; full
       gate set green.
-      verify: `check_preamble_payload_budget` on the repo reports rules ≤ 20,000 tok, total
-      ≤ 40,000.
+      verify: `check_preamble_payload_budget` on the repo reports rules ≤ 25,375 tok
+      (**superseded from 20,000 by ADR-272**), total ≤ 40,000.
       **NOT MET as written, and left unticked rather than reported as done. 2026-09-07.**
       The repo IS flipped (`.agent-settings.yml` → `delivery` / `[claude-code]`, regenerated,
       `.claude/rules` holds stubs) and the full gate set below IS green. The verify fails on
@@ -687,6 +689,37 @@ Defects this roadmap repairs:
       visible and marked superseded rather than rewritten as though it never existed.
       Not attempted: raising `design_ceiling` is K4, cutting rule prose is K5, and
       descoping this step to a carrier is K9.
+      **CLOSED 2026-09-09 by ADR-272 — option (a), the owner having delegated the
+      decision this step had reserved.** Both seats chose (a) across two runs; the first
+      lost the openai seat to an `ENOBUFS` transport error rather than a refusal, and the
+      retry recovered it. Their earlier declinations named the missing thing precisely —
+      anthropic's recommendation was *"conditional on you delegating at all"*, openai's was
+      *"valid only as an explicit repository-owner waiver"* — so the substance never
+      changed, only the authority.
+      The ceiling is **25,375 tok**, `ceil(24,166 × 1.05)` under the 5 % headroom policy.
+      Measured 24,166 passes it with 1,209 tok of headroom; the binding 40,000 aggregate is
+      unchanged and still passes at 39,758.
+      **Recorded as an UPWARD supersession, because that is what it is.** An earlier draft
+      called `20,000 → 25,375` a downward-only ratchet and openai refused the framing:
+      *"It is plainly an upward change. Owner authorization may make that amendment
+      legitimate, but it does not make the direction downward."* 25,375 is the new
+      downward-only ratchet from here.
+      **A correction to the council's own execution, found by checking its premise against
+      the tree.** Both seats proposed writing a `rules_bucket_ceiling` key into
+      `src/config/preamble-payload-budget.json`. That key does not exist and no gate reads
+      one: `check_preamble_payload_budget.ts` contains neither `20000` nor any rules-bucket
+      field, and the figure lives only in this file — the Goal and this verify line. Both
+      seats flagged the risk themselves without being able to settle it from the material
+      they had (openai: *"neither reviewer's invented JSON property names or shell commands
+      should be adopted without repository inspection"*). The inspection was done. So the
+      execution is these two prose amendments plus ADR-272, and no config edit — writing an
+      unread key would have manufactured a governance surface that looks enforced and is
+      not.
+      **What this does NOT close, stated rather than implied:** the rules bucket now carries
+      a ceiling nothing enforces deterministically. It was in that state at 20,000 too, so
+      this step neither opened the gap nor closes it; closing it means giving
+      `check_preamble_payload_budget` a rules-bucket limb, which is outside this change.
+
 - [x] **4.3 Flip the package default** in a separate PR containing only the default change,
       the ADR link and regenerated projections.
       verify: fresh install fixture on a Claude Code host measures ≤ 40,000 total; on a
@@ -780,6 +813,35 @@ Defects this roadmap repairs:
         criterion. It is not a demonstrated 30,500-token reduction mechanism."*
       Which mechanism, and whether the date moves at all, is yours. Neither seat proposed
       leaving it as it is, and both named the 2026-11-10 red as the thing to avoid.
+      **UPDATE 2026-09-09 — the council was asked again under the owner's delegation, and
+      it SPLIT. Recorded as an escalation rather than resolved by picking a side.**
+      Both seats agree on the thing that settles this step's shape: **a date extension does
+      not close 4.4.** openai, verbatim: *"Step 4.4 remains open until all four host modes
+      and their enforced ceilings land and the source grace is actually retired."* An
+      extension amends the deadline; it is not the retirement the step names. So whatever
+      the owner decides about the date, this box stays `[ ]` until the migration lands.
+      **Where they split: the date.** anthropic endorsed **2026-12-15** (96 days, with a
+      2026-11-28 checkpoint and an explicit checkpoint-failure protocol). openai proposed
+      **2027-02-10** with a 2027-01-10 CI warning — while also calling a three-month choice
+      *"an arbitrary policy choice, not an evidence-derived deadline"*, which lands on its
+      own number as much as on the other. Neither date comes from a delivery estimate,
+      because nobody has one.
+      **Owner call, on a ground already recorded.** Extending `grace_end_date` is a
+      relaxation in the TIME dimension, which anthropic itself classified owner-reserved —
+      and a split council does not acquire authority a converged one was denied.
+      **THE QUESTION, for the owner:** `grace_end_date` is 2026-11-10. On that date the
+      gate compares ~138,474 against `design_ceiling` 107,646 and reds every pull request
+      whether or not `grace_ceiling` is deleted, so doing nothing is deferral rather than
+      safety. Move it to 2026-12-15 (tighter, named checkpoint), to 2027-02-10 (more
+      runway, CI warning a month out), or neither?
+      **Two facts the next reader should not re-derive.** `grace_ceiling` is **138490**,
+      not the 138,474 that circulated in the council prose — that number came from this
+      roadmap's own text and the config is the authority. And the step's instruction to set
+      `baseline_tokens` to "the measured post-flip total" stays invalid whatever the date
+      does: `baseline_tokens` is 102,520 against a measured ~138,474, so following it would
+      RAISE a baseline under language calling it a reduction. Both seats said so
+      independently.
+
 - [x] **4.5 Rollback fixture.** flip → `eager-all` → `diff -r` against a never-flipped tree
       is empty; documented in `docs/contracts/rule-router.md`.
       verify: fixture green.
@@ -929,8 +991,8 @@ Defects this roadmap repairs:
       commit already carrying a default flip, an ADR and a schema repair would make a
       revert of any one of them a revert of all. `lint_roadmap_later_disposition` is green
       as it stands, so nothing is red while this waits.
-- [ ] `check_preamble_payload_budget` on a Claude Code install: total ≤ 40,000 tok, rules
-      ≤ 20,000.
+- [x] `check_preamble_payload_budget` on a Claude Code install: total ≤ 40,000 tok, rules
+      ≤ 25,375 (**superseded from 20,000 by ADR-272**).
       SPLIT VERDICT 2026-09-07 — total limb MET, rules limb MISSED, and left unticked
       because a criterion with two limbs is not met by one. On a clean consumer-shaped root:
       total **39,758 ≤ 40,000** (rules 24,166 + skills 14,846 + CLAUDE.md 746); rules
@@ -973,6 +1035,15 @@ Defects this roadmap repairs:
       derived from the mechanism and the result is COMPLETE on it — every rule that can be
       reachable is. The four that cannot are covered by 2.2's eager fallback instead, which
       is what that step exists for.
+      **MET 2026-09-09 on the superseded criterion, and ticked on that basis rather than
+      on the original.** The rules limb was the whole of what was missing; ADR-272 moves it
+      to 25,375 under the owner's delegation, and the measured 24,166 clears it with 1,209
+      tok of headroom. The total limb was already met at 39,758.
+      Stated plainly so nobody reads this tick as the tree having shrunk: **it did not.**
+      The measurement is unchanged and the criterion moved. What justifies the move is in
+      ADR-272 — two E2 clauses that cannot both hold, with the aggregate ceiling holding
+      either way — not a reduction that happened here.
+
 - [x] 119 rule files, 299 skills, all personas, contexts and commands still installed.
       MET 2026-09-07. Nothing was removed anywhere: `dist/agent-src/rules` holds 119 `.md`
       files, `src/skills` holds 299 directories, and the flipped-root measurement shows
