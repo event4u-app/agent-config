@@ -137,6 +137,27 @@ const _READ_ONLY_VERBS: ReadonlySet<string> = new Set([
     'stat', 'tail', 'test', 'tr', 'type', 'uniq', 'wc', 'which', 'yq',
 ]);
 
+/**
+ * Per-verb markers that turn one of the verbs above into a writing one.
+ *
+ * FOUR OF THE ALLOWLISTED VERBS CAN CREATE, and the first version of this
+ * allowlist said they could not. `sed -i` edits in place and `sed`'s `w`
+ * command opens a file; `find -exec` runs anything and `-fprint` writes;
+ * `awk`'s `system()` and `print >` do both. A neutral review of this change
+ * probed all of them and every one came back allowed where the token scan this
+ * commit replaced had blocked it — a coverage regression, not a false
+ * positive, which is the direction that matters for a blocking guard.
+ *
+ * Scoped per verb rather than as one combined pattern, because the obvious
+ * combined form checks for `-i` and `grep -i` is a read: a shared regex would
+ * reintroduce the false positive at the other end.
+ */
+const _WRITING_MARKERS: ReadonlyMap<string, RegExp> = new Map([
+    ['sed', /(?:^|\s)(?:-[a-zA-Z]*i|--in-place)(?:\b|=)|(?:^|['"\s;])[wW]\s/],
+    ['find', /(?:^|\s)-(?:exec|execdir|ok|okdir|delete|fprint|fprintf|fls)(?:\b|$)/],
+    ['awk', /\bsystem\s*\(|\bprintf?\b[^|]*>/],
+]);
+
 /** The command word of one segment, without its directory prefix or arguments. */
 function _verbOf(segment: string): string {
     const head = segment.trim().split(/\s+/)[0] ?? '';
@@ -158,7 +179,13 @@ function _redirectTargets(segment: string): string[] {
     const re = /(?:^|[^0-9<>&])[0-9]*>>?\s*([^\s|&;<>]+)/g;
     let m: RegExpExecArray | null = re.exec(segment);
     while (m !== null) {
-        const target = m[1];
+        // The character class stops at whitespace and separators but NOT at a
+        // quote, while both inbox regexes require `agents` at a `/` or at the
+        // start of the string. So `> "agents/tmp/<name>/x"` came back as
+        // `"agents/tmp/…` and read as not-an-inbox-path — allowed, where the
+        // unquoted form blocked. A neutral review probed it; stripping the
+        // quotes is the whole fix.
+        const target = (m[1] ?? '').replace(/^['"`]+|['"`]+$/g, '');
         if (target) {
             out.push(target);
         }
@@ -167,28 +194,58 @@ function _redirectTargets(segment: string): string[] {
     return out;
 }
 
+/** Is this ONE segment incapable of bringing a path into existence? */
+function _segmentIsReadOnly(segment: string): boolean {
+    const verb = _verbOf(segment);
+    if (!_READ_ONLY_VERBS.has(verb)) {
+        return false;
+    }
+    const marker = _WRITING_MARKERS.get(verb);
+    return marker === undefined || !marker.test(segment);
+}
+
 /**
  * The tokens of a shell command whose CREATION this guard should judge.
  *
- * Judged per INVOKED SEGMENT, reusing `git_command_classifier`'s segmenter so
- * this guard and its two siblings on the same slot agree about what a segment
- * is — that module already carries the heredoc stripping, the quote-aware
- * split, the `sh -c` unwrap and the substitution recursion, and a second copy
- * is one more thing that can drift. Per segment matters on its own: the host
- * splits a compound command the same way, and one creating segment must not
- * make every read token in its neighbours suspect.
+ * THE GATE IS THE WHOLE COMMAND, NOT THE SEGMENT, and the first version of
+ * this function skipped per segment. That looked more precise and was a hole:
+ * in `echo <path> | xargs mkdir -p` the path sits in the read-only segment and
+ * the creating segment carries no path at all, so both halves passed. Nothing
+ * is lost by widening it — a read token only ever causes a refusal when it
+ * names a speaking inbox directory, and in a command that also creates, that
+ * is the conservative answer.
+ *
+ * A HEREDOC IS JUDGED FROM THE RAW TEXT. Segmentation reuses
+ * `git_command_classifier`'s `invokedSegments`, so this guard and its two
+ * siblings on the slot agree about what a segment is — but that module answers
+ * "which commands run" and therefore strips heredoc BODIES as data. This guard
+ * asks "which paths appear", so the discarded text is exactly its input:
+ * `cat <<'EOF' > <inbox>/x` and a `python3 - <<PY` body calling `makedirs`
+ * both came back empty. A heredoc writes content somewhere by construction, so
+ * its presence drops the read-only skip and the raw command is scanned.
+ *
+ * Both widenings come from a neutral review of this change, which probed eight
+ * bypasses against the token scan this function replaced. They are coverage
+ * regressions rather than false positives — the direction that matters when
+ * the concern is `severity: blocking`.
  *
  * Exported so the harness can pin the polarity pair on the tokens themselves,
  * without an envelope.
  */
 export function creatableTokens(command: string): string[] {
     const out: string[] = [];
-    for (const seg of invokedSegments(command)) {
+    const segments = invokedSegments(command);
+    const hasHeredoc = /<<-?\s*['"]?[A-Za-z_]/.test(command);
+    const allReadOnly = !hasHeredoc && segments.every(_segmentIsReadOnly);
+    for (const seg of segments) {
         out.push(..._redirectTargets(seg));
-        if (_READ_ONLY_VERBS.has(_verbOf(seg))) {
-            continue;
-        }
-        for (const tok of seg.split(/[\s"'`(){};|&<>]+/)) {
+    }
+    if (allReadOnly) {
+        return out;
+    }
+    const scanned = hasHeredoc ? [...segments, command] : segments;
+    for (const text of scanned) {
+        for (const tok of text.split(/[\s"'`(){};|&<>]+/)) {
             if (tok) {
                 out.push(tok);
             }
@@ -276,12 +333,23 @@ export function verdictFor(
     // tree produces — probed `<repoRoot>/agents/tmp/<round>`, a directory that
     // does not exist. The already-exists carve-out could therefore never fire
     // there, and every write into a nested speaking round was refused forever
-    // instead of once. `(?:.*\/)?` backtracks to the LAST viable `agents/tmp/`,
-    // so the decoy case the paragraph below describes still resolves.
+    // instead of once.
+    //
+    // The prefix group is `??` — optional AND preferring ABSENT — and that is
+    // the half a neutral review had to point out. A greedy `(?:.*\/)?`
+    // resolves to the LAST inbox segment in the path while `inboxDirName`
+    // reads the FIRST, so a path carrying two of them judged one directory and
+    // probed another, reporting "already exists" for a name that does not.
+    // Making only `.*` lazy is NOT enough: `(...)?` still prefers one
+    // repetition, so the engine grows the prefix rather than trying the
+    // no-prefix branch, and the long match wins anyway — the test for this
+    // caught exactly that. `??` tries no-prefix first, so both reads agree.
+    // The decoy case below still resolves: `agents/tmp-notes/` fails the `/`
+    // after `tmp`, so the no-prefix branch is rejected and the match advances.
     const normalized = filePath.replace(/\\/g, '/').replace(/^(\.\/)+/, '');
     const m =
-        /^((?:.*\/)?agents\/tmp(?:\.old)?\/[^/]+)\//.exec(normalized) ??
-        /^((?:.*\/)?agents\/tmp(?:\.old)?\/[^/.]+)\/?$/.exec(normalized);
+        /^((?:.*?\/)??agents\/tmp(?:\.old)?\/[^/]+)\//.exec(normalized) ??
+        /^((?:.*?\/)??agents\/tmp(?:\.old)?\/[^/.]+)\/?$/.exec(normalized);
     if (m === null) {
         // `inboxDirName` matched but this did not — treat as unattributable and
         // BLOCK, since the name is speaking and we cannot prove it pre-exists.

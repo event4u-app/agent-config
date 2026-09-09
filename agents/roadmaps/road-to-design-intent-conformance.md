@@ -59,7 +59,7 @@ contradicted or unreachable.**
 - **And it is unreachable.** `src/rules/design-fidelity.md:33-34` declares
   `routes_to: guideline:design-fidelity-mechanics`. `dist/agent-src/` carries no
   `guidelines/` directory, and `.augment/guidelines` therefore does not exist —
-  although `AUGMENT_SYMLINK_DIRS` in `src/scripts/condense.ts:2464` already
+  although `AUGMENT_SYMLINK_DIRS` in `src/scripts/condense.ts:2461` already
   lists it. The lane is declared and dead. 31 rules share the shape.
 - **One shipped skill teaches the failure the rule forbids.**
   `src/skills/tailwind-engineer/SKILL.md:47-52` said: map every requested
@@ -100,7 +100,7 @@ Three constraints bound every phase below, all measured on this branch:
 `design-fidelity.md` is at **exactly 200 lines** against `skill_linter`'s
 `rule_too_large` ceiling, so no sentence lands there without one leaving;
 `check_estate_count` reports **0 growth allowance** on active roadmaps, skills
-and hook concerns; and `condense.ts` sits at 2735 lines against a 1500 ceiling
+and hook concerns; and `condense.ts` sits at 2712 lines against a 1500 ceiling
 under a shrink-only ratchet, so Phase 2 must be net-zero there.
 
 ## Phase 1 — Remove the contradiction and the false positives
@@ -369,9 +369,13 @@ Gated on `blocker: fidelity-default-flip` for anything that would refuse.
 - [x] AC-1 — A read command naming a not-yet-existing inbox directory is not
       refused, a creating command naming the same directory still is, and both
       are pinned by assertions that go red when the mechanism is removed.
-- [x] AC-2 — No shipped skill instructs the agent to replace a provided
-      artifact's exact value with a nearest project token without reporting the
-      distance; `tailwind-engineer` names the artifact-bound branch explicitly.
+- [x] AC-2 — `tailwind-engineer` names the artifact-bound branch explicitly,
+      gates the reconciliation on `design.fidelity_mode`, and carries a named
+      output field the reported distance lands in. Scoped to that skill on
+      purpose: the corpus-wide version of this claim ("no shipped skill
+      instructs …") is not checkable from a diff that changes one skill, and a
+      neutral review flagged the earlier wording as unbacked. The sweep across
+      the other design-adjacent skills is Phase 3's, via the same branch.
 - [ ] AC-3 — `brand-source-of-truth` and `design-fidelity` each carry the
       split between them, in both directions, on a projected surface, without
       the per-spawn payload ratchet moving.

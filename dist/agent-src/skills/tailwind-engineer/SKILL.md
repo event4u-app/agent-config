@@ -61,8 +61,19 @@ not by reflex:
 | The nearest project token is | Write |
 |---|---|
 | the same value | the project token — that is not a translation |
-| different in a way you cannot see side by side | the project token, and say so in the port notes |
-| visibly different | the artifact's value, and report the project gap |
+| different in a way you cannot see side by side | the project token, recorded on the `Reconciled:` line below |
+| visibly different | the artifact's value, and the gap on the same line |
+
+**Row 2 needs `design.fidelity_mode` to permit it, and under `hard-floor` it
+never does.** `strict` and `structural` scope their confirmation requirement to
+a *visible* deviation, so an invisible reconciliation that is reported is inside
+them. `hard-floor` makes **any** deviation a Hard-Floor action that no autonomy
+setting, roadmap or standing instruction lifts — there, every value stays the
+artifact's until the user confirms otherwise, and row 2 does not apply. Read the
+mode (`agent-config settings:get design.fidelity_mode`, missing → `strict`)
+before using the table; where "cannot see side by side" becomes a measured
+threshold instead of a judgement is an open decision, so the table is
+deliberately the judgement until it lands.
 
 An artifact-derived exact value is **not** a smell in this mode: it *is* the
 spec, and the source-naming comment the paragraph above asks for is what
@@ -125,6 +136,10 @@ When reviewing or proposing styles, return:
 1. Token map — every colour, spacing, radius, shadow, font-size mapped
    to its configured token; arbitrary values flagged with the design
    source they cite.
+1b. Reconciled — artifact-bound only: one line per value the distance table
+   moved or kept, as `<artifact value> → <token or kept> (<why>)`. This is the
+   destination the table's "report it" means; without it the obligation has
+   nowhere to land and is unobservable in the deliverable.
 2. Class list — ordered (layout → box-model → typography → colour →
    state → responsive); inline-style use justified per element.
 3. Extraction + risk call-out — component / constant / `@apply` / none
@@ -136,6 +151,7 @@ Concrete shape:
 ```
 Element:        <selector or component name>
 Token map:      <colour/spacing/etc → config token>
+Reconciled:     <artifact value → token or kept, and why — artifact-bound only>
 Class list:     <ordered classes>
 Inline style:   <only if runtime-computed; else "none">
 Extraction:     <component | constant | @apply | none — reason>

@@ -161,10 +161,76 @@ describe('creatableTokens — reading is not creating', () => {
         );
     });
 
-    it('does not read a stderr redirect as a creating target', () => {
-        expect(creatableTokens('ls -d agents/tmp/a-speaking-name-* 2>/dev/null')).not.toContain(
-            'agents/tmp/a-speaking-name-*',
+    it('classifies a stderr redirect target like any other redirect target', () => {
+        // The name of this case used to say the opposite of the behaviour: it
+        // asserted only that `2>/dev/null` produces no inbox token, which is
+        // true because `ls` is allowlisted and would stay true if the redirect
+        // classification were deleted. `2>` targets ARE captured, so both
+        // directions are asserted here and the case can now go red for its own
+        // reason. Found by a neutral review of this change.
+        expect(inboxTokens('ls -d agents/tmp/a-speaking-name-* 2>/dev/null')).toEqual([]);
+        expect(inboxTokens('ls -d agents/tmp/inbox-2026-08-h 2> agents/tmp/a-speaking-name/err.log')).toContain(
+            'agents/tmp/a-speaking-name/err.log',
         );
+    });
+
+    /**
+     * The eight bypasses a neutral review of this change probed against the
+     * token scan it replaced. Every one of them was blocked before and allowed
+     * after — coverage regressions, not false positives, which for a
+     * `severity: blocking` concern is the direction that matters.
+     *
+     * Sensitivity: emptying `_WRITING_MARKERS` reds the first five; removing
+     * the heredoc branch reds the two heredoc cases; dropping the quote strip
+     * in `_redirectTargets` reds the quoted one.
+     */
+    it('judges an allowlisted verb carrying a writing flag', () => {
+        for (const cmd of [
+            "sed -i '' 's/a/b/' agents/tmp/a-speaking-name/x.md",
+            "sed -n 'w agents/tmp/a-speaking-name/out.txt' in.txt",
+            'find . -name x -exec mkdir -p agents/tmp/a-speaking-name {} +',
+            'find . -fprint agents/tmp/a-speaking-name/list.txt',
+            'awk \'BEGIN{system("mkdir -p agents/tmp/a-speaking-name")}\'',
+        ]) {
+            expect(inboxTokens(cmd), cmd).not.toEqual([]);
+        }
+    });
+
+    it('judges a read segment when the pipeline it feeds can create', () => {
+        // The path is in the read-only segment and the creating segment carries
+        // none, so a per-segment skip passed both halves.
+        expect(inboxTokens('echo agents/tmp/a-speaking-name | xargs mkdir -p')).toContain(
+            'agents/tmp/a-speaking-name',
+        );
+    });
+
+    it('judges a heredoc, whose body the shared segmenter discards as data', () => {
+        expect(inboxTokens("cat <<'EOF' > agents/tmp/a-speaking-name/x.md\nbody\nEOF")).toContain(
+            'agents/tmp/a-speaking-name/x.md',
+        );
+        expect(
+            inboxTokens("python3 - <<'PY'\nimport os; os.makedirs('agents/tmp/a-speaking-name')\nPY"),
+        ).not.toEqual([]);
+    });
+
+    it('judges a quoted redirect target', () => {
+        expect(inboxTokens('echo hi > "agents/tmp/a-speaking-name/x.md"')).toContain(
+            'agents/tmp/a-speaking-name/x.md',
+        );
+        expect(inboxTokens("echo hi > 'agents/tmp/a-speaking-name/x.md'")).toContain(
+            'agents/tmp/a-speaking-name/x.md',
+        );
+    });
+
+    it('still allows the plain reads after all of that widening', () => {
+        for (const cmd of [
+            "ls -d agents/tmp.old/a-speaking-name-* 2>/dev/null | sed 's|.*/||'",
+            'sed -n 60,118p agents/tmp/a-speaking-name/chat.txt',
+            'find agents/tmp/a-speaking-name -name "*.md"',
+            'awk \'{print $1}\' agents/tmp/a-speaking-name/x.txt',
+        ]) {
+            expect(inboxTokens(cmd), cmd).toEqual([]);
+        }
     });
 });
 
@@ -189,6 +255,22 @@ describe('verdictFor — the probe carries the path prefix', () => {
     it('does not match a decoy segment that merely starts with agents/tmp', () => {
         expect(inboxDirName('xagents/tmp/a-speaking-name/notes.md')).toBeNull();
         expect(verdictFor('agents/tmpfiles/a-speaking-name/notes.md', never, '').block).toBe(false);
+    });
+
+    it('probes the SAME directory it judged when a path carries two inbox segments', () => {
+        // A greedy prefix resolved to the LAST inbox segment while
+        // `inboxDirName` reads the FIRST, so this path judged the speaking name
+        // and probed the opaque one — reporting "already exists" for a name that
+        // does not. Found by a neutral review of this change.
+        const p = 'agents/tmp/a-speaking-name/agents/tmp/round-a91f3c/x.md';
+        expect(inboxDirName(p)).toBe('a-speaking-name');
+        const seen: string[] = [];
+        const v = verdictFor(p, (probe) => {
+            seen.push(probe);
+            return false;
+        }, '');
+        expect(seen).toEqual(['agents/tmp/a-speaking-name']);
+        expect(v.block).toBe(true);
     });
 
     it('leaves an absolute path absolute instead of re-rooting it', () => {
