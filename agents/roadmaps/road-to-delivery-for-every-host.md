@@ -632,6 +632,61 @@ Defects this roadmap repairs:
       from measuring the tree the host actually loads instead. Pointing that gate at the
       host tree changes what every PR's budget ratchet measures, which is a decision with
       consequences beyond this roadmap and is 4.4's blocker below.
+      **UPDATE 2026-09-09 — the SECOND finding is fixed; the FIRST is an owner question,
+      quoted below per K9. The box stays `[ ]`.**
+      The measurement-surface half is closed. `check_preamble_payload_budget` now takes
+      `--host <id>` (resolving through `HOST_SURFACES` in
+      `_lib/host_projection_reach.ts`, never a path map written into the gate) and
+      `--project-rules-dir <path>` for a tree no host id names. The gated surface does NOT
+      move: the no-argument reading, the blocking CI step, the `task ci` invocation and the
+      base-ref ratchet all still measure `dist/agent-src/rules`, so no baseline or history
+      entry is reinterpreted, and the host reading never touches the exit code. Recorded as
+      `ADR-270`; AI council of 2026-09-09, 2/2 present, converged on option 1A.
+      **A diagnostic came out of it that this step should carry.** On a maintainer checkout
+      the host reading is **6,648 tok**, not 39,758 — 13 rule files against 119 in the
+      source, because user-scope dedup and workspace/pack scope both shrink a maintainer
+      tree for reasons unrelated to the projection mode. The gate now prints `PARTIAL TREE`
+      with both file counts whenever the host tree is smaller than the source, because a
+      bare total cannot tell a real saving from a tree that was never fully written. The
+      roadmap's own 4.2 table already warned about this; the gate now says it out loud.
+      **The rules-limb half is an OWNER DECISION, and both council seats said so
+      independently.** The question put to them was whether to accept 24,166 and record the
+      20,000 figure as superseded (2A), project the three path-only rules as stubs and
+      accept the capability loss (2B), restore the `pre_tool_use` binding and breach its
+      cap (2C), or invent a fourth delivery shape (2D). Both refused to answer it as a
+      council, on the same reading of K9:
+      · anthropic/claude-sonnet-4-5 — *"K9 states: a step needing a decision the file does
+        not contain is reported as a question, with the step left open. We are reporting the
+        question, but the escape does NOT authorize the council to rewrite the criterion.
+        Accepting 24,166 is rewriting that criterion. The fact that it is documented in an
+        ADR doesn't make it K9-compliant."* It added that the roadmap's own lines
+        ("*closing it needs an owner call between two E2 clauses that conflict, not more
+        engineering*") remove the authority question from council discretion by their own
+        terms.
+      · openai/codex-default — *"A recorded supersession is not council-compatible with K9.
+        K9 permits escalating the missing decision; it does not grant the council authority
+        to rewrite the criterion. Option 2A is valid only as an explicit repository-owner
+        waiver or amendment of the K9-protected 20,000-token invariant."* It rejected 2D as
+        well: *"its dispatcher-loads-and-returns-full-bodies assumes a synchronous host
+        capability not established in the evidence. If it uses the governed hook to inject
+        those bodies, calling it a new delivery mechanism does not necessarily avoid K4's
+        rule-inject prohibition."*
+      **THE QUESTION, quoted for the owner:** the rules bucket measures 24,166 tok against
+      the Goal's 20,000. The whole 4,166 is one disposition — keeping
+      `design-review-after-ui-write`, `source-of-truth` and `ui-audit-gate` eagerly
+      projected full-bodied (≈ 5,850 tok), because the alternative keeps the `pre_tool_use`
+      binding and breaches the 2,048-byte cap Phase 3 installs. Both options violate an
+      explicit E2 clause. Do you (a) waive K9 for a recorded supersession of the 20,000
+      figure, keeping the binding 40,000 total which PASSES at 39,758 and adding a
+      rules-bucket ratchet at the measured value plus the project's headroom policy; (b)
+      accept the capability loss and project the three as stubs; (c) authorise breaching the
+      hook cap; or (d) hold the step open until a TESTED conditional-loading mechanism
+      proves full rule content can be applied before the matched tool executes with the
+      governed hook surface still ≤ 2,048 bytes? Both seats' recommendation, conditional on
+      you delegating at all, is (a) — with openai adding that the old criterion must stay
+      visible and marked superseded rather than rewritten as though it never existed.
+      Not attempted: raising `design_ceiling` is K4, cutting rule prose is K5, and
+      descoping this step to a carrier is K9.
 - [x] **4.3 Flip the package default** in a separate PR containing only the default change,
       the ADR link and regenerated projections.
       verify: fresh install fixture on a Claude Code host measures ≤ 40,000 total; on a
@@ -680,6 +735,51 @@ Defects this roadmap repairs:
       inside a step whose stated job is to lower a number.
       Not attempted, deliberately: raising `design_ceiling` is K4 and shortening rule prose
       is K5.
+      **UPDATE 2026-09-09 — the measurement-surface question this step named IS now
+      settled, and it does not close this step. OWNER DECISION, quoted per K9. The box
+      stays `[ ]`.**
+      `ADR-270` gives the gate a host-aware reading and keeps the ratchet on the source.
+      That was the thing this step said would close it — *"point the gate at the tree the
+      host loads, then lower the baseline to THAT reading"* — and the council explicitly
+      declined that path for this step. openai/codex-default: *"1A explicitly leaves the
+      blocking ratchet source-based, so introducing host ceilings does not retire the
+      source grace. Under that proposal, unoptimized hosts still red on the deadline — the
+      exact failure D3 must prevent."*
+      **The step's instruction is also arithmetically invalid as written, and that is now
+      recorded rather than left for the next reader to rediscover.** It says
+      `baseline_tokens` becomes "the measured post-flip total". `baseline_tokens` is 102,520
+      and the measured total is ~138,474, so following the instruction would RAISE the
+      baseline by ~35,950 under language calling it a reduction. openai: *"Replace roadmap
+      step 4.4's invalid instruction to set baseline_tokens to approximately 138,200. A
+      baseline must never increase under language calling it a reduction."*
+      **Both seats reserved this to the owner, on the same invariant** — moving
+      `grace_end_date` is a substantive relaxation of ADR-264 in the TIME dimension even
+      though the numeric ceiling does not rise. anthropic: *"Council-decidable for the
+      dual-track mechanism and per-host ceilings. Owner-reserved for extending
+      grace_end_date beyond 2026-11-10 — extending the date increases permitted exposure
+      duration and is a substantive relaxation requiring owner authority."*
+      **THE QUESTION, quoted for the owner:** `grace_end_date` is **2026-11-10**. On that
+      date the gate compares ~138,474 against `design_ceiling` 107,646 and reds every pull
+      request, whether or not `grace_ceiling` is deleted — so doing nothing is deferral, not
+      safety. The two seats proposed different mechanisms and neither may execute without
+      you:
+      · anthropic — **dual-track with a hard deadline.** Add `per_host_ceilings`
+        (`claude-code: 40000`) and a `grace_retirement_note`; the grace retires when EITHER
+        all major hosts (augment, claude-code, cline, cursor) have delivery modes with
+        per-host ceilings, OR the source corpus measures ≤ `design_ceiling`. 2026-11-10
+        stays hard and reds if neither track lands. Its own checkpoint: by 2026-11-03,
+        decide which track will satisfy the deadline and resource it.
+      · openai — **one-time owner-approved date extension**, ADR-recorded, moving only the
+        date and the ADR reference, with `grace_ceiling`, `design_ceiling`,
+        `baseline_tokens` and their history untouched, a named migration deliverable
+        (complete writer-derived host measurements, make them blocking, then retire the
+        source-corpus grace as an explicit governance migration), a CI warning well before
+        the new date, a test proving expiry behaviour, and no automatic second extension.
+        It rejected the source-relocation alternative as *"accounting theater"* that
+        *"may conflict with K9's prohibition on relocating material to escape the
+        criterion. It is not a demonstrated 30,500-token reduction mechanism."*
+      Which mechanism, and whether the date moves at all, is yours. Neither seat proposed
+      leaving it as it is, and both named the 2026-11-10 red as the thing to avoid.
 - [x] **4.5 Rollback fixture.** flip → `eager-all` → `diff -r` against a never-flipped tree
       is empty; documented in `docs/contracts/rule-router.md`.
       verify: fixture green.
@@ -709,20 +809,44 @@ Defects this roadmap repairs:
       the saving.
       `check_claims` green (9 markered, 99 entries); the evidence pointer resolves;
       `build_proof` re-run and `--check` reports in sync.
-- [ ] **7.2 Per-host cost table** generated from the census into the contract the README
+- [x] **7.2 Per-host cost table** generated from the census into the contract the README
       points at; the generator fails when the census is missing.
       verify: table numbers equal the census.
-      BLOCKED 2026-09-07, on the same measurement-surface question as 4.4. The step wants a
-      table generated FROM THE CENSUS, and the census
-      (`check_preamble_payload_budget` / `preamble_byte_census`) reads the projection source
-      by default, where every host has the same number and the flip changes none of them. A
-      per-host table generated from that census would print one figure three times and call
-      it per-host.
-      The per-host numbers DO exist and are published — `agents/evidence/analysis/standing-payload-by-host-2026-09.md`
-      carries them, generated and pinned, with a machine-checked writer citation per host.
-      What is missing is the generator that reads a host-aware census into the contract, and
-      the host-aware census is the thing 4.4 is blocked on. Closes when that surface
-      decision is taken.
+      **Was BLOCKED 2026-09-07 on the measurement-surface question. Unblocked and DONE
+      2026-09-09.** The block was correct as stated: the census this step meant
+      (`check_preamble_payload_budget`) read the projection source, where every host
+      carries the same number, so a per-host table generated from it would print one
+      figure three times and call it per-host. The AI council of 2026-09-09 settled that
+      question (2/2 present, converged on option 1A — `ADR-270`), and the step became
+      executable without any of its words changing.
+      **The census used is the reproducible one**, and the choice is deliberate:
+      `report_standing_payload_by_host`, whose unit is the projection source minus the
+      ADR-004 `type: manual` rules no per-tool tree receives — the UPPER BOUND a host
+      loads on an unscoped, un-deduplicated install. A published contract table has to be
+      reproducible by a reader, and a host-tree reading is not: this checkout holds 13
+      rule files under `.claude/rules` against 119 in the source, because user-scope dedup
+      and workspace/pack scope both shrink a maintainer tree for reasons unrelated to the
+      projection mode. The per-install reading is the gate own new `--host` flag, and the
+      table points at it so the two are not confused.
+      **The contract is `docs/contracts/rule-router.md`** — what `README.md:288` points at
+      for projection modes, and where 4.5 already documented the rollback fixture. The
+      table sits between `<!-- BEGIN generated: host-standing-cost -->` markers, so a
+      re-run replaces rather than appends.
+      **Verify output:** `host cost table: docs/contracts/rule-router.md in sync (9 hosts,
+      pin b6af20db552fdbcc5e8507cd6a1d314925740ba8)`. The generator refuses when the
+      census is missing (probed end to end: exit 2 with the regenerate instruction, then
+      restored and green again), when the `## Per host` section has no parseable rows, and
+      when the census declares no pin.
+      **It also caught a real staleness, and this is the part worth reading.** The step
+      verify — *table numbers equal the census* — is satisfied by ANY table generated from
+      a stale census, including one that contradicts the repository. So the generator takes
+      a SECOND reading live from the tree and refuses when the two disagree. First run:
+      the committed census read 486,063 B per per-rule host and the tree read 486,068 B —
+      five bytes across four host rows, invisible to this step own check. Census re-emitted
+      at `b6af20db`, which is the commit that landed the host reading.
+      18 tests, all refusal paths pinned, plus one asserting the committed state stays in
+      sync so the drift reds in CI rather than waiting to be noticed.
+
 - [x] **7.3 Apply E7** to the two `later/` token roadmaps.
       verify: both files have a disposition;
       `./scripts-run src/scripts/lint_roadmap_later_disposition` green.
@@ -815,6 +939,19 @@ Defects this roadmap repairs:
       cap E2 fixes. Also in 4.2: `check_preamble_payload_budget` reads the projection SOURCE
       by default and is unchanged at 138,200 either way, so this criterion cannot be
       evaluated by that gate's default invocation at all.
+      **UPDATE 2026-09-09 — the last clause above is now FALSE, and the criterion is
+      evaluable. It is still not met, and the box stays `[ ]`.**
+      `check_preamble_payload_budget --host claude-code` measures the tree the host loads
+      (`ADR-270`), so "on a Claude Code install" is no longer a thing the gate cannot
+      express. What it reports on a maintainer checkout is 6,648 tok from 13 rule files
+      against 119 in the source, flagged `PARTIAL TREE` — a maintainer reading, not a
+      consumer one, and the gate now says so rather than leaving the number to be
+      misread. The consumer figures stay the roadmap's own clean-root measurement:
+      total **39,758 ≤ 40,000 PASSES**, rules **24,166 > 20,000 MISSES by 4,166**.
+      So the split verdict is unchanged and its cause is unchanged. What moved is that
+      the miss is now an OWNER question with two council seats' reasoning attached rather
+      than an unanswered one — quoted in full at step 4.2. A criterion with two limbs is
+      still not met by one.
 - [x] Every host not in `lean_projection.hosts`: rule tree byte-identical to `eager-all`
       (Phase 1.4 gate in CI, green).
       MET 2026-09-07, and asserted per PR rather than observed once.
@@ -852,6 +989,20 @@ Defects this roadmap repairs:
       post-flip total requires a total the gate can reproduce, and its default reading does
       not move. Deleting the grace block without that would red every PR on 2026-11-10 with
       the flip already landed — Risk 3, arrived at from the other direction.
+      **UPDATE 2026-09-09 — still two of three, and the third is now an OWNER question
+      rather than a blocked one. The box stays `[ ]`.**
+      Rollback fixture still green. Quality gates green in this change:
+      `check_preamble_payload_budget` (138,474 against the 138,490 grace ceiling),
+      `check_references` over 1,897 targets, `check_estate_count`, `check_adr_frontmatter`,
+      `check_condensed_paths`, `lint_evidence_artifacts`, `typecheck-ts`, `lint-ts`, and
+      50 tests across the two files this change touches.
+      The grace ceiling is still NOT gone, and 4.4 now records why that cannot be an
+      engineering step: the council settled the measurement-surface question this AC's
+      predecessor was waiting on and then explicitly declined it as the retirement
+      mechanism, because 1A leaves the blocking ratchet on the source and unoptimized hosts
+      still red on the deadline. Both seats reserved the date dimension to the owner. Two
+      mechanisms are on the table and quoted at 4.4; neither may execute without an owner
+      decision, and doing nothing reds every pull request on 2026-11-10 regardless.
 
 ## Notes
 
