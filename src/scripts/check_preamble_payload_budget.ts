@@ -45,6 +45,7 @@ import * as path from 'node:path';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { censusClaudeMdHierarchy, censusRuleDir, censusSkillsCatalog } from './preamble_byte_census.js';
 import { PREFIX_STABLE_SURFACES, prefixStableRoots } from './_lib/prefix_stable_surfaces.js';
+import { HOST_SURFACES } from './_lib/host_projection_reach.js';
 import { attributeGrowth, buildLedger, renderAttribution } from './_lib/asset_delivery_ledger.js';
 import { resolveBaseRef } from './_lib/ratchet_base_ref.js';
 import {
@@ -147,6 +148,174 @@ export function measureDeterministicPayload(
             files: claudeMdFiles,
         },
     ];
+}
+
+/**
+ * THE HOST READING — additive, and deliberately not the ratchet's surface.
+ *
+ * `measureDeterministicPayload` above measures `dist/agent-src/rules`: the
+ * projection SOURCE. That is the right surface for the shrink-only ratchet,
+ * because the source is what every host tree is written FROM and what a pull
+ * request actually edits. It is the wrong surface for one question: how many
+ * standing tokens does a session on host X start with? Under a per-host
+ * `delivery` projection the two answers diverge by design — measured 2026-09-07,
+ * `.claude/rules` went 99,598 tok to 24,166 tok while the source stayed at
+ * 138,200 either side of the flip.
+ *
+ * So this adds a SECOND reading and changes nothing about the first. AI council
+ * of 2026-09-09 (2/2 present, converged on option 1A):
+ *
+ *   - the no-argument source measurement, the blocking CI invocation, the
+ *     `task ci` invocation and the base-ref ratchet are untouched, so no
+ *     existing baseline or history entry is reinterpreted;
+ *   - the host reading is reported alongside and NEVER changes the exit code —
+ *     an informational census, not a second gate.
+ *
+ * Both seats were explicit that the host id must resolve through the existing
+ * projection registry rather than a path map invented here, which is why the
+ * roots come from `HOST_SURFACES` in `_lib/host_projection_reach.ts` — the same
+ * committed constant `check_host_projection_reach` walks.
+ */
+export interface HostPayload {
+    /** The host id as given, or `null` when a raw rules-dir override was used. */
+    host: string | null;
+    /** Repo-relative rules root actually measured. */
+    rules_path: string;
+    buckets: Array<{ name: string; tokens: number; files: number }>;
+    total: number;
+    /**
+     * Rule files in the host tree, against rule files in the projection source.
+     *
+     * A maintainer checkout is NOT a consumer install and its host tree is
+     * routinely smaller for reasons that have nothing to do with a projection
+     * mode: the installer deduplicates a project rule against the same rule
+     * already present at user scope, and a dev tree may hold a partial
+     * projection. Measured in this repository 2026-09-09: 13 files under
+     * `.claude/rules` against 119 in `dist/agent-src/rules`.
+     *
+     * A bare token total cannot tell a genuine saving from a tree that was never
+     * fully written, and those two send a reader to completely different places.
+     * So the counts travel with the number, and `complete` is false whenever the
+     * host tree holds fewer rule files than the source.
+     */
+    completeness: { host_rule_files: number; source_rule_files: number; complete: boolean };
+}
+
+/** Every host id this reading accepts, in registry order. */
+export function hostPayloadIds(): string[] {
+    return HOST_SURFACES.map((h) => h.id);
+}
+
+/**
+ * Split a host declared projections into the standing-payload buckets.
+ *
+ * Classification is derived from the registry rather than restated: a projection
+ * ending in `/skills` is the skills catalogue, one ending in `/commands` is
+ * EXCLUDED because a command is invoked rather than standing, and whatever
+ * remains is the rules surface — a directory on the per-rule hosts, a single
+ * `.md` file on the single-surface hosts, which is also that host root
+ * instruction file.
+ *
+ * The one conditional is `claude-code`, and it is a conditional rather than a
+ * map row: the `CLAUDE.md` / `CLAUDE.local.md` pair is already declared in
+ * `PREFIX_STABLE_SURFACES` as `project-claude-md` and `project-claude-local-md`,
+ * it is that host root instruction file, and no other host reads it.
+ */
+export function hostPayloadRoots(hostId: string): {
+    rules: string;
+    skills: string | null;
+    claudeMd: boolean;
+} {
+    const surface = HOST_SURFACES.find((h) => h.id === hostId);
+    if (surface === undefined) {
+        throw new Error(
+            `unknown host '${hostId}' — known ids: ${hostPayloadIds().join(', ')}. ` +
+                'The set is HOST_SURFACES in _lib/host_projection_reach.ts; a host absent there has no ' +
+                'declared projection for this reading to measure.',
+        );
+    }
+    const skills = surface.projections.find((r) => r.endsWith('/skills')) ?? null;
+    const rules = surface.projections.find(
+        (r) => !r.endsWith('/skills') && !r.endsWith('/commands'),
+    );
+    if (rules === undefined) {
+        throw new Error(
+            `host '${hostId}' declares no rules-bearing projection in HOST_SURFACES ` +
+                `(projections: ${surface.projections.join(', ') || 'none'}) — nothing to measure`,
+        );
+    }
+    return { rules, skills, claudeMd: hostId === 'claude-code' };
+}
+
+/** Char count for one root, whether it is a rules directory or a single file. */
+function charsAtRoot(abs: string): { chars: number; files: number } {
+    let st: fs.Stats;
+    try {
+        st = fs.statSync(abs);
+    } catch {
+        return { chars: 0, files: 0 };
+    }
+    if (st.isFile()) return { chars: fs.readFileSync(abs, 'utf-8').length, files: 1 };
+    const c = censusRuleDir(abs);
+    return { chars: c.chars, files: c.files };
+}
+
+/**
+ * Measure the standing payload of the tree ONE host loads.
+ *
+ * `rulesDirOverride` is the low-level escape for a tree no host id names — a
+ * fixture, a consumer-shaped root, a comparison against a never-flipped tree.
+ * It is mutually exclusive with `host` at the CLI layer.
+ */
+export function measureHostPayload(
+    repoRoot: string,
+    opts: { host?: string; rulesDirOverride?: string },
+): HostPayload {
+    const roots = opts.rulesDirOverride === undefined ? hostPayloadRoots(opts.host ?? '') : null;
+    const rulesRel = opts.rulesDirOverride ?? (roots as { rules: string }).rules;
+    const rulesAbs = path.isAbsolute(rulesRel) ? rulesRel : path.join(repoRoot, rulesRel);
+    if (!fs.existsSync(rulesAbs)) {
+        throw new Error(
+            `rules root '${rulesRel}' does not exist under ${repoRoot} — a host tree that was never ` +
+                'projected reads as zero tokens, which is indistinguishable from a tiny one, so this ' +
+                'refuses rather than reporting a green nothing',
+        );
+    }
+    const buckets: Array<{ name: string; tokens: number; files: number }> = [];
+    const rulesCensus = charsAtRoot(rulesAbs);
+    buckets.push({
+        name: `rules (${rulesRel})`,
+        tokens: tokens(rulesCensus.chars),
+        files: rulesCensus.files,
+    });
+
+    if (roots !== null && roots.skills !== null) {
+        const sk = censusSkillsCatalog(path.join(repoRoot, roots.skills));
+        buckets.push({
+            name: `skills catalog (${roots.skills})`,
+            tokens: tokens(sk.chars),
+            files: sk.skills,
+        });
+    }
+    if (roots !== null && roots.claudeMd) {
+        const md = censusClaudeMdHierarchy(repoRoot, path.join(repoRoot, '.no-such-home'));
+        const chars = md.project_claude_md_chars + md.project_claude_local_md_chars;
+        const files =
+            (md.project_claude_md_present ? 1 : 0) + (md.project_claude_local_md_present ? 1 : 0);
+        buckets.push({ name: 'CLAUDE.md hierarchy (project only)', tokens: tokens(chars), files });
+    }
+    const sourceRules = censusRuleDir(path.join(repoRoot, surfaceRoot('project-scope-rules')));
+    return {
+        host: opts.rulesDirOverride === undefined ? (opts.host ?? null) : null,
+        rules_path: rulesRel,
+        buckets,
+        total: buckets.reduce((n, b) => n + b.tokens, 0),
+        completeness: {
+            host_rule_files: rulesCensus.files,
+            source_rule_files: sourceRules.files,
+            complete: rulesCensus.files >= sourceRules.files,
+        },
+    };
 }
 
 /**
@@ -308,6 +477,48 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     // tighter-than-design value is IGNORED rather than honoured — see `evaluate`.
     const ci = argv.indexOf('--ceiling');
     const override = ci !== -1 && argv[ci + 1] !== undefined ? Number(argv[ci + 1]) : undefined;
+
+    // `--host <id>` / `--project-rules-dir <path>`: the additive host reading
+    // (AI council 2026-09-09, option 1A). Mutually exclusive on purpose — a call
+    // passing both is asking two different questions and would silently get one
+    // answer, so it is a usage error rather than a precedence rule nobody reads.
+    const hi = argv.indexOf('--host');
+    const hostArg = hi !== -1 ? argv[hi + 1] : undefined;
+    const pi = argv.indexOf('--project-rules-dir');
+    const rulesDirArg = pi !== -1 ? argv[pi + 1] : undefined;
+    if (hostArg !== undefined && rulesDirArg !== undefined) {
+        process.stderr.write(
+            '❌  preamble-payload budget: --host and --project-rules-dir are mutually exclusive. ' +
+                'Pass a host id to measure a declared projection, or a path to measure an ' +
+                'undeclared tree — never both.\n',
+        );
+        return 2;
+    }
+    if (hi !== -1 && (hostArg === undefined || hostArg.startsWith('--'))) {
+        process.stderr.write(
+            `❌  preamble-payload budget: --host needs an id — one of ${hostPayloadIds().join(', ')}.\n`,
+        );
+        return 2;
+    }
+    if (pi !== -1 && (rulesDirArg === undefined || rulesDirArg.startsWith('--'))) {
+        process.stderr.write('❌  preamble-payload budget: --project-rules-dir needs a path.\n');
+        return 2;
+    }
+    let host: HostPayload | null = null;
+    if (hostArg !== undefined || rulesDirArg !== undefined) {
+        try {
+            host = measureHostPayload(
+                REPO_ROOT,
+                hostArg !== undefined
+                    ? { host: hostArg }
+                    : { rulesDirOverride: rulesDirArg as string },
+            );
+        } catch (err) {
+            process.stderr.write(`❌  preamble-payload budget: ${(err as Error).message}\n`);
+            return 2;
+        }
+    }
+
     let decision: Decision;
     try {
         decision = decide(override === undefined ? {} : { overrideCeiling: override });
@@ -341,6 +552,19 @@ export function main(argv: string[] = process.argv.slice(2)): number {
             JSON.stringify(
                 {
                     ...verdict,
+                    // `source_corpus` and `host_payload` are structurally
+                    // separate, and both seats of the 2026-09-09 council asked
+                    // for exactly that: until the two are named apart, every
+                    // ceiling discussion risks comparing unlike quantities. The
+                    // legacy top-level fields stay so no existing reader breaks.
+                    measurement_scope: host === null ? 'source-corpus' : 'source-corpus+host-payload',
+                    source_corpus: {
+                        measured: verdict.measured,
+                        baseline: verdict.baseline,
+                        ceiling: verdict.ceiling,
+                        buckets: verdict.buckets,
+                    },
+                    host_payload: host,
                     ok: decision.ok,
                     bound_ratchet: {
                         ok: decision.bounds.ok,
@@ -367,6 +591,31 @@ export function main(argv: string[] = process.argv.slice(2)): number {
             `(baseline ${verdict.baseline}, ${sign}${delta}; ceiling ${verdict.ceiling})\n`,
     );
     process.stdout.write(renderBounds(decision.bounds));
+
+    // The host reading prints AFTER the source verdict and never touches the
+    // exit code below. The label says which surface each number describes,
+    // because the whole defect this reading fixes was two different quantities
+    // sharing one name.
+    if (host !== null) {
+        const label = host.host === null ? host.rules_path : host.host;
+        process.stdout.write(`\n  host payload — ${label} (informational, not gated)\n`);
+        for (const b of host.buckets) {
+            process.stdout.write(`  ${('· ' + b.name).padEnd(38)} ${String(b.tokens).padStart(8)} tok\n`);
+        }
+        process.stdout.write(`  ${'· host total'.padEnd(38)} ${String(host.total).padStart(8)} tok\n`);
+        const c = host.completeness;
+        if (!c.complete) {
+            process.stdout.write(
+                `  ${'· PARTIAL TREE'.padEnd(38)} ${c.host_rule_files} rule file(s) vs ` +
+                    `${c.source_rule_files} in the source.\n` +
+                    '    This total is NOT a consumer reading. A maintainer checkout deduplicates a\n' +
+                    '    project rule against the same rule at user scope, and a dev tree may hold a\n' +
+                    '    partial projection — both shrink this number for reasons unrelated to the\n' +
+                    '    projection mode. Measure a clean consumer-shaped root with\n' +
+                    '    --project-rules-dir <path> to get the number a consumer would load.\n',
+            );
+        }
+    }
 
     // The bound is checked BEFORE the size question and independently of it. A
     // change that lifts its own ceiling has already defeated the gate, and
