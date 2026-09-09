@@ -70,6 +70,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { GateLedger } from './_lib/gate_ledger.js';
 import { is_kernel_rule } from './_lib/kernel_rules.js';
+import { reportScanned } from './_lib/scan_scope.js';
 import {
     isRatified,
     RATIFICATION_DIR,
@@ -409,7 +410,23 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
 
     // OUTSIDE the quiet guard: CI passes --quiet, and a coverage guard that
     // sees no count reports the gate silent.
-    process.stdout.write(`scanned: ${result.scanned}\n`);
+    //
+    // Through `reportScanned` rather than a bare write, which is what makes the
+    // gate HARDENED — `check_gate_coverage`'s predicate is "routes through
+    // _lib/scan_scope OR emits the line AND is registered with a floor", and a
+    // diff-scoped gate can carry no honest floor (an empty diff scans zero by
+    // construction). A bare write put it in the unhardened population and made
+    // it owe a `gate-coverage.yml` row it cannot fill.
+    reportScanned({
+        gate: 'check_kernel_edit_ratified',
+        scanned: result.scanned,
+        units: 'changed path(s)',
+        roots: ['<the diff against the base ref>'],
+        allowEmpty:
+            'EMPTY_VALID: the corpus is one diff. A commit range that changed nothing is a ' +
+            'real state, and there is then no kernel rule, governance hook or mechanism file ' +
+            'to ratify — the gate has read everything there was.',
+    });
     if (!quiet || result.exitCode !== 0) {
         for (const l of result.lines) {
             process.stdout.write(`${l}\n`);
