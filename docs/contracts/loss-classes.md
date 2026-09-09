@@ -12,9 +12,11 @@ practices look identical from outside:
 - `fold_intake` folds intake batches into an **additive** archive page carrying a
   per-child `<file>:<first-line>-<last-line>` link-back, and never mutates a
   child. The original is right there.
-- `hot_context_hook` **drops** any line the low-impact redactor refuses — and
-  drops it on a redactor *error* too, fail-closed per line — then caps the result
-  at 400 words. The dropped content is gone.
+- `hot_context_hook` **dropped** any line the low-impact redactor refused — and
+  dropped it on a redactor *error* too, fail-closed per line — then capped the
+  result at 400 words. The dropped content was gone. That transform was retired
+  on 2026-09-09 with the concern's cache half; it stays here as the exemplar the
+  vocabulary was written against, in the past tense.
 
 Both are "compression". One promises recovery and one promises the opposite, and
 before this contract nothing in the tree distinguished them. So the five classes
@@ -48,7 +50,7 @@ The children are still on disk, byte-identical, and addressable. Declared at
 `src/scripts/fold_intake.ts`, in the same docblock that already stated
 "Children never mutated".
 
-### `hot_context_hook` — `ephemeral-lossy`
+### `hot_context_hook` — `ephemeral-lossy` (retired 2026-09-09)
 
 **`recoverable-lossy` would be the wrong class here even though the transcript
 still exists**, and that is the sharpest test of whether this vocabulary is worth
@@ -96,9 +98,17 @@ any, and reported a corpus of four. Three of those four were prose. A gate that
 fires on writing about a defect rather than on the defect is how a real corpus of
 one becomes a pro-forma corpus of four, each carrying a declaration nobody meant.
 
-**Measured at landing: 1 module qualifies** — `hot_context_hook`. A corpus of one
-is the honest state of this tree, not a broken detector. The gate fires the day a
-second one lands.
+**Measured at landing: 1 module qualified** — `hot_context_hook`. **Measured
+2026-09-09: 0.** Step 3.1 of road-to-continuity-writer-activation retired that
+module's cache half, and with it both patterns the detector matched on.
+
+A corpus of one was the honest state of this tree. A corpus of zero is not: the
+30-row cap in `src/scripts/_lib/session_index_trust.ts` is still a model-facing
+lossy transform, and this detector reads concern scripts only, so it cannot see
+it. The gate is green over an empty set — which proves nothing about any
+transform, rather than proving there are none. Widening the detector past concern
+scripts is what closes that, tracked as blocker
+`loss-class-corpus-is-empty-after-hot-context`.
 
 ## The passthrough invariant
 

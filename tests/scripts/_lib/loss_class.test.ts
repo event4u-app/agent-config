@@ -63,15 +63,14 @@ describe("AC-5 — the classification is checked against the transforms' own sou
         expect(read('src/scripts/fold_intake.ts')).toContain('Children never mutated');
     });
 
-    it('hot_context_hook declares ephemeral-lossy and owes no locator', () => {
-        const d = parseLossDeclaration(read('src/scripts/hot_context_hook.ts'));
-        expect(isProblem(d)).toBe(false);
-        if (!isProblem(d)) expect(d.lossClass).toBe('ephemeral-lossy');
-    });
-
-    it('its declared class matches its stated behaviour — violating lines are DROPPED', () => {
-        expect(read('src/scripts/hot_context_hook.ts')).toMatch(/violating lines are DROPPED/);
-    });
+    // The two `hot_context_hook` cases that stood here are gone with the
+    // transform they described: road-to-continuity-writer-activation step 3.1
+    // retired the cache half, taking `_redact_lines` and `WORD_CAP` with it, so
+    // the file no longer declares a loss class and no longer owes one. What is
+    // NOT gone is the 30-row cap in `_lib/session_index_trust.ts`, which the
+    // detector cannot see because it reads concern scripts only — tracked as
+    // blocker `loss-class-corpus-is-empty-after-hot-context`. Deleting these
+    // two without saying that would hide the hole rather than record it.
 });
 
 describe('3.3 — the passthrough invariant, one fixture per degradation', () => {

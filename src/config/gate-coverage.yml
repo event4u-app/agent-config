@@ -2389,11 +2389,14 @@ gates:
       has measurably never ratcheted. Both seats added the refinement adopted
       here: unknown reachability is classified as model-reaching.
 
-      MEASURED AT LANDING: **1** module qualifies — `hot_context_hook`, which is
-      exactly the `ephemeral-lossy` exemplar `docs/contracts/loss-classes.md`
-      classifies. A gated population of one is the honest state of this tree,
-      not a broken detector, and it is why the floor below is set on the SCANNED
-      corpus (53 hook scripts) rather than on the gated subset.
+      MEASURED AT LANDING: **1** module qualified — `hot_context_hook`, the
+      `ephemeral-lossy` exemplar `docs/contracts/loss-classes.md` classifies.
+      MEASURED 2026-09-09, after step 3.1 of road-to-continuity-writer-activation
+      retired that module's cache half: **0**. Setting the floor on the SCANNED
+      corpus rather than the gated subset is what keeps this row meaningful
+      through that drop — but a matched subset of zero means the gate currently
+      proves nothing about any transform, which is tracked as blocker
+      `loss-class-corpus-is-empty-after-hot-context`.
 
       THE DETECTOR READS CODE, NOT PROSE. Its first cut matched `truncat` inside
       three docblocks that describe truncation without performing any and
