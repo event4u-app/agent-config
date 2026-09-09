@@ -48,7 +48,7 @@ release can never be honestly dispositioned.
 
 ## Phase 1 — Ingest, then disposition
 
-- [ ] **1.1 Ingest the artifact before it expires.** Mechanical, no judgement:
+- [x] **1.1 Ingest the artifact before it expires.** Mechanical, no judgement:
       `gh run download 34214806821 -n self-review-findings -D <dir>` then
       `./scripts-run src/scripts/check_finding_dispositions --ingest
       <dir>/self-review-findings.json --release 14.22.0`. Deadline 2026-10-08 —
@@ -58,8 +58,13 @@ release can never be honestly dispositioned.
       56 findings; `check_finding_dispositions` moves from "no findings ledger"
       to naming undispositioned blocking findings, which is progress rather than
       a green.
+      Done 2026-09-08 in PR #1950 (`fix/adr-266-finding-dispositions`), inside
+      the deadline with a month to spare. Ticked here 2026-09-09 on verification
+      rather than on the commit message: the file exists at 84,022 bytes and
+      carries **56 findings — 3 critical, 12 high, 27 medium, 14 low**, which
+      matches the count this step predicted from the scratch ingest.
 
-- [ ] **1.2 Disposition the 11 blocking findings.** Each needs
+- [x] **1.2 Disposition the 11 blocking findings.** Each needs
       `{finding_id, status: fixed|false_positive|accepted_risk, commit,
       rationale, verified_by}`. Three are `critical security` — the self-review
       gate having reviewed nothing for four consecutive releases, ADR-262
@@ -72,6 +77,50 @@ release can never be honestly dispositioned.
       `accepted_risk` written without verifying the finding puts a false claim
       into a governance ledger, which is worse than the red it clears.
       verify: `./scripts-run src/scripts/check_finding_dispositions` exits 0.
+      Done 2026-09-08 in the same PR. Verified fresh 2026-09-09:
+      `check_finding_dispositions` prints `scanned: 56` and
+      `✅ all 56 recorded finding(s) for 14.22.0 dispositioned (blocking ones
+      completely)`.
+      **It was a review pass, and the shape of the verdicts is the evidence for
+      that.** The eleven blocking findings resolve as **8 `false_positive`, 2
+      `accepted_risk`, 1 `fixed`** — not eleven acceptances, which is the
+      pressure Risk 3 named. Every one carries a `verified_by` and a rationale
+      between 1,120 and 2,300 characters that names the files and lines checked;
+      the `fixed` row carries its commit. The step's own count ("nine
+      dispositioned `false_positive` and one `fixed`") is superseded by the
+      committed ledger: it reads 8 / 2 / 1, and the ledger is the record.
+      **Both `accepted_risk` verdicts were accepted WITH A RECEIVER, and the
+      receiver has since fired.** `bb9f81e64fae` (critical — vendored grammars
+      with no supply-chain verification surface) and `d1696732ac28` (high — the
+      manifest's eleven conditions are all self-referential) both name
+      `road-to-the-14-22-0-disposition-residuals` steps 1.1/1.2 as what closes
+      them. That roadmap was completed and archived on 2026-09-09 (PR #1953):
+      `src/scripts/_lib/vendored_grammar_upstream.ts` anchors the vendored bytes
+      to the locked upstream and refuses rather than passes when it cannot, and
+      `packed_binary_predicate.ts` states its threat boundary.
+      The two rows are deliberately NOT rewritten to `fixed`. A disposition
+      records what was true at the release it dispositions; editing it later to
+      match a subsequent fix would make the ledger describe a release that never
+      shipped. The discharge is recorded here, where it happened.
+
+## Closed 2026-09-09 — what actually happened
+
+The section below was written on 2026-09-08 by the run that found the red and
+declined to close it. Both of its stated reasons were answered, and by different
+means, so it is kept rather than deleted:
+
+- **The ingest and the eleven dispositions landed in PR #1950**, a PR whose whole
+  scope was this ledger — which is exactly the "not inside an unrelated roadmap
+  PR" the section asks for.
+- **The council quota was not a permanent state.** It read 50/50 on both seats
+  again on 2026-09-09, and `council_cli run --mode-override api --proceed-anyway`
+  takes the metered rung per invocation; two rounds cost $0.123 in total. A seat
+  at its CLI limit is not an unavailable seat.
+
+This file was then complete and unticked for a day: the work was done in another
+PR and nobody came back to close the roadmap. That is the reason it is being
+closed on verification rather than on a commit message — every claim above was
+re-run against the tree on 2026-09-09.
 
 ## Why an autonomous run did not simply close it
 
@@ -94,10 +143,21 @@ is the manufactured-evidence failure this repository has already recorded once.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `./scripts-run src/scripts/check_finding_dispositions` exits 0 with
+- [x] AC-1 — `./scripts-run src/scripts/check_finding_dispositions` exits 0 with
       `agents/evidence/release-findings/14.22.0.json` committed, so the required
       status check stops refusing unrelated pull requests.
-- [ ] AC-2 — Every blocking finding in that ledger carries a disposition whose
+      Met. Verified 2026-09-09: exit 0, `scanned: 56`. The file is tracked on
+      `main`. The trunk-wide stop this roadmap was opened for is gone —
+      `Sync + Generate Tools Consistency` has been green on every PR since,
+      including the two this file's own `estate_offset_exempt` cites as evidence
+      that it was red (#1944, #1923), and on #1953.
+- [x] AC-2 — Every blocking finding in that ledger carries a disposition whose
       `rationale` names what was checked, not only what was decided. A ledger
       that is green because eleven findings were accepted without evidence does
       not satisfy this.
+      Met, and measured rather than asserted. All eleven carry `verified_by`;
+      rationale lengths run 1,120–2,300 characters and cite files and line
+      ranges. The verdict mix is 8 `false_positive` / 2 `accepted_risk` / 1
+      `fixed` — the failure this AC forbids would be eleven bare acceptances,
+      and two is what the ledger has, each with a named receiver that has since
+      closed (see 1.2).
