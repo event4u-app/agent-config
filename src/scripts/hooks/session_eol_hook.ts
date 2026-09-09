@@ -45,7 +45,11 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import recycleThresholdConfig from '../../config/recycle-threshold-budget.json';
 
-import { recycle_envelope_rel } from '../_lib/recycle_envelope_paths.js';
+import {
+    listContinuityRecords,
+    RECYCLE_MAX_AGE_HOURS,
+    recycle_envelope_rel,
+} from '../_lib/recycle_envelope_paths.js';
 import {
     emptyCounters,
     eolSessionKey,
@@ -214,6 +218,62 @@ export function envelopeExists(
     } catch {
         return true;
     }
+}
+
+/**
+ * Records that were written and never read — the detection layer this defect
+ * did not have.
+ *
+ * `road-to-a-recycle-envelope-that-is-consumed` step 1.2. Twelve unconsumed
+ * envelopes accumulated across the estate over roughly a month, and the only
+ * reason anyone found them was a stray-copy check during an unrelated task. The
+ * producer reported success, the consumer reported `absent`, and nothing
+ * compared the two — so the mechanism was inert for weeks with no signal.
+ *
+ * Advisory ONLY. A hook that blocks a session end over a stale runtime file is
+ * worse than the file, and that is Kill-register K3 of the roadmap rather than
+ * a preference here.
+ *
+ * Silent in the normal case, which is what keeps it worth reading: a record
+ * younger than {@link RECYCLE_MAX_AGE_HOURS} is a pending resume, not a defect,
+ * and past that age the consumer discards it loudly on its own. What this
+ * reports is the third state — old enough to be dead, still sitting there,
+ * which means no successor ever came for it.
+ */
+export function unconsumedRecordLines(
+    workspaceRoot: string,
+    now: Date = new Date(),
+    maxAgeHours: number = RECYCLE_MAX_AGE_HOURS,
+): string[] {
+    const out: string[] = [];
+    for (const file of listContinuityRecords(workspaceRoot)) {
+        let raw: string;
+        try {
+            raw = fs.readFileSync(file, 'utf-8');
+        } catch {
+            continue; // an unreadable record proves nothing in either direction
+        }
+        let written: unknown;
+        let nextTask: unknown;
+        try {
+            const parsed = JSON.parse(raw) as { written_at?: unknown; next_task?: unknown };
+            written = parsed.written_at;
+            nextTask = parsed.next_task;
+        } catch {
+            continue;
+        }
+        if (typeof written !== 'string') continue;
+        const stamp = Date.parse(written);
+        if (Number.isNaN(stamp)) continue;
+        const ageHours = (now.getTime() - stamp) / 3_600_000;
+        if (ageHours <= maxAgeHours) continue;
+        const task = typeof nextTask === 'string' && nextTask.trim() !== '' ? nextTask.trim() : '(no next_task)';
+        out.push(
+            `unconsumed continuity record: ${path.relative(workspaceRoot, file)} is ` +
+                `${ageHours.toFixed(0)}h old and was never read — next_task was "${task.slice(0, 120)}"`,
+        );
+    }
+    return out;
 }
 
 /**

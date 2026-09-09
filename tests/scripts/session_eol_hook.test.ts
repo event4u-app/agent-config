@@ -25,6 +25,7 @@ import {
     stateFile,
     CONTEXT_FILL_REL,
     THRESHOLD_OVERRIDE_ENV,
+    unconsumedRecordLines,
 } from '../../src/scripts/hooks/session_eol_hook.js';
 import { recycle_envelope_rel } from '../../src/scripts/_lib/recycle_envelope_paths.js';
 import { readCheckpoint } from '../../src/scripts/_lib/run_checkpoint.js';
@@ -449,5 +450,78 @@ describe('deterministic checkpoint (UOTL Phase 6.1)', () => {
         const r = runMain();
         expect(r.rc).toBe(2);
         expect(r.out).toContain('warn');
+    });
+});
+
+/**
+ * The detection layer this defect did not have.
+ *
+ * Twelve unconsumed envelopes accumulated across the estate over roughly a
+ * month; the producer reported success, the consumer reported `absent`, and
+ * nothing compared the two. The silent case is tested first and deliberately:
+ * an advisory that fires on a healthy workspace trains the reader to skip it,
+ * and then the one time it matters it is skipped too.
+ */
+describe('unconsumedRecordLines', () => {
+    function ws(): string {
+        const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'eol-unconsumed-')));
+        fs.mkdirSync(path.join(root, 'agents', 'runtime', 'state'), { recursive: true });
+        return root;
+    }
+
+    function record(root: string, sessionId: string, ageHours: number, nextTask?: string): string {
+        const target = path.join(root, recycle_envelope_rel(sessionId));
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(
+            target,
+            JSON.stringify({
+                written_at: new Date(Date.now() - ageHours * 3_600_000).toISOString(),
+                ...(nextTask === undefined ? {} : { next_task: nextTask }),
+            }),
+        );
+        return target;
+    }
+
+    it('says NOTHING about a workspace with no records', () => {
+        expect(unconsumedRecordLines(ws())).toEqual([]);
+    });
+
+    it('says NOTHING about a fresh record — that is a pending resume, not a defect', () => {
+        const root = ws();
+        record(root, 'sess-fresh', 2);
+        expect(unconsumedRecordLines(root)).toEqual([]);
+    });
+
+    it('reports an old record by path, age and next_task', () => {
+        const root = ws();
+        record(root, 'sess-old', 100, 'finish the ratchet claim');
+        const lines = unconsumedRecordLines(root);
+        expect(lines).toHaveLength(1);
+        expect(lines[0]).toContain('recycle-envelope-sess-old.json');
+        expect(lines[0]).toContain('100h');
+        expect(lines[0]).toContain('finish the ratchet claim');
+    });
+
+    it('reports a record with no next_task without inventing one', () => {
+        const root = ws();
+        record(root, 'sess-bare', 100);
+        expect(unconsumedRecordLines(root)[0]).toContain('(no next_task)');
+    });
+
+    it('ignores an unparseable or undated record rather than guessing its age', () => {
+        const root = ws();
+        const target = path.join(root, recycle_envelope_rel('sess-broken'));
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(target, 'not json at all');
+        fs.writeFileSync(path.join(root, recycle_envelope_rel('sess-undated')), JSON.stringify({ task: 'x' }));
+        expect(unconsumedRecordLines(root)).toEqual([]);
+    });
+
+    it('reports each old record separately', () => {
+        const root = ws();
+        record(root, 'sess-a', 100, 'a');
+        record(root, 'sess-b', 200, 'b');
+        record(root, 'sess-fresh', 1, 'fresh');
+        expect(unconsumedRecordLines(root)).toHaveLength(2);
     });
 });
