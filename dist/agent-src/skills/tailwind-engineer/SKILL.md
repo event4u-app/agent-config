@@ -51,6 +51,27 @@ radius, spacing, shadow, font-size to a configured token. If the design hands yo
 (`bg-[#3B82F6]`, `mt-[17px]`) are a smell — accept only with a
 one-line comment naming the design source.
 
+**That paragraph is written for greenfield, and artifact-bound work inverts
+it.** When a provided finished design is the spec
+([`design-fidelity`](../../rules/design-fidelity.md)), `#3B82F6` is a decision
+somebody already made and `bg-blue-500` is a guess about it. Reconcile against
+the project's tokens — that part is not optional — but reconcile by distance,
+not by reflex:
+
+| The nearest project token is | Write |
+|---|---|
+| the same value | the project token — that is not a translation |
+| different in a way you cannot see side by side | the project token, and say so in the port notes |
+| visibly different | the artifact's value, and report the project gap |
+
+An artifact-derived exact value is **not** a smell in this mode: it *is* the
+spec, and the source-naming comment the paragraph above asks for is what
+records it. Translate a given literal **once** into a named project token
+rather than snapping it per call site — one token the project owns beats N
+approximations of the same colour. Structure, controls, icons, grid and
+breakpoints are never this skill's to adjust; those stay 1:1 with the artifact
+and belong to the rule, not to a utility-class decision.
+
 Token authoring (DTCG 3-layer model, CSS-var/Tailwind generation) lives
 in [`design-tokens`](../design-tokens/SKILL.md); its
 `tokens.ts validate --dir <path>` is the **single token-discipline
@@ -128,7 +149,16 @@ Risks:          <arbitrary values, !important, dark-mode gaps>
 - `dark:` variants need a token map in both modes; one-sided dark
   styling is half a feature.
 - Arbitrary values (`mt-[17px]`) survive Tailwind upgrades but
-  break the design system; they accumulate silently.
+  break the design system; they accumulate silently. **Artifact-bound is the
+  exception, not a loophole:** a value the provided design specifies is not
+  accumulation, and step 1's distance table decides it. An arbitrary value
+  nobody can trace to a source is still the smell this bullet is about.
+- **The carrier is CSS or a utility class; the value is the design's.** Static
+  presentation belongs in CSS / tokens / classes — `style=` is for what only
+  the runtime knows (a computed width, a live transform, a measured offset).
+  Porting an artifact's inline `style=` into classes is therefore expected and
+  is not a deviation, **as long as the resolved value comes out identical**.
+  Changing the carrier is free; changing the number is not.
 - `@apply` inside component CSS interacts with PurgeCSS — keep it
   in files Tailwind scans, not in vendor CSS.
 - **Anti-AI-slop catalog.** The bullets below are the Tailwind-specific

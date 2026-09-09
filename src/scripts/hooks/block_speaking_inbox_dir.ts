@@ -22,7 +22,12 @@
  *
  * Refuses: a Write/Edit/NotebookEdit (or cross-platform equivalent) whose
  * target path introduces a **new** first-level directory under `agents/tmp/`
- * or `agents/tmp.old/` whose name is not an opaque round identifier.
+ * or `agents/tmp.old/` whose name is not an opaque round identifier — and a
+ * shell command whose own segments would bring one into existence. That scope
+ * is now what the code implements: a read tool's `file_path` is filtered by
+ * `_READ_ONLY_TOOLS`, and a command's tokens by `creatableTokens`. Both were
+ * scanned unconditionally before, so the sentence above described an intent
+ * the file did not carry.
  *
  * Allowed, deliberately:
  *
@@ -62,6 +67,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { isNonHarvestTmpDir, isOpaqueRoundId } from '../_lib/source_shape.js';
+import { invokedSegments } from './git_command_classifier.js';
 import { readHookStdin } from './hook_stdin.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -76,8 +82,119 @@ const _PATH_KEYS: readonly string[] = [
     'file_path', 'path', 'target_file', 'filename', 'filePath', 'notebook_path',
 ];
 
+/**
+ * Tools whose `file_path` names something to READ, never something to write.
+ *
+ * `_PATH_KEYS` covers `file_path` and `path`, which is exactly what a Read,
+ * Grep or Glob call carries — so a search under a speaking round that does not
+ * exist yet was refused by a guard whose own docstring scopes itself to
+ * `Write/Edit/NotebookEdit`. Filtering here rather than through the manifest's
+ * `tools:` key on purpose: that key is an exact match on the host's own tool
+ * name, so an allowlist written in Claude's vocabulary would silence this
+ * guard on every host that spells its write tools differently. A DENY-list of
+ * read tools fails the other way — an unrecognised tool is still judged.
+ *
+ * An envelope with no tool name is judged too, for the same reason
+ * `_concern_matches_tool` runs a concern when the field is absent: a key that
+ * cannot decide must not be what silences a blocking guard.
+ */
+const _READ_ONLY_TOOLS: ReadonlySet<string> = new Set([
+    'read', 'grep', 'glob', 'notebookread', 'ls', 'view', 'search',
+    'codebase-retrieval', 'codebase_retrieval', 'file_search', 'grep_search',
+    'read_file', 'list_dir', 'semantic_search',
+]);
+
 function _isObject(v: JsonValue | undefined): v is JsonObject {
     return v !== null && v !== undefined && typeof v === 'object' && !Array.isArray(v);
+}
+
+/**
+ * Segment-leading command words that cannot bring a path into existence.
+ *
+ * READING IS NOT CREATING, AND THE COMMAND SCAN DID NOT KNOW IT. The scan in
+ * `main` offered every whitespace token of a shell command to the same verdict
+ * that judges a Write target, so `ls -d agents/tmp/<name>-*` — a read, over a
+ * glob, that creates nothing — was refused exactly like `mkdir`. Measured
+ * twice in one session while running the inbox flow over a real round: the
+ * command that lists which round identifiers are already taken is a command
+ * this guard blocked, so the guard stood between the operator and the naming
+ * rule it exists to enforce.
+ *
+ * A closed allowlist of read-only verbs rather than a deny-list of creating
+ * ones, so an unknown verb is still scanned and closing the false positive
+ * opens no bypass. `echo` and `printf` are listed because their only creating
+ * form is a redirect, which {@link _redirectTargets} judges separately.
+ *
+ * `git` is deliberately absent: `git mv` creates, and separating its read
+ * subcommands would buy one rare case (`git log -- agents/tmp/<name>/`, over a
+ * gitignored tree that returns nothing) for a second place to get the split
+ * wrong.
+ */
+const _READ_ONLY_VERBS: ReadonlySet<string> = new Set([
+    'awk', 'basename', 'bat', 'cat', 'cmp', 'column', 'cut', 'diff', 'dirname',
+    'du', 'echo', 'egrep', 'fd', 'fgrep', 'file', 'find', 'grep', 'head', 'jq',
+    'less', 'ls', 'nl', 'printf', 'readlink', 'realpath', 'rg', 'sed', 'sort',
+    'stat', 'tail', 'test', 'tr', 'type', 'uniq', 'wc', 'which', 'yq',
+]);
+
+/** The command word of one segment, without its directory prefix or arguments. */
+function _verbOf(segment: string): string {
+    const head = segment.trim().split(/\s+/)[0] ?? '';
+    return (head.split('/').pop() ?? '').toLowerCase();
+}
+
+/**
+ * The paths a redirect inside one segment would create.
+ *
+ * `splitOutsideQuotes` treats `;`, `|`, `&` and newline as separators and `>`
+ * as ordinary text, so a redirect target stays inside its segment — and a
+ * read-only verb would otherwise carry it past the allowlist above.
+ * `echo hi > agents/tmp/<name>/note.md` creates the directory as surely as
+ * `mkdir` does; `ls … 2>/dev/null` does not. The difference is the target, not
+ * the verb, so targets are judged even when the verb is read-only.
+ */
+function _redirectTargets(segment: string): string[] {
+    const out: string[] = [];
+    const re = /(?:^|[^0-9<>&])[0-9]*>>?\s*([^\s|&;<>]+)/g;
+    let m: RegExpExecArray | null = re.exec(segment);
+    while (m !== null) {
+        const target = m[1];
+        if (target) {
+            out.push(target);
+        }
+        m = re.exec(segment);
+    }
+    return out;
+}
+
+/**
+ * The tokens of a shell command whose CREATION this guard should judge.
+ *
+ * Judged per INVOKED SEGMENT, reusing `git_command_classifier`'s segmenter so
+ * this guard and its two siblings on the same slot agree about what a segment
+ * is — that module already carries the heredoc stripping, the quote-aware
+ * split, the `sh -c` unwrap and the substitution recursion, and a second copy
+ * is one more thing that can drift. Per segment matters on its own: the host
+ * splits a compound command the same way, and one creating segment must not
+ * make every read token in its neighbours suspect.
+ *
+ * Exported so the harness can pin the polarity pair on the tokens themselves,
+ * without an envelope.
+ */
+export function creatableTokens(command: string): string[] {
+    const out: string[] = [];
+    for (const seg of invokedSegments(command)) {
+        out.push(..._redirectTargets(seg));
+        if (_READ_ONLY_VERBS.has(_verbOf(seg))) {
+            continue;
+        }
+        for (const tok of seg.split(/[\s"'`(){};|&<>]+/)) {
+            if (tok) {
+                out.push(tok);
+            }
+        }
+    }
+    return out;
 }
 
 /** `agents/tmp/<name>/…` or `agents/tmp.old/<name>/…`, after normalisation. */
@@ -153,17 +270,25 @@ export function verdictFor(
     // `agents/tmp-notes/` and `agents/tmpfiles/`, and taking the FIRST
     // occurrence meant a path carrying a decoy earlier segment probed the wrong
     // directory — in either direction. Found by the R2 review of this branch.
+    // THE CAPTURE CARRIES THE PATH'S OWN PREFIX, and it did not. Anchoring the
+    // group at `agents/` discarded everything before it, so a nested inbox —
+    // `app/Modules/<m>/agents/tmp/<round>/…`, the shape a module-per-package
+    // tree produces — probed `<repoRoot>/agents/tmp/<round>`, a directory that
+    // does not exist. The already-exists carve-out could therefore never fire
+    // there, and every write into a nested speaking round was refused forever
+    // instead of once. `(?:.*\/)?` backtracks to the LAST viable `agents/tmp/`,
+    // so the decoy case the paragraph below describes still resolves.
     const normalized = filePath.replace(/\\/g, '/').replace(/^(\.\/)+/, '');
     const m =
-        /(?:^|\/)(agents\/tmp(?:\.old)?\/[^/]+)\//.exec(normalized) ??
-        /(?:^|\/)(agents\/tmp(?:\.old)?\/[^/.]+)\/?$/.exec(normalized);
+        /^((?:.*\/)?agents\/tmp(?:\.old)?\/[^/]+)\//.exec(normalized) ??
+        /^((?:.*\/)?agents\/tmp(?:\.old)?\/[^/.]+)\/?$/.exec(normalized);
     if (m === null) {
         // `inboxDirName` matched but this did not — treat as unattributable and
         // BLOCK, since the name is speaking and we cannot prove it pre-exists.
         return { block: true, dir, reason: 'new inbox directory with a speaking name (path not re-anchorable)' };
     }
     const upto = m[1] as string;
-    const probe = repoRoot === '' ? upto : path.join(repoRoot, upto);
+    const probe = repoRoot === '' || path.isAbsolute(upto) ? upto : path.join(repoRoot, upto);
     if (exists(probe)) {
         return { block: false, dir, reason: 'directory already exists — rename, do not re-refuse' };
     }
@@ -216,11 +341,15 @@ export function main(): number {
             return 0;
         }
         const repoRoot = typeof envelope['project_dir'] === 'string' ? envelope['project_dir'] : '';
+        const rawTool = payload['tool_name'] ?? envelope['tool_name'];
+        const toolName = typeof rawTool === 'string' ? rawTool.trim().toLowerCase() : '';
         const candidates: string[] = [];
-        for (const key of _PATH_KEYS) {
-            const v = ti[key];
-            if (typeof v === 'string' && v) {
-                candidates.push(v);
+        if (!_READ_ONLY_TOOLS.has(toolName)) {
+            for (const key of _PATH_KEYS) {
+                const v = ti[key];
+                if (typeof v === 'string' && v) {
+                    candidates.push(v);
+                }
             }
         }
         // A shell command creates the directory just as effectively as a Write,
@@ -228,16 +357,13 @@ export function main(): number {
         // agents/tmp/<speaking-name>`, a `git mv` into one, or a redirect
         // bypassed it entirely. Both siblings on this slot (`block_no_verify`,
         // `block_kernel_rule_writes`) parse the command string; this one did
-        // not, and the R2 review of this branch caught it. Every whitespace
-        // token of the command is offered to the same pure verdict, so the
-        // decision logic is shared rather than duplicated.
+        // not, and the R2 review of this branch caught it. The tokens that
+        // could CREATE something are offered to the same pure verdict, so the
+        // decision logic is shared rather than duplicated — see
+        // `creatableTokens` for why "every whitespace token" was too many.
         const cmd = ti['command'] ?? (_isObject(envelope['payload']) ? (envelope['payload'] as JsonObject)['command'] : undefined);
         if (typeof cmd === 'string' && cmd) {
-            for (const tok of cmd.split(/[\s"'`(){};|&<>]+/)) {
-                if (tok) {
-                    candidates.push(tok);
-                }
-            }
+            candidates.push(...creatableTokens(cmd));
         }
         for (const v of candidates) {
             const verdict = verdictFor(v, (p) => fs.existsSync(p), repoRoot);
