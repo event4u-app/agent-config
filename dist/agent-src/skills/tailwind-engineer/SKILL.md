@@ -83,9 +83,15 @@ as `blocker: approximation-tolerance` and `blocker: fidelity-default-flip` on
 `road-to-design-intent-conformance`. Until they land, a skill granting that
 autonomy would be re-writing the rule from underneath it.
 
-Structure, controls, icons, grid and breakpoints are never this skill's to
-adjust; those stay 1:1 with the artifact and belong to the rule, not to a
-utility-class decision.
+Structure, controls, grid and breakpoints are never this skill's to adjust;
+those stay 1:1 with the artifact and belong to the rule, not to a
+utility-class decision. **Icons are out of scope here as well, and this skill
+asserts no obligation about them** — the icon system belongs to
+[`icon-consistency`](../../rules/icon-consistency.md). An earlier revision of
+this paragraph claimed icons "stay 1:1 with the artifact" with no citation of
+any kind, while putting them outside its own scope in the same sentence; the
+claim is withdrawn rather than defended, because a clause that reached the tree
+first does not thereby earn an evidentiary bar for its own reversal.
 
 Token authoring (DTCG 3-layer model, CSS-var/Tailwind generation) lives
 in [`design-tokens`](../design-tokens/SKILL.md); its
@@ -113,7 +119,7 @@ manually. Reviewer should read intent in one pass.
 
 The first two repetitions of a **utility-class string** are noise; the third
 is a pattern (the utility-class row of the per-class canon,
-[`abstraction-thresholds`](../../../docs/guidelines/abstraction-thresholds.md)).
+[`abstraction-thresholds`](../../guidelines/abstraction-thresholds.md)).
 Extract via:
 
 | Mechanism | When |
@@ -183,7 +189,7 @@ Risks:          <arbitrary values, !important, dark-mode gaps>
   in files Tailwind scans, not in vendor CSS.
 - **Anti-AI-slop catalog.** The bullets below are the Tailwind-specific
   manifestations of the stack-agnostic patterns in
-  [`docs/guidelines/design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md)
+  [`docs/guidelines/design-antipatterns.md`](../../guidelines/design-antipatterns.md)
   (C1 gradients, T7 fonts, L1/L2 layout, V1 side-stripe). Pull the catalog
   for the full list; the objective subset (contrast, font-size floor,
   reduced-motion) is validated via `accessibility-auditor`'s checklist —

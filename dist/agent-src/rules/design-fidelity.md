@@ -75,12 +75,12 @@ both of which name a screenshot as a legitimate spec — and it would forbid the
 image-only handover class the rule exists to govern. What it forbids is
 narrower: reaching for pixels **while the code is sitting there**.
 
-The five new lines route to
-[`design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md)
-§ Data-basis ladder (the first three) and § Adopt the code (the last two) —
-including the scope line that keeps the adopt-the-code duty from colliding with
-[`code-provenance`](code-provenance.md). Read that scope line before acting on
-either rule; the boundary is stated from both sides.
+**Artifact versus brand — arbitrated here, not behind a pointer.** A brand
+token wins on a **value** (colour, type, spacing), and the distance from the
+artifact's own value is reported, never silently absorbed. **Structure is the
+artifact's** — layout, controls, component set, order, breakpoints — never
+adjusted to suit a token; a conflict is surfaced, never merged. The
+adopt-the-code duty stops where [`code-provenance`](code-provenance.md) starts.
 
 ## What counts as the spec
 
@@ -105,7 +105,7 @@ mentions a wireframe it replaces routes **strictly** — a reference to a previo
 not a declaration about this one. **When the artefact does not declare its maturity,
 it is treated as finished**: the 1:1 floor is stricter, and guessing *low fidelity*
 would authorise the redesign this rule prevents. Maturity→spec table + the pinned near-miss:
-[`design-fidelity-mechanics § Artefact maturity`](../docs/guidelines/design-fidelity-mechanics.md).
+[`design-fidelity-mechanics § Artefact maturity`](../guidelines/design-fidelity-mechanics.md).
 
 ## Strictness — set by `design.fidelity_mode`
 
@@ -189,7 +189,7 @@ introduced. The row that would have caught it is
 and it exists only because a review asked for it after the trigger had already
 shipped. Write that row first next time; it is the cheap half.
 
-Body migrated to [`guideline:design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md) (per P4 of `road-to-kernel-and-router.md`) — URL / live-page handover (extraction into the `design-system.json` contract before the first UI write, the retrieval order, the lock boundary), surgical visual edits (targeted-edit vs redesign-trigger discipline, stable anchors), asset & imagery discipline (owned-asset path, third-party delivery is self-hosted by default, real-imagery-as-proof, iconography floor, no unrequested filler), deviation-surfacing shape, failure-mode catalog, `daf-*` fixtures.
+Body migrated to [`guideline:design-fidelity-mechanics`](../guidelines/design-fidelity-mechanics.md) (per P4 of `road-to-kernel-and-router.md`) — URL / live-page handover (extraction into the `design-system.json` contract before the first UI write, the retrieval order, the lock boundary), surgical visual edits (targeted-edit vs redesign-trigger discipline, stable anchors), asset & imagery discipline (owned-asset path, third-party delivery is self-hosted by default, real-imagery-as-proof, iconography floor, no unrequested filler), deviation-surfacing shape, failure-mode catalog, `daf-*` fixtures.
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
 
 ## See also

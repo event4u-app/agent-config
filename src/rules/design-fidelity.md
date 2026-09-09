@@ -75,12 +75,12 @@ both of which name a screenshot as a legitimate spec — and it would forbid the
 image-only handover class the rule exists to govern. What it forbids is
 narrower: reaching for pixels **while the code is sitting there**.
 
-The five new lines route to
-[`design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md)
-§ Data-basis ladder (the first three) and § Adopt the code (the last two) —
-including the scope line that keeps the adopt-the-code duty from colliding with
-[`code-provenance`](code-provenance.md). Read that scope line before acting on
-either rule; the boundary is stated from both sides.
+**Artifact versus brand — arbitrated here, not behind a pointer.** A brand
+token wins on a **value** (colour, type, spacing), and the distance from the
+artifact's own value is reported, never silently absorbed. **Structure is the
+artifact's** — layout, controls, component set, order, breakpoints — never
+adjusted to suit a token; a conflict is surfaced, never merged. The
+adopt-the-code duty stops where [`code-provenance`](code-provenance.md) starts.
 
 ## What counts as the spec
 

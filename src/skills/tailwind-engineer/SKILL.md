@@ -83,9 +83,15 @@ as `blocker: approximation-tolerance` and `blocker: fidelity-default-flip` on
 `road-to-design-intent-conformance`. Until they land, a skill granting that
 autonomy would be re-writing the rule from underneath it.
 
-Structure, controls, icons, grid and breakpoints are never this skill's to
-adjust; those stay 1:1 with the artifact and belong to the rule, not to a
-utility-class decision.
+Structure, controls, grid and breakpoints are never this skill's to adjust;
+those stay 1:1 with the artifact and belong to the rule, not to a
+utility-class decision. **Icons are out of scope here as well, and this skill
+asserts no obligation about them** — the icon system belongs to
+[`icon-consistency`](../../rules/icon-consistency.md). An earlier revision of
+this paragraph claimed icons "stay 1:1 with the artifact" with no citation of
+any kind, while putting them outside its own scope in the same sentence; the
+claim is withdrawn rather than defended, because a clause that reached the tree
+first does not thereby earn an evidentiary bar for its own reversal.
 
 Token authoring (DTCG 3-layer model, CSS-var/Tailwind generation) lives
 in [`design-tokens`](../design-tokens/SKILL.md); its

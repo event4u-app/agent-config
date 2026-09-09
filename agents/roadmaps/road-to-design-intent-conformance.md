@@ -178,6 +178,36 @@ no source in the evidence set supports them: a "73-branch" corpus count, "4px /
 evidence about icons — that rule governs numeric values, and the icon grading is
 Adobe's `react-spectrum` audit.
 
+### The icon evidence, recorded rather than acted on
+
+Step 1.4 deletes the unsourced icon obligation. It does **not** replace it with
+the opposite obligation, and the evidence that would argue for one is recorded
+here so a later reader meets it instead of re-deriving it.
+
+**What the evidence says.** Adobe's `react-spectrum` audit grades icon
+substitution as acceptable practice within a design system, and every
+design-system linter surveyed in the round treats an icon as a component
+reference rather than as a literal value. That is a real observation about how
+design systems behave, and it points toward "an artifact's icon may be
+reconciled onto the project's icon set".
+
+**Why it is not acted on.** One measured practice does not reverse a shipped
+obligation, and the direction cuts both ways here: the shipped obligation was
+itself unsourced, so deleting it is the conservative move and *replacing* it
+with a reconcilable-by-default clause would be the same unsourced assertion
+pointed the other way. `src/rules/icon-consistency.md` carries zero occurrences
+of `artifact` / `artefact` / `provided`; step 2.7 gives it a provided-artifact
+carve-out that states when an artifact-sourced icon is not a violation, and
+stops there. Nothing in this roadmap grants an autonomous icon swap.
+
+**Reopening condition.** A shipped surface may assert that an artifact's icons
+are reconcilable onto the project's icon set once **either** (a) a primary
+source states it as an obligation rather than as an observed grading, **or**
+(b) a measured run over provided artifacts shows icon preservation producing a
+worse conformance outcome than reconciliation on the dimensions Phase 4.1
+reports. Absent both, the surface stays silent and `icon-consistency` owns the
+axis.
+
 ## Phase 1 — Remove the contradiction and the false positives
 
 Nothing here needs a decision, a new artefact, or a default change. All three
@@ -234,7 +264,7 @@ are defects with a verified wrong behaviour and a verified right one.
       greater than 0, the rule under the 200-line ceiling, **and**
       `./scripts-run src/scripts/check_preamble_payload_budget` still at or
       under the ratchet.
-- [ ] **1.4 Delete the unsourced icon obligation instead of defending it.**
+- [x] **1.4 Delete the unsourced icon obligation instead of defending it.**
       `src/skills/tailwind-engineer/SKILL.md:86` asserts that icons "stay 1:1
       with the artifact" — a single clause, added in the Phase 1 PR, with **no
       citation of any kind** (`grep -i icon` over that file returns that one
@@ -249,7 +279,7 @@ are defects with a verified wrong behaviour and a verified right one.
       verify: `grep -ci icon src/skills/tailwind-engineer/SKILL.md` returns the
       scope-boundary line and no obligation; `skill_linter --all` warn count
       unchanged.
-- [ ] **1.5 Swap an unfollowable instruction for the arbitration it points at.**
+- [x] **1.5 Swap an unfollowable instruction for the arbitration it points at.**
       `src/rules/design-fidelity.md:78-83` tells the reader *"Read that scope
       line before acting on either rule"* — and that line lives in
       `docs/guidelines/design-fidelity-mechanics.md`, which does not exist in a
@@ -268,7 +298,7 @@ are defects with a verified wrong behaviour and a verified right one.
       `check_preamble_payload_budget --ceiling <ci value>` does not rise, and no
       remaining sentence in the projected rule instructs the reader to open an
       unprojected path.
-- [ ] **1.6 State that no build order is prescribed, positively.**
+- [x] **1.6 State that no build order is prescribed, positively.**
       `src/skills/ui-component-architect/SKILL.md` (`packs: [engineering-base]`,
       same reach as the fidelity rule) gains the observed pattern rather than a
       bare negative: when porting existing UI, inventory first — the lifecycle
@@ -291,7 +321,7 @@ are defects with a verified wrong behaviour and a verified right one.
 install contains. Until that is true, every later phase writes policy into a
 file the reading agent cannot open.
 
-- [ ] **2.1 Project `docs/guidelines/` into `dist/agent-src/guidelines/`.** The
+- [x] **2.1 Project `docs/guidelines/` into `dist/agent-src/guidelines/`.** The
       consumer-side plumbing is already there — `AUGMENT_SYMLINK_DIRS` lists
       `guidelines` and the symlink is simply never created. The lane goes in a
       new module under `src/scripts/_lib/`, and `condense.ts` spends net zero
@@ -437,11 +467,97 @@ Gated on `blocker: fidelity-default-flip` for anything that would refuse.
       verify: the lock's record carries the falsifiability argument and names
       the blocker; no measurement is scheduled against it.
 
+## Council record — the blocker round, 2026-09-09
+
+All five blockers were put to the council in one round. Members `anthropic` +
+`openai`, **2/2 present and concluded** (read from the after-run quorum line),
+$0.00 — both seats subscription-authed. Each member carried an internal blind
+cross-review of the other's position.
+
+**Why the council and not the owner.** Four of the five are reversible,
+repository-internal placement or sequencing decisions, which
+`decision-revisit-gate`'s table routes to the council. The one genuinely
+owner-reserved transition — shipping the approximation **enabled**, a
+consumer-facing default flip — was declared unavailable in the question and
+stays unavailable: blocker 4 resolves to *disabled*, and the enable-by-default
+question is routed to its owner-reserved stub rather than answered here.
+
+| Blocker | Verdict | Split? |
+|---|---|---|
+| `findings-actionability-default` | **(b)** — set the flag at the one call site | no, 2/2 |
+| `standing-payload-headroom` | **(b) after 2.1, amended** — invariant in the guideline, **operative** pointer in the rule, funded by a local substitution | no, 2/2 |
+| `approximation-tolerance` | **none of (a)–(c)** — split 3.2 into measurement-now / behaviour-later; ship **no** tolerance constant | no, 2/2 |
+| `fidelity-default-flip` | **(a) AND (c)** — ship disabled *and* record the enable question in the stub | no, 2/2 |
+| `rule-body-cap` | **(a) narrowly applied** — see the reconciliation below | yes, resolved on a fact |
+
+**The one split, and why it is not an escalation.** `anthropic` answered (c)
+— clause in the guideline, pointer in the rule — and `openai` answered (a)
+narrowly applied, on a measured objection the other answer did not account
+for: *"option (c) cannot literally add a clause to a file already at
+200/200."* That is a fact about this tree, not a preference, and `anthropic`'s
+own answer requires the pointer to be **operative** — which means the pointer
+has to exist, which means the room has to come from somewhere. The two
+converge once the fact is applied: the tolerance clause lives in the guideline
+(the substance of (c)) and the room for its operative pointer is funded by
+migrating one cohesive explanatory passage out of the rule (the mechanism of
+(a)). Recorded as a reconciliation on evidence, not as a casting vote.
+
+**Three things the council added that the roadmap did not ask for**, all
+adopted:
+
+1. **A pointer must be operative, never passive.** *"Before reconciling
+   artifact and brand values, apply the protocol in [guideline §X]"* — placed
+   at the decision point — discharges the obligation; *"See also:
+   design-fidelity-mechanics"* establishes discoverability only. Both members
+   independently.
+2. **A pointer is not free.** Zero preamble headroom means even one clause is
+   paid for; each pointer is funded by naming the exact prose it replaces,
+   which is materially different from deleting 33 unrelated lines to fit 33
+   new ones.
+3. **The colour-distance metric is a prerequisite the roadmap never named.**
+   No colour tolerance is meaningful before the method is fixed — RGB
+   Euclidean, ΔE LAB, CIEDE2000 and OKLab/ΔEOK give different numbers for the
+   same pair. The metric is specified in 3.2; the threshold is not.
+
+**Shipped tolerance values: `null`, both axes.** Primer's ±1px is recorded as
+an externally observed candidate and is **not** the shipped length tolerance.
+`openai` rejected the round's proposed `±5 per RGB channel` on the ground that
+RGB channel distance is not perceptually uniform, and `max(1px, 2%)` on the
+ground that it grows permissive at large dimensions with no evidence that this
+is wanted. `anthropic`'s objection is the sharper one and is the reason both
+axes ship empty: *"a number in a config file, even flagged unmeasured, shapes
+behaviour and creates path dependency."*
+
+**What this does NOT defer.** Every step in Phases 3 and 4 stays executable and
+none is marked `[~]`. The council deferred *behaviour*, and with the mechanism
+shipping disabled and both tolerances `null`, the mechanism itself moves no
+consumer default: 3.2's three fixtures configure their own tolerances
+explicitly, and 3.4's re-frame is conditional on a tolerance being configured,
+so it is inert in a default install. The deferred thing is the *decision to
+turn it on*, which is blocker 4's routing to the stub, already recorded.
+
+**Deferral record, as the council worded it** (carried verbatim into the stub
+by 3.2): behavioural reconciliation and strict-mode reinterpretation are
+deferred because the evidence set contains no token-conformance measurements
+and supports no package colour or length tolerance. Shadow mode records raw
+distances, provenance, counterfactual threshold outcomes, and reviewed false-
+and missed-reconciliation labels. Reopening requires predefined sample
+sufficiency and acceptable error rates per metric. Enable-by-default remains
+owner-reserved.
+
 ## Blockers
 
 ### blocker: findings-actionability-default
 
-- **Status:** open
+- **Status:** resolved
+- **Verdict:** (b), council 2/2, 2026-09-09 — set `artifact_covered: true` on
+  the `token_violation` path in `src/skills/design-tokens/SKILL.md:82-88` and
+  leave the package-wide default alone. (a) was rejected on blast radius: it
+  changes the meaning of every existing unmarked finding to fix one known
+  producer. **Revisit-if:** a second artifact-derived finding path reaches the
+  polish loop without provenance — recurrence, not this single site, is what
+  would justify inverting the default, and the better second move is carrying
+  provenance structurally in the finding type rather than at another call site.
 - **Owner:** maintainer
 - **Blocks:** 4.3
 - **What to do:** pick exactly one — (a) invert the default in
@@ -464,7 +580,20 @@ Gated on `blocker: fidelity-default-flip` for anything that would refuse.
 
 ### blocker: standing-payload-headroom
 
-- **Status:** open
+- **Status:** resolved
+- **Verdict:** (b) after 2.1, amended, council 2/2, 2026-09-09 — the
+  artifact-versus-brand invariant lands in
+  `docs/guidelines/design-fidelity-mechanics.md`, which 2.1 makes reachable,
+  and each standing rule carries an **operative** pointer: *"before reconciling
+  artifact and brand values, apply the protocol in §X"*, placed at the decision
+  point. A passive `see also` establishes discoverability only and does not
+  discharge the obligation. The amendment is `openai`'s and is a measured
+  correction to option (b) as written: **a pointer is not free either**, so each
+  one is funded by naming the exact local prose it replaces — materially
+  different from (a), which buys 33 lines by deleting 33 lines somebody else
+  wrote. **Revisit-if:** traces show the operative pointer is routinely skipped,
+  2.1's projection fails in a real install, or deliberate rule consolidation
+  creates enough headroom to inline the invariant.
 - **Owner:** maintainer
 - **Blocks:** 1.3, 2.4
 - **What to do:** pick exactly one — (a) pay for the addition inside the same
@@ -487,7 +616,26 @@ Gated on `blocker: fidelity-default-flip` for anything that would refuse.
 
 ### blocker: approximation-tolerance
 
-- **Status:** open
+- **Status:** resolved
+- **Verdict:** none of (a)–(c); **split 3.2**, council 2/2, 2026-09-09. Build
+  the measurement half now — distance **metric** definition, raw distance
+  collection, provenance, the config shape, and counterfactual threshold
+  reporting — and ship **no tolerance constant at all**: both `design.tolerance`
+  axes ship `null`. Primer's ±1px is recorded as an externally observed
+  candidate, not as the shipped value. The round's proposed `±5 per RGB channel`
+  is rejected because RGB channel distance is not perceptually uniform, and
+  `max(1px, 2%)` because it grows permissive at large dimensions with no
+  evidence that this is wanted. The decisive argument is the one neither option
+  answered: *a number in a config file, even flagged unmeasured, shapes
+  behaviour and creates path dependency.* **A prerequisite the roadmap never
+  named** and the council added: the colour-distance **method** must be fixed
+  before any colour threshold is meaningful — RGB Euclidean, ΔE LAB, CIEDE2000
+  and OKLab/ΔEOK give different numbers for the same pair, so 3.2 specifies
+  OKLab/ΔEOK and leaves the threshold empty. **Revisit-if:** a pre-registered
+  shadow dataset carries enough independently reviewed cases to estimate false
+  reconciliations and missed reconciliations separately per value class,
+  against sample-sufficiency and error-rate criteria written before the window
+  opened.
 - **Owner:** maintainer
 - **Blocks:** 3.2, 3.4, 4.2
 - **What to do:** pick exactly one — (a) accept provisional start values and
@@ -507,7 +655,18 @@ Gated on `blocker: fidelity-default-flip` for anything that would refuse.
 
 ### blocker: fidelity-default-flip
 
-- **Status:** open
+- **Status:** resolved
+- **Verdict:** **(a) AND (c)**, council 2/2, 2026-09-09 — they are
+  complementary, not exclusive. (a) governs this change: every approximation
+  behaviour ships disabled, so no consumer default moves. (c) preserves the
+  owner's decision: the enable-by-default question is recorded in
+  `agents/roadmaps/stubs/road-to-frontend-power-default-flip.md`, which already
+  exists for this class. (b) was declared unavailable in the question and stays
+  unavailable — and the council named the way it could be smuggled back, which
+  is forbidden here in those words: **do not simulate (b)** through a migration,
+  an implicit auto-enable, or a nominally optional "recommended default".
+  **Revisit-if:** the owner reviews the stub after the shadow window has
+  measured error rates and the impact on existing consumers is known.
 - **Owner:** maintainer
 - **Blocks:** 3.2, 4.2
 - **What to do:** pick exactly one — (a) ship the approximation mechanism
@@ -527,7 +686,23 @@ Gated on `blocker: fidelity-default-flip` for anything that would refuse.
 
 ### blocker: rule-body-cap
 
-- **Status:** open
+- **Status:** resolved
+- **Verdict:** **(a) narrowly applied**, council split resolved on a fact,
+  2026-09-09. `anthropic` answered (c) and `openai` answered (a), and the split
+  is not an escalation because one side rests on a measured property of this
+  tree the other did not account for: *"option (c) cannot literally add a clause
+  to a file already at 200/200."* Both answers require the rule to carry an
+  **operative** pointer, and a pointer that cannot be written is not a pointer.
+  The reconciliation keeps the substance of (c) and the mechanism of (a): the
+  tolerance clause lives in `docs/guidelines/design-fidelity-mechanics.md`, and
+  the room for its operative pointer is funded by migrating **one cohesive
+  explanatory passage** out of `src/rules/design-fidelity.md` — a semantic
+  migration, not an arbitrary line-count cut, so normative routing stays in the
+  rule and detailed mechanics move to the guideline. (b) was rejected by both:
+  raising the `rule_too_large` ceiling weakens a package-wide guardrail for one
+  feature. **Revisit-if:** an execution test shows agents fail to dereference
+  the pointer — then inline the smallest load-bearing invariant and fund it by
+  deliberate consolidation, still not by raising the ceiling.
 - **Owner:** maintainer
 - **Blocks:** 3.4
 - **What to do:** pick exactly one — (a) migrate an existing passage out of
