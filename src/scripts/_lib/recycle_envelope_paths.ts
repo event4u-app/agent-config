@@ -73,6 +73,17 @@ export function recycle_envelope_rel(session_id: string | null | undefined): str
     return _sessionKeyed(session_id, RECYCLE_ENVELOPE_REL, 'recycle-envelope', '.json');
 }
 
+/**
+ * THE KEYING CONTRACT, in one place because its absence is what allowed the
+ * 2026-09-09 defect: the record is keyed by the **producing session** — the one
+ * that ran `session:recycle` — and it is READ by the **consuming session**,
+ * which is a different session with a different id. Those two facts were each
+ * true in their own module and were never written down together, so the
+ * producer and the consumer agreed on a PATH and disagreed about whose id
+ * filled it. {@link resolveContinuityRecord} is where that is now reconciled:
+ * it admits the unique record that is NOT the reader's own.
+ */
+
 /** Consumed sibling of {@link recycle_envelope_rel}, same keying. */
 export function recycle_consumed_rel(session_id: string | null | undefined): string {
     return _sessionKeyed(session_id, RECYCLE_CONSUMED_REL, 'recycle-envelope', '.consumed.json');
@@ -160,41 +171,66 @@ export interface ContinuityResolution {
 /**
  * Which record THIS session may read.
  *
- * Three cases, and the third is the one the per-session key exists for:
+ * **A resume reads the PREDECESSOR's record, and this function used to look for
+ * the reader's own.** Corrected 2026-09-09 after measuring it: the producer
+ * writes under the PRODUCING session's id and the consumer arrives with its
+ * OWN, so the two never coincided and every successor was told `absent`. The
+ * mechanism resolved only for a caller with no session id at all — the one
+ * shape no host produces, and the only shape the 19 pre-existing consumer tests
+ * exercised. `road-to-a-recycle-envelope-that-is-consumed` carries the
+ * five-fixture table; AI council 2026-09-09, 2/2, chose the rule below.
  *
- * 1. **Own id resolves.** Read the record keyed to it, and nothing else. A peer
- *    session's record is not a candidate at any point, so "neither observes the
- *    other's" holds by construction rather than by a comparison that could be
- *    skipped.
- * 2. **No id, one candidate.** Read it. A single record in a checkout with no
- *    resolvable identity is the pre-key situation and is unchanged.
- * 3. **No id, several candidates.** START CLEAN and say so. Picking the newest
- *    is precisely the recency resolution the no-index rule forbids: it would
- *    hand this session a stranger's state and look like a successful resume.
+ * Four cases, and the second is the resume:
+ *
+ * 1. **Own record.** NEVER read. A session re-reading its own state is a loop,
+ *    not a resume, and a second `session_start` for one session (resume, host
+ *    reconnect) made it reachable. Excluded by construction here rather than
+ *    guarded downstream.
+ * 2. **Exactly one record that is not the reader's own.** Read it. That is the
+ *    predecessor.
+ * 3. **Several such records.** START CLEAN and say so — the existing refusal,
+ *    unchanged and now reachable from both branches. Picking the newest is
+ *    precisely the recency resolution the no-index rule below forbids.
+ * 4. **None.** `absent`.
+ *
+ * **Why this is not recency, stated because the rule it must not become is one
+ * line away:** nothing is sorted and nothing is compared by time. Uniqueness
+ * admits; ambiguity refuses. The peer-isolation intent the per-session key was
+ * introduced for therefore moves from the KEY to the REFUSAL — a live peer's
+ * record is no longer excluded by its filename, so the branch gate in
+ * `consume_recycle_envelope` is what keeps an unrelated session from resuming
+ * it. That gate is part of this rule, not a decoration on it.
  */
 export function resolveContinuityRecord(
     workspace_root: string,
     session_id: string | null | undefined,
 ): ContinuityResolution {
     const id = String(session_id ?? '').trim();
-    if (id !== '') {
-        const own = path.join(workspace_root, recycle_envelope_rel(id));
-        return fs.existsSync(own)
-            ? { file: own, reason: `continuity record for this session (${safe_stem(id)})` }
-            : { file: null, reason: `no continuity record for this session (${safe_stem(id)})` };
-    }
-    const candidates = listContinuityRecords(workspace_root);
+    const own = id === '' ? null : path.join(workspace_root, recycle_envelope_rel(id));
+    const candidates = listContinuityRecords(workspace_root).filter((f) => f !== own);
     if (candidates.length === 0) {
-        return { file: null, reason: 'no continuity record present' };
+        return {
+            file: null,
+            reason:
+                id === ''
+                    ? 'no continuity record present'
+                    : `no predecessor record in this workspace (own: ${safe_stem(id)})`,
+        };
     }
     if (candidates.length === 1) {
-        return { file: candidates[0] as string, reason: 'one continuity record, no session id to key on' };
+        return {
+            file: candidates[0] as string,
+            reason:
+                id === ''
+                    ? 'one continuity record, no session id to key on'
+                    : `predecessor record, one candidate (own: ${safe_stem(id)})`,
+        };
     }
     return {
         file: null,
         reason:
-            `starting clean: ${candidates.length} continuity records in this workspace and no session id ` +
-            'to tell them apart — resuming from the newest would resume a peer session, not this one',
+            `starting clean: ${candidates.length} continuity records in this workspace and no way to tell ` +
+            'which is the predecessor — resuming from the newest would resume a peer session, not this one',
     };
 }
 

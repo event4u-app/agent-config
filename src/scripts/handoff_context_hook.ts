@@ -157,6 +157,12 @@ export function consume_handoff_context(root: string, now: Date = new Date()): C
  *   - drift (Phase 3.2): the envelope's recorded repo identity + branch +
  *     HEAD are compared against the tree it lands in, and any mismatch LEADS
  *     the injected block. Never a silent stale resume;
+ *   - the BRANCH GATE (2026-09-09): a branch mismatch is a refusal rather than
+ *     an annotation, and the refusal is `absent` so the record is left for a
+ *     session on the right branch instead of consumed. It is the half of the
+ *     resolution rule that keeps an unrelated session in the same checkout from
+ *     resuming an ended peer, now that the resolver admits any record that is
+ *     not the reader's own. Unknown on either side is not a mismatch;
  *   - focus (Phase 3.4): `AGENT_RESUME_FOCUS` narrows what the successor
  *     attacks first — the consumer-side mirror of `next_task`.
  */
@@ -262,7 +268,39 @@ export function consume_recycle_envelope(
 
     // Drift first: a stale resume against the wrong tree is the failure the
     // reader must see before anything else in the block.
-    const drift = describeDrift(envelope, collectRepoAnchor(root));
+    const anchor = collectRepoAnchor(root);
+
+    // The branch gate — an ADMISSION check, not an annotation, and the half of
+    // the 2026-09-09 resolution rule that lives outside the resolver.
+    //
+    // Why it is needed at all: the resolver now admits the unique record that is
+    // not the reader's own, so peer isolation no longer comes from the filename.
+    // Without this, an unrelated session in the same checkout would resume an
+    // ended peer's work simply by being the next one to start. AI council
+    // 2026-09-09 was explicit that (d) is acceptable WITH this gate and not
+    // without it.
+    //
+    // `absent`, deliberately, and this is the one place the invariant matters:
+    // every other outcome consumes the record (moved, not copied), and consuming
+    // here would destroy state the rightful successor could still use. `absent`
+    // is the only outcome that leaves the file alone, and the 48-hour staleness
+    // guard bounds how long it can sit unclaimed.
+    //
+    // Unknown on either side is NOT a mismatch. An envelope written before the
+    // field existed, or a tree whose branch cannot be read, must not be refused
+    // on a comparison neither side can make — that would turn a missing field
+    // into a broken resume. `describeDrift` still annotates those.
+    const envelopeBranch = String((envelope as Record<string, unknown>)['branch'] ?? '').trim();
+    if (envelopeBranch !== '' && anchor.branch !== null && envelopeBranch !== anchor.branch) {
+        return {
+            action: 'absent',
+            reason:
+                `recycle envelope is for branch "${envelopeBranch}" and this tree is on ` +
+                `"${anchor.branch}" — left unclaimed for a session on that branch rather than consumed`,
+        };
+    }
+
+    const drift = describeDrift(envelope, anchor);
     // Proposal fields carrying an imperative LEAD the block as a stop
     // notice — surfaced, never executed, never silently stripped.
     const warnings = scanEnvelopeDirectives(envelope);
