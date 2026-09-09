@@ -498,6 +498,16 @@ tasks:
     desc: "road-to-capability-discoverability P2 — fail if CAPABILITIES.yaml is stale vs the skill/command/pack surface (auto-run in CI; kill-switch on >5s / >50KB)"
     cmd: ./scripts-run src/scripts/generate_capabilities_index --check
 
+  generate-host-cost-table:
+    silent: true
+    desc: "road-to-delivery-for-every-host 7.2 — (re)generate the per-host standing-cost table in docs/contracts/rule-router.md from the standing-payload-by-host census; refuses when the census is missing, unparseable, or disagrees with the tree"
+    cmd: ./scripts-run src/scripts/generate_host_cost_table {{.CLI_ARGS}}
+
+  generate-host-cost-table-check:
+    silent: true
+    desc: "road-to-delivery-for-every-host 7.2 — fail if the per-host cost table in docs/contracts/rule-router.md is stale vs the census, or if the census itself no longer matches the tree"
+    cmd: ./scripts-run src/scripts/generate_host_cost_table --check
+
   complexity-report:
     silent: true
     desc: "road-to-feedback-8.11 P5 — regenerate internal/reports/complexity-report.md (soft ratchet: report-only, ALWAYS exit 0; kill criterion in the report header)"

@@ -10,7 +10,14 @@ import * as path from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { evaluate, main, readBudget } from '../../src/scripts/check_preamble_payload_budget.js';
+import {
+    evaluate,
+    hostPayloadIds,
+    hostPayloadRoots,
+    main,
+    measureHostPayload,
+    readBudget,
+} from '../../src/scripts/check_preamble_payload_budget.js';
 
 const tmps: string[] = [];
 
@@ -202,5 +209,153 @@ describe('the gate reds on growth past whichever ceiling applies', () => {
 
     it('exits 0 under the grace ceiling the CI step passes', () => {
         expect(main(['--ceiling', String(rawCiDelivery().grace_ceiling)])).toBe(0);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// The additive host reading (AI council 2026-09-09, option 1A).
+//
+// The property that matters most is the NEGATIVE one: adding a second reading
+// must not move the first. A test that only checks the new number would pass
+// even if the host flag had quietly redirected the ratchet — which is the
+// failure mode the council chose 1A specifically to avoid.
+// ---------------------------------------------------------------------------
+
+/** A repo shape carrying BOTH a projection source and a claude-code host tree. */
+function fakeRepoWithHostTree(sourceRules: string[], hostRules: string[]): string {
+    const root = tmpdir();
+    const src = path.join(root, 'dist', 'agent-src', 'rules');
+    fs.mkdirSync(src, { recursive: true });
+    sourceRules.forEach((b, i) => fs.writeFileSync(path.join(src, `r${i}.md`), b, 'utf-8'));
+    fs.mkdirSync(path.join(root, 'dist', 'agent-src', 'skills'), { recursive: true });
+    const host = path.join(root, '.claude', 'rules');
+    fs.mkdirSync(host, { recursive: true });
+    hostRules.forEach((b, i) => fs.writeFileSync(path.join(host, `h${i}.md`), b, 'utf-8'));
+    fs.mkdirSync(path.join(root, '.claude', 'skills'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'CLAUDE.md'), '# project\n', 'utf-8');
+    return root;
+}
+
+describe('the host reading is additive and never moves the ratchet', () => {
+    it('the source verdict is byte-identical with and without a host flag', () => {
+        // The load-bearing assertion of option 1A. `evaluate` is the source
+        // reading; nothing about a host argument may reach it.
+        const before = evaluate();
+        expect(main(['--ceiling', String(rawCiDelivery().grace_ceiling)])).toBe(0);
+        expect(main(['--host', 'claude-code', '--ceiling', String(rawCiDelivery().grace_ceiling)])).toBe(0);
+        const after = evaluate();
+        expect(after.measured).toBe(before.measured);
+        expect(after.ceiling).toBe(before.ceiling);
+        expect(after.buckets).toStrictEqual(before.buckets);
+    });
+
+    it('a host tree far SMALLER than the source does not make the gate pass', () => {
+        // The sabotage direction, and the one test here with PROVEN sensitivity.
+        // Verified 2026-09-09 by neutralising the mechanism: routing the host
+        // total into verdict.withinBudget and decision.ok turns this case RED
+        // (1 failed | 31 passed) and restoring it turns it green (32 passed).
+        //
+        // Stated because the sibling test above does NOT have that property: it
+        // compares evaluate() either side of a main() call, and evaluate() is
+        // untouched by any sabotage in main, so a first probe left all 32 green.
+        // This is the assertion that would actually catch a host flag quietly
+        // redirecting the gated surface.
+        const overBudget = main([]);
+        expect(overBudget, 'HEAD is over the design ceiling today').not.toBe(0);
+        expect(main(['--host', 'claude-code'])).toBe(overBudget);
+    });
+});
+
+describe('host id resolution comes from HOST_SURFACES, not a local path map', () => {
+    it('every declared host resolves to a rules-bearing root', () => {
+        for (const id of hostPayloadIds()) {
+            const roots = hostPayloadRoots(id);
+            expect(roots.rules, `${id} must name a rules root`).toBeTruthy();
+            expect(roots.rules.endsWith('/commands'), `${id} must not measure commands`).toBe(false);
+            expect(roots.rules.endsWith('/skills'), `${id} rules root must not be the skills tree`).toBe(false);
+        }
+    });
+
+    it('claude-code alone carries the CLAUDE.md hierarchy', () => {
+        expect(hostPayloadRoots('claude-code').claudeMd).toBe(true);
+        for (const id of hostPayloadIds().filter((h) => h !== 'claude-code')) {
+            expect(hostPayloadRoots(id).claudeMd, `${id} must not claim CLAUDE.md`).toBe(false);
+        }
+    });
+
+    it('an unknown host throws and names the known set', () => {
+        expect(() => hostPayloadRoots('not-a-host')).toThrow(/unknown host/);
+        expect(() => hostPayloadRoots('not-a-host')).toThrow(/claude-code/);
+    });
+
+    it('the id set is non-empty — a registry read as empty would measure nothing', () => {
+        expect(hostPayloadIds().length).toBeGreaterThan(0);
+        expect(hostPayloadIds()).toContain('claude-code');
+    });
+});
+
+describe('the host measurement and its completeness flag', () => {
+    it('measures the host tree, not the source tree', () => {
+        const root = fakeRepoWithHostTree(['x'.repeat(8000)], ['y'.repeat(400)]);
+        const host = measureHostPayload(root, { host: 'claude-code' });
+        // 400 chars of host body, not 8000 of source. A rules census counts the
+        // file bodies, so the host total is bounded well under the source size.
+        expect(host.total).toBeLessThan(500);
+        expect(host.rules_path).toBe('.claude/rules');
+        expect(host.host).toBe('claude-code');
+    });
+
+    it('flags a PARTIAL tree when the host holds fewer rule files than the source', () => {
+        const root = fakeRepoWithHostTree(['a', 'b', 'c', 'd'], ['a']);
+        const c = measureHostPayload(root, { host: 'claude-code' }).completeness;
+        expect(c.host_rule_files).toBe(1);
+        expect(c.source_rule_files).toBe(4);
+        expect(c.complete).toBe(false);
+    });
+
+    it('reports complete when the host tree carries every source rule', () => {
+        const root = fakeRepoWithHostTree(['a', 'b'], ['a', 'b']);
+        expect(measureHostPayload(root, { host: 'claude-code' }).completeness.complete).toBe(true);
+    });
+
+    it('a rules root that does not exist REFUSES rather than reporting zero', () => {
+        // Zero tokens and a tiny tree are the same number and completely
+        // different facts, so an absent root is an error and not a green.
+        const root = fakeRepoWithHostTree(['a'], ['a']);
+        expect(() => measureHostPayload(root, { rulesDirOverride: 'nope/missing' })).toThrow(
+            /does not exist/,
+        );
+    });
+
+    it('an explicit rules-dir override reports no host id', () => {
+        const root = fakeRepoWithHostTree(['a'.repeat(1000)], ['b'.repeat(2000)]);
+        const host = measureHostPayload(root, { rulesDirOverride: '.claude/rules' });
+        expect(host.host).toBeNull();
+        expect(host.rules_path).toBe('.claude/rules');
+        // Override path measures the rules root only — no skills, no CLAUDE.md,
+        // because an undeclared tree has no declared siblings to infer.
+        expect(host.buckets.length).toBe(1);
+    });
+});
+
+describe('the host flags reject every ambiguous invocation with exit 2', () => {
+    it('--host and --project-rules-dir together are a usage error', () => {
+        expect(main(['--host', 'claude-code', '--project-rules-dir', '.claude/rules'])).toBe(2);
+    });
+
+    it('--host with no value is a usage error', () => {
+        expect(main(['--host'])).toBe(2);
+    });
+
+    it('--host swallowing the next flag is a usage error, not a silent host named --json', () => {
+        expect(main(['--host', '--json'])).toBe(2);
+    });
+
+    it('--project-rules-dir with no value is a usage error', () => {
+        expect(main(['--project-rules-dir'])).toBe(2);
+    });
+
+    it('an unknown host is exit 2, never a pass', () => {
+        expect(main(['--host', 'not-a-host'])).toBe(2);
     });
 });
