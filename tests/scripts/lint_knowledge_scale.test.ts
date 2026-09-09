@@ -12,8 +12,6 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import {
     CORPUS_FILES_MAX,
-    HOT_CONTEXT_TOKENS_MAX,
-    CHARS_PER_TOKEN,
     INTAKE_EVENTS_MAX,
     SESSIONS_PAGES_MAX,
     TYPE_FILES_MAX,
@@ -113,16 +111,6 @@ describe('lint_knowledge_scale — tripwires', () => {
         }
         const warnings = runChecks(root);
         expect(warnings.map((w) => w.rule)).toEqual(['corpus-scale']);
-    });
-
-    it('hot-context-budget fires above the token estimate cap', () => {
-        const root = mkRoot();
-        const hot = path.join(root, 'agents', 'runtime', 'state', 'hot-context.md');
-        fs.mkdirSync(path.dirname(hot), { recursive: true });
-        fs.writeFileSync(hot, 'y'.repeat((HOT_CONTEXT_TOKENS_MAX + 1) * CHARS_PER_TOKEN), 'utf-8');
-        const warnings = runChecks(root);
-        expect(warnings.map((w) => w.rule)).toEqual(['hot-context-budget']);
-        expect(warnings[0]?.message).toContain('deterministic writer');
     });
 
     it('exclusions hold: README/INDEX cards, memory intake/archive/knowledge scratch', () => {

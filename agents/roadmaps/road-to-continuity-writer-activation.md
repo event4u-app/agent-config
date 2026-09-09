@@ -215,7 +215,7 @@ councils required puts them there on purpose:
 
 ## Phase 3 — the retirements, each with its own gate
 
-- [ ] **3.1 `hot-context` — retire the concern, relocate the restore.** The
+- [x] **3.1 `hot-context` — retire the concern, relocate the restore.** The
       2026-09-07 council (D3) authorised retiring the concern and required
       evidence of equivalence plus an explicit trust contract before the
       `memory.session_index` restore moves anywhere: repository and worktree
@@ -436,6 +436,40 @@ councils required puts them there on purpose:
       failure this roadmap's own Risk 1 names from the other direction: the
       writer lands, the retirement is performed against a target nobody chose,
       and the numbers move while the surface gets worse.
+      **Done 2026-09-09.** openai's mechanism, operative per the resolved
+      relocation blocker: the startup CACHE half is gone — write and restore
+      both, because removing only the write would leave a reader over a file
+      nobody maintains — and the `hot-context` concern id STAYS, with its
+      description rewritten to `restore persisted memory session index`. The
+      `stop` bindings on all seven hosts and the `pre_compact` binding on
+      claude are removed; the seven `session_start` bindings are untouched.
+      `concern_count` is unchanged at 58, which is the point of keeping the id:
+      the competing proposal bought −1 and paid for it in manifest
+      completeness.
+      Three sub-tests land in `tests/hooks/session_index_trust_e2e.test.ts` —
+      byte (the corpus renders to a pinned block, and two independent
+      workspaces render identically), sabotage (a missing and a corrupt index
+      each emit nothing and burn no latch, with a control case so the two are
+      not vacuous), ordering (the block is on the `session_start` stdout, and a
+      `stop` writes no cache file). The last one asserts the FILE rather than
+      the absence of a block on purpose: "stop emits no block" was true before
+      this step too, so it would have had no sensitivity.
+      **TWO PREDICTIONS IN THIS STEP'S OWN VERIFY WERE WRONG, and they are
+      corrected here rather than quietly overwritten.**
+      (1) It said `check_continuity_surface` would **not** show the artefact
+      axis one lower. It does: `1 / 2 / 5 / 1 / 1` → `1 / 2 / 4 / 1 / 1`. The
+      prediction conflated two counters — that axis counts ARTEFACTS, and
+      `hot-context.md` was a counted row, while the concern lives in
+      `concern_count` and did not move. A drawdown is gate-legal (the ratchet
+      forbids growth), and it is what the superseded verify line asked for.
+      (2) It said `build_hot_context` must survive because
+      `src/scripts/_cli/handoff_generate.ts` reuses it. It does not: the only
+      reference there is a prose analogy in a docblock, and that file carries
+      its own `WORD_CAP` and its own branch probe. Grepped at HEAD, the
+      function had exactly one caller, inside the file that defined it.
+      **A real coverage gap opened and is tracked, not absorbed** — see
+      blocker `loss-class-corpus-is-empty-after-hot-context` below.
+
 - [ ] **3.2 `session:recycle` — retire the manual writer once the automatic one
       is proven.** It is the only writer today, so this step is gated on Phase 1
       in full, not merely started. The advisory that instructs a human to run it
@@ -749,7 +783,7 @@ maintainer-owned blockers were not touched.
 
 ### blocker: memory-index-relocation-target-unspecified
 
-- **Status:** open
+- **Status:** resolved 2026-09-09
 - **Owner:** maintainer
 - **Asked:** 2026-09-09, by AI council (2 seats, anthropic + openai, api transport, $0.0617,
   quorum 2/2 after the run), convened after step 3.1's D3 precondition was discharged and the
@@ -848,14 +882,14 @@ maintainer-owned blockers were not touched.
   exception remains owner-reserved.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-08 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-09-09 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | The writer lands and the retirements never do | product | The parent's Risk 1 inherited one file further on, and now sharper: the measurement and the reader tolerance already shipped, so the cheapest remaining move is to add the writer, declare continuity solved, and leave five surfaces standing. That is the fourteenth layer, and it would look like completion. | Phase 3 is where the numbers move, and `check_continuity_surface` publishes them on every CI run — a writer that lands with no retirement shows `1 / 2 / 5 / 1 / 1` unchanged in the gate's own output, which is much harder to narrate past than a prose claim. | Phase 3 |
+| 1 | The writer lands and the retirements never do | product | The parent's Risk 1 inherited one file further on, and now sharper: the measurement and the reader tolerance already shipped, so the cheapest remaining move is to add the writer, declare continuity solved, and leave five surfaces standing. That is the fourteenth layer, and it would look like completion. | Phase 3 is where the numbers move, and `check_continuity_surface` publishes them on every CI run — a writer that lands with no retirement leaves the gate's own output unchanged, which is much harder to narrate past than a prose claim. Re-reviewed 2026-09-09: step 3.1 moved it to `1 / 2 / 4 / 1 / 1`, so the risk is one retirement smaller and still live for the remaining two. | Phase 3 |
 | 2 | The record slot loses fresh state to a stale one | implementation | Create-if-absent on a single-slot queue silently drops the newer record whenever an older unconsumed one is still sitting there, and automatic production makes that common rather than rare. The failure is invisible: the successor resumes from something plausible and older. | 1.1 settles the capacity policy and its state machine BEFORE 1.2 writes anything, and its verify requires an interruption test on both sides of the atomic rename. | Phase 1 |
 | 3 | The concern split is attempted before it is paid for | implementation | Step 2.1 is the most obviously "next" piece of work and the ratchet that forbids it lives in a different file, so a reader who starts there gets a red they will be tempted to fix by widening an allowance. | The ordering is stated in 2.1's own text, the blocker names the exact allowance and cites both seats refusing to widen it, and `check_estate_count` fails the branch rather than warning. | Phase 2 |
-| 4 | Retiring `hot-context` silently changes what a session restores | implementation | The `memory.session_index` restore rides on the hot-context injection surface, and moving it is easy to treat as a relocation when it is a change of trust boundary — restored memory is untrusted context arriving on a new path. | 3.1 requires byte-identical output for the same inputs plus a written trust contract with a test per property, which is the 2026-09-07 D3 ruling rather than this roadmap's preference. | Phase 3 |
+| 4 | Retiring `hot-context` silently changes what a session restores | implementation | The `memory.session_index` restore rides on the hot-context injection surface, and moving it is easy to treat as a relocation when it is a change of trust boundary — restored memory is untrusted context arriving on a new path. | DISCHARGED 2026-09-09. The mitigation as written cited byte-identical output, which the council struck as vacuous for a manifest edit plus a moved function; it was replaced by byte, sabotage and ordering sub-tests, and the trust contract's six properties each carry a test. The restore did not move: it stays in the same concern on the same slot, so the trust boundary this row worried about was never crossed. | Phase 3 |
 | 5 | `context-fill.json` is retired out from under a parked roadmap | product | It reads as a free win — a producer with no consumer in code — and the consumer that exists is three steps inside a file parked in `later/`, which nobody opens while doing this work. | 3.3 states the dependency with its file and step numbers and routes the decision to that roadmap's owner instead of taking it here. | Phase 3 |
 
 ## Acceptance Criteria
@@ -904,3 +938,38 @@ maintainer-owned blockers were not touched.
       switch armed a scratch workspace emits no `memory-index` block, because
       it carries no curated corpus. The injection half is covered by
       `tests/scripts/session_memory_index.test.ts`.
+
+### blocker: loss-class-corpus-is-empty-after-hot-context
+
+- **Status:** open
+- **Owner:** implementer
+- **Asked:** 2026-09-09, while executing step 3.1. Not a governance question — a
+  measured hole the step's own change opened.
+- **Blocks:** nothing in this roadmap. Recorded because a gate that stopped
+  seeing a real transform is worse than one that never saw it, and the change
+  that emptied its corpus is the right place to say so.
+- **What happened.** `check_loss_class_declared` matches a concern script only
+  when its text carries both an emit pattern and a lossy pattern (`\bredact`,
+  `\btruncat`, `(WORD|CHAR|MAX)_(CAP|CHARS|LEN|WORDS)`). Before 3.1 exactly ONE of 58 hook
+  scripts matched — `hot_context_hook.ts`, on `_redact_lines` and `WORD_CAP`.
+  Both left with the cache. Measured after the change: 58 scanned, 0 matched,
+  gate green.
+- **Why that is a hole and not bookkeeping.** The memory index still applies a
+  30-row cap (`SESSION_INDEX_ROW_CAP` / `capRows` in
+  `src/scripts/_lib/session_index_trust.ts`), which is a lossy, model-facing
+  transform by the contract's own definition. It sits in a `_lib` module rather
+  than a concern script, and the detector reads concern scripts only — so the
+  transform survives and the gate can no longer see it. A gate that scans
+  nothing exits green.
+- **If you do nothing:** the gate stays green over an empty corpus and stops
+  being evidence of anything. Nothing breaks; the guarantee quietly stops
+  applying.
+- **What to do:** widen `check_loss_class_declared` past concern scripts to the
+  `_lib` modules a concern reaches, or declare `loss_class` on
+  `session_index_trust.ts` and teach the detector to read it. Either way the
+  three surfaces that record "1 module qualifies" —
+  `src/scripts/check_loss_class_declared.ts`, `docs/contracts/loss-classes.md`
+  and the `src/config/gate-coverage.yml` row — move together with it.
+- **Resolved when:** `check_loss_class_declared` reports at least one matching
+  module again AND that module is the one applying the surviving cap, with
+  `tests/scripts/_lib/loss_class.test.ts` asserting it.

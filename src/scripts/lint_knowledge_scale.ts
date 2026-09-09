@@ -18,9 +18,6 @@
  *                          trigram, no engine fork / no FTS5; ADR-061 honoured)
  *   - corpus scale     — > 500 files across all types
  *                        → same lexical-index activation path
- *   - hot-context size — `agents/runtime/state/hot-context.md` > 600 tokens
- *                        (estimated at 4 chars/token) → trim schema / fix the
- *                        deterministic writer
  *
  * Usage: lint_knowledge_scale.ts [--dir <repo-root>] [--format text|json] [--quiet]
  * Exit codes: 0 = ran cleanly (warnings never fail the build), 1 = usage
@@ -39,8 +36,6 @@ export const INTAKE_EVENTS_MAX = 2000;
 export const SESSIONS_PAGES_MAX = 50;
 export const TYPE_FILES_MAX = 200;
 export const CORPUS_FILES_MAX = 500;
-export const HOT_CONTEXT_TOKENS_MAX = 600;
-export const CHARS_PER_TOKEN = 4;
 
 const KNOWLEDGE_TYPED_DIRS = ['sessions', 'concepts', 'procedures', 'decisions'] as const;
 
@@ -204,27 +199,6 @@ export function runChecks(root: string, stats?: ScanStats): Warning[] {
                 `${contested.length} knowledge card(s) carry \`contested: true\`: ${contested.join(', ')}. ` +
                 'Resolution path: reconcile each against its `contradictions: [id]` list (human-judged) — a contested claim must not be cited as settled until resolved.',
         });
-    }
-
-    // 5. Hot-context budget.
-    const hotContext = path.join(root, 'agents', 'runtime', 'state', 'hot-context.md');
-    let hotText = '';
-    try {
-        hotText = fs.readFileSync(hotContext, 'utf-8');
-    } catch {
-        // absent — fine (feature not active or fresh session)
-    }
-    if (hotText) {
-        const tokens = Math.ceil(hotText.length / CHARS_PER_TOKEN);
-        if (tokens > HOT_CONTEXT_TOKENS_MAX) {
-            warnings.push({
-                rule: 'hot-context-budget',
-                metric: `${tokens}/${HOT_CONTEXT_TOKENS_MAX}`,
-                message:
-                    `hot-context.md parses to ~${tokens} tokens (> ${HOT_CONTEXT_TOKENS_MAX}). ` +
-                    'Activation path (pre-decided): trim the schema sections or fix the deterministic writer cap.',
-            });
-        }
     }
 
     return warnings;

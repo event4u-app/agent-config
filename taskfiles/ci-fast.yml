@@ -1988,7 +1988,7 @@ tasks:
 
   lint-knowledge-scale:
     silent: true
-    desc: "Warn-only scale + budget tripwires for the memory/knowledge substrate (intake/sessions/type/corpus/hot-context) — road-to-second-brain Phase 0; never fails the build"
+    desc: "Warn-only scale + budget tripwires for the memory/knowledge substrate (intake/sessions/type/corpus) — road-to-second-brain Phase 0; never fails the build"
     cmd: ./scripts-run src/scripts/lint_knowledge_scale {{.QUIET_FLAG}}
 
   lint-versioned-cache:

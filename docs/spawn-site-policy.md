@@ -25,7 +25,6 @@ All Consumer-Runtime spawns route through `hardenedSpawnEnv()`:
 | Site | Spawns | Status |
 |---|---|---|
 | `src/scripts/ai_council/clients.ts::_runSubprocess` | provider CLIs (`codex`/`claude`/`gemini`) | ✅ hardened (ADR-123 / PR #984) |
-| `src/scripts/hot_context_hook.ts` | `git rev-parse` | ✅ hardened (PR #984) |
 | `src/scripts/roadmap_progress_hook.ts` | tsx regenerator (runs git) | ✅ hardened (PR #984) |
 | `src/scripts/hooks/dispatch_hook.ts` | every hook concern via tsx | ✅ hardened (this roadmap) |
 | `src/scripts/hooks/replay_hook.ts` | re-dispatches through the runtime | Maintainer/fixture tool; its downstream concern spawn is hardened by `dispatch_hook` above. Exempt at this layer. |

@@ -12,7 +12,7 @@
 ## The honest status (2026-07-09 — measured PASS, bounded)
 
 The substrate is **built** (typed knowledge dirs, INDEX generator, retrieval
-protocol, `hot_context_hook` working-memory continuity across compaction,
+protocol, `hot_context_hook` working-memory continuity across compaction (retired 2026-09-09),
 `fold_intake`, contradiction surfacing), and the cross-session recall *delta*
 is now **measured** — a real, placebo-controlled lift, honestly scoped.
 
@@ -70,7 +70,7 @@ against any populated store.
 
 | Capability | What it does | Evidence status |
 |---|---|---|
-| Working-memory continuity | `hot_context_hook` re-injects a bounded, deterministic cache across session boundaries and Claude Code compaction | mechanism shipped; recall lift **measured (bounded PASS)** |
+| Working-memory continuity | `hot_context_hook` re-injected a bounded, deterministic cache across session boundaries and Claude Code compaction | **retired 2026-09-09** (road-to-continuity-writer-activation 3.1). The bounded PASS was measured against the mechanism as it then stood; it is not a claim about the tree today |
 | Promotable knowledge cards/pages | typed dirs + INDEX + retrieval protocol, with redaction + team-share gate | mechanism shipped; recall lift **measured (bounded PASS)** |
 | Contradiction surfacing | a session that contradicts a prior decision is flagged on promote | mechanism shipped; ties in-prompt, lift where memory is the only source |
 

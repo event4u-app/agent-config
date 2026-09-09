@@ -26,10 +26,17 @@
  * without performing any, and a gate that fires on prose about a defect rather
  * than the defect is how a real corpus of one becomes a pro-forma corpus of four.
  *
- * Measured at landing: **1** module qualifies — `hot_context_hook`, which is
- * exactly the `ephemeral-lossy` exemplar the contract classifies. A corpus of one
- * is the honest state of this tree, not a broken detector; the gate fires the day
- * a second lands.
+ * Measured at landing: **1** module qualified — `hot_context_hook`, the
+ * `ephemeral-lossy` exemplar the contract classifies. Measured 2026-09-09 after
+ * road-to-continuity-writer-activation step 3.1 retired that module's cache
+ * half: **0**. The scanned corpus is unchanged at 58 hook scripts; the matched
+ * subset is empty, so this gate now passes over nothing.
+ *
+ * That is a hole, not a clean bill. The 30-row cap in
+ * `_lib/session_index_trust.ts` is still a model-facing lossy transform, and
+ * this detector cannot see it because it reads concern scripts only. Widening
+ * it past concern scripts is what closes that, tracked as blocker
+ * `loss-class-corpus-is-empty-after-hot-context`.
  *
  * Exit codes: 0 clean (warnings allowed) · 1 an undeclared model-facing
  * transform · 2 misuse / unreadable manifest.

@@ -141,7 +141,6 @@ record**:
 | slot | bound on | concerns | what each writes |
 |---|---|---|---|
 | `pre_compact` | claude only (`:1210`) | `language-mirror` | a pin-lost marker re-emitted once by `post_tool_use` |
-| | | `hot-context` | `agents/runtime/state/hot-context.md` — a 400-word redacted cache, `loss_class: ephemeral-lossy` |
 | | | `rule-inject` | injected rule text; writes no state |
 | | | `journal-record` | the runtime journal — **default-OFF** (`src/config/agent-settings.template.yml:1289`), so it writes nothing on a default install |
 | `session_end` | claude, cowork, augment, cursor, cline, gemini (`:1182,1189,1233,1268,1283,1319`) | `chat-history` | appends to `agents/runtime/.agent-chat-history` |
@@ -151,9 +150,12 @@ record**:
 | | | `telemetry-flush` | telemetry |
 | | | `journal-record` (claude only) | as above — default-OFF |
 
-`hot-context` is the closest thing to a continuity writer at either slot, and it
-is keyed by workspace rather than by session, overwritten on every `stop`, and
-declared lossy. `session-eol` is not in either row — it binds `stop`, on claude
+Neither slot carries a continuity writer any more. `hot-context` used to be the
+closest thing to one — keyed by workspace rather than by session, overwritten on
+every `stop`, and declared lossy — and step 3.1 of
+road-to-continuity-writer-activation retired that half on 2026-09-09. The concern
+survives on `session_start` only, where it restores the memory session index and
+writes no state. `session-eol` is not in either row — it binds `stop`, on claude
 only (`:1190`).
 
 ## Vocabulary — the enforcement ladder (glossary, not a migration)

@@ -9,7 +9,7 @@
  "per_concern_caps_bytes": {
   "_comment": "Named exceptions above the default, each with its reason. Absent concern = default_cap_bytes.",
   "hot-context": 4096,
-  "hot-context_reason": "400-word working-memory restore, session_start only — one-shot, not per-turn",
+  "hot-context_reason": "memory session-index restore, session_start only — one-shot, not per-turn",
   "handoff-context": 8192,
   "handoff-context_reason": "consume-once handoff injection, deleted after delivery — the one legitimately large one-shot",
   "session-canary": 2048,

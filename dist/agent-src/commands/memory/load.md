@@ -184,8 +184,8 @@ When resolving a knowledge/memory read — including cross-project access — cl
 the ladder and stop at the first rung that answers; do not jump straight to a
 full scan:
 
-1. **Hot cache** — the already-loaded session slice (`hot-context.md` / the
-   Tier-0 slice above); zero new reads.
+1. **Already loaded** — the session slice already in context (the Tier-0 slice
+   above, plus the `session_start` memory index when armed); zero new reads.
 2. **Index** — the lexical index / `memory_lookup retrieve_v1` over the keys.
 3. **Type index** — narrow to the relevant type directory, then its entries.
 4. **Entry** — read the specific entry only once the first three located it.
