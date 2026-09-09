@@ -1,6 +1,29 @@
 ---
 complexity: lightweight
-status: ready
+status: later
+review_by: 2027-03-08
+entry_condition:
+  what: >
+    Condition (iii) of `step-1-2-menu-exclusion-lever-unbuilt`, which is the only
+    one of the five that has never moved: a mechanism that removes a skill from
+    the DELIVERED model catalog while preserving command and flow invocability is
+    identified or built. Checkable without judgement in either of two forms — a
+    named host contract that documents catalog exclusion, or a delivered-menu
+    census in this tree whose reading differs from `SKILL.md` file presence.
+    Conditions (i) and (ii) are already closed and are NOT part of this gate:
+    (i) by PR #1923 merging on 2026-09-08 (`lean_projection.hosts` is on a merged
+    ref and ADR-267 is a real file), (ii) by ADR-263.
+  when: >
+    Producer-driven, not calendar-bound. No date is claimed because neither form
+    of (iii) has a producer in this tree today: `road-to-catalogue-host-fit` is
+    itself parked on the live trigger eval, and no roadmap owns a delivered-menu
+    census. `review_by: 2027-03-08` is the forcing function on the OWNER
+    boundary question below, not a wake date for this file.
+  who: >
+    The owner for the boundary question (does measuring what this package
+    PROJECTS count as a delivered-menu census, or is the delivered menu by
+    definition what a host injects — which this repository cannot observe). An
+    implementer for the census itself, once that question is answered.
 execution:
   mode: phase-checkpoints
 owner: maintainer
@@ -17,7 +40,7 @@ relates:
     note: >
       A carrier for one deferred census item, not an owner of the catalog bucket —
       it holds a framing question, this file holds the standing bytes.
-estate_growth_exempt: "Owner-instructed 2026-09-07. Charges +1 active roadmap against the origin/main `active_roadmaps` floor of 4 measured at 0918def55 — the floor is the base-ref measurement, not a stored number (ADR-243). The 14,846-token skill catalog is the second-largest standing bucket and is held by no active roadmap; `road-to-the-skill-surface-framing-choice.md` carries `status: carrier` for one deferred census item and does not own the bucket. AMENDED 2026-09-08 (owner-delegated drain run), and the amendment is what makes this claim diff-scoped rather than banked: this change also adds ONE blocker entry (`step-1-2-menu-exclusion-lever-unbuilt`), which grows `open_blockers` by 1 against the origin/main floor. `open_blockers` carries no growth allowance by policy, so a claim is the only green path. The rise is a NEW recorded blocker, not a repaired undercount: the mechanism defect it names was reproduced at e010b1c2f and no blocker described it before."
+estate_growth_exempt: "AMENDED AGAIN 2026-09-09 for the PARK, because the gate reads the claim from the diff and the earlier text authorised a different change. This diff grows `later_roadmaps` 83 -> 84 while shrinking `active_roadmaps` 4 -> 3: one file moves from the active board to `later/`, which is a one-for-one trade across two separately shrink-only dimensions rather than an addition. MEASURED on this branch: `check_estate_count` reads the growth on the later axis only, and no other dimension moves. The alternative that would have kept both axes flat is archiving, and it is not available to this run: archiving a roadmap with 7 open steps is the keep-in-archive disposition `roadmap-progress-sync` Iron Law 3 reserves to the owner, and the 2026-09-08 council had already rejected deletion as an unauthorised retirement. Parking is what the 2026-09-09 council chose 2/2, and it is the disposition that keeps every open item alive with a resume condition instead of dropping it to make a number flat -- which is the laundering this ratchet exists to catch. Nothing unrelated was parked or archived to pay for it. Earlier text, kept because the original addition it authorised is still in this file's history: Owner-instructed 2026-09-07. Charges +1 active roadmap against the origin/main `active_roadmaps` floor of 4 measured at 0918def55 — the floor is the base-ref measurement, not a stored number (ADR-243). The 14,846-token skill catalog is the second-largest standing bucket and is held by no active roadmap; `road-to-the-skill-surface-framing-choice.md` carries `status: carrier` for one deferred census item and does not own the bucket. AMENDED 2026-09-08 (owner-delegated drain run), and the amendment is what makes this claim diff-scoped rather than banked: this change also adds ONE blocker entry (`step-1-2-menu-exclusion-lever-unbuilt`), which grows `open_blockers` by 1 against the origin/main floor. `open_blockers` carries no growth allowance by policy, so a claim is the only green path. The rise is a NEW recorded blocker, not a repaired undercount: the mechanism defect it names was reproduced at e010b1c2f and no blocker described it before."
 estate_offset_exempt: "Offsets nothing. It disposes no roadmap and archives nothing, so the one-in-one-out half has no move available and is claimed here instead."
 ---
 
@@ -28,6 +51,67 @@ estate_offset_exempt: "Offsets nothing. It disposes no roadmap and archives noth
 > corrections forced by that re-measurement carry `corrected-from-reproduction`. Owner
 > ruling **E5** is decided in this file. Runs after `road-to-delivery-for-every-host`
 > Phase 4 so its measurement lands on the new baseline.
+
+## Parked 2026-09-09 — the blocker's own review trigger fired
+
+The trigger said, in its own words: *"if [condition (i)] closes and (ii)-(v) have
+not moved, that is the signal to take the disposition back to the council rather
+than to leave the file open another quarter."* That state arrived and was
+measured, not assumed:
+
+| | Condition | State at `d1e3517df` |
+|---|---|---|
+| (i) | predecessor Phase 4 merged | **closed** — PR #1923 merged 2026-09-08 at `5f2f2171f`; `lean_projection.hosts: [claude-code]` is on a merged ref and `ADR-267-delivery-default-for-claude-code.md` is a real file |
+| (ii) | owner-reserved surface decision recorded | **closed** — ADR-263, Option B |
+| (iii) | a delivered-catalog exclusion mechanism | **not moved** |
+| (iv) | 1.2's verify reads the delivered menu | **not moved** |
+| (v) | the 105 candidates revalidated per-skill | **not moved** |
+
+One nuance the trigger did not anticipate, recorded rather than smoothed over:
+it says "when `road-to-delivery-for-every-host` **archives**", and that roadmap
+has NOT archived — it is still active at 22 of 27 steps. What happened is the
+thing condition (i) actually asks for, its Phase 4 merge. So the trigger fired
+on its substance and not on its literal wording.
+
+**Disposition: park, decided by AI council 2026-09-09, 2/2 present, convergent.**
+Two seats, two rounds, $0.076. The council's reasoning for parking over holding:
+step 1.2 as written is a measured HARM rather than a neutral wait — executing it
+marks 105 skills, moves the catalog bucket by 0 bytes, and removes the user's
+slash access to exactly the skills whose only entry path is a command, while
+every file-count check passes.
+
+**Kept in the estate, not dropped.** Steps 1.1 and 1.3 are done and the
+published census stands; nothing here is cancelled and no acceptance criterion
+is retired. `later/` is the fourth disposition, tracked with a resume condition
+on the dashboard.
+
+### Dispositions already rejected — do not re-litigate
+
+The 2026-09-08 council rejected these 2/2, and the reasons are recorded so a
+later reader meets them instead of re-deriving them:
+
+- **Re-scope the goal** to what the tree can already establish — rejected on K5
+  (read as the forbidden carrier move) and, independently, because the narrowed
+  goal would itself be a false claim: proving that *no* shipped field removes a
+  skill from the model's menu is a statement about the DELIVERED menu, and this
+  tree has no delivered-menu census.
+- **Delete the roadmap** — rejected as an unauthorised retirement.
+- **Build the lever** — rejected as crossing the owner-reserved boundary.
+
+### The boundary question left open — owner, by 2027-03-08
+
+Building a delivered-menu census (the blocker's own `What to do` step 2, which
+names `src/scripts/preamble_byte_census.ts:290-310` and the artifact whose
+`on menu` column already disagrees with it) is **partially** available: the 2026-09-09
+council found the measurement agent-buildable but the LABELLING owner-reserved.
+The question is whether measuring the catalog this package PROJECTS counts as a
+delivered-menu census for condition (iii)'s purposes, or whether the delivered
+menu is by definition what a host injects — which this repository cannot observe,
+and which `road-to-catalogue-host-fit` is separately parked on.
+
+`review_by: 2027-03-08` is the forcing function on that question, added on the
+council's own amendment so it cannot become perpetually deferred. It is not a
+wake date for the roadmap: (iii) has no producer in this tree today.
 
 ## Goal
 
@@ -279,7 +363,7 @@ invariant holds either way: no skill leaves the install.
   `skill-menu-exclusion-lever-2026-09-08.md` measured for marking: a declaration
   the delivered surface does not act on.
 - **Resolved when:** all five hold — (i) `road-to-delivery-for-every-host` Phase 4 is merged, so 1.2 measures the post-flip baseline; (ii) the owner-reserved surface decision in `road-to-the-skill-surface-framing-choice.md` is recorded; (iii) a mechanism that removes a skill from the **delivered** model catalog while preserving command and flow invocability is identified or built; (iv) the measurement in 1.2's verify reads the delivered menu rather than `SKILL.md` file presence; (v) the 105 candidates are revalidated per-skill, because the census establishes candidates and never sole entry path.
-- **Review trigger:** re-read this blocker when `road-to-delivery-for-every-host` archives, or on 2026-12-08, whichever is first. Condition (i) is the only one that can close on its own; if it closes and (ii)-(v) have not moved, that is the signal to take the disposition back to the council rather than to leave the file open another quarter.
+- **Review trigger FIRED 2026-09-09 and the disposition is recorded above** — the file is parked in `later/` on a 2/2 AI-council verdict, with (i) and (ii) closed, (iii)-(v) unmoved, and the owner boundary question carrying a 2027-03-08 forcing date. The original wording follows, unedited: re-read this blocker when `road-to-delivery-for-every-host` archives, or on 2026-12-08, whichever is first. Condition (i) is the only one that can close on its own; if it closes and (ii)-(v) have not moved, that is the signal to take the disposition back to the council rather than to leave the file open another quarter.
 - **Why this is a blocker and not a re-scope.** The council considered re-scoping the goal to what the tree can already establish and rejected it 2/2 — on K5 (the openai seat read the narrowing as the forbidden carrier move) and, independently, because the narrowed goal would have been a false claim: proving that *no* shipped field removes a skill from the model's menu is a statement about the **delivered** menu, and this tree has no delivered-menu census. Deleting the roadmap was rejected as an unauthorised retirement. Building the lever was rejected as crossing the owner-reserved boundary. Option A was unanimous.
 
 ## Kill register
