@@ -90,6 +90,18 @@ export const READER_PATH = 'src/scripts/_lib/ratification_artifact.ts';
 /** The in-repo quorum policy. Present on every runner; absent means refuse. */
 export const POLICY_PATH = 'src/config/ratification-policy.json';
 
+/**
+ * The workflow that invokes this gate.
+ *
+ * On the watch list because a round-3 reviewer named its absence: running the
+ * gate's CODE from the base revision closes "the candidate judges itself" one
+ * level down and leaves the level above it open, since the step that decides
+ * whether to run at all lives in the candidate branch. Watching the file does
+ * not close that — a PR editing it still edits it — but it makes the edit
+ * carry a record instead of passing silently. One more level, not an anchor.
+ */
+export const WORKFLOW_PATH = '.github/workflows/consistency.yml';
+
 /** Governance hooks: the blocking PreToolUse guards. */
 const GOVERNANCE_HOOK_RE = /^src\/scripts\/hooks\/block_[a-z0-9_]+\.ts$/;
 
@@ -125,7 +137,7 @@ export function classifyPaths(files: readonly string[]): GatedPaths {
         if (p === '') {
             continue;
         }
-        if (p === SELF_PATH || p === READER_PATH || p === POLICY_PATH) {
+        if (p === SELF_PATH || p === READER_PATH || p === POLICY_PATH || p === WORKFLOW_PATH) {
             self = true;
             continue;
         }
@@ -260,7 +272,7 @@ export function evaluate(
     const touched = [
         ...gated.kernelRules.map((p) => `kernel rule ${p}`),
         ...gated.governanceHooks.map((p) => `governance hook ${p}`),
-        ...(gated.self ? ['the ratification mechanism itself (gate, reader or policy)'] : []),
+        ...(gated.self ? ['the ratification mechanism itself (gate, reader, policy or workflow)'] : []),
     ];
     lines.push(`Gated surfaces in this diff (${touched.length}):`);
     for (const t of touched) {

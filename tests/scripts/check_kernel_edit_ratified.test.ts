@@ -13,6 +13,7 @@ import {
     READER_PATH,
     requiresRatification,
     SELF_PATH,
+    WORKFLOW_PATH,
 } from '../../src/scripts/check_kernel_edit_ratified.js';
 import { RATIFICATION_DIR } from '../../src/scripts/_lib/ratification_artifact.js';
 
@@ -99,11 +100,14 @@ describe('classifyPaths', () => {
 
     it('matches every part of the mechanism, not only the gate file', () => {
         // Round 1: self-inclusion buys nothing if the reader or the quorum
-        // policy can be weakened beside it. All three are one surface.
-        for (const p of [SELF_PATH, READER_PATH, POLICY_PATH]) {
+        // policy can be weakened beside it. Round 3 added the workflow that
+        // invokes the gate — one more level, and named as not an anchor.
+        for (const p of [SELF_PATH, READER_PATH, POLICY_PATH, WORKFLOW_PATH]) {
             expect(classifyPaths([p]).self, p).toBe(true);
             expect(requiresRatification(classifyPaths([p])), p).toBe(true);
         }
+        // …and an unrelated workflow is not the mechanism.
+        expect(classifyPaths(['.github/workflows/tests.yml']).self).toBe(false);
     });
 
     it('normalises Windows separators rather than missing the path', () => {

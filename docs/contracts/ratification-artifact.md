@@ -44,6 +44,19 @@ expansion would be a false record. A vocabulary that forces a false label is a
 vocabulary people route around, which is the pressure that eventually weakens
 the gate.
 
+```
+`confirmed-non-expanding` IS A CLASSIFICATION, NEVER A WEAKER AUTHORIZATION CLASS.
+IT CARRIES THE SAME INDEPENDENCE AND PROVIDER-DIVERSITY BAR AS `ratified`.
+A MISCLASSIFIED EXPANSION IS REVIEW ERROR — THE LABEL IS NOT AN ESCAPE HATCH.
+```
+
+Both passing verdicts run through identical validation and differ only in what
+they record. Stated as an Iron Law because the round-3 review passed the
+verdict on exactly this condition: the reviewer's judgement about whether a
+change expands authority must clear the same bar as any other judgement they
+make, and a reviewer who labels an expansion `confirmed-non-expanding` has made
+an error, not used an option.
+
 The body carries `<!-- evidence-type: ratification -->` and the review itself:
 what was proposed, what the reviewer checked, and what would have changed the
 verdict.
@@ -55,6 +68,23 @@ Iron Law is wider than that fixture. The party gaining the authority is the
 party that proposed the expansion **and** the party that implemented it, so an
 artifact reviewed by its own implementer is the same defect wearing the other
 field's name. Both are rejected.
+
+## This gate is not independently enforceable, and must not be cited as if it were
+
+```
+THE GATE ADDS A REFUSAL. IT DOES NOT ADD AN ANCHOR.
+IT RUNS BECAUSE A WORKFLOW STEP IN THE CANDIDATE BRANCH INVOKES IT.
+NEVER CITE IT AS INDEPENDENT ENFORCEMENT, AND NEVER AS GROUNDS
+FOR REMOVING THE TOOL-CALL DENY IT SITS BESIDE.
+```
+
+Both round-3 reviewers passed the additive gate on this condition and named it
+in their own words — *"must not be represented as independently enforceable or
+as justification for later removing the existing deny"*. The gate ships
+**alongside** `block_kernel_rule_writes.ts`, not in place of it; the
+replacement was refused 2/2 in round 2 and stays refused until the blocker
+`ratification-platform-anchor` is closed by an owner decision. A later change
+that removes the deny needs its own ratification and cannot cite this one.
 
 ## Where the trust actually comes from
 
