@@ -68,6 +68,15 @@ returned 0, the turn closed, and the red arrived where the user found it.
   ending the turn silently on one is what the reminder exists to stop. Whether
   the reminder changes behavior is unmeasured — it ships as a carrier, not as a
   claim.
+- **`ci_settle` will not answer for a head that stopped mattering.** Since
+  2026-09-08 it reads the PR's `state` and compares its recorded head against
+  `git ls-remote` — before the wait and again at verdict time — and exits 2 with
+  a reason when the PR is merged, closed, or record-behind-branch. A green names
+  the head it is about. The measured reason: a merged PR's rollup kept answering
+  with its merge-time checks, so the tool reported `SETTLED GREEN — 40 check(s)`
+  for a commit that had zero check runs. The check does not apply to a fork PR
+  whose ref is not under this `origin`, and the line says so instead of claiming
+  it passed.
 - **Neither reaches a host without the slot.** `agent-config hooks:status`
   answers which slots are bound where you actually are; `post_tool_use` is
   unbound on windsurf and copilot, and there the settle obligation is

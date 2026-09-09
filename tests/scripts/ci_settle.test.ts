@@ -7,7 +7,12 @@
 // must never classify as settled.
 import { describe, expect, it } from 'vitest';
 
-import { classifyPoll, FOREGROUND_CEILING_MIN } from '../../src/scripts/ci_settle.js';
+import {
+    classifyPoll,
+    classifyTarget,
+    FOREGROUND_CEILING_MIN,
+    type RemoteTip,
+} from '../../src/scripts/ci_settle.js';
 
 const roll = (rows: unknown[]): string => JSON.stringify({ statusCheckRollup: rows });
 
@@ -119,5 +124,87 @@ describe('foreground deadline', () => {
     it('is a number, not a comment — a documented ceiling nobody reads is the old state', () => {
         expect(Number.isInteger(FOREGROUND_CEILING_MIN)).toBe(true);
         expect(FOREGROUND_CEILING_MIN).toBeGreaterThan(0);
+    });
+});
+
+// The second half of "never report a verdict it did not read": a verdict has to
+// be ABOUT something. Measured 2026-09-08 on PR #1949 — the PR had been merged
+// at 18:29, pushes to its branch created no checks, and the rollup kept
+// answering with the merge-time head's 40 green checks while
+// `/commits/<sha>/check-runs` for the actual branch tip answered 0. Read at face
+// value that green authorises merging content nobody checked.
+//
+// The load-bearing assertions are the two negatives: a merged PR and a diverged
+// head must classify `refuse`, never `open`.
+describe('classifyTarget', () => {
+    const pr = (state: string, head: string, ref = 'feat/x'): string =>
+        JSON.stringify({ state, headRefOid: head, headRefName: ref });
+    const found = (sha: string): RemoteTip => ({ kind: 'found', sha });
+    const sha = 'a'.repeat(40);
+
+    it('refuses a MERGED PR instead of letting its stale rollup through', () => {
+        const t = classifyTarget(pr('MERGED', sha), '', 0, found(sha));
+        expect(t.kind).toBe('refuse');
+        if (t.kind === 'refuse') expect(t.reason).toContain('MERGED');
+    });
+
+    it('refuses a CLOSED PR for the same reason', () => {
+        expect(classifyTarget(pr('CLOSED', sha), '', 0, found(sha)).kind).toBe('refuse');
+    });
+
+    it('refuses when the record head and the branch tip disagree', () => {
+        const t = classifyTarget(pr('OPEN', sha), '', 0, found('b'.repeat(40)));
+        expect(t.kind).toBe('refuse');
+        // The message must name BOTH heads — a refusal the reader cannot act on
+        // is the same dead end as no refusal.
+        if (t.kind === 'refuse') {
+            expect(t.reason).toContain(sha.slice(0, 9));
+            expect(t.reason).toContain('b'.repeat(9));
+        }
+    });
+
+    it('accepts an OPEN PR whose head equals the tip, and says the check ran', () => {
+        const t = classifyTarget(pr('OPEN', sha), '', 0, found(sha));
+        expect(t.kind).toBe('open');
+        if (t.kind === 'open') {
+            expect(t.head).toBe(sha);
+            expect(t.divergenceChecked).toBe(true);
+        }
+    });
+
+    it('does not collapse an absent ref into agreement — a fork PR passes, flagged', () => {
+        const t = classifyTarget(pr('OPEN', sha), '', 0, { kind: 'absent' });
+        expect(t.kind).toBe('open');
+        // Not silently "checked": a fork's ref is not under this origin, and
+        // claiming the check applied would be the coverage inflation the whole
+        // exit-code contract exists to avoid.
+        if (t.kind === 'open') expect(t.divergenceChecked).toBe(false);
+    });
+
+    it('reads an unreadable tip as unreadable, never as agreement', () => {
+        const t = classifyTarget(pr('OPEN', sha), '', 0, { kind: 'unreadable', reason: 'connection refused' });
+        expect(t.kind).toBe('unreadable');
+    });
+
+    it('reads a transport failure on the PR read as unreadable, never as open', () => {
+        for (const text of ['error connecting to api.github.com', 'HTTP 502 Bad Gateway']) {
+            expect(classifyTarget('', text, 1, found(sha)).kind, text).toBe('unreadable');
+        }
+    });
+
+    it('reads a response missing any of the three fields as unreadable', () => {
+        const partials = [
+            JSON.stringify({ state: 'OPEN', headRefOid: sha }),
+            JSON.stringify({ state: 'OPEN', headRefName: 'feat/x' }),
+            JSON.stringify({ headRefOid: sha, headRefName: 'feat/x' }),
+            'not json at all',
+        ];
+        for (const body of partials) {
+            expect(classifyTarget(body, '', 0, found(sha)).kind, body).toBe('unreadable');
+        }
+    });
+
+    it('is case-insensitive on state, so a lowercase `open` is not refused', () => {
+        expect(classifyTarget(pr('open', sha), '', 0, found(sha)).kind).toBe('open');
     });
 });
