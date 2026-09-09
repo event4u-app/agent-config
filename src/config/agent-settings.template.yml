@@ -738,6 +738,43 @@ design:
   #              autonomy setting, roadmap, or standing instruction lifts it).
   fidelity_mode: strict
 
+  # Value reconciliation between a provided artifact and the project's own
+  # tokens. MEASUREMENT ships; BEHAVIOUR does not — AI council 2026-09-09
+  # (anthropic + openai, 2/2) on `blocker: approximation-tolerance`.
+  #
+  # The distance from the artifact's value to the nearest project token is
+  # computed and REPORTED on every value row regardless of these settings.
+  # What these decide is whether the agent may act on it without asking.
+  approximation:
+    # false ships. Turning it on lets a value INSIDE tolerance be replaced by
+    # the project's token without a per-value confirmation; outside tolerance
+    # the artifact's value is preserved either way. Shipping this enabled is a
+    # consumer-facing default flip and is owner-reserved — recorded in
+    # agents/roadmaps/stubs/road-to-frontend-power-default-flip.md, not decided
+    # here. `design.fidelity_mode: hard-floor` overrides it to off.
+    enabled: false
+
+    # Distance metric: OKLab ΔEOK for colour, absolute CSS pixels for length.
+    # The METHOD is fixed; the THRESHOLDS are deliberately absent.
+    #
+    # Both ship `null`, and `null` means "preserve and report", never
+    # "reconcile freely". No number is set because none is supported: zero of
+    # seven design-to-code benchmarks in the evidence set score token
+    # conformance, and a number in a config file — even flagged unmeasured —
+    # shapes behaviour and acquires the authority of a default.
+    #
+    # The one real measurement in the evidence set is GitHub Primer's spacing
+    # plugin, which widens each token's accepted set by ±1px and autofixes. It
+    # is recorded as an externally observed CANDIDATE in
+    # src/scripts/_lib/design_tolerance.ts and is not the shipped value.
+    tolerance:
+      # ΔEOK. Not an RGB channel delta — RGB distance is not perceptually
+      # uniform, which is why a `±5 per channel` proposal was rejected.
+      color: null
+      # CSS pixels, absolute. Not `max(1px, 2%)`, which grows more permissive
+      # at large dimensions with no evidence that this is wanted.
+      length: null
+
 # --- Cross-source consistency ---
 #
 # When the agent plans, refines, roadmaps, or implements from multiple
@@ -1132,7 +1169,7 @@ continuity:
   # above the recycle threshold and inside a running roadmap contract leaves
   # agents/runtime/state/checkpoints/<run>.json behind, so a killed session can
   # be resumed by the watcher rather than by bookkeeping. Default ON: this is
-  # the behaviour the tree already had, and the switch exists so an operator can
+  # the behavior the tree already had, and the switch exists so an operator can
   # disable checkpointing WITHOUT disabling continuity writing or the recycle
   # advisory.
   #   on  = (default) write the checkpoint.

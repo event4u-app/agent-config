@@ -44,12 +44,16 @@ Any of the trigger keywords appear in a UI-building context: new component, new 
 
 ## When NOT to fire
 
+- **An icon traceable to a provided design artifact.** A faithful port
+  reproduces the handover's own icons; one traceable to neither the icon set nor
+  a named artifact still fires. A new rung below the brand token, never a
+  re-ordering: [`design-reconciliation § Icons on a provided artifact`](../guidelines/design-reconciliation.md).
 - The project's brand guide explicitly defines multiple icon sets for distinct contexts (e.g., filled icons for navigation, outlined for inline text).
 - The task is documentation or a non-UI surface (scripts, CLI output, markdown).
 - The user explicitly scopes to "just explore options" without committing to a UI change.
 
 ## See also
 
-- [`design-canon.md`](../docs/guidelines/design-canon.md) § Icon systems — when a named design system is in play, prefer its icon set over a fresh Iconify pick.
+- [`design-canon.md`](../guidelines/design-canon.md) § Icon systems — when a named design system is in play, prefer its icon set over a fresh Iconify pick.
 - [`iconography`](../skills/iconography/SKILL.md) — full icon-system selection, audit, and migration workflow.
 - [`ui-audit-gate`](ui-audit-gate.md) — broader UI consistency gate; runs before any new component lands.

@@ -95,7 +95,7 @@ Promotion candidates — seen in 3+ projects:
 
 This is candidacy only, never a promotion — crossing the threshold makes
 `/agents user accept` able to offer promoting it, nothing more (see
-[`agent-user-schema.md § Project attribution`](../../../../../docs/contracts/agent-user-schema.md#project-attribution-road-to-global-user-memory-phase-3)).
+[`agent-user-schema.md § Project attribution`](../../../docs/contracts/agent-user-schema.md#project-attribution-road-to-global-user-memory-phase-3)).
 
 ### 3. Ask
 
@@ -120,7 +120,7 @@ One question per turn. Wait for the user's number.
 ### 4. Privacy-floor verify
 
 Before printing any observation's `evidence` text, scan it for the
-[exclusions list](../../../../../docs/contracts/agent-user-schema.md#explicit-exclusions).
+[exclusions list](../../../docs/contracts/agent-user-schema.md#explicit-exclusions).
 Match → replace the offending substring with `[redacted]` in the
 rendered output.
 
@@ -143,7 +143,7 @@ turn.
 
 ## See also
 
-- Schema + buffer contract: [`agent-user-schema § Observation buffer`](../../../../../docs/contracts/agent-user-schema.md#observation-buffer).
+- Schema + buffer contract: [`agent-user-schema § Observation buffer`](../../../docs/contracts/agent-user-schema.md#observation-buffer).
 - Global buffer implementation: [`user_global_observations.ts`](../../../../src/scripts/_lib/user_global_observations.ts).
 - Parent: [`/agents user`](../user.md).
 - Sibling: [`/agents user accept`](accept.md), [`/agents user update`](update.md).

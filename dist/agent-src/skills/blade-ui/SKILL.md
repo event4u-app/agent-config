@@ -141,7 +141,7 @@ When `DESIGN.md` declares `## Taste Dials`, honour them: Variance → layout-fam
 ## Anti-slop
 
 Before shipping a Blade view, pull
-[`docs/guidelines/design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md)
+[`docs/guidelines/design-antipatterns.md`](../../guidelines/design-antipatterns.md)
 and scan Visual / Typography / Layout — the Blade markup is where side-stripe
 accents (V1), icon-tile feature cards (T3), and the centered-hero + 3-column
 template (L1/L2) concretely land. Stack-specific Tailwind class/hex bans live in

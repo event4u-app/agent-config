@@ -20,7 +20,7 @@ packs:
 
 Generate a copyable markdown draft in the voice of a captured
 ghostwriter profile under `agents/reference/ghostwriter/<slug>.md`. Implements
-the [`write-engine`](../../../docs/contracts/write-engine.md) contract
+the [`write-engine`](../../docs/contracts/write-engine.md) contract
 with **mandatory disclosure footer** appended by this command's output
 template (not by the model, no opt-out).
 
@@ -40,7 +40,7 @@ Argument shapes:
 `<value>` resolves against **slugs** and (when
 `ghostwriter.aliases: true` in `.agent-project-settings.yml` — default
 on) the `aliases:` list of every consumer profile. See
-[`ghostwriter-schema § Aliases`](../../../docs/contracts/ghostwriter-schema.md#aliases).
+[`ghostwriter-schema § Aliases`](../../docs/contracts/ghostwriter-schema.md#aliases).
 
 Scan `agents/reference/ghostwriter/*.md`, excluding `README.md` and any file
 with `fictional: true` (fixtures are not consumable from this
@@ -68,7 +68,7 @@ User picks by number or value. No default — explicit choice required.
 ### 2. Load the style source
 
 Read the selected file's frontmatter. Required keys (per
-[`ghostwriter-schema`](../../../docs/contracts/ghostwriter-schema.md)):
+[`ghostwriter-schema`](../../docs/contracts/ghostwriter-schema.md)):
 `identity.name`, `style.fingerprint.*`, `style.free_form_notes`,
 `voice_samples`, `taboos`, `source_provenance.verification`.
 
@@ -78,7 +78,7 @@ Style fidelity may be lower."* Non-blocking.
 
 ### 3. Collect topic + modifiers
 
-Per [`write-engine § 2`](../../../docs/contracts/write-engine.md).
+Per [`write-engine § 2`](../../docs/contracts/write-engine.md).
 Flag form: `--tone=<formal|casual|neutral>`,
 `--length=<words>`, `--channel=<linkedin-post|tweet|blog|freeform>`,
 `--audience=<text>`. The channel values and their length defaults are
@@ -93,13 +93,13 @@ and the vocab-register → tone mapping in the engine contract.
 ### 4. Negative-constraint pass
 
 Apply the loaded `taboos` list as exclusions before drafting (per
-[`write-engine § 3`](../../../docs/contracts/write-engine.md)). Print
+[`write-engine § 3`](../../docs/contracts/write-engine.md)). Print
 a one-line acknowledgement: *"Excluding N taboos from this profile."*
 
 ### 5. Draft
 
 Generate the body as a single fenced markdown block per
-[`write-engine § 4`](../../../docs/contracts/write-engine.md). Honour
+[`write-engine § 4`](../../docs/contracts/write-engine.md). Honour
 fingerprint constraints: sentence-length ±25 %, opener / closer
 patterns, hashtag / emoji rules, ±15 % length tolerance.
 
@@ -116,7 +116,7 @@ This footer is appended **by this command's output template** as a
 fixed string. It is not produced by the model. No `--no-disclosure`
 flag, no `--internal` flag, no opt-out. The absence of any such flag
 is the acceptance criterion (locked in
-[`ghostwriter-schema`](../../../docs/contracts/ghostwriter-schema.md)
+[`ghostwriter-schema`](../../docs/contracts/ghostwriter-schema.md)
 § Mandatory disclosure footer).
 
 **The footer always uses `identity.name`, never the alias that
@@ -161,8 +161,8 @@ Non-blocking.
 
 ## See also
 
-- [`write-engine`](../../../docs/contracts/write-engine.md) — shared procedural contract.
-- [`ghostwriter-schema`](../../../docs/contracts/ghostwriter-schema.md) — locked v1 frontmatter.
+- [`write-engine`](../../docs/contracts/write-engine.md) — shared procedural contract.
+- [`ghostwriter-schema`](../../docs/contracts/ghostwriter-schema.md) — locked v1 frontmatter.
 - [`/ghostwriter`](../ghostwriter.md) — parent cluster.
 - [`/ghostwriter:fetch`](fetch.md) — the producer side.
 - [`/post-as:ghostwriter`](../post-as/ghostwriter.md) — thin alias for this command.

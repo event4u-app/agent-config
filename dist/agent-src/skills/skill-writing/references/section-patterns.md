@@ -282,9 +282,9 @@ edge is.
 Where a skill's guidance is easy to agree with and hard to apply — tone, phrasing,
 question shape, what counts as evidence — a wrong/right pair does what prose
 cannot: it shows the near-miss. Six live corpora already carry them:
-[`direct-answers-demos`](../../../../../docs/guidelines/agent-infra/direct-answers-demos.md),
-[`asking-and-brevity-examples`](../../../../../docs/guidelines/agent-infra/asking-and-brevity-examples.md),
-[`language-and-tone-examples`](../../../../../docs/guidelines/agent-infra/language-and-tone-examples.md),
+[`direct-answers-demos`](../../../guidelines/agent-infra/direct-answers-demos.md),
+[`asking-and-brevity-examples`](../../../guidelines/agent-infra/asking-and-brevity-examples.md),
+[`language-and-tone-examples`](../../../guidelines/agent-infra/language-and-tone-examples.md),
 and `autonomy-examples` / `interrupt-examples` / `cheap-question-mechanics` under
 `src/agent-src/contexts/execution/`.
 

@@ -69,7 +69,7 @@ gate script to lower the bar.
 ### 3. Draft the curated entry
 
 Using the schema in
-[`engineering-memory-data-format`](../../docs/guidelines/agent-infra/engineering-memory-data-format.md),
+[`engineering-memory-data-format`](../../guidelines/agent-infra/engineering-memory-data-format.md),
 hydrate the full frontmatter:
 
 - `id` — kebab-case slug (not the `sig-*` id — that is an intake marker).
@@ -83,7 +83,7 @@ hydrate the full frontmatter:
   on every `/memory:load` regardless of query — e.g. a tenant-isolation
   invariant or a payment-flow rule. The validator warns when a type
   accumulates more than 10 active critical entries; raise the bar
-  deliberately. See [`engineering-memory-data-format`](../../docs/guidelines/agent-infra/engineering-memory-data-format.md)
+  deliberately. See [`engineering-memory-data-format`](../../guidelines/agent-infra/engineering-memory-data-format.md)
   § Priority semantics for the full contract.
 - `ts_week:` — optional ISO-week stamp `YYYY-Www` (e.g. `2026-W17`).
   **Convention, not enforced.** Stamp the curated entry with the week
@@ -94,7 +94,7 @@ hydrate the full frontmatter:
   ```bash
   date -u +'%G-W%V'   # POSIX ISO week-numbering year + ISO week
   ```
-  See [`engineering-memory-data-format`](../../docs/guidelines/agent-infra/engineering-memory-data-format.md)
+  See [`engineering-memory-data-format`](../../guidelines/agent-infra/engineering-memory-data-format.md)
   § Temporal jitter for rationale.
 - Type-specific fields (`rule`, `symptom`, `path`, …).
 
@@ -236,4 +236,4 @@ Read `verbosity.post_action_reports` from `.agent-settings.yml` (default
 
 - [`/propose-memory`](propose-memory.md) — write-side entry point.
 - [`/memory-add`](memory-add.md) — direct curated write (skips intake).
-- [`engineering-memory-data-format`](../../docs/guidelines/agent-infra/engineering-memory-data-format.md)
+- [`engineering-memory-data-format`](../../guidelines/agent-infra/engineering-memory-data-format.md)

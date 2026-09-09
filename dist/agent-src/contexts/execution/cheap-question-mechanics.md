@@ -4,7 +4,7 @@ Catalog material for [`no-cheap-questions`](../../rules/no-cheap-questions.md) �
 
 ## Cheap classes — full catalog
 
-Sequencing · format-only · commit / CI / test asks · fenced re-ask · Iron-Law option · context-derived · dominant option · re-ask after decline · paternalistic (IL 3) · continuation under mandate (IL 4) · prereq-for-authorized-action (IL 5) · destination-already-stated (IL 6) · self-cleaning artefact follow-up · disguised commit ask (preview-as-bait) · commit-chunking-strategy (one-or-multiple / which-first / how-to-split). Extended examples: [`asking-and-brevity-examples`](../../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#cheap-question-class-catalog--extended-examples).
+Sequencing · format-only · commit / CI / test asks · fenced re-ask · Iron-Law option · context-derived · dominant option · re-ask after decline · paternalistic (IL 3) · continuation under mandate (IL 4) · prereq-for-authorized-action (IL 5) · destination-already-stated (IL 6) · self-cleaning artefact follow-up · disguised commit ask (preview-as-bait) · commit-chunking-strategy (one-or-multiple / which-first / how-to-split). Extended examples: [`asking-and-brevity-examples`](../../guidelines/agent-infra/asking-and-brevity-examples.md#cheap-question-class-catalog--extended-examples).
 
 ## Iron Law 3 — No Paternalistic State-Assuming Options
 

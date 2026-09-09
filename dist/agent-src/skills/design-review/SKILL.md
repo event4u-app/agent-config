@@ -16,7 +16,7 @@ packs:
 ## When to use
 
 > **Render-verification gate.** A UI verdict is gated on the
-> [design-artifact verification checklist](../../../docs/contracts/design-artifact-verification.md#verification-checklist):
+> [design-artifact verification checklist](../../docs/contracts/design-artifact-verification.md#verification-checklist):
 > where render capability exists, do not pass a design task without render
 > evidence (checklist steps 1–5); where it is absent, scope the verdict to what
 > was statically checked and say so — never "looks good" without evidence.
@@ -213,7 +213,7 @@ Load the reference file whose sections the review needs — never all of them by
 ## Read the authority object — the review is scoped by it
 
 Read the resolved `ui_authority`
-([contract](../../../docs/contracts/ui-authority.md)) before reviewing. Three
+([contract](../../docs/contracts/ui-authority.md)) before reviewing. Three
 fields change what a finding *means*:
 
 - **`surface_mode`** sets the density, hierarchy and expressiveness a reviewer
@@ -288,7 +288,7 @@ structured review phases, add an explicit **Anti-Slop Check** section:
    `lint_design_slop` is **flags, never a block** (default exit 0; CI opts into
    failure via `--fail-on`).
 2. **Judge what the detector cannot** — load
-   [`docs/guidelines/design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md)
+   [`docs/guidelines/design-antipatterns.md`](../../guidelines/design-antipatterns.md)
    for the tells that need structural/aesthetic judgment (e.g. T3 icon-tile
    stack, L2 three-identical-card grid, V2 glassmorphism intent). List any that
    appear, cite by entry ID, and check the override condition.
@@ -304,7 +304,7 @@ structured review phases, add an explicit **Anti-Slop Check** section:
    own design. The flag is scoped to decisions the artifact actually covers;
    anything it leaves open (a state it never showed) is generative work and
    keeps the full scan. Precedence + scope:
-   [`design-fidelity-mechanics`](../../../docs/guidelines/design-fidelity-mechanics.md)
+   [`design-fidelity-mechanics`](../../guidelines/design-fidelity-mechanics.md)
    § Provided-artifact precedence. Regression witness: `daf-slop-vs-provided`.
 
 For the **objective quality floors** (WCAG contrast, font-size, line-length,

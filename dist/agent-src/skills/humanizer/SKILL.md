@@ -26,7 +26,7 @@ install:
 - A drafted deliverable (post, article, README section on request, release
   note) reads AI-generated and should read human-written.
 - The write engine reaches step 4b (humanize audit) —
-  [`write-engine § 4b`](../../../docs/contracts/write-engine.md).
+  [`write-engine § 4b`](../../docs/contracts/write-engine.md).
 - The user pastes text and asks to remove AI-isms, de-slop, or "make it
   sound less like ChatGPT".
 

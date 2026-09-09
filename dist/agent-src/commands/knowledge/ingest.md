@@ -21,7 +21,7 @@ packs:
 
 Indexes a local path into the agent's memory namespace. Local-only,
 single-user, bounded. Implements the
-[`local-knowledge-ingestion`](../../../docs/contracts/local-knowledge-ingestion.md)
+[`local-knowledge-ingestion`](../../docs/contracts/local-knowledge-ingestion.md)
 contract.
 
 ## Prerequisites
@@ -107,7 +107,7 @@ Show the user how to retrieve:
 
 ## See also
 
-- [`local-knowledge-ingestion`](../../../docs/contracts/local-knowledge-ingestion.md)
+- [`local-knowledge-ingestion`](../../docs/contracts/local-knowledge-ingestion.md)
   — contract (input shapes, bounds, storage, redaction).
 - [`/knowledge list`](list.md) — what's been ingested, pinning.
 - [`/knowledge forget`](forget.md) — drop an ingest atomically.

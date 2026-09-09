@@ -19,7 +19,7 @@ packs:
 
 # /humanize
 
-Run the [`humanizer`](../../../src/skills/humanizer/SKILL.md) skill's
+Run the [`humanizer`](../skills/humanizer/SKILL.md) skill's
 full draft→audit→final loop on a piece of deliverable prose. On-demand
 counterpart to the write-engine's built-in step 4b audit.
 
@@ -34,7 +34,7 @@ counterpart to the write-engine's built-in step 4b audit.
 - `/humanize <path>` — read the file at `<path>` (read-only).
 - `/humanize --voice=<ghostwriter-slug|me>` — optionally resolve a voice
   via the write-engine's style-source resolution (§ 1 of the
-  [`write-engine`](../../docs/contracts/write-engine.md) contract):
+  [`write-engine`](../docs/contracts/write-engine.md) contract):
   a ghostwriter slug loads `agents/reference/ghostwriter/<slug>.md`, `me`
   loads `.agent-user.md`. The resolved fingerprint takes precedence over
   humanizer defaults (a voice that legitimately uses em dashes wins). No
@@ -88,7 +88,7 @@ because it produces no text at all.
 
 ### 2. Run the humanizer loop
 
-Follow [`humanizer § Procedure`](../../../src/skills/humanizer/SKILL.md):
+Follow [`humanizer § Procedure`](../skills/humanizer/SKILL.md):
 load `data/patterns.md`, draft the rewrite (full coverage, voice
 precedence: fingerprint > brand voice > defaults), audit ("what still
 reads AI-generated?"), final rewrite.
@@ -137,9 +137,9 @@ Default form:
 
 ## See also
 
-- [`humanizer`](../../../src/skills/humanizer/SKILL.md) — the skill this
+- [`humanizer`](../skills/humanizer/SKILL.md) — the skill this
   command wraps.
-- [`write-engine § 4b`](../../docs/contracts/write-engine.md) — the
+- [`write-engine § 4b`](../docs/contracts/write-engine.md) — the
   built-in audit for ghostwriter/post-as drafts.
-- [`content-quoting-floor`](../../../src/rules/content-quoting-floor.md)
+- [`content-quoting-floor`](../rules/content-quoting-floor.md)
   — quoted text is never rewritten.

@@ -42,7 +42,7 @@ and follow its procedure verbatim:
 
 **Handoff trigger:** mitigation confirmed → proceed to Phase 2.
 Per
-[`analysis-memory-loop.md § 5`](../../../../docs/contracts/analysis-memory-loop.md),
+[`analysis-memory-loop.md § 5`](../../docs/contracts/analysis-memory-loop.md),
 the skeleton is acceptable input with open root-cause items.
 
 ### Phase 2 — Root-cause analysis
@@ -74,7 +74,7 @@ and produce the full write-up:
 
 Dedup pre-check: call `retrieve()` over the same key-space (incident
 type, affected paths) per
-[`analysis-memory-loop.md § 2`](../../../../docs/contracts/analysis-memory-loop.md):
+[`analysis-memory-loop.md § 2`](../../docs/contracts/analysis-memory-loop.md):
 
 - **Match found** → propose a `frequency` / `supersedes` update.
 - **No match** → draft a new `incident-learnings` candidate:
@@ -114,6 +114,6 @@ Surface the draft and ask:
 - [`incident-commander`](../../../../skills/incident-commander/SKILL.md)
 - [`root-cause-frameworks`](../../../../skills/root-cause-frameworks/SKILL.md)
 - [`blameless-post-mortem`](../../../../skills/blameless-post-mortem/SKILL.md)
-- [`analysis-memory-loop.md`](../../../../docs/contracts/analysis-memory-loop.md)
+- [`analysis-memory-loop.md`](../../docs/contracts/analysis-memory-loop.md)
 - [`/analyze:postmortem`](../postmortem/command.md) — post-incident write-up only (no live coordination)
 - [`/analyze`](../command.md) — cluster orchestrator

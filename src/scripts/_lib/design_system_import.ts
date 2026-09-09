@@ -77,8 +77,21 @@ export interface ComponentObservation {
 }
 
 /** The contract shape. Only `source` is mandatory; every other key is optional. */
+/**
+ * The artefact-maturity block. Two-valued on the axis `design-fidelity`
+ * branches on, with the rung that decided it and the concrete signal — never a
+ * restatement of the verdict. Resolved by `_lib/artifact_maturity.ts`; OPTIONAL
+ * in the file, because absent resolves `finished` by the same rule.
+ */
+export interface SpecBlock {
+    maturity?: string;
+    maturity_source?: string;
+    maturity_signal?: string;
+}
+
 export interface DesignSystem {
     source: SourceBlock;
+    spec?: SpecBlock;
     colors?: { light?: Record<string, string>; dark?: Record<string, string> };
     typography?: { families?: FontFamily[]; scale?: ScaleStep[] };
     spacing?: { base?: string; scale?: string[] };
@@ -259,6 +272,13 @@ const NATIVE_KEY_SHAPE: Record<string, 'object' | 'array'> = {
     shadow: 'object',
     motion: 'object',
     components: 'array',
+    // The artefact-maturity block (`road-to-design-intent-conformance` 3.1,
+    // resolved by `_lib/artifact_maturity.ts`). Added here in the same change
+    // that documented it: without a row the native lane routes it to
+    // `_meta.unmapped` with an "unknown top-level key" note, so the contract
+    // would say the field exists while the importer said it did not. Caught by
+    // a blind review, which read the two surfaces against each other.
+    spec: 'object',
     _meta: 'object',
 };
 

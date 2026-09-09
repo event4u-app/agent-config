@@ -134,7 +134,7 @@ current state on the next polish round.
 ## Anti-slop
 
 When a Livewire component renders UI, pull
-[`docs/guidelines/design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md)
+[`docs/guidelines/design-antipatterns.md`](../../guidelines/design-antipatterns.md)
 for the Visual / Layout / Motion checks (loading states that animate layout
 properties — M2 — are a common Livewire `wire:loading` pitfall). Stack styling
 bans: [`tailwind-engineer`](../tailwind-engineer/SKILL.md).

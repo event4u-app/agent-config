@@ -524,7 +524,7 @@ that was never a judgement call.
     No material risks → the **exact** honest-null grammar; a bare "no
     risks" sentence fails. Schema, staleness rule, and the grandfather
     clause for pre-gate roadmaps:
-    [`plan-review-gates § 1`](../../docs/contracts/plan-review-gates.md).
+    [`plan-review-gates § 1`](../docs/contracts/plan-review-gates.md).
     `status: draft` roadmaps are exempt until flipped to ready. Enforced
     by `lint_plan_risk_register` at pre-push + CI.
 

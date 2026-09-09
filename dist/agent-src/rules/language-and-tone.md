@@ -40,7 +40,7 @@ Stays source-language: code blocks, command output, file contents, quoted tool o
 1. **Detect** — language of last chat message. Mixed → dominant; tie → German.
 2. **Scan** — every user-visible token per catalog.
 3. **Rewrite** — one wrong-language token → rewrite whole reply.
-4. **Confirm** — first sentence in target language; recommendation label matches; no wrong-language filler opener. Blocklist: [`language-and-tone-examples`](../docs/guidelines/agent-infra/language-and-tone-examples.md).
+4. **Confirm** — first sentence in target language; recommendation label matches; no wrong-language filler opener. Blocklist: [`language-and-tone-examples`](../guidelines/agent-infra/language-and-tone-examples.md).
 
 ## Spelled out
 
@@ -53,7 +53,7 @@ Stays source-language: code blocks, command output, file contents, quoted tool o
 
 Acknowledge **once**, correct language ("Entschuldigung" / "Sorry"), switch in the same reply. No wrong-language re-explain; no "from now on" promise.
 
-Examples + CLI spacing rules + wrong-vs-correct: [`language-and-tone-examples`](../docs/guidelines/agent-infra/language-and-tone-examples.md).
+Examples + CLI spacing rules + wrong-vs-correct: [`language-and-tone-examples`](../guidelines/agent-infra/language-and-tone-examples.md).
 
 ## `.md` files — ALWAYS English
 
@@ -61,4 +61,4 @@ All `.md` text under `src/`, `docs/`, `.augment/`, `dist/agent-src/`, `.agent-sr
 
 Genuinely-required German → one of the two sanctioned escapes (labeled `DE: … · EN: …` anchor, or per-line `<!-- md-language-check: ignore -->` marker) — canonical mechanics in the guideline below.
 
-Generated-output rule, escape mechanics, pre-save detection heuristic: [`language-and-tone-examples`](../docs/guidelines/agent-infra/language-and-tone-examples.md).
+Generated-output rule, escape mechanics, pre-save detection heuristic: [`language-and-tone-examples`](../guidelines/agent-infra/language-and-tone-examples.md).

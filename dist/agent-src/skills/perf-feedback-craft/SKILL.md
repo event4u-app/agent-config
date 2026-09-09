@@ -28,7 +28,7 @@ Do NOT use as a comp-decision surface (route to Q2 `comp-banding`; feedback info
 
 ## Cognition cluster
 
-- **Mental model 1 — First principles.** Strip feedback to: *what observation, about what behavior, with what impact, requesting what change?* Most feedback fails because it skips the observation (jumps to interpretation) or skips the impact (assumes it's obvious). See [`mental-models.md`](../../../docs/contracts/mental-models.md) § 1.
+- **Mental model 1 — First principles.** Strip feedback to: *what observation, about what behavior, with what impact, requesting what change?* Most feedback fails because it skips the observation (jumps to interpretation) or skips the impact (assumes it's obvious). See [`mental-models.md`](../../docs/contracts/mental-models.md) § 1.
 - **Mental model — Ladder of inference.** Behavior observed → data selected → meaning inferred → assumptions made → conclusions drawn → beliefs adopted → action taken. Most feedback exchanges fail because giver and receiver are on different rungs. Naming the rung you're on (and inviting the other party to do the same) is the single highest-leverage feedback skill.
 - **Mental model 28 — Inversion.** *"What would make this feedback land as an attack instead of a gift?"* — usually: public delivery, surprise (no prior signal), interpretation-as-fact, no specific request, no listening turn. Inversion surfaces the four canonical mis-deliveries.
 - **Mental model 21 — Second-order thinking.** Feedback ripples. Praise in public, correction in private — the inverse damages both giver and receiver. A single mishandled feedback exchange damages trust for 6+ months; a single well-handled one banks trust that compounds.

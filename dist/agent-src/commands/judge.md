@@ -84,4 +84,4 @@ the implementer loop, so it never fires on a bare safe-default fallback.
 
 - [`subagent-orchestration`](../skills/subagent-orchestration/SKILL.md)
 - [`/review`](review-changes.md) — human-oriented self-review (Reviewer-mode contract)
-- [`role-contracts`](../docs/guidelines/agent-infra/role-contracts.md#reviewer)
+- [`role-contracts`](../guidelines/agent-infra/role-contracts.md#reviewer)

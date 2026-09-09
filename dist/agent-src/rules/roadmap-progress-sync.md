@@ -97,7 +97,7 @@ in the estate?**
   *whether the work happens*; only fix-now discharges it, and a carried item
   untouched at the next task boundary is raised again per
   [`active-remediation`](active-remediation.md). Provenance and the argument:
-  [`roadmap-deferred-resolution-provenance`](../docs/guidelines/agent-infra/roadmap-deferred-resolution-provenance.md).
+  [`roadmap-deferred-resolution-provenance`](../guidelines/agent-infra/roadmap-deferred-resolution-provenance.md).
 
 ### `deferred_policy` — a declared contract removes the round, never the route
 

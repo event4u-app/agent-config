@@ -48,7 +48,7 @@ replace the gate evidence. Any gate not citeable → **defer** + a watch-only
 note under `agents/settings/contexts/domain-watch/<domain>.md`; never silently
 shrink scope to dodge a gate.
 
-Body migrated to [`guideline:agent-infra/domain-adoption-gates`](../docs/guidelines/agent-infra/domain-adoption-gates.md) (per P4 of `road-to-kernel-and-router.md`) — per-gate evidence bars (demand signal, named owner + cadence, CI-vs-reference-only), the sunset policy, the failure-mode catalog, the gates-fail procedure, and the allowed-without-gates list.
+Body migrated to [`guideline:agent-infra/domain-adoption-gates`](../guidelines/agent-infra/domain-adoption-gates.md) (per P4 of `road-to-kernel-and-router.md`) — per-gate evidence bars (demand signal, named owner + cadence, CI-vs-reference-only), the sunset policy, the failure-mode catalog, the gates-fail procedure, and the allowed-without-gates list.
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
 
 ## See also

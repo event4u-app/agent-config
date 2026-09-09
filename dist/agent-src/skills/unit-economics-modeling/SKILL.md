@@ -34,7 +34,7 @@ Do NOT use for full-business intrinsic-value modeling, OKR setting, funnel-stage
   customer and one fully-loaded acquisition dollar. Aggregate ratios
   ride on per-unit truth; if the unit is mis-defined (trial vs paid,
   household vs seat), every ratio downstream is decoration. See
-  [`docs/contracts/mental-models.md`](../../../docs/contracts/mental-models.md) § 1.
+  [`docs/contracts/mental-models.md`](../../docs/contracts/mental-models.md) § 1.
 - **Mental model 8 — Second-order thinking.** A CAC drop driven by
   discounting lifts LTV/CAC on paper while shortening cohort
   retention — the second-order effect lands two quarters later in
@@ -46,7 +46,7 @@ Do NOT use for full-business intrinsic-value modeling, OKR setting, funnel-stage
   **fiscal-period** slot for the close-window the ratios must
   reconcile against (monthly close vs quarterly board pack vs
   annual plan). See
-  [`context-spine`](../../../docs/contracts/context-spine.md).
+  [`context-spine`](../../docs/contracts/context-spine.md).
 
 ## Procedure
 

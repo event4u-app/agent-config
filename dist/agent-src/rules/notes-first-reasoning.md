@@ -37,7 +37,7 @@ THE RESPONSE CARRIES CONCLUSIONS + EVIDENCE ONLY.
 
 This is not "show your work in the reply" — it is the opposite. Why, and what
 grounds the notes file:
-[`notes-horizon-mechanics`](../docs/guidelines/agent-infra/notes-horizon-mechanics.md).
+[`notes-horizon-mechanics`](../guidelines/agent-infra/notes-horizon-mechanics.md).
 
 ## Notes file structure (the file, not the response)
 
@@ -78,7 +78,7 @@ memory system (`memory-consolidation`), not the in-task notes.
 
 ## See also
 
-[`notes-horizon-mechanics`](../docs/guidelines/agent-infra/notes-horizon-mechanics.md)
+[`notes-horizon-mechanics`](../guidelines/agent-infra/notes-horizon-mechanics.md)
 — every mechanic this rule points at. Also
 [`rdp-gate`](../contexts/execution/rdp-gate.md) and
 [`verify-before-complete`](verify-before-complete.md).

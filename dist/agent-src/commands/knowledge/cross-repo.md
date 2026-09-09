@@ -23,7 +23,7 @@ Targeted, **read-only** retrieval across the IDE-attached sibling repos the user
 has opted into (`linked_projects[].include: true`). Returns a bounded set of
 matches — a shared type, an API contract the frontend consumes, a config the
 sibling owns — **without bulk-including** any sibling file. Implements
-[`cross-repo-retrieval`](../../../docs/contracts/cross-repo-retrieval.md) and
+[`cross-repo-retrieval`](../../docs/contracts/cross-repo-retrieval.md) and
 stays inside [ADR-032](../../../docs/decisions/ADR-032-linked-projects-scope.md)
 Option A.
 

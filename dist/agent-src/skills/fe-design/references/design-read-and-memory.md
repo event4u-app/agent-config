@@ -22,7 +22,7 @@ suggest adding to PRODUCT.md: [pattern description]."*
 ## Register — brand vs product
 
 Before applying heuristics, determine the register (see
-[`docs/guidelines/design-modes.md`](../../../../docs/guidelines/design-modes.md)):
+[`docs/guidelines/design-modes.md`](../../../guidelines/design-modes.md)):
 brand mode (impression-first) vs product mode (task-first). Form-heavy, table-heavy,
 and dashboard surfaces are almost always product mode — favour the standard
 patterns in this skill (Form Design, Table Design) over expressive variance.
@@ -42,7 +42,7 @@ Reading this as: <page-kind> for <audience>, <vibe> language, leaning <design-sy
 
 **Anti-Default Discipline:** Before committing to any layout or component
 pattern, cross-check your first impulse against
-[`design-antipatterns.md`](../../../../docs/guidelines/design-antipatterns.md) —
+[`design-antipatterns.md`](../../../guidelines/design-antipatterns.md) —
 the L1/L2 "AI landing page" layout (centered hero + 3-column grid + CTA), the
 V1 side-stripe card, the T7 default-font pick, and V2 decorative glassmorphism.
 If a tell was the first impulse, choose a different approach or explicitly
@@ -56,7 +56,7 @@ burden does not apply to them: build them as given. The carve-out is scoped to
 decisions the artifact actually covers — anything it leaves open (a state it
 never shows, a surface it never had) is your first impulse again and gets the
 full scan. See
-[`design-fidelity-mechanics`](../../../../docs/guidelines/design-fidelity-mechanics.md)
+[`design-fidelity-mechanics`](../../../guidelines/design-fidelity-mechanics.md)
 § Provided-artifact precedence.
 
 ## Aesthetic direction

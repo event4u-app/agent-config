@@ -38,14 +38,14 @@ Ask the user (in their language) for what is known:
 - Any existing `incident-commander` skeleton to consume.
 
 Accept an incomplete skeleton per
-[`analysis-memory-loop.md § 5`](../../../../docs/contracts/analysis-memory-loop.md):
+[`analysis-memory-loop.md § 5`](../../docs/contracts/analysis-memory-loop.md):
 a missing root cause is normal, not a blocker.
 
 ### 2. Retrieve prior incident-learnings
 
 Before drafting, call `retrieve()` over the same key-space (incident
 type, affected paths, decision areas) per
-[`analysis-memory-loop.md § 2`](../../../../docs/contracts/analysis-memory-loop.md).
+[`analysis-memory-loop.md § 2`](../../docs/contracts/analysis-memory-loop.md).
 
 - **Stale entries** (age > `review_after_days`) appear in `skipped`
   — surface them to the user, do not silently use them.
@@ -82,7 +82,7 @@ Systems and processes are examined — never individuals.
 ### 5. Draft the memory candidate
 
 Per
-[`analysis-memory-loop.md § 1`](../../../../docs/contracts/analysis-memory-loop.md),
+[`analysis-memory-loop.md § 1`](../../docs/contracts/analysis-memory-loop.md),
 draft an `incident-learnings` candidate using `/memory propose`:
 
 ```jsonc
@@ -125,5 +125,5 @@ Present the draft candidate and ask:
 
 - [`blameless-post-mortem`](../../../../skills/blameless-post-mortem/SKILL.md)
 - [`root-cause-frameworks`](../../../../skills/root-cause-frameworks/SKILL.md)
-- [`analysis-memory-loop.md`](../../../../docs/contracts/analysis-memory-loop.md)
+- [`analysis-memory-loop.md`](../../docs/contracts/analysis-memory-loop.md)
 - [`/analyze`](../command.md) — cluster orchestrator

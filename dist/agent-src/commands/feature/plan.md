@@ -303,7 +303,7 @@ If picked **2** → continue.
 - Set status to `📋 Planned`.
 - If Jira tickets were provided, add them to the `Jira` field and reference them in the feature doc.
 - **Risk review (Gate R1)** — before saving, add a `## Risk Register`
-  section per [`plan-review-gates § 1`](../../../docs/contracts/plan-review-gates.md):
+  section per [`plan-review-gates § 1`](../../docs/contracts/plan-review-gates.md):
   read the C→R1 handoff state from step 0 if present (resolved branches
   seed the risks — never re-ask them), rank the highest product and
   implementation risks descending, one mitigation per row, each row
@@ -386,6 +386,6 @@ What's next?
 
 ## See also
 
-- [`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md#po) — PO mode output contract (Goal / Assumptions / Acceptance criteria / Impacted modules / Risks / Open questions for stakeholder)
+- [`role-contracts`](../../guidelines/agent-infra/role-contracts.md#po) — PO mode output contract (Goal / Assumptions / Acceptance criteria / Impacted modules / Risks / Open questions for stakeholder)
 - [`refine-ticket`](refine-ticket.md) — optional upstream step: run first when the input is a Jira/Linear ticket rather than a fresh idea
 - [`estimate-ticket`](estimate-ticket.md) — sibling of `refine-ticket`; size + risk + split recommendation for an already-refined ticket

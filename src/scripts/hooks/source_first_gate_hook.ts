@@ -70,6 +70,18 @@
  * candidate spread is what tells them apart. Picking one now would be the
  * threshold-first mistake the activation policy names.
  *
+ * ── A SECOND RECORD KIND SHARES THIS LOG ──────────────────────────────────
+ *
+ * `_lib/tolerance_shadow.ts` appends `record: "tolerance_shadow"` lines here.
+ * It is NOT a second concern and registers nothing: `check_estate_count`
+ * reports zero growth allowance on hook concerns, so the value-reconciliation
+ * window rides this file rather than opening its own
+ * (`road-to-design-intent-conformance` 4.2). Readers of this log MUST
+ * discriminate on `record` — a consumer that assumed one shape would silently
+ * mis-parse the other. That module carries its own pre-registered flip
+ * criterion, on the same terms as the one above and with the same reverse
+ * trigger discipline.
+ *
  * PRIVACY BY CONSTRUCTION: booleans, counts, a matcher label, and the
  * id-shaped `agent_type` enum (recorded verbatim, the same stance
  * `subagent_ledger_hook.ts` states for that field). No prompt, no command

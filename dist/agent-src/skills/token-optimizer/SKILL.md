@@ -78,7 +78,7 @@ INTENT
 │
 └── API-bill lever (stable prefix reused across calls · non-interactive
     bulk cohort · model/effort pick against the paid Anthropic bill)
-      → cite [api-cost-levers](../../../docs/guidelines/agent-infra/api-cost-levers.md)
+      → cite [api-cost-levers](../../guidelines/agent-infra/api-cost-levers.md)
         (prompt caching ~0.1x reads · Batch -50% · model tiering · effort)
 ```
 

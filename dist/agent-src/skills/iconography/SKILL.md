@@ -89,7 +89,7 @@ rung 3 and is exactly the scaffold inheritance
 
 Before resolving any new icon, honour the project's existing icon system — the
 Inspect stage of the
-[design-artifact lifecycle](../../../docs/contracts/design-artifact-lifecycle.md).
+[design-artifact lifecycle](../../docs/contracts/design-artifact-lifecycle.md).
 
 - **Inspect first.** Detect the icon set already in use (imports, existing
   `set:name` usages, brand assets) before picking one. A new icon matches the
@@ -140,9 +140,9 @@ Inspect stage of the
 
 ## See also
 
-- [`design-canon.md`](../../../docs/guidelines/design-canon.md) § Icon systems — prefer a named system's icon set (Material Symbols / SF Symbols / Fluent / Carbon) when that system is in play.
+- [`design-canon.md`](../../guidelines/design-canon.md) § Icon systems — prefer a named system's icon set (Material Symbols / SF Symbols / Fluent / Carbon) when that system is in play.
 - [`design-tokens`](../design-tokens/SKILL.md) — token system the icon color/size variables should reference.
 - [`typography-system`](../typography-system/SKILL.md) — sibling visual-consistency skill.
 - [`fe-design`](../fe-design/SKILL.md) — broader frontend design discipline.
 - [`icon-consistency`](../../rules/icon-consistency.md) — enforced rule for set discipline across the project.
-- [`docs/guidelines/design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md) — icon-relevant slop tells: V5 (hand-drawn SVG mixed with crisp icon-system icons) and T3 (small rounded-square icon tile above every feature heading — the universal AI feature-card template).
+- [`docs/guidelines/design-antipatterns.md`](../../guidelines/design-antipatterns.md) — icon-relevant slop tells: V5 (hand-drawn SVG mixed with crisp icon-system icons) and T3 (small rounded-square icon tile above every feature heading — the universal AI feature-card template).

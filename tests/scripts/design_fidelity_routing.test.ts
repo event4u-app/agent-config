@@ -277,6 +277,42 @@ export const ROUTING_MATRIX: readonly Row[] = [
         baseline: false,
     },
     {
+        // Written BEFORE the `*.dc.html` trigger below, per the rule's own
+        // § Routing contract: the near-miss row for a new trigger class comes
+        // first, and it must test the direction the NEW trigger opens rather
+        // than one already closed. The direction `*.dc.html` opens is "an HTML
+        // file somewhere in the tree", and the over-broad form a future edit
+        // would reach for is `*.html` — which fires on every HTML file in every
+        // project. This row pins that form silent.
+        id: 'near-plain-html-open-file',
+        klass: 'none',
+        prompt: 'Can you fix the failing test?',
+        open_files: ['public/index.html', 'docs/coverage-report.html'],
+        routes: false,
+        baseline: false,
+    },
+    {
+        // Same direction from the other side: the segment is `.dc.` and not the
+        // bare letters, so a file that merely contains them stays quiet.
+        id: 'near-dc-in-a-filename',
+        klass: 'none',
+        prompt: 'Can you fix the failing test?',
+        open_files: ['src/dc-helpers.html', 'src/adchtml.html'],
+        routes: false,
+        baseline: false,
+    },
+    {
+        // The class the trigger exists for: a Claude Design canvas artboard,
+        // handed over as a file with no handover word in the prompt at all.
+        // `*design.html` compiles to `^(?:.*design\.html)$` and cannot match it.
+        id: 'dc-html-artboard-handover',
+        klass: 'en',
+        prompt: 'Can you do this?',
+        open_files: ['ToDo.dc.html'],
+        routes: true,
+        baseline: false,
+    },
+    {
         id: 'near-greenfield',
         klass: 'en',
         prompt: 'Design a pricing page for us from scratch.',

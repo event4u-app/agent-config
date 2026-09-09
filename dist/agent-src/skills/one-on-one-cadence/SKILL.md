@@ -28,7 +28,7 @@ Do NOT use this for non-engineering teams as the primary lens (Q4 `perf-feedback
 
 ## Cognition cluster
 
-- **Mental model 1 — First principles.** Strip the 1:1 to: *what conversation can only happen between this manager and this report, that wouldn't happen anywhere else?* If the answer is "status that fits in standup", the 1:1 is mis-shaped. See [`mental-models.md`](../../../docs/contracts/mental-models.md) § 1.
+- **Mental model 1 — First principles.** Strip the 1:1 to: *what conversation can only happen between this manager and this report, that wouldn't happen anywhere else?* If the answer is "status that fits in standup", the 1:1 is mis-shaped. See [`mental-models.md`](../../docs/contracts/mental-models.md) § 1.
 - **Mental model 21 — Second-order thinking.** A cancelled 1:1 signals more than a missed conversation. Two consecutive cancellations from the manager side recalibrate the report's read of priority for months. Cancellation has compounding cost; protect the slot.
 - **Mental model 28 — Inversion.** *"What 1:1 shape would make this report stop bringing up real problems?"* — usually: pure status-update format, manager-talks-most, no growth dimension, recurring cancellation, public location. Inversion surfaces the 5 canonical failure modes.
 - **Mental model — Theory of constraints.** In a manager's week, 1:1 time is the binding constraint on people-leverage. Reducing per-1:1 time below 30 minutes for direct reports usually starves the channel; protecting 30–45 minutes weekly is the canonical default.

@@ -230,6 +230,10 @@ unmarked finding is treated as actionable, so the default failure direction is
 
 Regression witness: `daf-slop-vs-provided`.
 
+**Why the default is what it is, and why the 2026-07-31 council lock over this
+loop cannot be discharged by measuring it:**
+[`design-reconciliation § The 2026-07-31 lock`](design-reconciliation.md).
+
 ## Value-level provenance — the finer grain beside the flag
 
 The block above is finding-level and stays the default: `artifact_covered` is a

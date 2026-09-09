@@ -181,7 +181,7 @@ the one the task calls for.
 ### Cross-references and paths
 
 * Body links to guidelines / contracts use the verbatim relative form
-  (`../../docs/guidelines/<group>/<name>.md`,
+  (`../../guidelines/<group>/<name>.md`,
   `../../docs/contracts/<name>.md`). The condense-time rewriter
   resolves them to depth-aware single-up form — do not pre-rewrite in
   source.
@@ -269,4 +269,4 @@ Workflow sequencing, preconditions, ID/output provenance ("copy ids verbatim,
 never from memory"), a mandatory "why" intent field, and turn-end contracts
 belong INSIDE this artifact's description/frontmatter — where they fire at the
 decision point — not in always-on prose. See
-[`tool-description-as-policy`](../../../docs/guidelines/agent-infra/tool-description-as-policy.md).
+[`tool-description-as-policy`](../../guidelines/agent-infra/tool-description-as-policy.md).

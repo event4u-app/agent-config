@@ -146,7 +146,7 @@ to every persona you author.
 * Author a persona that nobody cites.
 * Restate Iron-Law text from rules inside `## Output expectations`.
 * Use ALL-CAPS Iron-Law fenced blocks — those belong in rules on the
-  [`kernel-membership`](../../../docs/contracts/kernel-membership.md)
+  [`kernel-membership`](../../docs/contracts/kernel-membership.md)
   list.
 * Ship a persona that overlaps an existing one's focus by more than
   50 % — merge instead.

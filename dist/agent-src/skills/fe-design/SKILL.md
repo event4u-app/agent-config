@@ -246,13 +246,13 @@ When this skill's content is folded into a design brief or review:
 ## Read the authority object — never re-infer it
 
 Read the resolved `ui_authority`
-([contract](../../../docs/contracts/ui-authority.md)) before the loop:
+([contract](../../docs/contracts/ui-authority.md)) before the loop:
 `surface_mode`, `register`, `change_intent`, `reference_maturity`,
 `constraints`. This skill is a **declared consumer** — a second decision table
 beside the object is a drift surface, so do not re-derive any field.
 
 `surface_mode` sets density, hierarchy and expressiveness only, per
-[`design-modes`](../../../docs/guidelines/design-modes.md) § The second axis.
+[`design-modes`](../../guidelines/design-modes.md) § The second axis.
 
 ```
 QUALITY FLOORS DO NOT VARY BY SURFACE MODE.
@@ -274,7 +274,7 @@ provenance belongs to `road-to-frontend-fidelity-calibration` Phases 0 and 2.
 ## Anti-slop discipline
 
 Before proposing a direction, scan the Visual (V1–V8) and Layout (L1–L10)
-sections of [`design-antipatterns`](../../../docs/guidelines/design-antipatterns.md),
+sections of [`design-antipatterns`](../../guidelines/design-antipatterns.md),
 plus Motion (M1–M8) for the interaction layer.
 On a match, choose differently or invoke the entry's own override condition in
 the brief — every entry has one. Two of them, T7 and T8, are additionally

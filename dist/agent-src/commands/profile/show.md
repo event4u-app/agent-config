@@ -38,7 +38,7 @@ deterministic template (no LLM), the right content for an employee-facing surfac
 ./scripts-run src/scripts/config/session_profiles show --plain
 ```
 
-Shape + constraints: [`session-profile-overlay` § Plain status surface](../../../../docs/contracts/session-profile-overlay.md#plain-status-surface).
+Shape + constraints: [`session-profile-overlay` § Plain status surface](../../docs/contracts/session-profile-overlay.md#plain-status-surface).
 
 ### 2. Report
 

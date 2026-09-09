@@ -26,7 +26,7 @@ Do NOT use for outward-facing fundraise pitch (route to Wing-3 `fundraising-narr
 
 ## Cognition cluster
 
-- **Mental model 27 — Why now.** Vision without a *why now* is a wishlist. The market shift, technology wave, regulatory change, or demographic inflection that makes the vision *achievable in this window* is the load-bearing claim. See [`mental-models.md`](../../../docs/contracts/mental-models.md) § 27.
+- **Mental model 27 — Why now.** Vision without a *why now* is a wishlist. The market shift, technology wave, regulatory change, or demographic inflection that makes the vision *achievable in this window* is the load-bearing claim. See [`mental-models.md`](../../docs/contracts/mental-models.md) § 27.
 - **Mental model 1 — First principles.** Strip the vision to outcomes for a named cohort, not feature lists or company milestones. *"Be the X for Y"* is shape; *"customer C does outcome O 10× faster"* is substance. See `mental-models.md` § 1.
 - **Mental model 21 — Second-order thinking.** *"If this vision is realised, what does the world look like in 5 years?"* If the answer is just *"we got bigger"*, the vision isn't load-bearing; if the answer is structural change (workflow shift, market re-shape), it is. See `mental-models.md` § 21.
 - **Context-spine — org-stage + product + customer-segment.** Read **org-stage** for vision-horizon (pre-seed = 3-year survival vision; growth = 5–7-year market-shape vision; mature = 10-year). Read **product** for the realistic shipping shape. Read **customer-segment** for the cohort whose outcome anchors the vision.

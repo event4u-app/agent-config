@@ -83,7 +83,7 @@ does not substitute for engaging with the source.
   how much of that data may be reproduced verbatim once it IS being
   used as source material.
 - [`code-provenance`](code-provenance.md) +
-  [`design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md)
+  [`design-fidelity-mechanics`](../guidelines/design-fidelity-mechanics.md)
   § Adopt the code — this rule's user-owned-text carve-out extended to
   **markup**: a design artifact the user hands over is their own material, so
   adapting its code is not a borrow. Third-party code arriving inside that

@@ -107,7 +107,7 @@ Goal: locate the failure in a single component, layer, or call site.
 3. Check recent changes: `git log`, `git blame` on the failing line,
    recent dependency updates, config edits, infra changes.
 4. **Consult memory for prior matches.** Via
-   [`memory-access`](../../../docs/guidelines/agent-infra/memory-access.md):
+   [`memory-access`](../../guidelines/agent-infra/memory-access.md):
    ```bash
    agent-config memory:lookup \
      --types incident-learnings,historical-patterns \
@@ -228,7 +228,7 @@ right line beats five minutes of IDE breakpoints.
 tool/agent loop, HTTP 429, `ECONNREFUSED`, `ENOENT`, timeout/hang, OOM, flaky
 test, works-locally-fails-in-CI, or repeated attempts at a tool that is not
 available — consult the symptom → cause → first-check
-lookup in [`failure-signatures`](../../../docs/guidelines/agent-infra/failure-signatures.md)
+lookup in [`failure-signatures`](../../guidelines/agent-infra/failure-signatures.md)
 to shortcut Phase 2 (Isolate) with the highest-probability first check. Each row
 carries a stable id you can cite, and a discrimination drill that produces its
 documented symptom. It supplements the loop; it does not replace it.

@@ -78,7 +78,7 @@ Your diff cleans up exactly the mess it made — nothing more:
   own-orphan (delete); otherwise → note. (`downstream-changes` runs the same
   sweep for renames — this is that sweep applied to the new diff.)
 
-Body migrated to [`guideline:agent-infra/minimal-safe-diff-mechanics`](../docs/guidelines/agent-infra/minimal-safe-diff-mechanics.md) (per P4 of `road-to-kernel-and-router.md`) — larger-change guidance, auto-formatter hunk handling, anti-over-engineering criteria (premature abstraction, speculative features, rewrite trigger, no tombstones + the council's rejected trust-internal-code clause), break-glass exception, and the full bounded-remediation carve-out prose (five conditions summarized: same path/module, ≤ ~10 lines, no API change, no dependency/migration, verification in the same commit — everything outside is note + ask per `active-remediation`; a live cross-user/tenant exposure is the sole interrupt).
+Body migrated to [`guideline:agent-infra/minimal-safe-diff-mechanics`](../guidelines/agent-infra/minimal-safe-diff-mechanics.md) (per P4 of `road-to-kernel-and-router.md`) — larger-change guidance, auto-formatter hunk handling, anti-over-engineering criteria (premature abstraction, speculative features, rewrite trigger, no tombstones + the council's rejected trust-internal-code clause), break-glass exception, and the full bounded-remediation carve-out prose (five conditions summarized: same path/module, ≤ ~10 lines, no API change, no dependency/migration, verification in the same commit — everything outside is note + ask per `active-remediation`; a live cross-user/tenant exposure is the sole interrupt).
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
 
 ## See also

@@ -61,7 +61,7 @@ If the analysis surfaces a pattern worth preserving for future plans:
 
 1. Dedup pre-check: call `retrieve()` over the same key-space (plan
    type, affected paths, decision area) per
-   [`analysis-memory-loop.md § 2`](../../../../docs/contracts/analysis-memory-loop.md).
+   [`analysis-memory-loop.md § 2`](../../docs/contracts/analysis-memory-loop.md).
    - **Match found** → propose a `frequency` / `supersedes` update.
    - **No match** → draft a new `historical-patterns` candidate.
 
@@ -99,5 +99,5 @@ If the analysis surfaces a pattern worth preserving for future plans:
 ## See also
 
 - [`premortem`](../../../../skills/premortem/SKILL.md)
-- [`analysis-memory-loop.md`](../../../../docs/contracts/analysis-memory-loop.md)
+- [`analysis-memory-loop.md`](../../docs/contracts/analysis-memory-loop.md)
 - [`/analyze`](../command.md) — cluster orchestrator

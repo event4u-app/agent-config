@@ -37,7 +37,7 @@ diagnosis (route to `funnel-analysis`).
   vs \<base\>"* is a falsifiable claim with evidence. *"E feels
   important"* is not. Pick the event that survives the
   hypothesis test. See
-  [`docs/contracts/mental-models.md`](../../../docs/contracts/mental-models.md) § 9.
+  [`docs/contracts/mental-models.md`](../../docs/contracts/mental-models.md) § 9.
 - **Mental model 16 — Leading vs. lagging indicators.** Paid is
   lagging; the activation event must be leading — observable
   *before* the user has paid, and correlated with the lagging
@@ -54,7 +54,7 @@ diagnosis (route to `funnel-analysis`).
   segment's switch-event (the aha moment is the segment's job
   done once), and the **funnel-stage** slot for activation's
   position relative to signup and paid. See
-  [`context-spine`](../../../docs/contracts/context-spine.md).
+  [`context-spine`](../../docs/contracts/context-spine.md).
 
 ## Procedure
 

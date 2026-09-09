@@ -96,6 +96,6 @@ on the follow-up PR.
 ### Examples
 
 Wrong/right/why demos (hedged claims, trusting earlier runs,
-partial-verification creep): [`verify-before-complete-demos`](../../../../docs/guidelines/agent-infra/verify-before-complete-demos.md).
+partial-verification creep): [`verify-before-complete-demos`](../../guidelines/agent-infra/verify-before-complete-demos.md).
 Outcome baseline:
 [`tests/golden/outcomes/verify_before_complete.json`](../../../../tests/golden/outcomes/verify_before_complete.json).

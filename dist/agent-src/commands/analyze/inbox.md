@@ -271,7 +271,7 @@ file's mtime against the tree's movement since.
 **Read the provenance line first — it is the cheapest column in the table.** An
 artifact may open with `drafted-against: <short-SHA>` or
 `drafted-at: <YYYY-MM-DD>` (optional by design — see
-[`agents-layout`](../../../../../docs/contracts/agents-layout.md) § Snapshot
+[`agents-layout`](../../docs/contracts/agents-layout.md) § Snapshot
 provenance). When a SHA is present, run `git log --oneline <SHA>..HEAD` **before**
 any deep read: what merged in that window is the set of claims that may be
 *stale rather than wrong*, and that is one command instead of a verification
@@ -619,7 +619,7 @@ coverage.
 **The bound — our tree, read-only, offline, no secrets.** Reproduction runs *our*
 commands against *our* tree: reads, greps, a `--dry-run`, a targeted test filter.
 Writes go only to `agents/runtime/tmp/`
-([`agents-layout`](../../../../../docs/contracts/agents-layout.md)), which is
+([`agents-layout`](../../docs/contracts/agents-layout.md)), which is
 gitignored — never the tracked tree.
 
 The bound is the **five stop-classes this file already declared** in the
@@ -711,7 +711,7 @@ remedy [`systematic-debugging`](../../../../skills/systematic-debugging/SKILL.md
 
 **A `reproduced` that came easily is the verdict to distrust.** A verification
 far easier than expected is a signal to check the path, not a signal of success
-([`false-green`](../../../../../docs/guidelines/agent-infra/false-green.md)
+([`false-green`](../../guidelines/agent-infra/false-green.md)
 § The ease tripwire); the specific failure here is a probe that never actually
 exercised the step. So run the step against the case the file says it handles —
 not only against a case where nothing could have gone wrong. An instrument that
@@ -723,7 +723,7 @@ detectors.
 names, straight from its own wording. That read is free and it is what sorts a
 step into `out-of-bound` before anything is spent finding out. The repo already
 draws this static/dynamic line for installed skills
-([`skill-dry-run`](../../../../../docs/contracts/skill-dry-run.md) § Explicit
+([`skill-dry-run`](../../docs/contracts/skill-dry-run.md) § Explicit
 non-goals: declared intent is rendered, never executed) — cited as the precedent
 for the distinction, **not** as a tool to invoke here: that surface takes an
 installed skill name resolving under `dist/agent-src/skills/`, and an inbox
@@ -1018,7 +1018,7 @@ the class ("an external acceptance-pipeline reference") and put the identity in
 the encrypted intake note.
 
 Then the inbox contract from
-[`agents-layout`](../../../../docs/contracts/agents-layout.md), in the **same
+[`agents-layout`](../../docs/contracts/agents-layout.md), in the **same
 reply**: `mv` the consumed file to `agents/tmp.old/`, point the roadmap's
 `Source:` line at its new path — still the codename — and regenerate the
 dashboard. A consumed file

@@ -34,7 +34,7 @@ to `retention-loops`).
 - **Mental model 30 — Inversion.** Do not ask *"how do we keep this
   account?"* — ask *"name the reason this account will leave."* The
   inversion forces a cause; the cause picks the move. See
-  [`docs/contracts/mental-models.md`](../../../docs/contracts/mental-models.md) § 30.
+  [`docs/contracts/mental-models.md`](../../docs/contracts/mental-models.md) § 30.
 - **Mental model 16 — Leading vs. lagging indicators.** Cancellation
   is lagging; usage-decay, relationship-decay, and fit-mismatch
   signals are leading. A health score built on lagging signals can
@@ -50,7 +50,7 @@ to `retention-loops`).
   the **customer-segment** slot for the segment's switch-event
   patterns — fit-churn shows up early in segments whose switch
   event differs from the ICP. See
-  [`context-spine`](../../../docs/contracts/context-spine.md).
+  [`context-spine`](../../docs/contracts/context-spine.md).
 
 ## Procedure
 

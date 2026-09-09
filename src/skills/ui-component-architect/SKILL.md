@@ -69,13 +69,33 @@ still exists in the tree. Absent or empty → fall through to
 Then review existing components in the codebase for the same
 responsibility — extend rather than rebuild when a match is found.
 
-**A new component's workshop is part of its design, on every React lane and not
-only `react-shadcn`.** When the extraction is agreed, the story set comes from
-[`storybook-workshop`](../storybook-workshop/SKILL.md) — one story per concept
-off the state-coverage matrix below, which is what makes the component
-agent-readable and its contrast floor checkable before it reaches a page. That
-skill is stack-agnostic and ships in `engineering-base`, so a plain-`react`
-project receives it exactly as a `react-shadcn` one does.
+**A new component's workshop is part of its design where the project has one —
+size-conditional, never a generic mandate.** The boundary is
+[`component-oriented-and-oop-development`](../../../docs/guidelines/component-oriented-and-oop-development.md)
+§ Component workshop: a workshop pays for itself on a real, growing shared
+component library and is not worth the setup for a handful of one-off
+components. Where it applies, the story set comes from
+[`storybook-workshop`](../storybook-workshop/SKILL.md) — one story per concept,
+which is what makes the component agent-readable and its contrast floor
+checkable before it reaches a page. That skill is stack-agnostic and ships in
+`engineering-base`, so a plain-`react` project receives it exactly as a
+`react-shadcn` one does. The state-coverage matrix the story set is derived
+from is React-specific and lives in
+[`react-shadcn-ui`](../react-shadcn-ui/SKILL.md) § Step 3, deliberately not
+duplicated here; a Blade, Vue or Livewire lane derives its story set from that
+lane's own state list instead.
+
+**No order is prescribed among stories, component and page — and that is a
+positive statement, not an omission.** The observed pattern, described rather
+than required: when porting existing UI the first move is inventory, not
+construction (this lifecycle excludes Plan by definition), and stories are
+written concurrent with the component rather than as a phase gate before or
+after it. No primary source states a required order, Storybook's own tutorial
+writes the component before the story, Atomic Design's author calls it "not a
+linear process", and measured evidence comparing build orders is **absent**,
+not merely weak. A claimed order is therefore a preference someone holds, never
+this skill's instruction.
+
 If none exists, write the new component's purpose: *"Renders a
 labelled input with inline error and hint."* If the sentence has an
 "and" joining two unrelated jobs, the component is two components.

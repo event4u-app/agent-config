@@ -162,7 +162,7 @@ Show the complete roadmap to the user and ask (in their language) if anything sh
 
 Unless the roadmap will be saved as `status: draft`, add a
 `## Risk Register` per
-[`plan-review-gates § 1`](../../../docs/contracts/plan-review-gates.md):
+[`plan-review-gates § 1`](../../docs/contracts/plan-review-gates.md):
 read the C→R1 handoff state from step 0 if present (resolved branches
 seed the risk list — never re-ask them), identify the highest product and
 implementation risks, rank descending, write a mitigation per row, and

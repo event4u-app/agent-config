@@ -27,7 +27,28 @@ execution:
 > hands it to the [`design-tokens`](../design-tokens/SKILL.md) toolchain to emit
 > CSS vars + Tailwind. The same `.tokens.json` is the export that pack-ai-image
 > brand-asset generation and the greenfield scaffold seed consume (B → A;
-> contract: [`brand-token-consumption`](../../../docs/contracts/brand-token-consumption.md)).
+> contract: [`brand-token-consumption`](../../docs/contracts/brand-token-consumption.md)).
+
+## Known contradiction — the filename this skill authors is not the one the resolver reads
+
+**Recorded, not resolved.** This skill's prose says to author `.tokens.json`,
+and the only resolver in the tree reads `tokens.json` — `BRAND_TOKEN_PATHS`
+searches `tokens.json`, `assets/tokens.json`, `resources/tokens.json` and
+`agents/settings/brand/tokens.json` <!-- ref-ignore -->, none of them
+dot-prefixed. A consumer
+following this skill literally therefore produces a file nothing loads.
+
+The authoring name is a consumer-visible decision and is deliberately not
+changed here. What closes the gap in the meantime is
+`agent-config brand:status`, which reports which of the four paths holds a file
+— and separately flags a dot-prefixed `.tokens.json`, which is exactly the file
+a reader of this skill would plausibly have created.
+
+Moved here from [`brand-source-of-truth`](../../rules/brand-source-of-truth.md)
+on 2026-09-09: it is a note about this skill, and its 6 lines in a standing rule
+were paid for on every subagent spawn. The substitution funded that rule's
+artifact-versus-brand pointer, per the council verdict on
+`blocker: standing-payload-headroom`.
 
 ## When to use
 
@@ -98,9 +119,9 @@ execution:
 
 ## See also
 
-- [`design-canon.md`](../../../docs/guidelines/design-canon.md) § Colour references — culturally-situated palettes + a11y-contrast grounding when deriving brand colour tokens.
+- [`design-canon.md`](../../guidelines/design-canon.md) § Colour references — culturally-situated palettes + a11y-contrast grounding when deriving brand colour tokens.
 - [`brand-identity`](../brand-identity/SKILL.md) — supplies the constraint set this skill derives tokens from.
 - [`design-tokens`](../design-tokens/SKILL.md) — the DTCG toolchain that emits CSS/Tailwind from `.tokens.json`.
 - [`typography-system`](../typography-system/SKILL.md) — brand-aware stage-2 supplies the type tokens.
-- [`brand-token-consumption`](../../../docs/contracts/brand-token-consumption.md) — the read contract pack-ai-image and greenfield scaffold consume.
+- [`brand-token-consumption`](../../docs/contracts/brand-token-consumption.md) — the read contract pack-ai-image and greenfield scaffold consume.
 - [`brand-consistency`](../../rules/brand-consistency.md) — validates emitted artifacts against this token source of truth.

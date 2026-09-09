@@ -17,7 +17,7 @@ triggers:
 ## When to use
 
 > **Design verification.** When exercising a UI artifact, run the
-> [design-artifact verification checklist](../../../docs/contracts/design-artifact-verification.md#verification-checklist)
+> [design-artifact verification checklist](../../docs/contracts/design-artifact-verification.md#verification-checklist)
 > (open → console/load → viewport → text-fit → assets → interaction) and capture
 > evidence; a design task with browser capability present is not "done" without it.
 
@@ -29,12 +29,12 @@ Use this skill when:
 - Debugging flaky E2E tests
 - Configuring Playwright for CI/CD
 
-**Guideline:** `../../../docs/guidelines/e2e/playwright.md` — full conventions, config templates, CI setup.
+**Guideline:** `../../guidelines/e2e/playwright.md` — full conventions, config templates, CI setup.
 **Mobile:** for native iOS/Android or React Native E2E, do NOT reuse Playwright — see the `mobile-e2e-strategy` skill for framework selection.
 
 ## Procedure: Write Playwright tests
 
-1. **Read the guideline** — `../../../docs/guidelines/e2e/playwright.md` for detailed conventions.
+1. **Read the guideline** — `../../guidelines/e2e/playwright.md` for detailed conventions.
 2. **Check Playwright config** — `playwright.config.ts` for browsers, base URL, timeouts.
 3. **Check existing tests** — match patterns in `tests/e2e/` or `e2e/`.
 4. **Check test utilities** — look for page objects, fixtures, helpers.

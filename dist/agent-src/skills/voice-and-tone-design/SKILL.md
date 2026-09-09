@@ -36,7 +36,7 @@ subject lines or ad creative formats (channel-agnostic skill).
   segment can recognise across surfaces is the voice that survives
   contact with three writers under deadline. A five-attribute voice
   that no one remembers is brand-theatre. See
-  [`docs/contracts/mental-models.md`](../../../docs/contracts/mental-models.md) § 13.
+  [`docs/contracts/mental-models.md`](../../docs/contracts/mental-models.md) § 13.
 - **Mental model 15 — Signal vs. noise.** Voice is the
   identification signal embedded in copy — without distinctiveness
   it is noise that competes with every peer's noise. Cut to the
@@ -46,7 +46,7 @@ subject lines or ad creative formats (channel-agnostic skill).
   for the proofs the voice must carry (a voice that promises what
   the product cannot back is fiction); read **customer-segment**
   for the listening-register the audience already lives in. See
-  [`context-spine`](../../../docs/contracts/context-spine.md).
+  [`context-spine`](../../docs/contracts/context-spine.md).
 
 ## Procedure
 

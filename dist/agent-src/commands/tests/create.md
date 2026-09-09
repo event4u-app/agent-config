@@ -109,4 +109,4 @@ funnel per changed behavior — enumerate first, write second:
 
 ## See also
 
-- [`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md#tester) — Tester mode output contract (Behaviour under test / Edge cases / Negative paths / Reproduction / Coverage gaps)
+- [`role-contracts`](../../guidelines/agent-infra/role-contracts.md#tester) — Tester mode output contract (Behaviour under test / Edge cases / Negative paths / Reproduction / Coverage gaps)

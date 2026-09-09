@@ -63,12 +63,12 @@ Test before writing any comment: *would deleting it leave a future reader confus
 - The user explicitly asks for documented code / teaching examples ("erkläre im Code", "annotate this for juniors") — that turn's ask wins.
 - License headers or file-level pragmas a toolchain requires.
 
-Body migrated to [`guideline:code-clarity § Comment discipline`](../docs/guidelines/code-clarity.md#comment-discipline--state-a-constraint-not-a-narration) (per P4 of `road-to-kernel-and-router.md`) — banned-classes table, machine-relevant precision carve-out, `code_style.docblocks` public-API carve-out, per-language keep/drop tables, worked examples, scope boundary, fixtures pointer.
+Body migrated to [`guideline:code-clarity § Comment discipline`](../guidelines/code-clarity.md#comment-discipline--state-a-constraint-not-a-narration) (per P4 of `road-to-kernel-and-router.md`) — banned-classes table, machine-relevant precision carve-out, `code_style.docblocks` public-API carve-out, per-language keep/drop tables, worked examples, scope boundary, fixtures pointer.
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
 
 ## See also
 
-- [`code-clarity.md § Comment discipline`](../docs/guidelines/code-clarity.md#comment-discipline--state-a-constraint-not-a-narration) — canonical long-form with the migrated body.
+- [`code-clarity.md § Comment discipline`](../guidelines/code-clarity.md#comment-discipline--state-a-constraint-not-a-narration) — canonical long-form with the migrated body.
 - [`minimal-safe-diff`](minimal-safe-diff.md) — diff-shape twin; no comment additions or removals on untouched code.
 - [`output-discipline`](output-discipline.md) — adjacent but distinct: bans placeholder prose (`// TODO: implement`); this rule bans redundant prose.
 - `docs/guidelines/php/php-coding-patterns.md` § PHPDoc — PHP-specific operationalization.

@@ -111,7 +111,7 @@ none. **Intentional, not a bug.** The installer projects
 resolve at agent runtime. The patterns below are correct by design:
 
 - **Relative cross-references inside markdown rules / skills /
-  commands** like `[x](../docs/guidelines/foo.md)` or
+  commands** like `[x](../guidelines/foo.md)` or
   `[y](../contexts/bar.md)`. The base resolves from the file's
   delivered location (e.g. `.augment/rules/<rule>.md`) — these paths
   are valid via the `.augment/` tree, even when the file is symlinked

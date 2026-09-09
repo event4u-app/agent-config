@@ -44,6 +44,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { iter_guidelines, resolve_guideline } from './guidelines_lane.js';
+
 // --- Path-root configuration (mutable to mirror Python module attributes) ----
 //
 // the retired Python implementation derives ROOT from `Path(__file__).resolve().parents[3]`
@@ -567,6 +569,18 @@ export function* iter_all_sources(): Generator<[string, string]> {
         seen.add(rel);
         yield [p, rel];
     }
+    // `docs/guidelines/` → logical `guidelines/…`. Appended here rather than
+    // added to `_root_specs` on purpose: `_root_specs` defines the artefact
+    // ESTATE, which the discovery manifest and every count/size ratchet walk,
+    // and a guideline is projected content rather than an estate artefact.
+    // Same shape and the same reason as the domains-commands lane above.
+    for (const [p, rel] of iter_guidelines(_roots.ROOT)) {
+        if (seen.has(rel)) {
+            continue;
+        }
+        seen.add(rel);
+        yield [p, rel];
+    }
 }
 
 /**
@@ -644,6 +658,13 @@ export function resolve_logical(logical_rel: string): string | null {
                 return cand;
             }
         }
+    }
+    // `guidelines/<subpath>.md` is backed by `docs/guidelines/<subpath>.md`.
+    // Paired with the `iter_all_sources` lane above so the projector's
+    // staleness check and its stale-file sweep both resolve a guideline.
+    const guideline = resolve_guideline(_roots.ROOT, rel);
+    if (guideline !== null) {
+        return guideline;
     }
     return null;
 }

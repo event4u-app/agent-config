@@ -293,6 +293,17 @@ export const MERGEABLE_KEYS: readonly string[] = [
     'knowledge.global_sharing.auto_promote_threshold',
     'knowledge.global_sharing.freshness.hypothesis_after_days',
     'knowledge.global_sharing.freshness.stale_after_days',
+    // `design.fidelity_mode` is a per-DEVELOPER working preference, not a
+    // per-project one: whether an agent may deviate from a handed-over design
+    // is a property of how that person works, and a designer who sets it once
+    // expects it in every checkout. `design-fidelity.md` already tells the
+    // reader to resolve it through the cascade — "that file is the project
+    // layer of a cascade that starts user-global" — and the cascade then
+    // filtered it out here, silently, so the rule's own instruction could not
+    // be followed. Class C, so a user still sets it by hand or through the
+    // GUI; whitelisting decides only whether the value SURVIVES the merge
+    // (ADR-271, road-to-design-intent-conformance 2.3).
+    'design.fidelity_mode',
 ];
 
 /** The shipped template, relative to the package root. */

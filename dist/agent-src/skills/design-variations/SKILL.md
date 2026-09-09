@@ -79,7 +79,7 @@ existing design → [`design-review`](../design-review/SKILL.md).
 8. **Quality gate.** Novel ≠ sloppy: run `lint_design_slop` over the emitted
    file (every variation individually passes; a DESIGN.md-declared direction
    suppresses its flags) and honor the outward-artifact hygiene floor (Q13 in
-   [`design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md)) —
+   [`design-antipatterns.md`](../../guidelines/design-antipatterns.md)) —
    no workspace paths, skill/tool names, or generator traces in the markup.
    Final pass before delivery → [`design-review`](../design-review/SKILL.md).
 
@@ -127,4 +127,4 @@ existing design → [`design-review`](../design-review/SKILL.md).
 - [`design-tokens`](../design-tokens/SKILL.md) — token emission for variation values.
 - [`fe-design`](../fe-design/SKILL.md) — production heuristics the by-the-book variation follows.
 - [`design-review`](../design-review/SKILL.md) — final gate before delivery.
-- [`docs/guidelines/design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md) — catalog + Q13 outward-artifact hygiene.
+- [`docs/guidelines/design-antipatterns.md`](../../guidelines/design-antipatterns.md) — catalog + Q13 outward-artifact hygiene.

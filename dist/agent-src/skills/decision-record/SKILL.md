@@ -49,7 +49,7 @@ Do NOT use when:
 - **Mental model 4 — Second-order thinking.** Every decision unlocks
   some futures and locks out others; the consequences block names
   what becomes harder, not just what becomes easier. See
-  [`docs/contracts/mental-models.md`](../../../docs/contracts/mental-models.md) § 4.
+  [`docs/contracts/mental-models.md`](../../docs/contracts/mental-models.md) § 4.
 - **Mental model 6 — Theory of constraints.** A decision that does
   not move the binding constraint is theatre; if the trade-off matrix
   scores every option the same on the constraint that matters, the
@@ -67,7 +67,7 @@ Do NOT use when:
   categories are enumerated so the call is not left to a judgement about
   what feels important.
 - **Team context-spine slot.** Read the **team** slot of the
-  [context-spine](../../../docs/contracts/context-spine.md) to
+  [context-spine](../../docs/contracts/context-spine.md) to
   capture who is bound by the decision (review groups, on-call
   rotation). Skip if the consumer project has not filled it; note in
   the record.
@@ -133,7 +133,7 @@ Write:
   `agentic_mode: council` — sources and measurements raise the grade,
   consensus does not. A human product call records `E0` plus
   `authority_basis: owner_intent` rather than a faked grade. Vocabulary:
-  [`adr-layout § Provenance and evidence`](../../../docs/contracts/adr-layout.md).
+  [`adr-layout § Provenance and evidence`](../../docs/contracts/adr-layout.md).
 
 ### 5. Wire the supersession chain (if any)
 

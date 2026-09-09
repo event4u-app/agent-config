@@ -106,7 +106,7 @@ mentioned one. This rule ships `instruction-only` — the honesty boundary
 [`ui-audit-gate`](ui-audit-gate.md) state for their own obligations. The ladder
 is the control; skipping it is caught by nothing.
 
-Body migrated to [`guideline:agent-infra/active-remediation-mechanics`](../docs/guidelines/agent-infra/active-remediation-mechanics.md) (per P4 of `road-to-kernel-and-router.md`) — per-tier fix-now/note+ask/follow-up-PR criteria, version-gated modernization, anti-nagging guardrails.
+Body migrated to [`guideline:agent-infra/active-remediation-mechanics`](../guidelines/agent-infra/active-remediation-mechanics.md) (per P4 of `road-to-kernel-and-router.md`) — per-tier fix-now/note+ask/follow-up-PR criteria, version-gated modernization, anti-nagging guardrails.
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
 
 ## See also

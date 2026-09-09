@@ -386,4 +386,4 @@ Skip emit when `emergency.orchestration_halt` is set or `spawn_count == 0`
 | External / networked second opinion  | [`ai-council`](../ai-council/SKILL.md) |
 | Cross-model review WITH repo access   | [`/team`](../../domains/meta/team/command.md) (collaborative; subagents are in-session same-weights) |
 | Verifying completeness               | [`verify-completion-evidence`](../verify-completion-evidence/SKILL.md) |
-| What a subagent owns vs never owns   | [`subagent-boundary`](../../../docs/contracts/subagent-boundary.md) |
+| What a subagent owns vs never owns   | [`subagent-boundary`](../../docs/contracts/subagent-boundary.md) |

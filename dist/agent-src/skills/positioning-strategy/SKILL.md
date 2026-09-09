@@ -34,7 +34,7 @@ Do NOT use for peer-versus-peer feature comparison (route to
   the underlying job: who fires what, to make what progress, under
   what pressure. Inherited category labels are the trap; the unit of
   positioning is the job, not the label. See
-  [`docs/contracts/mental-models.md`](../../../docs/contracts/mental-models.md) § 1.
+  [`docs/contracts/mental-models.md`](../../docs/contracts/mental-models.md) § 1.
 - **Mental model 30 — Inversion.** For every positioning claim, ask
   *"what would a competitor with a credible alternative argue against
   this?"* A claim that has no opposable counter is either trivially
@@ -43,7 +43,7 @@ Do NOT use for peer-versus-peer feature comparison (route to
   slot for non-goals and the **customer-segment** slot for the ICP
   shape before locking the frame. Positioning that contradicts either
   slot fails its own audit. See
-  [`context-spine`](../../../docs/contracts/context-spine.md).
+  [`context-spine`](../../docs/contracts/context-spine.md).
 
 ## Procedure
 

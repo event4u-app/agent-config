@@ -32,7 +32,7 @@ Do NOT use for ranking features, valuation, or OKR decomposition (see Related Sk
   lagging; activation is leading; signup is upstream of both. A
   funnel decision built on the lagging stage can only confirm the
   miss; the leading stage names the binding fix. See
-  [`docs/contracts/mental-models.md`](../../../docs/contracts/mental-models.md) § 16.
+  [`docs/contracts/mental-models.md`](../../docs/contracts/mental-models.md) § 16.
 - **Mental model 13 — Occam's razor.** When a stage drops, the
   simpler explanation usually wins: *"acquisition mix shifted"*
   beats *"users no longer understand the product."* Pick the simpler
@@ -47,7 +47,7 @@ Do NOT use for ranking features, valuation, or OKR decomposition (see Related Sk
   **customer-segment** slot for which segments' switch-events the
   funnel is built for, and the **funnel-stage** slot for the
   position of each stage relative to the buying journey. See
-  [`context-spine`](../../../docs/contracts/context-spine.md).
+  [`context-spine`](../../docs/contracts/context-spine.md).
 
 ## Procedure
 

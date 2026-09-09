@@ -22,7 +22,7 @@ packs:
 Read-only render of the **effective, merged** user profile — the
 global `~/.event4u/agent-config/user/profile.md` layer plus the
 project-root `.agent-user.md` layer — per
-[`docs/contracts/agent-user-schema.md`](../../../../../docs/contracts/agent-user-schema.md)
+[`docs/contracts/agent-user-schema.md`](../../../docs/contracts/agent-user-schema.md)
 and its Loader contract / merge rule (ADR-138).
 
 Use when:
@@ -70,7 +70,7 @@ fix it via `/agents user update`).
 ### 3. Merge
 
 Apply the deepest-wins merge rule per
-[`agent-user-schema.md § Global profile layer`](../../../../../docs/contracts/agent-user-schema.md#global-profile-layer-adr-138):
+[`agent-user-schema.md § Global profile layer`](../../../docs/contracts/agent-user-schema.md#global-profile-layer-adr-138):
 for each field (`identity.name`, `language`, `role`, `style.pace`,
 `voice_sample`, `last_updated`), the project layer's value wins when
 present, otherwise the global layer's value is used. `# Notes`
@@ -162,6 +162,6 @@ the project it lives in, so there is nothing to audit for it here.
 
 ## See also
 
-- Schema: [`agent-user-schema`](../../../../../docs/contracts/agent-user-schema.md) — see § Global profile layer for the merge rule this command renders, and § Delete, revoke, and audit for `--audit`'s contract.
+- Schema: [`agent-user-schema`](../../../docs/contracts/agent-user-schema.md) — see § Global profile layer for the merge rule this command renders, and § Delete, revoke, and audit for `--audit`'s contract.
 - Parent: [`/agents user`](../user.md).
 - Sibling: [`/agents user init`](init.md), [`/agents user update`](update.md), [`/agents user delete`](delete.md) — the delete/revoke counterpart `--audit` informs.

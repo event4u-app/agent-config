@@ -104,4 +104,4 @@ guards the package side (run via the package's CI), and consumer-side
 - [`/ghostwriter:show`](show.md) — render a single profile in full.
 - [`/ghostwriter:fetch`](fetch.md) — refresh stale profiles with `--force-refresh`.
 - [`/ghostwriter:write`](write.md) — consume side; reuses the slugs listed here via `--as=<slug>`.
-- [`ghostwriter-schema`](../../../docs/contracts/ghostwriter-schema.md) — field definitions used in the table.
+- [`ghostwriter-schema`](../../docs/contracts/ghostwriter-schema.md) — field definitions used in the table.

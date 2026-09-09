@@ -180,5 +180,5 @@ Confirm:
   `TranscriptAdapter` matches the current host.
 - [`memory:promote`](promote.md) — lifts validated intake lines into
   curated YAML.
-- [`memory-access`](../../../docs/guidelines/agent-infra/memory-access.md) —
+- [`memory-access`](../../guidelines/agent-infra/memory-access.md) —
   file-backed retrieval contract for curated + intake entries.

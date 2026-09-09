@@ -30,7 +30,7 @@ decides — blocker `ratification-platform-anchor`.
 
 A PR is a "kernel-rule edit" iff it modifies any file in `src/rules/`
 that is in the locked kernel set
-(see [`docs/contracts/kernel-membership.md`](../../../docs/contracts/kernel-membership.md)).
+(see [`docs/contracts/kernel-membership.md`](../../docs/contracts/kernel-membership.md)).
 (Until 2026-07-31 this named the pre-ADR-051 authoring tree, which no
 longer exists — so the trigger could not match a live file.)
 

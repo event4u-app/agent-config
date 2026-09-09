@@ -93,5 +93,5 @@ If the prefix matched multiple ingests:
 
 - [`/knowledge ingest`](ingest.md) — add a new ingest.
 - [`/knowledge list`](list.md) — find an id prefix.
-- [`local-knowledge-ingestion`](../../../docs/contracts/local-knowledge-ingestion.md)
+- [`local-knowledge-ingestion`](../../docs/contracts/local-knowledge-ingestion.md)
   § Storage — directory layout.

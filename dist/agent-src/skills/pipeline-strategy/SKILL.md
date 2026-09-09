@@ -37,7 +37,7 @@ skill is strategy, not tooling).
   binding stage at any time; rates upstream of the constraint are
   inventory that never ships, rates downstream cannot exceed the
   constraint. Find the constraint before changing anything else. See
-  [`docs/contracts/mental-models.md`](../../../docs/contracts/mental-models.md) § 6.
+  [`docs/contracts/mental-models.md`](../../docs/contracts/mental-models.md) § 6.
 - **Mental model 16 — Leading vs. lagging indicators.** Stage-to-stage
   conversion is leading; closed-won is lagging. A coverage call built
   on lagging signals can only confirm the miss after it lands. See
@@ -51,7 +51,7 @@ skill is strategy, not tooling).
   quarter, the **customer-segment** slot for which segments belong in
   pipeline (and which are pre-pipeline education), and the
   **channel-stage** slot for where each segment enters. See
-  [`context-spine`](../../../docs/contracts/context-spine.md).
+  [`context-spine`](../../docs/contracts/context-spine.md).
 
 ## Procedure
 

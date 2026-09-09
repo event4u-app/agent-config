@@ -21,7 +21,7 @@ install:
 > compare the original assumptions against reality now, and produce a
 > verdict (still valid / needs amendment / superseded). Ends with a
 > `historical-patterns` memory candidate per the
-> [Analysis Memory Loop](../../../docs/contracts/analysis-memory-loop.md).
+> [Analysis Memory Loop](../../docs/contracts/analysis-memory-loop.md).
 >
 > **Direction:** backward (did it hold?) not forward (which option?).
 > For forward flow, use [`decision-record`](../decision-record/SKILL.md).
@@ -110,12 +110,12 @@ running them out of order pays for the expensive ones first:
    `unclassified`, which is not `owner`).
 
 Then price the reopen record from the grade × provenance burden table in
-[`adr-layout § The reopen record`](../../../docs/contracts/adr-layout.md) —
+[`adr-layout § The reopen record`](../../docs/contracts/adr-layout.md) —
 cheap for an `E0`/`E1` agentic snapshot, *surfaced* rather than obeyed or
 overturned for `E0`/`E1` human, the standard five fields at `E2`, and those
 fields plus engaging the original evidence **in kind** at `E3`/`E4`. Read the
 table; do not reconstruct it from memory. The axes are defined by
-[`adr-layout § Provenance and evidence`](../../../docs/contracts/adr-layout.md),
+[`adr-layout § Provenance and evidence`](../../docs/contracts/adr-layout.md),
 not here.
 
 ### 4. Verdict
@@ -142,7 +142,7 @@ key-space (decision area, affected paths):
 - **Match found** — propose a `frequency` / `supersedes` **update**
   to the existing entry. Do not create a duplicate.
 - **No match** — draft a new `historical-patterns` candidate per the
-  [Analysis Memory Loop § 1](../../../docs/contracts/analysis-memory-loop.md):
+  [Analysis Memory Loop § 1](../../docs/contracts/analysis-memory-loop.md):
 
 ```jsonc
 {
@@ -179,7 +179,7 @@ strengthening evidence.
   not rebuild one unless the verdict is "superseded" and a new decision
   process is needed.
 - Auto-promote memory candidates — the human drives promotion per the
-  [Analysis Memory Loop](../../../docs/contracts/analysis-memory-loop.md).
+  [Analysis Memory Loop](../../docs/contracts/analysis-memory-loop.md).
 - Issue a "superseded" verdict without naming the successor option or
   recommending the forward path to `decision-record` + `adr-create`.
 
@@ -306,7 +306,7 @@ in the rule; the lock catalog, fire steps, and failure modes live here.
    disposition, not a re-statement of the old one.
 
    When the lock is an **ADR**, the disposition carries the five-field reopen
-   record from [`adr-layout § Reopen record`](../../../docs/contracts/adr-layout.md):
+   record from [`adr-layout § Reopen record`](../../docs/contracts/adr-layout.md):
    the original rationale **addressed** (not cited), what changed with tree
    evidence, dependants and external commitments touched, the rollback path,
    and a blast radius — `narrow | wide | irreversible` — with the evidence for
@@ -344,7 +344,7 @@ neither the trust boundary nor the blast radius. Whether an *independently
 validated* grade may ever reduce the authorization burden is owner-reserved and
 open: do not answer it here — it is the `authority-coupling-decision` blocker in
 `road-to-evidence-based-adr-governance`, and
-[`adr-layout § The reopen record`](../../../docs/contracts/adr-layout.md) closes
+[`adr-layout § The reopen record`](../../docs/contracts/adr-layout.md) closes
 on the same point.
 
 Two consequences that are easy to get backwards:
@@ -396,4 +396,4 @@ Two consequences that are easy to get backwards:
 - [`decision-record`](../decision-record/SKILL.md) — forward flow: lock a new choice.
 - [`adr-create`](../adr-create/SKILL.md) — file the ADR after a decision is locked.
 - [`blameless-post-mortem`](../blameless-post-mortem/SKILL.md) — incident review; may hand off to decision-review when a prior architectural choice is implicated.
-- [`docs/contracts/analysis-memory-loop.md`](../../../docs/contracts/analysis-memory-loop.md) — produce → propose → promote → retrieve contract.
+- [`docs/contracts/analysis-memory-loop.md`](../../docs/contracts/analysis-memory-loop.md) — produce → propose → promote → retrieve contract.
