@@ -381,8 +381,8 @@ step):
 2. **Ground the draft in the original session logs, never the
    consolidated summary alone.** The candidate entry's `Sessions:`
    list names the chat-history session ids the topic recurred in —
-   pull those via [`/chat-history import`](../../../commands/chat-history/import.md)
-   (select by id) or the host's native transcript view before
+   read those from the host's native transcript view, or reconstruct
+   them manually from the retained continuity records, before
    drafting. A skill written purely from the recurrence-counter
    summary tends to be plausible but wrong; the original transcripts
    carry the detail the summary dropped.

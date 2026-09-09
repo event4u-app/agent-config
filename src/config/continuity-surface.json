@@ -478,25 +478,11 @@
             "reason": "REQUIRED on the normal path today: it is the only writer of the continuity record in the tree, so continuity does not happen unless a human runs it. That is what makes it a continuity command rather than an affordance, and it is on the owner-authorised retirement set of 2026-09-06."
         },
         {
-            "id": "command:chat-history",
-            "axis": "session_resume_pickers",
-            "disposition": "excluded",
-            "locus": "src/domains/meta/chat-history/command.md:3",
-            "reason": "The orchestrator shell that routes to the import picker; it presents no picker of its own. Counting both would double-count one surface. It is retired together with the picker it routes to, so the row disappears with it."
-        },
-        {
             "id": "picker:agent-handoff",
             "axis": "session_resume_pickers",
             "disposition": "counted",
             "locus": "src/domains/meta/agent-handoff/command.md:41",
             "reason": "A numbered-options block asking a human which prior session to resume. It is a picker by construction, and the parent`s target of 0 pickers is in tension with its preservation of this command \u2014 recorded here so the tension is visible in the count rather than argued away."
-        },
-        {
-            "id": "picker:chat-history-import",
-            "axis": "session_resume_pickers",
-            "disposition": "counted",
-            "locus": "src/domains/meta/chat-history/import/command.md:77",
-            "reason": "A numbered-table session picker plus a resume offer \u2014 a second, competing answer to \"which prior session do I continue from\". On the owner-authorised retirement set of 2026-09-06."
         },
         {
             "id": "session-index-latch",

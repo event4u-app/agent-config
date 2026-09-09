@@ -174,9 +174,9 @@ Your agent now understands slash commands:
 | `/optimize skills` | Audit skills, find duplicates, run linter |
 | `/feature plan` | Interactively plan a feature |
 | `/fix quality` | Run and fix all quality checks |
-| `/chat-history import` | Pull a prior session into the current chat (resume) |
+| [Crash recovery](#crash-recovery--agentsruntimeagent-chat-history) | Automatically records session state; restart recovery requires manual reconstruction from the latest usable continuity record |
 
-→ [Browse all 204 active commands](../dist/agent-src/commands/)
+→ [Browse all 202 active commands](../dist/agent-src/commands/)
 
 ---
 

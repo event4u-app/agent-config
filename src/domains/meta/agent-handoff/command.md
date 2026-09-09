@@ -250,19 +250,20 @@ do not auto-execute.
   fingerprint derived from the platform `session_id` (schema v4, see
   [`chat-history-platform-hooks`](../../agents/settings/contexts/chat-history-platform-hooks.md)).
   Works only on the same machine and same repo, but captures every
-  phase / decision any session logged. Pull prior-session context into
-  the current chat verbatim with `/chat-history import`; mine a prior
-  session for project-improving learnings with
+  phase / decision any session logged. Automatic continuity recording
+  preserves a continuity record when the supported recording path
+  completes; mine a prior session for project-improving learnings with
   `/memory mine-session --mode=proposals`.
 
-Prefer `/agent-handoff` for planned context switches and session resumes;
-use `/chat-history import` after a crash or fresh-chat reopen on the same
-workspace to surface prior-session context verbatim.
+Prefer `/agent-handoff` for planned context switches and session resumes.
+After a restart, inspect the most recent continuity record and manually
+reconstruct the context needed to continue.
 
 Three distinct mechanisms — do not conflate them:
 
 - **handoff** (this command) — a one-shot seed for the *next* chat;
   generated from a picked session (or pushed from the live one), ephemeral,
   verbatim on the user's instructions.
-- **[`chat-history import`](../chat-history/import/command.md)** — pull a prior *session's* logged context into the current chat.
+- **transcript import** — no longer available. Legacy transcripts without a
+  usable continuity record require manual reconstruction.
 - **durable memory** ([`memory-consolidation`](../../../skills/memory-consolidation/SKILL.md)) — cross-*run* curated facts; a handoff is not memory, and memory is not a transcript.
