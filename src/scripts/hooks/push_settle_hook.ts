@@ -191,8 +191,9 @@ export function buildReminder(branch: string, pr: number | null): { reason: stri
     `own exit code.\n\n` +
     `Before this turn ends:\n` +
     `  1. Settle it:\n     ${settle}\n` +
-    `     Exit 0 = settled green · 1 = settled, something failed · 2 = NOT a verdict ` +
-    `(timed out or unreadable — never report 2 as green).\n` +
+    `     Exit 0 = settled green, and the line names the head it is about · 1 = settled, ` +
+    `something failed · 2 = NOT a verdict (timed out, unreadable, or the PR is merged / ` +
+    `closed / head-diverged — never report 2 as green).\n` +
     `  2. Red? Read only the failing part:\n` +
     `     gh run view --job <id> --log-failed | grep -E '×|FAIL|Error'\n` +
     `     then fix it and push again (fix-what-you-see: the author is irrelevant).\n` +
