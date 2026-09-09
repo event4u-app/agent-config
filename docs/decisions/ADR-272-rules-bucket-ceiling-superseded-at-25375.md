@@ -148,6 +148,32 @@ Rejected as the decision, retained as the `review_trigger`. openai's objection t
 a synchronous host capability not established in the evidence."* Holding a step
 open against an unbuilt mechanism is deferral wearing a plan's clothes.
 
+## Evidence
+
+**E3 — the numbers are measured, and the one claim that would have made this
+record wrong was checked against the tree rather than taken from the council.**
+
+| Claim | Evidence |
+|---|---|
+| The rules bucket measures 24,166 tok under `delivery` on a clean consumer-shaped root, against 99,598 under `eager-all` | `agents/roadmaps/road-to-delivery-for-every-host.md` § Phase 4 step 4.2, measurement table of 2026-09-07 |
+| The total limb passes at 39,758 ≤ 40,000 (24,166 rules + 14,846 skills + 746 CLAUDE.md) | same table |
+| `ceil(24,166 × 1.05) = 25,375` | arithmetic, stated so the number is reproducible rather than asserted |
+| **No `rules_bucket_ceiling` key exists and no gate reads one** | `grep -n "20000\|rules_bucket" src/scripts/check_preamble_payload_budget.ts` returns nothing; `grep -rn "20,000\|20000" agents/roadmaps/road-to-delivery-for-every-host.md` returns the Goal and step 4.2's verify line, and nothing else in the tree |
+| `check_preamble_payload_budget` routes by surface and never consults a rules-bucket limb | `src/scripts/check_preamble_payload_budget.ts` — the budget entry it reads is `packed`/total, with no per-bucket branch |
+| Both seats chose (a); the earlier declinations were conditional on delegation, not on substance | `agents/runtime/council/responses/delivery-for-every-host-owner-delegation.md` and `…-retry.md`, 2/2 across the two runs |
+| The first run's missing seat was a transport failure, not a refusal | that response's openai entry: `error: os_error: ENOBUFS`, `reason: unavailable`, empty text |
+
+**What this evidence does NOT establish**, named rather than implied:
+
+- **That 24,166 reproduces on this checkout.** It does not and cannot: a
+  maintainer tree deduplicates 101 of 114 rules against `~/.claude` and reads
+  ~4,115 tok for reasons unrelated to the flip. The figure is the roadmap's
+  clean consumer-shaped measurement, and `--project-rules-dir` exists so a reader
+  can reproduce it against such a root.
+- **That anything now enforces 25,375.** Nothing does, and nothing enforced
+  20,000 either. This record moves a prose criterion; it does not add a gate, and
+  § Consequences says so.
+
 ## References
 
 - `agents/roadmaps/road-to-delivery-for-every-host.md` § Goal, § Phase 4 step 4.2
