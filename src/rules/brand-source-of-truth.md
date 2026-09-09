@@ -59,7 +59,7 @@ NEVER SHIP AN ASSET THE ACTIVE BRAND CANNOT ACCOUNT FOR.
 [`design-fidelity`](design-fidelity.md) the artifact is the spec: the brand
 token wins on the **value** with the distance reported, **structure**
 stays the artifact's, a conflict is surfaced not merged —
-[`design-fidelity-mechanics § Artifact versus brand`](../../docs/guidelines/design-fidelity-mechanics.md).
+[`design-reconciliation § Artifact versus brand`](../../docs/guidelines/design-reconciliation.md).
 
 ## Where the brand actually lives — and how to check
 

@@ -43,19 +43,19 @@
 - **`source` is mandatory** — `kind` + `ref` + `captured_at`. An artifact with
   no provenance is rejected (you cannot confirm what you cannot trace).
 - **`spec.maturity` is a field, not a judgement made twice.** `design-fidelity`
-  branches on whether the artefact's pixel detail carries decisions — a
-  wireframe's placeholder greys are non-decisions, and reproducing them 1:1
-  honours the wrong half of the artefact. That axis used to live only as a prose
+  branches on whether the artifact's pixel detail carries decisions — a
+  wireframe's placeholder grays are non-decisions, and reproducing them 1:1
+  honors the wrong half of the artifact. That axis used to live only as a prose
   table, so every consumer re-derived it by eye and two consumers could disagree
   without either misreading the text. `src/scripts/_lib/artifact_maturity.ts`
   resolves it, and the block carries the verdict **with its provenance**:
-  `maturity_source` says which rung decided (a user signal beats the artefact's
+  `maturity_source` says which rung decided (a user signal beats the artifact's
   own declaration, which beats inference from its content, which beats the
   default) and `maturity_signal` names the concrete thing — *"the filename names
   a wireframe"*, *"every colour in the body is greyscale"* — never a restatement
   of the verdict. **Absent resolves `finished`, deliberately:** the 1:1 floor is
-  the stricter reading, and guessing *low* would make an artefact's silence a
-  licence to redesign it. The block is OPTIONAL in the file; an importer that
+  the stricter reading, and guessing *low* would make an artifact's silence a
+  license to redesign it. The block is OPTIONAL in the file; an importer that
   omits it gets the same default, which is why `source` is mandatory and this
   is not.
 - **`bundled_local`** on a font family is a flag, not an instruction: the

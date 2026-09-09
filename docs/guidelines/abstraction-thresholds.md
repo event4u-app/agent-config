@@ -68,7 +68,7 @@ investigation is permitted; the numbers themselves — 2 · 3+ · ~4+ — are
 2. **Repetition of the ELEMENT, not of its compositional context.** Four
    `<Card>` instances show that Card is used four times. They do **not** show
    that a `CardGrid` is needed — that needs multiple distinct contexts each
-   arranging several cards. Without this guard the clause would licence
+   arranging several cards. Without this guard the clause would license
    extracting a wrapper for every layout the artifact happens to contain once,
    which is speculative abstraction with an artifact as its excuse.
 

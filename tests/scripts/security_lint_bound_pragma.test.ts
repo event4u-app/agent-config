@@ -101,6 +101,22 @@ describe('bound pragma — the suppression is tied to the evidence, not the file
         expect(sl.source_identity('src/rules/x.md')).toBe('src/rules/x.md');
         expect(sl.source_identity('docs/guidelines/x.md')).toBe('docs/guidelines/x.md');
 
+        // The guidelines lane folds onto `docs/`, not onto `src/`. Added when
+        // `docs/guidelines/` became a projected tree: without the lane row the
+        // projected copy of `untrusted-input-spotlighting.md` — a DEFENSE
+        // guideline that quotes role-takeover phrases to teach refusal — got a
+        // different identity from its own source, so the three fingerprints its
+        // pragma already carried could not suppress the projection, and the
+        // security umbrella went red on the very file that explains the attack.
+        expect(sl.source_identity('dist/agent-src/guidelines/x.md')).toBe('docs/guidelines/x.md');
+        expect(sl.source_identity('dist/agent-src/guidelines/agent-infra/y.md')).toBe(
+            'docs/guidelines/agent-infra/y.md',
+        );
+        // A path that merely CONTAINS the word is not the lane.
+        expect(sl.source_identity('dist/agent-src/rules/guidelines.md')).toBe(
+            'src/rules/guidelines.md',
+        );
+
         const hash = fingerprintOf(BENIGN_QUOTE);
         const pragma = `<!-- security-lint: allow ${SMUGGLING} "reasoned" sha256:${hash} -->`;
         const projected = scanned('dist/agent-src/rules/fixture.md', bodyWith(BENIGN_QUOTE, pragma));

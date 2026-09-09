@@ -125,7 +125,7 @@ design.fidelity_mode` reports the value and the file it came from.
 demanding a confirmation** — conditional on `design.approximation`, which ships
 disabled with both tolerances `null`, so no default install changes. Structure,
 and anything outside tolerance, is unchanged; `hard-floor` disables it outright:
-[`design-fidelity-mechanics § Tolerance`](../docs/guidelines/design-fidelity-mechanics.md).
+[`design-reconciliation § Tolerance`](../docs/guidelines/design-reconciliation.md).
 
 ## When it fires
 
@@ -167,17 +167,17 @@ Two further handover shapes carry the artifact without any of the above:
   rule does not route it; the trigger was tried and withdrawn as over-broad.
   Until then the class needs one word in the prompt. Why, what closes it, and
   the row that pins the broad form silent:
-  [`design-fidelity-mechanics § Routing mechanics`](../docs/guidelines/design-fidelity-mechanics.md).
+  [`design-fidelity-routing`](../docs/guidelines/design-fidelity-routing.md).
 
 Every class here carries its own near-miss row in `ROUTING_MATRIX`
 ([`design_fidelity_routing.test.ts`](../../tests/scripts/design_fidelity_routing.test.ts));
 extending the set without one is how an over-broad trigger lands. Which row, and
-why: [`design-fidelity-mechanics § Routing mechanics`](../docs/guidelines/design-fidelity-mechanics.md).
+why: [`design-fidelity-routing`](../docs/guidelines/design-fidelity-routing.md).
 
 **The near-miss must test the direction the new trigger opens, not a direction
 that was already closed** — apply this before writing a trigger, not after. The
 worked example and the review that produced the rule:
-[`design-fidelity-mechanics § Routing mechanics`](../docs/guidelines/design-fidelity-mechanics.md).
+[`design-fidelity-routing`](../docs/guidelines/design-fidelity-routing.md).
 
 Body migrated to [`guideline:design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md) (per P4 of `road-to-kernel-and-router.md`) — URL / live-page handover (extraction into the `design-system.json` contract before the first UI write, the retrieval order, the lock boundary), surgical visual edits (targeted-edit vs redesign-trigger discipline, stable anchors), asset & imagery discipline (owned-asset path, third-party delivery is self-hosted by default, real-imagery-as-proof, iconography floor, no unrequested filler), deviation-surfacing shape, failure-mode catalog, `daf-*` fixtures.
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).

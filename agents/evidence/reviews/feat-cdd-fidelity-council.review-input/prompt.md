@@ -1,0 +1,477 @@
+# R2 completion review — feat-cdd-fidelity-council
+
+You are a FRESH reviewer subagent. You have no implementation context and
+you must not acquire any (blind-review pattern, plan-review-gates.md §5).
+
+## Review mode
+
+Senior-engineer review of the branch diff. Search grid — hunt for:
+
+- errors
+- inconsistent logic
+- inefficiencies
+- bug-producing patterns
+
+## Rules
+
+- Review only — write no code, fix nothing.
+- Tool allowlist (contract §5): branch-scoped `git diff` + reads of
+  branch-touched files only; no `git log` beyond the branch, no repo-wide
+  grep, no reads of `agents/runtime/` or session artifacts.
+
+## Inputs
+
+- diff: `diff.patch` — the review scope (branch head 30aa704cf91612f3675838202e902bdda3f98cf6, review
+  artefacts excluded), scope hash `df88557d4cccfec27e62e53311a0ace2fa763dfb5baf83148e08064490c3ea6d`
+- roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
+
+Changed files:
+
+- .github/workflows/consistency.yml
+- Taskfile.yml
+- agents/evidence/analysis/adr-evidence-census-2026-08.md
+- agents/evidence/analysis/standing-payload-by-host-2026-09.md
+- agents/roadmaps/archive/road-to-design-intent-conformance.md
+- agents/roadmaps/road-to-design-intent-conformance.md
+- agents/roadmaps/stubs/road-to-frontend-power-default-flip.md
+- agents/roadmaps/stubs/road-to-the-ledger-ratchet-that-drifted.md
+- dist/agent-src/commands/agents/init.md
+- dist/agent-src/commands/agents/user.md
+- dist/agent-src/commands/agents/user/accept.md
+- dist/agent-src/commands/agents/user/delete.md
+- dist/agent-src/commands/agents/user/init.md
+- dist/agent-src/commands/agents/user/review.md
+- dist/agent-src/commands/agents/user/show.md
+- dist/agent-src/commands/agents/user/update.md
+- dist/agent-src/commands/analytics/prune.md
+- dist/agent-src/commands/analytics/show.md
+- dist/agent-src/commands/analyze.md
+- dist/agent-src/commands/analyze/decision.md
+- dist/agent-src/commands/analyze/inbox.md
+- dist/agent-src/commands/analyze/incident.md
+- dist/agent-src/commands/analyze/near-miss.md
+- dist/agent-src/commands/analyze/postmortem.md
+- dist/agent-src/commands/analyze/premortem.md
+- dist/agent-src/commands/bug/fix.md
+- dist/agent-src/commands/bug/investigate.md
+- dist/agent-src/commands/cost/profile.md
+- dist/agent-src/commands/design.md
+- dist/agent-src/commands/feature/explore.md
+- dist/agent-src/commands/feature/plan.md
+- dist/agent-src/commands/feature/roadmap.md
+- dist/agent-src/commands/ghostwriter/fetch.md
+- dist/agent-src/commands/ghostwriter/list.md
+- dist/agent-src/commands/ghostwriter/show.md
+- dist/agent-src/commands/ghostwriter/write.md
+- dist/agent-src/commands/humanize.md
+- dist/agent-src/commands/jira-ticket.md
+- dist/agent-src/commands/judge.md
+- dist/agent-src/commands/judge/solo.md
+- dist/agent-src/commands/knowledge/cross-repo.md
+- dist/agent-src/commands/knowledge/forget.md
+- dist/agent-src/commands/knowledge/ingest.md
+- dist/agent-src/commands/knowledge/list.md
+- dist/agent-src/commands/memory/add.md
+- dist/agent-src/commands/memory/load.md
+- dist/agent-src/commands/memory/mine-session.md
+- dist/agent-src/commands/memory/promote.md
+- dist/agent-src/commands/memory/propose.md
+- dist/agent-src/commands/mode.md
+- dist/agent-src/commands/post-as/ghostwriter.md
+- dist/agent-src/commands/post-as/me.md
+- dist/agent-src/commands/pr/create.md
+- dist/agent-src/commands/pr/merge.md
+- dist/agent-src/commands/profile/activate.md
+- dist/agent-src/commands/profile/show.md
+- dist/agent-src/commands/review/changes.md
+- dist/agent-src/commands/review/routing.md
+- dist/agent-src/commands/roadmap/create.md
+- dist/agent-src/commands/roadmap/materialize.md
+- dist/agent-src/commands/roadmap/next.md
+- dist/agent-src/commands/roadmap/process-full.md
+- dist/agent-src/commands/security-audit-config.md
+- dist/agent-src/commands/skill/preview.md
+- dist/agent-src/commands/skills/discover.md
+- dist/agent-src/commands/sync/agent-settings.md
+- dist/agent-src/commands/sync/gitignore/fix.md
+- dist/agent-src/commands/tests/create.md
+- dist/agent-src/commands/tests/e2e-heal.md
+- dist/agent-src/commands/tests/e2e-plan.md
+- dist/agent-src/contexts/authority/kernel-rule-edits.md
+- dist/agent-src/contexts/communication/rules-auto/slash-command-routing-policy-mechanics.md
+- dist/agent-src/contexts/communication/rules-auto/think-before-action-mechanics.md
+- dist/agent-src/contexts/communication/rules-auto/token-efficiency-mechanics.md
+- dist/agent-src/contexts/communication/rules-auto/user-interaction-mechanics.md
+- dist/agent-src/contexts/contracts/frugality-charter.md
+- dist/agent-src/contexts/execution/auto-dispatch-classification.md
+- dist/agent-src/contexts/execution/auto-orchestration-activation.md
+- dist/agent-src/contexts/execution/autonomy-mechanics.md
+- dist/agent-src/contexts/execution/cheap-question-mechanics.md
+- dist/agent-src/contexts/execution/contract-decision-sheet.md
+- dist/agent-src/contexts/execution/mandated-lines.md
+- dist/agent-src/contexts/execution/non-interactive-contract.md
+- dist/agent-src/contexts/execution/orchestration-telemetry.md
+- dist/agent-src/contexts/execution/plan-confidence-gate.md
+- dist/agent-src/contexts/execution/roadmap-execution-contract.md
+- dist/agent-src/contexts/execution/subagent-modes-detail.md
+- dist/agent-src/contexts/execution/subagent-routing.md
+- dist/agent-src/contexts/execution/subagent-spawn-contract.md
+- dist/agent-src/contexts/execution/user-memory-channels.md
+- dist/agent-src/contexts/execution/verification-mechanics.md
+- dist/agent-src/contexts/judges/persona-voice-rubric.md
+- dist/agent-src/guidelines/abstraction-thresholds.md
+- dist/agent-src/guidelines/agent-infra/5w2h-analysis.md
+- dist/agent-src/guidelines/agent-infra/active-remediation-mechanics.md
+- dist/agent-src/guidelines/agent-infra/agent-interaction-and-decision-quality.md
+- dist/agent-src/guidelines/agent-infra/api-cost-levers.md
+- dist/agent-src/guidelines/agent-infra/artifact-drafting-protocol-mechanics.md
+- dist/agent-src/guidelines/agent-infra/ask-when-uncertain-demos.md
+- dist/agent-src/guidelines/agent-infra/asking-and-brevity-examples.md
+- dist/agent-src/guidelines/agent-infra/break-glass-usage.md
+- dist/agent-src/guidelines/agent-infra/carve-out-predicates.md
+- dist/agent-src/guidelines/agent-infra/comparison-matrix.md
+- dist/agent-src/guidelines/agent-infra/context-hygiene-mechanics.md
+- dist/agent-src/guidelines/agent-infra/corpus-grounding-authoring.md
+- dist/agent-src/guidelines/agent-infra/critical-thinking.md
+- dist/agent-src/guidelines/agent-infra/cross-source-consistency-mechanics.md
+- dist/agent-src/guidelines/agent-infra/developer-judgment.md
+- dist/agent-src/guidelines/agent-infra/direct-answers-demos.md
+- dist/agent-src/guidelines/agent-infra/domain-adoption-gates.md
+- dist/agent-src/guidelines/agent-infra/domain-eval-anti-pattern.md
+- dist/agent-src/guidelines/agent-infra/domain-pack-architecture.md
+- dist/agent-src/guidelines/agent-infra/downstream-changes-mechanics.md
+- dist/agent-src/guidelines/agent-infra/emphasis-budget.md
+- dist/agent-src/guidelines/agent-infra/engineering-memory-data-format.md
+- dist/agent-src/guidelines/agent-infra/evaluator-independence-mechanics.md
+- dist/agent-src/guidelines/agent-infra/existence-question-verdicts.md
+- dist/agent-src/guidelines/agent-infra/failure-signatures.md
+- dist/agent-src/guidelines/agent-infra/false-green.md
+- dist/agent-src/guidelines/agent-infra/first-principles.md
+- dist/agent-src/guidelines/agent-infra/framework-neutrality-patterns.md
+- dist/agent-src/guidelines/agent-infra/frontier-reasoning-operating-profile.md
+- dist/agent-src/guidelines/agent-infra/gate-authoring.md
+- dist/agent-src/guidelines/agent-infra/guarded-baseline.md
+- dist/agent-src/guidelines/agent-infra/installed-tools-manifest.md
+- dist/agent-src/guidelines/agent-infra/inversion-thinking.md
+- dist/agent-src/guidelines/agent-infra/ios-simulator-guide.md
+- dist/agent-src/guidelines/agent-infra/language-and-tone-examples.md
+- dist/agent-src/guidelines/agent-infra/layered-settings.md
+- dist/agent-src/guidelines/agent-infra/linked-projects-onboarding-gate.md
+- dist/agent-src/guidelines/agent-infra/mcp-request-signing.md
+- dist/agent-src/guidelines/agent-infra/memory-access.md
+- dist/agent-src/guidelines/agent-infra/mental-models.md
+- dist/agent-src/guidelines/agent-infra/minimal-safe-diff-mechanics.md
+- dist/agent-src/guidelines/agent-infra/missing-tool-handling.md
+- dist/agent-src/guidelines/agent-infra/model-recommendation.md
+- dist/agent-src/guidelines/agent-infra/naming.md
+- dist/agent-src/guidelines/agent-infra/notes-horizon-mechanics.md
+- dist/agent-src/guidelines/agent-infra/output-patterns.md
+- dist/agent-src/guidelines/agent-infra/recurring-criticism-mechanics.md
+- dist/agent-src/guidelines/agent-infra/reuse-verdict-mechanics.md
+- dist/agent-src/guidelines/agent-infra/review-routing-data-format.md
+- dist/agent-src/guidelines/agent-infra/roadmap-deferred-resolution-provenance.md
+- dist/agent-src/guidelines/agent-infra/roadmap-progress-mechanics.md
+- dist/agent-src/guidelines/agent-infra/role-contracts.md
+- dist/agent-src/guidelines/agent-infra/role-mode-router.md
+- dist/agent-src/guidelines/agent-infra/rule-body-migration-inventory.md
+- dist/agent-src/guidelines/agent-infra/rule-type-governance.md
+- dist/agent-src/guidelines/agent-infra/runtime-layer.md
+- dist/agent-src/guidelines/agent-infra/scqa-framework.md
+- dist/agent-src/guidelines/agent-infra/security-lint-containment.md
+- dist/agent-src/guidelines/agent-infra/self-improvement-pipeline.md
+- dist/agent-src/guidelines/agent-infra/simplicity-and-goal-demos.md
+- dist/agent-src/guidelines/agent-infra/six-hats.md
+- dist/agent-src/guidelines/agent-infra/size-and-scope.md
+- dist/agent-src/guidelines/agent-infra/skill-quality-checklist.md
+- dist/agent-src/guidelines/agent-infra/source-confidentiality-mechanics.md
+- dist/agent-src/guidelines/agent-infra/symptom-driven-harvest-loop.md
+- dist/agent-src/guidelines/agent-infra/systems-thinking.md
+- dist/agent-src/guidelines/agent-infra/tool-description-as-policy.md
+- dist/agent-src/guidelines/agent-infra/tool-integration.md
+- dist/agent-src/guidelines/agent-infra/traceability-field-mechanics.md
+- dist/agent-src/guidelines/agent-infra/untrusted-input-spotlighting.md
+- dist/agent-src/guidelines/agent-infra/verify-before-complete-demos.md
+- dist/agent-src/guidelines/augment-portability-patterns.md
+- dist/agent-src/guidelines/code-clarity.md
+- dist/agent-src/guidelines/component-oriented-and-oop-development.md
+- dist/agent-src/guidelines/cross-role-handoff.md
+- dist/agent-src/guidelines/design-antipatterns-triggers.json
+- dist/agent-src/guidelines/design-antipatterns.md
+- dist/agent-src/guidelines/design-asset-discipline.md
+- dist/agent-src/guidelines/design-canon.md
+- dist/agent-src/guidelines/design-fidelity-mechanics.md
+- dist/agent-src/guidelines/design-handover-extraction.md
+- dist/agent-src/guidelines/design-modes.md
+- dist/agent-src/guidelines/docs/readme-size-and-splitting.md
+- dist/agent-src/guidelines/e2e/playwright.md
+- dist/agent-src/guidelines/gtm-handoff.md
+- dist/agent-src/guidelines/monorepo-antipatterns.md
+- dist/agent-src/guidelines/php/api-design.md
+- dist/agent-src/guidelines/php/artisan-commands.md
+- dist/agent-src/guidelines/php/blade-ui.md
+- dist/agent-src/guidelines/php/controllers.md
+- dist/agent-src/guidelines/php/database.md
+- dist/agent-src/guidelines/php/eloquent.md
+- dist/agent-src/guidelines/php/flux.md
+- dist/agent-src/guidelines/php/general.md
+- dist/agent-src/guidelines/php/git.md
+- dist/agent-src/guidelines/php/jobs.md
+- dist/agent-src/guidelines/php/livewire.md
+- dist/agent-src/guidelines/php/logging.md
+- dist/agent-src/guidelines/php/naming.md
+- dist/agent-src/guidelines/php/patterns.md
+- dist/agent-src/guidelines/php/patterns/dependency-injection.md
+- dist/agent-src/guidelines/php/patterns/dtos.md
+- dist/agent-src/guidelines/php/patterns/events.md
+- dist/agent-src/guidelines/php/patterns/factory.md
+- dist/agent-src/guidelines/php/patterns/pipelines.md
+- dist/agent-src/guidelines/php/patterns/policies.md
+- dist/agent-src/guidelines/php/patterns/repositories.md
+- dist/agent-src/guidelines/php/patterns/service-layer.md
+- dist/agent-src/guidelines/php/patterns/strategy.md
+- dist/agent-src/guidelines/php/performance.md
+- dist/agent-src/guidelines/php/php-coding-patterns.md
+- dist/agent-src/guidelines/php/resources.md
+- dist/agent-src/guidelines/php/security.md
+- dist/agent-src/guidelines/php/sql.md
+- dist/agent-src/guidelines/php/validations.md
+- dist/agent-src/guidelines/php/websocket.md
+- dist/agent-src/guidelines/prompt-templates.md
+- dist/agent-src/guidelines/redundancy-taxonomy.md
+- dist/agent-src/guidelines/wing4-handoff.md
+- dist/agent-src/personas/README.md
+- dist/agent-src/personas/_template-specialist/persona.md
+- dist/agent-src/personas/product-owner.md
+- dist/agent-src/rules/active-remediation.md
+- dist/agent-src/rules/architecture.md
+- dist/agent-src/rules/artifact-drafting-protocol.md
+- dist/agent-src/rules/ask-when-uncertain.md
+- dist/agent-src/rules/brand-source-of-truth.md
+- dist/agent-src/rules/code-comment-discipline.md
+- dist/agent-src/rules/code-provenance.md
+- dist/agent-src/rules/content-quoting-floor.md
+- dist/agent-src/rules/context-hygiene.md
+- dist/agent-src/rules/cross-source-consistency.md
+- dist/agent-src/rules/design-fidelity.md
+- dist/agent-src/rules/direct-answers.md
+- dist/agent-src/rules/domain-adoption-policy.md
+- dist/agent-src/rules/evaluator-independence.md
+- dist/agent-src/rules/framework-neutrality-in-generic-skills.md
+- dist/agent-src/rules/icon-consistency.md
+- dist/agent-src/rules/improve-before-implement.md
+- dist/agent-src/rules/language-and-tone.md
+- dist/agent-src/rules/minimal-safe-diff.md
+- dist/agent-src/rules/notes-first-reasoning.md
+- dist/agent-src/rules/recurring-criticism.md
+- dist/agent-src/rules/roadmap-progress-sync.md
+- dist/agent-src/rules/role-mode-adherence.md
+- dist/agent-src/rules/security-sensitive-stop.md
+- dist/agent-src/rules/size-enforcement.md
+- dist/agent-src/rules/source-confidentiality.md
+- dist/agent-src/rules/think-before-action.md
+- dist/agent-src/rules/token-efficiency.md
+- dist/agent-src/rules/ui-audit-gate.md
+- dist/agent-src/rules/untrusted-input-defense.md
+- dist/agent-src/skills/activation-design/SKILL.md
+- dist/agent-src/skills/adr-create/SKILL.md
+- dist/agent-src/skills/ai-council/SKILL.md
+- dist/agent-src/skills/ai-council/references/advanced-modes.md
+- dist/agent-src/skills/blade-ui/SKILL.md
+- dist/agent-src/skills/blast-radius-analyzer/SKILL.md
+- dist/agent-src/skills/brand-to-tokens/SKILL.md
+- dist/agent-src/skills/bug-analyzer/SKILL.md
+- dist/agent-src/skills/build-buy-partner/SKILL.md
+- dist/agent-src/skills/churn-prevention/SKILL.md
+- dist/agent-src/skills/code-refactoring/SKILL.md
+- dist/agent-src/skills/code-review/SKILL.md
+- dist/agent-src/skills/command-writing/SKILL.md
+- dist/agent-src/skills/comp-banding/SKILL.md
+- dist/agent-src/skills/competitive-moat-analysis/SKILL.md
+- dist/agent-src/skills/competitive-positioning/SKILL.md
+- dist/agent-src/skills/complexity-first-planning/SKILL.md
+- dist/agent-src/skills/condense-memory/SKILL.md
+- dist/agent-src/skills/content-funnel-design/SKILL.md
+- dist/agent-src/skills/contracts-cognition/SKILL.md
+- dist/agent-src/skills/copilot-agents-optimization/SKILL.md
+- dist/agent-src/skills/corpus-grounding/SKILL.md
+- dist/agent-src/skills/customer-research/SKILL.md
+- dist/agent-src/skills/dashboard-design/SKILL.md
+- dist/agent-src/skills/data-handling-judgment/SKILL.md
+- dist/agent-src/skills/deal-qualification-meddic/SKILL.md
+- dist/agent-src/skills/decision-record/SKILL.md
+- dist/agent-src/skills/decision-review/SKILL.md
+- dist/agent-src/skills/deep-reading-analyst/SKILL.md
+- dist/agent-src/skills/design-intelligence/SKILL.md
+- dist/agent-src/skills/design-intelligence/references/context-and-registers.md
+- dist/agent-src/skills/design-review/SKILL.md
+- dist/agent-src/skills/design-system-capture/references/design-system-json.md
+- dist/agent-src/skills/design-tokens/SKILL.md
+- dist/agent-src/skills/design-variations/SKILL.md
+- dist/agent-src/skills/developer-like-execution/SKILL.md
+- dist/agent-src/skills/discovery-interview/SKILL.md
+- dist/agent-src/skills/doc-coauthoring/SKILL.md
+- dist/agent-src/skills/editorial-calendar/SKILL.md
+- dist/agent-src/skills/existing-ui-audit/SKILL.md
+- dist/agent-src/skills/existing-ui-audit/references/anti-slop-cross-reference.md
+- dist/agent-src/skills/expansion-playbook/SKILL.md
+- dist/agent-src/skills/experiment-loop/SKILL.md
+- dist/agent-src/skills/experiment-loop/references/protocol.md
+- dist/agent-src/skills/fe-design/SKILL.md
+- dist/agent-src/skills/fe-design/references/design-patterns.md
+- dist/agent-src/skills/fe-design/references/design-read-and-memory.md
+- dist/agent-src/skills/fe-design/references/source-led-port.md
+- dist/agent-src/skills/feature-planning/SKILL.md
+- dist/agent-src/skills/flux/SKILL.md
+- dist/agent-src/skills/forecast-accuracy/SKILL.md
+- dist/agent-src/skills/forecasting/SKILL.md
+- dist/agent-src/skills/fundraising-narrative/SKILL.md
+- dist/agent-src/skills/funnel-analysis/SKILL.md
+- dist/agent-src/skills/gtm-launch/SKILL.md
+- dist/agent-src/skills/hiring-loop-design/SKILL.md
+- dist/agent-src/skills/html-deck/SKILL.md
+- dist/agent-src/skills/humanizer/SKILL.md
+- dist/agent-src/skills/iconography/SKILL.md
+- dist/agent-src/skills/judge-synthesis/SKILL.md
+- dist/agent-src/skills/laravel-api-endpoint/SKILL.md
+- dist/agent-src/skills/launch-readiness/SKILL.md
+- dist/agent-src/skills/learning-to-rule-or-skill/SKILL.md
+- dist/agent-src/skills/livewire/SKILL.md
+- dist/agent-src/skills/market-entry-analysis/SKILL.md
+- dist/agent-src/skills/mcp-builder/SKILL.md
+- dist/agent-src/skills/memory-consolidation/SKILL.md
+- dist/agent-src/skills/messaging-architecture/SKILL.md
+- dist/agent-src/skills/monorepo-workspace/SKILL.md
+- dist/agent-src/skills/onboarding-design/SKILL.md
+- dist/agent-src/skills/onboarding-program/SKILL.md
+- dist/agent-src/skills/one-on-one-cadence/SKILL.md
+- dist/agent-src/skills/org-design/SKILL.md
+- dist/agent-src/skills/overbuild-review-lens/SKILL.md
+- dist/agent-src/skills/override-management/SKILL.md
+- dist/agent-src/skills/perf-feedback-craft/SKILL.md
+- dist/agent-src/skills/persona-writing/SKILL.md
+- dist/agent-src/skills/php-coder/SKILL.md
+- dist/agent-src/skills/pipeline-strategy/SKILL.md
+- dist/agent-src/skills/playwright-testing/SKILL.md
+- dist/agent-src/skills/po-discovery/SKILL.md
+- dist/agent-src/skills/positioning-strategy/SKILL.md
+- dist/agent-src/skills/privacy-review/SKILL.md
+- dist/agent-src/skills/prompt-optimizer/SKILL.md
+- dist/agent-src/skills/react-shadcn-ui/SKILL.md
+- dist/agent-src/skills/reasoning-orchestrator/SKILL.md
+- dist/agent-src/skills/receiving-code-review/SKILL.md
+- dist/agent-src/skills/refine-ticket/SKILL.md
+- dist/agent-src/skills/release-comms/SKILL.md
+- dist/agent-src/skills/retention-loops/SKILL.md
+- dist/agent-src/skills/review-routing/SKILL.md
+- dist/agent-src/skills/roadmap-management/SKILL.md
+- dist/agent-src/skills/roadmap-management/references/archival.md
+- dist/agent-src/skills/roadmap-writing/SKILL.md
+- dist/agent-src/skills/rule-writing/SKILL.md
+- dist/agent-src/skills/runway-cognition/SKILL.md
+- dist/agent-src/skills/scenario-modeling/SKILL.md
+- dist/agent-src/skills/skill-writing/SKILL.md
+- dist/agent-src/skills/skill-writing/references/procedure.md
+- dist/agent-src/skills/skill-writing/references/section-patterns.md
+- dist/agent-src/skills/spreadsheet-authoring/SKILL.md
+- dist/agent-src/skills/stakeholder-tradeoff/SKILL.md
+- dist/agent-src/skills/subagent-orchestration/SKILL.md
+- dist/agent-src/skills/supply-chain-intake/SKILL.md
+- dist/agent-src/skills/systematic-debugging/SKILL.md
+- dist/agent-src/skills/tailwind-engineer/SKILL.md
+- dist/agent-src/skills/throughput-vs-morale-tradeoff/SKILL.md
+- dist/agent-src/skills/token-optimizer/SKILL.md
+- dist/agent-src/skills/typography-system/SKILL.md
+- dist/agent-src/skills/ui-component-architect/SKILL.md
+- dist/agent-src/skills/unit-economics-modeling/SKILL.md
+- dist/agent-src/skills/upstream-contribute/SKILL.md
+- dist/agent-src/skills/validate-feature-fit/SKILL.md
+- dist/agent-src/skills/verify-repair-loop/SKILL.md
+- dist/agent-src/skills/vision-articulation/SKILL.md
+- dist/agent-src/skills/voc-extract/SKILL.md
+- dist/agent-src/skills/voice-and-tone-design/SKILL.md
+- dist/agent-src/skills/wireframe/SKILL.md
+- dist/agent-src/skills/workspace-link/SKILL.md
+- dist/agent-src/templates/agent-settings.md
+- dist/agent-src/templates/copilot-instructions.md
+- dist/agent-src/templates/roadmaps.md
+- dist/agent-src/templates/scripts/README.md
+- dist/agent-src/user-types/_template/user-type.md
+- dist/router.json
+- docs/contracts/rule-router.md
+- docs/contracts/settings-classes.md
+- docs/decisions/ADR-213-scoped-abstraction-threshold-canon.md
+- docs/decisions/ADR-271-design-fidelity-mode-cascades-from-user-global.md
+- docs/decisions/INDEX.md
+- docs/guidelines/abstraction-thresholds.md
+- docs/guidelines/design-fidelity-mechanics.md
+- docs/settings-reference.md
+- src/agent-src/contexts/communication/rules-auto/token-efficiency-mechanics.md
+- src/config/agent-settings.template.yml
+- src/config/gate-coverage.yml
+- src/domains/brand/pack.yaml
+- src/domains/engineering-base/pack.yaml
+- src/domains/meta/pack.yaml
+- src/rules/brand-source-of-truth.md
+- src/rules/context-hygiene.md
+- src/rules/design-fidelity.md
+- src/rules/icon-consistency.md
+- src/rules/token-efficiency.md
+- src/rules/ui-audit-gate.md
+- src/scripts/_cli/cmd_settings_get.ts
+- src/scripts/_lib/agent_settings.ts
+- src/scripts/_lib/agent_src.ts
+- src/scripts/_lib/artifact_maturity.ts
+- src/scripts/_lib/conformance_report.ts
+- src/scripts/_lib/design_tolerance.ts
+- src/scripts/_lib/guidelines_lane.ts
+- src/scripts/_lib/tolerance_shadow.ts
+- src/scripts/check_projected_rule_routes.ts
+- src/scripts/condense.ts
+- src/scripts/hooks/source_first_gate_hook.ts
+- src/scripts/hooks/ui_route_nudge_hook.ts
+- src/skills/brand-to-tokens/SKILL.md
+- src/skills/design-system-capture/references/design-system-json.md
+- src/skills/design-tokens/SKILL.md
+- src/skills/existing-ui-audit/SKILL.md
+- src/skills/tailwind-engineer/SKILL.md
+- src/skills/ui-component-architect/SKILL.md
+- taskfiles/content.yml
+- tests/design-artifacts/fixtures/handoff-bundle/design-system.json
+- tests/design-artifacts/fixtures/wireframe.html
+- tests/lib/agent_settings.test.ts
+- tests/scripts/_cli/cmd_settings_get_user_global_drop.test.ts
+- tests/scripts/artifact_maturity.test.ts
+- tests/scripts/check_projected_rule_routes.test.ts
+- tests/scripts/conformance_report.test.ts
+- tests/scripts/design_fidelity_routing.test.ts
+- tests/scripts/design_tolerance.test.ts
+- tests/scripts/tolerance_shadow.test.ts
+- tests/scripts/ui_route_nudge.test.ts
+- tests/scripts/ui_route_nudge_artifact_read.test.ts
+
+## Output format (contract §2.2)
+
+Fill the findings table in `feat-cdd-fidelity-council.findings.md`:
+
+```markdown
+| # | Severity | File:Line | Finding | Status | Reason/Ref |
+|---|----------|-----------|---------|--------|------------|
+| 1 | critical | src/x.ts:42 | ... | open | |
+```
+
+- Severity ∈ {`critical`, `high`, `medium`, `low`}, rows sorted descending
+  by severity (ties keep authoring order).
+- Initial status of every finding: `open`.
+- A row is LIVE wherever it appears — a code fence around it changes
+  nothing. If you quote the template as an illustration, its Status cell
+  must be exactly `example`, or the gate reads it as a real finding.
+- 0 findings → replace the table with exactly this honest-null line
+  (contract §2.3):
+
+```markdown
+**Honest-null:** 0 findings, scope df88557d4cccfec27e62e53311a0ace2fa763dfb5baf83148e08064490c3ea6d, reviewed <YYYY-MM-DD>
+```
+
+## Return channel
+
+Final message = the return envelope and nothing else: {summary, handoff, confidence, findings, risks}. Shape + the write-to-disk-first rule: contexts/execution/subagent-response-contract.md. The findings table stays a file.

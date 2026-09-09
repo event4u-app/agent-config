@@ -149,18 +149,39 @@ export function path_weight(rel_path: string): number {
 }
 
 const PROJECTION_PREFIX = 'dist/agent-src/';
+/**
+ * Lanes whose source does NOT live under `src/`. The projection folds several
+ * trees into one output directory, so the `src/` default below is right for
+ * most of it and wrong for these.
+ */
+const PROJECTION_SOURCE_LANES: ReadonlyArray<readonly [string, string]> = [
+    // The guidelines lane copies `docs/guidelines/` (`_lib/guidelines_lane.ts`),
+    // not `src/guidelines/`, which does not exist. Without this row a projected
+    // guideline gets a DIFFERENT identity from its own source, so a bound
+    // pragma written in the source cannot suppress the projection's copy of the
+    // very same line — measured on
+    // `untrusted-input-spotlighting.md`, a defense guideline that quotes
+    // role-takeover phrases to teach refusal and carries three accepted
+    // fingerprints for exactly that.
+    ['guidelines/', 'docs/guidelines/'],
+];
 
 /**
  * Fold a projected path back onto the source it was copied from.
  *
- * `dist/agent-src/` is a byte-for-byte copy of `src/` with paths rewritten
+ * `dist/agent-src/` is a byte-for-byte copy of its sources with paths rewritten
  * (ADR-201), so an artifact and its projection are the same artifact for the
  * purpose of "which evidence did a human accept". Two identities would mean two
  * fingerprints for one accepted line, and only one of them could be written
  * into the pragma the projection copies verbatim.
  */
 export function source_identity(rel: string): string {
-    return rel.startsWith(PROJECTION_PREFIX) ? `src/${rel.slice(PROJECTION_PREFIX.length)}` : rel;
+    if (!rel.startsWith(PROJECTION_PREFIX)) return rel;
+    const tail = rel.slice(PROJECTION_PREFIX.length);
+    for (const [lane, sourceRoot] of PROJECTION_SOURCE_LANES) {
+        if (tail.startsWith(lane)) return sourceRoot + tail.slice(lane.length);
+    }
+    return `src/${tail}`;
 }
 
 /** A file pre-split into lines with a fence/pragma mask the linters reuse. */

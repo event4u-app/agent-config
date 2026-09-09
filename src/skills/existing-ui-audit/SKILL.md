@@ -241,7 +241,7 @@ extraction is taken without the evidence that decides it. Where the run has an
 artifact, order is: extract → audit → score → conform → decide. The unqualified
 reuse-first ordering stands only where there is no artifact to conform to.
 
-**Scope:** this is a gate on REUSE, not a licence to rewrite the incumbent. A
+**Scope:** this is a gate on REUSE, not a license to rewrite the incumbent. A
 candidate that deviates is left alone; the choice is whether *this* work builds
 on it.
 

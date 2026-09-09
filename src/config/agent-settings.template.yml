@@ -1169,7 +1169,7 @@ continuity:
   # above the recycle threshold and inside a running roadmap contract leaves
   # agents/runtime/state/checkpoints/<run>.json behind, so a killed session can
   # be resumed by the watcher rather than by bookkeeping. Default ON: this is
-  # the behaviour the tree already had, and the switch exists so an operator can
+  # the behavior the tree already had, and the switch exists so an operator can
   # disable checkpointing WITHOUT disabling continuity writing or the recycle
   # advisory.
   #   on  = (default) write the checkpoint.

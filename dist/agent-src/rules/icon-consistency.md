@@ -47,7 +47,7 @@ Any of the trigger keywords appear in a UI-building context: new component, new 
 - **An icon traceable to a provided design artifact.** A faithful port
   reproduces the handover's own icons; one traceable to neither the icon set nor
   a named artifact still fires. A new rung below the brand token, never a
-  re-ordering: [`design-fidelity-mechanics § Icons on a provided artifact`](../guidelines/design-fidelity-mechanics.md).
+  re-ordering: [`design-reconciliation § Icons on a provided artifact`](../guidelines/design-reconciliation.md).
 - The project's brand guide explicitly defines multiple icon sets for distinct contexts (e.g., filled icons for navigation, outlined for inline text).
 - The task is documentation or a non-UI surface (scripts, CLI output, markdown).
 - The user explicitly scopes to "just explore options" without committing to a UI change.
