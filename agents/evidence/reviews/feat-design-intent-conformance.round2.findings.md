@@ -26,31 +26,3 @@ dispatched: 2026-09-09T10:27:42Z
 | 7 | low | agents/roadmaps/road-to-design-intent-conformance.md:119-122 | Step 1.1 is `[x]` and its verify line names two figures the branch contradicts: "35 assertions green" — `node_modules/.bin/vitest run tests/hooks/block_speaking_inbox_dir.test.ts` on this branch reports **41 tests passed**; and "with both allowlists emptied exactly the five new allow-cases go red", which no longer matches the case set after the round-1 fixes added `_WRITING_MARKERS`, the heredoc branch and the quote strip (the test docstrings themselves now split sensitivity across three mechanisms, not one pair). The verify line predates its own commit's test additions. | fixed | f1ed5f44f |
 | 8 | low | agents/roadmaps/road-to-design-intent-conformance.md:87 | The Context block, declared "verified at `origin/main@4be5f59`", cites `src/scripts/hooks/hook_manifest.yaml:235-240`. That path does not exist — the file is `src/scripts/hook_manifest.yaml`, with no `hooks/` segment. The line range is exactly right (235-240 is the `block-speaking-inbox-dir` entry, `severity: blocking`, no `tools:` key), so the claim is true and its citation is unfollowable. Same class as round-1 finding 9, whose two wrong figures in this same block ARE fixed — re-verified: `condense.ts` is 2712 lines and `AUGMENT_SYMLINK_DIRS` is at :2461. | fixed | f1ed5f44f |
 | 9 | low | src/skills/tailwind-engineer/SKILL.md:139 | `1b.` is not an ordered-list marker. In the deliverable list (`1.` … `2.` … `3.`) it renders as a lazy continuation of item 1 rather than as its own item, so the field AC-2 calls "a named output field" has no number a reader can cite, and the surrounding list's numbering silently absorbs it. The `Reconciled:` line in the concrete-shape block (:154) is unaffected, so the obligation still has a destination — this is the index, not the field. | fixed | f1ed5f44f |
-
-## Scope note — where this stops, and why
-
-Two rounds ran, each dispatched by `dispatch_r2_reviewer.ts` so neither prompt
-was written by the implementing session. Round 1: ten findings over scope
-`beb47058`, nine `fixed` against `e69fd4f00`, one `accepted-risk`. Round 2: nine
-findings over scope `4e5a4656`, all nine `fixed` against `f1ed5f44f`. Both
-tables are preserved beside this file as `.round1.findings.md` and
-`.round2.findings.md`, because `--force` overwrites the filled artifact in place.
-
-**The current head is `f1ed5f44f`, scope `2b7c9481`, and no round has reviewed
-it.** That is not an oversight and not a claim of cleanliness — it is where the
-loop is stopped on purpose. Fixing a finding changes the reviewed content, so
-every round produces a new scope hash and a fresh `stale-review`; a round 3
-would review the round-2 repairs and, if it found anything, leave scope 4
-unreviewed in exactly the same way. Three attempts on one target is the recorded
-budget (`autonomous-execution` § Validation-loop budget), and this is the third:
-verb allowlist → per-verb writing markers → the glob axis that replaced both.
-
-What makes stopping here defensible rather than merely convenient: round 2's own
-handoff said the durable form stops classifying commands, and the third attempt
-did exactly that — it REMOVED the mechanism both rounds attacked instead of
-patching it again. Every writing form either round probed is now judged by the
-token scan that predates this branch, so the surface the findings were about no
-longer exists. The residual, stated plainly: a read naming a not-yet-existing
-speaking directory still blocks. That is pre-existing over-broadness, it is
-unchanged by this branch, and the two rounds are the evidence that narrowing it
-by classifying commands opens a hole somewhere else.

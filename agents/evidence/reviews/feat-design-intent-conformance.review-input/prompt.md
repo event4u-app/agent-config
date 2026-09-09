@@ -21,17 +21,14 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head b40531ab91c3331867592cade6f774cb89dd9e20, review
-  artefacts excluded), scope hash `beb47058c54503d450fd8b6656250825f7ab07d0e0783ec225201f0432390ab2`
+- diff: `diff.patch` — the review scope (branch head e930ee01fff507f7f8076b81b7eb407dfe2fadfc, review
+  artefacts excluded), scope hash `4e5a46567233db6f4c19dc9f981e5ecc180848817356d062c2e3e0ef4f05d24d`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
 
 - agents/roadmaps/road-to-design-intent-conformance.md
-- dist/agent-src/rules/brand-source-of-truth.md
 - dist/agent-src/skills/tailwind-engineer/SKILL.md
-- src/domains/brand/pack.yaml
-- src/rules/brand-source-of-truth.md
 - src/scripts/hooks/block_speaking_inbox_dir.ts
 - src/skills/tailwind-engineer/SKILL.md
 - tests/hooks/block_speaking_inbox_dir.test.ts
@@ -56,7 +53,7 @@ Fill the findings table in `feat-design-intent-conformance.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope beb47058c54503d450fd8b6656250825f7ab07d0e0783ec225201f0432390ab2, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 4e5a46567233db6f4c19dc9f981e5ecc180848817356d062c2e3e0ef4f05d24d, reviewed <YYYY-MM-DD>
 ```
 
 ## Return channel

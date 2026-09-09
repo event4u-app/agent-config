@@ -5,6 +5,7 @@ complexity: structural
 status: draft
 execution:
   mode: phase-checkpoints
+estate_offset_exempt: "Receiver for a round whose subject has arrived six times and closed on a fixture five of them; the count half is unmoved (`active_roadmaps` 5 at floor 5, `open_blockers` 43 at floor 43 — `status: draft` excludes it from collect()), and only the file-based one-in-one-out half fires. Nothing here is offsettable: the five predecessors are already archived, parking it would grow later_roadmaps instead, and folding it into a live roadmap would put a design-fidelity programme with four owner-reserved blockers inside a roadmap that owns a different axis."
 relates:
   - slug: road-to-the-packed-payload-cap
     relation: disjoint
@@ -18,6 +19,21 @@ relates:
 > owner directives, one external root-cause analysis, and a four-file plan
 > revision set, two members authored by a different model. Round intake note
 > holds the encrypted origin.
+
+> **Arrivals:** 6 — latest `inbox-2026-09-x` (2026-09-09). Five archived
+> predecessors closed on this same ground: `road-to-provided-artifact-honesty`,
+> `road-to-source-first-frontend`, `road-to-frontend-fidelity-calibration`,
+> `road-to-design-artifact-fidelity`, `road-to-design-system-extraction-contract`.
+> What broke is not that they were wrong — `road-to-source-first-frontend` wrote
+> its own limit down (*"Not claimed: that the operator's symptom is fixed …
+> needs a consumer repo"*) and closed 16 of 18 steps on a fixture with 3
+> handlers and 1 keyframe. The disposition was accurate and its reopening
+> condition then fired unread: `b-page-capture-primitive` is recorded FIRED
+> 2026-08-23 in `agents/roadmaps/archive/road-to-frontend-fidelity-calibration.md`
+> and nothing acted on it. This round is the consumer measurement those
+> roadmaps said they lacked, and it is red. Counter lives here rather than in
+> the round's evidence file so a seventh arrival meets a number instead of a
+> fresh argument.
 
 ## Goal
 
@@ -45,7 +61,7 @@ contradicted or unreachable.**
 - **And it is unreachable.** `src/rules/design-fidelity.md:33-34` declares
   `routes_to: guideline:design-fidelity-mechanics`. `dist/agent-src/` carries no
   `guidelines/` directory, and `.augment/guidelines` therefore does not exist —
-  although `AUGMENT_SYMLINK_DIRS` in `src/scripts/condense.ts:2464` already
+  although `AUGMENT_SYMLINK_DIRS` in `src/scripts/condense.ts:2461` already
   lists it. The lane is declared and dead. 31 rules share the shape.
 - **One shipped skill teaches the failure the rule forbids.**
   `src/skills/tailwind-engineer/SKILL.md:47-52` said: map every requested
@@ -86,7 +102,7 @@ Three constraints bound every phase below, all measured on this branch:
 `design-fidelity.md` is at **exactly 200 lines** against `skill_linter`'s
 `rule_too_large` ceiling, so no sentence lands there without one leaving;
 `check_estate_count` reports **0 growth allowance** on active roadmaps, skills
-and hook concerns; and `condense.ts` sits at 2735 lines against a 1500 ceiling
+and hook concerns; and `condense.ts` sits at 2712 lines against a 1500 ceiling
 under a shrink-only ratchet, so Phase 2 must be net-zero there.
 
 ## Phase 1 — Remove the contradiction and the false positives
@@ -122,15 +138,20 @@ are defects with a verified wrong behaviour and a verified right one.
       identical.
       verify: `./scripts-run src/scripts/skill_linter --all` warn count
       unchanged at 1, and the file stays under the 400-line skill ceiling.
-- [x] **1.3 Make the brand rule carry the split instead of pointing one way.**
+- [ ] **1.3 Make the brand rule carry the split instead of pointing one way.**
       `src/rules/brand-source-of-truth.md` gains the artifact-versus-brand
-      invariant as a table — values to the brand token with the distance
-      reported, structure to the artifact and never adjusted to suit a token —
-      plus the reciprocal `design-fidelity` see-also. This also puts the
-      invariant on a **projected** surface, which is the one piece of Phase 2's
-      reach problem that does not need Phase 2.
+      invariant — values to the brand token with the distance reported,
+      structure to the artifact and never adjusted to suit a token — plus the
+      reciprocal `design-fidelity` see-also. `design-fidelity.md:47` and `:197`
+      already point at the brand rule; the brand rule carried zero `fidelity`
+      hits, so a brand-first entry path never met the structure obligation.
+      **Attempted and reverted in the Phase 1 PR** — see
+      `blocker: standing-payload-headroom`. The invariant is written and the
+      surface will not take it; it lands once the blocker is decided.
       verify: `grep -c design-fidelity src/rules/brand-source-of-truth.md`
-      greater than 0, and the rule stays under the 200-line ceiling.
+      greater than 0, the rule under the 200-line ceiling, **and**
+      `./scripts-run src/scripts/check_preamble_payload_budget` still at or
+      under the ratchet.
 
 ## Phase 2 — Make the delegated procedure exist where it is read
 
@@ -161,6 +182,39 @@ file the reading agent cannot open.
       `agent-config settings:get design.fidelity_mode` and names the layer it
       came from; and a non-whitelisted user-global key reports the drop instead
       of a bare "not set".
+- [ ] **2.4 Give the read budget an artifact carve-out.** `token-efficiency.md:99`
+      sets a probe-then-slice threshold at 800 lines with no artifact exception,
+      and `context-hygiene.md:113` raises the read-only abort only for a
+      "mandated analysis/audit/review protocol" — a design *implementation* is
+      none of the three. A handed-over artifact is routinely thousands of lines
+      across a bundle, so the agent that reads it properly trips the loop
+      detector and the agent that does not is the reported failure. Both rules
+      are standing surfaces, so this obeys the same payload constraint as 1.3.
+      verify: a declared artifact port states its expected read count and does
+      not trip the abort; an undeclared read loop still does.
+- [ ] **2.5 Route the artifact file shapes the trigger set cannot match.**
+      `*design.html` compiles to `^(?:.*design\.html)$` and cannot match
+      `ToDo.dc.html`; `.dc.html` appears zero times in the rule and zero times
+      in `ROUTING_MATRIX`, so the class is an untested gap rather than a decided
+      exclusion. The rule's own contract at `design-fidelity.md:171-192` requires
+      the near-miss row **first** — write the row that would catch an
+      over-broad trigger before writing the trigger.
+      verify: a `.dc.html` handover routes, and the near-miss row for the
+      direction the new trigger opens stays silent.
+- [ ] **2.6 Wire the artifact-read predicate its own module never calls.**
+      `ui_route_nudge_hook.ts:162` exports `isArtifactRead`; `report_consultation_rate.ts:204`
+      consumes it and `decide` in the same module does not. The concern is
+      default-OFF, so wiring it changes nothing for a consumer and makes the
+      shadow record honest.
+      verify: an artifact-read event reaches `decide`, and the concern's
+      default stays off.
+- [ ] **2.7 Add a provided-artifact carve-out to `icon-consistency`.** Its
+      "When NOT to fire" lists three exceptions and none is a provided
+      artifact, while "ad-hoc inline SVGs alongside a chosen set" is exactly
+      what porting an artifact's own icons produces. Iconography rung 1 is
+      already a brand token, so the fix is a new rung, not a re-ordering.
+      verify: an artifact-sourced inline SVG does not read as a violation, and
+      an untraceable one still does.
 
 ## Phase 3 — Maturity and approximation as data, not prose
 
@@ -179,7 +233,18 @@ Gated on `blocker: approximation-tolerance` and `blocker: rule-body-cap`.
       verify: three fixtures — inside tolerance, outside tolerance, switched
       off — produce the three distinct verdicts, and every value row carries a
       distance to the nearest project token even when preserved.
-- [ ] **3.3 Re-frame `strict` instead of adding a fourth mode.** A value inside
+- [ ] **3.3 Gate reuse on conformity, and decide it after the read.**
+      `ui-audit-gate` gates on the audit *existing*, and `existing-ui-audit`
+      scores candidates by fuzzy similarity **to the input** — so nothing
+      anywhere checks a reuse candidate against a provided artifact's
+      constraints, while `ui-audit-gate:126` carries "reuse beats duplication"
+      as unqualified prose. Reuse becomes conditional on the candidate's own
+      conformance verdict, and the reuse decision moves after extraction rather
+      than before it. Found by the read-back pass rather than by any first
+      reading of the round, which is why it is recorded as its own step.
+      verify: a candidate whose subtree reds the conformance report is refused
+      with the dimension that refused it named; a conforming one is reused.
+- [ ] **3.4 Re-frame `strict` instead of adding a fourth mode.** A value inside
       tolerance stops being an unconfirmed deviation and becomes a reported
       reconciliation; everything outside stays confirmation-bound. Requires the
       rule-body cap to be resolved first.
@@ -206,11 +271,34 @@ Gated on `blocker: fidelity-default-flip` for anything that would refuse.
 
 ## Blockers
 
+### blocker: standing-payload-headroom
+
+- **Status:** open
+- **Owner:** maintainer
+- **Blocks:** 1.3, 2.4
+- **What to do:** pick exactly one — (a) pay for the addition inside the same
+  standing rule, cutting an equal weight of existing prose in
+  `src/rules/brand-source-of-truth.md` and naming what was cut and why; or
+  (b) land the invariant in `docs/guidelines/design-fidelity-mechanics.md`
+  instead, which is only honest after 2.1 makes that file reachable, and leave
+  a one-clause pointer in the rule; or (c) accept that the artifact-versus-brand
+  split stays unwritten on a projected surface and record that as the decision.
+- **Resolved when:** `./scripts-run src/scripts/check_preamble_payload_budget`
+  is at or under its ratchet with the invariant present somewhere a consumer
+  agent reads, or option (c) is recorded.
+- **Recommendation:** (b) after 2.1. The measured cost was +339 tok on a
+  surface re-written on every subagent spawn against a ceiling with no
+  headroom, so (a) buys 33 lines by deleting 33 lines somebody else wrote —
+  a drive-by edit — and (c) leaves the gap this roadmap opened with.
+- **If you do nothing:** 1.3 stays reverted, so `design-fidelity` keeps
+  pointing at a brand rule that points nowhere back, and a brand-first entry
+  path keeps missing the structure obligation entirely.
+
 ### blocker: approximation-tolerance
 
 - **Status:** open
 - **Owner:** maintainer
-- **Blocks:** 3.2, 3.3, 4.2
+- **Blocks:** 3.2, 3.4, 4.2
 - **What to do:** pick exactly one — (a) accept provisional start values and
   record them in `src/config/agent-settings.template.yml` under `design:`,
   flagged as unmeasured and re-derived after Phase 4.2's window; or (b) name
@@ -222,7 +310,7 @@ Gated on `blocker: fidelity-default-flip` for anything that would refuse.
 - **Recommendation:** (a). The mechanism is worth more than the constant, the
   distance is reported on every row either way, and (c) inverts a dependency
   for a number that is provisional in all three branches.
-- **If you do nothing:** Phase 3.2 cannot ship a setting, so Phase 3.3 cannot
+- **If you do nothing:** Phase 3.2 cannot ship a setting, so Phase 3.4 cannot
   re-frame `strict`, and the second owner directive stays unimplementable in
   the rule text.
 
@@ -250,7 +338,7 @@ Gated on `blocker: fidelity-default-flip` for anything that would refuse.
 
 - **Status:** open
 - **Owner:** maintainer
-- **Blocks:** 3.3
+- **Blocks:** 3.4
 - **What to do:** pick exactly one — (a) migrate an existing passage out of
   `src/rules/design-fidelity.md` into
   `docs/guidelines/design-fidelity-mechanics.md`, which is legitimate only
@@ -263,7 +351,7 @@ Gated on `blocker: fidelity-default-flip` for anything that would refuse.
 - **Recommendation:** (c) after Phase 2.1, then (a) if the clause proves too
   load-bearing to sit behind a pointer. The rule is at 200 of 200 lines and the
   guideline has no cap.
-- **If you do nothing:** Phase 3.3 has nowhere to put the sentence, and
+- **If you do nothing:** Phase 3.4 has nowhere to put the sentence, and
   `strict` keeps contradicting the directive in the projected text.
 
 ## Risk Register
@@ -276,17 +364,23 @@ Gated on `blocker: fidelity-default-flip` for anything that would refuse.
 | 3 | The approximation becomes a licence to drift | product | Many individually-legal small reconciliations compose into a result nobody approved | Every value row carries its distance even when preserved, so the drift is visible per row before it is cumulative; a cumulative bound is Phase 4's, and the tolerance is re-derived from shadow data rather than kept | Phase 3 — Maturity and approximation as data, not prose |
 | 4 | Phase 3 writes policy into an unreachable file | implementation | The tolerance clause lands in the guideline while the guideline still reaches no consumer install, reproducing the exact defect this roadmap opens with | Phase 2 is ordered before Phase 3 and `blocker: rule-body-cap` names the dependency explicitly in its option (a) | Phase 2 — Make the delegated procedure exist where it is read |
 | 5 | The distance table is judgement, not measurement | product | Phase 1.2 asks whether a difference is visible side by side, which two readers can answer differently | Accepted deliberately for Phase 1: inventing a threshold there would pre-empt `blocker: approximation-tolerance`. Phase 3.2 replaces the judgement with the recorded number | Phase 1 — Remove the contradiction and the false positives |
+| 6 | Every remaining fix wants a standing rule with no room in it | implementation | The reach problem's natural fix is prose in a rule, and the per-spawn preamble ratchet has zero headroom — measured at +339 tok for 33 lines, which reverted step 1.3 out of the Phase 1 PR. Steps 2.4 and 3.4 both want the same surface | Phase 2.1 is ordered first so the guideline becomes a legitimate destination, and `blocker: standing-payload-headroom` forces the choice to be recorded rather than paid for by deleting somebody else's prose | Phase 2 — Make the delegated procedure exist where it is read |
 
 ## Acceptance Criteria
 
 - [x] AC-1 — A read command naming a not-yet-existing inbox directory is not
       refused, a creating command naming the same directory still is, and both
       are pinned by assertions that go red when the mechanism is removed.
-- [x] AC-2 — No shipped skill instructs the agent to replace a provided
-      artifact's exact value with a nearest project token without reporting the
-      distance; `tailwind-engineer` names the artifact-bound branch explicitly.
-- [x] AC-3 — `brand-source-of-truth` and `design-fidelity` each carry the
-      split between them, in both directions, on a projected surface.
+- [x] AC-2 — `tailwind-engineer` names the artifact-bound branch explicitly,
+      gates the reconciliation on `design.fidelity_mode`, and carries a named
+      output field the reported distance lands in. Scoped to that skill on
+      purpose: the corpus-wide version of this claim ("no shipped skill
+      instructs …") is not checkable from a diff that changes one skill, and a
+      neutral review flagged the earlier wording as unbacked. The sweep across
+      the other design-adjacent skills is Phase 3's, via the same branch.
+- [ ] AC-3 — `brand-source-of-truth` and `design-fidelity` each carry the
+      split between them, in both directions, on a projected surface, without
+      the per-spawn payload ratchet moving.
 - [ ] AC-4 — `docs/guidelines/design-fidelity-mechanics.md` resolves inside
       `dist/agent-src/` and a gate fails when a projected rule routes to a
       target that does not.
