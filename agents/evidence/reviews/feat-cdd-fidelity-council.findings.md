@@ -1,12 +1,12 @@
 # Findings: feat-cdd-fidelity-council
-<!-- completion-review: v1 | reviewed: 2026-09-09 | scope: 66014cc8b4f3c700aeecdfbb055357032681f798a21bf1ff9420c1eced7027fc | diff: 30aa704cf91612f3675838202e902bdda3f98cf6 | reviewer: r2-fresh-subagent-feat-cdd-fidelity-council | prompt_hash: 7f2d7f06f678183b2092b714a4234d28af1495919de86be5f61c370c021ffcd1 -->
+<!-- completion-review: v1 | reviewed: 2026-09-09 | scope: 60c4434e239957b9c39ac228186bf1beeb70551ea833ee92f8e1936715b7cb78 | diff: 30aa704cf91612f3675838202e902bdda3f98cf6 | reviewer: r2-fresh-subagent-feat-cdd-fidelity-council | prompt_hash: 7f2d7f06f678183b2092b714a4234d28af1495919de86be5f61c370c021ffcd1 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-feat-cdd-fidelity-council"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-09-09 -->
 
 <!-- context-manifest: v1
 inputs:
   diff_sha: 30aa704cf91612f3675838202e902bdda3f98cf6
-  scope_hash: 66014cc8b4f3c700aeecdfbb055357032681f798a21bf1ff9420c1eced7027fc
+  scope_hash: 60c4434e239957b9c39ac228186bf1beeb70551ea833ee92f8e1936715b7cb78
   roadmap: agents/roadmaps/archive/road-to-design-intent-conformance.md
   roadmap_hash: 94935a5f189a51a9f458773b4e90ccb584e36449f5682c8f06316a18c9fa9781
   ac_hash: 9b391452c941756f547aa4657cea3c99a034568e74f11e0d88733ccc77736f23
