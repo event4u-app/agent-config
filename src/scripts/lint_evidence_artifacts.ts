@@ -63,6 +63,7 @@ export const EVIDENCE_TYPES = [
     'honest-null',
     'analysis',
     'feel',
+    'ratification',
 ] as const;
 
 /**
