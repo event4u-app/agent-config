@@ -15,7 +15,7 @@ _Origin: migrated from `.agent-src.uncondensed/rules/roadmap-progress-sync.md` p
 > 2. `.git/hooks/pre-commit` (installed by `scripts/install-hooks.sh`) —
 >    blocks any commit whose staged set touches `agents/roadmaps/` or
 >    `agents/roadmaps-progress.md` while the dashboard is stale.
-> 3. This repository's `ci` task runs `roadmap-progress-check` so a PR cannot land with a
+> 3. The `ci` task runs `roadmap-progress-check` so a PR cannot land with a
 >    stale dashboard even if local hooks were bypassed.
 >
 > Hook is primary; the prose below is the specification the hook
