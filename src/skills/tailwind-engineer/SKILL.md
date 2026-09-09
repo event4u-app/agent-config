@@ -54,23 +54,38 @@ one-line comment naming the design source.
 **That paragraph is written for greenfield, and artifact-bound work inverts
 it.** When a provided finished design is the spec
 ([`design-fidelity`](../../rules/design-fidelity.md)), `#3B82F6` is a decision
-somebody already made and `bg-blue-500` is a guess about it. Reconcile against
-the project's tokens — that part is not optional — but reconcile by distance,
-not by reflex:
+somebody already made and `bg-blue-500` is a guess about it. Three obligations
+follow, and the third is the one this skill used to get wrong:
 
-| The nearest project token is | Write |
-|---|---|
-| the same value | the project token — that is not a translation |
-| different in a way you cannot see side by side | the project token, and say so in the port notes |
-| visibly different | the artifact's value, and report the project gap |
+1. **Do not snap.** Replacing the artifact's value with the nearest configured
+   token is the deviation the rule's Iron Law forbids — *"NEVER SWAP … SPACING,
+   OR COLOUR"* without explicit confirmation. An artifact-derived exact value is
+   not a smell here: it *is* the spec, and the source-naming comment the
+   paragraph above asks for is what records it.
+2. **Translate once, not per call site.** Where the artifact's literal genuinely
+   needs to live in the project's system, add **one** named project token
+   carrying that exact value and use it everywhere — one token the project owns
+   beats N approximations of the same colour. That is a token duty, not a
+   deviation: the value does not change.
+3. **Reconcile as a proposal, never autonomously.** Report each value's
+   distance to the nearest project token on the `Reconciled:` line below, and
+   let the human decide. Writing a *different* project value because the
+   difference looks small is exactly the unconfirmed swap (1) rules out — the
+   mode table at `design-fidelity.md:117-121` grants no visibility exemption,
+   and `structural` grants only the filling of a spec that is genuinely
+   **silent**, which an artifact stating `#3B82F6` is not.
 
-An artifact-derived exact value is **not** a smell in this mode: it *is* the
-spec, and the source-naming comment the paragraph above asks for is what
-records it. Translate a given literal **once** into a named project token
-rather than snapping it per call site — one token the project owns beats N
-approximations of the same colour. Structure, controls, icons, grid and
-breakpoints are never this skill's to adjust; those stay 1:1 with the artifact
-and belong to the rule, not to a utility-class decision.
+**Why not "just approximate within tolerance", which is the eventual intent:**
+that needs a tolerance to exist. There is none — no `reconcile`, `tolerance`,
+`approximat` or `nearest` in the rule or its guideline — and both the threshold
+and whether approximation is autonomous by default are owner decisions, tracked
+as `blocker: approximation-tolerance` and `blocker: fidelity-default-flip` on
+`road-to-design-intent-conformance`. Until they land, a skill granting that
+autonomy would be re-writing the rule from underneath it.
+
+Structure, controls, icons, grid and breakpoints are never this skill's to
+adjust; those stay 1:1 with the artifact and belong to the rule, not to a
+utility-class decision.
 
 Token authoring (DTCG 3-layer model, CSS-var/Tailwind generation) lives
 in [`design-tokens`](../design-tokens/SKILL.md); its
@@ -124,7 +139,11 @@ When reviewing or proposing styles, return:
 
 1. Token map — every colour, spacing, radius, shadow, font-size mapped
    to its configured token; arbitrary values flagged with the design
-   source they cite.
+   source they cite. Artifact-bound work adds a **Reconciled** block here:
+   one line per value, as `<artifact value> → <kept, or the token that
+   carries it exactly> (<distance to the nearest project token>)`. This is
+   the destination "report the distance" means; without it the obligation
+   has nowhere to land and is unobservable in the deliverable.
 2. Class list — ordered (layout → box-model → typography → colour →
    state → responsive); inline-style use justified per element.
 3. Extraction + risk call-out — component / constant / `@apply` / none
@@ -136,6 +155,7 @@ Concrete shape:
 ```
 Element:        <selector or component name>
 Token map:      <colour/spacing/etc → config token>
+Reconciled:     <artifact value → kept or exact-carrying token, + distance>
 Class list:     <ordered classes>
 Inline style:   <only if runtime-computed; else "none">
 Extraction:     <component | constant | @apply | none — reason>
@@ -151,7 +171,7 @@ Risks:          <arbitrary values, !important, dark-mode gaps>
 - Arbitrary values (`mt-[17px]`) survive Tailwind upgrades but
   break the design system; they accumulate silently. **Artifact-bound is the
   exception, not a loophole:** a value the provided design specifies is not
-  accumulation, and step 1's distance table decides it. An arbitrary value
+  accumulation, and step 1's three obligations decide it. An arbitrary value
   nobody can trace to a source is still the smell this bullet is about.
 - **The carrier is CSS or a utility class; the value is the design's.** Static
   presentation belongs in CSS / tokens / classes — `style=` is for what only
