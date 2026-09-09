@@ -241,9 +241,8 @@ export type Slot =
  * Default firing period per slot, before per-platform native-event corrections.
  *
  * `stop` is per-turn, NOT session end. On Claude Code the native `Stop` event
- * fires after every assistant reply — `hook_manifest.yaml` says so itself,
- * describing the `stop` write as a "deterministic … overwrite of hot-context.md",
- * i.e. a working-memory refresh per reply. True session end is the separate
+ * fires after every assistant reply, so a concern bound there runs once per
+ * reply rather than once per session. True session end is the separate
  * `session_end` slot.
  */
 const SLOT_FREQUENCY_DEFAULT: Record<Slot, Frequency> = {

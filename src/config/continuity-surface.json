@@ -205,13 +205,6 @@
             "reason": "A second, prose-shaped session handoff written by `agent-config handoff` and injected once at the next `session_start`. Same job as the record, different format and different lifecycle \u2014 a competing mental model, which is what the count exists to expose."
         },
         {
-            "id": "hot-context.md",
-            "axis": "persistent_continuity_artefacts",
-            "disposition": "counted",
-            "locus": "src/scripts/hot_context_hook.ts:11",
-            "reason": "A working-memory cache rebuilt on stop/session_end/pre_compact and restored at session_start. Persisted state written for context restoration, so the behavioural rule counts it whatever it is called."
-        },
-        {
             "id": "injection-census.jsonl",
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",
