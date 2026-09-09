@@ -18,6 +18,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+    creatableTokens,
     denyMessage,
     inboxDirName,
     isAcceptableInboxDir,
@@ -108,6 +109,98 @@ describe('the allow branches the guard declares', () => {
     });
 });
 
+/**
+ * `creatableTokens` — the polarity pair for the false positive measured while
+ * running the inbox flow over a real round. The read half of these cases was
+ * REFUSED by the shipped guard, twice in one session, and the command that
+ * tripped it is the command the naming rule tells an operator to run.
+ *
+ * Sensitivity was probed, not assumed: emptying `_READ_ONLY_VERBS` reds every
+ * `does not judge` case below and leaves the `judges` cases green, so the
+ * allowlist is what these assertions measure.
+ */
+describe('creatableTokens — reading is not creating', () => {
+    const inboxTokens = (cmd: string): string[] =>
+        creatableTokens(cmd).filter((t) => t.includes('agents/tmp'));
+
+    it('does not judge a read over a glob — the case that blocked a real session', () => {
+        expect(inboxTokens("ls -d agents/tmp.old/a-speaking-name-* 2>/dev/null | sed 's|.*/||'")).toEqual([]);
+        expect(inboxTokens('ls -la agents/tmp/a-speaking-name/ && wc -l -c agents/tmp/a-speaking-name/*')).toEqual([]);
+    });
+
+    it('does not judge cat, grep, find, head or wc over an inbox path', () => {
+        for (const cmd of [
+            'cat agents/tmp/a-speaking-name/chat.txt',
+            'grep -rn "x" agents/tmp/a-speaking-name/',
+            'find agents/tmp/a-speaking-name -name "*.md"',
+            'head -60 agents/tmp/a-speaking-name/notes.md',
+            'wc -l agents/tmp/a-speaking-name/notes.md',
+        ]) {
+            expect(inboxTokens(cmd), cmd).toEqual([]);
+        }
+    });
+
+    it('judges a creating verb, and every segment of a compound command', () => {
+        expect(inboxTokens('mkdir -p agents/tmp/a-speaking-name')).toContain('agents/tmp/a-speaking-name');
+        expect(inboxTokens('cp x agents/tmp/a-speaking-name/y.md')).toContain('agents/tmp/a-speaking-name/y.md');
+        expect(inboxTokens('git mv old agents/tmp/a-speaking-name/note.md')).toContain(
+            'agents/tmp/a-speaking-name/note.md',
+        );
+        // One read segment must not launder the creating one beside it.
+        expect(inboxTokens('ls -la . && mkdir -p agents/tmp/a-speaking-name')).toContain(
+            'agents/tmp/a-speaking-name',
+        );
+    });
+
+    it('judges a redirect target even when the verb is read-only', () => {
+        expect(inboxTokens('echo hi > agents/tmp/a-speaking-name/note.md')).toContain(
+            'agents/tmp/a-speaking-name/note.md',
+        );
+        expect(inboxTokens('printf x >> agents/tmp/a-speaking-name/note.md')).toContain(
+            'agents/tmp/a-speaking-name/note.md',
+        );
+    });
+
+    it('does not read a stderr redirect as a creating target', () => {
+        expect(creatableTokens('ls -d agents/tmp/a-speaking-name-* 2>/dev/null')).not.toContain(
+            'agents/tmp/a-speaking-name-*',
+        );
+    });
+});
+
+describe('verdictFor — the probe carries the path prefix', () => {
+    /** Exists only at the NESTED location, which is the whole point. */
+    const nestedOnly = (p: string): boolean => p.endsWith('app/Modules/Reporting/agents/tmp/a-speaking-name');
+
+    it('finds a module-nested round that already exists', () => {
+        const v = verdictFor(
+            'app/Modules/Reporting/agents/tmp/a-speaking-name/notes.md',
+            nestedOnly,
+            '',
+        );
+        expect(v.block).toBe(false);
+        expect(v.reason).toContain('already exists');
+    });
+
+    it('still blocks a module-nested round that does not exist', () => {
+        expect(verdictFor('app/Modules/Reporting/agents/tmp/a-speaking-name/notes.md', never, '').block).toBe(true);
+    });
+
+    it('does not match a decoy segment that merely starts with agents/tmp', () => {
+        expect(inboxDirName('xagents/tmp/a-speaking-name/notes.md')).toBeNull();
+        expect(verdictFor('agents/tmpfiles/a-speaking-name/notes.md', never, '').block).toBe(false);
+    });
+
+    it('leaves an absolute path absolute instead of re-rooting it', () => {
+        const seen: string[] = [];
+        verdictFor('/elsewhere/repo/agents/tmp/a-speaking-name/x.md', (p) => {
+            seen.push(p);
+            return false;
+        }, '/some/other/root');
+        expect(seen).toEqual(['/elsewhere/repo/agents/tmp/a-speaking-name']);
+    });
+});
+
 describe('the deny message', () => {
     const msg = denyMessage('some-project-swarm');
 
@@ -172,6 +265,33 @@ describe('main() — the envelope surface', () => {
 
     it('does not block a command naming an opaque round id', () => {
         expect(run({ tool_name: 'Bash', tool_input: { command: 'mkdir -p agents/tmp/inbox-2026-08-h' } })).toBe(0);
+    });
+
+    it('ALLOWS a read tool whose file_path names a speaking round', () => {
+        for (const tool of ['Read', 'Grep', 'Glob', 'NotebookRead', 'codebase-retrieval']) {
+            expect(
+                run({ tool_name: tool, tool_input: { file_path: 'agents/tmp/a-speaking-round/x.md' } }),
+                tool,
+            ).toBe(0);
+        }
+    });
+
+    it('still BLOCKS a write tool on the same path — the filter is a deny-list, not a bypass', () => {
+        expect(run({ tool_name: 'Write', tool_input: { file_path: 'agents/tmp/a-speaking-round/x.md' } })).toBe(1);
+        // An unrecognised tool name is judged, so a host spelling its write
+        // tool differently is not silently exempted.
+        expect(run({ tool_name: 'str_replace_editor', tool_input: { path: 'agents/tmp/a-speaking-round/x.md' } })).toBe(1);
+        expect(run({ tool_input: { file_path: 'agents/tmp/a-speaking-round/x.md' } })).toBe(1);
+    });
+
+    it('ALLOWS the read commands that a real session had refused', () => {
+        for (const command of [
+            "ls -d agents/tmp.old/a-speaking-round-* 2>/dev/null | sed 's|.*/||'",
+            'cat agents/tmp/a-speaking-round/chat.txt',
+            'grep -rn "x" agents/tmp/a-speaking-round/',
+        ]) {
+            expect(run({ tool_name: 'Bash', tool_input: { command } }), command).toBe(0);
+        }
     });
 
     it('a malformed or empty envelope ALLOWS — fail_closed is false', () => {
