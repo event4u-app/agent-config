@@ -723,9 +723,36 @@ Defects this roadmap repairs:
       What is missing is the generator that reads a host-aware census into the contract, and
       the host-aware census is the thing 4.4 is blocked on. Closes when that surface
       decision is taken.
-- [ ] **7.3 Apply E7** to the two `later/` token roadmaps.
+- [x] **7.3 Apply E7** to the two `later/` token roadmaps.
       verify: both files have a disposition;
       `./scripts-run src/scripts/lint_roadmap_later_disposition` green.
+      Done 2026-09-09, in its own change for the reason the AC below already
+      gave: archiving a roadmap here moves three ratchets — the estate count,
+      the risk-register floor and the archive index — and folding that into the
+      commit that carried the default flip, an ADR and a schema repair would
+      have made a revert of any one a revert of all.
+      Both files are now at `agents/roadmaps/archive/`. Each carries an
+      ARCHIVED-under-E7 banner naming the mechanism that discharged it: the
+      `delivery` flip took `.claude/rules` from 99,598 tok to 24,166 tok
+      (−75.7 %) with every non-Claude host byte-identical, and the thin lever
+      both files chased is separately dead by measurement (two pre-registered
+      length-neutral judge runs, both inconclusive, CLOSED-BY-DIAGNOSIS).
+      **The non-rule-layer residue E7 names is carried, not dropped**, into
+      `agents/roadmaps/stubs/road-to-token-saving-residue.md` with a `review_by`
+      and one promotion probe per item: R1 the RTK golden-set validation and the
+      kernel promotion behind it (operator-gated, and a kernel edit besides),
+      R2 the live trigger-eval pass, R3 the `telegraph-speak` removal —
+      **owner-reserved, measured RED with a council recommending removal and
+      waiting only on authorization, so it is an unexecuted owner decision
+      rather than residue and this run did not take it** — R4 the zero-cost
+      dormancy flag nobody set, R5 the 26 remaining `.agent-src.uncondensed`
+      prose references, R6 the measured-before/after bar.
+      One byte changed inside an archived file, named so it is not read as
+      silent editing: `phase-0-golden-set`'s status token read `RESOLVED
+      NEGATIVE` and now reads `resolved`, so the machine-readable half matches
+      the prose that was already beside it.
+      Verify output: `lint_roadmap_later_disposition` green, and both
+      wake-condition ratchets moved DOWN with the two files leaving `later/`.
 
 ## Kill register (this roadmap's IDs)
 

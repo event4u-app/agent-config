@@ -96,6 +96,16 @@ selection-accuracy baseline for the rewritten skill descriptions, satisfies a
 resume condition on `road-to-cost-parity-1-rule-payload-diet`, and satisfies a
 resume gate on `later/road-to-token-saving`. Three roadmaps unblock from one run.
 
+> **Corrected 2026-09-09 — the third of those three has moved, and the run is
+> still worth the same.** `road-to-token-saving` was archived under owner ruling
+> E7 (`road-to-delivery-for-every-host` step 7.3): its rule-layer motivation was
+> discharged by the `delivery` projection flip, not by this eval. The live
+> trigger-eval obligation it carried was NOT dropped — it is item R2 of
+> `agents/roadmaps/stubs/road-to-token-saving-residue.md`, whose promotion probe
+> is exactly this run. So the arithmetic below is unchanged in substance: one
+> operator session still discharges three things, one of which is now a stub
+> item rather than a parked roadmap.
+
 - [~] **0.1** Run the human-gated live trigger eval per its own pre-registration —
       request count and shape coverage are set there, not here — and commit its
       baseline. Blocked on `b-live-trigger-eval`.
@@ -425,7 +435,9 @@ Phase 3.
   highest-leverage human action in the estate and the arithmetic is not close: one
   run commits the selection-accuracy baseline, satisfies a resume condition on
   `road-to-cost-parity-1-rule-payload-diet`, and satisfies a resume gate on
-  `later/road-to-token-saving`. Option (b) is strictly slower for the same spend and
+  `later/road-to-token-saving` (archived 2026-09-09; that gate is now R2 of
+  `stubs/road-to-token-saving-residue.md` — see the correction in Phase 0).
+  Option (b) is strictly slower for the same spend and
   makes three roadmaps wait on a mechanism that does not exist yet. Option (c)
   strands all three indefinitely.
 - **If you do nothing:** three roadmaps stay blocked on a command whose only human

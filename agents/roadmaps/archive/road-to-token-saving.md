@@ -1,9 +1,22 @@
 ---
 complexity: structural
-status: later
+status: archived
 ---
 
 # Road to token saving — measure, then cut, at constant quality
+
+> **ARCHIVED 2026-09-09 under owner ruling E7** (`road-to-delivery-for-every-host`
+> § Owner rulings, executed by its step 7.3). The rule-layer motivation is
+> discharged by a different mechanism — `lean_projection.mode: delivery` for
+> `claude-code` cut `.claude/rules` from 99,598 tok to 24,166 tok (−75.7 %) with
+> every non-Claude host byte-identical — and the thin lever this file chased is
+> separately dead by measurement (two pre-registered length-neutral judge runs,
+> both inconclusive, gate CLOSED-BY-DIAGNOSIS). The open boxes below are NOT
+> dropped: each one is carried, with its own promotion probe, into
+> `agents/roadmaps/stubs/road-to-token-saving-residue.md`. Nothing here was edited on
+> archival except the `phase-0-golden-set` status token, which read
+> `RESOLVED NEGATIVE` and now reads `resolved` so the machine-readable half
+> matches the prose that was already beside it.
 
 > **Parked (2026-07-12, later/ disposition).** Every remaining open step is
 > operator-gated; nothing is agent-workable now. **Resume when the operator
@@ -591,7 +604,7 @@ stale candidates.
 ## Blockers
 
 ### blocker: phase-0-golden-set
-- **Status:** RESOLVED NEGATIVE (2026-07-12) — the length-neutral judge RERUN (pre-registered: ±15% token-band pairing, double blind judges claude-opus-4-8 + gpt-4o both orders, κ floor 0.60) produced a SECOND inconclusive; the gate is **CLOSED-BY-DIAGNOSIS**: thin-vs-eager is not resolvable by LLM-paired judging on this corpus (see docs/benchmark.md § Length-neutral judge RERUN). Only re-open path: deterministic anchor-scoring against `must_include`/`must_not`. Consequence for this roadmap: the thin lever stays dead; the remaining open steps are operator-gated only (RTK validation + live trigger-eval), not judge-gated.
+- **Status:** resolved (2026-07-12) — RESOLVED NEGATIVE: the length-neutral judge RERUN (pre-registered: ±15% token-band pairing, double blind judges claude-opus-4-8 + gpt-4o both orders, κ floor 0.60) produced a SECOND inconclusive; the gate is **CLOSED-BY-DIAGNOSIS**: thin-vs-eager is not resolvable by LLM-paired judging on this corpus (see docs/benchmark.md § Length-neutral judge RERUN). Only re-open path: deterministic anchor-scoring against `must_include`/`must_not`. Consequence for this roadmap: the thin lever stays dead; the remaining open steps are operator-gated only (RTK validation + live trigger-eval), not judge-gated.
 - **Owner:** maintainer
 - **Blocks:** Phase 0 Steps 1 + 2 (golden set + host-compliance probe), Phase 1 Step 1 (RTK golden-set run), Phase 8 Step 2 (quality-elbow threshold), and Phase 10 Step 1 (tier-conditional loading)
 - **What to do:**

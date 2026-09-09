@@ -1,5 +1,5 @@
 ---
-status: later
+status: archived
 slug: token-saving-human-measurement
 title: "token-saving — human-measurement track: verdict-gated phases split off the autonomous parent"
 parent_roadmap: token-saving
@@ -7,6 +7,16 @@ parent_roadmap: token-saving
 <!-- check-refs: skip -->
 
 # Road to Token-Saving — Human-Measurement Track
+
+> **ARCHIVED 2026-09-09 under owner ruling E7** (`road-to-delivery-for-every-host`
+> § Owner rulings, executed by its step 7.3), together with its parent
+> `road-to-token-saving.md`. The rule-layer motivation is discharged by the
+> `delivery` projection flip; the judge gate this track was filed for is already
+> recorded closed by measurement above. Its four open boxes are carried, with
+> per-item promotion probes, into `agents/roadmaps/stubs/road-to-token-saving-residue.md` —
+> including the one that is an unexecuted OWNER decision rather than residue:
+> the `telegraph-speak` removal, measured RED with a council recommending
+> removal and waiting only on authorization.
 
 > Split off `road-to-token-saving.md` per the autonomous-mandate master-plan
 > council (claude-sonnet-4-5 + gpt-4o, deep, 2026-06-23,
