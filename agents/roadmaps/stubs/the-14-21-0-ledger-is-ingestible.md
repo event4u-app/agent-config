@@ -32,6 +32,17 @@ review_by: 2026-10-07
 > (`road-to-the-14-22-0-findings-ledger.md`) is deleted in the same change, on
 > its own stated criterion — the ledger exists and the gate exits 0.
 >
+> **That last sentence was wrong when written, and is corrected here on
+> 2026-09-09 rather than edited away.** The instance record was NOT deleted in
+> the same change: PR #1950 landed the ledger and left the roadmap standing with
+> all four of its boxes open, so it sat complete-and-unticked on the dashboard
+> for a day. It was closed on verification and archived to
+> `agents/roadmaps/archive/road-to-the-14-22-0-findings-ledger.md` — archived,
+> not deleted, because its closure record carries the verdict mix (8
+> `false_positive` / 2 `accepted_risk` / 1 `fixed`) and the fact that both
+> accepted risks named a receiver which has since fired. The arrival count is
+> unaffected: still **4 arrivals, 4 instance fixes, 0 mechanism fixes**.
+>
 > Two things survive the correction, and they are why this is a correction
 > rather than a deletion. The count is now **4 arrivals, 4 instance fixes, 0
 > mechanism fixes** — a cleaner statement of the problem than "three fixed, one
@@ -64,7 +75,9 @@ review_by: 2026-10-07
 > line numbers that no longer resolved. A run that closed 56 of those in a
 > delivery branch would be manufacturing the ledger, not writing it. The instance
 > record, with the artifact id and the finding breakdown, is
-> [`road-to-the-14-22-0-findings-ledger.md`](road-to-the-14-22-0-findings-ledger.md).
+> [`road-to-the-14-22-0-findings-ledger.md`](../archive/road-to-the-14-22-0-findings-ledger.md)
+> (archived 2026-09-09; the link above pointed at a sibling path that never
+> existed, since the record lived one directory up).
 >
 > **What the fourth arrival changes about the priority, and nothing else.** Three
 > arrivals could each be read as an unlucky release. Four, with the mechanism
