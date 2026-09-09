@@ -169,7 +169,7 @@ that silently does not fire because the file it needed was somewhere else.
 ## What was NOT preserved from the mechanism this replaces
 
 The 24-hour soak is gone and nothing replaces its *elapsed-time* property. The
-soak let behaviour emerge — a rule that stops firing, a trigger that swallows a
+soak let behavior emerge — a rule that stops firing, a trigger that swallows a
 sibling's domain — before the next edit landed and confounded the diagnosis. A
 ratification review at T+0 judges intent; it cannot judge what a week of real
 sessions would have shown. ADR-268 § 4 makes this a deliberate owner-decided
