@@ -315,6 +315,60 @@ councils required puts them there on purpose:
       Reopen it if a real workspace refuses on it (too tight), or if a
       wrong-root incident passes it (the bound is not the control that would
       have caught it, and identity is).
+
+      **THE FIRST VERSION OF THIS CONTRACT DID NOT HOLD. Corrected 2026-09-09 on
+      an R2 completion review that found SEVEN defects, three of them high, and
+      proved every one by running it rather than by reading.** Recorded at this
+      length because the failure is instructive in a specific way: the contract
+      passed 32 tests of its own writing while three of its six properties were
+      bypassable, and every bypass sat on a path those tests did not take.
+
+      - **P5 was inert** whenever the session id lived only on the dispatcher
+        envelope. `dispatch_hook` resolves `envelope.session_id` from the
+        payload OR `AGENT_SESSION_ID`; the hook read the payload alone, so a
+        host supplying no payload id received the block on every start and never
+        latched. Every sibling concern already read the envelope first.
+      - **P4 was decorative.** Retrieval was asked for the CAP, and every
+        curated hit scores an identical 0.1 with an empty key set, so
+        `memory_lookup` sliced the first 30 in STORE order and the declared
+        order then sorted a set the cap had already chosen. A 40-entry corpus
+        with the five cheapest last emitted zero cheap rows.
+      - **P1 stopped at the root.** Canonicalizing the memory root does not stop
+        a symlinked FILE inside it from resolving into another tree — the exact
+        threat the module's own docblock names. The reviewer read a donor
+        workspace's entry out of a victim session.
+      - **P3 no-opped on two of three layouts**, because the read was root-only
+        and non-recursive while `_iter_curated_entries` supports
+        `<root>/<type>.yml`, `<root>/<type>/**/*.yml` and `intake/*.jsonl`. A
+        3-year-old type-directory corpus was served past the 400-day bound.
+      - **The latch burned on an empty corpus**, so a session that started
+        before its memory was curated could never receive an index afterwards —
+        the same defect class as the refused-root case fixed one branch earlier,
+        one branch later.
+      - **The trust check was opt-in**, and `session_index_cost()` omitted it:
+        the one function whose name suggests it only measures was also the one
+        that could render unchecked.
+
+      All seven are repaired with a test each, sabotage-proven in three batches
+      so attribution is clean. P1's file half and P3's reading turned out to be
+      ONE omission and are fixed by one recursive, canonicalizing,
+      containment-checking walk. Render and serve are now two operations with
+      two names, and `serve_…` takes a `TrustGrant` so "did you check?" is
+      answered by the signature rather than by convention.
+
+      **A second falsifier, from the P4 repair:**
+      `SESSION_INDEX_RETRIEVAL_LIMIT = 500` is a stated default, not a measured
+      optimum. Reopen it when a curated corpus approaches it, because past that
+      bound store order silently decides again and P4 becomes decorative a
+      second time in exactly the way it just was.
+
+      **Process note, recorded because it changes what the artefact is.** The
+      reviewed change merged as PR #1958 at 07:01 while the review was still
+      running, so the three high findings reached `main` before their repair
+      did. Nothing was live — the feature is default-off, which is the only
+      reason this is a repair rather than an incident — but the sequencing is
+      worth naming: a review that finishes after its own merge cannot gate
+      anything, and this one only functioned as a follow-up.
 - [ ] **3.2 `session:recycle` — retire the manual writer once the automatic one
       is proven.** It is the only writer today, so this step is gated on Phase 1
       in full, not merely started. The advisory that instructs a human to run it
