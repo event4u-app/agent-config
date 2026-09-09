@@ -829,7 +829,7 @@ function pyListRepr(values: YamlValue[]): string {
  *    never fails a build.
  *
  * The nine kernel rules are exempt, and the exemption is DERIVED from
- * `_lib/kernel_rules.ts` — the same locked set `block_kernel_rule_writes.ts`
+ * `_lib/kernel_rules.ts` — the same locked set `check_kernel_edit_ratified.ts`
  * enforces. They are not exempt because kernel rules are special; they are
  * exempt because that guard denies the write, so requiring the field would make
  * `task ci` unsatisfiable for any agent. Deriving it rather than hand-listing it

@@ -233,7 +233,7 @@ export function egressBlockedReason(record: DefectRecord, repoRoot?: string | nu
  *
  * The point is structural: the loop that fixes the agent's own defects must
  * not be a channel through which the agent loosens the floors it is bound by.
- * Same posture as `block_kernel_rule_writes` (tool-call-time) and the settings
+ * Same posture as `check_kernel_edit_ratified` (CI-time) and the settings
  * class-C fence (write-time), applied to the one outward vehicle this loop
  * owns. Nothing auto-applies a patch today; this keeps that true for the
  * denied surfaces even when the PR path is otherwise available.
@@ -320,7 +320,7 @@ const DOTTED_KEY_RE = /^[a-z0-9_]+(\.[a-z0-9_]+)+$/;
  *   - `src/scripts/hook_manifest.yaml` — the concern↔slot bindings. Unbinding
  *     a concern disarms a PreToolUse guard without touching the guard's code.
  *   - `src/scripts/hooks/` — the guard implementations themselves
- *     (`block_no_verify`, `block_kernel_rule_writes`, `block_config_weakening`).
+ *     (`block_no_verify`, `block_config_weakening`, `evidence_independence`).
  *   - `src/scripts/check_*.ts` / `src/scripts/lint_*.ts` — the gate scripts. A
  *     loosened threshold or a narrowed scan root disarms the gate in place,
  *     which is exactly the "gates that scan nothing exit green" failure.
@@ -356,7 +356,7 @@ function isCiEnforcementPath(token: string): boolean {
  * negative is a patch channel into a safety floor.
  *
  * The kernel set resolves from `kernel_rules.ts` — the same canonical source
- * `block_kernel_rule_writes` uses — never a copy that can drift. Settings
+ * `check_kernel_edit_ratified` uses — never a copy that can drift. Settings
  * class-C keys are matched against `classCKeys` when the caller can supply
  * them (parsed from `docs/contracts/settings-classes.md`); the contract file
  * itself is denied by path regardless, so an unreadable contract narrows the

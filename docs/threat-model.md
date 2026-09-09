@@ -32,13 +32,20 @@ Row f's surface (safety-floor / kernel-rule rewrite) is now held by three
 INDEPENDENT layers — three different failure modes have to be beaten
 together, not one:
 
-1. **Layer 1 — tool-call-time deny (pre-write).** The `PreToolUse` hook
-   `src/scripts/hooks/block_kernel_rule_writes.ts` (registered
-   `fail_closed: true`, red/green-tested) denies Write/Edit tool calls
-   whose target is a kernel rule file — matched via the single-sourced
-   list in `src/scripts/_lib/kernel_rules.ts`, in the source tree and in
-   projections. Hook-capable hosts only (see
-   `docs/enforcement-by-host.md`).
+1. **Layer 1 — CI gate on the diff (pre-merge).** `check_kernel_edit_ratified`
+   in `ci-fast` reds any diff touching a kernel rule — matched via the
+   single-sourced list in `src/scripts/_lib/kernel_rules.ts`, in the source
+   tree and in projections — a governance hook, or the gate itself, unless the
+   PR carries a ratification artifact with `verdict: ratified`
+   (`docs/contracts/ratification-artifact.md`).
+
+   **This layer changed shape on 2026-09-09 and it changed direction too.**
+   It used to be a `PreToolUse` deny, `block_kernel_rule_writes.ts`. ADR-268
+   § 4 retired that hook, and the honest reading of the swap is mixed: the gate
+   reaches **every** host rather than the one that honours a deny, and it runs
+   on the whole diff rather than one tool call at a time — but it fires at
+   merge rather than at the keystroke, so an unratified kernel edit can now
+   exist in a working tree and in a pushed branch. What it cannot do is land.
 2. **Layer 2 — projected immutability statement (instruction-time).** The
    consumer projection states the rule set's immutability explicitly
    (consumer `AGENTS.md` template: kernel rules are immutable, never

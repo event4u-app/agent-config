@@ -69,10 +69,11 @@ cost: each override is a decision the default did not carry.
 The contradiction was resolved on **the sheet's** side deliberately, and the
 asymmetry is durable rather than incidental: `user-interaction` is one of the
 locked nine ([`kernel-membership § 4`](../../../docs/contracts/kernel-membership.md)),
-so amending its clause is an owner-reserved edit that `block-kernel-rule-writes`
-refuses at tool-call time, while the answer SHAPE is this page's own. When a
-page and a kernel rule contradict each other, the page is both the cheaper half
-to change and the only half an autonomous run may touch at all.
+so amending its clause is a governance edit that needs a ratification artifact
+(ADR-268 § 4) and reds `check_kernel_edit_ratified` without one, while the
+answer SHAPE is this page's own. When a page and a kernel rule contradict each
+other, the page is the cheaper half to change and the half an autonomous run
+reaches without opening a ratification.
 
 The sheet is rendered **inside** the contract screen, above its Accept line —
 never as a second block and never as a second turn. Accepting the contract with

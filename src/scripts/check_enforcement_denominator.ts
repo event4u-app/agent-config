@@ -43,8 +43,8 @@
  * settles WHERE the number may be published; it says nothing about whether the
  * published number is readable. `undeclared` quoted bare reads as a backlog
  * somebody forgot to wire, and for nine of them that is not what it is:
- * `block_kernel_rule_writes` refuses an `enforced_by` write on a kernel rule
- * with no agent-accessible override, so those cannot declare one at all. The
+ * an `enforced_by` declaration on a kernel rule is reachable only through a
+ * ratified governance edit (ADR-268 § 4), never through authoring. The
  * resolver has always computed `kernel_denied`; the published line dropped it
  * and appended the word `yet`, promising a future that does not exist for that
  * nine. So a line in the sanctioned projection that states an `undeclared`
@@ -428,9 +428,9 @@ export function main(argv?: readonly string[]): number {
         if (findings.some((f) => f.kind === 'missing-split')) {
             process.stdout.write(
                 '\nThe projection may state the `undeclared` figure — it is the only surface\n' +
-                    'that may — but not bare. Nine of those rules are kernel-denied:\n' +
-                    '`block_kernel_rule_writes` refuses an `enforced_by` write with no\n' +
-                    'agent-accessible override, so for them there is no *yet*. Print\n' +
+                    'that may — but not bare. Nine of those rules are kernel-denied: an\n' +
+                    '`enforced_by` declaration on a kernel rule needs a ratified governance\n' +
+                    'edit (ADR-268 § 4), so for them there is no *yet*. Print\n' +
                     "`summary.kernel_denied` on the same line (`build_proof.ts` § 4b does).\n",
             );
         }

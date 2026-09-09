@@ -96,9 +96,9 @@ export type Resolution =
  *                  the gap is stated in
  *                  the rule's own text, so it is honest, not a defect.
  * `unclassified` — no `obligation_frequency` to join against. The nine kernel
- *                  rules sit here: `block_kernel_rule_writes.ts` denies agent
- *                  writes to them, so the field cannot be populated by the same
- *                  pass that populated the other 105.
+ *                  rules sit here: populating the field on one of them is a
+ *                  ratified governance edit (ADR-268 § 4), so it could not be
+ *                  done by the same pass that populated the other 105.
  * `unmeasured`   — the rule declares no carrier at all; model-carried by design,
  *                  making no claim this join could falsify.
  */
@@ -384,9 +384,9 @@ export function resolve_one(
     // level with the triage record attached, because "nothing enforces this" and
     // "nothing enforces this AND here is why that is the right call" are not the
     // same statement, and only the second one survives review. The one remaining
-    // `none` is `non-destructive-by-default`, a kernel rule that
-    // `block_kernel_rule_writes` denies agent writes to — see
-    // `agents/roadmaps/stubs/road-to-kernel-instruction-only-migration.md`.
+    // `none` is `non-destructive-by-default`, a kernel rule whose edits go
+    // through a ratification artifact (ADR-268 § 4), which is why migrating it
+    // to `instruction-only:` is a governance change and not a cleanup.
     if (decl === 'none') return { resolution: 'none' };
 
     if (decl === 'instruction-only' || decl.startsWith('instruction-only:')) {
@@ -580,13 +580,21 @@ export function collect(): RuleCoverage[] {
             binding,
         );
         // Say WHY a row is unclassified. For the nine kernel rules the answer is
-        // structural rather than an authoring lapse — block_kernel_rule_writes
-        // denies the write — and a reader who cannot tell those apart will read
-        // the same bucket as either "expected" or "someone forgot".
+        // structural rather than an authoring lapse, and a reader who cannot
+        // tell those apart will read the same bucket as either "expected" or
+        // "someone forgot".
+        //
+        // The reason CHANGED and the classification did not. Until ADR-268 § 4
+        // it was "block_kernel_rule_writes denies the write" — a tool-call deny
+        // that made the field unreachable. That hook is retired: the field is
+        // now reachable, behind `check_kernel_edit_ratified` and a ratification
+        // artifact. So the nine stay unclassified because declaring a field on
+        // all nine is a governance event rather than an authoring convenience,
+        // not because it is impossible.
         if (verdict === 'unclassified' && KERNEL_RULE_ID_SET.has(id)) {
             notes.push(
-                'no obligation_frequency: kernel rule, and block_kernel_rule_writes denies ' +
-                    'the write with no agent-accessible override',
+                'no obligation_frequency: kernel rule — the field is reachable only through a ' +
+                    'ratified kernel edit (ADR-268 § 4), never as an authoring convenience',
             );
         }
         out.push({
@@ -808,9 +816,9 @@ function main(argv: string[]): number {
                         'when blocking falls, or unwired / local_only / missing / frequency_gap ' +
                         'rises. Regenerate intentionally with --write-baseline when the change is ' +
                         'the point. READ `undeclared` WITH ITS THREE CLASSES, never bare: ' +
-                        '`kernel_denied` cannot carry an enforced_by field at all ' +
-                        '(block_kernel_rule_writes refuses the write, no agent-accessible ' +
-                        'override), `observer` has a carrier that fires and cannot block by ' +
+                        '`kernel_denied` carries no enforced_by field because declaring one on a ' +
+                        'kernel rule is a ratified governance edit (ADR-268 § 4), never an ' +
+                        'authoring step, `observer` has a carrier that fires and cannot block by ' +
                         'design, and `carrier_less` has no machine carrier of any kind. The ' +
                         'reachable population is the observer set, not `undeclared` — a floor ' +
                         'set against the full number would stall in its second release.',
@@ -843,7 +851,7 @@ function main(argv: string[]): number {
 
     lines.push(
         `  frequency: ${summary.frequency_gap} gap · ${summary.frequency_unclassified} unclassified ` +
-            `(kernel — block_kernel_rule_writes denies the field)`,
+            `(kernel — the field is reachable only through a ratified edit, ADR-268 § 4)`,
     );
     lines.push(
         `  undeclared ${summary.undeclared} splits: ${summary.kernel_denied} kernel-denied · ` +

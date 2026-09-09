@@ -265,7 +265,7 @@ export interface CoverageGap {
  * `src/rules/**` is scanned for VALUE drift but is deliberately excluded from
  * this pass, and the reason is mechanical rather than stylistic: satisfying it
  * would require `update_counts` to become a writer into `src/rules/`, where the
- * kernel rules live behind `block_kernel_rule_writes`. A generator that must
+ * kernel rules live behind `check_kernel_edit_ratified`. A generator that must
  * never touch part of its own target directory is a generator waiting to be
  * disarmed by a path move. So a stale count in a rule fails on value and a human
  * fixes it — the coverage claim this pass makes stays true of the surfaces it
@@ -420,7 +420,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
             '\nFix: on a flagship surface, run `./scripts-run src/scripts/update_counts` —\n' +
                 'every anchored position is generator-written, so never hand-type one there.\n' +
                 `Under ${RULE_SURFACE_DIR}/ the generator does not write (the kernel rules live\n` +
-                'there behind block_kernel_rule_writes), so a rule count is a hand edit: correct\n' +
+                'there behind check_kernel_edit_ratified), so a rule count is a hand edit: correct\n' +
                 'the number, or — if the figure is a dated measurement rather than a live\n' +
                 `self-count — mark that line \`${DATED_MEASUREMENT_MARKER}\` and say what it was\n` +
                 'measured against.\n',

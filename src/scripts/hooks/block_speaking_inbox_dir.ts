@@ -396,7 +396,7 @@ export function main(): number {
         // and this guard read only the path keys — so `mkdir -p
         // agents/tmp/<speaking-name>`, a `git mv` into one, or a redirect
         // bypassed it entirely. Both siblings on this slot (`block_no_verify`,
-        // `block_kernel_rule_writes`) parse the command string; this one did
+        // `block_config_weakening`) parse the command string; this one did
         // not, and the R2 review of this branch caught it. The tokens that
         // could CREATE something are offered to the same pure verdict, so the
         // decision logic is shared rather than duplicated — see
