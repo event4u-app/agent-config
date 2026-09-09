@@ -4,7 +4,7 @@ status: ready
 parent_roadmap: road-to-continuity-retirement-sequencing
 execution:
   mode: phase-checkpoints
-estate_growth_exempt: "Receiver for five items carried out of road-to-continuity-retirement-sequencing, which is archived by the same change — the estate is flat, not larger. It cannot be folded into any active roadmap: the carried items are the automatic writer and the retirements that depend on it, and the only other file that ever owned them is the one being archived. Its predecessor road-to-one-continuity-record is archived too. The alternative to this file is dropping five items an owner authorised and two councils sequenced, which is the outcome both councils named as the failure mode."
+estate_growth_exempt: "AMENDED 2026-09-09, because the gate reads the claim from the diff and the earlier text authorised a different change. This diff grows `open_blockers` 42 -> 43 by adding ONE entry, `memory-index-relocation-target-unspecified`. It is a NEW recorded blocker rather than a repaired undercount: step 3.1's second half was attempted this run, after its D3 precondition was discharged, and an AI council (2/2, convergent) established that the step names no relocation destination and that all thirteen concerns bound on `session_start` fail on subject rather than on cost. Nothing described that before, because nobody had got far enough to find it. The alternative to recording it is inventing a destination, which is the failure this file's own Risk 1 names from the other direction -- the retirement performed against a target nobody chose, numbers moving while the surface gets worse. `open_blockers` carries no growth allowance by policy, so a claim is the only green path, and suppressing the entry to keep the metric flat would launder an unmade decision. MEASURED on this branch: `check_estate_count` reads the growth on that axis only; `active_roadmaps`, `later_roadmaps`, `skill_count`, `skill_description_tokens` and `concern_count` are all +0. Earlier text, kept because the addition it authorised is still this file's reason to exist: Receiver for five items carried out of road-to-continuity-retirement-sequencing, which is archived by the same change — the estate is flat, not larger. It cannot be folded into any active roadmap: the carried items are the automatic writer and the retirements that depend on it, and the only other file that ever owned them is the one being archived. Its predecessor road-to-one-continuity-record is archived too. The alternative to this file is dropping five items an owner authorised and two councils sequenced, which is the outcome both councils named as the failure mode."
 estate_offset_exempt: "Offset in the same change by archiving agents/roadmaps/archive/road-to-continuity-retirement-sequencing.md, which reaches 100% with this file as its declared carry destination. Recorded rather than omitted because the archival and the addition are one commit and a reader should not have to reconstruct that they pay for each other."
 ---
 # Road to continuity writer activation
@@ -369,6 +369,44 @@ councils required puts them there on purpose:
       reason this is a repair rather than an incident — but the sequencing is
       worth naming: a review that finishes after its own merge cannot gate
       anything, and this one only functioned as a follow-up.
+
+      **AND THE SECOND HALF TURNS OUT NOT TO BE EXECUTABLE — the step is
+      UNDER-SPECIFIED, not merely hard. Established 2026-09-09 by AI council,
+      2/2 present, convergent, after the precondition was discharged and the
+      relocation was actually attempted.** The finding is that "relocate the
+      restore" names no destination, and neither does D3.
+      What was checked before asking: thirteen other concerns bind
+      `session_start` across all seven hosts (`hook_manifest.yaml:1263` and its
+      six sibling rows), so a destination costs no new concern — which matters,
+      because a NEW concern is unpayable: `concern_count` reads 58 against a
+      floor of 58 with allowance 0, retiring `hot-context` buys exactly one, and
+      both seats of the 2026-09-08 council refused a temporary allowance. So the
+      obstacle is not the ratchet.
+      The obstacle is that **every candidate fails on subject**, and the council
+      converged on that rather than picking the least-bad one:
+      `handoff-context` is the handoff surface and a memory index is not a
+      handoff; `session-register`'s subject is cross-worktree session
+      visibility; `chat-history` is itself a retirement candidate in this same
+      roadmap, so relocating onto it moves the restore to a surface this file is
+      trying to shrink. It also found a second reading of 3.1 the text does not
+      disambiguate — retire the CACHE half and keep the memory index where it
+      is, which inverts which half survives — and called the step **ambiguous**
+      rather than merely incomplete on that basis.
+      **Two further findings from the same round, both worth more than the
+      destination question.** First, D3's independence requirement is arguably
+      already unmet in the CURRENT state, so a relocation would be lateral
+      movement rather than degradation — which changes what step 1.4's three
+      independent switches are worth here and is the owner's to read. Second,
+      **3.1's byte-identity verify tests the wrong thing**: with the relocation
+      being a manifest change plus a moved function, the block's bytes are
+      trivially identical, so the proof establishes that the move did not break
+      the code and says nothing about equivalence. The council asked for three
+      sub-tests (byte, sabotage, ordering) in place of the one.
+      Recorded as the blocker `memory-index-relocation-target-unspecified`
+      below rather than executed. Inventing a destination here would be the
+      failure this roadmap's own Risk 1 names from the other direction: the
+      writer lands, the retirement is performed against a target nobody chose,
+      and the numbers move while the surface gets worse.
 - [ ] **3.2 `session:recycle` — retire the manual writer once the automatic one
       is proven.** It is the only writer today, so this step is gated on Phase 1
       in full, not merely started. The advisory that instructs a human to run it
@@ -595,6 +633,41 @@ maintainer-owned blockers were not touched.
 - **What to do:** either make the collector emit — `agents/runtime/metrics/skill-usage.jsonl` is its source and it is empty — or mark the report `baseline, instrument not yet emitting` in its own header so a reader cannot mistake a zero for a measurement. The second is a one-line change and closes the trap; the first is the real fix and is not this roadmap's subject.
 - **Resolved when:** the report either carries real non-zero data or states in its header that its zeros are an unrun instrument rather than a measurement.
 
+
+### blocker: memory-index-relocation-target-unspecified
+
+- **Status:** open
+- **Owner:** maintainer
+- **Asked:** 2026-09-09, by AI council (2 seats, anthropic + openai, api transport, $0.0617,
+  quorum 2/2 after the run), convened after step 3.1's D3 precondition was discharged and the
+  relocation was attempted rather than assumed.
+- **Blocks:** the second half of step 3.1 only — the relocation and the concern retirement.
+  3.1's precondition (the six-property trust contract, its 38 tests and the corpus fixture)
+  is DONE and is unaffected, as is every other step in Phase 3.
+- **Recommendation:** none on the destination, and that is the finding rather than a gap in
+  effort. Both seats converged that 3.1 is under-specified and requires re-specification, not
+  execution: "relocate the restore" names no target, D3 names none, and all thirteen concerns
+  bound on `session_start` fail on subject rather than on cost. Picking the least-bad one
+  would be inventing the decision.
+- **If you do nothing:** the trust contract stays built and unused on the relocation axis, and
+  `check_continuity_surface` keeps reporting `1 / 2 / 5 / 1 / 1` — the artefact axis does not
+  move. Nothing degrades and nothing rots; the cost is that D3's precondition is paid for and
+  the thing it was a precondition FOR cannot start.
+- **What to do:** decide one thing and record it in this entry — whether 3.1 means (a)
+  relocate the memory-index restore to a named concern, in which case name it and accept the
+  subject mismatch explicitly, or (b) retire only the hot-context CACHE half and leave the
+  memory index where it is, which the council read as a second valid parsing of the same
+  sentence. Then, whichever is chosen, replace 3.1's byte-identity verify: with the
+  relocation being a manifest change plus a moved function the bytes are trivially identical,
+  so the council asked for three sub-tests (byte, sabotage, ordering) in place of the one.
+  The candidate list and the objection to each is in step 3.1's own body; the concern-cost
+  arithmetic is in `three-concern-split-is-unpaid-under-the-concern-ratchet` below.
+- **Resolved when:** this entry names the chosen parsing and, for (a), the destination
+  concern; and 3.1's `verify:` line states the three sub-tests rather than byte-identity
+  alone.
+- **Review trigger:** re-read when `road-to-continuity-writer-activation`'s other four
+  blockers move, since three of them are maintainer decisions on the same file and one
+  sitting alone is the shape that decays into abandoned-in-place.
 
 ### blocker: three-concern-split-is-unpaid-under-the-concern-ratchet
 
