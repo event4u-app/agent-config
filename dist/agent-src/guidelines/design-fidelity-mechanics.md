@@ -168,6 +168,45 @@ Grounded in [`wireframe`](../../src/skills/wireframe/SKILL.md) § Gotchas. The n
 class is pinned in `ROUTING_MATRIX`, its rationale beside the assertions in
 `design_fidelity_routing.test.ts`.
 
+## Artifact versus brand
+
+Both `design-fidelity` and `brand-source-of-truth` point here rather than
+carrying this arbitration themselves, and the pointers are **operative**: apply
+this section before reconciling a value, not as a reference to consult if
+curious. Two standing rules cannot each hold half of an arbitration between
+them — a consumer receives one of them without the other, because
+`design-fidelity` ships in `engineering-base` and `brand-source-of-truth` in
+`brand` — so the split has to be somewhere both can reach.
+
+**Values reconcile onto the brand token, with the distance reported.** Colour,
+type and spacing are the axes where the field converges, unanimously and at
+error severity, across the design systems surveyed. Where a registered brand
+token exists, it wins, and the artifact's own value is not silently absorbed:
+the distance between the two is reported on the same row, so what changed is
+visible before it is cumulative.
+
+**Structure is the artifact's, and is never adjusted to suit a token.** Layout,
+control types, component set, ordering, breakpoints and behaviour are not value
+questions at all, and no brand token is evidence about any of them. A structural
+deviation stays what `design-fidelity`'s Iron Law says it is: a proposal needing
+explicit confirmation.
+
+**A conflict is surfaced, never merged.** Where the artifact and the brand
+genuinely disagree on something that is not resolvable by the two rules above —
+an artifact whose type scale contradicts the brand's, say — the agent surfaces
+both readings as a numbered choice and builds neither until the human picks.
+Averaging them produces a third design nobody approved.
+
+**Where no brand exists**, there is nothing to reconcile onto: the artifact's
+values are the values, and `brand-source-of-truth`'s own "when NOT to fire"
+already says so. The reconciliation above is a rule about *two* sources, not a
+licence to normalise one.
+
+**What this section does NOT decide** is whether an in-tolerance value may be
+reconciled *without asking*. That needs a tolerance to exist and a default to be
+chosen, and both are recorded as open decisions rather than answered here —
+`design.tolerance.*` ships empty and the approximation ships disabled.
+
 ## Provided-artifact precedence
 
 ```

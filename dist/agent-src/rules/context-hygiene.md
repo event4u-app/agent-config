@@ -110,7 +110,7 @@ EVERY TURN MUST EDIT, RUN, OR ASK.
 
 ### Declared read protocol — the cap goes UP, never off
 
-A mandated analysis/audit/review protocol is exactly the case that legitimately needs *more* reads, not fewer — an 8-turn evidence sweep is the protocol working, not a loop. Capping a declared protocol tighter than an undeclared one is backwards. So:
+A mandated analysis/audit/review protocol — or a port of a provided design artifact, where reading the handover whole IS the work — is exactly the case that legitimately needs *more* reads, not fewer — an 8-turn evidence sweep is the protocol working, not a loop. Capping a declared protocol tighter than an undeclared one is backwards. So:
 
 - **Undeclared reading keeps 3-warn / 5-abort.** Unchanged.
 - **A declared protocol raises the abort to 8 read-only turns** — and never suspends it. "Non-bypassable" narrows to **no *silent* bypass**: a declared protocol is not silent.

@@ -215,6 +215,11 @@ tasks:
     desc: Check condensation quality (headings, code blocks, frontmatter, word count)
     cmd: ./scripts-run src/scripts/check_condensation
 
+  check-projected-rule-routes:
+    silent: true
+    desc: "Every projected rule's `routes_to: guideline:` target resolves inside dist/agent-src/ (road-to-design-intent-conformance 2.2)"
+    cmd: ./scripts-run src/scripts/check_projected_rule_routes
+
   check-condensed-paths:
     silent: true
     desc: "Validate condensed-output paths in dist/agent-src/rules/*.md (road-to-path-fixes P5.2)"

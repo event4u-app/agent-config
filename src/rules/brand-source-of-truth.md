@@ -55,6 +55,12 @@ OR A VOICE RULE. A VALUE THAT TRACES TO NEITHER IS OFF-BRAND.
 NEVER SHIP AN ASSET THE ACTIVE BRAND CANNOT ACCOUNT FOR.
 ```
 
+**Artifact versus brand — apply before reconciling a value.** Under
+[`design-fidelity`](design-fidelity.md) the artifact is the spec: the brand
+token wins on the **value** with the distance reported, **structure**
+stays the artifact's, a conflict is surfaced not merged —
+[`design-fidelity-mechanics § Artifact versus brand`](../../docs/guidelines/design-fidelity-mechanics.md).
+
 ## Where the brand actually lives — and how to check
 
 ```
@@ -137,10 +143,6 @@ for the full Brand-mode vs Product-mode discriminator.
 - [`brand`](../skills/brand/SKILL.md) — the gap-fill corpus this rule subordinates to consumer brand.
 - [`brand-identity`](../skills/brand-identity/SKILL.md) — defines the tokens the gate validates against.
 - [`brand-to-tokens`](../skills/brand-to-tokens/SKILL.md) — emits the DTCG token
-  source of truth. **Known contradiction, recorded not resolved:** that skill's
-  prose says to author `.tokens.json` while the only resolver in the tree reads
-  `tokens.json`, so a consumer following it literally produces a file nothing
-  loads. The authoring name is a consumer-visible decision and is not changed
-  here; `brand:status` surfaces the mismatch at the moment it matters.
+  source of truth; it carries the recorded `.tokens.json` filename contradiction.
 - [`design-intelligence`](../skills/design-intelligence/SKILL.md) — the "audit findings outrank corpus" precedent the gate mirrors.
 - [`docs/guidelines/design-modes.md`](../../docs/guidelines/design-modes.md) — brand vs product register discriminator and routing.

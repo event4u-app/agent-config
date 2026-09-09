@@ -250,7 +250,7 @@ are defects with a verified wrong behaviour and a verified right one.
       identical.
       verify: `./scripts-run src/scripts/skill_linter --all` warn count
       unchanged at 1, and the file stays under the 400-line skill ceiling.
-- [ ] **1.3 Make the brand rule carry the split instead of pointing one way.**
+- [x] **1.3 Make the brand rule carry the split instead of pointing one way.**
       `src/rules/brand-source-of-truth.md` gains the artifact-versus-brand
       invariant — values to the brand token with the distance reported,
       structure to the artifact and never adjusted to suit a token — plus the
@@ -330,13 +330,13 @@ file the reading agent cannot open.
       verify: after `task sync`, `ls dist/agent-src/guidelines/design-fidelity-mechanics.md`
       resolves and `.augment/guidelines` is a live symlink; and
       `./scripts-run src/scripts/check_source_size_budget` reports no rise.
-- [ ] **2.2 Gate the route rather than trusting it.** A check that every
+- [x] **2.2 Gate the route rather than trusting it.** A check that every
       `routes_to: guideline:` target and every relative `../docs/` link in a
       **projected** rule resolves inside the projection. Today's 31 rules and 43
       distinct targets are the floor; the ratchet then only moves down.
       verify: the gate red on a deliberately unprojected target, green on the
       tree, and registered with its coverage row and self-test.
-- [ ] **2.3 Whitelist `design.*` and repair the drop warning.** Add the
+- [x] **2.3 Whitelist `design.*` and repair the drop warning.** Add the
       `design.fidelity_mode` key to `MERGEABLE_KEYS` with the ADR its docstring
       requires, and widen `userGlobalDrop()` to probe the canonical
       `settings/.agent-settings.yml` as well as the flat file.
@@ -344,7 +344,7 @@ file the reading agent cannot open.
       `agent-config settings:get design.fidelity_mode` and names the layer it
       came from; and a non-whitelisted user-global key reports the drop instead
       of a bare "not set".
-- [ ] **2.4 Give the read budget an artifact carve-out.** `token-efficiency.md:99`
+- [x] **2.4 Give the read budget an artifact carve-out.** `token-efficiency.md:99`
       sets a probe-then-slice threshold at 800 lines with no artifact exception,
       and `context-hygiene.md:113` raises the read-only abort only for a
       "mandated analysis/audit/review protocol" — a design *implementation* is

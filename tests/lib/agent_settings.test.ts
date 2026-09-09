@@ -334,6 +334,9 @@ describe('MERGEABLE_KEYS', () => {
             'knowledge.global_sharing.auto_promote_threshold',
             'knowledge.global_sharing.freshness.hypothesis_after_days',
             'knowledge.global_sharing.freshness.stale_after_days',
+            // ADR-271: `design-fidelity.md` tells the reader to resolve this
+            // key through the cascade, and the cascade then filtered it out.
+            'design.fidelity_mode',
         ]);
     });
 

@@ -102,6 +102,7 @@ tasks:
       - task: check-archive-index
       - task: check-router
       - task: check-condensation
+      - task: check-projected-rule-routes
       - task: check-condensed-paths
       - task: check-overlay-cascade-subdirs
       - task: check-template-pin-drift
