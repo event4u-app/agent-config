@@ -168,6 +168,53 @@ Grounded in [`wireframe`](../../src/skills/wireframe/SKILL.md) § Gotchas. The n
 class is pinned in `ROUTING_MATRIX`, its rationale beside the assertions in
 `design_fidelity_routing.test.ts`.
 
+## Routing mechanics
+
+Migrated out of `design-fidelity.md` on 2026-09-09 under the council verdict on
+`blocker: rule-body-cap` — a semantic migration that frees rule-body lines for
+the operative pointers the same verdict requires, not an arbitrary line cut. The
+rule keeps the obligations; this holds the reasoning behind them.
+
+### The withdrawn builder-URL trigger
+
+A page built in Lovable / v0 / bolt and handed over as a share link is a
+finished spec, and `design-fidelity` does not route it. The obvious trigger was
+tried and **withdrawn**: matching is plain lower-cased substring containment, so
+`https://v0.dev/` also fires on `https://v0.dev/docs`, on a pricing page, and on
+a changelog link — it would treat every mention of the tool's own site as a spec
+handover. That is exactly the `claude.ai` failure the capability-URL trigger
+exists to avoid, and by the rule's own standard it is worse than the gap it
+closes. The alternatives are a bare-host keyword (broader still) or guessing
+each vendor's share-path segment, and a trigger built on a guessed path is not
+evidence.
+
+**What closes it:** a verified share-path segment per vendor, or a
+handover-word co-occurrence the matcher cannot express today. Until then the
+class needs one word in the prompt, like any other unlisted filename.
+`near-bare-host-mention` in `ROUTING_MATRIX` pins the bare-host direction silent
+so a future attempt cannot reintroduce the broad form unnoticed.
+
+### Write the near-miss row first — and test the right direction
+
+Extending the trigger set without adding a near-miss row is how an over-broad
+trigger lands. The stronger half of the contract is *which* near-miss:
+
+**The row must test the direction the NEW trigger opens, not a direction that
+was already closed.** The withdrawn class is the worked example. Its first
+near-miss row tested a protocol-less mention — silent *before* the change, and
+therefore incapable of catching the over-broadness the change introduced. The
+row that would have caught it is `near-builder-host-non-handover-url`, a
+documentation URL on the same host, and it exists only because a review asked
+for it after the trigger had already shipped.
+
+Applied on the next trigger to land: `*.dc.html` (the Claude Design canvas
+artboard, which `*design.html` cannot match because it compiles to
+`^(?:.*design\.html)$`) shipped with `near-plain-html-open-file` and
+`near-dc-in-a-filename` written **before** it, both testing the direction it
+opens — an ordinary `.html` file in the tree, and a filename that merely
+contains the letters. Both were confirmed red-then-green against the real
+matcher rather than asserted.
+
 ## Artifact versus brand
 
 Both `design-fidelity` and `brand-source-of-truth` point here rather than
@@ -206,6 +253,36 @@ licence to normalise one.
 reconciled *without asking*. That needs a tolerance to exist and a default to be
 chosen, and both are recorded as open decisions rather than answered here —
 `design.tolerance.*` ships empty and the approximation ships disabled.
+
+## Icons on a provided artifact
+
+`icon-consistency` owns the icon axis and, until 2026-09-09, carried **zero**
+occurrences of `artifact` / `artefact` / `provided` — so no surface in the
+package handled a handed-over artifact's icons at all. Its "ad-hoc inline SVGs
+alongside a chosen set" clause is exactly the shape a faithful port produces,
+which made a port read as a violation of the rule it was obeying.
+
+**The fix is a new rung, not a re-ordering.** Rung 1 of the iconography ladder
+is the project's brand token, and the artifact does **not** outrank it. What the
+carve-out changes is which findings are violations, not which source wins.
+
+**The obligation that survives is traceability, not conformity.** An
+artifact-sourced icon is legitimate when it traces to the artifact and that
+provenance is stated. An inline `<svg>` that traces to neither the adopted icon
+set nor a named artifact is untraceable, and still fires.
+
+**A swap is still a deviation.** Replacing the artifact's icon with the
+project's nearest equivalent is a substitution of a control the artifact
+specified, so it needs the same explicit confirmation as any other deviation
+under `design-fidelity`'s Iron Law. The carve-out permits keeping the
+artifact's icon; it never permits changing it silently.
+
+**What is deliberately NOT here:** an assertion that an artifact's icons are
+*reconcilable* onto the project's set by default. `tailwind-engineer` carried
+that claim in the opposite direction — icons "stay 1:1 with the artifact", with
+no citation — and it was deleted rather than inverted. The contrary evidence and
+the two conditions that would reverse the silence are recorded in
+`road-to-design-intent-conformance` § The icon evidence.
 
 ## Provided-artifact precedence
 

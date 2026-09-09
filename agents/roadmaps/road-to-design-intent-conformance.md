@@ -354,7 +354,7 @@ file the reading agent cannot open.
       are standing surfaces, so this obeys the same payload constraint as 1.3.
       verify: a declared artifact port states its expected read count and does
       not trip the abort; an undeclared read loop still does.
-- [ ] **2.5 Route the artifact file shapes the trigger set cannot match.**
+- [x] **2.5 Route the artifact file shapes the trigger set cannot match.**
       `*design.html` compiles to `^(?:.*design\.html)$` and cannot match
       `ToDo.dc.html`; `.dc.html` appears zero times in the rule and zero times
       in `ROUTING_MATRIX`, so the class is an untested gap rather than a decided
@@ -363,14 +363,14 @@ file the reading agent cannot open.
       over-broad trigger before writing the trigger.
       verify: a `.dc.html` handover routes, and the near-miss row for the
       direction the new trigger opens stays silent.
-- [ ] **2.6 Wire the artifact-read predicate its own module never calls.**
+- [x] **2.6 Wire the artifact-read predicate its own module never calls.**
       `ui_route_nudge_hook.ts:162` exports `isArtifactRead`; `report_consultation_rate.ts:204`
       consumes it and `decide` in the same module does not. The concern is
       default-OFF, so wiring it changes nothing for a consumer and makes the
       shadow record honest.
       verify: an artifact-read event reaches `decide`, and the concern's
       default stays off.
-- [ ] **2.7 Add a provided-artifact carve-out to `icon-consistency`.** Its
+- [x] **2.7 Add a provided-artifact carve-out to `icon-consistency`.** Its
       "When NOT to fire" lists three exceptions and none is a provided
       artifact, while "ad-hoc inline SVGs alongside a chosen set" is exactly
       what porting an artifact's own icons produces. Iconography rung 1 is

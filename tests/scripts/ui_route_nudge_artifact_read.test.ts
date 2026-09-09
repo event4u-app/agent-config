@@ -34,7 +34,7 @@ import {
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const RULE = path.resolve(HERE, '..', '..', 'src', 'rules', 'design-fidelity.md');
 
-const fresh: SessionState = { consulted: false, nudges: 0 };
+const fresh: SessionState = { consulted: false, nudges: 0, artifactRead: false };
 
 function write(file: string): ToolEvent {
     return { file, isWrite: true };
@@ -88,10 +88,40 @@ describe('overlap with consultation — a property, not two examples', () => {
 });
 
 describe('no behaviour change — the predicate never reaches a decision', () => {
-    it('an artifact read leaves the state untouched', () => {
+    // Rewritten by road-to-design-intent-conformance 2.6. It used to assert
+    // that `decide` ignored the predicate entirely — `state` deep-equal to
+    // `fresh` — which was true and was also the defect: the predicate was
+    // exported from this module, consumed only by a transcript analyzer, and a
+    // live session's own state could not say whether the handover had been
+    // opened. What has to stay true is the BEHAVIOURAL half, and the two cases
+    // below pin it: the latch is recorded and nothing branches on it.
+    it('an artifact read records the latch and changes nothing else', () => {
         const { state, warn } = decide(read('a/design.html'), fresh);
-        expect(state).toEqual(fresh);
+        expect(state).toEqual({ ...fresh, artifactRead: true });
         expect(warn).toBe(false);
+    });
+
+    it('the latch survives later events and never clears', () => {
+        const afterRead = decide(read('a/design.html'), fresh).state;
+        const afterWrite = decide(write(UI_FILE), afterRead).state;
+        expect(afterWrite.artifactRead).toBe(true);
+    });
+
+    it('a non-artifact read does not set the latch', () => {
+        expect(decide(read('src/utils/date.ts'), fresh).state.artifactRead).toBe(false);
+    });
+
+    // `isArtifactRead` and `isConsultation` are not disjoint, and its own
+    // header warns that branching on the first hit drops the event from the
+    // other classification. This is that warning as a test: a path satisfying
+    // BOTH must set the latch and mark the session consulted.
+    it('an event that is both a consultation and an artifact read records both', () => {
+        const both = read('src/skills/design-review/references/design.html');
+        expect(isConsultation(both)).toBe(true);
+        expect(isArtifactRead(both)).toBe(true);
+        const { state } = decide(both, fresh);
+        expect(state.consulted).toBe(true);
+        expect(state.artifactRead).toBe(true);
     });
 
     it('an artifact read still leaves the session nudgeable', () => {
@@ -128,6 +158,10 @@ describe('drift guard — the copied triggers still exist in the rule', () => {
         );
         expect(fileShaped).toEqual([
             { file_pattern: '*design.html' },
+            // Added by road-to-design-intent-conformance 2.5. This assertion
+            // is what forced the predicate to learn the shape in the same
+            // change: adding the trigger alone reds here.
+            { file_pattern: '*.dc.html' },
             { path_prefix: '.claude/design-system/' },
         ]);
     });
@@ -139,6 +173,7 @@ describe('drift guard — the copied triggers still exist in the rule', () => {
         // set above without touching the predicate.
         const samples: Record<string, string> = {
             '*design.html': 'some/dir/design.html',
+            '*.dc.html': 'ToDo.dc.html',
             '.claude/design-system/': '.claude/design-system/tokens.json',
         };
         for (const trigger of ruleTriggers()) {

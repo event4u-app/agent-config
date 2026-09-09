@@ -25,6 +25,7 @@ triggers:
   - phrase: "1:1 nach"
   - phrase: "claude.site/artifacts"
   - file_pattern: "*design.html"
+  - file_pattern: "*.dc.html"
   - path_prefix: ".claude/design-system/"
 applies_to_user_types:
   - "creator"
@@ -136,10 +137,13 @@ porting, or modifying UI to match it.
 Matching is plain lower-cased substring containment on the prompt, plus fnmatch
 over the open files. Three handover classes must reach this rule: an English
 phrasing, a German one, and a prompt carrying **no** keyword at all because the
-artifact is simply attached. The last is covered by `file_pattern: *design.html`
-— the conventional handover filename, not `*.html`, which would fire on every
-HTML edit in every project and be strictly worse than the gap it closes. A
-handover under some other filename needs one word in the prompt.
+artifact is simply attached. The last is covered by two file patterns:
+`*design.html`, the conventional handover filename, and `*.dc.html`, the Claude
+Design canvas artboard — which `*design.html` cannot match, because it compiles
+to `^(?:.*design\.html)$` and `ToDo.dc.html` does not end in `design.html`.
+Neither is `*.html`, which would fire on every HTML edit in every project and be
+strictly worse than the gap it closes; `near-plain-html-open-file` pins that
+form silent. A handover under some other filename needs one word in the prompt.
 
 Two further handover shapes carry the artifact without any of the above:
 
@@ -153,20 +157,11 @@ Two further handover shapes carry the artifact without any of the above:
   vendor-scoped directory, never a bare `design-system/`, which is a normal
   source folder in a large fraction of frontend repos.
 - **A third-party builder's share link — UNCOVERED, deliberately.** A page built
-  in Lovable / v0 / bolt and handed over as a link is a finished spec, and this
-  rule does not route it. The obvious trigger was tried on this branch and
-  **withdrawn**: matching is plain substring containment, so `https://v0.dev/`
-  also fires on `https://v0.dev/docs`, a pricing page, or a changelog link — it
-  would treat every mention of the tool's own site as a spec handover. That is
-  the `claude.ai` failure the capability-URL entry above exists to avoid, and by
-  this rule's own standard it is worse than the gap it closes. The alternatives
-  are a bare-host keyword (broader still) or guessing each vendor's share-path
-  segment, and a trigger built on a guessed path is not evidence.
-  **What closes it:** a verified share-path segment per vendor, or a
-  handover-word co-occurrence the matcher cannot express today. Until then the
-  class needs one word in the prompt, like any other unlisted filename.
-  `near-bare-host-mention` in the matrix pins the bare-host direction silent so
-  a future attempt cannot reintroduce the broad form unnoticed.
+  in Lovable / v0 / bolt and handed over as a link is a finished spec and this
+  rule does not route it; the trigger was tried and withdrawn as over-broad.
+  Until then the class needs one word in the prompt. Why, what closes it, and
+  the row that pins the broad form silent:
+  [`design-fidelity-mechanics § Routing mechanics`](../docs/guidelines/design-fidelity-mechanics.md).
 
 The trigger set is deliberately phrase-heavy on the German side and on
 `artifact`: a bare `artifact` keyword fires on "the CI build artifact is 40 MB".
@@ -181,13 +176,9 @@ withdrawn builder-URL class left `near-bare-host-mention` behind so the broad
 form stays pinned silent.
 
 **The near-miss must test the direction the new trigger opens, not a direction
-that was already closed.** The withdrawn class is the worked example: its first
-near-miss row tested a protocol-less mention, which was silent *before* the
-change and therefore could not have caught the over-broadness the change
-introduced. The row that would have caught it is
-`near-builder-host-non-handover-url` — a documentation URL on the same host —
-and it exists only because a review asked for it after the trigger had already
-shipped. Write that row first next time; it is the cheap half.
+that was already closed** — apply this before writing a trigger, not after. The
+worked example and the review that produced the rule:
+[`design-fidelity-mechanics § Routing mechanics`](../docs/guidelines/design-fidelity-mechanics.md).
 
 Body migrated to [`guideline:design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md) (per P4 of `road-to-kernel-and-router.md`) — URL / live-page handover (extraction into the `design-system.json` contract before the first UI write, the retrieval order, the lock boundary), surgical visual edits (targeted-edit vs redesign-trigger discipline, stable anchors), asset & imagery discipline (owned-asset path, third-party delivery is self-hosted by default, real-imagery-as-proof, iconography floor, no unrequested filler), deviation-surfacing shape, failure-mode catalog, `daf-*` fixtures.
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).

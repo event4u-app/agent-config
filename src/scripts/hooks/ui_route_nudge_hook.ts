@@ -132,12 +132,17 @@ export function isUiWrite(event: ToolEvent): boolean {
  * `path_prefix: .claude/design-system/`. Reading one is the agent reaching
  * rung 1 of the data-basis ladder before it writes.
  *
- * A SHARED PREDICATE, NOT A DECISION INPUT HERE. `decide` does not branch on
- * it: the nudge's behaviour is unchanged by an artifact read, and the phase
- * that introduced this states `nothing behavioural`. The one consumer is
- * `report_consultation_rate`, which measures over transcripts. Keeping the
- * predicate beside `isUiWrite` / `isConsultation` is what stops the analyzer
- * and the nudge from classifying the same event differently.
+ * A SHARED PREDICATE, AND A RECORDED ONE — NOT A DECISION INPUT. `decide`
+ * evaluates it on every event and latches the result into `SessionState`, but
+ * no branch reads that latch: every `warn` value is what it was before, so the
+ * nudge's behaviour is unchanged and the phase's `nothing behavioural` still
+ * holds. Recording it closes the gap the predicate shipped with — it was
+ * exported here and consumed only by `report_consultation_rate`, so a live
+ * session's own state said nothing about whether the artifact had been read.
+ * The concern is default-OFF, so this changes nothing for a consumer and makes
+ * the shadow record honest (`road-to-design-intent-conformance` 2.6). Keeping
+ * the predicate beside `isUiWrite` / `isConsultation` is what stops the
+ * analyzer and the nudge from classifying the same event differently.
  *
  * THIS IS A COPY OF THE RULE'S TRIGGERS, NOT A READ OF THEM — same honesty
  * boundary the header states for `ui_surface.ts`: nothing here parses
@@ -162,12 +167,27 @@ export function isUiWrite(event: ToolEvent): boolean {
 export function isArtifactRead(event: ToolEvent): boolean {
     if (event.isWrite || !event.file) return false;
     const normalized = event.file.replace(/\\/g, '/').toLowerCase();
-    return normalized.endsWith('design.html') || normalized.includes('.claude/design-system/');
+    return (
+        normalized.endsWith('design.html') ||
+        // The Claude Design canvas artboard. NOT covered by the line above:
+        // `ToDo.dc.html` does not end in `design.html`, which is exactly why
+        // the rule needed a second file pattern (2.5) and why the drift guard
+        // below reds when one is added here without the other.
+        normalized.endsWith('.dc.html') ||
+        normalized.includes('.claude/design-system/')
+    );
 }
 
 export interface SessionState {
     consulted: boolean;
     nudges: number;
+    /**
+     * Latched once a provided design artifact has been READ this session.
+     * Shadow-only: nothing branches on it. It exists so the session's own
+     * record can answer "did this agent open the handover before writing UI",
+     * which until 2.6 only a transcript analyzer could answer after the fact.
+     */
+    artifactRead: boolean;
 }
 
 function stateFile(root: string): string {
@@ -182,12 +202,17 @@ export function readState(root: string, session: string): SessionState {
         >;
         const entry = all[session];
         if (entry && typeof entry.consulted === 'boolean' && typeof entry.nudges === 'number') {
-            return entry;
+            // `artifactRead` arrived after the file shape did, so a state file
+            // written by an older build carries the two older fields and not
+            // this one. Default it rather than rejecting the entry: dropping a
+            // valid latch to gain a boolean would lose the `consulted` flag and
+            // re-nudge a session that had already consulted.
+            return { ...entry, artifactRead: entry.artifactRead === true };
         }
     } catch {
         /* fresh session */
     }
-    return { consulted: false, nudges: 0 };
+    return { consulted: false, nudges: 0, artifactRead: false };
 }
 
 /** Sessions retained in the state file; oldest entries drop past this. */
@@ -236,13 +261,21 @@ export function decide(
     event: ToolEvent,
     state: SessionState,
 ): { state: SessionState; warn: boolean } {
+    // Evaluated FIRST and independently of every branch below, because
+    // `isArtifactRead` and `isConsultation` are NOT disjoint — a read of
+    // `src/skills/design-review/references/design.html` satisfies both. Folding
+    // it into one of the branches would silently drop such an event from
+    // whichever classification lost the race, which is the failure
+    // `isArtifactRead`'s own header warns callers about. Latching, never
+    // clearing: the question is "was it read at any point this session".
+    const artifactRead = state.artifactRead || isArtifactRead(event);
     if (isConsultation(event)) {
-        return { state: { ...state, consulted: true }, warn: false };
+        return { state: { ...state, artifactRead, consulted: true }, warn: false };
     }
-    if (!isUiWrite(event)) return { state, warn: false };
-    if (state.consulted) return { state, warn: false };
-    if (state.nudges >= MAX_NUDGES) return { state, warn: false };
-    return { state: { ...state, nudges: state.nudges + 1 }, warn: true };
+    if (!isUiWrite(event)) return { state: { ...state, artifactRead }, warn: false };
+    if (state.consulted) return { state: { ...state, artifactRead }, warn: false };
+    if (state.nudges >= MAX_NUDGES) return { state: { ...state, artifactRead }, warn: false };
+    return { state: { ...state, artifactRead, nudges: state.nudges + 1 }, warn: true };
 }
 
 /**
@@ -256,7 +289,11 @@ export function decide(
  * but the guard stays enumerated and this note stays with it.
  */
 export function stateChanged(before: SessionState, after: SessionState): boolean {
-    return before.consulted !== after.consulted || before.nudges !== after.nudges;
+    return (
+        before.consulted !== after.consulted ||
+        before.nudges !== after.nudges ||
+        before.artifactRead !== after.artifactRead
+    );
 }
 
 export function nudgeReason(file: string): string {

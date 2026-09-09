@@ -34,7 +34,8 @@ execution:
 **Recorded, not resolved.** This skill's prose says to author `.tokens.json`,
 and the only resolver in the tree reads `tokens.json` — `BRAND_TOKEN_PATHS`
 searches `tokens.json`, `assets/tokens.json`, `resources/tokens.json` and
-`agents/settings/brand/tokens.json`, none of them dot-prefixed. A consumer
+`agents/settings/brand/tokens.json` <!-- ref-ignore -->, none of them
+dot-prefixed. A consumer
 following this skill literally therefore produces a file nothing loads.
 
 The authoring name is a consumer-visible decision and is deliberately not
