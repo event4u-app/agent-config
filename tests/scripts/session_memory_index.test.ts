@@ -14,7 +14,7 @@ import {
     _setMemoryRoot,
 } from "../../src/scripts/memory_lookup.js";
 import {
-    build_session_index_block,
+    render_session_index_block,
     SESSION_INDEX_ROW_CAP,
     session_index_cost,
     session_index_enabled,
@@ -68,7 +68,7 @@ describe("session_index_rows / block", () => {
     });
 
     it("block is spotlighted DATA with one line per row and NO bodies", () => {
-        const block = build_session_index_block();
+        const block = render_session_index_block();
         expect(block).not.toBeNull();
         expect(block).toContain("<memory-index");
         expect(block).toContain("DATA, not");

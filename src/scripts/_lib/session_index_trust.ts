@@ -54,13 +54,22 @@ export const SESSION_INDEX_ROW_CAP = 30;
  */
 export const MAX_ROOT_AGE_DAYS = 400;
 
-/** Curated YAML files a memory root is expected to carry, for P3's reading. */
-const CURATED_GLOB_SUFFIX = '.yml';
+/**
+ * Curated sources, matching the layouts `memory_lookup._iter_curated_entries`
+ * actually reads: `<root>/<type>.yml` AND `<root>/<type>/**\/*.yml`, plus the
+ * agent-written `intake/*.jsonl`. Reading only the first of those is what made
+ * P3 silently no-op on two of the three layouts — R2 finding 4.
+ */
+const CURATED_SUFFIXES = ['.yml', '.yaml', '.jsonl'] as const;
+
+/** Depth bound on the walk. A memory root is shallow; a cycle is not. */
+const MAX_WALK_DEPTH = 8;
 
 export type TrustRefusalCode =
     | 'workspace-root-unresolvable'
     | 'memory-root-absent'
     | 'memory-root-escapes-workspace'
+    | 'curated-source-escapes-workspace'
     | 'source-mtime-in-future'
     | 'memory-root-abandoned'
     | 'already-injected-this-session';
@@ -110,33 +119,74 @@ export function canonical(p: string): string | null {
     }
 }
 
+export interface SourceWalk {
+    /** Newest mtime across every curated source read, epoch ms; 0 when none. */
+    readonly newestMs: number;
+    /** Sources whose canonical path lies outside the workspace. P1's other half. */
+    readonly escaped: readonly string[];
+    /** How many sources the walk actually read — 0 means "nothing to judge". */
+    readonly count: number;
+}
+
 /**
- * P3's reading — the newest mtime among the curated YAML files at the root.
+ * One recursive walk serving P1's file half and P3's reading, because R2 found
+ * both defects in the same omission: the previous version read only `*.yml`
+ * directly at the root, which is one of the three layouts
+ * `memory_lookup._iter_curated_entries` supports. So freshness silently
+ * no-opped on a type-directory corpus (a 3-year-old one was served past the
+ * 400-day bound), and containment was never checked below the root at all.
  *
- * Per-entry timestamps do not exist: a curated entry is `{id, key, body}`, so
- * freshness is a property of the SOURCE FILES and is read from them rather than
- * invented per row. Returns 0 for a root with no curated file, which P3 treats
- * as "nothing to be stale about" rather than as abandonment — an empty root
- * already produces no block.
+ * The containment half is the sharper of the two. Canonicalizing the ROOT does
+ * not stop a symlinked FILE inside it from resolving into another tree, and
+ * that is the exact threat this module's docblock names — proven by the
+ * reviewer, who read a donor workspace's entry out of a victim session.
+ *
+ * Per-entry timestamps do not exist (a curated entry is `{id, key, body}`), so
+ * freshness stays a property of the source files rather than something invented
+ * per row.
  */
-export function newestCuratedMtimeMs(memoryRoot: string): number {
-    let newest = 0;
-    let names: string[];
-    try {
-        names = fs.readdirSync(memoryRoot);
-    } catch {
-        return 0;
-    }
-    for (const name of names) {
-        if (!name.endsWith(CURATED_GLOB_SUFFIX)) continue;
+export function walkCuratedSources(memoryRoot: string, workspaceRoot: string): SourceWalk {
+    let newestMs = 0;
+    let count = 0;
+    const escaped: string[] = [];
+
+    const visit = (dir: string, depth: number): void => {
+        if (depth > MAX_WALK_DEPTH) return;
+        let names: fs.Dirent[];
         try {
-            const st = fs.statSync(path.join(memoryRoot, name));
-            if (st.mtimeMs > newest) newest = st.mtimeMs;
+            names = fs.readdirSync(dir, { withFileTypes: true });
         } catch {
-            // an unreadable member cannot make the root fresher
+            return;
         }
-    }
-    return newest;
+        for (const ent of names) {
+            const full = path.join(dir, ent.name);
+            // `withFileTypes` reports a symlink as a symlink, so a directory
+            // reached through one is followed only after it canonicalizes
+            // inside the workspace — which is the containment check itself.
+            const resolved = canonical(full);
+            if (resolved === null) continue;
+            if (!isContained(resolved, workspaceRoot)) {
+                escaped.push(full);
+                continue;
+            }
+            let st: fs.Stats;
+            try {
+                st = fs.statSync(resolved);
+            } catch {
+                continue;
+            }
+            if (st.isDirectory()) {
+                visit(resolved, depth + 1);
+                continue;
+            }
+            if (!CURATED_SUFFIXES.some((sfx) => ent.name.endsWith(sfx))) continue;
+            count += 1;
+            if (st.mtimeMs > newestMs) newestMs = st.mtimeMs;
+        }
+    };
+
+    visit(memoryRoot, 0);
+    return { newestMs, escaped, count };
 }
 
 export interface TrustInput {
@@ -194,8 +244,17 @@ export function verifyMemoryRoot(input: TrustInput): TrustVerdict {
         );
     }
 
+    // P1's file half + P3, from one walk. R2 findings 3 and 4.
+    const walk = walkCuratedSources(memoryRoot, workspaceRoot);
+    if (walk.escaped.length > 0) {
+        return refuse(
+            'curated-source-escapes-workspace',
+            `${walk.escaped.length} curated source(s) resolve outside ${workspaceRoot}, first ${walk.escaped[0]} — refusing to serve another tree's memory`,
+        );
+    }
+
     // P3 — freshness, in the two directions it can fail.
-    const newestSourceMs = newestCuratedMtimeMs(memoryRoot);
+    const newestSourceMs = walk.newestMs;
     if (newestSourceMs > now.getTime() + 60_000) {
         return refuse(
             'source-mtime-in-future',

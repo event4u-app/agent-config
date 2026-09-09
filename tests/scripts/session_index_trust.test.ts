@@ -21,7 +21,7 @@ import {
     isContained,
     latchPath,
     MAX_ROOT_AGE_DAYS,
-    newestCuratedMtimeMs,
+    walkCuratedSources,
     orderRows,
     SESSION_INDEX_ROW_CAP,
     verifyMemoryRoot,
@@ -33,14 +33,25 @@ afterAll(() => {
     for (const d of temps) fs.rmSync(d, { recursive: true, force: true });
 });
 
-/** A workspace with a real curated memory root, which every grant case needs. */
-function workspace(opts: { curated?: boolean; mtime?: Date } = {}): string {
+/**
+ * A workspace with a real curated memory root, which every grant case needs.
+ *
+ * `layout` exists because R2 finding 4 was exactly a layout blind spot:
+ * `memory_lookup._iter_curated_entries` reads `<root>/<type>.yml` AND
+ * `<root>/<type>/**\/*.yml`, and the first version of this contract read only
+ * the former, so freshness silently no-opped on the latter.
+ */
+function workspace(opts: { curated?: boolean; mtime?: Date; layout?: 'single-file' | 'type-dir' } = {}): string {
     const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sit-')));
     temps.push(root);
     const mem = path.join(root, 'agents', 'memory');
     fs.mkdirSync(mem, { recursive: true });
     if (opts.curated !== false) {
-        const f = path.join(mem, 'product-rules.yml');
+        const f =
+            opts.layout === 'type-dir'
+                ? path.join(mem, 'product-rules', 'aa11.yml')
+                : path.join(mem, 'product-rules.yml');
+        fs.mkdirSync(path.dirname(f), { recursive: true });
         fs.writeFileSync(f, 'version: 1\nentries: []\n');
         if (opts.mtime) fs.utimesSync(f, opts.mtime, opts.mtime);
     }
@@ -73,6 +84,46 @@ describe('P1 — repository and worktree identity', () => {
             expect(v.code).toBe('memory-root-escapes-workspace');
             expect(v.detail).toContain('another tree');
         }
+    });
+
+    it('REFUSES a symlinked curated FILE inside the root — canonicalizing the root is not enough', () => {
+        // R2 finding 3, and the sharpest of the seven: the root canonicalizes
+        // fine, and one file inside it resolves into a donor tree. The reviewer
+        // read a donor workspace's entry out of a victim session this way.
+        const donor = workspace();
+        const victim = workspace();
+        fs.symlinkSync(
+            path.join(donor, 'agents', 'memory', 'product-rules.yml'),
+            path.join(victim, 'agents', 'memory', 'donor-rules.yml'),
+        );
+        const v = verifyMemoryRoot({ workspaceRoot: victim });
+        expect(v.ok).toBe(false);
+        if (!v.ok) {
+            expect(v.code).toBe('curated-source-escapes-workspace');
+            expect(v.detail).toContain('donor-rules.yml');
+        }
+    });
+
+    it('REFUSES a symlinked curated DIRECTORY inside the root', () => {
+        const donor = workspace({ layout: 'type-dir' });
+        const victim = workspace();
+        fs.symlinkSync(
+            path.join(donor, 'agents', 'memory', 'product-rules'),
+            path.join(victim, 'agents', 'memory', 'borrowed'),
+        );
+        const v = verifyMemoryRoot({ workspaceRoot: victim });
+        expect(v.ok).toBe(false);
+        if (!v.ok) expect(v.code).toBe('curated-source-escapes-workspace');
+    });
+
+    it('GRANTS an internal symlink — containment, not a ban on symlinks', () => {
+        // The inverse that must not become collateral damage.
+        const root = workspace();
+        fs.symlinkSync(
+            path.join(root, 'agents', 'memory', 'product-rules.yml'),
+            path.join(root, 'agents', 'memory', 'alias.yml'),
+        );
+        expect(verifyMemoryRoot({ workspaceRoot: root }).ok).toBe(true);
     });
 
     it('REFUSES a relative root that climbs out with `..`', () => {
@@ -127,9 +178,26 @@ describe('P2 — path canonicalization', () => {
 describe('P3 — freshness', () => {
     it('reads the newest curated source mtime, and 0 when the root carries none', () => {
         const withFile = workspace();
-        expect(newestCuratedMtimeMs(path.join(withFile, 'agents', 'memory'))).toBeGreaterThan(0);
+        expect(walkCuratedSources(path.join(withFile, 'agents', 'memory'), withFile).newestMs).toBeGreaterThan(0);
         const bare = workspace({ curated: false });
-        expect(newestCuratedMtimeMs(path.join(bare, 'agents', 'memory'))).toBe(0);
+        expect(walkCuratedSources(path.join(bare, 'agents', 'memory'), bare).newestMs).toBe(0);
+    });
+
+    it('walks RECURSIVELY — a type-directory corpus is read, not skipped', () => {
+        // R2 finding 4: the root-only, non-recursive read made both freshness
+        // directions no-op on this layout, and a 3-year-old corpus was served.
+        const root = workspace({ layout: 'type-dir' });
+        const w = walkCuratedSources(path.join(root, 'agents', 'memory'), root);
+        expect(w.count).toBe(1);
+        expect(w.newestMs).toBeGreaterThan(0);
+    });
+
+    it('REFUSES an abandoned TYPE-DIRECTORY corpus, which the root-only read served', () => {
+        const old = new Date(Date.now() - (MAX_ROOT_AGE_DAYS + 400) * 86_400_000);
+        const root = workspace({ layout: 'type-dir', mtime: old });
+        const v = verifyMemoryRoot({ workspaceRoot: root });
+        expect(v.ok).toBe(false);
+        if (!v.ok) expect(v.code).toBe('memory-root-abandoned');
     });
 
     it('REFUSES a source dated in the future — clock skew or tampering', () => {

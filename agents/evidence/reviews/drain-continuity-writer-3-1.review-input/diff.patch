@@ -1,0 +1,1034 @@
+diff --git a/agents/roadmaps/road-to-continuity-writer-activation.md b/agents/roadmaps/road-to-continuity-writer-activation.md
+index b9e5b9c297175996ae1bc7618f9c8d9a35b51862..fcc2d83299babf53d827fec22f6d8e5b80bf766a 100644
+--- a/agents/roadmaps/road-to-continuity-writer-activation.md
++++ b/agents/roadmaps/road-to-continuity-writer-activation.md
+@@ -249,6 +249,72 @@ councils required puts them there on purpose:
+       unit. What would falsify the descope: a lane that can carry the five
+       properties with their tests, the corpus fixture, and the 17 bindings in
+       one reviewable change.
++
++      **THE PRECONDITION IS DISCHARGED, 2026-09-09. THE STEP IS NOT — and the
++      split is D3's own ordering, not a descope.** D3 requires the trust
++      contract and the equivalence evidence to exist BEFORE the restore moves
++      anywhere, so building them first is the sequence the ruling imposes.
++      What landed:
++      - `src/scripts/_lib/session_index_trust.ts` — all six properties in one
++        module, which is what makes the relocation a move rather than a
++        rewrite: identity (the canonical memory root must be contained in the
++        canonical workspace root), canonicalization (`realpath` both sides,
++        containment by path SEGMENTS because a string prefix says `/a/bc` is
++        inside `/a/b`), freshness (newest curated source mtime; refuses a
++        future date as clock skew or tampering, and an abandonment bound),
++        ordering (a declared TOTAL order — cheapest first, id as tie-break, so
++        the cap truncates the same way twice), duplicate invocation (a
++        create-exclusive per-session latch), and size limits (the pre-existing
++        cap, moved here so all six read from one place).
++      - `tests/scripts/session_index_trust.test.ts` — 24 cases, one refusal per
++        property, each on a fixture built to violate exactly that one thing.
++      - `tests/hooks/session_index_trust_e2e.test.ts` — 8 cases through the
++        REAL dispatcher, and **the corpus fixture this step said the tree
++        lacks**. Step 1.4 measured that an armed `memory.session_index` emits
++        no block in a scratch workspace, so a byte-identity proof there would
++        compare two empty strings; these cases write real curated entries into
++        `agents/memory/` and the first one asserts the block is non-empty
++        precisely so the refusal cases cannot pass vacuously.
++
++      **The threat is now named concretely rather than as a category, because
++      finding it changed the design.** `MEMORY_ROOT` is the RELATIVE path
++      `agents/memory`, resolved against the process cwd, and the hook chdirs to
++      a workspace root it received from a host payload. So the attacker is not
++      an intruder: it is a wrong or stale root — a sibling checkout, a worktree
++      pointed elsewhere, a symlink out of the tree — serving another
++      repository's curated memory into this session as this session's own. The
++      e2e P1 case is that exact fixture: two workspaces, the victim's
++      `agents/memory` symlinked into the donor's corpus, asserting the donor's
++      ids never appear.
++
++      **Three findings from the tests, each of which changed the code:**
++      1. A `..` root whose target does not exist was reported as
++         `memory-root-absent`. That reads as "this workspace has no memory"
++         when the truth is "this root pointed outside the tree". Containment is
++         now checked LEXICALLY first and on the canonical path second, so the
++         escape is the fact reported either way.
++      2. The hook-level trust call **enforces nothing** — sabotaging it left
++         every case green, because `build_session_index_block` re-checks the
++         root itself. Found by sabotage, not by reading.
++      3. Its stderr diagnostic reaches nobody: the dispatcher does not forward
++         a concern's stderr, verified by hand. So the hook layer's real and
++         only contribution is ORDERING — the latch is claimed after the
++         verdict, so a refused root leaves the session's one claim unspent and
++         a corrected root is still served. That is now its own e2e case,
++         sabotage-proven, and it is why the layer was kept rather than deleted.
++
++      **What remains, unchanged in shape:** relocate the restore off this
++      concern, then retire the concern across the 17 bindings enumerated above,
++      keeping the MODULE alive for `handoff_generate.ts` and the
++      `ephemeral-lossy` loss-class declaration. The byte-identity verify is now
++      buildable, which it was not before this change.
++
++      **The abandonment bound's falsifiers**, recorded here because a
++      `Revisit-if` belongs in the roadmap rather than in a source docblock:
++      `MAX_ROOT_AGE_DAYS = 400` is a stated default, not a measured optimum.
++      Reopen it if a real workspace refuses on it (too tight), or if a
++      wrong-root incident passes it (the bound is not the control that would
++      have caught it, and identity is).
+ - [ ] **3.2 `session:recycle` — retire the manual writer once the automatic one
+       is proven.** It is the only writer today, so this step is gated on Phase 1
+       in full, not merely started. The advisory that instructs a human to run it
+diff --git a/src/config/continuity-surface.json b/src/config/continuity-surface.json
+index 9876c5fd308f7c353e0ffc1fff9e2f095cca0723..babd332d13db2c466bbb6720b67b3ae3715a9ab3 100644
+--- a/src/config/continuity-surface.json
++++ b/src/config/continuity-surface.json
+@@ -504,6 +504,13 @@
+             "disposition": "counted",
+             "locus": "src/domains/meta/chat-history/import/command.md:77",
+             "reason": "A numbered-table session picker plus a resume offer \u2014 a second, competing answer to \"which prior session do I continue from\". On the owner-authorised retirement set of 2026-09-06."
++        },
++        {
++            "id": "session-index-latch",
++            "axis": "persistent_continuity_artefacts",
++            "disposition": "excluded",
++            "locus": "src/scripts/_lib/session_index_trust.ts:251",
++            "reason": "A duplicate-suppression latch, not a record. It holds one file per session under agents/runtime/state/session-index-latch/ whose entire content is a claim timestamp, and nothing reads it to restore anything — a successor session that finds it learns only that THIS session already received the memory index, which is the opposite of resumable state. It exists because `session_start` can fire more than once for one session (resume, host reconnect, compaction boundary on some hosts) and two injections double a fixed cost while presenting two corpora as one session memory. Excluded on the same reasoning as schema:session-eol-state: the writer own bookkeeping, not a record a successor reads. Deleting the directory costs a session nothing but a possible second injection."
+         }
+     ]
+ }
+diff --git a/src/scripts/_lib/session_index_trust.ts b/src/scripts/_lib/session_index_trust.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..21a67db6aea778bcd6cbdbc4e749ba9abe292beb
+--- /dev/null
++++ b/src/scripts/_lib/session_index_trust.ts
+@@ -0,0 +1,287 @@
++/**
++ * The trust contract for the session-start memory index.
++ *
++ * WHY THIS EXISTS, AND WHOSE RULING IT IMPLEMENTS.
++ *
++ * The `memory.session_index` block injects curated memory at `session_start`.
++ * Restored memory is UNTRUSTED CONTEXT arriving on an injection surface, and an
++ * AI council (2026-09-07, ruling D3, recorded in
++ * `road-to-continuity-writer-activation` step 3.1) required six properties —
++ * repository and worktree identity, path canonicalization, freshness, ordering,
++ * duplicate invocation and size limits — each with a test, BEFORE the restore
++ * moves off the `hot-context` concern. Five of the six did not exist: measured
++ * at HEAD, `session_memory_index.ts` implemented size limits only. This module
++ * is those six in one place, so the relocation has something to move.
++ *
++ * THE THREAT, STATED CONCRETELY RATHER THAN AS A CATEGORY.
++ *
++ * `MEMORY_ROOT` in `memory_lookup.ts` is the RELATIVE path `agents/memory`, so
++ * it resolves against the process cwd. The hook therefore chdirs to a workspace
++ * root it received from a host payload and reads memory from wherever that
++ * landed. Nothing checked that the root was the workspace the session belongs
++ * to, nothing resolved symlinks before trusting it, and nothing stopped a second
++ * `session_start` in one session from injecting the block twice. So the
++ * attacker this module answers is not an intruder: it is a wrong or stale root —
++ * a sibling checkout, a worktree pointed at another tree, a leftover directory,
++ * a symlink out of the workspace — serving another repository's curated memory
++ * into this session as though it were this repository's.
++ *
++ * WHAT IT DOES NOT CLAIM.
++ *
++ * It does not authenticate the memory's CONTENT. A curated entry that is wrong,
++ * or hostile, and sits at the correct path inside the correct workspace passes
++ * every property here — that is the review boundary of `agents/memory/`, not a
++ * check's. Nor does it make the index trustworthy in the sense that a model may
++ * act on it: the block stays spotlighted as DATA, per `untrusted-input-defense`,
++ * and this module bounds only WHICH bytes reach that block.
++ */
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++
++/** P6 — the row cap. Owned here so all six properties read from one place. */
++export const SESSION_INDEX_ROW_CAP = 30;
++
++/**
++ * P3 — the abandonment bound, in days.
++ *
++ * A STATED DEFAULT, NOT A MEASURED OPTIMUM, said plainly because a number that
++ * looks derived and is not is worse than an admitted guess. Curated memory is
++ * deliberately long-lived — a stable `product-rules.yml` is not stale at 90
++ * days — so the bound is set well beyond any legitimate quiet period and exists
++ * to catch an ABANDONED root, not an inactive one. The two conditions that
++ * would falsify it are recorded in `road-to-continuity-writer-activation`
++ * step 3.1 rather than here.
++ */
++export const MAX_ROOT_AGE_DAYS = 400;
++
++/** Curated YAML files a memory root is expected to carry, for P3's reading. */
++const CURATED_GLOB_SUFFIX = '.yml';
++
++export type TrustRefusalCode =
++    | 'workspace-root-unresolvable'
++    | 'memory-root-absent'
++    | 'memory-root-escapes-workspace'
++    | 'source-mtime-in-future'
++    | 'memory-root-abandoned'
++    | 'already-injected-this-session';
++
++export interface TrustRefusal {
++    readonly ok: false;
++    readonly code: TrustRefusalCode;
++    readonly detail: string;
++}
++
++export interface TrustGrant {
++    readonly ok: true;
++    /** Canonical, containment-checked absolute path to the memory root. */
++    readonly memoryRoot: string;
++    /** Canonical absolute path to the workspace the root was checked against. */
++    readonly workspaceRoot: string;
++    /** P3 — mtime of the newest curated source read, epoch ms; 0 when none. */
++    readonly newestSourceMs: number;
++}
++
++export type TrustVerdict = TrustGrant | TrustRefusal;
++
++function refuse(code: TrustRefusalCode, detail: string): TrustRefusal {
++    return { ok: false, code, detail };
++}
++
++/**
++ * P2 — canonicalize, then compare by SEGMENTS.
++ *
++ * A string prefix test says `/a/bc` is inside `/a/b`, which is how a
++ * containment check passes something it should refuse. Splitting on the
++ * separator makes the comparison mean what it says.
++ */
++export function isContained(child: string, parent: string): boolean {
++    const rel = path.relative(parent, child);
++    if (rel === '') return true;
++    if (path.isAbsolute(rel)) return false;
++    return !rel.split(path.sep).includes('..');
++}
++
++/** Canonicalize a path, following symlinks. `null` when it does not resolve. */
++export function canonical(p: string): string | null {
++    try {
++        return fs.realpathSync(p);
++    } catch {
++        return null;
++    }
++}
++
++/**
++ * P3's reading — the newest mtime among the curated YAML files at the root.
++ *
++ * Per-entry timestamps do not exist: a curated entry is `{id, key, body}`, so
++ * freshness is a property of the SOURCE FILES and is read from them rather than
++ * invented per row. Returns 0 for a root with no curated file, which P3 treats
++ * as "nothing to be stale about" rather than as abandonment — an empty root
++ * already produces no block.
++ */
++export function newestCuratedMtimeMs(memoryRoot: string): number {
++    let newest = 0;
++    let names: string[];
++    try {
++        names = fs.readdirSync(memoryRoot);
++    } catch {
++        return 0;
++    }
++    for (const name of names) {
++        if (!name.endsWith(CURATED_GLOB_SUFFIX)) continue;
++        try {
++            const st = fs.statSync(path.join(memoryRoot, name));
++            if (st.mtimeMs > newest) newest = st.mtimeMs;
++        } catch {
++            // an unreadable member cannot make the root fresher
++        }
++    }
++    return newest;
++}
++
++export interface TrustInput {
++    /** The workspace root the session belongs to, as the host reported it. */
++    readonly workspaceRoot: string;
++    /** Relative memory root, matching `memory_lookup.MEMORY_ROOT`. */
++    readonly relativeMemoryRoot?: string;
++    /** Injected for tests; defaults to now. */
++    readonly now?: Date;
++}
++
++/**
++ * P1 + P2 + P3 — decide whether a memory root may be read at all.
++ *
++ * Ordered cheapest-first, and each refusal names itself: a caller that logs the
++ * code can tell "this workspace has no memory" from "this root pointed
++ * somewhere else", which is the distinction the whole module exists for.
++ */
++export function verifyMemoryRoot(input: TrustInput): TrustVerdict {
++    const now = input.now ?? new Date();
++    const rel = input.relativeMemoryRoot ?? path.join('agents', 'memory');
++
++    // P2 — the workspace root is canonicalized FIRST. Everything downstream
++    // compares against the resolved form, never the reported one.
++    const workspaceRoot = canonical(input.workspaceRoot);
++    if (workspaceRoot === null) {
++        return refuse('workspace-root-unresolvable', `workspace root does not resolve: ${input.workspaceRoot}`);
++    }
++
++    // P1 — identity, checked LEXICALLY first and on the canonical path second.
++    // The order is load-bearing and a test found it: a `..` root whose target
++    // does not exist would otherwise be reported as merely absent, which reads
++    // as "this workspace has no memory" when the truth is "this root pointed
++    // outside the tree". The escape is the more important fact, so it is the
++    // one reported, whether or not the target happens to exist.
++    const lexical = path.resolve(workspaceRoot, rel);
++    if (!isContained(lexical, workspaceRoot)) {
++        return refuse(
++            'memory-root-escapes-workspace',
++            `${lexical} is not inside ${workspaceRoot} — refusing to serve another tree's memory`,
++        );
++    }
++
++    const memoryRoot = canonical(lexical);
++    if (memoryRoot === null) {
++        return refuse('memory-root-absent', `no memory root at ${path.join(input.workspaceRoot, rel)}`);
++    }
++
++    // The second half of P1, and the half a lexical check cannot see: the path
++    // is inside the tree and the SYMLINK it resolves through is not.
++    if (!isContained(memoryRoot, workspaceRoot)) {
++        return refuse(
++            'memory-root-escapes-workspace',
++            `${memoryRoot} is not inside ${workspaceRoot} — refusing to serve another tree's memory`,
++        );
++    }
++
++    // P3 — freshness, in the two directions it can fail.
++    const newestSourceMs = newestCuratedMtimeMs(memoryRoot);
++    if (newestSourceMs > now.getTime() + 60_000) {
++        return refuse(
++            'source-mtime-in-future',
++            `newest curated source is dated in the future (${new Date(newestSourceMs).toISOString()}) — clock skew or tampering`,
++        );
++    }
++    if (newestSourceMs > 0) {
++        const ageDays = (now.getTime() - newestSourceMs) / 86_400_000;
++        if (ageDays > MAX_ROOT_AGE_DAYS) {
++            return refuse(
++                'memory-root-abandoned',
++                `newest curated source is ${ageDays.toFixed(0)}d old, past the ${MAX_ROOT_AGE_DAYS}d abandonment bound`,
++            );
++        }
++    }
++
++    return { ok: true, memoryRoot, workspaceRoot, newestSourceMs };
++}
++
++export interface OrderableRow {
++    readonly id: string;
++    readonly title: string;
++    readonly tokens_estimate: number;
++}
++
++/**
++ * P4 — the declared total order.
++ *
++ * Ordering is a trust property because the CAP truncates: without a declared
++ * order, which 30 of 200 entries reach the model is whatever the filesystem
++ * happened to yield, and two runs over the same tree can advertise different
++ * corpora. Cheapest row first (`tokens_estimate` ascending) so a fixed cap
++ * carries the most entries it can, with `id` ascending as the tie-break that
++ * makes the order TOTAL rather than merely defined — a comparator with ties is
++ * not deterministic under an unstable sort.
++ */
++export function orderRows<T extends OrderableRow>(rows: readonly T[]): T[] {
++    return [...rows].sort((a, b) => {
++        if (a.tokens_estimate !== b.tokens_estimate) return a.tokens_estimate - b.tokens_estimate;
++        return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
++    });
++}
++
++/** P6 — apply the cap after ordering, never before. */
++export function capRows<T>(rows: readonly T[], cap: number = SESSION_INDEX_ROW_CAP): T[] {
++    const limit = Number.isFinite(cap) && cap > 0 ? Math.min(cap, SESSION_INDEX_ROW_CAP) : SESSION_INDEX_ROW_CAP;
++    return rows.slice(0, limit);
++}
++
++/** Where the P5 latch lives. Gitignored runtime state, one file per session. */
++export function latchPath(workspaceRoot: string, sessionId: string): string {
++    const safe = sessionId.replace(/[^A-Za-z0-9._-]/gu, '_').slice(0, 128);
++    return path.join(workspaceRoot, 'agents', 'runtime', 'state', 'session-index-latch', `${safe}.json`);
++}
++
++/**
++ * P5 — duplicate invocation.
++ *
++ * `session_start` can fire more than once for one session (a resume, a
++ * host-side reconnect, a compaction boundary on some hosts). Two injections
++ * double the fixed cost and can present two different corpora as the same
++ * session's memory. The latch is create-exclusive (`wx`), so the FIRST caller
++ * wins and every later one refuses — an ordering that matters, because
++ * check-then-write would let two concurrent starts both pass.
++ *
++ * Fails OPEN on an unwritable state directory: a hook that cannot latch must
++ * still be able to serve the index once, and refusing there would make a
++ * read-only workspace lose the feature entirely. That is a deliberate trade and
++ * it is the reason this property is a latch rather than a gate.
++ */
++export function claimSessionOnce(workspaceRoot: string, sessionId: string): TrustVerdict | { ok: true } {
++    if (sessionId.length === 0) {
++        // No session id to key on — cannot latch, so do not pretend to.
++        return { ok: true };
++    }
++    const target = latchPath(workspaceRoot, sessionId);
++    try {
++        fs.mkdirSync(path.dirname(target), { recursive: true });
++        fs.writeFileSync(target, JSON.stringify({ claimed_at: new Date().toISOString() }), { flag: 'wx' });
++        return { ok: true };
++    } catch (exc) {
++        const code = (exc as { code?: string }).code;
++        if (code === 'EEXIST') {
++            return refuse('already-injected-this-session', `session ${sessionId} already received the index`);
++        }
++        // fail-open — see the docblock
++        return { ok: true };
++    }
++}
+diff --git a/src/scripts/hot_context_hook.ts b/src/scripts/hot_context_hook.ts
+index 1f42f554371df807f370dc73e560bb92bd56c9d5..4cd9487615ac576b7817d140c38dcb1394ab2601 100644
+--- a/src/scripts/hot_context_hook.ts
++++ b/src/scripts/hot_context_hook.ts
+@@ -397,24 +397,60 @@ export function restore_hot_context(
+ 
+ /**
+  * Build the compact memory index when `memory.session_index: on`; `null`
+- * on the default-off path, empty corpus, or any failure (never blocks).
+- * Memory roots are cwd-relative (same contract as the MCP tool handlers),
+- * so the build runs chdir-wrapped to the workspace root.
++ * on the default-off path, empty corpus, a refused root, an already-served
++ * session, or any failure (never blocks).
++ *
++ * Memory roots are cwd-relative (same contract as the MCP tool handlers), so
++ * the build runs chdir-wrapped to the workspace root — and that relativity is
++ * exactly why the trust contract exists: whatever cwd this lands on is where
++ * `agents/memory` is read from. `_lib/session_index_trust.ts` carries the six
++ * properties the 2026-09-07 D3 ruling required (identity, canonicalization,
++ * freshness, ordering, duplicate invocation, size limits); this function is
++ * where two of them bind, because they need runtime facts the module cannot
++ * see — the workspace root and the session id.
++ *
++ * Refusals are logged with their code rather than swallowed. `null` alone
++ * cannot distinguish "no curated memory here" from "this root pointed at
++ * another tree", and that distinction is the whole point of the contract.
+  */
+-function _session_index_block_or_null(root: string): string | null {
++function _session_index_block_or_null(root: string, sessionId: string): string | null {
+     try {
+         // Lazy require (ESM-safe via createRequire) keeps the default-off
+         // fast path free of the memory_lookup + settings-cascade import cost.
+         const req = createRequire(import.meta.url);
+         const mod = req('./session_memory_index.js') as {
+             session_index_enabled: (root: string) => boolean;
+-            build_session_index_block: () => string | null;
++            build_session_index_block: (cap?: number, workspaceRoot?: string) => string | null;
++            session_index_trust: (workspaceRoot: string) => { ok: boolean; code?: string; detail?: string };
+         };
+         if (!mod.session_index_enabled(root)) return null;
++
++        // P1-P3, before any memory is read. Checked here rather than only
++        // inside the builder so the refusal reason reaches stderr.
++        const verdict = mod.session_index_trust(root);
++        if (!verdict.ok) {
++            process.stderr.write(`hot-context-hook: session index refused [${String(verdict.code)}]: ${String(verdict.detail)}\n`);
++            return null;
++        }
++
++        // P5 — duplicate invocation. `session_start` can fire more than once
++        // for one session (resume, host reconnect, compaction boundary on some
++        // hosts), and two injections double a fixed cost while presenting two
++        // corpora as one session's memory. Claimed AFTER the trust verdict so a
++        // refused root does not burn the session's one claim.
++        const trust = req('./_lib/session_index_trust.js') as {
++            claimSessionOnce: (workspaceRoot: string, sessionId: string) => { ok: boolean; code?: string };
++        };
++        const claim = trust.claimSessionOnce(root, sessionId);
++        if (!claim.ok) {
++            process.stderr.write(`hot-context-hook: session index already served [${String(claim.code)}]\n`);
++            return null;
++        }
++
+         const prev = process.cwd();
+         try {
+             process.chdir(root);
+-            return mod.build_session_index_block();
++            return mod.build_session_index_block(undefined, root);
+         } finally {
+             process.chdir(prev);
+         }
+@@ -486,7 +522,8 @@ export function main(): number {
+             // Opt-in compact memory index (road-to-memory-retrieval-economy
+             // P5) — default OFF; rides the same injection surface. Memory
+             // roots are cwd-relative, so resolve from the workspace root.
+-            const indexBlock = _session_index_block_or_null(root);
++            const sessionId = String(payload.session_id ?? payload.sessionId ?? '');
++            const indexBlock = _session_index_block_or_null(root, sessionId);
+             if (indexBlock !== null) {
+                 blocks.push(indexBlock);
+             }
+diff --git a/src/scripts/session_memory_index.ts b/src/scripts/session_memory_index.ts
+index b22e1f58bb7cb564d1cdfe1e5184a5688d67f44e..654ec290031b149145078c51fff9754e5825433f 100644
+--- a/src/scripts/session_memory_index.ts
++++ b/src/scripts/session_memory_index.ts
+@@ -22,10 +22,17 @@
+  * default is off, per the roadmap's "off unless proven".
+  */
+ 
+-import { CURATED_TYPES, retrieve_v1 } from './memory_lookup.js';
++import { CURATED_TYPES, MEMORY_ROOT, retrieve_v1 } from './memory_lookup.js';
+ import { load_agent_settings } from './_lib/agent_settings.js';
++import {
++    capRows,
++    orderRows,
++    SESSION_INDEX_ROW_CAP,
++    verifyMemoryRoot,
++    type TrustVerdict,
++} from './_lib/session_index_trust.js';
+ 
+-export const SESSION_INDEX_ROW_CAP = 30;
++export { SESSION_INDEX_ROW_CAP };
+ 
+ interface IndexRow {
+     id: string;
+@@ -55,20 +62,56 @@ export function session_index_enabled(root: string): boolean {
+  * are cwd-relative, same contract as the MCP tool handlers.
+  */
+ export function session_index_rows(cap: number = SESSION_INDEX_ROW_CAP): IndexRow[] {
+-    const envelope = retrieve_v1([...CURATED_TYPES], [], cap, { detail: 'index' });
++    // Retrieval is asked for the ceiling rather than the caller's cap, so the
++    // declared order below chooses which rows survive truncation instead of
++    // the retrieval layer choosing for it. P4 and P6 are one decision: order
++    // first, then cap, and never the reverse.
++    const envelope = retrieve_v1([...CURATED_TYPES], [], SESSION_INDEX_ROW_CAP, { detail: 'index' });
+     const entries = (envelope['entries'] as Array<Record<string, unknown>>) ?? [];
+-    return entries.slice(0, cap).map((e) => ({
++    const rows: IndexRow[] = entries.map((e) => ({
+         id: String(e['id'] ?? ''),
+         title: String(e['title'] ?? ''),
+         tokens_estimate: Number(e['tokens_estimate'] ?? 0),
+     }));
++    return capRows(orderRows(rows), cap);
++}
++
++/**
++ * The trust gate, separated from the render so a caller can log WHY nothing
++ * was injected. `null` from {@link build_session_index_block} is ambiguous by
++ * construction — empty corpus and refused root look identical — and the
++ * distinction is the point of the contract, so it is available here.
++ *
++ * The workspace root is REQUIRED. `MEMORY_ROOT` is relative, so without a root
++ * to resolve it against there is nothing to check identity or containment
++ * against, and a default would be a bypass wearing a convenience.
++ */
++export function session_index_trust(workspaceRoot: string, now?: Date): TrustVerdict {
++    // `exactOptionalPropertyTypes` refuses `now: undefined` on an optional
++    // field, so the key is omitted rather than passed as undefined.
++    return verifyMemoryRoot({
++        workspaceRoot,
++        relativeMemoryRoot: MEMORY_ROOT,
++        ...(now === undefined ? {} : { now }),
++    });
+ }
+ 
+ /**
+  * Render the injectable block, or `null` when the corpus is empty (no
+- * block beats an empty scaffold).
++ * block beats an empty scaffold) or the trust contract refused the root.
++ *
++ * Passing a `workspaceRoot` is what arms P1-P3; omitting it renders from
++ * whatever `MEMORY_ROOT` currently resolves to, which is the pre-contract
++ * behaviour and is kept ONLY for the test seam that injects an absolute
++ * fixture root (`_setMemoryRoot`). The production caller
++ * (`hot_context_hook.ts`) always passes it, and `session_index_trust` above is
++ * how a caller proves it did.
+  */
+-export function build_session_index_block(cap: number = SESSION_INDEX_ROW_CAP): string | null {
++export function build_session_index_block(cap: number = SESSION_INDEX_ROW_CAP, workspaceRoot?: string): string | null {
++    if (workspaceRoot !== undefined) {
++        const verdict = session_index_trust(workspaceRoot);
++        if (!verdict.ok) return null;
++    }
+     const rows = session_index_rows(cap);
+     if (rows.length === 0) return null;
+     const lines = [
+diff --git a/tests/hooks/session_index_trust_e2e.test.ts b/tests/hooks/session_index_trust_e2e.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..0ef706e46ca6785394bf989ff481b1ef675d872a
+--- /dev/null
++++ b/tests/hooks/session_index_trust_e2e.test.ts
+@@ -0,0 +1,221 @@
++/**
++ * The memory-index trust contract, driven through the real dispatcher
++ * (`road-to-continuity-writer-activation` step 3.1, AI-council ruling D3).
++ *
++ * `session_index_trust.test.ts` proves each property against its own fixture.
++ * This file proves the properties are WIRED — that the hook consults them on
++ * the path a host actually takes — which a unit call cannot see, because an
++ * unwired contract passes every unit test it has.
++ *
++ * It also supplies the corpus fixture step 3.1 says the tree lacks. Measured
++ * during step 1.4: an armed `memory.session_index` emits no `memory-index`
++ * block in a scratch workspace, because the workspace carries no curated
++ * memory and `MEMORY_ROOT` is cwd-relative. So a byte-identity proof built on
++ * that workspace would compare two empty strings. Every case below writes real
++ * curated entries into `agents/memory/` first, and the first case asserts the
++ * block is non-empty precisely so the refusal cases cannot pass vacuously.
++ */
++import { spawnSync } from 'node:child_process';
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++import { fileURLToPath } from 'node:url';
++
++import { afterAll, describe, expect, it } from 'vitest';
++
++const HERE = path.dirname(fileURLToPath(import.meta.url));
++const REPO = path.resolve(HERE, '..', '..');
++const DISPATCH = path.join(REPO, 'src', 'scripts', 'hooks', 'dispatch_hook.ts');
++
++const cleanups: string[] = [];
++
++afterAll(() => {
++    for (const d of cleanups) fs.rmSync(d, { recursive: true, force: true });
++});
++
++/** Curated entries a real memory root carries — the corpus 3.1 asks for. */
++const CURATED = [
++    'version: 1',
++    'entries:',
++    '  - id: pr-fixture-alpha',
++    '    key: fixture alpha rule',
++    '    body: |',
++    '      The alpha rule exists so the index has something to list. Its body',
++    '      must never reach the block — the index carries ids and titles only.',
++    '  - id: pr-fixture-beta',
++    '    key: fixture beta rule',
++    '    body: |',
++    '      The beta rule is longer than alpha on purpose, so the declared',
++    '      cheapest-first ordering has two distinct costs to order by and the',
++    '      cap has something to truncate. Padding follows to make that true.',
++    '      Padding padding padding padding padding padding padding padding.',
++    '      Padding padding padding padding padding padding padding padding.',
++    '',
++].join('\n');
++
++interface WorkspaceOpts {
++    /** Arm the feature. Default on — the refusal cases need it armed. */
++    armed?: boolean;
++    /** Write real curated memory. Default true. */
++    curated?: boolean;
++    /** Point `agents/memory` at another tree via a symlink (the P1 threat). */
++    memorySymlinkTo?: string;
++}
++
++function writeWorkspace(opts: WorkspaceOpts = {}): string {
++    const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sit-e2e-')));
++    cleanups.push(root);
++    // Project-root anchor: the settings cascade walks up for it, and without
++    // one the armed flag is never read and every case below passes vacuously.
++    fs.mkdirSync(path.join(root, '.git'), { recursive: true });
++    fs.writeFileSync(
++        path.join(root, '.agent-settings.yml'),
++        ['memory:', `  session_index: "${opts.armed === false ? 'off' : 'on'}"`, ''].join('\n'),
++        'utf-8',
++    );
++    const mem = path.join(root, 'agents', 'memory');
++    if (opts.memorySymlinkTo !== undefined) {
++        fs.mkdirSync(path.dirname(mem), { recursive: true });
++        fs.symlinkSync(opts.memorySymlinkTo, mem);
++        return root;
++    }
++    fs.mkdirSync(mem, { recursive: true });
++    if (opts.curated !== false) {
++        fs.writeFileSync(path.join(mem, 'product-rules.yml'), CURATED, 'utf-8');
++    }
++    return root;
++}
++
++interface Run {
++    /** What the host would inject. */
++    readonly out: string;
++    /**
++     * Diagnostics. Captured but NOT asserted on: the dispatcher does not
++     * forward a concern's stderr, verified by hand, so a hook-level
++     * `process.stderr.write` reaches nobody. Kept on the type because the
++     * next reader will reach for it, and this comment is the answer.
++     */
++    readonly err: string;
++}
++
++function run(root: string, sessionId: string): Run {
++    const r = spawnSync(
++        'npx',
++        ['tsx', DISPATCH, '--platform', 'claude', '--event', 'session_start',
++         '--native-event', 'SessionStart', '--project-dir', root],
++        {
++            input: JSON.stringify({ session_id: sessionId, source: 'startup' }),
++            encoding: 'utf-8',
++            cwd: REPO,
++            timeout: 180_000,
++        },
++    );
++    return { out: r.stdout ?? '', err: r.stderr ?? '' };
++}
++
++function sessionStart(root: string, sessionId: string): string {
++    return run(root, sessionId).out;
++}
++
++describe('the corpus fixture — without it every case below is vacuous', () => {
++    it('an armed workspace with real curated memory EMITS the block', () => {
++        const root = writeWorkspace();
++        const out = sessionStart(root, 'sit-e2e-emit');
++        expect(out).toContain('<memory-index');
++        expect(out).toContain('pr-fixture-alpha');
++        // ids and titles only — a body reaching the block is the leak the
++        // index exists to avoid.
++        expect(out).not.toContain('Padding padding');
++    });
++
++    it('the same workspace with NO curated memory emits nothing — the 1.4 measurement', () => {
++        const out = sessionStart(writeWorkspace({ curated: false }), 'sit-e2e-empty');
++        expect(out).not.toContain('<memory-index');
++    });
++
++    it('disarmed emits nothing even with the corpus present', () => {
++        const out = sessionStart(writeWorkspace({ armed: false }), 'sit-e2e-off');
++        expect(out).not.toContain('<memory-index');
++    });
++});
++
++describe('P1 wired — a memory root pointing at another tree is refused live', () => {
++    /**
++     * TWO layers check this, and the split was found by sabotage rather than
++     * designed: neutralising the HOOK's verdict call left this case green,
++     * because `build_session_index_block` re-checks the root itself. The
++     * builder is therefore the enforcing layer and the hook's call buys the
++     * DIAGNOSTIC — which was unfalsifiable until this case asserted it. Both
++     * assertions below are load-bearing: the first fails if the builder stops
++     * refusing, the second if the hook stops reporting.
++     */
++    it('serves nothing when `agents/memory` symlinks into a different workspace', () => {
++        // The threat in its end-to-end form: the victim workspace is armed and
++        // its memory root resolves into the donor's curated corpus. A run that
++        // emits the donor's ids here has leaked another repository's memory.
++        const donor = writeWorkspace();
++        const victim = writeWorkspace({ memorySymlinkTo: path.join(donor, 'agents', 'memory') });
++
++        const r = run(victim, 'sit-e2e-symlink');
++        expect(r.out).not.toContain('<memory-index');
++        expect(r.out).not.toContain('pr-fixture-alpha');
++    });
++
++    it('a refused root does NOT burn the session latch — the hook layer earns its place here', () => {
++        // This is what the hook-level check actually buys, and it took a
++        // sabotage run plus a dead-end to find it. Removing the hook's verdict
++        // call left the refusal intact (the builder re-checks) and the stderr
++        // diagnostic unobservable (the dispatcher does not forward a concern's
++        // stderr — verified by hand). What it DOES change is ordering: the
++        // latch is claimed after the verdict, so a refused root leaves the
++        // session's one claim unspent and a corrected root still gets served.
++        // Without it, one bad root permanently costs that session its index.
++        const donor = writeWorkspace();
++        const victim = writeWorkspace({ memorySymlinkTo: path.join(donor, 'agents', 'memory') });
++        const session = 'sit-e2e-latch-not-burned';
++
++        expect(run(victim, session).out).not.toContain('<memory-index');
++
++        // Repair the root in place: drop the escaping symlink, put real
++        // curated memory where it should have been all along.
++        const mem = path.join(victim, 'agents', 'memory');
++        fs.unlinkSync(mem);
++        fs.mkdirSync(mem, { recursive: true });
++        fs.writeFileSync(path.join(mem, 'product-rules.yml'), CURATED, 'utf-8');
++
++        expect(run(victim, session).out).toContain('<memory-index');
++    });
++});
++
++describe('P5 wired — one session gets the index once', () => {
++    it('the second session_start for the SAME session id emits nothing', () => {
++        const root = writeWorkspace();
++        const first = sessionStart(root, 'sit-e2e-latch');
++        expect(first).toContain('<memory-index');
++
++        const second = run(root, 'sit-e2e-latch');
++        expect(second.out).not.toContain('<memory-index');
++    });
++
++    it('a DIFFERENT session in the same workspace still gets it', () => {
++        const root = writeWorkspace();
++        expect(sessionStart(root, 'sit-e2e-latch-a')).toContain('<memory-index');
++        expect(sessionStart(root, 'sit-e2e-latch-b')).toContain('<memory-index');
++    });
++});
++
++describe('P4 wired — the emitted order is the declared one', () => {
++    it('lists the cheaper entry first, deterministically across runs', () => {
++        const root = writeWorkspace();
++        const out = sessionStart(root, 'sit-e2e-order');
++        const alpha = out.indexOf('pr-fixture-alpha');
++        const beta = out.indexOf('pr-fixture-beta');
++        expect(alpha).toBeGreaterThan(-1);
++        expect(beta).toBeGreaterThan(-1);
++        // alpha's body is shorter, so it is the cheaper row and orders first.
++        expect(alpha).toBeLessThan(beta);
++
++        const again = sessionStart(writeWorkspace(), 'sit-e2e-order-2');
++        expect(again.indexOf('pr-fixture-alpha')).toBeLessThan(again.indexOf('pr-fixture-beta'));
++    });
++});
+diff --git a/tests/scripts/session_index_trust.test.ts b/tests/scripts/session_index_trust.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..24c9f3f85f293fdc5915b8f09228922fb9c59988
+--- /dev/null
++++ b/tests/scripts/session_index_trust.test.ts
+@@ -0,0 +1,247 @@
++/**
++ * The six trust properties of the session-start memory index (D3).
++ *
++ * The AI-council ruling this implements demands a test PER PROPERTY, and the
++ * reason is the one this suite is built around: a trust property whose refusal
++ * nobody exercises is a property nobody has checked. So every describe block
++ * below drives its property to a REFUSAL on a fixture built to violate exactly
++ * that one thing, and the grant case sits beside it so the refusal is not
++ * passing for a reason unrelated to the property.
++ */
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++
++import { afterAll, describe, expect, it } from 'vitest';
++
++import {
++    canonical,
++    capRows,
++    claimSessionOnce,
++    isContained,
++    latchPath,
++    MAX_ROOT_AGE_DAYS,
++    newestCuratedMtimeMs,
++    orderRows,
++    SESSION_INDEX_ROW_CAP,
++    verifyMemoryRoot,
++} from '../../src/scripts/_lib/session_index_trust.js';
++
++const temps: string[] = [];
++
++afterAll(() => {
++    for (const d of temps) fs.rmSync(d, { recursive: true, force: true });
++});
++
++/** A workspace with a real curated memory root, which every grant case needs. */
++function workspace(opts: { curated?: boolean; mtime?: Date } = {}): string {
++    const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sit-')));
++    temps.push(root);
++    const mem = path.join(root, 'agents', 'memory');
++    fs.mkdirSync(mem, { recursive: true });
++    if (opts.curated !== false) {
++        const f = path.join(mem, 'product-rules.yml');
++        fs.writeFileSync(f, 'version: 1\nentries: []\n');
++        if (opts.mtime) fs.utimesSync(f, opts.mtime, opts.mtime);
++    }
++    return root;
++}
++
++describe('P1 — repository and worktree identity', () => {
++    it('grants a memory root that lives inside the workspace it was checked against', () => {
++        const root = workspace();
++        const v = verifyMemoryRoot({ workspaceRoot: root });
++        expect(v.ok).toBe(true);
++        if (v.ok) {
++            expect(v.memoryRoot).toBe(path.join(root, 'agents', 'memory'));
++            expect(v.workspaceRoot).toBe(root);
++        }
++    });
++
++    it('REFUSES a memory root symlinked out of the workspace — the wrong-root case', () => {
++        // The threat in one fixture: two checkouts, and this one's `agents/memory`
++        // points at the other one's. Every path string still looks local.
++        const other = workspace();
++        const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sit-victim-')));
++        temps.push(root);
++        fs.mkdirSync(path.join(root, 'agents'), { recursive: true });
++        fs.symlinkSync(path.join(other, 'agents', 'memory'), path.join(root, 'agents', 'memory'));
++
++        const v = verifyMemoryRoot({ workspaceRoot: root });
++        expect(v.ok).toBe(false);
++        if (!v.ok) {
++            expect(v.code).toBe('memory-root-escapes-workspace');
++            expect(v.detail).toContain('another tree');
++        }
++    });
++
++    it('REFUSES a relative root that climbs out with `..`', () => {
++        const root = workspace();
++        const v = verifyMemoryRoot({ workspaceRoot: root, relativeMemoryRoot: path.join('..', '..', 'tmp') });
++        expect(v.ok).toBe(false);
++        if (!v.ok) expect(v.code).toBe('memory-root-escapes-workspace');
++    });
++
++    it('REFUSES an absent memory root rather than treating it as empty', () => {
++        const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sit-bare-')));
++        temps.push(root);
++        const v = verifyMemoryRoot({ workspaceRoot: root });
++        expect(v.ok).toBe(false);
++        if (!v.ok) expect(v.code).toBe('memory-root-absent');
++    });
++
++    it('REFUSES a workspace root that does not resolve at all', () => {
++        const v = verifyMemoryRoot({ workspaceRoot: path.join(os.tmpdir(), 'sit-does-not-exist-9f3a') });
++        expect(v.ok).toBe(false);
++        if (!v.ok) expect(v.code).toBe('workspace-root-unresolvable');
++    });
++});
++
++describe('P2 — path canonicalization', () => {
++    it('containment is decided on SEGMENTS, so a shared prefix is not containment', () => {
++        // The bug a string prefix test has: `/a/bc`.startsWith(`/a/b`) is true.
++        expect(isContained(path.join('/a', 'bc'), path.join('/a', 'b'))).toBe(false);
++        expect(isContained(path.join('/a', 'b', 'c'), path.join('/a', 'b'))).toBe(true);
++        expect(isContained('/a/b', '/a/b')).toBe(true);
++        expect(isContained('/a', path.join('/a', 'b'))).toBe(false);
++    });
++
++    it('canonicalizes before comparing — a symlinked WORKSPACE still grants', () => {
++        // The inverse of P1's refusal, and it must not be collateral damage:
++        // reaching a legitimate workspace through a symlink is normal.
++        const real = workspace();
++        const link = path.join(fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sit-link-'))), 'ws');
++        temps.push(path.dirname(link));
++        fs.symlinkSync(real, link);
++        const v = verifyMemoryRoot({ workspaceRoot: link });
++        expect(v.ok).toBe(true);
++        if (v.ok) expect(v.workspaceRoot).toBe(real);
++    });
++
++    it('canonical() returns null rather than throwing on an unresolvable path', () => {
++        expect(canonical(path.join(os.tmpdir(), 'sit-nope-7b21'))).toBeNull();
++        expect(canonical(os.tmpdir())).not.toBeNull();
++    });
++});
++
++describe('P3 — freshness', () => {
++    it('reads the newest curated source mtime, and 0 when the root carries none', () => {
++        const withFile = workspace();
++        expect(newestCuratedMtimeMs(path.join(withFile, 'agents', 'memory'))).toBeGreaterThan(0);
++        const bare = workspace({ curated: false });
++        expect(newestCuratedMtimeMs(path.join(bare, 'agents', 'memory'))).toBe(0);
++    });
++
++    it('REFUSES a source dated in the future — clock skew or tampering', () => {
++        const future = new Date(Date.now() + 86_400_000);
++        const root = workspace({ mtime: future });
++        const v = verifyMemoryRoot({ workspaceRoot: root });
++        expect(v.ok).toBe(false);
++        if (!v.ok) expect(v.code).toBe('source-mtime-in-future');
++    });
++
++    it('REFUSES a root past the abandonment bound', () => {
++        const old = new Date(Date.now() - (MAX_ROOT_AGE_DAYS + 10) * 86_400_000);
++        const root = workspace({ mtime: old });
++        const v = verifyMemoryRoot({ workspaceRoot: root });
++        expect(v.ok).toBe(false);
++        if (!v.ok) {
++            expect(v.code).toBe('memory-root-abandoned');
++            expect(v.detail).toContain(String(MAX_ROOT_AGE_DAYS));
++        }
++    });
++
++    it('GRANTS a quiet-but-not-abandoned root, so the bound catches abandonment only', () => {
++        // Curated memory is deliberately long-lived; a 90-day-old stable file is
++        // not stale. This is the case that would fire if the bound were tightened
++        // to something that sounds prudent.
++        const quiet = new Date(Date.now() - 90 * 86_400_000);
++        const v = verifyMemoryRoot({ workspaceRoot: workspace({ mtime: quiet }) });
++        expect(v.ok).toBe(true);
++    });
++
++    it('a bare root is "nothing to be stale about", not abandoned', () => {
++        const v = verifyMemoryRoot({ workspaceRoot: workspace({ curated: false }) });
++        expect(v.ok).toBe(true);
++        if (v.ok) expect(v.newestSourceMs).toBe(0);
++    });
++});
++
++describe('P4 — ordering', () => {
++    const rows = [
++        { id: 'b', title: 'B', tokens_estimate: 50 },
++        { id: 'a', title: 'A', tokens_estimate: 50 },
++        { id: 'c', title: 'C', tokens_estimate: 10 },
++    ];
++
++    it('orders cheapest first, so a fixed cap carries the most entries it can', () => {
++        expect(orderRows(rows).map((r) => r.id)).toEqual(['c', 'a', 'b']);
++    });
++
++    it('is a TOTAL order — equal cost breaks on id, so the sort is deterministic', () => {
++        // Without the tie-break, `a` and `b` are equal and an unstable sort may
++        // return either, which makes the capped corpus differ between runs.
++        const shuffled = [rows[1], rows[0]] as typeof rows;
++        expect(orderRows(shuffled).map((r) => r.id)).toEqual(['a', 'b']);
++        expect(orderRows([rows[0], rows[1]] as typeof rows).map((r) => r.id)).toEqual(['a', 'b']);
++    });
++
++    it('does not mutate its input', () => {
++        const before = rows.map((r) => r.id);
++        orderRows(rows);
++        expect(rows.map((r) => r.id)).toEqual(before);
++    });
++});
++
++describe('P5 — duplicate invocation', () => {
++    it('the FIRST claim wins and the second REFUSES', () => {
++        const root = workspace();
++        expect(claimSessionOnce(root, 'sess-1').ok).toBe(true);
++        const second = claimSessionOnce(root, 'sess-1');
++        expect(second.ok).toBe(false);
++        if (!second.ok) expect(second.code).toBe('already-injected-this-session');
++    });
++
++    it('latches per session, so a different session is unaffected', () => {
++        const root = workspace();
++        expect(claimSessionOnce(root, 'sess-a').ok).toBe(true);
++        expect(claimSessionOnce(root, 'sess-b').ok).toBe(true);
++    });
++
++    it('sanitises the session id into the latch filename', () => {
++        const p = latchPath('/ws', '../../etc/passwd');
++        expect(path.basename(p)).not.toContain('/');
++        expect(isContained(p, path.join('/ws', 'agents', 'runtime', 'state'))).toBe(true);
++    });
++
++    it('cannot latch without a session id, and says so by granting once', () => {
++        expect(claimSessionOnce(workspace(), '').ok).toBe(true);
++    });
++});
++
++describe('P6 — size limits', () => {
++    const many = Array.from({ length: 100 }, (_, i) => i);
++
++    it('caps at the module ceiling', () => {
++        expect(capRows(many).length).toBe(SESSION_INDEX_ROW_CAP);
++    });
++
++    it('honours a smaller cap but never a larger one', () => {
++        expect(capRows(many, 5).length).toBe(5);
++        expect(capRows(many, 5_000).length).toBe(SESSION_INDEX_ROW_CAP);
++    });
++
++    it('falls back to the ceiling on a nonsense cap rather than emitting everything', () => {
++        expect(capRows(many, 0).length).toBe(SESSION_INDEX_ROW_CAP);
++        expect(capRows(many, -1).length).toBe(SESSION_INDEX_ROW_CAP);
++        expect(capRows(many, Number.NaN).length).toBe(SESSION_INDEX_ROW_CAP);
++    });
++
++    it('caps AFTER ordering — the two together decide which rows survive', () => {
++        const rows = [
++            { id: 'expensive', title: 'x', tokens_estimate: 900 },
++            { id: 'cheap', title: 'c', tokens_estimate: 1 },
++        ];
++        expect(capRows(orderRows(rows), 1).map((r) => r.id)).toEqual(['cheap']);
++    });
++});
