@@ -19,13 +19,16 @@ weight, a trigger that swallows a sibling rule's domain) surfaces in
 real interactions before the second edit lands and confounds the
 diagnosis.
 
+A kernel-rule PR also carries a ratification artifact
+([`ratification-artifact`](../../docs/contracts/ratification-artifact.md)),
+gated by `check_kernel_edit_ratified` — an ADDITION to this soak, never a
+replacement, until blocker `ratification-platform-anchor` is decided.
+
 ## Trigger
 
 A PR is a "kernel-rule edit" iff it modifies any file in `src/rules/`
 that is in the locked kernel set
 (see [`docs/contracts/kernel-membership.md`](../../docs/contracts/kernel-membership.md)).
-(Until 2026-07-31 this named the pre-ADR-051 authoring tree, which no
-longer exists — so the trigger could not match a live file.)
 
 The CI guard (Phase 4.2 of the always-budget-relief roadmap) fails
 any PR that touches **> 1** kernel rule in the same diff. Override is
@@ -59,6 +62,3 @@ diff instead of a silent 10× cost event.
 ## Source
 
 - Roadmap Phase 4: always-budget-relief roadmap § Phase 4 (transient — see `agents/roadmaps/archive/`).
-- Lesson: PR #36 (2026-05-04) condensed the rollout schedule under
-  autonomous mandate; the slow-rollout note was deferred until this
-  ADR pass.

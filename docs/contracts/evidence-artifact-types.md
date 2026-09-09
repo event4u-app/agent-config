@@ -48,7 +48,7 @@ So the obligation is forward-looking: a **newly written** evidence artifact
 declares its type. `lint_evidence_artifacts.ts` enforces exactly that and
 nothing wider.
 
-## The six types
+## The seven types
 
 | Type | What it asserts | How it is declared |
 |---|---|---|
@@ -58,6 +58,7 @@ nothing wider.
 | `honest-null` | A review that ran and found nothing. Distinct from a skip: the work happened. | The existing `**Honest-null:** 0 findings, scope <64-hex>, reviewed <date>` line |
 | `analysis` | A measurement, census, investigation, or report. Asserts what was true when it was written and is never re-bound. | `<!-- evidence-type: analysis -->` |
 | `feel` | A perceptual check on shipped motion — the class for "technically correct and still wrong", which every type above is blind to because every one of them is mechanical or textual. | `<!-- evidence-type: feel -->` **plus** a `**Feel:** <method> — <outcome>` line |
+| `ratification` | ADR-268 § 4's governance control: an authority-expanding edit to a kernel rule, a governance hook or an authority schema, reviewed by a party other than the one gaining the authority. Unlike every type above it binds **forward** — it carries an `effective_after`. | `<!-- evidence-type: ratification -->` **plus** the frontmatter contract in [`ratification-artifact`](ratification-artifact.md) |
 
 ### `feel` carries a method, not an adjective
 

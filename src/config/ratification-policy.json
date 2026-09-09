@@ -1,0 +1,7 @@
+{
+  "$comment": "ADR-268 § 4's quorum policy, committed IN THE REPOSITORY so the gate never depends on a user-global file it cannot read in CI. The first review round refused the gate for exactly that: the council config resolves user-global (ADR-104), is absent on a runner, and the gate printed 'diversity unmeasured' and passed. An authoritative control that fails open when it cannot measure is advisory. This file is always present, so the rule always fires; if it is MISSING or unparseable the gate fails closed rather than skipping the rule.",
+  "required_providers": 2,
+  "required_providers_note": "Distinct provider ids a ratification artifact must name. 2 is the configured council size (anthropic, openai) at the time this landed. Lowering it is itself a governance edit and reds this gate without its own ratification, because this file sits on the gated-surface list.",
+  "verdicts_that_pass": ["ratified", "confirmed-non-expanding"],
+  "verdicts_note": "`ratified` records that an authority-EXPANDING change was approved. `confirmed-non-expanding` records that an independent reviewer looked and found no authority expansion — a typo fix in a kernel rule is not an authority ratification and should not be labelled one. Both clear the gate; the distinction exists so the vocabulary stays honest and so the pressure to weaken the gate over routine edits never builds. Proposed by the round-1 council (codex-default) and adopted."
+}
