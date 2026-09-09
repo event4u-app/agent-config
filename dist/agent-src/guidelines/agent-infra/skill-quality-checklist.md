@@ -53,7 +53,7 @@ A field that carries the schema `default` (e.g. `trust.level: core`,
 `validate_frontmatter.apply_schema_defaults` injects it transparently for
 every consumer (validator, discovery manifest, drift checksum). Writing it
 anyway is boilerplate that `scripts/lint_frontmatter_boilerplate.ts` rejects
-(wired into `task ci-fast`). To strip it across the tree, run
+(wired into this repository's `ci-fast` task). To strip it across the tree, run
 `./scripts-run src/scripts/migrate_frontmatter_defaults`. Background:
 `road-to-abstraction-reduction.md` +
 `agents/evidence/analysis/abstraction-reduction-preflight.md`.

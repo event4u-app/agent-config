@@ -168,8 +168,8 @@ bash src/scripts/condense.sh --changed        # dist != rewrite(src) => the scan
 ./scripts-run src/scripts/check_condensation --summary   # byte-exactness dist vs rewrite(src)
 ```
 
-**Structural fix:** regenerate before judging (`task sync` then
-`task generate-tools`, in that order), and treat a baseline unchanged past
+**Structural fix:** regenerate before judging — this repository's `sync` task
+then its `generate-tools` task, in that order — and treat a baseline unchanged past
 `STALE_AFTER_DAYS` (56, `_lib/gate_baseline.ts:39`) as suppression rather than
 as headroom. A completion claim rests on a run made **after** the last edit, not
 on the freshest run you happen to remember.

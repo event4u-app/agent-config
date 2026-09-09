@@ -67,16 +67,16 @@ Two failure shapes this table exists to name:
 
 ### Worked example — a red gate seen mid-task
 
-> `task check` fails; the lint step reports 7 errors, all pre-existing on `main`, in files this branch does not touch.
+> the `check` task fails; the lint step reports 7 errors, all pre-existing on `main`, in files this branch does not touch.
 
-Wrong, and the canonical shape of it: finish the task, and close with *"the only thing still open is the lint finding — 7 errors on main, which makes `task check` unusable as a chain"*. The sentence is accurate, the issue is named, and nothing about it is decided — the next session inherits it verbatim.
+Wrong, and the canonical shape of it: finish the task, and close with *"the only thing still open is the lint finding — 7 errors on main, which makes the `check` task unusable as a chain"*. The sentence is accurate, the issue is named, and nothing about it is decided — the next session inherits it verbatim.
 
 Right: the errors are pre-existing, outside the fix-now bar (unrelated files, more than ~10 lines), so they are **note + ask** — after the task is delivered, one block:
 
 1. Fix the 3 `no-unused-vars` in `src/a.ts`, `src/b.ts` — ~6 lines, mechanical, ships in this PR.
 2. Fix all 7 in a separate follow-up PR — keeps this diff single-purpose; needs a branch (permission-gated).
 3. Suppress the two in generated output with a scoped ignore, fix the rest — smallest green path, adds a suppression to review.
-4. Leave as is — `task check` stays unusable as a chain until someone else picks it up.
+4. Leave as is — the `check` task stays unusable as a chain until someone else picks it up.
 
 One recommendation line names the pick. Whatever the user answers, the item is closed. If they answer nothing, it is raised once at the next task boundary — not carried silently into a third session.
 

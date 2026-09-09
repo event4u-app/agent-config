@@ -12,7 +12,7 @@ the typed artifact looks like**, and **who owns the failure mode
 when the chain breaks**.
 
 Cycle / dangling / tier-mismatch enforcement is not duplicated here —
-`task lint-handoffs` (per cross-wing-handoff § 4) is the mechanical
+The `lint-handoffs` task (per cross-wing-handoff § 4) is the mechanical
 gate.
 
 ## Chain 1 — brand → channel
@@ -101,7 +101,7 @@ the contract (O2 owns the interface; H10 only consumes it).
 ## See also
 
 - [`docs/contracts/cross-wing-handoff.md`](../contracts/cross-wing-handoff.md)
-  — typed-handoff mechanical contract; `task lint-handoffs` enforces
+  — typed-handoff mechanical contract; the `lint-handoffs` task enforces
   cycles, dangling references, and tier mismatches over the graph.
 - [`docs/guidelines/cross-role-handoff.md`](cross-role-handoff.md)
   — when to hand off at all, how to phrase the routing, L4 / C8
