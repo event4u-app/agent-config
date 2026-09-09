@@ -28,7 +28,6 @@ const MANIFEST = path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml');
  */
 const BLOCKING_ALLOWLIST = new Set([
     'block-no-verify',
-    'block-kernel-rule-writes',
     'block-config-weakening',
     // road-to-source-silence Phase 4.2. It refuses ONE thing: the creation of a
     // NEW first-level directory under agents/tmp(.old)/ whose name is not an

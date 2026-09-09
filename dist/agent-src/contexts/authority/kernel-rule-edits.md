@@ -8,16 +8,17 @@ soak-time guarantee for edits to always-loaded (kernel) rules under
 
 ## The guarantee
 
-Each kernel-rule edit ships in **its own PR**, with **≥ 24 h between
-merges** of consecutive kernel-rule PRs. Autonomous mandate, roadmap
-authorization, and standing "just keep going" directives **do not lift
-this** — it is a behaviour-soak guarantee, not a governance preference.
+Each kernel-rule edit ships in **its own PR** and carries a **ratification
+artifact** — `agents/evidence/ratifications/<pr>.md`, reviewed by a party
+other than the one that proposed or implemented the edit. The gate is
+`check_kernel_edit_ratified` in `ci-fast`.
 
-The 24 h window exists so that a regression introduced by the first
-edit (a rule that stops firing, an Iron Law that loses rhetorical
-weight, a trigger that swallows a sibling rule's domain) surfaces in
-real interactions before the second edit lands and confounds the
-diagnosis.
+**The ≥ 24 h soak between consecutive kernel-rule PRs is retired**, ADR-268
+§ 4 and K9 of `road-to-typed-grants-that-persist`: a fixed window measures
+elapsed time, not control quality. Nothing observed the tree during those
+24 hours; the artifact records that somebody actually looked.
+
+Contract for the artifact: [`ratification-artifact`](../../../../docs/contracts/ratification-artifact.md).
 
 ## Trigger
 
