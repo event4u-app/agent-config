@@ -397,24 +397,60 @@ export function restore_hot_context(
 
 /**
  * Build the compact memory index when `memory.session_index: on`; `null`
- * on the default-off path, empty corpus, or any failure (never blocks).
- * Memory roots are cwd-relative (same contract as the MCP tool handlers),
- * so the build runs chdir-wrapped to the workspace root.
+ * on the default-off path, empty corpus, a refused root, an already-served
+ * session, or any failure (never blocks).
+ *
+ * Memory roots are cwd-relative (same contract as the MCP tool handlers), so
+ * the build runs chdir-wrapped to the workspace root — and that relativity is
+ * exactly why the trust contract exists: whatever cwd this lands on is where
+ * `agents/memory` is read from. `_lib/session_index_trust.ts` carries the six
+ * properties the 2026-09-07 D3 ruling required (identity, canonicalization,
+ * freshness, ordering, duplicate invocation, size limits); this function is
+ * where two of them bind, because they need runtime facts the module cannot
+ * see — the workspace root and the session id.
+ *
+ * Refusals are logged with their code rather than swallowed. `null` alone
+ * cannot distinguish "no curated memory here" from "this root pointed at
+ * another tree", and that distinction is the whole point of the contract.
  */
-function _session_index_block_or_null(root: string): string | null {
+function _session_index_block_or_null(root: string, sessionId: string): string | null {
     try {
         // Lazy require (ESM-safe via createRequire) keeps the default-off
         // fast path free of the memory_lookup + settings-cascade import cost.
         const req = createRequire(import.meta.url);
         const mod = req('./session_memory_index.js') as {
             session_index_enabled: (root: string) => boolean;
-            build_session_index_block: () => string | null;
+            build_session_index_block: (cap?: number, workspaceRoot?: string) => string | null;
+            session_index_trust: (workspaceRoot: string) => { ok: boolean; code?: string; detail?: string };
         };
         if (!mod.session_index_enabled(root)) return null;
+
+        // P1-P3, before any memory is read. Checked here rather than only
+        // inside the builder so the refusal reason reaches stderr.
+        const verdict = mod.session_index_trust(root);
+        if (!verdict.ok) {
+            process.stderr.write(`hot-context-hook: session index refused [${String(verdict.code)}]: ${String(verdict.detail)}\n`);
+            return null;
+        }
+
+        // P5 — duplicate invocation. `session_start` can fire more than once
+        // for one session (resume, host reconnect, compaction boundary on some
+        // hosts), and two injections double a fixed cost while presenting two
+        // corpora as one session's memory. Claimed AFTER the trust verdict so a
+        // refused root does not burn the session's one claim.
+        const trust = req('./_lib/session_index_trust.js') as {
+            claimSessionOnce: (workspaceRoot: string, sessionId: string) => { ok: boolean; code?: string };
+        };
+        const claim = trust.claimSessionOnce(root, sessionId);
+        if (!claim.ok) {
+            process.stderr.write(`hot-context-hook: session index already served [${String(claim.code)}]\n`);
+            return null;
+        }
+
         const prev = process.cwd();
         try {
             process.chdir(root);
-            return mod.build_session_index_block();
+            return mod.build_session_index_block(undefined, root);
         } finally {
             process.chdir(prev);
         }
@@ -486,7 +522,8 @@ export function main(): number {
             // Opt-in compact memory index (road-to-memory-retrieval-economy
             // P5) — default OFF; rides the same injection surface. Memory
             // roots are cwd-relative, so resolve from the workspace root.
-            const indexBlock = _session_index_block_or_null(root);
+            const sessionId = String(payload.session_id ?? payload.sessionId ?? '');
+            const indexBlock = _session_index_block_or_null(root, sessionId);
             if (indexBlock !== null) {
                 blocks.push(indexBlock);
             }
