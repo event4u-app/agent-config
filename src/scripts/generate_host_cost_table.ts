@@ -47,6 +47,7 @@
  * disagrees with the tree · 2 census missing, unparseable, or empty.
  */
 
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -109,10 +110,27 @@ export function parseCensus(text: string): HostRow[] {
     return rows;
 }
 
-/** Re-derive the same numbers from the tree, so the census can be contradicted. */
-export function deriveLive(root: string): Map<string, { bytes: string; tokens: string }> {
+/**
+ * Re-derive the numbers from the tree, so the census can be contradicted.
+ *
+ * ONLY what a FRESH CHECKOUT can reproduce is derived, and the rest is marked
+ * `unverifiable` rather than guessed at. The distinction is not academic and it
+ * cost a CI red to learn: of the nine host surfaces, exactly one single-file
+ * surface is tracked (`.github/copilot-instructions.md`). `GEMINI.md` and
+ * `.windsurfrules` are GENERATED and untracked, so a clean CI checkout has no
+ * such files — and reading their absence as `absent` made the cross-check
+ * declare a disagreement against a census that was perfectly correct about a
+ * generated tree. Comparing a committed census to a surface that only exists
+ * after `task generate-tools` is comparing two different trees.
+ *
+ * A per-rule-tree host is different: its figure derives from
+ * `dist/agent-src/rules`, which IS committed, so every reader gets the same
+ * number. Those rows are the ones this check can and does police — and they are
+ * the rows the real staleness appeared on (four of them, five bytes each).
+ */
+export function deriveLive(root: string): Map<string, { bytes: string; tokens: string } | 'unverifiable'> {
     const corpus = readRuleCorpus(root);
-    const out = new Map<string, { bytes: string; tokens: string }>();
+    const out = new Map<string, { bytes: string; tokens: string } | 'unverifiable'>();
     for (const h of HOST_SURFACES) {
         if (h.surface === null) {
             out.set(h.host, { bytes: '—', tokens: '—' });
@@ -123,6 +141,13 @@ export function deriveLive(root: string): Map<string, { bytes: string; tokens: s
                 bytes: String(corpus.projectedChars),
                 tokens: String(tokensChars4(corpus.projectedChars)),
             });
+            continue;
+        }
+        // A single-file surface is comparable only when the file is in the
+        // tree every reader gets. Untracked-and-generated is `unverifiable`,
+        // which is a third state and not a synonym for absent.
+        if (!isTracked(root, h.surface)) {
+            out.set(h.host, 'unverifiable');
             continue;
         }
         const chars = singleFileChars(root, h.surface);
@@ -136,23 +161,51 @@ export function deriveLive(root: string): Map<string, { bytes: string; tokens: s
     return out;
 }
 
-/** Every host whose census row disagrees with the live tree, rendered. */
-export function disagreements(rows: readonly HostRow[], live: ReadonlyMap<string, { bytes: string; tokens: string }>): string[] {
-    const out: string[] = [];
+/** Is this path in the committed tree? A generated file is not. */
+export function isTracked(root: string, rel: string): boolean {
+    try {
+        execFileSync('git', ['ls-files', '--error-unmatch', '--', rel], {
+            cwd: root,
+            stdio: ['ignore', 'ignore', 'ignore'],
+        });
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * Every host whose census row disagrees with the live tree, rendered.
+ *
+ * `unverifiable` rows are SKIPPED, never silently accepted: `skipped` carries
+ * their names so the caller prints how much of the table this check does not
+ * police. A cross-check that quietly covers 4 of 9 rows while reading like it
+ * covers all 9 is the shape this repository's scan-scope guards exist to reject.
+ */
+export function disagreements(
+    rows: readonly HostRow[],
+    live: ReadonlyMap<string, { bytes: string; tokens: string } | 'unverifiable'>,
+): { problems: string[]; skipped: string[] } {
+    const problems: string[] = [];
+    const skipped: string[] = [];
     for (const r of rows) {
         const l = live.get(r.host);
         if (l === undefined) {
-            out.push(`${r.host}: in the census, absent from HOST_SURFACES in the tree`);
+            problems.push(`${r.host}: in the census, absent from HOST_SURFACES in the tree`);
+            continue;
+        }
+        if (l === 'unverifiable') {
+            skipped.push(r.host);
             continue;
         }
         if (l.bytes !== r.bytes || l.tokens !== r.tokens) {
-            out.push(
+            problems.push(
                 `${r.host}: census says ${r.bytes} B / ${r.tokens} tok, the tree says ` +
                     `${l.bytes} B / ${l.tokens} tok`,
             );
         }
     }
-    return out;
+    return { problems, skipped };
 }
 
 export function renderTable(rows: readonly HostRow[], pin: string): string {
@@ -233,16 +286,32 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         return 2;
     }
 
-    const bad = disagreements(rows, deriveLive(root));
-    if (bad.length > 0) {
+    const { problems, skipped } = disagreements(rows, deriveLive(root));
+    if (problems.length > 0) {
         process.stderr.write(
             '❌  host cost table: the census disagrees with the tree — refusing to publish either.\n' +
-                bad.map((b) => `      · ${b}\n`).join('') +
+                problems.map((b) => `      · ${b}\n`).join('') +
                 '    A stale census is the one failure a "table equals the census" check cannot\n' +
                 '    catch on its own, which is why both readings are taken. Re-emit the census\n' +
                 '    at the current pin, then re-run this.\n',
         );
         return 1;
+    }
+    const compared = rows.length - skipped.length;
+    if (compared === 0) {
+        process.stderr.write(
+            '❌  host cost table: every census row was unverifiable, so nothing was cross-checked.\n' +
+                '    A check that compared zero rows has not passed. Either the rule corpus root\n' +
+                '    moved, or HOST_SURFACES no longer carries a per-rule-tree host.\n',
+        );
+        return 2;
+    }
+    if (skipped.length > 0) {
+        process.stdout.write(
+            `  cross-check: ${compared} of ${rows.length} row(s) verified against the tree; ` +
+                `${skipped.length} unverifiable (${skipped.join(', ')}) — generated and untracked, ` +
+                'so a fresh checkout has no file to compare.\n',
+        );
     }
 
     const contractAbs = path.join(root, CONTRACT_REL);

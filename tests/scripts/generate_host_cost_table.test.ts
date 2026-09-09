@@ -82,7 +82,8 @@ describe('the pin, without which the census is not evidence', () => {
 });
 
 describe('the census is cross-checked against the tree, not trusted', () => {
-    const live = new Map([
+    type LiveValue = { bytes: string; tokens: string } | 'unverifiable';
+    const live = new Map<string, LiveValue>([
         ['claude-code', { bytes: '486068', tokens: '121517' }],
         ['gemini', { bytes: '2982', tokens: '746' }],
     ]);
@@ -91,7 +92,23 @@ describe('the census is cross-checked against the tree, not trusted', () => {
         const rows: HostRow[] = [
             { host: 'claude-code', surface: '.claude/rules', shape: 'per-rule tree', bytes: '486068', tokens: '121517' },
         ];
-        expect(disagreements(rows, live)).toStrictEqual([]);
+        expect(disagreements(rows, live).problems).toStrictEqual([]);
+        expect(disagreements(rows, live).skipped).toStrictEqual([]);
+    });
+
+    it('an UNVERIFIABLE row is skipped and NAMED, never silently accepted', () => {
+        // The CI red that taught this: GEMINI.md and .windsurfrules are
+        // generated and untracked, so a fresh checkout has no file to compare
+        // and reading their absence as `absent` declared a disagreement against
+        // a census that was correct. Skipping is right; skipping silently is
+        // not — a cross-check covering 6 of 9 rows must say so.
+        const partial = new Map<string, LiveValue>([...live, ['gemini', 'unverifiable']]);
+        const rows: HostRow[] = [
+            { host: 'gemini', surface: 'GEMINI.md', shape: 'single file', bytes: '2982', tokens: '746' },
+        ];
+        const r = disagreements(rows, partial);
+        expect(r.problems).toStrictEqual([]);
+        expect(r.skipped).toStrictEqual(['gemini']);
     });
 
     it('a STALE census is caught, which the roadmap own verify could not do', () => {
@@ -101,7 +118,7 @@ describe('the census is cross-checked against the tree, not trusted', () => {
         const rows: HostRow[] = [
             { host: 'claude-code', surface: '.claude/rules', shape: 'per-rule tree', bytes: '486063', tokens: '121516' },
         ];
-        const found = disagreements(rows, live);
+        const found = disagreements(rows, live).problems;
         expect(found.length).toBe(1);
         expect(found[0]).toContain('census says 486063');
         expect(found[0]).toContain('the tree says 486068');
@@ -111,14 +128,14 @@ describe('the census is cross-checked against the tree, not trusted', () => {
         const rows: HostRow[] = [
             { host: 'ghost-host', surface: '.ghost', shape: 'single file', bytes: '1', tokens: '1' },
         ];
-        expect(disagreements(rows, live)[0]).toContain('absent from HOST_SURFACES');
+        expect(disagreements(rows, live).problems[0]).toContain('absent from HOST_SURFACES');
     });
 
     it('a token-only drift is caught even when the byte count matches', () => {
         const rows: HostRow[] = [
             { host: 'gemini', surface: 'GEMINI.md', shape: 'single file', bytes: '2982', tokens: '999' },
         ];
-        expect(disagreements(rows, live).length).toBe(1);
+        expect(disagreements(rows, live).problems.length).toBe(1);
     });
 });
 

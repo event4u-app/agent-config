@@ -19,6 +19,19 @@ import {
     readBudget,
 } from '../../src/scripts/check_preamble_payload_budget.js';
 
+/** Repo root, resolved the way the gate resolves it. */
+const REPO_ROOT_FOR_TESTS = path.resolve(
+    path.dirname(new URL(import.meta.url).pathname),
+    '..',
+    '..',
+);
+
+/** Hosts whose rules surface is generated, with the path that proves presence. */
+const HOST_IDS_WITH_NO_TREE = [
+    { host: 'windsurf', probe: '.windsurf/rules' },
+    { host: 'gemini-cli', probe: 'GEMINI.md' },
+] as const;
+
 const tmps: string[] = [];
 
 function tmpdir(): string {
@@ -236,13 +249,25 @@ function fakeRepoWithHostTree(sourceRules: string[], hostRules: string[]): strin
     return root;
 }
 
+// `.claude/rules` and `.claude/skills` are GENERATED and untracked (`git
+// ls-files .claude/rules` returns nothing), so a clean CI checkout has no host
+// tree at all and `--host claude-code` correctly refuses with exit 2. That is
+// not a weaker environment to be worked around — it is the documented refusal,
+// and a test that assumed the tree exists went red in CI while passing on every
+// maintainer machine. Both branches are real, so both are asserted, and which
+// one runs is decided by the tree rather than by a guess about the environment.
+const hostTreeExists = fs.existsSync(path.join(REPO_ROOT_FOR_TESTS, '.claude', 'rules'));
+
 describe('the host reading is additive and never moves the ratchet', () => {
     it('the source verdict is byte-identical with and without a host flag', () => {
         // The load-bearing assertion of option 1A. `evaluate` is the source
         // reading; nothing about a host argument may reach it.
+        const ceiling = String(rawCiDelivery().grace_ceiling);
         const before = evaluate();
-        expect(main(['--ceiling', String(rawCiDelivery().grace_ceiling)])).toBe(0);
-        expect(main(['--host', 'claude-code', '--ceiling', String(rawCiDelivery().grace_ceiling)])).toBe(0);
+        expect(main(['--ceiling', ceiling])).toBe(0);
+        // With a host tree: the exit code must be IDENTICAL. Without one: the
+        // documented refusal, which is exit 2 and never a silent 0.
+        expect(main(['--host', 'claude-code', '--ceiling', ceiling])).toBe(hostTreeExists ? 0 : 2);
         const after = evaluate();
         expect(after.measured).toBe(before.measured);
         expect(after.ceiling).toBe(before.ceiling);
@@ -262,7 +287,24 @@ describe('the host reading is additive and never moves the ratchet', () => {
         // redirecting the gated surface.
         const overBudget = main([]);
         expect(overBudget, 'HEAD is over the design ceiling today').not.toBe(0);
+        if (!hostTreeExists) {
+            // No tree to be smaller — the refusal is the property here, and it
+            // is asserted rather than skipped so this case is never vacuous.
+            expect(main(['--host', 'claude-code'])).toBe(2);
+            return;
+        }
         expect(main(['--host', 'claude-code'])).toBe(overBudget);
+    });
+
+    it('a host id whose tree was never projected REFUSES rather than reporting zero', () => {
+        // The property that makes the branch above safe: an unprojected tree is
+        // exit 2, so a missing host tree can never be read as a tiny one. This
+        // case runs identically on a maintainer machine and in CI.
+        const neverProjected = HOST_IDS_WITH_NO_TREE.find(
+            (id) => !fs.existsSync(path.join(REPO_ROOT_FOR_TESTS, id.probe)),
+        );
+        if (neverProjected === undefined) return; // every tree present locally
+        expect(main(['--host', neverProjected.host])).toBe(2);
     });
 });
 
