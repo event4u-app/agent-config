@@ -1,0 +1,1242 @@
+diff --git a/agents/evidence/release-findings/14.22.0.json b/agents/evidence/release-findings/14.22.0.json
+index 62f5a406c014334b08f6e8e814b6ed17881ccf53..7183c1c7eece7ed2ca3c4682de46381ac0a80657 100644
+--- a/agents/evidence/release-findings/14.22.0.json
++++ b/agents/evidence/release-findings/14.22.0.json
+@@ -248,7 +248,7 @@
+       "detail": "docs/CLAIMS.md:245 adds 'FRAMING, RECORDED 2026-09-07...' text to the skill-activation-census-zero claim. This is claim-affecting prose added to an unbacked claim where the measurement (0 invocations over 30 sessions) is unchanged. The addition discusses alternatives NOT taken and records a publication decision, which changes what the claim asserts about the package's position on skill routing. ADR-263 makes the substantive decision (Option B: skills are explicitly-invoked reference material), but the claim text modification happened before that ADR and represents a different action (Option C: publish the zero with its reason).",
+       "file": "docs/CLAIMS.md",
+       "status": "false_positive",
+-      "rationale": "SPLIT, recorded as a false positive because every mechanism the finding asserts is refuted, while the concern it gestures at is real, different, and now carried. REFUTED: (1) the claim is `status: backed`, not the \"unbacked claim\" the finding describes -- docs/CLAIMS.md:249. (2) The measurement did not change. The edit (96f2362ac, 2026-09-07 21:25) touches one line and is a pure INSERTION with zero removals; every figure -- 30 sessions, 11,338 turns, 0 invocations, 0 of 299, 12/100/2/189, measured 2026-09-06 -- and both `status:` and `last_verified:` are byte-identical before and after. (3) No gate treats added prose on a claim as a state change: check_claims.ts:15-17 makes unbacked entries non-failing inventory and :530-531 is its only status assertion, firing on MARKERED claims alone, and neither claim is markered anywhere outside CLAIMS.md. The claim-specific gate compares only the nine figures plus `measured` and `last_verified` (report_skill_activation.ts:326-379), all untouched. The ORDERING the finding asserts is correct and verified: the CLAIMS.md edit is dated 2026-09-07 and ADR-263 is dated 2026-09-08 and says in its own Context that \"Option C (publish the zero with its reason) was taken on 2026-09-07 and did not consume the menu\", and it does choose Option B. REAL, and it is a different finding than the one filed: ADR-263 § Consequences says the published reading \"is now wrong and is superseded by this record\" and that correcting the ledger text is \"tracked as work rather than performed here\", and § References calls docs/CLAIMS.md:245 \"the claim this decision corrects\" -- but NOTHING tracked it. At this commit the claim still says both alternatives \"stay OPEN rather than closed\" after Option B was locked, and still says 189 where ADR-263 fixes the arithmetic at 187. That drift is deliberate, not overlooked, and its arithmetic half is mechanically blocked: the census record holds `human_named_only: 189`, so writing 187 reds check_skill_activation_claim until the census is re-emitted. RECEIVER: agents/roadmaps/road-to-the-14-22-0-disposition-residuals.md step 1.3, which names both edits, the ordering, and the blocking mechanism.",
++      "rationale": "SPLIT, recorded as a false positive because every mechanism the finding asserts is refuted, while the concern it gestures at is real, different, and now carried. REFUTED: (1) the claim is `status: backed`, not the \"unbacked claim\" the finding describes -- docs/CLAIMS.md:249. (2) The measurement did not change. The edit (96f2362ac, 2026-09-07 21:25) touches one line and is a pure INSERTION with zero removals; every figure -- 30 sessions, 11,338 turns, 0 invocations, 0 of 299, 12/100/2/189, measured 2026-09-06 -- and both `status:` and `last_verified:` are byte-identical before and after. (3) No gate treats added prose on a claim as a state change: check_claims.ts:15-17 makes unbacked entries non-failing inventory and :530-531 is its only status assertion, firing on MARKERED claims alone, and neither claim is markered anywhere outside CLAIMS.md. The claim-specific gate compares only the nine figures plus `measured` and `last_verified` (report_skill_activation.ts:326-379), all untouched. The ORDERING the finding asserts is correct and verified: the CLAIMS.md edit is dated 2026-09-07 and ADR-263 is dated 2026-09-08 and says in its own Context that \"Option C (publish the zero with its reason) was taken on 2026-09-07 and did not consume the menu\", and it does choose Option B. REAL, and it is a different finding than the one filed: ADR-263 § Consequences says the published reading \"is now wrong and is superseded by this record\" and that correcting the ledger text is \"tracked as work rather than performed here\", and § References calls docs/CLAIMS.md:245 \"the claim this decision corrects\" -- but NOTHING tracked it. At this commit the claim still says both alternatives \"stay OPEN rather than closed\" after Option B was locked, and still says 189 where ADR-263 fixes the arithmetic at 187. That drift is deliberate, not overlooked, and its arithmetic half is mechanically blocked: the census record holds `human_named_only: 189`, so writing 187 reds check_skill_activation_claim until the census is re-emitted. RECEIVER: agents/roadmaps/archive/road-to-the-14-22-0-disposition-residuals.md step 1.3, which names both edits, the ordering, and the blocking mechanism.",
+       "verified_by": "docs/CLAIMS.md:244-250 read in place (`status: backed`, `last_verified: 2026-09-06`). Edit isolated rather than assumed: `git log --oneline 14.21.0..14.22.0 -- docs/CLAIMS.md` -> exactly two commits, 96f2362ac and 848c6284d; `git show 96f2362ac --stat` -> docs/CLAIMS.md | 2 +- (one line). Insert-only established by a word-level difflib pass over `git show 96f2362ac -- docs/CLAIMS.md`: a single `insert` opcode, removed text empty, 1582 -> 2715 chars. Gate rules read at src/scripts/check_claims.ts:15-17 and :530-531, with `last_verified` occurring only at :230, :368, :392 and :1036 -- parse and fixture, never validated. Comparison set read at src/scripts/report_skill_activation.ts:326-341 and :352-379; census value read at agents/evidence/metrics/skill-activation-census.json -> human_named_only 189. Gate exercised: `./scripts-run src/scripts/check_skill_activation_claim` -> exit 0. ADR-263 read in full for its Decision, Context, Consequences and References. HONEST GAP: nothing in the tree pins whether an autonomous lane was AUTHORIZED to append claim-affecting framing prose to a published claim. lint_governed_writes.ts:71 protects docs/CLAIMS.md only against fs writes bypassing write_atomic, not against an editorial edit, so the commit's own argument that the addition is \"a reversible explanatory sentence\" is unrefuted and unverified alike. That is a governance question for decision-revisit-gate's owner-reserved surface and is not settled here.",
+       "date": "2026-09-08"
+     },
+@@ -332,7 +332,7 @@
+       "detail": "src/vendor/grammars/ adds three WebAssembly grammar files (tree-sitter-php.wasm, tree-sitter-typescript.wasm, tree-sitter-javascript.wasm) totaling 3.8MB. These are binary artifacts loaded at runtime by web-tree-sitter. ADR-259 amendment says they're 'vendored' and 'refreshed from tree-sitter-wasms', but there's no documented verification that the vendored bytes match any upstream source, no subresource integrity check, and no provenance record linking them to a specific tree-sitter-wasms version. packed-binary-manifest.json records SHA256 hashes but doesn't record what those hashes were derived FROM (which tree-sitter-wasms version, which upstream tree-sitter-{lang} version). An attacker who compromises the vendoring process could inject malicious WASM with no detection.",
+       "file": "src/vendor/grammars/",
+       "status": "accepted_risk",
+-      "rationale": "SPLIT, accepted for this release with a receiver, because one half of the finding is factually wrong and the other half is real and not fixable in a governance-ledger commit. WRONG: \"no provenance record linking them to a specific tree-sitter-wasms version\". Provenance is pinned in four places, including an exact version and its upstream integrity hash -- package.json:118 (`\"tree-sitter-wasms\": \"0.1.13\"`), package-lock.json:7285-7293 (`resolved` plus `integrity: sha512-wT+cR6DwaIz80/vho3AvSF0N4txuNx/5bcRKoXouOfClpxh/qqrF4URNLQXbbt8MaAxeksZcZd1j8gcGjc+QxQ==`), src/vendor/grammars/README.md:32-42 (§ Provenance: the package, the upstream repository, the licence chain), and REUSE.toml:25-30 with CREDITS.md:16,60,122. CORRECT: the statement about the manifest itself. src/config/packed-binary-manifest.json:5-31 carries only path, sha256, size, kind, grammar_id, abi and why -- no upstream package, version, source URL or resolved-integrity field. REAL, and this is what is accepted: nothing in the tree VERIFIES that the vendored bytes are the upstream bytes. No test and no gate reads node_modules/tree-sitter-wasms/out/ -- the single tree reference to that path is a comment at code_graph/types.ts:199 -- and there is no refresh SCRIPT, only a manual snippet in the README whose version is the placeholder `<v>`, so the pin is convention rather than enforcement. ADR-259 does not acknowledge the gap: the word `provenance` in its frontmatter concerns the provenance of the DECISION, and its amendment covers mechanics and size only. WHY ACCEPTED rather than fixed: the bytes are currently identical to the locked upstream (measured below), so the exposure is not live, and the residual threat reduces to who can land a commit on main -- code review, not cryptography. RECEIVER: agents/roadmaps/road-to-the-14-22-0-disposition-residuals.md step 1.1, which names package-lock.json:7288 as the anchor to close against and requires the check be observed failing on mutated bytes before it is trusted.",
++      "rationale": "SPLIT, accepted for this release with a receiver, because one half of the finding is factually wrong and the other half is real and not fixable in a governance-ledger commit. WRONG: \"no provenance record linking them to a specific tree-sitter-wasms version\". Provenance is pinned in four places, including an exact version and its upstream integrity hash -- package.json:118 (`\"tree-sitter-wasms\": \"0.1.13\"`), package-lock.json:7285-7293 (`resolved` plus `integrity: sha512-wT+cR6DwaIz80/vho3AvSF0N4txuNx/5bcRKoXouOfClpxh/qqrF4URNLQXbbt8MaAxeksZcZd1j8gcGjc+QxQ==`), src/vendor/grammars/README.md:32-42 (§ Provenance: the package, the upstream repository, the licence chain), and REUSE.toml:25-30 with CREDITS.md:16,60,122. CORRECT: the statement about the manifest itself. src/config/packed-binary-manifest.json:5-31 carries only path, sha256, size, kind, grammar_id, abi and why -- no upstream package, version, source URL or resolved-integrity field. REAL, and this is what is accepted: nothing in the tree VERIFIES that the vendored bytes are the upstream bytes. No test and no gate reads node_modules/tree-sitter-wasms/out/ -- the single tree reference to that path is a comment at code_graph/types.ts:199 -- and there is no refresh SCRIPT, only a manual snippet in the README whose version is the placeholder `<v>`, so the pin is convention rather than enforcement. ADR-259 does not acknowledge the gap: the word `provenance` in its frontmatter concerns the provenance of the DECISION, and its amendment covers mechanics and size only. WHY ACCEPTED rather than fixed: the bytes are currently identical to the locked upstream (measured below), so the exposure is not live, and the residual threat reduces to who can land a commit on main -- code review, not cryptography. RECEIVER: agents/roadmaps/archive/road-to-the-14-22-0-disposition-residuals.md step 1.1, which names package-lock.json:7288 as the anchor to close against and requires the check be observed failing on mutated bytes before it is trusted.",
+       "verified_by": "Files and hashes measured, not read off the manifest: `shasum -a 256 src/vendor/grammars/*.wasm` -> 55bb617b..d8a3 (tree-sitter-php.wasm, 812594 B), 8515404d..3d8f (tree-sitter-typescript.wasm, 2342690 B), 63812b9e..5ab5 (tree-sitter-javascript.wasm, 647334 B); total 3802618 B, matching the finding's \"3.8MB\". All three compared byte-for-byte against node_modules/tree-sitter-wasms/out/ -> IDENTICAL for php, typescript and javascript. THAT COMPARISON IS THIS PASS'S OWN CHECK AND NOT A REPOSITORY CONTROL, which is the whole of the real finding. Provenance read in place at package.json:118, package-lock.json:7285-7293, src/vendor/grammars/README.md:32-42 and :44-54, REUSE.toml:25-30, CREDITS.md:16,60,122. Manifest field list read at src/config/packed-binary-manifest.json:5-31. Absence probed rather than asserted: `grep -rn 'node_modules/tree-sitter-wasms\\|tree-sitter-wasms/out' --include='*.ts'` -> 1 hit, a comment at src/scripts/code_graph/types.ts:199; `grep -i 'grammar\\|wasm\\|tree-sitter' provenance/*.jsonl` -> 0 hits across 14 rows, so no borrow-ledger row exists for the grammars either. ADR-259 scanned for the terms: `grep -n -i 'provenance\\|verif\\|integrity\\|supply' docs/decisions/ADR-259-*.md` -> :11 (decision provenance) and :180 (a rejected fetch-at-runtime alternative); amendment at :108-160 is mechanics and size. HONEST GAP: there is no subresource-integrity field and no trust anchor wired to package-lock.json:7288, so between refreshes the byte identity above is established by this pass alone and by nothing that runs again. SIDE FINDING, fixed in this change rather than deferred because it is two lines in the finding's own file: src/vendor/grammars/README.md:58 instructed a refresher to update `BINARY_PAYLOAD_EXCEPTIONS` in check_pack_size.ts, a constant that no longer exists -- `grep -rn BINARY_PAYLOAD_EXCEPTIONS` returned that README line and nothing else in the tree, so anyone following it would have skipped the manifest and reddened the pack-size gate with no pointer to why. It now names src/config/packed-binary-manifest.json.",
+       "date": "2026-09-08"
+     },
+@@ -472,7 +472,7 @@
+       "detail": "tests/scripts/packed_binary_predicate.test.ts introduces mutation testing (definedInvalidHeaderMutation, definedUnsupportedAbiEntry) for grammar binaries. While the test suite validates that mutated binaries are rejected, the production evaluateEntry function in src/scripts/_lib/packed_binary_predicate.ts does not appear to have a cryptographic signature verification mechanism—only sha256 hash checks against a manifest. An attacker who can modify both the manifest and the binary simultaneously (e.g., supply-chain attack on the manifest file itself) could bypass this. The manifest should be signed or the binary verification should include a separate trust anchor.",
+       "file": "tests/scripts/packed_binary_predicate.test.ts",
+       "status": "accepted_risk",
+-      "rationale": "SPLIT, accepted for this release with a receiver. The mechanism description is false, the title's charge against the test file misses, and the CONCLUSION is nonetheless right. FALSE: \"only sha256 hash checks against a manifest\". evaluateEntry (packed_binary_predicate.ts:165-217) checks eleven conditions -- manifest-row uniqueness (:175-177), no wildcard or directory grants (:178-179), presence in the tarball (:180), sha256 (:189-190), size (:191), kind (:192), WASM magic and version (:193 via :110-115), a probe that FAILS on null rather than passing (:195-197), and grammar_id (:198-200) and ABI (:201-203) resolved through the PRODUCTION loader -- plus two self-checks at :206-214 asserting that the defined header mutation and the defined wrong-ABI entry are refused, which run inside the production function on every call rather than in a test. That also answers the title: the mutation refusals are production path, and the test file additionally re-derives hash, size and magic from the bytes on disk (tests/scripts/packed_binary_predicate.test.ts:185-209). CORRECT, and this is what is accepted: none of those extras is an INDEPENDENT trust anchor. grammar_id and abi are themselves manifest values and magic/version is a format check, so a same-commit edit of the manifest AND the bytes passes all eleven. The finding's proposed remedy does not fit this repository: there is no signing infrastructure at all -- no cosign, sigstore, minisign or SLSA anywhere in the tree -- and what does exist, npm OIDC trusted publishing with registry provenance attestation (publish-npm.yml:60-62, CONTRIBUTING.md:449-455), attests the TARBALL's origin rather than the manifest against an upstream anchor. So \"sign the manifest\" would anchor to the wrong thing. The real anchor already exists and is unread: package-lock.json:7288. WHY ACCEPTED: the residual reduces to who can land a commit on main, i.e. code review, and the bytes currently match the locked upstream (measured under bb9f81e64fae). RECEIVER: agents/roadmaps/road-to-the-14-22-0-disposition-residuals.md steps 1.1 (the anchor) and 1.2 (writing the boundary down).",
++      "rationale": "SPLIT, accepted for this release with a receiver. The mechanism description is false, the title's charge against the test file misses, and the CONCLUSION is nonetheless right. FALSE: \"only sha256 hash checks against a manifest\". evaluateEntry (packed_binary_predicate.ts:165-217) checks eleven conditions -- manifest-row uniqueness (:175-177), no wildcard or directory grants (:178-179), presence in the tarball (:180), sha256 (:189-190), size (:191), kind (:192), WASM magic and version (:193 via :110-115), a probe that FAILS on null rather than passing (:195-197), and grammar_id (:198-200) and ABI (:201-203) resolved through the PRODUCTION loader -- plus two self-checks at :206-214 asserting that the defined header mutation and the defined wrong-ABI entry are refused, which run inside the production function on every call rather than in a test. That also answers the title: the mutation refusals are production path, and the test file additionally re-derives hash, size and magic from the bytes on disk (tests/scripts/packed_binary_predicate.test.ts:185-209). CORRECT, and this is what is accepted: none of those extras is an INDEPENDENT trust anchor. grammar_id and abi are themselves manifest values and magic/version is a format check, so a same-commit edit of the manifest AND the bytes passes all eleven. The finding's proposed remedy does not fit this repository: there is no signing infrastructure at all -- no cosign, sigstore, minisign or SLSA anywhere in the tree -- and what does exist, npm OIDC trusted publishing with registry provenance attestation (publish-npm.yml:60-62, CONTRIBUTING.md:449-455), attests the TARBALL's origin rather than the manifest against an upstream anchor. So \"sign the manifest\" would anchor to the wrong thing. The real anchor already exists and is unread: package-lock.json:7288. WHY ACCEPTED: the residual reduces to who can land a commit on main, i.e. code review, and the bytes currently match the locked upstream (measured under bb9f81e64fae). RECEIVER: agents/roadmaps/archive/road-to-the-14-22-0-disposition-residuals.md steps 1.1 (the anchor) and 1.2 (writing the boundary down).",
+       "verified_by": "Every condition read in place at src/scripts/_lib/packed_binary_predicate.ts:165-217, with the line references given in the rationale, and the whole docblock at :1-64 (condition list :28-42, loader rationale :43-46, inline-refusal rationale :47-49). Test file read at tests/scripts/packed_binary_predicate.test.ts:185-194 (hash, size and magic re-derived from bytes on disk) and :196-209 (grammar_id and ABI probed via src/scripts/code_graph/loader.js against the manifest). Signing infrastructure probed rather than assumed: `grep -rniE 'cosign|sigstore|minisign|gpg --|slsa' --include='*.ts' --include='*.yml' --include='*.json' --include='*.md' .` -> no signing-tooling hits. What exists instead read at .github/workflows/publish-npm.yml:60-62 (`id-token: write  # required for npm OIDC Trusted Publishing + provenance`) and CONTRIBUTING.md:449-455. Unread anchor read at package-lock.json:7288. All at 2cc536be2. HONEST GAP: the docblock names NO threat model -- no attacker, no trust anchor, and nowhere the statement that a same-commit manifest-plus-bytes edit is out of scope because the diff is reviewed. The finding's assumption that the boundary is undocumented is therefore correct, and a reader cannot currently tell the boundary from an oversight. That is receiver step 1.2.",
+       "date": "2026-09-08"
+     },
+diff --git a/agents/roadmaps/archive/road-to-the-14-22-0-disposition-residuals.md b/agents/roadmaps/archive/road-to-the-14-22-0-disposition-residuals.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..8cd717a96b76f1bff3e971a404f104955a891c1d
+--- /dev/null
++++ b/agents/roadmaps/archive/road-to-the-14-22-0-disposition-residuals.md
+@@ -0,0 +1,272 @@
++---
++complexity: lightweight
++status: ready
++relates:
++  - slug: road-to-a-graph-that-is-shipped
++    relation: extends
++    note: >
++      Shared surface, verified rather than assumed: that roadmap names
++      `packed-binary-manifest` / `src/vendor/grammars` three times
++      (`grep -c` on its text) and is what introduced the vendored WASM and its
++      eleven manifest-internal admission conditions. Steps 1.1 and 1.2 extend
++      exactly that surface with the verification it did not add — an anchor
++      outside the manifest, and the threat boundary written down.
++  - slug: road-to-skill-menu-economy
++    relation: disjoint
++    note: >
++      Shares the SUBJECT of step 1.3 and not its surface. That roadmap changes
++      what the preloaded catalog costs; 1.3 corrects the ledger text ADR-263
++      superseded and is gated only on re-emitting the census via
++      `report_skill_activation`, which that roadmap neither performs nor
++      blocks — `grep -c 'skill-activation-census\|report_skill_activation'`
++      over its text returns 0. So no ordering edge exists in either direction.
++estate_offset_exempt: "Offsets nothing, because it is the receiver the 14.22.0 disposition pass owed and there was nothing to disarchive against it. Three residuals survived verification of the eleven blocking findings in `agents/evidence/release-findings/14.22.0.json`; each is REAL and none was fixable inside a governance-ledger commit, so the alternative to this file was a deferral with no receiver — the shape `active-remediation` names as not a disposition at all. MEASURED on this branch rather than predicted: `check_estate_count` read `active_roadmaps 7 (floor 7 at origin/main, +0)` before the file and is expected to read `+1 active / -0 disposed` after it, which is what this line authorises under path 1 of the gate's own three (`check_estate_count.ts:59-62`). Nothing was archived to pay for it and no unrelated roadmap was parked to buy room — laundering an unrelated disposal to fund a receiver is the move the ratchet exists to catch, and doing it in the ratchet's name would be worse than the growth. Deliberately NOT folded into another file: `grep -rl 'release-findings' agents/roadmaps/*.md` returns nothing on this branch, so no active roadmap owns this surface."
++execution:
++  mode: phase-checkpoints
++---
++# Road to the 14.22.0 disposition residuals
++
++> **Source:** verification of the eleven blocking findings of the
++> `release/14.22.0` self-review (run 34214806821, artifact
++> `self-review-findings`, 56 findings) while writing
++> `agents/evidence/release-findings/14.22.0.json`. Nine of the eleven were
++> dispositioned `false_positive` and one `fixed`; the three items below are the
++> halves that survived, recorded here because a `false_positive` verdict on a
++> finding's stated mechanism does not dispose of a real gap found next to it.
++
++## Goal
++
++Each of the three residuals is either closed or carries a recorded decision
++naming why it stays open — so a later reader of the 14.22.0 ledger can follow
++every "REAL" half of a SPLIT verdict to something that owns it, rather than to
++a rationale paragraph that named it and stopped.
++
++## Phase 1 — The residuals
++
++- [x] **1.1 Verify the vendored grammar bytes against their upstream anchor.**
++      `src/config/packed-binary-manifest.json:5-31` records `sha256`, `size`,
++      `kind`, `grammar_id` and `abi` per grammar, and `evaluateEntry`
++      (`src/scripts/_lib/packed_binary_predicate.ts:165-217`) checks eleven
++      conditions against it — but every one of them is manifest-internal, so a
++      same-commit edit of the manifest and the bytes passes all eleven. The
++      independent anchor already exists and is read by nothing:
++      `package-lock.json:7288` holds `tree-sitter-wasms@0.1.13`'s upstream
++      `integrity: sha512-…`. Close the loop there rather than by inventing a
++      signing story — `grep -rniE 'cosign|sigstore|minisign|slsa'` returns no
++      signing tooling in this tree, so "sign the manifest" has no
++      infrastructure and would anchor to the wrong thing.
++      verify: a gate or test that fails when a vendored `.wasm` diverges from
++      the bytes the locked `tree-sitter-wasms` version resolves to, with the
++      failure demonstrated on a deliberately mutated copy — a check never seen
++      red has unknown sensitivity.
++      Done 2026-09-09. `src/scripts/_lib/vendored_grammar_upstream.ts` reads the
++      locked pin out of `package-lock.json` (`node_modules/tree-sitter-wasms`,
++      version + `integrity`), asserts the INSTALLED version equals the locked
++      one, and byte-compares every grammar the manifest admits against
++      `node_modules/tree-sitter-wasms/out/`. Exercised by
++      `tests/scripts/vendored_grammar_upstream.test.ts` — 16 cases, all green.
++      (13 at the first commit; three added by the R2 completion review below,
++      which found the vendored side resolving by BASENAME rather than by the
++      entry's own path. Two rows sharing a filename in different directories
++      would have anchored to the same file — one admitted binary silently
++      unanchored while the verdict reported full coverage, the false green this
++      module exists to remove. Fixed with a refusal for the ambiguous case and a
++      sabotage-proven test for the resolution.)
++      **Refusal, never a pass, is the load-bearing half** and it is what Risk 1
++      asks for: an absent upstream, an installed version that is not the locked
++      one, a lock row with no `integrity`, a missing counterpart, a missing
++      vendored file and an EMPTY claim set are each a thrown
++      `UpstreamAnchorRefusal` with its own test, so the check cannot go green
++      over nothing.
++      **Sensitivity proven on the REAL tree, not only on fixtures.** One byte of
++      `src/vendor/grammars/tree-sitter-php.wasm` at offset 812000 was flipped in
++      place; the real-tree case went red
++      (`× the real tree > anchors every vendored grammar to the locked upstream,
++      byte for byte`, `1 failed | 12 passed`), and the file was restored from a
++      pre-mutation copy and re-hashed to
++      `55bb617b6f01e14bab997861f0b20a2420cf6ba3199ffeb295b9ec398966d8a3`, its
++      committed value. A fixture case mutating a copy of the same real grammar
++      is kept in the suite so the sensitivity re-runs in CI.
++      **Test, not gate — the council split and the split was resolved by
++      measurement.** AI council 2026-09-09, 2 seats: unanimous that the
++      node_modules comparison is a real anchor; SPLIT on the shape, one seat for
++      a vitest test with cross-references, one for a registered gate on
++      discoverability grounds. Resolved to the test on two measured facts rather
++      than on a majority. First, the discoverability objection is answered by an
++      edit step 1.2 already owed: the predicate's docblock — the place a reader
++      auditing these bytes actually arrives — now names the module and the test
++      by path, and the manifest `_comment` and `src/vendor/grammars/README.md`
++      carry the same pointer. Second, the precedent exists: the ABI smoke test in
++      `tests/scripts/code_graph.test.ts` already depends on this same
++      devDependency, so a test-shaped check over `tree-sitter-wasms` is this
++      repository's existing pattern, not a new one. Against that, a gate costs
++      six registration surfaces and trips three ratchets
++      (`check_ci_local_parity`, `check_gate_coverage` hardening, the `allowEmpty`
++      prefix contract) for a corpus of exactly three static files.
++      **What the module may NOT claim, in the council's own words, written into
++      its docblock:** it is not independent of all repository state, and it does
++      not verify the grammars cryptographically against the registry independent
++      of local build state. The chain is registry tarball → `npm ci` checks its
++      sha512 against the lock's `integrity` → extracted bytes → vendored bytes,
++      and only the last link is checked here.
++
++- [x] **1.2 Write the threat boundary into the predicate's docblock.**
++      `packed_binary_predicate.ts:1-64` lists all eleven conditions and is
++      unusually explicit that it relaxes a control, yet names no attacker, no
++      trust anchor, and nowhere states that a same-commit manifest-plus-bytes
++      edit is out of scope because the diff is reviewed. A reader therefore
++      cannot tell the boundary from an oversight, which is what made finding
++      `d1696732ac28` reach for a signature the repository cannot provide.
++      verify: the docblock states the boundary and what closes it (1.1), and
++      `grep -c 'same-commit' src/scripts/_lib/packed_binary_predicate.ts`
++      returns non-zero.
++      Done 2026-09-09. The docblock gained a § THE THREAT BOUNDARY block in four
++      named parts: what the eleven conditions DO refuse (a byte drifting from
++      the row — corruption, a truncated checkout, a refresh that forgot the row,
++      an ABI move, a second row widening a path); what they deliberately do NOT
++      (the same-commit manifest-plus-bytes edit, held by review because the
++      manifest is a small JSON file whose diff a human reads); what closes it
++      (`_lib/vendored_grammar_upstream.ts` and its test, both by path, with the
++      sentence that module may not claim); and what stays open and owned by
++      review (a `package-lock.json` row pointing at a hostile package, which no
++      check in this tree defends). Verify output: `grep -c 'same-commit'` returns
++      `1`.
++      The finding this answers is named in the block itself, so a later reader
++      meets the reason rather than re-deriving it: `d1696732ac28` reached for a
++      signature this repository cannot provide precisely because nothing said
++      where the line was.
++
++- [x] **1.3 Land the CLAIMS.md correction ADR-263 deferred.**
++      ADR-263 § Consequences says the published reading of
++      `skill-activation-census-zero` "is now wrong and is superseded by this
++      record" and that correcting the ledger text "is tracked as work rather
++      than performed here" — but no slug tracks it, which is the gap this step
++      closes. Two edits are owed at `docs/CLAIMS.md:244-250`: the arithmetic
++      (`189` where ADR-263 fixes it at `187`) and the text still saying both
++      alternatives "stay OPEN rather than closed" after Option B was locked.
++      The arithmetic half is mechanically blocked first:
++      `agents/evidence/metrics/skill-activation-census.json` holds
++      `human_named_only: 189`, and `report_skill_activation.ts:352-379`
++      requires the claim to match the census, so writing `187` reds
++      `check_skill_activation_claim` until the census is re-emitted. Re-emit,
++      then correct.
++      verify: `./scripts-run src/scripts/check_skill_activation_claim` exits 0
++      with the corrected figure in `docs/CLAIMS.md`, and ADR-263's § References
++      pointer no longer describes a claim the tree contradicts.
++
++      **THE STEP ABOVE IS WRONG ON THE ARITHMETIC HALF AND IS LEFT AS WRITTEN.**
++      Done 2026-09-09, and only the prose half was landed. The original text is
++      preserved because an executor who found it edited away could not tell a
++      correction from a decision.
++
++      **What was measured before anything was written.** `populations()` in
++      `src/scripts/report_skill_activation.ts:226-237` computes the remainder as
++      `census.total - eitherOne.size`, where `eitherOne` is the SET UNION of the
++      trigger-key skills and the corpus skills. Union = 12 + 100 − 2 = 110;
++      remainder = 299 − 110 = **189**. The report prints its own reconciliation
++      today: `12 + 100 - 2 + 189 = 299 of 299`. ADR-263:113-115 states the union
++      correctly at 110 in the same sentence and then subtracts 112, and its
++      diagnosis is inverted — 189 IS the inclusion–exclusion result, and 187 is
++      what you get by removing the two overlapping skills a second time, from a
++      remainder they were never in. So the defect is in ADR-263, not in the
++      ledger, and writing `187` into a `status: backed` claim would have put a
++      figure there that the tree's own instrument contradicts.
++
++      **The census was deliberately NOT re-emitted, against this step's own
++      instruction.** Two reasons, both measured. Re-emitting cannot produce 187:
++      the remainder is computed over a set union, so it recomputes 189 unless the
++      population moves. And re-emitting from here would have CORRUPTED the
++      record: `report_skill_activation` reads the transcript store for the
++      current project path, and the only store reachable from the executing
++      worktree holds `sessions=2 asst=425 Skill calls=1` against the committed
++      `sessions=30 asst=11338 invocations=0`. The published claim's headline word
++      is ZERO. The report itself already prints `population split still describes
++      this tree`, so the population half needed no re-emit at all.
++
++      **What landed.** (a) `docs/CLAIMS.md`: the sentence saying both
++      alternatives "stay OPEN rather than closed" is corrected — ADR-263 locks
++      Option B in the "by observation" form and rejects Option A — and the
++      earlier "for the 12 the zero is a defect" reading now carries the
++      supersession ADR-263 § Consequences names. The figure 189 is untouched.
++      (b) `docs/decisions/ADR-263-…md` gained **Amendment 1 (2026-09-09)**
++      correcting the 187 bullet, scoped in its first paragraph to one number:
++      the Decision, Option A's rejection and Option D's not-taken status are all
++      untouched, and `reopen_policy: owner` is unaffected because reopening the
++      decision is not what an arithmetic correction does. The wrong bullet is
++      kept in place with a pointer to the amendment rather than rewritten.
++      verify output: `adr_cite_check ADR-263` reports
++      `amendments 1: Amendment 1 (2026-09-09) …` and
++      `→ AMENDED — read the amendment before citing the original decision`;
++      `check_adr_frontmatter`: no errors;
++      `check_skill_activation_claim`: `✅ census claim matches … (measured
++      2026-09-06)`.
++
++      **Authority for both deviations.** AI council 2026-09-09, 2 seats
++      (anthropic, openai), converging: the defect is in ADR-263 rather than the
++      ledger; an arithmetic correction touching no floor and no commitment is
++      council-decidable under `decision-revisit-gate` rather than owner-reserved;
++      the refusal to re-emit is correct and belongs in this step's own text
++      rather than in a separate blocker, so the reasoning chain stays where the
++      instruction is.
++
++      **Left for the owner, not silently absorbed.** `report_skill_activation`
++      has no guard against being run outside the canonical checkout — from a
++      worktree it silently measures a different, smaller store and `--emit`
++      would overwrite a published claim with it. That is a real defect this step
++      only avoided by hand, and it is recorded as
++      `agents/roadmaps/stubs/road-to-a-census-that-refuses-a-partial-store.md`
++      rather than fixed here — changing what the census refuses to measure is a
++      decision about a published claim's provenance, not a residual of the
++      14.22.0 pass. A stub rather than a blocker on this file, deliberately: a
++      blocker would hold a finished roadmap open on an item that is not one of
++      its three residuals, and the stub carries the measured table and a
++      two-branch promotion probe so the finding is not merely mentioned.
++
++## Risk Register
++<!-- risk-review: v1 | reviewed: 2026-09-08 | reviewer: claude/host -->
++
++| Rank | Item | Risk type | Description | Mitigation | Anchored under |
++|------|------|-----------|-------------|------------|----------------|
++| 1 | 1.1 is closed by a check that cannot fail | implementation | An upstream-comparison gate is easy to write so that it passes when the upstream package is absent from `node_modules`, which is the normal state in a fresh CI checkout — it would then be green forever while verifying nothing, the exact shape the eleven manifest-internal conditions already have | 1.1's own verify demands the failure be demonstrated on a mutated copy, so the check is seen red before it is trusted; an absent upstream must be an explicit refusal rather than a pass | Phase 1 — The residuals |
++| 2 | 1.3 lands the text edit without re-emitting the census | implementation | The prose half of 1.3 is unblocked while the arithmetic half is gated, so an executor can correct "stay OPEN" and leave `189` — producing a claim that is half-superseded and reads as fully corrected | 1.3 names the ordering and the blocking mechanism explicitly, and its verify requires the corrected figure rather than only a green gate, which `189` would also produce | Phase 1 — The residuals |
++| 3 | The file is read as re-opening settled findings | product | Nine of the eleven findings were dispositioned `false_positive` on verified evidence; a receiver roadmap next to that ledger invites a later reader to treat the whole set as unresolved and re-run a verification that already happened | The Source block states the split explicitly, and each step names only the surviving half with the file and line the verification landed on, so the closed halves are not reachable from here | Phase 1 — The residuals |
++
++## Acceptance Criteria
++
++- [x] AC-1 — The vendored grammars have an independent verification path against
++      the locked upstream, proven by a check that has been observed failing on
++      mutated bytes. A manifest-internal check does not satisfy this.
++      Met 2026-09-09. `src/scripts/_lib/vendored_grammar_upstream.ts` +
++      `tests/scripts/vendored_grammar_upstream.test.ts` (16 cases). Observed
++      failing twice on mutated bytes: once by hand on the real committed
++      `tree-sitter-php.wasm` (one byte flipped, `1 failed | 12 passed`, restored
++      and re-hashed to its committed sha256), and once as a permanent suite case
++      that mutates a copy of that same real grammar, so the observation re-runs
++      rather than living in this sentence. Not manifest-internal by
++      construction: the comparison never reads
++      `packed-binary-manifest.json`'s hashes, only its path list.
++- [x] AC-2 — `packed_binary_predicate.ts`'s docblock states its threat boundary,
++      so the absence of a trust anchor is documented rather than inferable.
++      Met 2026-09-09. § THE THREAT BOUNDARY names what is refused, what is
++      deliberately not (the same-commit pair, held by review), what closes it
++      (1.1, by module and test path), and what stays open and owned by review (a
++      lock row pointing at a hostile package). `grep -c 'same-commit'` returns 1.
++- [x] AC-3 — `docs/CLAIMS.md`'s `skill-activation-census-zero` entry no longer
++      contradicts ADR-263, with `check_skill_activation_claim` green on the
++      corrected figure rather than on the stale one.
++      **AC AMENDED 2026-09-09, and the original is kept above.** As written it
++      presumes the ledger's figure is the stale one; measurement showed the
++      opposite — 189 is what the generator's inclusion–exclusion computes and
++      ADR-263's `187` is the arithmetic error (step 1.3 carries the derivation).
++      Read literally the criterion is unsatisfiable, because no correct figure
++      other than 189 exists to write. It is satisfied in substance and that is
++      what is claimed: the contradiction is gone, resolved on the side that was
++      wrong. ADR-263 carries Amendment 1 (2026-09-09) correcting 187 → 189 with
++      its Decision untouched; `docs/CLAIMS.md` carries the prose correction
++      (Option B locked, Option A rejected, the "12 = defect" reading superseded)
++      with the figure unchanged; `check_skill_activation_claim` exits 0 —
++      `✅ census claim matches agents/evidence/metrics/skill-activation-census.json
++      (measured 2026-09-06)`. Amended under the same AI-council convergence that
++      settled 1.3, which is why this is recorded here rather than performed
++      silently: rewriting an acceptance criterion to match what was done is the
++      failure this note exists to make visible instead.
+diff --git a/agents/roadmaps/road-to-the-14-22-0-disposition-residuals.md b/agents/roadmaps/road-to-the-14-22-0-disposition-residuals.md
+deleted file mode 100644
+index a4bbeeaa572bdd50dee4847c790b9a9674188fcf..0000000000000000000000000000000000000000
+--- a/agents/roadmaps/road-to-the-14-22-0-disposition-residuals.md
++++ /dev/null
+@@ -1,110 +0,0 @@
+----
+-complexity: lightweight
+-status: ready
+-relates:
+-  - slug: road-to-a-graph-that-is-shipped
+-    relation: extends
+-    note: >
+-      Shared surface, verified rather than assumed: that roadmap names
+-      `packed-binary-manifest` / `src/vendor/grammars` three times
+-      (`grep -c` on its text) and is what introduced the vendored WASM and its
+-      eleven manifest-internal admission conditions. Steps 1.1 and 1.2 extend
+-      exactly that surface with the verification it did not add — an anchor
+-      outside the manifest, and the threat boundary written down.
+-  - slug: road-to-skill-menu-economy
+-    relation: disjoint
+-    note: >
+-      Shares the SUBJECT of step 1.3 and not its surface. That roadmap changes
+-      what the preloaded catalog costs; 1.3 corrects the ledger text ADR-263
+-      superseded and is gated only on re-emitting the census via
+-      `report_skill_activation`, which that roadmap neither performs nor
+-      blocks — `grep -c 'skill-activation-census\|report_skill_activation'`
+-      over its text returns 0. So no ordering edge exists in either direction.
+-estate_offset_exempt: "Offsets nothing, because it is the receiver the 14.22.0 disposition pass owed and there was nothing to disarchive against it. Three residuals survived verification of the eleven blocking findings in `agents/evidence/release-findings/14.22.0.json`; each is REAL and none was fixable inside a governance-ledger commit, so the alternative to this file was a deferral with no receiver — the shape `active-remediation` names as not a disposition at all. MEASURED on this branch rather than predicted: `check_estate_count` read `active_roadmaps 7 (floor 7 at origin/main, +0)` before the file and is expected to read `+1 active / -0 disposed` after it, which is what this line authorises under path 1 of the gate's own three (`check_estate_count.ts:59-62`). Nothing was archived to pay for it and no unrelated roadmap was parked to buy room — laundering an unrelated disposal to fund a receiver is the move the ratchet exists to catch, and doing it in the ratchet's name would be worse than the growth. Deliberately NOT folded into another file: `grep -rl 'release-findings' agents/roadmaps/*.md` returns nothing on this branch, so no active roadmap owns this surface."
+-execution:
+-  mode: phase-checkpoints
+----
+-# Road to the 14.22.0 disposition residuals
+-
+-> **Source:** verification of the eleven blocking findings of the
+-> `release/14.22.0` self-review (run 34214806821, artifact
+-> `self-review-findings`, 56 findings) while writing
+-> `agents/evidence/release-findings/14.22.0.json`. Nine of the eleven were
+-> dispositioned `false_positive` and one `fixed`; the three items below are the
+-> halves that survived, recorded here because a `false_positive` verdict on a
+-> finding's stated mechanism does not dispose of a real gap found next to it.
+-
+-## Goal
+-
+-Each of the three residuals is either closed or carries a recorded decision
+-naming why it stays open — so a later reader of the 14.22.0 ledger can follow
+-every "REAL" half of a SPLIT verdict to something that owns it, rather than to
+-a rationale paragraph that named it and stopped.
+-
+-## Phase 1 — The residuals
+-
+-- [ ] **1.1 Verify the vendored grammar bytes against their upstream anchor.**
+-      `src/config/packed-binary-manifest.json:5-31` records `sha256`, `size`,
+-      `kind`, `grammar_id` and `abi` per grammar, and `evaluateEntry`
+-      (`src/scripts/_lib/packed_binary_predicate.ts:165-217`) checks eleven
+-      conditions against it — but every one of them is manifest-internal, so a
+-      same-commit edit of the manifest and the bytes passes all eleven. The
+-      independent anchor already exists and is read by nothing:
+-      `package-lock.json:7288` holds `tree-sitter-wasms@0.1.13`'s upstream
+-      `integrity: sha512-…`. Close the loop there rather than by inventing a
+-      signing story — `grep -rniE 'cosign|sigstore|minisign|slsa'` returns no
+-      signing tooling in this tree, so "sign the manifest" has no
+-      infrastructure and would anchor to the wrong thing.
+-      verify: a gate or test that fails when a vendored `.wasm` diverges from
+-      the bytes the locked `tree-sitter-wasms` version resolves to, with the
+-      failure demonstrated on a deliberately mutated copy — a check never seen
+-      red has unknown sensitivity.
+-
+-- [ ] **1.2 Write the threat boundary into the predicate's docblock.**
+-      `packed_binary_predicate.ts:1-64` lists all eleven conditions and is
+-      unusually explicit that it relaxes a control, yet names no attacker, no
+-      trust anchor, and nowhere states that a same-commit manifest-plus-bytes
+-      edit is out of scope because the diff is reviewed. A reader therefore
+-      cannot tell the boundary from an oversight, which is what made finding
+-      `d1696732ac28` reach for a signature the repository cannot provide.
+-      verify: the docblock states the boundary and what closes it (1.1), and
+-      `grep -c 'same-commit' src/scripts/_lib/packed_binary_predicate.ts`
+-      returns non-zero.
+-
+-- [ ] **1.3 Land the CLAIMS.md correction ADR-263 deferred.**
+-      ADR-263 § Consequences says the published reading of
+-      `skill-activation-census-zero` "is now wrong and is superseded by this
+-      record" and that correcting the ledger text "is tracked as work rather
+-      than performed here" — but no slug tracks it, which is the gap this step
+-      closes. Two edits are owed at `docs/CLAIMS.md:244-250`: the arithmetic
+-      (`189` where ADR-263 fixes it at `187`) and the text still saying both
+-      alternatives "stay OPEN rather than closed" after Option B was locked.
+-      The arithmetic half is mechanically blocked first:
+-      `agents/evidence/metrics/skill-activation-census.json` holds
+-      `human_named_only: 189`, and `report_skill_activation.ts:352-379`
+-      requires the claim to match the census, so writing `187` reds
+-      `check_skill_activation_claim` until the census is re-emitted. Re-emit,
+-      then correct.
+-      verify: `./scripts-run src/scripts/check_skill_activation_claim` exits 0
+-      with the corrected figure in `docs/CLAIMS.md`, and ADR-263's § References
+-      pointer no longer describes a claim the tree contradicts.
+-
+-## Risk Register
+-<!-- risk-review: v1 | reviewed: 2026-09-08 | reviewer: claude/host -->
+-
+-| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+-|------|------|-----------|-------------|------------|----------------|
+-| 1 | 1.1 is closed by a check that cannot fail | implementation | An upstream-comparison gate is easy to write so that it passes when the upstream package is absent from `node_modules`, which is the normal state in a fresh CI checkout — it would then be green forever while verifying nothing, the exact shape the eleven manifest-internal conditions already have | 1.1's own verify demands the failure be demonstrated on a mutated copy, so the check is seen red before it is trusted; an absent upstream must be an explicit refusal rather than a pass | Phase 1 — The residuals |
+-| 2 | 1.3 lands the text edit without re-emitting the census | implementation | The prose half of 1.3 is unblocked while the arithmetic half is gated, so an executor can correct "stay OPEN" and leave `189` — producing a claim that is half-superseded and reads as fully corrected | 1.3 names the ordering and the blocking mechanism explicitly, and its verify requires the corrected figure rather than only a green gate, which `189` would also produce | Phase 1 — The residuals |
+-| 3 | The file is read as re-opening settled findings | product | Nine of the eleven findings were dispositioned `false_positive` on verified evidence; a receiver roadmap next to that ledger invites a later reader to treat the whole set as unresolved and re-run a verification that already happened | The Source block states the split explicitly, and each step names only the surviving half with the file and line the verification landed on, so the closed halves are not reachable from here | Phase 1 — The residuals |
+-
+-## Acceptance Criteria
+-
+-- [ ] AC-1 — The vendored grammars have an independent verification path against
+-      the locked upstream, proven by a check that has been observed failing on
+-      mutated bytes. A manifest-internal check does not satisfy this.
+-- [ ] AC-2 — `packed_binary_predicate.ts`'s docblock states its threat boundary,
+-      so the absence of a trust anchor is documented rather than inferable.
+-- [ ] AC-3 — `docs/CLAIMS.md`'s `skill-activation-census-zero` entry no longer
+-      contradicts ADR-263, with `check_skill_activation_claim` green on the
+-      corrected figure rather than on the stale one.
+diff --git a/agents/roadmaps/stubs/road-to-a-census-that-refuses-a-partial-store.md b/agents/roadmaps/stubs/road-to-a-census-that-refuses-a-partial-store.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..aa2181be2dcf78e114dcf61596136c9b58f7ad48
+--- /dev/null
++++ b/agents/roadmaps/stubs/road-to-a-census-that-refuses-a-partial-store.md
+@@ -0,0 +1,71 @@
++---
++complexity: lightweight
++review_by: 2026-12-09
++---
++
++# Stub: road to a census that refuses to publish from a partial store
++
++> **Stub — not active work.** Found 2026-09-09 by the drain run holding
++> `road-to-the-14-22-0-disposition-residuals`, whose step 1.3 was instructed to
++> re-emit the skill-activation census and did not. The run avoided the defect by
++> hand; nothing in the tree would have stopped it. An AI council (2026-09-09,
++> 2 seats) named it as a separate item and said it should be tracked rather than
++> fixed inside a ledger-correction commit. Recorded here rather than built
++> drive-by, and rather than as a blocker on that roadmap, because it is not a
++> residual of the 14.22.0 review and would otherwise hold a finished file open.
++
++## The defect, reproduced
++
++`src/scripts/report_skill_activation.ts` resolves the transcript stores to read
++from the **current project path**. Run from the canonical checkout it finds the
++maintainer's main store; run from a git worktree it finds that worktree's own,
++much smaller store, and says nothing about the difference.
++
++Measured 2026-09-09 from
++`.claude/worktrees/feat-blocker-not-hidden-in-archive`:
++
++| Reading | sessions | assistant turns | Skill invocations |
++|---|---:|---:|---:|
++| committed record (`agents/evidence/metrics/skill-activation-census.json`) | 30 | 11,338 | 0 |
++| what this worktree resolves | 2 | 425 | 1 |
++
++`--emit` writes the second over the first with no warning and no refusal. The
++published claim `skill-activation-census-zero` in `docs/CLAIMS.md` is
++`status: backed`, and its headline word is **ZERO** — so a single `--emit` from
++the wrong directory turns a 30-session zero into a 2-session one, and
++`check_skill_activation_claim` would then be green against the corrupted record,
++because that gate compares the claim to the record and never asks whether the
++record still describes the world. Its own docblock says so
++(`report_skill_activation.ts:342-349`).
++
++## Why the obvious guard is not obviously right
++
++The cheap version — refuse when `process.cwd()` is not the canonical checkout —
++is a path heuristic, and path heuristics in this tree have a record of being
++wrong in both directions (a CI checkout is not the maintainer's path either).
++
++The shape that reads better is data-driven: `--emit` refuses when the store set
++it resolved does not cover the `stores` array the existing record names, i.e.
++when re-emitting would DROP a store rather than update one. That has no path
++assumption in it, states its refusal in terms a reader can check, and leaves a
++first emit (no prior record) unaffected. It needs an explicit override for the
++legitimate case where a store genuinely goes away.
++
++Neither is written here. Choosing between them changes what a published claim's
++provenance is allowed to be, which is worth one decision rather than a
++drive-by patch.
++
++## Promotion probe
++
++Promote when either fires:
++
++1. A census record is found in git history whose `stores` array shrank between
++   two commits with no accompanying note — i.e. the defect has actually landed
++   once. `git log -p --follow agents/evidence/metrics/skill-activation-census.json`
++   is the whole probe.
++2. The owner decides the provenance question above (path guard vs store-coverage
++   guard) — a one-line answer is enough to make this buildable.
++
++Until then the mitigation is what this stub is: the failure mode is written
++down, and `road-to-the-14-22-0-disposition-residuals` step 1.3 records the one
++run that met it and declined.
+diff --git a/docs/CLAIMS.md b/docs/CLAIMS.md
+index 70deeaa8e7c186c6c586b033b8d19b58f1fde266..b7e6ebaa3ac90999b380a12968312d9852edf917 100644
+--- a/docs/CLAIMS.md
++++ b/docs/CLAIMS.md
+@@ -242,7 +242,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
+ - last_verified: 2026-08-26
+ 
+ ### claim: skill-activation-census-zero
+-- claim: Skill self-selection is measured, not assumed, and over this package's own transcript store it is ZERO — not near zero. `report_skill_activation` over 30 sessions and 11,338 assistant turns records 0 Skill invocations and 0 of 299 distinct skills (measured 2026-09-06). Every figure in this sentence, and the date, is read out of `agents/evidence/metrics/skill-activation-census.json`, which the census writes and refuses to write from an empty store; `check_skill_activation_claim` fails when the record and this sentence disagree, so the published number cannot outlive its measurement silently. The 299 split three ways and the zero means a different thing in each: 12 declare a machine-matchable trigger key in frontmatter, 100 carry an `evals/triggers.json` corpus, 2 do both, and the remaining 189 are reachable only by a human naming them. For the 12 the zero is a defect — a matchable declaration exists and nothing acted on it. For the 189 the zero is the design, because no automatic selection is claimed for them and invocation there is a reader opening a file. For the 100 the zero licenses nothing in either direction: `evals/triggers.json` is a TEST fixture read by `check_routing_coverage` / `lint_skill_trigger_corpus` / `check_trigger_evals`, no host reads it at routing time, and the two surfaces share the word "trigger" and are unrelated. A 14-file eval-corpus wave taking coverage 100 → 114 was authored, measured against, and then reverted on the same branch for an unrelated governance reason; the census read 0 in both states. FRAMING, RECORDED 2026-09-07 SO A LATER REVIEW MEETS AN ANSWER RATHER THAN RE-DERIVING THE ARGUMENT: the surface is left exactly as it is and the zero is published with its reason. Two substantive alternatives were on the table and NEITHER was taken — building a host-side selection path for the population that declares a machine-matchable trigger key, or declaring the human-named remainder reference material by design. Each of those changes what the package claims to be for its consumers, which is an owner-reserved commitment under `decision-revisit-gate`, so both stay OPEN rather than closed and this line narrows neither. What is recorded is a publication decision and nothing wider: no selection mechanism was built, no population was reclassified, and the split above is untouched. Its own falsifier, stated so it can fail: the reason for accepting the zero as-is is that a single-machine transcript store cannot separate an unbuilt selection path from an unused one, so the moment a second store — a consumer install, another host, a CI-visible corpus — becomes readable, the reason stops holding and the choice returns. <!-- count: dated -->
++- claim: Skill self-selection is measured, not assumed, and over this package's own transcript store it is ZERO — not near zero. `report_skill_activation` over 30 sessions and 11,338 assistant turns records 0 Skill invocations and 0 of 299 distinct skills (measured 2026-09-06). Every figure in this sentence, and the date, is read out of `agents/evidence/metrics/skill-activation-census.json`, which the census writes and refuses to write from an empty store; `check_skill_activation_claim` fails when the record and this sentence disagree, so the published number cannot outlive its measurement silently. The 299 split three ways and the zero means a different thing in each: 12 declare a machine-matchable trigger key in frontmatter, 100 carry an `evals/triggers.json` corpus, 2 do both, and the remaining 189 are reachable only by a human naming them. For the 12 the zero was published as a defect — a matchable declaration exists and nothing acted on it — and ADR-263 SUPERSEDES that reading in those words: the 12 are unvalidated metadata with no host contract to bind to, so nothing was owed and nothing failed; they are kept, not deleted, as the thing a future host contract would bind to. For the 189 the zero is the design, because no automatic selection is claimed for them and invocation there is a reader opening a file. For the 100 the zero licenses nothing in either direction: `evals/triggers.json` is a TEST fixture read by `check_routing_coverage` / `lint_skill_trigger_corpus` / `check_trigger_evals`, no host reads it at routing time, and the two surfaces share the word "trigger" and are unrelated. A 14-file eval-corpus wave taking coverage 100 → 114 was authored, measured against, and then reverted on the same branch for an unrelated governance reason; the census read 0 in both states. FRAMING, RECORDED 2026-09-07 SO A LATER REVIEW MEETS AN ANSWER RATHER THAN RE-DERIVING THE ARGUMENT: the surface is left exactly as it is and the zero is published with its reason. Two substantive alternatives were on the table and NEITHER was taken — building a host-side selection path for the population that declares a machine-matchable trigger key, or declaring the human-named remainder reference material by design. Each of those changes what the package claims to be for its consumers, which is an owner-reserved commitment under `decision-revisit-gate` — and on 2026-09-08 that commitment was made: ADR-263 LOCKS the second, in the corrected form "by observation" rather than "by design", and REJECTS the first, on the ground that there is no host contract to build against and that shipping a documented routing capability which still yields zero would convert an implementation cost into a credibility cost. So neither alternative is open any longer, and the sentence that said both were is corrected here rather than left standing. What ADR-263 did NOT do is still worth naming: no selection mechanism was built, no population was reclassified, and the split above is untouched — "by observation" is deliberately not "by design", because design intent is an ownership claim this repository cannot make about hosts it does not own. Its own falsifier, stated so it can fail: the reason for accepting the zero as-is is that a single-machine transcript store cannot separate an unbuilt selection path from an unused one, so the moment a second store — a consumer install, another host, a CI-visible corpus — becomes readable, the reason stops holding and the choice returns. <!-- count: dated -->
+ - kind: quant
+ - evidence: exec:check_skill_activation_claim -> 0
+ - non_inference: This is a reading of ONE transcript store on one machine, so it bounds this package's own maintainer sessions and licenses nothing about consumer installs, other hosts, or any period outside the 30 sessions scanned. The store is rolling rather than append-only, so a later re-derivation can legitimately report FEWER assistant turns than an earlier one; a rise or fall between two readings is not a trend. Zero invocations is NOT evidence that the skills are useless, unreachable, or wrongly written — the census names its own leading unmeasured cause, that the host's injected catalogue may carry bare names rather than descriptions past roughly the first forty entries, and that catalogue is not persisted in the transcript so nothing here tests it. The three population counts partition the 299 by what each skill DECLARES, not by what any host does with it: they do not establish that the 189 are unreachable, that the 12 are reachable, or that the split is the right one. The number is also not a rate: with a zero numerator there is no denominator question to answer. It says nothing about whether `lean_projection.mode: delivery` would move activation; that needs the flip, which is owner-reserved. And it must not be read as a verdict on the corpus wave, which raised testability and was never a delivery mechanism.
+diff --git a/docs/decisions/ADR-263-skills-are-explicitly-invoked-reference-material.md b/docs/decisions/ADR-263-skills-are-explicitly-invoked-reference-material.md
+index 19ab113b2d5b30b71a3dbedd45bde8af536fde74..dc39663cc47a06ef2d2eaae2d5a85ad7c28075db 100644
+--- a/docs/decisions/ADR-263-skills-are-explicitly-invoked-reference-material.md
++++ b/docs/decisions/ADR-263-skills-are-explicitly-invoked-reference-material.md
+@@ -104,6 +104,16 @@ supplied the replacement wording, and it is adopted verbatim as the target:
+ > All 299 require explicit invocation until a named host with a documented
+ > routing contract demonstrates otherwise.
+ 
++**The third bullet of that block is WRONG and is corrected by Amendment 1
++(2026-09-09): read `189`, not `187`.** The block is quoted verbatim rather than
++edited, because it is the wording the council adopted and rewriting a quoted
++verdict hides that a correction happened. Reading it, take the third line as
++`189 skills declare neither trigger nor eval data` — and note that the three
++lines only reconcile once the overlap is named, because 12 + 100 + 189 = 301
++while 12 + 100 − 2 + 189 = 299. The published wording therefore owes the
++2-skill overlap a mention that the adopted block does not carry. Amendment 1
++states both sites.
++
+ Two wording points are load-bearing and are recorded rather than left implicit:
+ 
+ - **"by observation", never "by design".** The council rejected "reference
+@@ -113,6 +123,9 @@ Two wording points are load-bearing and are recorded rather than left implicit:
+ - **187, not 189.** 12 declare a trigger key and 100 carry a corpus, of which 2
+   do both, so 110 are in at least one set and **187** are in neither. The 189 in
+   the earlier framing counted the two overlaps twice out of the remainder.
++  **WRONG — see Amendment 1 (2026-09-09). This bullet is kept as written because
++  an amendment that edits the error away leaves the next reader unable to tell a
++  correction from a decision. 189 is the figure that stands.**
+ 
+ **Option A is rejected**, on two grounds the council named: there is no host
+ contract to build against, and shipping a documented routing capability that
+@@ -123,6 +136,61 @@ consumers would cite the claim as a bug.
+ honest closure only if the provenance hole could not be closed, and it was
+ closed.
+ 
++## Amendment 1 (2026-09-09) — the `187` figure is an arithmetic error; 189 stands
++
++Scope, stated first so it cannot be misread: this amendment corrects **one
++figure, at the two places it appears**. The Decision is untouched — Option B stands, in
++the "by observation" form, Option A stays rejected, Option D stays not-taken, and
++nothing this record locks is reopened.
++
++**Where it appears — TWO sites, not one.** Corrected 2026-09-09 within the same
++change, on an R2 completion-review finding against the first draft of this
++amendment: the figure is in the § Decision blockquote (`:102`, the wording the
++Decision introduces as adopted verbatim) as well as in the supporting bullet
++below it. An amendment naming only the bullet leaves the authoritative half of
++the record contradicting the ledger, and no gate covers that — the census gate
++reads `docs/CLAIMS.md` against the record and exits 0 with this file still
++wrong. Both sites now carry a pointer here; neither is rewritten.
++
++**A figure swap alone would not have been enough**, which is why the note above
++the bullets says so: 12 + 100 + 189 = 301. The adopted block never named the
++2-skill overlap, so its three lines reconcile to 299 only with the `− 2` the
++reconciliation below carries.
++
++**What is wrong.** The bullet states the union correctly at 110 and then
++subtracts 112. With `total = 299`, `trigger key = 12`, `corpus = 100` and
++`both = 2`, the union is 12 + 100 − 2 = 110 and the remainder is
++299 − 110 = **189**. The bullet's diagnosis is also inverted: 189 is the
++inclusion–exclusion result, and 187 is what you get by removing the two
++overlapping skills a second time — from a remainder they were never in.
++
++**How it was established.** `populations()` in
++`src/scripts/report_skill_activation.ts:226-237` computes the remainder as
++`census.total - eitherOne.size`, where `eitherOne` is the set union. The
++implementation is the definition, so no reading of "human-named only" produces
++187 without changing that line. Run today, the report prints its own
++reconciliation: `12 + 100 - 2 + 189 = 299 of 299`. The committed record
++`agents/evidence/metrics/skill-activation-census.json` holds
++`human_named_only: 189`, and `check_skill_activation_claim` is green against
++`docs/CLAIMS.md` at that figure.
++
++**What this changes downstream.** The § Consequences bullet below says correcting
++the ledger text is tracked as work rather than performed here. That work is
++`road-to-the-14-22-0-disposition-residuals` step 1.3, and it lands the *prose*
++half only: the claim's sentence that both alternatives "stay OPEN rather than
++closed" is false after this record and is corrected, while the figure 189 is
++left exactly as it is. The census was deliberately **not** re-emitted — see that
++step for the measurement, in short: the only transcript store reachable from the
++executing worktree is a 2-session one, and re-emitting would have replaced a
++30-session zero-invocation reading with it.
++
++**Authority.** AI council 2026-09-09, 2 seats (anthropic, openai), both
++converging on this disposition: the defect is here rather than in the ledger, an
++arithmetic correction that touches no floor and no commitment is
++council-decidable under `decision-revisit-gate`, and the original bullet is
++preserved rather than rewritten. `reopen_policy: owner` on this record is
++unaffected — it governs reopening the decision, which this does not do.
++
+ ## Consequences
+ 
+ - The published claim `skill-activation-census-zero` (`docs/CLAIMS.md:245`) reads
+diff --git a/docs/proof.md b/docs/proof.md
+index 1ccae0dd6c033567c9bbb93f143784345ee876c6..75f9cbeafc93196e2868e7cab6c887139101502c 100644
+--- a/docs/proof.md
++++ b/docs/proof.md
+@@ -95,7 +95,7 @@ evidence pointer, or `task check-claims` fails the build.
+ | On a deterministic multi-session recall corpus, the memory substrate produces a measured, placebo-controlled recall lift — memory-on 27/27 vs no-memory 10/27 and vs equal-byte placebo 9/27 (claude-haiku-4-5, n=9 tasks x 3 seeds, sign test p=0.031 for BOTH pairings). Scoped honestly: this is the context-value upper bound (perfect retrieval on a one-fact-per-task corpus), not retrieval precision under a large store. | quant | `internal/bench/reports/second-brain-delta.json` | ✅ |
+ | `sequential-thinking` applies chain-of-thought decomposition with two constraints the original formulation does not carry — a cap on the number of thoughts and a mandatory validation step — specifically to bound the unbounded-expansion failure mode. | qual | `https://arxiv.org/abs/2201.11903 (2026-08-11)` | ✅ |
+ | Every artifact the package ships — source AND the condensed projection that reaches consumers — is machine-scanned in CI for hidden-Unicode, mixed-script-confusable, and instruction-smuggling payloads (the rules-file-backdoor class); a finding blocks the release before `npm publish`, not just the merge. | qual | `exec:lint_agent_security -> 0` | ✅ |
+-| Skill self-selection is measured, not assumed, and over this package's own transcript store it is ZERO — not near zero. `report_skill_activation` over 30 sessions and 11,338 assistant turns records 0 Skill invocations and 0 of 299 distinct skills (measured 2026-09-06). Every figure in this sentence, and the date, is read out of `agents/evidence/metrics/skill-activation-census.json`, which the census writes and refuses to write from an empty store; `check_skill_activation_claim` fails when the record and this sentence disagree, so the published number cannot outlive its measurement silently. The 299 split three ways and the zero means a different thing in each: 12 declare a machine-matchable trigger key in frontmatter, 100 carry an `evals/triggers.json` corpus, 2 do both, and the remaining 189 are reachable only by a human naming them. For the 12 the zero is a defect — a matchable declaration exists and nothing acted on it. For the 189 the zero is the design, because no automatic selection is claimed for them and invocation there is a reader opening a file. For the 100 the zero licenses nothing in either direction: `evals/triggers.json` is a TEST fixture read by `check_routing_coverage` / `lint_skill_trigger_corpus` / `check_trigger_evals`, no host reads it at routing time, and the two surfaces share the word "trigger" and are unrelated. A 14-file eval-corpus wave taking coverage 100 → 114 was authored, measured against, and then reverted on the same branch for an unrelated governance reason; the census read 0 in both states. FRAMING, RECORDED 2026-09-07 SO A LATER REVIEW MEETS AN ANSWER RATHER THAN RE-DERIVING THE ARGUMENT: the surface is left exactly as it is and the zero is published with its reason. Two substantive alternatives were on the table and NEITHER was taken — building a host-side selection path for the population that declares a machine-matchable trigger key, or declaring the human-named remainder reference material by design. Each of those changes what the package claims to be for its consumers, which is an owner-reserved commitment under `decision-revisit-gate`, so both stay OPEN rather than closed and this line narrows neither. What is recorded is a publication decision and nothing wider: no selection mechanism was built, no population was reclassified, and the split above is untouched. Its own falsifier, stated so it can fail: the reason for accepting the zero as-is is that a single-machine transcript store cannot separate an unbuilt selection path from an unused one, so the moment a second store — a consumer install, another host, a CI-visible corpus — becomes readable, the reason stops holding and the choice returns. <!-- count: dated --> | quant | `exec:check_skill_activation_claim -> 0` | ✅ |
++| Skill self-selection is measured, not assumed, and over this package's own transcript store it is ZERO — not near zero. `report_skill_activation` over 30 sessions and 11,338 assistant turns records 0 Skill invocations and 0 of 299 distinct skills (measured 2026-09-06). Every figure in this sentence, and the date, is read out of `agents/evidence/metrics/skill-activation-census.json`, which the census writes and refuses to write from an empty store; `check_skill_activation_claim` fails when the record and this sentence disagree, so the published number cannot outlive its measurement silently. The 299 split three ways and the zero means a different thing in each: 12 declare a machine-matchable trigger key in frontmatter, 100 carry an `evals/triggers.json` corpus, 2 do both, and the remaining 189 are reachable only by a human naming them. For the 12 the zero was published as a defect — a matchable declaration exists and nothing acted on it — and ADR-263 SUPERSEDES that reading in those words: the 12 are unvalidated metadata with no host contract to bind to, so nothing was owed and nothing failed; they are kept, not deleted, as the thing a future host contract would bind to. For the 189 the zero is the design, because no automatic selection is claimed for them and invocation there is a reader opening a file. For the 100 the zero licenses nothing in either direction: `evals/triggers.json` is a TEST fixture read by `check_routing_coverage` / `lint_skill_trigger_corpus` / `check_trigger_evals`, no host reads it at routing time, and the two surfaces share the word "trigger" and are unrelated. A 14-file eval-corpus wave taking coverage 100 → 114 was authored, measured against, and then reverted on the same branch for an unrelated governance reason; the census read 0 in both states. FRAMING, RECORDED 2026-09-07 SO A LATER REVIEW MEETS AN ANSWER RATHER THAN RE-DERIVING THE ARGUMENT: the surface is left exactly as it is and the zero is published with its reason. Two substantive alternatives were on the table and NEITHER was taken — building a host-side selection path for the population that declares a machine-matchable trigger key, or declaring the human-named remainder reference material by design. Each of those changes what the package claims to be for its consumers, which is an owner-reserved commitment under `decision-revisit-gate` — and on 2026-09-08 that commitment was made: ADR-263 LOCKS the second, in the corrected form "by observation" rather than "by design", and REJECTS the first, on the ground that there is no host contract to build against and that shipping a documented routing capability which still yields zero would convert an implementation cost into a credibility cost. So neither alternative is open any longer, and the sentence that said both were is corrected here rather than left standing. What ADR-263 did NOT do is still worth naming: no selection mechanism was built, no population was reclassified, and the split above is untouched — "by observation" is deliberately not "by design", because design intent is an ownership claim this repository cannot make about hosts it does not own. Its own falsifier, stated so it can fail: the reason for accepting the zero as-is is that a single-machine transcript store cannot separate an unbuilt selection path from an unused one, so the moment a second store — a consumer install, another host, a CI-visible corpus — becomes readable, the reason stops holding and the choice returns. <!-- count: dated --> | quant | `exec:check_skill_activation_claim -> 0` | ✅ |
+ | 299 skills. | quant | `exec:check_artefact_count_messaging -> 0` | ✅ |
+ | `skill-improvement-pipeline` converts post-task outcomes into durable written lessons rather than in-context retries, following the Reflexion formulation. | qual | `https://arxiv.org/abs/2303.11366 (2026-08-11)` | ✅ |
+ | Every cross-skill `SKILL.md` link in the authored skill corpus resolves on disk, and the census behind that statement is derived by the same collector the gate scans with. | quant | `agents/evidence/metrics/skill-link-census.json#"dead_links": []` | ✅ |
+diff --git a/src/config/packed-binary-manifest.json b/src/config/packed-binary-manifest.json
+index 597338ddaffe5f3bde9a4a6971af9c612babb3d0..9a82f3ab0d3e98d5bdfd5a9ff9e7ddb018f3fad4 100644
+--- a/src/config/packed-binary-manifest.json
++++ b/src/config/packed-binary-manifest.json
+@@ -1,5 +1,5 @@
+ {
+-  "_comment": "Every binary entry the published tarball is allowed to carry, one entry per file. Consulted by check_pack_size's binary-eligibility predicate; an entry is ALLOWED only when every mechanical condition in that predicate holds, so a row here is a claim the gate re-verifies rather than a permission it grants. Path-exact by construction: no wildcards, no directory grants, and a second row for the same path is a hard failure. AUTHORITY: AI council 2026-09-08, 2 seats, unanimous, deep tier — it reopened the `binary` class that f573d628c closed 24 hours earlier. `archive` is NOT reopened and this file may never carry one: that collision supplied zero evidence about archives.",
++  "_comment": "Every binary entry the published tarball is allowed to carry, one entry per file. Consulted by check_pack_size's binary-eligibility predicate; an entry is ALLOWED only when every mechanical condition in that predicate holds, so a row here is a claim the gate re-verifies rather than a permission it grants. Path-exact by construction: no wildcards, no directory grants, and a second row for the same path is a hard failure. AUTHORITY: AI council 2026-09-08, 2 seats, unanimous, deep tier — it reopened the `binary` class that f573d628c closed 24 hours earlier. `archive` is NOT reopened and this file may never carry one: that collision supplied zero evidence about archives. ANCHOR: every condition the predicate checks reads THIS file, so a commit that edits a row and its bytes together satisfies all of them. The check that anchors these bytes to something outside this repository is `src/scripts/_lib/vendored_grammar_upstream.ts`, exercised by `tests/scripts/vendored_grammar_upstream.test.ts`; the threat boundary between the two is written out in `packed_binary_predicate.ts`'s docblock.",
+   "schema_version": 1,
+   "entries": [
+     {
+diff --git a/src/scripts/_lib/packed_binary_predicate.ts b/src/scripts/_lib/packed_binary_predicate.ts
+index 8a907bfe24c327ef8428b96ade2b8acffed47125..8ba106786a9525830078414693c7c6f5bc2e2e84 100644
+--- a/src/scripts/_lib/packed_binary_predicate.ts
++++ b/src/scripts/_lib/packed_binary_predicate.ts
+@@ -61,6 +61,43 @@
+  * that passed every condition above — never `observed` minus something excused.
+  * A file that fails one condition lowers `allowed`; it never disappears from
+  * `observed`.
++ *
++ * THE THREAT BOUNDARY — WHO THIS REFUSES, AND WHO IT DOES NOT.
++ *
++ * Written down because the eleven conditions read as a security control and are
++ * only half of one, and a reader could not previously tell that boundary from
++ * an oversight. The `release/14.22.0` self-review finding `d1696732ac28` is
++ * exactly that misreading: it reached for a signature this repository has no
++ * infrastructure to provide (`grep -rniE 'cosign|sigstore|minisign|slsa'`
++ * returns nothing in this tree), because nothing here said where the line was.
++ *
++ * REFUSED. A byte that drifts from what the manifest says — a corrupted copy, a
++ * truncated checkout, a refresh that updated the file and forgot the row, a
++ * grammar whose ABI moved under a version bump, a second row quietly widening a
++ * path. Each of those is one side of the pair changing while the other does
++ * not, and every condition above is a re-derivation from the bytes rather than
++ * a restatement of the row.
++ *
++ * NOT REFUSED, DELIBERATELY. An attacker who edits the manifest and the bytes in
++ * the SAME COMMIT. Every condition here reads the manifest, so a same-commit
++ * pair is internally consistent and passes all eleven. That case is out of
++ * scope for this module and is held by review instead: the manifest is a small
++ * JSON file whose diff a human reads, and a hash changing next to a binary
++ * changing is the most visible shape a diff has.
++ *
++ * WHAT CLOSES IT, AND WHERE. `_lib/vendored_grammar_upstream.ts` compares the
++ * vendored bytes against the `tree-sitter-wasms` release pinned in
++ * `package-lock.json` and installed by `npm ci` — a source outside this
++ * repository's own diff — and refuses rather than passes when that comparison
++ * cannot be made. It is exercised by `tests/scripts/vendored_grammar_upstream.test.ts`,
++ * which is where a reader auditing "what enforces these bytes" should go next.
++ * Its own docblock states what it may not claim: it is not independent of all
++ * repository state, and it does not verify the grammars against the registry
++ * independent of local build state.
++ *
++ * STILL OPEN, AND OWNED BY REVIEW. A `package-lock.json` row that points at a
++ * hostile package. No check in this tree defends that; the lock is
++ * human-readable text declaring dependencies, and reviewing it is the control.
+  */
+ import { createHash } from 'node:crypto';
+ import * as fs from 'node:fs';
+diff --git a/src/scripts/_lib/vendored_grammar_upstream.ts b/src/scripts/_lib/vendored_grammar_upstream.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..8976b5f1bab3c7f2259acf2eda4bcf05021123e2
+--- /dev/null
++++ b/src/scripts/_lib/vendored_grammar_upstream.ts
+@@ -0,0 +1,246 @@
++/**
++ * The vendored grammars' one anchor outside the manifest.
++ *
++ * WHAT THIS ANSWERS.
++ *
++ * `packed_binary_predicate.ts` verifies eleven conditions over
++ * `src/config/packed-binary-manifest.json`, and every one of them is
++ * manifest-internal: the manifest states a sha256 and the bytes are hashed
++ * against it, so a single commit that edits both passes all eleven. The
++ * `release/14.22.0` self-review finding `d1696732ac28` names exactly that gap.
++ * This module closes it by comparing the vendored bytes against a source the
++ * repository does not author: the `tree-sitter-wasms` release pinned in
++ * `package-lock.json` and installed by `npm ci`.
++ *
++ * WHAT IT MAY CLAIM, AND WHAT IT MAY NOT.
++ *
++ * It MAY claim: the vendored bytes equal the bytes of the locked upstream
++ * package, independent of the binary manifest's own self-description.
++ *
++ * It MUST NOT claim to be independent of all repository state, and it MUST NOT
++ * claim to verify the grammars cryptographically against the registry
++ * independent of local build state. It does neither. The chain is
++ * registry tarball -> `npm ci` checks its sha512 against the lock's
++ * `integrity` -> extracted bytes -> vendored bytes, and only the last link is
++ * checked here. An attacker who edits `node_modules` after install defeats
++ * this, and a lock entry that points at a hostile package defeats it earlier
++ * still — that link is review's job, not a check's, because the lock is
++ * human-readable text and the manifest is machine-only JSON.
++ *
++ * Both scoping sentences are the AI council's wording (2026-09-09, 2 seats,
++ * unanimous on this question), kept verbatim so a later reader can tell the
++ * boundary from an oversight.
++ *
++ * WHY IT REFUSES RATHER THAN SKIPS.
++ *
++ * An upstream comparison is trivially written so that it passes when the
++ * upstream is absent, which is a green that verifies nothing — the exact shape
++ * of the eleven conditions it is here to supplement. So an absent package, a
++ * version that is not the locked one, an absent counterpart file, an empty
++ * claim set, and two admitted entries sharing a filename are all refusals,
++ * never passes.
++ *
++ * The last of those is the subtlest, and it was added on an R2 review finding
++ * rather than foreseen: the upstream keeps its grammars in one flat directory,
++ * so the counterpart is addressed by basename. Two manifest rows with the same
++ * filename in different directories would anchor to the same upstream file —
++ * one admitted binary silently unanchored while the verdict reported full
++ * coverage, which is the false green this module exists to remove. The vendored
++ * side resolves the entry's OWN repo-relative path, never a basename under a
++ * fixed directory, for the same reason.
++ */
++import { createHash } from 'node:crypto';
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++
++import { VERIFIABLE_KIND, type PackedBinaryManifest } from './packed_binary_predicate.js';
++
++/**
++ * The upstream this repository copies from. Hardcoded rather than derived: the
++ * vendored set exists precisely because the package is NOT a runtime
++ * dependency, so there is no dependency edge to read it off, and
++ * `src/vendor/grammars/README.md` names the same string as the refresh source.
++ */
++export const UPSTREAM_PACKAGE = 'tree-sitter-wasms';
++
++/** Where the upstream keeps its compiled grammars inside its own package. */
++const UPSTREAM_GRAMMAR_SUBDIR = 'out';
++
++/** A refusal — the anchor could not be established, so no verdict is honest. */
++export class UpstreamAnchorRefusal extends Error {
++    constructor(message: string) {
++        super(message);
++        this.name = 'UpstreamAnchorRefusal';
++    }
++}
++
++/** One vendored file compared against its upstream counterpart. */
++export interface GrammarComparison {
++    readonly vendoredPath: string;
++    readonly upstreamPath: string;
++    readonly vendoredSha256: string;
++    readonly upstreamSha256: string;
++    readonly equal: boolean;
++}
++
++export interface UpstreamAnchorVerdict {
++    readonly lockedVersion: string;
++    readonly lockedIntegrity: string;
++    readonly installedVersion: string;
++    readonly comparisons: readonly GrammarComparison[];
++    /** Human-readable divergence lines. Empty iff every comparison is equal. */
++    readonly divergences: readonly string[];
++}
++
++export interface UpstreamAnchorOptions {
++    readonly repoRoot: string;
++    /** Defaults to `<repoRoot>/node_modules/<UPSTREAM_PACKAGE>`. Fixture seam. */
++    readonly upstreamPackageDir?: string;
++    /**
++     * Root the manifest's repo-relative `path` values resolve against.
++     * Defaults to `repoRoot`. Fixture seam — NOT a grammar directory: resolving
++     * by directory would discard the entry's own path, and two rows sharing a
++     * basename in different directories would then anchor to the same file.
++     */
++    readonly vendoredRoot?: string;
++    /** Defaults to the manifest at `<repoRoot>/src/config/…`. Fixture seam. */
++    readonly manifest?: PackedBinaryManifest;
++}
++
++interface LockPin {
++    readonly version: string;
++    readonly integrity: string;
++}
++
++/**
++ * The locked pin for the upstream, read from `package-lock.json`.
++ *
++ * `integrity` is not used to verify anything here — it is carried into the
++ * verdict so the caller can print the anchor it is trusting, and its absence
++ * is a refusal because a lock row without one pins a version and not bytes.
++ */
++export function readLockPin(repoRoot: string): LockPin {
++    const lockPath = path.join(repoRoot, 'package-lock.json');
++    if (!fs.existsSync(lockPath)) {
++        throw new UpstreamAnchorRefusal(`no package-lock.json at ${lockPath} — there is no locked upstream to anchor to`);
++    }
++    const lock = JSON.parse(fs.readFileSync(lockPath, 'utf-8')) as {
++        packages?: Record<string, { version?: string; integrity?: string }>;
++    };
++    const key = `node_modules/${UPSTREAM_PACKAGE}`;
++    const row = lock.packages?.[key];
++    if (row === undefined) {
++        throw new UpstreamAnchorRefusal(`package-lock.json carries no \`${key}\` row — the vendored grammars have no locked source`);
++    }
++    if (typeof row.version !== 'string' || row.version.length === 0) {
++        throw new UpstreamAnchorRefusal(`\`${key}\` in package-lock.json carries no version`);
++    }
++    if (typeof row.integrity !== 'string' || row.integrity.length === 0) {
++        throw new UpstreamAnchorRefusal(
++            `\`${key}\` in package-lock.json carries no \`integrity\` — the row pins a version but not bytes, so \`npm ci\` verifies nothing for it`,
++        );
++    }
++    return { version: row.version, integrity: row.integrity };
++}
++
++function readManifest(repoRoot: string): PackedBinaryManifest {
++    const p = path.join(repoRoot, 'src', 'config', 'packed-binary-manifest.json');
++    if (!fs.existsSync(p)) throw new UpstreamAnchorRefusal(`no packed-binary manifest at ${p}`);
++    const raw = JSON.parse(fs.readFileSync(p, 'utf-8')) as PackedBinaryManifest;
++    if (!Array.isArray(raw.entries)) throw new UpstreamAnchorRefusal(`packed-binary-manifest: entries must be an array (${p})`);
++    return raw;
++}
++
++function sha256(file: string): string {
++    return createHash('sha256').update(fs.readFileSync(file)).digest('hex');
++}
++
++/**
++ * Compare every vendored grammar the manifest admits against the locked
++ * upstream's copy of the same filename.
++ *
++ * Throws `UpstreamAnchorRefusal` when the anchor cannot be established at all;
++ * returns a verdict whose `divergences` is non-empty when it can be established
++ * and the bytes differ. The two are deliberately different outcomes: a refusal
++ * says "this was not checked", a divergence says "this was checked and is
++ * wrong", and collapsing them is how a check becomes a permanent green.
++ */
++export function verifyVendoredGrammarsAgainstUpstream(options: UpstreamAnchorOptions): UpstreamAnchorVerdict {
++    const { repoRoot } = options;
++    const upstreamDir = options.upstreamPackageDir ?? path.join(repoRoot, 'node_modules', UPSTREAM_PACKAGE);
++    const vendoredRoot = options.vendoredRoot ?? repoRoot;
++    const manifest = options.manifest ?? readManifest(repoRoot);
++
++    const pin = readLockPin(repoRoot);
++
++    const claims = manifest.entries.filter((e) => e.kind === VERIFIABLE_KIND);
++    if (claims.length === 0) {
++        throw new UpstreamAnchorRefusal(
++            `the manifest admits no \`${VERIFIABLE_KIND}\` entry — nothing was compared, and reporting that as a pass would be a green over an empty corpus`,
++        );
++    }
++
++    // The upstream keeps its grammars in one flat directory, so the counterpart
++    // is addressed by basename. Two admitted entries sharing a basename would
++    // therefore point at the same upstream file, which is an ambiguous anchor
++    // rather than a comparison — refuse instead of picking one.
++    const byBase = new Map<string, string[]>();
++    for (const e of claims) {
++        const base = path.basename(e.path);
++        byBase.set(base, [...(byBase.get(base) ?? []), e.path]);
++    }
++    const ambiguous = [...byBase.entries()].filter(([, paths]) => paths.length > 1);
++    if (ambiguous.length > 0) {
++        throw new UpstreamAnchorRefusal(
++            `two or more admitted entries share a filename, so they would anchor to the same upstream file: ${ambiguous
++                .map(([base, paths]) => `${base} <- ${paths.join(', ')}`)
++                .join('; ')}`,
++        );
++    }
++
++    const upstreamPkgJson = path.join(upstreamDir, 'package.json');
++    if (!fs.existsSync(upstreamPkgJson)) {
++        throw new UpstreamAnchorRefusal(
++            `${UPSTREAM_PACKAGE} is not installed at ${upstreamDir} — run \`npm ci\`. The vendored bytes were NOT verified; an absent upstream is a refusal, never a pass`,
++        );
++    }
++    const installed = JSON.parse(fs.readFileSync(upstreamPkgJson, 'utf-8')) as { version?: string };
++    if (installed.version !== pin.version) {
++        throw new UpstreamAnchorRefusal(
++            `installed ${UPSTREAM_PACKAGE} is ${String(installed.version)} but package-lock.json pins ${pin.version} — comparing against an unlocked tree would anchor to nothing`,
++        );
++    }
++
++    const comparisons: GrammarComparison[] = [];
++    const divergences: string[] = [];
++
++    for (const entry of claims) {
++        const vendoredPath = path.join(vendoredRoot, entry.path);
++        const upstreamPath = path.join(upstreamDir, UPSTREAM_GRAMMAR_SUBDIR, path.basename(entry.path));
++        if (!fs.existsSync(vendoredPath)) {
++            throw new UpstreamAnchorRefusal(`the manifest admits ${entry.path} but ${vendoredPath} does not exist`);
++        }
++        if (!fs.existsSync(upstreamPath)) {
++            throw new UpstreamAnchorRefusal(
++                `${entry.path} has no counterpart at ${upstreamPath} — the locked upstream does not carry this grammar, so this file has no anchor`,
++            );
++        }
++        const vendoredSha256 = sha256(vendoredPath);
++        const upstreamSha256 = sha256(upstreamPath);
++        const equal = vendoredSha256 === upstreamSha256;
++        comparisons.push({ vendoredPath, upstreamPath, vendoredSha256, upstreamSha256, equal });
++        if (!equal) {
++            divergences.push(
++                `${entry.path}: vendored sha256 ${vendoredSha256} != upstream ${upstreamSha256} (${UPSTREAM_PACKAGE}@${pin.version})`,
++            );
++        }
++    }
++
++    return {
++        lockedVersion: pin.version,
++        lockedIntegrity: pin.integrity,
++        installedVersion: installed.version,
++        comparisons,
++        divergences,
++    };
++}
+diff --git a/src/vendor/grammars/README.md b/src/vendor/grammars/README.md
+index e95bf7ba1847d7f326c84ee5f20e2f2ee5586870..b2f0ef1c6c975659da9321696bbc953c37db9240 100644
+--- a/src/vendor/grammars/README.md
++++ b/src/vendor/grammars/README.md
+@@ -41,6 +41,27 @@ they are annotated MIT in `REUSE.toml` and credited in `CREDITS.md`.
+ are refreshed from, and the ABI smoke test in `tests/scripts/code_graph.test.ts`
+ runs against it. It is deliberately not a runtime dependency.
+ 
++## Verification
++
++Two checks, and they answer different questions.
++
++`src/config/packed-binary-manifest.json` plus `_lib/packed_binary_predicate.ts`
++verify that these bytes are what the manifest says they are — eleven conditions,
++all of them re-derived from the bytes. Every one of them reads the manifest, so
++a commit that edits a row and its file together satisfies all eleven.
++
++`_lib/vendored_grammar_upstream.ts` verifies that these bytes are what the
++**locked upstream** says they are: it byte-compares each file against
++`node_modules/tree-sitter-wasms/out/`, after asserting that the installed
++version is the one `package-lock.json` pins. An absent or unlocked upstream is a
++refusal, never a pass. It is exercised by
++`tests/scripts/vendored_grammar_upstream.test.ts`, which also drives every
++refusal path and a real mutated grammar to failure.
++
++What neither check covers is a `package-lock.json` row pointing at a hostile
++package; that is review's job, and `packed_binary_predicate.ts`'s docblock says
++so in those words.
++
+ ## Refreshing
+ 
+ The pair is ABI-coupled and must move together:
+diff --git a/tests/scripts/vendored_grammar_upstream.test.ts b/tests/scripts/vendored_grammar_upstream.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..99dac360f53ad9959ff20e6962be698ef854e1e2
+--- /dev/null
++++ b/tests/scripts/vendored_grammar_upstream.test.ts
+@@ -0,0 +1,272 @@
++/**
++ * The vendored grammars' anchor outside their own manifest.
++ *
++ * `packed_binary_predicate.test.ts` proves the eleven manifest conditions
++ * refuse what they must refuse. Every one of them reads the manifest, so a
++ * commit that edits the manifest and the bytes together satisfies all eleven —
++ * the surviving half of the `release/14.22.0` finding `d1696732ac28`. These
++ * tests cover the other side: the bytes equal the locked upstream's bytes, and
++ * the check refuses rather than passes whenever that comparison cannot be made.
++ *
++ * The real-tree case is the enforcement. The fixture cases are the sensitivity
++ * proof — a check never seen red has unknown sensitivity, so every refusal path
++ * and the divergence path are each driven to failure here rather than asserted
++ * in prose.
++ */
++import { createHash } from 'node:crypto';
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++
++import { afterAll, describe, expect, it } from 'vitest';
++
++import { type PackedBinaryManifest, VERIFIABLE_KIND } from '../../src/scripts/_lib/packed_binary_predicate.js';
++import {
++    readLockPin,
++    UPSTREAM_PACKAGE,
++    UpstreamAnchorRefusal,
++    verifyVendoredGrammarsAgainstUpstream,
++} from '../../src/scripts/_lib/vendored_grammar_upstream.js';
++
++const REPO_ROOT = path.resolve(__dirname, '..', '..');
++
++const tempRoots: string[] = [];
++
++afterAll(() => {
++    for (const dir of tempRoots) fs.rmSync(dir, { recursive: true, force: true });
++});
++
++/**
++ * A miniature repository whose shape is the real one: a lock row, a manifest,
++ * a vendored file and an installed upstream. Every negative case below is this
++ * fixture with exactly one thing removed or changed, so the failure it produces
++ * is attributable to that one thing.
++ */
++function makeFixture(over: {
++    lockVersion?: string;
++    lockIntegrity?: string | null;
++    installedVersion?: string | null;
++    vendoredBytes?: Buffer;
++    upstreamBytes?: Buffer | null;
++    entries?: PackedBinaryManifest['entries'];
++} = {}): string {
++    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'grammar-anchor-'));
++    tempRoots.push(root);
++
++    const lockVersion = over.lockVersion ?? '0.1.13';
++    const integrity = over.lockIntegrity === null ? undefined : (over.lockIntegrity ?? 'sha512-fixture');
++    fs.writeFileSync(
++        path.join(root, 'package-lock.json'),
++        JSON.stringify({
++            lockfileVersion: 3,
++            packages: {
++                [`node_modules/${UPSTREAM_PACKAGE}`]: { version: lockVersion, ...(integrity === undefined ? {} : { integrity }) },
++            },
++        }),
++    );
++
++    const entries =
++        over.entries ??
++        ([
++            {
++                path: 'src/vendor/grammars/tree-sitter-fixture.wasm',
++                sha256: 'unused-by-this-module',
++                size: 8,
++                kind: VERIFIABLE_KIND,
++                grammar_id: 'fixture',
++                abi: 14,
++            },
++        ] as PackedBinaryManifest['entries']);
++    fs.mkdirSync(path.join(root, 'src', 'config'), { recursive: true });
++    fs.writeFileSync(path.join(root, 'src', 'config', 'packed-binary-manifest.json'), JSON.stringify({ schema_version: 1, entries }));
++
++    const vendored = over.vendoredBytes ?? Buffer.from([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00]);
++    for (const entry of entries) {
++        const target = path.join(root, entry.path);
++        fs.mkdirSync(path.dirname(target), { recursive: true });
++        fs.writeFileSync(target, vendored);
++    }
++
++    if (over.installedVersion !== null) {
++        const pkgDir = path.join(root, 'node_modules', UPSTREAM_PACKAGE);
++        fs.mkdirSync(path.join(pkgDir, 'out'), { recursive: true });
++        fs.writeFileSync(path.join(pkgDir, 'package.json'), JSON.stringify({ name: UPSTREAM_PACKAGE, version: over.installedVersion ?? lockVersion }));
++        if (over.upstreamBytes !== null) {
++            const upstream = over.upstreamBytes ?? vendored;
++            for (const entry of entries) fs.writeFileSync(path.join(pkgDir, 'out', path.basename(entry.path)), upstream);
++        }
++    }
++
++    return root;
++}
++
++describe('the real tree', () => {
++    it('anchors every vendored grammar to the locked upstream, byte for byte', () => {
++        const verdict = verifyVendoredGrammarsAgainstUpstream({ repoRoot: REPO_ROOT });
++        expect(verdict.divergences).toEqual([]);
++        expect(verdict.comparisons.length).toBeGreaterThanOrEqual(3);
++        for (const c of verdict.comparisons) expect(c.equal).toBe(true);
++    });
++
++    it('compares against the version package-lock.json pins, not whatever is installed', () => {
++        const pin = readLockPin(REPO_ROOT);
++        const installed = JSON.parse(
++            fs.readFileSync(path.join(REPO_ROOT, 'node_modules', UPSTREAM_PACKAGE, 'package.json'), 'utf-8'),
++        ) as { version: string };
++        expect(installed.version).toBe(pin.version);
++        expect(pin.integrity.startsWith('sha512-')).toBe(true);
++    });
++
++    it('covers every grammar the manifest admits, by full path, so no admitted file is unanchored', () => {
++        const manifest = JSON.parse(
++            fs.readFileSync(path.join(REPO_ROOT, 'src', 'config', 'packed-binary-manifest.json'), 'utf-8'),
++        ) as PackedBinaryManifest;
++        const admitted = manifest.entries.filter((e) => e.kind === VERIFIABLE_KIND).map((e) => path.join(REPO_ROOT, e.path));
++        const verdict = verifyVendoredGrammarsAgainstUpstream({ repoRoot: REPO_ROOT });
++        // Compared on the FULL path, not the basename: comparing basenames here
++        // would apply the same collapse the module was found doing, so the test
++        // could not catch it. R2 finding 2, 2026-09-09.
++        expect(verdict.comparisons.map((c) => c.vendoredPath).sort()).toEqual(admitted.sort());
++    });
++
++    it('reports the version it actually read from node_modules, not the one it read from the lock', () => {
++        const verdict = verifyVendoredGrammarsAgainstUpstream({ repoRoot: REPO_ROOT });
++        const installed = JSON.parse(
++            fs.readFileSync(path.join(REPO_ROOT, 'node_modules', UPSTREAM_PACKAGE, 'package.json'), 'utf-8'),
++        ) as { version: string };
++        expect(verdict.installedVersion).toBe(installed.version);
++    });
++});
++
++describe('the divergence it exists to catch', () => {
++    it('reports a mutated vendored byte as a divergence', () => {
++        const mutated = Buffer.from([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x01]);
++        const root = makeFixture({ vendoredBytes: mutated, upstreamBytes: Buffer.from([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00]) });
++        const verdict = verifyVendoredGrammarsAgainstUpstream({ repoRoot: root });
++        expect(verdict.divergences).toHaveLength(1);
++        expect(verdict.divergences[0]).toContain('tree-sitter-fixture.wasm');
++        expect(verdict.comparisons[0]?.equal).toBe(false);
++    });
++
++    it('names both hashes, so the divergence is diagnosable without re-running it', () => {
++        const root = makeFixture({
++            vendoredBytes: Buffer.from([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x01]),
++            upstreamBytes: Buffer.from([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00]),
++        });
++        const verdict = verifyVendoredGrammarsAgainstUpstream({ repoRoot: root });
++        const expected = createHash('sha256').update(Buffer.from([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x01])).digest('hex');
++        expect(verdict.divergences[0]).toContain(expected);
++    });
++
++    it('is sensitive to the REAL vendored bytes — mutating a copy of the shipped grammar diverges', () => {
++        const real = fs.readFileSync(path.join(REPO_ROOT, 'src', 'vendor', 'grammars', 'tree-sitter-php.wasm'));
++        const mutated = Buffer.from(real);
++        mutated[mutated.length - 1] = (mutated[mutated.length - 1] as number) ^ 0xff;
++        const root = makeFixture({ vendoredBytes: mutated, upstreamBytes: real });
++        expect(verifyVendoredGrammarsAgainstUpstream({ repoRoot: root }).divergences).toHaveLength(1);
++    });
++});
++
++describe('the refusals — an unestablished anchor is never a pass', () => {
++    it('refuses when the upstream package is not installed', () => {
++        const root = makeFixture({ installedVersion: null });
++        expect(() => verifyVendoredGrammarsAgainstUpstream({ repoRoot: root })).toThrow(UpstreamAnchorRefusal);
++        expect(() => verifyVendoredGrammarsAgainstUpstream({ repoRoot: root })).toThrow(/is not installed/);
++    });
++
++    it('refuses when the installed version is not the locked one', () => {
++        const root = makeFixture({ lockVersion: '0.1.13', installedVersion: '0.1.12' });
++        expect(() => verifyVendoredGrammarsAgainstUpstream({ repoRoot: root })).toThrow(/pins 0\.1\.13/);
++    });
++
++    it('refuses when the lock row carries no integrity, because it then pins no bytes', () => {
++        const root = makeFixture({ lockIntegrity: null });
++        expect(() => verifyVendoredGrammarsAgainstUpstream({ repoRoot: root })).toThrow(/integrity/);
++    });
++
++    it('refuses when the lock carries no row for the upstream at all', () => {
++        const root = makeFixture();
++        fs.writeFileSync(path.join(root, 'package-lock.json'), JSON.stringify({ lockfileVersion: 3, packages: {} }));
++        expect(() => verifyVendoredGrammarsAgainstUpstream({ repoRoot: root })).toThrow(/no locked source/);
++    });
++
++    it('refuses an empty claim set instead of reporting a green over nothing', () => {
++        const root = makeFixture({ entries: [] });
++        expect(() => verifyVendoredGrammarsAgainstUpstream({ repoRoot: root })).toThrow(/nothing was compared/);
++    });
++
++    it('refuses when a manifest-admitted grammar has no counterpart upstream', () => {
++        const root = makeFixture({ upstreamBytes: null });
++        expect(() => verifyVendoredGrammarsAgainstUpstream({ repoRoot: root })).toThrow(/no counterpart/);
++    });
++
++    it('refuses when a manifest-admitted grammar is missing from the vendored dir', () => {
++        const root = makeFixture();
++        fs.rmSync(path.join(root, 'src', 'vendor', 'grammars', 'tree-sitter-fixture.wasm'));
++        expect(() => verifyVendoredGrammarsAgainstUpstream({ repoRoot: root })).toThrow(/does not exist/);
++    });
++
++    it('refuses two admitted entries that share a filename in different directories', () => {
++        // The upstream is one flat directory, so both rows would anchor to the
++        // same file and one admitted binary would be silently unverified while
++        // the verdict claimed full coverage. R2 finding 2, 2026-09-09.
++        const root = makeFixture({
++            entries: [
++                {
++                    path: 'src/vendor/grammars/tree-sitter-fixture.wasm',
++                    sha256: 'unused-by-this-module',
++                    size: 8,
++                    kind: VERIFIABLE_KIND,
++                    grammar_id: 'fixture',
++                    abi: 14,
++                },
++                {
++                    path: 'src/vendor/other/tree-sitter-fixture.wasm',
++                    sha256: 'unused-by-this-module',
++                    size: 8,
++                    kind: VERIFIABLE_KIND,
++                    grammar_id: 'fixture',
++                    abi: 14,
++                },
++            ] as PackedBinaryManifest['entries'],
++        });
++        expect(() => verifyVendoredGrammarsAgainstUpstream({ repoRoot: root })).toThrow(/share a filename/);
++    });
++
++    it('resolves the vendored file by its own manifest path, not by basename under one directory', () => {
++        // Sensitivity for the fix: the second row lives elsewhere and carries
++        // DIFFERENT bytes. Under the basename collapse both rows read the first
++        // file and the divergence disappears.
++        const root = makeFixture({
++            entries: [
++                {
++                    path: 'src/vendor/grammars/tree-sitter-a.wasm',
++                    sha256: 'unused-by-this-module',
++                    size: 8,
++                    kind: VERIFIABLE_KIND,
++                    grammar_id: 'a',
++                    abi: 14,
++                },
++                {
++                    path: 'src/vendor/other/tree-sitter-b.wasm',
++                    sha256: 'unused-by-this-module',
++                    size: 8,
++                    kind: VERIFIABLE_KIND,
++                    grammar_id: 'b',
++                    abi: 14,
++                },
++            ] as PackedBinaryManifest['entries'],
++        });
++        fs.writeFileSync(
++            path.join(root, 'src', 'vendor', 'other', 'tree-sitter-b.wasm'),
++            Buffer.from([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x01]),
++        );
++        const verdict = verifyVendoredGrammarsAgainstUpstream({ repoRoot: root });
++        expect(verdict.comparisons.map((c) => c.vendoredPath)).toEqual([
++            path.join(root, 'src/vendor/grammars/tree-sitter-a.wasm'),
++            path.join(root, 'src/vendor/other/tree-sitter-b.wasm'),
++        ]);
++        expect(verdict.divergences).toHaveLength(1);
++        expect(verdict.divergences[0]).toContain('src/vendor/other/tree-sitter-b.wasm');
++    });
++});

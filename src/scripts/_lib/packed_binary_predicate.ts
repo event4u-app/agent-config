@@ -61,6 +61,43 @@
  * that passed every condition above — never `observed` minus something excused.
  * A file that fails one condition lowers `allowed`; it never disappears from
  * `observed`.
+ *
+ * THE THREAT BOUNDARY — WHO THIS REFUSES, AND WHO IT DOES NOT.
+ *
+ * Written down because the eleven conditions read as a security control and are
+ * only half of one, and a reader could not previously tell that boundary from
+ * an oversight. The `release/14.22.0` self-review finding `d1696732ac28` is
+ * exactly that misreading: it reached for a signature this repository has no
+ * infrastructure to provide (`grep -rniE 'cosign|sigstore|minisign|slsa'`
+ * returns nothing in this tree), because nothing here said where the line was.
+ *
+ * REFUSED. A byte that drifts from what the manifest says — a corrupted copy, a
+ * truncated checkout, a refresh that updated the file and forgot the row, a
+ * grammar whose ABI moved under a version bump, a second row quietly widening a
+ * path. Each of those is one side of the pair changing while the other does
+ * not, and every condition above is a re-derivation from the bytes rather than
+ * a restatement of the row.
+ *
+ * NOT REFUSED, DELIBERATELY. An attacker who edits the manifest and the bytes in
+ * the SAME COMMIT. Every condition here reads the manifest, so a same-commit
+ * pair is internally consistent and passes all eleven. That case is out of
+ * scope for this module and is held by review instead: the manifest is a small
+ * JSON file whose diff a human reads, and a hash changing next to a binary
+ * changing is the most visible shape a diff has.
+ *
+ * WHAT CLOSES IT, AND WHERE. `_lib/vendored_grammar_upstream.ts` compares the
+ * vendored bytes against the `tree-sitter-wasms` release pinned in
+ * `package-lock.json` and installed by `npm ci` — a source outside this
+ * repository's own diff — and refuses rather than passes when that comparison
+ * cannot be made. It is exercised by `tests/scripts/vendored_grammar_upstream.test.ts`,
+ * which is where a reader auditing "what enforces these bytes" should go next.
+ * Its own docblock states what it may not claim: it is not independent of all
+ * repository state, and it does not verify the grammars against the registry
+ * independent of local build state.
+ *
+ * STILL OPEN, AND OWNED BY REVIEW. A `package-lock.json` row that points at a
+ * hostile package. No check in this tree defends that; the lock is
+ * human-readable text declaring dependencies, and reviewing it is the control.
  */
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
