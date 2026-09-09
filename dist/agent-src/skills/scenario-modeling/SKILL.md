@@ -28,10 +28,10 @@ Do NOT use for per-customer economics (route to `unit-economics-modeling` (O1)),
 
 ## Cognition cluster
 
-- **Mental model 21 — Second-order thinking.** Each scenario is a chain: revenue → margin → burn → runway → fundraise → dilution. Single-statement scenarios (just revenue) skip the chain and read like wishlists. See [`mental-models.md`](../../../docs/contracts/mental-models.md) § 21.
+- **Mental model 21 — Second-order thinking.** Each scenario is a chain: revenue → margin → burn → runway → fundraise → dilution. Single-statement scenarios (just revenue) skip the chain and read like wishlists. See [`mental-models.md`](../../docs/contracts/mental-models.md) § 21.
 - **Mental model 29 — Premortem.** *"It's two windows from now and the downside scenario happened. Walk back."* The premortem forces concrete failure paths into the model; without it the downside is just a 20 % discount on base. See `mental-models.md` § 29.
 - **Mental model 26 — Optionality.** Optionality = preserved future choices. Read each scenario by what choices it preserves vs forecloses. Bounded downside + preserved optionality > unbounded upside with foreclosed optionality. See `mental-models.md` § 26.
-- **Context-spine — org-stage + fiscal-period + product.** Read **org-stage** for which scenarios matter (pre-revenue → upside is traction speed; growth → downside is competitive pressure). Read **fiscal-period** for the modeling horizon. Read **product** for which revenue lines are real vs roadmap. See [`context-spine`](../../../docs/contracts/context-spine.md).
+- **Context-spine — org-stage + fiscal-period + product.** Read **org-stage** for which scenarios matter (pre-revenue → upside is traction speed; growth → downside is competitive pressure). Read **fiscal-period** for the modeling horizon. Read **product** for which revenue lines are real vs roadmap. See [`context-spine`](../../docs/contracts/context-spine.md).
 
 ## Procedure
 

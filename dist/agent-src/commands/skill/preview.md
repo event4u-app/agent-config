@@ -22,7 +22,7 @@ packs:
 Renders a skill's **declared intent** — its `## Steps`, execution type, handler,
 `allowed_tools`, and any file/command targets named in its body — so you can
 decide whether to run it. Read-only, no network, no execution. Implements the
-[`skill-dry-run`](../../../docs/contracts/skill-dry-run.md) contract.
+[`skill-dry-run`](../../docs/contracts/skill-dry-run.md) contract.
 
 ## Prerequisites
 

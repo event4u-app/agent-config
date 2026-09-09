@@ -73,7 +73,7 @@ Each link **delegates** to the artifact that owns it (no duplication):
 1. **ground** — close constraints/tools/info-gaps before designing
    ([`think-before-action` § Environment grounding](../../rules/think-before-action.md));
    seed the read from the **repo** slot of the
-   [context-spine](../../../docs/contracts/context-spine.md) when present.
+   [context-spine](../../docs/contracts/context-spine.md) when present.
 2. **intent** — state the inferred goal + one recommendation, standard host only
    ([`improve-before-implement` § Intent inference](../../rules/improve-before-implement.md)).
 3. **notes** — hypotheses/predictions/decisions/uncertainty to the notes file, not
@@ -146,4 +146,4 @@ action — grounding and the load-bearing-unknown resolution precede any edit):
   [`verify-before-complete`](../../rules/verify-before-complete.md)) instead of the
   whole chain.
 - Needing the rationale behind the protocol — read
-  [`frontier-reasoning-operating-profile`](../../../../docs/guidelines/agent-infra/frontier-reasoning-operating-profile.md).
+  [`frontier-reasoning-operating-profile`](../../guidelines/agent-infra/frontier-reasoning-operating-profile.md).

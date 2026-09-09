@@ -58,7 +58,7 @@ back. If neither file exists, emit the generic role-based fallback
 using the common role vocabulary below.
 
 **Also** pull agent-written signals via the shared abstraction (see
-[`memory-access`](../../../docs/guidelines/agent-infra/memory-access.md)):
+[`memory-access`](../../guidelines/agent-infra/memory-access.md)):
 
 ```bash
 agent-config memory:lookup \
@@ -209,7 +209,7 @@ Data source: <"ownership-map.yml + historical-bug-patterns.yml"
 ## See also
 
 - [`reviewer-awareness`](../../rules/reviewer-awareness.md) — the rule that routes here: anchor reviewer choice in paths and risk, never seniority
-- [`review-routing-data-format`](../../../docs/guidelines/agent-infra/review-routing-data-format.md)
+- [`review-routing-data-format`](../../guidelines/agent-infra/review-routing-data-format.md)
 - [`/pr:create:description-only`](../../domains/git/pr/create/description-only/command.md)
 - [`judge-test-coverage`](../judge-test-coverage/SKILL.md) — consumes
   the `required_test` entries from matched patterns.

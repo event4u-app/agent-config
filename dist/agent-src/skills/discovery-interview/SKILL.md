@@ -36,7 +36,7 @@ quantitative survey design or scale-bound research.
 - **Mental model 22 — Data-informed, not data-driven.** Interview
   data is signal at low N; treat it as evidence to reason with, not
   a vote count. See
-  [`docs/contracts/mental-models.md`](../../../docs/contracts/mental-models.md) § 22.
+  [`docs/contracts/mental-models.md`](../../docs/contracts/mental-models.md) § 22.
 - **Mental model 15 — Signal vs noise.** A vivid quote from one
   articulate user can swamp three muted but consistent signals;
   frequency-rank by distinct people, never by quote count. See
@@ -47,7 +47,7 @@ quantitative survey design or scale-bound research.
   `mental-models.md` § 28.
 - **Product context-spine slot.** Read **product** for the focal job
   + competitor names; do **not** re-derive these inside this skill.
-  See [`context-spine`](../../../docs/contracts/context-spine.md).
+  See [`context-spine`](../../docs/contracts/context-spine.md).
 
 ## Procedure
 

@@ -67,7 +67,7 @@ Carbon, Polaris, GOV.UK, shadcn, Tailwind UI, Radix, etc.):
 0. **Canon grounding first.** If the brief names a system OR
    `components.json`/deps signal one (`@mui/material`, `antd`, `@fluentui/*`,
    `@carbon/*`, `@atlaskit/*`), pull
-   [`docs/guidelines/design-canon.md`](../../../docs/guidelines/design-canon.md),
+   [`docs/guidelines/design-canon.md`](../../guidelines/design-canon.md),
    surface the matching one-line summary, and **offer to fetch the live spec**
    before committing to the system's conventions — rather than improvising.
    The canon index is thin + lazy: do not load it for a generic, unnamed brief.
@@ -85,7 +85,7 @@ Carbon, Polaris, GOV.UK, shadcn, Tailwind UI, Radix, etc.):
 
 **Grounding precedence** (consistent with `brand-source-of-truth`): consumer
 brand tokens > confirmed session decisions > named canon
-([`design-canon.md`](../../../docs/guidelines/design-canon.md)) > generated
+([`design-canon.md`](../../guidelines/design-canon.md)) > generated
 corpus. Canon is a gap-filler, never an override of a registered brand value.
 
 ## Procedure: Produce a grounded design brief (`ui-design-brief` rebound)
@@ -130,7 +130,7 @@ that row's **Don't** column) no longer read as opposite instructions:
 |---|---|---|
 | `Google Fonts URL` | *where do I find / verify this font?* | discovery + availability check |
 | `Self-Hosted Route` | *how does it get onto the page?* | **the default answer** — `@fontsource/*` package ids derived from the row's own Google-Fonts families; two rows name a foundry file instead (Fontshare pairs with a Google alternative) |
-| `CSS Import` | the third-party CDN `@import` | **opt-in only** — emitting it transmits the visitor's IP to the third party; policy owner is [`design-fidelity-mechanics`](../../../docs/guidelines/design-fidelity-mechanics.md) § Asset & imagery discipline ([`ADR-205`](../../../docs/decisions/ADR-205-webfont-delivery-ownership.md)) |
+| `CSS Import` | the third-party CDN `@import` | **opt-in only** — emitting it transmits the visitor's IP to the third party; policy owner is [`design-fidelity-mechanics`](../../guidelines/design-fidelity-mechanics.md) § Asset & imagery discipline ([`ADR-205`](../../../docs/decisions/ADR-205-webfont-delivery-ownership.md)) |
 
 Per-stack route resolution (Next / bundler / asset-pipeline / plain) lives in
 [`typography-system`](../typography-system/SKILL.md) § Delivery — one table, not
@@ -175,7 +175,7 @@ say why. Never invent pairing metadata.
 ## Anti-slop discipline
 
 Before finalizing any design brief, cross-check against
-[`docs/guidelines/design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md)
+[`docs/guidelines/design-antipatterns.md`](../../guidelines/design-antipatterns.md)
 — especially the Color (C1–C5), Typography (T7–T8), and Layout (L1–L2) sections.
 If the grounded corpus selection lands on a pattern in the catalog, either invoke
 the override condition or adjust the selection.

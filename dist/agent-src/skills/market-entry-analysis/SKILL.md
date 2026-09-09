@@ -26,7 +26,7 @@ Do NOT use for build-vs-buy decisions on capability gaps (route to `build-buy-pa
 
 ## Cognition cluster
 
-- **Mental model 23 — Beachhead.** Pick a single segment / geo / vertical where the constraints favour winning, then expand from a position of strength. Trying to enter "the whole market" with no beachhead is the canonical failure pattern. See [`mental-models.md`](../../../docs/contracts/mental-models.md) § 23.
+- **Mental model 23 — Beachhead.** Pick a single segment / geo / vertical where the constraints favour winning, then expand from a position of strength. Trying to enter "the whole market" with no beachhead is the canonical failure pattern. See [`mental-models.md`](../../docs/contracts/mental-models.md) § 23.
 - **Mental model 21 — Second-order thinking.** Entry costs (sales motion, regulatory compliance, segment-specific support) compound across markets. Reading entry as *"just open the door"* misses the second-order shape of multi-market operations. See `mental-models.md` § 21.
 - **Mental model 16 — Leading vs lagging.** Revenue from new market is lagging; **segment-specific pipeline coverage** + **win rates against incumbents in target segment** are leading. Reading only lagging signals = entering markets that already won't work. See `mental-models.md` § 16.
 - **Context-spine — customer-segment + regulatory-regime + product.** Read **customer-segment** for which buyer cohort the entry targets; **regulatory-regime** for the compliance delta (often the load-bearing cost in geo expansion); **product** for what's GA-shippable in the target market without re-platforming.

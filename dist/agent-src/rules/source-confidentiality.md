@@ -98,14 +98,14 @@ path trigger to match, and a path-scoped rule is not re-injected after
 measurement, the AI-council record of 2026-08-20, the three rejected
 alternatives and the +3,512-token cost this shared note carries for four rules
 live in
-[`source-confidentiality-mechanics`](../docs/guidelines/agent-infra/source-confidentiality-mechanics.md)
+[`source-confidentiality-mechanics`](../guidelines/agent-infra/source-confidentiality-mechanics.md)
 § Why these four rules are unconditional — moved there 2026-08-29 because a
 rationale paid on every subagent spawn is the most expensive place to keep an
 argument nobody re-reads.
 
 ## See also
 
-- [`source-confidentiality-mechanics`](../docs/guidelines/agent-infra/source-confidentiality-mechanics.md) — the claim/residual honesty clause, the two-class split by path, and the gate's shape checks and tiering.
+- [`source-confidentiality-mechanics`](../guidelines/agent-infra/source-confidentiality-mechanics.md) — the claim/residual honesty clause, the two-class split by path, and the gate's shape checks and tiering.
 - [`source-of-truth`](source-of-truth.md) — edit `src/`, never the projections.
 - [`augment-edit-discipline`](augment-edit-discipline.md) — portability + cross-ref sync.
 - `src/scripts/_lib/link_crypto.ts` — encrypted link storage.

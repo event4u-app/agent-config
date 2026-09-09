@@ -63,7 +63,7 @@ frontend-hardcoded axis moved into the manifest. Full license obligations:
 ### Invocation (consumer runtime)
 
 Scripts resolve all paths **skill-relative** (per
-[`docs/contracts/skill-bundled-assets.md`](../../../docs/contracts/skill-bundled-assets.md))
+[`docs/contracts/skill-bundled-assets.md`](../../docs/contracts/skill-bundled-assets.md))
 — they work from any cwd:
 
 ```bash
@@ -226,5 +226,5 @@ the skill shipping the manifest, and its containment is `resolve_data_path`.
   (frontend corpus + manifest).
 - [ADR-061](../../../docs/decisions/ADR-061-corpus-grounding-layer.md) —
   architecture, qualification rubric, fork resolutions.
-- [`docs/contracts/skill-bundled-assets.md`](../../../docs/contracts/skill-bundled-assets.md)
+- [`docs/contracts/skill-bundled-assets.md`](../../docs/contracts/skill-bundled-assets.md)
   — how bundled `scripts/` + `data/` reach consumer runtime.

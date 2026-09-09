@@ -60,7 +60,7 @@ among them.
 *(none, deliberately.)* `all` changes **cardinality**, not lifecycle, so it is
 an argument rather than a second command — the locked registry's rule that
 "sibling variants become a flag, never a second command"
-([`command-clusters`](../../../../../docs/contracts/command-clusters.md)) applied
+([`command-clusters`](../../docs/contracts/command-clusters.md)) applied
 to this cluster. A future sub belongs here only if it has a materially
 different lifecycle, not a different count.
 

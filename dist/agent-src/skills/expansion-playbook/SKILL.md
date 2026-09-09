@@ -36,7 +36,7 @@ unattended by a human play (route to `retention-loops`).
   vendor pushes (because the quarter needs the number) corrodes
   the relationship and inflates churn the next cycle. Pick the
   trigger that signals pull. See
-  [`docs/contracts/mental-models.md`](../../../docs/contracts/mental-models.md) § 18.
+  [`docs/contracts/mental-models.md`](../../docs/contracts/mental-models.md) § 18.
 - **Mental model 9 — Hypothesis-driven thinking.** Each expansion
   trigger is a hypothesis: *"if signal X is true, the buyer will
   accept expansion Y at price Z."* Triggers without falsification
@@ -52,7 +52,7 @@ unattended by a human play (route to `retention-loops`).
   segment cannot use yet inflates churn), and the
   **customer-segment** slot for switch-event patterns that signal
   organic scope expansion. See
-  [`context-spine`](../../../docs/contracts/context-spine.md).
+  [`context-spine`](../../docs/contracts/context-spine.md).
 
 ## Procedure
 

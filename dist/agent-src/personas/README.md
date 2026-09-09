@@ -102,7 +102,7 @@ cast (usually Core-6 for review skills, empty for others).
 ## Related
 
 - [`../docs/contracts/persona-schema.md`](../../docs/contracts/persona-schema.md) — locked schema (Core / Specialist)
-- [`../docs/guidelines/agent-infra/role-contracts.md`](../../docs/guidelines/agent-infra/role-contracts.md) — workflow modes personas compose with
+- [`../guidelines/agent-infra/role-contracts.md`](../../docs/guidelines/agent-infra/role-contracts.md) — workflow modes personas compose with
 - [`../rules/artifact-drafting-protocol.md`](../rules/artifact-drafting-protocol.md) — mandatory per new persona
 
 ## See also — sibling voice primitives

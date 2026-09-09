@@ -20,7 +20,7 @@ packs:
 # /agents user accept
 
 Apply a buffered observation from either
-[the project-local or the global observation buffer](../../../../../docs/contracts/agent-user-schema.md#observation-buffer)
+[the project-local or the global observation buffer](../../../docs/contracts/agent-user-schema.md#observation-buffer)
 to the matching profile file — `.agent-user.md` for a project-local
 observation, the global `~/.event4u/agent-config/user/profile.md` for a
 global one (ADR-138, road-to-global-user-memory Phase 2) — after
@@ -159,7 +159,7 @@ On `1. Apply`:
   never appears in `profile.md`, alongside `context`/`seen_in`, which are
   likewise never written. This is the only generalisation path, and it
   leaves the durable profile with zero project references (see
-  [`agent-user-schema.md § Project attribution`](../../../../../docs/contracts/agent-user-schema.md#project-attribution-road-to-global-user-memory-phase-3)).
+  [`agent-user-schema.md § Project attribution`](../../../docs/contracts/agent-user-schema.md#project-attribution-road-to-global-user-memory-phase-3)).
 
 Either layer: drop **all** applied observations for that field from
 **that layer's own buffer only** (rewrite the JSONL minus matching
@@ -201,8 +201,8 @@ Do NOT commit. Do NOT auto-chain to a second field.
 
 ## See also
 
-- Schema + buffer contract: [`agent-user-schema § Observation buffer`](../../../../../docs/contracts/agent-user-schema.md#observation-buffer).
-- Project attribution + promotion: [`agent-user-schema § Project attribution`](../../../../../docs/contracts/agent-user-schema.md#project-attribution-road-to-global-user-memory-phase-3).
+- Schema + buffer contract: [`agent-user-schema § Observation buffer`](../../../docs/contracts/agent-user-schema.md#observation-buffer).
+- Project attribution + promotion: [`agent-user-schema § Project attribution`](../../../docs/contracts/agent-user-schema.md#project-attribution-road-to-global-user-memory-phase-3).
 - Global write primitive: [`agent_user_profile.applyObservationToGlobalProfile`](../../../../src/scripts/_lib/agent_user_profile.ts).
 - Promotion primitives: [`findPromotionCandidates`, `promotionValueFor`](../../../../../src/scripts/_lib/user_global_observations.ts).
 - Parent: [`/agents user`](../user.md).

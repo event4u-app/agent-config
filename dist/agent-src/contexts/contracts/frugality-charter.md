@@ -56,4 +56,4 @@ kernel chars. The pointers below replace them.
 
 ## Decidable carve-out predicates
 
-Predicates with one-sentence tests live in [`docs/guidelines/agent-infra/carve-out-predicates.md`](../../../docs/guidelines/agent-infra/carve-out-predicates.md). Default-terse applies unless a predicate's test is yes/no decidable from the artifact alone.
+Predicates with one-sentence tests live in [`docs/guidelines/agent-infra/carve-out-predicates.md`](../../guidelines/agent-infra/carve-out-predicates.md). Default-terse applies unless a predicate's test is yes/no decidable from the artifact alone.

@@ -13,7 +13,7 @@ packs:
 
 > A bounded **change → commit → evaluate → keep-or-revert** cycle against a
 > **scalar metric**, where the decision input is an
-> [evaluator-output](../../../docs/contracts/evaluator-output.md) verdict and the
+> [evaluator-output](../../docs/contracts/evaluator-output.md) verdict and the
 > loop's entire state lives in an append-only register on disk.
 
 This file **routes**. The protocol, the register format, and the pivot ladder are

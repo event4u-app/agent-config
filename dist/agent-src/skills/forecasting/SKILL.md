@@ -32,7 +32,7 @@ Do NOT use to qualify a single deal (route to `deal-qualification-meddic`), cons
 - **Mental model 9 — Hypothesis-driven thinking.** Each forecast is
   a falsifiable claim about a window. If the call cannot be falsified
   inside the window, the call is a narrative, not a forecast. See
-  [`mental-models.md`](../../../docs/contracts/mental-models.md) § 9.
+  [`mental-models.md`](../../docs/contracts/mental-models.md) § 9.
 - **Mental model 29 — Premortem.** Before locking the call, write the
   post-window retro as if commit missed by 20 %. The premortem
   surfaces which construction inputs were riding on weak evidence;
@@ -47,7 +47,7 @@ Do NOT use to qualify a single deal (route to `deal-qualification-meddic`), cons
   reconcile against (monthly close vs quarterly board pack vs annual
   plan vs multi-year plan); the **customer-segment** slot for
   segment-historical close rates. See
-  [`context-spine`](../../../docs/contracts/context-spine.md).
+  [`context-spine`](../../docs/contracts/context-spine.md).
 
 ## Procedure
 

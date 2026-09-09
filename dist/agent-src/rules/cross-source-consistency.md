@@ -88,7 +88,7 @@ trivial edits, or when the user has already resolved the discrepancy this turn.
 
 The taxonomy, the scan procedure, the confidence-tiered noise control, worked
 examples, and the precedence table live in
-[`cross-source-consistency-mechanics`](../docs/guidelines/agent-infra/cross-source-consistency-mechanics.md).
+[`cross-source-consistency-mechanics`](../guidelines/agent-infra/cross-source-consistency-mechanics.md).
 
 ## See also
 

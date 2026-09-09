@@ -153,8 +153,8 @@ four-operation split assigns to *rules/linters*, not the corpus).
 
 ## See also
 
-- [`design-canon.md`](../../../docs/guidelines/design-canon.md) § Colour references — a11y-contrast + culturally-specific palettes + named-system token models.
+- [`design-canon.md`](../../guidelines/design-canon.md) § Colour references — a11y-contrast + culturally-specific palettes + named-system token models.
 - [`design-intelligence`](../design-intelligence/SKILL.md) — grounded value selection.
 - [`tailwind-engineer`](../tailwind-engineer/SKILL.md) — utility-discipline consumer.
 - [`react-shadcn-ui`](../react-shadcn-ui/SKILL.md) — shadcn token conventions.
-- [`docs/guidelines/design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md) — when authoring the colour layer, avoid the C5 cream/sand default palette (OKLCH L 0.84–0.97, C < 0.06) and C1 purple/violet primaries unless the brand explicitly defines them; the `brand-consistency` rule validates emitted tokens against the active brand profile.
+- [`docs/guidelines/design-antipatterns.md`](../../guidelines/design-antipatterns.md) — when authoring the colour layer, avoid the C5 cream/sand default palette (OKLCH L 0.84–0.97, C < 0.06) and C1 purple/violet primaries unless the brand explicitly defines them; the `brand-consistency` rule validates emitted tokens against the active brand profile.

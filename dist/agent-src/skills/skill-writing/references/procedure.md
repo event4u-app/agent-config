@@ -56,7 +56,7 @@ ships is worse than no record.
 **Surface overlap before deciding** — run `./scripts-run src/scripts/skill_overlap`
 (or `audit_skill_overlap`) and read the nearest matches; a high-overlap hit is a
 merge signal, not a green light. This gate is the authoring-time companion to the
-[capability-boundary matrix](../../../../../docs/contracts/capability-boundary.md): the
+[capability-boundary matrix](../../../docs/contracts/capability-boundary.md): the
 matrix governs packs, this governs the skills inside them.
 
 ### 1. Define the trigger

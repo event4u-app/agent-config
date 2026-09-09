@@ -120,7 +120,7 @@ After the block, ask:
 
 - [`review-routing`](../../skills/review-routing/SKILL.md) — the resolver
 - [`reviewer-awareness`](../../rules/reviewer-awareness.md) — the rule that routes here: paths and risk over seniority, primary + secondary on medium/high
-- [`review-routing-data-format`](../../../docs/guidelines/agent-infra/review-routing-data-format.md)
+- [`review-routing-data-format`](../../guidelines/agent-infra/review-routing-data-format.md)
   — YAML schemas
 - [`create-pr-description`](../../skills/create-pr:description-only/SKILL.md) —
   consumes the routing block

@@ -125,5 +125,5 @@ A future `telegraph-v2.md` will tabulate the realised input-token saving against
 - [`src/scripts/validate_safe_paths.ts`](../../../src/scripts/validate_safe_paths.ts) — Phase 0 gate; ported from upstream Telegraph `63a91ec`.
 - [`src/scripts/condense_memory.ts`](../../../src/scripts/condense_memory.ts) — implementation.
 - [`tests/scripts/condense_memory.test.ts`](../../../tests/scripts/condense_memory.test.ts) — regression locks for each carve-out + idempotency + denylist.
-- [`docs/contracts/condensation-default-kill-criterion.md`](../../../docs/contracts/condensation-default-kill-criterion.md) — v1 verdict (output-side; informs but does not gate this skill).
+- [`docs/contracts/condensation-default-kill-criterion.md`](../../docs/contracts/condensation-default-kill-criterion.md) — v1 verdict (output-side; informs but does not gate this skill).
 - [`agents-md-thin-root`](../agents-md-thin-root/SKILL.md) — caps the consumer-shipped `templates/AGENTS.md`; this skill is one tool to land under the cap.

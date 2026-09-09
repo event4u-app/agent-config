@@ -38,7 +38,7 @@ via the `forecast-construction-shape` interface).
   is lagging; per-stage conversion and MEDDIC-slot completeness
   are leading. A forecast built on lagging signals can only confirm
   the result after it lands. See
-  [`docs/contracts/mental-models.md`](../../../docs/contracts/mental-models.md) § 16.
+  [`docs/contracts/mental-models.md`](../../docs/contracts/mental-models.md) § 16.
 - **Mental model 29 — Premortem.** Before locking the call, write
   the post-quarter retro as if commit missed by 20 %. The premortem
   surfaces which categorisations are riding on weak evidence; demote
@@ -54,7 +54,7 @@ via the `forecast-construction-shape` interface).
   **customer-segment** slot for segment-historical close rates —
   pricing-power and cycle-length differ by segment and the forecast
   must too. See
-  [`context-spine`](../../../docs/contracts/context-spine.md).
+  [`context-spine`](../../docs/contracts/context-spine.md).
 
 ## Procedure
 

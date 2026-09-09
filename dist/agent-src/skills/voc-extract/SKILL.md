@@ -47,7 +47,7 @@ quantitative funnel diagnosis ([`funnel-analysis`](../funnel-analysis/SKILL.md))
 - **Mental model 15 — Signal vs noise.** A loud single reporter
   swamps quiet recurring patterns; rank by **distinct authors**, not
   comment count. See
-  [`docs/contracts/mental-models.md`](../../../docs/contracts/mental-models.md) § 15.
+  [`docs/contracts/mental-models.md`](../../docs/contracts/mental-models.md) § 15.
 - **Mental model 14 — Pareto.** Roughly 20% of themes carry 80% of
   the contact volume; cut the long tail explicitly so the team acts
   on the head. See `mental-models.md` § 14.
@@ -57,7 +57,7 @@ quantitative funnel diagnosis ([`funnel-analysis`](../funnel-analysis/SKILL.md))
 - **Product context-spine slot.** Read **product** for segments,
   non-goals, and focal jobs; do not surface themes that fall outside
   the declared scope without a scope-violation flag. See
-  [`context-spine`](../../../docs/contracts/context-spine.md).
+  [`context-spine`](../../docs/contracts/context-spine.md).
 
 ## Procedure
 

@@ -37,7 +37,7 @@ Do NOT use when:
 
 Any request to **recreate, redesign, mock, prototype, or improve** a UI runs
 this gate BEFORE styling — the Inspect stage of the
-[design-artifact lifecycle](../../../docs/contracts/design-artifact-lifecycle.md).
+[design-artifact lifecycle](../../docs/contracts/design-artifact-lifecycle.md).
 Design starts from project truth, not generic aesthetic memory.
 
 - **Search first (owned UI).** Before proposing anything, search the project

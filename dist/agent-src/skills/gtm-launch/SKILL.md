@@ -36,7 +36,7 @@ post-launch retention loops (route to `retention-loops`).
   expectations after public launch costs more than re-shipping the
   product. Alpha and beta are reversible; treat them as the
   decision-quality buffer. See
-  [`docs/contracts/mental-models.md`](../../../docs/contracts/mental-models.md) § 10.
+  [`docs/contracts/mental-models.md`](../../docs/contracts/mental-models.md) § 10.
 - **Mental model 29 — Premortem.** Before the wave plan locks, write
   the post-mortem of the launch as if it failed. The premortem
   surfaces the gates that need to hold; the wave plan is the inverse
@@ -50,7 +50,7 @@ post-launch retention loops (route to `retention-loops`).
   **customer-segment** slot for who hears the launch on which wave,
   and the **channel-stage** slot for where each wave's audience lives
   in the awareness → decision arc. See
-  [`context-spine`](../../../docs/contracts/context-spine.md).
+  [`context-spine`](../../docs/contracts/context-spine.md).
 
 ## Procedure
 

@@ -22,7 +22,7 @@ packs:
 * Rewriting an existing roadmap (phase restructure, goal pivot,
   council-pass integration — not a checkbox flip)
 * Drafting a phase block, exit criteria, or rollback section that
-  will land inside an existing roadmap — an operator **symptom** as the input has its own entry procedure: [`symptom-driven harvest`](../../../docs/guidelines/agent-infra/symptom-driven-harvest-loop.md)
+  will land inside an existing roadmap — an operator **symptom** as the input has its own entry procedure: [`symptom-driven harvest`](../../guidelines/agent-infra/symptom-driven-harvest-loop.md)
 
 Do NOT use this skill when:
 
@@ -86,7 +86,7 @@ carry `parent_roadmap:` (rule 17).
 Default `lightweight` (≤ 6 phases, ≤ 600 lines). Only use
 `structural` when the change touches a contract, kernel rule, or
 budget invariant — the complexity linter enforces it. Standard:
-[`roadmap-complexity-standard`](../../../docs/contracts/roadmap-complexity-standard.md).
+[`roadmap-complexity-standard`](../../docs/contracts/roadmap-complexity-standard.md).
 
 ### 3. Write the goal first
 
@@ -107,7 +107,7 @@ built over a text↔image contradiction or a silent-but-needed behavior
 every downstream step. Surface each discrepancy as one batched open
 question first; an inferred behavior is a scope expansion to confirm, not
 to plan silently. Taxonomy + procedure:
-[`cross-source-consistency-mechanics`](../../../docs/guidelines/agent-infra/cross-source-consistency-mechanics.md).
+[`cross-source-consistency-mechanics`](../../guidelines/agent-infra/cross-source-consistency-mechanics.md).
 
 ### 4. Phase blocks carry checkboxes
 
@@ -199,7 +199,7 @@ Omit it entirely when there is no such gate; run the § 4c gate-test first.
   from a fresh C→R1 handoff state (never re-ask a resolved branch).
 - Product AND implementation risks ranked descending, one mitigation per row,
   each anchored to a phase/step here; none → exact honest-null grammar.
-- Schema, staleness, grandfather, drafts-exempt: [`plan-review-gates § 1`](../../../docs/contracts/plan-review-gates.md).
+- Schema, staleness, grandfather, drafts-exempt: [`plan-review-gates § 1`](../../docs/contracts/plan-review-gates.md).
 
 ### 6. Step-marker semantics — pick `[~]` (defer) vs `[-]` (cancel) honestly
 
@@ -352,7 +352,7 @@ to every roadmap you author.
   `<!-- carve-out: new-gate-verification -->` when it verifies a NEW
   gate this roadmap introduces.
 * Use ALL-CAPS Iron-Law fenced blocks — those belong in
-  [`kernel-membership`](../../../docs/contracts/kernel-membership.md)-listed rules.
+  [`kernel-membership`](../../docs/contracts/kernel-membership.md)-listed rules.
 * Adopt items from an external source / harvest **without a
   `KEEP`/`FOLD`/`CUT` gap-table** against the existing surface (§ 8) —
   that is a skill dump, not integration.

@@ -133,8 +133,8 @@ files `contexts/judges/no-consolidate-rationale.md`.
 
 ## References
 
-- [`docs/contracts/context-paths.md`](../../../docs/contracts/context-paths.md)
+- [`docs/contracts/context-paths.md`](../../docs/contracts/context-paths.md)
   — locked path tree (this file lives at `contexts/judges/`).
-- [`docs/contracts/load-context-schema.md`](../../../docs/contracts/load-context-schema.md)
+- [`docs/contracts/load-context-schema.md`](../../docs/contracts/load-context-schema.md)
   — frontmatter contract for citing this rubric from a slimmed `judge-*`
   skill in Phase 3a.2.

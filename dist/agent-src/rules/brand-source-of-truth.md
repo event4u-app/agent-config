@@ -128,7 +128,7 @@ When a consumer brand profile is present, the brand register ("the impression IS
 the product") is active — use `brand-identity`, `iconography`, and
 `design-intelligence` as the primary skill cluster. For product/dashboard/admin
 surfaces within the same brand, the product register ("design serves the task")
-may apply per-surface. See [`docs/guidelines/design-modes.md`](../docs/guidelines/design-modes.md)
+may apply per-surface. See [`docs/guidelines/design-modes.md`](../guidelines/design-modes.md)
 for the full Brand-mode vs Product-mode discriminator.
 
 ## See also
@@ -143,4 +143,4 @@ for the full Brand-mode vs Product-mode discriminator.
   loads. The authoring name is a consumer-visible decision and is not changed
   here; `brand:status` surfaces the mismatch at the moment it matters.
 - [`design-intelligence`](../skills/design-intelligence/SKILL.md) — the "audit findings outrank corpus" precedent the gate mirrors.
-- [`docs/guidelines/design-modes.md`](../docs/guidelines/design-modes.md) — brand vs product register discriminator and routing.
+- [`docs/guidelines/design-modes.md`](../guidelines/design-modes.md) — brand vs product register discriminator and routing.

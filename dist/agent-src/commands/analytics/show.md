@@ -88,13 +88,13 @@ and offer the next step:
 
 - Read-only. Never writes to the JSONL, never opens the network.
 - The opt-out check (env + settings) short-circuits before the file is
-  opened — see [`local-analytics`](../../../docs/contracts/local-analytics.md)
+  opened — see [`local-analytics`](../../docs/contracts/local-analytics.md)
   § Opt-out.
 
 ## See also
 
 - [`/analytics prune`](prune.md) — drop events older than 90 days.
-- [`local-analytics`](../../../docs/contracts/local-analytics.md) — full
+- [`local-analytics`](../../docs/contracts/local-analytics.md) — full
   schema and retention contract.
 - [`local-analytics walkthrough`](../../../docs/guides/local-analytics.md)
   — the 3-minute read for end-users.

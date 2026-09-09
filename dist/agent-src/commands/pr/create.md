@@ -227,7 +227,7 @@ runs on the post-archival state (the findings artifact references
 post-archival paths), (3) the PR is created only with a valid findings
 artifact, honest-null, or skip declaration **for the current review-scope
 hash** per
-[`plan-review-gates § 2`](../../../docs/contracts/plan-review-gates.md).
+[`plan-review-gates § 2`](../../docs/contracts/plan-review-gates.md).
 
 - A completion-review artifact from the roadmap-completion event
   (`agents/evidence/reviews/<slug>.findings.md`) is re-used when its

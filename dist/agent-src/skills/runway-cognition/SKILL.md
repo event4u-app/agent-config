@@ -33,10 +33,10 @@ Do NOT use for per-customer economics (route to `unit-economics-modeling` (O1)),
 
 ## Cognition cluster
 
-- **Mental model 21 — Second-order thinking.** *"If we cut here, then ___, and then ___."* Runway decisions are second-order by construction: the first-order effect (extended runway) is trivial; the second-order effect (slower growth → next-round terms → dilution) is the real decision. See [`mental-models.md`](../../../docs/contracts/mental-models.md) § 21.
+- **Mental model 21 — Second-order thinking.** *"If we cut here, then ___, and then ___."* Runway decisions are second-order by construction: the first-order effect (extended runway) is trivial; the second-order effect (slower growth → next-round terms → dilution) is the real decision. See [`mental-models.md`](../../docs/contracts/mental-models.md) § 21.
 - **Mental model 28 — Inversion.** *"What would force a down-round?"* Invert the fundraise question: instead of *"can we raise?"* ask *"what evidence would the market need to fund us at this valuation?"* and work backwards. See `mental-models.md` § 28.
 - **Mental model 16 — Leading vs lagging indicators.** Cash balance is lagging; **net burn trend over the last 3 fiscal-periods** + **pipeline coverage of next-window revenue** are leading. A runway model that reads only cash balance is reading yesterday's weather. See `mental-models.md` § 16.
-- **Context-spine — org-stage + fiscal-period + product.** Read the **org-stage** slot for what bands apply (pre-seed / seed / Series A / Series B+ / growth / public — each has a different "healthy runway" band; do not hardcode 18 months). Read **fiscal-period** for the cadence the runway model rolls forward against. Read **product** for what's GA-shippable in the window — pre-revenue product changes the cognition shape (extend until traction) vs post-revenue (extend until next milestone). See [`context-spine`](../../../docs/contracts/context-spine.md).
+- **Context-spine — org-stage + fiscal-period + product.** Read the **org-stage** slot for what bands apply (pre-seed / seed / Series A / Series B+ / growth / public — each has a different "healthy runway" band; do not hardcode 18 months). Read **fiscal-period** for the cadence the runway model rolls forward against. Read **product** for what's GA-shippable in the window — pre-revenue product changes the cognition shape (extend until traction) vs post-revenue (extend until next milestone). See [`context-spine`](../../docs/contracts/context-spine.md).
 
 ## Procedure
 

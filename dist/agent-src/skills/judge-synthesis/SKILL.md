@@ -75,7 +75,7 @@ reproduces the pre-filter defect one layer up — the finding was found, the
 reviewer reported it, and the aggregator withheld it. Filtering is the
 consumer's pass, after the ledger is whole. Output shape, the separate
 `Confidence` field, and the preserve-an-unverified-S0 rule are specified once in
-[`adversarial-review-protocol`](../../../docs/contracts/adversarial-review-protocol.md)
+[`adversarial-review-protocol`](../../docs/contracts/adversarial-review-protocol.md)
 § 3.
 
 ### 2. Find consensus (highest confidence)

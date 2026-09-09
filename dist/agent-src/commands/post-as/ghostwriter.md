@@ -46,7 +46,7 @@ re-implement, do not skip, do not add steps.
 ### 2. Disclosure footer (mandatory — inherited from `/ghostwriter:write`)
 
 The footer is appended by `/ghostwriter:write`'s output template (per
-[`write-engine § 5`](../../../docs/contracts/write-engine.md)). This
+[`write-engine § 5`](../../docs/contracts/write-engine.md)). This
 alias inherits the footer unconditionally — no `--no-disclosure`
 flag, no `--internal` flag, no opt-out. Any flag that would suppress
 it is forbidden by design.
@@ -68,5 +68,5 @@ it is forbidden by design.
 - [`/ghostwriter:write`](../ghostwriter/write.md) — canonical implementation; this file is a thin alias.
 - [`/post-as`](../post-as.md) — parent cluster.
 - [`/post-as:me`](me.md) — sibling consumer, user-self voice, no footer.
-- [`write-engine`](../../../docs/contracts/write-engine.md) — shared procedural contract.
-- [`ghostwriter-schema`](../../../docs/contracts/ghostwriter-schema.md) — locked v1 frontmatter.
+- [`write-engine`](../../docs/contracts/write-engine.md) — shared procedural contract.
+- [`ghostwriter-schema`](../../docs/contracts/ghostwriter-schema.md) — locked v1 frontmatter.

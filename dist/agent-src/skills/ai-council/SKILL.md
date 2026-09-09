@@ -136,7 +136,7 @@ explicit absolute path for tests / power users — still not a project search.
 ## When NOT to invoke — necessity self-check
 
 The Phase 6 necessity classifier (see
-[`ai-council-config § Necessity classifier`](../../../docs/contracts/ai-council-config.md))
+[`ai-council-config § Necessity classifier`](../../docs/contracts/ai-council-config.md))
 runs as a pre-flight gate inside the CLI and skips the council when
 the prompt looks like routine work. Route around it BEFORE the gate
 fires so the user never pays the classifier-pause cost on a request

@@ -37,7 +37,7 @@ draft the asset itself (downstream of this skill).
   funnel design is the discipline of placing the heaviest content
   investment at the structural leverage point, not the parameter
   one. See
-  [`docs/contracts/mental-models.md`](../../../docs/contracts/mental-models.md) § 14.
+  [`docs/contracts/mental-models.md`](../../docs/contracts/mental-models.md) § 14.
 - **Mental model 6 — Theory of constraints.** The slow funnel stage
   caps the whole pipeline. Adding content elsewhere does not loosen
   the constraint. See `mental-models.md` § 6.
@@ -52,7 +52,7 @@ draft the asset itself (downstream of this skill).
   the asset, **customer-segment** for whose questions the asset
   answers, and **product** for the proofs the asset can actually
   back. See
-  [`context-spine`](../../../docs/contracts/context-spine.md).
+  [`context-spine`](../../docs/contracts/context-spine.md).
 
 ## Procedure
 

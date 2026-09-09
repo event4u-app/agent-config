@@ -243,7 +243,7 @@ removes or tightens THE TRIGGER, and the removal PR cites the numbers.
 
 ## Related
 
-- [`audit-log-v1`](../../../../docs/contracts/audit-log-v1.md) — the frozen
+- [`audit-log-v1`](../../docs/contracts/audit-log-v1.md) — the frozen
   JSONL contract this object rides on; the `orchestration` field is optional
   and additive, schema_version unchanged.
 - [`host-capability-manifest`](host-capability-manifest.md) — the manifest that

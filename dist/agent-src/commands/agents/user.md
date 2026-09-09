@@ -20,14 +20,14 @@ packs:
 # /agents user
 
 Sub-dispatcher for the user-persona file
-[`/.agent-user.md`](../../../docs/contracts/agent-user-schema.md) — a
+[`/.agent-user.md`](../../docs/contracts/agent-user-schema.md) — a
 single, project-root, gitignored Markdown file that captures who the
 user is and how they want the agent to address them.
 
 Since ADR-138, a weaker global layer
 (`~/.event4u/agent-config/user/profile.md`) sits beneath the
 project-local file — see
-[`agent-user-schema.md § Global profile layer`](../../../docs/contracts/agent-user-schema.md#global-profile-layer-adr-138)
+[`agent-user-schema.md § Global profile layer`](../../docs/contracts/agent-user-schema.md#global-profile-layer-adr-138)
 for the merge rule. `init` and `update` operate on the **project-local**
 file only; `review` and `accept` cover BOTH layers' observation buffers
 (road-to-global-user-memory Phase 2/3); `show` renders the merged,
@@ -53,7 +53,7 @@ separate sub-commands for separation of concerns.
 | `/agents user delete` | `commands/agents/user/delete.md` | Delete an observation, purge a project's observations, or revoke a profile field — with a tombstone |
 
 Schema contract:
-[`docs/contracts/agent-user-schema.md`](../../../docs/contracts/agent-user-schema.md).
+[`docs/contracts/agent-user-schema.md`](../../docs/contracts/agent-user-schema.md).
 
 ## Dispatch
 
@@ -70,15 +70,15 @@ Schema contract:
   explicitly authorizes it.
 - **Do NOT write third-party PII** — names, dates, financial figures,
   health/legal status. See the
-  [exclusions list](../../../docs/contracts/agent-user-schema.md#explicit-exclusions).
+  [exclusions list](../../docs/contracts/agent-user-schema.md#explicit-exclusions).
 - **Do NOT introduce network code** in this package. External
   enrichment is rejected for v1 — see the
-  [determinism floor](../../../docs/contracts/agent-user-schema.md#determinism-floor).
+  [determinism floor](../../docs/contracts/agent-user-schema.md#determinism-floor).
 - **Edit `src/` only.** `dist/agent-src/` and
   `.augment/` regenerate from source.
 
 ## See also
 
-- [`agent-user-schema`](../../../docs/contracts/agent-user-schema.md) — locked v1 frontmatter and field reference.
+- [`agent-user-schema`](../../docs/contracts/agent-user-schema.md) — locked v1 frontmatter and field reference.
 - [`/agents`](../AGENTS.md) — parent cluster.
 - [`/agents init`](init.md) — project-side bootstrap (separate primitive).

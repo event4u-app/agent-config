@@ -153,7 +153,7 @@ auto-suffix without the user's pick.
 
 **Risk review (Gate R1)** — every generated roadmap that is saved ready
 (non-draft) carries a `## Risk Register` per
-[`plan-review-gates § 1`](../../../docs/contracts/plan-review-gates.md):
+[`plan-review-gates § 1`](../../docs/contracts/plan-review-gates.md):
 read the C→R1 handoff state from step 2 if present (resolved branches
 seed the risks — never re-ask them), rank the highest product and
 implementation risks descending, one mitigation per row, each row
@@ -238,4 +238,4 @@ What's next?
 
 ## See also
 
-- [`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md#planner) — Planner mode output contract (Goal / Constraints / Option set / Recommendation / Dependencies / Rollback)
+- [`role-contracts`](../../guidelines/agent-infra/role-contracts.md#planner) — Planner mode output contract (Goal / Constraints / Option set / Recommendation / Dependencies / Rollback)

@@ -27,7 +27,7 @@ execution:
 > hands it to the [`design-tokens`](../design-tokens/SKILL.md) toolchain to emit
 > CSS vars + Tailwind. The same `.tokens.json` is the export that pack-ai-image
 > brand-asset generation and the greenfield scaffold seed consume (B → A;
-> contract: [`brand-token-consumption`](../../../docs/contracts/brand-token-consumption.md)).
+> contract: [`brand-token-consumption`](../../docs/contracts/brand-token-consumption.md)).
 
 ## When to use
 
@@ -98,9 +98,9 @@ execution:
 
 ## See also
 
-- [`design-canon.md`](../../../docs/guidelines/design-canon.md) § Colour references — culturally-situated palettes + a11y-contrast grounding when deriving brand colour tokens.
+- [`design-canon.md`](../../guidelines/design-canon.md) § Colour references — culturally-situated palettes + a11y-contrast grounding when deriving brand colour tokens.
 - [`brand-identity`](../brand-identity/SKILL.md) — supplies the constraint set this skill derives tokens from.
 - [`design-tokens`](../design-tokens/SKILL.md) — the DTCG toolchain that emits CSS/Tailwind from `.tokens.json`.
 - [`typography-system`](../typography-system/SKILL.md) — brand-aware stage-2 supplies the type tokens.
-- [`brand-token-consumption`](../../../docs/contracts/brand-token-consumption.md) — the read contract pack-ai-image and greenfield scaffold consume.
+- [`brand-token-consumption`](../../docs/contracts/brand-token-consumption.md) — the read contract pack-ai-image and greenfield scaffold consume.
 - [`brand-consistency`](../../rules/brand-consistency.md) — validates emitted artifacts against this token source of truth.

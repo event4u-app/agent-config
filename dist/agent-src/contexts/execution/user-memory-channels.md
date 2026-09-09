@@ -18,7 +18,7 @@ behaviour was to detect it and throw it away. It now has a second
 destination: `~/.event4u/agent-config/user/observations.jsonl`, the global
 observation buffer from ADR-138's sibling phase — mirroring, one level up,
 the project-local `.agent-user.observations.jsonl` contract in
-[`agent-user-schema.md § Observation buffer`](../../../docs/contracts/agent-user-schema.md#observation-buffer).
+[`agent-user-schema.md § Observation buffer`](../../docs/contracts/agent-user-schema.md#observation-buffer).
 
 **The project-scoped rule in Phase 3 (CONSOLIDATE) is unchanged.** No user
 fact enters `agents/memory/` curated YAML through this or any other path —
@@ -73,7 +73,7 @@ than at review, and from reusing the existing redaction gate verbatim:
   birthdays · financial figures · health / legal / therapy status ·
   demographics · external-source identifiers — refused when the
   observation is captured, per
-  [`agent-user-schema.md § Explicit exclusions`](../../../docs/contracts/agent-user-schema.md#explicit-exclusions).
+  [`agent-user-schema.md § Explicit exclusions`](../../docs/contracts/agent-user-schema.md#explicit-exclusions).
 - **Hidden unicode.** Every write routes through
   `knowledge_global_redaction.redaction_scan`, including its
   `hidden_unicode` class (the ADR-103 zero-width-smuggling detector) — the
@@ -120,7 +120,7 @@ against the project root once, during ORIENT:
   `seen_in[]` recurrence tally to the fact and appends it to the SAME
   global buffer Phase 2 uses — never a second store, never a
   project-indexed directory (the council's round-2 namespace refusal; see
-  [`agent-user-schema.md § Project attribution`](../../../docs/contracts/agent-user-schema.md#project-attribution-road-to-global-user-memory-phase-3)).
+  [`agent-user-schema.md § Project attribution`](../../docs/contracts/agent-user-schema.md#project-attribution-road-to-global-user-memory-phase-3)).
 
 **This is the only generalisation path.** A fact recurring in a
 *different* unmanaged project (Jaccard similarity ≥ `MERGE_THRESHOLD`,

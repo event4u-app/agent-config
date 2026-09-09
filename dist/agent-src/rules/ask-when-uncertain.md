@@ -30,7 +30,7 @@ Even if trivial or independent — exactly one.
 
 ## Vague-request triggers — MUST ask
 
-Nine patterns — "improve / optimize" · "add caching" · "make it better / cleaner" · "clean up this file" · "fix this" (no symptom) · "refactor X" · "use best practices" · "handle errors properly" · "add a UI / component / tile / page" in a mixed-framework repo. Match without context → ask **before** touching code. Per-pattern questions: [`asking-and-brevity-examples`](../docs/guidelines/agent-infra/asking-and-brevity-examples.md).
+Nine patterns — "improve / optimize" · "add caching" · "make it better / cleaner" · "clean up this file" · "fix this" (no symptom) · "refactor X" · "use best practices" · "handle errors properly" · "add a UI / component / tile / page" in a mixed-framework repo. Match without context → ask **before** touching code. Per-pattern questions: [`asking-and-brevity-examples`](../guidelines/agent-infra/asking-and-brevity-examples.md).
 
 **Escape hatch:** unambiguous from ticket / open file / prior turn → proceed, state the assumption.
 
@@ -48,7 +48,7 @@ Any "yes" → **collapse to ONE question**; hold the rest for their own turn.
 
 ### Ordering & handoff
 
-- **Session handoff** — ask LAST, after domain questions ([`agent-interaction-and-decision-quality`](../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md)).
+- **Session handoff** — ask LAST, after domain questions ([`agent-interaction-and-decision-quality`](../guidelines/agent-infra/agent-interaction-and-decision-quality.md)).
 - **Model switch** — [`model-recommendation`](model-recommendation.md) STOP-AND-WAIT gate is standalone.
 - **Blocking clarification** — ask FIRST, alone.
 - **Optional refinement** — don't ask; state the assumption, proceed.

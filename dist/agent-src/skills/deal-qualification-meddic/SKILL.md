@@ -37,7 +37,7 @@ scope — this skill is single-deal qualification, one cycle).
   answer survives, qualification is incomplete; if the answer is
   load-bearing and the team has no countermeasure, disqualification
   is the call. See
-  [`docs/contracts/mental-models.md`](../../../docs/contracts/mental-models.md) § 30.
+  [`docs/contracts/mental-models.md`](../../docs/contracts/mental-models.md) § 30.
 - **Mental model 9 — Hypothesis-driven thinking.** Each MEDDIC slot
   is a hypothesis with falsification evidence. *"Mary is the
   champion"* is a claim; *"Mary briefed two peers without us in the
@@ -55,7 +55,7 @@ scope — this skill is single-deal qualification, one cycle).
   **customer-segment** slot for the segment's switch-event shape —
   pain claims that do not match the segment's known switch events
   are coaching opportunities, not qualifications. See
-  [`context-spine`](../../../docs/contracts/context-spine.md).
+  [`context-spine`](../../docs/contracts/context-spine.md).
 
 ## Procedure
 

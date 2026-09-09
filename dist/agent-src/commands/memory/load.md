@@ -122,7 +122,7 @@ opts in.
 
 The agent should now treat every loaded entry as an authority signal
 with its declared `confidence` — see
-[`memory-access`](../../docs/guidelines/agent-infra/memory-access.md) for
+[`memory-access`](../../guidelines/agent-infra/memory-access.md) for
 how entries modulate edits.
 
 ### 5. Inline-review hook (intake backlog)
@@ -198,5 +198,5 @@ nothing on this" — never invent an entry to fill the gap.
 - [`memory-add`](memory-add.md) — add a single entry
 - [`memory-promote`](memory-promote.md) — promote an intake signal to
   a curated entry
-- [`memory-access`](../../docs/guidelines/agent-infra/memory-access.md) —
+- [`memory-access`](../../guidelines/agent-infra/memory-access.md) —
   how entries flow into agent decisions

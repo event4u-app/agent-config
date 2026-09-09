@@ -16,7 +16,7 @@ Loaded on demand by [`experiment-loop`](../SKILL.md). One iteration, in order.
 4. **Commit.** The revert is then a git operation rather than a manual undo, and
    the branch carries one commit per iteration whether it survives or not.
 5. **Evaluate** — run the evaluator, read its
-   [evaluator-output](../../../../../docs/contracts/evaluator-output.md) verdict.
+   [evaluator-output](../../../docs/contracts/evaluator-output.md) verdict.
 6. **Decide**, and update the row:
 
    | Verdict | Decision |

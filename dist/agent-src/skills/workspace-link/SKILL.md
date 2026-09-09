@@ -127,5 +127,5 @@ A workspace-link answer MUST contain, in order:
 ## See also
 
 - [`monorepo-workspace`](../monorepo-workspace/SKILL.md) — which manager, which workspaces, which graph.
-- [`monorepo-antipatterns`](../../../docs/guidelines/monorepo-antipatterns.md) — the task-graph mistakes a `paths` patch hides.
+- [`monorepo-antipatterns`](../../guidelines/monorepo-antipatterns.md) — the task-graph mistakes a `paths` patch hides.
 - [`blast-radius-analyzer`](../blast-radius-analyzer/SKILL.md) — § Monorepo, once the edge exists.

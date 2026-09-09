@@ -44,7 +44,7 @@ adds a router rather than a 295th entry to it.
 ## The six verbs are one field, not six commands
 
 Each verb declares the `ui_authority` dimensions it may touch
-([contract](../../../docs/contracts/ui-authority.md) § The six operations).
+([contract](../docs/contracts/ui-authority.md) § The six operations).
 That makes a collision **decidable** rather than a judgement call:
 
 ```

@@ -101,7 +101,7 @@ branded, recommendation-bearing). A single refined implementation →
 - Do NOT skip decision capture — an exploration round without a recorded
   decision has to be re-litigated in the hi-fi round.
 - Do NOT embed system internals (paths, skill/tool names) in the artifact —
-  Q13 in [`design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md).
+  Q13 in [`design-antipatterns.md`](../../guidelines/design-antipatterns.md).
 
 ## Gotcha
 

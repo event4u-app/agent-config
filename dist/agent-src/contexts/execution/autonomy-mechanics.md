@@ -13,7 +13,7 @@ relevant. Detection logic lives in [`autonomy-detection.md`](autonomy-detection.
 | `auto` (default) | Same as `off` by default. Flips to `on` for the rest of the conversation as soon as the user expresses the intent "stop asking, just work". See [detection logic](autonomy-detection.md) — match by **intent**, not exact string. The flip never lifts the Hard Floor. |
 
 The value is read once on the first turn (per
-[`layered-settings`](../../../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules))
+[`layered-settings`](../../guidelines/agent-infra/layered-settings.md#section-aware-merge-rules))
 and cached. Missing key → treat as `auto` (fail-closed — same behavior
 as the shipped template default; absence of a key never grants the most
 permissive mode). The one exception is the explicit cloud carve-out

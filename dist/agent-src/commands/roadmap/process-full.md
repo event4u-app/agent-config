@@ -87,7 +87,7 @@ with the **scope delta below**.
 `--all` changes **cardinality, not lifecycle**: the same single-roadmap loop,
 iterated over the whole active estate. It is a flag rather than a
 `/roadmap:process-all` command because
-[`command-clusters`](../../../../../docs/contracts/command-clusters.md) says
+[`command-clusters`](../../docs/contracts/command-clusters.md) says
 sibling variants become a flag, and a drain is a count of the thing this
 command already does.
 

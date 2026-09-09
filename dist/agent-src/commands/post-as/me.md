@@ -21,7 +21,7 @@ packs:
 
 Generate a copyable markdown draft in the **maintainer's own voice**.
 Style source is the project-root `.agent-user.md` file. Implements
-the [`write-engine`](../../../docs/contracts/write-engine.md)
+the [`write-engine`](../../docs/contracts/write-engine.md)
 contract — **the disclosure footer is omitted** because the user is
 the author.
 
@@ -43,7 +43,7 @@ Look in the project root.
 | File exists with `voice_sample` | Proceed |
 
 Schema reference:
-[`agent-user-schema`](../../../docs/contracts/agent-user-schema.md).
+[`agent-user-schema`](../../docs/contracts/agent-user-schema.md).
 
 ### 2. Load the style source
 
@@ -72,7 +72,7 @@ operator notes, not voice signal.
 
 ### 3. Collect topic + modifiers
 
-Per [`write-engine § 2`](../../../docs/contracts/write-engine.md).
+Per [`write-engine § 2`](../../docs/contracts/write-engine.md).
 Flag form: `--tone=<formal|casual|neutral>`,
 `--length=<words>`, `--channel=<linkedin-post|tweet|blog|freeform>`,
 `--audience=<text>`. The channel values and their length defaults are
@@ -87,12 +87,12 @@ the pace mapping above.
 ### 4. Negative-constraint pass (skipped)
 
 `.agent-user.md` v1 has no `taboos` field. Skip per
-[`write-engine § 3`](../../../docs/contracts/write-engine.md).
+[`write-engine § 3`](../../docs/contracts/write-engine.md).
 
 ### 5. Draft
 
 Generate the body as a single fenced markdown block per
-[`write-engine § 4`](../../../docs/contracts/write-engine.md). Honour
+[`write-engine § 4`](../../docs/contracts/write-engine.md). Honour
 the loaded fingerprint (sentence-length ±25 %, pace),
 ±15 % length tolerance, write in `language`.
 
@@ -126,8 +126,8 @@ commit, no save. The user copies the output manually.
 
 ## See also
 
-- [`write-engine`](../../../docs/contracts/write-engine.md) — shared procedural contract.
-- [`agent-user-schema`](../../../docs/contracts/agent-user-schema.md) — `.agent-user.md` source schema.
+- [`write-engine`](../../docs/contracts/write-engine.md) — shared procedural contract.
+- [`agent-user-schema`](../../docs/contracts/agent-user-schema.md) — `.agent-user.md` source schema.
 - [`/post-as`](../post-as.md) — parent cluster.
 - [`/post-as:ghostwriter`](ghostwriter.md) — sibling consumer, public-figure voice, mandatory footer.
 - [`/agents:user:init`](../agents/user/init.md) — bootstrap `.agent-user.md`.

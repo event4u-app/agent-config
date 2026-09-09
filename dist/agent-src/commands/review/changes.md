@@ -383,7 +383,7 @@ Per `verbosity.routine_confirmations` (default `false`):
 - [`verify-repair-loop`](../../skills/verify-repair-loop/SKILL.md) — opt-in test-verdict-gated iterate-to-green loop (step 6 hand-off); judge confirms after the numeric gate
 - [`/judge`](judge.md) — standalone judge, no review-changes dispatch
 - [`code-review`](../../skills/code-review/SKILL.md) — human-oriented review patterns (tone, feedback handling)
-- [`role-contracts`](../../../docs/guidelines/agent-infra/role-contracts.md#reviewer) — Reviewer mode output contract (Summary / Risks / Findings / Required actions / Verdict)
+- [`role-contracts`](../../guidelines/agent-infra/role-contracts.md#reviewer) — Reviewer mode output contract (Summary / Risks / Findings / Required actions / Verdict)
 
 ## References
 

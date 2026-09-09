@@ -101,7 +101,7 @@ brand already registers fonts, use them and skip the filter.
 ## Delivery — hosting mode (self-hosted by default)
 
 The delivery policy is **owned** by
-[`design-fidelity-mechanics`](../../../docs/guidelines/design-fidelity-mechanics.md)
+[`design-fidelity-mechanics`](../../guidelines/design-fidelity-mechanics.md)
 § Asset & imagery discipline ([`ADR-205`](../../../docs/decisions/ADR-205-webfont-delivery-ownership.md));
 this skill is a consumer and emits the route, never a competing policy. A font
 CDN link transmits the **visitor's IP** to that third party on every page view —
@@ -174,7 +174,7 @@ the shorter line.
 
 ## See also
 
-- [`design-canon.md`](../../../docs/guidelines/design-canon.md) — named-systems + typography-craft (foundry/theory) grounding index; pull to escape the AI-default fonts.
+- [`design-canon.md`](../../guidelines/design-canon.md) — named-systems + typography-craft (foundry/theory) grounding index; pull to escape the AI-default fonts.
 - [`design-tokens`](../design-tokens/SKILL.md) — toolchain that generates CSS
   vars and the Tailwind snippet from `tokens.json`.
 - [`design-intelligence`](../design-intelligence/SKILL.md) — idiom corpus that

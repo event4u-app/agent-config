@@ -175,6 +175,6 @@ counter and is the first thing to look at before adding a sixth line.
 
 ## See also
 
-- [`docs/contracts/settings-classes.md`](../../../docs/contracts/settings-classes.md) — a sibling contract in the same shape: prose that a gate reads.
+- [`docs/contracts/settings-classes.md`](../../docs/contracts/settings-classes.md) — a sibling contract in the same shape: prose that a gate reads.
 - [`verify-before-complete`](../../rules/verify-before-complete.md) — the evidence gate the pre-send sweep runs beside.
 - `src/scripts/lint_mandated_lines.ts` — the deterministic half.

@@ -23,7 +23,7 @@ packs:
 - A diff adds a helper, a wrapper, a config layer, an abstraction, or a
   dependency.
 - A rewrite, v2, or large refactor landed — the peak over-build context
-  (see [`minimal-safe-diff-mechanics`](../../../docs/guidelines/agent-infra/minimal-safe-diff-mechanics.md)
+  (see [`minimal-safe-diff-mechanics`](../../guidelines/agent-infra/minimal-safe-diff-mechanics.md)
   § The sanctioned-rewrite trap).
 - A reviewer asks "is all of this needed?", "could the platform do
   this?", or "why is this so clever?".
@@ -70,7 +70,7 @@ demands is not, however large.
 
 For every new unit (function, class, module, config key, dependency),
 find the highest rung that would have carried it — see
-[`agent-interaction-and-decision-quality`](../../../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md)
+[`agent-interaction-and-decision-quality`](../../guidelines/agent-infra/agent-interaction-and-decision-quality.md)
 § 8b-ladder:
 
 | Tag | Meaning | The evidence that makes it a finding |

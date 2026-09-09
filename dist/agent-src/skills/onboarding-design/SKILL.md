@@ -37,7 +37,7 @@ to `funnel-analysis`).
   reshapes retention more than a change in the welcome email. Pick
   the leverage point — milestone definition over surface polish.
   See
-  [`docs/contracts/mental-models.md`](../../../docs/contracts/mental-models.md) § 14.
+  [`docs/contracts/mental-models.md`](../../docs/contracts/mental-models.md) § 14.
 - **Mental model 16 — Leading vs. lagging indicators.**
   Time-to-first-value and milestone-completion are leading; D30
   retention is lagging. Onboarding decisions built on lagging
@@ -54,7 +54,7 @@ to `funnel-analysis`).
   configure unattended, the **customer-segment** slot for the
   segment's job and switch-event, and the **funnel-stage** slot for
   where activation sits relative to signup and paid. See
-  [`context-spine`](../../../docs/contracts/context-spine.md).
+  [`context-spine`](../../docs/contracts/context-spine.md).
 
 ## Procedure
 

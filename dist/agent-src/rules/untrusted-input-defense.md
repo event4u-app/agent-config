@@ -79,14 +79,14 @@ inflation, so none is counted.
 hook that cannot refuse does not enforce. This section used to say no such
 backstop existed and that a future one would change the field — the first half
 is now false, the second always was. Detail:
-[`untrusted-input-spotlighting § The content-scanning hook`](../docs/guidelines/agent-infra/untrusted-input-spotlighting.md).
+[`untrusted-input-spotlighting § The content-scanning hook`](../guidelines/agent-infra/untrusted-input-spotlighting.md).
 
-Body migrated to [`guideline:agent-infra/untrusted-input-spotlighting`](../docs/guidelines/agent-infra/untrusted-input-spotlighting.md) (per P4 of `road-to-kernel-and-router.md`) — runtime defense protocol (separate / spotlight / refuse role-takeover / no silent egress / untrusted agent-instruction files), hidden-instruction awareness (invisible Unicode + confusables), injection-signal taxonomy, least-agency → existing-gate OWASP mapping.
+Body migrated to [`guideline:agent-infra/untrusted-input-spotlighting`](../guidelines/agent-infra/untrusted-input-spotlighting.md) (per P4 of `road-to-kernel-and-router.md`) — runtime defense protocol (separate / spotlight / refuse role-takeover / no silent egress / untrusted agent-instruction files), hidden-instruction awareness (invisible Unicode + confusables), injection-signal taxonomy, least-agency → existing-gate OWASP mapping.
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
 
 ## See also
 
-- [`untrusted-input-spotlighting`](../docs/guidelines/agent-infra/untrusted-input-spotlighting.md) — spotlighting/datamarking + OWASP LLM01/LLM06 mapping + the migrated body.
+- [`untrusted-input-spotlighting`](../guidelines/agent-infra/untrusted-input-spotlighting.md) — spotlighting/datamarking + OWASP LLM01/LLM06 mapping + the migrated body.
 - [`delegation-policy`](delegation-policy.md) — delegation authority; the found-instructions quarantine is where a container-delegation's scope ends.
 - [`lethal-trifecta-guard`](lethal-trifecta-guard.md) — break one leg of the trifecta.
 - [`security-sensitive-stop`](security-sensitive-stop.md), [`threat-modeling`](../skills/threat-modeling/SKILL.md), [`security-audit`](../skills/security-audit/SKILL.md).

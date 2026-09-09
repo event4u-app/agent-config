@@ -172,4 +172,4 @@ When the runner was absent, the last line reads
 - [`standards-from-config`](../standards-from-config/SKILL.md) — the Class-A pointer+digest shape this follows.
 - [`workspace-link`](../workspace-link/SKILL.md) — when a cross-workspace import will not resolve.
 - [`blast-radius-analyzer`](../blast-radius-analyzer/SKILL.md) — § Monorepo consumes this graph.
-- [`monorepo-antipatterns`](../../../docs/guidelines/monorepo-antipatterns.md) — diff-detectable task-graph mistakes.
+- [`monorepo-antipatterns`](../../guidelines/monorepo-antipatterns.md) — diff-detectable task-graph mistakes.

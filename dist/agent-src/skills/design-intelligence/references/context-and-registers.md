@@ -28,7 +28,7 @@ Both are consumed; DESIGN.md takes precedence for usage questions.
 ## Register — brand vs product
 
 Determine the design register before grounding (see
-[`docs/guidelines/design-modes.md`](../../../../docs/guidelines/design-modes.md)):
+[`docs/guidelines/design-modes.md`](../../../guidelines/design-modes.md)):
 **brand mode** ("the impression IS the product" — marketing, landing, consumer
 first-impression) prioritizes distinctive selection; **product mode** ("design
 serves the task" — dashboard, admin, workflow) prioritizes earned familiarity
@@ -109,7 +109,7 @@ Dials persist in `DESIGN.md`; the stack executors (`tailwind-engineer`,
 
 **Anti-Default Discipline — first-impulse check:** Before committing to any
 design direction, cross-check your first impulse against the current-generation
-tells in [`design-antipatterns.md`](../../../../docs/guidelines/design-antipatterns.md)
+tells in [`design-antipatterns.md`](../../../guidelines/design-antipatterns.md)
 (§ Current-generation tells — the warm-editorial C5+T2+T7 signature and the
 previous-generation C1/C2 gradient) plus the L1/L2 layout defaults. If a tell
 was your first reach, name a different direction or explicitly justify why this

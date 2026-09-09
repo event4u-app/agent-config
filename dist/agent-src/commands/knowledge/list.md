@@ -100,5 +100,5 @@ user has already provided. See also
 
 - [`/knowledge ingest`](ingest.md) — add a new ingest.
 - [`/knowledge forget`](forget.md) — drop an ingest atomically.
-- [`local-knowledge-ingestion`](../../../docs/contracts/local-knowledge-ingestion.md)
+- [`local-knowledge-ingestion`](../../docs/contracts/local-knowledge-ingestion.md)
   § Bounds — when LRU fires.

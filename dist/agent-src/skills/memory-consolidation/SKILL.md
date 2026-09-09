@@ -32,7 +32,7 @@ user-scoped channel (§ Global user-scoped channel, below) — never into
 - **Mental model 5 — Signal vs. noise.** A consolidation pass that
   promotes 30 entries from a 50-message session is noise; the Pareto
   cut is roughly 3–5 promote-worthy signals per cycle. See
-  [`docs/contracts/mental-models.md`](../../../docs/contracts/mental-models.md) § 5.
+  [`docs/contracts/mental-models.md`](../../docs/contracts/mental-models.md) § 5.
 - **Mental model 12 — Defense in depth.** Date-discipline, tag
   intersection, and per-invocation transcript-access confirmation are
   three independent guards; any one alone fails open. See § 12.
@@ -55,7 +55,7 @@ not advance until the gate is green.
    once here — CONSOLIDATE step 2 needs the answer to know whether
    project-scoped facts land in `agents/memory/intake/` or route through
    the global buffer instead (§ Project attribution channel, below).
-3. Review the **repo** slot of the [context-spine](../../../docs/contracts/context-spine.md)
+3. Review the **repo** slot of the [context-spine](../../docs/contracts/context-spine.md)
    for project boundaries (modules, owners, sensitive paths). If empty,
    note the gap in the consolidation report; do not invent.
 4. Resolve the `TranscriptAdapter` for the current host (see Adapter
@@ -119,7 +119,7 @@ Read it before touching either path — the guards are restated there, not linke
 
    A fact may carry **two** tags; the promoter resolves via tag
    intersection, not by file extension. See
-   [`memory-access`](../../../docs/guidelines/agent-infra/memory-access.md)
+   [`memory-access`](../../guidelines/agent-infra/memory-access.md)
    for the file-backed retrieval contract over the curated YAML.
 
 2. **Managed project only** (§ Project attribution channel, above, for the

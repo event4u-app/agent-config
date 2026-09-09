@@ -116,4 +116,4 @@ Non-blocking.
 - [`/ghostwriter:fetch`](fetch.md) — refresh path; `--force-refresh` rebuilds from scratch.
 - [`/ghostwriter:delete`](delete.md) — hard-delete the profile.
 - [`/ghostwriter:write`](write.md) — consume the rendered voice.
-- [`ghostwriter-schema`](../../../docs/contracts/ghostwriter-schema.md) — field definitions used here.
+- [`ghostwriter-schema`](../../docs/contracts/ghostwriter-schema.md) — field definitions used here.

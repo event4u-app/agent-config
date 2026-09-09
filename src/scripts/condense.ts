@@ -797,7 +797,7 @@ const _LEGACY_PROJECTED_SRC_PREFIX = '.agent-src/';
 
 const _FM_LIST_ITEM_RE = /^(\s*-\s*)(["']?)([^"'\n]+?\.md)(["']?)\s*$/;
 const _FM_PATH_PREFIX_RE = /^(\s*(?:-\s+)?path_prefix:\s*)(["']?)([^"'\n]+?)(["']?)\s*$/;
-const _BODY_DOCS_RE = /\.\.\/\.\.\/(docs\/(?:guidelines|contracts)\/[^)\s]+\.md)/g;
+const _BODY_DOCS_RE = /(?:\.\.\/)+(docs\/(?:guidelines|contracts)\/[^)\s]+\.md)/g;
 const _FM_PLAIN_LIST_RE = /^\s*-\s*(["']?)([^"'\n]+?)\1\s*$/;
 
 const _HRR_BANNER_MARKER = '<!-- agent-config:human-review-banner -->';
@@ -878,7 +878,7 @@ function _rewrite_frontmatter_lines(lines: string[], prefix: string): string[] {
 }
 
 function _rewrite_body_links(body: string, prefix: string): string {
-    return body.replace(_BODY_DOCS_RE, (_m, tail: string) => prefix + tail);
+    return body.replace(_BODY_DOCS_RE, (_m, t: string) => prefix + t.replace(/^docs\/guidelines\//, 'guidelines/')); // docs/guidelines/ is projected — see _lib/guidelines_lane.ts; docs/contracts/ is not, and keeps its path
 }
 
 function _parse_trust_and_owner(fm_lines: string[]): [string, boolean, string] {

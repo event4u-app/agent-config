@@ -126,7 +126,7 @@ When `DESIGN.md` declares `## Taste Dials`, honour them: Variance → layout-fam
 ## Anti-slop
 
 Flux primitives carry sane defaults, but composition still drifts into slop —
-pull [`docs/guidelines/design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md)
+pull [`docs/guidelines/design-antipatterns.md`](../../guidelines/design-antipatterns.md)
 and check Layout (L1/L2 hero-metric + identical-card grids) and Color
 (C1 gradient defaults) before shipping. Tailwind-level bans:
 [`tailwind-engineer`](../tailwind-engineer/SKILL.md).

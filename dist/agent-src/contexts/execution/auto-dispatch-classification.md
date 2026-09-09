@@ -129,7 +129,7 @@ tier `inferSliceTier` (§ below) already raised.
 Deny-by-default — a direction not listed here is denied. Direction rules,
 payload allow/deny lists, the report-only boundary, the no-recursion clause and
 the human egress gate:
-[`cross-vendor-worker-direction`](../../../../docs/contracts/cross-vendor-worker-direction.md).
+[`cross-vendor-worker-direction`](../../docs/contracts/cross-vendor-worker-direction.md).
 Role pairs, never vendor names — `classifyLadder` carries no vendor identity
 ([`subagent-routing`](subagent-routing.md) § Why vendor-neutral).
 

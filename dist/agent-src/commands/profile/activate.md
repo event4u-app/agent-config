@@ -79,4 +79,4 @@ unscoped artefacts are always in `shown`.
 ## See also
 
 - [`/profile show`](show.md) · [`/profile deactivate`](deactivate.md)
-- [`docs/contracts/session-profile-overlay.md`](../../../docs/contracts/session-profile-overlay.md)
+- [`docs/contracts/session-profile-overlay.md`](../../docs/contracts/session-profile-overlay.md)

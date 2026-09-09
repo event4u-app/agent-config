@@ -46,7 +46,7 @@
   a long time that meant nothing read it at all: the block was written by
   capture and consumed by nobody, so easing and duration were re-derived from
   taste on every port. On the **Port a provided artifact** branch
-  ([`design-artifact-lifecycle`](../../../../../docs/contracts/design-artifact-lifecycle.md))
+  ([`design-artifact-lifecycle`](../../../docs/contracts/design-artifact-lifecycle.md))
   the audit reads `motion.durations` and `motion.easings` as the answer. The
   extraction-only marking above still holds: `motion._meta.detected_libs`
   informs the human and never becomes a token.
