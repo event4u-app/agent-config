@@ -11474,7 +11474,7 @@ function computeSurfaceDelta(oldS, newS) {
       continue;
     }
     const o = oldS.entries[key];
-    if (o.type !== n.type) {
+    if (!sameJson(o.type, n.type)) {
       changes.push({ key, kind: "type_changed", old: o, new: n });
     }
     if (!sameJson(o.default, n.default)) {

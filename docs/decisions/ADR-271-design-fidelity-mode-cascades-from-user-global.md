@@ -132,6 +132,39 @@ precedence and not a new escape.
   option — it is a Class-C reclassification, which is owner-reserved, and it is
   not needed for anything in this change.
 
+## Evidence
+
+**E2 — the decision rests on readings taken in this change, plus one shipped
+sentence the tree contradicted.**
+
+| Claim | Evidence |
+|---|---|
+| The rule instructs the reader to resolve this key through the cascade | `src/rules/design-fidelity.md` § Strictness, verbatim: *"That file is the project layer of a cascade that starts user-global"* |
+| The cascade did not carry it | `MERGEABLE_KEYS` in `src/scripts/_lib/agent_settings.ts` listed no `design.` key |
+| The layer IS read and the value discarded afterwards — not a resolver bug | `user_global_settings_paths()` returns both layers; the filter is `MERGEABLE_KEYS.includes(key)` in the loader, downstream of the read |
+| The key now resolves and names its layer | `EVENT4U_CONFIG_HOME=<fixture> agent-config settings:get design.fidelity_mode` → `"structural"`, source = the fixture's `settings/.agent-settings.yml` |
+| The drop warning could not fire for a wizard user | `userGlobalDrop()` probed only the flat `agent-settings.yml`; the wizard writes `settings/.agent-settings.yml` |
+| It fires now | same fixture, `settings:get memory.learn_on_session_end` → the discard warning, naming the canonical file |
+| That repair is SENSITIVE, not merely passing | neutralising the multi-layer probe reds exactly the three multi-layer cases (3 failed / 3 passed); restoring it returns 6 passed. `tests/scripts/_cli/cmd_settings_get_user_global_drop.test.ts` |
+| The class is unchanged | `docs/contracts/settings-classes.md` still records C; `lint_settings_classes` green at 145 keys, A=26 B=3 C=116 |
+| The whitelist stays an exact-path list | `tests/lib/agent_settings.test.ts` pins the full array; the new row is one entry, not a prefix |
+
+**What the evidence does not establish**, named rather than implied:
+
+- **That any consumer has this key set user-globally today.** Nobody measured
+  that, and the change is worth making either way: a rule instructing a
+  resolution the tree refuses is a defect whether or not it has bitten yet.
+- **That `hard-floor` cascading from user-global is desirable.** It is
+  *harmless* — a stricter value cannot weaken a project, and a looser one is
+  overridden by any project that states its own — but "harmless" is an argument
+  from the precedence order, not a measurement of use.
+- **That the three-way surface gap is closed.** It is not.
+  `lint_settings_classes` compares the template against the contract and never
+  against the zod schema, which is how a sibling key in this same branch shipped
+  in two of three surfaces. Recorded as a deferred finding in
+  `agents/evidence/reviews/feat-cdd-fidelity-council.findings.md`, not fixed
+  here.
+
 ## References
 
 - `src/scripts/_lib/agent_settings.ts` — `MERGEABLE_KEYS`.
