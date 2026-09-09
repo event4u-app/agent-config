@@ -188,7 +188,14 @@ describe('runSessionRecycle', () => {
         });
         expect(write.code).toBe(0);
 
-        const decision = consume_recycle_envelope(repo);
+        // Read from the SUCCESSOR's seat, with an id that is not the writer's.
+        // The consumer defaults to `env_session_id()`, which inside a live
+        // session is the very id `runSessionRecycle` just keyed the record
+        // with — and a session is deliberately never handed its own record
+        // back (that is a loop, not a resume). Passing the id explicitly is
+        // what makes this a PAIRING test rather than a test of who reads: the
+        // property in doubt is that the two sides agree on the PATH.
+        const decision = consume_recycle_envelope(repo, new Date(), 'successor-of-the-writer');
         expect(decision.action).toBe('inject');
     });
 

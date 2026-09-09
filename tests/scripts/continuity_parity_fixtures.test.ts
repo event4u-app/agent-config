@@ -43,6 +43,15 @@ import { consume_recycle_envelope } from '../../src/scripts/handoff_context_hook
 const SLUG = 'road-to-parity-fixture';
 const SESSION = 'parity-session';
 
+/**
+ * The session that READS the record, and it is deliberately not `SESSION`.
+ * A record is keyed by the producing session and consumed by its successor, so
+ * a fixture that consumes under the producer's own id is exercising a shape
+ * production never takes — and that shape is exactly what hid the 2026-09-09
+ * resolution defect for weeks.
+ */
+const CONSUMER = 'parity-successor';
+
 /** One scratch root for the whole file, so the final sweep can see everything. */
 const SCRATCH = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'continuity-parity-')));
 const OUT_DIR = path.join(SCRATCH, 'parity-out');
@@ -128,7 +137,7 @@ function consume(
     const target = path.join(root, recycle_envelope_rel(SESSION));
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, body);
-    const res = consume_recycle_envelope(root, opts.now ?? new Date(), SESSION);
+    const res = consume_recycle_envelope(root, opts.now ?? new Date(), CONSUMER);
     return {
         action: String((res as { action?: unknown }).action ?? ''),
         reason: String((res as { reason?: unknown }).reason ?? ''),
@@ -168,7 +177,7 @@ describe('case 2 — malformed', () => {
         expect(res.action).toBe('discard');
         const root = path.join(SCRATCH, 'consume', 'malformed');
         expect(fs.existsSync(path.join(root, recycle_envelope_rel(SESSION)))).toBe(false);
-        expect(fs.existsSync(path.join(root, recycle_consumed_rel(SESSION)))).toBe(true);
+        expect(fs.existsSync(path.join(root, recycle_consumed_rel(CONSUMER)))).toBe(true);
     });
 });
 

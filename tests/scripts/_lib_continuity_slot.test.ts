@@ -36,6 +36,14 @@ import {
 import { CAPSULE_SCHEMA_VERSION } from '../../src/scripts/_lib/subagent_capsule.js';
 
 const SID = 'sess-alpha';
+
+/**
+ * A DIFFERENT session id, because `resolveContinuityRecord` deliberately never
+ * hands a session its own record back — that is a loop, not a resume. The
+ * resolver is therefore always exercised from the successor's seat, which is
+ * the only seat that ever calls it in production.
+ */
+const SUCCESSOR = 'sess-beta';
 const OTHER = 'sess-beta';
 
 function scratchRoot(): string {
@@ -179,7 +187,7 @@ describe('interruption at the atomic rename', () => {
 
         expect(inspectSlot(root, SID).state).toBe('absent');
         expect(listContinuityRecords(root)).toEqual([]);
-        expect(resolveContinuityRecord(root, SID).file).toBeNull();
+        expect(resolveContinuityRecord(root, SUCCESSOR).file).toBeNull();
     });
 
     it('leaves a complete parseable record when the rename completes', () => {
@@ -199,7 +207,7 @@ describe('interruption at the atomic rename', () => {
         expect(parsed['variant']).toBe('continuity_record');
         expect(parsed['written_at']).toBe(now.toISOString());
         expect(inspectSlot(root, SID, now).state).toBe('published');
-        expect(resolveContinuityRecord(root, SID).file).toBe(target);
+        expect(resolveContinuityRecord(root, SUCCESSOR).file).toBe(target);
 
         // No temp litter survives a completed publish.
         expect(fs.readdirSync(path.dirname(target)).filter((n) => n.includes('.tmp.'))).toEqual([]);
