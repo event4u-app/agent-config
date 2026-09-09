@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **743 artefacts** in this package.
+Maintainer-facing index of all **741 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -435,7 +435,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`user-interrupt-priority`](../src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (204)
+## Commands (202)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -477,8 +477,6 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`challenge-me`](../src/domains/meta/challenge-me/command.md) | cluster: challenge-me | Challenge-me orchestrator — routes to vision, with-docs |
 | command | [`challenge-me-vision`](../src/domains/meta/challenge-me/vision/command.md) | cluster: challenge-me | Stress-test a plan or idea by one-question-at-a-time interview until 95% confidence — emits a copyable Markdown vision pitch for tickets, roadmaps, or fresh-chat handoff. |
 | command | [`challenge-me-with-docs`](../src/domains/meta/challenge-me/with-docs/command.md) | cluster: challenge-me | Doc-aware /challenge-me — 95%-confidence interview with session glossary vs CONTEXT.md, load-bearing claim-vs-code verification, optional CONTEXT.md patch + ADR candidates in the pitch. |
-| command | [`chat-history`](../src/domains/meta/chat-history/command.md) | cluster: chat-history | Chat-history orchestrator — routes to import (selective cross-session resume). Mining moved to /memory mine-session; raw-log inspection uses the host's native transcript view. |
-| command | [`chat-history-import`](../src/domains/meta/chat-history/import/command.md) | cluster: chat-history | Surface prior chat-history sessions as a numbered table, let the user pick one, read it silently, and emit a short summary plus a resume offer — selective, user-driven cross-session import |
 | command | [`check-current-md`](../src/domains/meta/check-current-md/command.md) |  | Check the open .md file (or a passed path) for German outside DE:/EN: anchor blocks — umlauts, function words, untranslated quotes. Reports and offers fixes. |
 | command | [`git-commit`](../src/domains/git/commit/command.md) | cluster: git-commit | Stage and commit all uncommitted changes — splits into logical commits following Conventional Commits |
 | command | [`git-commit-in-chunks`](../src/domains/git/commit/in-chunks/command.md) | cluster: git-commit | Stage and commit all uncommitted changes in logical chunks WITHOUT confirmation — sibling of /commit for autonomous flows |

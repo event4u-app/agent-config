@@ -7,12 +7,10 @@ Cross-session memory and chat-history capabilities for the maintainer workspace.
 - **id**: `memory`
 - **owner**: agent-config-maintainer
 - **requires**: meta
-- **artefacts**: 9
+- **artefacts**: 7
 
-## Commands (9)
+## Commands (7)
 
-- **`chat-history`** — Chat-history orchestrator — routes to import (selective cross-session resume). Mining moved to /memory mine-session; raw-log inspection uses the host's native transcript view.
-- **`chat-history-import`** — Surface prior chat-history sessions as a numbered table, let the user pick one, read it silently, and emit a short summary plus a resume offer — selective, user-driven cross-session import
 - **`memory`** — Memory orchestrator — routes to add, load, mine-session, promote, propose
 - **`memory-add`** — Interactively add a validated entry to an engineering-memory file (domain-invariants, incident-learnings, product-rules, ownership, historical-patterns)
 - **`memory-learn-low-impact`** — Preview validated low-impact entries that would be upstreamed to the package seed (default `--preview`); `--apply` opens a draft PR via `upstream-contribute` after re-redaction.

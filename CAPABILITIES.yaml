@@ -12,7 +12,7 @@ meta:
   generated_by: generate_capabilities_index
   purpose: "Machine-readable coverage index so external reviews stop re-proposing what already ships."
   skills_total: 299
-  commands_total: 204
+  commands_total: 202
   capability_areas: 31
   gaps: 0
   coverage_bands: "none(0) thin(1-2) moderate(3-6) strong(7+)"
@@ -257,9 +257,9 @@ capability_areas:
       size_class: "small"
       coverage: strong
       skill_count: 0
-      command_count: 9
+      command_count: 7
       skills: []
-      commands: ["chat-history", "chat-history-import", "memory", "memory-add", "memory-learn-low-impact", "memory-load", "memory-mine-session", "memory-promote", "memory-propose"]
+      commands: ["memory", "memory-add", "memory-learn-low-impact", "memory-load", "memory-mine-session", "memory-promote", "memory-propose"]
     - id: meta
       label: "Meta"
       description: "Artefacts that maintain this package (agent-config itself)."
