@@ -515,7 +515,7 @@ councils required puts them there on purpose:
       re-anchoring because option (1) requires editing a roadmap that is parked precisely
       because nobody is working on it — trading one small per-session write for work inside
       a file the estate has deliberately set down.
-- [ ] **3.4 `/chat-history` and `/chat-history import` — retire the two commands.** <!-- blocked-by: chat-history-command-retirement-authorization | asked: yes -->
+- [x] **3.4 `/chat-history` and `/chat-history import` — retire the two commands.**
       Named in the owner's 2026-09-06 authorisation and blocked in
       the predecessor only because the 2026-09-08 council required a non-use
       audit and the audit found dependencies rather than none: the surviving
@@ -531,6 +531,36 @@ councils required puts them there on purpose:
       updated in the same change; `check_continuity_surface` shows
       `session_resume_pickers` one lower; the generated command projections are
       regenerated rather than hand-edited.
+      **Landed 2026-09-09 — AUTHORIZED CAPABILITY LOSS.** The AI council of
+      2026-09-09, under the owner's written delegation, took the decision both
+      seats had previously refused and chose **Option 1: remove the affordance and
+      record it as an AUTHORIZED CAPABILITY LOSS** — `anthropic` and `openai`, both
+      seats converging. The binding condition both seats attached is on the
+      replacement prose, and it is honoured: the documentation claims no automatic
+      restoration and no equivalent recovery. openai: *"documentation should not
+      call a file's existence 'recovery'. Recording, locating a record,
+      interpreting it, injecting it into a new session, and restoring usable
+      context are separate capabilities. The replacement wording must name only
+      those actually demonstrated."*
+
+      `/chat-history import` was retired under the owner's authorization to accept
+      loss of automated transcript import. No equivalent restoration mechanism was
+      established; recovery from retained continuity records is manual.
+
+      **Executed.** The two command documents are deleted; the two rows
+      (`command:chat-history`, `picker:chat-history-import`) are gone from the
+      continuity-surface inventory; the two `src/flows/surface-map.yaml` refs, the
+      `docs/contracts/command-clusters.md` cluster row plus its worked example, the
+      `docs/getting-started.md` quick-start row and the stale routing-mechanics
+      table row are hand-edited; the `/agent-handoff` recovery references and the
+      `learning-to-rule-or-skill` link carry the council's wording; every other
+      surface is regenerated rather than hand-edited.
+
+      **Measured, not asserted.** `check_continuity_surface` moved `1 / 2 / 4 / 1 / 1`
+      to `1 / 1 / 4 / 1 / 1` — `session_resume_pickers` 2 to 1, which is the whole
+      movement available on that axis. `check_cluster_patterns` reports 25
+      dispatchers, down from 26. The command count moved 204 to 202. The memory
+      pack's `artefact_count` moved 9 to 7 and its token passport 12,851 to 10,396.
 
 ## Disposition, 2026-09-08 — the record changed, the progress did not
 
@@ -709,7 +739,19 @@ maintainer-owned blockers were not touched.
 - **Resolved when:** one of the two options above is taken and recorded, either by the file being gone or by its inventory row naming the owner's keep decision.
 ### blocker: chat-history-command-retirement-authorization
 
-- **Status:** open
+- **Status:** resolved 2026-09-09
+- **How it resolved, and it is a LOSS rather than a discharge.** The AI council of
+  2026-09-09, under the owner's written delegation, chose **Option 1 of the three this
+  entry put to the owner: remove the recovery affordance** — both seats converging on
+  the option that accepts the capability loss rather than the two that would have
+  preserved or replaced it. The entry's own `Revisit-if` named exactly this path: *"the
+  owner explicitly authorises the loss."* No executable test was produced showing an
+  already-shipped mechanism reproduces `/chat-history import` recovery semantics, and
+  none is claimed. `/chat-history import` was retired under the owner's authorization to
+  accept loss of automated transcript import. No equivalent restoration mechanism was
+  established; recovery from retained continuity records is manual.
+  The binding condition both seats attached is on the documentation, and it is honoured:
+  the replacement prose names only recording, and states that reconstruction is manual.
 - **Owner:** maintainer
 - **Asked:** 2026-09-08. The AI council made these two retirements conditional — anthropic: *"Do they appear in any shipped examples, docs, or error messages? … Retiring them requires proving non-use, not just proving they're marked internal. If that proof doesn't exist, they're not 'reachable in this session.'"* A full tracked-source audit ran on 2026-09-08 against `drain/continuity-retirement`. It answers every other class in the negative and this one in the affirmative.
 - **Blocks:** the AUTHORIZATION half only — whether the removal may proceed at all. The enumerated edits are split out into `chat-history-command-retirement-execution` below, on a 2/2 AI-council ruling of 2026-09-08 that this entry conflated a governance question with a work item. openai: *"A completed checklist resolves the discovery work. It does not itself resolve governance precedence or prove that the accepted evidentiary standard was met."*
@@ -717,7 +759,7 @@ maintainer-owned blockers were not touched.
 - **Blocks (residual):** the only movement available on the `session_resume_pickers` axis. `check_continuity_surface` reads `1 / 2 / 5 / 1 / 1`; this retirement alone takes position 2 to `1`.
 - **Recommendation:** retire them, in a change whose subject is the removal. The audit clears every mechanical class — no CLI verb, no dispatcher case, no MCP tool, no hook, no runtime loader, no error path, and no test that reads the real tree (the one test naming the slug writes a synthetic fixture into a `mkdtemp` sandbox). What it does NOT clear is the documentation class the council named, and the two instances that matter are not incidental: `docs/getting-started.md:177` advertises `/chat-history import` in the user-facing quick-start table, and `src/domains/meta/agent-handoff/command.md:254`, `:259`, `:267` — the command the owner's authorisation explicitly PRESERVES — instructs its use after a crash or a fresh-chat reopen and links to the file. Removing a recovery affordance that the surviving command advertises is a deliberate act.
 - **If you do nothing:** two internal commands stay listed, `session_resume_pickers` stays at 2, and `/agent-handoff` keeps pointing at a path that still works. Nothing degrades and nothing rots — the cost is that the surface stays one wider than the owner asked for on 2026-09-06, indefinitely.
-- **What to do:** the audit enumerated the whole change, so this is a checklist rather than an investigation. **Delete** `src/domains/meta/chat-history/command.md` and `src/domains/meta/chat-history/import/command.md`. **Hand-edit the four surfaces no generator owns**, each of which reddens a named gate: `src/config/continuity-surface.json` — delete the rows `command:chat-history` and `picker:chat-history-import` (gate `check_continuity_surface`, dead-locus); `src/flows/surface-map.yaml:168-169` (gate `lint_command_flow_coverage`, phantom ref); `docs/contracts/command-clusters.md:34` plus the worked example at `:92` (gate `check_cluster_patterns`, dispatcher-missing); `docs/getting-started.md:177` (no gate — it is the user-facing row). **Fix the links no gate catches**, because `check_references` does not match parenthesised markdown targets: `src/domains/meta/agent-handoff/command.md:254`, `:259`, `:267` and `src/skills/learning-to-rule-or-skill/SKILL.md:383-384` both go dangling. **Then regenerate rather than hand-edit** — `task sync`, `task generate-tools`, `update_counts`, `generate_index`, `generate_command_flows`, `generate_capabilities_index`, `generate_pack_manifests`, `build_proof` — which moves the command count 204 → 202 across `README.md:7`, `docs/CLAIMS.md:393`, `docs/architecture.md:158`, `docs/command-flows.md:10`, `docs/featured-skills.md:96`, `docs/getting-started-by-role.md:5`, `docs/proof.md:55`, `CAPABILITIES.yaml:15`, and the memory pack's `artefact_count` and token passport. **Verify** with `check_continuity_surface` (expect `session_resume_pickers` 2 → 1), `lint_command_flow_coverage`, `check_cluster_patterns` (expect 25 dispatchers, down from 26), `check_command_count_messaging`, `check_artefact_count_messaging`, `check_public_catalog_links` and the four `--check` generators.
+- **What to do:** the audit enumerated the whole change, so this is a checklist rather than an investigation. **Delete** the two command documents in the (now removed) `chat-history` domain directory — the head and its `import` sub. **Hand-edit the four surfaces no generator owns**, each of which reddens a named gate: `src/config/continuity-surface.json` — delete the rows `command:chat-history` and `picker:chat-history-import` (gate `check_continuity_surface`, dead-locus); `src/flows/surface-map.yaml:168-169` (gate `lint_command_flow_coverage`, phantom ref); `docs/contracts/command-clusters.md:34` plus the worked example at `:92` (gate `check_cluster_patterns`, dispatcher-missing); `docs/getting-started.md:177` (no gate — it is the user-facing row). **Fix the links no gate catches**, because `check_references` does not match parenthesised markdown targets: `src/domains/meta/agent-handoff/command.md:254`, `:259`, `:267` and `src/skills/learning-to-rule-or-skill/SKILL.md:383-384` both go dangling. **Then regenerate rather than hand-edit** — `task sync`, `task generate-tools`, `update_counts`, `generate_index`, `generate_command_flows`, `generate_capabilities_index`, `generate_pack_manifests`, `build_proof` — which moves the command count 204 → 202 across `README.md:7`, `docs/CLAIMS.md:393`, `docs/architecture.md:158`, `docs/command-flows.md:10`, `docs/featured-skills.md:96`, `docs/getting-started-by-role.md:5`, `docs/proof.md:55`, `CAPABILITIES.yaml:15`, and the memory pack's `artefact_count` and token passport. **Verify** with `check_continuity_surface` (expect `session_resume_pickers` 2 → 1), `lint_command_flow_coverage`, `check_cluster_patterns` (expect 25 dispatchers, down from 26), `check_command_count_messaging`, `check_artefact_count_messaging`, `check_public_catalog_links` and the four `--check` generators.
 - **Resolved when:** the two command documents are gone, every surface above is updated or regenerated in the same change, and `check_continuity_surface` reports `session_resume_pickers` at 1.
 - **STAYS OPEN, OWNER-RESERVED — AI council 2026-09-09 under the owner's written delegation for this drain run (2 seats, anthropic + openai, subscription transport, $0.0000, quorum 2/2), and BOTH seats refused it.**
   This is the one of six the council would not take, and they reached that from opposite
@@ -748,7 +790,15 @@ maintainer-owned blockers were not touched.
 
 ### blocker: chat-history-command-retirement-execution
 
-- **Status:** open
+- **Status:** resolved 2026-09-09
+- **How it resolved.** Its authorization half resolved to FULL RETIREMENT, which is the
+  branch this entry's `Resolved when` was written for — so its unconditional
+  `session_resume_pickers == 1` and the 204 to 202 command move are both correct as
+  written, and the `Revisit-if` below (a resolution to anything other than full
+  retirement) did not fire. The sibling's checklist was then executed verbatim without
+  re-investigation: the two command documents, the four hand-edited surfaces, the two
+  link classes `check_references` cannot see, then regeneration rather than hand-editing.
+  `check_continuity_surface` reports `session_resume_pickers` at 1.
 - **Owner:** implementer
 - **Blocks:** step 3.4 only, and only once its sibling authorization blocker resolves. Split out of `chat-history-command-retirement-authorization` on the 2026-09-08 AI-council ruling that authorization and execution are different obligations with different owners, and that filing them as one hides a ready work item behind a pending decision.
 - **Recommendation:** hold until the authorization resolves, then execute the enumerated checklist in the sibling entry without re-investigating. The audit already ran and cleared every mechanical class; nothing in this entry is discovery work. Executing it early is the failure the split exists to prevent — the edits are irreversible in the sense that matters (a removed documented affordance), and the decision that licenses them is not this owner's.
@@ -882,15 +932,16 @@ maintainer-owned blockers were not touched.
   exception remains owner-reserved.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-09 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-09-10 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | The writer lands and the retirements never do | product | The parent's Risk 1 inherited one file further on, and now sharper: the measurement and the reader tolerance already shipped, so the cheapest remaining move is to add the writer, declare continuity solved, and leave five surfaces standing. That is the fourteenth layer, and it would look like completion. | Phase 3 is where the numbers move, and `check_continuity_surface` publishes them on every CI run — a writer that lands with no retirement leaves the gate's own output unchanged, which is much harder to narrate past than a prose claim. Re-reviewed 2026-09-09: step 3.1 moved it to `1 / 2 / 4 / 1 / 1`, so the risk is one retirement smaller and still live for the remaining two. | Phase 3 |
+| 1 | The writer lands and the retirements never do | product | The parent's Risk 1 inherited one file further on, and now sharper: the measurement and the reader tolerance already shipped, so the cheapest remaining move is to add the writer, declare continuity solved, and leave five surfaces standing. That is the fourteenth layer, and it would look like completion. | Phase 3 is where the numbers move, and `check_continuity_surface` publishes them on every CI run — a writer that lands with no retirement leaves the gate's own output unchanged, which is much harder to narrate past than a prose claim. Re-reviewed 2026-09-10: 3.1 and 3.4 have both landed and the gate now reads `1 / 1 / 4 / 1 / 1`. Two of the three retirements happened, so the risk is materially smaller — and it is NOT discharged, because the one that remains (3.2) is the one that removes the manual action a human still has to take. The cheapest bad ending is now narrower and more specific: declare continuity solved on two retirements and leave `session:recycle` and its pre-`/clear` advisory standing forever. | Phase 3 |
 | 2 | The record slot loses fresh state to a stale one | implementation | Create-if-absent on a single-slot queue silently drops the newer record whenever an older unconsumed one is still sitting there, and automatic production makes that common rather than rare. The failure is invisible: the successor resumes from something plausible and older. | 1.1 settles the capacity policy and its state machine BEFORE 1.2 writes anything, and its verify requires an interruption test on both sides of the atomic rename. | Phase 1 |
 | 3 | The concern split is attempted before it is paid for | implementation | Step 2.1 is the most obviously "next" piece of work and the ratchet that forbids it lives in a different file, so a reader who starts there gets a red they will be tempted to fix by widening an allowance. | The ordering is stated in 2.1's own text, the blocker names the exact allowance and cites both seats refusing to widen it, and `check_estate_count` fails the branch rather than warning. | Phase 2 |
 | 4 | Retiring `hot-context` silently changes what a session restores | implementation | The `memory.session_index` restore rides on the hot-context injection surface, and moving it is easy to treat as a relocation when it is a change of trust boundary — restored memory is untrusted context arriving on a new path. | DISCHARGED 2026-09-09. The mitigation as written cited byte-identical output, which the council struck as vacuous for a manifest edit plus a moved function; it was replaced by byte, sabotage and ordering sub-tests, and the trust contract's six properties each carry a test. The restore did not move: it stays in the same concern on the same slot, so the trust boundary this row worried about was never crossed. | Phase 3 |
 | 5 | `context-fill.json` is retired out from under a parked roadmap | product | It reads as a free win — a producer with no consumer in code — and the consumer that exists is three steps inside a file parked in `later/`, which nobody opens while doing this work. | 3.3 states the dependency with its file and step numbers and routes the decision to that roadmap's owner instead of taking it here. | Phase 3 |
+| 6 | The retired import path is quietly re-advertised | product | 3.4 removed a documented crash-recovery affordance under an explicit authorization to accept the loss. Nothing in the tree now performs transcript import, but seven surfaces described it and two of them were found outside the audit's own checklist. A future doc pass, or a generated page rebuilt from a stale source, can re-assert a capability that no longer exists — and the failure is silent, because a doc claiming recovery reds no gate. | The replacement prose names only recording and manual reconstruction, never restoration, which is the council's binding condition and makes a re-assertion visibly different from what is written. `check_references` and `check_public_catalog_links` catch a re-added LINK; neither catches a re-added CLAIM, and that gap is stated here rather than assumed covered. | Phase 3 |
 
 ## Acceptance Criteria
 
@@ -938,6 +989,40 @@ maintainer-owned blockers were not touched.
       switch armed a scratch workspace emits no `memory-index` block, because
       it carries no curated corpus. The injection half is covered by
       `tests/scripts/session_memory_index.test.ts`.
+
+### blocker: chat-history-settings-description-needs-the-main-checkout
+
+- **Status:** open
+- **Owner:** implementer
+- **Asked:** 2026-09-09, while executing step 3.4. Found beyond the audit's
+  checklist, attempted, and rolled back rather than shipped half-done.
+- **Blocks:** nothing in this roadmap. Recorded because one of its three stale
+  clauses went stale in THIS change, so it is partly our doc-drift and not purely
+  inherited debt.
+- **What is wrong.** `src/server/schemas/settings.ts:176` describes
+  `chat_history.enabled` as *"Persist a structured log … so `/chat-history:show`,
+  `:import`, and `:learn` can replay sessions"*. All three verbs are now gone —
+  `:show` and `:learn` were retired earlier, `:import` by step 3.4 — and the path
+  it names is not the real one either. The string is mirrored into
+  `docs/settings-reference.md` and into `dist/install/install.mjs`.
+- **Why it is not fixed here, and this is a worktree fact rather than a
+  judgement.** The fix is three lines, but landing it requires
+  `npm run build:install-bundle`, and in a worktree that resolves the symlinked
+  `node_modules` as `../../../node_modules/…` and rewrote **190 lines** of the
+  bundle with worktree-relative paths. CI rebuilds the bundle and asserts
+  `git diff --exit-code -- dist/install/`, so a stale committed bundle reds and a
+  path-poisoned one is worse. The attempt was reverted; the three files are
+  byte-clean.
+- **If you do nothing:** a consumer reading the settings reference is told three
+  retired commands can replay their sessions. Nothing breaks; the documentation
+  lies.
+- **What to do:** from the **main checkout**, not a worktree — rewrite the
+  description to name only recording, run
+  `./scripts-run src/scripts/generate_settings_reference` and
+  `npm run build:install-bundle`, and commit all three together.
+- **Resolved when:** `grep -n 'chat-history:show' src/server/schemas/settings.ts`
+  returns nothing, `docs/settings-reference.md` matches the regenerated output,
+  and `git diff --exit-code -- dist/install/` is clean after a bundle rebuild.
 
 ### blocker: loss-class-corpus-is-empty-after-hot-context
 

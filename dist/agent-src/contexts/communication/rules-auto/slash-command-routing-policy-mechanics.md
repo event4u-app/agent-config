@@ -15,7 +15,6 @@ this file mirrors that contract for runtime lookup. Linter:
 | `/fix` | 1 | `ci` · `pr-comments` · `portability` · `refs` · `seeder` | `/fix-ci` · `/fix-pr-comments` · `/fix-portability` · `/fix-references` · `/fix-seeder` |
 | `/optimize` | 1 | `agents` · `augmentignore` · `rtk` · `skills` | `/optimize-agents` · `/optimize-augmentignore` · `/optimize-rtk-filters` · `/optimize-skills`                                                   |
 | `/feature` | 1 | `explore` · `plan` · `refactor` · `roadmap` | `/feature-explore` · `/feature-plan` · `/feature-refactor` · `/feature-roadmap`                                                                 |
-| `/chat-history` | 2 | `show` | `/chat-history` (legacy status) — `resume` / `clear` / `checkpoint` removed in `road-to-chat-history-hook-only`                                 |
 | `/agents` | 2 | `init` · `optimize` · `audit` | `/copilot-agents-init` · merger of `/optimize-agents-md` + `/copilot-agents-optimize` · `/optimize-agents` (folder ops moved to `/optimize:agents-dir`) |
 | `/memory` | 2 | `add` · `load` · `promote` · `propose` | `/memory-add` · `/memory-full` · `/memory-promote` · `/propose-memory`                                                                          |
 | `/roadmap` | 2 | `create` · `process-step` · `process-phase` · `process-full` | `/roadmap-create` · `/roadmap-process` (replaced — autonomous, no per-step gate; `process-phase` is the default execution scope)                |

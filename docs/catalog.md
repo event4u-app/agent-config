@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **742 public artefacts** shipped by
+Consumer-facing catalog of all **740 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -450,7 +450,7 @@ are excluded.
 | rule | [`user-interrupt-priority`](../dist/agent-src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../dist/agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (204)
+## Commands (202)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -492,8 +492,6 @@ are excluded.
 | command | [`challenge-me`](../dist/agent-src/commands/challenge-me.md) | cluster: challenge-me | Challenge-me orchestrator — routes to vision, with-docs |
 | command | [`challenge-me-vision`](../dist/agent-src/commands/challenge-me/vision.md) | cluster: challenge-me | Stress-test a plan or idea by one-question-at-a-time interview until 95% confidence — emits a copyable Markdown vision pitch for tickets, roadmaps, or fresh-chat handoff. |
 | command | [`challenge-me-with-docs`](../dist/agent-src/commands/challenge-me/with-docs.md) | cluster: challenge-me | Doc-aware /challenge-me — 95%-confidence interview with session glossary vs CONTEXT.md, load-bearing claim-vs-code verification, optional CONTEXT.md patch + ADR candidates in the pitch. |
-| command | [`chat-history`](../dist/agent-src/commands/chat-history.md) | cluster: chat-history | Chat-history orchestrator — routes to import (selective cross-session resume). Mining moved to /memory mine-session; raw-log inspection uses the host's native transcript view. |
-| command | [`chat-history-import`](../dist/agent-src/commands/chat-history/import.md) | cluster: chat-history | Surface prior chat-history sessions as a numbered table, let the user pick one, read it silently, and emit a short summary plus a resume offer — selective, user-driven cross-session import |
 | command | [`check-current-md`](../dist/agent-src/commands/check-current-md.md) |  | Check the open .md file (or a passed path) for German outside DE:/EN: anchor blocks — umlauts, function words, untranslated quotes. Reports and offers fixes. |
 | command | [`git-commit`](../dist/agent-src/commands/commit.md) | cluster: git-commit | Stage and commit all uncommitted changes — splits into logical commits following Conventional Commits |
 | command | [`git-commit-in-chunks`](../dist/agent-src/commands/commit/in-chunks.md) | cluster: git-commit | Stage and commit all uncommitted changes in logical chunks WITHOUT confirmation — sibling of /commit for autonomous flows |

@@ -36,6 +36,7 @@ commands:
   discovery:
     - analyze
     - analyze/repo
+    - analyze/roadmap-repos
     - analyze/inbox
     - analyze/conformance
     - analyze/decision
@@ -165,8 +166,6 @@ commands:
     - analytics/prune
     - analytics/show
     - explain-run
-    - chat-history
-    - chat-history/import
     - check-current-md
     - condense
     - context
