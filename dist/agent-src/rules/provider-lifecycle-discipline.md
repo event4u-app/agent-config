@@ -54,6 +54,6 @@ Trigger-set above activates this routing on demand, independent of the disciplin
 ## See also
 
 - [`docs/contracts/provider-lifecycle.md`](../docs/contracts/provider-lifecycle.md) — the full tier definitions, promotion / demotion criteria, day-one assignment matrix, and the migrated enforcement detail (§ 4–4b).
-- [`src/scripts/media/lib/adapter-contract.md`](../scripts/media/lib/adapter-contract.md) — the four-method shell surface every adapter implements; the tier tag is read alongside this contract.
+- [`src/scripts/media/lib/adapter-contract.md`](../../src/scripts/media/lib/adapter-contract.md) — the four-method shell surface every adapter implements; the tier tag is read alongside this contract.
 - [`media-governance-routing`](media-governance-routing.md) — sibling tier-2a rule that surfaces the prompt-side policy layer; this rule covers the provider-side discipline.
 - [`ask-when-uncertain`](ask-when-uncertain.md) — the one-question-per-turn discipline the refuse-and-surface path uses.

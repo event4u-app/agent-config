@@ -121,7 +121,8 @@ export function resolve_guideline(root: string, logical_rel: string): string | n
 export function rewriteProjectedBodyLinks(body: string, prefix: string): string {
     return body
         .replace(BODY_DOCS_RE, (_m, t: string) => prefix + t.replace(/^docs\/guidelines\//, 'guidelines/'))
-        .replace(BODY_SRC_RE, (_m, t: string) => prefix + t);
+        .replace(BODY_SRC_FLAT_RE, (_m, t: string) => prefix + t)
+        .replace(BODY_SRC_AGENT_RE, (_m, t: string) => prefix + t);
 }
 
 /**
@@ -135,17 +136,29 @@ export function rewriteProjectedBodyLinks(body: string, prefix: string): string 
 const BODY_DOCS_RE = /(?:\.\.\/)+(docs\/(?:guidelines|contracts)\/[^)\s]+\.md)/g;
 
 /**
- * `src/rules`, `src/skills` and `src/agent-src/<x>` all project into
- * `dist/agent-src/`, losing the `src/` (and `agent-src/`) segment.
+ * Source trees that project into `dist/agent-src/`, losing their `src/` (and
+ * `agent-src/`) segment.
  *
  * Until the guidelines lane shipped, no PROJECTED file linked into `src/`, so
  * this rewrite had nothing to do and did not exist. A guideline does it 209
  * times — a blind review measured 253 of 268 links under
  * `dist/agent-src/guidelines/` resolving to nothing before this was added.
  *
- * `src/domains` is deliberately absent: a domains command projects to
+ * TWO patterns, not one, and the difference is load-bearing. `rules` and
+ * `skills` are FLAT library roots directly under `src/`; `commands`,
+ * `contexts`, `personas`, `user-types`, `templates` and `scripts` exist only
+ * under `src/agent-src/`. A single pattern with an optional `agent-src/` group
+ * conflates them, and the conflation is not theoretical: it folded
+ * `../../src/scripts/media/lib/adapter-contract.md` — a real link in
+ * `provider-lifecycle-discipline.md` — onto `../scripts/…`, which resolves to
+ * `dist/agent-src/scripts/`, a projection of `src/agent-src/scripts/` and a
+ * different tree entirely. `check_condensed_paths` caught it; the first version
+ * of this regex turned one resolving link into a broken one.
+ *
+ * `src/domains` is deliberately absent from both: a domains command projects to
  * `commands/<subpath>.md`, which is a re-shaping rather than a prefix strip,
  * and guessing it would produce a link that looks right and is wrong.
  */
-const BODY_SRC_RE =
-    /(?:\.\.\/)+src\/(?:agent-src\/)?((?:rules|skills|commands|contexts|personas|user-types|templates|scripts)\/[^)\s]+\.md)/g;
+const BODY_SRC_FLAT_RE = /(?:\.\.\/)+src\/((?:rules|skills)\/[^)\s]+\.md)/g;
+const BODY_SRC_AGENT_RE =
+    /(?:\.\.\/)+src\/agent-src\/((?:commands|contexts|personas|user-types|templates|scripts)\/[^)\s]+\.md)/g;
