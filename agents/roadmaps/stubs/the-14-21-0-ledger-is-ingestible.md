@@ -5,14 +5,33 @@ review_by: 2026-10-07
 
 # Stub: nothing runs the ingest step, so the ledger goes missing once per release
 
-> **Arrival 5 — 2026-09-09, release 14.23.0, instance CLOSED, and option 1's open
-> question is now ANSWERED.** Found while settling CI on a roadmap-only PR
-> (#1971) that inherited the red from `main`. Count: **5 arrivals, 5 instance
-> fixes, 0 mechanism fixes.** The instance closure is
-> `agents/evidence/release-findings/14.23.0.json` — 49 findings ingested, all 13
-> blocking ones dispositioned first-hand (11 `false_positive`, 1 `fixed`, 1
-> `accepted_risk`), which reproduces the 14.21.0 and 14.22.0 mix and is the third
-> independent measurement of it.
+> **Arrival 5 — 2026-09-09, release 14.23.0, instance CLOSED BY A PARALLEL LANE,
+> and option 1's open question is now ANSWERED.** Found while settling CI on a
+> roadmap-only PR (#1971) that inherited the red from `main`. Count: **5
+> arrivals, 5 instance fixes, 0 mechanism fixes.** The instance closure is
+> `agents/evidence/release-findings/14.23.0.json`, landed by **PR #1972** while
+> this lane was verifying the same 13 findings independently — so 14.23.0 has two
+> first-hand dispositions of one finding set, which is worth more than either
+> alone and is recorded rather than deduplicated away.
+>
+> **Where the two readings agreed and where they did not.** Both ingested 49
+> findings and dispositioned all 13 blocking ones; #1972's mix is 6
+> `accepted_risk` / 5 `false_positive` / 2 `fixed`, this lane's was 11
+> `false_positive` / 1 `fixed` / 1 `accepted_risk`. #1972's record is the one that
+> shipped and is left standing, with **one row corrected**: it dispositioned
+> `549923656232` (option injection in `graph_impact`'s rev) as `false_positive`
+> on the sentence "the `..HEAD` suffix means an attacker cannot land a clean
+> option at all". A probe refutes that — `--output=<file>` absorbs the suffix
+> into its VALUE, so `--output=/tmp/x..HEAD` is well-formed and git writes the
+> file at exit 0. The earlier probe tested nine boolean-FLAG shapes, where the
+> suffix does break the token, and no value-taking option; it named its own scope
+> and the gap sits exactly at that boundary, which is the argument for writing
+> the scope down. The row is now `fixed`, with a guard at the shared path.
+>
+> **Two independent dispositions of one finding set is the cheapest disagreement
+> detector this process has, and it happened by accident.** Nothing scheduled it,
+> nothing would have noticed if only one lane had run, and the one row they
+> disagree on is the one with a live exploit behind it.
 >
 > **What this arrival adds that the four before it could not.** § What closes it,
 > option 1, asks to "establish whether that invocation can see an un-ingested
