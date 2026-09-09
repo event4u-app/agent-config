@@ -26,7 +26,7 @@ Do NOT use as a regulatory-regime delta read (route to `privacy-review` (P6); th
 
 ## Cognition cluster
 
-- **Mental model 28 — Inversion.** *"If this data category leaked in this form, who would we have to notify and what would the headline read?"* The headline inversion forces honest classification ahead of operational convenience. See [`mental-models.md`](../../../docs/contracts/mental-models.md) § 28.
+- **Mental model 28 — Inversion.** *"If this data category leaked in this form, who would we have to notify and what would the headline read?"* The headline inversion forces honest classification ahead of operational convenience. See [`mental-models.md`](../../docs/contracts/mental-models.md) § 28.
 - **Mental model 1 — First principles.** Strip every retention claim to: *what purpose does keeping this another day serve, and whose risk does it grow?* Most retention defaults are inherited from the previous system, not chosen. See `mental-models.md` § 1.
 - **Mental model 26 — Optionality.** Aggressive retention preserves *analytical optionality* but forecloses *deletion optionality* and grows *breach optionality* for the attacker. Each retention choice is a trade. See `mental-models.md` § 26.
 - **Context-spine — regulatory-regime + customer-segment + product.** Read **regulatory-regime** (J1) for floor (GDPR storage-limitation principle; HIPAA retention minimums for medical records; financial-regulator retention mandates). Read **customer-segment** for whose data sets the floor. Read **product** for which features actually need the data.

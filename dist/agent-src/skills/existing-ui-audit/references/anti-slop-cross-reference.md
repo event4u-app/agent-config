@@ -9,7 +9,7 @@
 When the audit inventory reveals an existing aesthetic direction (dominant color
 scheme, border-radius convention, motion patterns), cross-check the findings
 against
-[`docs/guidelines/design-antipatterns.md`](../../../../docs/guidelines/design-antipatterns.md).
+[`docs/guidelines/design-antipatterns.md`](../../../guidelines/design-antipatterns.md).
 If the existing UI already uses a listed anti-pattern, surface it as a design-debt
 finding (separate from the reuse inventory) — flag by entry ID and severity.
 
@@ -26,6 +26,6 @@ A corrective direction change against a supplied spec is not a design
 improvement, it is overriding a decision the user already made — the failure
 [`design-fidelity`](../../rules/design-fidelity.md) exists to prevent, arriving
 through the audit's side door. Precedence and its exact scope:
-[`design-fidelity-mechanics`](../../../../docs/guidelines/design-fidelity-mechanics.md)
+[`design-fidelity-mechanics`](../../../guidelines/design-fidelity-mechanics.md)
 § Provided-artifact precedence. Where the two sources disagree, surface the
 conflict rather than picking (fixture `daf-slop-vs-provided`).

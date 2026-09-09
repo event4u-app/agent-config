@@ -39,7 +39,7 @@ roadmap, writes one ticket per materialisable step into
 (acyclic dependency graph + empty `linear_state`), writes
 `<!-- ticket: T-NNN -->` markers back into the roadmap, and regenerates
 `agents/tickets/_registry.yml`. Format contract:
-[`ticket-bundle-format`](../../../../docs/contracts/ticket-bundle-format.md).
+[`ticket-bundle-format`](../../docs/contracts/ticket-bundle-format.md).
 
 ### 3. Gate on buildability
 
@@ -69,4 +69,4 @@ pastes a ticket into Linear/Jira (or creates it via MCP), or runs a per-ticket b
 - **Do NOT auto-create tracker issues** — paste/MCP is a separate user-invoked step (ADR-102, no API export).
 - **Do NOT commit or push.**
 - Bundle is the source of truth; the tracker is a projection
-  ([`ticket-bundle-format`](../../../../docs/contracts/ticket-bundle-format.md)).
+  ([`ticket-bundle-format`](../../docs/contracts/ticket-bundle-format.md)).

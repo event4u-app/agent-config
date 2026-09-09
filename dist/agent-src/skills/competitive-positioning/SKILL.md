@@ -35,7 +35,7 @@ DCF-style valuation work (route to `dcf-modeling`).
   outcome each package promises its user, not the feature lists. Two
   packages with overlapping features can promise different outcomes
   and therefore are not direct competitors. See
-  [`docs/contracts/mental-models.md`](../../../docs/contracts/mental-models.md) § 1.
+  [`docs/contracts/mental-models.md`](../../docs/contracts/mental-models.md) § 1.
 - **Mental model 24 — Optionality.** A pattern that costs little to
   adopt and preserves exit value beats a "better" pattern that locks
   the package in. Score adoption cost AND exit cost on every row. See
@@ -46,7 +46,7 @@ DCF-style valuation work (route to `dcf-modeling`).
 - **Product context-spine slot.** Read the **product** slot for
   segment / focal job / non-goals before picking axes; the comparison
   is only legitimate inside our own scope. See
-  [`context-spine`](../../../docs/contracts/context-spine.md).
+  [`context-spine`](../../docs/contracts/context-spine.md).
 
 ## Procedure
 

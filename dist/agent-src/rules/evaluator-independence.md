@@ -139,7 +139,7 @@ review ran as if it were verified.
 Why each branch behaves that way, the phrase-list and turn-boundary limits, the
 four host states, the two corrections this section has taken, and the
 11-of-19 measurement behind item 3:
-[`evaluator-independence-mechanics`](../docs/guidelines/agent-infra/evaluator-independence-mechanics.md).
+[`evaluator-independence-mechanics`](../guidelines/agent-infra/evaluator-independence-mechanics.md).
 
 ## See also
 

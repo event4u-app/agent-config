@@ -44,6 +44,7 @@ import {
     iter_setting_overrides,
     load_agent_settings,
     MERGEABLE_KEYS,
+    user_global_settings_paths,
     USER_GLOBAL_FILENAME,
 } from '../_lib/agent_settings.js';
 import { resolve_with_fallback, write_target } from '../_lib/user_global_paths.js';
@@ -150,15 +151,29 @@ export function carveOutFor(key: string): CarveOutKey | undefined {
  * without telling them which file it was dropped from is half an answer.
  */
 export function userGlobalDrop(key: string): { dropped: boolean; file: string } {
-    const file = resolve_with_fallback(USER_GLOBAL_FILENAME) ?? write_target(USER_GLOBAL_FILENAME);
+    // Probe EVERY user-global layer the loader reads, not just the flat file.
+    // `user_global_settings_paths()` returns the flat `agent-settings.yml` AND
+    // the canonical `settings/.agent-settings.yml` the setup wizard writes, and
+    // this function used to open only the first — so for a wizard user the drop
+    // warning could not fire at all and a filtered key read as a plain "not
+    // set". Highest-precedence layer last, same order as the loader, so the
+    // reported file is the one that actually carried the dropped value
+    // (road-to-design-intent-conformance 2.3).
+    const probed = user_global_settings_paths();
+    const fallbackFile =
+        resolve_with_fallback(USER_GLOBAL_FILENAME) ?? write_target(USER_GLOBAL_FILENAME);
+    const file = probed.length > 0 ? (probed[probed.length - 1] as string) : fallbackFile;
     if (MERGEABLE_KEYS.includes(key)) return { dropped: false, file };
-    let raw: unknown;
-    try {
-        raw = yamlLoad(fs.readFileSync(file, 'utf-8'));
-    } catch {
-        return { dropped: false, file };
+    for (const candidate of [...probed].reverse()) {
+        let raw: unknown;
+        try {
+            raw = yamlLoad(fs.readFileSync(candidate, 'utf-8'));
+        } catch {
+            continue;
+        }
+        if (getSettingsLeaf(raw, key) !== undefined) return { dropped: true, file: candidate };
     }
-    return { dropped: getSettingsLeaf(raw, key) !== undefined, file };
+    return { dropped: false, file };
 }
 
 /**

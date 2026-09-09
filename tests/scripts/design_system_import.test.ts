@@ -211,6 +211,29 @@ describe('observation is never promoted to a token', () => {
         expect(outcome.notes.join(' ')).toContain('licence_notes');
     });
 
+    // Added with the `spec.maturity` block (3.1). A blind review found the
+    // contract documenting the field while the importer routed it to
+    // `_meta.unmapped` as "not in the contract" — two surfaces disagreeing
+    // about one key, which is exactly what an off-contract note is for and
+    // exactly the wrong verdict here.
+    it('carries a `spec` block through instead of treating it as off-contract', () => {
+        const input = {
+            source: { kind: 'dir', ref: '.', captured_at: '2026-09-09T00:00:00Z' },
+            spec: {
+                maturity: 'finished',
+                maturity_source: 'declaration',
+                maturity_signal: 'the artifact declares `maturity: finished`',
+            },
+        };
+        const outcome = importDesignSystem(input, PROVENANCE);
+        expect(outcome.ok).toBe(true);
+        if (!outcome.ok) return;
+        expect(outcome.design_system['spec']).toEqual(input.spec);
+        const unmapped = outcome.design_system._meta?.['unmapped'] as Record<string, unknown> | undefined;
+        expect(unmapped?.['spec']).toBeUndefined();
+        expect(outcome.notes.join(' ')).not.toContain('"spec" is not in the contract');
+    });
+
     it('flags a contract key whose shape is wrong without discarding its value', () => {
         const outcome = importDesignSystem({
             source: { kind: 'dir', ref: '.', captured_at: '2026-01-01' },

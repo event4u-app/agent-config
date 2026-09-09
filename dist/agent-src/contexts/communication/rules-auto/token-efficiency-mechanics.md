@@ -108,6 +108,39 @@ The step-2 grep is not a second probe of the same file for the same fact — it
 returns information step 1 did not have, so it is one operation with step 3, per
 the enumerated-set carve-out.
 
+### Where the 800 came from, and what would falsify it
+
+Migrated out of `token-efficiency.md` on 2026-09-09 to fund that rule's
+provided-artifact carve-out — a named substitution rather than a deletion, per
+the council verdict on `blocker: standing-payload-headroom`.
+
+The number is a **stated default, not a measured optimum** — said plainly rather
+than implying a derivation it does not have. *Revisit-if:* a run records a
+probe-then-slice that cost more than the full read would have, or the host's
+ranged-read primitive changes its own default. Either falsifies the number, not
+the obligation.
+
+### The provided-artifact carve-out
+
+A handed-over design artifact is not a large file to be probed; it is the spec,
+and reading it whole is the work. A bundle of several thousand lines across
+markup, CSS and tokens is ordinary, so the agent that reads it properly is the
+one the size gate and the read-loop detector both punish, while the agent that
+skims it produces the fidelity failure `design-fidelity` exists to prevent.
+
+Two obligations, and they compose rather than cancel:
+
+1. **The size gate does not fire on it.** Read the artifact whole.
+2. **The read is declared** — [`context-hygiene`](../../../guidelines/agent-infra/context-hygiene-mechanics.md)
+   § the declared-protocol cap — with its goal, its expected read count and the
+   output shape, before the reading starts. Declaring raises the read-only abort
+   from 5 turns to 8; it never suspends it, and exceeding the declared count by
+   more than 2 is still the violation.
+
+What this does NOT do: it does not exempt an *undeclared* read loop, and it does
+not apply to a file that merely happens to be large. The discriminator is the
+handover, not the size.
+
 ### Exceptions
 
 - Small output (< 30 lines) — read directly.

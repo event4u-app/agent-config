@@ -29,7 +29,7 @@ Do NOT use as a substitute for actual legal counsel (this skill produces the *no
 
 ## Cognition cluster
 
-- **Mental model 28 — Inversion.** *"What would force us to invoke this clause? What would force the counterparty to invoke it?"* Inversion surfaces which clauses are dormant boilerplate vs which are loaded triggers. See [`mental-models.md`](../../../docs/contracts/mental-models.md) § 28.
+- **Mental model 28 — Inversion.** *"What would force us to invoke this clause? What would force the counterparty to invoke it?"* Inversion surfaces which clauses are dormant boilerplate vs which are loaded triggers. See [`mental-models.md`](../../docs/contracts/mental-models.md) § 28.
 - **Mental model 21 — Second-order thinking.** Each clause has a second-order shape: indemnity caps interact with insurance coverage; SLAs interact with operating-cost; auto-renewal interacts with switching cost. Reading clauses in isolation misses the load-bearing combinations. See `mental-models.md` § 21.
 - **Mental model 26 — Optionality.** Each clause either preserves or forecloses future choices (terminate-for-convenience preserves; auto-renewal forecloses; exclusivity forecloses; MFN forecloses). The cost of a clause is the optionality it removes. See `mental-models.md` § 26.
 - **Context-spine — regulatory-regime + customer-segment + org-stage.** Read **regulatory-regime** (J1) for floor-bound clauses (GDPR DPA terms, HIPAA BAA, SOC 2 audit). Read **customer-segment** for risk sizing (enterprise SLA terms ≠ SMB SLA terms). Read **org-stage** for what's affordable (early-stage = avoid uncapped indemnities; growth = can absorb tighter SLAs).

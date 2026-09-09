@@ -11,6 +11,9 @@
 ```json
 {
   "source": { "kind": "url|repo|dir", "ref": "https://example.com", "captured_at": "<ISO-8601>" },
+  "spec":    { "maturity": "low|finished",
+               "maturity_source": "user|declaration|inference|default",
+               "maturity_signal": "<the concrete thing that decided it>" },
   "colors": {
     "light": { "<role>": "<value>" },
     "dark":  { "<role>": "<value>" }
@@ -39,6 +42,22 @@
   `components[].observed`). It informs the human; it never becomes a token.
 - **`source` is mandatory** — `kind` + `ref` + `captured_at`. An artifact with
   no provenance is rejected (you cannot confirm what you cannot trace).
+- **`spec.maturity` is a field, not a judgement made twice.** `design-fidelity`
+  branches on whether the artifact's pixel detail carries decisions — a
+  wireframe's placeholder grays are non-decisions, and reproducing them 1:1
+  honors the wrong half of the artifact. That axis used to live only as a prose
+  table, so every consumer re-derived it by eye and two consumers could disagree
+  without either misreading the text. `src/scripts/_lib/artifact_maturity.ts`
+  resolves it, and the block carries the verdict **with its provenance**:
+  `maturity_source` says which rung decided (a user signal beats the artifact's
+  own declaration, which beats inference from its content, which beats the
+  default) and `maturity_signal` names the concrete thing — *"the filename names
+  a wireframe"*, *"every colour in the body is greyscale"* — never a restatement
+  of the verdict. **Absent resolves `finished`, deliberately:** the 1:1 floor is
+  the stricter reading, and guessing *low* would make an artifact's silence a
+  license to redesign it. The block is OPTIONAL in the file; an importer that
+  omits it gets the same default, which is why `source` is mandatory and this
+  is not.
 - **`bundled_local`** on a font family is a flag, not an instruction: the
   package never downloads or bundles fonts (out of scope) — it records that the
   source did.
@@ -46,7 +65,7 @@
   a long time that meant nothing read it at all: the block was written by
   capture and consumed by nobody, so easing and duration were re-derived from
   taste on every port. On the **Port a provided artifact** branch
-  ([`design-artifact-lifecycle`](../../../../../docs/contracts/design-artifact-lifecycle.md))
+  ([`design-artifact-lifecycle`](../../../docs/contracts/design-artifact-lifecycle.md))
   the audit reads `motion.durations` and `motion.easings` as the answer. The
   extraction-only marking above still holds: `motion._meta.detected_libs`
   informs the human and never becomes a token.

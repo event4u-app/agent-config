@@ -33,7 +33,7 @@ This skill produces the **decision** to ship and the rollback contract.
 - **Mental model 10 — Reversible vs irreversible.** Map every step
   of the rollout to a reversibility class; the rollback criteria
   must name the irreversible steps and the abort threshold for each.
-  See [`docs/contracts/mental-models.md`](../../../docs/contracts/mental-models.md) § 10.
+  See [`docs/contracts/mental-models.md`](../../docs/contracts/mental-models.md) § 10.
 - **Mental model 29 — Pre-mortems.** Imagine the rollout failed in
   six hours; what failed first? The pre-mortem becomes the rollback
   criteria, not a separate document. See `mental-models.md` § 29.
@@ -43,7 +43,7 @@ This skill produces the **decision** to ship and the rollback contract.
 - **Team + product context-spine slots.** Read **team** for the
   on-call rotation and ops handoff path; read **product** for the
   segment / cohort exposure of the rollout. See
-  [`context-spine`](../../../docs/contracts/context-spine.md).
+  [`context-spine`](../../docs/contracts/context-spine.md).
 
 ## Procedure
 
@@ -71,7 +71,7 @@ hand-wave.
 ### 2b. Epistemics block — the diagnostic report (contract-backed)
 
 For a consumer-facing diagnostic (not just the merge decision), emit a
-report per [`docs/contracts/prelaunch-diagnostics.md`](../../../docs/contracts/prelaunch-diagnostics.md)
+report per [`docs/contracts/prelaunch-diagnostics.md`](../../docs/contracts/prelaunch-diagnostics.md)
 (schema: `prelaunch-report.schema.json`). Rules:
 
 - **Coverage backbone** — diagnose exactly the fixed area vocabulary

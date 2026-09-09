@@ -66,5 +66,5 @@ other pass finishes.
 ## See also
 
 - [`/analytics show`](show.md) — render the (post-prune) report.
-- [`local-analytics`](../../../docs/contracts/local-analytics.md)
+- [`local-analytics`](../../docs/contracts/local-analytics.md)
   § Storage — atomicity guarantees and lock semantics.

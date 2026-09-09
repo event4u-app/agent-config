@@ -30,7 +30,7 @@ Use this skill when:
 * Deciding whether a learning belongs in a rule or a skill
 * After completing a task — reflecting on what worked or caused friction
 * Mining the audit log (`agents/runtime/state/audit/<YYYY-MM>.jsonl`,
-  [`audit-log-v1`](../../../docs/contracts/audit-log-v1.md)) surfaced
+  [`audit-log-v1`](../../docs/contracts/audit-log-v1.md)) surfaced
   a repeated phase pattern via
   [`extract_audit_patterns.ts`](../../../scripts/extract_audit_patterns.ts)
   — the pattern's `count` ≥ 2 already satisfies the repetition gate
@@ -223,7 +223,7 @@ The output of this skill is a **curated proposal** under
 `.augment/templates/agents/proposal.example.md` (shipped by the
 package). This is the input to the five-stage pipeline
 (capture → classify → propose → gate → upstream); see
-[`self-improvement-pipeline`](../../../docs/guidelines/agent-infra/self-improvement-pipeline.md).
+[`self-improvement-pipeline`](../../guidelines/agent-infra/self-improvement-pipeline.md).
 
 Mandatory fields the draft MUST fill:
 
@@ -235,7 +235,7 @@ Mandatory fields the draft MUST fill:
   file this proposal was captured from
 * `evidence` — **at least two independent** references (PR, issue,
   incident, review-comment, test-failure, **or audit-log line ids**
-  per [`audit-log-v1`](../../../docs/contracts/audit-log-v1.md));
+  per [`audit-log-v1`](../../docs/contracts/audit-log-v1.md));
   entries that all resolve to the same PR or the same audit-log
   `run_id` are rejected by the gate (independence floor)
 * `Proposed artefact` (§4) — the full draft body, no `TODO` / `TBD`
@@ -350,7 +350,7 @@ the gap is documented in its skill body.
 When the input is a pattern surfaced by
 [`extract_audit_patterns.ts`](../../../scripts/extract_audit_patterns.ts)
 mining `agents/runtime/state/audit/<YYYY-MM>.jsonl`
-([`audit-log-v1`](../../../docs/contracts/audit-log-v1.md)):
+([`audit-log-v1`](../../docs/contracts/audit-log-v1.md)):
 
 1. Treat the script's pattern record as the **State the learning**
    step input (§1) — `pattern.summary` is the one-sentence

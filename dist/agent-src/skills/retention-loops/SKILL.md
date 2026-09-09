@@ -36,7 +36,7 @@ Do NOT use to fix days 0–30 onboarding friction (route to
   *gain* (how strong the reward is) and *delay* (how long until
   the reward lands), not in the surface UI. Pick the leverage
   point — gain or delay — over surface polish. See
-  [`docs/contracts/mental-models.md`](../../../docs/contracts/mental-models.md) § 14.
+  [`docs/contracts/mental-models.md`](../../docs/contracts/mental-models.md) § 14.
 - **Mental model 8 — Compounding.** A loop with even small gain
   per cycle compounds across cohorts; a one-time activation
   bump does not. Verify which loops compound before investing
@@ -51,7 +51,7 @@ Do NOT use to fix days 0–30 onboarding friction (route to
   **customer-segment** slot for which segments have the latent
   need the loop addresses, and the **funnel-stage** slot for where
   the loop sits relative to activation and paid. See
-  [`context-spine`](../../../docs/contracts/context-spine.md).
+  [`context-spine`](../../docs/contracts/context-spine.md).
 
 ## Procedure
 

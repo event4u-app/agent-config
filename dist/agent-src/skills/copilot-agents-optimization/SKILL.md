@@ -130,7 +130,7 @@ both. Instead, reference with a table:
 | What | Where |
 |---|---|
 | PHP coding rules | `.augment/rules/php-coding.md` |
-| Controller guidelines | `../../../docs/guidelines/php/controllers.md` |
+| Controller guidelines | `../../guidelines/php/controllers.md` |
 ```
 
 ## Line Budget Enforcement
@@ -192,7 +192,7 @@ broken. When optimizing, **keep that section intact** — never delete
 it as "redundant" and never trim its bullets. The patterns it covers:
 
 - Relative cross-references inside `.augment/` rules / skills
-  (`../docs/guidelines/foo.md`, `../contexts/bar.md`) — paths resolve
+  (`../../guidelines/foo.md`, `../contexts/bar.md`) — paths resolve
   from the file's delivered location, not from the symlink in
   `.claude/rules/` etc. (per `road-to-path-fixes.md` Strategy A).
 - `path_prefix:` triggers containing `src/` —

@@ -149,7 +149,7 @@ Check the loaded ticket for clarity signals before orchestrating:
 - **silent-but-needed** — is the spec silent on a clearly-needed behavior (weekend/holiday shift, empty state, error path, timezone, permissions)? Surface it and ask before it becomes an implementation assumption — an inferred behavior is a scope expansion, not a given.
 - **intra-ticket** — do the AC, description, and comments contradict each other?
 
-Fold every discrepancy into the refined output's *Open questions* section (one batched list), never a second prompt. Full taxonomy + scan procedure: [`cross-source-consistency-mechanics`](../../../docs/guidelines/agent-infra/cross-source-consistency-mechanics.md).
+Fold every discrepancy into the refined output's *Open questions* section (one batched list), never a second prompt. Full taxonomy + scan procedure: [`cross-source-consistency-mechanics`](../../guidelines/agent-infra/cross-source-consistency-mechanics.md).
 
 Then run the deterministic detection helper — do **not** re-derive trigger
 logic in prose:
@@ -231,7 +231,7 @@ lens. v1 is CLI-only (no skill-level default; no frontmatter list). The
 user-type voice renders as one paragraph in *Persona voices* labelled
 `**User: <label>**`, citing Daily Workflow, Vocabulary, Operational
 Constraints, and Ticket Red Flags from the loaded user-type. Contract:
-[`docs/contracts/user-type-schema.md`](../../../docs/contracts/user-type-schema.md).
+[`docs/contracts/user-type-schema.md`](../../docs/contracts/user-type-schema.md).
 
 ### 5. Synthesize + close-prompt
 

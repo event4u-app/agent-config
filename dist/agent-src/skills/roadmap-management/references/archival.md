@@ -27,7 +27,7 @@ After the last step of a roadmap is done, check completion status:
    - Work findings in priority order — each ends `fixed` / `accepted-risk` /
      `deferred`. No code surface → explicit skip, never silent.
    - Grammar, scope-hash binding, escape hatch:
-     [`plan-review-gates § 2`](../../../../docs/contracts/plan-review-gates.md).
+     [`plan-review-gates § 2`](../../../docs/contracts/plan-review-gates.md).
 
 1. **Scan the file** for all checkbox markers: `- [x]`, `- [ ]`, `- [~]`, `- [-]`.
 2. **Classify:**

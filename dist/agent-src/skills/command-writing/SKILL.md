@@ -39,7 +39,7 @@ author as a skill and add a thin command that delegates to it.
 
 **A command must EARN a top-level slot.** Only three justifications qualify:
 **flow-entry**, **state-query**, or **product-surface** — everything else is a
-skill. Check before authoring: [`command-clusters` § Command justification](../../../docs/contracts/command-clusters.md#command-justification--a-command-must-earn-a-top-level-slot)
+skill. Check before authoring: [`command-clusters` § Command justification](../../docs/contracts/command-clusters.md#command-justification--a-command-must-earn-a-top-level-slot)
 ([ADR-048](../../../docs/decisions/ADR-048-command-justification-rule.md)).
 
 **Categorize at creation (checklist).** When you author a NEW top-level command,
@@ -56,7 +56,7 @@ is `flow-entry | state-query | product-surface`:
 
 Sub-commands (`council:debate`) inherit the parent cluster's category — leave
 `category:` off them. Why optional + not yet a blocking lint, and what triggers
-the upgrade: [`command-category-governance`](../../../docs/contracts/command-category-governance.md).
+the upgrade: [`command-category-governance`](../../docs/contracts/command-category-governance.md).
 
 ## Commands ARE Claude skills (projection reality)
 
@@ -346,4 +346,4 @@ Workflow sequencing, preconditions, ID/output provenance ("copy ids verbatim,
 never from memory"), a mandatory "why" intent field, and turn-end contracts
 belong INSIDE this artifact's description/frontmatter — where they fire at the
 decision point — not in always-on prose. See
-[`tool-description-as-policy`](../../../docs/guidelines/agent-infra/tool-description-as-policy.md).
+[`tool-description-as-policy`](../../guidelines/agent-infra/tool-description-as-policy.md).

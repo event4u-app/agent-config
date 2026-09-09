@@ -122,7 +122,7 @@ For each candidate read its frontmatter, its open-step count, and every
 3. **A date that must pass.**
 4. **A kernel-rule edit** — [`scope-control`](../../rules/scope-control.md)
    demands its own PR plus a ≥24 h soak, so it cannot close in this run
-   (kernel list: [`kernel-membership`](../../../docs/contracts/kernel-membership.md)).
+   (kernel list: [`kernel-membership`](../../docs/contracts/kernel-membership.md)).
 5. **Phases gated on a spike verdict** that may return FINDING.
 
 Also check the **family concurrency cap** (`lint_roadmap_family_cap`) —

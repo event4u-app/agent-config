@@ -92,7 +92,7 @@ tool calls and a waiter is indistinguishable from any other call at that layer.
 
 Why the loop test misses it in both clauses, the n=1 measurement behind the
 clause, and the enforcement argument: [`context-hygiene-mechanics § Waiting is one
-waiter`](../docs/guidelines/agent-infra/context-hygiene-mechanics.md).
+waiter`](../guidelines/agent-infra/context-hygiene-mechanics.md).
 
 ## Read-Loop Detection — the 15 / 25 rule
 
@@ -110,12 +110,12 @@ EVERY TURN MUST EDIT, RUN, OR ASK.
 
 ### Declared read protocol — the cap goes UP, never off
 
-A mandated analysis/audit/review protocol is exactly the case that legitimately needs *more* reads, not fewer — an 8-turn evidence sweep is the protocol working, not a loop. Capping a declared protocol tighter than an undeclared one is backwards. So:
+A mandated analysis/audit/review protocol — or a port of a provided design artifact, where reading the handover whole IS the work — is exactly the case that legitimately needs *more* reads, not fewer — an 8-turn evidence sweep is the protocol working, not a loop. Capping a declared protocol tighter than an undeclared one is backwards. So:
 
 - **Undeclared reading keeps 3-warn / 5-abort.** Unchanged.
 - **A declared protocol raises the abort to 8 read-only turns** — and never suspends it. "Non-bypassable" narrows to **no *silent* bypass**: a declared protocol is not silent.
 
-> **The 8 is a guess, a LOWER BOUND, and revisitable** — derivation, the n=1 run behind it, and the two-branch `revisit-if`: [`context-hygiene-mechanics § The declared-protocol cap`](../docs/guidelines/agent-infra/context-hygiene-mechanics.md).
+> **The 8 is a guess, a LOWER BOUND, and revisitable** — derivation, the n=1 run behind it, and the two-branch `revisit-if`: [`context-hygiene-mechanics § The declared-protocol cap`](../guidelines/agent-infra/context-hygiene-mechanics.md).
 
 A declaration is only valid when it states, before the reading starts, all three of:
 
@@ -125,10 +125,10 @@ A declaration is only valid when it states, before the reading starts, all three
 
 Free-text intent is not a declaration — the three fields exist so that "declared protocol: I need to read things" cannot buy the higher cap. Exceeding the declared count by more than 2 is itself the violation: stop, surface what the extra reads were for, and ask.
 
-Body migrated to [`guideline:agent-infra/context-hygiene-mechanics`](../docs/guidelines/agent-infra/context-hygiene-mechanics.md) (per P4 of `road-to-kernel-and-router.md`) — the freshness-suggestion template, the read-loop self-check + abort block, the state-dump format + `/agent-handoff` pointer, the Augment ignored-skills recovery flow, and the Copilot no-hook fallback (manual `context_hygiene_hook` refresh).
+Body migrated to [`guideline:agent-infra/context-hygiene-mechanics`](../guidelines/agent-infra/context-hygiene-mechanics.md) (per P4 of `road-to-kernel-and-router.md`) — the freshness-suggestion template, the read-loop self-check + abort block, the state-dump format + `/agent-handoff` pointer, the Augment ignored-skills recovery flow, and the Copilot no-hook fallback (manual `context_hygiene_hook` refresh).
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
 
 ## See also
 
-- [`guideline:agent-infra/context-hygiene-mechanics`](../docs/guidelines/agent-infra/context-hygiene-mechanics.md) — templates + per-host procedures.
+- [`guideline:agent-infra/context-hygiene-mechanics`](../guidelines/agent-infra/context-hygiene-mechanics.md) — templates + per-host procedures.
 - [`systematic-debugging § Debug micro-loop`](../skills/systematic-debugging/SKILL.md) — the read-loop debug procedure.

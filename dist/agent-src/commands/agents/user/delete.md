@@ -24,7 +24,7 @@ road-to-global-user-memory Phase 4, the delete counterpart of
 [`/agents user accept`](accept.md). Every deletion writes an
 append-only tombstone to the revocation ledger BEFORE the underlying
 file is rewritten without it — see
-[`agent-user-schema § Delete, revoke, and audit`](../../../../../docs/contracts/agent-user-schema.md#delete-revoke-and-audit-road-to-global-user-memory-phase-4).
+[`agent-user-schema § Delete, revoke, and audit`](../../../docs/contracts/agent-user-schema.md#delete-revoke-and-audit-road-to-global-user-memory-phase-4).
 
 Three targets, one per invocation:
 
@@ -140,7 +140,7 @@ Do NOT commit. Do NOT auto-chain to a second deletion.
 
 ## See also
 
-- Schema: [`agent-user-schema § Delete, revoke, and audit`](../../../../../docs/contracts/agent-user-schema.md#delete-revoke-and-audit-road-to-global-user-memory-phase-4) — the write→delete mapping and the ADR-121 reuse this command exposes.
+- Schema: [`agent-user-schema § Delete, revoke, and audit`](../../../docs/contracts/agent-user-schema.md#delete-revoke-and-audit-road-to-global-user-memory-phase-4) — the write→delete mapping and the ADR-121 reuse this command exposes.
 - Audit source: [`/agents user show --audit`](show.md) — the read surface that surfaces what there is to delete.
 - Parent: [`/agents user`](../user.md).
 - Sibling: [`/agents user review`](review.md), [`/agents user accept`](accept.md) — the write side this command undoes.

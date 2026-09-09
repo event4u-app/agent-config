@@ -36,7 +36,7 @@ launch sequencing (route to `gtm-launch`).
   segment's noise floor, not just be true. Estimate the noise before
   drafting; without it, every line looks distinctive in the doc and
   forgettable in market. See
-  [`docs/contracts/mental-models.md`](../../../docs/contracts/mental-models.md) § 15.
+  [`docs/contracts/mental-models.md`](../../docs/contracts/mental-models.md) § 15.
 - **Mental model 30 — Inversion.** Ask *"what is the strongest
   message a credible alternative would land against us?"* The answer
   exposes the proofs the message stack must carry, not the words.
@@ -45,7 +45,7 @@ launch sequencing (route to `gtm-launch`).
   slot for the proofs the team can actually back; read the
   **customer-segment** slot for the buyer's listening posture.
   Architecture that exceeds the proofs available is fiction. See
-  [`context-spine`](../../../docs/contracts/context-spine.md).
+  [`context-spine`](../../docs/contracts/context-spine.md).
 
 ## Procedure
 

@@ -156,7 +156,7 @@ iterating against a stale contract.
 
 State lives in the conversation, optionally mirrored to a re-read working file —
 **never** a daemon or persistent cross-session store (honors
-[`resident-process-governance`](../../../docs/contracts/resident-process-governance.md)).
+[`resident-process-governance`](../../docs/contracts/resident-process-governance.md)).
 
 ## Validation
 
@@ -261,7 +261,7 @@ iter2 fixes A, breaks B, 92% → "PASS"      ✗ regression ignored
   `tests/fixtures/tamper-corpus/` and its polarity proven both ways by
   `--self-test`.
 * [`autonomous-execution`](../../rules/autonomous-execution.md) — the N=3 cap.
-* [`resident-process-governance`](../../../docs/contracts/resident-process-governance.md) — the
+* [`resident-process-governance`](../../docs/contracts/resident-process-governance.md) — the
   runtime-free constraint this loop honors.
 * Optional impact pre-step (when a code-graph is present, ADR-124): run
   `agent-config code-graph affected --since <ref>` to scope which symbols a

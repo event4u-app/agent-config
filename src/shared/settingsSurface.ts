@@ -23,7 +23,13 @@ export type JsonLike =
     | { [key: string]: JsonLike };
 
 export interface SurfaceEntry {
-    type: string;
+    /**
+     * JSON-schema type. A STRING for an ordinary key, and an ARRAY for a
+     * nullable one (`["number", "null"]`) — which is what the generator has
+     * always produced for a `z.number().nullable()`, though this field was
+     * declared `string` until the first such key shipped.
+     */
+    type: string | string[];
     default?: JsonLike;
     enum?: Array<string | number>;
     description?: string;
@@ -129,7 +135,12 @@ export function computeSurfaceDelta(oldS: SettingsSurface, newS: SettingsSurface
             continue;
         }
         const o = oldS.entries[key] as SurfaceEntry;
-        if (o.type !== n.type) {
+        // `sameJson`, not `!==`: `type` is an array for a nullable key, and two
+        // structurally equal arrays are never `===`. Left as a strict compare
+        // it reported `type_changed` on EVERY version bump for every nullable
+        // key, forever — caught by the identical-surface test the moment the
+        // first one shipped (`design.approximation.tolerance.*`).
+        if (!sameJson(o.type, n.type)) {
             changes.push({ key, kind: 'type_changed', old: o, new: n });
         }
         if (!sameJson(o.default, n.default)) {

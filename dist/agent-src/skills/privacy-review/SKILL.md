@@ -28,7 +28,7 @@ Do NOT use as a substitute for qualified privacy counsel (this skill produces th
 
 ## Cognition cluster
 
-- **Mental model 28 — Inversion.** *"What's the worst-case if this data flow leaks, is subpoenaed, or is mis-consented?"* Inversion sizes the regulatory tail before consent / DPA shape is debated. See [`mental-models.md`](../../../docs/contracts/mental-models.md) § 28.
+- **Mental model 28 — Inversion.** *"What's the worst-case if this data flow leaks, is subpoenaed, or is mis-consented?"* Inversion sizes the regulatory tail before consent / DPA shape is debated. See [`mental-models.md`](../../docs/contracts/mental-models.md) § 28.
 - **Mental model 1 — First principles.** Strip the data flow to: *who* (data subject), *what* (data category), *why* (lawful basis / purpose), *where* (residency / transfer), *how long* (retention), *who else* (sub-processors). Six primitives anchor every regime delta. See `mental-models.md` § 1.
 - **Mental model 21 — Second-order thinking.** Consent design at signup interacts with marketing automation; retention defaults interact with data-subject-rights workflow; sub-processor chains interact with breach-notification timelines. Each privacy choice has downstream regime obligations. See `mental-models.md` § 21.
 - **Context-spine — regulatory-regime + customer-segment + product.** Read **regulatory-regime** (J1) for the applicable floor (GDPR, CCPA/CPRA, HIPAA, PIPEDA, LGPD, sector-specific). Read **customer-segment** for who the data subjects are (B2C-EU = GDPR primary; US-healthcare = HIPAA primary; B2B-EU-of-US-customers = mixed). Read **product** for which features touch sensitive categories.

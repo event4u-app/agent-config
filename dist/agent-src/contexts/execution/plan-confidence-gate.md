@@ -7,7 +7,7 @@ the [`roadmap-writing`](../../skills/roadmap-writing/SKILL.md) skill,
 [`/feature:roadmap`](../../commands/feature/roadmap.md) — each of which links
 here instead of restating the gate. Machine-checked grammars (the C→R1 state
 schema, marker lines) are owned by
-[`docs/contracts/plan-review-gates.md`](../../../docs/contracts/plan-review-gates.md);
+[`docs/contracts/plan-review-gates.md`](../../docs/contracts/plan-review-gates.md);
 this context carries the agent-side procedure.
 
 ## Activation
@@ -22,7 +22,7 @@ equivalents drop the gate immediately
 (`DE: "einfach schreiben", "Interview überspringen" · EN: "just write it", "skip the interview"`).
 A bypass is **counted**, never punished: append a `gate_c_bypass` event to
 `agents/evidence/metrics/gate-metrics.jsonl` (see
-[`plan-review-gates § metrics`](../../../docs/contracts/plan-review-gates.md))
+[`plan-review-gates § metrics`](../../docs/contracts/plan-review-gates.md))
 so gate erosion stays visible.
 
 ## When it fires — and when NOT
@@ -127,7 +127,7 @@ On completing the gate (either path that ran an interview), write
 `agents/runtime/state/gate-c-<plan-slug>.json` so the R1 risk pass never
 re-asks resolved branches — the user is never interviewed twice for one
 plan. Schema (canonical:
-[`plan-review-gates § C→R1 handoff`](../../../docs/contracts/plan-review-gates.md)):
+[`plan-review-gates § C→R1 handoff`](../../docs/contracts/plan-review-gates.md)):
 resolved branches, plan hash, timestamp, and a mandatory `transcript_ref`
 (path + content hash of the interview transcript artifact).
 
@@ -136,7 +136,7 @@ resolved branches, plan hash, timestamp, and a mandatory `transcript_ref`
 lint and no hook entry behind it, and the state file is gitignored so CI never
 sees it — a human reading the diff is what catches a violation (stated
 `enforced_by: none` in
-[`plan-review-gates § 4.1`](../../../docs/contracts/plan-review-gates.md)).
+[`plan-review-gates § 4.1`](../../docs/contracts/plan-review-gates.md)).
 The rule defends against silent agent shortcuts, not against the local human
 (who holds the settings escape hatch anyway).
 Confident-path runs (no interview) write no state file; R1 then runs its
@@ -155,7 +155,7 @@ risk pass fresh.
 
 - [`/challenge-me vision`](../../commands/challenge-me/vision.md) — the four
   95%-conditions and the interview this gate routes into.
-- [`plan-review-gates`](../../../docs/contracts/plan-review-gates.md) — machine
+- [`plan-review-gates`](../../docs/contracts/plan-review-gates.md) — machine
   grammars: C→R1 state schema, Risk Register, completion review.
 - [`ask-when-uncertain`](../../rules/ask-when-uncertain.md) — the
   one-question-per-turn floor the degrade protocol runs under.

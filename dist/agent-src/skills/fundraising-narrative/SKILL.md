@@ -35,7 +35,7 @@ are siblings, not the same artefact).
   the load-bearing claim and the one most often borrowed. Build
   it from the segment-shift up — what changed in the world, the
   customer, the technology — not from a deck template. See
-  [`docs/contracts/mental-models.md`](../../../docs/contracts/mental-models.md) § 1.
+  [`docs/contracts/mental-models.md`](../../docs/contracts/mental-models.md) § 1.
 - **Mental model 9 — Hypothesis-driven development.** A pitch is
   a falsifiable hypothesis: *if X is true, our round closes.*
   Name the X. Investors who disagree with the hypothesis are not
@@ -55,7 +55,7 @@ are siblings, not the same artefact).
   for the proofs the traction story can actually back; read
   **customer-segment** for the TAM/SAM argument that survives a
   bottom-up scrutiny. See
-  [`context-spine`](../../../docs/contracts/context-spine.md).
+  [`context-spine`](../../docs/contracts/context-spine.md).
 
 ## Procedure
 

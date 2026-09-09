@@ -59,8 +59,8 @@ Before writing, apply the **per-part grounding + disconfirmation gate**: every
 part of the request must be grounded in a retrieved source before it appears in
 the report, and at least one search must have actively tried to falsify the
 leading hypothesis (not only confirm it). Distinct from
-[`source-discovery-gate`](../../../../src/rules/source-discovery-gate.md) and
-[`verify-before-complete`](../../../../src/rules/verify-before-complete.md).
+[`source-discovery-gate`](../../rules/source-discovery-gate.md) and
+[`verify-before-complete`](../../rules/verify-before-complete.md).
 
 The agent itself reads each JSON + `fields.yaml` + the user's TOC
 choices, then writes `{topic_slug}/report.md`. **No `generate_report.py`

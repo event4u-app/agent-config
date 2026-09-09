@@ -35,7 +35,7 @@ import {
     type ToolEvent,
 } from '../../src/scripts/hooks/ui_route_nudge_hook.js';
 
-const fresh: SessionState = { consulted: false, nudges: 0 };
+const fresh: SessionState = { consulted: false, nudges: 0, artifactRead: false };
 
 function write(file: string): ToolEvent {
     return { file, isWrite: true };
@@ -88,7 +88,7 @@ describe('decide', () => {
     });
 
     it('stays silent once the session has consulted', () => {
-        const consulted: SessionState = { consulted: true, nudges: 0 };
+        const consulted: SessionState = { consulted: true, nudges: 0, artifactRead: false };
 
         expect(decide(write('src/components/Card.tsx'), consulted).warn).toBe(false);
     });
@@ -165,7 +165,7 @@ describe('state hygiene', () => {
     it('keeps the file bounded by dropping the oldest sessions', () => {
         const all: Record<string, SessionState> = {};
         for (let i = 0; i < MAX_SESSIONS + 10; i += 1) {
-            all[`session-${i}`] = { consulted: false, nudges: 1 };
+            all[`session-${i}`] = { consulted: false, nudges: 1, artifactRead: false };
         }
 
         const pruned = pruneSessions(all);
@@ -177,7 +177,7 @@ describe('state hygiene', () => {
     });
 
     it('leaves a small file untouched', () => {
-        const all = { a: { consulted: true, nudges: 0 } };
+        const all = { a: { consulted: true, nudges: 0, artifactRead: false } };
 
         expect(pruneSessions(all)).toEqual(all);
     });

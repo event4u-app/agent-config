@@ -101,11 +101,13 @@ content — size, then a structural grep for the offsets that matter, then a
 ranged read of those offsets. Below it, just read it: a probe you did not need
 costs a call and teaches nothing.
 
-The number is a **stated default, not a measured optimum** — said plainly rather
-than implying a derivation it does not have. *Revisit-if:* a run records a
-probe-then-slice that cost more than the full read would have, or the host's
-ranged-read primitive changes its own default. Either falsifies the number, not
-the obligation.
+The number is a **stated default, not a measured optimum**; its `revisit-if`
+lives in the mechanics file below.
+
+**Carve-out — a provided design artifact.** A handover is routinely thousands of
+lines and reading it whole IS the task, not a probe target. Before the threshold
+above applies, declare the read per
+[`context-hygiene`](context-hygiene.md) § Declared read protocol.
 
 Additive: the repetition discriminator above is untouched, an enumerated
 multi-file sweep stays ONE operation, and re-probing a file whose shape you

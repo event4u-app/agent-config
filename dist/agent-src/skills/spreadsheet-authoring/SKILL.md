@@ -21,7 +21,7 @@ execution:
 # spreadsheet-authoring
 
 > The spreadsheet surface's correctness floor (per
-> [`surface-agent-contracts`](../../../docs/contracts/surface-agent-contracts.md)):
+> [`surface-agent-contracts`](../../docs/contracts/surface-agent-contracts.md)):
 > a spreadsheet's **truth source is the formula read-back**, not a plausible
 > table of numbers. A cell that holds a hardcoded computed value is a latent
 > lie — it silently goes stale the moment an input changes.

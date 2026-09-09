@@ -24,7 +24,7 @@ sheet-eligible when **all** hold:
 - it is answerable **before** the run starts — its answer does not depend on
   something the run itself produces;
 - its decision class is `trivial`, `low_impact`, or `medium_impact`
-  ([`ai-council-config`](../../../docs/contracts/ai-council-config.md)
+  ([`ai-council-config`](../../docs/contracts/ai-council-config.md)
   § decision_resolution);
 - a **conservative default** exists and can be stated in one line.
 
@@ -68,7 +68,7 @@ cost: each override is a decision the default did not carry.
 
 The contradiction was resolved on **the sheet's** side deliberately, and the
 asymmetry is durable rather than incidental: `user-interaction` is one of the
-locked nine ([`kernel-membership § 4`](../../../docs/contracts/kernel-membership.md)),
+locked nine ([`kernel-membership § 4`](../../docs/contracts/kernel-membership.md)),
 so amending its clause is an owner-reserved edit that `block-kernel-rule-writes`
 refuses at tool-call time, while the answer SHAPE is this page's own. When a
 page and a kernel rule contradict each other, the page is both the cheaper half
@@ -110,6 +110,6 @@ by whichever mechanism happened to hit them first.
 
 - [`roadmap-execution-contract`](roadmap-execution-contract.md) — the screen this renders inside; its single Accept is the authorization.
 - [`roadmap-process-loop § 3`](roadmap-process-loop.md) — the pre-scan that produces the rows, and the § 3a ladder that decides whether a contract is derived at all.
-- [`ai-council-config`](../../../docs/contracts/ai-council-config.md) § decision_resolution — the class table and the locked-class Iron Law.
+- [`ai-council-config`](../../docs/contracts/ai-council-config.md) § decision_resolution — the class table and the locked-class Iron Law.
 - [`ask-when-uncertain`](../../rules/ask-when-uncertain.md) — one question per turn; one sheet answered by one keystroke is one question.
 - [`user-interaction`](../../rules/user-interaction.md) — the numbered-options shape and the single recommendation line.

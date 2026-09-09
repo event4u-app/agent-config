@@ -28,7 +28,7 @@ Do NOT use as a payroll / equity-administration substitute (this skill produces 
 
 ## Cognition cluster
 
-- **Mental model 1 — First principles.** Strip every comp question to: *what behavior are we paying for, over what horizon, with what risk-bearing?* Cash pays for present effort; equity pays for future co-built value with risk; bonus pays for outcome-linked behavior. Mixing the levers without first-principles intent produces confusion. See [`mental-models.md`](../../../docs/contracts/mental-models.md) § 1.
+- **Mental model 1 — First principles.** Strip every comp question to: *what behavior are we paying for, over what horizon, with what risk-bearing?* Cash pays for present effort; equity pays for future co-built value with risk; bonus pays for outcome-linked behavior. Mixing the levers without first-principles intent produces confusion. See [`mental-models.md`](../../docs/contracts/mental-models.md) § 1.
 - **Mental model 28 — Inversion.** *"What comp shape would force our best people to leave?"* Inversion surfaces the load-bearing risks (condensation at senior levels, equity refresh gaps, geo arbitrage that punishes loyalty).
 - **Mental model 26 — Optionality.** Each comp lever preserves or forecloses future options. Above-band offers preserve hire optionality but foreclose internal-equity optionality. Equity-heavy mix preserves cash runway but forecloses people who need liquidity. Read every move as an optionality trade.
 - **Mental model 21 — Second-order thinking.** A raise to one person ripples (perceived parity, retention pressure on peers, expectation-setting for next cycle). A band shift ripples (new-hire offers anchor higher, internal expectations re-anchor). Comp moves rarely stay isolated.

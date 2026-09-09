@@ -114,7 +114,7 @@ Cross-wing or cross-skill chain executed across isolated git
 worktrees — each handoff in the chain runs in its own worktree, so
 the workspace state of one step never leaks into the next. Operationalizes
 the worktree boundary clause in
-[`docs/contracts/cross-wing-handoff.md`](../../../../docs/contracts/cross-wing-handoff.md)
+[`docs/contracts/cross-wing-handoff.md`](../../docs/contracts/cross-wing-handoff.md)
 § 3. State-machine layer only — worktree creation/destruction lives
 in [`using-git-worktrees`](../../skills/using-git-worktrees/SKILL.md) and
 [`finishing-a-development-branch`](../../skills/finishing-a-development-branch/SKILL.md).

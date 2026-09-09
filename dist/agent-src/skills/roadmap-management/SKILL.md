@@ -85,7 +85,7 @@ different agents.
 
 **Module path resolution.** `{module_root}` and `{agent_folder}` come from
 `modules.root_paths` and `modules.agent_folder` in
-`.agent-project-settings.yml` — see [`layered-settings`](../../../../../docs/guidelines/agent-infra/layered-settings.md).
+`.agent-project-settings.yml` — see [`layered-settings`](../../guidelines/agent-infra/layered-settings.md).
 Common shapes:
 
 - Laravel — `app/Modules/{Module}/agents/roadmaps/`

@@ -29,7 +29,7 @@ letterbox to any viewport. A deck is fixed-canvas media (default 1920×1080,
 
 > **Cross-surface handoff.** A deck often consumes upstream analysis
 > (spreadsheet → deck, research → deck). Read the handoff envelope from
-> [`surface-agent-contracts`](../../../docs/contracts/surface-agent-contracts.md#cross-surface-handoff-envelope):
+> [`surface-agent-contracts`](../../docs/contracts/surface-agent-contracts.md#cross-surface-handoff-envelope):
 > trust `verification_already_done` (don't recompute the source's numbers),
 > carry the asset list, and keep source restrictions intact.
 
@@ -44,7 +44,7 @@ options of one screen → [`design-variations`](../design-variations/SKILL.md).
 ## Deck fidelity floor
 
 The deck surface's floor (per
-[`surface-agent-contracts`](../../../docs/contracts/surface-agent-contracts.md)):
+[`surface-agent-contracts`](../../docs/contracts/surface-agent-contracts.md)):
 
 - **Outline before slides.** Draft the slide outline (title + one-line intent
   per slide) before building any slide; when audience or tone is ambiguous, ask
@@ -58,7 +58,7 @@ The deck surface's floor (per
   brand evidence ([`design-fidelity`](../../rules/design-fidelity.md) § Asset &
   imagery discipline).
 - **Export verification.** Verify the deck exports/renders
-  ([`design-artifact-verification`](../../../docs/contracts/design-artifact-verification.md));
+  ([`design-artifact-verification`](../../docs/contracts/design-artifact-verification.md));
   on a host without export capability, say what could not be verified rather
   than claiming a clean export.
 
@@ -98,7 +98,7 @@ The deck surface's floor (per
    per-slide `<aside hidden>`, never printed.
 6. **Quality gate.** Run `lint_design_slop` over the file; honor the
    outward-artifact hygiene floor (Q13 in
-   [`design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md))
+   [`design-antipatterns.md`](../../guidelines/design-antipatterns.md))
    — no workspace paths, skill/tool names, or generator traces in markup or
    comments; final pass → [`design-review`](../design-review/SKILL.md).
    Verify scaling + navigation + persistence once in a browser before
@@ -150,4 +150,4 @@ The deck surface's floor (per
 - [`design-intelligence`](../design-intelligence/SKILL.md) — direction/palette/type grounding.
 - [`design-tokens`](../design-tokens/SKILL.md) / [`brand-to-tokens`](../brand-to-tokens/SKILL.md) — token precedence and emission.
 - [`design-review`](../design-review/SKILL.md) — final review gate.
-- [`docs/guidelines/design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md) — catalog, CP5, Q13.
+- [`docs/guidelines/design-antipatterns.md`](../../guidelines/design-antipatterns.md) — catalog, CP5, Q13.

@@ -83,6 +83,36 @@ silently forking.
   guideline** — rejected: that guideline covers *how* to structure; extraction
   *timing* is orthogonal and the canon must stay small enough to cite whole.
 
+## Extension, 2026-09-09 — the provided-artifact clause
+
+`road-to-design-intent-conformance` 3.5. The canon authorises extraction on
+repetition **already present in the diff**. A handed-over **runnable** artifact
+makes repetition observable before any code exists, which is a **different
+mechanism** than the one this threshold tested — not a challenge to it. Per
+[`decision-revisit-gate`](../../src/rules/decision-revisit-gate.md) step 1, a
+different mechanism is not blocked by the lock, and step 2 was run rather than
+assumed: `adr_cite_check ADR-213` reports the record LIVE with an
+**indeterminate** review trigger and `reopen_policy: unclassified`, so
+investigation is permitted.
+
+**The numbers do not move.** 2 · 3+ · ~4+ are byte-identical to what this ADR
+settled; the clause changes only *when* the count may legitimately be taken.
+
+**Two guards, both required**, and the second is why this is an extension rather
+than a widening: (a) a **runnable** artifact, never a design comp — counting
+rectangles in a picture is not counting repetition; (b) repetition of the
+**element itself, not of its compositional context** — four `<Card>` instances
+show Card is used four times and do NOT show a `CardGrid` is needed, which needs
+multiple distinct contexts each arranging several cards.
+
+**Enforcement, honestly:** guard (b) is **model-carried and audit-enforced**.
+Nothing mechanical separates "I saw four Cards" from "I saw a CardGrid pattern",
+and `lint_abstraction_thresholds.ts` checks numeric drift, which is a different
+property. Guard (a) is checkable; (b) is not. Claiming otherwise would be the
+coverage inflation this repository forbids elsewhere.
+
+Full clause: [`abstraction-thresholds § The provided-artifact clause`](../guidelines/abstraction-thresholds.md).
+
 ## References
 
 - [`docs/guidelines/abstraction-thresholds.md`](../guidelines/abstraction-thresholds.md) — the canon.

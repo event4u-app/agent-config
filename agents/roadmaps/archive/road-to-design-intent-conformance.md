@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: draft
+status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Receiver for a round whose subject has arrived six times and closed on a fixture five of them; the count half is unmoved (`active_roadmaps` 5 at floor 5, `open_blockers` 43 at floor 43 — `status: draft` excludes it from collect()), and only the file-based one-in-one-out half fires. Nothing here is offsettable: the five predecessors are already archived, parking it would grow later_roadmaps instead, and folding it into a live roadmap would put a design-fidelity programme with four owner-reserved blockers inside a roadmap that owns a different axis."
@@ -178,6 +178,36 @@ no source in the evidence set supports them: a "73-branch" corpus count, "4px /
 evidence about icons — that rule governs numeric values, and the icon grading is
 Adobe's `react-spectrum` audit.
 
+### The icon evidence, recorded rather than acted on
+
+Step 1.4 deletes the unsourced icon obligation. It does **not** replace it with
+the opposite obligation, and the evidence that would argue for one is recorded
+here so a later reader meets it instead of re-deriving it.
+
+**What the evidence says.** Adobe's `react-spectrum` audit grades icon
+substitution as acceptable practice within a design system, and every
+design-system linter surveyed in the round treats an icon as a component
+reference rather than as a literal value. That is a real observation about how
+design systems behave, and it points toward "an artifact's icon may be
+reconciled onto the project's icon set".
+
+**Why it is not acted on.** One measured practice does not reverse a shipped
+obligation, and the direction cuts both ways here: the shipped obligation was
+itself unsourced, so deleting it is the conservative move and *replacing* it
+with a reconcilable-by-default clause would be the same unsourced assertion
+pointed the other way. `src/rules/icon-consistency.md` carries zero occurrences
+of `artifact` / `artefact` / `provided`; step 2.7 gives it a provided-artifact
+carve-out that states when an artifact-sourced icon is not a violation, and
+stops there. Nothing in this roadmap grants an autonomous icon swap.
+
+**Reopening condition.** A shipped surface may assert that an artifact's icons
+are reconcilable onto the project's icon set once **either** (a) a primary
+source states it as an obligation rather than as an observed grading, **or**
+(b) a measured run over provided artifacts shows icon preservation producing a
+worse conformance outcome than reconciliation on the dimensions Phase 4.1
+reports. Absent both, the surface stays silent and `icon-consistency` owns the
+axis.
+
 ## Phase 1 — Remove the contradiction and the false positives
 
 Nothing here needs a decision, a new artefact, or a default change. All three
@@ -220,7 +250,7 @@ are defects with a verified wrong behaviour and a verified right one.
       identical.
       verify: `./scripts-run src/scripts/skill_linter --all` warn count
       unchanged at 1, and the file stays under the 400-line skill ceiling.
-- [ ] **1.3 Make the brand rule carry the split instead of pointing one way.**
+- [x] **1.3 Make the brand rule carry the split instead of pointing one way.**
       `src/rules/brand-source-of-truth.md` gains the artifact-versus-brand
       invariant — values to the brand token with the distance reported,
       structure to the artifact and never adjusted to suit a token — plus the
@@ -234,7 +264,7 @@ are defects with a verified wrong behaviour and a verified right one.
       greater than 0, the rule under the 200-line ceiling, **and**
       `./scripts-run src/scripts/check_preamble_payload_budget` still at or
       under the ratchet.
-- [ ] **1.4 Delete the unsourced icon obligation instead of defending it.**
+- [x] **1.4 Delete the unsourced icon obligation instead of defending it.**
       `src/skills/tailwind-engineer/SKILL.md:86` asserts that icons "stay 1:1
       with the artifact" — a single clause, added in the Phase 1 PR, with **no
       citation of any kind** (`grep -i icon` over that file returns that one
@@ -249,7 +279,7 @@ are defects with a verified wrong behaviour and a verified right one.
       verify: `grep -ci icon src/skills/tailwind-engineer/SKILL.md` returns the
       scope-boundary line and no obligation; `skill_linter --all` warn count
       unchanged.
-- [ ] **1.5 Swap an unfollowable instruction for the arbitration it points at.**
+- [x] **1.5 Swap an unfollowable instruction for the arbitration it points at.**
       `src/rules/design-fidelity.md:78-83` tells the reader *"Read that scope
       line before acting on either rule"* — and that line lives in
       `docs/guidelines/design-fidelity-mechanics.md`, which does not exist in a
@@ -268,7 +298,7 @@ are defects with a verified wrong behaviour and a verified right one.
       `check_preamble_payload_budget --ceiling <ci value>` does not rise, and no
       remaining sentence in the projected rule instructs the reader to open an
       unprojected path.
-- [ ] **1.6 State that no build order is prescribed, positively.**
+- [x] **1.6 State that no build order is prescribed, positively.**
       `src/skills/ui-component-architect/SKILL.md` (`packs: [engineering-base]`,
       same reach as the fidelity rule) gains the observed pattern rather than a
       bare negative: when porting existing UI, inventory first — the lifecycle
@@ -291,7 +321,7 @@ are defects with a verified wrong behaviour and a verified right one.
 install contains. Until that is true, every later phase writes policy into a
 file the reading agent cannot open.
 
-- [ ] **2.1 Project `docs/guidelines/` into `dist/agent-src/guidelines/`.** The
+- [x] **2.1 Project `docs/guidelines/` into `dist/agent-src/guidelines/`.** The
       consumer-side plumbing is already there — `AUGMENT_SYMLINK_DIRS` lists
       `guidelines` and the symlink is simply never created. The lane goes in a
       new module under `src/scripts/_lib/`, and `condense.ts` spends net zero
@@ -300,13 +330,16 @@ file the reading agent cannot open.
       verify: after `task sync`, `ls dist/agent-src/guidelines/design-fidelity-mechanics.md`
       resolves and `.augment/guidelines` is a live symlink; and
       `./scripts-run src/scripts/check_source_size_budget` reports no rise.
-- [ ] **2.2 Gate the route rather than trusting it.** A check that every
+- [x] **2.2 Gate the route rather than trusting it.** A check that every
       `routes_to: guideline:` target and every relative `../docs/` link in a
-      **projected** rule resolves inside the projection. Today's 31 rules and 43
-      distinct targets are the floor; the ratchet then only moves down.
+      **projected** rule resolves inside the projection. **Corrected after a
+      blind review, which reproduced the numbers this line asserted and found
+      they reproduce on nothing:** the gate's own reading is **119 projected
+      rules and 22 distinct targets**, not 31 and 43. The floor is the
+      measurement the gate prints, and the ratchet then only moves down.
       verify: the gate red on a deliberately unprojected target, green on the
       tree, and registered with its coverage row and self-test.
-- [ ] **2.3 Whitelist `design.*` and repair the drop warning.** Add the
+- [x] **2.3 Whitelist `design.*` and repair the drop warning.** Add the
       `design.fidelity_mode` key to `MERGEABLE_KEYS` with the ADR its docstring
       requires, and widen `userGlobalDrop()` to probe the canonical
       `settings/.agent-settings.yml` as well as the flat file.
@@ -314,7 +347,7 @@ file the reading agent cannot open.
       `agent-config settings:get design.fidelity_mode` and names the layer it
       came from; and a non-whitelisted user-global key reports the drop instead
       of a bare "not set".
-- [ ] **2.4 Give the read budget an artifact carve-out.** `token-efficiency.md:99`
+- [x] **2.4 Give the read budget an artifact carve-out.** `token-efficiency.md:99`
       sets a probe-then-slice threshold at 800 lines with no artifact exception,
       and `context-hygiene.md:113` raises the read-only abort only for a
       "mandated analysis/audit/review protocol" — a design *implementation* is
@@ -324,7 +357,7 @@ file the reading agent cannot open.
       are standing surfaces, so this obeys the same payload constraint as 1.3.
       verify: a declared artifact port states its expected read count and does
       not trip the abort; an undeclared read loop still does.
-- [ ] **2.5 Route the artifact file shapes the trigger set cannot match.**
+- [x] **2.5 Route the artifact file shapes the trigger set cannot match.**
       `*design.html` compiles to `^(?:.*design\.html)$` and cannot match
       `ToDo.dc.html`; `.dc.html` appears zero times in the rule and zero times
       in `ROUTING_MATRIX`, so the class is an untested gap rather than a decided
@@ -333,14 +366,14 @@ file the reading agent cannot open.
       over-broad trigger before writing the trigger.
       verify: a `.dc.html` handover routes, and the near-miss row for the
       direction the new trigger opens stays silent.
-- [ ] **2.6 Wire the artifact-read predicate its own module never calls.**
+- [x] **2.6 Wire the artifact-read predicate its own module never calls.**
       `ui_route_nudge_hook.ts:162` exports `isArtifactRead`; `report_consultation_rate.ts:204`
       consumes it and `decide` in the same module does not. The concern is
       default-OFF, so wiring it changes nothing for a consumer and makes the
       shadow record honest.
       verify: an artifact-read event reaches `decide`, and the concern's
       default stays off.
-- [ ] **2.7 Add a provided-artifact carve-out to `icon-consistency`.** Its
+- [x] **2.7 Add a provided-artifact carve-out to `icon-consistency`.** Its
       "When NOT to fire" lists three exceptions and none is a provided
       artifact, while "ad-hoc inline SVGs alongside a chosen set" is exactly
       what porting an artifact's own icons produces. Iconography rung 1 is
@@ -352,20 +385,20 @@ file the reading agent cannot open.
 
 Gated on `blocker: approximation-tolerance` and `blocker: rule-body-cap`.
 
-- [ ] **3.1 Promote the maturity table to a field.** `spec.maturity` on the
+- [x] **3.1 Promote the maturity table to a field.** `spec.maturity` on the
       existing `design-system.json` contract, resolved from the artifact with
       provenance, with a user signal beating any inference. The two-row prose
       table becomes the data behind it rather than a second copy.
       verify: a wireframe fixture resolves `low` and a runnable-artifact fixture
       resolves `finished`, both with the signal that decided it.
-- [ ] **3.2 Add the approximation semantics as a setting beside `fidelity_mode`.**
+- [x] **3.2 Add the approximation semantics as a setting beside `fidelity_mode`.**
       Within tolerance the project token wins and the outcome is reported;
       outside it the artifact value is preserved and the project gap is
       reported; a per-run signal switches it off. `hard-floor` disables it.
       verify: three fixtures — inside tolerance, outside tolerance, switched
       off — produce the three distinct verdicts, and every value row carries a
       distance to the nearest project token even when preserved.
-- [ ] **3.3 Gate reuse on conformity, and decide it after the read.**
+- [x] **3.3 Gate reuse on conformity, and decide it after the read.**
       `ui-audit-gate` gates on the audit *existing*, and `existing-ui-audit`
       scores candidates by fuzzy similarity **to the input** — so nothing
       anywhere checks a reuse candidate against a provided artifact's
@@ -376,13 +409,13 @@ Gated on `blocker: approximation-tolerance` and `blocker: rule-body-cap`.
       reading of the round, which is why it is recorded as its own step.
       verify: a candidate whose subtree reds the conformance report is refused
       with the dimension that refused it named; a conforming one is reused.
-- [ ] **3.4 Re-frame `strict` instead of adding a fourth mode.** A value inside
+- [x] **3.4 Re-frame `strict` instead of adding a fourth mode.** A value inside
       tolerance stops being an unconfirmed deviation and becomes a reported
       reconciliation; everything outside stays confirmation-bound. Requires the
       rule-body cap to be resolved first.
       verify: the rule states it, the mode enum is unchanged, and no consumer
       default moved.
-- [ ] **3.5 Give ADR-213 the artifact clause, with both guards and an honest
+- [x] **3.5 Give ADR-213 the artifact clause, with both guards and an honest
       enforcement line.** ADR-213 authorises extraction on repetition "already
       present in the diff". A handed-over runnable artifact makes repetition
       observable before any code exists, which is a **different mechanism** than
@@ -405,20 +438,20 @@ Gated on `blocker: approximation-tolerance` and `blocker: rule-body-cap`.
 
 Gated on `blocker: fidelity-default-flip` for anything that would refuse.
 
-- [ ] **4.1 Report the dimensions separately.** Structure, values with their
+- [x] **4.1 Report the dimensions separately.** Structure, values with their
       distance, behaviour, responsive semantics, icons and carrier, each row
       citing the artifact and the implementation. A green pixel diff alone
       cannot produce a pass.
       verify: a deliberately corrupted port reds the dimension that was
       corrupted and no other.
-- [ ] **4.2 Run it in shadow and derive the threshold from what it records.**
+- [x] **4.2 Run it in shadow and derive the threshold from what it records.**
       Extend the existing shadow gate rather than adding a concern — the
       allowance is zero. The flip to a refusing state is pre-registered with
       its own reverse trigger, and the tolerance start values are re-derived
       from the shadow distribution rather than kept.
       verify: shadow records exist, carry no self-reported verdict, and the
       flip criterion is written before the window opens.
-- [ ] **4.3 Record why the polish-loop measurement is NOT the way to discharge
+- [x] **4.3 Record why the polish-loop measurement is NOT the way to discharge
       its lock.** A 2026-07-31 council lock names its own reopening condition as
       *"a measured run showing the polish loop still edits away from a provided
       artifact"*, and no such run exists — so running it looks like the cheap way
@@ -437,11 +470,97 @@ Gated on `blocker: fidelity-default-flip` for anything that would refuse.
       verify: the lock's record carries the falsifiability argument and names
       the blocker; no measurement is scheduled against it.
 
+## Council record — the blocker round, 2026-09-09
+
+All five blockers were put to the council in one round. Members `anthropic` +
+`openai`, **2/2 present and concluded** (read from the after-run quorum line),
+$0.00 — both seats subscription-authed. Each member carried an internal blind
+cross-review of the other's position.
+
+**Why the council and not the owner.** Four of the five are reversible,
+repository-internal placement or sequencing decisions, which
+`decision-revisit-gate`'s table routes to the council. The one genuinely
+owner-reserved transition — shipping the approximation **enabled**, a
+consumer-facing default flip — was declared unavailable in the question and
+stays unavailable: blocker 4 resolves to *disabled*, and the enable-by-default
+question is routed to its owner-reserved stub rather than answered here.
+
+| Blocker | Verdict | Split? |
+|---|---|---|
+| `findings-actionability-default` | **(b)** — set the flag at the one call site | no, 2/2 |
+| `standing-payload-headroom` | **(b) after 2.1, amended** — invariant in the guideline, **operative** pointer in the rule, funded by a local substitution | no, 2/2 |
+| `approximation-tolerance` | **none of (a)–(c)** — split 3.2 into measurement-now / behaviour-later; ship **no** tolerance constant | no, 2/2 |
+| `fidelity-default-flip` | **(a) AND (c)** — ship disabled *and* record the enable question in the stub | no, 2/2 |
+| `rule-body-cap` | **(a) narrowly applied** — see the reconciliation below | yes, resolved on a fact |
+
+**The one split, and why it is not an escalation.** `anthropic` answered (c)
+— clause in the guideline, pointer in the rule — and `openai` answered (a)
+narrowly applied, on a measured objection the other answer did not account
+for: *"option (c) cannot literally add a clause to a file already at
+200/200."* That is a fact about this tree, not a preference, and `anthropic`'s
+own answer requires the pointer to be **operative** — which means the pointer
+has to exist, which means the room has to come from somewhere. The two
+converge once the fact is applied: the tolerance clause lives in the guideline
+(the substance of (c)) and the room for its operative pointer is funded by
+migrating one cohesive explanatory passage out of the rule (the mechanism of
+(a)). Recorded as a reconciliation on evidence, not as a casting vote.
+
+**Three things the council added that the roadmap did not ask for**, all
+adopted:
+
+1. **A pointer must be operative, never passive.** *"Before reconciling
+   artifact and brand values, apply the protocol in [guideline §X]"* — placed
+   at the decision point — discharges the obligation; *"See also:
+   design-fidelity-mechanics"* establishes discoverability only. Both members
+   independently.
+2. **A pointer is not free.** Zero preamble headroom means even one clause is
+   paid for; each pointer is funded by naming the exact prose it replaces,
+   which is materially different from deleting 33 unrelated lines to fit 33
+   new ones.
+3. **The colour-distance metric is a prerequisite the roadmap never named.**
+   No colour tolerance is meaningful before the method is fixed — RGB
+   Euclidean, ΔE LAB, CIEDE2000 and OKLab/ΔEOK give different numbers for the
+   same pair. The metric is specified in 3.2; the threshold is not.
+
+**Shipped tolerance values: `null`, both axes.** Primer's ±1px is recorded as
+an externally observed candidate and is **not** the shipped length tolerance.
+`openai` rejected the round's proposed `±5 per RGB channel` on the ground that
+RGB channel distance is not perceptually uniform, and `max(1px, 2%)` on the
+ground that it grows permissive at large dimensions with no evidence that this
+is wanted. `anthropic`'s objection is the sharper one and is the reason both
+axes ship empty: *"a number in a config file, even flagged unmeasured, shapes
+behaviour and creates path dependency."*
+
+**What this does NOT defer.** Every step in Phases 3 and 4 stays executable and
+none is marked `[~]`. The council deferred *behaviour*, and with the mechanism
+shipping disabled and both tolerances `null`, the mechanism itself moves no
+consumer default: 3.2's three fixtures configure their own tolerances
+explicitly, and 3.4's re-frame is conditional on a tolerance being configured,
+so it is inert in a default install. The deferred thing is the *decision to
+turn it on*, which is blocker 4's routing to the stub, already recorded.
+
+**Deferral record, as the council worded it** (carried verbatim into the stub
+by 3.2): behavioural reconciliation and strict-mode reinterpretation are
+deferred because the evidence set contains no token-conformance measurements
+and supports no package colour or length tolerance. Shadow mode records raw
+distances, provenance, counterfactual threshold outcomes, and reviewed false-
+and missed-reconciliation labels. Reopening requires predefined sample
+sufficiency and acceptable error rates per metric. Enable-by-default remains
+owner-reserved.
+
 ## Blockers
 
 ### blocker: findings-actionability-default
 
-- **Status:** open
+- **Status:** resolved
+- **Verdict:** (b), council 2/2, 2026-09-09 — set `artifact_covered: true` on
+  the `token_violation` path in `src/skills/design-tokens/SKILL.md:82-88` and
+  leave the package-wide default alone. (a) was rejected on blast radius: it
+  changes the meaning of every existing unmarked finding to fix one known
+  producer. **Revisit-if:** a second artifact-derived finding path reaches the
+  polish loop without provenance — recurrence, not this single site, is what
+  would justify inverting the default, and the better second move is carrying
+  provenance structurally in the finding type rather than at another call site.
 - **Owner:** maintainer
 - **Blocks:** 4.3
 - **What to do:** pick exactly one — (a) invert the default in
@@ -464,7 +583,20 @@ Gated on `blocker: fidelity-default-flip` for anything that would refuse.
 
 ### blocker: standing-payload-headroom
 
-- **Status:** open
+- **Status:** resolved
+- **Verdict:** (b) after 2.1, amended, council 2/2, 2026-09-09 — the
+  artifact-versus-brand invariant lands in
+  `docs/guidelines/design-fidelity-mechanics.md`, which 2.1 makes reachable,
+  and each standing rule carries an **operative** pointer: *"before reconciling
+  artifact and brand values, apply the protocol in §X"*, placed at the decision
+  point. A passive `see also` establishes discoverability only and does not
+  discharge the obligation. The amendment is `openai`'s and is a measured
+  correction to option (b) as written: **a pointer is not free either**, so each
+  one is funded by naming the exact local prose it replaces — materially
+  different from (a), which buys 33 lines by deleting 33 lines somebody else
+  wrote. **Revisit-if:** traces show the operative pointer is routinely skipped,
+  2.1's projection fails in a real install, or deliberate rule consolidation
+  creates enough headroom to inline the invariant.
 - **Owner:** maintainer
 - **Blocks:** 1.3, 2.4
 - **What to do:** pick exactly one — (a) pay for the addition inside the same
@@ -487,7 +619,26 @@ Gated on `blocker: fidelity-default-flip` for anything that would refuse.
 
 ### blocker: approximation-tolerance
 
-- **Status:** open
+- **Status:** resolved
+- **Verdict:** none of (a)–(c); **split 3.2**, council 2/2, 2026-09-09. Build
+  the measurement half now — distance **metric** definition, raw distance
+  collection, provenance, the config shape, and counterfactual threshold
+  reporting — and ship **no tolerance constant at all**: both `design.tolerance`
+  axes ship `null`. Primer's ±1px is recorded as an externally observed
+  candidate, not as the shipped value. The round's proposed `±5 per RGB channel`
+  is rejected because RGB channel distance is not perceptually uniform, and
+  `max(1px, 2%)` because it grows permissive at large dimensions with no
+  evidence that this is wanted. The decisive argument is the one neither option
+  answered: *a number in a config file, even flagged unmeasured, shapes
+  behaviour and creates path dependency.* **A prerequisite the roadmap never
+  named** and the council added: the colour-distance **method** must be fixed
+  before any colour threshold is meaningful — RGB Euclidean, ΔE LAB, CIEDE2000
+  and OKLab/ΔEOK give different numbers for the same pair, so 3.2 specifies
+  OKLab/ΔEOK and leaves the threshold empty. **Revisit-if:** a pre-registered
+  shadow dataset carries enough independently reviewed cases to estimate false
+  reconciliations and missed reconciliations separately per value class,
+  against sample-sufficiency and error-rate criteria written before the window
+  opened.
 - **Owner:** maintainer
 - **Blocks:** 3.2, 3.4, 4.2
 - **What to do:** pick exactly one — (a) accept provisional start values and
@@ -507,7 +658,18 @@ Gated on `blocker: fidelity-default-flip` for anything that would refuse.
 
 ### blocker: fidelity-default-flip
 
-- **Status:** open
+- **Status:** resolved
+- **Verdict:** **(a) AND (c)**, council 2/2, 2026-09-09 — they are
+  complementary, not exclusive. (a) governs this change: every approximation
+  behaviour ships disabled, so no consumer default moves. (c) preserves the
+  owner's decision: the enable-by-default question is recorded in
+  `agents/roadmaps/stubs/road-to-frontend-power-default-flip.md`, which already
+  exists for this class. (b) was declared unavailable in the question and stays
+  unavailable — and the council named the way it could be smuggled back, which
+  is forbidden here in those words: **do not simulate (b)** through a migration,
+  an implicit auto-enable, or a nominally optional "recommended default".
+  **Revisit-if:** the owner reviews the stub after the shadow window has
+  measured error rates and the impact on existing consumers is known.
 - **Owner:** maintainer
 - **Blocks:** 3.2, 4.2
 - **What to do:** pick exactly one — (a) ship the approximation mechanism
@@ -527,7 +689,23 @@ Gated on `blocker: fidelity-default-flip` for anything that would refuse.
 
 ### blocker: rule-body-cap
 
-- **Status:** open
+- **Status:** resolved
+- **Verdict:** **(a) narrowly applied**, council split resolved on a fact,
+  2026-09-09. `anthropic` answered (c) and `openai` answered (a), and the split
+  is not an escalation because one side rests on a measured property of this
+  tree the other did not account for: *"option (c) cannot literally add a clause
+  to a file already at 200/200."* Both answers require the rule to carry an
+  **operative** pointer, and a pointer that cannot be written is not a pointer.
+  The reconciliation keeps the substance of (c) and the mechanism of (a): the
+  tolerance clause lives in `docs/guidelines/design-fidelity-mechanics.md`, and
+  the room for its operative pointer is funded by migrating **one cohesive
+  explanatory passage** out of `src/rules/design-fidelity.md` — a semantic
+  migration, not an arbitrary line-count cut, so normative routing stays in the
+  rule and detailed mechanics move to the guideline. (b) was rejected by both:
+  raising the `rule_too_large` ceiling weakens a package-wide guardrail for one
+  feature. **Revisit-if:** an execution test shows agents fail to dereference
+  the pointer — then inline the smallest load-bearing invariant and fund it by
+  deliberate consolidation, still not by raising the ceiling.
 - **Owner:** maintainer
 - **Blocks:** 3.4
 - **What to do:** pick exactly one — (a) migrate an existing passage out of
@@ -573,29 +751,38 @@ Gated on `blocker: fidelity-default-flip` for anything that would refuse.
       that changes one skill, and a neutral review flagged the earlier wording
       as unbacked. The sweep across the other design-adjacent skills is Phase
       3's, via the same branch.
-- [ ] AC-3 — `brand-source-of-truth` and `design-fidelity` each carry the
+- [x] AC-3 — `brand-source-of-truth` and `design-fidelity` each carry the
       split between them, in both directions, on a projected surface, without
       the per-spawn payload ratchet moving.
-- [ ] AC-4 — `docs/guidelines/design-fidelity-mechanics.md` resolves inside
+- [x] AC-4 — `docs/guidelines/design-fidelity-mechanics.md` resolves inside
       `dist/agent-src/` and a gate fails when a projected rule routes to a
       target that does not.
-- [ ] AC-5 — `design.fidelity_mode` set on the user-global layer resolves, and
+- [x] AC-5 — `design.fidelity_mode` set on the user-global layer resolves, and
       a non-whitelisted key there reports the drop rather than reading as unset.
-- [ ] AC-6 — The artifact's maturity and the reconciliation outcome are fields
+- [x] AC-6 — The artifact's maturity and the reconciliation outcome are fields
       with provenance, not prose, and a preserved value still carries its
       distance to the nearest project token.
-- [ ] AC-7 — A corrupted port reds exactly the dimension that was corrupted,
+- [x] AC-7 — A corrupted port reds exactly the dimension that was corrupted,
       the record carries no self-reported verdict, and the flip criterion was
       written before the shadow window opened.
-- [ ] AC-8 — No shipped surface asserts an obligation about icons on a provided
+- [x] AC-8 — No shipped surface asserts an obligation about icons on a provided
       artifact without a citation. The contrary evidence is recorded with the
       condition that would reverse it, and the skill that declares icons outside
       its own scope no longer legislates them.
-- [ ] AC-9 — A consumer install that receives the fidelity rule and **not** the
+- [x] AC-9 — A consumer install that receives the fidelity rule and **not** the
       brand rule reads the artifact-versus-brand split inside the rule it did
-      receive, and no sentence in a projected rule instructs the reader to open
-      a path the projection does not contain.
-- [ ] AC-10 — No shipped surface prescribes an order among stories, components
+      receive, and no sentence in a projected rule **instructs** the reader to
+      open a path the projection does not contain.
+      **Scope, tightened after a blind review flagged the wording as broader
+      than what shipped:** the clause is about an INSTRUCTION — the imperative
+      1.5 removed (*"Read that scope line before acting on either rule"*) — not
+      about every reference. 36 see-also style links into `docs/contracts/` and
+      `agents/settings/policies/` remain and are pinned by
+      `check_projected_rule_routes`'s shrink-only floor; neither tree is
+      projected, and closing them means deciding to project a second tree, which
+      is a different change with a different owner. The gate's header was honest
+      about the 36 from the start; this criterion was not, and now is.
+- [x] AC-10 — No shipped surface prescribes an order among stories, components
       and the page. Where a sequence is described it is labelled as observed
       practice, and the two contradictions about the workshop's conditionality
       and its state-coverage pointer are gone.

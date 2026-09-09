@@ -110,6 +110,26 @@ describe('_write_settings_surface_snapshot', () => {
         expect(readSurface().version).toBe('9.9.9');
     });
 
+    // Regression, and the reason the case above could pass for a long time and
+    // then fail: `type` is a STRING for an ordinary key and an ARRAY for a
+    // nullable one, and the comparator used `!==`, which is never true for two
+    // structurally equal arrays. Every version bump therefore reported
+    // `type_changed` on every nullable key, forever. The identical-surface
+    // assertion above catches it only once such a key exists in the real
+    // schema; this one catches it directly.
+    it('a nullable key does not report type_changed against itself', () => {
+        const surface = _current_settings_surface('9.0.0');
+        const nullable = Object.entries(surface.entries).filter(([, e]) => Array.isArray(e.type));
+        // The assertion is worthless over an empty set — if the schema ever
+        // stops carrying a nullable key, this must say so rather than pass.
+        expect(nullable.length).toBeGreaterThan(0);
+
+        mkdirSync(join(root, 'state'), { recursive: true });
+        writeFileSync(surfacePath(), JSON.stringify(surface));
+        _write_settings_surface_snapshot('9.9.9');
+        expect(existsSync(deltaPath())).toBe(false);
+    });
+
     it('a corrupt existing snapshot degrades to seed-only, never throws', () => {
         mkdirSync(join(root, 'state'), { recursive: true });
         writeFileSync(surfacePath(), '{corrupt');

@@ -247,8 +247,8 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 26 |
 | B — consent | 3 |
-| C — guarded | 113 |
-| **Total** | **142** |
+| C — guarded | 116 |
+| **Total** | **145** |
 
 It rose to 142 on 2026-09-08 from two independent additions that landed in the same
 day and are counted together here: `lean_projection.hosts` (one C, `policy`, from
@@ -363,9 +363,9 @@ the template, which is the drift this contract exists to prevent.
 |---|---|
 | derivable | 83 |
 | un-inferrable | 9 |
-| consent | 43 |
-| policy | 7 |
-| **Total** | **142** |
+| consent | 44 |
+| policy | 9 |
+| **Total** | **145** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -531,6 +531,9 @@ Rows follow template order, so a diff against the template reads straight down.
 | `planning.completion_review` | C | `true` | disables the completion-review validator | derivable — `check_completion_review`'s own scope predicate, bound to the current diff hash |
 | `quality.local_auto_run` | C | `false` | governs whether local verification runs at all | consent |
 | `design.fidelity_mode` | C | `strict` | strict-mode selector, one of whose values is a Hard Floor | policy |
+| `design.approximation.enabled` | C | `false` | lets a value change without a per-value confirmation; enabling it is a consumer-facing default flip | consent |
+| `design.approximation.tolerance.color` | C | `null` | decides which colour deviations may be taken silently | policy |
+| `design.approximation.tolerance.length` | C | `null` | decides which length deviations may be taken silently | policy |
 | `consistency.cross_source` | C | `"on"` | disables the cross-source discrepancy gate | derivable — the rule's own trigger condition; a discrepancy exists only when two present sources contradict |
 | `screenshots.identity_allowlist` | C | `[]` | allowlist of identities that ship unredacted | consent |
 | `screenshots.forbid_terminal_capture` | C | `true` | kill-switch over the highest-leak capture path | consent |

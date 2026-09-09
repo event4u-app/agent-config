@@ -28,7 +28,7 @@ Do NOT use as a customer-onboarding surface (route to Wing-3 [`onboarding-design
 
 ## Cognition cluster
 
-- **Mental model 1 — First principles.** Strip onboarding to: *what does this person need to know, do, and decide alone before being net-positive?* Most onboarding programs over-index on what's easy to teach (history, slides) and under-index on what's hard (decision rights, who-knows-what, codebase / domain context). See [`mental-models.md`](../../../docs/contracts/mental-models.md) § 1.
+- **Mental model 1 — First principles.** Strip onboarding to: *what does this person need to know, do, and decide alone before being net-positive?* Most onboarding programs over-index on what's easy to teach (history, slides) and under-index on what's hard (decision rights, who-knows-what, codebase / domain context). See [`mental-models.md`](../../docs/contracts/mental-models.md) § 1.
 - **Mental model 21 — Second-order thinking.** Onboarding is paid for in mentor time. A 4-hour-per-week mentor commitment from a senior person costs more than people realise; mentor capacity is the binding constraint on hiring velocity. Read mentor cost as part of the program, not a free input.
 - **Mental model 28 — Inversion.** *"What would make this hire fail in their first 90 days?"* Inversion surfaces the load-bearing risks (unclear scope, no early win, missing tools, no peer relationship). Most onboarding failures trace to one of these four, not to skill gaps.
 - **Mental model 26 — Optionality.** A heavy template onboarding preserves *consistency* optionality but forecloses *role-specific* optionality. A pure free-form onboarding preserves customization but forecloses scalability. Pick the trade explicitly per role family.

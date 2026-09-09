@@ -87,7 +87,7 @@ Non-negotiable. Guardrails are encoded here.
 
 *Author note (delete before publishing): this template targets the
 7-section spine locked in
-[`docs/contracts/user-type-schema.md`](../../../docs/contracts/user-type-schema.md).
+[`docs/contracts/user-type-schema.md`](../../docs/contracts/user-type-schema.md).
 Stay within the **≤ 120 line** budget (file total, including
 frontmatter). Replace every `{placeholder}` with concrete content
 that passes the Anti-Generic Quality Bar (≥ 5 concrete review

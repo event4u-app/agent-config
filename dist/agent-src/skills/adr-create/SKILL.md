@@ -90,7 +90,7 @@ needing an architecture supersession.
 ## Preconditions
 
 - An ADR directory exists. Two layouts coexist (see
-  [`docs/contracts/adr-layout.md`](../../../docs/contracts/adr-layout.md)):
+  [`docs/contracts/adr-layout.md`](../../docs/contracts/adr-layout.md)):
   - **Flat** — `docs/decisions/` (or `docs/adr/` alias): cross-cutting
     governance ADRs, 3-digit numbering (`ADR-NNN-<slug>.md`).
   - **Per-area** — `docs/adrs/<area>/`: sub-area ADRs, 4-digit
@@ -181,7 +181,7 @@ gets a logged correction block, never a silent edit.
 
 **Three descriptive axes ship on a new record** — `provenance`, `evidence`,
 `authority_basis`. Vocabulary, defaults and the mutation policy are owned by
-[`adr-layout § Provenance and evidence`](../../../docs/contracts/adr-layout.md);
+[`adr-layout § Provenance and evidence`](../../docs/contracts/adr-layout.md);
 `check_adr_frontmatter.ts` validates the shape. What the author has to get
 right while drafting:
 
@@ -207,7 +207,7 @@ right while drafting:
   comes from owning the purpose.
 - **A grade prices review burden, never authority.** Nothing about writing
   `E0` makes the record cheaper to overturn *by whom* — see
-  [`adr-layout § The reopen record`](../../../docs/contracts/adr-layout.md).
+  [`adr-layout § The reopen record`](../../docs/contracts/adr-layout.md).
 
 **Flat-surface template** (`docs/decisions/ADR-NNN-<slug>.md`):
 
@@ -287,7 +287,7 @@ authority_basis: evidence | owner_intent      # optional; absent → evidence
 ```
 
 The frontmatter block is the same shape as the flat surface — the contract
-says so ([`adr-layout § Frontmatter`](../../../docs/contracts/adr-layout.md):
+says so ([`adr-layout § Frontmatter`](../../docs/contracts/adr-layout.md):
 "identical across both surfaces"), and `audit_adr_coverage.ts`'s parser reads
 it when present. The quote-style header stays as the human-readable banner,
 and every existing per-area record now carries frontmatter beside it, so their
@@ -359,7 +359,7 @@ completeness check — not on every ADR by default.
   alone does not stop someone quoting the reversed sentence.
 - **Who may reopen it is recorded, not assumed** — `reopen_policy` /
   `protected_dimensions`, both optional, absent meaning `unclassified`
-  ([`adr-layout § Reopen authority`](../../../docs/contracts/adr-layout.md)).
+  ([`adr-layout § Reopen authority`](../../docs/contracts/adr-layout.md)).
   Reach for `owner` only when EVERY future transition is genuinely reserved;
   `directional` is the normal answer, and no answer is a fine answer.
 

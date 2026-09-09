@@ -189,7 +189,7 @@ rendered as a bulleted list of reasons — declines are short prose (one or
 two sentences), because a bulleted refusal reads as a checklist to argue
 against rather than a direct answer.
 
-Full example set: [`asking-and-brevity-examples § Bullet floor`](../../../../../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#bullet-floor).
+Full example set: [`asking-and-brevity-examples § Bullet floor`](../../../guidelines/agent-infra/asking-and-brevity-examples.md#bullet-floor).
 
 ## Summaries
 

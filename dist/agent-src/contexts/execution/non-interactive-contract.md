@@ -127,6 +127,6 @@ A misbehaving heuristic is disabled by config, not by reverting 6.1.0.
 
 ## See also
 
-- [`command-clusters`](../../../docs/contracts/command-clusters.md) — the locked cluster/sub-command set.
+- [`command-clusters`](../../docs/contracts/command-clusters.md) — the locked cluster/sub-command set.
 - [`user-interaction`](../../rules/user-interaction.md) — numbered-options + recommendation rules the interactive path obeys.
 - [`non-destructive-by-default`](../../rules/non-destructive-by-default.md) — the Hard Floor destructive sub-commands still answer to.

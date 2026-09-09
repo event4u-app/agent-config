@@ -1,0 +1,14 @@
+<!-- Fixture: a low-fidelity artefact that declares NOTHING about itself.
+     It resolves `low` purely on content tells, which is what makes it a real
+     test of the inference rung rather than of the declaration rung. -->
+<title>Checkout — layout exploration</title>
+<style>
+  body   { background: #ffffff; color: #333333; font-family: sans-serif; }
+  .box   { background: #cccccc; border: 1px solid #999999; }
+  .label { color: #666666; }
+</style>
+<div class="box">
+  <p class="label">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+  <div class="box" style="height: 120px"></div>
+  <div class="box" style="height: 40px"></div>
+</div>

@@ -40,7 +40,7 @@ packs:
    - *Complex / multi-step* → chain-of-thought + systematic framing (template: **CoT** or **ReAct**)
    - *Image AI (Midjourney / SD / DALL·E)* → **Visual Descriptor** or **Reference-Image-Edit**
    - Assign an AI role/expertise; layer context; add logical structure.
-   - Full template catalogue + when-to-pick rubric: [`docs/guidelines/prompt-templates.md`](../../../docs/guidelines/prompt-templates.md).
+   - Full template catalogue + when-to-pick rubric: [`docs/guidelines/prompt-templates.md`](../../guidelines/prompt-templates.md).
 4. **Deliver** — output the optimized prompt + a short "what changed" + (DETAIL only) techniques applied + one pro-tip.
 
 ## Setting awareness
@@ -136,7 +136,7 @@ Format per § Output format. Do **not** execute the optimized prompt yourself un
 - The model tends to **preserve a presupposed canon while sharpening around it** — asked to improve "apply the 7 laws of X", it produces a cleaner prompt that still presupposes seven laws, and the target model then invents them. Turn the presupposition into a DETAIL question or a stated BASIC assumption; never carry it through polished.
 - The model tends to **keep every demand in a scope-stuffed prompt** because each one came from the author — four deliverables in one prompt produce four shallow answers. Name the primary deliverable, and surface the rest as a numbered option rather than silently answering all of them.
 - The model tends to **over-apply de-inflation once it has the concept** — stripping a constraint the author meant, because it read as verbose. Exactly three patterns are strippable (§ 3b); everything else the author wrote is a requirement. Removing a requirement is the worse failure of the two, and it is silent.
-- The model tends to inherit upstream dogma that "only 5 techniques are safe" (few-shot, role, structured-output, constraint-based, chain-of-thought). That claim travels with an external prompt-collection and is **rejected here** — CO-STAR, RISEN, CRISPE, ReAct, and the image-AI templates land in [`docs/guidelines/prompt-templates.md`](../../../docs/guidelines/prompt-templates.md) and are first-class. Pick by request type, not by upstream whitelist.
+- The model tends to inherit upstream dogma that "only 5 techniques are safe" (few-shot, role, structured-output, constraint-based, chain-of-thought). That claim travels with an external prompt-collection and is **rejected here** — CO-STAR, RISEN, CRISPE, ReAct, and the image-AI templates land in [`docs/guidelines/prompt-templates.md`](../../guidelines/prompt-templates.md) and are first-class. Pick by request type, not by upstream whitelist.
 
 ## Do NOT
 
@@ -149,5 +149,5 @@ Format per § Output format. Do **not** execute the optimized prompt yourself un
 ## See also
 
 - [`refine-prompt`](../refine-prompt/SKILL.md) — engine-inbound sibling; same `prompt_optimization` setting controls its mode
-- [`docs/guidelines/prompt-templates.md`](../../../docs/guidelines/prompt-templates.md) — 12-template catalogue cited from Develop step
+- [`docs/guidelines/prompt-templates.md`](../../guidelines/prompt-templates.md) — 12-template catalogue cited from Develop step
 - AI Council session: `agents/runtime/council/responses/prompt-master-mini.json` (2026-05-17) — analysis behind template adoption and the 5-safe-dogma rejection <!-- council-ref-allowed: ADR decision trace -->

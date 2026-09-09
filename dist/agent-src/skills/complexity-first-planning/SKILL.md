@@ -44,7 +44,7 @@ unknown to resolve), or when the user has already fixed the sequence.
 
 1. **Inspect and name the unknowns.** Read the affected components first
    (start from the **repo** slot of the
-   [context-spine](../../../docs/contracts/context-spine.md) when present),
+   [context-spine](../../docs/contracts/context-spine.md) when present),
    then list which carry real uncertainty (technical feasibility, an
    unverified integration, an ambiguous requirement) — analyze the existing
    system before planning any change.

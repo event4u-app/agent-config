@@ -101,19 +101,19 @@ export interface HostSurface {
 export const HOST_SURFACES: readonly HostSurface[] = [
     {
         host: 'augment', surface: '.augment/rules', perRuleTree: true,
-        writer: 'src/scripts/condense.ts:2499',
+        writer: 'src/scripts/condense.ts:2495',
         anchor: '\'.augment/rules\',',
         note: 'copies by default; symlinks under `augment.rules_use_symlinks`',
     },
     {
         host: 'claude-code', surface: '.claude/rules', perRuleTree: true,
-        writer: 'src/scripts/condense.ts:1192',
+        writer: 'src/scripts/condense.ts:1188',
         anchor: '_emit_claude_rule(',
         note: '`_emit_claude_rule` rewrites frontmatter to the host\'s own `paths:` key',
     },
     {
         host: 'cline', surface: '.clinerules', perRuleTree: true,
-        writer: 'src/scripts/condense.ts:1194',
+        writer: 'src/scripts/condense.ts:1190',
         anchor: 'fs.symlinkSync(',
         note: 'symlink per rule into the projection',
     },
@@ -131,19 +131,19 @@ export const HOST_SURFACES: readonly HostSurface[] = [
     },
     {
         host: 'cursor', surface: '.cursor/rules', perRuleTree: true,
-        writer: 'src/scripts/condense.ts:1194',
+        writer: 'src/scripts/condense.ts:1190',
         anchor: 'fs.symlinkSync(',
-        note: 'symlink per rule, plus `.mdc` companions at `condense.ts:1422`',
+        note: 'symlink per rule, plus `.mdc` companions at `condense.ts:1418`',
     },
     {
         host: 'gemini', surface: 'GEMINI.md', perRuleTree: false,
-        writer: 'src/scripts/condense.ts:1498',
+        writer: 'src/scripts/condense.ts:1494',
         anchor: '\'GEMINI.md\'',
         note: 'single file',
     },
     {
         host: 'windsurf', surface: '.windsurfrules', perRuleTree: false,
-        writer: 'src/scripts/condense.ts:1242',
+        writer: 'src/scripts/condense.ts:1238',
         anchor: '\'.windsurfrules\'',
         note: 'single concatenated file',
     },

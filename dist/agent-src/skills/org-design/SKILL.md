@@ -28,7 +28,7 @@ Do NOT use as a hiring-plan substitute (route to forthcoming hiring-loop / comp 
 
 ## Cognition cluster
 
-- **Mental model — Theory of constraints.** Org bottlenecks live in one or two places at a time; reorging everywhere else is theatre. Find the constraint (decision queue, dependency hub, single-threaded role), reshape around it, leave the rest. See [`mental-models.md`](../../../docs/contracts/mental-models.md).
+- **Mental model — Theory of constraints.** Org bottlenecks live in one or two places at a time; reorging everywhere else is theatre. Find the constraint (decision queue, dependency hub, single-threaded role), reshape around it, leave the rest. See [`mental-models.md`](../../docs/contracts/mental-models.md).
 - **Mental model — Conway's law.** Systems mirror the communication structure that shipped them. If two services must integrate cleanly, the two teams must communicate cleanly. Org boundary = future architecture boundary. Use the inverse: pick the architecture you want, then draw the org to match.
 - **Mental model 28 — Inversion.** *"What problem does the proposed structure prevent us from solving?"* Every structure trades one class of problem for another. The honest question is which trade is acceptable, not which structure is best.
 - **Mental model 26 — Optionality.** Reorgs cost 3–6 months of throughput; the reorg is worth it only if the new shape preserves more optionality than the old shape forecloses. Reorging for short-term symptoms usually destroys optionality.

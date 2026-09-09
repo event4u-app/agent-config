@@ -162,7 +162,7 @@ is why the discipline is the control on both layers.
   **The carve-out is authorship, not delivery:** a vendored component or a
   licensed template that merely *arrives inside* a handover stays under this
   rule in full. Boundary stated from the other side in
-  [`design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md)
+  [`design-fidelity-mechanics`](../guidelines/design-fidelity-mechanics.md)
   § Adopt the code.
   **It exempts the code clauses only.** A claim *about* the artifact's origin —
   that a pattern in it came from somewhere nameable — is a knowledge-layer

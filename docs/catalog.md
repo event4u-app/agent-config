@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **740 public artefacts** shipped by
+Consumer-facing catalog of all **742 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -659,7 +659,7 @@ are excluded.
 | command | [`worktree-status`](../dist/agent-src/commands/worktree/status.md) | cluster: worktree | List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence |
 | command | [`worktree-verify`](../dist/agent-src/commands/worktree/verify.md) | cluster: worktree | Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline |
 
-## Guidelines (119)
+## Guidelines (121)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -743,8 +743,10 @@ are excluded.
 | guideline | [`design-asset-discipline`](../docs/guidelines/design-asset-discipline.md) | (root) |  |
 | guideline | [`design-canon`](../docs/guidelines/design-canon.md) | (root) |  |
 | guideline | [`design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md) | (root) |  |
+| guideline | [`design-fidelity-routing`](../docs/guidelines/design-fidelity-routing.md) | (root) |  |
 | guideline | [`design-handover-extraction`](../docs/guidelines/design-handover-extraction.md) | (root) |  |
 | guideline | [`design-modes`](../docs/guidelines/design-modes.md) | (root) |  |
+| guideline | [`design-reconciliation`](../docs/guidelines/design-reconciliation.md) | (root) |  |
 | guideline | [`readme-size-and-splitting`](../docs/guidelines/docs/readme-size-and-splitting.md) | docs |  |
 | guideline | [`playwright`](../docs/guidelines/e2e/playwright.md) | e2e |  |
 | guideline | [`gtm-handoff`](../docs/guidelines/gtm-handoff.md) | (root) |  |

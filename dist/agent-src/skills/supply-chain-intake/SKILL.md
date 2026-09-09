@@ -39,7 +39,7 @@ PIN IT, LOCK IT, CVE-SCAN IT. NEVER PIPE A REMOTE SCRIPT STRAIGHT TO A SHELL.
    (`crypto.randomUUID` before a uuid package, `Intl` before a formatting
    library, `AbortSignal.timeout` before a timeout helper, the database's own
    full-text / JSON support before an application-side index)? Full ordering:
-   [`agent-interaction-and-decision-quality` § 8b-ladder](../../../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md).
+   [`agent-interaction-and-decision-quality` § 8b-ladder](../../guidelines/agent-infra/agent-interaction-and-decision-quality.md).
    A dependency added for something already present is permanent cost — install
    surface, CVE surface, upgrade surface — bought against a capability you had.
 1. **Existence** — confirm the exact string resolves on the real registry, published before your session and with real usage:

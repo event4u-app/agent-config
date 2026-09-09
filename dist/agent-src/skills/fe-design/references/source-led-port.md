@@ -1,7 +1,7 @@
 # Source-led port — adopt the mechanics, do not re-derive them
 
 Pulled when `ui_authority.reference_maturity` is `runnable-artifact`. Contract:
-[`ui-authority`](../../../../../docs/contracts/ui-authority.md).
+[`ui-authority`](../../../docs/contracts/ui-authority.md).
 
 When `reference_maturity` is `runnable-artifact`, the artifact's own markup, CSS
 and JS is the data basis and adapting it is the DEFAULT. A from-scratch

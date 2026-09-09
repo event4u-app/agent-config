@@ -52,7 +52,7 @@ principle, not a decision, and it has no answer for the case where two copies
 should stay. Replace it with a verdict.
 
 Classify the finding against
-[`redundancy-taxonomy`](../../../docs/guidelines/redundancy-taxonomy.md) —
+[`redundancy-taxonomy`](../../guidelines/redundancy-taxonomy.md) —
 implementation, knowledge, or representation — and record one verdict from that
 document's list. `keep-duplicated` and `de-abstract` are successful outcomes; a
 finding with no recorded verdict stays open. Knowledge, policy, contract and
@@ -85,7 +85,7 @@ consumers and their status — every `switch` / `match` / if-chain over the type
 every lookup table keyed by it, every validator, serializer, schema, fixture and
 translation key. A `default` branch that silently absorbs the new member is a
 missing case, not a handled one. Procedure:
-[`downstream-changes-mechanics`](../../../docs/guidelines/agent-infra/downstream-changes-mechanics.md).
+[`downstream-changes-mechanics`](../../guidelines/agent-infra/downstream-changes-mechanics.md).
 
 **A shared behaviour moved and its siblings did not.** A defect fixed in one
 place is presumed to recur until searched: name the exact wrong construct, grep
@@ -100,7 +100,7 @@ changing one, the question is whether it needed to exist: what was searched,
 what was found, and why composing or extending the incumbent was rejected. An
 answer, not a ceremony — and the thresholds for when repetition actually earns
 an abstraction are in
-[`component-oriented-and-oop-development`](../../../docs/guidelines/component-oriented-and-oop-development.md).
+[`component-oriented-and-oop-development`](../../guidelines/component-oriented-and-oop-development.md).
 
 ## Change-type routing — load only the checklist the diff needs
 

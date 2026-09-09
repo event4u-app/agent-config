@@ -75,7 +75,7 @@ resolution naming none of them is an unresolved recurrence.
 **Look up the earlier disposition before re-deriving anything, and name the store
 you checked** — addresses, the mechanism-is-the-defect classification, the
 hardening floor and the failure modes are in
-[`recurring-criticism-mechanics`](../docs/guidelines/agent-infra/recurring-criticism-mechanics.md).
+[`recurring-criticism-mechanics`](../guidelines/agent-infra/recurring-criticism-mechanics.md).
 One line does not migrate, because acting on it wrong is silent: rejections live in
 analysis prose by design, so "I found nothing" means *prose was grepped*, never
 *nothing was decided*.

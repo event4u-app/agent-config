@@ -36,7 +36,7 @@ scope — channel-agnostic skill), or sequence a one-off launch wave
   the editorial beats produce 80 % of the audience pull. The
   calendar is the discipline of doubling down on the 20 % and
   letting the 80 % be reactive, not core. See
-  [`docs/contracts/mental-models.md`](../../../docs/contracts/mental-models.md) § 3.
+  [`docs/contracts/mental-models.md`](../../docs/contracts/mental-models.md) § 3.
 - **Mental model 18 — Pull vs. push systems.** Evergreen content is
   a *pull* system (the audience finds it); campaigns are a *push*
   system (we time the arrival). The calendar separates the two so
@@ -48,7 +48,7 @@ scope — channel-agnostic skill), or sequence a one-off launch wave
   for where the audience is in the awareness arc, and
   **funnel-stage** for whether a beat is top-of-funnel reach or
   mid-funnel proof. See
-  [`context-spine`](../../../docs/contracts/context-spine.md).
+  [`context-spine`](../../docs/contracts/context-spine.md).
 
 ## Procedure
 

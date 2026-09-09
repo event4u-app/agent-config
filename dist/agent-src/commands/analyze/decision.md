@@ -61,7 +61,7 @@ available at the time it was made, not against the outcome alone.
 
 Before drafting a new candidate, call `retrieve()` over the same
 key-space (decision area, affected paths) per
-[`analysis-memory-loop.md § 2`](../../../../docs/contracts/analysis-memory-loop.md):
+[`analysis-memory-loop.md § 2`](../../docs/contracts/analysis-memory-loop.md):
 
 - **Match found** → propose a `frequency` / `supersedes` update.
 - **No match** → draft a new `historical-patterns` candidate:
@@ -110,5 +110,5 @@ suggest deferring or strengthening evidence before proposing.
 ## See also
 
 - [`decision-review`](../../../../skills/decision-review/SKILL.md)
-- [`analysis-memory-loop.md`](../../../../docs/contracts/analysis-memory-loop.md)
+- [`analysis-memory-loop.md`](../../docs/contracts/analysis-memory-loop.md)
 - [`/analyze`](../command.md) — cluster orchestrator

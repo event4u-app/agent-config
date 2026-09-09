@@ -49,7 +49,7 @@ THE SAME MINUS THE QUOTA WIN.
    for a removed category — and because `session_tier` sits non-null in 0 of 327
    records, leaving the saving unmeasurable in principle. Migration record and
    the union revisit-if:
-   [`budget-routing` contract](../../../../docs/contracts/budget-routing.md).
+   [`budget-routing` contract](../../docs/contracts/budget-routing.md).
    **Tier resolution therefore ends at step 3.** What survives of the module is
    `TIER_ORDER` and `readCooldowns`, read by `routing:doctor` as a diagnostic —
    monitoring, not routing, and note that nothing writes the cool-down file any
@@ -177,7 +177,7 @@ This resolves the direction; it does not license downshifting as a target. The
 cold start is paid per leg regardless of tier, which is precisely what the
 non-escalation floor above bounds. Analogous downgrade/cache coupling on the
 council side: see
-[`docs/contracts/ai-council-config.md`](../../../../docs/contracts/ai-council-config.md)
+[`docs/contracts/ai-council-config.md`](../../docs/contracts/ai-council-config.md)
 § `model_downgrade` for the analogous downgrade/cache coupling this suite
 already ships on the council side.
 

@@ -72,7 +72,7 @@ designs; holds the line on outcome, scope, and decision provenance.
   confidence forces split-recommendation.
 - Every cross-lens trade-off routes through `stakeholder-tradeoff`
   (L4) **before** code; in-flight conflicts in code review escalate
-  C8 → L4 per [`cross-role-handoff`](../docs/guidelines/cross-role-handoff.md).
+  C8 → L4 per [`cross-role-handoff`](../guidelines/cross-role-handoff.md).
 - A ticket without switch-event or evidence routes to
   [`customer-research`](../skills/customer-research/SKILL.md) before
   refinement.

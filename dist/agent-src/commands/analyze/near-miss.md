@@ -45,7 +45,7 @@ with `status: draft`.
 
 Before drafting, call `retrieve()` over the same key-space (affected
 system, incident type, decision area) per
-[`analysis-memory-loop.md § 2`](../../../../docs/contracts/analysis-memory-loop.md):
+[`analysis-memory-loop.md § 2`](../../docs/contracts/analysis-memory-loop.md):
 
 - **Stale entries** (age > `review_after_days`) are in `skipped` —
   surface them; do not silently use them.
@@ -72,7 +72,7 @@ call.
 ### 4. Draft the memory candidate
 
 Per
-[`analysis-memory-loop.md § 1`](../../../../docs/contracts/analysis-memory-loop.md),
+[`analysis-memory-loop.md § 1`](../../docs/contracts/analysis-memory-loop.md),
 draft an `incident-learnings` candidate via `/memory propose`:
 
 ```jsonc
@@ -107,6 +107,6 @@ draft an `incident-learnings` candidate via `/memory propose`:
 ## See also
 
 - [`blameless-post-mortem`](../../../../skills/blameless-post-mortem/SKILL.md)
-- [`analysis-memory-loop.md`](../../../../docs/contracts/analysis-memory-loop.md)
+- [`analysis-memory-loop.md`](../../docs/contracts/analysis-memory-loop.md)
 - [`/analyze:postmortem`](../postmortem/command.md) — same flow, full incident
 - [`/analyze`](../command.md) — cluster orchestrator

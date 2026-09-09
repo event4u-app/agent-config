@@ -22,7 +22,7 @@ packs:
 Surfaces a short, explained skill shortlist for a role. Reuses existing local
 signals only — the skill catalog frontmatter, the role's `skills.yml`
 shortlist, and (when present and not opted out) the local-analytics JSONL.
-Implements the [`skill-discovery`](../../../docs/contracts/skill-discovery.md)
+Implements the [`skill-discovery`](../../docs/contracts/skill-discovery.md)
 contract. Local-only, read-only, no network.
 
 ## Prerequisites

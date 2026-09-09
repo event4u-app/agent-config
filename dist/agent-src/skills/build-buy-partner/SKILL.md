@@ -27,7 +27,7 @@ Do NOT use for vendor selection within a "buy" decision (different skill), marke
 
 ## Cognition cluster
 
-- **Mental model 28 — Inversion.** *"What would force us to undo this choice in 18 months?"* Inversion surfaces the dependency-risk and integration-cost that the forward case understates. See [`mental-models.md`](../../../docs/contracts/mental-models.md) § 28.
+- **Mental model 28 — Inversion.** *"What would force us to undo this choice in 18 months?"* Inversion surfaces the dependency-risk and integration-cost that the forward case understates. See [`mental-models.md`](../../docs/contracts/mental-models.md) § 28.
 - **Mental model 21 — Second-order thinking.** Each option chains: build → ongoing maintenance + opportunity cost; buy → integration + lock-in; partner → dependency + boundary management. Single-order *"build is cheaper"* fails on the second-order. See `mental-models.md` § 21.
 - **Mental model 26 — Optionality.** Read each option by which choices it preserves (switch costs, re-build optionality, re-negotiation power) vs forecloses. The option with bounded foreclosure usually wins. See `mental-models.md` § 26.
 - **Context-spine — org-stage + product + customer-segment.** Read **org-stage** for capacity (pre-seed should buy almost everything non-core; growth-stage can build deeper). Read **product** for whether the capability is core-differentiation (build) or commodity (buy). Read **customer-segment** for whether enterprise-segment buyers require a build-it-yourself story.

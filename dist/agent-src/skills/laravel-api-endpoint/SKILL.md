@@ -39,8 +39,8 @@ Do NOT use when:
 
 ## What to generate
 
-1. **Controller** — Single Action (invokable). Read `agents/reference/docs/controller.md` and `../../../docs/guidelines/php/controllers.md`.
-2. **FormRequest** — Validation rules, `authorize()` via policies. Read `../../../docs/guidelines/php/validations.md`.
+1. **Controller** — Single Action (invokable). Read `agents/reference/docs/controller.md` and `../../guidelines/php/controllers.md`.
+2. **FormRequest** — Validation rules, `authorize()` via policies. Read `../../guidelines/php/validations.md`.
 3. **Resource** — JSON response transformation. Read `agents/reference/docs/api-resources.md`.
 4. **Route** — Add to the correct versioned route file.
 5. **Policy** — If authorization is needed.

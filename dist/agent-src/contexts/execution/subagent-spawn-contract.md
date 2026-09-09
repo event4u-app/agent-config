@@ -22,7 +22,7 @@ task without re-inventing any taxonomy.
 
 | Element | Source |
 |---|---|
-| `role_mode` | The six contracts in [`role-contracts`](../../../docs/guidelines/agent-infra/role-contracts.md). A review sub-task → `reviewer`; a planning sub-task → `planner`; default → null (no contract). |
+| `role_mode` | The six contracts in [`role-contracts`](../../guidelines/agent-infra/role-contracts.md). A review sub-task → `reviewer`; a planning sub-task → `planner`; default → null (no contract). |
 | `profile` | The active profile (`profile.id` in `.agent-settings.yml`); inherited from the session unless the sub-task is a different domain. |
 | `personas` | The persona ids already cited in the task's skill frontmatter (review lenses). Capped at 2 (`MAX_PERSONAS`). |
 | `knowledge_refs` | A SMALL set of knowledge references (ingest ids / file paths) relevant to the sub-task. Capped at 5 (`MAX_KNOWLEDGE_REFS`). |

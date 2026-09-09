@@ -28,7 +28,7 @@ Build (or refresh) a ghostwriter profile at
 
 Zero network code in the package — the host agent performs the fetch /
 search; this command is procedural only. Schema:
-[`ghostwriter-schema`](../../../docs/contracts/ghostwriter-schema.md).
+[`ghostwriter-schema`](../../docs/contracts/ghostwriter-schema.md).
 
 ## Steps
 
@@ -54,7 +54,7 @@ Existing `agents/reference/ghostwriter/<slug>.md`?
 
 Print verbatim, one question per turn, **all four** required before any
 write. Mirrors the deterministic gate in
-[`ghostwriter-schema § public-figure gate`](../../../docs/contracts/ghostwriter-schema.md).
+[`ghostwriter-schema § public-figure gate`](../../docs/contracts/ghostwriter-schema.md).
 
 1. *"Is the target a documented public figure with a public-facing role
    (author / executive / academic / politician / journalist /
@@ -109,7 +109,7 @@ profile.
 ### 4. Derive frontmatter
 
 From the gathered material, populate the locked frontmatter per
-[`ghostwriter-schema § locked frontmatter (v1)`](../../../docs/contracts/ghostwriter-schema.md):
+[`ghostwriter-schema § locked frontmatter (v1)`](../../docs/contracts/ghostwriter-schema.md):
 
 - `identity.*` — name, role, category (from Step 2), source URLs,
   `fetched_at` (today, ISO date), `attestation_recorded_at` (Step 2).
@@ -184,7 +184,7 @@ Non-blocking.
 
 ## See also
 
-- [`ghostwriter-schema`](../../../docs/contracts/ghostwriter-schema.md) — locked v1 frontmatter, verification levels, confidence derivation.
+- [`ghostwriter-schema`](../../docs/contracts/ghostwriter-schema.md) — locked v1 frontmatter, verification levels, confidence derivation.
 - [`/ghostwriter`](../ghostwriter.md) — parent cluster.
 - [`/ghostwriter:write`](write.md) — consume side; appends the mandatory disclosure footer.
 - [`/agents:user:accept`](../agents/user/accept.md) — the diff-and-accept flow this command mirrors on re-fetch.

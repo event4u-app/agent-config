@@ -55,7 +55,7 @@ Do NOT use when:
   also an opportunity cost on the stakeholders not getting that
   benefit; the matrix only earns its keep when it surfaces who pays
   for the chosen `+`. See
-  [`docs/contracts/mental-models.md`](../../../docs/contracts/mental-models.md) § 5.
+  [`docs/contracts/mental-models.md`](../../docs/contracts/mental-models.md) § 5.
 - **Mental model 27 — Outcome over output.** Picking the option with
   the most checkmarks is output theatre; pick the option whose `–`
   cells land on stakeholders who can execute mitigations. See
@@ -67,7 +67,7 @@ Do NOT use when:
 - **Team + product context-spine slots.** Read **team** for the
   silent-stakeholders inventory (on-call, support, finance) and
   **product** for end-user / segment lenses (free vs paid, region,
-  cohort). See [`context-spine`](../../../docs/contracts/context-spine.md).
+  cohort). See [`context-spine`](../../docs/contracts/context-spine.md).
 
 ## Procedure
 
@@ -145,7 +145,7 @@ column is missing.
   but PO wants to ship) — start with `code-review-multi-lens`
   (sibling C8); a C8 verdict that surfaces stakeholder conflict
   becomes input to this skill for escalation. Boundary prose lives
-  in [`docs/guidelines/cross-role-handoff.md`](../../../docs/guidelines/cross-role-handoff.md).
+  in [`docs/guidelines/cross-role-handoff.md`](../../guidelines/cross-role-handoff.md).
 - The trade-off is purely technical (perf vs storage, sync vs async)
   — route to [`decision-record`](../decision-record/SKILL.md); if it is
   one costly choice on ≥ 3 options with user-weighted criteria, its

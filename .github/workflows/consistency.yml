@@ -447,6 +447,9 @@ jobs:
       - name: Check condensation quality
         run: ./scripts-run src/scripts/check_condensation
 
+      - name: Check projected rule routes resolve
+        run: ./scripts-run src/scripts/check_projected_rule_routes
+
       - name: Check Iron Law prominence
         run: ./scripts-run src/scripts/check_iron_law_prominence
 

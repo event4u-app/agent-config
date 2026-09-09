@@ -171,7 +171,7 @@ If the JSON `candidates` array is non-empty, render the proposed
 
 On accept, append the `modules:` block to the team file
 `.agent-project-settings.yml` (preserve comments + ordering per the
-[`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md)
+[`layered-settings`](../../guidelines/agent-infra/layered-settings.md)
 contract). On skip, do nothing — the block stays opt-in.
 
 ### 8. Follow-ups

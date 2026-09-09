@@ -10605,7 +10605,18 @@ var MERGEABLE_KEYS = [
   "knowledge.global_sharing.redaction.halt_on_trigger",
   "knowledge.global_sharing.auto_promote_threshold",
   "knowledge.global_sharing.freshness.hypothesis_after_days",
-  "knowledge.global_sharing.freshness.stale_after_days"
+  "knowledge.global_sharing.freshness.stale_after_days",
+  // `design.fidelity_mode` is a per-DEVELOPER working preference, not a
+  // per-project one: whether an agent may deviate from a handed-over design
+  // is a property of how that person works, and a designer who sets it once
+  // expects it in every checkout. `design-fidelity.md` already tells the
+  // reader to resolve it through the cascade — "that file is the project
+  // layer of a cascade that starts user-global" — and the cascade then
+  // filtered it out here, silently, so the rule's own instruction could not
+  // be followed. Class C, so a user still sets it by hand or through the
+  // GUI; whitelisting decides only whether the value SURVIVES the merge
+  // (ADR-271, road-to-design-intent-conformance 2.3).
+  "design.fidelity_mode"
 ];
 var TEMPLATE_RELATIVE = path14.join("src", "config", "agent-settings.template.yml");
 var _PACKAGE_ROOT = path14.resolve(path14.dirname(fileURLToPath3(import.meta.url)), "..", "..", "..");
@@ -11463,7 +11474,7 @@ function computeSurfaceDelta(oldS, newS) {
       continue;
     }
     const o = oldS.entries[key];
-    if (o.type !== n.type) {
+    if (!sameJson(o.type, n.type)) {
       changes.push({ key, kind: "type_changed", old: o, new: n });
     }
     if (!sameJson(o.default, n.default)) {
@@ -15750,8 +15761,24 @@ var settingsSchema = external_exports.object({
   design: external_exports.object({
     fidelity_mode: fidelityMode.default("strict").describe(
       "How strictly the agent must follow a user-provided prototype / mockup / design system (consumed by the design-fidelity rule). strict = build 1:1, every visible deviation needs confirmation; structural = structure locked, silent gaps fillable with a stated assumption; hard-floor = any deviation is never autonomous."
-    )
-  }).default({ fidelity_mode: "strict" }),
+    ),
+    approximation: external_exports.object({
+      enabled: external_exports.boolean().default(false).describe(
+        "Whether a value INSIDE the configured tolerance may be replaced by the project's own token without a per-value confirmation. Ships false. The distance from the artifact's value to the nearest project token is computed and REPORTED on every value row regardless of this switch \u2014 what it decides is whether the agent may act on it without asking. Turning it on for a whole install is a consumer-facing default flip and is owner-reserved (agents/roadmaps/stubs/road-to-frontend-power-default-flip.md); design.fidelity_mode: hard-floor overrides it to off."
+      ),
+      tolerance: external_exports.object({
+        color: external_exports.number().nullable().default(null).describe(
+          'Colour distance below which a value may be reconciled, in OKLab \u0394EOK. Ships null, and null means "preserve and report" rather than "reconcile freely". No number is set because none is supported: zero of seven design-to-code benchmarks in the evidence set score token conformance, and a number in a config file \u2014 even flagged unmeasured \u2014 shapes behavior and acquires the authority of a default. Not an RGB channel delta: RGB distance is not perceptually uniform.'
+        ),
+        length: external_exports.number().nullable().default(null).describe(
+          "Length distance below which a value may be reconciled, in absolute CSS pixels. Ships null, same reasoning as color. GitHub Primer's \xB11px spacing widening is recorded as an externally observed candidate in src/scripts/_lib/design_tolerance.ts and is deliberately not the shipped value; max(1px, 2%) was rejected for growing more permissive at large dimensions with no evidence that this is wanted."
+        )
+      }).default({ color: null, length: null })
+    }).default({ enabled: false, tolerance: { color: null, length: null } })
+  }).default({
+    fidelity_mode: "strict",
+    approximation: { enabled: false, tolerance: { color: null, length: null } }
+  }),
   consistency: external_exports.object({
     cross_source: crossSourceMode.default("on").describe(
       "Consumed by the cross-source-consistency rule. When the agent works from multiple sources (ticket text, an attached image/mockup, the spec, the codebase) it checks them against each other and asks before proceeding on a discrepancy \u2014 instead of silently guessing. on (default) = surface every real cross-source contradiction / silent-scope-expansion as one question; auto = surface only high-confidence contradictions, state low-confidence as an assumption; off = no cross-source checking."
@@ -15958,7 +15985,7 @@ var settingsSchema = external_exports.object({
       "Deterministic continuity-record writer at session end (road-to-continuity-writer-activation Phase 1). on = the session-eol concern writes the continuity_record capsule variant on Stop for a substantive session that has claimed a roadmap; every field is computed from on-disk state, with no model spend and no subprocess. off (default) = no automatic record \u2014 while session:recycle is still the normal path, a second producer on it before the parity evidence is in would be unverified."
     ),
     run_checkpoints: external_exports.enum(["on", "off"]).default("on").describe(
-      "Deterministic run-checkpoint production at session end (road-to-continuity-writer-activation Phase 1.4). on (default) = a session above the recycle threshold and inside a running roadmap contract leaves agents/runtime/state/checkpoints/<run>.json, so a killed run resumes from a derived checkpoint rather than from bookkeeping. off = no checkpoint; continuity writing, the recycle advisory and the context-fill surface are unaffected. Default ON because it is the behaviour the tree already had \u2014 the switch exists to make the three session-end handlers independently disableable, not to change what ships."
+      "Deterministic run-checkpoint production at session end (road-to-continuity-writer-activation Phase 1.4). on (default) = a session above the recycle threshold and inside a running roadmap contract leaves agents/runtime/state/checkpoints/<run>.json, so a killed run resumes from a derived checkpoint rather than from bookkeeping. off = no checkpoint; continuity writing, the recycle advisory and the context-fill surface are unaffected. Default ON because it is the behavior the tree already had \u2014 the switch exists to make the three session-end handlers independently disableable, not to change what ships."
     )
   }),
   memory: external_exports.object({

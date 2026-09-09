@@ -96,8 +96,8 @@ Read {fields_path} to get all field definitions.
    no part is written unless a retrieved source grounds it. And run at least
    one search that actively tries to **falsify** the leading hypothesis (rule
    alternatives in or out), not only searches that confirm it. Distinct from
-   [`source-discovery-gate`](../../../../src/rules/source-discovery-gate.md)
-   (structural evidence) and [`verify-before-complete`](../../../../src/rules/verify-before-complete.md)
+   [`source-discovery-gate`](../../rules/source-discovery-gate.md)
+   (structural evidence) and [`verify-before-complete`](../../rules/verify-before-complete.md)
    (completion evidence) — this is *research* evidence.
 
 ## Output path

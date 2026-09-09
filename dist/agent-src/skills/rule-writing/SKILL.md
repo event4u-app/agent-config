@@ -95,13 +95,13 @@ Three different surfaces, three different rules. Mixing them up will
 either fail the schema (`./scripts-run src/scripts/validate_frontmatter`) or
 fail `./scripts-run src/scripts/lint_load_context`. Canonical reference:
 [`templates/rule.md`](../../templates/rule.md) § Path conventions and
-[`docs/contracts/load-context-schema.md`](../../../docs/contracts/load-context-schema.md).
+[`docs/contracts/load-context-schema.md`](../../docs/contracts/load-context-schema.md).
 
 | Field | Form | Example |
 |---|---|---|
 | `load_context:` / `load_context_eager:` | **Logical name** rooted at the source — never `src/` | `contexts/execution/verification-mechanics.md` |
 | `triggers[].path_prefix:` | **Literal match pattern** the host evaluates against the file the agent is editing — not rewritten | `src/skills/` (source-of-truth rules) or `agents/`, `app/`, `.augment/` |
-| Body links to guidelines / contracts | **Verbatim relative form** — `../../docs/...` works in any markdown viewer; rewriter handles depth | `[guideline](../../docs/guidelines/<group>/<name>.md)` |
+| Body links to guidelines / contracts | **Verbatim relative form** — `../../docs/...` works in any markdown viewer; rewriter handles depth | `[guideline](../../guidelines/<group>/<name>.md)` |
 
 The condense-time rewriter (`scripts/condense.ts::_rewrite_paths`) is
 idempotent and depth-aware — it resolves logical names and body links
@@ -307,7 +307,7 @@ to every rule you author.
   body — start with the obligation, not a setup paragraph.
 - Per the Iron-Law literal predicate, ALL-CAPS fenced obligations
   belong only when the rule sits on the
-  [`kernel-membership`](../../../docs/contracts/kernel-membership.md)
+  [`kernel-membership`](../../docs/contracts/kernel-membership.md)
   list.
 - Per the cheap-question check, the rule's "When to ask" guidance
   must list decidable triggers, not vibe-based judgment.
@@ -364,9 +364,9 @@ an interrupt, which reply mirrors the user's language — needs the same treatme
 for the **behaviour**, not just the frontmatter.
 
 Six live corpora already carry those pairs:
-[`direct-answers-demos`](../../../docs/guidelines/agent-infra/direct-answers-demos.md),
-[`asking-and-brevity-examples`](../../../docs/guidelines/agent-infra/asking-and-brevity-examples.md),
-[`language-and-tone-examples`](../../../docs/guidelines/agent-infra/language-and-tone-examples.md),
+[`direct-answers-demos`](../../guidelines/agent-infra/direct-answers-demos.md),
+[`asking-and-brevity-examples`](../../guidelines/agent-infra/asking-and-brevity-examples.md),
+[`language-and-tone-examples`](../../guidelines/agent-infra/language-and-tone-examples.md),
 and `autonomy-examples` / `interrupt-examples` / `cheap-question-mechanics` under
 `src/agent-src/contexts/execution/`. Follow one; do not invent a format.
 

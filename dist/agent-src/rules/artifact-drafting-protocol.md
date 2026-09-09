@@ -59,7 +59,7 @@ Fires once per creation task, not once per edit.
   `late_artifacts: auto-research` is the only declared value that continues,
   capped at three per run (mechanics guideline § Late artifacts).
 
-Body migrated to [`guideline:agent-infra/artifact-drafting-protocol-mechanics`](../docs/guidelines/agent-infra/artifact-drafting-protocol-mechanics.md) (per P4 of `road-to-kernel-and-router.md`) — Phase A/B/C procedure detail + the roadmap-run batch-mode carve-out (Research-once-at-contract-time, batch scope, no `artifact_protocol: skip`) + § Late artifacts (the `halt` default
+Body migrated to [`guideline:agent-infra/artifact-drafting-protocol-mechanics`](../guidelines/agent-infra/artifact-drafting-protocol-mechanics.md) (per P4 of `road-to-kernel-and-router.md`) — Phase A/B/C procedure detail + the roadmap-run batch-mode carve-out (Research-once-at-contract-time, batch scope, no `artifact_protocol: skip`) + § Late artifacts (the `halt` default
 and the five-step `auto-research` procedure).
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
 

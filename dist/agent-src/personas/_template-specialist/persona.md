@@ -83,7 +83,7 @@ action with a clear pass/fail outcome.
 
 *Author note (delete before publishing): this template targets the
 7-section specialist spine locked in
-[`docs/contracts/persona-schema.md`](../../../docs/contracts/persona-schema.md).
+[`docs/contracts/persona-schema.md`](../../docs/contracts/persona-schema.md).
 Stay within the **≤ 100 line** budget (file total, including
 frontmatter). Replace every `{placeholder}` with concrete content.
 Run the project's CI / lint pipeline before commit.*

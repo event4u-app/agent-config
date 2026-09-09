@@ -27,7 +27,7 @@ Do NOT use for narrative / messaging surface (route to Wing-3 `positioning-strat
 
 ## Cognition cluster
 
-- **Mental model 18 — Where to play, where not to play.** A moat is read as much from *what we refuse to do* as from what we do. Trying to win everywhere = winning nowhere. See [`mental-models.md`](../../../docs/contracts/mental-models.md) § 18.
+- **Mental model 18 — Where to play, where not to play.** A moat is read as much from *what we refuse to do* as from what we do. Trying to win everywhere = winning nowhere. See [`mental-models.md`](../../docs/contracts/mental-models.md) § 18.
 - **Mental model 28 — Inversion.** *"What would force a customer to leave us for an incumbent?"* The inversion answer surfaces the load-bearing moat assumption. If the answer is *"nothing"*, the moat is wishful; if the answer is concrete, that's the real fragility. See `mental-models.md` § 28.
 - **Mental model 21 — Second-order thinking.** Moats compound or decay; *"feature parity today"* says nothing about *"feature parity in 18 months"*. Read each moat by its compounding rate, not its current state. See `mental-models.md` § 21.
 - **Context-spine — customer-segment + product + org-stage.** Read **customer-segment** for which incumbent matters in which segment (the enterprise incumbent is rarely the SMB incumbent). Read **product** for which moats are real vs roadmap. Read **org-stage** for moat realism (pre-revenue moats are claims; growth-stage moats are evidence).

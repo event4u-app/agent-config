@@ -83,7 +83,7 @@ Framework names in a generic artifact appear only as **multi-stack peers**
 mandated procedure. `scripts/lint_framework_leakage.ts` is the deterministic
 CI backstop (exit 1 on a non-allowlisted hit in a generic artifact).
 
-Body migrated to [`guideline:agent-infra/framework-neutrality-patterns`](../docs/guidelines/agent-infra/framework-neutrality-patterns.md) (per P4 of `road-to-kernel-and-router.md`) — the 10-row forbidden-pattern table with fixes, the cross-stack documentation allowance + auto-detect heuristic, the carve-out pointer shape, and the linter exit-code contract.
+Body migrated to [`guideline:agent-infra/framework-neutrality-patterns`](../guidelines/agent-infra/framework-neutrality-patterns.md) (per P4 of `road-to-kernel-and-router.md`) — the 10-row forbidden-pattern table with fixes, the cross-stack documentation allowance + auto-detect heuristic, the carve-out pointer shape, and the linter exit-code contract.
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
 
 ## See also
