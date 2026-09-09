@@ -21,6 +21,8 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import process from 'node:process';
+
 import { afterAll, describe, expect, it } from 'vitest';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -98,19 +100,39 @@ interface Run {
     readonly err: string;
 }
 
-function run(root: string, sessionId: string): Run {
+interface RunOpts {
+    /** Omit the payload `session_id`, leaving only the env seam. Finding 1. */
+    readonly payloadId?: false;
+    /** Set `AGENT_SESSION_ID`, which is what `dispatch_hook` falls back to. */
+    readonly envId?: string;
+}
+
+function run(root: string, sessionId: string, opts: RunOpts = {}): Run {
+    const payload: Record<string, unknown> = { source: 'startup' };
+    if (opts.payloadId !== false) payload['session_id'] = sessionId;
     const r = spawnSync(
         'npx',
         ['tsx', DISPATCH, '--platform', 'claude', '--event', 'session_start',
          '--native-event', 'SessionStart', '--project-dir', root],
         {
-            input: JSON.stringify({ session_id: sessionId, source: 'startup' }),
+            input: JSON.stringify(payload),
             encoding: 'utf-8',
             cwd: REPO,
             timeout: 180_000,
+            env: opts.envId === undefined ? process.env : { ...process.env, AGENT_SESSION_ID: opts.envId },
         },
     );
     return { out: r.stdout ?? '', err: r.stderr ?? '' };
+}
+
+/** Does the workspace hold a latch for this session? P5's observable. */
+function latched(root: string): boolean {
+    const dir = path.join(root, 'agents', 'runtime', 'state', 'session-index-latch');
+    try {
+        return fs.readdirSync(dir).length > 0;
+    } catch {
+        return false;
+    }
 }
 
 function sessionStart(root: string, sessionId: string): string {
@@ -217,5 +239,72 @@ describe('P4 wired — the emitted order is the declared one', () => {
 
         const again = sessionStart(writeWorkspace(), 'sit-e2e-order-2');
         expect(again.indexOf('pr-fixture-alpha')).toBeLessThan(again.indexOf('pr-fixture-beta'));
+    });
+});
+
+describe('R2 findings — each was proven by a run, so each gets one', () => {
+    it('finding 1 — P5 holds when the session id lives ONLY on the envelope', () => {
+        // `dispatch_hook` resolves `envelope.session_id` from the payload OR
+        // `AGENT_SESSION_ID`. Reading the payload alone left P5 inert: two runs
+        // emitted the block both times and never latched.
+        const root = writeWorkspace();
+        const first = run(root, '', { payloadId: false, envId: 'sit-env-only' });
+        expect(first.out).toContain('<memory-index');
+        expect(latched(root)).toBe(true);
+
+        const second = run(root, '', { payloadId: false, envId: 'sit-env-only' });
+        expect(second.out).not.toContain('<memory-index');
+    });
+
+    it('finding 5 — an empty corpus does NOT burn the session latch', () => {
+        // Claiming before the render meant a session that started before its
+        // memory was curated could never receive an index afterwards.
+        const root = writeWorkspace({ curated: false });
+        const session = 'sit-empty-no-burn';
+        expect(run(root, session).out).not.toContain('<memory-index');
+        expect(latched(root)).toBe(false);
+
+        fs.writeFileSync(path.join(root, 'agents', 'memory', 'product-rules.yml'), CURATED, 'utf-8');
+        expect(run(root, session).out).toContain('<memory-index');
+    });
+
+    it('finding 2 — the declared order chooses the cap survivors, not store order', () => {
+        // Retrieval used to be asked for the CAP, and every curated hit scores
+        // an identical 0.1 with empty keys, so the first 30 in STORE order won
+        // and the ordering sorted a set the cap had already chosen. The cheapest
+        // rows are written LAST here, so store order would drop them.
+        const root = writeWorkspace({ curated: false });
+        const bulk: string[] = ['version: 1', 'entries:'];
+        for (let i = 0; i < 40; i += 1) {
+            bulk.push(`  - id: bulk-${String(i).padStart(2, '0')}`);
+            bulk.push(`    key: bulk entry ${i}`);
+            bulk.push('    body: |');
+            // The last five are one short line; every earlier one is padded.
+            const pad = i >= 35 ? 1 : 12;
+            for (let l = 0; l < pad; l += 1) {
+                bulk.push(`      padding line ${l} padding padding padding padding padding padding`);
+            }
+        }
+        bulk.push('');
+        fs.writeFileSync(path.join(root, 'agents', 'memory', 'product-rules.yml'), bulk.join('\n'), 'utf-8');
+
+        const out = run(root, 'sit-order-cap').out;
+        expect(out).toContain('<memory-index');
+        const cheapPresent = [35, 36, 37, 38, 39].filter((i) => out.includes(`bulk-${i}`));
+        expect(cheapPresent.length).toBeGreaterThan(0);
+    });
+
+    it('finding 3 — a symlinked curated FILE inside the root is refused live', () => {
+        // The root canonicalizes fine; one file inside it resolves into the
+        // donor. The reviewer read a donor entry out of a victim session.
+        const donor = writeWorkspace();
+        const victim = writeWorkspace();
+        fs.symlinkSync(
+            path.join(donor, 'agents', 'memory', 'product-rules.yml'),
+            path.join(victim, 'agents', 'memory', 'donor-rules.yml'),
+        );
+        const out = run(victim, 'sit-file-symlink').out;
+        expect(out).not.toContain('<memory-index');
+        expect(out).not.toContain('pr-fixture-alpha');
     });
 });

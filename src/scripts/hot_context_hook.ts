@@ -420,24 +420,42 @@ function _session_index_block_or_null(root: string, sessionId: string): string |
         const req = createRequire(import.meta.url);
         const mod = req('./session_memory_index.js') as {
             session_index_enabled: (root: string) => boolean;
-            build_session_index_block: (cap?: number, workspaceRoot?: string) => string | null;
+            serve_session_index_block: (grant: unknown, cap?: number) => string | null;
             session_index_trust: (workspaceRoot: string) => { ok: boolean; code?: string; detail?: string };
         };
         if (!mod.session_index_enabled(root)) return null;
 
-        // P1-P3, before any memory is read. Checked here rather than only
-        // inside the builder so the refusal reason reaches stderr.
+        // P1-P3, computed ONCE here and handed to the server as a grant. The
+        // builder used to re-check it, which R2 finding 7 named as a duplicate
+        // for a diagnostic nothing forwards; `serve_session_index_block` now
+        // takes the grant, so the check cannot be skipped and is not repeated.
         const verdict = mod.session_index_trust(root);
         if (!verdict.ok) {
             process.stderr.write(`hot-context-hook: session index refused [${String(verdict.code)}]: ${String(verdict.detail)}\n`);
             return null;
         }
 
-        // P5 — duplicate invocation. `session_start` can fire more than once
-        // for one session (resume, host reconnect, compaction boundary on some
-        // hosts), and two injections double a fixed cost while presenting two
-        // corpora as one session's memory. Claimed AFTER the trust verdict so a
-        // refused root does not burn the session's one claim.
+        const prev = process.cwd();
+        let block: string | null;
+        try {
+            process.chdir(root);
+            block = mod.serve_session_index_block(verdict);
+        } finally {
+            process.chdir(prev);
+        }
+
+        // P5 — duplicate invocation, claimed LAST. `session_start` can fire
+        // more than once for one session (resume, host reconnect, compaction
+        // boundary on some hosts), and two injections double a fixed cost while
+        // presenting two corpora as one session's memory.
+        //
+        // The ordering is the whole property and it took two corrections to get
+        // right. Claiming before the verdict let a refused root burn the
+        // session's one claim; claiming before the RENDER let an empty corpus
+        // burn it too (R2 finding 5) — so a session that started before its
+        // memory was curated would never receive an index afterwards. Nothing
+        // is claimed until there is something to serve.
+        if (block === null) return null;
         const trust = req('./_lib/session_index_trust.js') as {
             claimSessionOnce: (workspaceRoot: string, sessionId: string) => { ok: boolean; code?: string };
         };
@@ -446,14 +464,7 @@ function _session_index_block_or_null(root: string, sessionId: string): string |
             process.stderr.write(`hot-context-hook: session index already served [${String(claim.code)}]\n`);
             return null;
         }
-
-        const prev = process.cwd();
-        try {
-            process.chdir(root);
-            return mod.build_session_index_block(undefined, root);
-        } finally {
-            process.chdir(prev);
-        }
+        return block;
     } catch (exc) {
         process.stderr.write(`hot-context-hook: session index skipped: ${String(exc)}\n`);
         return null;
@@ -522,7 +533,14 @@ export function main(): number {
             // Opt-in compact memory index (road-to-memory-retrieval-economy
             // P5) — default OFF; rides the same injection surface. Memory
             // roots are cwd-relative, so resolve from the workspace root.
-            const sessionId = String(payload.session_id ?? payload.sessionId ?? '');
+            // R2 finding 1: reading the payload alone left P5 INERT whenever
+            // the host supplied no payload id. `dispatch_hook.ts` resolves
+            // `envelope.session_id` from the payload OR `AGENT_SESSION_ID`, and
+            // every sibling concern reads the envelope first — proven by two
+            // dispatcher runs that emitted the block twice and never latched.
+            const sessionId = String(
+                envelope.session_id ?? payload.session_id ?? payload.sessionId ?? '',
+            );
             const indexBlock = _session_index_block_or_null(root, sessionId);
             if (indexBlock !== null) {
                 blocks.push(indexBlock);

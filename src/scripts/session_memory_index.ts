@@ -29,6 +29,7 @@ import {
     orderRows,
     SESSION_INDEX_ROW_CAP,
     verifyMemoryRoot,
+    type TrustGrant,
     type TrustVerdict,
 } from './_lib/session_index_trust.js';
 
@@ -61,12 +62,28 @@ export function session_index_enabled(root: string): boolean {
  * Expects the caller to have chdir'd to the workspace root — memory roots
  * are cwd-relative, same contract as the MCP tool handlers.
  */
+/**
+ * How many entries retrieval is asked for before the declared order picks.
+ *
+ * R2 finding 2: asking retrieval for the CAP made P4 decorative. Every curated
+ * hit scores an identical 0.1 with an empty key set, so `retrieve` sliced the
+ * first 30 in STORE order at `memory_lookup.ts:995` and `orderRows` then sorted
+ * a set the cap had already chosen. Measured by the reviewer: a 40-entry corpus
+ * with the 5 cheapest last emitted zero cheap rows.
+ *
+ * The number must therefore exceed any realistic curated corpus, not merely the
+ * cap. 500 is a STATED DEFAULT, not a measured optimum — the cost of asking for
+ * more than exists is bounded by what exists, since `detail: 'index'` returns a
+ * row rather than a body. Its falsifier is recorded in the roadmap: a corpus
+ * larger than this bound makes store order decide again, silently.
+ */
+export const SESSION_INDEX_RETRIEVAL_LIMIT = 500;
+
 export function session_index_rows(cap: number = SESSION_INDEX_ROW_CAP): IndexRow[] {
-    // Retrieval is asked for the ceiling rather than the caller's cap, so the
-    // declared order below chooses which rows survive truncation instead of
-    // the retrieval layer choosing for it. P4 and P6 are one decision: order
-    // first, then cap, and never the reverse.
-    const envelope = retrieve_v1([...CURATED_TYPES], [], SESSION_INDEX_ROW_CAP, { detail: 'index' });
+    // Retrieval is asked for far more than the cap, so the declared order below
+    // is what chooses which rows survive truncation. P4 and P6 are one
+    // decision: retrieve wide, order, THEN cap — and never the reverse.
+    const envelope = retrieve_v1([...CURATED_TYPES], [], SESSION_INDEX_RETRIEVAL_LIMIT, { detail: 'index' });
     const entries = (envelope['entries'] as Array<Record<string, unknown>>) ?? [];
     const rows: IndexRow[] = entries.map((e) => ({
         id: String(e['id'] ?? ''),
@@ -97,21 +114,20 @@ export function session_index_trust(workspaceRoot: string, now?: Date): TrustVer
 }
 
 /**
- * Render the injectable block, or `null` when the corpus is empty (no
- * block beats an empty scaffold) or the trust contract refused the root.
+ * RENDER a block from whatever `MEMORY_ROOT` currently resolves to. Checks
+ * nothing, serves nothing.
  *
- * Passing a `workspaceRoot` is what arms P1-P3; omitting it renders from
- * whatever `MEMORY_ROOT` currently resolves to, which is the pre-contract
- * behaviour and is kept ONLY for the test seam that injects an absolute
- * fixture root (`_setMemoryRoot`). The production caller
- * (`hot_context_hook.ts`) always passes it, and `session_index_trust` above is
- * how a caller proves it did.
+ * Split out on R2 findings 6 and 7. The trust check used to be an OPTIONAL
+ * parameter, which made the serving path opt-in — and `session_index_cost()`
+ * omitted it, so the one function whose name suggests it only measures was also
+ * the one that could render unchecked. Now the two operations have two names:
+ * this one renders (for cost measurement and for the unit seam that injects an
+ * absolute fixture root via `_setMemoryRoot`, which by construction sits
+ * outside any workspace), and {@link serve_session_index_block} is the only way
+ * to obtain a block for INJECTION — it takes a granted verdict, so there is no
+ * unchecked serving path to forget.
  */
-export function build_session_index_block(cap: number = SESSION_INDEX_ROW_CAP, workspaceRoot?: string): string | null {
-    if (workspaceRoot !== undefined) {
-        const verdict = session_index_trust(workspaceRoot);
-        if (!verdict.ok) return null;
-    }
+export function render_session_index_block(cap: number = SESSION_INDEX_ROW_CAP): string | null {
     const rows = session_index_rows(cap);
     if (rows.length === 0) return null;
     const lines = [
@@ -125,12 +141,26 @@ export function build_session_index_block(cap: number = SESSION_INDEX_ROW_CAP, w
 }
 
 /**
+ * The only path to a block that will be INJECTED.
+ *
+ * Takes a granted verdict rather than a root, so the check happens once, at the
+ * caller, and cannot be skipped here — R2 finding 7 was that the hook and the
+ * builder each computed it, for a diagnostic the dispatcher does not forward.
+ * The type is `TrustGrant`, not `TrustVerdict`: a refusal cannot be passed in,
+ * so "did you check?" is answered by the signature instead of by a convention.
+ */
+export function serve_session_index_block(_grant: TrustGrant, cap: number = SESSION_INDEX_ROW_CAP): string | null {
+    return render_session_index_block(cap);
+}
+
+/**
  * Deterministic fixed cost of the block in real tokens (cl100k_base) —
  * the measurable arm of the roadmap's ship-criterion. Lazy-loads the
  * tokenizer so the enabled=off fast path never pays it.
  */
 export async function session_index_cost(cap: number = SESSION_INDEX_ROW_CAP): Promise<number> {
-    const block = build_session_index_block(cap);
+    // Renders rather than serves: this measures a cost, it injects nothing.
+    const block = render_session_index_block(cap);
     if (block === null) return 0;
     const { gpt_tokens } = await import('./_lib/token_count.js');
     return gpt_tokens(block).tokens;
