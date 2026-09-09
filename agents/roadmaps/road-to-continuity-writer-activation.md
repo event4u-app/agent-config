@@ -184,7 +184,23 @@ councils required puts them there on purpose:
 
 ## Phase 2 — the split the concern ratchet currently forbids
 
-- [ ] **2.1 Three concern ids with three kill switches, paid for by a retirement.** <!-- blocked-by: three-concern-split-is-unpaid-under-the-concern-ratchet | asked: yes -->
+- [-] **2.1 Three concern ids with three kill switches, paid for by a retirement.**
+      **CANCELLED 2026-09-09 by the AI council under the owner's written delegation for this
+      drain run (2 seats, converged on option (d)).** The blocker
+      `three-concern-split-is-unpaid-under-the-concern-ratchet` carries the full reasoning;
+      the short form is that the arithmetic does not close and the substance is already
+      shipped. `concern_count` is 58 against a floor of 58, and even retiring TWO concerns
+      and adding three lands at 59 — so the only route is moving the floor, which both seats
+      placed outside the council's reach.
+      What Phase 1 already delivers is the requirement itself: three independently
+      switchable handlers with fault-injection coverage, inside existing concerns. This step
+      asked for the code-organisation FORM (three separate concern ids) on top of a
+      SUBSTANCE that is already there. Declining the form loses no safety and no capability.
+      `[-]` rather than `[~]`, and the distinction is load-bearing: a deferral needs a
+      receiver carrying the criterion forward, and there is none — the criterion is met by
+      Phase 1 and only its packaging is dropped. The glyph's owner-reservation is discharged
+      by the owner's written delegation of this run to the council, cited above rather than
+      assumed.
       `hook_manifest.yaml` declares the continuity-record writer,
       the run-checkpoint writer and the session-index restorer separately, with
       a fault-injection test over every handler combination showing no
@@ -207,10 +223,23 @@ councils required puts them there on purpose:
       and size limits, because *"restored memory is untrusted context"*. A
       global kill switch is inadequate — an operator must be able to disable
       restoration while continuity writing and run verification stay active.
-      verify: the relocated restore produces byte-identical output to today's
-      for the same inputs; the trust contract is written and each of its six
-      properties has a test; `check_continuity_surface` shows the artefact axis
-      one lower.
+      verify: **REPLACED 2026-09-09 by the AI council under the owner's written delegation
+      (2 seats, both agreeing on this half).** Byte-identity alone tested the wrong thing:
+      with the change being a manifest edit plus a moved function, identical bytes are
+      trivially true and the check is vacuous. Three sub-tests instead —
+      **byte:** restored bytes match the persisted fixture;
+      **sabotage:** a missing or corrupt index prevents restoration or produces the
+      specified safe failure, so the restore is shown to be load-bearing rather than
+      incidental;
+      **ordering:** restoration completes before prompt/context consumption.
+      Two clauses of the old verify also change. The trust contract IS written and each of
+      its six properties has a test — that half is done and is the precondition this step's
+      body already records. And `check_continuity_surface` will **not** show the artefact
+      axis one lower: the blocker resolution keeps the `hot-context` concern with a narrower
+      job rather than retiring it, so no axis moves. Superseded text, kept for the reader:
+      *the relocated restore produces byte-identical output to today's for the same inputs;
+      the trust contract is written and each of its six properties has a test;
+      `check_continuity_surface` shows the artefact axis one lower.*
       measured 2026-09-08, so the next lane re-decides rather than re-derives.
       **Five of the six trust properties do not exist yet**, which makes this
       step feature work on a trust boundary and not a relocation:
@@ -430,7 +459,7 @@ councils required puts them there on purpose:
       producer on the normal path is a maintainer's. So this step is gated on
       "Phase 1 in full AND the default flipped", and only the first half is
       done.
-- [ ] **3.3 `context-fill.json` — retire it, or record that its parked consumer keeps it.** <!-- blocked-by: context-fill-retirement-has-a-parked-consumer | asked: yes -->
+- [x] **3.3 `context-fill.json` — retire it, or record that its parked consumer keeps it.**
       Authorised by the 2026-09-08 council on producer/no-consumer
       evidence that turned out incomplete: there is no consumer in code, but
       `agents/roadmaps/later/road-to-cost-parity-2-state-aware-dispatch.md` has
@@ -440,6 +469,18 @@ councils required puts them there on purpose:
       verify: either the file and its producer are gone and that roadmap's steps
       are re-anchored in the same change, or its inventory row records the
       owner's decision to keep it.
+      **Done 2026-09-09 on the second limb, which the verify admits explicitly.** The AI
+      council under the owner's written delegation resolved
+      `context-fill-retirement-has-a-parked-consumer` as retain, both seats agreeing, and
+      the inventory row at `src/config/continuity-surface.json` now records that DECISION
+      rather than only the evidence that blocked the retirement — which is the difference
+      between a row explaining why nothing happened and a row stating what was decided.
+      `writeContextFill` at `src/scripts/hooks/session_eol_hook.ts:269` stays and the row
+      stays `counted`.
+      The artefact-axis reduction 5 → 4 is **not** claimed. Retention was chosen over
+      re-anchoring because option (1) requires editing a roadmap that is parked precisely
+      because nobody is working on it — trading one small per-session write for work inside
+      a file the estate has deliberately set down.
 - [ ] **3.4 `/chat-history` and `/chat-history import` — retire the two commands.** <!-- blocked-by: chat-history-command-retirement-authorization | asked: yes -->
       Named in the owner's 2026-09-06 authorisation and blocked in
       the predecessor only because the 2026-09-08 council required a non-use
@@ -580,7 +621,7 @@ maintainer-owned blockers were not touched.
 
 ### blocker: capture-endpoint-rename-is-owner-reserved
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Asked:** 2026-09-08, by the AI council convened during the predecessor's drain run (2 seats, anthropic + openai, subscription transport, 0.0000 USD, quorum 2/2). Recorded verbatim in `agents/evidence/analysis/council-2026-09-08-continuity-retirement-scope.md`.
 - **Blocks:** the retirement of the `chat-history:checkpoint` NAME. It blocks nothing else in this roadmap — chat-history capture itself is out of scope by decision and keeps working untouched.
@@ -588,16 +629,49 @@ maintainer-owned blockers were not touched.
 - **If you do nothing:** the verb keeps a name that collides with the run-checkpoint concept, which is a vocabulary defect and not a functional one. Capture is unaffected. This is the cheapest of the open items to leave alone.
 - **What to do:** decide five things and record them here — the surviving endpoint name; the compatibility period; the migration mechanism for hooks already installed in downstream checkouts (`src/scripts/install-hooks.sh:459-484` generates four of them, and `post-merge` and `post-checkout` carry a second appended auto-sync segment, so ownership detection must match two generated contents per hook); how a migrated installation is detected and counted; and the objective threshold at which the alias is removed. A locally modified hook is **reported, never rewritten** — that half is already settled and is not part of this decision.
 - **Resolved when:** the five decisions above are written into this entry and `Status:` reads `resolved`.
+- **RESOLVED 2026-09-09 — option (c), decline the rename.** AI council 2026-09-09 under the owner's written delegation for this drain run (2 seats, anthropic/claude-sonnet-4-5 + openai/codex-default, subscription transport, $0.0000, quorum 2/2, two rounds with peer review). Both seats
+  put the option inside the council's reach and neither picked a rename.
+  openai: *"Option (c) — decline the rename. Council-decidable. This preserves the existing
+  callable contract and creates no compatibility commitment. Renaming under either option
+  (a) or (b) remains owner-reserved. The invariant is: creating, deprecating, or breaking a
+  public callable compatibility contract requires owner authorization."*
+  anthropic reached the same place by a different route — it asked for a contract-boundary
+  audit first, and its own branch 4 says accepting the collision *"is council-decidable"*.
+  Since (c) adds no name, the audit that would gate (a) and (b) is not needed to take it.
+  **The five decisions are therefore answered by not being reached**, and that is the
+  resolution rather than an evasion of it: there is no surviving new name, no compatibility
+  period, no migration mechanism for the four hooks `install-hooks.sh:459-484` generates, no
+  migration detection, and no alias sunset — because no alias is created. `install-hooks.sh`
+  and every installed hook are untouched.
+  **What this costs, stated plainly:** `chat-history:checkpoint` keeps a name that collides
+  with the run-checkpoint concept. That is the vocabulary defect this entry already called
+  the cheapest of the set to leave alone, and it is now left alone deliberately rather than
+  by default.
+  **Revisit-if:** repository evidence shows actual user confusion, or the owner authorises a
+  replacement name together with a compatibility policy. Either is owner-reserved.
 
 ### blocker: context-fill-retirement-has-a-parked-consumer
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Asked:** 2026-09-08. The 2026-09-08 council authorised this retirement on producer/no-consumer evidence supplied from this session; the reference sweep that followed found the evidence incomplete, so the authorisation is not acted on.
 - **Blocks:** one artifact of step 4.1. It blocks nothing else, and the other five candidates in that step are blocked for unrelated reasons.
 - **Recommendation:** do not retire it here, and route the decision to the owner of `agents/roadmaps/later/road-to-cost-parity-2-state-aware-dispatch.md`. There is no consumer in code, but that roadmap has open steps 1.1 and 1.4c which read `agents/runtime/state/context-fill.json` as a planned input, and 1.4c exists specifically to bound its staleness. Retiring the file makes a parked roadmap's step unbuildable as written, which is a decision for that roadmap rather than a side effect of this one. The same council seat had already named this failure shape: *"no consumer in the tree" proves no in-repository consumer, not that no packaged or external consumer exists* — and a planned consumer INSIDE the tree is the stronger case, because it is checkable.
 - **If you do nothing:** the artefact axis stays at 5 instead of 4 and a producer with no code consumer keeps writing a file on every Stop. The cost is one small write per session and one row in the inventory; nothing breaks, and the row states the reason so the next reader does not re-derive it.
 - **What to do:** either (1) the owner of that parked roadmap re-anchors steps 1.1 and 1.4c onto another source, after which this file and `writeContextFill` in `src/scripts/hooks/session_eol_hook.ts:269` are deleted in one change; or (2) the owner decides the parked roadmap keeps it, and the inventory row at `src/config/continuity-surface.json` records that decision and stays `counted`. Step 3.3 of `road-to-continuity-writer-activation` carries whichever is chosen.
+- **RESOLVED 2026-09-09 — option (2), retain it.** AI council 2026-09-09 under the owner's written delegation for this drain run (2 seats, anthropic/claude-sonnet-4-5 + openai/codex-default, subscription transport, $0.0000, quorum 2/2, two rounds with peer review), and both seats
+  agreed. openai: *"Option (b) — retain `context-fill.json`. Council-decidable. This is a
+  reversible internal cost-versus-dependency decision with no public or governance invariant
+  at stake."* anthropic listed the same disposition among its agreements.
+  The asymmetry that decided it: option (1) requires editing a roadmap that is parked
+  **precisely because nobody is working on it**, so it trades a one-line-per-session write
+  for work inside a file the estate has deliberately set down.
+  **Executed here:** `writeContextFill` at `src/scripts/hooks/session_eol_hook.ts:269` stays,
+  the row in `src/config/continuity-surface.json` stays `counted`, and its `reason` now
+  records the RETENTION DECISION rather than only the evidence that blocked the retirement.
+  The artefact-axis reduction 5 → 4 is **not** claimed, here or anywhere.
+  **Revisit-if:** `road-to-cost-parity-2-state-aware-dispatch` is resumed, cancelled, or
+  re-anchors steps 1.1 and 1.4c onto another source.
 - **Resolved when:** one of the two options above is taken and recorded, either by the file being gone or by its inventory row naming the owner's keep decision.
 ### blocker: chat-history-command-retirement-authorization
 
@@ -611,6 +685,32 @@ maintainer-owned blockers were not touched.
 - **If you do nothing:** two internal commands stay listed, `session_resume_pickers` stays at 2, and `/agent-handoff` keeps pointing at a path that still works. Nothing degrades and nothing rots — the cost is that the surface stays one wider than the owner asked for on 2026-09-06, indefinitely.
 - **What to do:** the audit enumerated the whole change, so this is a checklist rather than an investigation. **Delete** `src/domains/meta/chat-history/command.md` and `src/domains/meta/chat-history/import/command.md`. **Hand-edit the four surfaces no generator owns**, each of which reddens a named gate: `src/config/continuity-surface.json` — delete the rows `command:chat-history` and `picker:chat-history-import` (gate `check_continuity_surface`, dead-locus); `src/flows/surface-map.yaml:168-169` (gate `lint_command_flow_coverage`, phantom ref); `docs/contracts/command-clusters.md:34` plus the worked example at `:92` (gate `check_cluster_patterns`, dispatcher-missing); `docs/getting-started.md:177` (no gate — it is the user-facing row). **Fix the links no gate catches**, because `check_references` does not match parenthesised markdown targets: `src/domains/meta/agent-handoff/command.md:254`, `:259`, `:267` and `src/skills/learning-to-rule-or-skill/SKILL.md:383-384` both go dangling. **Then regenerate rather than hand-edit** — `task sync`, `task generate-tools`, `update_counts`, `generate_index`, `generate_command_flows`, `generate_capabilities_index`, `generate_pack_manifests`, `build_proof` — which moves the command count 204 → 202 across `README.md:7`, `docs/CLAIMS.md:393`, `docs/architecture.md:158`, `docs/command-flows.md:10`, `docs/featured-skills.md:96`, `docs/getting-started-by-role.md:5`, `docs/proof.md:55`, `CAPABILITIES.yaml:15`, and the memory pack's `artefact_count` and token passport. **Verify** with `check_continuity_surface` (expect `session_resume_pickers` 2 → 1), `lint_command_flow_coverage`, `check_cluster_patterns` (expect 25 dispatchers, down from 26), `check_command_count_messaging`, `check_artefact_count_messaging`, `check_public_catalog_links` and the four `--check` generators.
 - **Resolved when:** the two command documents are gone, every surface above is updated or regenerated in the same change, and `check_continuity_surface` reports `session_resume_pickers` at 1.
+- **STAYS OPEN, OWNER-RESERVED — AI council 2026-09-09 under the owner's written delegation for this drain run (2 seats, anthropic + openai, subscription transport, $0.0000, quorum 2/2), and BOTH seats refused it.**
+  This is the one of six the council would not take, and they reached that from opposite
+  starting points, which is worth more than agreement would be on its own.
+  openai named the invariant: *"a documented crash-recovery affordance used by a preserved
+  command may not be removed without authorization or proof of equivalent surviving recovery
+  behavior."* And on the doc-update question this entry poses: *"The prior council authorized
+  retirement only after an audit established non-use, explicitly including documentation.
+  The audit found shipped uses. Editing away the evidence is not the same as satisfying the
+  condition."*
+  anthropic arrived by finding a circularity: authorising *"conditional on docs being
+  updated"* is circular, because the docs can only be updated if an equivalent recovery path
+  exists — and the fact this entry already records is that `/agent-handoff`'s own recovery
+  instructions POINT AT `/chat-history import`. That is a dependency, not a replacement. Its
+  rule: if `/agent-handoff` depends on the command being retired, escalate.
+  **THE DECISION, for the owner, in the shape the council asked for it.** The affordance at
+  stake is documented at `docs/getting-started.md:177` and
+  `src/domains/meta/agent-handoff/command.md:254,259,267`. Choose one:
+  1. remove the recovery affordance;
+  2. preserve equivalent import behaviour under a surviving command;
+  3. retain `/chat-history import`.
+  **Until that lands, no retirement edit and no documentation edit is made** — openai was
+  explicit that editing the docs first destroys the evidence the condition is measured
+  against. The sibling execution blocker stays parked behind this one, and its expected
+  counts are conditional on choice 1 (see its own entry).
+  **Revisit-if:** an executable test proves an already-shipped mechanism reproduces
+  `/chat-history import` recovery semantics, or the owner explicitly authorises the loss.
 
 ### blocker: chat-history-command-retirement-execution
 
@@ -621,6 +721,19 @@ maintainer-owned blockers were not touched.
 - **If you do nothing:** nothing degrades. This entry holds no work that is currently permitted; it exists so that when the maintainer's decision arrives, the next reader sees a ready checklist with a named owner rather than re-deriving it from a blocker that reads as a governance question.
 - **What to do:** on resolution of the authorization half, run its `What to do` checklist verbatim — the two command documents, the four hand-edited surfaces, the two link classes `check_references` cannot see, then regenerate rather than hand-edit, then verify with the seven named gates.
 - **Resolved when:** the authorization half reads `resolved`, its checklist has been executed, and `check_continuity_surface` reports `session_resume_pickers` at 1.
+- **ORDERING CONFIRMED 2026-09-09, and one assertion in this entry is now conditional.**
+  AI council 2026-09-09 under the owner's written delegation for this drain run (2 seats, anthropic + openai, subscription transport, $0.0000, quorum 2/2) was asked whether any part of the checklist may run before its
+  authorization half resolves. openai: *"No deletions, reference rewrites, generated-file
+  changes, or count changes before B2 is resolved. Read-only preparation may occur earlier:
+  enumerate references, classify generated versus hand-maintained files, and verify the
+  baseline gates."* So this entry stays `open` and the split it was created for holds.
+  **The conditional half matters and was not previously stated.** openai: *"Require
+  `session_resume_pickers == 1` and command count 204 → 202 only if the owner chose full
+  retirement. A replacement command may require different expected counts."* This entry's
+  `Resolved when` asserts `session_resume_pickers` at 1 unconditionally. If the owner
+  authorises a REPLACEMENT recovery path rather than outright retirement, that number and
+  the 204 → 202 move are both wrong, and this checklist has to be rewritten rather than run.
+  **Revisit-if:** the authorization half resolves to anything other than full retirement.
 
 ### blocker: the-command-usage-telemetry-cannot-prove-non-use
 
@@ -662,16 +775,43 @@ maintainer-owned blockers were not touched.
   so the council asked for three sub-tests (byte, sabotage, ordering) in place of the one.
   The candidate list and the objection to each is in step 3.1's own body; the concern-cost
   arithmetic is in `three-concern-split-is-unpaid-under-the-concern-ratchet` below.
-- **Resolved when:** this entry names the chosen parsing and, for (a), the destination
-  concern; and 3.1's `verify:` line states the three sub-tests rather than byte-identity
-  alone.
+- **Resolved when:** this entry names the chosen parsing and, for (a), the destination concern; and 3.1's `verify:` line states the three sub-tests rather than byte-identity alone.
+- **RESOLVED 2026-09-09 on the PARSING and the VERIFY; the two seats split on the mechanism
+  and both readings are recorded.** AI council 2026-09-09 under the owner's written delegation for this drain run (2 seats, anthropic + openai, subscription transport, $0.0000, quorum 2/2).
+  **Parsing: neither (a) as written.** Both seats refused to name a destination concern,
+  because every candidate fails on subject and forcing a mismatch is worse than not moving.
+  The chosen reading is interpretation (b) — retire the startup CACHE half, leave the
+  memory-index restore where it is.
+  **The split, stated rather than smoothed.** openai's mechanism: remove only the startup
+  cache write, KEEP the `hot-context` concern, rename its description from a cache-oriented
+  one to *"restore persisted memory session index"*, and **do not mark the concern retired**
+  — because *"option (b), as written, cannot both retire the concern and leave the restore in
+  the same `hot-context` ownership location."* anthropic's mechanism: remove the concern id
+  from `hook_manifest.yaml` (58 → 57) and leave the restore running as **unconcerned code**,
+  tagged with no concern id at all.
+  **openai's is operative, and the reason is B6.** anthropic's version buys a −1 on
+  `concern_count`, and B6 resolved that no payment is needed — the split it would have paid
+  for is declined. So the −1 purchases nothing, while untagged running code costs the
+  manifest its completeness property: every executing handler currently carries a concern
+  id, and a function deliberately outside that set is a new category with no reader.
+  **What this does NOT achieve, said plainly:** step 3.1's *"retire the concern"* half is not
+  done. The `hot-context` concern id survives with a narrower job. That is a real shortfall
+  against the step as written, and it is recorded here rather than absorbed by calling the
+  cache removal a retirement.
+  **Verify: both seats converged on replacing byte-identity with three sub-tests**, because
+  a pure code move makes byte-identity trivially true and therefore vacuous — byte (restored
+  bytes match the persisted fixture), sabotage (a missing or corrupt index prevents
+  restoration or produces the specified safe failure), ordering (restoration completes before
+  prompt/context consumption). 3.1's `verify:` line is updated to state them.
+  **Revisit-if:** a concern with a matching subject exists or is approved, at which point the
+  restore can be relocated one-for-one with coherent ownership.
 - **Review trigger:** re-read when `road-to-continuity-writer-activation`'s other four
   blockers move, since three of them are maintainer decisions on the same file and one
   sitting alone is the shape that decays into abandoned-in-place.
 
 ### blocker: three-concern-split-is-unpaid-under-the-concern-ratchet
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** implementer
 - **Blocks:** step 2.1 only. Phase 1 is unaffected — a writer whose handlers are independently switchable inside existing concerns satisfies everything the 2026-09-07 council's D2 asked for in substance.
 - **Recommendation:** reorder rather than negotiate the ratchet — do Phase 3 first — but note first that the arithmetic below shows the reorder alone does not pay, so this recommendation is now necessary-but-insufficient rather than a route to green. Step 3.1's retirement of the `hot-context` concern pays one of the two or three the split costs. It is the only one of the three resolutions the 2026-09-08 council left standing (anthropic listed changing the countable unit, introducing an allowance, and deferring the split; openai struck the first two with *"No temporary allowance"*), and it is also the cheapest: the retirement is authorised work this roadmap already carries, so the payment costs nothing that was not already planned.
@@ -679,6 +819,33 @@ maintainer-owned blockers were not touched.
 - **What to do:** the instruction this entry carried — *"land Phase 3 first, retiring `hot-context` is the payment"* — is **arithmetically insufficient, measured 2026-09-08**, and that is now the first thing to know. `concern_count` reads **58** at HEAD against a floor of **58** (`countConcerns` over the `concerns:` block of `src/scripts/hook_manifest.yaml`, `src/scripts/_lib/concern_estate.ts:53-73`, called at `src/scripts/check_estate_count.ts:512`, allowance 0 at `:156`). Retiring `hot-context` takes it to **57**. A three-way split then lands at **59** if it dissolves one existing concern into three (+2) or at **60** if it adds three ids beside the two concerns that keep other work (+3). Both exceed 58. Retiring one concern buys one, and the split costs two or three, so **the payment is short by one or two whichever way the split is drawn**. The reordering is therefore still necessary and is no longer sufficient. What would actually pay: a second concern retirement (none is authorised in this roadmap — 3.2, 3.3 and 3.4 retire a CLI verb, a state file and two command documents, none of which is a concern), or a split that costs +1 rather than +2, or a maintainer decision on the ratchet itself. The first is the only agent-reachable option and it needs a candidate this roadmap does not carry. Both seats of the 2026-09-08 council refused a temporary allowance — openai: *"No temporary allowance."* — so widening it is not on the table either.
 - **What to do (unchanged half):** whatever pays for it, the split's own shape is settled — three ids in `hook_manifest.yaml` plus the fault-injection test over every handler combination, per step 2.1.
 - **Resolved when:** `concern_count` at HEAD is at or below the base ref's floor with the three ids declared, proven by `./scripts-run src/scripts/check_estate_count` exiting 0 on the branch that adds them.
+- **RESOLVED 2026-09-09 — option (d): the three-concern split is DECLINED, and step 2.1 is
+  cancelled rather than left unreachable.** AI council 2026-09-09 under the owner's written delegation for this drain run (2 seats, anthropic + openai, subscription transport, $0.0000, quorum 2/2), converged.
+  openai: *"Option (d) — leave step 2.1 unreachable. Council-decidable, assuming the written
+  delegation permits closing roadmap items as declined. This preserves the hard ratchet and
+  the already-shipped safety behavior."* anthropic reached (d) too, and got there by asking
+  the question this entry had not: **is a three-way split a FORM requirement (three separate
+  concern ids) or a SUBSTANCE requirement (handlers independently switchable)?** Phase 1
+  already ships three independently switchable handlers with fault-injection coverage inside
+  existing concerns. The substance is delivered; only the code-organisation form is not.
+  **The arithmetic is settled and it does not close.** `concern_count` is 58 against a floor
+  of 58. Even retiring two concerns and adding three lands at 59. anthropic wrote that out
+  and concluded *"this still doesn't close unless the floor itself moves"* — and moving the
+  floor is the one option both seats put outside the council's reach. openai names the
+  invariant: *"a hard governance ratchet may not be relaxed or redefined by the body it
+  constrains."*
+  **One seat corrected the other, and the correction is why (d) rather than (b).** An
+  earlier round proposed absorbing one handler into an existing concern so the split costs
+  +2 instead of +3. openai refused the arithmetic — *"58 - 1 + 2 = 59, which exceeds a
+  ceiling/floor fixed at 58; calling that within tolerance invents an allowance both
+  councils rejected"* — and anthropic independently observed that absorbing one handler
+  makes it a TWO-way split, not the three-way split the step names. Both objections kill (b).
+  **Executed here:** step 2.1 is `[-]`. No code changes, no concern-count change, no
+  weakening of `check_estate_count`, and the claim that retiring `hot-context` pays for the
+  split is removed — it was arithmetically insufficient and this entry already said so.
+  **Revisit-if:** a separately justified concern retirement lands and creates headroom, or a
+  design demonstrates a net-zero count without semantic misclassification. A ratchet
+  exception remains owner-reserved.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-08 | reviewer: claude/host -->

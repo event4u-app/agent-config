@@ -294,6 +294,12 @@ function budgetOf(argv: string[]): number {
  * measured.
  */
 export function changedFiles(root: string, ref: string): string[] | null {
+    // `execFileSync` takes an argv array, so there is no shell and `$(...)` in a
+    // rev is inert. What the `${ref}..HEAD` concatenation does NOT stop is
+    // OPTION injection: `--output=/tmp/x` becomes `--output=/tmp/x..HEAD`, a
+    // well-formed option whose value is a filename, and the file is written with
+    // exit 0 (probed 2026-09-09). A rev never begins with `-`.
+    if (ref.startsWith('-')) return null;
     try {
         return execFileSync('git', ['-C', root, 'diff', '--name-only', `${ref}..HEAD`], {
             env: hardenedSpawnEnv(),
