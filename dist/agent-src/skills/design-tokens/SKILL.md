@@ -87,6 +87,21 @@ scan the changed files, append the findings to
 (`var(--token)` over hardcoded hex — the validation rule the council's
 four-operation split assigns to *rules/linters*, not the corpus).
 
+**Set `artifact_covered: true` on a finding whose value traces to a provided
+design artifact.** Without it the polish round edits AWAY from the artifact:
+`polish.ts::partition_artifact_covered` drops flagged findings and treats every
+unmarked one as actionable, and this path appended `token_violation` findings
+without the flag — so a hex the handover states was converted to a project token
+by a loop nobody asked. The flag is per finding, not per run: a hardcoded hex
+the artifact never mentioned stays actionable and is still fixed. Marking is not
+suppression — the finding stays in the report as informational, so a reader
+still sees that the spec carries a value the token system does not.
+(AI council 2026-09-09 on `blocker: findings-actionability-default`, option (b):
+one call site, no package-wide default changed. Reopens if a second
+artifact-derived finding path reaches the loop without provenance — recurrence
+would argue for carrying provenance in the finding TYPE rather than at a third
+call site.)
+
 ## Procedure
 
 1. **Inspect the existing styling surface** — detect the stack (Tailwind

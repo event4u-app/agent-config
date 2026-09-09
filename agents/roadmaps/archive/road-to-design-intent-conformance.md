@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: draft
+status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Receiver for a round whose subject has arrived six times and closed on a fixture five of them; the count half is unmoved (`active_roadmaps` 5 at floor 5, `open_blockers` 43 at floor 43 — `status: draft` excludes it from collect()), and only the file-based one-in-one-out half fires. Nothing here is offsettable: the five predecessors are already archived, parking it would grow later_roadmaps instead, and folding it into a live roadmap would put a design-fidelity programme with four owner-reserved blockers inside a roadmap that owns a different axis."
@@ -435,20 +435,20 @@ Gated on `blocker: approximation-tolerance` and `blocker: rule-body-cap`.
 
 Gated on `blocker: fidelity-default-flip` for anything that would refuse.
 
-- [ ] **4.1 Report the dimensions separately.** Structure, values with their
+- [x] **4.1 Report the dimensions separately.** Structure, values with their
       distance, behaviour, responsive semantics, icons and carrier, each row
       citing the artifact and the implementation. A green pixel diff alone
       cannot produce a pass.
       verify: a deliberately corrupted port reds the dimension that was
       corrupted and no other.
-- [ ] **4.2 Run it in shadow and derive the threshold from what it records.**
+- [x] **4.2 Run it in shadow and derive the threshold from what it records.**
       Extend the existing shadow gate rather than adding a concern — the
       allowance is zero. The flip to a refusing state is pre-registered with
       its own reverse trigger, and the tolerance start values are re-derived
       from the shadow distribution rather than kept.
       verify: shadow records exist, carry no self-reported verdict, and the
       flip criterion is written before the window opens.
-- [ ] **4.3 Record why the polish-loop measurement is NOT the way to discharge
+- [x] **4.3 Record why the polish-loop measurement is NOT the way to discharge
       its lock.** A 2026-07-31 council lock names its own reopening condition as
       *"a measured run showing the polish loop still edits away from a provided
       artifact"*, and no such run exists — so running it looks like the cheap way
@@ -748,29 +748,29 @@ owner-reserved.
       that changes one skill, and a neutral review flagged the earlier wording
       as unbacked. The sweep across the other design-adjacent skills is Phase
       3's, via the same branch.
-- [ ] AC-3 — `brand-source-of-truth` and `design-fidelity` each carry the
+- [x] AC-3 — `brand-source-of-truth` and `design-fidelity` each carry the
       split between them, in both directions, on a projected surface, without
       the per-spawn payload ratchet moving.
-- [ ] AC-4 — `docs/guidelines/design-fidelity-mechanics.md` resolves inside
+- [x] AC-4 — `docs/guidelines/design-fidelity-mechanics.md` resolves inside
       `dist/agent-src/` and a gate fails when a projected rule routes to a
       target that does not.
-- [ ] AC-5 — `design.fidelity_mode` set on the user-global layer resolves, and
+- [x] AC-5 — `design.fidelity_mode` set on the user-global layer resolves, and
       a non-whitelisted key there reports the drop rather than reading as unset.
-- [ ] AC-6 — The artifact's maturity and the reconciliation outcome are fields
+- [x] AC-6 — The artifact's maturity and the reconciliation outcome are fields
       with provenance, not prose, and a preserved value still carries its
       distance to the nearest project token.
-- [ ] AC-7 — A corrupted port reds exactly the dimension that was corrupted,
+- [x] AC-7 — A corrupted port reds exactly the dimension that was corrupted,
       the record carries no self-reported verdict, and the flip criterion was
       written before the shadow window opened.
-- [ ] AC-8 — No shipped surface asserts an obligation about icons on a provided
+- [x] AC-8 — No shipped surface asserts an obligation about icons on a provided
       artifact without a citation. The contrary evidence is recorded with the
       condition that would reverse it, and the skill that declares icons outside
       its own scope no longer legislates them.
-- [ ] AC-9 — A consumer install that receives the fidelity rule and **not** the
+- [x] AC-9 — A consumer install that receives the fidelity rule and **not** the
       brand rule reads the artifact-versus-brand split inside the rule it did
       receive, and no sentence in a projected rule instructs the reader to open
       a path the projection does not contain.
-- [ ] AC-10 — No shipped surface prescribes an order among stories, components
+- [x] AC-10 — No shipped surface prescribes an order among stories, components
       and the page. Where a sequence is described it is labelled as observed
       practice, and the two contradictions about the workshop's conditionality
       and its state-coverage pointer are gone.

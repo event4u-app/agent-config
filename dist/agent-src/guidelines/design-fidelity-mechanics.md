@@ -412,6 +412,40 @@ unmarked finding is treated as actionable, so the default failure direction is
 
 Regression witness: `daf-slop-vs-provided`.
 
+### The 2026-07-31 lock, and why its own reopening condition cannot discharge it
+
+A council lock of 2026-07-31 names its reopening condition as *"a measured run
+showing the polish loop still edits away from a provided artifact"*. No such run
+exists, which makes running one look like the cheap way to close or reopen it.
+**It is not, and this paragraph exists so the next reader meets the argument
+instead of re-deriving it and spending the run.**
+
+The mechanism is **structural, not probabilistic**. Three facts, each checkable:
+`polish.ts:135-167` drops findings flagged `artifact_covered: true`;
+`src/skills/design-tokens/SKILL.md` wired `token_violation` findings into the
+same loop **without** setting that flag; and the paragraph above states that an
+unmarked finding is treated as actionable. Those compose into a path that edits
+away from the artifact whenever a token-violation finding fires on an
+artifact-derived value. Nothing about that path is stochastic.
+
+So a green measured run would establish *"this did not trigger in the sample"*
+— it could never establish *"this cannot trigger"*, which is the claim the lock
+would need to be discharged in the useful direction. A run whose only possible
+informative outcome is the one nobody wants is not a measurement, it is a
+lottery ticket, and it costs a real run to buy.
+
+**The structural fix is the discharge, and it is `blocker:
+findings-actionability-default`** on `road-to-design-intent-conformance`.
+Resolved by the AI council on 2026-09-09 to option (b): set `artifact_covered`
+on the `token_violation` path, changing no package-wide default. Option (a) —
+inverting the default so a finding is non-actionable unless escalated — was
+rejected on blast radius: it changes the meaning of every existing unmarked
+finding across the package to fix one known producer.
+
+**No measurement is scheduled against this lock.** If a later reader wants to
+reopen it, the thing to change is the falsifiability of its condition, not the
+sample size.
+
 ## Value-level provenance — the finer grain beside the flag
 
 The block above is finding-level and stays the default: `artifact_covered` is a
