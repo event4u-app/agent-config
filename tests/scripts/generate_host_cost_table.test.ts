@@ -7,11 +7,7 @@
 // reads as "this package has no standing cost", the most misleading output this
 // code could produce. So every refusal path is pinned here, and the pass path is
 // the smallest part of the file.
-import * as fs from 'node:fs';
-import * as os from 'node:os';
-import * as path from 'node:path';
-
-import { afterEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import {
     censusPin,
@@ -20,18 +16,6 @@ import {
     renderTable,
     type HostRow,
 } from '../../src/scripts/generate_host_cost_table.js';
-
-const tmps: string[] = [];
-
-function tmpdir(): string {
-    const d = fs.mkdtempSync(path.join(os.tmpdir(), 'host-cost-table-'));
-    tmps.push(d);
-    return d;
-}
-
-afterEach(() => {
-    while (tmps.length) fs.rmSync(tmps.pop() as string, { recursive: true, force: true });
-});
 
 const CENSUS = `<!-- evidence-type: analysis -->
 # Standing rule payload, per host
