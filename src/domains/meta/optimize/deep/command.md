@@ -102,15 +102,11 @@ above that, re-invoke deliberately with fresh context.
 ### Hard exclusions — never inside this command
 
 - **Kernel rules:** the run NEVER edits a kernel rule (`is_kernel_rule` in
-  `src/scripts/_lib/kernel_rules.ts`). This is now a fence this command holds
-  itself, not one a guard holds for it: ADR-268 § 4 retired the
-  `block-kernel-rule-writes` tool-call deny, so a kernel edit is refused in CI
-  by `check_kernel_edit_ratified` rather than at the keystroke — and an
-  optimisation sweep is exactly the context that must not reach for a
-  ratification artifact. A finding that wants a kernel-rule change is recorded
-  in the roadmap as a **proposal routed to the kernel amendment process**
-  (`contexts/authority/kernel-rule-edits.md`: own PR, ratification artifact) —
-  the refusal names that process, never edits.
+  `src/scripts/_lib/kernel_rules.ts`; the `block-kernel-rule-writes`
+  PreToolUse guard denies the write anyway). A finding that wants a
+  kernel-rule change is recorded in the roadmap as a **proposal routed to
+  the kernel slow-rollout process** (`contexts/authority/kernel-rule-edits.md`:
+  own PR, ≥ 24 h soak) — the refusal names that process, never edits.
 - **Public contracts:** no change to a `docs/contracts/` surface marked
   `stability: stable` without explicit user approval this run — record as a
   proposal otherwise.

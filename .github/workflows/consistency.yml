@@ -775,6 +775,53 @@ jobs:
           fi
           ./scripts-run src/scripts/check_kernel_rule_bundle --files "${CHANGED[@]}"
 
+      # ADR-268 § 4. Same `gh pr view` file list and the same reason for it —
+      # the shallow PR-merge checkout makes `git fetch origin <base>` race with
+      # the auth extraheader on some runners.
+      #
+      # THE JUDGING CODE COMES FROM THE BASE, THE DATA FROM THE HEAD. The
+      # round-1 ratification review refused an earlier version of this step for
+      # running the gate out of the PR head: a candidate diff then supplied the
+      # code that judged it, and self-inclusion in the gated set bought nothing
+      # because the modified gate could simply exclude itself. So the step
+      # materialises the base revision in a detached worktree and runs THAT
+      # copy of the script, pointing it at the head tree for the changed files
+      # and the artifact. `--policy-root` is left at the script's own tree, so
+      # the quorum policy is the base's too — otherwise the same PR could lower
+      # `required_providers` and have the base gate honour it.
+      #
+      # `node_modules` stays the head's (tsx lives there); only the SCRIPT and
+      # its `_lib` imports resolve from the base worktree, because ESM resolves
+      # relative imports against the importing file.
+      - name: Kernel / governance-hook edits carry a ratification artifact
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          mapfile -t CHANGED < <(gh pr view "${{ github.event.pull_request.number }}" \
+            --json files --jq '.files[].path')
+          if [ "${#CHANGED[@]}" -eq 0 ]; then
+            echo "No changed files reported by gh pr view; nothing to gate."
+            exit 0
+          fi
+          GATE=src/scripts/check_kernel_edit_ratified.ts
+          BASE_DIR="$RUNNER_TEMP/ratification-base"
+          if git cat-file -e "$BASE_SHA:$GATE" 2>/dev/null; then
+            git worktree add --detach "$BASE_DIR" "$BASE_SHA" >/dev/null
+            echo "Judging with the BASE revision's gate ($BASE_SHA)."
+            npx tsx "$BASE_DIR/$GATE" --root "$PWD" --files "${CHANGED[@]}"
+          else
+            # The bootstrap PR — the one that INTRODUCES the gate. There is no
+            # base copy to judge with, so the head's own gate runs and the
+            # independence of that run rests entirely on the ratification
+            # artifact and on human review of this PR. Stated loudly rather
+            # than hidden: this branch is sound exactly once.
+            echo "::warning::BOOTSTRAP — no gate at the base revision; running the head's copy."
+            echo "The independence of this run rests on the ratification artifact and human review."
+            ./scripts-run src/scripts/check_kernel_edit_ratified --files "${CHANGED[@]}"
+          fi
+
       - name: Lint marketplace.json
         run: task lint-marketplace
 

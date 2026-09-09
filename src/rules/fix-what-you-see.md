@@ -97,7 +97,7 @@ run comes back red and nobody has said a word.
 `check_always_budget` is the reason: the extended always-budget sat at
 60,252 / 60,254 chars — **two characters of headroom** — and the cap is a
 ratchet that may only move down. The other nine always-rules are the kernel,
-whose edits go through a ratification artifact (ADR-268 § 4), so no room can be made
+which `block_kernel_rule_writes` denies agent writes to, so no room can be made
 from this side. A 2,332-char rule puts the total at 103.9 %.
 
 Closing the gap needs one of: the ext-cap ratchet opened deliberately (a

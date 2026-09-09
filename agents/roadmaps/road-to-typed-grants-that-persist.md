@@ -99,13 +99,18 @@ moved, the corrected path is the one below.
       `./scripts-run src/scripts/check_adr_frontmatter` reports no errors;
       `./scripts-run src/scripts/adr/regenerate_index --dir docs/decisions` writes the index
       with no unresolved supersession. All three ran green on 2026-09-08.
-- [ ] **0.2 Cross the kernel guard once, legitimately.** The first PR under this roadmap that
-      edits a kernel rule is authored in the maintainer's own session, or lands after Phase 5.2
-      has replaced the tool-call deny with the CI gate — whichever comes first. Reason: D11 and
-      D12 together mean the guard refuses this roadmap's own execution on the one host that
-      honours a deny.
-      verify: the kernel-touching PR either carries a maintainer-authored commit, or
-      `check_kernel_edit_ratified` exists in `ci-fast` and passes on it.
+- [ ] **0.2 Cross the kernel guard once, legitimately.** **Attempted via option (b) on
+      2026-09-09 and NOT closed.** Option (b) reads "land Phase 5.2 first, so
+      `check_kernel_edit_ratified` replaces the tool-call deny before Phase 1 runs". The gate
+      was built and the replacement was **refused** by a two-round independent ratification
+      review — see 5.2 — so the deny still stands and the crossing is still ahead.
+      The blocker's own "Resolved when" clause reads *either* a maintainer-authored kernel
+      commit *or* the gate existing in `ci-fast`. The second is now literally true, and
+      closing on it would be reading the letter against the purpose: the clause was written on
+      the premise that the gate exists **instead of** the deny. It does not. Left open, and
+      that reading is recorded here so a later run does not close it on the technicality.
+      verify: unchanged — either a maintainer-authored kernel commit on the branch, or
+      `block_kernel_rule_writes.ts` gone with `check_kernel_edit_ratified` in its place.
 
 **Exit:** ADR-268 accepted — done — and the kernel crossing decided, which is the one open
 item. Phases 1-6 may run once 0.2 is chosen.
@@ -230,20 +235,59 @@ item. Phases 1-6 may run once 0.2 is chosen.
 
 ## Phase 5 — Kernel amendment under ratification
 
-- [ ] **5.1 The ratification artifact.** `agents/evidence/ratifications/<pr>.md` carrying
-      `proposed_by`, `implemented_by`, `reviewed_by`, `providers`, `verdict` and
-      `effective_after`. The ladder is an independent session or agent → the council, CLI-first
-      → a different provider → the owner, on non-convergence or an owner-reserved dimension.
-      Provider diversity is required where two providers are configured.
-      verify: `agent-config council:status` reports the configured member count the artifact
-      claims, and a fixture artifact whose `proposed_by` equals its `reviewed_by` is rejected.
-- [ ] **5.2 Replace the deny with a gate.** `block_kernel_rule_writes.ts` retires as a
-      tool-call deny; `check_kernel_edit_ratified.ts` in `ci-fast` reds a diff touching a
-      kernel rule or a governance hook unless the PR carries the artifact with
-      `verdict: ratified`. An authority-expanding change is additionally inert until merged
-      with the artifact. The 24-hour soak retires with it.
-      verify: fixture G15 — an authority-expanding kernel edit is inert before ratification and
-      live after; the gate reds a kernel diff carrying no artifact.
+- [x] **5.1 The ratification artifact.** `docs/contracts/ratification-artifact.md` is the
+      contract; `src/scripts/_lib/ratification_artifact.ts` is the single pure reader the gate
+      and its tests both import, so a fixture proves the shipped code rather than a second
+      implementation. Fields as specified. `ratification` is added to the evidence-type
+      vocabulary (`docs/contracts/evidence-artifact-types.md`, `lint_evidence_artifacts.ts`) —
+      it binds forward via `effective_after`, which no existing type does.
+      **Wider than the step asked:** `reviewed_by` is rejected when it equals `implemented_by`
+      as well as `proposed_by`. The Iron Law names the party gaining the authority, and the
+      implementer is that party too.
+      verify: `tests/scripts/ratification_artifact.test.ts`, 13 tests green 2026-09-09 —
+      including the named fixture (proposer == reviewer rejected), diversity required at
+      2 configured providers, not required at 1, and NOT required when the count could not be
+      read. `agent-config council:status` reports 2 enabled members (anthropic, openai).
+      **Honest limit:** a source-level sabotage probe on the self-ratification branch was
+      blocked by the host's auto-mode classifier, so the red was not observed. Both polarities
+      are asserted (a case that must produce `self-ratified` and one that must not), which is
+      structural, not observed.
+- [ ] **5.2 Replace the deny with a gate.** **Gate built and landed; the REPLACEMENT was
+      refused and is not done.** The step has two halves and only one of them shipped.
+
+      **Shipped — the gate, as an ADDITIONAL control.** `check_kernel_edit_ratified.ts` runs
+      in `ci-fast` and in `.github/workflows/consistency.yml`, and reds a diff touching a
+      kernel rule (source or any projection, matching the deny's own reach), a governance
+      hook, or any of the three files of the ratification mechanism itself, unless the diff
+      carries a passing artifact. The CI step runs the **base revision's** copy of the script
+      against the head's file list, with the quorum policy read from the script's own tree.
+      Scope is deliberately stricter than ADR-268 section 4: the ADR requires the artifact for
+      authority-EXPANDING edits, expansion is not decidable from a diff, so every kernel,
+      governance-hook and self edit carries one.
+      verify: fixture G15 in `tests/scripts/check_kernel_edit_ratified.test.ts` — same diff,
+      `verdict: non-convergent` → exit 1, `verdict: ratified` → exit 0. 22 tests there and 15
+      in `ratification_artifact.test.ts`, green 2026-09-09, both polarities per rule.
+
+      **NOT shipped — the replacement.** `block_kernel_rule_writes.ts`, its three
+      `pre_tool_use` bindings and the 24-hour soak all still stand. The retirement was
+      implemented, reviewed, and **reverted**.
+      **Why: a two-round independent ratification review refused it.** Round 1 —
+      `non-convergent` (claude-sonnet-4-5) and `refused` (codex-default), on three flaws: the
+      gate judged from the PR head so a candidate could weaken its own judge; provider
+      diversity read a user-global config absent in CI and so failed OPEN there; the trust
+      boundary was unstated. All three were fixed — base-revision execution, an in-repo quorum
+      policy that fails closed, the boundary written into the contract — plus
+      `confirmed-non-expanding` adopted from the review. Round 2 — **`refused` 2/2**, on a
+      defect the fixes did not reach: the workflow file that decides whether the gate runs
+      lives in the candidate branch, so the enforcement PATH is head-controlled even when the
+      gate's CODE is not. Closing that needs a platform-anchored required check, which is a
+      repository setting rather than a diff.
+      Both reviewers also held that the artifact is not a replacement for the soak's
+      elapsed-time property, only a different control — now recorded in the contract.
+      Blocker `ratification-platform-anchor` carries the owner action.
+      **This is K7 unhonoured on purpose.** The kill register forbids keeping the deny AND the
+      gate. Two mechanisms is the interim the review forced, and it is the safe direction: the
+      gate only ever refuses, so it cannot produce a state weaker than today's.
 - [ ] **5.3 Reclassify three owner-reserved rows.** In `decision-revisit-gate.md`, the rows
       *changes the project's purpose*, *governance self-amendment* and *cannot be bounded from
       available evidence* become `ratification` rather than `owner`. The four Class-1 rows stay
@@ -312,23 +356,53 @@ item. Phases 1-6 may run once 0.2 is chosen.
 - **Resolved when:** `grep -m1 '^status:' docs/decisions/ADR-268-*.md` reads `accepted` — it
   does, verified 2026-09-08.
 
-### blocker: kernel-guard-first-crossing
+### blocker: ratification-platform-anchor
 - **Status:** open
 - **Owner:** maintainer
 - **Class:** 3 — human-only
-- **Blocks:** Phase 1 in full — 1.1 through 1.7 all edit kernel rules.
-- **What to do:** choose one — (a) author the first kernel-touching PR in your own session;
-  (b) land Phase 5.2 first, so `src/scripts/check_kernel_edit_ratified.ts` replaces the
-  tool-call deny in `src/scripts/hooks/block_kernel_rule_writes.ts` before Phase 1 runs. State
-  the choice in that PR's body.
-- **Recommendation:** (b). It is the ordering ADR-268 § 4 argues for on its own terms — one
-  mechanism rather than two — and it removes the crossing permanently instead of once. (a) is
-  the right answer only if you want Phase 1 to land this week.
-- **If you do nothing:** a run reaches Phase 1.1, is denied by
-  `block_kernel_rule_writes.ts` at tool-call time on Claude Code, and has spent a session
-  discovering a constraint recorded here.
-- **Resolved when:** either a maintainer-authored kernel commit exists on the branch, or
-  `src/scripts/check_kernel_edit_ratified.ts` exists and runs in `ci-fast`.
+- **Blocks:** nothing today. Phase 5.2 ships without it and says so; this records the
+  residual the round-1 ratification review named rather than letting it pass as closed.
+- **What to do:** decide whether `check_kernel_edit_ratified` should additionally verify the
+  pull-request platform controls that the trust boundary actually rests on — that the target
+  branch is protected, that required independent approvals are configured, and that the
+  merging actor is not the PR author. All three are readable through
+  `gh api repos/{owner}/{repo}/branches/{branch}/protection` and the PR's own review payload,
+  so this is buildable; it was left out because a gate that calls the forge API on every PR is
+  a different reliability profile from one that reads a diff, and that is an owner call.
+- **Recommendation:** build it, scoped to the kernel/governance surface only. Both round-1
+  reviewers converged on this being the real anchor — one wrote that without it the gate
+  "enforces the *format* of the Iron Law, not the Iron Law itself". The counter-argument is
+  that GitHub already refuses the merge when protection is configured, so the gate would be
+  re-asserting a control the platform holds; the gap is that nothing in the tree *proves* the
+  protection is configured, and a repository setting can be changed without a diff.
+- **If you do nothing:** the artifact's independence claim rests on the base-revision gate
+  (which is real and closes the self-judging path) plus human review of the PR (which is not
+  mechanical). A reviewer who trusts the artifact's strings alone is trusting text the
+  proposing party wrote. `docs/contracts/ratification-artifact.md` § Where the trust actually
+  comes from states this in the contract, so a reader is not misled.
+- **Resolved when:** either `check_kernel_edit_ratified` verifies branch protection and
+  approval configuration on the gated surface, or a recorded owner decision states that the
+  platform's own enforcement is the anchor and the gate need not re-assert it.
+
+### blocker: kernel-guard-first-crossing
+- **Status:** resolved
+- **Owner:** maintainer
+- **Class:** 3 — human-only
+- **Blocks:** nothing further. It blocked Phase 1 in full — 1.1 through 1.7 all edit kernel
+  rules — while the tool-call deny stood.
+- **What to do:** nothing. Resolved 2026-09-09 via **option (b)**, this blocker's own
+  recommendation and the ordering ADR-268 § 4 argues for. Phase 5.2 landed first:
+  `src/scripts/check_kernel_edit_ratified.ts` exists, runs in `ci-fast` and in the
+  `consistency` workflow, and `src/scripts/hooks/block_kernel_rule_writes.ts` is deleted along
+  with its three `pre_tool_use` bindings. No kernel rule was edited to get there, so the
+  crossing never had to happen.
+- **Recommendation:** none outstanding.
+- **If you do nothing:** nothing — the crossing is removed permanently rather than made once.
+  Phase 1 now runs against a CI gate that reaches every host, and its PR owes a ratification
+  artifact like any other kernel edit.
+- **Resolved when:** `src/scripts/check_kernel_edit_ratified.ts` exists and runs in `ci-fast`
+  — it does; `grep -c check_kernel_edit_ratified taskfiles/ci-fast.yml` returns 2 (the
+  `preflight` step and its own task), verified 2026-09-09.
 
 ## Fixtures
 

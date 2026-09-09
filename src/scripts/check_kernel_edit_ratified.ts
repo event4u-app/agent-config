@@ -1,21 +1,32 @@
 #!/usr/bin/env tsx
 /**
- * check_kernel_edit_ratified — ADR-268 § 4's CI gate, and the replacement for
- * a tool-call deny.
+ * check_kernel_edit_ratified — ADR-268 § 4's CI gate, ADDED ALONGSIDE the
+ * tool-call deny, not in place of it.
  *
- * Until this gate existed, the control on kernel-rule edits was
- * `src/scripts/hooks/block_kernel_rule_writes.ts`, a PreToolUse deny.
- * ADR-268 § 4 retires it in one sentence and gives the
- * reason: *"the tool-call deny is replaced by a CI gate reading the artifact —
- * one mechanism, not two, because a deny the executing run must bypass is the
- * shape ADR-262 retired."*
+ * ADR-268 § 4 says the deny "is replaced by a CI gate reading the artifact —
+ * one mechanism, not two". This lands the gate and does NOT perform that
+ * replacement, and the distinction is the whole reason this header exists.
  *
- * The concrete failure the deny had. It fires on ONE host (Claude Code is the
- * only host that both binds `pre_tool_use` and honours a deny), so on every
- * other host the guarantee was prose. And it denied the very run that ADR-268
- * authorises — `road-to-typed-grants-that-persist` rewrites five of the nine
- * kernel rules, and the guard refused that roadmap's own execution. A control
- * whose correct use requires bypassing it is not a control.
+ * A two-round independent ratification review REFUSED the replacement, 2/2 in
+ * round 2, on a defect neither the ADR nor the first implementation saw: the
+ * workflow file that decides whether the gate runs at all lives in the
+ * candidate branch. Running the gate's CODE from the base revision — which the
+ * workflow now does — closes the "candidate judges itself" hole one level
+ * down and leaves the level above it open, because a PR can still edit the
+ * step that invokes it. Closing that needs a platform-anchored required check
+ * (a protected reusable workflow, an org ruleset), which is a repository
+ * setting and not a diff. So the replacement waits on an owner action, and
+ * until then BOTH mechanisms stand.
+ *
+ * Two mechanisms is a state ADR-268 § 4 argues against, and it is the correct
+ * interim anyway: this gate ADDS a refusal and removes none, so it is pure
+ * tightening — the discriminator ADR-268 § 0 gives for a narrowing. Removing
+ * the deny is the authority change, and that is what was refused.
+ *
+ * What the gate buys over the deny, today, with the deny still in place: it
+ * reaches every host rather than the one that honours a deny, and its unit is
+ * the cumulative DIFF rather than one tool call — so the two-step
+ * write-to-staging-then-`mv` sequence that laundered past the hook is caught.
  *
  * Gated: a diff touching a kernel rule under `src/rules/` (the nine of
  * `_lib/kernel_rules.ts`), a governance hook (`src/scripts/hooks/block_*.ts`),
@@ -33,17 +44,20 @@
  * a record. A narrowing edit pays one artifact it did not strictly owe; an
  * expanding edit cannot slip through a misclassification.
  *
- * Provider diversity is measured, never assumed.
- * The configured member count comes from the council config, which resolves
- * user-global (ADR-104) and is therefore ABSENT in CI. Absent means the
- * diversity rule does not fire and the gate says so on stdout — an unmeasured
- * count is not evidence that diversity was unavailable. Locally, where the
- * config resolves, the rule fires.
+ * Provider diversity fails closed. The required count comes from
+ * `src/config/ratification-policy.json`, committed in this repository so it is
+ * present on every runner. The first review round refused reading it from the
+ * user-global council config: that file is absent on CI, so the rule printed
+ * "unmeasured" and passed, on the one surface where it most needed to fire. A
+ * missing or unparseable policy is now a refusal.
  *
  * Inputs:
  *   --base-ref REF    git ref to diff against (default: origin/main, then main)
  *   --files F [F …]   override the changed-file list (testing and CI)
- *   --root DIR        repo root (testing)
+ *   --root DIR        repo root the diff and artifacts are read from (testing)
+ *   --policy-root DIR where the quorum policy is read from (testing); defaults
+ *                     to THIS script's tree, so a base-revision run reads the
+ *                     base's policy rather than one the candidate lowered
  *   --quiet           verdict line only
  *
  * Exit codes: 0 = pass (or nothing gated) · 1 = fail · 3 = internal error.

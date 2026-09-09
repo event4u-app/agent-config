@@ -8,7 +8,7 @@
 // defect is never silently dropped.
 //
 // The kernel set is asserted against `kernel_rules.ts`, the same canonical
-// source `check_kernel_edit_ratified` resolves from, so a governance change to
+// source `block_kernel_rule_writes` resolves from, so a governance change to
 // membership cannot leave a hardcoded copy here behind.
 import { describe, expect, it } from "vitest";
 

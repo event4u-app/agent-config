@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import {
     isRatified,
+    PASSING_VERDICTS,
     RATIFICATION_VERDICTS,
     readRatification,
+    readRequiredProviders,
 } from '../../src/scripts/_lib/ratification_artifact.js';
 
 /**
@@ -79,9 +81,18 @@ describe('readRatification', () => {
         expect(reading.artifact).not.toBeNull();
     });
 
-    it('does not require diversity when the configured count could not be established', () => {
-        const reading = readRatification(artifact({}, ['anthropic']), null);
-        expect(reading.problems.map((p) => p.code)).not.toContain('diversity-required');
+    // Round 1 of the ratification review refused the opposite behaviour: an
+    // unreadable required-count used to SKIP the rule. A control that passes
+    // when it cannot measure is advisory, so it now refuses.
+    it('FAILS CLOSED when the required count could not be established', () => {
+        const reading = readRatification(artifact({}, ['anthropic', 'openai']), null);
+        expect(reading.artifact).toBeNull();
+        expect(reading.problems.map((p) => p.code)).toContain('diversity-unverifiable');
+    });
+
+    it('requires as many distinct providers as the policy asks for, not just two', () => {
+        const reading = readRatification(artifact({}, ['anthropic', 'openai']), 3);
+        expect(reading.problems.map((p) => p.code)).toContain('diversity-required');
     });
 
     it('names every missing required field', () => {
@@ -96,12 +107,15 @@ describe('readRatification', () => {
         expect(RATIFICATION_VERDICTS).not.toContain('approved');
     });
 
-    it('accepts every verdict in the vocabulary and ratifies only one of them', () => {
+    it('accepts every verdict in the vocabulary and lets exactly two of them land', () => {
         for (const verdict of RATIFICATION_VERDICTS) {
             const reading = readRatification(artifact({ verdict }), 2);
-            expect(reading.problems).toEqual([]);
-            expect(isRatified(reading)).toBe(verdict === 'ratified');
+            expect(reading.problems, verdict).toEqual([]);
+            expect(isRatified(reading), verdict).toBe(PASSING_VERDICTS.has(verdict));
         }
+        // Pinned explicitly, so widening the passing set is a deliberate edit
+        // rather than something a new vocabulary entry does by accident.
+        expect([...PASSING_VERDICTS].sort()).toEqual(['confirmed-non-expanding', 'ratified']);
     });
 
     it('rejects an effective_after that is neither `merge` nor an ISO instant', () => {
@@ -131,6 +145,15 @@ describe('readRatification', () => {
         const reading = readRatification(inline, 2);
         expect(reading.problems).toEqual([]);
         expect(reading.artifact?.providers).toEqual(['anthropic', 'openai']);
+    });
+
+    it('reads the required count from the policy text, and refuses a malformed one', () => {
+        expect(readRequiredProviders('{"required_providers": 2}')).toBe(2);
+        expect(readRequiredProviders(null)).toBeNull();
+        expect(readRequiredProviders('not json')).toBeNull();
+        expect(readRequiredProviders('{"required_providers": "2"}')).toBeNull();
+        expect(readRequiredProviders('{"required_providers": 0}')).toBeNull();
+        expect(readRequiredProviders('{}')).toBeNull();
     });
 
     it('reports a file with no frontmatter as such rather than as six missing fields', () => {

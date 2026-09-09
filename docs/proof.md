@@ -303,7 +303,7 @@ Pure projection of what the repo already knows — the `enforced_by`
 resolution (`check_enforcement_coverage`) and the claims ledger
 (`docs/CLAIMS.md`). No new taxonomy, zero hand-written rows.
 
-**Axis 1 — enforcement level per rule.** 120 rules · 16 blocking (13.3%) · 10 observer · 0 local-only · 81 undeclared — of which 9 kernel-denied (an `enforced_by` declaration on a kernel rule is reachable only through a ratified governance edit, ADR-268 § 4, never through authoring) and 72 not declared yet.
+**Axis 1 — enforcement level per rule.** 120 rules · 16 blocking (13.3%) · 10 observer · 0 local-only · 81 undeclared — of which 9 kernel-denied (`block_kernel_rule_writes` refuses an `enforced_by` write on a kernel rule, so no declaration is reachable for them at all) and 72 not declared yet.
 
 `denominator: 120 rule(s), frame in-scope (src/rules/*.md) == governed-total 120`
 

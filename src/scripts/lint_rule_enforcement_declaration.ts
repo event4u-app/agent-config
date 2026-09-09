@@ -89,7 +89,7 @@ function _declaration(fm: Record<string, string | string[]>): string[] | null {
  *
  * BOTH spellings are accepted, and that is not leniency. The bare `none` was
  * retired for `instruction-only: <reason>` on 2026-08-23 (one rule still carries
- * it: `non-destructive-by-default`, a kernel rule `check_kernel_edit_ratified`
+ * it: `non-destructive-by-default`, a kernel rule `block_kernel_rule_writes`
  * denies the agent write to). A body-check that knew only the old word would
  * fail a NEW rule that spelled the declaration the new way and said so in prose —
  * the rename would have made the honesty convention unsatisfiable for exactly

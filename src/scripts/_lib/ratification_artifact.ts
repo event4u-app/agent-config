@@ -43,8 +43,27 @@ export const RATIFICATION_DIR = 'agents/evidence/ratifications';
  * The verdict vocabulary — closed, because an open one is a free-text field
  * that always reads as approval to a grep.
  */
-export const RATIFICATION_VERDICTS = ['ratified', 'refused', 'non-convergent'] as const;
+export const RATIFICATION_VERDICTS = [
+    'ratified',
+    'confirmed-non-expanding',
+    'refused',
+    'non-convergent',
+] as const;
 export type RatificationVerdict = (typeof RATIFICATION_VERDICTS)[number];
+
+/**
+ * The two verdicts that let a diff land.
+ *
+ * `confirmed-non-expanding` exists because the gate demands an artifact for
+ * EVERY kernel and governance-hook diff, including a typo fix. Calling that a
+ * ratification of an authority expansion would be false, and a vocabulary that
+ * forces a false label is a vocabulary people route around. Adopted from the
+ * round-1 review, which named the pressure this relieves.
+ */
+export const PASSING_VERDICTS: ReadonlySet<string> = new Set([
+    'ratified',
+    'confirmed-non-expanding',
+]);
 
 /** The six fields Phase 5.1 names, all required. */
 export const RATIFICATION_FIELDS = [
@@ -76,6 +95,7 @@ export interface RatificationProblem {
         | 'self-ratified'
         | 'no-providers'
         | 'diversity-required'
+        | 'diversity-unverifiable'
         | 'bad-effective-after';
     message: string;
 }
@@ -188,14 +208,27 @@ export function readRatification(
         }
     }
 
-    // Diversity, only where two or more providers are actually configured.
-    if (configuredProviders !== null && configuredProviders >= 2) {
+    // Diversity, against the REQUIRED count.
+    //
+    // Round 1 refused the previous shape: the count came from the user-global
+    // council config, which is absent on a CI runner, so the rule silently did
+    // not fire there. `null` now means the required count could not be
+    // established, and that is a REFUSAL rather than a skip — a control that
+    // passes when it cannot measure is advisory.
+    if (configuredProviders === null) {
+        problems.push({
+            code: 'diversity-unverifiable',
+            message:
+                'the required provider count could not be read, so diversity is unverifiable — ' +
+                'a control that cannot measure fails closed (src/config/ratification-policy.json)',
+        });
+    } else if (configuredProviders >= 2) {
         const distinct = new Set(providers);
-        if (distinct.size < 2) {
+        if (distinct.size < configuredProviders) {
             problems.push({
                 code: 'diversity-required',
                 message:
-                    `${configuredProviders} providers are configured, so provider diversity is required; ` +
+                    `${configuredProviders} distinct providers are required; ` +
                     `the artifact names ${distinct.size} (${providers.join(', ') || 'none'})`,
             });
         }
@@ -218,7 +251,28 @@ export function readRatification(
     };
 }
 
-/** True when the artifact both parses and carries `verdict: ratified`. */
+/** True when the artifact parses and carries a verdict that lets the diff land. */
 export function isRatified(reading: RatificationReading): boolean {
-    return reading.artifact !== null && reading.artifact.verdict === 'ratified';
+    return reading.artifact !== null && PASSING_VERDICTS.has(reading.artifact.verdict);
+}
+
+/**
+ * The required distinct-provider count, from the repository's own policy file.
+ *
+ * Returns `null` when the file is missing or unparseable, and the caller turns
+ * that into a refusal — never a skip. Reading the policy from the repository
+ * rather than from the user-global council config is the round-1 fix: a runner
+ * has the repository and does not have the operator's home directory.
+ */
+export function readRequiredProviders(policyText: string | null): number | null {
+    if (policyText === null) {
+        return null;
+    }
+    try {
+        const parsed = JSON.parse(policyText) as { required_providers?: unknown };
+        const n = parsed.required_providers;
+        return typeof n === 'number' && Number.isInteger(n) && n >= 1 ? n : null;
+    } catch {
+        return null;
+    }
 }

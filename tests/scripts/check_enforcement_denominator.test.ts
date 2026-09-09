@@ -152,8 +152,8 @@ describe('check_enforcement_denominator — the projection owes the split', () =
     // number is readable, and `docs/proof.md:307` shipped
     // `81 undeclared (no enforced_by yet)` while the same resolver's
     // `kernel_denied: 9` recorded that nine of those cannot carry an
-    // `enforced_by` field through authoring — reaching one takes a ratified
-    // governance edit (ADR-268 § 4). For that nine there is no *yet*.
+    // `enforced_by` field at all — `block_kernel_rule_writes` refuses the write
+    // with no agent-accessible override. For that nine there is no *yet*.
     //
     // RED BEFORE GREEN, on the real tree rather than a fixture: with the split
     // stripped from `docs/proof.md` the gate exits **1** naming `docs/proof.md:307`;

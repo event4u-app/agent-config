@@ -51,6 +51,7 @@ import { main as languageMirrorMain } from '../language_mirror_hook.js';
 import { main as gitAuthorizationMain } from '../git_authorization_hook.js';
 import { main as evidenceIndependenceMain } from './evidence_independence.js';
 import { main as blockNoVerifyMain } from './block_no_verify.js';
+import { main as blockKernelRuleWritesMain } from './block_kernel_rule_writes.js';
 import { main as blockConfigWeakeningMain } from './block_config_weakening.js';
 import { main as blockSpeakingInboxDirMain } from './block_speaking_inbox_dir.js';
 import { main as oneQuestionPerAskMain } from './one_question_per_ask_hook.js';
@@ -113,6 +114,7 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
     'src/scripts/git_authorization_hook.ts': gitAuthorizationMain as ConcernMain,
     'src/scripts/hooks/evidence_independence.ts': evidenceIndependenceMain as ConcernMain,
     'src/scripts/hooks/block_no_verify.ts': blockNoVerifyMain as ConcernMain,
+    'src/scripts/hooks/block_kernel_rule_writes.ts': blockKernelRuleWritesMain as ConcernMain,
     'src/scripts/hooks/block_config_weakening.ts': blockConfigWeakeningMain as ConcernMain,
     'src/scripts/hooks/block_speaking_inbox_dir.ts': blockSpeakingInboxDirMain as ConcernMain,
     'src/scripts/hooks/one_question_per_ask_hook.ts': oneQuestionPerAskMain as ConcernMain,

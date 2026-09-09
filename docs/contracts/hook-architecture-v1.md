@@ -406,8 +406,8 @@ platform, every event key must be in the agent-config event vocabulary.
 
 ### Which hosts carry `pre_tool_use` — bound-and-denying, bound-only, capability-limited, unbound, absent
 
-Three `severity: blocking` concerns sit on `pre_tool_use` — `block-no-verify`,
-`block-config-weakening` and
+Four `severity: blocking` concerns sit on `pre_tool_use` — `block-no-verify`,
+`block-kernel-rule-writes`, `block-config-weakening` and
 `evidence-independence` (its blocking branch) — so "which hosts is this
 actually enforced on" is asked of this manifest repeatedly. It has **four**
 answers — **five since 2026-08-24** — and every collapse of them has produced a
@@ -469,6 +469,7 @@ becoming a blanket claim:
 |---|---|---|---|---|
 | `hardenedSpawnEnv` | env mutations only | `shell.env` | ✅ dedicated hook | **writable** — mutate-only, exactly its shape |
 | kernel projection | system-prompt mutations only | `experimental.chat.system.transform` | ✅ dedicated hook | **writable** — mutate-only |
+| `block-kernel-rule-writes` | the written path | `permission.ask` | ⚠️ `pattern` / untyped `metadata` | **probe-gated** |
 | `block-config-weakening` | path **and** diff | `permission.ask` | ⚠️ diff certainly absent | **probe-gated** |
 | `block-no-verify` | the command string | `permission.ask` | ⚠️ not a typed field | **probe-gated** |
 | `git-authorization` | the git operation | `permission.ask` | ⚠️ not a typed field | **probe-gated** |

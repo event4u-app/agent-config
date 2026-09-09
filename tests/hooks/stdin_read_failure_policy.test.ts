@@ -140,13 +140,13 @@ describe('denyOnStdinFailure — option (c), and only option (c)', () => {
 
     it('names every silenced guard, not just the first', () => {
         const second: JsonObject = {
-            name: 'block-config-weakening',
+            name: 'block-kernel-rule-writes',
             fail_closed: true,
             severity: 'blocking',
         };
         const deny = denyOnStdinFailure('claude', 'pre_tool_use', [GUARD, second], 'EBADF');
         expect(deny?.reason).toContain('block-no-verify');
-        expect(deny?.reason).toContain('block-config-weakening');
+        expect(deny?.reason).toContain('block-kernel-rule-writes');
     });
 
     // This is the half that separates (c) from (a). A deny here refuses nothing

@@ -1,6 +1,6 @@
 // Tests for src/scripts/hooks/block_config_weakening.ts.
 //
-// House pattern (mirrors block_no_verify.test.ts): the decision lives
+// House pattern (mirrors block_kernel_rule_writes.test.ts): the decision lives
 // in exported pure functions and is tested directly; `main()` is thin wiring
 // over them. The one impure piece — the per-session counter — is exercised
 // against a temp root so no repo state is touched.
