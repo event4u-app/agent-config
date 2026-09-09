@@ -382,20 +382,20 @@ file the reading agent cannot open.
 
 Gated on `blocker: approximation-tolerance` and `blocker: rule-body-cap`.
 
-- [ ] **3.1 Promote the maturity table to a field.** `spec.maturity` on the
+- [x] **3.1 Promote the maturity table to a field.** `spec.maturity` on the
       existing `design-system.json` contract, resolved from the artifact with
       provenance, with a user signal beating any inference. The two-row prose
       table becomes the data behind it rather than a second copy.
       verify: a wireframe fixture resolves `low` and a runnable-artifact fixture
       resolves `finished`, both with the signal that decided it.
-- [ ] **3.2 Add the approximation semantics as a setting beside `fidelity_mode`.**
+- [x] **3.2 Add the approximation semantics as a setting beside `fidelity_mode`.**
       Within tolerance the project token wins and the outcome is reported;
       outside it the artifact value is preserved and the project gap is
       reported; a per-run signal switches it off. `hard-floor` disables it.
       verify: three fixtures — inside tolerance, outside tolerance, switched
       off — produce the three distinct verdicts, and every value row carries a
       distance to the nearest project token even when preserved.
-- [ ] **3.3 Gate reuse on conformity, and decide it after the read.**
+- [x] **3.3 Gate reuse on conformity, and decide it after the read.**
       `ui-audit-gate` gates on the audit *existing*, and `existing-ui-audit`
       scores candidates by fuzzy similarity **to the input** — so nothing
       anywhere checks a reuse candidate against a provided artifact's
@@ -406,13 +406,13 @@ Gated on `blocker: approximation-tolerance` and `blocker: rule-body-cap`.
       reading of the round, which is why it is recorded as its own step.
       verify: a candidate whose subtree reds the conformance report is refused
       with the dimension that refused it named; a conforming one is reused.
-- [ ] **3.4 Re-frame `strict` instead of adding a fourth mode.** A value inside
+- [x] **3.4 Re-frame `strict` instead of adding a fourth mode.** A value inside
       tolerance stops being an unconfirmed deviation and becomes a reported
       reconciliation; everything outside stays confirmation-bound. Requires the
       rule-body cap to be resolved first.
       verify: the rule states it, the mode enum is unchanged, and no consumer
       default moved.
-- [ ] **3.5 Give ADR-213 the artifact clause, with both guards and an honest
+- [x] **3.5 Give ADR-213 the artifact clause, with both guards and an honest
       enforcement line.** ADR-213 authorises extraction on repetition "already
       present in the diff". A handed-over runnable artifact makes repetition
       observable before any code exists, which is a **different mechanism** than

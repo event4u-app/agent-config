@@ -141,3 +141,51 @@ The README's shared criteria do **not** govern a drain-run transfer. These do:
   indistinguishable from a flip taken on preference.
 - Keep the rollback one line: setting the key back to `false` restores the
   measured state, and the published numbers stay, which is the point.
+
+## Second arrival, 2026-09-09 — `design.approximation.enabled`
+
+`road-to-design-intent-conformance` routed `blocker: fidelity-default-flip`
+here. AI council (anthropic + openai, 2/2): **(a) AND (c)** — ship disabled,
+and record the enable question in this stub. They are complementary, not
+exclusive: (a) governs the change that shipped, (c) preserves the decision.
+
+**What shipped disabled.** `design.approximation.enabled: false`, with
+`design.approximation.tolerance.color` and `.length` both `null`. The mechanism
+computes and reports the distance from every artifact value to the nearest
+project token on every row, and changes no value. `design_tolerance.ts` carries
+it; `design_tolerance.test.ts` pins all three verdicts.
+
+**Why the flip itself was not available.** Shipping it enabled changes
+behaviour for a consumer who changes nothing — the owner-reserved class under
+`decision-revisit-gate`, and the council was told so in the question rather
+than left to discover it. The owner directive motivating the roadmap states the
+approximation IS the intended behaviour, which is why (b) was the roadmap's
+stated preference and is nonetheless out of a council's reach.
+
+**The one thing this stub must not allow.** The council named the smuggling
+route, and it is recorded here in their words: *do not simulate (b)* through a
+migration that turns it on, an implicit auto-enable, or a nominally optional
+"recommended default". Any of the three is the flip without the decision.
+
+### Conditions for the flip, on this item
+
+1. **A tolerance exists at all.** Both axes ship `null`, and `null` means
+   preserve-and-report. Enabling the mechanism with no threshold configured is
+   a no-op by construction, so the flip is meaningless before a threshold is
+   decided — which is itself gated on measurement, not on preference.
+2. **The threshold came off a distribution, not off a guess.** Phase 4.2's
+   shadow window records raw distances with provenance and counterfactual
+   outcomes at several candidate thresholds. Reopening requires sample
+   sufficiency and error-rate criteria written BEFORE the window opened, per
+   axis — false reconciliations and missed reconciliations estimated
+   separately for colour and length.
+3. **A named human performs the flip**, same authority gate as the parent item
+   above. There is no number that authorises a shipped-default change on its
+   own.
+
+### Rollback
+
+One line: set `design.approximation.enabled` back to `false`. Because the
+distance is reported on every row whether or not the mechanism acts, the
+measurement survives the rollback — which is what makes the flip cheap to
+reverse and the evidence expensive to lose.

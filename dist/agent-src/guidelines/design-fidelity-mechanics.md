@@ -194,6 +194,24 @@ class needs one word in the prompt, like any other unlisted filename.
 `near-bare-host-mention` in `ROUTING_MATRIX` pins the bare-host direction silent
 so a future attempt cannot reintroduce the broad form unnoticed.
 
+### The trigger set, class by class
+
+Phrase-heavy on the German side and on `artifact` deliberately: a bare
+`artifact` keyword fires on *"the CI build artifact is 40 MB"*, which is CI
+vocabulary and not a handover. `ROUTING_MATRIX` pins both halves — every class
+that must route, and every near-miss that must stay silent (fixture
+`daf-port-trigger-de`).
+
+Each shipped class carries its own near-miss row, and the pairing is the
+contract rather than a courtesy:
+
+| Class | Its near-miss row | The direction that row tests |
+|---|---|---|
+| `phrase: claude.site/artifacts` | `near-claude-ai-chat-link` | a bare `claude.ai` chat link is a conversation reference, not a spec |
+| `path_prefix: .claude/design-system/` | `near-generic-design-system-dir` | a bare `design-system/` is a normal source folder in a large fraction of frontend repos |
+| `file_pattern: *.dc.html` | `near-plain-html-open-file`, `near-dc-in-a-filename` | an ordinary `.html` file in the tree; a filename that merely contains the letters |
+| the withdrawn builder URL | `near-bare-host-mention` | left behind on purpose, so the broad form stays pinned silent |
+
 ### Write the near-miss row first — and test the right direction
 
 Extending the trigger set without adding a near-miss row is how an over-broad
@@ -214,6 +232,54 @@ artboard, which `*design.html` cannot match because it compiles to
 opens — an ordinary `.html` file in the tree, and a filename that merely
 contains the letters. Both were confirmed red-then-green against the real
 matcher rather than asserted.
+
+## Tolerance — why the mechanism ships and the number does not
+
+`design-fidelity`'s `strict` mode says EVERY visible deviation needs explicit
+confirmation. The owner directive that motivated
+`road-to-design-intent-conformance` asks for an unprompted approximation within
+a tolerance. Read literally, those contradict — and the contradiction is real
+rather than a wording problem: `grep -cE 'reconcil|tolerance|approximat|nearest'`
+over the rule and this guideline returned 0 / 0 before this section existed.
+
+**The re-frame, and its condition.** A value inside a configured tolerance stops
+being an unconfirmed deviation and becomes a **reported reconciliation**: the
+project's token is written, and the distance from the artifact's own value is
+reported on the row. Everything outside the tolerance stays confirmation-bound,
+and structure — layout, control types, component set, ordering, breakpoints —
+is never in scope at any setting, because it is not a value question.
+
+**The condition is load-bearing, not a hedge.** `design.approximation` ships
+`enabled: false` with `tolerance.color` and `tolerance.length` both `null`, so
+in a default install the paragraph above describes nothing that happens: every
+deviation stays confirmation-bound exactly as before, and no consumer default
+moved. `hard-floor` disables the mechanism outright, so the strictest mode
+cannot be loosened by configuring a tolerance under it.
+
+**Why no threshold ships**, decided by the AI council on 2026-09-09 (anthropic +
+openai, 2/2), and worth re-reading before adding one: *a number in a config
+file, even flagged unmeasured, shapes behaviour and creates path dependency.*
+Zero of seven design-to-code benchmarks in the evidence set score token
+conformance, so a shipped threshold would be a guess wearing a default's
+authority. Two proposals were examined and rejected on their merits rather than
+on caution — `±5 per RGB channel`, because RGB channel distance is not
+perceptually uniform and "likely imperceptible" does not follow from it; and
+`max(1px, 2%)`, because it grows steadily more permissive at large dimensions
+with no evidence that this is wanted. GitHub Primer's ±1px spacing widening is
+the one real measurement available and is recorded as an externally observed
+**candidate**, not adopted.
+
+**The metric IS fixed, and that is the half that could be settled.** Colour
+distance is OKLab ΔEOK, length distance is absolute CSS pixels
+(`src/scripts/_lib/design_tolerance.ts`). Fixing the method mattered before
+fixing any number: RGB Euclidean, ΔE LAB, CIEDE2000 and OKLab/ΔEOK give
+different numbers for the same pair, so a threshold quoted without its metric
+is not a threshold.
+
+**The distance is reported on every row regardless.** Preserved values carry it
+too. That is what makes the deferred half decidable: a window over rows that
+report distances yields a distribution, where a window over rows reporting only
+"kept" or "changed" yields nothing to read a threshold off.
 
 ## Artifact versus brand
 

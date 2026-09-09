@@ -121,6 +121,12 @@ design.fidelity_mode` reports the value and the file it came from.
 | `structural` | Structure is locked — fonts, control types, component set, layout, no omissions still require confirmation. Where the spec is genuinely **silent** (a state it does not show: hover / empty / error), the agent may fill the gap in the spec's style and MUST state the assumption. |
 | `hard-floor` | Any deviation from the provided design is a Hard-Floor action (per [`non-destructive-by-default`](non-destructive-by-default.md)): never autonomous; no autonomy setting, roadmap, or standing instruction lifts it. |
 
+**Inside a configured tolerance, `strict` reports a reconciliation rather than
+demanding a confirmation** — conditional on `design.approximation`, which ships
+disabled with both tolerances `null`, so no default install changes. Structure,
+and anything outside tolerance, is unchanged; `hard-floor` disables it outright:
+[`design-fidelity-mechanics § Tolerance`](../docs/guidelines/design-fidelity-mechanics.md).
+
 ## When it fires
 
 A finished design artifact is provided or referenced AND the agent is building,
@@ -163,17 +169,10 @@ Two further handover shapes carry the artifact without any of the above:
   the row that pins the broad form silent:
   [`design-fidelity-mechanics § Routing mechanics`](../docs/guidelines/design-fidelity-mechanics.md).
 
-The trigger set is deliberately phrase-heavy on the German side and on
-`artifact`: a bare `artifact` keyword fires on "the CI build artifact is 40 MB".
-`ROUTING_MATRIX` in
-[`design_fidelity_routing.test.ts`](../../tests/scripts/design_fidelity_routing.test.ts)
-pins both halves — every class that must route, and the near-misses that must
-stay silent (fixture `daf-port-trigger-de`). Extending the set without adding a
-near-miss row there is how an over-broad trigger lands: each of the two shipped
-trigger classes above carries its own near-miss row
-(`near-claude-ai-chat-link`, `near-generic-design-system-dir`), and the
-withdrawn builder-URL class left `near-bare-host-mention` behind so the broad
-form stays pinned silent.
+Every class here carries its own near-miss row in `ROUTING_MATRIX`
+([`design_fidelity_routing.test.ts`](../../tests/scripts/design_fidelity_routing.test.ts));
+extending the set without one is how an over-broad trigger lands. Which row, and
+why: [`design-fidelity-mechanics § Routing mechanics`](../docs/guidelines/design-fidelity-mechanics.md).
 
 **The near-miss must test the direction the new trigger opens, not a direction
 that was already closed** — apply this before writing a trigger, not after. The
