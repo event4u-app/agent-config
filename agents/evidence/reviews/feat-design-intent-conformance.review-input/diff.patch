@@ -1,0 +1,859 @@
+diff --git a/agents/roadmaps/road-to-design-intent-conformance.md b/agents/roadmaps/road-to-design-intent-conformance.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..e5bc877c3bc90864f90cc90d29a7b9039990cf2c
+--- /dev/null
++++ b/agents/roadmaps/road-to-design-intent-conformance.md
+@@ -0,0 +1,298 @@
++---
++complexity: structural
++status: draft
++execution:
++  mode: phase-checkpoints
++relates:
++  - slug: road-to-the-packed-payload-cap
++    relation: disjoint
++    note: >-
++      owns the always-payload axis; Phase 2 adds a projection lane and must
++      leave that axis alone — separate concerns, deliberately not folded
++---
++# Road to design-intent conformance — the contract exists, it is contradicted in one skill and unreachable in every consumer install
++
++> **Source:** `agents/tmp.old/inbox-2026-09-x/` — a transcript carrying two
++> owner directives, one external root-cause analysis, and a four-file plan
++> revision set, two members authored by a different model. Round intake note
++> holds the encrypted origin.
++
++## Goal
++
++A consumer agent that is handed a finished design artifact reads the same
++contract this repository already wrote, and nothing shipped tells it to do the
++opposite. Concretely: `tailwind-engineer` stops instructing the agent to
++replace an artifact's exact value with a nearest token; `brand-source-of-truth`
++carries the artifact-versus-brand split instead of pointing one way only; the
++inbox guard stops refusing read commands; and the procedure
++`design-fidelity` delegates to exists in a consumer install rather than only in
++this checkout. What is *not* claimed: that the reported symptom is fixed. That
++needs a measurement, and Phase 4 is where it becomes one.
++
++## Context — what the round established, verified at `origin/main@4be5f59`
++
++The round's own diagnosis is that the policy is missing. Four independent
++verification passes over this tree found the opposite, and the correction is the
++reason this roadmap is shaped the way it is: **the policy is written, and it is
++contradicted or unreachable.**
++
++- **The maturity axis already exists, twice.** `src/scripts/_lib/ui_authority.ts:36-42`
++  carries `ReferenceMaturity`, and `docs/guidelines/design-fidelity-mechanics.md:157-168`
++  carries the low-fidelity-versus-finished table. That table *is* the first
++  owner directive ("a wireframe is not a finished design"), already decided.
++- **And it is unreachable.** `src/rules/design-fidelity.md:33-34` declares
++  `routes_to: guideline:design-fidelity-mechanics`. `dist/agent-src/` carries no
++  `guidelines/` directory, and `.augment/guidelines` therefore does not exist —
++  although `AUGMENT_SYMLINK_DIRS` in `src/scripts/condense.ts:2464` already
++  lists it. The lane is declared and dead. 31 rules share the shape.
++- **One shipped skill teaches the failure the rule forbids.**
++  `src/skills/tailwind-engineer/SKILL.md:47-52` said: map every requested
++  colour to a configured token, "if the design hands you `#3B82F6`, use
++  `bg-blue-500`", arbitrary values "are a smell" — with no artifact-bound
++  carve-out, against `src/rules/design-fidelity.md:56-66`, which forbids
++  swapping colour or spacing. Two verification passes ranked this first
++  independently.
++- **`brand-source-of-truth` pointed nowhere back.** `design-fidelity.md:47`
++  and `:197` reference it; the 146-line brand rule carried zero `fidelity`
++  hits, so a brand-first entry path never met the structure obligation.
++- **The inbox guard refuses reads.** `src/scripts/hooks/hook_manifest.yaml:235-240`
++  registers it `severity: blocking` with no `tools:` filter, `_PATH_KEYS`
++  covers a read tool's `file_path`, and the command scan offered every
++  whitespace token to the same verdict without ever inspecting the verb.
++  Reproduced live twice while running this very round: `ls -d agents/tmp/<glob>`
++  — the command the naming rule tells an operator to run — was refused.
++  A third defect, found by verification rather than by symptom: the
++  existence probe anchored its capture at `agents/`, discarding any path
++  prefix, so a module-nested round could never hit the already-exists
++  carve-out and was refused forever instead of once.
++- **`design.*` never cascades from the user-global layer.**
++  `MERGEABLE_KEYS` (`src/scripts/_lib/agent_settings.ts:265-296`) lists no
++  `design.` key, so `design.fidelity_mode` set user-globally is filtered out.
++  The round's diagnosis ("the resolver does not see the layer") is wrong — the
++  layer is read and then whitelisted — and the correction matters because it
++  changes the fix. A second, independent half: `userGlobalDrop()` probes only
++  the flat `agent-settings.yml`, never the canonical
++  `settings/.agent-settings.yml` the wizard writes, so the warning that would
++  announce the drop cannot fire for exactly these keys.
++- **`strict` literally forbids the second owner directive.**
++  `design-fidelity.md:119` reads "EVERY visible deviation … requires explicit
++  confirmation", and the directive asks for an unprompted approximation within
++  tolerance. `grep -cE 'reconcil|tolerance|approximat|nearest'` over the rule
++  and its guideline returns 0 / 0.
++
++Three constraints bound every phase below, all measured on this branch:
++`design-fidelity.md` is at **exactly 200 lines** against `skill_linter`'s
++`rule_too_large` ceiling, so no sentence lands there without one leaving;
++`check_estate_count` reports **0 growth allowance** on active roadmaps, skills
++and hook concerns; and `condense.ts` sits at 2735 lines against a 1500 ceiling
++under a shrink-only ratchet, so Phase 2 must be net-zero there.
++
++## Phase 1 — Remove the contradiction and the false positives
++
++Nothing here needs a decision, a new artefact, or a default change. All three
++are defects with a verified wrong behaviour and a verified right one.
++
++- [x] **1.1 Teach the inbox guard that reading is not creating.** Three fixes in
++      `src/scripts/hooks/block_speaking_inbox_dir.ts`: a read-tool deny-list so a
++      `Read`/`Grep`/`Glob` `file_path` is not judged as a write target; a
++      per-segment verb allowlist reusing `git_command_classifier`'s segmenter so
++      `ls`/`cat`/`grep` are not judged as `mkdir`, with redirect targets still
++      judged separately; and an existence probe that carries the path's own
++      prefix so a module-nested round resolves. The docstring's `Write/Edit/
++      NotebookEdit` scope becomes what the code implements.
++      verify: `npx vitest run tests/hooks/block_speaking_inbox_dir.test.ts` —
++      35 assertions green, including the two commands that were refused in this
++      round; and with both allowlists emptied exactly the five new allow-cases
++      go red while every block-case stays green.
++- [x] **1.2 Give `tailwind-engineer` the artifact-bound branch it never had.**
++      Step 1 keeps the greenfield default and gains a distance table: same value
++      to the nearest project token means write the token, an invisible
++      difference means write the token and report it, a visible difference means
++      keep the artifact's value and report the project gap. An artifact-derived
++      exact value stops being "a smell" in that mode. A literal is translated
++      once into a named project token instead of snapped per call site — the
++      first owner directive's token duty, as written. Structure, controls,
++      icons, grid and breakpoints are named as not this skill's to adjust. A
++      second `Gotcha` bullet states the carrier-versus-value split the second
++      owner directive asked to be made clearer: static presentation belongs in
++      CSS or classes, `style=` is for what only the runtime knows, and porting
++      an inline style into classes is expected as long as the resolved value is
++      identical.
++      verify: `./scripts-run src/scripts/skill_linter --all` warn count
++      unchanged at 1, and the file stays under the 400-line skill ceiling.
++- [x] **1.3 Make the brand rule carry the split instead of pointing one way.**
++      `src/rules/brand-source-of-truth.md` gains the artifact-versus-brand
++      invariant as a table — values to the brand token with the distance
++      reported, structure to the artifact and never adjusted to suit a token —
++      plus the reciprocal `design-fidelity` see-also. This also puts the
++      invariant on a **projected** surface, which is the one piece of Phase 2's
++      reach problem that does not need Phase 2.
++      verify: `grep -c design-fidelity src/rules/brand-source-of-truth.md`
++      greater than 0, and the rule stays under the 200-line ceiling.
++
++## Phase 2 — Make the delegated procedure exist where it is read
++
++`design-fidelity` routes its operative detail to a guideline that no consumer
++install contains. Until that is true, every later phase writes policy into a
++file the reading agent cannot open.
++
++- [ ] **2.1 Project `docs/guidelines/` into `dist/agent-src/guidelines/`.** The
++      consumer-side plumbing is already there — `AUGMENT_SYMLINK_DIRS` lists
++      `guidelines` and the symlink is simply never created. The lane goes in a
++      new module under `src/scripts/_lib/`, and `condense.ts` spends net zero
++      lines by extending an existing import and replacing a statement rather
++      than adding either.
++      verify: after `task sync`, `ls dist/agent-src/guidelines/design-fidelity-mechanics.md`
++      resolves and `.augment/guidelines` is a live symlink; and
++      `./scripts-run src/scripts/check_source_size_budget` reports no rise.
++- [ ] **2.2 Gate the route rather than trusting it.** A check that every
++      `routes_to: guideline:` target and every relative `../docs/` link in a
++      **projected** rule resolves inside the projection. Today's 31 rules and 43
++      distinct targets are the floor; the ratchet then only moves down.
++      verify: the gate red on a deliberately unprojected target, green on the
++      tree, and registered with its coverage row and self-test.
++- [ ] **2.3 Whitelist `design.*` and repair the drop warning.** Add the
++      `design.fidelity_mode` key to `MERGEABLE_KEYS` with the ADR its docstring
++      requires, and widen `userGlobalDrop()` to probe the canonical
++      `settings/.agent-settings.yml` as well as the flat file.
++      verify: a user-global `design.fidelity_mode` resolves through
++      `agent-config settings:get design.fidelity_mode` and names the layer it
++      came from; and a non-whitelisted user-global key reports the drop instead
++      of a bare "not set".
++
++## Phase 3 — Maturity and approximation as data, not prose
++
++Gated on `blocker: approximation-tolerance` and `blocker: rule-body-cap`.
++
++- [ ] **3.1 Promote the maturity table to a field.** `spec.maturity` on the
++      existing `design-system.json` contract, resolved from the artifact with
++      provenance, with a user signal beating any inference. The two-row prose
++      table becomes the data behind it rather than a second copy.
++      verify: a wireframe fixture resolves `low` and a runnable-artifact fixture
++      resolves `finished`, both with the signal that decided it.
++- [ ] **3.2 Add the approximation semantics as a setting beside `fidelity_mode`.**
++      Within tolerance the project token wins and the outcome is reported;
++      outside it the artifact value is preserved and the project gap is
++      reported; a per-run signal switches it off. `hard-floor` disables it.
++      verify: three fixtures — inside tolerance, outside tolerance, switched
++      off — produce the three distinct verdicts, and every value row carries a
++      distance to the nearest project token even when preserved.
++- [ ] **3.3 Re-frame `strict` instead of adding a fourth mode.** A value inside
++      tolerance stops being an unconfirmed deviation and becomes a reported
++      reconciliation; everything outside stays confirmation-bound. Requires the
++      rule-body cap to be resolved first.
++      verify: the rule states it, the mode enum is unchanged, and no consumer
++      default moved.
++
++## Phase 4 — Turn the claim into a measurement
++
++Gated on `blocker: fidelity-default-flip` for anything that would refuse.
++
++- [ ] **4.1 Report the dimensions separately.** Structure, values with their
++      distance, behaviour, responsive semantics, icons and carrier, each row
++      citing the artifact and the implementation. A green pixel diff alone
++      cannot produce a pass.
++      verify: a deliberately corrupted port reds the dimension that was
++      corrupted and no other.
++- [ ] **4.2 Run it in shadow and derive the threshold from what it records.**
++      Extend the existing shadow gate rather than adding a concern — the
++      allowance is zero. The flip to a refusing state is pre-registered with
++      its own reverse trigger, and the tolerance start values are re-derived
++      from the shadow distribution rather than kept.
++      verify: shadow records exist, carry no self-reported verdict, and the
++      flip criterion is written before the window opens.
++
++## Blockers
++
++### blocker: approximation-tolerance
++
++- **Status:** open
++- **Owner:** maintainer
++- **Blocks:** 3.2, 3.3, 4.2
++- **What to do:** pick exactly one — (a) accept provisional start values and
++  record them in `src/config/agent-settings.template.yml` under `design:`,
++  flagged as unmeasured and re-derived after Phase 4.2's window; or (b) name
++  the values yourself in that file; or (c) hold Phase 3.2 until Phase 4.2 has
++  a distribution to read them off, which orders 4 before 3.
++- **Resolved when:** the `design:` block in
++  `src/config/agent-settings.template.yml` carries a colour tolerance and a
++  length tolerance with a one-line note on where the number came from.
++- **Recommendation:** (a). The mechanism is worth more than the constant, the
++  distance is reported on every row either way, and (c) inverts a dependency
++  for a number that is provisional in all three branches.
++- **If you do nothing:** Phase 3.2 cannot ship a setting, so Phase 3.3 cannot
++  re-frame `strict`, and the second owner directive stays unimplementable in
++  the rule text.
++
++### blocker: fidelity-default-flip
++
++- **Status:** open
++- **Owner:** maintainer
++- **Blocks:** 3.2, 4.2
++- **What to do:** pick exactly one — (a) ship the approximation mechanism
++  disabled by default, so no consumer behaviour changes and the directive
++  applies to whoever switches it on; or (b) ship it enabled, which is a
++  shipped-default flip and is owner-reserved, recorded as such in an ADR; or
++  (c) route it to `agents/roadmaps/stubs/road-to-frontend-power-default-flip.md`,
++  which already exists for this exact class.
++- **Resolved when:** the default is recorded in an ADR or in that stub, naming
++  which of the three was chosen.
++- **Recommendation:** (b), because the directive that motivates this roadmap
++  states the approximation *is* the intended default — but the decision is
++  owner-reserved and the agent may not take it, which is why this is a blocker
++  and not a step.
++- **If you do nothing:** the mechanism can be built and cannot be turned on,
++  so Phase 4.2's shadow window has nothing to record.
++
++### blocker: rule-body-cap
++
++- **Status:** open
++- **Owner:** maintainer
++- **Blocks:** 3.3
++- **What to do:** pick exactly one — (a) migrate an existing passage out of
++  `src/rules/design-fidelity.md` into
++  `docs/guidelines/design-fidelity-mechanics.md`, which is legitimate only
++  after Phase 2.1 makes it reachable; or (b) raise the `rule_too_large`
++  ceiling in `src/scripts/skill_linter.ts` with the reason in the same commit;
++  or (c) accept that the tolerance clause lives only in the guideline and the
++  rule keeps a one-clause pointer.
++- **Resolved when:** `wc -l src/rules/design-fidelity.md` leaves room for the
++  clause, or option (c) is recorded.
++- **Recommendation:** (c) after Phase 2.1, then (a) if the clause proves too
++  load-bearing to sit behind a pointer. The rule is at 200 of 200 lines and the
++  guideline has no cap.
++- **If you do nothing:** Phase 3.3 has nowhere to put the sentence, and
++  `strict` keeps contradicting the directive in the projected text.
++
++## Risk Register
++<!-- risk-review: v1 | reviewed: 2026-09-09 | reviewer: claude/host -->
++
++| Rank | Item | Risk type | Description | Mitigation | Anchored under |
++|------|------|-----------|-------------|------------|----------------|
++| 1 | The read carve-out opens a write bypass | implementation | A creating command wearing a read verb, or a tool name nobody recognised, slips a speaking directory past a blocking guard | Both allowlists are deny-by-default: an unknown verb and an unknown tool are still judged, redirect targets are judged whatever the verb, and the sensitivity probe in 1.1 shows the block-cases stay green when the allowlists are emptied | Phase 1 — Remove the contradiction and the false positives |
++| 2 | The projection lane reds the byte-exactness invariant | implementation | `dist == rewrite(src)` is asserted byte-for-byte, and a new lane is a new population for it to walk | Land 2.1 alone, with the invariant's own check run before anything else in the phase; the lane copies verbatim and rewrites paths through the mechanism already used for every other lane | Phase 2 — Make the delegated procedure exist where it is read |
++| 3 | The approximation becomes a licence to drift | product | Many individually-legal small reconciliations compose into a result nobody approved | Every value row carries its distance even when preserved, so the drift is visible per row before it is cumulative; a cumulative bound is Phase 4's, and the tolerance is re-derived from shadow data rather than kept | Phase 3 — Maturity and approximation as data, not prose |
++| 4 | Phase 3 writes policy into an unreachable file | implementation | The tolerance clause lands in the guideline while the guideline still reaches no consumer install, reproducing the exact defect this roadmap opens with | Phase 2 is ordered before Phase 3 and `blocker: rule-body-cap` names the dependency explicitly in its option (a) | Phase 2 — Make the delegated procedure exist where it is read |
++| 5 | The distance table is judgement, not measurement | product | Phase 1.2 asks whether a difference is visible side by side, which two readers can answer differently | Accepted deliberately for Phase 1: inventing a threshold there would pre-empt `blocker: approximation-tolerance`. Phase 3.2 replaces the judgement with the recorded number | Phase 1 — Remove the contradiction and the false positives |
++
++## Acceptance Criteria
++
++- [x] AC-1 — A read command naming a not-yet-existing inbox directory is not
++      refused, a creating command naming the same directory still is, and both
++      are pinned by assertions that go red when the mechanism is removed.
++- [x] AC-2 — No shipped skill instructs the agent to replace a provided
++      artifact's exact value with a nearest project token without reporting the
++      distance; `tailwind-engineer` names the artifact-bound branch explicitly.
++- [x] AC-3 — `brand-source-of-truth` and `design-fidelity` each carry the
++      split between them, in both directions, on a projected surface.
++- [ ] AC-4 — `docs/guidelines/design-fidelity-mechanics.md` resolves inside
++      `dist/agent-src/` and a gate fails when a projected rule routes to a
++      target that does not.
++- [ ] AC-5 — `design.fidelity_mode` set on the user-global layer resolves, and
++      a non-whitelisted key there reports the drop rather than reading as unset.
++- [ ] AC-6 — The artifact's maturity and the reconciliation outcome are fields
++      with provenance, not prose, and a preserved value still carries its
++      distance to the nearest project token.
++- [ ] AC-7 — A corrupted port reds exactly the dimension that was corrupted,
++      the record carries no self-reported verdict, and the flip criterion was
++      written before the shadow window opened.
+diff --git a/dist/agent-src/rules/brand-source-of-truth.md b/dist/agent-src/rules/brand-source-of-truth.md
+index e8a5b361d7c67a30f217983343d952f85a70990e..9394741e6fc5d05c2fef7506e154ad5ffff7a37f 100644
+--- a/dist/agent-src/rules/brand-source-of-truth.md
++++ b/dist/agent-src/rules/brand-source-of-truth.md
+@@ -131,8 +131,34 @@ surfaces within the same brand, the product register ("design serves the task")
+ may apply per-surface. See [`docs/guidelines/design-modes.md`](../docs/guidelines/design-modes.md)
+ for the full Brand-mode vs Product-mode discriminator.
+ 
++## A provided artifact and the brand divide the decision, not the authority
++
++```
++BRAND OWNS THE VALUES. A PROVIDED ARTIFACT OWNS THE STRUCTURE.
++NEITHER SILENTLY OVERRIDES THE OTHER — A CONFLICT IS SURFACED, NEVER MERGED.
++RECONCILING A COLOUR ONTO A BRAND TOKEN IS NOT A LICENSE TO RESTRUCTURE.
++```
++
++Stated here because the traffic runs both ways and only one direction was
++signposted: [`design-fidelity`](design-fidelity.md) already points at this rule,
++this rule pointed nowhere back, so a brand-first entry path never met the
++artifact-structure obligation at all. When a finished design artifact is the spec
++**and** the consumer has registered brand tokens, the split is:
++
++| Dimension | Authority |
++|---|---|
++| colour · spacing · radius · shadow · type scale | brand token — reconcile the artifact's literal onto it, and report the distance |
++| layout · element set · hierarchy · controls · icons · grid · breakpoints · layers · behavior | the artifact — never adjusted to suit a token |
++
++Two failure modes this forbids, in both directions: rebranding the project
++because an artifact carried different colours, and redesigning the artifact
++because the brand carries different tokens. The reconciliation is a **reported**
++approximation, never a silent one — same obligation
++[`design-fidelity`](design-fidelity.md) states from its side.
++
+ ## See also
+ 
++- [`design-fidelity`](design-fidelity.md) — the other half of the split above: a provided artifact is the spec for structure, and the brand does not license restructuring it.
+ - [`brand-consistency`](brand-consistency.md) — pointer stub; its body lives here since the 2026-08-04 merge.
+ - [`brand`](../skills/brand/SKILL.md) — the gap-fill corpus this rule subordinates to consumer brand.
+ - [`brand-identity`](../skills/brand-identity/SKILL.md) — defines the tokens the gate validates against.
+diff --git a/dist/agent-src/skills/tailwind-engineer/SKILL.md b/dist/agent-src/skills/tailwind-engineer/SKILL.md
+index 176745e9da899a8fe5f7d5aa325dfc82717bad38..e8876d8a14a058bc3a24bf30276807b8ac241fdd 100644
+--- a/dist/agent-src/skills/tailwind-engineer/SKILL.md
++++ b/dist/agent-src/skills/tailwind-engineer/SKILL.md
+@@ -51,6 +51,27 @@ radius, spacing, shadow, font-size to a configured token. If the design hands yo
+ (`bg-[#3B82F6]`, `mt-[17px]`) are a smell — accept only with a
+ one-line comment naming the design source.
+ 
++**That paragraph is written for greenfield, and artifact-bound work inverts
++it.** When a provided finished design is the spec
++([`design-fidelity`](../../rules/design-fidelity.md)), `#3B82F6` is a decision
++somebody already made and `bg-blue-500` is a guess about it. Reconcile against
++the project's tokens — that part is not optional — but reconcile by distance,
++not by reflex:
++
++| The nearest project token is | Write |
++|---|---|
++| the same value | the project token — that is not a translation |
++| different in a way you cannot see side by side | the project token, and say so in the port notes |
++| visibly different | the artifact's value, and report the project gap |
++
++An artifact-derived exact value is **not** a smell in this mode: it *is* the
++spec, and the source-naming comment the paragraph above asks for is what
++records it. Translate a given literal **once** into a named project token
++rather than snapping it per call site — one token the project owns beats N
++approximations of the same colour. Structure, controls, icons, grid and
++breakpoints are never this skill's to adjust; those stay 1:1 with the artifact
++and belong to the rule, not to a utility-class decision.
++
+ Token authoring (DTCG 3-layer model, CSS-var/Tailwind generation) lives
+ in [`design-tokens`](../design-tokens/SKILL.md); its
+ `tokens.ts validate --dir <path>` is the **single token-discipline
+@@ -128,7 +149,16 @@ Risks:          <arbitrary values, !important, dark-mode gaps>
+ - `dark:` variants need a token map in both modes; one-sided dark
+   styling is half a feature.
+ - Arbitrary values (`mt-[17px]`) survive Tailwind upgrades but
+-  break the design system; they accumulate silently.
++  break the design system; they accumulate silently. **Artifact-bound is the
++  exception, not a loophole:** a value the provided design specifies is not
++  accumulation, and step 1's distance table decides it. An arbitrary value
++  nobody can trace to a source is still the smell this bullet is about.
++- **The carrier is CSS or a utility class; the value is the design's.** Static
++  presentation belongs in CSS / tokens / classes — `style=` is for what only
++  the runtime knows (a computed width, a live transform, a measured offset).
++  Porting an artifact's inline `style=` into classes is therefore expected and
++  is not a deviation, **as long as the resolved value comes out identical**.
++  Changing the carrier is free; changing the number is not.
+ - `@apply` inside component CSS interacts with PurgeCSS — keep it
+   in files Tailwind scans, not in vendor CSS.
+ - **Anti-AI-slop catalog.** The bullets below are the Tailwind-specific
+diff --git a/src/domains/brand/pack.yaml b/src/domains/brand/pack.yaml
+index de3681677f2d9ff249cc96cc4380888f818b71ab..d2510e688a090cfabe1f510b74277f241afffd01 100644
+--- a/src/domains/brand/pack.yaml
++++ b/src/domains/brand/pack.yaml
+@@ -25,6 +25,6 @@ token_passport:
+   catalog_tokens: 251
+   commands_tokens: 1999
+   other_tokens: 0
+-  rules_tokens: 1902
+-  total_tokens: 4152
++  rules_tokens: 2286
++  total_tokens: 4536
+ trust_level_default: professional
+diff --git a/src/rules/brand-source-of-truth.md b/src/rules/brand-source-of-truth.md
+index 0cf4aa57da9450a9466f3a35e645f94d5c56519f..620ac5755a55d0a3a817ce8a5888d66cb3698d7a 100644
+--- a/src/rules/brand-source-of-truth.md
++++ b/src/rules/brand-source-of-truth.md
+@@ -131,8 +131,34 @@ surfaces within the same brand, the product register ("design serves the task")
+ may apply per-surface. See [`docs/guidelines/design-modes.md`](../../docs/guidelines/design-modes.md)
+ for the full Brand-mode vs Product-mode discriminator.
+ 
++## A provided artifact and the brand divide the decision, not the authority
++
++```
++BRAND OWNS THE VALUES. A PROVIDED ARTIFACT OWNS THE STRUCTURE.
++NEITHER SILENTLY OVERRIDES THE OTHER — A CONFLICT IS SURFACED, NEVER MERGED.
++RECONCILING A COLOUR ONTO A BRAND TOKEN IS NOT A LICENSE TO RESTRUCTURE.
++```
++
++Stated here because the traffic runs both ways and only one direction was
++signposted: [`design-fidelity`](design-fidelity.md) already points at this rule,
++this rule pointed nowhere back, so a brand-first entry path never met the
++artifact-structure obligation at all. When a finished design artifact is the spec
++**and** the consumer has registered brand tokens, the split is:
++
++| Dimension | Authority |
++|---|---|
++| colour · spacing · radius · shadow · type scale | brand token — reconcile the artifact's literal onto it, and report the distance |
++| layout · element set · hierarchy · controls · icons · grid · breakpoints · layers · behavior | the artifact — never adjusted to suit a token |
++
++Two failure modes this forbids, in both directions: rebranding the project
++because an artifact carried different colours, and redesigning the artifact
++because the brand carries different tokens. The reconciliation is a **reported**
++approximation, never a silent one — same obligation
++[`design-fidelity`](design-fidelity.md) states from its side.
++
+ ## See also
+ 
++- [`design-fidelity`](design-fidelity.md) — the other half of the split above: a provided artifact is the spec for structure, and the brand does not license restructuring it.
+ - [`brand-consistency`](brand-consistency.md) — pointer stub; its body lives here since the 2026-08-04 merge.
+ - [`brand`](../skills/brand/SKILL.md) — the gap-fill corpus this rule subordinates to consumer brand.
+ - [`brand-identity`](../skills/brand-identity/SKILL.md) — defines the tokens the gate validates against.
+diff --git a/src/scripts/hooks/block_speaking_inbox_dir.ts b/src/scripts/hooks/block_speaking_inbox_dir.ts
+index f22c33e98a12e208eb7e20351fc7c62e3e16be7a..ee592866f9d6568a5fe1c02dae723edb4320a7a2 100644
+--- a/src/scripts/hooks/block_speaking_inbox_dir.ts
++++ b/src/scripts/hooks/block_speaking_inbox_dir.ts
+@@ -22,7 +22,12 @@
+  *
+  * Refuses: a Write/Edit/NotebookEdit (or cross-platform equivalent) whose
+  * target path introduces a **new** first-level directory under `agents/tmp/`
+- * or `agents/tmp.old/` whose name is not an opaque round identifier.
++ * or `agents/tmp.old/` whose name is not an opaque round identifier — and a
++ * shell command whose own segments would bring one into existence. That scope
++ * is now what the code implements: a read tool's `file_path` is filtered by
++ * `_READ_ONLY_TOOLS`, and a command's tokens by `creatableTokens`. Both were
++ * scanned unconditionally before, so the sentence above described an intent
++ * the file did not carry.
+  *
+  * Allowed, deliberately:
+  *
+@@ -62,6 +67,7 @@ import * as path from 'node:path';
+ import { fileURLToPath, pathToFileURL } from 'node:url';
+ 
+ import { isNonHarvestTmpDir, isOpaqueRoundId } from '../_lib/source_shape.js';
++import { invokedSegments } from './git_command_classifier.js';
+ import { readHookStdin } from './hook_stdin.js';
+ 
+ const _HERE = fileURLToPath(import.meta.url);
+@@ -76,10 +82,121 @@ const _PATH_KEYS: readonly string[] = [
+     'file_path', 'path', 'target_file', 'filename', 'filePath', 'notebook_path',
+ ];
+ 
++/**
++ * Tools whose `file_path` names something to READ, never something to write.
++ *
++ * `_PATH_KEYS` covers `file_path` and `path`, which is exactly what a Read,
++ * Grep or Glob call carries — so a search under a speaking round that does not
++ * exist yet was refused by a guard whose own docstring scopes itself to
++ * `Write/Edit/NotebookEdit`. Filtering here rather than through the manifest's
++ * `tools:` key on purpose: that key is an exact match on the host's own tool
++ * name, so an allowlist written in Claude's vocabulary would silence this
++ * guard on every host that spells its write tools differently. A DENY-list of
++ * read tools fails the other way — an unrecognised tool is still judged.
++ *
++ * An envelope with no tool name is judged too, for the same reason
++ * `_concern_matches_tool` runs a concern when the field is absent: a key that
++ * cannot decide must not be what silences a blocking guard.
++ */
++const _READ_ONLY_TOOLS: ReadonlySet<string> = new Set([
++    'read', 'grep', 'glob', 'notebookread', 'ls', 'view', 'search',
++    'codebase-retrieval', 'codebase_retrieval', 'file_search', 'grep_search',
++    'read_file', 'list_dir', 'semantic_search',
++]);
++
+ function _isObject(v: JsonValue | undefined): v is JsonObject {
+     return v !== null && v !== undefined && typeof v === 'object' && !Array.isArray(v);
+ }
+ 
++/**
++ * Segment-leading command words that cannot bring a path into existence.
++ *
++ * READING IS NOT CREATING, AND THE COMMAND SCAN DID NOT KNOW IT. The scan in
++ * `main` offered every whitespace token of a shell command to the same verdict
++ * that judges a Write target, so `ls -d agents/tmp/<name>-*` — a read, over a
++ * glob, that creates nothing — was refused exactly like `mkdir`. Measured
++ * twice in one session while running the inbox flow over a real round: the
++ * command that lists which round identifiers are already taken is a command
++ * this guard blocked, so the guard stood between the operator and the naming
++ * rule it exists to enforce.
++ *
++ * A closed allowlist of read-only verbs rather than a deny-list of creating
++ * ones, so an unknown verb is still scanned and closing the false positive
++ * opens no bypass. `echo` and `printf` are listed because their only creating
++ * form is a redirect, which {@link _redirectTargets} judges separately.
++ *
++ * `git` is deliberately absent: `git mv` creates, and separating its read
++ * subcommands would buy one rare case (`git log -- agents/tmp/<name>/`, over a
++ * gitignored tree that returns nothing) for a second place to get the split
++ * wrong.
++ */
++const _READ_ONLY_VERBS: ReadonlySet<string> = new Set([
++    'awk', 'basename', 'bat', 'cat', 'cmp', 'column', 'cut', 'diff', 'dirname',
++    'du', 'echo', 'egrep', 'fd', 'fgrep', 'file', 'find', 'grep', 'head', 'jq',
++    'less', 'ls', 'nl', 'printf', 'readlink', 'realpath', 'rg', 'sed', 'sort',
++    'stat', 'tail', 'test', 'tr', 'type', 'uniq', 'wc', 'which', 'yq',
++]);
++
++/** The command word of one segment, without its directory prefix or arguments. */
++function _verbOf(segment: string): string {
++    const head = segment.trim().split(/\s+/)[0] ?? '';
++    return (head.split('/').pop() ?? '').toLowerCase();
++}
++
++/**
++ * The paths a redirect inside one segment would create.
++ *
++ * `splitOutsideQuotes` treats `;`, `|`, `&` and newline as separators and `>`
++ * as ordinary text, so a redirect target stays inside its segment — and a
++ * read-only verb would otherwise carry it past the allowlist above.
++ * `echo hi > agents/tmp/<name>/note.md` creates the directory as surely as
++ * `mkdir` does; `ls … 2>/dev/null` does not. The difference is the target, not
++ * the verb, so targets are judged even when the verb is read-only.
++ */
++function _redirectTargets(segment: string): string[] {
++    const out: string[] = [];
++    const re = /(?:^|[^0-9<>&])[0-9]*>>?\s*([^\s|&;<>]+)/g;
++    let m: RegExpExecArray | null = re.exec(segment);
++    while (m !== null) {
++        const target = m[1];
++        if (target) {
++            out.push(target);
++        }
++        m = re.exec(segment);
++    }
++    return out;
++}
++
++/**
++ * The tokens of a shell command whose CREATION this guard should judge.
++ *
++ * Judged per INVOKED SEGMENT, reusing `git_command_classifier`'s segmenter so
++ * this guard and its two siblings on the same slot agree about what a segment
++ * is — that module already carries the heredoc stripping, the quote-aware
++ * split, the `sh -c` unwrap and the substitution recursion, and a second copy
++ * is one more thing that can drift. Per segment matters on its own: the host
++ * splits a compound command the same way, and one creating segment must not
++ * make every read token in its neighbours suspect.
++ *
++ * Exported so the harness can pin the polarity pair on the tokens themselves,
++ * without an envelope.
++ */
++export function creatableTokens(command: string): string[] {
++    const out: string[] = [];
++    for (const seg of invokedSegments(command)) {
++        out.push(..._redirectTargets(seg));
++        if (_READ_ONLY_VERBS.has(_verbOf(seg))) {
++            continue;
++        }
++        for (const tok of seg.split(/[\s"'`(){};|&<>]+/)) {
++            if (tok) {
++                out.push(tok);
++            }
++        }
++    }
++    return out;
++}
++
+ /** `agents/tmp/<name>/…` or `agents/tmp.old/<name>/…`, after normalisation. */
+ const INBOX_RE = /(?:^|\/)agents\/tmp(?:\.old)?\/([^/]+)\/./;
+ 
+@@ -153,17 +270,25 @@ export function verdictFor(
+     // `agents/tmp-notes/` and `agents/tmpfiles/`, and taking the FIRST
+     // occurrence meant a path carrying a decoy earlier segment probed the wrong
+     // directory — in either direction. Found by the R2 review of this branch.
++    // THE CAPTURE CARRIES THE PATH'S OWN PREFIX, and it did not. Anchoring the
++    // group at `agents/` discarded everything before it, so a nested inbox —
++    // `app/Modules/<m>/agents/tmp/<round>/…`, the shape a module-per-package
++    // tree produces — probed `<repoRoot>/agents/tmp/<round>`, a directory that
++    // does not exist. The already-exists carve-out could therefore never fire
++    // there, and every write into a nested speaking round was refused forever
++    // instead of once. `(?:.*\/)?` backtracks to the LAST viable `agents/tmp/`,
++    // so the decoy case the paragraph below describes still resolves.
+     const normalized = filePath.replace(/\\/g, '/').replace(/^(\.\/)+/, '');
+     const m =
+-        /(?:^|\/)(agents\/tmp(?:\.old)?\/[^/]+)\//.exec(normalized) ??
+-        /(?:^|\/)(agents\/tmp(?:\.old)?\/[^/.]+)\/?$/.exec(normalized);
++        /^((?:.*\/)?agents\/tmp(?:\.old)?\/[^/]+)\//.exec(normalized) ??
++        /^((?:.*\/)?agents\/tmp(?:\.old)?\/[^/.]+)\/?$/.exec(normalized);
+     if (m === null) {
+         // `inboxDirName` matched but this did not — treat as unattributable and
+         // BLOCK, since the name is speaking and we cannot prove it pre-exists.
+         return { block: true, dir, reason: 'new inbox directory with a speaking name (path not re-anchorable)' };
+     }
+     const upto = m[1] as string;
+-    const probe = repoRoot === '' ? upto : path.join(repoRoot, upto);
++    const probe = repoRoot === '' || path.isAbsolute(upto) ? upto : path.join(repoRoot, upto);
+     if (exists(probe)) {
+         return { block: false, dir, reason: 'directory already exists — rename, do not re-refuse' };
+     }
+@@ -216,11 +341,15 @@ export function main(): number {
+             return 0;
+         }
+         const repoRoot = typeof envelope['project_dir'] === 'string' ? envelope['project_dir'] : '';
++        const rawTool = payload['tool_name'] ?? envelope['tool_name'];
++        const toolName = typeof rawTool === 'string' ? rawTool.trim().toLowerCase() : '';
+         const candidates: string[] = [];
+-        for (const key of _PATH_KEYS) {
+-            const v = ti[key];
+-            if (typeof v === 'string' && v) {
+-                candidates.push(v);
++        if (!_READ_ONLY_TOOLS.has(toolName)) {
++            for (const key of _PATH_KEYS) {
++                const v = ti[key];
++                if (typeof v === 'string' && v) {
++                    candidates.push(v);
++                }
+             }
+         }
+         // A shell command creates the directory just as effectively as a Write,
+@@ -228,16 +357,13 @@ export function main(): number {
+         // agents/tmp/<speaking-name>`, a `git mv` into one, or a redirect
+         // bypassed it entirely. Both siblings on this slot (`block_no_verify`,
+         // `block_kernel_rule_writes`) parse the command string; this one did
+-        // not, and the R2 review of this branch caught it. Every whitespace
+-        // token of the command is offered to the same pure verdict, so the
+-        // decision logic is shared rather than duplicated.
++        // not, and the R2 review of this branch caught it. The tokens that
++        // could CREATE something are offered to the same pure verdict, so the
++        // decision logic is shared rather than duplicated — see
++        // `creatableTokens` for why "every whitespace token" was too many.
+         const cmd = ti['command'] ?? (_isObject(envelope['payload']) ? (envelope['payload'] as JsonObject)['command'] : undefined);
+         if (typeof cmd === 'string' && cmd) {
+-            for (const tok of cmd.split(/[\s"'`(){};|&<>]+/)) {
+-                if (tok) {
+-                    candidates.push(tok);
+-                }
+-            }
++            candidates.push(...creatableTokens(cmd));
+         }
+         for (const v of candidates) {
+             const verdict = verdictFor(v, (p) => fs.existsSync(p), repoRoot);
+diff --git a/src/skills/tailwind-engineer/SKILL.md b/src/skills/tailwind-engineer/SKILL.md
+index 176745e9da899a8fe5f7d5aa325dfc82717bad38..e8876d8a14a058bc3a24bf30276807b8ac241fdd 100644
+--- a/src/skills/tailwind-engineer/SKILL.md
++++ b/src/skills/tailwind-engineer/SKILL.md
+@@ -51,6 +51,27 @@ radius, spacing, shadow, font-size to a configured token. If the design hands yo
+ (`bg-[#3B82F6]`, `mt-[17px]`) are a smell — accept only with a
+ one-line comment naming the design source.
+ 
++**That paragraph is written for greenfield, and artifact-bound work inverts
++it.** When a provided finished design is the spec
++([`design-fidelity`](../../rules/design-fidelity.md)), `#3B82F6` is a decision
++somebody already made and `bg-blue-500` is a guess about it. Reconcile against
++the project's tokens — that part is not optional — but reconcile by distance,
++not by reflex:
++
++| The nearest project token is | Write |
++|---|---|
++| the same value | the project token — that is not a translation |
++| different in a way you cannot see side by side | the project token, and say so in the port notes |
++| visibly different | the artifact's value, and report the project gap |
++
++An artifact-derived exact value is **not** a smell in this mode: it *is* the
++spec, and the source-naming comment the paragraph above asks for is what
++records it. Translate a given literal **once** into a named project token
++rather than snapping it per call site — one token the project owns beats N
++approximations of the same colour. Structure, controls, icons, grid and
++breakpoints are never this skill's to adjust; those stay 1:1 with the artifact
++and belong to the rule, not to a utility-class decision.
++
+ Token authoring (DTCG 3-layer model, CSS-var/Tailwind generation) lives
+ in [`design-tokens`](../design-tokens/SKILL.md); its
+ `tokens.ts validate --dir <path>` is the **single token-discipline
+@@ -128,7 +149,16 @@ Risks:          <arbitrary values, !important, dark-mode gaps>
+ - `dark:` variants need a token map in both modes; one-sided dark
+   styling is half a feature.
+ - Arbitrary values (`mt-[17px]`) survive Tailwind upgrades but
+-  break the design system; they accumulate silently.
++  break the design system; they accumulate silently. **Artifact-bound is the
++  exception, not a loophole:** a value the provided design specifies is not
++  accumulation, and step 1's distance table decides it. An arbitrary value
++  nobody can trace to a source is still the smell this bullet is about.
++- **The carrier is CSS or a utility class; the value is the design's.** Static
++  presentation belongs in CSS / tokens / classes — `style=` is for what only
++  the runtime knows (a computed width, a live transform, a measured offset).
++  Porting an artifact's inline `style=` into classes is therefore expected and
++  is not a deviation, **as long as the resolved value comes out identical**.
++  Changing the carrier is free; changing the number is not.
+ - `@apply` inside component CSS interacts with PurgeCSS — keep it
+   in files Tailwind scans, not in vendor CSS.
+ - **Anti-AI-slop catalog.** The bullets below are the Tailwind-specific
+diff --git a/tests/hooks/block_speaking_inbox_dir.test.ts b/tests/hooks/block_speaking_inbox_dir.test.ts
+index ed0245fa367b3d47a807ba78f21f3f73d5acf2f6..3a40bd2c032827d0dcd0279da2494a575f8b149e 100644
+--- a/tests/hooks/block_speaking_inbox_dir.test.ts
++++ b/tests/hooks/block_speaking_inbox_dir.test.ts
+@@ -18,6 +18,7 @@
+ import { describe, expect, it } from 'vitest';
+ 
+ import {
++    creatableTokens,
+     denyMessage,
+     inboxDirName,
+     isAcceptableInboxDir,
+@@ -108,6 +109,98 @@ describe('the allow branches the guard declares', () => {
+     });
+ });
+ 
++/**
++ * `creatableTokens` — the polarity pair for the false positive measured while
++ * running the inbox flow over a real round. The read half of these cases was
++ * REFUSED by the shipped guard, twice in one session, and the command that
++ * tripped it is the command the naming rule tells an operator to run.
++ *
++ * Sensitivity was probed, not assumed: emptying `_READ_ONLY_VERBS` reds every
++ * `does not judge` case below and leaves the `judges` cases green, so the
++ * allowlist is what these assertions measure.
++ */
++describe('creatableTokens — reading is not creating', () => {
++    const inboxTokens = (cmd: string): string[] =>
++        creatableTokens(cmd).filter((t) => t.includes('agents/tmp'));
++
++    it('does not judge a read over a glob — the case that blocked a real session', () => {
++        expect(inboxTokens("ls -d agents/tmp.old/a-speaking-name-* 2>/dev/null | sed 's|.*/||'")).toEqual([]);
++        expect(inboxTokens('ls -la agents/tmp/[REDACTED:src-conf]/ && wc -l -c agents/tmp/[REDACTED:src-conf]/*')).toEqual([]);
++    });
++
++    it('does not judge cat, grep, find, head or wc over an inbox path', () => {
++        for (const cmd of [
++            'cat agents/tmp/[REDACTED:src-conf]/chat.txt',
++            'grep -rn "x" agents/tmp/[REDACTED:src-conf]/',
++            'find agents/tmp/a-speaking-name -name "*.md"',
++            'head -60 agents/tmp/[REDACTED:src-conf]/notes.md',
++            'wc -l agents/tmp/[REDACTED:src-conf]/notes.md',
++        ]) {
++            expect(inboxTokens(cmd), cmd).toEqual([]);
++        }
++    });
++
++    it('judges a creating verb, and every segment of a compound command', () => {
++        expect(inboxTokens('mkdir -p agents/tmp/a-speaking-name')).toContain('agents/tmp/a-speaking-name');
++        expect(inboxTokens('cp x agents/tmp/[REDACTED:src-conf]/y.md')).toContain('agents/tmp/[REDACTED:src-conf]/y.md');
++        expect(inboxTokens('git mv old agents/tmp/[REDACTED:src-conf]/note.md')).toContain(
++            'agents/tmp/[REDACTED:src-conf]/note.md',
++        );
++        // One read segment must not launder the creating one beside it.
++        expect(inboxTokens('ls -la . && mkdir -p agents/tmp/a-speaking-name')).toContain(
++            'agents/tmp/a-speaking-name',
++        );
++    });
++
++    it('judges a redirect target even when the verb is read-only', () => {
++        expect(inboxTokens('echo hi > agents/tmp/[REDACTED:src-conf]/note.md')).toContain(
++            'agents/tmp/[REDACTED:src-conf]/note.md',
++        );
++        expect(inboxTokens('printf x >> agents/tmp/[REDACTED:src-conf]/note.md')).toContain(
++            'agents/tmp/[REDACTED:src-conf]/note.md',
++        );
++    });
++
++    it('does not read a stderr redirect as a creating target', () => {
++        expect(creatableTokens('ls -d agents/tmp/a-speaking-name-* 2>/dev/null')).not.toContain(
++            'agents/tmp/a-speaking-name-*',
++        );
++    });
++});
++
++describe('verdictFor — the probe carries the path prefix', () => {
++    /** Exists only at the NESTED location, which is the whole point. */
++    const nestedOnly = (p: string): boolean => p.endsWith('app/Modules/Reporting/agents/tmp/a-speaking-name');
++
++    it('finds a module-nested round that already exists', () => {
++        const v = verdictFor(
++            'app/Modules/Reporting/agents/tmp/[REDACTED:src-conf]/notes.md',
++            nestedOnly,
++            '',
++        );
++        expect(v.block).toBe(false);
++        expect(v.reason).toContain('already exists');
++    });
++
++    it('still blocks a module-nested round that does not exist', () => {
++        expect(verdictFor('app/Modules/Reporting/agents/tmp/[REDACTED:src-conf]/notes.md', never, '').block).toBe(true);
++    });
++
++    it('does not match a decoy segment that merely starts with agents/tmp', () => {
++        expect(inboxDirName('xagents/tmp/[REDACTED:src-conf]/notes.md')).toBeNull();
++        expect(verdictFor('agents/tmpfiles/a-speaking-name/notes.md', never, '').block).toBe(false);
++    });
++
++    it('leaves an absolute path absolute instead of re-rooting it', () => {
++        const seen: string[] = [];
++        verdictFor('/elsewhere/repo/agents/tmp/[REDACTED:src-conf]/x.md', (p) => {
++            seen.push(p);
++            return false;
++        }, '/some/other/root');
++        expect(seen).toEqual(['/elsewhere/repo/agents/tmp/a-speaking-name']);
++    });
++});
++
+ describe('the deny message', () => {
+     const msg = denyMessage('some-project-swarm');
+ 
+@@ -174,6 +267,33 @@ describe('main() — the envelope surface', () => {
+         expect(run({ tool_name: 'Bash', tool_input: { command: 'mkdir -p agents/tmp/inbox-2026-08-h' } })).toBe(0);
+     });
+ 
++    it('ALLOWS a read tool whose file_path names a speaking round', () => {
++        for (const tool of ['Read', 'Grep', 'Glob', 'NotebookRead', 'codebase-retrieval']) {
++            expect(
++                run({ tool_name: tool, tool_input: { file_path: 'agents/tmp/[REDACTED:src-conf]/x.md' } }),
++                tool,
++            ).toBe(0);
++        }
++    });
++
++    it('still BLOCKS a write tool on the same path — the filter is a deny-list, not a bypass', () => {
++        expect(run({ tool_name: 'Write', tool_input: { file_path: 'agents/tmp/[REDACTED:src-conf]/x.md' } })).toBe(1);
++        // An unrecognised tool name is judged, so a host spelling its write
++        // tool differently is not silently exempted.
++        expect(run({ tool_name: 'str_replace_editor', tool_input: { path: 'agents/tmp/[REDACTED:src-conf]/x.md' } })).toBe(1);
++        expect(run({ tool_input: { file_path: 'agents/tmp/[REDACTED:src-conf]/x.md' } })).toBe(1);
++    });
++
++    it('ALLOWS the read commands that a real session had refused', () => {
++        for (const command of [
++            "ls -d agents/tmp.old/a-speaking-round-* 2>/dev/null | sed 's|.*/||'",
++            'cat agents/tmp/[REDACTED:src-conf]/chat.txt',
++            'grep -rn "x" agents/tmp/[REDACTED:src-conf]/',
++        ]) {
++            expect(run({ tool_name: 'Bash', tool_input: { command } }), command).toBe(0);
++        }
++    });
++
+     it('a malformed or empty envelope ALLOWS — fail_closed is false', () => {
+         expect(run({})).toBe(0);
+         setHookStdinOverride('not json at all');
