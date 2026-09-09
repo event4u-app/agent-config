@@ -117,6 +117,34 @@ elapsed-time property — recorded in the contract's own § What was NOT preserv
 | Preserve the external-anchor blocker | blocker `ratification-platform-anchor`, open, on `road-to-typed-grants-that-persist` |
 | The workflow file is not on the watch list | added — `WORKFLOW_PATH` in the gate, with the honest note that it is one more level and not an anchor |
 
+## The base-revision mechanism, verified outside CI
+
+The round-1 fix rests on CI running the gate's code from a revision the
+candidate did not write. **CI does not exercise that path on this PR** — this
+is the bootstrap branch, `main` carries no gate, and the workflow takes its
+`::warning::` fallback. So the mechanism was proven by hand instead, and the
+proof is recorded here rather than assumed:
+
+```bash
+git archive HEAD src/scripts src/config | tar -x -C /tmp/basetest
+npx tsx /tmp/basetest/src/scripts/check_kernel_edit_ratified.ts \
+    --root "$PWD" --files <changed files>
+```
+
+A script tree extracted **outside the repository**, resolving its own `_lib`
+imports and its own quorum policy, reading the working tree only through
+`--root`. Both polarities, 2026-09-09:
+
+| Files passed | Exit | Output |
+|---|---|---|
+| `src/rules/commit-policy.md` | **1** | no ratification artifact in this diff |
+| the same, plus this record | **0** | ratified by `council/anthropic+openai-2026-09-09-r3` |
+
+An older revision of the script (`66a2ecb91`, before the policy file existed)
+was run the same way and also produced a correct refusal — so the invocation
+pattern survives the two versions drifting apart, which is the property the
+workflow needs when the base is genuinely behind.
+
 ## What a later reader should check before trusting this
 
 The gate reads paths and artifact shape. It cannot read whether the review
