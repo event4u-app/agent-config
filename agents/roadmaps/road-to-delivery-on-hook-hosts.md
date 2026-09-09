@@ -292,7 +292,7 @@ admission. Cowork is excluded by the existing measurement.
       replacement prose quoted the retired phrase while explaining what it replaced, so the
       grep still returned 1. Reworded to describe the old cell without reproducing its
       literal. A verify expressed as a grep counts the fix's own prose too.
-- [ ] **4.2 One sentence** in the same file and in the predecessor's ADR: hosts without a
+- [x] **4.2 One sentence** in the same file and in the predecessor's ADR: hosts without a
       measured injection path receive the full corpus; this is the cost of the host, not a
       defect.
       verify: sentence present; predecessor 1.4 gate green.
@@ -311,8 +311,8 @@ admission. Cowork is excluded by the existing measurement.
       **ADR-262 IS CONTESTED — do not follow this number blindly. Found 2026-09-08.** Two
       open PRs each ship a different ADR numbered 262, and neither is merged:
       `drain/delivery-for-every-host` (PR #1923) has
-      `docs/decisions/ADR-262-delivery-default-for-claude-code.md`, which is the one this
-      step means, and `drain/abolish-carrier-gate` (PR #1926) has
+      `docs/decisions/ADR-262-delivery-default-for-claude-code.md` <!-- ref-ignore -->, which is the one this
+      step means (it is `ADR-267-…` today — see the DONE note above), and `drain/abolish-carrier-gate` (PR #1926) has
       `docs/decisions/ADR-262-carrier-status-deleted-no-repo-authored-human-gate.md`, a
       decision on an unrelated subject. Both branches carry an identical ADR-260 and
       ADR-261, so 262 was simply the first free number each lane took independently.
@@ -371,7 +371,22 @@ admission. Cowork is excluded by the existing measurement.
 
 ### blocker: predecessor-delivery-for-every-host-unmerged
 
-- **Status:** open
+- **Status:** resolved 2026-09-09. PR #1923 (`drain/delivery-for-every-host`) merged on
+  2026-09-08 at `5f2f2171f`, and the `Resolved when` below is met on its own terms rather
+  than by a generous reading: `lean_projection.hosts: [claude-code]` is in
+  `src/config/agent-settings.template.yml:212-214` on a merged ref, and the predecessor ADR
+  is a real file this repository has — `ADR-267-delivery-default-for-claude-code.md`, which
+  is where the number landed after four renumberings, not the ADR-262 the entry names.
+  Its `What to do` step 1 is now FALSE and is left standing rather than edited: it says
+  `origin/main` carries 0 of 6 of the predecessor's Phase 4, and `origin/main` carries 4 of
+  6 (4.0, 4.1, 4.3, 4.5 done; 4.2 and 4.4 open on the predecessor with their own recorded
+  reasons). The durable half of that claim was the 0-of-6, and it is the half that changed.
+  What this unblocks, and what it does not: step 4.2 is CLOSED by this change, and the
+  second verify limb of 2.2 and 4.2 now runs here. Step 1.1's second limb and step 2.1
+  limb (a) stay blocked on `no-host-observed-true-injection`, which is a different blocker
+  needing a live transcript, and step 2.1 limb (b) needs a host admitted under that one.
+  The review trigger fired in the merged direction; the abandoned case nobody was watching
+  for did not happen.
 - **Owner:** maintainer
 - **Asked:** 2026-09-08, owner-delegated drain run.
 - **Blocks:** step 2.1 limb (b), step 4.2 second half, and step 1.1 second limb by way of its precondition. Steps 1.2, 1.3, 2.2, 3.1, 3.2 and 4.1 are done and unaffected.
@@ -490,6 +505,29 @@ this line.
 
 ## Acceptance Criteria
 
+
+      **DONE 2026-09-09 — the branches met, and the number moved four times on the way.**
+      PR #1923 merged on 2026-09-08. The predecessor's ADR is
+      `docs/decisions/ADR-267-delivery-default-for-claude-code.md` — NOT 262, and not 263,
+      265 or 266 either: the record was renumbered four times against collisions with
+      records that merged first, which is exactly the hazard the paragraph above predicted
+      arriving from a third direction. The full collision record is
+      `agents/roadmaps/stubs/road-to-adr-number-uniqueness.md`. Resolving this step by the
+      contested number rather than by re-reading it live would have edited the wrong
+      decision.
+      The sentence now sits in ADR-267 § Consequences, immediately before § What this does
+      NOT reopen, and it carries the two things the bare sentence does not: WHY it is not a
+      withholding (every rule body is written and shipped, and `check_host_tree_parity`
+      asserts byte-identity against `eager-all` for every host outside
+      `lean_projection.hosts` on every PR) and WHY thinning is earned rather than granted (a
+      host that binds no slot has nowhere to put the body back, so removing it would delete
+      a rule and put nothing in its place). It names `docs/enforcement-by-host.md` § L4 as
+      its reciprocal half, so the pair is navigable from either side.
+      Verify: both limbs met. The sentence is present in both files, and the second limb —
+      the predecessor's 1.4 gate — now runs HERE rather than only on the predecessor branch,
+      because the predecessor is merged: `check_host_tree_parity` reports
+      `2 non-delivery host tree(s) byte-identical to eager-all · delivery hosts
+      [claude-code]`, exit 0.
 - [x] Every host has an `injection_effect` line with provenance in the census.
       Met 2026-09-08. Nine hosts, nine lines, in
       `agents/evidence/analysis/host-injection-effect-2026-09.md`. Provenance is enforced

@@ -140,6 +140,18 @@ That is why the host axis exists and why its default has exactly one member.
   the pre-registered one, so a future run measures this condition instead of
   inferring it. This decision is NOT reopened, and nothing here supersedes it.
 
+- **A host with no measured injection path receives the full corpus, and that
+  is the cost of the host rather than a defect in this record.** Added
+  2026-09-09 by `road-to-delivery-on-hook-hosts` step 4.2, which owed the same
+  sentence to two files and could only place one of them while this record sat
+  on an unmerged branch. It is not a withholding: every rule body is written and
+  shipped, `check_host_tree_parity` asserts byte-identity against `eager-all`
+  for every host outside `lean_projection.hosts` on every PR, and the thinning
+  is what a host EARNS by binding a slot that can carry a body back. A host that
+  binds nothing has nowhere to put the body, so removing it would delete a
+  rule and put nothing in its place. The reciprocal half of this sentence is in
+  `docs/enforcement-by-host.md` § L4.
+
 ## What this does NOT reopen
 
 - **ADR-202** closed the paired-judging instrument behind the `thin` quality
