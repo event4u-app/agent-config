@@ -230,7 +230,18 @@ Gated on `blocker: approximation-tolerance` and `blocker: rule-body-cap`.
       verify: three fixtures — inside tolerance, outside tolerance, switched
       off — produce the three distinct verdicts, and every value row carries a
       distance to the nearest project token even when preserved.
-- [ ] **3.3 Re-frame `strict` instead of adding a fourth mode.** A value inside
+- [ ] **3.3 Gate reuse on conformity, and decide it after the read.**
+      `ui-audit-gate` gates on the audit *existing*, and `existing-ui-audit`
+      scores candidates by fuzzy similarity **to the input** — so nothing
+      anywhere checks a reuse candidate against a provided artifact's
+      constraints, while `ui-audit-gate:126` carries "reuse beats duplication"
+      as unqualified prose. Reuse becomes conditional on the candidate's own
+      conformance verdict, and the reuse decision moves after extraction rather
+      than before it. Found by the read-back pass rather than by any first
+      reading of the round, which is why it is recorded as its own step.
+      verify: a candidate whose subtree reds the conformance report is refused
+      with the dimension that refused it named; a conforming one is reused.
+- [ ] **3.4 Re-frame `strict` instead of adding a fourth mode.** A value inside
       tolerance stops being an unconfirmed deviation and becomes a reported
       reconciliation; everything outside stays confirmation-bound. Requires the
       rule-body cap to be resolved first.
@@ -284,7 +295,7 @@ Gated on `blocker: fidelity-default-flip` for anything that would refuse.
 
 - **Status:** open
 - **Owner:** maintainer
-- **Blocks:** 3.2, 3.3, 4.2
+- **Blocks:** 3.2, 3.4, 4.2
 - **What to do:** pick exactly one — (a) accept provisional start values and
   record them in `src/config/agent-settings.template.yml` under `design:`,
   flagged as unmeasured and re-derived after Phase 4.2's window; or (b) name
@@ -296,7 +307,7 @@ Gated on `blocker: fidelity-default-flip` for anything that would refuse.
 - **Recommendation:** (a). The mechanism is worth more than the constant, the
   distance is reported on every row either way, and (c) inverts a dependency
   for a number that is provisional in all three branches.
-- **If you do nothing:** Phase 3.2 cannot ship a setting, so Phase 3.3 cannot
+- **If you do nothing:** Phase 3.2 cannot ship a setting, so Phase 3.4 cannot
   re-frame `strict`, and the second owner directive stays unimplementable in
   the rule text.
 
@@ -324,7 +335,7 @@ Gated on `blocker: fidelity-default-flip` for anything that would refuse.
 
 - **Status:** open
 - **Owner:** maintainer
-- **Blocks:** 3.3
+- **Blocks:** 3.4
 - **What to do:** pick exactly one — (a) migrate an existing passage out of
   `src/rules/design-fidelity.md` into
   `docs/guidelines/design-fidelity-mechanics.md`, which is legitimate only
@@ -337,7 +348,7 @@ Gated on `blocker: fidelity-default-flip` for anything that would refuse.
 - **Recommendation:** (c) after Phase 2.1, then (a) if the clause proves too
   load-bearing to sit behind a pointer. The rule is at 200 of 200 lines and the
   guideline has no cap.
-- **If you do nothing:** Phase 3.3 has nowhere to put the sentence, and
+- **If you do nothing:** Phase 3.4 has nowhere to put the sentence, and
   `strict` keeps contradicting the directive in the projected text.
 
 ## Risk Register
@@ -350,7 +361,7 @@ Gated on `blocker: fidelity-default-flip` for anything that would refuse.
 | 3 | The approximation becomes a licence to drift | product | Many individually-legal small reconciliations compose into a result nobody approved | Every value row carries its distance even when preserved, so the drift is visible per row before it is cumulative; a cumulative bound is Phase 4's, and the tolerance is re-derived from shadow data rather than kept | Phase 3 — Maturity and approximation as data, not prose |
 | 4 | Phase 3 writes policy into an unreachable file | implementation | The tolerance clause lands in the guideline while the guideline still reaches no consumer install, reproducing the exact defect this roadmap opens with | Phase 2 is ordered before Phase 3 and `blocker: rule-body-cap` names the dependency explicitly in its option (a) | Phase 2 — Make the delegated procedure exist where it is read |
 | 5 | The distance table is judgement, not measurement | product | Phase 1.2 asks whether a difference is visible side by side, which two readers can answer differently | Accepted deliberately for Phase 1: inventing a threshold there would pre-empt `blocker: approximation-tolerance`. Phase 3.2 replaces the judgement with the recorded number | Phase 1 — Remove the contradiction and the false positives |
-| 6 | Every remaining fix wants a standing rule with no room in it | implementation | The reach problem's natural fix is prose in a rule, and the per-spawn preamble ratchet has zero headroom — measured at +339 tok for 33 lines, which reverted step 1.3 out of the Phase 1 PR. Steps 2.4 and 3.3 both want the same surface | Phase 2.1 is ordered first so the guideline becomes a legitimate destination, and `blocker: standing-payload-headroom` forces the choice to be recorded rather than paid for by deleting somebody else's prose | Phase 2 — Make the delegated procedure exist where it is read |
+| 6 | Every remaining fix wants a standing rule with no room in it | implementation | The reach problem's natural fix is prose in a rule, and the per-spawn preamble ratchet has zero headroom — measured at +339 tok for 33 lines, which reverted step 1.3 out of the Phase 1 PR. Steps 2.4 and 3.4 both want the same surface | Phase 2.1 is ordered first so the guideline becomes a legitimate destination, and `blocker: standing-payload-headroom` forces the choice to be recorded rather than paid for by deleting somebody else's prose | Phase 2 — Make the delegated procedure exist where it is read |
 
 ## Acceptance Criteria
 
