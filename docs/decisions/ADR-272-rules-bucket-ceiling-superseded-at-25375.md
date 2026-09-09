@@ -160,8 +160,8 @@ record wrong was checked against the tree rather than taken from the council.**
 | `ceil(24,166 × 1.05) = 25,375` | arithmetic, stated so the number is reproducible rather than asserted |
 | **No `rules_bucket_ceiling` key exists and no gate reads one** | `grep -n "20000\|rules_bucket" src/scripts/check_preamble_payload_budget.ts` returns nothing; `grep -rn "20,000\|20000" agents/roadmaps/road-to-delivery-for-every-host.md` returns the Goal and step 4.2's verify line, and nothing else in the tree |
 | `check_preamble_payload_budget` routes by surface and never consults a rules-bucket limb | `src/scripts/check_preamble_payload_budget.ts` — the budget entry it reads is `packed`/total, with no per-bucket branch |
-| Both seats chose (a); the earlier declinations were conditional on delegation, not on substance | `agents/runtime/council/responses/delivery-for-every-host-owner-delegation.md` and `…-retry.md`, 2/2 across the two runs |
-| The first run's missing seat was a transport failure, not a refusal | that response's openai entry: `error: os_error: ENOBUFS`, `reason: unavailable`, empty text |
+| Both seats chose (a); the earlier declinations were conditional on delegation, not on substance | AI council 2026-09-09, anthropic/claude-sonnet-4-5 + openai/codex-default, subscription transport, `$0.0000`, deep depth with peer review. Run 1 concluded 1/2 (anthropic answering (a)); run 2 concluded 2/2 with openai answering (a) independently. |
+| The first run's missing seat was a transport failure, not a refusal | that run recorded the seat as `error: os_error: ENOBUFS`, `reason: unavailable`, empty text — a transport code, not a declination, which is why the retry was legitimate rather than verdict shopping |
 
 **What this evidence does NOT establish**, named rather than implied:
 
