@@ -9,9 +9,9 @@ execution:
 
 > **Source:** the AI council of 2026-09-08 (anthropic/claude-sonnet-4-5 +
 > openai/codex-default, 2 of 2 present, converged), recorded as
-> [`ADR-265`](../../docs/decisions/ADR-265-iron-law-reserve-refused-verifier-inside-the-change.md).
+> [`ADR-265`](../../../docs/decisions/ADR-265-iron-law-reserve-refused-verifier-inside-the-change.md).
 > This file is the receiver for step 1.3 of
-> [`road-to-a-standing-budget-with-headroom`](archive/road-to-a-standing-budget-with-headroom.md)
+> [`road-to-a-standing-budget-with-headroom`](road-to-a-standing-budget-with-headroom.md)
 > (archived in the same change that closed it),
 > which was deferred rather than closed.
 
@@ -53,7 +53,7 @@ be discharged by answering it.
 **Outcome 2026-09-09: the second branch.** An AI council convened under the
 owner's written delegation for this drain run decided **against** the reserve,
 2 of 2 seats present and converged, recorded as
-[`ADR-269`](../../docs/decisions/ADR-269-iron-law-reserve-abandoned-strict-ceiling-stands.md).
+[`ADR-269`](../../../docs/decisions/ADR-269-iron-law-reserve-abandoned-strict-ceiling-stands.md).
 1.1 is therefore discharged and 1.2–1.6 are **cancelled**, not deferred: their
 premise is the thing that was decided against, so there is no future run that
 executes them and no receiver to carry them to. The phase heading already

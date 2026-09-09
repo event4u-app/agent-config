@@ -68,7 +68,7 @@ fail-closed rebuild — and left the prior question open: **should the reserve
 exist at all?** One seat of that council argued it should not; the other treated
 it as legitimate once the controls exist. Nothing resolved it.
 
-`agents/roadmaps/road-to-iron-law-reserve-activation.md` was the receiver for
+`agents/roadmaps/archive/road-to-iron-law-reserve-activation.md` was the receiver for
 that open question. Its step 1.1 asked for exactly this record; its Risk 1 named
 the failure this record forecloses — *"the controls get installed and the
 reserve is rebuilt without re-asking 1.1; five administrator actions are a sunk
@@ -185,7 +185,7 @@ it to a **documented inventory**, which is a bar a real case can clear.
 
 ## Consequences
 
-- `agents/roadmaps/road-to-iron-law-reserve-activation.md` closes. Step 1.1 is
+- `agents/roadmaps/archive/road-to-iron-law-reserve-activation.md` closes. Step 1.1 is
   discharged by this record; steps 1.2–1.6 are cancelled, because their premise
   — that the reserve should exist — is the thing decided against. Its AC-1
   admits exactly this branch: *"or an ADR records that the reserve is abandoned

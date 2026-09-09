@@ -192,8 +192,17 @@ run:
 5. **Fail-closed on any missing component**, with the plain ceiling still
    enforced.
 
-Carried in `agents/roadmaps/road-to-iron-law-reserve-activation.md`
-(`status: draft`, so it costs no active slot until a maintainer takes it up).
+Carried in `agents/roadmaps/archive/road-to-iron-law-reserve-activation.md`
+— **closed and archived 2026-09-09 on its decide-against branch.** The
+parenthetical this line used to carry (`status: draft`, so it costs no active
+slot until a maintainer takes it up) went false in the same change that moved
+the path, so it is replaced rather than left beside a corrected link: the
+roadmap flipped to `ready` in order to be archivable at all, and the prior
+question this record left open is answered by
+[`ADR-269`](ADR-269-iron-law-reserve-abandoned-strict-ceiling-stands.md) — the
+reserve is abandoned, the five controls above are **not** installed, and the
+design in § What the run had already built stays recorded for any future
+proposal to argue from.
 
 ## Consequences
 
