@@ -119,7 +119,16 @@ describe('lint_skill_originality — synthetic fixtures', () => {
         ] as const) {
             fs.copyFileSync(src, path.join(scriptsDir, dst));
         }
-        for (const lib of ['value_ladder.ts', 'scan_scope.ts', 'agent_src.ts'] as const) {
+        // `guidelines_lane.ts` is here because `agent_src.ts` imports it — the
+        // docs/guidelines projection lane. A fixture that copies a module and
+        // not its imports fails at LOAD time, which reads as seven unrelated
+        // assertion failures rather than as one missing file.
+        for (const lib of [
+            'value_ladder.ts',
+            'scan_scope.ts',
+            'agent_src.ts',
+            'guidelines_lane.ts',
+        ] as const) {
             fs.copyFileSync(
                 path.join(SCRIPTS, '_lib', lib),
                 path.join(scriptsDir, '_lib', lib),
