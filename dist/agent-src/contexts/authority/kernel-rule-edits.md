@@ -20,7 +20,7 @@ real interactions before the second edit lands and confounds the
 diagnosis.
 
 Since 2026-09-09 a kernel-rule PR **also** carries a ratification artifact
-([`ratification-artifact`](../../../../docs/contracts/ratification-artifact.md)),
+([`ratification-artifact`](../../docs/contracts/ratification-artifact.md)),
 gated by `check_kernel_edit_ratified`. An ADDITION: ADR-268 § 4 would have it
 replace the deny and retire this soak, and a 2/2 independent review refused
 that while the check is not platform-anchored. Both stand until the owner
