@@ -41,8 +41,20 @@ each phase.
 
 ## Prerequisites
 
-- [ ] Predecessor Phase 1 merged (`lean_projection.hosts` exists, non-regression gate
+- [x] Predecessor Phase 1 merged (`lean_projection.hosts` exists, non-regression gate
       green).
+      **MET 2026-09-09 — on `origin/main`, which is what the criterion asked for.**
+      `lean_projection.hosts` exists in the shipped template
+      (`src/config/agent-settings.template.yml:214`, `hosts: [claude-code]`) and resolves
+      to `["claude-code"]` by default, and the non-regression half is green measured on
+      `origin/main`: `check_host_tree_parity` reports *2 non-delivery host tree(s)
+      byte-identical to eager-all · delivery hosts [claude-code]*, and
+      `check_rule_projection_integrity` reports *140 rule projection entries complete and
+      fresh across 3 host rule tree(s)*. Phase 2 is therefore no longer gated on a
+      predecessor branch.
+      The paragraph below is the 2026-09-08 reading, kept because it records what the
+      criterion looked like while it was unmet rather than being rewritten to look like it
+      was always fine:
       NOT MET 2026-09-08, and it is met on a branch rather than on `origin/main`.
       `road-to-delivery-for-every-host` Phase 1 is complete and green on
       `drain/delivery-for-every-host` — `lean_projection.hosts` exists, the stub write is
@@ -148,6 +160,52 @@ admission. Cowork is excluded by the existing measurement.
       What closes it: one Claude Code session with `delivery` live, a prompt that trips a
       labelled rule, and a transcript reference showing the next turn reflecting the body.
       The record has the slot waiting and the citation check will refuse a partial one.
+      **2026-09-09 — the second limb is still NOT met, and the reason it has never been met
+      is now measured rather than assumed. It is not that the bar is unreachable.**
+      Four facts, each reproducible from a command:
+      1. **The gate is OPEN in this repository.** `gateOpen`
+         (`hooks/rule_inject_hook.ts:314-320`) returns true when the mode delivers bodies
+         and `hosts` includes `claude-code`; `lean_projection.mode` resolves to `delivery`
+         and `lean_projection.hosts` to `["claude-code"]` from the shipped defaults, with
+         nothing set in any settings file.
+      2. **The concern DELIVERS when it is invoked.** Fed a `user_prompt_submit` envelope
+         carrying a prompt that trips a labelled rule, it returns
+         `{"decision":"warn","reason":"rule-inject: 1 rule body/bodies on
+         user_prompt_submit (5346 B)"}` with the full body in `additional_context`, exit 2
+         — the warn path that is how context reaches the model. Verified in three shapes:
+         a raw host payload, the same payload with the dispatcher's own envelope keys, and
+         both repository roots.
+      3. **The SOURCE dispatcher delivers it too.** `npx tsx
+         src/scripts/hooks/dispatch_hook.ts --platform claude --event user_prompt_submit`
+         over the same payload emits 6,458 B of output containing the matched rule id. So
+         nothing in the dispatcher's own logic drops it.
+      4. **The BUILT bundle does not.** `node dist/hooks/dispatch.js --platform claude
+         --event user_prompt_submit` over the identical payload emits 826 B — the
+         language-mirror pin and nothing else. `dist/hooks/dispatch.js` is UNTRACKED
+         (`git ls-files dist/hooks/` returns nothing) and is produced by
+         `npm run build:hooks`, so this is a stale LOCAL build, not a defect in the
+         repository. It is also the file the installed hook actually runs, resolved through
+         `$CLAUDE_PROJECT_DIR/dist/hooks/dispatch.js` in `~/.claude/settings.json`.
+      **The consequence for this step.** No `rule-inject` session state exists anywhere on
+      this machine — `agents/runtime/state/rule-inject/` did not exist in either the
+      worktree or the parent checkout before this investigation created a probe file — so
+      the concern has never delivered a body in a live session here. Every session that
+      could have produced the E3 transcript was running a bundle that had the carrier
+      missing, and `check_installed_hooks_fresh` said so at session start: *".git/hooks does
+      not match this checkout"*.
+      **What is deliberately NOT claimed.** No `observed-true` row is written. Everything
+      above is the COMPUTED axis one step closer to the observed one — it shows the carrier
+      delivers, not that a model visibly acted on a delivered body, and those are the two
+      axes this step exists to keep apart. Writing `observed-true` off a dispatcher probe
+      would be K1 one layer in, exactly as writing it off byte-equivalence would be. There
+      is a second reason to refuse: the only session available to observe is this one, so
+      the observer and the subject would be the same agent, which is the self-review shape
+      `evaluator-independence` exists to reject.
+      **What closes it, sharpened.** Refresh the local bundle (`npm run build:hooks`),
+      confirm `node dist/hooks/dispatch.js --platform claude --event user_prompt_submit`
+      now carries a rule body, then run a session and have a SECOND party read the
+      transcript for the turn that reflects the body. The bar was never the problem; the
+      carrier the sessions were running was.
 - [x] **1.2 Run 1.1 on Cursor and Cline** (the two hosts binding `user_prompt_submit` with a
       `.md` rule tree). Record Windsurf, Gemini and Augment as `unobserved` unless a session
       exists.
@@ -428,11 +486,51 @@ admission. Cowork is excluded by the existing measurement.
 - **Owner:** maintainer
 - **Asked:** 2026-09-08, owner-delegated drain run.
 - **Blocks:** step 1.1 second limb, step 2.1 limb (a), and acceptance criteria depending on an admitted host.
-- **Recommendation:** none on the substance. What this lane can say is that the gap is real and is not an artefact of missing effort: `agents/evidence/analysis/host-injection-effect-2026-09.md` records 1 `observed-false` and 8 `unobserved` across nine hosts, and `admissibleUnderE3` returns true for nothing, which a test pins.
+- **Recommendation:** attempt option 1, not option 3 — and not from the session that
+  measured this. UPDATED 2026-09-09; the 2026-09-08 reading was *none on the substance*
+  and is superseded, with what it established kept below.
+  The re-scope option exists because the E3 bar looked unreachable. It is not. The carrier
+  works, and the reason no session ever produced a transcript is a **stale local hook
+  bundle** — measured and reproducible: the concern delivers a 5,346-byte rule body when
+  invoked, the SOURCE dispatcher delivers it (6,458 B carrying the matched rule id), and
+  the built `dist/hooks/dispatch.js` that `~/.claude/settings.json` actually runs emits
+  826 B for the identical payload. No `rule-inject` session state existed anywhere on the
+  machine, which is exactly what that predicts. So the cheap move is `npm run build:hooks`
+  and one session, not re-scoping Phase 2 around an empty set.
+  Not from this session, stated rather than left implicit: the only session available to
+  observe is the one doing the observing, so observer and subject would be the same agent —
+  the self-review shape `evaluator-independence` rejects — and a dispatcher probe is the
+  COMPUTED axis, which is the conflation K1 forbids. The row needs a session whose
+  transcript a second party reads.
+  What the 2026-09-08 reading established, and it still holds: the gap is real and is not
+  an artefact of missing effort. `agents/evidence/analysis/host-injection-effect-2026-09.md`
+  records 1 `observed-false` and 8 `unobserved` across nine hosts, and `admissibleUnderE3`
+  returns true for nothing, which a test pins. What this lane can say is that the gap is real and is not an artefact of missing effort: `agents/evidence/analysis/host-injection-effect-2026-09.md` records 1 `observed-false` and 8 `unobserved` across nine hosts, and `admissibleUnderE3` returns true for nothing, which a test pins.
 - **If you do nothing:** Phase 2 has an empty input set forever, and the temptation the roadmap names in K1 stays live — writing `observed-true` off the byte-equivalence measurement, which is a different claim.
 - **What to do:**
   1. Produce the transcript step 1.1 asks for: one Claude Code session with `delivery` live in `.agent-settings.yml`, a prompt that trips a labelled rule, and a transcript reference showing the next turn reflecting the delivered body. Then fill the waiting slot in `src/config/host-injection-effect.json`; the citation check in `src/scripts/_lib/injection_effect.ts` refuses a partial row.
-  2. Note the ordering trap: `delivery` going live in this repository is the predecessor Phase 4.2 flip, so this blocker cannot be discharged before the one above it, even though the two are otherwise independent.
+  2. **The ordering trap is GONE, and a different one replaced it — measured 2026-09-09.**
+     This step used to read: *`delivery` going live in this repository is the predecessor
+     Phase 4.2 flip, so this blocker cannot be discharged before the one above it.* That is
+     no longer true in either direction. `delivery` IS live — `lean_projection.mode`
+     resolves to `delivery` and `hosts` to `["claude-code"]` from the shipped defaults, with
+     nothing set in any settings file — and `gateOpen` in
+     `hooks/rule_inject_hook.ts:314-320` therefore returns true here. So the precondition
+     this step waited for has been satisfied for some time.
+     What actually blocked every session that could have produced the transcript is a
+     **stale local hook bundle**. The concern delivers a 5,346-byte rule body when invoked,
+     and the SOURCE dispatcher delivers it too (6,458 B of output carrying the matched rule
+     id). The BUILT `dist/hooks/dispatch.js` — untracked, produced by
+     `npm run build:hooks`, and the file `~/.claude/settings.json` actually runs — emits
+     826 B for the identical payload: the language-mirror pin and nothing else. No
+     `rule-inject` session state existed anywhere on the machine, which is what that
+     predicts. So the E3 bar was never the obstacle; the carrier the sessions were running
+     was, and it is a local install-freshness problem rather than a defect in the tree.
+     Concretely: run `npm run build:hooks`, confirm
+     `node dist/hooks/dispatch.js --platform claude --event user_prompt_submit` now carries
+     a rule body for a prompt that trips a labelled rule, and only then attempt the
+     session. Full evidence, including what is deliberately not claimed, is recorded at
+     step 1.1.
   3. Or decide that E3's bar is not reachable for any host this year and re-scope Phase 2 rather than leaving it waiting on an empty set — an owner decision, since E3 is an owner ruling.
 - **Resolved when:** at least one host carries an `observed-true` row in `src/config/host-injection-effect.json` with a full citation (host version, transcript pointer, date), and `report_host_injection_effect` regenerates the census with that row admissible.
 - **Review trigger:** re-read when the blocker above resolves, since `delivery` going live is its precondition; otherwise 2026-12-08, matching the expiry the host table already carries for this observation state.
