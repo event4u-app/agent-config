@@ -124,9 +124,8 @@ limits, because naming a script is not the same as closing the gap:
 
 Run [`existing-ui-audit`](../skills/existing-ui-audit/SKILL.md) before adding a
 component because reuse beats duplication — **except against a provided
-artifact, where reuse is conditional on the candidate conforming to it** and the
-decision comes after extraction, not before (that skill § 6b). What changed is
-that a check can now catch you — on a host that binds the slot, with the setting on, and not on the
+artifact, where it is conditional on the candidate conforming** (that skill
+§ 6b). What changed is that a check can now catch you — on a host that binds the slot, with the setting on, and not on the
 very first file of a new surface.
 
 **A runtime carrier now exists, and it does not change the verdict.** The
