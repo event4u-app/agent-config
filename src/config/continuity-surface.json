@@ -504,6 +504,13 @@
             "disposition": "counted",
             "locus": "src/domains/meta/chat-history/import/command.md:77",
             "reason": "A numbered-table session picker plus a resume offer \u2014 a second, competing answer to \"which prior session do I continue from\". On the owner-authorised retirement set of 2026-09-06."
+        },
+        {
+            "id": "session-index-latch",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/_lib/session_index_trust.ts:251",
+            "reason": "A duplicate-suppression latch, not a record. It holds one file per session under agents/runtime/state/session-index-latch/ whose entire content is a claim timestamp, and nothing reads it to restore anything — a successor session that finds it learns only that THIS session already received the memory index, which is the opposite of resumable state. It exists because `session_start` can fire more than once for one session (resume, host reconnect, compaction boundary on some hosts) and two injections double a fixed cost while presenting two corpora as one session memory. Excluded on the same reasoning as schema:session-eol-state: the writer own bookkeeping, not a record a successor reads. Deleting the directory costs a session nothing but a possible second injection."
         }
     ]
 }
