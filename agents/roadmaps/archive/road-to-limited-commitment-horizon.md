@@ -177,33 +177,70 @@ them: `road-to-candidate-moves-floor` Phase 3 published a keep verdict with a
 dim-5 delta. A delete verdict closes this phase unbuilt, which is a legitimate
 outcome and not a failure of this roadmap.
 
-- [ ] **[~] 3.1 Rebuild the orchestrator chain.** <!-- deferred: entry condition is the floor roadmap's keep verdict -->
+> **CLOSED UNBUILT 2026-09-09, on owner authorisation. The gate published a
+> verdict it did not offer.** `road-to-candidate-moves-floor` completed and is
+> archived; its step 3.3 recorded **a fourth outcome**, verbatim: *"Treatment
+> signal observed; line validation failed. Retain the evaluation artifacts and
+> the block for research. Promote neither the line nor the prose."* Decided
+> there by a 2-seat council over 3 rounds, quorum 2/2, convergent on all four
+> questions, with the step's own three verdicts recorded as INAPPLICABLE rather
+> than one of them forced — KEEP because it would assert the artifact earned the
+> gain at 1/32 compliance, DELETE because it misdescribes a dim 5 that did move,
+> and the third outcome because dim 1 rose instead of dropping.
+>
+> So neither of the two branches this header pre-authorised fired, and that is
+> why closing it needed a decision rather than an execution. The reading taken:
+> on the only axis these five steps depend on — did the mechanism earn its keep —
+> the answer is no, nothing was promoted, and the delete branch is the one that
+> describes it. Every step below is downstream of that mechanism being worth
+> building on.
+>
+> **Routing, stated because it is the part no mandate could shortcut.** An AI
+> council (2026-09-09, two independent single-seat readings, both DEGRADED at 1/2
+> and therefore not convergence) agreed on the diagnosis — entry condition
+> unsatisfied in both directions, gate must be restated — and split on the
+> disposition, leaning toward carrying the five into a follow-up roadmap. That
+> was NOT taken, on the council's own counter-argument: the original condition
+> cannot fire after this verdict, so a follow-up gated on it would be a receiver
+> in name only. `roadmap-progress-sync` Iron Law 3 reserves a `[~]` → cancelled
+> conversion to the owner and says no mandate lifts it; the owner authorised
+> option 1 (close unbuilt and archive) on 2026-09-09. The five steps are
+> therefore `[-]` cancelled, each with its reason inline, and none of them is
+> carried anywhere — which is the honest form of this outcome rather than a
+> receiver built to satisfy a checklist.
+>
+> **What would reopen this.** Not a re-reading of the floor verdict, which is
+> settled. A NEW measurement showing the candidates mechanism earning its cost
+> at materially better than 1/32 compliance would be a new roadmap with its own
+> evidence, exactly as step 3.6 already says of its own subject.
+
+- [-] **[-] 3.1 Rebuild the orchestrator chain.** <!-- cancelled 2026-09-09 — floor verdict promoted neither the line nor the prose, so the chain has nothing new to carry; re-running the published eval was the cost this ordering existed to defer -->
       Split link 2 so the requirement frame and the form commitment are
       separate links, and add an observation step after action. The measured
       gain of the current chain was published for the current chain, so
       changing it obliges re-running that eval — which is the cost this
       ordering exists to defer until the cheap obligation has proven itself.
-- [ ] **[~] 3.2 Give the branch vocabulary one home.** <!-- deferred: same entry condition -->
+- [-] **[-] 3.2 Give the branch vocabulary one home.** <!-- cancelled 2026-09-09 — same verdict; the vocabulary had one reader before and has one reader now, which is the bar this step set for itself -->
       State, transition, candidate, axis, rollout, prune reason and stop
       condition, written once as a lookup context and referenced from the
       carriers that need it. Only worth its own file once more than two
       carriers reference it; before that it is a file with one reader.
-- [ ] **[~] 3.3 Turn surviving branches into verification obligations.** <!-- deferred: same entry condition -->
+- [-] **[-] 3.3 Turn surviving branches into verification obligations.** <!-- cancelled 2026-09-09 — same verdict; the discriminator this step turns into obligations is the mechanism that did not earn its keep -->
       A branch that survived the discriminator is either covered by an existing
       test, gets a new one, gets a runtime probe, or is deliberately untested
       with the reason stated. Derive the outcome classes from types and code,
       never from imagination, where a source can answer.
-- [ ] **[~] 3.4 Give debugging a cause frontier.** <!-- deferred: same entry condition -->
+- [-] **[-] 3.4 Give debugging a cause frontier.** <!-- cancelled 2026-09-09 — same verdict; the candidate discipline it applies to causes is the same discipline the floor roadmap measured -->
       `systematic-debugging` generates one hypothesis at a time. The same
       candidate discipline applies to causes rather than fixes, with the
       cheapest discriminating probe first and no patch until a cause survives.
-- [ ] **[~] 3.5 Count what a hook would have blocked, and block nothing.** <!-- deferred: same entry condition, plus a capture bar this tree has not met -->
+- [-] **[-] 3.5 Count what a hook would have blocked, and block nothing.** <!-- cancelled 2026-09-09 — same verdict, and its own second gate never cleared either: the last trajectory-capture reading came in under its own bar, so the counter would report a number nobody may act on -->
       Observation-only: how often a form-changing edit arrived with no prior
       candidate line, and how often a horizon was exceeded. The last
       trajectory-capture reading in this tree came in under its own bar, so a
       counter built on it reports a number nobody may act on until capture is
       re-measured.
-- [ ] **[-] 3.6 A runtime search engine.** <!-- cancelled: the round's own parents kill it, and no measured ranking failure exists to justify it -->
+- [-] **[-] 3.6 A runtime search engine.** <!-- cancelled at authoring: the round's own parents kill it, and no measured ranking failure exists to justify it. NOT a 2026-09-09 conversion — only its checkbox glyph moved, to match the label it always carried -->
       Beam search, best-first, MCTS, value functions, confidence floats per
       candidate. Cancelled rather than deferred: it answers a *ranking* failure,
       and no measurement in this tree shows ranking as the failing stage. If
@@ -211,7 +248,7 @@ outcome and not a failure of this roadmap.
       measured, that is a new roadmap with its own evidence, not this step.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-07 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-09-09 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -220,6 +257,7 @@ outcome and not a failure of this roadmap.
 | 3 | Reopen becomes a loop | implementation | Re-reading the position after every observation is the chess analogy taken literally, and taken literally it does not terminate. This tree already recorded that an uncapped reopen is the known loop shape under another name | 2.2 caps at one reopen per candidate and hands the second contradiction to the existing retry ladder; 2.3 adds a branch to that ladder without changing its budget | Phase 2 — Reopen once, on contradiction, without looping |
 | 4 | Phase 3 is read as a plan | product | Five deferred steps and one cancelled step look like committed scope, and a later reader may execute them because they are written down. The round's self-critique made exactly this point about its own parent: good as a map, too large as an order | Every Phase-3 step carries `[~]` with its entry condition inline; 3.6 is `[-]` rather than `[~]`, so it carries no follow-up obligation; the phase states that a delete verdict closes it unbuilt | Phase 3 — Everything that waits for a number |
 | 5 | The two fields drift from the prediction | implementation | `next-commitment` and `revisit-if` live in `## Decisions` while the prediction lives in `## Predictions`. Two sections, one subject — the binding is prose and nothing checks it | 1.3 names the chosen candidate in `## Predictions` so both sections point at the same identifier; 2.4 makes `killed-if` the checkable half, which is the field a falsification test can actually read | Phase 1 — Define the horizon mechanically |
+| 6 | The closure is read as the floor verdict having said `delete` | product | Added 2026-09-09 with the re-review, because the closure itself creates it. Phase 3 closes on the DELETE branch while the floor roadmap explicitly recorded that DELETE misdescribes its result — a dim 5 that did move. A later reader who takes this closure as evidence that the candidates mechanism failed outright would be citing this file against what the floor roadmap actually measured, and would do it while looking at a roadmap that says `closed unbuilt`. | The phase header quotes the fourth outcome verbatim, names all three verdicts the floor step recorded as INAPPLICABLE and why each was refused, and states the narrow reading this closure rests on: not that the mechanism failed, but that nothing was promoted, which is the only axis these five steps depended on. It also names what would reopen the subject — a new measurement at materially better than 1/32 compliance, as a new roadmap with its own evidence. | Phase 3 — Everything that waits for a number |
 
 ## Acceptance Criteria
 
@@ -238,3 +276,17 @@ outcome and not a failure of this roadmap.
 - [x] AC-6 — Every Phase-3 step is `[~]` or `[-]` and carries its entry
       condition or its cancellation reason inline, so no step in it is
       executable without the floor roadmap's published verdict.
+      Still met after the 2026-09-09 closure, and the criterion did its job
+      rather than merely passing. Every Phase-3 step now reads `[-]` with its own
+      cancellation reason, so the first clause holds in the stricter of its two
+      alternatives. The second clause was written against a verdict that had not
+      been published yet: the verdict is published, it is neither of the two the
+      phase pre-authorised, and no step became executable on it — which is the
+      protection this AC was for. Risk 4 of the register is what actually paid
+      off here: a later reader COULD have executed five written-down steps
+      because they were written down, and what stopped that is the `[~]` marker
+      with its entry condition inline, which is exactly what the mitigation said
+      it would do.
+      One transcription note, so the change is not read as larger than it is:
+      3.6 was cancelled at authoring, not on 2026-09-09. Only its checkbox glyph
+      moved, from `[ ]` to `[-]`, to match the label it always carried.
