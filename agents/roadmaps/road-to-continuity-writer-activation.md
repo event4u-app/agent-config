@@ -249,6 +249,72 @@ councils required puts them there on purpose:
       unit. What would falsify the descope: a lane that can carry the five
       properties with their tests, the corpus fixture, and the 17 bindings in
       one reviewable change.
+
+      **THE PRECONDITION IS DISCHARGED, 2026-09-09. THE STEP IS NOT — and the
+      split is D3's own ordering, not a descope.** D3 requires the trust
+      contract and the equivalence evidence to exist BEFORE the restore moves
+      anywhere, so building them first is the sequence the ruling imposes.
+      What landed:
+      - `src/scripts/_lib/session_index_trust.ts` — all six properties in one
+        module, which is what makes the relocation a move rather than a
+        rewrite: identity (the canonical memory root must be contained in the
+        canonical workspace root), canonicalization (`realpath` both sides,
+        containment by path SEGMENTS because a string prefix says `/a/bc` is
+        inside `/a/b`), freshness (newest curated source mtime; refuses a
+        future date as clock skew or tampering, and an abandonment bound),
+        ordering (a declared TOTAL order — cheapest first, id as tie-break, so
+        the cap truncates the same way twice), duplicate invocation (a
+        create-exclusive per-session latch), and size limits (the pre-existing
+        cap, moved here so all six read from one place).
+      - `tests/scripts/session_index_trust.test.ts` — 24 cases, one refusal per
+        property, each on a fixture built to violate exactly that one thing.
+      - `tests/hooks/session_index_trust_e2e.test.ts` — 8 cases through the
+        REAL dispatcher, and **the corpus fixture this step said the tree
+        lacks**. Step 1.4 measured that an armed `memory.session_index` emits
+        no block in a scratch workspace, so a byte-identity proof there would
+        compare two empty strings; these cases write real curated entries into
+        `agents/memory/` and the first one asserts the block is non-empty
+        precisely so the refusal cases cannot pass vacuously.
+
+      **The threat is now named concretely rather than as a category, because
+      finding it changed the design.** `MEMORY_ROOT` is the RELATIVE path
+      `agents/memory`, resolved against the process cwd, and the hook chdirs to
+      a workspace root it received from a host payload. So the attacker is not
+      an intruder: it is a wrong or stale root — a sibling checkout, a worktree
+      pointed elsewhere, a symlink out of the tree — serving another
+      repository's curated memory into this session as this session's own. The
+      e2e P1 case is that exact fixture: two workspaces, the victim's
+      `agents/memory` symlinked into the donor's corpus, asserting the donor's
+      ids never appear.
+
+      **Three findings from the tests, each of which changed the code:**
+      1. A `..` root whose target does not exist was reported as
+         `memory-root-absent`. That reads as "this workspace has no memory"
+         when the truth is "this root pointed outside the tree". Containment is
+         now checked LEXICALLY first and on the canonical path second, so the
+         escape is the fact reported either way.
+      2. The hook-level trust call **enforces nothing** — sabotaging it left
+         every case green, because `build_session_index_block` re-checks the
+         root itself. Found by sabotage, not by reading.
+      3. Its stderr diagnostic reaches nobody: the dispatcher does not forward
+         a concern's stderr, verified by hand. So the hook layer's real and
+         only contribution is ORDERING — the latch is claimed after the
+         verdict, so a refused root leaves the session's one claim unspent and
+         a corrected root is still served. That is now its own e2e case,
+         sabotage-proven, and it is why the layer was kept rather than deleted.
+
+      **What remains, unchanged in shape:** relocate the restore off this
+      concern, then retire the concern across the 17 bindings enumerated above,
+      keeping the MODULE alive for `handoff_generate.ts` and the
+      `ephemeral-lossy` loss-class declaration. The byte-identity verify is now
+      buildable, which it was not before this change.
+
+      **The abandonment bound's falsifiers**, recorded here because a
+      `Revisit-if` belongs in the roadmap rather than in a source docblock:
+      `MAX_ROOT_AGE_DAYS = 400` is a stated default, not a measured optimum.
+      Reopen it if a real workspace refuses on it (too tight), or if a
+      wrong-root incident passes it (the bound is not the control that would
+      have caught it, and identity is).
 - [ ] **3.2 `session:recycle` — retire the manual writer once the automatic one
       is proven.** It is the only writer today, so this step is gated on Phase 1
       in full, not merely started. The advisory that instructs a human to run it
