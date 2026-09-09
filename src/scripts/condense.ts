@@ -41,6 +41,7 @@ import {
     resolve_logical as _agent_src_resolve_logical,
     strip_source_prefix,
 } from './_lib/agent_src.js';
+import { rewriteProjectedBodyLinks } from './_lib/guidelines_lane.js';
 // Import-safety note: `project_thin_rules` guards its CLI entry
 // (`_isCliEntry()` before `process.exit(main())`), so importing it here is
 // side-effect-free. condense.ts is bundled into the installer, where a bare
@@ -797,7 +798,6 @@ const _LEGACY_PROJECTED_SRC_PREFIX = '.agent-src/';
 
 const _FM_LIST_ITEM_RE = /^(\s*-\s*)(["']?)([^"'\n]+?\.md)(["']?)\s*$/;
 const _FM_PATH_PREFIX_RE = /^(\s*(?:-\s+)?path_prefix:\s*)(["']?)([^"'\n]+?)(["']?)\s*$/;
-const _BODY_DOCS_RE = /(?:\.\.\/)+(docs\/(?:guidelines|contracts)\/[^)\s]+\.md)/g;
 const _FM_PLAIN_LIST_RE = /^\s*-\s*(["']?)([^"'\n]+?)\1\s*$/;
 
 const _HRR_BANNER_MARKER = '<!-- agent-config:human-review-banner -->';
@@ -877,25 +877,6 @@ function _rewrite_frontmatter_lines(lines: string[], prefix: string): string[] {
     return out;
 }
 
-function _rewrite_body_links(body: string, prefix: string): string {
-    return body
-        // `docs/guidelines/` is projected (see `_lib/guidelines_lane.ts`) so its
-        // link loses the `docs/` segment; `docs/contracts/` is not, and keeps it.
-        .replace(_BODY_DOCS_RE, (_m, t: string) => prefix + t.replace(/^docs\/guidelines\//, 'guidelines/'))
-        // `src/rules`, `src/skills` and `src/agent-src/<x>` all project into
-        // `dist/agent-src/`, losing the `src/` (and `agent-src/`) segment. Until
-        // the guidelines lane shipped, no PROJECTED file linked into `src/` and
-        // this rewrite had nothing to do; a guideline does it 209 times, so
-        // without it the lane ships bodies whose own cross-references are dead.
-        // `src/domains` is deliberately absent: a domains command projects to
-        // `commands/<subpath>.md`, which is a re-shaping rather than a prefix
-        // strip, and guessing it would produce a link that looks right.
-        .replace(
-            /(?:\.\.\/)+src\/(?:agent-src\/)?((?:rules|skills|commands|contexts|personas|user-types|templates|scripts)\/[^)\s]+\.md)/g,
-            (_m, t: string) => prefix + t,
-        );
-}
-
 function _parse_trust_and_owner(fm_lines: string[]): [string, boolean, string] {
     let level = 'core';
     let hrr = false;
@@ -949,7 +930,7 @@ function _inject_hrr_banner(body: string, level: string, owner: string): string 
 export function _rewrite_paths(content: string, source_relative_path: string): string {
     const prefix = _depth_prefix(source_relative_path);
     const [fm_lines, bodyInitial] = _split_frontmatter(content);
-    let body = _rewrite_body_links(bodyInitial, prefix);
+    let body = rewriteProjectedBodyLinks(bodyInitial, prefix);
     if (fm_lines === null) {
         return body;
     }

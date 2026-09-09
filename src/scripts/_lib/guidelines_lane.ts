@@ -102,3 +102,50 @@ export function resolve_guideline(root: string, logical_rel: string): string | n
     const candidate = path.join(root, GUIDELINES_SOURCE_REL, suffix);
     return _isFile(candidate) ? candidate : null;
 }
+
+/**
+ * Rewrite a projected body's relative `.md` links onto the projection.
+ *
+ * Lives here rather than in `condense.ts` for two reasons, and the second is
+ * the load-bearing one. It is this lane's own subject: every rule it applies is
+ * a statement about which source trees project where, which is what this module
+ * exists to know. And `condense.ts` sits ~1,200 lines past the 1,500-line
+ * ceiling `check_source_size_budget` ratchets, so every line there costs one
+ * unit of excess while every line here costs zero — the doctrine that file's
+ * own baseline note prescribes for exactly this case.
+ *
+ * `prefix` is the caller's depth prefix (`../` per level below
+ * `dist/agent-src/`), so a rule at depth 1 and a guideline at depth 2 both
+ * resolve.
+ */
+export function rewriteProjectedBodyLinks(body: string, prefix: string): string {
+    return body
+        .replace(BODY_DOCS_RE, (_m, t: string) => prefix + t.replace(/^docs\/guidelines\//, 'guidelines/'))
+        .replace(BODY_SRC_RE, (_m, t: string) => prefix + t);
+}
+
+/**
+ * `docs/guidelines/` is projected and loses its `docs/` segment;
+ * `docs/contracts/` is NOT projected and keeps its path unchanged.
+ *
+ * One-or-more `../` rather than a literal `../../`: the dominant convention in
+ * `src/rules/` is a single `../` — 26 sites across 18 rules — so a literal
+ * two-level pattern matched only the minority spelling.
+ */
+const BODY_DOCS_RE = /(?:\.\.\/)+(docs\/(?:guidelines|contracts)\/[^)\s]+\.md)/g;
+
+/**
+ * `src/rules`, `src/skills` and `src/agent-src/<x>` all project into
+ * `dist/agent-src/`, losing the `src/` (and `agent-src/`) segment.
+ *
+ * Until the guidelines lane shipped, no PROJECTED file linked into `src/`, so
+ * this rewrite had nothing to do and did not exist. A guideline does it 209
+ * times — a blind review measured 253 of 268 links under
+ * `dist/agent-src/guidelines/` resolving to nothing before this was added.
+ *
+ * `src/domains` is deliberately absent: a domains command projects to
+ * `commands/<subpath>.md`, which is a re-shaping rather than a prefix strip,
+ * and guessing it would produce a link that looks right and is wrong.
+ */
+const BODY_SRC_RE =
+    /(?:\.\.\/)+src\/(?:agent-src\/)?((?:rules|skills|commands|contexts|personas|user-types|templates|scripts)\/[^)\s]+\.md)/g;
