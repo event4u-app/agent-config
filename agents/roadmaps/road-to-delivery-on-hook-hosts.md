@@ -292,7 +292,7 @@ admission. Cowork is excluded by the existing measurement.
       replacement prose quoted the retired phrase while explaining what it replaced, so the
       grep still returned 1. Reworded to describe the old cell without reproducing its
       literal. A verify expressed as a grep counts the fix's own prose too.
-- [ ] **4.2 One sentence** in the same file and in the predecessor's ADR: hosts without a
+- [x] **4.2 One sentence** in the same file and in the predecessor's ADR: hosts without a
       measured injection path receive the full corpus; this is the cost of the host, not a
       defect.
       verify: sentence present; predecessor 1.4 gate green.
@@ -311,8 +311,8 @@ admission. Cowork is excluded by the existing measurement.
       **ADR-262 IS CONTESTED — do not follow this number blindly. Found 2026-09-08.** Two
       open PRs each ship a different ADR numbered 262, and neither is merged:
       `drain/delivery-for-every-host` (PR #1923) has
-      `docs/decisions/ADR-262-delivery-default-for-claude-code.md`, which is the one this
-      step means, and `drain/abolish-carrier-gate` (PR #1926) has
+      `docs/decisions/ADR-262-delivery-default-for-claude-code.md` <!-- ref-ignore -->, which is the one this
+      step means (it is `ADR-267-…` today — see the DONE note above), and `drain/abolish-carrier-gate` (PR #1926) has
       `docs/decisions/ADR-262-carrier-status-deleted-no-repo-authored-human-gate.md`, a
       decision on an unrelated subject. Both branches carry an identical ADR-260 and
       ADR-261, so 262 was simply the first free number each lane took independently.
@@ -358,6 +358,29 @@ admission. Cowork is excluded by the existing measurement.
       also outside the lane's delegated authority, choose A operationally while recording B
       as the recommended owner action.* That is what this note is.
 
+
+      **DONE 2026-09-09 — the branches met, and the number moved four times on the way.**
+      PR #1923 merged on 2026-09-08. The predecessor's ADR is
+      `docs/decisions/ADR-267-delivery-default-for-claude-code.md` — NOT 262, and not 263,
+      265 or 266 either: the record was renumbered four times against collisions with
+      records that merged first, which is exactly the hazard the paragraph above predicted
+      arriving from a third direction. The full collision record is
+      `agents/roadmaps/stubs/road-to-adr-number-uniqueness.md`. Resolving this step by the
+      contested number rather than by re-reading it live would have edited the wrong
+      decision.
+      The sentence now sits in ADR-267 § Consequences, immediately before § What this does
+      NOT reopen, and it carries the two things the bare sentence does not: WHY it is not a
+      withholding (every rule body is written and shipped, and `check_host_tree_parity`
+      asserts byte-identity against `eager-all` for every host outside
+      `lean_projection.hosts` on every PR) and WHY thinning is earned rather than granted (a
+      host that binds no slot has nowhere to put the body back, so removing it would delete
+      a rule and put nothing in its place). It names `docs/enforcement-by-host.md` § L4 as
+      its reciprocal half, so the pair is navigable from either side.
+      Verify: both limbs met. The sentence is present in both files, and the second limb —
+      the predecessor's 1.4 gate — now runs HERE rather than only on the predecessor branch,
+      because the predecessor is merged: `check_host_tree_parity` reports
+      `2 non-delivery host tree(s) byte-identical to eager-all · delivery hosts
+      [claude-code]`, exit 0.
 ## Blockers
 
 > **Added 2026-09-08 by the owner-delegated drain run, as a correction rather than as news.**
@@ -371,7 +394,22 @@ admission. Cowork is excluded by the existing measurement.
 
 ### blocker: predecessor-delivery-for-every-host-unmerged
 
-- **Status:** open
+- **Status:** resolved 2026-09-09. PR #1923 (`drain/delivery-for-every-host`) merged on
+  2026-09-08 at `5f2f2171f`, and the `Resolved when` below is met on its own terms rather
+  than by a generous reading: `lean_projection.hosts: [claude-code]` is in
+  `src/config/agent-settings.template.yml:212-214` on a merged ref, and the predecessor ADR
+  is a real file this repository has — `ADR-267-delivery-default-for-claude-code.md`, which
+  is where the number landed after four renumberings, not the ADR-262 the entry names.
+  Its `What to do` step 1 is now FALSE and is left standing rather than edited: it says
+  `origin/main` carries 0 of 6 of the predecessor's Phase 4, and `origin/main` carries 4 of
+  6 (4.0, 4.1, 4.3, 4.5 done; 4.2 and 4.4 open on the predecessor with their own recorded
+  reasons). The durable half of that claim was the 0-of-6, and it is the half that changed.
+  What this unblocks, and what it does not: step 4.2 is CLOSED by this change, and the
+  second verify limb of 2.2 and 4.2 now runs here. Step 1.1's second limb and step 2.1
+  limb (a) stay blocked on `no-host-observed-true-injection`, which is a different blocker
+  needing a live transcript, and step 2.1 limb (b) needs a host admitted under that one.
+  The review trigger fired in the merged direction; the abandoned case nobody was watching
+  for did not happen.
 - **Owner:** maintainer
 - **Asked:** 2026-09-08, owner-delegated drain run.
 - **Blocks:** step 2.1 limb (b), step 4.2 second half, and step 1.1 second limb by way of its precondition. Steps 1.2, 1.3, 2.2, 3.1, 3.2 and 4.1 are done and unaffected.
@@ -479,7 +517,7 @@ this line.
 - **Council:** none. E3 is an owner ruling.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-08 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-09-09 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |---|---|---|---|---|---|
@@ -487,6 +525,7 @@ this line.
 | 2 | The census fills with `unobserved` and the file reads as stalled | implementation | Most hosts cannot be observed from a Claude session, so several lines will stay open for a long time and a reader may treat the roadmap as abandoned. | K6 makes `unobserved` an outcome rather than a deferral: the line stays `[]`, the file stays active, and 2.2 keeps the host's tree byte-identical to `eager-all` in the meantime so nothing is lost while it waits | Phase 1: Measure context injection per host |
 | 3 | Description-lowering leaks trigger terms into a user-visible field | product | The emitted description is the host's routing surface and a reader's first line about the rule. Appending up to N raw trigger terms can turn a sentence into a keyword list. | 3.1 caps by the host's own description length and measures recall by string match on the frozen corpus, so a change that reads worse and routes no better is visible before it lands | Phase 3: Native lazy forms get the triggers they need |
 | 4 | The corrected 98-rule population is itself re-derived wrongly later | implementation | The draft's 5 became 21 on one re-measurement. A later run summing only `path_prefix` or only `file_pattern` lands on a third number and re-scopes Phase 3 silently. | The Context states the derivation (41 `path_prefix` + 13 `file_pattern` across 21 files) and 3.1 requires the population figure in the commit message, so a divergent count is a visible contradiction rather than a quiet re-scope. **Re-reviewed 2026-09-08: this risk FIRED, and the mitigation caught it — which is the outcome the row was written for.** The population was re-derived a third time and came out different again: **97, not 102**, because 8 of the 105 `auto` rules carry no keyword or phrase trigger at all. The figure is in the commit message as the row requires, so the divergence surfaced as a contradiction to resolve rather than as a silent re-scope. 3.1's measured result is stated against the corrected denominator: 179 → 284 of 309 auto-rule positives, 57.9 % → 91.9 %. | Phase 3: Native lazy forms get the triggers they need |
+| 5 | The resolved predecessor blocker is read as unblocking the roadmap | product | Added 2026-09-09 with the re-review, because the change that prompted it creates the risk. `predecessor-delivery-for-every-host-unmerged` closing is the loudest event on this file in a week, and it closed exactly one step. A later reader who sees one blocker resolved and the predecessor merged can conclude the roadmap is runnable, start step 1.1, and find its second limb still gated on a live transcript nobody has produced. | The blocker's resolution text names, in its own body, what stays blocked and on which other blocker: 1.1's second limb and 2.1 limb (a) on `no-host-observed-true-injection`, 2.1 limb (b) on a host admitted under it. Its `What to do` step 1 is left standing with the correction beside it rather than edited away, so a reader meets the superseded reasoning and its answer together instead of a clean page that hides the transition. | Phase 4: Truth surfaces |
 
 ## Acceptance Criteria
 
