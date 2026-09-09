@@ -705,6 +705,7 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ### Bug Fixes
 
+* **budgets:** record the mcp_public_tool_count move 20 -> 25 ([#1968](https://github.com/event4u-app/agent-config/pull/1968)) ([7b76059](https://github.com/event4u-app/agent-config/commit/7b76059585e30dc646ee899ff5d8620299505910))
 * **hooks,design:** repair the regressions #1964 introduced — a blocking guard is weakened on main (#1966) ([bdbd5b7](https://github.com/event4u-app/agent-config/commit/bdbd5b762a1943c75040014198b7c8aba5030660))
 * **design:** one skill taught the failure design-fidelity forbids ([1c04ccd](https://github.com/event4u-app/agent-config/commit/1c04ccd158c44f089ac1a18372d4062c398e9c42))
 * **hooks:** block-speaking-inbox-dir refused reads it was never scoped to ([82169c5](https://github.com/event4u-app/agent-config/commit/82169c5cfa4987027a86547c52a94b66e0244636))
