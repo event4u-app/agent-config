@@ -55,6 +55,35 @@ export const SESSION_INDEX_ROW_CAP = 30;
 export const MAX_ROOT_AGE_DAYS = 400;
 
 /**
+ * P3's other direction — how far ahead of now a source mtime may sit.
+ *
+ * A STATED DEFAULT, on the same terms as `MAX_ROOT_AGE_DAYS` above, and written
+ * down because a 14.23.0 self-review finding named it as the one threshold in
+ * this module carrying no threat model while its neighbour carried one. That
+ * asymmetry was the real defect; the number was not.
+ *
+ * What the grace is FOR: ordinary clock disagreement. An NTP correction, a
+ * resumed VM snapshot, or a filesystem whose mtime comes from a host with a
+ * slightly different clock can date a file a few seconds ahead of this process
+ * without anything being wrong. Zero grace would refuse those, and a refusal
+ * there costs the session its memory index for a reason the operator cannot act
+ * on.
+ *
+ * What it is NOT for, stated because the finding read it as an attack window:
+ * it buys an attacker nothing. Writing a curated source requires write access
+ * INSIDE the workspace, and an attacker holding that can date the file at `now`
+ * and pass P3 outright — a future date is strictly worse for them. Freshness
+ * here bounds an ABANDONED root, not a hostile one; the module's own docblock
+ * says content authenticity is out of scope and that boundary is unchanged.
+ *
+ * The grace is only harmless while that reading holds. If this check is ever
+ * repurposed as a content-integrity control, or a measured population of
+ * legitimate skew exceeds the value, the number has to be derived rather than
+ * stated.
+ */
+export const MAX_FUTURE_SKEW_MS = 60_000;
+
+/**
  * Curated sources, matching the layouts `memory_lookup._iter_curated_entries`
  * actually reads: `<root>/<type>.yml` AND `<root>/<type>/**\/*.yml`, plus the
  * agent-written `intake/*.jsonl`. Reading only the first of those is what made
@@ -255,7 +284,7 @@ export function verifyMemoryRoot(input: TrustInput): TrustVerdict {
 
     // P3 — freshness, in the two directions it can fail.
     const newestSourceMs = walk.newestMs;
-    if (newestSourceMs > now.getTime() + 60_000) {
+    if (newestSourceMs > now.getTime() + MAX_FUTURE_SKEW_MS) {
         return refuse(
             'source-mtime-in-future',
             `newest curated source is dated in the future (${new Date(newestSourceMs).toISOString()}) — clock skew or tampering`,
