@@ -18,6 +18,7 @@
  * reuses the shipped guards by name rather than acquiring a second reader, and
  * a reader that had to be rewritten for it would have failed the step.
  */
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -35,6 +36,7 @@ import {
 import {
     RECYCLE_CONSUMED_REL,
     RECYCLE_ENVELOPE_REL,
+    recycle_envelope_rel,
 } from '../../src/scripts/_lib/recycle_envelope_paths.js';
 
 function scratchRoot(): string {
@@ -81,6 +83,19 @@ function derivedRecord(root: string, writtenAt: string): Record<string, unknown>
 
 function writeEnvelope(root: string, envelope: unknown): string {
     const target = path.join(root, RECYCLE_ENVELOPE_REL);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, JSON.stringify(envelope, null, 2));
+    return target;
+}
+
+/**
+ * The path the PRODUCER actually writes: keyed to the producing session.
+ *
+ * Every other helper in this file writes the legacy shared name, which is why
+ * the block at the bottom exists — see its own docblock.
+ */
+function writeEnvelopeFor(root: string, sessionId: string, envelope: unknown): string {
+    const target = path.join(root, recycle_envelope_rel(sessionId));
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, JSON.stringify(envelope, null, 2));
     return target;
@@ -340,5 +355,159 @@ describe('injected envelope content is data, never instruction', () => {
         // failed_approaches is NOT a proposal field, so it raises no directive
         // warning — the marker alone carries it.
         expect(decision.reason).not.toContain('directive warning');
+    });
+});
+
+/**
+ * The path a REAL session takes, which nothing in this file exercised.
+ *
+ * Every one of the 19 `consume_recycle_envelope` calls above passes `null` for
+ * the session id. That is the one shape in which the mechanism resolves, and it
+ * is not the shape any host produces: the dispatcher carries a `session_id` and
+ * `handoff_context_hook` passes it through, so a real successor always arrives
+ * with an id of its own.
+ *
+ * The producer writes `recycle-envelope-<producer-id>.json`; the consumer
+ * resolves `recycle-envelope-<its-own-id>.json`. Those never coincide, so the
+ * successor is told there is no record. The cases below are the ones that fail
+ * on that, and they are written to be READ as the specification of the fix
+ * rather than as regression cover for it.
+ */
+describe('a successor with its own id — the path no test took', () => {
+    const PRODUCER = 'sess-producer-1111';
+    const SUCCESSOR = 'sess-successor-2222';
+
+    it('injects a predecessor envelope for a successor carrying a DIFFERENT id', () => {
+        const root = scratchRoot();
+        const target = writeEnvelopeFor(root, PRODUCER, validEnvelope(root, new Date().toISOString()));
+
+        const decision = consume_recycle_envelope(root, new Date(), SUCCESSOR);
+
+        expect(decision.action).toBe('inject');
+        expect(decision.context).toContain('<prior-session-data kind="recycle-envelope"');
+        // moved, not copied — the successor's own consumed name, so
+        // `resolvePredecessor` can read the lineage back off it.
+        expect(fs.existsSync(target)).toBe(false);
+    });
+
+    it('still refuses when two predecessor records leave the successor unable to tell them apart', () => {
+        // The peer-isolation intent the per-session key was introduced for must
+        // survive the fix: with more than one candidate the reader starts clean
+        // and says why, rather than picking one.
+        const root = scratchRoot();
+        writeEnvelopeFor(root, 'sess-peer-a', validEnvelope(root, new Date().toISOString()));
+        writeEnvelopeFor(root, 'sess-peer-b', validEnvelope(root, new Date().toISOString()));
+
+        const decision = consume_recycle_envelope(root, new Date(), SUCCESSOR);
+
+        expect(decision.action).toBe('absent');
+        expect(decision.reason).toContain('starting clean');
+    });
+
+    it('never reads its OWN record back — that is a loop, not a resume', () => {
+        const root = scratchRoot();
+        writeEnvelopeFor(root, SUCCESSOR, validEnvelope(root, new Date().toISOString()));
+
+        const decision = consume_recycle_envelope(root, new Date(), SUCCESSOR);
+
+        expect(decision.action).toBe('absent');
+    });
+
+    it('leaves a stale predecessor record discarded rather than injected', () => {
+        // The 48-hour guard is what keeps a wrong resume out; the defect is
+        // resolution, not age, and the fix must not touch this.
+        const root = scratchRoot();
+        const old = new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString();
+        writeEnvelopeFor(root, PRODUCER, validEnvelope(root, old));
+
+        const decision = consume_recycle_envelope(root, new Date(), SUCCESSOR);
+
+        expect(decision.action).toBe('discard');
+        expect(decision.reason).toContain('stale');
+    });
+});
+
+/**
+ * The branch gate — the half of the resolution rule that lives in the consumer.
+ *
+ * The resolver now admits the unique record that is not the reader's own, so
+ * peer isolation no longer comes from the filename. Without this gate an
+ * unrelated session in the same checkout would resume an ended peer's work
+ * simply by being the next one to start. AI council 2026-09-09 was explicit
+ * that the rule is acceptable WITH the gate and not without it, so these cases
+ * are the rule's other half rather than an add-on to it.
+ *
+ * A real git repo is required: `collectRepoAnchor` reads the branch with git,
+ * and in a bare tmpdir it is `null` — which the gate treats as unknown, so a
+ * fixture without a repo would pass every case for the wrong reason.
+ */
+describe('the branch gate', () => {
+    const PRODUCER = 'sess-branch-producer';
+    const SUCCESSOR = 'sess-branch-successor';
+
+    function gitRoot(branch: string): string {
+        const root = scratchRoot();
+        const run = (...args: string[]): void => {
+            spawnSync('git', args, { cwd: root, encoding: 'utf-8' });
+        };
+        run('init', '--initial-branch', branch);
+        run('config', 'user.email', 't@example.com');
+        run('config', 'user.name', 't');
+        fs.writeFileSync(path.join(root, 'seed'), 'seed');
+        run('add', '-A');
+        run('commit', '-m', 'seed');
+        return root;
+    }
+
+    function envelopeOnBranch(root: string, branch: string | null): Record<string, unknown> {
+        const e = validEnvelope(root, new Date().toISOString());
+        if (branch !== null) e['branch'] = branch;
+        return e;
+    }
+
+    it('REFUSES a record from another branch, and leaves it unclaimed rather than consuming it', () => {
+        const root = gitRoot('feat/current');
+        const target = writeEnvelopeFor(root, PRODUCER, envelopeOnBranch(root, 'feat/somewhere-else'));
+
+        const decision = consume_recycle_envelope(root, new Date(), SUCCESSOR);
+
+        expect(decision.action).toBe('absent');
+        expect(decision.reason).toContain('feat/somewhere-else');
+        expect(decision.reason).toContain('feat/current');
+        // The invariant that makes `absent` the right refusal: every other
+        // outcome consumes, and consuming here would destroy state the rightful
+        // successor could still use.
+        expect(fs.existsSync(target)).toBe(true);
+        expect(fs.existsSync(consumedPath(root))).toBe(false);
+    });
+
+    it('admits a record from the SAME branch', () => {
+        const root = gitRoot('feat/current');
+        const target = writeEnvelopeFor(root, PRODUCER, envelopeOnBranch(root, 'feat/current'));
+
+        const decision = consume_recycle_envelope(root, new Date(), SUCCESSOR);
+
+        expect(decision.action).toBe('inject');
+        expect(fs.existsSync(target)).toBe(false);
+    });
+
+    it('treats an envelope with NO branch field as unknown, not as a mismatch', () => {
+        // An envelope written before the field existed must not be refused on a
+        // comparison it cannot take part in — that would turn a missing field
+        // into a broken resume.
+        const root = gitRoot('feat/current');
+        writeEnvelopeFor(root, PRODUCER, envelopeOnBranch(root, null));
+
+        expect(consume_recycle_envelope(root, new Date(), SUCCESSOR).action).toBe('inject');
+    });
+
+    it('treats an unreadable tree branch as unknown, not as a mismatch', () => {
+        // No git repo -> anchor.branch is null. The envelope names a branch and
+        // the tree cannot answer; refusing would be a verdict on a comparison
+        // that never happened.
+        const root = scratchRoot();
+        writeEnvelopeFor(root, PRODUCER, envelopeOnBranch(root, 'feat/whatever'));
+
+        expect(consume_recycle_envelope(root, new Date(), SUCCESSOR).action).toBe('inject');
     });
 });

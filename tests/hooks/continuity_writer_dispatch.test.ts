@@ -41,6 +41,15 @@ const DISPATCH = path.join(REPO, 'src', 'scripts', 'hooks', 'dispatch_hook.ts');
 
 const SLUG = 'road-to-continuity-dispatch-fixture';
 const SESSION = 'continuity-dispatch-session';
+
+/**
+ * The session that READS what {@link SESSION} wrote. Deliberately a different
+ * id, because a record is written for a successor and a session is never
+ * handed its own record back — resuming from your own envelope is a loop, not
+ * a resume. `dispatch` spreads its payload after the default id, so passing
+ * `session_id` overrides it.
+ */
+const SUCCESSOR = 'continuity-dispatch-successor';
 const OTHER = 'a-peer-session';
 
 const cleanups: string[] = [];
@@ -330,13 +339,15 @@ describe('source routing on the consumer side', () => {
 
         // `resume` is not an injecting source: the host is continuing the same
         // conversation, so the record must stay for the session that will
-        // actually start clean.
-        dispatch('session_start', root, { source: 'resume' });
+        // actually start clean. Both reads come from the SUCCESSOR's seat —
+        // reading under the writer's own id would be refused for a second,
+        // unrelated reason and would prove nothing about source routing.
+        dispatch('session_start', root, { source: 'resume', session_id: SUCCESSOR });
         expect(records(root)).toHaveLength(1);
-        expect(fs.existsSync(path.join(root, recycle_consumed_rel(SESSION)))).toBe(false);
+        expect(fs.existsSync(path.join(root, recycle_consumed_rel(SUCCESSOR)))).toBe(false);
 
-        dispatch('session_start', root, { source: 'startup' });
+        dispatch('session_start', root, { source: 'startup', session_id: SUCCESSOR });
         expect(records(root)).toEqual([]);
-        expect(fs.existsSync(path.join(root, recycle_consumed_rel(SESSION)))).toBe(true);
+        expect(fs.existsSync(path.join(root, recycle_consumed_rel(SUCCESSOR)))).toBe(true);
     });
 });
