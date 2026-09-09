@@ -131,34 +131,8 @@ surfaces within the same brand, the product register ("design serves the task")
 may apply per-surface. See [`docs/guidelines/design-modes.md`](../../docs/guidelines/design-modes.md)
 for the full Brand-mode vs Product-mode discriminator.
 
-## A provided artifact and the brand divide the decision, not the authority
-
-```
-BRAND OWNS THE VALUES. A PROVIDED ARTIFACT OWNS THE STRUCTURE.
-NEITHER SILENTLY OVERRIDES THE OTHER — A CONFLICT IS SURFACED, NEVER MERGED.
-RECONCILING A COLOUR ONTO A BRAND TOKEN IS NOT A LICENSE TO RESTRUCTURE.
-```
-
-Stated here because the traffic runs both ways and only one direction was
-signposted: [`design-fidelity`](design-fidelity.md) already points at this rule,
-this rule pointed nowhere back, so a brand-first entry path never met the
-artifact-structure obligation at all. When a finished design artifact is the spec
-**and** the consumer has registered brand tokens, the split is:
-
-| Dimension | Authority |
-|---|---|
-| colour · spacing · radius · shadow · type scale | brand token — reconcile the artifact's literal onto it, and report the distance |
-| layout · element set · hierarchy · controls · icons · grid · breakpoints · layers · behavior | the artifact — never adjusted to suit a token |
-
-Two failure modes this forbids, in both directions: rebranding the project
-because an artifact carried different colours, and redesigning the artifact
-because the brand carries different tokens. The reconciliation is a **reported**
-approximation, never a silent one — same obligation
-[`design-fidelity`](design-fidelity.md) states from its side.
-
 ## See also
 
-- [`design-fidelity`](design-fidelity.md) — the other half of the split above: a provided artifact is the spec for structure, and the brand does not license restructuring it.
 - [`brand-consistency`](brand-consistency.md) — pointer stub; its body lives here since the 2026-08-04 merge.
 - [`brand`](../skills/brand/SKILL.md) — the gap-fill corpus this rule subordinates to consumer brand.
 - [`brand-identity`](../skills/brand-identity/SKILL.md) — defines the tokens the gate validates against.
