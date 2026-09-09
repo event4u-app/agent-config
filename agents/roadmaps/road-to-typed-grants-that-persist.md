@@ -252,6 +252,12 @@ item. Phases 1-6 may run once 0.2 is chosen.
       blocked by the host's auto-mode classifier, so the red was not observed. Both polarities
       are asserted (a case that must produce `self-ratified` and one that must not), which is
       structural, not observed.
+      **Exercised end to end, not only unit-tested:** this branch's own ratification record is
+      `agents/evidence/ratifications/drain-typed-grants-5-1-5-2.md`, and the gate accepts it
+      for the real branch diff (exit 0) and refuses the same diff with the record withheld
+      (exit 1). The ladder ran for real — an independent AI council over two providers, three
+      rounds, two refusals; the mechanism refused its own author twice before it passed
+      anything, which is the only evidence that it is a control and not a form.
 - [ ] **5.2 Replace the deny with a gate.** **Gate built and landed; the REPLACEMENT was
       refused and is not done.** The step has two halves and only one of them shipped.
 
