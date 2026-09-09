@@ -1,10 +1,14 @@
 /**
  * The `docs/guidelines/` → `dist/agent-src/guidelines/` projection lane.
  *
- * Why this exists at all: 31 rules declare `routes_to: guideline:<slug>` and
- * link `../../docs/guidelines/<slug>.md`, and until this lane shipped
+ * Why this exists at all: the projected rules declare `routes_to:
+ * guideline:<slug>` against **22 distinct targets** and link
+ * `../../docs/guidelines/<slug>.md`, and until this lane shipped
  * `dist/agent-src/` carried no `guidelines/` directory — so every one of those
- * routes was declared and dead in a consumer install. `AUGMENT_SYMLINK_DIRS`
+ * routes was declared and dead in a consumer install. (The figure is the gate's own reading. An
+ * earlier draft here said "31 rules", which reproduced on nothing: `grep -l`
+ * returns 22 in both trees. A blind review checked it; the number is now the
+ * one `check_projected_rule_routes` prints.) `AUGMENT_SYMLINK_DIRS`
  * in `condense.ts` has listed `guidelines` since before the lane existed; the
  * symlink simply had nothing to point at.
  *

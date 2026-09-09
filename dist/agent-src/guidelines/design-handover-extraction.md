@@ -23,7 +23,7 @@ connected, and land them as files first.
 Into `design-system.json` under `.claude/design-system/` — the `path_prefix` the
 `design-fidelity` rule already routes on. That file is an **existing contract**,
 specified in
-[`design-system-json.md`](../../src/skills/design-system-capture/references/design-system-json.md);
+[`design-system-json.md`](../skills/design-system-capture/references/design-system-json.md);
 this guideline defines no format of its own. Raw source files land beside it,
 and screenshots taken while extracting land in a references directory next to
 them.
@@ -113,5 +113,5 @@ fabricated witness look justified.
 ## See also
 
 - [`design-fidelity-mechanics`](design-fidelity-mechanics.md) — the data-basis ladder this operationalises, and the adopt-the-code duty that governs what you do with the extracted source.
-- [`design-fidelity`](../../src/rules/design-fidelity.md) — the rule; a provided artifact is the spec.
-- [`design-system-capture`](../../src/skills/design-system-capture/SKILL.md) — the per-field import the adapter hands off to.
+- [`design-fidelity`](../rules/design-fidelity.md) — the rule; a provided artifact is the spec.
+- [`design-system-capture`](../skills/design-system-capture/SKILL.md) — the per-field import the adapter hands off to.

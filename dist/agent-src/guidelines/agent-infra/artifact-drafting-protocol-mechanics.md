@@ -36,7 +36,7 @@ If the user skips Q1 or Q5, stop and surface the ambiguity — don't guess.
 ## Phase B — Research
 
 Run the **search protocol** from
-[`learning-to-rule-or-skill` § 4](../../../src/skills/learning-to-rule-or-skill/SKILL.md)
+[`learning-to-rule-or-skill` § 4](../../skills/learning-to-rule-or-skill/SKILL.md)
 — `ls` all four surfaces (`skills/`, `rules/`, `guidelines/`, `commands/`),
 grep with **solution-words AND problem-words**, scan sub-directory
 taxonomies, then **open and skim** the 3 nearest matches. A negative grep
@@ -152,7 +152,7 @@ those artifacts:
 
 The bullet above is the whole rule when the contract says nothing. A contract
 may instead declare `late_artifacts: auto-research`
-([`roadmap-execution-contract § 2a`](../../../src/agent-src/contexts/execution/roadmap-execution-contract.md)),
+([`roadmap-execution-contract § 2a`](../../contexts/execution/roadmap-execution-contract.md)),
 and then a mid-run discovery runs **this** procedure rather than halting:
 
 1. **Re-run Phase B against current state** — the same overlap scan the batch

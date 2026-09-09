@@ -147,7 +147,7 @@ dashboard, commit if commit policy allows.
 A reply that lands a verified step without flipping its checkbox is a rule violation.
 
 **Deterministic flip-guard.** The autonomous loop carries a per-step
-guard at [`roadmap-process-loop § 5b`](../../../src/agent-src/contexts/execution/roadmap-process-loop.md#5b-flip-guard--deterministic):
+guard at [`roadmap-process-loop § 5b`](../../contexts/execution/roadmap-process-loop.md#5b-flip-guard--deterministic):
 after the atomic flip, the loop runs
 `git diff --name-only -- agents/roadmaps/<file>.md` and halts loudly
 when the diff is empty. The `command:` triggers on
@@ -166,7 +166,7 @@ the step lands; that's a normal `[ ] → [x]` transition.
 The triggers table, the regen command (`./agent-config roadmap:progress`),
 the pre-send self-check, the failure-mode catalog and the `Do NOT` list are
 **in this file**; the rule
-[`roadmap-progress-sync`](../../../src/rules/roadmap-progress-sync.md) is the
+[`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md) is the
 obligation surface.
 
 > **Corrected 2026-08-26.** This pointed at a `rules-auto` mechanics file that
@@ -239,7 +239,7 @@ When the closure check fires (`count_open == 0` and `count_deferred > 0`), the a
    3. **Keep in this archive** — confirm the deferred items stay searchable in the archived file; no follow-up roadmap. Choosing this records an explicit decision-to-drop in the same reply.
    4. **Restore selected items to `[ ]`** — finish them in this roadmap before archive.
    5. **Convert selected items to `[-]` cancelled** — drop them with rationale recorded inline.
-3. Route by the **preservation test** — full table, recording contract and residual limit in [`roadmap-progress-sync § Who resolves it`](../../../src/rules/roadmap-progress-sync.md). In one line: options 1, 2, 4 keep the item alive → council; 3 and 5 drop or weaken it → user, always; in doubt, user.
+3. Route by the **preservation test** — full table, recording contract and residual limit in [`roadmap-progress-sync § Who resolves it`](../../rules/roadmap-progress-sync.md). In one line: options 1, 2, 4 keep the item alive → council; 3 and 5 drop or weaken it → user, always; in doubt, user.
 4. Only after the deferrals are resolved does the `git mv` to `archive/` run. The dashboard regen happens after the resolution, not before.
 
 The migration mechanics (file naming, frontmatter pattern, body shape, parent-back-link) live in `roadmap-management § Spawn follow-up from deferred items`. The rule owns the obligation; the skill owns the procedure.

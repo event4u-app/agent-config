@@ -183,9 +183,41 @@ describe('the extractors', () => {
         expect([...behaviourHooks(`<button onclick="f()">`)]).toEqual(['click']);
     });
 
+    // Blind-review regressions, both directions of the same regex.
+    it('reads a mixed-case or custom event name', () => {
+        expect([...behaviourHooks(`addEventListener('DOMContentLoaded', f)`)]).toEqual([
+            'domcontentloaded',
+        ]);
+        expect([...behaviourHooks(`addEventListener('itemAdded', f)`)]).toEqual(['itemadded']);
+    });
+
+    it('does not read an attribute that merely starts with the letters on', () => {
+        expect([...behaviourHooks(`<div onboarding="x">`)]).toEqual([]);
+    });
+
+    it('reads a single-quoted style attribute and ignores a lookalike one', () => {
+        expect(inlineStaticDeclarations(`<div style='width: 40px'>`)).toEqual(['width: 40px']);
+        expect(inlineStaticDeclarations(`<div data-style="width: 40px">`)).toEqual([]);
+    });
+
     it('reads min- and max-width breakpoints', () => {
         const bp = breakpoints('@media (min-width: 48rem){} @media (max-width: 600px){}');
         expect(bp).toEqual(new Set(['48rem', '600px']));
+    });
+
+    // Regression from a blind review: capturing only the FIRST bound left the
+    // second counted as a value, reddening two dimensions for one corruption.
+    it('reads BOTH bounds of a compound query', () => {
+        const bp = breakpoints('@media (min-width: 48rem) and (max-width: 80rem){}');
+        expect(bp).toEqual(new Set(['48rem', '80rem']));
+    });
+
+    it('a compound-query bound is not counted as a value', () => {
+        const art = '<style>@media (min-width: 48rem) and (max-width: 80rem){.a{color:#111827}}</style>';
+        const imp = '<style>.a{color:#111827}</style>';
+        expect(buildConformanceReport({ artifact: art, implementation: imp }).deviating).toEqual([
+            'responsive',
+        ]);
     });
 
     // The carrier rule's own carve-out: `style=` is legitimate for what only

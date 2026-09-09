@@ -14,7 +14,7 @@ Unicode, unsafe MCP config and dangerous frontmatter. But the corpus
 skill quotes `ignore previous instructions`, the security skills describe
 reverse shells, the rules quote suppression phrases. A naive scanner would fail
 on its own documentation, and the "fix" — a growing global allowlist — is the
-[`autonomous-execution`](../../../src/rules/autonomous-execution.md)
+[`autonomous-execution`](../../rules/autonomous-execution.md)
 allowlist-growth antipattern (>20 entries means the linter is wrong, not the
 content).
 
@@ -118,4 +118,4 @@ directory named `examples/` in it is the submitter's word for it.
 
 - `src/scripts/_lib/security_lint.ts` — the shared implementation.
 - `road-to-security-pillar` P1.5 (archived roadmap) — the council-locked decision behind this convention.
-- [`autonomous-execution`](../../../src/rules/autonomous-execution.md) — the allowlist-growth antipattern this convention avoids.
+- [`autonomous-execution`](../../rules/autonomous-execution.md) — the allowlist-growth antipattern this convention avoids.

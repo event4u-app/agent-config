@@ -117,7 +117,7 @@ in one place rather than in every agent's head.
 
 ## Waiting is one waiter — why the loop test misses it
 
-Migrated from [`context-hygiene`](../../../src/rules/context-hygiene.md)
+Migrated from [`context-hygiene`](../../rules/context-hygiene.md)
 § *Waiting is one waiter, never a fleet* under the P4 pattern
 (`road-to-standing-payload-diet` step 1.3). The rule keeps the Iron Law, the
 one-waiter instruction and the enforcement verdict; the argument for them is
@@ -155,7 +155,7 @@ condition. This is model-carried on every host.
 
 ## The declared-protocol cap — why 8, and when it changes
 
-Migrated from [`context-hygiene`](../../../src/rules/context-hygiene.md)
+Migrated from [`context-hygiene`](../../rules/context-hygiene.md)
 § *Declared read protocol* under the same pattern. The rule keeps the cap and the
 three-field declaration contract; the honesty note about the number is here.
 

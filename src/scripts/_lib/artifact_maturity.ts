@@ -148,6 +148,16 @@ export function isGreyscaleOnly(body: string): boolean {
  * default, which is the conservative direction — see the header.
  */
 export function resolveArtifactMaturity(input: MaturityInput = {}): MaturityVerdict {
+    /** Set when rung 2 saw a declaration it could not read; reported, not obeyed. */
+    let unreadableDeclaration: string | null = null;
+    const withNote = (v: MaturityVerdict): MaturityVerdict =>
+        unreadableDeclaration === null
+            ? v
+            : {
+                  ...v,
+                  signal: `${v.signal} (the artifact also declares \`maturity: ${unreadableDeclaration}\`, which this resolver does not recognise)`,
+              };
+
     // 1. The user. `design-fidelity` § Two axes: a user signal beats any
     //    inference, because the human can see what the heuristic cannot.
     if (input.userSignal === 'low' || input.userSignal === 'finished') {
@@ -175,55 +185,58 @@ export function resolveArtifactMaturity(input: MaturityInput = {}): MaturityVerd
                 signal: `the artefact declares \`maturity: ${declared}\``,
             };
         }
-        // An unrecognised declaration is NOT silently treated as absent: it is
-        // a statement the resolver could not read, and saying so beats guessing.
-        return {
-            maturity: 'finished',
-            source: 'default',
-            signal: `the artefact declares \`maturity: ${declared}\`, which is not a value this resolver knows — defaulting to finished`,
-        };
+        // An unrecognised declaration is NOT silently treated as absent, and it
+        // does NOT short-circuit the ladder either. The first version returned
+        // here, so an artifact declaring `maturity: draft` while carrying a
+        // wireframe filename, a lorem-ipsum body AND a greyscale-only palette
+        // resolved `finished` — an unparseable string outranking three signals
+        // the resolver does recognise, which inverts the ladder this module's
+        // header describes. Blind-review finding. It is remembered instead:
+        // reported on whatever verdict the remaining rungs produce, so the
+        // reader sees both the unreadable declaration and the evidence.
+        unreadableDeclaration = declared;
     }
 
     // 3. A ReferenceMaturity already resolved upstream, where it decides.
     const mapped = mapReferenceMaturity(input.referenceMaturity);
     if (mapped !== null) {
-        return {
+        return withNote({
             maturity: mapped,
             source: 'inference',
             signal: `reference_maturity is \`${String(input.referenceMaturity)}\``,
-        };
+        });
     }
 
     // 4. The filename. Cheap, and the one signal present even when the body is
     //    not readable.
     if (typeof input.filename === 'string' && /wireframe|wf-|lofi|lo-fi/i.test(input.filename)) {
-        return {
+        return withNote({
             maturity: 'low',
             source: 'inference',
             signal: `the filename \`${input.filename}\` names a wireframe`,
-        };
+        });
     }
 
     // 5. The body.
     if (typeof input.body === 'string' && input.body !== '') {
         for (const [pattern, why] of LOW_CONTENT_TELLS) {
             if (pattern.test(input.body)) {
-                return { maturity: 'low', source: 'inference', signal: why };
+                return withNote({ maturity: 'low', source: 'inference', signal: why });
             }
         }
         if (isGreyscaleOnly(input.body)) {
-            return {
+            return withNote({
                 maturity: 'low',
                 source: 'inference',
-                signal: 'every colour in the body is greyscale',
-            };
+                signal: 'every color in the body is greyscale',
+            });
         }
     }
 
     // 6. Default — finished, deliberately. Silence is not a licence to redesign.
-    return {
+    return withNote({
         maturity: 'finished',
         source: 'default',
-        signal: 'the artefact declares no maturity and shows no low-fidelity tell',
-    };
+        signal: 'the artifact declares no maturity and shows no low-fidelity tell',
+    });
 }

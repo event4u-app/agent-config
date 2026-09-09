@@ -95,5 +95,5 @@ Update stale idioms to the version the project **actually runs** — but only wh
 
 ## See also
 
-- [`active-remediation`](../../../src/rules/active-remediation.md) — the rule this file details (Iron Law + ladder + live-security carve-out).
+- [`active-remediation`](../../rules/active-remediation.md) — the rule this file details (Iron Law + ladder + live-security carve-out).
 - [`minimal-safe-diff`](minimal-safe-diff-mechanics.md) — the diff-shape mechanics the fix-now tier amends.

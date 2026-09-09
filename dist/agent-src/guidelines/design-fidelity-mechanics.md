@@ -95,14 +95,14 @@ THIRD-PARTY CODE THAT MERELY ARRIVES THROUGH A HANDOVER STAYS UNDER
 ```
 
 Without this line the two rules contradict each other on the same act:
-[`code-provenance`](../../src/rules/code-provenance.md) opens with `NEVER ADOPT
+[`code-provenance`](../rules/code-provenance.md) opens with `NEVER ADOPT
 EXTERNAL CODE VERBATIM` and routes any conscious borrow through a licence check
 plus a ledger entry, while the duty above says adapt the artifact's code.
 Whichever the agent followed, it would be violating a rule, and no gate can
 arbitrate between two Iron Laws.
 
 The resolution weakens neither, and it is not new: it is the carve-out
-[`content-quoting-floor`](../../src/rules/content-quoting-floor.md) already
+[`content-quoting-floor`](../rules/content-quoting-floor.md) already
 makes for user-owned text — *"content the user wrote, pasted, or explicitly
 authorized for verbatim use is not an external source"*. A design artifact the
 user hands over is that same category, in markup.
@@ -157,14 +157,14 @@ no-unrequested-filler clause — each with its `daf-*` fixture:
 ## Artefact maturity — the second axis
 
 The Iron Law and both discriminator clauses stay in
-[`design-fidelity`](../../src/rules/design-fidelity.md) § Two axes; this is the table.
+[`design-fidelity`](../rules/design-fidelity.md) § Two axes; this is the table.
 
 | The artefact declares | The spec is | The spec is NOT |
 |---|---|---|
 | low fidelity — greyscale, box-and-line, placeholder copy | layout · element set · hierarchy · states shown | grays · placeholder text · borders · exact spacing |
 | finished — colour, real copy, real assets | everything visible (the 1:1 floor, unchanged) | — |
 
-Grounded in [`wireframe`](../../src/skills/wireframe/SKILL.md) § Gotchas. The near-miss
+Grounded in [`wireframe`](../skills/wireframe/SKILL.md) § Gotchas. The near-miss
 class is pinned in `ROUTING_MATRIX`, its rationale beside the assertions in
 `design_fidelity_routing.test.ts`.
 

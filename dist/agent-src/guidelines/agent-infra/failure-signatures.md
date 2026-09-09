@@ -1,6 +1,6 @@
 # Failure signatures — symptom → likely cause → first check
 
-A file-first lookup the [`systematic-debugging`](../../../src/skills/systematic-debugging/SKILL.md)
+A file-first lookup the [`systematic-debugging`](../../skills/systematic-debugging/SKILL.md)
 skill reads when a failure shows a recognisable signature. It does **not**
 replace the 6-phase loop — it shortcuts **Phase 2 (Isolate)** by pointing at the
 *first* check for a known shape, so you stop guessing and start with the highest-

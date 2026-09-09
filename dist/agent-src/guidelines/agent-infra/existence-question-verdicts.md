@@ -1,6 +1,6 @@
 # The existence question — its verdict set, its cost, and why it is not TDD
 
-Depth for [`improve-before-implement`](../../../src/rules/improve-before-implement.md)
+Depth for [`improve-before-implement`](../../rules/improve-before-implement.md)
 § The solution-size ladder, migrated out of
 [`agent-interaction-and-decision-quality`](agent-interaction-and-decision-quality.md)
 § 8b.
@@ -45,7 +45,7 @@ Two clauses hold the set honest, and both cut against reading it as a ranking:
 
 **Reach the verdict with the engine, not a fresh grep protocol.** `agent-config
 code-graph query` and `code-graph affected`;
-[`external-code-graph-interop`](../../../src/rules/external-code-graph-interop.md)
+[`external-code-graph-interop`](../../rules/external-code-graph-interop.md)
 already mandates query-before-grep and names grep the fallback, so a second
 search specification here would contradict it rather than add to it.
 
@@ -60,7 +60,7 @@ existing helper more often than features do**, because the author is inside one
 file and reaching for something small. Switching the reuse rung off there
 switches it off where it pays most.
 
-Cheap means cheap, on the [`ui-audit-gate`](../../../src/rules/ui-audit-gate.md)
+Cheap means cheap, on the [`ui-audit-gate`](../../rules/ui-audit-gate.md)
 precedent: one `code-graph query`, one named verdict, no interview.
 
 **The skip is decidable from the diff alone** — ≤ 1 file, ≤ 5 changed lines, no

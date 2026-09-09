@@ -113,9 +113,17 @@ interface Rgb {
     b: number;
 }
 
-/** `#rgb` / `#rrggbb` / `#rrggbbaa` → 0–1 channels, or null when unparseable. */
+/**
+ * `#rgb` / `#rrggbb` → 0–1 channels, or null when unparseable.
+ *
+ * An 8-digit `#rrggbbaa` returns NULL rather than its opaque prefix. ΔEOK is a
+ * three-channel metric and has nothing to say about alpha, so truncating made
+ * `#ff000080` and `#ff0000` measure distance 0 — "identical" for two values a
+ * designer chose to differ. Found by a blind review. Null is the honest answer:
+ * the row is reported as unmeasured, which is what it is.
+ */
 export function parseHex(value: string): Rgb | null {
-    const m = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.exec(value.trim());
+    const m = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.exec(value.trim());
     if (!m) return null;
     let hex = m[1] as string;
     if (hex.length === 3) {

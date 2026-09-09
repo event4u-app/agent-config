@@ -166,7 +166,7 @@ authors), never subagent request construction (what the host authors).
   capability band behind lever 3).
 - [`size-and-scope.md`](size-and-scope.md) — token discipline for the artifacts
   that become the cached prefix.
-- [`subagent-orchestration/prompts/README.md`](../../../src/skills/subagent-orchestration/prompts/README.md)
+- [`subagent-orchestration/prompts/README.md`](../../skills/subagent-orchestration/prompts/README.md)
   § Prompt-cache discipline — sibling-uniformity rules and the
   fork-vs-subagent dispatch ordering that follow from this cache economy.
 - [`docs/contracts/ai-council-config.md`](../../contracts/ai-council-config.md)

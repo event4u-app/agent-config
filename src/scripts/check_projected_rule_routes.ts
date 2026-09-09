@@ -50,13 +50,40 @@ const GUIDELINES_SUBDIR = path.join('dist', 'agent-src', 'guidelines');
 
 /**
  * Shrink-only floor for half B. Measured 2026-09-09 on the tree that shipped
- * the guidelines lane: 256 relative links across the projected rules, 36 of
- * them unresolved, every one under `docs/contracts/` or `agents/`. Lower it
- * when a link is genuinely fixed; never raise it.
+ * the guidelines lane, by this module's own `REL_LINK_RE` over its own corpus:
+ * **262** relative links across the projected rules, **36** of them unresolved,
+ * every one under `docs/contracts/` or `agents/`. Lower it when a link is
+ * genuinely fixed; never raise it. (The denominator read 256 in a first draft —
+ * a hand count, not the gate's. A blind review caught it. The floor was right
+ * either way, which is exactly why the wrong denominator could sit there
+ * unnoticed: quote the number the code prints.)
  */
 export const UNRESOLVED_RELATIVE_FLOOR = 36;
 
-const ROUTES_TO_RE = /guideline:([A-Za-z0-9][A-Za-z0-9/_.-]*)/g;
+/**
+ * Shrink-only floor for the same half, over the GUIDELINE bodies the lane
+ * projects. A blind review of the branch that shipped the lane found this
+ * population unmeasured and 253 of 268 links dead — the projection carried 120
+ * bodies whose own cross-references resolved to nothing, including five in the
+ * one file Phase 2 existed for. Repairing the `src/` class in the rewriter took
+ * it to 60; the residue is `docs/contracts`, `docs/decisions`, `agents/` and
+ * two template placeholders, none of which is a projected tree. The floor is the
+ * gate's OWN reading, 44 — an earlier draft said 60 from a hand-written glob
+ * that counted the top-level files twice, and a floor above the measurement is
+ * a floor that cannot bite.
+ *
+ * It is a SEPARATE floor from the rules one on purpose: pooling them would let
+ * a regression in one population hide behind an improvement in the other, and
+ * the two are repaired by different changes.
+ */
+export const UNRESOLVED_GUIDELINE_FLOOR = 44;
+
+// No `.` in the slug class: with it, a prose mention of the shape
+// `guideline:foo.md` was captured as slug `foo.md` and checked against
+// `foo.md.md`. No live instance exists, but this half is graded HARD, so the
+// first body that spells a reference that way would red CI for a non-defect.
+// Blind-review finding.
+const ROUTES_TO_RE = /guideline:([A-Za-z0-9][A-Za-z0-9/_-]*)/g;
 const REL_LINK_RE = /\]\((\.\.?\/[^)\s#]+\.md)(?:#[^)]*)?\)/g;
 
 export interface RouteFinding {
@@ -71,15 +98,35 @@ export interface RouteVerdict {
     /** Relative `.md` links seen in projected rules. */
     relativeLinks: number;
     unresolvedRelative: number;
+    /** The unresolved rule links themselves, so a failure can name them. */
+    unresolvedRuleLinks: Array<{ file: string; link: string }>;
+    /** The same two counts over the projected guideline bodies. */
+    guidelineLinks: number;
+    unresolvedGuideline: number;
     findings: RouteFinding[];
 }
 
-function listRules(dir: string): string[] {
+/** Every `.md` under `dir`, recursively, name-sorted at each level. */
+function walkMarkdown(dir: string): string[] {
     if (!fs.existsSync(dir)) return [];
-    return fs
-        .readdirSync(dir)
-        .filter((n) => n.endsWith('.md'))
-        .sort();
+    const out: string[] = [];
+    for (const name of fs.readdirSync(dir).sort()) {
+        const full = path.join(dir, name);
+        if (fs.statSync(full).isDirectory()) out.push(...walkMarkdown(full));
+        else if (name.endsWith('.md')) out.push(full);
+    }
+    return out;
+}
+
+/**
+ * Rule files, RECURSIVELY, as paths relative to `dir`.
+ *
+ * Non-recursive in a first draft, which would have silently unscanned a rule in
+ * a subdirectory — a gate that reads less than its corpus and reports green is
+ * the failure `gate-coverage.yml` exists for. Blind-review finding.
+ */
+function listRules(dir: string): string[] {
+    return walkMarkdown(dir).map((p) => path.relative(dir, p));
 }
 
 export function evaluate(root: string = REPO_ROOT, ledger?: GateLedger): RouteVerdict {
@@ -90,6 +137,7 @@ export function evaluate(root: string = REPO_ROOT, ledger?: GateLedger): RouteVe
     let scanned = 0;
     let relativeLinks = 0;
     let unresolvedRelative = 0;
+    const unresolvedRuleLinks: Array<{ file: string; link: string }> = [];
 
     const names = listRules(rulesDir);
     ledger?.plan(names);
@@ -117,15 +165,41 @@ export function evaluate(root: string = REPO_ROOT, ledger?: GateLedger): RouteVe
 
         for (const m of text.matchAll(REL_LINK_RE)) {
             relativeLinks += 1;
-            const target = path.resolve(path.dirname(file), m[1] as string);
-            if (!fs.existsSync(target)) unresolvedRelative += 1;
+            const link = m[1] as string;
+            if (!fs.existsSync(path.resolve(path.dirname(file), link))) {
+                unresolvedRelative += 1;
+                unresolvedRuleLinks.push({ file: path.join(RULES_SUBDIR, name), link });
+            }
         }
 
         if (failed > 0) ledger?.fail(name, `${String(failed)} unresolved guideline route(s)`);
         else ledger?.complete(name);
     }
 
-    return { scanned, targets: seenTargets.size, relativeLinks, unresolvedRelative, findings };
+    // The guideline bodies themselves. Walked recursively — the lane preserves
+    // `docs/guidelines/`'s own subdirectories, so a flat readdir would miss
+    // `agent-infra/` and `php/`, which is most of the corpus.
+    let guidelineLinks = 0;
+    let unresolvedGuideline = 0;
+    for (const file of walkMarkdown(guidelinesDir)) {
+        for (const m of fs.readFileSync(file, 'utf-8').matchAll(REL_LINK_RE)) {
+            guidelineLinks += 1;
+            if (!fs.existsSync(path.resolve(path.dirname(file), m[1] as string))) {
+                unresolvedGuideline += 1;
+            }
+        }
+    }
+
+    return {
+        scanned,
+        targets: seenTargets.size,
+        relativeLinks,
+        unresolvedRelative,
+        unresolvedRuleLinks,
+        guidelineLinks,
+        unresolvedGuideline,
+        findings,
+    };
 }
 
 // ---------------------------------------------------------------- self-test
@@ -272,6 +346,19 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         return 1;
     }
 
+    if (!isFixtureRoot && v.unresolvedGuideline > UNRESOLVED_GUIDELINE_FLOOR) {
+        process.stderr.write(
+            `❌  check_projected_rule_routes: unresolved links inside the projected ` +
+                `guidelines rose to ${String(v.unresolvedGuideline)}, floor is ` +
+                `${String(UNRESOLVED_GUIDELINE_FLOOR)}.\n` +
+                `    A guideline body whose own cross-references are dead is a body a\n` +
+                `    consumer cannot follow. Most of this class is repaired in\n` +
+                `    condense.ts::_rewrite_body_links; the residue points at trees the\n` +
+                `    projection does not carry.\n`,
+        );
+        return 1;
+    }
+
     if (!isFixtureRoot && v.unresolvedRelative > UNRESOLVED_RELATIVE_FLOOR) {
         process.stderr.write(
             `❌  check_projected_rule_routes: unresolved relative links rose to ` +
@@ -279,6 +366,12 @@ export function main(argv: string[] = process.argv.slice(2)): number {
                 `    This ratchet is shrink-only. Fix the link, or — if a whole tree became\n` +
                 `    projectable — lower UNRESOLVED_RELATIVE_FLOOR in the same commit.\n`,
         );
+        // Name them. An aggregate the operator cannot act on is half a finding,
+        // and `evaluate` already holds every path — it used to count and throw
+        // them away. Blind-review finding.
+        for (const u of v.unresolvedRuleLinks) {
+            process.stderr.write(`      ${u.file} → ${u.link}\n`);
+        }
         return 1;
     }
 
@@ -286,8 +379,10 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         process.stdout.write(
             `✅  every projected rule's guideline route resolves ` +
                 `(${String(v.scanned)} rule(s), ${String(v.targets)} distinct target(s); ` +
-                `${String(v.unresolvedRelative)}/${String(v.relativeLinks)} relative links unresolved, ` +
-                `floor ${String(UNRESOLVED_RELATIVE_FLOOR)}).\n`,
+                `${String(v.unresolvedRelative)}/${String(v.relativeLinks)} rule links unresolved, ` +
+                `floor ${String(UNRESOLVED_RELATIVE_FLOOR)}; ` +
+                `${String(v.unresolvedGuideline)}/${String(v.guidelineLinks)} guideline links unresolved, ` +
+                `floor ${String(UNRESOLVED_GUIDELINE_FLOOR)}).\n`,
         );
     }
     return 0;

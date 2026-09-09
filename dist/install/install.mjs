@@ -15761,8 +15761,24 @@ var settingsSchema = external_exports.object({
   design: external_exports.object({
     fidelity_mode: fidelityMode.default("strict").describe(
       "How strictly the agent must follow a user-provided prototype / mockup / design system (consumed by the design-fidelity rule). strict = build 1:1, every visible deviation needs confirmation; structural = structure locked, silent gaps fillable with a stated assumption; hard-floor = any deviation is never autonomous."
-    )
-  }).default({ fidelity_mode: "strict" }),
+    ),
+    approximation: external_exports.object({
+      enabled: external_exports.boolean().default(false).describe(
+        "Whether a value INSIDE the configured tolerance may be replaced by the project's own token without a per-value confirmation. Ships false. The distance from the artifact's value to the nearest project token is computed and REPORTED on every value row regardless of this switch \u2014 what it decides is whether the agent may act on it without asking. Turning it on for a whole install is a consumer-facing default flip and is owner-reserved (agents/roadmaps/stubs/road-to-frontend-power-default-flip.md); design.fidelity_mode: hard-floor overrides it to off."
+      ),
+      tolerance: external_exports.object({
+        color: external_exports.number().nullable().default(null).describe(
+          'Colour distance below which a value may be reconciled, in OKLab \u0394EOK. Ships null, and null means "preserve and report" rather than "reconcile freely". No number is set because none is supported: zero of seven design-to-code benchmarks in the evidence set score token conformance, and a number in a config file \u2014 even flagged unmeasured \u2014 shapes behavior and acquires the authority of a default. Not an RGB channel delta: RGB distance is not perceptually uniform.'
+        ),
+        length: external_exports.number().nullable().default(null).describe(
+          "Length distance below which a value may be reconciled, in absolute CSS pixels. Ships null, same reasoning as color. GitHub Primer's \xB11px spacing widening is recorded as an externally observed candidate in src/scripts/_lib/design_tolerance.ts and is deliberately not the shipped value; max(1px, 2%) was rejected for growing more permissive at large dimensions with no evidence that this is wanted."
+        )
+      }).default({ color: null, length: null })
+    }).default({ enabled: false, tolerance: { color: null, length: null } })
+  }).default({
+    fidelity_mode: "strict",
+    approximation: { enabled: false, tolerance: { color: null, length: null } }
+  }),
   consistency: external_exports.object({
     cross_source: crossSourceMode.default("on").describe(
       "Consumed by the cross-source-consistency rule. When the agent works from multiple sources (ticket text, an attached image/mockup, the spec, the codebase) it checks them against each other and asks before proceeding on a discrepancy \u2014 instead of silently guessing. on (default) = surface every real cross-source contradiction / silent-scope-expansion as one question; auto = surface only high-confidence contradictions, state low-confidence as an assumption; off = no cross-source checking."

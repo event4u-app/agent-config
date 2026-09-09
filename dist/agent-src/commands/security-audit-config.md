@@ -63,7 +63,7 @@ Output is **decision support**, not a gate — detection is probabilistic
 (guardrails are evadable). Recommend the fix per finding (move a secret to
 `${env:VAR}`, pin an MCP server, remove a `bypassPermissions` flag, strip
 hidden Unicode), but never rewrite the consumer's config without confirmation
-(per [`scope-control`](../../../src/rules/scope-control.md)).
+(per [`scope-control`](../rules/scope-control.md)).
 
 ## Output format
 
@@ -81,5 +81,5 @@ Overall: B (84/100)
 ## See also
 
 - [`lint_agent_security`](../../../src/scripts/lint_agent_security.ts) — the self-audit (our own corpus) sibling.
-- [`untrusted-input-defense`](../../../src/rules/untrusted-input-defense.md), [`lethal-trifecta-guard`](../../../src/rules/lethal-trifecta-guard.md) — the always-on prevention rules.
+- [`untrusted-input-defense`](../rules/untrusted-input-defense.md), [`lethal-trifecta-guard`](../rules/lethal-trifecta-guard.md) — the always-on prevention rules.
 - [`/threat-model`](../threat-model/command.md), [`judge-security-auditor`](../skills/judge-security-auditor/SKILL.md) — deep-pass dispatch.

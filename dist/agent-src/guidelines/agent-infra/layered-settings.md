@@ -29,7 +29,7 @@ on user request.
 
 All three are YAML. Schemas:
 
-- Developer (project-local): [`agent-settings.md`](../../../src/agent-src/templates/agent-settings.md).
+- Developer (project-local): [`agent-settings.md`](../../templates/agent-settings.md).
 - Team: [`agent-project-settings.example.yml`](../../../src/agent-src/templates/agents/agent-project-settings.example.yml).
 - User-global: six exact dotted paths — whitelist in
   [`scripts/_lib/agent_settings.ts`](../../../src/scripts/_lib/agent_settings.ts).
@@ -260,7 +260,7 @@ choice (vs. `ruamel.yaml`) and its revisit triggers are recorded in
 [`docs/contracts/adr-settings-sync-engine.md`](../../contracts/adr-settings-sync-engine.md).
 
 For each section in the template
-([`agent-settings.md`](../../../src/agent-src/templates/agent-settings.md)):
+([`agent-settings.md`](../../templates/agent-settings.md)):
 
 - For each key under the section:
   - **Key exists in user's file** → keep the user's line **verbatim**
@@ -313,5 +313,5 @@ the next explicit settings edit.
 
 ## See also
 
-- [`agent-settings.md`](../../../src/agent-src/templates/agent-settings.md) — dev-layer schema
+- [`agent-settings.md`](../../templates/agent-settings.md) — dev-layer schema
 - [`agent-project-settings.example.yml`](../../../src/agent-src/templates/agents/agent-project-settings.example.yml) — team-layer template

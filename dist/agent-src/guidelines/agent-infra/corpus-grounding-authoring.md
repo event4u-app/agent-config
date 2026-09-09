@@ -2,7 +2,7 @@
 
 > The gate every new domain corpus passes before it enters
 > `src/skills/<skill>/data/`. Architecture: ADR-061; engine + manifest
-> contract: [`corpus-grounding`](../../../src/skills/corpus-grounding/SKILL.md).
+> contract: [`corpus-grounding`](../../skills/corpus-grounding/SKILL.md).
 
 ## 1. Qualification checklist — ALL must hold
 

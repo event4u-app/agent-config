@@ -1,9 +1,9 @@
 # asking-and-brevity-examples
 
 Companion examples for three always-rules:
-[`ask-when-uncertain`](../../../src/rules/ask-when-uncertain.md),
-[`no-cheap-questions`](../../../src/rules/no-cheap-questions.md),
-[`direct-answers`](../../../src/rules/direct-answers.md).
+[`ask-when-uncertain`](../../rules/ask-when-uncertain.md),
+[`no-cheap-questions`](../../rules/no-cheap-questions.md),
+[`direct-answers`](../../rules/direct-answers.md).
 
 The rules carry the Iron Laws and the obligation surface. This file
 carries the illustrative material (example questions, rationale

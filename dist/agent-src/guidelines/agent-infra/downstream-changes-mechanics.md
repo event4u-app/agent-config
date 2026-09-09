@@ -1,6 +1,6 @@
 # Downstream-Changes Mechanics — closed-set evolution
 
-> The procedure behind [`downstream-changes`](../../../src/rules/downstream-changes.md)
+> The procedure behind [`downstream-changes`](../../rules/downstream-changes.md)
 > for one change class its table does not reach: a **closed set** whose member
 > list changed. Cited by `skill:code-review` (the propagation dimension) and
 > `skill:code-refactoring` (the reference sweep).
@@ -78,14 +78,14 @@ member, while a partially-typed string-keyed map does not. In PHP an exhaustive
 Add a **synthetic member** to the set, confirm the checks you are relying on go
 red, then update the consumers and confirm they go green. A sweep never seen red
 has unknown coverage — the same sensitivity argument
-[`downstream-changes`](../../../src/rules/downstream-changes.md) § Verification
+[`downstream-changes`](../../rules/downstream-changes.md) § Verification
 makes for tests, applied to the discovery step.
 
 ## See also
 
-- [`downstream-changes`](../../../src/rules/downstream-changes.md) — the rule this
+- [`downstream-changes`](../../rules/downstream-changes.md) — the rule this
   extends; its § Defect-pattern search is the sibling-occurrence half.
 - [`redundancy-taxonomy`](../redundancy-taxonomy.md) — the naming half: one
   concept, several terms.
-- [`prefer-enums-over-literals`](../../../src/rules/prefer-enums-over-literals.md)
+- [`prefer-enums-over-literals`](../../rules/prefer-enums-over-literals.md)
   — how a closed set comes to exist in the first place.

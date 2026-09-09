@@ -7,22 +7,30 @@
  * structurally over the record's own keys rather than by inspection.
  */
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it } from 'vitest';
 
 import { SHADOW_LOG } from '../../src/scripts/hooks/source_first_gate_hook.js';
 import { SHIPPED_TOLERANCE, reconcileValue } from '../../src/scripts/_lib/design_tolerance.js';
+import { buildConformanceReport } from '../../src/scripts/_lib/conformance_report.js';
 import {
     CANDIDATE_COLOR_THRESHOLDS,
     CANDIDATE_LENGTH_THRESHOLDS,
     FLIP_CRITERION,
     TOLERANCE_SHADOW_RECORD,
     candidatesFor,
+    recordToleranceShadow,
     toleranceShadowRecord,
 } from '../../src/scripts/_lib/tolerance_shadow.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
+const tmps: string[] = [];
+
+afterAll(() => {
+    for (const d of tmps) fs.rmSync(d, { recursive: true, force: true });
+});
 
 const PALETTE = [
     { name: 'color.brand', value: '#3b82f7' },
@@ -123,6 +131,61 @@ describe('the flip criterion was written before the window opened', () => {
     it('does not authorise a shipped default', () => {
         expect(FLIP_CRITERION).toMatch(/owner-reserved/);
         expect(FLIP_CRITERION).toMatch(/not a shipped default/);
+    });
+});
+
+describe('the window is actually written — not merely described', () => {
+    // The defect a blind review caught on this branch: the module documented
+    // records riding SHADOW_LOG while having no writer and no caller, so
+    // FLIP_CRITERION's reverse trigger ("fewer than 20 records in 8 weeks") was
+    // satisfied by construction. A criterion that cannot fail measures nothing.
+    function tmpRoot(): string {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'shadow-'));
+        tmps.push(root);
+        return root;
+    }
+
+    function logLines(root: string): string[] {
+        const f = path.join(root, SHADOW_LOG);
+        if (!fs.existsSync(f)) return [];
+        return fs.readFileSync(f, 'utf-8').trim().split('\n').filter(Boolean);
+    }
+
+    it('recordToleranceShadow appends one line per measurable row', () => {
+        const root = tmpRoot();
+        const rows = [
+            { kind: 'color' as const, row: reconcileValue('color', '#3b82f6', PALETTE) },
+            { kind: 'length' as const, row: reconcileValue('length', '15px', SPACING) },
+            // Nothing to measure — must be skipped, not written as a zero.
+            { kind: 'color' as const, row: reconcileValue('color', '#3b82f6', []) },
+        ];
+        expect(recordToleranceShadow(root, rows)).toBe(2);
+        const lines = logLines(root).map((l) => JSON.parse(l) as Record<string, unknown>);
+        expect(lines).toHaveLength(2);
+        expect(lines.every((l) => l['record'] === TOLERANCE_SHADOW_RECORD)).toBe(true);
+    });
+
+    it('the conformance reporter feeds the window when a root is given', () => {
+        const root = tmpRoot();
+        buildConformanceReport({
+            artifact: '<style>.a{color:#3b82f6;padding:15px}</style>',
+            implementation: '<style>.a{color:#3b82f6;padding:15px}</style>',
+            tokens: [...PALETTE, ...SPACING],
+            shadowRoot: root,
+        });
+        expect(logLines(root).length).toBeGreaterThan(0);
+    });
+
+    // Opt-in, so a test run or a reader inspecting a port does not pollute the
+    // distribution with its own fixtures.
+    it('writes nothing when no root is given', () => {
+        const root = tmpRoot();
+        buildConformanceReport({
+            artifact: '<style>.a{color:#3b82f6}</style>',
+            implementation: '<style>.a{color:#3b82f6}</style>',
+            tokens: PALETTE,
+        });
+        expect(logLines(root)).toEqual([]);
     });
 });
 

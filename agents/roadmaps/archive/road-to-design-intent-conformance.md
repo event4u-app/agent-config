@@ -332,8 +332,11 @@ file the reading agent cannot open.
       `./scripts-run src/scripts/check_source_size_budget` reports no rise.
 - [x] **2.2 Gate the route rather than trusting it.** A check that every
       `routes_to: guideline:` target and every relative `../docs/` link in a
-      **projected** rule resolves inside the projection. Today's 31 rules and 43
-      distinct targets are the floor; the ratchet then only moves down.
+      **projected** rule resolves inside the projection. **Corrected after a
+      blind review, which reproduced the numbers this line asserted and found
+      they reproduce on nothing:** the gate's own reading is **119 projected
+      rules and 22 distinct targets**, not 31 and 43. The floor is the
+      measurement the gate prints, and the ratchet then only moves down.
       verify: the gate red on a deliberately unprojected target, green on the
       tree, and registered with its coverage row and self-test.
 - [x] **2.3 Whitelist `design.*` and repair the drop warning.** Add the
@@ -768,8 +771,17 @@ owner-reserved.
       its own scope no longer legislates them.
 - [x] AC-9 — A consumer install that receives the fidelity rule and **not** the
       brand rule reads the artifact-versus-brand split inside the rule it did
-      receive, and no sentence in a projected rule instructs the reader to open
-      a path the projection does not contain.
+      receive, and no sentence in a projected rule **instructs** the reader to
+      open a path the projection does not contain.
+      **Scope, tightened after a blind review flagged the wording as broader
+      than what shipped:** the clause is about an INSTRUCTION — the imperative
+      1.5 removed (*"Read that scope line before acting on either rule"*) — not
+      about every reference. 36 see-also style links into `docs/contracts/` and
+      `agents/settings/policies/` remain and are pinned by
+      `check_projected_rule_routes`'s shrink-only floor; neither tree is
+      projected, and closing them means deciding to project a second tree, which
+      is a different change with a different owner. The gate's header was honest
+      about the 36 from the start; this criterion was not, and now is.
 - [x] AC-10 — No shipped surface prescribes an order among stories, components
       and the page. Where a sequence is described it is labelled as observed
       practice, and the two contradictions about the workshop's conditionality

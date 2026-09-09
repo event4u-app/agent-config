@@ -22,7 +22,7 @@ editorial drift.
 | **Code-level abstraction** — helper, method, class, Strategy, generic, config layer | any non-UI code shape | **2 real repetitions** (or a genuine second axis of change) |
 | **Pure-markup UI shell** — props-only fragment, no state (button shell, card frame, header) | renders props, holds no state | **3+ uses** |
 | **Stateful UI component** — carries real props/state (form, table, filter) | repeats **AND** has varying props / local state | **~4+ repeats AND real state** (both conditions) |
-| **Utility-class string** (Tailwind et al.) — repeated class list | identical class string | **≥ 3 duplications** (mechanism table: [`tailwind-engineer`](../../src/skills/tailwind-engineer/SKILL.md)) |
+| **Utility-class string** (Tailwind et al.) — repeated class list | identical class string | **≥ 3 duplications** (mechanism table: [`tailwind-engineer`](../skills/tailwind-engineer/SKILL.md)) |
 
 The code-level bar of **two** is this suite's settled base decision (the
 borrowed "Rule of Three" for code was evaluated and not adopted — see
@@ -39,7 +39,7 @@ is not a Strategy; a repeat with no varying props is inlined, not extracted.
 
 ## Precedence
 
-[`minimal-safe-diff`](../../src/rules/minimal-safe-diff.md) / YAGNI win on every
+[`minimal-safe-diff`](../rules/minimal-safe-diff.md) / YAGNI win on every
 conflict: these thresholds authorize extraction when repetition is **already
 present in the diff** — never speculative abstraction for "this could grow
 later". See [`component-oriented-and-oop-development`](component-oriented-and-oop-development.md)
@@ -82,7 +82,7 @@ elsewhere. The discipline is the control.
 
 ## See also
 
-- [`architecture`](../../src/rules/architecture.md) — the rule that carries the code-level bar.
-- [`fe-design`](../../src/skills/fe-design/SKILL.md) § Component granularity — the UI-shell bar in context.
-- [`ui-component-architect`](../../src/skills/ui-component-architect/SKILL.md) § Componentization threshold — the stateful-component bar in context.
+- [`architecture`](../rules/architecture.md) — the rule that carries the code-level bar.
+- [`fe-design`](../skills/fe-design/SKILL.md) § Component granularity — the UI-shell bar in context.
+- [`ui-component-architect`](../skills/ui-component-architect/SKILL.md) § Componentization threshold — the stateful-component bar in context.
 - ADR-213 — the decision record scoping the bars.

@@ -4,7 +4,7 @@
 > limits that were measured rather than assumed; and the two corrections this
 > material has taken. The rule keeps the verdict — this page carries the argument.
 
-_Origin: migrated from [`evaluator-independence`](../../../src/rules/evaluator-independence.md)
+_Origin: migrated from [`evaluator-independence`](../../rules/evaluator-independence.md)
 § *Enforcement — honest scope* under the P4 pattern
 (`road-to-standing-payload-diet` step 1.3). Nothing here is new; the rule was
 re-sending all of it on every session and every spawn, and only the verdict has
@@ -88,5 +88,5 @@ fabricated evidence, and claiming coverage it does not have would repeat that.
 
 ## See also
 
-- [`evaluator-independence`](../../../src/rules/evaluator-independence.md) — the rule this page carries the argument for.
+- [`evaluator-independence`](../../rules/evaluator-independence.md) — the rule this page carries the argument for.
 - [`hook-architecture-v1 § Which hosts carry pre_tool_use`](../../contracts/hook-architecture-v1.md) — the four host states, tabulated once.

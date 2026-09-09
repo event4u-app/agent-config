@@ -7,7 +7,7 @@
 > pulls external material in **per confirmed defect**.
 >
 > Body of `road-to-symptom-driven-harvest-loop` Phase 2. It lives here rather
-> than inline in [`roadmap-writing`](../../../src/skills/roadmap-writing/SKILL.md)
+> than inline in [`roadmap-writing`](../../skills/roadmap-writing/SKILL.md)
 > because that skill is already ~4.8k tokens — well past the 3,500-token band —
 > and a procedure needed a few times a quarter should not be paid for on every
 > roadmap-authoring turn. The skill carries the pointer.
@@ -94,11 +94,11 @@ own evidence. Only an external round can date it.
 
 ## See also
 
-- [`roadmap-writing`](../../../src/skills/roadmap-writing/SKILL.md) — the authoring
+- [`roadmap-writing`](../../skills/roadmap-writing/SKILL.md) — the authoring
   skill this procedure extends; it owns phases, falsifiers, and the output format.
 - [`agents/tickets/symptoms/README.md`](../../../agents/tickets/symptoms/README.md) —
   the intake convention and the two resolution blocks.
-- [`source-discovery-gate`](../../../src/rules/source-discovery-gate.md) — the
+- [`source-discovery-gate`](../../rules/source-discovery-gate.md) — the
   no-structural-claim-without-evidence rule step 1 is an application of.
-- [`external-reference-deep-dive`](../../../src/rules/external-reference-deep-dive.md) —
+- [`external-reference-deep-dive`](../../rules/external-reference-deep-dive.md) —
   how to read a named external source properly in step 2.

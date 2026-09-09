@@ -878,7 +878,22 @@ function _rewrite_frontmatter_lines(lines: string[], prefix: string): string[] {
 }
 
 function _rewrite_body_links(body: string, prefix: string): string {
-    return body.replace(_BODY_DOCS_RE, (_m, t: string) => prefix + t.replace(/^docs\/guidelines\//, 'guidelines/')); // docs/guidelines/ is projected — see _lib/guidelines_lane.ts; docs/contracts/ is not, and keeps its path
+    return body
+        // `docs/guidelines/` is projected (see `_lib/guidelines_lane.ts`) so its
+        // link loses the `docs/` segment; `docs/contracts/` is not, and keeps it.
+        .replace(_BODY_DOCS_RE, (_m, t: string) => prefix + t.replace(/^docs\/guidelines\//, 'guidelines/'))
+        // `src/rules`, `src/skills` and `src/agent-src/<x>` all project into
+        // `dist/agent-src/`, losing the `src/` (and `agent-src/`) segment. Until
+        // the guidelines lane shipped, no PROJECTED file linked into `src/` and
+        // this rewrite had nothing to do; a guideline does it 209 times, so
+        // without it the lane ships bodies whose own cross-references are dead.
+        // `src/domains` is deliberately absent: a domains command projects to
+        // `commands/<subpath>.md`, which is a re-shaping rather than a prefix
+        // strip, and guessing it would produce a link that looks right.
+        .replace(
+            /(?:\.\.\/)+src\/(?:agent-src\/)?((?:rules|skills|commands|contexts|personas|user-types|templates|scripts)\/[^)\s]+\.md)/g,
+            (_m, t: string) => prefix + t,
+        );
 }
 
 function _parse_trust_and_owner(fm_lines: string[]): [string, boolean, string] {

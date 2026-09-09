@@ -162,6 +162,13 @@ describe('the colour metric', () => {
         expect(deltaEOK('rebeccapurple', '#3b82f6')).toBeNull();
     });
 
+    // Regression from a blind review: truncating `#rrggbbaa` to its opaque
+    // prefix made two deliberately different values measure distance 0.
+    it('refuses an 8-digit hex rather than dropping its alpha', () => {
+        expect(parseHex('#ff000080')).toBeNull();
+        expect(deltaEOK('#ff000080', '#ff0000')).toBeNull();
+    });
+
     it('treats the three-digit form as its expansion', () => {
         expect(deltaEOK('#fff', '#ffffff')).toBe(0);
         expect(parseHex('#fff')).toEqual(parseHex('#ffffff'));

@@ -94,7 +94,7 @@ Chesterton's Fence, operationalised. Agents are documented as
 especially fence-blind: complex code reads as an invitation to simplify
 when the complexity may exist for a reason the reader has no context
 for. This does not restate
-[`minimal-safe-diff`](../../../src/rules/minimal-safe-diff.md)'s "never
+[`minimal-safe-diff`](../../rules/minimal-safe-diff.md)'s "never
 delete code that *looks* dead without proof" — it is the output contract
 that makes the proof visible.
 

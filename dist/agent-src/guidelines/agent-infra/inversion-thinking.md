@@ -4,18 +4,18 @@ Reference guideline for Wing-1 deep-thinking work — Carl Jacobi's
 "invert, always invert" applied to **decisions and arguments**, not
 diffs. The pre-mortem on a strategy, an argument, or a written plan;
 distinct from
-[`adversarial-review`](../../../src/skills/adversarial-review/SKILL.md)
+[`adversarial-review`](../../skills/adversarial-review/SKILL.md)
 which stress-tests **diffs**. Adopted under the **Reference-Guideline
 Sunset Policy** (see frontmatter `upstream` / `refresh_trigger` keys)
 and cross-referenced from:
 
-- [`refine-prompt`](../../../src/skills/refine-prompt/SKILL.md)
+- [`refine-prompt`](../../skills/refine-prompt/SKILL.md)
   — pre-mortem on a free-form prompt before planning.
-- [`refine-ticket`](../../../src/skills/refine-ticket/SKILL.md)
+- [`refine-ticket`](../../skills/refine-ticket/SKILL.md)
   — pre-mortem on a Jira / Linear ticket before estimation.
-- [`threat-modeling`](../../../src/skills/threat-modeling/SKILL.md)
+- [`threat-modeling`](../../skills/threat-modeling/SKILL.md)
   — abuse-case generation pairs with goal inversion.
-- [`improve-before-implement`](../../../src/rules/improve-before-implement.md)
+- [`improve-before-implement`](../../rules/improve-before-implement.md)
   — challenge weak requirements before writing code.
 
 > **Core principle:** "Invert, always invert." — Carl Jacobi

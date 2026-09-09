@@ -7,9 +7,9 @@ separate thinking modes and avoid the cross-talk that derails group
 decisions. Adopted under the **Reference-Guideline Sunset Policy** and
 cross-referenced from:
 
-- [`deep-reading-analyst`](../../../src/skills/deep-reading-analyst/SKILL.md)
+- [`deep-reading-analyst`](../../skills/deep-reading-analyst/SKILL.md)
   — L2 Standard analysis depth (multi-perspective sweep).
-- [`ai-council`](../../../src/skills/ai-council/SKILL.md)
+- [`ai-council`](../../skills/ai-council/SKILL.md)
   — multi-model consultation pattern; Six Hats is the per-perspective
   decomposition the council voices use when adjudicating a decision.
 - [`/council`](../../../src/domains/meta/council/command.md)

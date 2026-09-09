@@ -74,7 +74,7 @@ apps/web/src/shared/format-currency.ts   ← imported by apps/admin
 second app imports from the first, the two are coupled with no declared edge,
 the affected-set calculation is wrong, and neither app can be built or released
 alone. Shared code belongs in a `packages/*` workspace with a real dependency
-declared ([`workspace-link`](../../src/skills/workspace-link/SKILL.md)).
+declared ([`workspace-link`](../skills/workspace-link/SKILL.md)).
 
 **In a diff:** an import whose specifier reaches into `apps/<other>/`, or a new
 `shared/` `common/` `utils/` directory added under `apps/*`.
@@ -135,7 +135,7 @@ rather than implying a completeness it does not have.
 
 ## See also
 
-- [`monorepo-workspace`](../../src/skills/monorepo-workspace/SKILL.md) — read the graph and the task list before judging either.
-- [`workspace-link`](../../src/skills/workspace-link/SKILL.md) — the `workspace:` declaration rows 2 and 4 both come back to.
-- [`blast-radius-analyzer`](../../src/skills/blast-radius-analyzer/SKILL.md) — § Monorepo, for the affected set of an edit.
+- [`monorepo-workspace`](../skills/monorepo-workspace/SKILL.md) — read the graph and the task list before judging either.
+- [`workspace-link`](../skills/workspace-link/SKILL.md) — the `workspace:` declaration rows 2 and 4 both come back to.
+- [`blast-radius-analyzer`](../skills/blast-radius-analyzer/SKILL.md) — § Monorepo, for the affected set of an edit.
 - [`design-antipatterns.md`](design-antipatterns.md) — sibling diff-detectable catalog for a different surface.

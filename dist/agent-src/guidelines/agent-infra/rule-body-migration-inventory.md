@@ -238,4 +238,4 @@ the migrated prose must stay in lockstep with the corresponding
 
 - [`docs/contracts/kernel-membership.md`](../../contracts/kernel-membership.md) — the 9-rule kernel this inventory treats as permanently must-stay.
 - [`docs/guidelines/agent-infra/model-recommendation.md`](model-recommendation.md) / [`docs/guidelines/agent-infra/roadmap-progress-mechanics.md`](roadmap-progress-mechanics.md) — worked examples of the target-file header/format convention this inventory's proposed new guidelines should follow (`# Title` + `>` one-line summary + `_Origin: migrated from …`_ + Iron-Law restatement + sections; no frontmatter).
-- The roadmap layer's "P4" migration pattern — the mechanism this inventory audits; not cited by filepath per [`no-roadmap-references`](../../../src/rules/no-roadmap-references.md) (roadmap files are transient, this inventory is durable).
+- The roadmap layer's "P4" migration pattern — the mechanism this inventory audits; not cited by filepath per [`no-roadmap-references`](../../rules/no-roadmap-references.md) (roadmap files are transient, this inventory is durable).

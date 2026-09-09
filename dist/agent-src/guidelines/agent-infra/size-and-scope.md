@@ -124,7 +124,7 @@ evidence-disciplined context type:
   content-compare). Durable content = negative facts + pointers; positive
   structure is a per-line, last-verified hypothesis.
 
-See [`source-discovery`](../../../src/skills/source-discovery/SKILL.md) and the
+See [`source-discovery`](../../skills/source-discovery/SKILL.md) and the
 `evidence-discipline` context for the full model.
 
 ---

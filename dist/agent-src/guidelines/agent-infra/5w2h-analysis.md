@@ -6,9 +6,9 @@ comprehensive understanding of any topic, problem, or plan. Adopted under
 the **Reference-Guideline Sunset Policy** (see frontmatter `upstream` /
 `refresh_trigger` keys) and cross-referenced from:
 
-- [`deep-reading-analyst`](../../../src/skills/deep-reading-analyst/SKILL.md)
+- [`deep-reading-analyst`](../../skills/deep-reading-analyst/SKILL.md)
   — L1 Quick analysis depth.
-- [`refine-ticket`](../../../src/skills/refine-ticket/SKILL.md)
+- [`refine-ticket`](../../skills/refine-ticket/SKILL.md)
   — completeness check on a Jira / Linear ticket before estimation.
 - [`bug-investigate`](../../../src/domains/engineering-base/bug/investigate/command.md)
   — gap analysis on an incident report before forming a hypothesis.

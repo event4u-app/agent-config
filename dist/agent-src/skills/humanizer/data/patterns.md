@@ -161,7 +161,7 @@ Not reliable indicators on their own — leave these alone:
 - **Mixed registers.** Often a person, not a bot.
 - **Unsourced claims.** Most human web writing is unsourced.
 - **Quoted text, titles, proper names, and discussed-not-used phrases.**
-  Never rewrite secondhand text ([`content-quoting-floor`](../../../src/rules/content-quoting-floor.md)).
+  Never rewrite secondhand text ([`content-quoting-floor`](../../../rules/content-quoting-floor.md)).
 
 Decide on **clusters**: two or more distinct pattern groups co-occurring.
 Below that, say "no reliable tells found" and stop.

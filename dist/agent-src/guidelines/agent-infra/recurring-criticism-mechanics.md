@@ -10,7 +10,7 @@ derive different URIs for the same file — one from the key
 `mcp_parity_smoke` drift, and it only surfaces once `dist/cli/agent-config.js`
 is built, so the local suite passes and CI does not._
 
-Depth for [`recurring-criticism`](../../../src/rules/recurring-criticism.md). The
+Depth for [`recurring-criticism`](../../rules/recurring-criticism.md). The
 rule carries the obligation; this carries the lookup addresses and the reasoning
 that would otherwise be paid in every session — that rule is phrase-triggered, and
 a phrase-triggered rule is unconditionally loaded on Claude (the emitter writes no
@@ -42,19 +42,19 @@ difference decides whether the recurrence is new information or a lookup failure
 ## The mechanism is the candidate defect, not the item
 
 Classify what was missing before choosing an artefact — the taxonomy in
-[`skill-improvement-pipeline`](../../../src/skills/skill-improvement-pipeline/SKILL.md)
+[`skill-improvement-pipeline`](../../skills/skill-improvement-pipeline/SKILL.md)
 § Classify the missing component (instruction · source-of-truth · tool · validator ·
 permission · sandbox · evaluation · recovery-path) is the one to use, because "add
 another rule" is the answer that feels right and is usually wrong.
 
 Then land the learning where it **constrains** the next run, per
-[`learning-to-rule-or-skill`](../../../src/skills/learning-to-rule-or-skill/SKILL.md).
+[`learning-to-rule-or-skill`](../../skills/learning-to-rule-or-skill/SKILL.md).
 A lesson that does not narrow the next attempt produces thrashing rather than
 convergence <!-- harvest:unconstraining-lesson-thrashes -->; a learning that lives
 only in a reply is not a learning, it is a note.
 
 **Third recurrence of the same class escalates to structure** —
-[`decision-review`](../../../src/skills/decision-review/SKILL.md) § Escalation owns
+[`decision-review`](../../skills/decision-review/SKILL.md) § Escalation owns
 the threshold, and its point is worth restating: a louder restatement of a rule the
 agent keeps missing is the one response already known not to work. At that point
 the choice is a deterministic gate or deletion, not more prose.
@@ -70,7 +70,7 @@ Self-improvement loops can regress the artefact they improve
 - It never arrives as a **weakened** gate, a widened allowlist, a lifted Hard
   Floor, or a loosened ratchet. If the only available hardening lowers a floor, the
   recurrence escalates to the owner instead — that transition is owner-reserved per
-  [`decision-revisit-gate`](../../../src/rules/decision-revisit-gate.md) § Who
+  [`decision-revisit-gate`](../../rules/decision-revisit-gate.md) § Who
   decides.
 
 ## Failure modes
@@ -91,6 +91,6 @@ Self-improvement loops can regress the artefact they improve
 
 ## See also
 
-- [`recurring-criticism`](../../../src/rules/recurring-criticism.md) — the obligation.
-- [`decision-revisit-gate`](../../../src/rules/decision-revisit-gate.md) — the other entrance (a lock blocking a change), the five steps, the owner-reserved table.
-- [`self-repair-loop`](../../../src/rules/self-repair-loop.md) — the single-occurrence intake and the `occurrences` counter this rule consumes.
+- [`recurring-criticism`](../../rules/recurring-criticism.md) — the obligation.
+- [`decision-revisit-gate`](../../rules/decision-revisit-gate.md) — the other entrance (a lock blocking a change), the five steps, the owner-reserved table.
+- [`self-repair-loop`](../../rules/self-repair-loop.md) — the single-occurrence intake and the `occurrences` counter this rule consumes.

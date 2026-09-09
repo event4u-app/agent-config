@@ -27,7 +27,8 @@
  * not claim to. Where a rendered comparison is available it belongs beside this
  * report, not inside it.
  */
-import { type TokenCandidate, type ValueRow, reconcileValue } from './design_tolerance.js';
+import { type TokenCandidate, type ValueKind, type ValueRow, reconcileValue } from './design_tolerance.js';
+import { recordToleranceShadow } from './tolerance_shadow.js';
 
 export type Dimension = 'structure' | 'values' | 'behaviour' | 'responsive' | 'icons' | 'carrier';
 
@@ -69,9 +70,42 @@ export interface ConformanceReport {
 const HEX_RE = /#[0-9a-fA-F]{3}\b|#[0-9a-fA-F]{6}\b/g;
 const LENGTH_RE = /\b\d*\.?\d+(?:px|rem)\b/g;
 const TAG_RE = /<([a-zA-Z][a-zA-Z0-9-]*)\b/g;
-const MEDIA_RE = /@media[^{]*?\(\s*(?:min|max)-width\s*:\s*([^)]+)\)/g;
-const HANDLER_RE = /\b(?:addEventListener\(\s*['"]([a-z]+)['"]|on([a-z]+)\s*=)/g;
-const INLINE_STYLE_RE = /style\s*=\s*"([^"]*)"/g;
+// EVERY width bound in a query, not the first. `@media (min-width: 48rem) and
+// (max-width: 80rem)` has two, and capturing one left `80rem` counted as a
+// VALUE — which reds two dimensions for one corruption and breaks the
+// one-dimension property 4.1's verify clause rests on. Found by a blind review.
+const MEDIA_QUERY_RE = /@media[^{]+/g;
+const MEDIA_BOUND_RE = /\(\s*(?:min|max)-width\s*:\s*([^)]+)\)/g;
+// Case-insensitive on the listener name: the first version required an
+// all-lowercase quoted name, so `addEventListener('DOMContentLoaded', …)` and
+// any camelCase custom event were invisible to the behavior dimension that
+// exists to catch a dropped interaction. Blind-review finding.
+const LISTENER_RE = /addEventListener\(\s*['"]([A-Za-z][A-Za-z0-9_:.-]*)['"]/g;
+
+/**
+ * `on*` ATTRIBUTES, matched against a closed set rather than by shape.
+ *
+ * A word boundary does not separate `onclick` from `onboarding` — both begin
+ * with `on` and both are followed by `=`, so a shape rule reads the second as a
+ * hook named `boarding`. It is the inline-handler namespace that is closed, so
+ * the set is what discriminates. A custom event never appears as an attribute
+ * anyway; it appears in `addEventListener`, which the regex above reads openly.
+ */
+const INLINE_EVENTS = new Set([
+    'click', 'dblclick', 'mousedown', 'mouseup', 'mouseenter', 'mouseleave',
+    'mousemove', 'mouseover', 'mouseout', 'keydown', 'keyup', 'keypress',
+    'input', 'change', 'submit', 'reset', 'focus', 'blur', 'focusin',
+    'focusout', 'scroll', 'wheel', 'load', 'error', 'resize', 'toggle',
+    'select', 'drag', 'dragstart', 'dragend', 'dragover', 'drop', 'touchstart',
+    'touchend', 'touchmove', 'pointerdown', 'pointerup', 'pointermove',
+    'animationend', 'transitionend', 'contextmenu', 'copy', 'cut', 'paste',
+    'invalid', 'play', 'pause', 'ended',
+]);
+const ON_ATTR_RE = /(?:^|[\s"'`<])on([a-z]+)\s*=/g;
+// Attribute-bounded and quote-agnostic. Unbounded, it false-positived on any
+// attribute ENDING in `style` (`data-style=`, `hover-style=`); double-quote-only,
+// it missed `style='…'` entirely. Blind-review finding.
+const INLINE_STYLE_RE = /(?:^|[\s"'`<])style\s*=\s*(?:"([^"]*)"|'([^']*)')/g;
 
 /** Landmark and control tags — the structural skeleton, not every `<div>`. */
 const STRUCTURAL_TAGS = new Set([
@@ -123,16 +157,26 @@ export function structuralCounts(html: string): Map<string, number> {
 /** Event names the document wires, from listeners and from `on*` attributes. */
 export function behaviourHooks(html: string): Set<string> {
     const out = new Set<string>();
-    for (const m of html.matchAll(HANDLER_RE)) {
-        const name = m[1] ?? m[2];
-        if (typeof name === 'string' && name !== '') out.add(name.toLowerCase());
+    for (const m of html.matchAll(LISTENER_RE)) {
+        out.add((m[1] as string).toLowerCase());
+    }
+    for (const m of html.matchAll(ON_ATTR_RE)) {
+        const name = (m[1] as string).toLowerCase();
+        if (INLINE_EVENTS.has(name)) out.add(name);
     }
     return out;
 }
 
 /** Breakpoints, normalised so `48rem` and `48 rem` are one value. */
 export function breakpoints(html: string): Set<string> {
-    return matchSet(html, MEDIA_RE, 1);
+    const out = new Set<string>();
+    for (const q of html.matchAll(MEDIA_QUERY_RE)) {
+        for (const b of (q[0] as string).matchAll(MEDIA_BOUND_RE)) {
+            const v = (b[1] as string).toLowerCase().trim();
+            if (v !== '') out.add(v);
+        }
+    }
+    return out;
 }
 
 /**
@@ -147,7 +191,7 @@ export function breakpoints(html: string): Set<string> {
 export function inlineStaticDeclarations(html: string): string[] {
     const out: string[] = [];
     for (const m of html.matchAll(INLINE_STYLE_RE)) {
-        for (const decl of (m[1] as string).split(';')) {
+        for (const decl of ((m[1] ?? m[2] ?? '') as string).split(';')) {
             const trimmed = decl.trim();
             if (trimmed === '') continue;
             // A custom property or a `var()` is plausibly runtime-driven.
@@ -174,6 +218,15 @@ export interface ReportInput {
     implementation: string;
     /** Project tokens, so a value row can carry its distance. */
     tokens?: readonly TokenCandidate[];
+    /**
+     * Repo root. When given, every measurable value row is appended to the
+     * shadow log as a `tolerance_shadow` record.
+     *
+     * OPT-IN, and that is the whole design: a report is also built by tests and
+     * by a reader inspecting a port, and a window that recorded those would be
+     * measuring its own test fixtures. The caller that wants the window says so.
+     */
+    shadowRoot?: string;
 }
 
 /**
@@ -215,11 +268,15 @@ export function buildConformanceReport(input: ReportInput): ConformanceReport {
     const iLen = setMinus(matchSet(implementation, LENGTH_RE), breakpoints(implementation));
     const valueFindings: Finding[] = [];
     const valueRows: ValueRow[] = [];
+    // Parallel to `valueRows`: a row does not carry its own kind, and the
+    // shadow record needs it to pick the right candidate-threshold spread.
+    const valueKinds: ValueKind[] = [];
 
     for (const hex of aHex) {
         // Reported on every value, present or missing — the distance is the
         // point, not the verdict (`design_tolerance.ts` header).
         valueRows.push(reconcileValue('color', hex, tokens));
+        valueKinds.push('color');
         if (!iHex.has(hex)) {
             valueFindings.push({
                 dimension: 'values',
@@ -231,6 +288,7 @@ export function buildConformanceReport(input: ReportInput): ConformanceReport {
     }
     for (const len of aLen) {
         valueRows.push(reconcileValue('length', len, tokens));
+        valueKinds.push('length');
         if (!iLen.has(len)) {
             valueFindings.push({
                 dimension: 'values',
@@ -304,6 +362,17 @@ export function buildConformanceReport(input: ReportInput): ConformanceReport {
         verdictFor('carrier', carrierFindings),
     ];
     const deviating = dimensions.filter((d) => d.verdict === 'deviates').map((d) => d.dimension);
+
+    // The one place the shadow window is fed. Without this the records the
+    // flip criterion is meant to read never exist, and its reverse trigger is
+    // satisfied by construction — the defect a blind review caught on the
+    // branch that introduced the module.
+    if (input.shadowRoot !== undefined) {
+        recordToleranceShadow(
+            input.shadowRoot,
+            valueRows.map((row, i) => ({ kind: valueKinds[i] as ValueKind, row })),
+        );
+    }
 
     return {
         dimensions,

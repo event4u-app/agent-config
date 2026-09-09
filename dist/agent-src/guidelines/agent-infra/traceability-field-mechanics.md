@@ -1,6 +1,6 @@
 # Traceability field mechanics — `traceability:` in the roadmap execution contract
 
-> Migrated from [`roadmap-execution-contract`](../../../src/agent-src/contexts/execution/roadmap-execution-contract.md)
+> Migrated from [`roadmap-execution-contract`](../../contexts/execution/roadmap-execution-contract.md)
 > § 2c, 2026-08-22, because the section pushed that file past the 16,000-char
 > depth ceiling. The contract keeps the field shape and the reused grammars; the
 > semantics a reader needs before writing a row live here. Established P4

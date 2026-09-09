@@ -1,6 +1,6 @@
 # Source confidentiality — mechanics
 
-Migrated out of [`source-confidentiality`](../../../src/rules/source-confidentiality.md)
+Migrated out of [`source-confidentiality`](../../rules/source-confidentiality.md)
 on 2026-08-29. The rule is delivered on **every subagent spawn**, so its body is
 paid per spawn; this material is reference read on demand. Nothing was dropped —
 the three sections below are the rule's own text, verbatim, and the rule keeps
@@ -104,6 +104,6 @@ which simply loses this particular comparison. Both readings survive 3.6 %.
 
 ## See also
 
-- [`source-confidentiality`](../../../src/rules/source-confidentiality.md) — the rule these mechanics belong to.
-- [`code-provenance`](../../../src/rules/code-provenance.md) — the license-required-attribution obligation the two-class split defers to.
+- [`source-confidentiality`](../../rules/source-confidentiality.md) — the rule these mechanics belong to.
+- [`code-provenance`](../../rules/code-provenance.md) — the license-required-attribution obligation the two-class split defers to.
 - `src/scripts/check_no_external_sources.ts` — the gate that implements the shape checks.

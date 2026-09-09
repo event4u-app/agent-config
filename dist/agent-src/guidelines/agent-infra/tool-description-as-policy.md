@@ -1,9 +1,9 @@
 # Tool description as policy
 
 Authoring guideline for skills, commands, and MCP tools. Shared block — cited
-from [`skill-writing`](../../../src/skills/skill-writing/SKILL.md),
-[`command-writing`](../../../src/skills/command-writing/SKILL.md), and
-[`mcp-builder`](../../../src/skills/mcp-builder/SKILL.md).
+from [`skill-writing`](../../skills/skill-writing/SKILL.md),
+[`command-writing`](../../skills/command-writing/SKILL.md), and
+[`mcp-builder`](../../skills/mcp-builder/SKILL.md).
 
 ## The principle
 

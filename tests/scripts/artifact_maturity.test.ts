@@ -126,6 +126,22 @@ describe('the resolution ladder, in order', () => {
         expect(v.maturity).toBe('finished');
         expect(v.signal).toContain('medium-ish');
     });
+
+    // Blind-review regression: an unreadable declaration used to RETURN, so a
+    // string the resolver could not parse outranked three signals it could —
+    // inverting the ladder. It is now remembered and reported, never obeyed.
+    it('an unrecognised declaration does not short-circuit the rungs below it', () => {
+        const v = resolveArtifactMaturity({
+            declared: 'draft',
+            filename: 'checkout-wireframe.html',
+            body: 'Lorem ipsum #cccccc #333333',
+        });
+        expect(v.maturity).toBe('low');
+        expect(v.source).toBe('inference');
+        // Both facts survive: what decided it, and what could not be read.
+        expect(v.signal).toContain('wireframe');
+        expect(v.signal).toContain('draft');
+    });
 });
 
 describe('mapReferenceMaturity — the one seam between the two enums', () => {

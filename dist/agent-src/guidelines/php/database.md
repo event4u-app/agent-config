@@ -143,7 +143,7 @@ $users = User::query()->orderBy('id')->cursorPaginate(15);
   parent, `restrict` when the child is a record in its own right (an invoice, an
   audit row, a payment), `set null` when it survives the parent with the link
   removed — which needs a nullable column. The decision table lives in
-  [`laravel-migration`](../../../src/skills/laravel-migration/SKILL.md)
+  [`laravel-migration`](../../skills/laravel-migration/SKILL.md)
   § Referential action is a decision.
 - Always add indexes for searchable/filterable columns.
 - One logical change per migration.
@@ -153,7 +153,7 @@ $users = User::query()->orderBy('id')->cursorPaginate(15);
   evidence, the ordered recovery steps and their inputs, the criteria that say
   recovery succeeded, and the responsible owner. Silence is the violation, not
   the absence of `down()`. Full contract:
-  [`laravel-migration`](../../../src/skills/laravel-migration/SKILL.md)
+  [`laravel-migration`](../../skills/laravel-migration/SKILL.md)
   § The recovery contract.
 
 ### Multi-connection migrations

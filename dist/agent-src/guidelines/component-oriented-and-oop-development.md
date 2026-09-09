@@ -35,13 +35,13 @@ advocacy, always.
 This standard **never** authorizes speculative abstraction. It is bounded by the
 package's restraint posture and defers to it on every conflict:
 
-- [`minimal-safe-diff`](../../src/rules/minimal-safe-diff.md) (+ its
+- [`minimal-safe-diff`](../rules/minimal-safe-diff.md) (+ its
   anti-over-engineering mechanics) — smallest change; no premature abstraction,
   no speculative feature, no rewrite for taste.
-- [`senior-engineering-discipline`](../../src/rules/senior-engineering-discipline.md)
+- [`senior-engineering-discipline`](../rules/senior-engineering-discipline.md)
   — reuse the *existing* abstraction; generalize, don't overfit; never invent an
   API to look object-oriented.
-- [`improve-before-implement`](../../src/rules/improve-before-implement.md) —
+- [`improve-before-implement`](../rules/improve-before-implement.md) —
   "does it fit the existing architecture?" before adding structure.
 - **When NOT to use a pattern** ([`php/patterns.md`](php/patterns.md) §) — KISS &
   YAGNI trump pattern purity: no interface for a single implementation, no
@@ -70,18 +70,18 @@ into composable units, reuse the project's primitives, and extract shared shells
 when they repeat. Depth and mechanics already live in dedicated skills — consult
 them, don't duplicate:
 
-- [`fe-design`](../../src/skills/fe-design/SKILL.md) § Component Architecture —
+- [`fe-design`](../skills/fe-design/SKILL.md) § Component Architecture —
   the stack-agnostic "kind, not framework" taxonomy, granularity, and the
   UI-shell bar (per [`abstraction-thresholds`](abstraction-thresholds.md)).
-- [`ui-component-architect`](../../src/skills/ui-component-architect/SKILL.md) —
+- [`ui-component-architect`](../skills/ui-component-architect/SKILL.md) —
   how to *shape* a reusable component: composition over inheritance, slot
   contracts, prop-API caps, controlled/uncontrolled, the stateful-component
   bar (repeat **and** real state, per the same canon).
-- [`existing-ui-audit`](../../src/skills/existing-ui-audit/SKILL.md) — the
+- [`existing-ui-audit`](../skills/existing-ui-audit/SKILL.md) — the
   reuse-before-invent gate: inventory existing components/tokens/primitives
-  first (enforced by [`ui-audit-gate`](../../src/rules/ui-audit-gate.md)).
-- [`design-tokens`](../../src/skills/design-tokens/SKILL.md) /
-  [`design-system-capture`](../../src/skills/design-system-capture/SKILL.md) —
+  first (enforced by [`ui-audit-gate`](../rules/ui-audit-gate.md)).
+- [`design-tokens`](../skills/design-tokens/SKILL.md) /
+  [`design-system-capture`](../skills/design-system-capture/SKILL.md) —
   the shared token/design-system layer components draw from.
 
 **Component workshop (Storybook et al.) — when the project is large enough.**
@@ -91,23 +91,23 @@ ecosystem equivalent) pays for itself — it makes components discoverable,
 reviewable in isolation, and reused instead of re-invented. It is **not** worth
 the setup for a small surface with a handful of one-off components. The
 framework-specific setup is a carve-out, not a generic mandate — React /
-Storybook specifics: [`react-shadcn-ui`](../../src/skills/react-shadcn-ui/SKILL.md)
+Storybook specifics: [`react-shadcn-ui`](../skills/react-shadcn-ui/SKILL.md)
 § Component workshop.
 
 Framework carve-outs (never restated here): React →
-[`react-shadcn-ui`](../../src/skills/react-shadcn-ui/SKILL.md); Next.js
+[`react-shadcn-ui`](../skills/react-shadcn-ui/SKILL.md); Next.js
 server/client component boundary →
-[`nextjs-patterns`](../../src/skills/nextjs-patterns/SKILL.md); Laravel FE →
-[`blade-ui`](../../src/skills/blade-ui/SKILL.md) /
-[`livewire`](../../src/skills/livewire/SKILL.md) /
-[`flux`](../../src/skills/flux/SKILL.md); styling →
-[`tailwind-engineer`](../../src/skills/tailwind-engineer/SKILL.md).
+[`nextjs-patterns`](../skills/nextjs-patterns/SKILL.md); Laravel FE →
+[`blade-ui`](../skills/blade-ui/SKILL.md) /
+[`livewire`](../skills/livewire/SKILL.md) /
+[`flux`](../skills/flux/SKILL.md); styling →
+[`tailwind-engineer`](../skills/tailwind-engineer/SKILL.md).
 
 ## Backend — object-oriented where it reduces complexity
 
 The structural half — thin handlers, business logic in services / use-cases,
 behavior-rich domain models, validation at the boundary — is owned by
-[`architecture`](../../src/rules/architecture.md) and holds across paradigms. In
+[`architecture`](../rules/architecture.md) and holds across paradigms. In
 an **object-oriented / class-based** service layer, layer the OO principles below
 on top of it, each applied only where it earns its place. In a **functional /
 pipeline** codebase, apply that paradigm's equivalent (pure functions +
@@ -132,11 +132,11 @@ Language / framework carve-outs (never restated here): PHP →
 [`patterns.md`](php/patterns.md) (+ `php/patterns/strategy.md`,
 `php/patterns/dependency-injection.md`, `php/patterns/factory.md`,
 `php/patterns/service-layer.md`)
-+ skills [`php-coder`](../../src/skills/php-coder/SKILL.md) /
-[`php-service`](../../src/skills/php-service/SKILL.md); Laravel →
-[`laravel`](../../src/skills/laravel/SKILL.md); Symfony →
-[`symfony-workflow`](../../src/skills/symfony-workflow/SKILL.md); Next.js / TS →
-[`nextjs-patterns`](../../src/skills/nextjs-patterns/SKILL.md); cross-language
++ skills [`php-coder`](../skills/php-coder/SKILL.md) /
+[`php-service`](../skills/php-service/SKILL.md); Laravel →
+[`laravel`](../skills/laravel/SKILL.md); Symfony →
+[`symfony-workflow`](../skills/symfony-workflow/SKILL.md); Next.js / TS →
+[`nextjs-patterns`](../skills/nextjs-patterns/SKILL.md); cross-language
 clean-code baseline → [`code-clarity`](code-clarity.md).
 
 ## Enums over scattered literals
@@ -144,13 +144,13 @@ clean-code baseline → [`code-clarity`](code-clarity.md).
 A field with two or more non-boolean states is an enum, not a bare string /
 magic number — the small OO move that keeps a codebase greppable and safe to
 change. Full rule + the defer-and-ask flow for pre-existing literals:
-[`prefer-enums-over-literals`](../../src/rules/prefer-enums-over-literals.md).
+[`prefer-enums-over-literals`](../rules/prefer-enums-over-literals.md).
 
 ## How this is reviewed
 
 "Reuse existing components + object-oriented shape (where it reduces
 complexity)" is a check on the code-quality review lens
-([`judge-code-quality`](../../src/skills/judge-code-quality/SKILL.md)), so it
+([`judge-code-quality`](../skills/judge-code-quality/SKILL.md)), so it
 reaches `/review-changes`, `/judge`, the subagent judge modes, and team-mode's
 fallback review frame. It fires **only where the duplication or the growing
 branch is already present in the diff** — never "this could grow later" — and
@@ -184,6 +184,6 @@ which rots (`no-roadmap-references`).
 
 ## See also
 
-- [`architecture`](../../src/rules/architecture.md) — the structural home this layers onto.
+- [`architecture`](../rules/architecture.md) — the structural home this layers onto.
 - [`code-clarity`](code-clarity.md) — the cross-language clean-code baseline.
-- [`minimal-safe-diff`](../../src/rules/minimal-safe-diff.md) · [`senior-engineering-discipline`](../../src/rules/senior-engineering-discipline.md) — the restraint anchors this standard is bounded by.
+- [`minimal-safe-diff`](../rules/minimal-safe-diff.md) · [`senior-engineering-discipline`](../rules/senior-engineering-discipline.md) — the restraint anchors this standard is bounded by.

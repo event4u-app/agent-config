@@ -37,9 +37,9 @@ Judgment at review time, keyed to the harm-asymmetry test above, is the control.
 
 ## Overlap (why a separate guideline)
 
-Distinct from [`preservation-guard`](../../../src/rules/preservation-guard.md)
+Distinct from [`preservation-guard`](../../rules/preservation-guard.md)
 (preserve existing emphasis through a transform — this governs *adding* it),
-[`size-enforcement`](../../../src/rules/size-enforcement.md) (line budgets, not
-emphasis weight), and [`token-budget-discipline`](../../../src/rules/token-budget-discipline.md)
+[`size-enforcement`](../../rules/size-enforcement.md) (line budgets, not
+emphasis weight), and [`token-budget-discipline`](../../rules/token-budget-discipline.md)
 (load cost, not signal-to-noise). None owns the emphasis-rationing judgment;
 this guideline does.

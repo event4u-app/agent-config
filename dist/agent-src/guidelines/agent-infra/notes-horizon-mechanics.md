@@ -1,6 +1,6 @@
 # Notes-first reasoning — horizon and reopening mechanics
 
-Migrated out of [`notes-first-reasoning`](../../../src/rules/notes-first-reasoning.md)
+Migrated out of [`notes-first-reasoning`](../../rules/notes-first-reasoning.md)
 on 2026-09-08. That rule is delivered on **every subagent spawn**, so its body is
 paid per spawn; this material is reference read on demand. Nothing was dropped —
 the four passages below are the rule's own text, verbatim, and the rule keeps
@@ -16,7 +16,7 @@ Reasoning dumped into the user-facing answer is both noise and a
 `reasoning_extraction` refusal risk (see `rdp-gate`). Keep it in the notes file.
 
 The notes file is grounded in the documented cross-run lessons memory
-(consolidated via [`memory-consolidation`](../../../src/skills/memory-consolidation/SKILL.md));
+(consolidated via [`memory-consolidation`](../../skills/memory-consolidation/SKILL.md));
 the rule's in-task sections are a local derivation for within-task scope. The
 gate itself reads settings + task-signal + host self-assessment.
 
@@ -34,7 +34,7 @@ cannot be contradicted: when the observation comes back, "the prediction
 missed" has to point at *what* it was a prediction about, or nothing reopens.
 
 `## Decisions` escalates to
-[`decision-record`](../../../src/skills/decision-record/SKILL.md)/ADR when the
+[`decision-record`](../../skills/decision-record/SKILL.md)/ADR when the
 decision is cross-task or architectural — litmus: would a dev on a different
 component next month need this context? And `next-commitment` is the boundary
 this choice authorises work up to, not the plan for it: choosing a form is not
@@ -76,15 +76,15 @@ an uncapped reopen is a loop with better manners. Two consequences:
   dead — it returns to the set. That is what makes a stated `killed-if`
   condition worth carrying: without it, "we ruled that out" is unfalsifiable.
 - **The first failure reads the candidate list before the retry**, where one
-  exists — see [`autonomy-mechanics`](../../../src/agent-src/contexts/execution/autonomy-mechanics.md)
+  exists — see [`autonomy-mechanics`](../../contexts/execution/autonomy-mechanics.md)
   § Retry-budget escalation ladder. Where none exists the ladder is unchanged.
   This adds a branch; it does not move the N=3 budget.
 
 ## See also
 
-- [`notes-first-reasoning`](../../../src/rules/notes-first-reasoning.md) — the
+- [`notes-first-reasoning`](../../rules/notes-first-reasoning.md) — the
   rule this material was paid for in, and which keeps both Iron Laws.
-- [`rdp-gate`](../../../src/agent-src/contexts/execution/rdp-gate.md) — the
+- [`rdp-gate`](../../contexts/execution/rdp-gate.md) — the
   engagement gate that decides whether the notes discipline runs at all.
-- [`decision-record`](../../../src/skills/decision-record/SKILL.md) — where a
+- [`decision-record`](../../skills/decision-record/SKILL.md) — where a
   cross-task or architectural decision escalates to.

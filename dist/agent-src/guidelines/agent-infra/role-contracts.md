@@ -150,7 +150,7 @@ output contract.
 
 This table is **advisory**, not enforcing. A skill may cite any
 persona inside any mode; the mapping below is just the most common
-fit. See [`../../personas/README.md`](../../../src/agent-src/personas/README.md) for
+fit. See [`../../personas/README.md`](../../personas/README.md) for
 the persona catalog and schema.
 
 | Mode | Typical persona companions | Why |

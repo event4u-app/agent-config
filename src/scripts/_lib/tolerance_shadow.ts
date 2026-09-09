@@ -32,6 +32,8 @@
  * project's own vocabulary and is the one string here; it is what makes a
  * distribution readable per token rather than only in aggregate.
  */
+import { appendShadowLine } from '../hooks/source_first_gate_hook.js';
+
 import type {
     COLOR_DISTANCE_METRIC,
     LENGTH_DISTANCE_METRIC,
@@ -106,6 +108,35 @@ export function toleranceShadowRecord(
             would_reconcile: distance <= threshold,
         })),
     };
+}
+
+/**
+ * Append the records for one reconciliation pass to the shared shadow log.
+ *
+ * THE WINDOW IS ONLY OPEN IF SOMETHING WRITES TO IT. A blind review of the
+ * branch that shipped this module found the header above claiming records ride
+ * `SHADOW_LOG` while the module had no writer and no caller — so
+ * `FLIP_CRITERION`'s reverse trigger ("fewer than 20 records in 8 weeks")
+ * was satisfied by construction, which is a criterion that measures nothing.
+ * The writer is `appendShadowLine`, reused rather than reimplemented: it is
+ * already replay-aware and already fail-open, and a second writer to one log is
+ * two chances to disagree about the format.
+ *
+ * Returns the number of records written — rows with nothing to measure are
+ * skipped, so this is not `rows.length`.
+ */
+export function recordToleranceShadow(
+    root: string,
+    rows: ReadonlyArray<{ kind: ValueKind; row: ValueRow }>,
+): number {
+    let written = 0;
+    for (const { kind, row } of rows) {
+        const record = toleranceShadowRecord(kind, row);
+        if (record === null) continue;
+        appendShadowLine(root, record as unknown as Record<string, unknown>);
+        written += 1;
+    }
+    return written;
 }
 
 /**

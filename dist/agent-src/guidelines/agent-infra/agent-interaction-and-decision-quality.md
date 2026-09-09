@@ -215,7 +215,7 @@ shortens the solution, never the reading.
 Rungs 1, 2, 3, 5 and 6 are obligations this suite already states elsewhere
 (§ 8-pre; § 8b above and [`component-oriented-and-oop-development`](../component-oriented-and-oop-development.md)
 "Reuse before you build"; `architecture`'s "use the framework's primitive";
-[`supply-chain-intake`](../../../src/skills/supply-chain-intake/SKILL.md) step 0;
+[`supply-chain-intake`](../../skills/supply-chain-intake/SKILL.md) step 0;
 `minimal-safe-diff`'s smallest-change Iron Law) — the ladder **orders** them, it
 does not add them.
 
@@ -308,7 +308,7 @@ If the challenge requires you to confirm current behavior before proposing an al
 
 ### Intent inference (RDP, standard host)
 
-When the literal request and the underlying goal may differ, **state the inferred goal in one line and give ONE recommendation** — do not spread 2–3 framings (that is the overplanning [`direct-answers`](../../../src/rules/direct-answers.md) suppresses). Standard host only; a strong-reasoning host self-infers, so skip it there. Engage per [`rdp-gate`](../../../src/agent-src/contexts/execution/rdp-gate.md).
+When the literal request and the underlying goal may differ, **state the inferred goal in one line and give ONE recommendation** — do not spread 2–3 framings (that is the overplanning [`direct-answers`](../../rules/direct-answers.md) suppresses). Standard host only; a strong-reasoning host self-infers, so skip it there. Engage per [`rdp-gate`](../../contexts/execution/rdp-gate.md).
 
 ## Anti-patterns
 

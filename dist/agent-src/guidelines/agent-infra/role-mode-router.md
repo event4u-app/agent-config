@@ -62,9 +62,9 @@ both the number and the spelled-out slash command.
 ## Interactions
 
 - [`role-contracts`](role-contracts.md) — the contracts this router targets.
-- [`role-mode-adherence`](../../../src/rules/role-mode-adherence.md) — enforces
+- [`role-mode-adherence`](../../rules/role-mode-adherence.md) — enforces
   the contract once a mode is active.
-- [`ask-when-uncertain`](../../../src/rules/ask-when-uncertain.md) — the
+- [`ask-when-uncertain`](../../rules/ask-when-uncertain.md) — the
   fallback when no signal matches.
 - [`/mode`](../../../src/domains/meta/mode/command.md) — user-facing override.
 

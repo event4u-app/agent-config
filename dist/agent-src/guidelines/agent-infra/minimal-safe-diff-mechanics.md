@@ -224,9 +224,9 @@ this instance of it:
 
 ### Why the pre-work rules do not cover it
 
-[`improve-before-implement`](../../../src/rules/improve-before-implement.md) does
+[`improve-before-implement`](../../rules/improve-before-implement.md) does
 not activate for bug fixes ("the problem is already defined") and
-[`invite-challenge`](../../../src/rules/invite-challenge.md) excludes "evidenced
+[`invite-challenge`](../../rules/invite-challenge.md) excludes "evidenced
 bug fixes". Both exclusions are right for the case they were written for and
 wrong for a downstream repair, which presents as a defined problem while its
 definition came from the broken code.

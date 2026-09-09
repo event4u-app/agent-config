@@ -111,7 +111,7 @@ alone. If the comment only restates what identifiers already convey, or
 explains the change's history rather than the code's behavior, cut it.
 
 This is the canonical long-form behind the
-[`code-comment-discipline`](../../src/rules/code-comment-discipline.md)
+[`code-comment-discipline`](../rules/code-comment-discipline.md)
 rule (whose body is merged here per P4 of `road-to-kernel-and-router.md`).
 External consensus in one line each: comments explain **why, never
 what** (competent readers get the what from the code); Google's style
@@ -303,7 +303,7 @@ total_cents = sum(item.total_cents for item in items)
 
 The comment discipline governs **new and edited code only**. It is never a
 license to strip comments from untouched code —
-[`minimal-safe-diff`](../../src/rules/minimal-safe-diff.md) wins on diff shape
+[`minimal-safe-diff`](../rules/minimal-safe-diff.md) wins on diff shape
 ("no docstrings/comments on untouched code" cuts both ways: don't add, don't
 remove). Sweeping a file's existing comments is a separate,
 explicitly-requested cleanup task.
