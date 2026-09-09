@@ -32,11 +32,11 @@
  * project's own vocabulary and is the one string here; it is what makes a
  * distribution readable per token rather than only in aggregate.
  */
-import {
+import type {
     COLOR_DISTANCE_METRIC,
     LENGTH_DISTANCE_METRIC,
-    type ValueKind,
-    type ValueRow,
+    ValueKind,
+    ValueRow,
 } from './design_tolerance.js';
 
 /**
