@@ -22,10 +22,17 @@
  * default is off, per the roadmap's "off unless proven".
  */
 
-import { CURATED_TYPES, retrieve_v1 } from './memory_lookup.js';
+import { CURATED_TYPES, MEMORY_ROOT, retrieve_v1 } from './memory_lookup.js';
 import { load_agent_settings } from './_lib/agent_settings.js';
+import {
+    capRows,
+    orderRows,
+    SESSION_INDEX_ROW_CAP,
+    verifyMemoryRoot,
+    type TrustVerdict,
+} from './_lib/session_index_trust.js';
 
-export const SESSION_INDEX_ROW_CAP = 30;
+export { SESSION_INDEX_ROW_CAP };
 
 interface IndexRow {
     id: string;
@@ -55,20 +62,56 @@ export function session_index_enabled(root: string): boolean {
  * are cwd-relative, same contract as the MCP tool handlers.
  */
 export function session_index_rows(cap: number = SESSION_INDEX_ROW_CAP): IndexRow[] {
-    const envelope = retrieve_v1([...CURATED_TYPES], [], cap, { detail: 'index' });
+    // Retrieval is asked for the ceiling rather than the caller's cap, so the
+    // declared order below chooses which rows survive truncation instead of
+    // the retrieval layer choosing for it. P4 and P6 are one decision: order
+    // first, then cap, and never the reverse.
+    const envelope = retrieve_v1([...CURATED_TYPES], [], SESSION_INDEX_ROW_CAP, { detail: 'index' });
     const entries = (envelope['entries'] as Array<Record<string, unknown>>) ?? [];
-    return entries.slice(0, cap).map((e) => ({
+    const rows: IndexRow[] = entries.map((e) => ({
         id: String(e['id'] ?? ''),
         title: String(e['title'] ?? ''),
         tokens_estimate: Number(e['tokens_estimate'] ?? 0),
     }));
+    return capRows(orderRows(rows), cap);
+}
+
+/**
+ * The trust gate, separated from the render so a caller can log WHY nothing
+ * was injected. `null` from {@link build_session_index_block} is ambiguous by
+ * construction — empty corpus and refused root look identical — and the
+ * distinction is the point of the contract, so it is available here.
+ *
+ * The workspace root is REQUIRED. `MEMORY_ROOT` is relative, so without a root
+ * to resolve it against there is nothing to check identity or containment
+ * against, and a default would be a bypass wearing a convenience.
+ */
+export function session_index_trust(workspaceRoot: string, now?: Date): TrustVerdict {
+    // `exactOptionalPropertyTypes` refuses `now: undefined` on an optional
+    // field, so the key is omitted rather than passed as undefined.
+    return verifyMemoryRoot({
+        workspaceRoot,
+        relativeMemoryRoot: MEMORY_ROOT,
+        ...(now === undefined ? {} : { now }),
+    });
 }
 
 /**
  * Render the injectable block, or `null` when the corpus is empty (no
- * block beats an empty scaffold).
+ * block beats an empty scaffold) or the trust contract refused the root.
+ *
+ * Passing a `workspaceRoot` is what arms P1-P3; omitting it renders from
+ * whatever `MEMORY_ROOT` currently resolves to, which is the pre-contract
+ * behaviour and is kept ONLY for the test seam that injects an absolute
+ * fixture root (`_setMemoryRoot`). The production caller
+ * (`hot_context_hook.ts`) always passes it, and `session_index_trust` above is
+ * how a caller proves it did.
  */
-export function build_session_index_block(cap: number = SESSION_INDEX_ROW_CAP): string | null {
+export function build_session_index_block(cap: number = SESSION_INDEX_ROW_CAP, workspaceRoot?: string): string | null {
+    if (workspaceRoot !== undefined) {
+        const verdict = session_index_trust(workspaceRoot);
+        if (!verdict.ok) return null;
+    }
     const rows = session_index_rows(cap);
     if (rows.length === 0) return null;
     const lines = [
