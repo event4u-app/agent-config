@@ -23,11 +23,12 @@
  * Refuses: a Write/Edit/NotebookEdit (or cross-platform equivalent) whose
  * target path introduces a **new** first-level directory under `agents/tmp/`
  * or `agents/tmp.old/` whose name is not an opaque round identifier — and a
- * shell command whose own segments would bring one into existence. That scope
- * is now what the code implements: a read tool's `file_path` is filtered by
- * `_READ_ONLY_TOOLS`, and a command's tokens by `creatableTokens`. Both were
- * scanned unconditionally before, so the sentence above described an intent
- * the file did not carry.
+ * shell command carrying its path. Two narrowings bring the code closer to
+ * that sentence without classifying commands: a read tool's `file_path` is
+ * filtered by `_READ_ONLY_TOOLS`, and a directory name that is a GLOB over an
+ * acceptable one is not a creatable literal
+ * ({@link isGlobOverAcceptableInboxDir}). Both were judged unconditionally
+ * before, which is what refused a read command in this guard's own workflow.
  *
  * Allowed, deliberately:
  *
@@ -109,70 +110,60 @@ function _isObject(v: JsonValue | undefined): v is JsonObject {
 }
 
 /**
- * Segment-leading command words that cannot bring a path into existence.
+ * A directory name that is a GLOB over an already-acceptable name.
  *
- * READING IS NOT CREATING, AND THE COMMAND SCAN DID NOT KNOW IT. The scan in
- * `main` offered every whitespace token of a shell command to the same verdict
- * that judges a Write target, so `ls -d agents/tmp/<name>-*` — a read, over a
- * glob, that creates nothing — was refused exactly like `mkdir`. Measured
- * twice in one session while running the inbox flow over a real round: the
- * command that lists which round identifiers are already taken is a command
- * this guard blocked, so the guard stood between the operator and the naming
- * rule it exists to enforce.
+ * READING IS NOT CREATING, AND THE COMMAND SCAN DID NOT KNOW IT. Measured
+ * twice in one session while running the inbox flow over a real round:
+ * `ls -d agents/tmp/inbox-2026-09-*` — the command the naming rule tells an
+ * operator to run to find a free round identifier — was refused, because the
+ * scan in `main` offered every whitespace token to the same verdict that judges
+ * a Write target and `inbox-2026-09-*` is not an opaque identifier: the `*`
+ * fails the 1-3 char disambiguator. So the guard stood between the operator and
+ * the rule it exists to enforce.
  *
- * A closed allowlist of read-only verbs rather than a deny-list of creating
- * ones, so an unknown verb is still scanned and closing the false positive
- * opens no bypass. `echo` and `printf` are listed because their only creating
- * form is a redirect, which {@link _redirectTargets} judges separately.
+ * WHY THIS AXIS AND NOT THE VERB. The first two attempts classified the
+ * COMMAND — an allowlist of read-only verbs, then per-verb writing markers.
+ * Two rounds of neutral review took that apart from both ends: round 1 found
+ * `sed -i`, `find -exec` and `awk system()` allowed where the plain token scan
+ * had blocked them; round 2 found the siblings the resulting deny-list did not
+ * reach (`sed`'s `s///w`, `awk`'s output pipe, `sort -o`, `yq -i`), a false
+ * positive the awk marker reintroduced by running past the program into a shell
+ * redirect, mention-blocking on heredoc bodies, and a fail-OPEN when the
+ * segmenter returned nothing. Its handoff named the shape of the problem:
+ * *"3 and 5 pull in opposite directions, so patching them one probe at a time
+ * will keep oscillating."*
  *
- * `git` is deliberately absent: `git mv` creates, and separating its read
- * subcommands would buy one rare case (`git log -- agents/tmp/<name>/`, over a
- * gitignored tree that returns nothing) for a second place to get the split
- * wrong.
+ * It was the wrong axis, and the measured defect never needed it. What is
+ * actually decidable from the token alone is whether the name could be created
+ * AS WRITTEN, and a glob cannot: the shell expands it against what exists. The
+ * one thing that could — `mkdir 'inbox-2026-09-*'`, creating a literal
+ * directory with a `*` in it — produces a name this predicate accepts anyway,
+ * because its non-glob part is opaque and carries no source. So the carve-out
+ * is safe by construction rather than by enumeration, and every writing form
+ * above is judged again by the unchanged token scan.
+ *
+ * A pattern over a SPEAKING name (`my-source-*`) is not accepted: the glob
+ * characters are removed and the remainder must itself pass.
  */
-const _READ_ONLY_VERBS: ReadonlySet<string> = new Set([
-    'awk', 'basename', 'bat', 'cat', 'cmp', 'column', 'cut', 'diff', 'dirname',
-    'du', 'echo', 'egrep', 'fd', 'fgrep', 'file', 'find', 'grep', 'head', 'jq',
-    'less', 'ls', 'nl', 'printf', 'readlink', 'realpath', 'rg', 'sed', 'sort',
-    'stat', 'tail', 'test', 'tr', 'type', 'uniq', 'wc', 'which', 'yq',
-]);
-
-/**
- * Per-verb markers that turn one of the verbs above into a writing one.
- *
- * FOUR OF THE ALLOWLISTED VERBS CAN CREATE, and the first version of this
- * allowlist said they could not. `sed -i` edits in place and `sed`'s `w`
- * command opens a file; `find -exec` runs anything and `-fprint` writes;
- * `awk`'s `system()` and `print >` do both. A neutral review of this change
- * probed all of them and every one came back allowed where the token scan this
- * commit replaced had blocked it — a coverage regression, not a false
- * positive, which is the direction that matters for a blocking guard.
- *
- * Scoped per verb rather than as one combined pattern, because the obvious
- * combined form checks for `-i` and `grep -i` is a read: a shared regex would
- * reintroduce the false positive at the other end.
- */
-const _WRITING_MARKERS: ReadonlyMap<string, RegExp> = new Map([
-    ['sed', /(?:^|\s)(?:-[a-zA-Z]*i|--in-place)(?:\b|=)|(?:^|['"\s;])[wW]\s/],
-    ['find', /(?:^|\s)-(?:exec|execdir|ok|okdir|delete|fprint|fprintf|fls)(?:\b|$)/],
-    ['awk', /\bsystem\s*\(|\bprintf?\b[^|]*>/],
-]);
-
-/** The command word of one segment, without its directory prefix or arguments. */
-function _verbOf(segment: string): string {
-    const head = segment.trim().split(/\s+/)[0] ?? '';
-    return (head.split('/').pop() ?? '').toLowerCase();
+function isGlobOverAcceptableInboxDir(name: string): boolean {
+    if (!/[*?[\]]/.test(name)) {
+        return false;
+    }
+    const literal = name.replace(/[*?]|\[[^\]]*\]/g, '');
+    const trimmed = literal.replace(/-+$/, '');
+    return trimmed !== '' && isAcceptableInboxDir(trimmed);
 }
 
 /**
  * The paths a redirect inside one segment would create.
  *
  * `splitOutsideQuotes` treats `;`, `|`, `&` and newline as separators and `>`
- * as ordinary text, so a redirect target stays inside its segment — and a
- * read-only verb would otherwise carry it past the allowlist above.
- * `echo hi > agents/tmp/<name>/note.md` creates the directory as surely as
- * `mkdir` does; `ls … 2>/dev/null` does not. The difference is the target, not
- * the verb, so targets are judged even when the verb is read-only.
+ * as ordinary text, so a redirect target stays inside its segment. Collected
+ * separately from the token scan because the quotes matter: the token split
+ * removes them, this does not, and both inbox regexes need `agents` at a `/`
+ * or at the start — so `> "agents/tmp/<name>/x"` read as not-an-inbox-path
+ * until the strip below. Also run over the RAW command, because the heredoc
+ * regex in `invokedSegments` swallows a redirect that follows the delimiter.
  */
 function _redirectTargets(segment: string): string[] {
     const out: string[] = [];
@@ -194,40 +185,23 @@ function _redirectTargets(segment: string): string[] {
     return out;
 }
 
-/** Is this ONE segment incapable of bringing a path into existence? */
-function _segmentIsReadOnly(segment: string): boolean {
-    const verb = _verbOf(segment);
-    if (!_READ_ONLY_VERBS.has(verb)) {
-        return false;
-    }
-    const marker = _WRITING_MARKERS.get(verb);
-    return marker === undefined || !marker.test(segment);
-}
-
 /**
  * The tokens of a shell command whose CREATION this guard should judge.
  *
- * THE GATE IS THE WHOLE COMMAND, NOT THE SEGMENT, and the first version of
- * this function skipped per segment. That looked more precise and was a hole:
- * in `echo <path> | xargs mkdir -p` the path sits in the read-only segment and
- * the creating segment carries no path at all, so both halves passed. Nothing
- * is lost by widening it — a read token only ever causes a refusal when it
- * names a speaking inbox directory, and in a command that also creates, that
- * is the conservative answer.
+ * Every whitespace token, exactly as before this change — the classification
+ * that tried to be cleverer than this is gone, and the docstring on
+ * {@link isGlobOverAcceptableInboxDir} records why. The two things kept are
+ * the ones no review disputed: the RAW command is scanned as well, because
+ * `invokedSegments` strips heredoc bodies as data and a `python3 - <<PY` body
+ * calling `makedirs` is precisely this guard's input; and redirect targets are
+ * collected separately with their quotes stripped, because `>` is not a
+ * segment separator and `> "path"` otherwise read as not-a-path.
  *
- * A HEREDOC IS JUDGED FROM THE RAW TEXT. Segmentation reuses
- * `git_command_classifier`'s `invokedSegments`, so this guard and its two
- * siblings on the slot agree about what a segment is — but that module answers
- * "which commands run" and therefore strips heredoc BODIES as data. This guard
- * asks "which paths appear", so the discarded text is exactly its input:
- * `cat <<'EOF' > <inbox>/x` and a `python3 - <<PY` body calling `makedirs`
- * both came back empty. A heredoc writes content somewhere by construction, so
- * its presence drops the read-only skip and the raw command is scanned.
- *
- * Both widenings come from a neutral review of this change, which probed eight
- * bypasses against the token scan this function replaced. They are coverage
- * regressions rather than false positives — the direction that matters when
- * the concern is `severity: blocking`.
+ * Scanning the raw command in addition to the segments is deliberately
+ * redundant rather than conditional: a heredoc predicate is one more thing to
+ * get wrong, the extra tokens can only ever matter if one of them names a
+ * speaking inbox directory, and the mention-blocking a review found came from
+ * the read-only SKIP being dropped for heredocs — not from the extra scan.
  *
  * Exported so the harness can pin the polarity pair on the tokens themselves,
  * without an envelope.
@@ -235,16 +209,11 @@ function _segmentIsReadOnly(segment: string): boolean {
 export function creatableTokens(command: string): string[] {
     const out: string[] = [];
     const segments = invokedSegments(command);
-    const hasHeredoc = /<<-?\s*['"]?[A-Za-z_]/.test(command);
-    const allReadOnly = !hasHeredoc && segments.every(_segmentIsReadOnly);
     for (const seg of segments) {
         out.push(..._redirectTargets(seg));
     }
-    if (allReadOnly) {
-        return out;
-    }
-    const scanned = hasHeredoc ? [...segments, command] : segments;
-    for (const text of scanned) {
+    out.push(..._redirectTargets(command));
+    for (const text of [...segments, command]) {
         for (const tok of text.split(/[\s"'`(){};|&<>]+/)) {
             if (tok) {
                 out.push(tok);
@@ -318,6 +287,9 @@ export function verdictFor(
     }
     if (isAcceptableInboxDir(dir)) {
         return { block: false, dir, reason: 'opaque round identifier or named working set' };
+    }
+    if (isGlobOverAcceptableInboxDir(dir)) {
+        return { block: false, dir, reason: 'glob over an acceptable name — not a creatable literal' };
     }
     // Already created — a rename is the fix, and refusing every later write
     // would wedge the round without removing the name.

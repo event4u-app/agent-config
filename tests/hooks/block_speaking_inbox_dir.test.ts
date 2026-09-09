@@ -110,34 +110,42 @@ describe('the allow branches the guard declares', () => {
 });
 
 /**
- * `creatableTokens` — the polarity pair for the false positive measured while
- * running the inbox flow over a real round. The read half of these cases was
- * REFUSED by the shipped guard, twice in one session, and the command that
- * tripped it is the command the naming rule tells an operator to run.
+ * `creatableTokens` — the token surface, which classifies NOTHING.
  *
- * Sensitivity was probed, not assumed: emptying `_READ_ONLY_VERBS` reds every
- * `does not judge` case below and leaves the `judges` cases green, so the
- * allowlist is what these assertions measure.
+ * Two earlier attempts classified the command instead: an allowlist of
+ * read-only verbs, then per-verb writing markers. Two rounds of neutral review
+ * took both apart from opposite ends — missed writing forms on one side, a
+ * reintroduced false positive and mention-blocking on the other — and named the
+ * shape of the problem: patching it one probe at a time oscillates. The verb
+ * axis is gone; the axis that fixes the measured defect is a glob over an
+ * acceptable name, asserted in its own block below.
+ *
+ * What these cases pin is that EVERY creating form still yields its path,
+ * including the four the deny-list version missed. They are regression cases
+ * for a mechanism that no longer exists, kept because the forms are real.
  */
-describe('creatableTokens — reading is not creating', () => {
+describe('creatableTokens — every creating form yields its path', () => {
     const inboxTokens = (cmd: string): string[] =>
         creatableTokens(cmd).filter((t) => t.includes('agents/tmp'));
 
-    it('does not judge a read over a glob — the case that blocked a real session', () => {
-        expect(inboxTokens("ls -d agents/tmp.old/a-speaking-name-* 2>/dev/null | sed 's|.*/||'")).toEqual([]);
-        expect(inboxTokens('ls -la agents/tmp/a-speaking-name/ && wc -l -c agents/tmp/a-speaking-name/*')).toEqual([]);
+    it('judges the writing forms a verb deny-list missed', () => {
+        for (const cmd of [
+            "sed -i '' 's/a/b/' agents/tmp/a-speaking-name/x.md",
+            "sed 's/a/b/w agents/tmp/a-speaking-name/out.txt' in.txt",
+            'awk \'BEGIN{print "" | "mkdir -p agents/tmp/a-speaking-name"}\'',
+            'sort -o agents/tmp/a-speaking-name/out.txt in.txt',
+            "yq -i '.a=1' agents/tmp/a-speaking-name/x.yaml",
+        ]) {
+            expect(inboxTokens(cmd), cmd).not.toEqual([]);
+        }
     });
 
-    it('does not judge cat, grep, find, head or wc over an inbox path', () => {
-        for (const cmd of [
-            'cat agents/tmp/a-speaking-name/chat.txt',
-            'grep -rn "x" agents/tmp/a-speaking-name/',
-            'find agents/tmp/a-speaking-name -name "*.md"',
-            'head -60 agents/tmp/a-speaking-name/notes.md',
-            'wc -l agents/tmp/a-speaking-name/notes.md',
-        ]) {
-            expect(inboxTokens(cmd), cmd).toEqual([]);
-        }
+    it('judges a command the segmenter cannot parse, instead of failing open', () => {
+        // A four-deep `sh -c` nest trips `invokedSegments`' depth guard and
+        // returns []. An `[].every(readOnly)` skip read that as "read-only".
+        expect(inboxTokens('sh -c \'sh -c "sh -c \\\'sh -c \\"mkdir -p agents/tmp/a-speaking-name\\"\\\'"\'')).not.toEqual(
+            [],
+        );
     });
 
     it('judges a creating verb, and every segment of a compound command', () => {
@@ -161,17 +169,11 @@ describe('creatableTokens — reading is not creating', () => {
         );
     });
 
-    it('classifies a stderr redirect target like any other redirect target', () => {
-        // The name of this case used to say the opposite of the behaviour: it
-        // asserted only that `2>/dev/null` produces no inbox token, which is
-        // true because `ls` is allowlisted and would stay true if the redirect
-        // classification were deleted. `2>` targets ARE captured, so both
-        // directions are asserted here and the case can now go red for its own
-        // reason. Found by a neutral review of this change.
-        expect(inboxTokens('ls -d agents/tmp/a-speaking-name-* 2>/dev/null')).toEqual([]);
+    it('captures a stderr redirect target, and does not mistake /dev/null for one', () => {
         expect(inboxTokens('ls -d agents/tmp/inbox-2026-08-h 2> agents/tmp/a-speaking-name/err.log')).toContain(
             'agents/tmp/a-speaking-name/err.log',
         );
+        expect(creatableTokens('ls -d agents/tmp/inbox-2026-08-h 2>/dev/null')).not.toContain('/dev/null/');
     });
 
     /**
@@ -222,15 +224,47 @@ describe('creatableTokens — reading is not creating', () => {
         );
     });
 
-    it('still allows the plain reads after all of that widening', () => {
-        for (const cmd of [
-            "ls -d agents/tmp.old/a-speaking-name-* 2>/dev/null | sed 's|.*/||'",
-            'sed -n 60,118p agents/tmp/a-speaking-name/chat.txt',
-            'find agents/tmp/a-speaking-name -name "*.md"',
-            'awk \'{print $1}\' agents/tmp/a-speaking-name/x.txt',
-        ]) {
-            expect(inboxTokens(cmd), cmd).toEqual([]);
-        }
+    it('does not treat a mention as a path it must judge — the shape it never had', () => {
+        // `printf` writing its argument to stdout was allowed before this
+        // branch and still is. Recorded because the heredoc variant of the same
+        // shape WAS refused for one commit, and the review that caught it named
+        // mention-blocking "the worst false-positive shape a refusing gate can
+        // have" — quoting the classifier module this file reuses.
+        expect(inboxTokens("printf '%s' 'agents-tmp-a-speaking-name'")).toEqual([]);
+    });
+});
+
+/**
+ * The axis that actually fixes the measured defect, and the one it must not
+ * launder.
+ *
+ * `ls -d agents/tmp/inbox-2026-09-*` — the command the naming rule tells an
+ * operator to run to find a free round identifier — was refused twice in one
+ * session, because `inbox-2026-09-*` is not an opaque id: the `*` fails the
+ * 1-3 char disambiguator. A glob cannot be created as written, so the name is
+ * judged on its non-glob part.
+ *
+ * Sensitivity: making `isGlobOverAcceptableInboxDir` return `false` reds the
+ * two allow-cases and leaves the four block-cases green, so the predicate is
+ * what these assertions measure — and the block-cases are what stop it from
+ * being a bypass.
+ */
+describe('a glob over an acceptable name is not a creatable literal', () => {
+    const blocks = (p: string): boolean => verdictFor(p, never, '').block;
+
+    it('allows a glob whose literal part is opaque', () => {
+        expect(blocks('agents/tmp/inbox-2026-09-*/x.md')).toBe(false);
+        expect(blocks('agents/tmp/inbox-2026-09-[a-z]/x.md')).toBe(false);
+    });
+
+    it('refuses a glob whose literal part still speaks', () => {
+        expect(blocks('agents/tmp/a-speaking-name-*/x.md')).toBe(true);
+        expect(blocks('agents/tmp/my-source-[a-z]/x.md')).toBe(true);
+    });
+
+    it('refuses a glob that says nothing at all', () => {
+        expect(blocks('agents/tmp/*/x.md')).toBe(true);
+        expect(blocks('agents/tmp/?/x.md')).toBe(true);
     });
 });
 
@@ -366,14 +400,18 @@ describe('main() — the envelope surface', () => {
         expect(run({ tool_input: { file_path: 'agents/tmp/a-speaking-round/x.md' } })).toBe(1);
     });
 
-    it('ALLOWS the read commands that a real session had refused', () => {
+    it('ALLOWS the round-id lookup that a real session had refused, twice', () => {
         for (const command of [
-            "ls -d agents/tmp.old/a-speaking-round-* 2>/dev/null | sed 's|.*/||'",
-            'cat agents/tmp/a-speaking-round/chat.txt',
-            'grep -rn "x" agents/tmp/a-speaking-round/',
+            "ls -d agents/tmp.old/inbox-2026-09-* 2>/dev/null | sed 's|.*/||'",
+            'ls -d agents/tmp/inbox-2026-09-*',
+            "python3 -c \"import glob; print(glob.glob('agents/tmp/inbox-2026-09-*'))\"",
         ]) {
             expect(run({ tool_name: 'Bash', tool_input: { command } }), command).toBe(0);
         }
+    });
+
+    it('still BLOCKS the same shape over a speaking stem', () => {
+        expect(run({ tool_name: 'Bash', tool_input: { command: 'ls -d agents/tmp/a-speaking-round-*' } })).toBe(1);
     });
 
     it('a malformed or empty envelope ALLOWS — fail_closed is false', () => {

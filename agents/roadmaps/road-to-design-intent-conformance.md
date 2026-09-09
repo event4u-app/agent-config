@@ -71,7 +71,7 @@ contradicted or unreachable.**
 - **`brand-source-of-truth` pointed nowhere back.** `design-fidelity.md:47`
   and `:197` reference it; the 146-line brand rule carried zero `fidelity`
   hits, so a brand-first entry path never met the structure obligation.
-- **The inbox guard refuses reads.** `src/scripts/hooks/hook_manifest.yaml:235-240`
+- **The inbox guard refuses reads.** `src/scripts/hook_manifest.yaml:235-240`
   registers it `severity: blocking` with no `tools:` filter, `_PATH_KEYS`
   covers a read tool's `file_path`, and the command scan offered every
   whitespace token to the same verdict without ever inspecting the verb.
@@ -114,21 +114,30 @@ are defects with a verified wrong behaviour and a verified right one.
       per-segment verb allowlist reusing `git_command_classifier`'s segmenter so
       `ls`/`cat`/`grep` are not judged as `mkdir`, with redirect targets still
       judged separately; and an existence probe that carries the path's own
-      prefix so a module-nested round resolves. The docstring's `Write/Edit/
-      NotebookEdit` scope becomes what the code implements.
+      prefix so a module-nested round resolves. The narrowing is a **glob over
+      an acceptable name**, not a classification of the command: two review
+      rounds took the verb axis apart from both ends, and the measured defect
+      never needed it — a glob cannot be created as written, and the one form
+      that could (`mkdir 'inbox-2026-09-*'`) produces a name that is opaque
+      anyway. Every writing form is judged by the unchanged token scan.
       verify: `npx vitest run tests/hooks/block_speaking_inbox_dir.test.ts` —
-      35 assertions green, including the two commands that were refused in this
-      round; and with both allowlists emptied exactly the five new allow-cases
-      go red while every block-case stays green.
+      45 assertions green, including the two commands that were refused in this
+      round; and with `isGlobOverAcceptableInboxDir` forced false, exactly the
+      two glob allow-cases go red while every block-case stays green.
 - [x] **1.2 Give `tailwind-engineer` the artifact-bound branch it never had.**
-      Step 1 keeps the greenfield default and gains a distance table: same value
-      to the nearest project token means write the token, an invisible
-      difference means write the token and report it, a visible difference means
-      keep the artifact's value and report the project gap. An artifact-derived
-      exact value stops being "a smell" in that mode. A literal is translated
-      once into a named project token instead of snapped per call site — the
-      first owner directive's token duty, as written. Structure, controls,
-      icons, grid and breakpoints are named as not this skill's to adjust. A
+      Step 1 keeps the greenfield default and gains three obligations: do not
+      snap (replacing the artifact's value with a nearest token is the Iron
+      Law's deviation); translate a literal **once** into a named project token
+      carrying that exact value, not per call site — the first owner
+      directive's token duty; and reconcile as a **proposal**, reporting each
+      value's distance on a named output line. An artifact-derived exact value
+      stops being "a smell" in that mode. What it deliberately does NOT ship
+      is the autonomous approximation the directive eventually wants: that
+      needs a tolerance to exist, and both the threshold and the default are
+      owner decisions (3.2, 3.4). A first draft did ship it, bought with a
+      reading of `strict`/`structural` the rule does not carry, and a review
+      round caught the pre-emption. Structure, controls, icons, grid and
+      breakpoints are named as not this skill's to adjust. A
       second `Gotcha` bullet states the carrier-versus-value split the second
       owner directive asked to be made clearer: static presentation belongs in
       CSS or classes, `style=` is for what only the runtime knows, and porting
@@ -357,11 +366,11 @@ Gated on `blocker: fidelity-default-flip` for anything that would refuse.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | The read carve-out opens a write bypass | implementation | A creating command wearing a read verb, or a tool name nobody recognised, slips a speaking directory past a blocking guard | Both allowlists are deny-by-default: an unknown verb and an unknown tool are still judged, redirect targets are judged whatever the verb, and the sensitivity probe in 1.1 shows the block-cases stay green when the allowlists are emptied | Phase 1 — Remove the contradiction and the false positives |
+| 1 | The read carve-out opens a write bypass | implementation | A creating command slips a speaking directory past a blocking guard because the guard decided it was a read. Two review rounds falsified the first two mitigations here: a verb allowlist missed `sed -i`, `find -exec` and `awk system()`, and the deny-list that replaced it missed `sed`'s `s///w`, awk's output pipe, `sort -o` and `yq -i` | The carve-out no longer classifies commands at all. It judges the NAME: a glob cannot be created as written, and a glob over a speaking stem is still refused. Every writing form is judged by the unchanged token scan, and the sensitivity probe reds only the two glob allow-cases | Phase 1 — Remove the contradiction and the false positives |
 | 2 | The projection lane reds the byte-exactness invariant | implementation | `dist == rewrite(src)` is asserted byte-for-byte, and a new lane is a new population for it to walk | Land 2.1 alone, with the invariant's own check run before anything else in the phase; the lane copies verbatim and rewrites paths through the mechanism already used for every other lane | Phase 2 — Make the delegated procedure exist where it is read |
 | 3 | The approximation becomes a licence to drift | product | Many individually-legal small reconciliations compose into a result nobody approved | Every value row carries its distance even when preserved, so the drift is visible per row before it is cumulative; a cumulative bound is Phase 4's, and the tolerance is re-derived from shadow data rather than kept | Phase 3 — Maturity and approximation as data, not prose |
 | 4 | Phase 3 writes policy into an unreachable file | implementation | The tolerance clause lands in the guideline while the guideline still reaches no consumer install, reproducing the exact defect this roadmap opens with | Phase 2 is ordered before Phase 3 and `blocker: rule-body-cap` names the dependency explicitly in its option (a) | Phase 2 — Make the delegated procedure exist where it is read |
-| 5 | The distance table is judgement, not measurement | product | Phase 1.2 asks whether a difference is visible side by side, which two readers can answer differently | Accepted deliberately for Phase 1: inventing a threshold there would pre-empt `blocker: approximation-tolerance`. Phase 3.2 replaces the judgement with the recorded number | Phase 1 — Remove the contradiction and the false positives |
+| 5 | A skill re-writes a rule from underneath it | product | Phase 1.2's first draft granted the autonomous approximation by asserting that `strict` and `structural` scope their confirmation to a *visible* deviation. The rule carries no such qualifier, so the skill was shipping step 3.4's re-framing ahead of two open owner blockers — and its only safety branch read a setting that never cascades from the layer the rule points at | Row 3 of 1.2 is now a proposal, not an action: the distance is reported and the human decides, so the skill claims no autonomy the rule has not granted. The autonomous form waits for 3.2 and 3.4. Caught by review, not by a gate — nothing mechanical compares a skill's claim against a rule's text | Phase 3 — Maturity and approximation as data, not prose |
 | 6 | Every remaining fix wants a standing rule with no room in it | implementation | The reach problem's natural fix is prose in a rule, and the per-spawn preamble ratchet has zero headroom — measured at +339 tok for 33 lines, which reverted step 1.3 out of the Phase 1 PR. Steps 2.4 and 3.4 both want the same surface | Phase 2.1 is ordered first so the guideline becomes a legitimate destination, and `blocker: standing-payload-headroom` forces the choice to be recorded rather than paid for by deleting somebody else's prose | Phase 2 — Make the delegated procedure exist where it is read |
 
 ## Acceptance Criteria
@@ -370,12 +379,14 @@ Gated on `blocker: fidelity-default-flip` for anything that would refuse.
       refused, a creating command naming the same directory still is, and both
       are pinned by assertions that go red when the mechanism is removed.
 - [x] AC-2 — `tailwind-engineer` names the artifact-bound branch explicitly,
-      gates the reconciliation on `design.fidelity_mode`, and carries a named
-      output field the reported distance lands in. Scoped to that skill on
-      purpose: the corpus-wide version of this claim ("no shipped skill
-      instructs …") is not checkable from a diff that changes one skill, and a
-      neutral review flagged the earlier wording as unbacked. The sweep across
-      the other design-adjacent skills is Phase 3's, via the same branch.
+      forbids the snap, requires the translate-once token duty, keeps the
+      reconciliation a proposal, and carries a named output field the reported
+      distance lands in — while claiming no autonomy that 3.2 and 3.4 have not
+      yet earned. Scoped to that skill on purpose: the corpus-wide version of
+      this claim ("no shipped skill instructs …") is not checkable from a diff
+      that changes one skill, and a neutral review flagged the earlier wording
+      as unbacked. The sweep across the other design-adjacent skills is Phase
+      3's, via the same branch.
 - [ ] AC-3 — `brand-source-of-truth` and `design-fidelity` each carry the
       split between them, in both directions, on a projected surface, without
       the per-spawn payload ratchet moving.
