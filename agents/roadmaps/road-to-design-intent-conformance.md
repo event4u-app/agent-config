@@ -96,12 +96,87 @@ contradicted or unreachable.**
   tolerance. `grep -cE 'reconcil|tolerance|approximat|nearest'` over the rule
   and its guideline returns 0 / 0.
 
+- **The 1:1 Iron Law ships without its counterweight, and that is why the
+  "take it 1:1" reading is the honest description of a default install.**
+  `design-fidelity` is `packs: [engineering-base, frontend-design]`;
+  `brand-source-of-truth` is `packs: [brand]`; `ui-audit-gate` and
+  `icon-consistency` are `[frontend-design]`. Language packs only `suggests:`
+  frontend-design, and `suggests` is "advisory, never auto-installed". So a plain
+  engineering install receives the fidelity obligation and **not** the rule
+  requiring every colour, type and spacing value to trace to a brand token — and
+  the arbitration between them sits in the unprojected guideline. Widening pack
+  reach is not available: **ADR-245** is `reopen_policy: owner` and states that
+  a preference for wider default reach "with no number behind it" is explicitly
+  **not** a reopen trigger.
+- **And the rule reaches the model on prompt words alone.**
+  `src/scripts/project_thin_rules.ts:102-121` records `design-fidelity` as one of
+  18 thinned mixed-trigger rules whose path-shaped half has **no carrier at
+  all**: "a session that touches a matching file and says nothing that matches
+  gets nothing." Restoring the path route costs a measured **+16,329 GPT tokens
+  (+69 % of the thin rule layer)** or a raised hook-slot cap — both
+  owner-reserved. This is why 1.5 lands the arbitration inside the rule body
+  rather than behind another pointer.
+
 Three constraints bound every phase below, all measured on this branch:
 `design-fidelity.md` is at **exactly 200 lines** against `skill_linter`'s
 `rule_too_large` ceiling, so no sentence lands there without one leaving;
 `check_estate_count` reports **0 growth allowance** on active roadmaps, skills
 and hook concerns; and `condense.ts` sits at 2712 lines against a 1500 ceiling
 under a shrink-only ratchet, so Phase 2 must be net-zero there.
+
+## Council record — three rounds, 2026-09-09
+
+Two claims were raised against this roadmap's position: that a provided design
+should be taken **1:1 including its literal values**, and that the best build
+order is **Storybook first, then components, then the page**. Both were put to
+the AI council over three rounds, each round attacking the plan the previous one
+produced. Members `anthropic` + `openai`, **2/2 present and concluded on every
+round** (verdict read from the after-run quorum line, not the pre-run presence
+check), $0.23 total. Each round's artefact carried an internal blind
+cross-review.
+
+**Round 1 → Round 2 → Round 3 changed the answer twice, which is why the loops
+were run.** Recorded because a single round would have shipped two wrong things:
+
+| Item | Round 1 | Round 3 (final) |
+|---|---|---|
+| icons | flip to reconcilable, 2/2 | **delete the clause.** One measured practice cannot reverse a shipped obligation — and the shipped obligation was itself unsourced, so "keep it" was never the conservative option |
+| arbitration destination | move it into the projected tier | same direction; **all three rounds proposed a destination that does not work** — two named protected or non-existent lines, the third named a skill file that does not exist. The destination in 1.5 is this repository's own finding |
+
+Standing on the two claims, after three rounds:
+
+- **1:1 dissolves per dimension, and the field made the split first.** Colour,
+  spacing, radius and shadow reconcile — unanimous, at error severity, across
+  Primer, Polaris and Spectrum S2, with 540 token usages to 0 raw colour
+  literals measured across 61 shadcn components. Sizing, position and type
+  micro-values are genuinely contested and the 1:1 side is winning there —
+  Polaris grades them `warning`, Spectrum **opened** arbitrary px in v0.5.0 with
+  a codemod. Structure, controls, layout, breakpoints and behaviour are not a
+  value question at all.
+- **The field's invariant is "no *silent* literal", not "no literal."** Every
+  enforcing system ships an escape hatch and the good ones make it accountable —
+  Polaris requires a written reason for each suppression. That is the shape this
+  roadmap's report-the-distance duty already has.
+- **Snap-to-nearest with a declared tolerance is shipped production behaviour.**
+  Primer's spacing plugin widens each token's accepted set by **±1px** and
+  autofixes. It is the one real number in the evidence set, and it belongs to
+  `blocker: approximation-tolerance` rather than to any step here.
+- **No build order is prescribable from the evidence.** No primary source states
+  the claimed order; Storybook's own tutorial writes the component before the
+  story; Atomic Design's author calls it "not a linear process"; no repository
+  inspected gates on story-per-component, and two of the largest component
+  ecosystems ship zero stories. Where UI already exists the prescribed first
+  move is inventory, not construction. **Measured evidence comparing build
+  orders: none** — absent, not weak.
+- **Reconciliation's benefit is unmeasured and the case for it is structural.**
+  Zero of seven design-to-code benchmarks score token conformance; pixel
+  deviation is instrumented by default. Argued as empirical, the case loses.
+
+Three figures the council produced are **not** carried into this roadmap because
+no source in the evidence set supports them: a "73-branch" corpus count, "4px /
+2px" tolerance values, and a reading of Salesforce's `hasReplacement` as
+evidence about icons — that rule governs numeric values, and the icon grading is
+Adobe's `react-spectrum` audit.
 
 ## Phase 1 — Remove the contradiction and the false positives
 
@@ -159,6 +234,56 @@ are defects with a verified wrong behaviour and a verified right one.
       greater than 0, the rule under the 200-line ceiling, **and**
       `./scripts-run src/scripts/check_preamble_payload_budget` still at or
       under the ratchet.
+- [ ] **1.4 Delete the unsourced icon obligation instead of defending it.**
+      `src/skills/tailwind-engineer/SKILL.md:86` asserts that icons "stay 1:1
+      with the artifact" — a single clause, added in the Phase 1 PR, with **no
+      citation of any kind** (`grep -i icon` over that file returns that one
+      line). The same sentence declares icons "belong to the rule, not to a
+      utility-class decision", so the skill asserts an obligation it
+      simultaneously puts outside its own scope. The rule that owns icons,
+      `src/rules/icon-consistency.md`, carries **zero** occurrences of
+      `artifact` / `artefact` / `provided`, so no surface handles a handed-over
+      artifact today. Replace the clause with a scope boundary that defers to
+      the owning rule, and record the contrary evidence with its reopening
+      condition rather than acting on it (see the council note below).
+      verify: `grep -ci icon src/skills/tailwind-engineer/SKILL.md` returns the
+      scope-boundary line and no obligation; `skill_linter --all` warn count
+      unchanged.
+- [ ] **1.5 Swap an unfollowable instruction for the arbitration it points at.**
+      `src/rules/design-fidelity.md:78-83` tells the reader *"Read that scope
+      line before acting on either rule"* — and that line lives in
+      `docs/guidelines/design-fidelity-mechanics.md`, which does not exist in a
+      consumer install (`ls dist/agent-src/guidelines` → no such directory). In
+      every consumer install the rule therefore issues an instruction nobody can
+      follow. Replace those lines with the artifact-versus-brand arbitration
+      itself — values reconcile onto the brand token with the distance reported,
+      structure stays the artifact's and is never adjusted to suit a token,
+      conflicts are surfaced and never merged — keeping the one clause that
+      names the `code-provenance` collision boundary, which is real.
+      **This is the destination three council rounds asked for and none
+      located.** It is the projected rule tier, it reaches every consumer
+      including non-Tailwind ones, and it is **net-negative on lines**, which is
+      the only way anything lands in a file at 200 of 200.
+      verify: the rule stays at or under 200 lines, `check_condensation` passes,
+      `check_preamble_payload_budget --ceiling <ci value>` does not rise, and no
+      remaining sentence in the projected rule instructs the reader to open an
+      unprojected path.
+- [ ] **1.6 State that no build order is prescribed, positively.**
+      `src/skills/ui-component-architect/SKILL.md` (`packs: [engineering-base]`,
+      same reach as the fidelity rule) gains the observed pattern rather than a
+      bare negative: when porting existing UI, inventory first — the lifecycle
+      excludes Plan by definition — stories concurrent with the component work,
+      never a phase gate before or after it, **and an explicit note that this
+      describes common practice, not a size-based requirement**. Fix two tree
+      defects in the same edit: `:72-78` calls the workshop unconditional "on
+      every React lane" while
+      `docs/guidelines/component-oriented-and-oop-development.md:87-95` calls it
+      size-conditional and "never a generic mandate"; and `:75` cites "the
+      state-coverage matrix **below**", which `react-shadcn-ui/SKILL.md:345`
+      deliberately keeps React-specific — so a Blade, Vue or Livewire consumer
+      is routed nowhere.
+      verify: the skill names no required sequence, the contradiction with the
+      guideline is gone, and the matrix pointer resolves or is removed.
 
 ## Phase 2 — Make the delegated procedure exist where it is read
 
@@ -257,6 +382,24 @@ Gated on `blocker: approximation-tolerance` and `blocker: rule-body-cap`.
       rule-body cap to be resolved first.
       verify: the rule states it, the mode enum is unchanged, and no consumer
       default moved.
+- [ ] **3.5 Give ADR-213 the artifact clause, with both guards and an honest
+      enforcement line.** ADR-213 authorises extraction on repetition "already
+      present in the diff". A handed-over runnable artifact makes repetition
+      observable before any code exists, which is a **different mechanism** than
+      the one the threshold tested — `adr_cite_check ADR-213` reports it LIVE
+      with an **indeterminate** review trigger and `reopen_policy: unclassified`,
+      so investigation is permitted. Two guards, both required, because the
+      first alone is insufficient: (a) a **runnable** artifact, not a design
+      comp; (b) repetition **of the element itself, not of its compositional
+      context** — four `<Card>` instances show Card is used four times, they do
+      not show a `CardGrid` is needed unless the diff carries multiple distinct
+      contexts each arranging several cards. The numbers 2 / 3+ / ~4+ are
+      unchanged. State plainly that guard (b) is **model-carried and
+      audit-enforced**: nothing mechanical separates "I saw four Cards" from "I
+      saw a CardGrid pattern", and claiming otherwise would be the coverage
+      inflation this tree forbids elsewhere.
+      verify: the clause names both guards and the enforcement class; the
+      threshold numbers are byte-identical to today's.
 
 ## Phase 4 — Turn the claim into a measurement
 
@@ -275,8 +418,49 @@ Gated on `blocker: fidelity-default-flip` for anything that would refuse.
       from the shadow distribution rather than kept.
       verify: shadow records exist, carry no self-reported verdict, and the
       flip criterion is written before the window opens.
+- [ ] **4.3 Record why the polish-loop measurement is NOT the way to discharge
+      its lock.** A 2026-07-31 council lock names its own reopening condition as
+      *"a measured run showing the polish loop still edits away from a provided
+      artifact"*, and no such run exists — so running it looks like the cheap way
+      to close or reopen it. The third loop examined that and found the run
+      cannot discharge the lock in the useful direction: the mechanism is
+      structural, not probabilistic. `polish.ts:135-167` drops findings flagged
+      `artifact_covered: true`, `src/skills/design-tokens/SKILL.md:82-88` wires
+      `token_violation` findings into the same loop **without** setting that
+      flag, and `design-fidelity-mechanics.md:222-229` states that "an unmarked
+      finding is treated as actionable". A green run would mean "this did not
+      trigger in the sample", never "this cannot trigger". The executable work
+      is therefore to write that argument into the lock's own record, so the
+      next reader meets the reasoning instead of re-deriving it and spending the
+      run. The structural fix is gated on
+      `blocker: findings-actionability-default`.
+      verify: the lock's record carries the falsifiability argument and names
+      the blocker; no measurement is scheduled against it.
 
 ## Blockers
+
+### blocker: findings-actionability-default
+
+- **Status:** open
+- **Owner:** maintainer
+- **Blocks:** 4.3
+- **What to do:** pick exactly one — (a) invert the default in
+  `docs/guidelines/design-fidelity-mechanics.md:222-229` so a finding is
+  **non-actionable unless explicitly escalated**, and set the escalation flag at
+  the one call site that needs it; or (b) set `artifact_covered` on the
+  `token_violation` path in `src/skills/design-tokens/SKILL.md:82-88` and leave
+  the default alone; or (c) record that the pathway stays open and that the
+  2026-07-31 lock is therefore undischargeable as written.
+- **Resolved when:** a finding wired into the polish round from a
+  token-violation detector no longer reaches an actionable state without an
+  explicit flag, or option (c) is recorded in the lock's own record.
+- **Recommendation:** (b). It is one call site and it changes no default, where
+  (a) inverts the meaning of every existing unmarked finding across the
+  package — a consumer-facing behaviour flip that is owner-reserved and far
+  wider than the defect. (c) leaves a lock that cannot be closed.
+- **If you do nothing:** 4.3 records the argument and the lock stays open
+  forever, because the only measurement that would discharge it cannot
+  distinguish "did not happen" from "cannot happen".
 
 ### blocker: standing-payload-headroom
 
@@ -372,6 +556,8 @@ Gated on `blocker: fidelity-default-flip` for anything that would refuse.
 | 4 | Phase 3 writes policy into an unreachable file | implementation | The tolerance clause lands in the guideline while the guideline still reaches no consumer install, reproducing the exact defect this roadmap opens with | Phase 2 is ordered before Phase 3 and `blocker: rule-body-cap` names the dependency explicitly in its option (a) | Phase 2 — Make the delegated procedure exist where it is read |
 | 5 | A skill re-writes a rule from underneath it | product | Phase 1.2's first draft granted the autonomous approximation by asserting that `strict` and `structural` scope their confirmation to a *visible* deviation. The rule carries no such qualifier, so the skill was shipping step 3.4's re-framing ahead of two open owner blockers — and its only safety branch read a setting that never cascades from the layer the rule points at | Row 3 of 1.2 is now a proposal, not an action: the distance is reported and the human decides, so the skill claims no autonomy the rule has not granted. The autonomous form waits for 3.2 and 3.4. Caught by review, not by a gate — nothing mechanical compares a skill's claim against a rule's text | Phase 3 — Maturity and approximation as data, not prose |
 | 6 | Every remaining fix wants a standing rule with no room in it | implementation | The reach problem's natural fix is prose in a rule, and the per-spawn preamble ratchet has zero headroom — measured at +339 tok for 33 lines, which reverted step 1.3 out of the Phase 1 PR. Steps 2.4 and 3.4 both want the same surface | Phase 2.1 is ordered first so the guideline becomes a legitimate destination, and `blocker: standing-payload-headroom` forces the choice to be recorded rather than paid for by deleting somebody else's prose | Phase 2 — Make the delegated procedure exist where it is read |
+| 7 | A council verdict is adopted without its destination being checked | implementation | Three rounds converged 2/2 on direction and proposed three destinations that do not work — two named protected Iron-Law lines or load-bearing prose as "redundant", the third named a skill file that does not exist. A plan that had executed any of them would have failed at the gate or violated `preservation-guard` | Every council-sourced step in this roadmap names the file and line it edits, and the destination in 1.5 was located and verified in this repository rather than taken from the verdict. Adopt direction from the council; verify placement in the tree | Phase 1 — Remove the contradiction and the false positives |
+| 8 | An unsourced claim is defended because it already shipped | product | The icon obligation set an evidentiary bar for its own reversal that it never met itself. The same asymmetry can protect any clause that reached the tree first, and the more confidently a clause is written the more it looks like a decision rather than an assertion | 1.4 deletes rather than defends, and records the contrary evidence with a reopening condition instead of acting on it. The general form — a claim's provenance is checked before its authority is granted — belongs to `code-provenance`'s knowledge layer and is not re-litigated here | Phase 1 — Remove the contradiction and the false positives |
 
 ## Acceptance Criteria
 
@@ -401,3 +587,15 @@ Gated on `blocker: fidelity-default-flip` for anything that would refuse.
 - [ ] AC-7 — A corrupted port reds exactly the dimension that was corrupted,
       the record carries no self-reported verdict, and the flip criterion was
       written before the shadow window opened.
+- [ ] AC-8 — No shipped surface asserts an obligation about icons on a provided
+      artifact without a citation. The contrary evidence is recorded with the
+      condition that would reverse it, and the skill that declares icons outside
+      its own scope no longer legislates them.
+- [ ] AC-9 — A consumer install that receives the fidelity rule and **not** the
+      brand rule reads the artifact-versus-brand split inside the rule it did
+      receive, and no sentence in a projected rule instructs the reader to open
+      a path the projection does not contain.
+- [ ] AC-10 — No shipped surface prescribes an order among stories, components
+      and the page. Where a sequence is described it is labelled as observed
+      practice, and the two contradictions about the workshop's conditionality
+      and its state-coverage pointer are gone.
