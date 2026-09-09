@@ -146,6 +146,10 @@ tasks:
       - ./scripts-run src/scripts/check_safety_floor_untouched
       - ./scripts-run src/scripts/check_no_new_legacy_path
       - ./scripts-run src/scripts/check_kernel_rule_bundle
+      # ADR-268 § 4's replacement for the retired kernel tool-call deny. Cheap:
+      # it reads a name-only diff and, on the overwhelming majority of PRs,
+      # finds no kernel rule and no governance hook and exits at once.
+      - ./scripts-run src/scripts/check_kernel_edit_ratified
       # Catches the one failure that is invisible to CI AND to the test suite:
       # a self-hosted hook bundle older than the hook sources it bundles, i.e.
       # the agent running a merged hook fix that was never built. On 2026-08-06
@@ -2056,6 +2060,16 @@ tasks:
     silent: true
     desc: Fail PRs that touch > 1 kernel rule (override label `bundled-always-rules-acknowledged`)
     cmd: ./scripts-run src/scripts/check_kernel_rule_bundle
+
+  check-kernel-edit-ratified:
+    silent: true
+    desc: >-
+      ADR-268 § 4 — a diff touching a kernel rule, a governance hook
+      (src/scripts/hooks/block_*.ts) or this gate itself must carry a
+      ratification artifact under agents/evidence/ratifications/ with
+      `verdict: ratified`. Replaces the retired `block_kernel_rule_writes`
+      tool-call deny: one mechanism, on every host, reviewable in the PR.
+    cmd: ./scripts-run src/scripts/check_kernel_edit_ratified {{.QUIET_FLAG}}
 
   check-gate-coverage:
     silent: true
