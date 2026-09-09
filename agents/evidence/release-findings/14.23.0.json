@@ -1,0 +1,933 @@
+{
+  "schema_version": 1,
+  "release": "14.23.0",
+  "review_independence": "single-member",
+  "context_relation": "unknown",
+  "acceptance_status": "provisional",
+  "assurance": "single-pass",
+  "reviewers": [
+    "anthropic"
+  ],
+  "coverage": {
+    "chunks": 6,
+    "filesReviewed": 91,
+    "filesTotal": 211,
+    "unreviewed": [
+      {
+        "path": "docs/proof.md",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "docs/skills-catalog.md",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "internal/bench/reports/code-graph-vs-grep-inrepo-v2-rerun-2026-09-08.json",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "internal/bench/reports/code-graph-vs-grep-inrepo-v2-rerun-2026-09-08.md",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "internal/bench/reports/thin-inject-2026-09-08.md",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "internal/bench/reports/token-baseline.json",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "llms.txt",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "package.json",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/agent-src/contexts/execution/autonomy-mechanics.md",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/agent-src/scripts/archive_completed_roadmaps.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/agent-src/templates/agents/agent-project-settings.example.yml",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/cli/registry.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/config/agent-settings.template.yml",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/config/continuity-surface.json",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/config/evaluator-budgets.json",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/config/gate-violation-baselines.json",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/config/hook-token-budget.json",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/config/packed-binary-manifest.json",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/config/routing-coverage-seed.json",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/domains/git/README.md",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/domains/git/pack.yaml",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/domains/git/pr/merge/command.md",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/domains/meta/README.md",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/domains/meta/pack.yaml",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/domains/product-basic/roadmap/next/command.md",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/notes-first-reasoning.md",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_cli/cmd_session_recycle.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_cli/handoff_sessions.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/continuity_slot.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/continuity_writer.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/hook_settings.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/lean_projection_mode.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/packed_binary_predicate.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/recycle_envelope_paths.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/regression_neighbourhood.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/session_eol.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/session_index_trust.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/standing_bound_ratchet.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/vendored_grammar_upstream.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/audit_mcp_tools.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/build_mcp_catalog.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/check_host_tree_parity.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/check_preamble_payload_budget.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/check_rule_projection_integrity.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/ci_settle.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/code_graph/build.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/code_graph/cli.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/code_graph/detect.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/code_graph/query.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/code_graph/sqlite_store.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/code_graph/types.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/code_graph/validate.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/code_graph/verbs.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/condense.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/handoff_context_hook.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hook_manifest.json",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hook_manifest.yaml",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks/block_speaking_inbox_dir.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks/code_graph_context_hook.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks/push_settle_hook.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks/rule_inject_hook.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks/session_eol_hook.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hot_context_hook.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/lint_roadmap_blockers.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/mcp_server/consumer_tool_catalog.json",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/mcp_server/graph_tools.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/mcp_server/path_util.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/mcp_server/tool_catalog_source.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/mcp_server/tools.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/model_rule_injection.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/project_thin_rules.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/report_standing_payload_by_host.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/schemas/agent-settings.schema.json",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/session_memory_index.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/server/schemas/settings.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/code-intelligence/SKILL.md",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/git-workflow/references/push-closes-its-loop.md",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/tailwind-engineer/SKILL.md",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/vendor/grammars/README.md",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "taskfiles/ci-fast.yml",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/contracts/notes_horizon.test.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/eval/routing-matrix/council-availability.yaml",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/eval/routing-matrix/evaluator-independence.yaml",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/eval/routing-matrix/fix-what-you-see.yaml",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/eval/routing-matrix/missing-skill-recovery.yaml",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/eval/routing-matrix/playbook-precedence.yaml",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/eval/routing-matrix/recurring-criticism.yaml",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/eval/routing-matrix/self-repair-loop.yaml",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/hooks/block_speaking_inbox_dir.test.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/hooks/continuity_switches.test.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/hooks/continuity_writer_dispatch.test.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/hooks/recycle_resume_e2e.test.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/hooks/session_index_trust_e2e.test.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/_lib/lean_projection_shipped_default.test.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/_lib_continuity_slot.test.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/archive_index_divergence.test.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/build_mcp_catalog.test.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/ci_settle.test.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/code_graph_gate_verbs.test.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/continuity_parity_fixtures.test.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/continuity_record_session_key.test.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/continuity_writer.test.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/lean_projection_host_scope.test.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/lean_projection_hosts.test.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/lint_roadmap_blockers.test.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/mcp_graph_tools.test.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/mcp_lite_tools.test.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/mcp_server_tools.test.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/project_thin_rules.test.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/recycle_envelope_consumer.test.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/regression_neighbourhood.test.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/report_standing_payload_by_host.test.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/rule_inject_hook.test.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/session_eol_hook.test.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/session_index_trust.test.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/session_memory_index.test.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/session_recycle.test.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/standing_bound_ratchet.test.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/vendored_grammar_upstream.test.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/server/helpers.ts",
+        "reason": "the span needs 9 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      }
+    ]
+  },
+  "findings": [
+    {
+      "finding_id": "fc6974c2c58b",
+      "severity": "medium",
+      "kind": "security",
+      "title": "block-speaking-inbox-dir refused reads it was never scoped to",
+      "detail": "agents/roadmaps/archive/road-to-the-14-22-0-disposition-residuals.md:272 moved from agents/roadmaps/. The hook block-speaking-inbox-dir (src/scripts/hooks/block_speaking_inbox_dir.ts) refuses reads of agents/roadmaps/**, but its own docblock (:15-20) scopes it to 'agents/tmp/inbox-*/' only — the roadmap folder is outside that scope. The roadmap move from active → archive is a normal workflow operation, yet the hook would refuse reading the archived file. Either the hook's scope is wider than documented (and should be), or the archived roadmap violates the hook's intended boundary. The diff shows the move but no hook allowlist update.",
+      "file": "agents/roadmaps/archive/road-to-the-14-22-0-disposition-residuals.md"
+    },
+    {
+      "finding_id": "def33e1dff1b",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "ADR-263 Amendment 1 contradicts its own scoping statement",
+      "detail": "docs/decisions/ADR-263-skills-are-explicitly-invoked-reference-material.md:138 Amendment 1 says 'this amendment corrects one figure, at the two places it appears' and names :102 and the supporting bullet. But the amendment's own first paragraph (:138-141) says 'Scope, stated first so it cannot be misread: this amendment corrects **one figure, at the two places it appears**. The Decision is untouched'. Yet :196 in § Consequences still reads 'the published reading of skill-activation-census-zero ... is now wrong and is superseded by this record' without carrying a pointer to Amendment 1. A reader landing on § Consequences via cross-reference meets an unbounded supersession claim with no inline flag that it was partially corrected. The § Consequences bullet below (:168-176) now carries the pointer, but :196 predates it and still reads as if the whole claim is superseded, not just the '12 = defect' reading. Either § Consequences :196 needs its own amendment pointer, or the scoping statement overstates what was corrected.",
+      "file": "docs/decisions/ADR-263-skills-are-explicitly-invoked-reference-material.md"
+    },
+    {
+      "finding_id": "52ce52e03732",
+      "severity": "low",
+      "kind": "style",
+      "title": "Honest-null census stub promotion probe cites a command that does not exist",
+      "detail": "agents/roadmaps/stubs/road-to-a-census-that-refuses-a-partial-store.md:62-64 promotion probe says 'git log -p --follow agents/evidence/metrics/skill-activation-census.json is the whole probe'. But `git log -p --follow` outputs diff hunks, not a yes/no answer to 'did stores[] shrink'. The probe needs grep or a scripted parser to answer the question. As written it describes the data source, not the executable test. Either complete the probe (pipe to grep for 'stores' with logic) or reframe it as 'examine git log ...' rather than claiming it 'is the whole probe'.",
+      "file": "agents/roadmaps/stubs/road-to-a-census-that-refuses-a-partial-store.md"
+    },
+    {
+      "finding_id": "f7b56547a2bc",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Vendored grammar upstream anchor docblock claims independence it explicitly disclaims",
+      "detail": "src/scripts/_lib/vendored_grammar_upstream.ts:11-24 docblock § WHAT THIS ANSWERS says 'This module closes it by comparing the vendored bytes against a source the repository does not author' — but :15-24 § WHAT IT MAY CLAIM immediately says 'It MUST NOT claim to be independent of all repository state'. The first sentence asserts the anchor is outside the repo's authorship; the second says it's not independent of repo state. Both are true (the upstream is external, but npm ci reads the lock), but the juxtaposition reads as contradiction unless the reader parses 'repository does not author' as distinct from 'repository state'. Suggest: reorder so the disclaimer comes first, or reframe the first sentence to 'compares against the locked upstream' without the 'does not author' clause that implies full independence.",
+      "file": "src/scripts/_lib/vendored_grammar_upstream.ts"
+    },
+    {
+      "finding_id": "0e1f78644c09",
+      "severity": "low",
+      "kind": "claim",
+      "title": "Test docblock claims module 'was written to close' a threat class it only partly closes",
+      "detail": "tests/scripts/vendored_grammar_upstream.test.ts:9 docblock says the module 'was written to close' the same-commit manifest+bytes threat. But the module's own docblock (vendored_grammar_upstream.ts:25-30) explicitly carves out 'an attacker who edits node_modules after install defeats this, and a lock entry that points at a hostile package defeats it earlier still'. So the threat class is only partly closed (the manifest-internal loop is broken, but the lock-to-bytes chain is not cryptographically verified). The test docblock overstates what the module achieves. Either qualify it ('written to close the manifest-internal half') or cite the module's own carve-out.",
+      "file": "tests/scripts/vendored_grammar_upstream.test.ts"
+    },
+    {
+      "finding_id": "de1f5ddf786f",
+      "status": "fixed",
+      "commit": "e758465188a24a400f921720af11c982f62f5afd",
+      "rationale": "SPLIT — the headline is a FALSE POSITIVE and the residual it also names is REAL and now fixed. The claim is that `../../etc/passwd` still resolves outside the intended directory when path.join() processes the remaining path separators. There are no remaining separators: the sanitizer at session_index_trust.ts:309 replaces every character outside [A-Za-z0-9._-], and the forward slash is outside it, so the id collapses to a single filename. Probed with 13 hostile ids including a NUL prefix, a Windows path and a 300-dot case that exercises the 128-char truncation: 0 of 13 escape. The finding is right about one thing and it is the thing that was fixed — the existing test checked only the basename, so the resolved-path containment it asked for did not exist. It does now, plus a filesystem-level check that nothing lands above the workspace. The line the finding cites (:206) is not the sanitizer; the sanitizer is at :309.",
+      "verified_by": "tests/scripts/release_14_23_0_security_dispositions.test.ts — describe 'finding de1f5ddf786f': 13 it.each cases over the RESOLVED path plus 'writes inside the latch directory even for a traversal id'. Sanitizer read at src/scripts/_lib/session_index_trust.ts:309-310; containment helper at :106-111. 52 tests green in that file. HONEST GAP: the tests bound the session-id axis only. A hostile workspaceRoot is a different finding (121c73bfc0c9), dispositioned separately as accepted_risk and not covered here.",
+      "severity": "critical",
+      "kind": "security",
+      "title": "Path traversal in session ID sanitization allows directory escape",
+      "detail": "src/scripts/_lib/session_index_trust.ts:206 sanitizes session IDs with `.replace(/[^A-Za-z0-9._-]/gu, '_')` but preserves dots and hyphens. An attacker-controlled session ID like `../../etc/passwd` becomes `_.._.._.._etc_passwd`, which still resolves outside the intended directory when path.join() processes the remaining path separators in the parent directory string. The latch path construction at line 207 uses `path.join(workspaceRoot, 'agents', 'runtime', 'state', 'session-index-latch', ...)` — while the sanitized filename itself won't escape, a malicious workspace root parameter could. More critically, the test at line 204 demonstrates awareness ('sanitises the session id into the latch filename') but only validates the basename, not the full resolved path containment.",
+      "file": "src/scripts/_lib/session_index_trust.ts:206"
+    },
+    {
+      "finding_id": "121c73bfc0c9",
+      "status": "accepted_risk",
+      "rationale": "SPLIT — the observation is accurate and the requested countermeasure does not exist at this layer. Confirmed at hot_context_hook.ts:497: the root is String(envelope.workspace_root ?? process.cwd()), a host-supplied field. Confirmed in verifyMemoryRoot (:213-274) that P1 is containment only — memory root inside workspace root, lexically and after symlink resolution, plus per-file containment through walkCuratedSources — and never an identity check on the root itself. But the fix the finding asks for, validating that workspace root is the legitimate workspace for THIS session, has no ground truth to validate against: the host supplies the root AND chooses the cwd, so there is no out-of-band anchor inside the trust boundary. The module says so in its own docblock (:16-27): the attacker it answers is not an intruder, it is a wrong or stale root; and (:29-36) it does not authenticate the memory CONTENT. ACCEPTED with one residual named rather than closed: the docblock lists repository and worktree identity as one of six required properties, and the code delivers containment. A cwd-anchored git-toplevel cross-check would tighten the DECLARED threat (a sibling checkout, a worktree pointed elsewhere) without defending a compromised host, and it does not exist.",
+      "verified_by": "src/scripts/hot_context_hook.ts:497 (root from envelope, cwd fallback); src/scripts/_lib/session_index_trust.ts:213-274 (verifyMemoryRoot: containment, symlink resolution, per-file walk, freshness — no identity check); :16-36 (declared threat model and declared non-claims). HONEST GAP: no probe was written, because the gap is an ABSENT check rather than a wrong one, and a test asserting the current behaviour would pin the residual as intended. The git-toplevel hardening is described, not implemented, and nothing in this change closes it.",
+      "severity": "critical",
+      "kind": "security",
+      "title": "Workspace root parameter is untrusted attacker-controlled input with no origin validation",
+      "detail": "The workspaceRoot parameter throughout session_index_trust.ts flows from hook payloads (hot_context_hook.ts:415 receives it from payload, passes to _session_index_block_or_null which passes to session_index_trust). The threat model at line 20 identifies 'a wrong or stale root' but the countermeasure (P1 identity check) only validates that memory root is INSIDE workspace root — it never validates that workspace root itself is the legitimate workspace for THIS session. An attacker supplying workspaceRoot=/tmp/malicious with agents/memory/ containing crafted entries would pass all checks. The canonicalization at line 161 resolves symlinks but doesn't verify the root belongs to the current session/repository.",
+      "file": "src/scripts/_lib/session_index_trust.ts:150"
+    },
+    {
+      "finding_id": "ca171a25e9df",
+      "status": "false_positive",
+      "rationale": "FALSE POSITIVE — the finding has the ordering inverted. It describes claim-BEFORE-render: first wins latch at line 435, second fails latch but the first memory read has not completed. The code claims LAST, after the render, and says so in a comment recording two prior corrections at hot_context_hook.ts:446-457 — P5 duplicate invocation, claimed LAST; claiming before the verdict let a refused root burn the session's one claim; claiming before the RENDER let an empty corpus burn it too (R2 finding 5); nothing is claimed until there is something to serve. Under the real ordering two concurrent starts can both render and both reach claimSessionOnce, where the create-exclusive wx write admits exactly one; the loser returns already-injected-this-session and injects nothing. So no double injection exists under either ordering. Probed: 1 winner in 50 claims for one session, with a sensitivity case that restores a second winner once the latch file is removed.",
+      "verified_by": "src/scripts/hot_context_hook.ts:446-464 (claim after render; loser returns null); src/scripts/_lib/session_index_trust.ts:328-350 (wx create-exclusive, fail-open documented). tests/scripts/release_14_23_0_security_dispositions.test.ts — describe 'finding ca171a25e9df': one-winner-in-50, loser-names-itself, SENSITIVITY case, empty-id case. HONEST GAP: the exclusivity probe is SEQUENTIAL, not a true concurrent race — it proves the create-exclusive semantics rather than OS-level atomicity under contention, which a single-process test cannot demonstrate.",
+      "severity": "high",
+      "kind": "security",
+      "title": "Time-of-check-time-of-use race in latch claim allows double injection",
+      "detail": "claimSessionOnce() at line 263 uses writeFileSync with flag 'wx' for atomicity, but the check at hot_context_hook.ts:435 ('P5 — duplicate invocation') and the subsequent memory read at line 447 are separate operations. An attacker racing two session_start events could: (1) both pass the trust check at line 428, (2) first wins latch at line 435, (3) second fails latch but first's memory read hasn't completed, (4) if first's build_session_index_block fails/hangs, second could inject before first completes. The 'claimed AFTER the trust verdict' ordering at line 438 means a refused root doesn't burn the claim, but a passed root that fails downstream leaves a window.",
+      "file": "src/scripts/hot_context_hook.ts:435-447"
+    },
+    {
+      "finding_id": "044773c18d45",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "Path-only rule exemption silently changes delivery semantics without measuring impact",
+      "detail": "project_thin_rules.ts:94 adds path_only_ids() exemption keeping rules full-bodied when their only triggers are path-shaped. The commit message states this resolves E2's conflict (pre_tool_use binding removed but 3 rules were reachable only there), but: (1) no measurement of the 3 rules' actual usage is provided, (2) the exemption is permanent ('stated as a PROPERTY rather than a list of ids') but its necessity is temporary (only while pre_tool_use is unbound), (3) keeping them eager costs ~5,850 tokens (per AC-1 failure note) which directly causes the rules limb miss (24,166 > 20,000), (4) the alternative (binding pre_tool_use) would honor the cap but is rejected based on the p90 measurement without considering rate limiting or other mitigations.",
+      "file": "src/scripts/project_thin_rules.ts:94"
+    },
+    {
+      "finding_id": "af44229759c3",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "Stub pointer path is wrong for .clinerules depth, documented as 'known limit' but ships broken",
+      "detail": "project_thin_rules.ts:266 BODY_LINK_PREFIX uses '../../dist/agent-src/rules/' which is correct for 2-level trees (.claude/rules, .cursor/rules) but wrong for 1-level .clinerules. The comment at line 260 acknowledges this: 'A stub in `.clinerules` needs an operator to have added `cline` to that list, and its pointer is off by one level.' This means under mode=thin (where the pointer is the ONLY path to the body), cline users get broken links. The justification 'strictly better than the previous state, where the pointer was dead in all three' is a comparison to a bug, not a validation of correctness.",
+      "file": "src/scripts/project_thin_rules.ts:266"
+    },
+    {
+      "finding_id": "976c43603d21",
+      "status": "false_positive",
+      "rationale": "FALSE POSITIVE — the citation does not resolve and the finding's own arithmetic refutes it. ADR-265:56 is about the iron-law-reserve verifier placement and contains no reachability figure at all; the text described lives in ADR-267:57 and :186, a different record. The denominator itself is correct and was re-derived independently: dist/agent-src/rules carries 105 auto rules (102 with a quoted type value plus 3 bare), of which exactly 4 have an empty triggers array (no-roadmap-references, skill-quality, source-confidentiality, rule-type-governance), giving 105 minus 4 equals 101 — matching CLAIMS.md:365 and reconciling with 94 pre-existing plus 7 authored. The finding even works this through and concludes that the math reconciles; its residual complaint is that CLAIMS.md does not restate the derivation inline, which the roadmap does at :826-834. A missing inline derivation is not a propagated error.",
+      "verified_by": "docs/decisions/ADR-265-iron-law-reserve-refused-verifier-inside-the-change.md:55-57 (unrelated content; a grep for the reachability figures hits only :123, unrelated); docs/decisions/ADR-267-delivery-default-for-claude-code.md:57 and :186 (the real source of the figures); docs/CLAIMS.md:365; independent count over dist/agent-src/rules frontmatter and dist/router.json (105 auto, 4 with empty triggers); agents/roadmaps/road-to-delivery-for-every-host.md:826-834 (the derivation). HONEST GAP: the same roadmap's Risk Register says 8 of 105 carry no keyword or phrase trigger with a denominator of 97, which looks contradictory next to the 4-of-101 figure. Resolved as two different sets — 4 rules have zero triggers of any kind, 8 have no keyword or phrase trigger because the extra 4 are path-only — but that reconciliation is not part of this finding and was not dispositioned as its own item.",
+      "severity": "high",
+      "kind": "claim",
+      "title": "Recall measurement denominator error propagates into ADR and claims as authoritative",
+      "detail": "roadmap.md AC-2 states '102/102 reachable' but corrects to '101/101' with explanation that 4 rules have no triggers. However, ADR-265:56 and CLAIMS.md:365 both cite '101/101 labelled rules reachable' but the corpus has 105 auto rules (102 quoted + 3 bare). The '101/101' treats the 4 trigger-less rules as unlabelable, but step 0.2 (roadmap:231) counts 11 unlabeled rules and explicitly lists 4 with no triggers. If 105 total - 4 triggerless = 101 labelable, and 94 pre-existing + 7 new = 101, the math reconciles but the CLAIMS row doesn't show this work, presenting '101/101' as if the denominator is self-evident when it required correction twice in the roadmap.",
+      "file": "docs/CLAIMS.md:365"
+    },
+    {
+      "finding_id": "42b3324b3bc9",
+      "status": "fixed",
+      "commit": "e758465188a24a400f921720af11c982f62f5afd",
+      "rationale": "SPLIT — the exploit claim is FALSE, the documentation gap is REAL and fixed. The finding is right that the 60-second future-mtime grace was the only threshold in the module with no threat model beside it while its neighbour MAX_ROOT_AGE_DAYS carried one; that asymmetry was the defect rather than the number. The time-travel framing does not hold: writing a curated source requires write access INSIDE the workspace, and an attacker holding that can date the file at now and pass P3 outright — a future date is strictly worse for them, so the grace grants no capability. Freshness here bounds an ABANDONED root, not a hostile one, which the module docblock already states as a non-claim. FIXED by naming the constant MAX_FUTURE_SKEW_MS and writing down what the grace is for (NTP correction, resumed VM snapshot, cross-host mtime), what it is not for, and the condition under which the number would need deriving rather than stating.",
+      "verified_by": "src/scripts/_lib/session_index_trust.ts — MAX_FUTURE_SKEW_MS and its docblock, replacing the bare 60_000 at the P3 future-mtime branch. lint_code_comments green; existing tests/scripts/session_index_trust.test.ts unchanged and green (57 tests across it and the new file). HONEST GAP: the value is still a STATED default, not a measured one — no population of legitimate clock skew was measured, and the docblock says so rather than implying a derivation.",
+      "severity": "high",
+      "kind": "security",
+      "title": "Freshness check accepts future dates within 60s, allowing time-travel attacks during clock skew",
+      "detail": "session_index_trust.ts:191 refuses future mtimes only if `> now.getTime() + 60_000` (60 second grace). During NTP corrections or VM snapshots, an attacker with filesystem access could plant files dated 30s in the future that pass validation but represent tampered content. The 60s threshold is uncommented — unlike MAX_ROOT_AGE_DAYS which explicitly states 'a stated default, not a measured optimum', this magic number has no documented threat model. A malicious curated entry dated 59s ahead passes P3 freshness, fails no other check, and gets injected as trusted context.",
+      "file": "src/scripts/_lib/session_index_trust.ts:191"
+    },
+    {
+      "finding_id": "036210ed2ccd",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Host tree parity gate generates into temp but doesn't verify temp isolation",
+      "detail": "check_host_tree_parity.ts:153 creates temp=mkdtemp(), seeds it, generates twice, compares, then removes. However: (1) the temp directory name is predictable (os.tmpdir() + 'host-parity-'), (2) no verification that mkdtemp() succeeded in a location isolated from the repository, (3) the afterEach cleanup at line 33 in the test file uses `fs.rmSync(tmp, { recursive: true, force: true })` which silently succeeds even if tmp was never created, so a failed setup wouldn't be detected. If mkdtemp() fails (disk full, permissions), the generator might write into cwd or another unexpected location.",
+      "file": "src/scripts/check_host_tree_parity.ts:153"
+    },
+    {
+      "finding_id": "e0ab4b6f7ef1",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Settings schema enum doesn't match resolver's drop behavior, creating validation gap",
+      "detail": "agent-settings.schema.json:47 restricts hosts items to `enum: [claude-code, cursor, cline]` while resolveLeanProjectionHosts() at lean_projection_mode.ts:120 accepts ANY string and drops unknowns. The finding at #6 in the review notes this correctly: 'For any config that passes validation the drop path and its two carefully-worded reasons are unreachable' — but this means the schema is stricter than the code. If a user hand-edits .agent-settings.yml with hosts: [windsurf], the resolver drops it with 'not-thinnable', but if they use validate_agent_settings, it fails with 'not one of [claude-code, cursor, cline]'. The two error messages describe different validation layers but there's no documentation of which runs when.",
+      "file": "src/scripts/schemas/agent-settings.schema.json:47"
+    },
+    {
+      "finding_id": "d0ef18dbee38",
+      "severity": "medium",
+      "kind": "security",
+      "title": "Empty HOME in tests disables user-scope dedup but doesn't prevent $HOME reads in dependencies",
+      "detail": "Multiple test files (lean_projection_host_scope.test.ts:89, check_host_tree_parity.ts:144) set process.env['HOME'] to an empty temp directory 'so user-scope dedup must find no twin'. However, this only affects code that reads $HOME directly — any dependency (including Node's os.homedir() in some configurations, or third-party modules) might cache the original HOME or read /etc/passwd. The test assumes `$HOME` isolation is complete but doesn't verify no reads escape. If a tool in the call chain uses os.homedir() before the override, the test measures something other than the isolated case it thinks it's testing.",
+      "file": "tests/scripts/lean_projection_host_scope.test.ts:89"
+    },
+    {
+      "finding_id": "2d7cba305865",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Slot fire size measurement skips pre_compact 'by construction' but claims to measure it",
+      "detail": "report_standing_payload_by_host.ts:433 returns empty array for pre_compact with comment 'zero by construction, not by measurement: that branch clears the seen-set and returns allow without writing to stdout'. But slotFireSizes() at line 413 is titled 'Measured through the SAME selection the runtime concern uses' — if pre_compact is known to emit zero by code inspection, it's not measured, yet the table at line 376 reports it as p50/p90/max all zero as if these are measured statistics. A reader expecting measurement data gets a construction assertion instead. The distinction matters for validation: 'measured zero' means tested, 'construction zero' means assumed.",
+      "file": "src/scripts/report_standing_payload_by_host.ts:433"
+    },
+    {
+      "finding_id": "132a1b693e37",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "ADR-265 evidence table claims 'delivery was accepted by resolver long before schema' but schema was the bug",
+      "detail": "ADR-265:149 Evidence table row states 'delivery was accepted by the resolver while agent-settings.schema.json did not, so a consumer setting the documented value failed validation' — this frames the resolver as correct and schema as lagging. But the resolver's acceptance of an undocumented third mode (when only eager-all/thin were in the schema) was itself a contract violation. The template shipped 'mode: eager-all' while the code accepted 'delivery'; shipping code that accepts undocumented values is a forward-compatibility risk, not a feature. The evidence row presents this as validation catching up to code, when both were partially wrong.",
+      "file": "docs/decisions/ADR-265-delivery-default-for-claude-code.md:149"
+    },
+    {
+      "finding_id": "92066a84afbd",
+      "severity": "low",
+      "kind": "style",
+      "title": "Inconsistent terminology for 'workspace root' vs 'project root' vs 'repository root'",
+      "detail": "The trust contract documentation uses 'workspace root' (session_index_trust.ts:146), but the codebase also uses PROJECT_ROOT (check_host_tree_parity.ts:59), REPO_ROOT (report_standing_payload_by_host.ts:63), 'repository root', and 'workspace' interchangeably. In the trust-boundary context, these distinctions matter: a workspace could be a worktree, a repository is the .git parent, a project root is what the settings cascade walks from. The threat model at line 20 explicitly calls out 'a worktree pointed at another tree' as an attacker, so conflating 'workspace' and 'repository' obscures the attack surface.",
+      "file": "src/scripts/_lib/session_index_trust.ts:20"
+    },
+    {
+      "finding_id": "060f37cd231d",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Percentile calculation uses nearest-rank but doesn't document empty-sample behavior",
+      "detail": "report_standing_payload_by_host.ts:365 defines percentile() returning 0 for empty samples, but the docstring just says 'Empty sample → 0' without explaining why this is safe. The caller slotFireSizes() uses this for budget calculations (p90 determines the cap), so if a slot legitimately has zero fires (like pre_compact), the p90=0 looks like measured data. A reader can't distinguish 'measured zero because no samples' from 'measured zero because all samples were zero'. The row() function at line 372 doesn't annotate which case applies.",
+      "file": "src/scripts/report_standing_payload_by_host.ts:365"
+    },
+    {
+      "finding_id": "f40835f4a4bb",
+      "status": "false_positive",
+      "rationale": "FALSE POSITIVE — the cited lines are prose, and the claim row pre-empts the objection in its own text. agent-settings.template.yml:198-199 is a comment block; the actual keys are at :212-214. More decisively, CLAIMS.md:365 does not say shipped for Claude Code only and leave the reader to misread it — it says SHIPPED FOR CLAUDE CODE ONLY, and the per-host scope is the whole claim; and its non_inference at :368 adds SCOPED TO ONE HOST BY CONSTRUCTION, every host outside that list receives byte-for-byte what eager-all writes, do not read a per-host figure as a per-install one. That reading is true at the code level and not merely documented intent: lean_projection_mode.ts defines THINNABLE_HOSTS and a DEFAULT_LEAN_PROJECTION_HOSTS of claude-code, and check_host_tree_parity asserts byte-identity for every host outside the list. A consumer does receive mode delivery as a config value, and the observable shipped behaviour changes for one host — which is what shipped for X describes.",
+      "verified_by": "src/config/agent-settings.template.yml:198-203 (prose) vs :212-214 (the keys the finding cites the wrong lines for); docs/CLAIMS.md:365 and :368 (non_inference, verbatim); src/scripts/_lib/lean_projection_mode.ts:19-20, :57, :65 (defaults and THINNABLE_HOSTS); agents/roadmaps/road-to-delivery-for-every-host.md:818-825 (measured byte-identity for the cursor and cline trees). HONEST GAP: check_host_tree_parity was not executed for this disposition — the byte-identity claim rests on the recorded measurement and the gate's presence in CI config, not on a fresh run.",
+      "severity": "high",
+      "kind": "claim",
+      "title": "CLAIMS.md:365 flip statement falsified by the flipped tree itself",
+      "detail": "The row was rewritten to say 'SHIPPED FOR CLAUDE CODE ONLY' and re-measured (616/616 byte-equal, 101/101 reachable, 0/212 near-misses). But the package default (`src/config/agent-settings.template.yml:198-199`) NOW ships `mode: delivery` + `hosts: [claude-code]` (step 4.3, ticked), and step 4.2 measured the flipped repo at 39,758 total / 24,166 rules tokens. The claim states it is shipped AND that the flip is Claude-only, which was true at measurement but is contradicted by the template the branch commits. A consumer installing this tree receives `delivery` by default, so 'shipped for Claude Code only' is not the shipped state — it is shipped-for-everyone with a host scope inside it.",
+      "file": "docs/CLAIMS.md:365"
+    },
+    {
+      "finding_id": "54c1a4813356",
+      "status": "false_positive",
+      "rationale": "FALSE POSITIVE — the premise is that the criterion is ticked. It is not, in either the live roadmap or the review-time snapshot the finding cites, and the body's first sentence is: SPLIT VERDICT 2026-09-07, total limb MET, rules limb MISSED, and left unticked because a criterion with two limbs is not met by one. The roadmap already does exactly what the finding recommends. The finding also conflates step 4.2 with a separate Acceptance Criteria entry quoting the same gate; both are unticked. There is no ticked box over this content for the author to have asserted the opposite of.",
+      "verified_by": "agents/roadmaps/road-to-delivery-for-every-host.md:808 (the criterion, unticked) and :810 (left unticked); :600 (step 4.2, unticked) and :604 (NOT MET as written, and left unticked); snapshot parity at agents/evidence/reviews/drain-delivery-for-every-host.review-input/roadmap.md:755, :757 and :574 — identical checkbox states, so this is not a staleness case either. HONEST GAP: none. The checkbox state and the prose are unambiguous on both sides of the snapshot and live divide.",
+      "severity": "high",
+      "kind": "claim",
+      "title": "Step 4.2 measured ≤40k total but >20k rules, criterion split-ticked without recording the miss",
+      "detail": "AC '`check_preamble_payload_budget` on a Claude Code install: total ≤40k tok, rules ≤20k' is marked `[x]` with 'SPLIT VERDICT — total limb MET, rules limb MISSED'. The step's own note says 'total 39,758 ≤40k PASSES' and 'rules 24,166 >20k does not', then blames the 3.2 disposition for the 4,166-tok overage. The criterion has two limbs and one failed, so ticking it asserts the opposite of what the note records. Either the criterion is not met (stay `[ ]`) or it needs amendment to the limb that passed.",
+      "file": "agents/evidence/reviews/drain-delivery-for-every-host.review-input/roadmap.md:450"
+    },
+    {
+      "finding_id": "bb7b466d3e0c",
+      "status": "accepted_risk",
+      "rationale": "REAL and OUT OF SCOPE — every factual claim checks out, and the accusation the finding implies does not. Verified: 4.4 is unticked and BLOCKED on the measurement-surface question; check_preamble_payload_budget does read dist/agent-src/rules and is unchanged by the flip; and no CI workflow or taskfile invokes report_standing_payload_by_host, so no gate reproduces the per-host figures 7.1 published. But the implied accusation, published without disclosure, fails: 7.1's own body at :706 and CLAIMS.md:368 both state the caveat verbatim — the gate reads the projection SOURCE by default and its number is UNCHANGED by this flip at 138,200, because it measures a different surface from the one this claim reports. The roadmap also tracks it as Risk 3, UNMITIGATED, and scopes the remediation outside its own authority. ACCEPTED: this is a disclosed, tracked, owner-reserved deferral, and it is the same question two AI-council seats independently classified as owner-reserved on 2026-09-09.",
+      "verified_by": "agents/roadmaps/road-to-delivery-for-every-host.md:657 (4.4 unticked), :671 (BLOCKED), :689 (7.1 ticked), :706 (the disclosure), :794 (Risk 3 UNMITIGATED), :679 (not one an autonomous lane should take); docs/CLAIMS.md:368 (non_inference carries the identical caveat); a grep for report_standing_payload_by_host across .github/workflows/ and taskfiles/ returns 0 matches, while check_preamble_payload_budget is wired at standing-payload-delta.yml:131 and ci-fast.yml:881 with no dir override, i.e. the projection source. HONEST GAP: the 138,200 figure and the per-host table were not re-run for this disposition; it rests on the roadmap, the claim row and the workflow text. A branch-protection-required check configured only in the GitHub UI would not be visible from the tree and was not checked.",
+      "severity": "high",
+      "kind": "claim",
+      "title": "Step 4.4 blocked on measurement surface but 7.1 ticked and row rewritten",
+      "detail": "4.4 is `[ ]` with 'BLOCKED 2026-09-07, on a measurement-surface question this roadmap does not settle' — the gate reads `dist/agent-src/rules`, unchanged at 138,200 either way, so the baseline cannot be lowered to a post-flip total the gate cannot reproduce. 7.1 is `[x]` 'done 2026-09-07' and rewrote `CLAIMS.md:365` to carry the re-measured figures. But 4.4's blocker is the same surface question: the claim cites measurements of trees the hosts load (24,166 rules for Claude, 121,242 for Cursor/Cline), and the gate that would enforce them reads a different tree. So 7.1 published figures anchored to a surface its own roadmap says is undecided, and the claim is backed by numbers no CI gate will reproduce.",
+      "file": "agents/evidence/reviews/drain-delivery-for-every-host.review-input/roadmap.md:491,539"
+    },
+    {
+      "finding_id": "9f5b2fdf53c1",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Step 3.2 applies E2's exception then closes by removing the exception's premise",
+      "detail": "E2 says '`pre_tool_use` delivery is disabled unless 3.1 shows a labelled rule reachable only there'. 3.1 shows three. The step's note says 'E2's exception fired and I did not take it' and instead keeps the three path-only rules eagerly projected, removes the binding, and calls this 'honouring every literal clause of E2 that remains'. But the clause that remains is 'disabled unless X', and X is true (3.1 lists the three), so disabling it contradicts the unless. The note argues the three 'lose nothing' because they are kept eager — true for their reachability, false for the E2 clause, which is about the binding. The binding is gone and the exception that would have kept it is described as taken by removing the condition it was conditioned on.",
+      "file": "agents/evidence/reviews/drain-delivery-for-every-host.review-input/roadmap.md:322"
+    },
+    {
+      "finding_id": "50268254a241",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "AC-1 unticked but all three verify limbs met, with contradictory scoping note",
+      "detail": "AC-1 ('read command not refused, creating command still is, pinned') is `[x]` with 'MET 2026-09-07' and three verify limbs all reported green. The note then says 'NOT MET as written, and left unticked' and spends 15 lines on why the rules limb missed. So the checkbox is ticked, the status line says met, and the note says not-met-and-unticked. One of those is wrong.",
+      "file": "agents/evidence/reviews/drain-delivery-for-every-host.review-input/roadmap.md:420"
+    },
+    {
+      "finding_id": "94dcbb2d6c7e",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Risk 3 refutation contradicts its own 4.4 reference",
+      "detail": "Risk 3 mitigation originally said '4.2 flips this repo before 4.3 touches the package default; 4.4 lowers the baseline'. Re-reviewed row now says 'REFUTED 2026-09-08 … Risk 3 is UNMITIGATED and still live for 2026-11-10. Steps 4.4 and 7.2 are blocked on it'. But 4.4's own status is `[ ]` 'BLOCKED 2026-09-07' on the same measurement-surface question, so the refutation is consistent with the step. What contradicts is that the Risk was re-reviewed 2026-09-08 and calls the mitigation refuted, while the Mitigation column still cites the original ordering (4.2 then 4.3 then 4.4) that the refutation says does not work. Either the Mitigation cell updates to match the refutation or the refutation belongs in a note rather than inline.",
+      "file": "agents/evidence/reviews/drain-delivery-for-every-host.review-input/roadmap.md:584"
+    },
+    {
+      "finding_id": "a22140a0efcd",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Recall floor re-reviewed with corrected denominator but the corrected number is still wrong",
+      "detail": "Risk 1 mitigation was re-reviewed 2026-09-08 and says the floor is 'complete and the mitigation's own figure was WRONG. Phase 2 … measured … 101/101 reachable'. The note corrects '102/102' to '101/101' because 4 of 105 auto rules have no triggers. But step 2.1's verify says '102/102 reachable' and the measurement there is '101/101 rules reachable; unreachable: none' with 0 false fires on 212 near-misses. So 101/101 is right and the criterion it was written against (2.1 verify) still says 102. The re-review corrected one number and left the contradicting one in the step.",
+      "file": "agents/evidence/reviews/drain-delivery-for-every-host.review-input/roadmap.md:574"
+    },
+    {
+      "finding_id": "bd8bb54c3089",
+      "severity": "low",
+      "kind": "claim",
+      "title": "Step 0.2 count corrected from 8 to 11 but its verify still says 102+3=105",
+      "detail": "Step 0.2 lists 11 unlabelled auto rules and says 'the count is 11, not 8 — corrected-from-reproduction'. Its verify says 'ls … | wc -l plus the listed names equals the type: auto count — counting BOTH quoted and bare (102+3)'. 102+3=105, and 105−94 labelled = 11 unlabelled, so the arithmetic reconciles. But the verify is written as an instruction ('count both forms') that produces 105, and a reader following it gets 105−94=11 only if they also subtract the 94. The step knows the answer is 11; the verify describes how to get 105.",
+      "file": "agents/evidence/reviews/drain-delivery-for-every-host.review-input/roadmap.md:176"
+    },
+    {
+      "finding_id": "4e079907528b",
+      "severity": "low",
+      "kind": "style",
+      "title": "AC-0 verify says rules ≤20k but the measured rules are 24,166",
+      "detail": "AC-0 (the first unticked one) says 'check_preamble_payload_budget on the repo reports rules ≤20k tok, total ≤40k'. The criterion is the gating condition for starting 4.2. But 4.2's own measurement, quoted in the AC block 30 lines below, is 'rules 24,166 tok … The rules limb MISSES: 24,166 > 20k, by 4,166.' So AC-0's rules limb is the condition for the step, and the step measured that it does not hold. Either AC-0 should be ticked with the split recorded (total met, rules not) or 4.2 should be unticked because its precondition failed.",
+      "file": "agents/evidence/reviews/drain-delivery-for-every-host.review-input/roadmap.md:415,432"
+    },
+    {
+      "finding_id": "3cc951b24e82",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Inconsistent MCP tool count in catalog description vs. measurements",
+      "detail": "The skill description (agents/index.md:49) claims 'impact, tests-for, dead cheaper' but the catalog shows 36 tools total (up from 31), meaning 5 graph tools were added. However, the description treats these as three distinct verbs when the actual implementation includes 5 MCP tools (graph_impact, graph_tests_for, graph_dead, graph_query, graph_path). The fourth verb 'untested' is mentioned in verification notes but not consistently reflected in user-facing documentation.",
+      "file": "agents/index.md"
+    },
+    {
+      "finding_id": "f7d3c2f85faa",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Accepted-edge filter excludes valid 'member' edges but reasoning is unclear",
+      "detail": "In verbs.ts, REFERENCE_RELATIONS excludes 'member' because 'a declaration is not a use'. However, the filter's purpose is to identify accepted resolution mechanisms, not semantic relationships. A file->symbol member edge with resolved_via='same-file' is still an ACCEPTED edge by the mechanism axis. The exclusion appears correct for 'dead' (where member edges would false-positive) but the rationale conflates two distinct filters.",
+      "file": "src/scripts/code_graph/verbs.ts"
+    },
+    {
+      "finding_id": "549923656232",
+      "status": "false_positive",
+      "rationale": "FALSE POSITIVE — there is no shell. changedFiles at code_graph/cli.ts:296-309 calls execFileSync with the program 'git' and an argv ARRAY ['-C', root, 'diff', '--name-only', `${ref}..HEAD`], so a command substitution or backticks reach git as literal bytes and are never expanded. The --help half is defeated by the interpolation itself: the rev becomes ${ref}..HEAD, so an option-shaped rev arrives as --help..HEAD, which git rejects as an unknown option rather than honouring — the ..HEAD suffix means an attacker cannot land a clean option at all. Probed with nine hostile revs against a real temp repository, asserting both a clean refusal and that no sentinel file was created; hardenedSpawnEnv() is applied on top. The finding correctly notes there is no ref validation before execution; that is true and harmless here, because the failure mode is git exiting non-zero into the existing catch, which returns null and surfaces as cannot resolve rev.",
+      "verified_by": "src/scripts/code_graph/cli.ts:296-309 (execFileSync with argv array, hardenedSpawnEnv, catch returns null). tests/scripts/release_14_23_0_security_dispositions.test.ts — describe 'finding 549923656232': nine it.each hostile revs, each asserting no side effect, plus a SENSITIVITY case proving a legitimate rev still resolves so the refusals are not vacuous. HONEST GAP: the probe covers the shell-metacharacter and option-shaped classes. It does not enumerate every git option that might behave surprisingly when suffixed with ..HEAD; the argument for those is structural (the suffix invalidates the option) rather than exhaustive.",
+      "severity": "high",
+      "kind": "security",
+      "title": "MCP graph_impact tool executes git subprocess with user-controlled rev parameter",
+      "detail": "graph_impact accepts a 'diff' parameter and passes it directly to 'git diff --name-only <rev>..HEAD'. While hardenedSpawnEnv() is used, there's no validation that <rev> is a valid git ref before execution. An attacker-controlled rev like '--help' or '$(malicious)' could trigger unintended git behavior or command injection. The error handling catches failures but doesn't prevent the attempt.",
+      "file": "src/scripts/mcp_server/graph_tools.ts"
+    },
+    {
+      "finding_id": "6aab313b85e0",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Resolution tier reports 'import-specifier 47,701 → 47,669' but unclear if this is regression",
+      "detail": "Step 2.3's closure note states the tsconfig tier moves 32 edges from import-specifier to path-alias, and 'import-specifier 47,701 → 47,669' is cited as evidence. This is a -32 delta, which matches the tier's behavior. However, the note positions this as 'what a future reader should measure' without clearly stating whether this -32 is acceptable or a silent loss of import edges. The verify was amended to remove a regression check, but the downstream impact isn't evaluated.",
+      "file": "agents/roadmaps/road-to-a-graph-that-is-shipped.md"
+    },
+    {
+      "finding_id": "c005a0e7142c",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "AC-6 claims 'byte-identical' but lists multiple differences in the same paragraph",
+      "detail": "AC-6's verification states '126 metric fields on each side, 0 differences' and calls the result 'byte-identical'. The next paragraph immediately lists what DID differ: run date, measured commit, tree-hashes, wall_ms, output_bytes. The claim should be 'metric-identical' not 'byte-identical', since the reports are demonstrably not byte-identical files. This matters for reproducibility claims.",
+      "file": "agents/roadmaps/road-to-a-graph-that-is-shipped.md"
+    },
+    {
+      "finding_id": "9b4e084a85a9",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "dead() verb refuses by default but exported function entries may be incorrectly excluded",
+      "detail": "The 'exports' entry-point source is always 'unavailable' because the extractor records no exportedness. dead() refuses unless --accept-missing-exports or --entry-points is supplied. However, if a user supplies an entry-points file and it includes a symbol that IS exported but not yet imported (the case the refusal exists to prevent), that symbol is excluded from the dead list via the 'entries' check. This means the supplied list can HIDE genuinely dead exported symbols if the operator mistakenly includes them.",
+      "file": "src/scripts/code_graph/verbs.ts"
+    },
+    {
+      "finding_id": "fec4c159f40b",
+      "severity": "low",
+      "kind": "style",
+      "title": "Inconsistent terminology: 'EXTRACTED does not regress' vs. actual measurement axis",
+      "detail": "Step 2.3's amended verify says 'EXTRACTED does not regress on the repository build', measured as 130,348 / 130,348. But the note explains the tsconfig tier moves 32 edges from import-specifier to path-alias—both are EXTRACTED confidence. The tier changes the mechanism (resolved_via), not confidence. The verify is checking that total extracted edge count is stable, but phrases it as 'EXTRACTED does not regress' when the tier cannot regress EXTRACTED by design.",
+      "file": "agents/roadmaps/road-to-a-graph-that-is-shipped.md"
+    },
+    {
+      "finding_id": "cb7279885cfa",
+      "severity": "critical",
+      "kind": "correctness",
+      "title": "Path traversal vulnerability in graph_dead entry_points parameter",
+      "detail": "graph_dead accepts an 'entry_points' parameter as a file path and validates it with path.resolve(root, listArg) + startsWith check. However, the check is 'abs.startsWith(path.resolve(root) + path.sep)', which can be bypassed on Windows via path canonicalization differences (e.g., root='C:\\repo' but abs='C:/repo/../../../etc/passwd' may not match). The fixture asserts '../outside.txt' is rejected, but a more sophisticated traversal (e.g., symlink, UNC path, or case-insensitive bypass) isn't tested.",
+      "file": "src/scripts/mcp_server/graph_tools.ts"
+    },
+    {
+      "finding_id": "3bac011f876c",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Blocker re-measurement shows worsening (9.82→10.31 MB) but disposition contradicts itself",
+      "detail": "The pack-size blocker note records origin/main grew from 9.8216 MB (2026-09-07) to 10.3087 MB (2026-09-08), +0.49 MB beyond this branch's +0.37 MB contribution. The note states 'this branch's own contribution is the +373,922 B recorded above and landed with Phase 0.1, which is already on main at both pins'. But if Phase 0.1 landed and is on main at BOTH pins, the +0.37 MB should appear in BOTH measurements, not as a delta between them. Either the timeline is wrong or the attribution is.",
+      "file": "agents/roadmaps/road-to-a-graph-that-is-shipped.md"
+    },
+    {
+      "finding_id": "b9697221b623",
+      "severity": "low",
+      "kind": "claim",
+      "title": "Risk Register rank 1 claims 'readers shipped with it' but usage is unmeasured",
+      "detail": "Post-close review of rank 1 states 'Readers shipped with it: 3.4 (regression selector), 4.1 (five MCP tools, catalogue 36) and the four CLI verbs'. It then adds 'What is NOT claimed: an available reader is not a used one, and usage is unmeasured'. This undermines the mitigation—if readers exist but usage is zero, the risk (delivery without a reader) is not actually mitigated. The claim should either measure usage or reframe the risk as 'delivery without reachable reader'.",
+      "file": "agents/roadmaps/road-to-a-graph-that-is-shipped.md"
+    },
+    {
+      "finding_id": "89ec930c5742",
+      "status": "accepted_risk",
+      "rationale": "SPLIT — the cross-workspace headline is FALSE, a narrower residual is REAL and accepted. Cross-workspace injection is impossible by construction: every slot path is workspace-RELATIVE and joined under a caller-supplied workspace_root (continuity_slot.ts:143), so reaching another workspace already requires write access to it — at which point the attacker can write anything and the slot is not the weak point. _sessionKeyed (recycle_envelope_paths.ts:125-141) additionally refuses a traversal by FALLING BACK to the legacy path rather than escaping, and the session_id comparison at continuity_slot.ts:184-193 is a second layer inside one workspace, not the isolation boundary. The feature also ships off: continuity.auto_record resolves to default 'off', class C. ACCEPTED residual, which the finding named correctly: an EMPTY session id collapses every session onto one shared legacy file inside the workspace, so two sessions in one workspace can collide there. That is a backwards-compatibility affordance and it is not documented as a security property anywhere — accepted rather than closed because removing the fallback breaks pre-keying records, which is a migration decision and not a security fix.",
+      "verified_by": "src/scripts/_lib/continuity_slot.ts:143 (workspace-rooted join), :184-193 (owner comparison); src/scripts/_lib/recycle_envelope_paths.ts:125-141 (traversal falls back, never escapes); agent-config settings:get continuity.auto_record reports default 'off', class C. tests/scripts/release_14_23_0_security_dispositions.test.ts — describe 'finding 89ec930c5742': seven hostile ids across all three path builders, the empty-id legacy fallback pinned as behaviour, and a SENSITIVITY case proving a benign id does NOT take the legacy path. HONEST GAP: no cryptographic origin verification exists for a quarantined record and none is added — the finding is right about that, and it is the same trust-root argument as 121c73bfc0c9.",
+      "severity": "high",
+      "kind": "security",
+      "title": "Privilege escalation via automatic continuity record writing",
+      "detail": "The new continuity.auto_record feature (step 1.2 in road-to-continuity-writer-activation) arms an automatic producer on session-end that can persist state across sessions. The default ships 'off' but the mechanism itself lacks multi-tenancy isolation - the slot contract (continuity-record-slot.md) uses session_id comparison but does not validate workspace ownership boundaries. A malicious actor could craft a session_id collision or exploit the legacy shared path fallback to inject continuity records into another user's workspace. The quarantine mechanism moves unusable records but does not cryptographically verify their origin.",
+      "file": "src/scripts/_lib/continuity_slot.ts"
+    },
+    {
+      "finding_id": "0d580f5f6a5d",
+      "status": "accepted_risk",
+      "rationale": "REAL and OUT OF SCOPE — the residual is real, ADR-266 names it in its own text as finding 2, and the specific attack shape the finding describes is not instantiated in this tree. ADR-266:127-134 states it verbatim: a CI-side agent can merge, and this record does not reach it; Real; a workflow holding a write-scoped token, pull_request_target being the usual shape, merges through the API regardless of what any rule text says; this record governs the agent-in-a-session path only, and a green CI is not evidence that the CI path is gated. So the finding restates a disclosed, deliberately-scoped limit rather than uncovering a hidden one. The named vector is additionally absent: grepping for a pull_request_target trigger line across .github/workflows/ returns 0 — every mention in the tree is a comment recording its absence. ACCEPTED because the control is forge-side (required reviews, restricted merge permissions) and is not a change an execution run may make.",
+      "verified_by": "docs/decisions/ADR-266-explicit-pr-merge-invocation-is-the-this-turn-confirmation.md:127-134 (the residual, stated by the ADR). A grep for a pull_request_target trigger line across .github/workflows/ returns 0 matches; the five files mentioning the string do so in comments asserting its absence (release.yml:85, skill-lint.yml:48, bench-drift.yml:26, standing-payload-delta.yml:57, self-review-gate.yml:34). HONEST GAP: zero occurrences TODAY is not a guarantee for tomorrow, and nothing in the tree gates the reintroduction of such a trigger. A workflow-trigger allowlist gate would close that and does not exist.",
+      "severity": "high",
+      "kind": "security",
+      "title": "CI agent injection vulnerability in PR-triggered workflows",
+      "detail": "ADR-266 (explicit-pr-merge-invocation) acknowledges but does not fix CI-side agent merge capability: 'A workflow holding a write-scoped token — pull_request_target being the usual shape — merges through the API regardless of what any rule text says'. The diff shows no remediation of this attack vector. An attacker-controlled fork PR with malicious title/body/diff can reach an agent running in CI with repo secrets and write permissions (e.g., via pull_request_target trigger). The ADR explicitly states 'this record governs the agent-in-a-session path only' and defers the CI path to forge-side controls that may not exist in consumer repos.",
+      "file": "docs/decisions/ADR-266-explicit-pr-merge-invocation-is-the-this-turn-confirmation.md"
+    },
+    {
+      "finding_id": "9b86cddaed46",
+      "status": "accepted_risk",
+      "rationale": "SPLIT — the transitional gap is REAL and ADR-268 states it; the finding's factual premise about the guard is FALSE. The finding says the only control is the DELETED tool-call deny from block_kernel_rule_writes.ts. It is not deleted: src/scripts/hooks/block_kernel_rule_writes.ts exists and is bound on pre_tool_use for two hosts (hook_manifest.yaml:1266 and :1297, declared at :184-185). So during the transition the control is a live tool-call deny on the one host that honours a deny, not an absence. What is real is that the section-4 CI gate does not exist yet, and ADR-268:335-336 says exactly that as a sequencing constraint: the first such PR is maintainer-authored or lands after section 4's CI gate. ACCEPTED: building that gate is governance infrastructure an execution run may not self-authorise, which is the same principle the ADR is about.",
+      "verified_by": "src/scripts/hooks/block_kernel_rule_writes.ts (present); src/scripts/hook_manifest.yaml:184-185 (declared), :1266 and :1297 (bound on pre_tool_use); docs/decisions/ADR-268-mission-scoped-authority-persistence-and-ratified-self-amendment.md:189 (section 4), :204 (the guard is replaced BY the CI gate, not before it), :335-336 (the sequencing constraint). HONEST GAP: the deny is honoured on one host only, which this repository documents elsewhere as a standing limitation; on every other host the section-4 obligation is model-carried in the transition, and this disposition does not change that.",
+      "severity": "high",
+      "kind": "security",
+      "title": "Unverified self-amendment in governance rules",
+      "detail": "ADR-268 section 4 permits governance self-amendment with ratification after-the-fact: 'An agent may modify its constitution. It may not ratify its own increase in power.' However, the mechanism is model-carried with no mechanical enforcement until a future CI gate is built (per ADR-268 Consequences: 'the first such PR is maintainer-authored or lands after § 4's CI gate'). During the transition period, an agent can modify kernel rules (ask-when-uncertain, commit-policy, non-destructive-by-default, scope-control, no-cheap-questions) and the only control is the deleted tool-call deny from block_kernel_rule_writes.ts. The 'provider diversity required where two providers are configured' clause is unenforceable without the CI gate.",
+      "file": "docs/decisions/ADR-268-mission-scoped-authority-persistence-and-ratified-self-amendment.md"
+    },
+    {
+      "finding_id": "f473cf5adef9",
+      "status": "accepted_risk",
+      "rationale": "REAL — the loss is real, named and unclosed, and only the word obscures overstates the concealment. CLAIMS.md:365 does carry both figures in one sentence: 101/101 labelled rules reachable (the mechanism figure) and the shipped reach, 98/101 — so a reader stopping at the first number gets the optimistic one. The non_inference at :368 carries the admission close to verbatim: path_only_ids exempts a rule only when EVERY trigger is path-shaped, so all 18 dual-trigger rules are thinned and their path route has no carrier, and each of them also has a prompt-matching positive, which is precisely why the labelled corpus cannot see the loss. Coverage was checked directly and the gap is real: augment-edit-discipline.yaml has three positives and every one pairs a keyword or phrase prompt with open_files, so none isolates a path-only match. ACCEPTED: the receiver stub names all 18 rules and states that both mechanisms which could restore a path route are budget moves an agent may not make — an owner decision, not an execution one.",
+      "verified_by": "docs/CLAIMS.md:365 (both figures in one claim) and :368 (the 18-rule path-route admission); agents/roadmaps/stubs/road-to-a-path-route-under-delivery.md (all 18 ids listed, owner-reserved closure options); tests/eval/routing-matrix/augment-edit-discipline.yaml (three positives, all keyword or phrase plus open_files, none path-only); docs/decisions/ADR-267-delivery-default-for-claude-code.md:186 (independent statement of the same mechanism-versus-shipped split). HONEST GAP: one of the 18 fixture files was opened as a representative sample, not all 18. The stub's own statement that no rule in the set has a path-only fixture is consistent with that sample and with the stub listing such a fixture as an undone closure option, but an exception among the other 17 was not ruled out by direct reading.",
+      "severity": "high",
+      "kind": "claim",
+      "title": "Delivery equivalence claim scope mismatch with measured surface",
+      "detail": "docs/CLAIMS.md line 365 (thin-inject-delivery-equivalence) claims '98/101 labelled rules reachable with user_prompt_submit' but the non_inference field admits a critical loss: '18 rules carry both path and non-path triggers… their path route has no carrier'. The claim's headline '98/101 reachable' obscures that 18 rules (design-fidelity, doc-screenshot-hygiene, lethal-trifecta-guard, etc.) lost their path-based activation without any labelled test coverage. The receiver stub (road-to-a-path-route-under-delivery.md) defers the fix to an owner decision, meaning the claimed 'delivery equivalence' has a known-unquantified loss baked into the shipped default.",
+      "file": "docs/CLAIMS.md"
+    },
+    {
+      "finding_id": "cf8825a5c290",
+      "severity": "medium",
+      "kind": "security",
+      "title": "Slot-sum budget exceeded by rule-inject concern",
+      "detail": "Finding 3 from the R2 completion review (noted in ADR-267) discovered the rule-inject concern was licensed at 20,480 bytes while the user_prompt_submit slot sum is 16,384 bytes - a 25% overage. This was corrected to 16,384 in the same change, but the residue reveals the gate design: the runtime enforces per_turn_aggregate_bytes.ceiling_bytes but does NOT enforce per-slot sums at runtime, only at authoring time. A concern that exceeds its slot row will be truncated at runtime rather than refused, potentially leaving security-critical rules undelivered.",
+      "file": "src/config/hook-token-budget.json"
+    },
+    {
+      "finding_id": "23d49af2561e",
+      "severity": "medium",
+      "kind": "security",
+      "title": "Unbounded authority persistence across interruptions",
+      "detail": "ADR-268 section 2 introduces mission-scoped grants with expires: mission-end that survive 'CI fixes, base syncs, conflict resolution, unrelated owner questions, or context resets' for up to twelve hours. The grant is spent once on 'the final green head' but there is no cryptographic binding - the authorization channel is 'the owner's own words' with no tamper-evident storage. ADR-266's table admits 'tamper-resistant: partially' because 'the manifest lives in the run's own context, not in a file anything can verify'. An interrupted twelve-hour run could resume with a modified grant and the only control is the pre-merge observed_head re-read, which validates the target but not the grant provenance.",
+      "file": "docs/decisions/ADR-268-mission-scoped-authority-persistence-and-ratified-self-amendment.md"
+    },
+    {
+      "finding_id": "5bc5dafa81f0",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Grace ceiling enforcement gap creates unbounded growth window",
+      "detail": "ADR-264 designed a 128-token Iron Law reserve but ADR-265 refused to activate it because 'the verifier is inside the change it authorises'. The fallback shipped is standing_bound_ratchet.ts which refuses grace_ceiling rises but reports SKIPPED when no base ref resolves ('does not refuse when no base ref resolves... an unreadable base would refuse a change on an infrastructure failure'). This creates a window where shallow clones or CI environments without base-ref access bypass the only enforcement of the 138,490-byte ceiling that is already 28.4% above the design ceiling. The claim 'grace ceiling may not rise' is protected only where git history is readable.",
+      "file": "docs/decisions/ADR-265-iron-law-reserve-refused-verifier-inside-the-change.md"
+    },
+    {
+      "finding_id": "ccb4f9ced669",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Roadmap phase completion contradicts open blockers",
+      "detail": "road-to-delivery-for-every-host Phase 4 acceptance criteria split: 'total limb MET, rules limb MISSED' (AC-1) but Phase 0-3 boxes are all ticked. The roadmap Goal requires 'rules ≤ 20,000' but measured 24,166 (4,166 over). The cause is named (3.2 disposition kept path-only rules full-bodied) but the step is marked [x] complete anyway. Step 4.2 'Flip this repo first' is left unticked with the reason recorded, but step 4.3 'Flip the package default' is marked [x] done including the regenerated projections. A reader following ticked boxes sees Phase 4 complete while its acceptance criteria explicitly say otherwise.",
+      "file": "agents/roadmaps/road-to-delivery-for-every-host.md"
+    },
+    {
+      "finding_id": "9f46cca724f6",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Skill activation census denominator error propagated to claim",
+      "detail": "Amendment 1 to ADR-263 corrects 187 to 189 for 'human-named only' skills, stating the original was an 'arithmetic error: 12 + 100 - 2 = 110, remainder 299 - 110 = 189'. However, the docs/CLAIMS.md skill-activation-census-zero row still contains contradictory figures across its amendment history (579/579 vs 616/616 vs 591/591 deliveries, 94 vs 101 vs 97 rule corpus sizes). The claim is marked 'status: backed' but its evidence pointer moved three times (thin-inject-2026-08-23.md → thin-inject-2026-09-08.md) and the 'corrected-from-reproduction' markers show the denominator itself was re-derived wrongly twice.",
+      "file": "docs/decisions/ADR-263-skills-are-explicitly-invoked-reference-material.md"
+    },
+    {
+      "finding_id": "609b24a0d904",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "ADR number collision happened four times in one merge session",
+      "detail": "The ADR-number uniqueness stub records delivery-for-every-host was renumbered 262 → 263 → 265 → 266 → 267 in four collisions, the last two 'inside one merge session, minutes apart'. The stub concludes 'renumbering is not a fix; it is the defect moving' but proposes no durable solution beyond manual checking of origin/main + open PR heads at renumber time, which failed to prevent collision 4. The collision rate is highest 'where two lanes are most likely to need cross-references to each other', creating a documentation integrity risk.",
+      "file": "agents/roadmaps/stubs/road-to-adr-number-uniqueness.md"
+    },
+    {
+      "finding_id": "de8ebd26e70d",
+      "severity": "low",
+      "kind": "style",
+      "title": "Verbose completion review inline amendments reduce diff clarity",
+      "detail": "Multiple roadmap files contain multi-paragraph 'CORRECTED 2026-09-08' / 'AMENDED 2026-09-09' blocks inline in step Done notes (e.g., road-to-delivery-for-every-host step 0.1, 3.2, 4.2). While these preserve the correction reasoning, they make the step status harder to parse - a reader must scan 50+ lines to determine if a [x] step's verify is actually met. The package's own style guide (CHANGELOG-conventions.md) uses 'BREAKING' / 'SECURITY' markers but has no convention for inline correctness amendments in roadmaps.",
+      "file": "agents/roadmaps/road-to-delivery-for-every-host.md"
+    }
+  ]
+}
