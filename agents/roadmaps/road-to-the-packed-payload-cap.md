@@ -37,15 +37,29 @@ reproduce the measurement and may not act on it.
 
 ## Prerequisites
 
-- [ ] Read `src/config/pack-size-budget.json` in full — `_comment`,
+- [x] Read `src/config/pack-size-budget.json` in full — `_comment`,
       `measurement_conditions`, `built_surface_measurement_2026_08_24`,
       `built_surface_enforcement_2026_08_30`, and the six `baseline_note_*`
       entries. The file's own history is the argument against a reflex raise:
       four of those notes ARE raises, each recording that the trunk was already
       at the ceiling before the branch that tripped it existed.
-- [ ] Read `docs/decisions/ADR-259-code-graph-parsers-ship-with-the-package.md`
+      Done 2026-09-09. The reading changed what the decision below is ABOUT, and
+      that is recorded at 1.1 rather than here. The one structural fact worth
+      carrying up: this file holds **two** surfaces and they are not
+      interchangeable. `budgets.packed_size_mb.max` (9.1) was set against the
+      UNBUILT tree, and `built_surface_measurement_2026_08_24.built.packed_mb`
+      (10.5525) against the BUILT one, from `npm run build && npm pack`. Since
+      `built_surface_enforcement_2026_08_30`, `check_pack_size` compares against
+      the BUILT figure with `regression_pct: 10`, i.e. a ceiling of 11.608.
+- [x] Read `docs/decisions/ADR-259-code-graph-parsers-ship-with-the-package.md`
       § "Amendment — 2026-09-07 · vendored-wired-set", which is where the
       +373,922 B this blocker was first recorded beside came from.
+      Done 2026-09-09. The amendment replaced a mechanism, not a decision:
+      vendoring three grammars instead of depending on thirty-six, because the
+      dependency route delivers all 36 (51,765,657 B apparent, 49 MiB on disk) —
+      the outcome the record's own Alternatives section rejects by name. So the
+      vendored bytes this blocker sits beside are already the SMALL branch of
+      that choice, and "shrink the payload" cannot be answered by revisiting it.
 
 ## Phase 1 — The decision
 
@@ -55,6 +69,41 @@ reproduce the measurement and may not act on it.
       verify: `./scripts-run src/scripts/check_pack_size` exits 0 on a clean
       `origin/main` checkout with no local edits, and the chosen path's own
       condition below holds.
+      **STILL OPEN — the decision is the maintainer's and this run did not take
+      it. What this run did is the half the Goal allows: reproduce the
+      measurement. It came back with something the blocker did not anticipate.**
+      Measured 2026-09-09 on `origin/main` at `e7a7a68d4`, no local edits:
+
+      | Tree state | `check_pack_size` | vs recorded built 10.5525 | Verdict |
+      |---|---:|---:|---|
+      | `dist/mcp` + `dist/ui` PRESENT (a full build) | **12.140 MB** | **+15.0 %** | **FAILS** — ceiling 11.608 |
+      | those two ABSENT (a partial build) | 11.539 MB | +9.35 % | passes, by 0.069 MB |
+
+      **The second row is the invalid one, and that is the finding.** The
+      recorded baseline came from `npm run build && npm pack --dry-run --json`,
+      and `npm run build` in `package.json` chains `build:mcp-bundle` and
+      `build:ui` — so 10.5525 was measured WITH those directories. Comparing a
+      partial build against a full-build baseline understates the payload by
+      0.601 MB, which is nine times the 0.069 MB of apparent headroom it
+      produces. Anyone who clears those two directories to get a green has made
+      the gate lie rather than made the tree smaller.
+      **So the overage is REAL and it is 15.0 %, not the ~0.7 % the passing row
+      suggests.** The blocker's own step 1 asked for this reproduction; the
+      numbers it carried (9.8216 on 2026-09-07, 10.3087 on 2026-09-08) were
+      taken against the UNBUILT cap of 9.1, which
+      `built_surface_enforcement_2026_08_30` has since superseded. They are not
+      wrong, they measure the other surface.
+      **A standing note this contradicts, named so it is not quietly dropped.**
+      A recorded local heuristic says `check_pack_size` reds because vitest
+      builds `dist/ui` and `dist/mcp`, and that clearing them is the fix. That
+      was true while the gate compared against the UNBUILT cap. Under the
+      built-surface line the same act inverts: their presence is the CORRECT
+      state to measure, and clearing them is what produces the false green.
+      **Not decided here, deliberately.** Which of (a), (b), (c) — and whether
+      re-pinning the built baseline is even the same class of act as raising the
+      unbuilt cap — is a maintainer-owned ratchet call, and the Goal says an
+      execution run may reproduce the measurement and may not act on it. The
+      measurement is now sharp enough to decide against.
 
 ## Blockers
 
@@ -96,6 +145,21 @@ reproduce the measurement and may not act on it.
        between the two readings is the `release/14.22.0` merge**, not a feature
        branch: `road-to-a-graph-that-is-shipped` Phase 0.1's own contribution is
        +373,922 B and was already on `main` at both pins.
+     · **2026-09-09, base `e7a7a68d4` — and the surface matters more than the
+       number.** `check_pack_size` on a full build reads **12.140 MB** against
+       the BUILT figure 10.5525, i.e. **+15.0 %** past a 10 % allowance whose
+       ceiling is 11.608. With `dist/mcp` and `dist/ui` absent it reads 11.539
+       and passes — but that compares a PARTIAL build against a FULL-build
+       baseline, because `npm run build` chains `build:mcp-bundle` and
+       `build:ui`. The 0.601 MB those two carry is nine times the 0.069 MB of
+       headroom their absence appears to create, so the passing reading is the
+       false one and clearing them is not a fix.
+     · **The two readings above measure the OTHER surface.** 9.8216 and 10.3087
+       were taken against `budgets.packed_size_mb.max = 9.1`, the UNBUILT cap,
+       which `built_surface_enforcement_2026_08_30` superseded as the thing
+       `check_pack_size` compares. They are not wrong; they answer a question
+       the gate no longer asks. Anyone costing (a) should start from 12.140
+       against 10.5525, not from 10.3087 against 9.1.
   2. Decide one:
      - **(a)** re-measure and raise `max` + `last_measured` together, recording
        the tree the figures came from as every other entry in that file does;
