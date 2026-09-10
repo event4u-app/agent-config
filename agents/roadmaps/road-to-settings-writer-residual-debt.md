@@ -3,6 +3,15 @@ complexity: lightweight
 status: draft
 execution:
   mode: phase-checkpoints
+estate_offset_exempt: >-
+  This roadmap IS the offset. It exists because an AI council classified four
+  review findings as shippable debt rather than release blockers, and that
+  decision is worthless unless it is written where the next reviewer finds it —
+  otherwise all four are re-found and both review rounds are paid for again.
+  Archiving an unrelated roadmap to make room would dispose of somebody else's
+  open work to record a decision about this one, which trades a real estate
+  reduction for a bookkeeping entry. Closes with the release that ships the
+  fixes; two of its four items are already decided and need only a dated line.
 ---
 # Road to settings writer residual debt
 
