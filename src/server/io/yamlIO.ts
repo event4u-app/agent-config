@@ -40,6 +40,25 @@ function formatScalar(value: unknown): string {
     return yamlDump(value, { lineWidth: -1, flowLevel: 0 }).replace(/\n$/, '').trim();
 }
 
+/**
+ * A NESTED mapping key, as both the presence probe and the insertion walk read
+ * one. Shared so the writer and its own existence-probe cannot drift apart —
+ * that drift is the shape this file has now hit four times.
+ *
+ * `-` is in the class because a dashed key is ordinary YAML (`first-name`,
+ * `dry-run`, `retry-count`) and `detectIndentWidth` already accepted one.
+ * While this pattern did not, `findScalarLine` could never find such a key:
+ * `mergeIntoTemplate` then wrote a bogus top-level `x.first-principles:` line
+ * beside the real nested one and the intended value was never written — a save
+ * that silently did nothing — and `upsertScalar` appended another child line on
+ * EVERY call, growing without bound until the file stopped parsing.
+ *
+ * `.` stays OUT, deliberately. A dotted key is the FLAT form, which
+ * `replaceFlatDottedKey` owns; letting this pattern match `a.b:` would make the
+ * nested probe claim a line that is one key literally named "a.b".
+ */
+const NESTED_KEY_RE = /^([A-Za-z_][A-Za-z0-9_-]*)\s*:/;
+
 interface FlatEntry {
     path: string[];
     value: unknown;
@@ -68,6 +87,25 @@ export function replaceScalar(template: string, dottedPath: string[], value: unk
     const key = dottedPath[dottedPath.length - 1];
 
     const lines = template.split('\n');
+    const at = findScalarLine(lines, sections, key);
+    if (at === -1) return template;
+    const width = detectIndentWidth(lines);
+    lines[at] = `${' '.repeat(width * sections.length)}${key}: ${formatScalar(value)}`;
+    return lines.join('\n');
+}
+
+/**
+ * Index of the line holding the scalar at `sections`/`key`, or -1.
+ *
+ * Split out of `replaceScalar` so that "is this path present?" is answerable
+ * WITHOUT writing. `mergeIntoTemplate` used to infer presence from
+ * `replaceScalar` returning a changed string, which conflates "absent" with
+ * "present and already equal to the value being written" — under that test a
+ * no-op write reads as a miss and the caller appends a duplicate mapping key.
+ * A presence question answered by a mutation's side effect is the shape to
+ * look for here; the file already carries two earlier rounds of it.
+ */
+function findScalarLine(lines: readonly string[], sections: readonly string[], key: string | undefined): number {
     // The document's own width, the same read `upsertScalar` performs.
     //
     // R2 round 5, finding 1, and it is the second half of round 4's finding 7.
@@ -84,9 +122,7 @@ export function replaceScalar(template: string, dottedPath: string[], value: unk
     // A writer and its own existence-probe disagreeing about the format is the
     // shape to look for whenever one of a pair is taught something new.
     const width = detectIndentWidth(lines);
-    const targetIndent = ' '.repeat(width * sections.length);
     const currentPath: (string | null)[] = new Array<string | null>(sections.length).fill(null);
-    const formatted = formatScalar(value);
 
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
@@ -98,7 +134,7 @@ export function replaceScalar(template: string, dottedPath: string[], value: unk
         const level = indentLen / width;
         if (level > sections.length) continue;
 
-        const m = /^([A-Za-z_][A-Za-z0-9_]*)\s*:/.exec(stripped);
+        const m = NESTED_KEY_RE.exec(stripped);
         if (!m) continue;
         const lineKey = m[1];
         if (lineKey === undefined) continue;
@@ -115,10 +151,9 @@ export function replaceScalar(template: string, dottedPath: string[], value: unk
         const parentsMatch = sections.every((s, idx) => currentPath[idx] === s);
         if (!parentsMatch) continue;
         if (lineKey !== key) continue;
-        lines[i] = `${targetIndent}${key}: ${formatted}`;
-        return lines.join('\n');
+        return i;
     }
-    return template;
+    return -1;
 }
 
 /**
@@ -182,11 +217,21 @@ export function detectIndentWidth(lines: readonly string[]): number {
  */
 export function upsertScalar(template: string, dottedPath: string[], value: unknown): string {
     if (dottedPath.length === 0) return template;
-    const replaced = replaceScalar(template, dottedPath, value);
-    if (replaced !== template) return replaced;
-
     const sections = dottedPath.slice(0, -1);
     const key = dottedPath[dottedPath.length - 1] as string;
+
+    // Presence is asked, never inferred from the write changing the text. The
+    // string compare that used to stand here read "key already holds this
+    // value" as "key absent" and fell through to the append below — so saving
+    // the wizard's council page twice WITHOUT changing a toggle wrote a second
+    // `api_on_quota:` into the same block, over two `{ok: true}` responses, and
+    // left `.ai-council.yml` rejected by a strict parser. Third instance of one
+    // shape in this file; `findScalarLine` exists to end it, and a fix that
+    // taught only `mergeIntoTemplate` would have left the live path here.
+    if (findScalarLine(template.split('\n'), sections, key) !== -1) {
+        return replaceScalar(template, dottedPath, value);
+    }
+
     const formatted = formatScalar(value);
     const lines = template.split('\n');
     // The document's OWN indent width, not an assumed two.
@@ -228,7 +273,7 @@ export function upsertScalar(template: string, dottedPath: string[], value: unkn
             if (line.trim() === '' || line.trim().startsWith('#')) continue;
             const indentLen = line.length - line.trimStart().length;
             if (indentLen !== indent.length) continue;
-            const m = /^([A-Za-z_][A-Za-z0-9_]*)\s*:/.exec(line.trim());
+            const m = NESTED_KEY_RE.exec(line.trim());
             if (m !== null && m[1] === want) {
                 found = i;
                 break;
@@ -270,22 +315,87 @@ export function upsertScalar(template: string, dottedPath: string[], value: unkn
 }
 
 /**
+ * Rewrite an existing top-level `a.b.c: value` line — the FLAT form
+ * `mergeIntoTemplate` itself appends when a path has no template entry.
+ * Returns the template unchanged when no such line exists.
+ *
+ * `replaceScalar` cannot see this line: its key pattern is
+ * `[A-Za-z_][A-Za-z0-9_]*`, with no dot, so a path this module appended on
+ * one pass is invisible to the probe on the next and `mergeIntoTemplate`
+ * appends a SECOND copy. Two wizard saves therefore produce a file carrying
+ * duplicate mapping keys — a strict parser rejects it outright, which is what
+ * wedged `task release`: its `sync` step exits 2 with "Map keys must be
+ * unique" before the release does any git work.
+ *
+ * A pre-existing duplicate run is COLLAPSED, not merely updated: the first
+ * occurrence keeps its position and takes the new value, every later one is
+ * dropped. Collapsing is value-neutral — a lenient reader already resolved
+ * such a run last-wins — and it is the only way a file corrupted by the old
+ * behaviour becomes parseable again through the ordinary write path.
+ *
+ * Deliberately NOT folded into `replaceScalar`: `upsertScalar` calls that
+ * probe and documents the flat form as the WRONG shape for a nested key (a
+ * reader sees one key literally named "a.b"). Teaching the shared probe to
+ * match it would make `upsertScalar` write into that broken line instead of
+ * creating the nesting. The flat form is legitimate only here, where this
+ * function is the one that wrote it.
+ */
+function replaceFlatDottedKey(
+    template: string,
+    dottedPath: string[],
+    value: unknown,
+): { found: boolean; body: string } {
+    if (dottedPath.length < 2) return { found: false, body: template };
+    const flat = dottedPath.join('.');
+    const lines = template.split('\n');
+    const hits: number[] = [];
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (line === undefined) continue;
+        // Top level only — an indented `a.b:` is somebody else's child key.
+        if (line.length !== line.trimStart().length) continue;
+        const m = /^([A-Za-z_][A-Za-z0-9_.-]*)\s*:/.exec(line);
+        if (m === null || m[1] !== flat) continue;
+        hits.push(i);
+    }
+    if (hits.length === 0) return { found: false, body: template };
+    lines[hits[0] as number] = `${flat}: ${formatScalar(value)}`;
+    // Drop the later copies back-to-front so the earlier indices stay valid.
+    for (let i = hits.length - 1; i >= 1; i--) lines.splice(hits[i] as number, 1);
+    return { found: true, body: lines.join('\n') };
+}
+
+/**
  * Apply every leaf change from `newValues` to `templateBody`. Paths that
  * are not present in the template are appended at the end. Comments are
  * preserved for every key that already exists in the template.
+ *
+ * Idempotent: applying the same values twice yields the same document, so a
+ * second wizard save re-writes the flat block instead of duplicating it.
  */
 export function mergeIntoTemplate(templateBody: string, newValues: Record<string, unknown>): string {
     let body = templateBody;
     const appended: string[] = [];
     for (const entry of flatten(newValues)) {
-        const before = body;
-        body = replaceScalar(body, entry.path, entry.value);
-        if (body === before) {
-            // Path is not in the template — append a flat key=value at EOF.
-            // Form coverage is asserted by parity test, so this branch only
-            // fires on hand-edited templates.
-            appended.push(`${entry.path.join('.')}: ${formatScalar(entry.value)}`);
+        const sections = entry.path.slice(0, -1);
+        const leaf = entry.path[entry.path.length - 1];
+        // Presence is asked, never inferred from the write changing the text —
+        // see `findScalarLine`. Writing the value it already holds is a hit.
+        if (findScalarLine(body.split('\n'), sections, leaf) !== -1) {
+            body = replaceScalar(body, entry.path, entry.value);
+            continue;
         }
+        // Not in the template's nested form. It may still be here as a flat
+        // dotted line this function appended on an earlier pass.
+        const flat = replaceFlatDottedKey(body, entry.path, entry.value);
+        if (flat.found) {
+            body = flat.body;
+            continue;
+        }
+        // Genuinely absent — append a flat key=value at EOF. Form coverage is
+        // asserted by parity test, so this branch only fires on hand-edited
+        // templates.
+        appended.push(`${entry.path.join('.')}: ${formatScalar(entry.value)}`);
     }
     if (appended.length > 0) {
         if (!body.endsWith('\n')) body += '\n';

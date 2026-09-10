@@ -16,8 +16,14 @@ tasks:
     silent: true
     desc: Reconcile local .agent-settings.yml with the canonical template (skipped on fresh clones)
     cmds:
+      # Both locations, because the SCRIPT resolves canonical-first
+      # (`resolveSettingsRead`: agents/settings/ then the repo-root legacy
+      # file). Guarding on the repo-root path alone skipped the sync entirely
+      # on any checkout carrying only the canonical file — which is the layout
+      # ADR-038 made standard, so the guard was answering a question about a
+      # different file than the one the script reads.
       - |
-        if [ -f .agent-settings.yml ]; then
+        if [ -f agents/settings/.agent-settings.yml ] || [ -f .agent-settings.yml ]; then
           ./scripts-run src/scripts/sync_agent_settings --quiet
         else
           echo "ℹ️  .agent-settings.yml absent — skipping sync (run src/scripts/install.py for first-run setup)"
