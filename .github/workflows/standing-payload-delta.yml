@@ -74,7 +74,14 @@ concurrency:
 
 jobs:
   standing-payload-delta:
-    name: Standing payload delta (report-only)
+    # The name is the REPORTED CHECK STRING and is about to be pinned into
+    # branch protection, so it says what the job does. It read
+    # "(report-only)" from before 2026-08-24, when the blocking budget step
+    # was added to it — accurate for the delta script, which never fails, and
+    # wrong for the job, which does. Renaming it AFTER pinning would silently
+    # detach the required check from the job that satisfies it, so it happens
+    # here, one PR before.
+    name: Standing payload delta + budget gate
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
