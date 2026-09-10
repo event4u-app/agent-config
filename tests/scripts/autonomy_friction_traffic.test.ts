@@ -26,7 +26,10 @@ import {
     SHELL_METACHARACTERS,
     transcriptPaths,
 } from '../../src/scripts/autonomy_friction_traffic.js';
-import { SHELL_METACHARACTERS as CATEGORY_A_METACHARACTERS } from '../../src/scripts/hooks/category_a.js';
+import {
+    isCategoryABashCommand,
+    SHELL_METACHARACTERS as CATEGORY_A_METACHARACTERS,
+} from '../../src/scripts/hooks/category_a.js';
 
 function transcriptLine(command: string, id = 'toolu_x'): string {
     return JSON.stringify({
@@ -139,6 +142,28 @@ describe('firstDisqualifier — only the first, because that is the one a fix re
     });
 });
 
+describe('the disqualifier order tracks the classifier, which nothing else pins', () => {
+    // The mechanics doc says the report and the carrier "cannot drift". That
+    // holds for the detectors by construction (they are imported) and NOT for
+    // the bucket order, which restates category_a's refusal sequence by hand.
+    // These rows are the only thing keeping the restatement honest, and the
+    // round-2 review named the gap explicitly.
+    it('reports the metacharacter before the operation, as the classifier does', () => {
+        expect(firstDisqualifier('rm -rf x && ls')).toBe('shell-metacharacter');
+    });
+
+    it('reports the operation before the head list, as the classifier does', () => {
+        expect(firstDisqualifier('frobnicate --push')).toBe('names-a-consequence-operation');
+    });
+
+    it('agrees with the classifier that each of these is refused at all', () => {
+        for (const cmd of ['rm -rf x && ls', 'frobnicate --push', 'frobnicate --all', 'git -C /abs status']) {
+            expect(isCategoryABashCommand(cmd)).toBe(false);
+            expect(firstDisqualifier(cmd)).not.toBe('');
+        }
+    });
+});
+
 describe('the metacharacter class is shared with category_a, not copied', () => {
     // Round-2 finding 2: this was a private regex literal here while the
     // header claimed shared detectors, and it computes the load-bearing split.
@@ -222,14 +247,48 @@ describe('defaultStore', () => {
     });
 });
 
-describe('--limit is validated, not coerced', () => {
-    // Round-2 finding 11: a negative limit silently dropped the OLDEST
-    // transcripts through Array.slice, zero reported an empty store as the
-    // reason, and a typo fell back to 40 without saying so.
+describe('--limit and --store are validated, not coerced', () => {
+    // Round-2 finding 11 / round-3 finding 5: a negative limit silently dropped
+    // the OLDEST transcripts through Array.slice, zero reported an empty store
+    // as the reason, and a typo fell back to 40 without saying so.
+    //
+    // The store is REAL and non-empty here, which is the whole point of this
+    // block. The first version pointed at /nonexistent, where a VALID limit
+    // returns 1 as well — so the rows could not fail for the property they
+    // name, and a test that cannot fail for its own reason is the anti-pattern
+    // this suite already carries a finding about.
+    function storeWithOneCall(): string {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aft-limit-'));
+        fs.writeFileSync(path.join(dir, 'a.jsonl'), transcriptLine('git -C sub status'));
+        return dir;
+    }
+
+    it('accepts a valid limit against this store, so the rows below isolate the limit', () => {
+        const dir = storeWithOneCall();
+        expect(main(['--store', dir, '--limit', '1', '--json'])).toBe(0);
+        fs.rmSync(dir, { recursive: true, force: true });
+    });
+
     it('refuses a negative, a zero and a non-numeric limit', () => {
+        const dir = storeWithOneCall();
         for (const bad of ['-5', '0', 'forty']) {
-            expect(main(['--store', '/nonexistent', '--limit', bad])).toBe(1);
+            expect(main(['--store', dir, '--limit', bad])).toBe(1);
         }
+        fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('refuses a valueless --limit instead of falling back to 40', () => {
+        const dir = storeWithOneCall();
+        expect(main(['--store', dir, '--limit'])).toBe(1);
+        fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    // Round-3 finding 6: the --store half of the same defect was left unfixed —
+    // a valueless --store fell back to the DEFAULT store silently, which is a
+    // different measurement wearing the requested one's shape.
+    it('refuses a valueless --store instead of falling back to the default store', () => {
+        expect(main(['--store'])).toBe(1);
+        expect(main(['--store', '--json'])).toBe(1);
     });
 });
 

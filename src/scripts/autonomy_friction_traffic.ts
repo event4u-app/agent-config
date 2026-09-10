@@ -8,8 +8,8 @@
  * answer is "how much of what the agent actually types does the design
  * cover", because a hand-written corpus contains the shapes its author
  * thought of. That number turned out to be the one that mattered: measured
- * over 7,530 distinct real Bash calls in 39 transcripts on 2026-09-10,
- * category A covered 125 of them — 1.7 %.
+ * over 7,569 distinct real Bash calls in 39 transcripts on 2026-09-10,
+ * category A covered 126 of them — 1.7 %.
  *
  * WHAT IT MEASURES, STATED NARROWLY. Three things, over a transcript store:
  * the share of Bash calls that are category A (the calls this package hands
@@ -288,9 +288,20 @@ export function render(r: TrafficReport): string {
     return `${lines.join("\n")}\n`;
 }
 
-function argValue(argv: readonly string[], flag: string): string | undefined {
+/**
+ * The value of `flag`, `undefined` when the flag is absent, `null` when it is
+ * present with no value.
+ *
+ * The three states are distinct because the caller must refuse the third. A
+ * valueless `--store` used to collapse into "absent" and fall back to the
+ * default store silently, which is the same class of defect as the `--limit`
+ * coercion beside it: an argument that silently changes the window.
+ */
+function argValue(argv: readonly string[], flag: string): string | null | undefined {
     const i = argv.indexOf(flag);
-    return i === -1 ? undefined : argv[i + 1];
+    if (i === -1) return undefined;
+    const value = argv[i + 1];
+    return value === undefined || value.startsWith("--") ? null : value;
 }
 
 export function main(argv: string[] = process.argv.slice(2)): number {
@@ -306,18 +317,23 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         return 0;
     }
     const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
-    const store = argValue(argv, "--store") ?? defaultStore(repoRoot);
+    const storeArg = argValue(argv, "--store");
+    if (storeArg === null) {
+        process.stderr.write("autonomy_friction_traffic: --store needs a directory\n");
+        return 1;
+    }
+    const store = storeArg ?? defaultStore(repoRoot);
     const limitRaw = argValue(argv, "--limit");
     let limit = DEFAULT_LIMIT;
     if (limitRaw !== undefined) {
-        const parsed = Number(limitRaw);
+        const parsed = limitRaw === null ? NaN : Number(limitRaw);
         // Validated rather than coerced: `--limit -5` silently dropped the
         // five OLDEST transcripts through `Array.slice`, `--limit 0` reported
         // an empty store as the reason, and a typo fell back to 40 without
         // saying so. A window is the report's denominator; a wrong one is a
         // wrong measurement wearing the right shape.
         if (!Number.isInteger(parsed) || parsed < 1) {
-            process.stderr.write(`autonomy_friction_traffic: --limit must be a positive integer, got ${limitRaw}\n`);
+            process.stderr.write(`autonomy_friction_traffic: --limit must be a positive integer, got ${limitRaw ?? "no value"}\n`);
             return 1;
         }
         limit = parsed;
