@@ -305,11 +305,65 @@ admission. Cowork is excluded by the existing measurement.
       prompt. The concern does not distinguish them, so every notification-driven turn in a
       long autonomous run pays the full injection. That is a real cost input for the
       `hosts` default and it is not measured anywhere; recorded here rather than acted on.
-      **What a qualifying transcript now looks like**, sharpened by all of the above: a
-      session where a delivered rule's own obligation is discharged visibly — a surfaced
-      discrepancy, a refused step, a classification the model states — in a turn that was
-      NOT about the delivery mechanism. That is reachable in ordinary work and is not
-      reachable by trying to produce it, which is why no attempt is scheduled here.
+      **THE E3 QUALIFICATION CRITERION, WRITTEN DOWN BEFORE THE NEXT ATTEMPT.** AI council
+      2/2 convergent, 2026-09-10 (anthropic/claude-sonnet-4-5 + openai/gpt-4o, blind peer
+      review, api rung), on the question of whether the ACTED read above admits this host.
+      **Q1 — does demonstrable reference satisfy "VISIBLY ACTS ON"? NO, both seats.**
+      anthropic put the reductio on it: *"you create a standard where a model that logs
+      'Received 4 rules' and then ignores all four would qualify as `observed-true`. The gap
+      E3 exists to close is 'do injected rules change model behavior during tasks', not 'do
+      models notice files were read'."*
+      **It also named the risk in refusing, and the refusal is only legitimate because the
+      criterion below now exists:** *"you're at risk of moving the goalposts after seeing a
+      result you didn't design for … If you reject this, you need a PROSPECTIVE criterion
+      for what would qualify, not post-hoc reasoning. Otherwise you're running an
+      unfalsifiable standard: every observation can be dismissed as 'too cheap'."* That is
+      why this paragraph is in the tree rather than in a response file, and why it is dated
+      ahead of any further attempt.
+
+      **A transcript qualifies under E3 when ALL FOUR hold:**
+      1. A delivered rule's OWN STATED OBLIGATION is discharged in the observed turn — a
+         surfaced discrepancy, a refused step, a stated classification, a check performed.
+         Quoting the rule, its id, its size or its arrival is explicitly NOT this.
+      2. The behaviour is **not explainable by the prompt alone**. A reader names the
+         counterfactual: what the turn would plausibly have looked like without the body.
+      3. The turn is **not about the delivery mechanism**. A session measuring injection has
+         every reason to mention injection; that turn cannot be its own evidence.
+      4. The reader is a **fresh context that did not produce the turn**, given a neutral
+         question with no expectation stated in either direction.
+      Conditions 1 and 2 are anthropic's, near verbatim: *"the model's output contains
+      behavior explicitly required by a delivered rule's stated obligation, AND that
+      behavior is absent in the prompt/context alone."* 3 answers Q3 and 4 restates the
+      independence this round already applied.
+
+      **Q3 — must the SUBJECT be blind? NO, and the reason is a bootstrap.** Enabling
+      delivery is itself a deliberate act, so an unwitting subject is unobtainable by
+      construction. Both seats accepted a knowing subject; anthropic drew the line at
+      condition 3 instead — *"the reader was independent … the behavior is routine, not
+      performed-for-the-observer"* — which is what makes the criterion satisfiable in
+      ordinary work and unsatisfiable by staging.
+      **A paired A/B (same prompt, gate open and closed) was considered and NOT adopted as
+      the primary path** — anthropic: a tiebreaker only, because it manufactures the
+      observation, which this repository has refused in a neighbouring case.
+
+      **Q4 — the background-notification cost is a TRIGGER DEFECT, both seats.** The
+      16,314-byte delivery landed on a turn whose `user_prompt_submit` was a task
+      notification, and the concern does not distinguish it from a human prompt. Both
+      recommended separating the two.
+      **Not implemented here, and the reason is measurement rather than effort.** The
+      concern reads the prompt string out of the envelope
+      (`rule_inject_hook.ts:221-223`) and nothing in this tree establishes that a
+      notification-driven `user_prompt_submit` envelope carries a field distinguishing it
+      from a typed one. Guessing a discriminator — matching on a marker in the prompt text,
+      say — is a host-shaped guess of exactly the kind three rounds of this step have now
+      been corrected for. **What closes it:** capture one real envelope of each kind and
+      compare them; then the discriminator is read rather than invented.
+
+      **THREE PROPOSED SURFACES CHECKED AGAINST THE TREE AND ABSENT**, continuing this
+      step's own record: `src/concerns/rule-inject/` (the concern lives at
+      `src/scripts/hooks/rule_inject_hook.ts`), a `triggerScope` configuration field, and a
+      `deliversBodies` config key of the shape proposed. All three are proposals wearing
+      the grammar of references.
 - [x] **1.2 Run 1.1 on Cursor and Cline** (the two hosts binding `user_prompt_submit` with a
       `.md` rule tree). Record Windsurf, Gemini and Augment as `unobserved` unless a session
       exists.
