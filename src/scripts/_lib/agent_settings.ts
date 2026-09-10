@@ -872,33 +872,22 @@ function _probe_yaml(p: string): SettingsLayerState {
 /**
  * Per-layer validity for the layers a caller can actually break.
  *
- * WHY THIS EXISTS, and it is a repair rather than a feature.
+ * A repair, not a feature. `load_agent_settings` merges a broken layer as if it
+ * were absent, so a key's resolved value says nothing about whether the user's
+ * own file parsed — measured 2026-09-10, a project `.agent-settings.yml` of
+ * `:\n  - [\n` returns the template's values and throws nothing. Every reader
+ * shaped `try { …read… } catch { } return <default>` therefore has an
+ * UNREACHABLE catch for that case, and its "fails closed" claim is carried by
+ * its default value rather than by its own code. Worked example and the ruling
+ * that required this: `_lib/continuity_writer.ts` § `auto_record_enabled`.
  *
- * `load_agent_settings` merges a broken layer as if it were absent, so the
- * resolved value of a key says nothing about whether the user's own settings
- * file parsed. Every reader shaped `try { …read… } catch { } return <default>`
- * therefore has an UNREACHABLE catch for the malformed-file case, and any
- * "fails closed" claim such a reader makes is carried by its default value
- * rather than by its own code.
+ * Scope is the user-global files and the in-project cascade — the layers a
+ * human edits. The shipped template is excluded deliberately: a malformed
+ * template is a package defect that already resolves every key to absent, so
+ * reporting it would blame a tree in which the user did nothing wrong.
  *
- * Measured 2026-09-10: with a project `.agent-settings.yml` containing `:\n  - [\n`,
- * `load_agent_settings` returns the template's values and throws nothing. That
- * is why `continuity.auto_record`'s documented fail-closed property evaporated
- * the moment its template default flipped from `off` to `on`
- * (road-to-continuity-writer-activation step 3.2), and why an AI council of
- * 2026-09-10 (2 seats, convergent) ruled the repair is to make the property
- * real rather than to redefine it: *"The defective implementation is grounds to
- * repair the protection, not authority to repeal it."*
- *
- * Scope: the user-global files and the in-project cascade — the layers a human
- * edits. The shipped template is excluded deliberately: a malformed template is
- * a package defect that already resolves every key to absent, so a reader
- * consulting this would report `malformed` for a tree in which nothing the user
- * did was wrong.
- *
- * Reports, never decides. A caller chooses what a `malformed` layer means for
- * its own key, because that choice is the key's polarity and not this
- * function's.
+ * Reports, never decides. What a `malformed` layer MEANS is the key's polarity,
+ * which belongs to the caller.
  */
 export function settings_layer_states(
     options: {

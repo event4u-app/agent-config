@@ -189,7 +189,7 @@ describe('recording (Phase 1.1)', () => {
     });
 });
 
-// ── step 3.2: the advisory and its counter-check are RETIRED ──────────
+// Step 3.2 retired the advisory and its counter-check.
 //
 // Both emitters told a human to run `agent-config session:recycle` before
 // `/clear`. `writeContinuityRecord` now writes the record itself, armed by

@@ -40,7 +40,7 @@ been told something true about Phase 1 and false about Phase 3.
 
 | Handler | Key | Ships | What OFF restores | Residual behavior when OFF |
 |---|---|---|---|---|
-| Continuity-record writer | `continuity.auto_record` | `"on"` (was `"off"` before 2026-09-10) | no automatic record producer — but NOT the pre-change tree any more, and that is the change this row carries | `session:recycle` becomes the only writer again, so a record exists only when a human runs it — and since step 3.2 retired the recycle advisory and its missing-envelope counter-check, **nothing tells anybody to run it**. Throwing this switch off is therefore no longer a return to the previous behaviour; it is continuity off unless an operator remembers the command unprompted. Trip it only for a defect in the writer, and expect to re-arm it |
+| Continuity-record writer | `continuity.auto_record` | `"on"` (was `"off"` before 2026-09-10) | no automatic record producer — but NOT the pre-change tree any more, and that is the change this row carries | `session:recycle` becomes the only writer again, so a record exists only when a human runs it — and since step 3.2 retired the recycle advisory and its missing-envelope counter-check, **nothing tells anybody to run it**. Throwing this switch off is therefore no longer a return to the previous behavior; it is continuity off unless an operator remembers the command unprompted. Trip it only for a defect in the writer, and expect to re-arm it |
 | Run-checkpoint producer | `continuity.run_checkpoints` | `"on"` | no `agents/runtime/state/checkpoints/<run>.json` is written | A killed session inside a roadmap contract can no longer be resumed from a derived checkpoint; `run:supervise` falls back to whatever the roadmap file itself says. Continuity writing and the context-fill surface are unaffected. (This row used to end "and both advisory lanes are unaffected" — there are no advisory lanes left to be unaffected by anything since step 3.2 retired them.) |
 | Session-index restore | `memory.session_index` | `"off"` | the pre-change tree: no memory index injected at `session_start` | No compact id + title index reaches the model at session start; `memory_get` on demand still works, and the working-memory cache injection on the same slot is unaffected |
 
@@ -77,7 +77,7 @@ protection and therefore owner-reserved.
 `run_checkpoints_enabled` is **deliberately unchanged**: its `catch` is
 unreachable for the same reason, and its fail-open claim is true anyway because
 its template value is `on`. Hardening a reader whose claim is currently correct
-would change no behaviour. If that default ever moves to `off`, this paragraph
+would change no behavior. If that default ever moves to `off`, this paragraph
 is the notice that the claim moves with it.
 
 **The diagnostic is an attempt, not a promise.** The Stop slot never blocks and
@@ -93,7 +93,7 @@ a list of things that have happened.
 
 **`continuity.auto_record` → `off`** — and note what it no longer restores. Up
 to 2026-09-10 this switch shipped `off` and throwing it returned the tree to its
-prior behaviour. It now ships `on` and the recycle advisory is retired, so
+prior behavior. It now ships `on` and the recycle advisory is retired, so
 throwing it leaves the normal path with no writer AND no prompt. Every criterion
 below is still a reason to throw it; none of them is a reason to leave it thrown.
 
