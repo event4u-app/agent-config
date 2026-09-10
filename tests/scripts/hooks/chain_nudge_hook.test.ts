@@ -19,6 +19,7 @@ import {
     nudgeReason,
     reasonFor,
     stripLiterals,
+    stripQuoted,
     withClassLatched,
 } from '../../../src/scripts/hooks/chain_nudge_hook.js';
 
@@ -54,6 +55,16 @@ describe('detectChaining — stays silent', () => {
             expect(detectChaining(cmd)).toBeNull();
         });
     }
+});
+
+describe('stripQuoted — the sibling stripper, and why it exists', () => {
+    it('removes quoted spans like stripLiterals does', () => {
+        expect(stripQuoted('grep "a && b" f')).not.toContain('&&');
+    });
+    it('LEAVES the heredoc body, so the command line keeps its own redirect', () => {
+        expect(stripQuoted("cat <<'EOF' > out.txt\nbody\nEOF")).toContain('> out.txt');
+        expect(stripLiterals("cat <<'EOF' > out.txt\nbody\nEOF")).not.toContain('> out.txt');
+    });
 });
 
 describe('stripLiterals', () => {
@@ -98,13 +109,25 @@ describe('nudgeReason', () => {
     });
 });
 
-describe('detectEditByShell — fires on the four write shapes', () => {
+describe('detectEditByShell — fires on every write shape it claims', () => {
     const writes: ReadonlyArray<readonly [string, string]> = [
         ["sed -i '' -e 's/a/b/' docs/x.md", 'sed in-place, BSD two-arg form'],
         ['sed -i.bak -e s/a/b/ f', 'sed in-place with a suffix'],
+        // Round-2 findings: `-i` inside a flag cluster was invisible to the
+        // first draft, which required it as its own token.
+        ["sed -ri 's/a/b/' f", 'sed in-place with -i inside a flag cluster'],
+        ["sed -Ei 's/a/b/' f", 'sed in-place, the -E spelling of the same cluster'],
         ['cat > out.txt', 'a file filled from the shell'],
         ['cat >> out.txt', 'a file appended from the shell'],
+        ['cat a.md b.md > merged.md', 'a concatenation redirected into a file'],
+        // Round-2 finding: stripLiterals consumed the heredoc to its closing
+        // tag and took this redirect with it, so the largest measured write
+        // shape went undetected in its most common spelling.
+        ["cat <<'EOF' > out.txt\nbody\nEOF", 'a heredoc redirected into a file'],
         ['tee report.txt', 'tee writing its input to a path'],
+        // Round-2 finding: the first draft's (?!-) lookahead excluded every
+        // flagged form, which is most of the real ones.
+        ['tee -a report.txt', 'tee appending, with a flag before the path'],
         ["perl -i -pe 's/a/b/' f", 'perl in-place'],
         ['python3 -c "open(\'f\',\'w\').write(x)"', 'an interpreter opening a path for writing'],
     ];
@@ -123,7 +146,18 @@ describe('detectEditByShell — stays silent', () => {
         ['cat f | grep x', 'cat feeding a filter'],
         ['grep x f > /dev/null', 'a redirect to the null device'],
         ['npm test 2>&1', 'an fd duplication, which names no file'],
-        ['tee -a', 'tee with no path argument'],
+        // Round-2 finding, and the ROLE of the row this replaces. It read
+        // `tee -a` and was described as passing for want of a path, while it
+        // actually passed on the flag — the false negative now pinned above,
+        // sitting in the suite as a green row asserting the opposite.
+        ['tee', 'tee with no argument at all'],
+        ['cat f && npm test 2>&1', 'a chain whose only redirect is an fd duplication'],
+        ['sed --expression=s/a/b/ f', 'a long option that merely contains an i'],
+        ['cat CHANGELOG.md | head -50', 'cat feeding a filter, with no redirect'],
+        // The canonical false positive — and this change ships this exact
+        // string in a substitution table: a quoted MENTION of the shape is
+        // not the shape. Round-2 finding 4.
+        ["git commit -m \"use python3 -c open(p,'w') instead\"", 'the write shape quoted inside another command'],
         ['python3 -c "print(open(\'f\').read())"', 'an interpreter opening a path to READ'],
         ["grep 'sed -i' f", 'the shape mentioned inside a quoted argument'],
         ['ls -la', 'a plain command'],

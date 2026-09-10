@@ -29,9 +29,12 @@
  * directory. That makes the substitution a strictly cheaper primitive rather
  * than a style preference, which is why the concern that already reads
  * `tool_input.command` carries it instead of a second concern reading the
- * same field. Measured over 7,488 real Bash calls in 40 transcripts on the
- * maintainer's machine: 326 (4.4 %) wrote a file through the shell — 214
- * `cat >`, 61 `sed -i`, 49 `python3 -c` with a write-mode `open`.
+ * same field. Measured on 2026-09-10 over 7,530 distinct real Bash calls in
+ * 39 transcripts on the maintainer's machine: 306 (4.1 %) wrote a file
+ * through the shell — 216 `cat >`, 66 `sed -i`, 16 `python3 -c` with a
+ * write-mode `open`, 7 `perl -i`, 1 `tee`. Recompute with
+ * `./scripts-run src/scripts/autonomy_friction_traffic`, which shares these
+ * detectors; every figure in this change comes from that one run.
  *
  * WHAT IT DOES NOT FLAG, DELIBERATELY. A pipe of ordinary filters
  * (`grep foo file | head`) is one command with a filter, not two work steps.
@@ -166,9 +169,50 @@ export function stripLiterals(cmd: string): string {
     return out;
 }
 
+/**
+ * Quoted spans removed, heredoc bodies LEFT IN PLACE.
+ *
+ * The sibling of `stripLiterals` for the write rules. That one must consume a
+ * heredoc, because an operator in its body is not chaining; this one must not,
+ * because the heredoc marker and the redirect share a command line and
+ * consuming to the closing tag takes the redirect with it.
+ */
+export function stripQuoted(cmd: string): string {
+    let out = '';
+    let i = 0;
+    let quote: string | null = null;
+    while (i < cmd.length) {
+        const c = cmd[i] as string;
+        if (quote) {
+            if (c === '\\' && quote === '"') {
+                i += 2;
+                continue;
+            }
+            if (c === quote) quote = null;
+            i += 1;
+            continue;
+        }
+        if (c === '\\') {
+            i += 2;
+            continue;
+        }
+        if (c === '"' || c === "'") {
+            quote = c;
+            i += 1;
+            continue;
+        }
+        out += c;
+        i += 1;
+    }
+    return out;
+}
+
 /** What the nudge saw, or null when the command is not chained work. */
 export function detectChaining(command: string): string | null {
-    const bare = stripLiterals(command);
+    return _detectChaining(stripLiterals(command));
+}
+
+function _detectChaining(bare: string): string | null {
     if (/^\s*[A-Za-z_][A-Za-z0-9_]*=/.test(bare) && /[;\n]/.test(bare)) {
         return 'a leading `VAR=…` assignment carrying state into a later segment';
     }
@@ -187,24 +231,64 @@ export function detectChaining(command: string): string | null {
  * and Write perform without an expiring grant. `/dev/null` and an fd
  * duplication (`2>&1`) are excluded because neither names a file being filled.
  */
-const EDIT_BY_SHELL: ReadonlyArray<{ re: RegExp; seen: string; raw?: true }> = [
-    { re: /(^|[\s;&|(])sed\s+(-[A-Za-z]+\s+)*-i\b/, seen: '`sed -i` edits a file in place' },
-    { re: /(^|[\s;&|(])perl\s+(-[A-Za-z]+\s+)*-[A-Za-z]*i\b/, seen: '`perl -i` edits a file in place' },
-    { re: /(^|[\s;&|(])cat\s*>{1,2}\s*(?!&|\/dev\/null)\S/, seen: '`cat >` fills a file from the shell' },
-    { re: /(^|[\s;&|(])tee\s+(?!-)(?!\/dev\/null)\S/, seen: '`tee` writes its input to a file' },
-    // RAW, and it has to be: an interpreter's program is a quoted argument, so
-    // `stripLiterals` removes the whole body and this rule could never fire
-    // against the stripped text. Matched on the raw string it needs the write
-    // MODE to be named — `open(p, "w")` — so a path merely being read, and a
-    // quoted mention of the shape in prose, both stay silent.
-    { re: /python3?\s+-c[\s\S]*\bopen\s*\([^)]*['"][wax]\+?['"]/, seen: 'a `python3 -c` one-liner opens a path for writing', raw: true },
+const EDIT_BY_SHELL: ReadonlyArray<{ re: RegExp; seen: string }> = [
+    // `-i` may ride inside a flag cluster (`-ri`, `-Ei`) or carry a backup
+    // suffix (`-i.bak`), so the letter is matched inside the cluster rather
+    // than as a token. `sed -n 2,8p` and `sed -e s/a/b/ f` have no `i` in any
+    // flag and stay silent; `--expression=…` cannot match because the class
+    // admits letters only after the single leading dash.
+    {
+        re: /(^|[\s;&|(])sed\s+(?:-[A-Za-z]+\s+)*(?:-[A-Za-z]*i[A-Za-z]*|--in-place)\b/,
+        seen: '`sed -i` edits a file in place',
+    },
+    {
+        re: /(^|[\s;&|(])perl\s+(?:-[A-Za-z]+\s+)*-[A-Za-z]*i[A-Za-z]*\b/,
+        seen: '`perl -i` edits a file in place',
+    },
+    // `[^\n]*` between the head and the redirect, so `cat <<'EOF' > out.txt`
+    // and `cat a b > merged` both land, while `> /dev/null` and an fd
+    // duplication (`2>&1`) are excluded by the lookahead at every position the
+    // engine tries.
+    { re: /(^|[\s;&|(])cat\b[^\n]*>{1,2}\s*(?!&|\/dev\/null)\S/, seen: '`cat >` fills a file from the shell' },
+    // A flag cluster before the path is normal (`tee -a out.txt`); the first
+    // draft's `(?!-)` lookahead excluded every flagged form, which is most of
+    // the real ones.
+    {
+        re: /(^|[\s;&|(])tee\s+(?:-[A-Za-z]+\s+)*(?!\/dev\/null)\S/,
+        seen: '`tee` writes its input to a file',
+    },
 ];
 
-/** What the write-shaped detector saw, or null when the call writes no file. */
+/** The interpreter form, split across the two views for the reason below. */
+const PY_AT_COMMAND_POSITION = /(^|[\s;&|(])python3?\s+-c\b/;
+const PY_OPENS_FOR_WRITING = /\bopen\s*\([^)]*['"][wax]\+?['"]/;
+
+/**
+ * What the write-shaped detector saw, or null when the call writes no file.
+ *
+ * `stripQuoted` rather than `stripLiterals` for the redirect rules: the
+ * heredoc branch of `stripLiterals` runs to the closing tag and swallows the
+ * command line with it, so `cat <<'EOF' > out.txt` lost its own redirect and
+ * the largest measured write shape went undetected in its most common spelling.
+ *
+ * The interpreter rule reads BOTH views, and needs to. Its program is a quoted
+ * argument, so the write mode is only visible in the raw string; but matching
+ * the raw string alone fires on any command that merely QUOTES the shape —
+ * `git commit -m "use python3 -c open(p,'w')"` did, and this change ships that
+ * exact string in a substitution table. So the interpreter must sit at a
+ * command position in the STRIPPED text, where a quoted mention has already
+ * been removed, and the write mode must be named in the RAW text.
+ */
 export function detectEditByShell(command: string): string | null {
-    const bare = stripLiterals(command);
+    return _detectEditByShell(command, stripQuoted(command));
+}
+
+function _detectEditByShell(command: string, quotesStripped: string): string | null {
     for (const shape of EDIT_BY_SHELL) {
-        if (shape.re.test(shape.raw ? command : bare)) return shape.seen;
+        if (shape.re.test(quotesStripped)) return shape.seen;
+    }
+    if (PY_AT_COMMAND_POSITION.test(quotesStripped) && PY_OPENS_FOR_WRITING.test(command)) {
+        return 'a `python3 -c` one-liner opens a path for writing';
     }
     return null;
 }
@@ -226,9 +310,12 @@ export interface NudgeFinding {
  * at all, while the chain line only explains why this one did.
  */
 export function detectShape(command: string): NudgeFinding | null {
-    const write = detectEditByShell(command);
+    // Each view is built once. This runs on every shell tool call and the
+    // header documents 26 ms p95 as load-bearing, so calling the two exported
+    // wrappers here would strip the same string twice per call for nothing.
+    const write = _detectEditByShell(command, stripQuoted(command));
     if (write) return { klass: 'edit-by-shell', seen: write };
-    const chained = detectChaining(command);
+    const chained = _detectChaining(stripLiterals(command));
     if (chained) return { klass: 'chain', seen: chained };
     return null;
 }
@@ -306,14 +393,16 @@ function readLatch(root: string): Record<string, LatchEntry> {
     }
 }
 
-function alreadyNudged(root: string, session: string, klass: NudgeClass): boolean {
-    return classAlreadyNudged(readLatch(root)[session], klass);
-}
-
-function latch(root: string, session: string, klass: NudgeClass): void {
+/**
+ * Record `klass` into an ALREADY-READ state and persist it.
+ *
+ * The state is passed in rather than re-read: the caller has just consulted it
+ * to decide whether to fire, and reading the same file twice per firing call is
+ * the kind of hot-path waste this file's own ordering comment exists to avoid.
+ */
+function latch(root: string, session: string, klass: NudgeClass, state: Record<string, LatchEntry>): void {
     try {
         const p = latchFile(root);
-        const state = readLatch(root);
         state[session] = withClassLatched(state[session], klass);
         fs.mkdirSync(path.dirname(p), { recursive: true });
         fs.writeFileSync(p, JSON.stringify(state));
@@ -380,9 +469,10 @@ export function main(): number {
     if (!enabled(root)) return EXIT_ALLOW;
 
     const session = sessionId(envelope);
-    if (alreadyNudged(root, session, finding.klass)) return EXIT_ALLOW;
+    const state = readLatch(root);
+    if (classAlreadyNudged(state[session], finding.klass)) return EXIT_ALLOW;
 
-    latch(root, session, finding.klass);
+    latch(root, session, finding.klass, state);
     process.stdout.write(`${JSON.stringify({ decision: 'warn', reason: reasonFor(finding) })}\n`);
     return EXIT_WARN;
 }
