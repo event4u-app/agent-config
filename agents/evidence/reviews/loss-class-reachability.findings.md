@@ -1,12 +1,12 @@
 # Findings: loss-class-reachability
-<!-- completion-review: v1 | reviewed: 2026-09-10 | scope: 776cc3e22d0273f7f67bb1872911154792b414cd936b46c6c8ec474d78fbbadd | diff: 621d44fc2b6ade0b2c6f375a803fbe786dd9adc8 | reviewer: r2-fresh-subagent-loss-class-reachability | prompt_hash: 22058a9b4b13db9a126974537d6448352930d517900752a4898ecba3f2c3320f -->
+<!-- completion-review: v1 | reviewed: 2026-09-10 | scope: 584a6f3a59f658c9d5b92229edeafeb384bc150125cec5be0de9605ee35933a7 | diff: 597c11bd2ba8f92c269963c9acedac00528ee3c5 | reviewer: r2-fresh-subagent-loss-class-reachability | prompt_hash: 22058a9b4b13db9a126974537d6448352930d517900752a4898ecba3f2c3320f -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-loss-class-reachability"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-09-10 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 621d44fc2b6ade0b2c6f375a803fbe786dd9adc8
-  scope_hash: 776cc3e22d0273f7f67bb1872911154792b414cd936b46c6c8ec474d78fbbadd
+  diff_sha: 597c11bd2ba8f92c269963c9acedac00528ee3c5
+  scope_hash: 584a6f3a59f658c9d5b92229edeafeb384bc150125cec5be0de9605ee35933a7
   roadmap: agents/roadmaps/archive/road-to-continuity-writer-activation.md
   roadmap_hash: 443b2c16bed9c29d476cd21aaa877062988b7e59590cd54e6f305a597e38742c
   ac_hash: 2fb0f356a9bd37c49de56d689199f1c5717e8b3f8bd9fb967e44caff33c76e60
