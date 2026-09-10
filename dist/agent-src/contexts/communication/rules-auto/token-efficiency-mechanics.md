@@ -224,25 +224,42 @@ Over 40,268 real Bash calls from one maintainer's transcripts:
 
 The figures above were computed once by hand. `autonomy_friction_traffic`
 (`./scripts-run src/scripts/autonomy_friction_traffic --store <dir> --limit 40`)
-recomputes them from a transcript store and shares the live detectors, so the
-report and the carrier cannot drift. Over 7,518 Bash calls in 40 transcripts:
+recomputes them from a transcript store and shares the live detectors — and the
+metacharacter class is `category_a`'s own exported constant — so the report and
+the carrier cannot drift. Over **7,530 distinct** Bash calls in 39 transcripts
+(deduplicated by tool-use id, with the measuring session excluded):
 
-- **1.6 %** are category A. 7,095 of the 7,394 uncovered calls are disqualified
-  by a shell metacharacter before their argv is read; only 299 fail on the head
-  token. Widening the head list therefore cannot move this number — the shape
-  can.
-- **60.3 %** carry the chain class. `cd` is the head of 3,512 of them.
-- **3.9 %** (293) write a file through the shell: 215 `cat >`, 60 `sed -i`,
-  11 a `python3 -c` opening a path for writing, 7 `perl -i`.
+- **1.7 %** (125) are category A. Of the 7,405 uncovered calls, **7,105** are
+  disqualified by a shell metacharacter before their argv is read, 21 name a
+  consequence operation, and **279** get as far as the head list and are refused
+  there. Widening the head list therefore cannot move this number — the shape
+  can. Read the 279 as an upper bound: a simple command is also refused for a
+  directory flag whose value escapes the working tree, and that case is not
+  separable from the head bucket.
+- **60.4 %** (4,548) carry the chain class.
+- **4.1 %** (306) write a file through the shell: 216 `cat >`, 66 `sed -i`,
+  16 a `python3 -c` opening a path for writing, 7 `perl -i`, 1 `tee`.
+- Among the **uncovered** calls (a different denominator from the two classes
+  above, which are counted over every call), `cd` is the head of **3,541** —
+  followed by `git` 481, `grep` 373, `gh` 334, `sed` 238, `./scripts-run` 228,
+  `python3` 209.
 
-**Two host facts, verified against the host's own permission documentation,
-that decide what any of this can buy.** First, `permissions.allow` does **not**
-bypass the auto-mode classifier — the two are layers, the rules are consulted
-first and the classifier still judges what passes, so an allow entry cannot
-make a prompt go away on its own. Second, "don't ask again" saves a permanent
-rule for a read-only command and only a session-lifetime one for a
-write-shaped command. That second fact is the reason the write class earns its
-own advisory line: no amount of confirming makes the next `sed -i` cheaper.
+**Two host facts that decide what any of this can buy.** First,
+`permissions.allow` does **not** bypass the auto-mode classifier — the two are
+layers, the rules are consulted first and the classifier still judges what
+passes, so an allow entry cannot make a prompt go away on its own. Second,
+"don't ask again" saves a permanent rule for a read-only command and only a
+session-lifetime one for a write-shaped command. That second fact is why the
+write class earns its own advisory line: no amount of confirming makes the next
+`sed -i` cheaper.
+
+*Provenance, because the strength of those two claims differs from the
+neighbouring one.* Both were read out of the host's own permission
+documentation on 2026-09-10 and are reported by it directly. The adjacent
+question — whether a `pre_tool_use` hook returning `permissionDecision: allow`
+suppresses the classifier — was looked for in the same pass and **not found
+documented**, which is why nothing here rests on it and why the surrounding
+prose says so rather than assuming the layering generalises.
 
 **And a correction to the table below.** `git -C /repo status` is the right
 substitution for the host's matcher, but it is **not** category A: `category_a`

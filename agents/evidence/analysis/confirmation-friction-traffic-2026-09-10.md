@@ -13,8 +13,8 @@ package can reach.
 |---|---|
 | **Instrument** | `./scripts-run src/scripts/autonomy_friction_traffic --store <store> --limit 40` (new in this change) |
 | **Store** | `~/.claude/projects/-Users-mathiasberg-projects-galawork-galawork-packages-event4u-agent-config` |
-| **Window** | the 40 most recent transcripts by mtime |
-| **Bash calls in window** | **7,518** |
+| **Window** | the 40 most recent transcripts by mtime, less the measuring session → **39 read** |
+| **Distinct Bash calls** | **7,530** (deduplicated by tool-use id) |
 | **Measured on** | **2026-09-10** |
 | **Tree SHA** | `7bf325f3b3e659d9d568780fe9ed46a10d6e502a` |
 
@@ -52,23 +52,30 @@ is, and it is the one this change addresses.**
 
 | Measure | Count | Share |
 |---|---|---|
-| Bash calls | 7,518 | — |
-| Category A (this package hands the host an `allow`) | 124 | **1.6 %** |
-| No allow emitted | 7,394 | 98.4 % |
-| … disqualified by a shell metacharacter, before argv | 7,095 | 94.4 % of the uncovered |
-| … disqualified by the head token or subcommand | 299 | 4.0 % of the uncovered |
-| Carrying the chain shape class | 4,534 | 60.3 % |
-| Carrying the write-through-shell class | 293 | 3.9 % |
+| Distinct Bash calls | 7,530 | — |
+| Category A (this package hands the host an `allow`) | 125 | **1.7 %** |
+| No allow emitted | 7,405 | 98.3 % |
+| … disqualified by a shell metacharacter, before argv | 7,105 | 95.9 % of the uncovered |
+| … naming a consequence operation | 21 | 0.3 % of the uncovered |
+| … refused after the shape and the operation cleared | 279 | 3.8 % of the uncovered |
+| Carrying the chain shape class | 4,548 | 60.4 % of all calls |
+| Carrying the write-through-shell class | 306 | 4.1 % of all calls |
 
-Top head tokens among the uncovered: `cd` 3,512 · `git` 482 · `grep` 382 ·
-`gh` 332 · `sed` 235 · `./scripts-run` 229 · `python3` 208.
+Top head tokens **among the uncovered** — a different denominator from the two
+shape classes above, which are counted over every call: `cd` 3,541 · `git` 481 ·
+`grep` 373 · `gh` 334 · `sed` 238 · `./scripts-run` 228 · `python3` 209.
 
-Write shapes: `cat >` 215 · `sed -i` 60 · `python3 -c` opening a path for
-writing 11 · `perl -i` 7.
+Write shapes: `cat >` 216 · `sed -i` 66 · `python3 -c` opening a path for
+writing 16 · `perl -i` 7 · `tee` 1.
 
 **The load-bearing consequence: widening the head allowlist cannot move the
-coverage figure.** Only 299 of 7,394 uncovered calls fail on the head. The other
-7,095 fail on the shape, so the lever is the shape and not the list.
+coverage figure.** 7,105 of 7,405 uncovered calls fail on the shape before their
+argv is read, so the lever is the shape and not the list. The 279 that reach the
+head list are an **upper bound** on head misses, not a count of them: a simple
+command is also refused for a directory flag whose value escapes the working
+tree, and that case is not separable from this bucket without reimplementing the
+argv walk. The conclusion survives either reading — it is a ceiling, and the
+ceiling is 3.8 %.
 
 ## 3. A lock, evaluated rather than cited
 
@@ -110,9 +117,19 @@ at all.
 
 **What would falsify the choice.** A re-run of the probe over a later window
 where the write-through-shell share has not fallen. The number to beat is
-**3.9 % (293 of 7,518)** on 2026-09-10; the store, the window and the command
-are in the table above, so the comparison is reproducible rather than
-remembered.
+**4.1 % (306 of 7,530)** on 2026-09-10; the store, the window and the command
+are in the table above.
+
+**What that comparison can and cannot control, stated because the first draft
+of this record overclaimed it.** Two confounders are now removed by the
+instrument: calls are deduplicated by tool-use id, so a resumed session's
+recopied turns are not counted twice, and the measuring session's own transcript
+is excluded, because every call the probe makes lands in a file it is about to
+read — two runs minutes apart reported 7,518 and 7,653 for the same tree before
+that was fixed. What remains uncontrolled is the **window**: `--limit 40` names
+the 40 most recent transcripts, and which files those are moves as new sessions
+appear. So a later figure measures the window as well as the tree, and the date
+above is part of the number rather than a note beside it.
 
 ## 5. What was deliberately not done
 
@@ -128,3 +145,33 @@ remembered.
 - **No new rule prose.** The always-loaded budget has no headroom, and the
   obligation already exists in `token-efficiency`; what was missing was reach at
   tool-call time, which is a carrier and not a sentence.
+
+## 6. Round 2 — what the neutral review changed
+
+The completion review returned thirteen findings, five medium and eight low,
+committed unedited before any of them was touched
+(`agents/evidence/reviews/feat-confirmation-friction-write-shape.findings.md`).
+Four had been executed against the shipped modules rather than read off the
+diff, and all four reproduced here. What they cost, because the pattern is worth
+recording rather than just the fixes:
+
+- **Three false negatives and one false positive in a detector whose own comment
+  claimed the opposite.** `cat <<'EOF' > out.txt` lost its redirect to the
+  heredoc stripper — the most common spelling of the largest write shape.
+  `tee -a f` was excluded by a lookahead meant to require a path. `sed -ri` was
+  invisible because `-i` was required as its own token. And a quoted *mention* of
+  the interpreter shape fired the rule — on a string this very change ships in a
+  substitution table. The write count moved 293 → 306 on the fixes.
+- **A test row that was green for the wrong reason.** `tee -a` sat in the
+  silence list described as passing for want of a path, while it actually passed
+  on the flag. It was the false negative above, asserted as correct behaviour.
+- **Three contradictory populations for one instrument**, because the first two
+  figures came from throwaway scripts before the detectors were shared. Every
+  number in the change now comes from the single run recorded above.
+- **A private copy of the classifier's metacharacter class** in the probe, while
+  the probe's header claimed shared detectors — and that copy computed the split
+  the whole report turns on. Now imported, and pinned by an identity test.
+
+None was critical or high, and the direction of the conclusion survived all of
+them. That is the honest summary: the review did not overturn the finding, it
+removed four ways the finding could have been wrong without anyone noticing.
