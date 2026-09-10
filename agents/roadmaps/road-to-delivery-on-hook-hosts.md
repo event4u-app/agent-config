@@ -267,6 +267,49 @@ admission. Cowork is excluded by the existing measurement.
       subject. The next session on this machine whose prompt trips a labelled rule is the
       candidate; a second party then reads that turn and fills the waiting slot in
       `src/config/host-injection-effect.json`, whose citation check refuses a partial row.
+
+      **UPDATE 2026-09-10 (later still) — THE DELIVERY HAPPENED, A SECOND PARTY READ IT,
+      AND THE ROW STAYS `unobserved`. That is the result, not a failure to get one.**
+      With `mode: delivery` live, a user prompt tripped two labelled rules and the concern
+      delivered **2 bodies / 7,685 B** into a live Claude Code context (2.1.268); later in
+      the same session a further **4 bodies / 16,314 B**. Delivery into a live model
+      context is therefore no longer the open question, and the reason this row carried
+      since 2026-09-08 — *"the concern emitted zero bytes in every session on record"* — is
+      now false.
+      **The independent read.** A fresh context that did not produce the turn was given the
+      transcript and a neutral three-way question (ACTED / COINCIDENT / NONE) with no
+      expectation stated in either direction. It returned **ACTED** — and qualified its own
+      verdict unprompted, which is the sentence this step turns on:
+      *"the ACTED verdict rests on 'referring to its substance', not on 'doing something it
+      asks for'."*
+      It confirmed the reference is demonstrable rather than reconstructible: the model
+      quoted the injection's byte count, and that string appears nowhere else in the
+      transcript. And on the two delivered rules' actual OBLIGATIONS it returned **NONE** —
+      no point in the turn surfaces a source discrepancy (`cross-source-consistency`) or
+      classifies the prompt continuation-vs-interrupt (`user-interrupt-priority`).
+      **Why that is not `observed-true`, stated so the next round does not relitigate it.**
+      E3 asks for a transcript in which the model VISIBLY ACTS ON a delivered body. Citing
+      that a body arrived is a different act, and it is a cheap one precisely here: the
+      observed turn was one that had been WAITING for the delivery for two rounds, so the
+      model had every reason to remark on it regardless of what it contained. Recording
+      `observed-true` off that is the K1 conflation one layer further in than the
+      byte-equivalence version this file already refused.
+      **A STRUCTURAL LIMIT THE READER FOUND, and it bounds every future attempt.** Thinking
+      blocks are recorded with length 0 in the transcript, so an internal application of a
+      delivered rule is invisible **by construction**. Only externally visible behaviour
+      can ever satisfy E3 on this host — which means the qualifying transcript is one where
+      a delivered rule changes what the model DOES in a way a reader can point at, not one
+      where the model is thinking about rules.
+      **A third finding, on cost rather than effect.** The 16,314-byte delivery landed on a
+      turn whose `user_prompt_submit` was a BACKGROUND TASK NOTIFICATION, not a human
+      prompt. The concern does not distinguish them, so every notification-driven turn in a
+      long autonomous run pays the full injection. That is a real cost input for the
+      `hosts` default and it is not measured anywhere; recorded here rather than acted on.
+      **What a qualifying transcript now looks like**, sharpened by all of the above: a
+      session where a delivered rule's own obligation is discharged visibly — a surfaced
+      discrepancy, a refused step, a classification the model states — in a turn that was
+      NOT about the delivery mechanism. That is reachable in ordinary work and is not
+      reachable by trying to produce it, which is why no attempt is scheduled here.
 - [x] **1.2 Run 1.1 on Cursor and Cline** (the two hosts binding `user_prompt_submit` with a
       `.md` rule tree). Record Windsurf, Gemini and Augment as `unobserved` unless a session
       exists.
@@ -640,6 +683,14 @@ admission. Cowork is excluded by the existing measurement.
      attempt the session. Costs 17,823 B of injected context on a prompt that trips three
      labelled rules, which is worth knowing before enabling it. Reproduction with commands:
      `agents/evidence/analysis/e3-gate-closed-not-stale-bundle-2026-09-10.md`.
+     **DONE 2026-09-10, and the blocker does NOT resolve on it.** Delivery was enabled,
+     the concern delivered into a live session (2 bodies / 7,685 B, then 4 / 16,314 B), and
+     an independent reader returned ACTED **while qualifying that the verdict rests on the
+     model REFERRING to the payload rather than acting on what it asks for**. On the rules'
+     own obligations the reader returned NONE. So the `Resolved when` condition — an
+     `observed-true` row with a full citation — is still unmet, and step 1.1 records why in
+     full. What changed is the shape of the remaining gap: it is no longer "the carrier
+     never fires", it is "a delivered rule has not yet visibly changed what the model does".
   3. Or decide that E3's bar is not reachable for any host this year and re-scope Phase 2 rather than leaving it waiting on an empty set — an owner decision, since E3 is an owner ruling.
 - **Resolved when:** at least one host carries an `observed-true` row in `src/config/host-injection-effect.json` with a full citation (host version, transcript pointer, date), and `report_host_injection_effect` regenerates the census with that row admissible.
 - **Review trigger:** re-read when the blocker above resolves, since `delivery` going live is its precondition; otherwise 2026-12-08, matching the expiry the host table already carries for this observation state.
