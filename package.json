@@ -67,7 +67,9 @@
         "!src/**/*.test.ts",
         "!src/**/*.spec.ts",
         "!dist/agent-src/skills/**/evals/**",
-        "!dist/**/*.map"
+        "!dist/**/*.map",
+        "!**/__pycache__/**",
+        "!**/*.pyc"
     ],
     "bin": {
         "agent-config": "dist/cli/agent-config.js"
@@ -80,6 +82,8 @@
         "build:install-bundle": "esbuild src/scripts/install.ts --bundle --platform=node --format=esm --target=node20 --define:__AGENT_CONFIG_BUNDLE__=true --outfile=dist/install/install.mjs --banner:js=\"import { createRequire as __acCreateRequire } from 'node:module'; const require = globalThis.require ?? __acCreateRequire(import.meta.url);\"",
         "build:hooks": "esbuild src/scripts/hooks/dispatch_entry.ts --bundle --platform=node --format=esm --target=node20 --define:__AGENT_CONFIG_BUNDLE__=true --outfile=dist/hooks/dispatch.js --banner:js=\"import { createRequire as __acCreateRequire } from 'node:module'; const require = globalThis.require ?? __acCreateRequire(import.meta.url); const __acPath = require('node:path'); const __acFs = require('node:fs'); const __acUrl = require('node:url'); const __acReal = (p) => { try { return __acFs.realpathSync(p); } catch { return p; } }; const __acSelf = __acReal(__acUrl.fileURLToPath(import.meta.url)); if (process.argv[1] !== undefined && __acReal(__acPath.resolve(process.argv[1])) === __acSelf) { globalThis.__AC_HOOKS_BUNDLE_DIRECT = true; process.argv = [process.argv[0], __acSelf + '.__direct__', ...process.argv.slice(2)]; }\"",
         "build:mcp-bundle": "esbuild src/scripts/mcp_server/__main__.ts --bundle --platform=node --format=esm --target=node20 --define:__AGENT_CONFIG_BUNDLE__=true --outfile=dist/mcp/server.mjs --banner:js=\"import { createRequire as __acCreateRequire } from 'node:module'; const require = globalThis.require ?? __acCreateRequire(import.meta.url); const __acPath = require('node:path'); const __acFs = require('node:fs'); const __acUrl = require('node:url'); const __acReal = (p) => { try { return __acFs.realpathSync(p); } catch { return p; } }; const __acSelf = __acReal(__acUrl.fileURLToPath(import.meta.url)); if (process.argv[1] !== undefined && __acReal(__acPath.resolve(process.argv[1])) === __acSelf) { globalThis.__AC_MCP_BUNDLE_DIRECT = true; process.argv = [process.argv[0], __acSelf + '.__direct__', ...process.argv.slice(2)]; }\"",
+        "clean:cli-delegate": "rm -rf dist/cli-delegate",
+        "build:delegates": "npm run clean:cli-delegate && npm run build:cli-delegate && npm run build:agent-src-delegate && npm run build:delegate-aux",
         "build:cli-delegate": "esbuild src/scripts/_cli/cmd_*.ts --bundle --splitting --platform=node --format=esm --target=node20 --define:__AGENT_CONFIG_BUNDLE__=true --define:__AGENT_CONFIG_CLI_DELEGATE__=true --outdir=dist/cli-delegate --banner:js=\"import { createRequire as __acCreateRequire } from 'node:module'; const require = globalThis.require ?? __acCreateRequire(import.meta.url);\"",
         "build:agent-src-delegate": "esbuild src/agent-src/scripts/*.ts --bundle --splitting --platform=node --format=esm --target=node20 --define:__AGENT_CONFIG_BUNDLE__=true --define:__AGENT_CONFIG_CLI_DELEGATE__=true --outdir=dist/cli-delegate --banner:js=\"import { createRequire as __acCreateRequire } from 'node:module'; const require = globalThis.require ?? __acCreateRequire(import.meta.url);\"",
         "build:delegate-aux": "esbuild src/scripts/_lib/pin_resolver.ts src/scripts/check_update_banner.ts --bundle --splitting --platform=node --format=esm --target=node20 --define:__AGENT_CONFIG_BUNDLE__=true --define:__AGENT_CONFIG_CLI_DELEGATE__=true --outbase=src/scripts --outdir=dist/cli-delegate --banner:js=\"import { createRequire as __acCreateRequire } from 'node:module'; const require = globalThis.require ?? __acCreateRequire(import.meta.url);\"",
@@ -89,7 +93,7 @@
         "build:discovery": "./scripts-run src/scripts/build_discovery_manifest --write --strict",
         "build:mcp-manifest": "./scripts-run src/scripts/build_mcp_registry_manifest --write --strict",
         "build:mcp-catalog": "./scripts-run src/scripts/build_mcp_catalog --write --strict",
-        "build": "npm run build:cli && npm run build:install-bundle && npm run build:hooks && npm run build:mcp-bundle && npm run build:cli-delegate && npm run build:agent-src-delegate && npm run build:delegate-aux && npm run build:ui",
+        "build": "npm run build:cli && npm run build:install-bundle && npm run build:hooks && npm run build:mcp-bundle && npm run build:delegates && npm run build:ui",
         "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.scripts.json",
         "lint:ts": "eslint --cache --max-warnings 0 'src/**/*.ts'",
         "test:ts": "vitest run",

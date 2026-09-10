@@ -11,8 +11,14 @@ import { markdown, type Delta } from '../../src/scripts/report_pack_delta';
  * `files[]` — are NOT run here: one harness invocation takes minutes, and a
  * unit suite that shells out to `npm install --global` is a suite nobody runs.
  * What is asserted here is everything a cheap check CAN see: that the
- * exclusions the harness proved safe are actually in `files[]`, that the cap
- * moved DOWN, and that the delta reporter's contract holds.
+ * exclusions the harness proved safe are actually in `files[]`, that the cap is
+ * DERIVED from a measurement and bounded by the value its newest dated note
+ * justifies, and that the delta reporter's contract holds.
+ *
+ * This paragraph used to end "that the cap moved DOWN". ADR-273 reset the cap
+ * upward on a reconstructed clean baseline, so that clause was false the moment
+ * the block below was rewritten and is corrected here rather than left for a
+ * reader to trip over.
  *
  * The behavioural evidence itself lives in
  * `agents/evidence/analysis/npm-payload-subtree-verdicts.md` and is reproducible
@@ -56,23 +62,70 @@ describe('the exclusions the harness proved safe are in files[]', () => {
     });
 });
 
-describe('the cap ratcheted DOWN', () => {
-    it('max is below the 9.2 it was raised to', () => {
-        expect(budget().budgets.packed_size_mb.max).toBeLessThan(9.2);
+/**
+ * SUPERSEDED IN ITS LITERALS, KEPT IN ITS DISCIPLINE — ADR-273, 2026-09-10.
+ *
+ * This block used to pin `max < 9.2`, a headroom band of 6-8 %, and the literal
+ * strings `7.4 %` / `HEADROOM IS 7.4 %, NOT 8 %`. Those assert one historical
+ * moment — the 9.2 -> 9.1 reduction — rather than an invariant, and ADR-273
+ * reset the cap to 11.5 on a reconstructed clean baseline after establishing
+ * that the comparator every earlier figure was set against carried 0.4058 MB of
+ * stale build output. A test that pins a superseded moment fails on the change
+ * that supersedes it and says nothing about whether that change was sound.
+ *
+ * What is asserted instead is the part that does NOT expire: the cap is
+ * DERIVED, never chosen. This file's own documented formula is
+ * `max = last_measured x 1.095`, and every recorded reset in its history obeys
+ * it. Pinning the derivation catches the thing the old literals were really
+ * guarding — a cap nudged up to clear a failing check — at every future reset
+ * rather than only at this one.
+ */
+describe('the cap is derived from a measurement, never chosen', () => {
+    // The absolute anchor. The derivation check below is satisfied by raising
+    // `max` and `last_measured` together, which is precisely the move the block
+    // exists to catch — so a ceiling on the literal value has to sit beside it.
+    // This IS a moment pin and is meant to be: it is updated at each recorded
+    // reset, in the same diff as the `baseline_note_<date>` that justifies it.
+    it('max is at or below the value ADR-273 reset it to', () => {
+        expect(budget().budgets.packed_size_mb.max).toBeLessThanOrEqual(11.5);
     });
 
-    it('headroom over last_measured is real but is not overstated as 8%', () => {
+    it('max never exceeds last_measured x 1.095', () => {
         const { max, last_measured: measured } = budget().budgets.packed_size_mb;
-        const headroom = (max - measured) / measured;
-        // Both council seats required the exact figure rather than a rounded 8%.
-        expect(headroom).toBeGreaterThan(0.06);
-        expect(headroom).toBeLessThan(0.08);
+        expect(max).toBeLessThanOrEqual(measured * 1.095);
     });
 
-    it('the note states the headroom exactly, not as ~8%', () => {
+    it('max leaves real headroom — a cap at or under the measurement reds on day one', () => {
+        const { max, last_measured: measured } = budget().budgets.packed_size_mb;
+        expect(max).toBeGreaterThan(measured);
+    });
+
+    it('the newest baseline note states the headroom exactly, and it matches the numbers', () => {
         const raw = fs.readFileSync(path.join('src', 'config', 'pack-size-budget.json'), 'utf8');
-        expect(raw).toContain('7.4 %');
-        expect(raw).toContain('HEADROOM IS 7.4 %, NOT 8 %');
+        const { max, last_measured: measured } = budget().budgets.packed_size_mb;
+        // COMPUTED, not pinned. An earlier revision of this block asserted the
+        // literal `HEADROOM IS 7.4 %, NOT 8 %` and had to be hand-edited by the
+        // reset that superseded it; replacing one literal with the next would
+        // have reproduced that cost. Deriving the string means the assertion
+        // survives every future reset and still catches a rounded figure.
+        const pct = (((max - measured) / measured) * 100).toFixed(2);
+        expect(raw).toContain(`HEADROOM IS ${pct} %`);
+    });
+
+    it('the newest baseline note names the cap value it justifies', () => {
+        const raw = fs.readFileSync(path.join('src', 'config', 'pack-size-budget.json'), 'utf8');
+        const { max } = budget().budgets.packed_size_mb;
+        const dates = [...raw.matchAll(/"(baseline_note_\d{4}_\d{2}_\d{2})"/g)].map((m) => m[1] as string);
+        // Counting notes proves nothing: the count only grows and is tied to no
+        // cap value. What a raise landing without justification actually breaks
+        // is that the NEWEST note stops mentioning the number in force.
+        expect(dates.length).toBeGreaterThan(0);
+        const newest = dates.sort().at(-1) as string;
+        const cap = (JSON.parse(raw) as { budgets: { packed_size_mb: Record<string, unknown> } })
+            .budgets.packed_size_mb;
+        const note = cap[newest];
+        expect(typeof note, `${newest} must live under budgets.packed_size_mb`).toBe('string');
+        expect(note as string).toContain(String(max));
     });
 });
 
