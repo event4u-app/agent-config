@@ -323,6 +323,35 @@ admission. Cowork is excluded by the existing measurement.
       `drain/delivery-for-every-host`, unmerged, so 2.1's action has no target here.
       Closes when a host has an `observed-true` row with a full citation AND the predecessor
       is merged. The record has the slot and the citation check will refuse a partial one.
+      **CORRECTED 2026-09-10, on both limbs, and the step is much closer than its own text
+      says.**
+      (b) is dead: `lean_projection.hosts: [claude-code]` is at
+      `src/config/agent-settings.template.yml:214` on `main`, so 2.1's action has a target
+      here. The blocker below already recorded that on 2026-09-09; the step kept the
+      superseded sentence, which is where a reader lands first.
+      **And the two manifest edits 2.1 asks for are ALREADY DONE for this host.**
+      `src/scripts/hook_manifest.yaml:1289` binds `rule-inject` on `claude`'s
+      `user_prompt_submit` and `:1323` binds it on `pre_compact` — the exact pair the step
+      prescribes. So what 2.1 actually still owes is limb (a), the fixture extension, and
+      the host-bucket census reading; not the bindings and not a merge.
+      **Its first verify half already passes, and so does the fixture limb:**
+      `model_rule_injection --endpoints` reports `4/4 hold` at this commit — endpoint (a)
+      is *"592 deliveries byte-equal, 0 not"*, which IS the non-regression fixture 2.1 asks
+      to extend, already holding for this host; (b) 101/101 rules reachable; (c) 0 of 212
+      near-miss prompts fired; (d) delivery 0.7040 USD against eager 4.0482 USD.
+      So of 2.1's four actions, three are done for `claude-code` — both manifest bindings,
+      the hosts entry, and the fixture — and what remains is limb (a) plus the host-bucket
+      census reading.
+      **WHERE THE `delivery`-IS-LIVE BELIEF CAME FROM, since it misled two rounds and the
+      answer is one line.** `src/config/agent-settings.template.yml:213` says
+      `mode: delivery` — that is what a CONSUMER receives from `agent-config setup`. The
+      CODE default for a checkout with no settings file is `eager-all`
+      (`_lib/lean_projection_mode.ts:21`, with its own docstring: *"a mode nobody can spell
+      must never silently thin the standing corpus"*). Both are deliberate and they are
+      different facts. Reading the template as "the shipped default" is what produced
+      *"`lean_projection.mode` resolves to `delivery` … with nothing set in any settings
+      file"*, and this repository ships no `.agent-settings.yml` — so the one tree where
+      the transcript had to be produced was the one tree running `eager-all`.
 - [x] **2.2 For each host `observed-false` or `unobserved`:** nothing changes in projection;
       write the result into the host table with an expiry per the table's own discipline.
       verify: the host's rule tree is byte-identical to `eager-all` (predecessor 1.4 gate
