@@ -1,12 +1,12 @@
 # Findings: anchor-owner-ruling-r2
-<!-- completion-review: v1 | reviewed: 2026-09-10 | scope: 44c33badac59a3007d16c855adc1a1b308efd272296ee3949beec4a30a5a5b8a | diff: 1c73771663e2f1e4d355f8e2654b9cf8eb8d3ac3 | reviewer: r2-fresh-subagent-anchor-owner-ruling-r2 | prompt_hash: 8833b94cd2298df968a4c7d8d7a417019c568d22b04b90429c70b0cf737c9cc5 -->
+<!-- completion-review: v1 | reviewed: 2026-09-10 | scope: c84d2e713dfe807d25e9c9e67f7222ca8d950e3eda895c25974ff318b4fd87cb | diff: 1c73771663e2f1e4d355f8e2654b9cf8eb8d3ac3 | reviewer: r2-fresh-subagent-anchor-owner-ruling-r2 | prompt_hash: 8833b94cd2298df968a4c7d8d7a417019c568d22b04b90429c70b0cf737c9cc5 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-anchor-owner-ruling-r2"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-09-10 -->
 
 <!-- context-manifest: v1
 inputs:
   diff_sha: 1c73771663e2f1e4d355f8e2654b9cf8eb8d3ac3
-  scope_hash: 44c33badac59a3007d16c855adc1a1b308efd272296ee3949beec4a30a5a5b8a
+  scope_hash: c84d2e713dfe807d25e9c9e67f7222ca8d950e3eda895c25974ff318b4fd87cb
   roadmap: agents/roadmaps/road-to-typed-grants-that-persist.md
   roadmap_hash: 290bf6222daca3d432d6fe780df825988baf46d55a47ec4e62487de19cfdb447
   ac_hash: 41b7b784a462de3c07c67dc8ece3c0c82e4d53bcf1f6855152c7521afd993856
