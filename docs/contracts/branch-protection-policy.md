@@ -73,6 +73,7 @@ the **reported check names** — the strings a required-check list must match.
 | `skill-lint.yml` | `skill-lint` (+ `skill-lint-strict`, release-gated) |
 | `tests.yml` | `Static Checks (ESLint · typecheck · prepack)` · `Install Script Tests ({ubuntu,macos}-latest, shard N/4)` · `Install Aux Tests ({ubuntu,macos}-latest)` · `Node Tests ({ubuntu,macos}-latest, shard N/4)` · `Golden Tests ({ubuntu,macos}-latest)` · `Workspace Tests ({ubuntu,macos}-latest)` |
 | `smoke-public-install.yml` | `{ubuntu,macos,windows}-latest · node {20,22}` · `tarball E2E · node {20,22}` · `npm publish dry-run · node {20,22}` |
+| `standing-payload-delta.yml` | `Standing payload delta + budget gate` — renamed from `Standing payload delta (report-only)` on 2026-09-10, before it is pinned as a required check; the job carries a blocking budget step and has since 2026-08-24 |
 | `rule-backstops.yml` | `Rule backstops` |
 | `no-python-in-src.yml` | `no-python-in-src` |
 | `commit-subjects.yml` | `lint commit subjects` |
