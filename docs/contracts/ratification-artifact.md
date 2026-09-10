@@ -108,12 +108,58 @@ it does and does not cover:
    that judges it. The quorum policy is read from the script's own tree for the
    same reason — otherwise the same PR could lower `required_providers` and
    have the base gate honour it.
-2. **The platform holds the merge.** Protected branches and required approvals
-   are what make a landed artifact mean something. This gate does **not** verify
-   them; that is the largest residual and it is recorded as an open blocker on
-   `road-to-typed-grants-that-persist` rather than implied away.
+2. **The platform is supposed to hold the merge — and measured, it does not.**
+   Protected branches and required approvals are what would make a landed
+   artifact mean something. `check_platform_anchor` now reads the live rulesets
+   and compares them against `src/config/platform-anchor.json`, so the gap is at
+   last measurable instead of assumed. What it measures today is a failure; see
+   § The platform anchor as measured, below. Until that reads compliant, this
+   layer carries no weight and the reader should not credit it with any.
 3. **The artifact is the durable record.** It is what a later reader opens to
    learn who reviewed what, and on what basis.
+
+### The platform anchor as measured
+
+```
+MEASURED 2026-09-10 ON `event4u-app/agent-config`: THE PLATFORM DOES NOT
+REQUIRE AN INDEPENDENT REVIEWER, AND AN ADMINISTRATOR BYPASSES EVERY RULE.
+UNTIL THAT CHANGES, THIS MECHANISM SUPPLIES PROCESS EVIDENCE — NOT A
+PLATFORM-ENFORCED RATIFICATION GUARANTEE. DO NOT CITE IT AS ONE.
+```
+
+The three facts, from `gh api`, so a reader can re-run them rather than trust
+this paragraph:
+
+- `repos/{owner}/{repo}/branches/main/protection` returns **404, "Branch not
+  protected"** — classic branch protection is not in use here at all. The live
+  surface is `repos/{owner}/{repo}/rulesets`, and any check written against the
+  classic endpoint measures nothing.
+- The one active branch ruleset covering `~DEFAULT_BRANCH` sets
+  **`required_approving_review_count: 0`** and `require_last_push_approval:
+  false`. A pull request is required; an *approving reviewer* is not. So a
+  ratification artifact can land reviewed by nobody the repository insisted on.
+- `bypass_actors` carries **`{actor_type: RepositoryRole, actor_id: 5,
+  bypass_mode: always}`**. Every rule above is advisory for that actor.
+
+One clause that a first reading of this gap gets wrong, corrected here because
+it changes what a fix has to do: **the ratification gate IS a required status
+check, transitively.** `check_kernel_edit_ratified` runs as a step inside the
+job `Sync + Generate Tools Consistency`
+(`.github/workflows/consistency.yml:811-825`), and that job's context is the
+ruleset's one required check. What a required context pins is the job's
+reported *name*, never the steps inside it — so a candidate branch may delete
+the step and the job still reports the same context, green. That is the defect
+the round-2 ratification review refused the deny-retirement over. It is
+necessary and not sufficient, and neither `check_platform_anchor` nor anything
+else in this tree closes it.
+
+**Whether repository administrators are inside the threat model is unanswered,
+and this contract must not pretend otherwise.** If they are a deliberate
+root-of-trust escape hatch, that belongs here in writing along with an audited
+emergency-use procedure; what may not stand is this document simultaneously
+claiming protection against unilateral action while an administrator role
+bypasses unconditionally. The question is recorded in `threat_model_note` in
+`src/config/platform-anchor.json` and is owner-reserved.
 
 ### The bootstrap exception, which is sound exactly once
 
@@ -184,3 +230,7 @@ trade, and both round-1 reviewers were right that calling the artifact a
 - [`kernel-membership`](kernel-membership.md) — the nine rules the gate watches.
 - `src/scripts/check_kernel_edit_ratified.ts` — the gate.
 - `src/scripts/_lib/ratification_artifact.ts` — the reader.
+- `src/scripts/check_platform_anchor.ts` — the platform-anchor gate, and
+  `src/scripts/_lib/platform_anchor.ts` its pure evaluator.
+- `src/config/platform-anchor.json` — the committed expectation the anchor is
+  measured against, and the one place its threat-model question is recorded.

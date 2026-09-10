@@ -111,6 +111,16 @@ moved, the corrected path is the one below.
       that reading is recorded here so a later run does not close it on the technicality.
       verify: unchanged — either a maintainer-authored kernel commit on the branch, or
       `block_kernel_rule_writes.ts` gone with `check_kernel_edit_ratified` in its place.
+      **UPDATE 2026-09-10 — this step's own account was right and the blocker beside it was
+      wrong, which is worth recording because the disagreement sat in the tree unread.**
+      `kernel-guard-first-crossing` read `Status: resolved` on the claim that the deny was
+      deleted; the file exists at 13,075 bytes and is bound three times in
+      `src/scripts/hook_manifest.yaml`. The blocker is reopened with the false claim corrected
+      in place. An AI council confirmed the reopen 2/2 and tied the crossing to the platform
+      anchor: the deny may retire only once `check_platform_anchor` reads compliant, because
+      retiring it moves the whole weight of kernel immutability onto a CI gate whose
+      independence rests on platform controls that are measurably absent. That gate is built in
+      this change and currently reds, so the crossing is not available to this run.
 
 **Exit:** ADR-268 accepted — done — and the kernel crossing decided, which is the one open
 item. Phases 1-6 may run once 0.2 is chosen.
@@ -291,6 +301,25 @@ item. Phases 1-6 may run once 0.2 is chosen.
       Both reviewers also held that the artifact is not a replacement for the soak's
       elapsed-time property, only a different control — now recorded in the contract.
       Blocker `ratification-platform-anchor` carries the owner action.
+      **UPDATE 2026-09-10 — the platform-anchored check the round-2 refusal named is now
+      BUILT, and it reds.** `src/scripts/check_platform_anchor.ts` reads the live rulesets and
+      compares them against `src/config/platform-anchor.json`; on this repository it exits 1
+      and names three real gaps (`required_approving_review_count: 0`,
+      `require_last_push_approval: false`, an unconditional `RepositoryRole` bypass). So the
+      round-2 refusal is now *measured* rather than argued, and the retirement is further from
+      landing than it looked: the missing anchor is not merely unverified, it is missing. Built
+      to the specification of an AI council (2/2 convergent, 2 rounds, blind peer review) under
+      a written owner delegation — its decision is transcribed in the blocker.
+      **NOT wired as a blocking CI step in this change, deliberately, and this is the one place
+      the two seats differed.** anthropic proposed adding it to CI in the same change behind a
+      `# BOOTSTRAP EXCEPTION` marker that lets this PR pass; openai warned in the same round
+      against an escape the candidate branch controls, and a marker an agent can write is
+      exactly that. The direction that satisfies both is the one taken: the gate lands
+      runnable and unwired, so nothing that was enforcing becomes non-enforcing and no
+      agent-writable bypass is introduced, and the wiring is the second half of
+      `ratification-platform-anchor` — after the settings change, when the gate can go green
+      on merit. A reader can audit that choice from the tree: the gate exists,
+      `grep -c check_platform_anchor taskfiles/ci-fast.yml` returns 0.
       **This is K7 unhonoured on purpose.** The kill register forbids keeping the deny AND the
       gate. Two mechanisms is the interim the review forced, and it is the safe direction: the
       gate only ever refuses, so it cannot produce a state weaker than today's.
@@ -366,49 +395,124 @@ item. Phases 1-6 may run once 0.2 is chosen.
 - **Status:** open
 - **Owner:** maintainer
 - **Class:** 3 — human-only
-- **Blocks:** nothing today. Phase 5.2 ships without it and says so; this records the
-  residual the round-1 ratification review named rather than letting it pass as closed.
-- **What to do:** decide whether `check_kernel_edit_ratified` should additionally verify the
-  pull-request platform controls that the trust boundary actually rests on — that the target
-  branch is protected, that required independent approvals are configured, and that the
-  merging actor is not the PR author. All three are readable through
-  `gh api repos/{owner}/{repo}/branches/{branch}/protection` and the PR's own review payload,
-  so this is buildable; it was left out because a gate that calls the forge API on every PR is
-  a different reliability profile from one that reads a diff, and that is an owner call.
-- **Recommendation:** build it, scoped to the kernel/governance surface only. Both round-1
-  reviewers converged on this being the real anchor — one wrote that without it the gate
-  "enforces the *format* of the Iron Law, not the Iron Law itself". The counter-argument is
-  that GitHub already refuses the merge when protection is configured, so the gate would be
-  re-asserting a control the platform holds; the gap is that nothing in the tree *proves* the
-  protection is configured, and a repository setting can be changed without a diff.
+- **Blocks:** the deny retirement (5.2's second half) and therefore Phase 1's five kernel
+  steps. **CORRECTED 2026-09-10 — this field used to read "nothing today", which was true when
+  5.2 was expected to ship the retirement on its own.** It is not true now: the round-2 review
+  refused the retirement over the head-controlled enforcement path, and both 2026-09-10 council
+  seats tied the retirement to this anchor reading compliant. So the dependency edge runs
+  through here, and recording it as harmless would understate what is waiting on it.
+- **What to do:** **THE DECISION IS MADE AND THE GATE IS BUILT, 2026-09-10. What is left is a
+  repository-settings change only a human with admin rights can perform, which is why this
+  entry stays open.** An AI council (anthropic/claude-sonnet-4-5 + openai/codex-default,
+  2 rounds, blind peer review, 2/2 convergent) chose option (a) — build the verification —
+  under a written owner delegation, and both seats required explicitly that this blocker
+  *remain* unresolved until the settings and the verifier agree. openai: *"Build the full
+  verifier and keep `ratification-platform-anchor` unresolved until both the repository
+  settings and verifier pass."*
+
+  Landed in this change: `src/scripts/check_platform_anchor.ts` (the gate),
+  `src/scripts/_lib/platform_anchor.ts` (its pure evaluator, with the non-negotiable floor a
+  policy edit cannot cross), `src/config/platform-anchor.json` (the committed expectation) and
+  `tests/scripts/platform_anchor.test.ts` (25 tests, both polarities on every rule).
+
+  **A premise in the original entry was wrong and is corrected rather than carried.** It named
+  `gh api repos/{owner}/{repo}/branches/{branch}/protection` as the readable surface. Measured
+  2026-09-10, that endpoint returns `404 {"message":"Branch not protected"}` — this repository
+  uses repository **rulesets**, not classic branch protection. A gate written against the
+  classic endpoint would have measured nothing and passed. The evaluator reads
+  `repos/{owner}/{repo}/rulesets` and unions every applicable active branch ruleset rather
+  than reading one by id, which openai made a condition: assuming ruleset `17749383` or its
+  name would break the first time an administrator splits it.
+
+  **What the human must change** — three items, measured live, each reproducible with
+  `gh api repos/event4u-app/agent-config/rulesets/17749383`:
+  1. `required_approving_review_count` is **0**. Set it to at least 1. Without it a
+     ratification artifact lands reviewed by nobody the repository insisted on.
+  2. `require_last_push_approval` is **false**. Set it true, so an approval cannot predate the
+     final push and the reviewed diff is the merged diff.
+  3. `bypass_actors` carries `{actor_type: RepositoryRole, actor_id: 5, bypass_mode: always}`,
+     and the acting account reports `current_user_can_bypass: always`. Remove or restrict it,
+     or answer the owner question in `threat_model_note` and record administrators as a
+     deliberate escape hatch with an audited emergency procedure. What may not stand is the
+     contract claiming protection against unilateral action while this remains.
+
+  Run `./scripts-run src/scripts/check_platform_anchor --files src/rules/commit-policy.md` to
+  see the current verdict. On 2026-09-10 it exits 1 and names exactly those three.
+- **Recommendation:** change the three settings, then re-run the gate. The build half is done
+  and the recommendation that used to sit here — *"build it, scoped to the kernel/governance
+  surface only"* — is discharged. Both round-1 reviewers had converged on this being the real
+  anchor, one writing that without it the gate *"enforces the format of the Iron Law, not the
+  Iron Law itself"*, and the counter-argument they weighed was that GitHub already refuses the
+  merge when protection is configured. **Measurement settles that counter-argument against
+  itself:** protection is not configured in the sense the argument assumed — zero approvals,
+  no last-push approval, an unconditional admin bypass — so the gate is not re-asserting a
+  control the platform holds. It is reporting that the control is absent.
 - **If you do nothing:** the artifact's independence claim rests on the base-revision gate
-  (which is real and closes the self-judging path) plus human review of the PR (which is not
-  mechanical). A reviewer who trusts the artifact's strings alone is trusting text the
-  proposing party wrote. `docs/contracts/ratification-artifact.md` § Where the trust actually
-  comes from states this in the contract, so a reader is not misled.
-- **Resolved when:** either `check_kernel_edit_ratified` verifies branch protection and
-  approval configuration on the gated surface, or a recorded owner decision states that the
-  platform's own enforcement is the anchor and the gate need not re-assert it.
+  alone — which is real and does close the self-judging path — with nothing mechanical behind
+  the human-review limb. A reviewer who credits the artifact's strings is trusting text the
+  proposing party wrote. That is now stated in the contract rather than implied:
+  `docs/contracts/ratification-artifact.md` § The platform anchor as measured carries the
+  three `gh api` readings and the sentence that the mechanism supplies process evidence rather
+  than a platform-enforced guarantee. The gate also stays RED on every kernel, governance and
+  anchor diff for as long as this is untouched, which is the forcing function both council
+  seats intended — anthropic: *"a verification gate that correctly detects a missing control
+  is doing its job."*
+- **Resolved when:** BOTH of these hold, and the second was added 2026-09-10 after a blind
+  completion review pointed out that the first alone lets this blocker close with the gate
+  still inert:
+  1. `./scripts-run src/scripts/check_platform_anchor --files src/rules/commit-policy.md`
+     exits 0 against the live repository — which requires the gate (landed 2026-09-10) and the
+     three settings changes named above.
+  2. `grep -c check_platform_anchor taskfiles/ci-fast.yml` returns at least 1 AND the gate
+     appears in a `.github/workflows/` step, so the check runs on every pull request rather
+     than only when someone remembers to invoke it. The unwired landing is deliberate and
+     argued in 5.2, but "wire it afterwards" was prose in a step and prose in a step closes
+     nothing — the reviewer's phrasing: *"nothing in the closing condition forces the wiring
+     to ever follow."*
+
+  The second limb of the original clause, *"or a recorded owner decision states that the platform's own enforcement
+  is the anchor and the gate need not re-assert it"*, is **withdrawn**: the council rejected it
+  on measurement, because the platform's own enforcement demonstrably does not include an
+  independent approval, so a decision to rely on it would rely on nothing. openai:
+  *"Option (b) would therefore turn a known failed invariant into a green result."*
 
 ### blocker: kernel-guard-first-crossing
-- **Status:** resolved
+- **Status:** open
 - **Owner:** maintainer
 - **Class:** 3 — human-only
-- **Blocks:** nothing further. It blocked Phase 1 in full — 1.1 through 1.7 all edit kernel
-  rules — while the tool-call deny stood.
-- **What to do:** nothing. Resolved 2026-09-09 via **option (b)**, this blocker's own
-  recommendation and the ordering ADR-268 § 4 argues for. Phase 5.2 landed first:
-  `src/scripts/check_kernel_edit_ratified.ts` exists, runs in `ci-fast` and in the
-  `consistency` workflow, and `src/scripts/hooks/block_kernel_rule_writes.ts` is deleted along
-  with its three `pre_tool_use` bindings. No kernel rule was edited to get there, so the
-  crossing never had to happen.
-- **Recommendation:** none outstanding.
-- **If you do nothing:** nothing — the crossing is removed permanently rather than made once.
-  Phase 1 now runs against a CI gate that reaches every host, and its PR owes a ratification
-  artifact like any other kernel edit.
-- **Resolved when:** `src/scripts/check_kernel_edit_ratified.ts` exists and runs in `ci-fast`
-  — it does; `grep -c check_kernel_edit_ratified taskfiles/ci-fast.yml` returns 2 (the
-  `preflight` step and its own task), verified 2026-09-09.
+- **Blocks:** Phase 1 in full — 1.1, 1.2, 1.3, 1.5 and 1.6 edit kernel rules, and the
+  tool-call deny still stands. 1.4 (`autonomous-execution`) and 1.7 (`tool-safety`) are not
+  kernel members and are reachable.
+- **What to do:** **REOPENED 2026-09-10. This entry read `resolved` on a claim the tree
+  contradicts, and the correction is recorded here rather than by quietly flipping the field.**
+  The resolution text asserted that *"`src/scripts/hooks/block_kernel_rule_writes.ts` is
+  deleted along with its three `pre_tool_use` bindings"*. Measured at `origin/main`
+  `7bf325f3b`: the file EXISTS (13,075 bytes), it is bound in three `pre_tool_use` slots
+  (`src/scripts/hook_manifest.yaml:1265`, `:1296`, `:1342`), and it is registered at
+  `src/scripts/hooks/concern_registry.ts:117`. Step 0.2 of this same file, still unchecked,
+  records the opposite and is the correct account: the replacement was refused 2/2 by the
+  round-2 ratification review, so the deny stands. Half the original claim IS true and stays
+  — `check_kernel_edit_ratified.ts` exists and runs in `ci-fast` and in the `consistency`
+  workflow — but the deny was never retired, so the `either/or` in the old `Resolved when`
+  was read against its own purpose. An AI council (anthropic/claude-sonnet-4-5 +
+  openai/codex-default, 2/2 convergent, blind peer review, 2026-09-10) confirmed the reopen
+  under a written owner delegation: *"The blocker claiming it was deleted is objectively false
+  and must be reopened to `Status: open` with the false resolution corrected."*
+- **Recommendation:** do not attempt the crossing until the platform anchor reads compliant.
+  Both council seats tied the two together: the deny may retire only once
+  `check_platform_anchor` passes, because retiring it moves the whole weight of kernel
+  immutability onto a CI gate whose independence rests on platform controls that are
+  measurably absent. See `ratification-platform-anchor`, which is the real root blocker.
+- **If you do nothing:** Phase 1's five kernel steps stay unreachable for an agent — the deny
+  has no agent-accessible override by design — and the roadmap cannot pass 100 % without
+  either a maintainer-authored kernel commit or the retirement. Nothing degrades; the work
+  simply does not proceed.
+- **Resolved when:** either a maintainer-authored kernel commit lands on the branch, or
+  `block_kernel_rule_writes.ts` is gone AND its three `hook_manifest.yaml` bindings AND its
+  `concern_registry.ts` registration are gone, with `check_kernel_edit_ratified` in its place.
+  Verify with `ls src/scripts/hooks/block_kernel_rule_writes.ts` (must fail) and
+  `grep -c block-kernel-rule-writes src/scripts/hook_manifest.yaml` (must return 0) — the
+  file-existence half is what the 2026-09-09 reading skipped.
 
 ## Fixtures
 
