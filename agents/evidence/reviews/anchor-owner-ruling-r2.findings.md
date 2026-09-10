@@ -1,14 +1,14 @@
 # Findings: anchor-owner-ruling-r2
-<!-- completion-review: v1 | reviewed: 2026-09-10 | scope: c84d2e713dfe807d25e9c9e67f7222ca8d950e3eda895c25974ff318b4fd87cb | diff: 1c73771663e2f1e4d355f8e2654b9cf8eb8d3ac3 | reviewer: r2-fresh-subagent-anchor-owner-ruling-r2 | prompt_hash: 8833b94cd2298df968a4c7d8d7a417019c568d22b04b90429c70b0cf737c9cc5 -->
+<!-- completion-review: v1 | reviewed: 2026-09-10 | scope: 6ac94e6db84b2de6eca9399497a20144825d65cf7df45949c58cb4ebea48e9fd | diff: 1c73771663e2f1e4d355f8e2654b9cf8eb8d3ac3 | reviewer: r2-fresh-subagent-anchor-owner-ruling-r2 | prompt_hash: 8833b94cd2298df968a4c7d8d7a417019c568d22b04b90429c70b0cf737c9cc5 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-anchor-owner-ruling-r2"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-09-10 -->
 
 <!-- context-manifest: v1
 inputs:
   diff_sha: 1c73771663e2f1e4d355f8e2654b9cf8eb8d3ac3
-  scope_hash: c84d2e713dfe807d25e9c9e67f7222ca8d950e3eda895c25974ff318b4fd87cb
+  scope_hash: 6ac94e6db84b2de6eca9399497a20144825d65cf7df45949c58cb4ebea48e9fd
   roadmap: agents/roadmaps/road-to-typed-grants-that-persist.md
-  roadmap_hash: 290bf6222daca3d432d6fe780df825988baf46d55a47ec4e62487de19cfdb447
+  roadmap_hash: 2760b796c09520e9a712ea3e845e4a6ed7501401ce5388001cccb4d87313cbaa
   ac_hash: 41b7b784a462de3c07c67dc8ece3c0c82e4d53bcf1f6855152c7521afd993856
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
