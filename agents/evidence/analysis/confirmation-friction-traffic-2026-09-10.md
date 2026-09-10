@@ -3,11 +3,9 @@
 # Host confirmations — why they recur, measured over real traffic
 
 The operator reported the same complaint the friction corpus was built for, in
-its plainest form — DE: *"ich will solche bestätigungen nicht mehr machen
-müssen"* · EN: *"I do not want to have to make confirmations like this any
-more"* — <!-- md-language-check: ignore -->
-attached to one blocked call and the host's own note that **20 actions were
-blocked this session**. This record establishes what caused that call to prompt,
+its plainest form: the operator no longer wants to have to give confirmations
+like this one, said with a blocked call attached and the host's own note that
+**20 actions were blocked this session**. This record establishes what caused that call to prompt,
 what the population of such calls looks like, and which half of the cause this
 package can reach.
 
