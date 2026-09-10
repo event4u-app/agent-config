@@ -20,11 +20,22 @@ pull requests and token spend, with every decision that would normally reach the
 to the AI council instead. Base `origin/main` at `7bf325f3b`, closing against `f92a4d4ee`.
 
 ```
-FOUR PULL REQUESTS OPENED, ALL CI-GREEN, NONE MERGED.
-ONE ROADMAP ARCHIVED. FIVE STILL OPEN. NOTHING WAS DESCOPED.
+FOUR PULL REQUESTS OPENED, ALL CI-GREEN. THREE WERE MERGED BY A HUMAN
+WHILE THIS RECORD WAS BEING WRITTEN — NOT BY THIS RUN.
+TWO ROADMAPS ARCHIVED, FIVE STILL OPEN. NOTHING WAS DESCOPED.
 THE ROADMAP DIRECTORY DID NOT EMPTY, AND CLOSING IT WOULD HAVE REQUIRED
 MISREPRESENTING THE ESTATE — WHICH THE COUNCIL REFUSED, 2/2.
 ```
+
+> **Corrected before shipping, and the correction is the point.** The three paragraphs above
+> and the table below first read *"none is merged"* and *"four PRs are awaiting a human"*.
+> That was true when written and false by the time this branch reached its push gate: a human
+> merged #1985 and #1984 at 08:10 and #1983 at 08:45, and the peer session's #1981 at 07:26.
+> The push gate refused the branch as behind its base, the merge brought this run's own gate
+> back down onto the branch from `main`, and that is what surfaced it. Verified with
+> `gh pr view <n> --json state,mergedAt`, not inferred from the merge — a live-state fact is
+> never asserted from memory. Nothing this run did caused those merges and it claims no credit
+> for them; what changed is only who is waiting on what.
 
 ## The seed order was stale; the queue was recomputed
 
@@ -36,20 +47,31 @@ count), with the dependency chain overriding rank where a `depends:` edge forced
 
 ## Terminal state of every roadmap
 
-| Roadmap | Before | After | PR | CI | Disposition |
-|---|---|---|---|---|---|
-| `road-to-delivery-for-every-host` | 28/30 | **28/30** | [#1983](https://github.com/event4u-app/agent-config/pull/1983) `drain/delivery-for-every-host` | green, 39 checks on `f7fb052ff` | open, not archived — council forbade ticking |
-| `road-to-continuity-writer-activation` | 9/11 | **archived** | [#1985](https://github.com/event4u-app/agent-config/pull/1985) `drain/continuity-writer-activation-close` | green, 45 checks on `fc5735cbb` | 10 criteria satisfied, 1 **cancelled** |
-| `road-to-typed-grants-that-persist` | 2/31 | **2/31** | [#1984](https://github.com/event4u-app/agent-config/pull/1984) `drain/typed-grants-that-persist` | green, 45 checks on `d54ed6a3e` | open — root blocker decided, gate built, settings not |
-| `road-to-delivery-on-hook-hosts` | 11/16 | **11/16** | — | — | open, one obstacle, closing criterion recorded |
-| `road-to-decision-closure` | 0/22 | **0/22** | — | — | open, blocked on its dependency |
-| `road-to-adversarial-verification-and-long-runs` | 0/30 | **0/30** | — | — | open, two dependencies + two Class-3 blockers |
-| `road-to-the-packed-payload-cap` | 2/6 | **untouched** | [#1981](https://github.com/event4u-app/agent-config/pull/1981) (not this run) | not this run's | deliberately not entered — see below |
-| — closeout | — | — | this PR | — | dispositions + this summary |
+| Roadmap | Before | After | PR | CI | Merged | Disposition |
+|---|---|---|---|---|---|---|
+| `road-to-delivery-for-every-host` | 28/30 | **28/30** | [#1983](https://github.com/event4u-app/agent-config/pull/1983) `drain/delivery-for-every-host` | green, 39 checks on `f7fb052ff` | **08:45** | open, not archived — council forbade ticking |
+| `road-to-continuity-writer-activation` | 9/11 | **archived** | [#1985](https://github.com/event4u-app/agent-config/pull/1985) `drain/continuity-writer-activation-close` | green, 45 checks on `fc5735cbb` | **08:10** | 10 criteria satisfied, 1 **cancelled** |
+| `road-to-typed-grants-that-persist` | 2/31 | **2/31** | [#1984](https://github.com/event4u-app/agent-config/pull/1984) `drain/typed-grants-that-persist` | green, 45 checks on `d54ed6a3e` | **08:10** | open — root blocker decided, gate built, settings not |
+| `road-to-delivery-on-hook-hosts` | 11/16 | **11/16** | — | — | — | open, one obstacle, closing criterion recorded |
+| `road-to-decision-closure` | 0/22 | **0/22** | — | — | — | open, blocked on its dependency |
+| `road-to-adversarial-verification-and-long-runs` | 0/30 | **0/30** | — | — | — | open, two dependencies + two Class-3 blockers |
+| `road-to-the-packed-payload-cap` | 2/6 | **archived** | [#1981](https://github.com/event4u-app/agent-config/pull/1981) (**not this run**) | not this run's | **07:26** | deliberately not entered — see below |
+| — closeout | — | — | this PR | — | no | dispositions + this summary |
 
-**Every PR is opened, none is merged.** A merge to `main` is a Hard-Floor action and the
-delegation covered commits, pushes and pull requests, explicitly not merges. Four PRs are
-awaiting a human.
+**This run merged nothing.** A merge to `main` is a Hard-Floor action and the delegation
+covered commits, pushes and pull requests, explicitly not merges — so every merge above was a
+human's, taken while this record was being written, and is recorded rather than claimed. The
+one PR still awaiting a human is this closeout.
+
+Two roadmaps therefore left the active set: `road-to-continuity-writer-activation` (this run's
+lane B) and `road-to-the-packed-payload-cap` (the peer session's, untouched here). **Five
+remain active**, and the three this run screened and left open are among them.
+
+One consequence worth naming, because it moves a criterion rather than just a status: with
+#1984 merged, `check_platform_anchor` is now **on `main`**. The remaining code action for
+`ratification-platform-anchor` is its second closing limb — wiring the gate into `ci-fast` and
+a workflow step — and that is now a change against `main` rather than against an open branch.
+The three settings changes are unaffected and still admin-only.
 
 **`road-to-the-packed-payload-cap` was deliberately not entered.** Its branch
 `feat/packed-payload-cap` was checked out in a worktree with **another session live in it**,
@@ -58,6 +80,12 @@ writing to `tests/scripts/pack_payload_reduction.test.ts` and
 pushing one branch is not parallelism. The run also removed the `dist/cli`, `dist/ui` and
 `dist/mcp` artefacts its own test invocation had created in that worktree, because their
 presence flips `payloadIsBuilt` and would have corrupted the peer session's pack-size reading.
+
+That session finished on its own: #1981 merged at 07:26 and its roadmap is archived. The
+staying-out was the right call and is worth recording as one — the peer's work landed intact,
+which is the outcome a second lane on the same branch would have put at risk. The two CI reds
+this run had already diagnosed on #1981 (`pack_payload_reduction.test.ts` pinning a superseded
+9.1 reset, and a stale `adr-evidence-census`) were fixed by that session, not by this one.
 
 **Green CI on #1984 did not satisfy its roadmap, and the PR says so in its own title and
 body.** 45 green checks mean the change is sound; the roadmap stays at 2/31.
@@ -84,7 +112,9 @@ not as convergence, and its divergent Q2 was left unacted rather than resolved o
 
 ## Declined actions
 
-- **A merge to `main`** — outside the delegation. Four green PRs wait.
+- **A merge to `main`** — outside the delegation. The run opened four green PRs and merged
+  none; a human merged three of them at 08:10 and 08:45. The refusal stands as a refusal
+  whatever happened next: this run had no authority to merge and did not.
 - **Rebuilding `dist/hooks/dispatch.js` in the shared parent checkout**, which is what an E3
   observation for `road-to-delivery-on-hook-hosts` 1.1 needs. A worktree session's
   `CLAUDE_PROJECT_DIR` is the PARENT checkout, and another session was live in it. Both seats
@@ -228,8 +258,11 @@ lane authored its reviewer's prompt.
 
 ## How this run ended
 
-With four green pull requests, one archived roadmap, five open ones, and every obstacle named
-with what closes it. The obligations that remain are blocked on a forge administrator, on a
-merge only a human may perform, on one transcript that needs an isolated checkout, and on a
-tool-call deny that exists precisely so an agent cannot lift it. None of that is abandoned
-work, and none of it was closed to make a directory look empty.
+With four green pull requests it opened and none it merged, two roadmaps out of the active set,
+five still in it, and every remaining obstacle named with what closes it. Three of its PRs were
+merged by a human during the writing of this record; that is stated as fact and claimed as no
+achievement of the run's.
+
+What remains is blocked on a forge administrator, on one transcript that needs an isolated
+checkout, and on a tool-call deny that exists precisely so an agent cannot lift it. None of
+that is abandoned work, and none of it was closed to make a directory look empty.
