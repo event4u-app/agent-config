@@ -33,6 +33,14 @@
  * 7. Business-context SQL identifiers — caller-supplied table / column
  *    allow-list. Default empty.
  * 8. Inline code excerpts > 40 chars — any backtick-fenced run > 40.
+ *
+ * loss_class: exact
+ *
+ * Named despite the module's name: the redactor never rewrites. It returns a
+ * {@link RedactionResult} verdict and the caller refuses, so no byte of the
+ * input is dropped or replaced here — "a rewritten secret is still a leaked
+ * secret". `exact` is the class that says nothing is lost, and it is what this
+ * module guarantees its callers.
  */
 
 import { _RAW_KEY_PREFIXES } from './config.js';

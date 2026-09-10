@@ -26,6 +26,13 @@
  *
  *     import { retrieve } from './memory_lookup.js';
  *     const hits = retrieve(['ownership'], ['app/Http'], 3);
+ *
+ * loss_class: recoverable-lossy
+ * loss_recovery: the envelope's own `truncation` notice — when a positive
+ * `token_budget` forces a cut, the response carries `truncation.omitted` plus a
+ * hint naming the next concrete path under `agents/memory/`, so every omitted
+ * hit stays addressable. With no budget the envelope is byte-identical and this
+ * transform does not run at all.
  */
 
 import * as fs from 'node:fs';

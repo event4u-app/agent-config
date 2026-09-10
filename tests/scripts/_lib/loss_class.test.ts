@@ -4,15 +4,14 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
+import { evaluate, isLossy, stripNonCode } from '../../../src/scripts/check_loss_class_declared.js';
 import {
     applyTransform,
     isLossClass,
     isProblem,
     LOSS_CLASSES,
     parseLossDeclaration,
-    parseLossModulePointers,
 } from '../../../src/scripts/_lib/loss_class.js';
-import { evaluate } from '../../../src/scripts/check_loss_class_declared.js';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 
@@ -68,13 +67,14 @@ describe("AC-5 — the classification is checked against the transforms' own sou
     // The two `hot_context_hook` cases that stood here are gone with the
     // transform they described: road-to-continuity-writer-activation step 3.1
     // retired the cache half, taking `_redact_lines` and `WORD_CAP` with it, so
-    // the file no longer declares a loss class and no longer owes one. What is
-    // NOT gone is the 30-row cap in `_lib/session_index_trust.ts`, and the
-    // cases below are where it is now asserted — the hole the deleted pair left
-    // is closed by the `loss_module:` pointer rather than by silence.
+    // the file no longer declares a loss class and no longer owes one. What
+    // replaced them is the block below: the 30-row cap that survived, and the
+    // detector that can now see it.
 
-    it('session_index_trust declares recoverable-lossy and names a real corpus as its locator', () => {
-        const d = parseLossDeclaration(read('src/scripts/_lib/session_index_trust.ts'));
+    const CAP_MODULE = 'src/scripts/_lib/session_index_trust.ts';
+
+    it('session_index_trust declares recoverable-lossy and carries its locator', () => {
+        const d = parseLossDeclaration(read(CAP_MODULE));
         expect(isProblem(d)).toBe(false);
         if (!isProblem(d)) {
             expect(d.lossClass).toBe('recoverable-lossy');
@@ -82,46 +82,44 @@ describe("AC-5 — the classification is checked against the transforms' own sou
         }
     });
 
-    it('its declared class matches its stated behaviour — the cap drops rows the corpus still holds', () => {
-        const src = read('src/scripts/_lib/session_index_trust.ts');
-        expect(src).toContain('SESSION_INDEX_ROW_CAP');
-        expect(src).toContain('export function capRows');
-    });
-
-    it('hot_context_hook points the gate at the module that applies the cap', () => {
-        expect(parseLossModulePointers(read('src/scripts/hot_context_hook.ts'))).toContain(
-            'src/scripts/_lib/session_index_trust.ts',
-        );
+    it('its declared class matches its stated behaviour — the cap drops rows the corpus keeps', () => {
+        const src = read(CAP_MODULE);
+        expect(src).toContain('SESSION_INDEX_ROW_CAP = 30');
+        expect(src).toContain('rows.slice(0, limit)');
     });
 });
 
-describe('the corpus is not empty, and the module in it is the one applying the surviving cap', () => {
-    // The blocker `loss-class-corpus-is-empty-after-hot-context` resolves on
-    // exactly this: the gate reports at least one matching module again, AND
-    // that module is the one applying the cap. Asserted against the LIVE tree
-    // rather than a fixture, because a fixture would prove the mechanism works
-    // somewhere and this claim is about here.
-    const v = evaluate(REPO_ROOT);
+describe('the corpus is not empty, and it is the module applying the surviving cap', () => {
+    // Closes blocker `loss-class-corpus-is-empty-after-hot-context`. Its
+    // `Resolved when` has two limbs and a count satisfies only the first, so
+    // this asserts IDENTITY: the matched module must be the one holding the cap.
+    const CAP_MODULE = 'src/scripts/_lib/session_index_trust.ts';
+    const read = (rel: string): string => fs.readFileSync(path.join(REPO_ROOT, rel), 'utf-8');
+    const verdict = evaluate();
 
-    it('reports at least one model-facing module', () => {
-        expect(v.modelFacing).toBeGreaterThanOrEqual(1);
+    it('matches at least one module again', () => {
+        expect(verdict.modelFacing).toBeGreaterThan(0);
+        expect(verdict.modules.length).toBe(verdict.modelFacing);
     });
 
-    it('the matching module is session_index_trust, reached by pointer', () => {
-        expect(v.pointedModules).toContain('src/scripts/_lib/session_index_trust.ts');
+    it('and that module is the one applying the 30-row cap', () => {
+        expect(verdict.modules).toContain(CAP_MODULE);
     });
 
-    it('and it passes — no finding stands against it', () => {
-        expect(v.findings.filter((f) => f.script === 'src/scripts/_lib/session_index_trust.ts')).toEqual([]);
+    it('every matched module carries a usable declaration — the gate is green over a real set', () => {
+        expect(verdict.findings).toEqual([]);
+        for (const m of verdict.modules) {
+            expect(isProblem(parseLossDeclaration(read(m)))).toBe(false);
+        }
     });
 
-    it('a pointer is a claim, not an exemption: an undeclared pointed module is a finding', () => {
-        // Sensitivity, without touching the tree: the same parser over a source
-        // that declares nothing must report `missing`, which is what the gate
-        // turns into a failing finding.
-        expect(isProblem(parseLossDeclaration('/**\n * just a docblock\n */'))).toBe(true);
-        expect(parseLossModulePointers('/**\n * loss_module: a/b.ts\n * loss_module: a/b.ts\n */')).toEqual(['a/b.ts']);
-        expect(parseLossModulePointers('/**\n * nothing here\n */')).toEqual([]);
+    it('the detector sees the cap structurally, not because a declaration is present', () => {
+        // Sensitivity: strip the declaration and the module must still be
+        // LOSSY, or removing it would drop the module out of the corpus
+        // instead of turning the gate red.
+        const withoutDecl = read(CAP_MODULE).replace(/^\s*\*\s*loss_class:.*$/m, ' *');
+        expect(withoutDecl).not.toContain('loss_class:');
+        expect(isLossy(stripNonCode(withoutDecl))).toBe(true);
     });
 });
 

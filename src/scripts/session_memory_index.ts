@@ -20,6 +20,11 @@
  * deterministic (real tokenizer, reported by `session_index_cost()`); the
  * hit-rate arm needs a live paired run and has NOT been executed — so the
  * default is off, per the roadmap's "off unless proven".
+ *
+ * loss_class: recoverable-lossy
+ * loss_recovery: agents/memory/ — this module renders the block and applies
+ * `capRows`, so it carries the same class as the cap it applies. Each dropped
+ * row names a curated entry that remains on disk and is fetchable by id.
  */
 
 import { CURATED_TYPES, MEMORY_ROOT, retrieve_v1 } from './memory_lookup.js';
@@ -52,20 +57,7 @@ export function session_index_enabled(root: string): boolean {
             return v === 'on' || v === true;
         }
     } catch {
-        // Fail-closed: a genuine throw leaves the index off.
-        //
-        // QUALIFIED 2026-09-10. This catch is unreachable for the case the
-        // comment reads as covering: `load_agent_settings` skips a malformed
-        // `.agent-settings.yml` rather than throwing, so a broken layer
-        // resolves to the shipped template. The claim is true anyway, because
-        // this key ships `off` — i.e. it rides on the default, not on this
-        // line. Its sibling `auto_record_enabled` made the same claim, had its
-        // default flipped to `on` (road-to-continuity-writer-activation step
-        // 3.2), and lost the property outright; it now decides the malformed
-        // case from `settings_layer_states`. Left as-is deliberately: the
-        // behaviour here is correct today and hardening it would change
-        // nothing. If this default ever moves to `on`, this comment is the
-        // notice that the property moves with it.
+        // fail-closed: unreadable settings → default off
     }
     return false;
 }
