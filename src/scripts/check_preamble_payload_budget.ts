@@ -370,6 +370,8 @@ export interface DecideOptions {
     git?: GitRunner;
     /** Test seam: pin the base ref instead of resolving it. `null` = none resolved. */
     baseRef?: string | null;
+    /** Refuse instead of skipping when the shrink-only bound cannot be verified. */
+    requireBase?: boolean;
 }
 
 export function decide(opts: DecideOptions = {}): Decision {
@@ -384,6 +386,7 @@ export function decide(opts: DecideOptions = {}): Decision {
         baseRef,
         git,
         headGraceCeiling: opts.overrideCeiling ?? budget.grace_ceiling ?? 0,
+        requireBase: opts.requireBase === true,
     });
     return { verdict, bounds, ok: bounds.ok && verdict.withinBudget };
 }
@@ -478,6 +481,16 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     const ci = argv.indexOf('--ceiling');
     const override = ci !== -1 && argv[ci + 1] !== undefined ? Number(argv[ci + 1]) : undefined;
 
+    // `--require-base`: refuse instead of skipping when the shrink-only bound
+    // cannot be verified. An AI council (2/2, 2026-09-10) made this blocking
+    // before the ceiling may be measured at the base ref rather than stored,
+    // because an unreadable base costs a comparison today and would grant an
+    // unbounded budget there. Opt-in rather than the default, and rather than
+    // derived from `GITHUB_ACTIONS`: a shallow clone, a first commit and a
+    // detached build all legitimately have no base, and a gate that reds on a
+    // developer's machine gets switched off.
+    const requireBase = argv.includes('--require-base');
+
     // `--host <id>` / `--project-rules-dir <path>`: the additive host reading
     // (AI council 2026-09-09, option 1A). Mutually exclusive on purpose — a call
     // passing both is asking two different questions and would silently get one
@@ -521,7 +534,10 @@ export function main(argv: string[] = process.argv.slice(2)): number {
 
     let decision: Decision;
     try {
-        decision = decide(override === undefined ? {} : { overrideCeiling: override });
+        decision = decide({
+            ...(override === undefined ? {} : { overrideCeiling: override }),
+            requireBase,
+        });
     } catch (err) {
         process.stderr.write(`❌  preamble-payload budget: ${(err as Error).message}\n`);
         return 2;

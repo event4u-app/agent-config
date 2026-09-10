@@ -1018,6 +1018,51 @@ Defects this roadmap repairs:
       may edit — which is repository governance rather than a gate edit. Implementing the
       formula without them is the regression both seats warned about, so the next change is
       the prerequisites, not the ceiling.
+
+      **UPDATE 2026-09-10 — PREREQUISITES 1 AND 2 ARE DONE. 3 AND 4 ARE NOT DECIDED, and
+      that is recorded as a non-decision rather than dressed as one.**
+      Owner instruction: build 1 and 2, put 3 and 4 to the council, and — the constraint
+      that shapes both — *"it must not block us completely again. We want an agent system
+      that can later develop autonomously, where tests and CI ensure quality."*
+
+      **1 and 2, shipped together because they are one branch.** Both prerequisites name the
+      same four `ok: true` returns in `_lib/standing_bound_ratchet.ts`. They now route
+      through a single `unverified()` helper with two postures: advisory (the default, and
+      what every existing caller keeps) reports the skip; enforcing (`requireBase: true`)
+      refuses. The CI step passes `--require-base`.
+      **Mode-gated rather than replaced, and the reason is in the module's own prose.** Its
+      docstring already argued the skip: a shallow clone, a first commit and a detached
+      build legitimately have no base, and a gate that reds on a developer's machine gets
+      switched off. That argument is still right for a cross-check and stops being right
+      once the base ref IS the ceiling — an unreadable base costs a comparison today and
+      would grant an unbounded budget then. anthropic's wording was "replaced or
+      mode-gated"; this is the gate, so no existing caller changes behaviour silently.
+      The flag is the caller's rather than derived from `GITHUB_ACTIONS`: a gate that infers
+      its own strictness from an environment variable is one `env` edit away from being
+      advisory everywhere.
+      SENSITIVITY: five new tests pair every enforcing case with the SAME input in advisory
+      posture, plus one asserting that a VERIFIABLE bound reaches the same verdict in both —
+      otherwise the flag would be a second policy rather than a mode gate. 12/12 green.
+
+      **3 and 4 could not be decided: the council is quota-exhausted.** Three attempts.
+      The first spent quota and wrote no file (the output path is validated after the spend
+      — a known trap). The second and third returned 1/2 with openai failing on
+      `os_error: ENOBUFS` twice, which is transport rather than refusal; shortening the
+      question from 4,504 to 2,563 bytes did not help, and the fourth attempt returned 0/2.
+      `council:status` now reads both seats `degraded (quota_exhausted)`.
+      **Two independent single-seat readings are not convergence, and this file will not
+      record one as a verdict.** What the answering seat argued is worth carrying as a
+      POINTER for the next round rather than as a decision: that neither a 5,000-token nor a
+      256-token exception cap was derived from anything, and that the cap has to come from
+      the measured distribution of payload deltas over recent merged pull requests — because
+      a guessed number either blocks most agent work or authorises abuse, which is exactly
+      the owner constraint above from both sides. It also named a gap neither prior round
+      had: **catalogue completeness** — a pull request can move payload into a location the
+      measurement does not enumerate, and no ceiling formula sees that.
+      **The cheapest thing that makes the next round conclusive** is measuring that
+      distribution — p50/p90/p95/p99 of payload delta over the last N merged PRs. It commits
+      to nothing, and it converts "pick a cap" into "here is the data". Not done here; named
+      so the next run starts with it rather than with another guess.
       **Not attempted, deliberately, and unchanged from the earlier note:** raising
       `design_ceiling` is K4 and shortening rule prose is K5. Added to that list by this
       round: closing this roadmap through a stub carrier, which openai forbade in terms —

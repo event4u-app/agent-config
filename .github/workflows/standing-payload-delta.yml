@@ -130,10 +130,19 @@ jobs:
       # `--ceiling` is the GRACE ceiling from ci_delivery, not the design ceiling.
       # It is read out of the budget file rather than written here, so the number
       # has exactly one home and this workflow cannot drift from it.
+      #
+      # `--require-base` makes the shrink-only bound FAIL rather than skip when
+      # it cannot be verified. An AI council (2/2, 2026-09-10) made that blocking
+      # before the ceiling may be measured at the base ref instead of stored: an
+      # unreadable base costs a comparison today and would grant an unbounded
+      # budget then. It is passed HERE and not defaulted in the script, because
+      # a shallow clone, a first commit and a detached build legitimately have no
+      # base, and a gate that reds on a developer's machine gets switched off.
+      # This job checks out with a base available, so the strict posture is free.
       - name: Preamble payload budget (blocking, grace ceiling)
         if: always()
         run: |
           set -euo pipefail
           ceiling="$(python3 -c "import json;print(json.load(open('src/config/preamble-payload-budget.json'))['ci_delivery']['grace_ceiling'])")"
           echo "grace ceiling $ceiling (shrink-only, undated) — design ceiling is lower; see ci_delivery"
-          ./scripts-run src/scripts/check_preamble_payload_budget --ceiling "$ceiling"
+          ./scripts-run src/scripts/check_preamble_payload_budget --ceiling "$ceiling" --require-base
