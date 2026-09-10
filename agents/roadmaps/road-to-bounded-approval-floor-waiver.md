@@ -18,14 +18,12 @@ relates:
 ---
 # Road to bounded approval floor waiver
 
-> **Source:** an AI council of 2026-09-10 (anthropic/claude-sonnet-4-5 +
-> openai/codex-default, 2 rounds, blind peer review, quorum 2/2), asked which
-> form the in-repository half of an owner-decided approval-floor rollback
-> should take. Question and both answers:
-> `agents/runtime/council/questions/2026-09-10-approval-floor-solo-maintainer.md`
-> and the two files beside it under `../responses/` — gitignored and pruned
-> after the retention window, so the council's load-bearing findings are
-> restated here rather than cited.
+> **Source:** an AI council of 2026-09-10 — `anthropic/claude-sonnet-4-5` and
+> `openai/codex-default`, 2 rounds, blind peer review, quorum 2/2 present,
+> subscription transport, $0.0000 — asked which form the in-repository half of
+> an owner-decided approval-floor rollback should take. The session files are
+> gitignored and pruned after the retention window, so every load-bearing
+> finding is restated in full below rather than cited by path.
 >
 > The occasion was PR #1988 reporting `mergeStateStatus: BLOCKED`,
 > `reviewDecision: REVIEW_REQUIRED` with every required check green.
