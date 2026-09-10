@@ -1,6 +1,15 @@
 ---
 complexity: structural
 status: draft
+estate_offset_exempt: >-
+  Nothing in the active estate can be offset against this. The two active roadmaps cover
+  host delivery and typed grants; neither carries the platform expectation, and this file
+  exists because the committed expectation in platform-anchor.json now contradicts a live
+  ruleset the owner changed deliberately on 2026-09-10. Archiving an unrelated roadmap to
+  buy the slot would be exactly the gate-gaming this key exists to make visible instead.
+  Blocking rather than cosmetic: check_platform_anchor runs in taskfiles/ci-fast.yml, so
+  while the drift stands every kernel-rule, governance-hook and anchor-path change is
+  refused at pre-push.
 execution:
   mode: phase-checkpoints
 relates:
@@ -35,12 +44,21 @@ Today the file expects `minimum_approving_reviews: 1` and
 ruleset to `0` / `false`, because with one maintainer and GitHub's prohibition
 on approving one's own pull request, `1` is not a strict requirement — it is an
 unsatisfiable one, and it locked the sole maintainer out of the merge path
-entirely once `bypass_actors` became empty. Nothing in CI enforces the
-expectation (`check_platform_anchor` is deliberately unwired — `grep -rn
-check_platform_anchor taskfiles/ .github/workflows/ Taskfile.yml` returns
-nothing), so the drift reds no check and this roadmap is not urgent. It is
-still a file asserting something false about the platform, which is the one
-property the anchor exists to prevent.
+entirely once `bypass_actors` became empty.
+
+**This roadmap is load-bearing, not tidy-up, and an earlier draft of this
+paragraph had that backwards.** It claimed the gate was unwired and the drift
+reds nothing. Measured on `origin/main` after PR #1989:
+`check_platform_anchor` runs in `taskfiles/ci-fast.yml`, in the `preflight`
+list and as its own target. That is a **pre-push** control rather than a CI
+one — no workflow can run it, because reading
+`repos/{owner}/{repo}/rulesets` needs the repository `administration`
+permission and that scope does not exist for a workflow `GITHUB_TOKEN` — but
+pre-push is enough to matter: the gate fires on any diff that already requires
+ratification, so while the expectation and the platform disagree, **every
+future kernel-rule, governance-hook and anchor-path change is blocked at
+pre-push.** An ordinary documentation or feature PR is unaffected; the gate
+exits before its first API call there.
 
 ## What the council converged on, and where it split
 

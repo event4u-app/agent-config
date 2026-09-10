@@ -392,7 +392,10 @@ item. Phases 1-6 may run once 0.2 is chosen.
   does, verified 2026-09-08.
 
 ### blocker: ratification-platform-anchor
-- **Status:** open — **limb 1 met 2026-09-10, limb 2 blocked on a platform capability.**
+- **Status:** open — **limb 1 was met at 12:51 on 2026-09-10 and owner-reversed at 15:18;
+  limb 2 blocked on a platform capability.** Read the limb-1 paragraph below together with
+  the correction that follows it; the first is the 12:51 measurement, the second is what
+  the owner then decided.
   This entry read `resolved` for one commit on the premise that both limbs were met. Limb 2 was
   then falsified by CI and the claim is corrected here rather than left standing. **What limb 2
   ran into:** the gate reads `repos/{owner}/{repo}/rulesets`, which needs the repository
@@ -421,10 +424,29 @@ item. Phases 1-6 may run once 0.2 is chosen.
   `check_ci_local_parity` and `check_gate_reachability` both exit 0 over that wiring. The
   workflow half is what the `administration` scope blocks, above. `rule-backstops.yml` carries
   a comment recording the scope refusal in place of the step, so the next reader does not spend
-  the cycle re-discovering the scope list. **What this does NOT resolve:** the deny retirement. The precondition both 2026-09-10
-  council seats attached to it is now met, but the retirement itself was refused 2/2 in round 2
-  and needs its own council decision and its own ratification artifact —
+  the cycle re-discovering the scope list. **What this does NOT resolve:** the deny retirement. The retirement itself was refused
+  2/2 in round 2 and needs its own council decision and its own ratification artifact —
   `kernel-guard-first-crossing` stays open and may not cite this entry as approval.
+
+  **LIMB 1 WAS UNDONE THE SAME AFTERNOON, BY THE OWNER, DELIBERATELY. The paragraph above
+  is the 12:51 reading and is no longer current state.** It is kept because it is the
+  verification that was actually performed, and because a record that quietly rewrites its
+  own measurements cannot be checked later. What happened after it: the 12:51 settings made
+  the repository unmergeable — this repository has one maintainer, GitHub does not permit
+  approving your own pull request, and `bypass_actors` was emptied in the same edit, so
+  `required_approving_review_count: 1` was not a strict requirement but an unsatisfiable
+  one. PR #1988 measured `mergeable: MERGEABLE`, `mergeStateStatus: BLOCKED`,
+  `reviewDecision: REVIEW_REQUIRED` with every required check green. At 15:18 the owner
+  reversed `required_approving_review_count` to `0` and `require_last_push_approval` to
+  `false`, and turned `strict_required_status_checks_policy` off for a separate measured
+  cost reason. `bypass_actors: []` and `current_user_can_bypass: never` still hold, so that
+  third item of limb 1 stands.
+
+  So limb 1 is **not met** and the gate reports three findings again — all three intended.
+  What it now waits on is the in-repository half: a bounded, expiring waiver rather than a
+  lowered floor, per `agents/roadmaps/road-to-bounded-approval-floor-waiver.md`. Verify
+  with `gh api repos/event4u-app/agent-config/rulesets/17749383/history` rather than from
+  either paragraph.
 - **Owner:** maintainer
 - **Class:** 3 — human-only
 - **Blocks:** the deny retirement (5.2's second half) and therefore Phase 1's five kernel

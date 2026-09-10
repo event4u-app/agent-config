@@ -224,10 +224,24 @@ on a branch is evidence about that branch's base, not about the trunk it lands
 on. Nothing in the tree detects the case where two independently green
 branches conflict semantically after both merge.
 
-Nothing in CI runs this gate — `grep -rn check_platform_anchor taskfiles/
-.github/workflows/ Taskfile.yml` returns nothing, as
-`drain-typed-grants-platform-anchor.md` records deliberately — so none of the
-three reds a check. The in-repository half of the reconciliation, including the
+**Where the gate actually runs, since this matters for what the drift costs.**
+It is in `taskfiles/ci-fast.yml`, both in the `preflight` list and as its own
+`check-platform-anchor` target — a **pre-push** control, not a CI one, and the
+distinction is not cosmetic. No workflow can run it: the evaluator reads
+`repos/{owner}/{repo}/rulesets`, which needs the repository `administration`
+permission, and that scope does not exist for a workflow `GITHUB_TOKEN` —
+actionlint refuses `administration: read` as an unknown scope and none of the
+sixteen that do exist grants it. `rule-backstops.yml` carries a comment
+recording that refusal in place of a step. Closing it needs a PAT in a
+repository secret; that is a human action, tracked as limb 2 of the
+`ratification-platform-anchor` blocker.
+
+So the three findings red nothing on an ordinary pull request — the gate fires
+only on a diff that already requires ratification and exits before its first
+API call otherwise — but they **do** block every future kernel-rule,
+governance-hook and anchor-path change at pre-push, which is precisely the
+class of change this whole mechanism exists to govern. The drift is therefore
+not idle. The in-repository half of the reconciliation, including the
 bounded waiver both 2026-09-10 council seats required in place of a lowered
 floor, is planned in the `road-to-bounded-approval-floor-waiver` roadmap —
 named by slug rather than by path, per `no-roadmap-references`.
