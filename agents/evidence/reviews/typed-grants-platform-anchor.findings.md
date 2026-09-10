@@ -8,7 +8,7 @@ inputs:
   diff_sha: 2ea42016ea0776da426f4218f2350fc2af6f4ac2
   scope_hash: 2692d657f367f4cb262f1a692ed276b10c0c3969c66f1f49f5791e8a2b9ed816
   roadmap: agents/roadmaps/road-to-typed-grants-that-persist.md
-  roadmap_hash: 82ba365e7f1e9a1155608b4cb8c62e2252891f4baf757a8da9dde808d6afa5fc
+  roadmap_hash: c794908ed635d617dfb08a3b1c75178ee683d26355bb4bb18e768b2f3b99bba6
   ac_hash: 41b7b784a462de3c07c67dc8ece3c0c82e4d53bcf1f6855152c7521afd993856
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
