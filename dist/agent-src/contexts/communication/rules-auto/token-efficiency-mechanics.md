@@ -225,32 +225,32 @@ Over 40,268 real Bash calls from one maintainer's transcripts:
 The figures above were computed once by hand. `autonomy_friction_traffic`
 (`./scripts-run src/scripts/autonomy_friction_traffic --store <dir> --limit 40`)
 recomputes them from a transcript store and shares the live detectors — and the
-metacharacter class is `category_a`'s own exported constant — so the report and
-the carrier cannot drift. Over **7,530 distinct** Bash calls in 39 transcripts
-(deduplicated by tool-use id, with the measuring session excluded):
+metacharacter class is `category_a`'s own exported constant — so those cannot
+drift; the bucket ORDER restates the classifier by hand and is pinned by a test.
+Over **7,569 distinct** Bash calls in 39 transcripts (deduplicated by tool-use
+id, measuring session excluded):
 
-- **1.7 %** (125) are category A. Of the 7,405 uncovered calls, **7,105** are
+- **1.7 %** (126) are category A. Of the 7,443 uncovered calls, **7,143** are
   disqualified by a shell metacharacter before their argv is read, 21 name a
-  consequence operation, and **279** get as far as the head list and are refused
-  there. Widening the head list therefore cannot move this number — the shape
-  can. Read the 279 as an upper bound: a simple command is also refused for a
-  directory flag whose value escapes the working tree, and that case is not
-  separable from the head bucket.
-- **60.4 %** (4,548) carry the chain class; `cd` heads 3,541 of the uncovered
+  consequence operation, and **279** get as far as the head list. Widening the
+  head list therefore cannot move this number — the shape can. The 279 is an
+  upper bound: a directory flag whose value escapes the tree lands there too.
+- **73.8 %** (5,585) carry the chain class; `cd` heads 3,573 of the uncovered
   calls — a different denominator from the shape classes, which count every call.
-- **4.1 %** (306) write a file through the shell: 216 `cat >`, 66 `sed -i`,
-  16 a `python3 -c` opening a path for writing, 7 `perl -i`, 1 `tee`.
+- **4.0 %** (306) write a file through the shell: 216 `cat >`, 66 `sed -i`,
+  16 a `python3 -c` opening a path for writing, 7 `perl -i`, 1 `tee`. A **floor**
+  — the rules are a positive list of five commands, so `echo >`, `jq >` and `cp`
+  are silent.
 
 **Two host facts that decide what any of this can buy**, both read out of the
 host's own permission documentation on 2026-09-10. First, `permissions.allow`
-does **not** bypass the auto-mode classifier — they are layers, the rules go
-first and the classifier still judges what passes, so an allow entry cannot make
-a prompt go away on its own. Second, "don't ask again" saves a permanent rule
-for a read-only command and only a session-lifetime one for a write-shaped one.
-The second is why the write class earns its own line: no amount of confirming
-makes the next `sed -i` cheaper. The adjacent question — whether a hook's
-`permissionDecision: allow` suppresses the classifier — was looked for in the
-same pass and **not found documented**, so nothing here rests on it.
+does **not** bypass the auto-mode classifier — they are layers, so an allow
+entry cannot make a prompt go away on its own. Second, "don't ask again" saves a
+permanent rule for a read-only command and only a session-lifetime one for a
+write-shaped one. The second is why the write class earns its own line: no
+amount of confirming makes the next `sed -i` cheaper. The adjacent question —
+whether a hook's `permissionDecision: allow` suppresses the classifier — was
+looked for in the same pass and **not found documented**.
 
 **And a correction to the table below.** `git -C /repo status` is the right
 substitution for the host's matcher, but it is **not** category A: `category_a`
@@ -293,7 +293,10 @@ file (`sed -i`, `cat > f`, `tee f`, `perl -i`, a `python3 -c` opening a path for
 writing) — and the latch is per class, so a session sees at most one line per
 class instead of one line for whichever mistake came first. A redirect that
 names no file being filled (`2>&1`, `> /dev/null`) is still not a write and is
-still not flagged.
+still not flagged. The two classes read different views: the chain rules see
+quoted spans and heredocs removed, the write rules see quoted spans removed and
+heredoc BODIES removed with the command line kept — a heredoc marker and the
+redirect sharing its line cannot be separated otherwise.
 
 **It never blocks, and each class fires once.** So it changes what the agent knows,
 not what the agent may do: compliance stays model-carried, and the concern's

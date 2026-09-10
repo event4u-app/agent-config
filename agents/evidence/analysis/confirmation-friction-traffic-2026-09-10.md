@@ -14,9 +14,10 @@ package can reach.
 | **Instrument** | `./scripts-run src/scripts/autonomy_friction_traffic --store <store> --limit 40` (new in this change) |
 | **Store** | `~/.claude/projects/-Users-mathiasberg-projects-galawork-galawork-packages-event4u-agent-config` |
 | **Window** | the 40 most recent transcripts by mtime, less the measuring session → **39 read** |
-| **Distinct Bash calls** | **7,530** (deduplicated by tool-use id) |
+| **Distinct Bash calls** | **7,569** (deduplicated by tool-use id) |
 | **Measured on** | **2026-09-10** |
-| **Tree SHA** | `7bf325f3b3e659d9d568780fe9ed46a10d6e502a` |
+| **Base SHA** (`main` at branch point) | `7bf325f3b3e659d9d568780fe9ed46a10d6e502a` |
+| **Instrument** | new on this branch — the base SHA above does NOT contain it, and a re-run needs this branch or its successor |
 
 ## 1. The reported call, and the three causes stacked in it
 
@@ -52,30 +53,38 @@ is, and it is the one this change addresses.**
 
 | Measure | Count | Share |
 |---|---|---|
-| Distinct Bash calls | 7,530 | — |
-| Category A (this package hands the host an `allow`) | 125 | **1.7 %** |
-| No allow emitted | 7,405 | 98.3 % |
-| … disqualified by a shell metacharacter, before argv | 7,105 | 95.9 % of the uncovered |
+| Distinct Bash calls | 7,569 | — |
+| Category A (this package hands the host an `allow`) | 126 | **1.7 %** |
+| No allow emitted | 7,443 | 98.3 % |
+| … disqualified by a shell metacharacter, before argv | 7,143 | 96.0 % of the uncovered |
 | … naming a consequence operation | 21 | 0.3 % of the uncovered |
-| … refused after the shape and the operation cleared | 279 | 3.8 % of the uncovered |
-| Carrying the chain shape class | 4,548 | 60.4 % of all calls |
-| Carrying the write-through-shell class | 306 | 4.1 % of all calls |
+| … refused after the shape and the operation cleared | 279 | 3.7 % of the uncovered |
+| Carrying the chain shape class | 5,585 | 73.8 % of all calls |
+| Carrying the write-through-shell class | 306 | 4.0 % of all calls — **a floor** |
 
 Top head tokens **among the uncovered** — a different denominator from the two
-shape classes above, which are counted over every call: `cd` 3,541 · `git` 481 ·
-`grep` 373 · `gh` 334 · `sed` 238 · `./scripts-run` 228 · `python3` 209.
+shape classes above, which are counted over every call: `cd` 3,573 · `git` 481 ·
+`grep` 376 · `gh` 334 · `sed` 238 · `./scripts-run` 228 · `python3` 209.
 
 Write shapes: `cat >` 216 · `sed -i` 66 · `python3 -c` opening a path for
 writing 16 · `perl -i` 7 · `tee` 1.
 
+**Why the write share is a floor and not a measurement.** The rules are a
+positive list of five commands, so `echo >`, `printf >`, `jq >`, `awk >`,
+`git show >` and `cp` all fill a file and none is counted; a heredoc whose body
+performs the write is invisible by the same construction. A generic redirect
+scanner would fire on `grep x f > out.txt`, where the shell is not the thing
+writing — that is the trade the positive list buys, and 4.0 % is therefore
+"at least".
+
 **The load-bearing consequence: widening the head allowlist cannot move the
-coverage figure.** 7,105 of 7,405 uncovered calls fail on the shape before their
+coverage figure.** 7,143 of 7,443 uncovered calls fail on the shape before their
 argv is read, so the lever is the shape and not the list. The 279 that reach the
 head list are an **upper bound** on head misses, not a count of them: a simple
 command is also refused for a directory flag whose value escapes the working
 tree, and that case is not separable from this bucket without reimplementing the
 argv walk. The conclusion survives either reading — it is a ceiling, and the
-ceiling is 3.8 %.
+ceiling is 3.7 %.
 
 ## 3. A lock, evaluated rather than cited
 
@@ -117,7 +126,7 @@ at all.
 
 **What would falsify the choice.** A re-run of the probe over a later window
 where the write-through-shell share has not fallen. The number to beat is
-**4.1 % (306 of 7,530)** on 2026-09-10; the store, the window and the command
+**4.0 % (306 of 7,569)** on 2026-09-10; the store, the window and the command
 are in the table above.
 
 **What that comparison can and cannot control, stated because the first draft
@@ -161,7 +170,11 @@ recording rather than just the fixes:
   `tee -a f` was excluded by a lookahead meant to require a path. `sed -ri` was
   invisible because `-i` was required as its own token. And a quoted *mention* of
   the interpreter shape fired the rule — on a string this very change ships in a
-  substitution table. The write count moved 293 → 306 on the fixes.
+  substitution table. The write count read 293 before and 306 after, but the
+  window moved between the two runs, so that delta is **not** attributable to
+  the fixes — the same caution § 4 states about a later comparison applies to
+  this one, and the honest claim is only that each fix was reproduced
+  individually.
 - **A test row that was green for the wrong reason.** `tee -a` sat in the
   silence list described as passing for want of a path, while it actually passed
   on the flag. It was the false negative above, asserted as correct behaviour.
@@ -175,3 +188,33 @@ recording rather than just the fixes:
 None was critical or high, and the direction of the conclusion survived all of
 them. That is the honest summary: the review did not overturn the finding, it
 removed four ways the finding could have been wrong without anyone noticing.
+
+## 7. Round 3 — the review of the fixes found four regressions in them
+
+A second neutral review, over the fixed tree, returned twelve findings (4 medium,
+8 low). Eleven of round 1's thirteen dispositions held; **four of the round-1
+fixes had introduced new defects**, which is what most of round 3 was:
+
+- **A crash on a shipped path.** Consolidating two latch reads into one dropped
+  the shape guard the replaced helper had, and `JSON.parse` returns `null` for a
+  latch file holding `null` without throwing — so a corrupted latch crashed the
+  hook with an uncaught TypeError, against a header that promises every failure
+  path returns allow. Reproduced end-to-end through the hook binary, fixed, and
+  now driven by a test.
+- **A false negative traded for a false-positive class.** Dropping the `tee`
+  path lookahead to admit `tee -a f` made `tee -a`, `foo | tee | wc -l` and even
+  `tee -a /dev/null` fire. The path token is now matched explicitly.
+- **A letter match that was not a flag match.** The `perl` in-place rule matched
+  an `i` anywhere in a flag cluster, so `perl -Mstrict`, `perl -MList::Util` and
+  `perl -Ilib` all reported an in-place edit — the characters after `-M` and `-I`
+  are a module name and a directory. The letter set is now closed.
+- **The heredoc problem, moved rather than solved.** Reading the write rules off
+  a quotes-only view fixed the lost redirect and created its mirror: a heredoc
+  *body* mentioning `sed -i` fired the nudge. Neither existing view is right, so
+  the write rules now read a third — heredoc bodies removed, the command line
+  they sit on kept.
+
+Each of the four spends the session's single write-class line on a false
+positive, which the concern's own header calls worse than shipping nothing. That
+is why they are recorded here rather than filed as nits: the failure mode of this
+carrier is not a wrong verdict, it is a wasted one.

@@ -421,9 +421,10 @@ concerns:
   # permission documentation records a permanent saved rule for a read-only
   # command and a session-lifetime one for a write-shaped command, so the same
   # shape is confirmed again next session. Edit and Write carry no such expiry
-  # inside the working directory. Measured 2026-09-10 over 7,530 distinct real
-  # Bash calls in 39 transcripts: 306 (4.1 %) wrote a file through the shell,
-  # 216 of them `cat >`. Re-measure with
+  # inside the working directory. Measured 2026-09-10 over 7,569 distinct real
+  # Bash calls in 39 transcripts: 306 (4.0 %) wrote a file through the shell,
+  # 216 of them `cat >` — a FLOOR, since the rules are a positive list of five
+  # commands rather than a redirect scanner. Re-measure with
   # `./scripts-run src/scripts/autonomy_friction_traffic`.
   #
   # Warn-only, once per SHAPE CLASS per session, ON by default with
