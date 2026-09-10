@@ -18,6 +18,7 @@ import {
     enabled,
     nudgeReason,
     reasonFor,
+    stripHeredocBodies,
     stripLiterals,
     stripQuoted,
     withClassLatched,
@@ -128,6 +129,8 @@ describe('detectEditByShell — fires on every write shape it claims', () => {
         // Round-2 finding: the first draft's (?!-) lookahead excluded every
         // flagged form, which is most of the real ones.
         ['tee -a report.txt', 'tee appending, with a flag before the path'],
+        ['perl -pi -e s/a/b/ f', 'perl in-place as a flag cluster'],
+        ['perl -Ilib -pi -e x f', 'perl in-place behind a directory switch'],
         ["perl -i -pe 's/a/b/' f", 'perl in-place'],
         ['python3 -c "open(\'f\',\'w\').write(x)"', 'an interpreter opening a path for writing'],
     ];
@@ -151,6 +154,24 @@ describe('detectEditByShell — stays silent', () => {
         // actually passed on the flag — the false negative now pinned above,
         // sitting in the suite as a green row asserting the opposite.
         ['tee', 'tee with no argument at all'],
+        // Round-3 finding 3: dropping the path requirement to admit `tee -a f`
+        // turned one false negative into a false-positive class.
+        ['tee -a', 'tee with a flag and still no path'],
+        ['foo | tee | wc -l', 'tee in the middle of a pipeline'],
+        ['foo | tee -', 'tee writing to stdout'],
+        ['tee -a /dev/null', 'tee appending to the null device'],
+        // Round-3 finding 4: an `i` anywhere in a flag cluster is not `-i`;
+        // the letters after -M and -I are a module name and a directory.
+        ["perl -Mstrict -e 'print 1'", 'perl loading a module whose name contains an i'],
+        ['perl -MList::Util -e x', 'perl loading a module path'],
+        ['perl -Ilib script.pl', 'perl with an include directory'],
+        // Round-3 finding 12: the same redirect after a non-cat head is
+        // silent, so a cat-headed pipeline must be too.
+        ['cat f | grep x > out.txt', 'a cat-headed pipeline redirecting downstream'],
+        // Round-3 finding 1: a heredoc BODY that mentions a write shape is
+        // not a write. The command line is what is read.
+        ["git commit -F - <<'MSG'\nuse sed -i here\nMSG", 'a heredoc body mentioning sed -i'],
+        ["gh pr create --body-file - <<'BODY'\ncat > f fills a file\nBODY", 'a heredoc body mentioning cat >'],
         ['cat f && npm test 2>&1', 'a chain whose only redirect is an fd duplication'],
         ['sed --expression=s/a/b/ f', 'a long option that merely contains an i'],
         ['cat CHANGELOG.md | head -50', 'cat feeding a filter, with no redirect'],
@@ -167,6 +188,48 @@ describe('detectEditByShell — stays silent', () => {
             expect(detectEditByShell(cmd)).toBeNull();
         });
     }
+});
+
+describe('stripHeredocBodies — the third view, and why neither other one works', () => {
+    it('keeps the command line, drops the body', () => {
+        const out = stripHeredocBodies("cat <<'EOF' > out.txt\nsed -i x\nEOF");
+        expect(out).toContain('> out.txt');
+        expect(out).not.toContain('sed -i');
+    });
+    it('leaves a command with no heredoc untouched', () => {
+        expect(stripHeredocBodies('ls -la')).toBe('ls -la');
+    });
+    it('a writing command line still fires, through the rule that describes it', () => {
+        expect(detectEditByShell("cat <<'EOF' > f\nsed -i x\nEOF")).toContain('cat >');
+    });
+});
+
+describe('detectChaining — a newline separates work steps', () => {
+    // Round-3 finding 10: the header names newlines among the host's split
+    // points and the rule did not read them.
+    it('flags two commands on two lines', () => {
+        expect(detectChaining('git status\ngit diff')).not.toBeNull();
+    });
+    it('still ignores a heredoc, whose body this view has already removed', () => {
+        expect(detectChaining("cat > f <<EOF\nx && y\nEOF")).toBeNull();
+        expect(detectChaining("python3 - <<PY\nprint(1); print(2)\nPY")).toBeNull();
+    });
+});
+
+describe('the latch survives a corrupted file — every failure path allows', () => {
+    // Round-3 finding 2: consolidating two reads into readLatch dropped the
+    // shape guard the helper had, and JSON.parse returns null for `null`
+    // without throwing — so a corrupted latch crashed the hook.
+    it('a null entry has fired nothing', () => {
+        expect(classAlreadyNudged(null as unknown as undefined, 'chain')).toBe(false);
+        expect(classAlreadyNudged(null as unknown as undefined, 'edit-by-shell')).toBe(false);
+    });
+    it('a primitive entry has fired nothing', () => {
+        expect(classAlreadyNudged(7 as unknown as undefined, 'chain')).toBe(false);
+    });
+    it('latching onto a primitive entry starts a fresh object', () => {
+        expect(withClassLatched(7 as unknown as undefined, 'chain')).toEqual({ chain: true });
+    });
 });
 
 describe('detectShape — the write class wins a call that is both', () => {

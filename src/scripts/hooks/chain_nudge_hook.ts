@@ -29,12 +29,19 @@
  * directory. That makes the substitution a strictly cheaper primitive rather
  * than a style preference, which is why the concern that already reads
  * `tool_input.command` carries it instead of a second concern reading the
- * same field. Measured on 2026-09-10 over 7,530 distinct real Bash calls in
- * 39 transcripts on the maintainer's machine: 306 (4.1 %) wrote a file
+ * same field. Measured on 2026-09-10 over 7,569 distinct real Bash calls in
+ * 39 transcripts on the maintainer's machine: 306 (4.0 %) wrote a file
  * through the shell — 216 `cat >`, 66 `sed -i`, 16 `python3 -c` with a
  * write-mode `open`, 7 `perl -i`, 1 `tee`. Recompute with
  * `./scripts-run src/scripts/autonomy_friction_traffic`, which shares these
  * detectors; every figure in this change comes from that one run.
+ *
+ * THE COUNT IS A FLOOR, and the five rules are why. `echo >`, `printf >`,
+ * `jq >`, `awk >`, `git show >` and `cp` all fill a file and none is matched:
+ * the list is positive by design, and a generic redirect scanner would fire on
+ * `grep x f > out.txt`, where the shell is not the thing doing the writing.
+ * A heredoc whose BODY performs the write is invisible for the same reason the
+ * body is stripped at all. Read 4.0 % as "at least".
  *
  * WHAT IT DOES NOT FLAG, DELIBERATELY. A pipe of ordinary filters
  * (`grep foo file | head`) is one command with a filter, not two work steps.
@@ -170,6 +177,37 @@ export function stripLiterals(cmd: string): string {
 }
 
 /**
+ * Heredoc BODIES removed, the command line they sit on kept.
+ *
+ * `stripLiterals` runs from `<<` to the closing tag and so deletes the redirect
+ * that shares the command line; leaving the body in instead let a heredoc that
+ * merely MENTIONS a write shape fire the nudge and spend the session's one
+ * write line. Neither view is right for the write rules, so this is the third:
+ * the marker and the rest of the command line survive, the body does not.
+ *
+ * Consequence, stated because it is a real false negative: a heredoc whose BODY
+ * performs the write — `python3 - <<PY` opening a path — is invisible here. The
+ * class is a floor, and this is one of the reasons.
+ */
+export function stripHeredocBodies(cmd: string): string {
+    const marker = /<<-?\s*(['"]?)([A-Za-z_][A-Za-z0-9_]*)\1/g;
+    let out = '';
+    let cursor = 0;
+    let m: RegExpExecArray | null;
+    while ((m = marker.exec(cmd)) !== null) {
+        const tag = m[2] as string;
+        const nl = cmd.indexOf('\n', m.index + m[0].length);
+        if (nl === -1) break;
+        const close = cmd.indexOf(`\n${tag}`, nl);
+        const end = close === -1 ? cmd.length : close + tag.length + 1;
+        out += cmd.slice(cursor, m.index) + '<<' + cmd.slice(m.index + m[0].length, nl);
+        cursor = end;
+        marker.lastIndex = end;
+    }
+    return out + cmd.slice(cursor);
+}
+
+/**
  * Quoted spans removed, heredoc bodies LEFT IN PLACE.
  *
  * The sibling of `stripLiterals` for the write rules. That one must consume a
@@ -218,6 +256,11 @@ function _detectChaining(bare: string): string | null {
     }
     if (/&&|\|\|/.test(bare)) return 'work steps chained with `&&` / `||`';
     if (/;\s*\S/.test(bare)) return 'work steps chained with `;`';
+    // The header names newlines among the host's split points and this rule did
+    // not read them, so `git status\ngit diff` — two work steps by any reading —
+    // was silent. Heredoc bodies are already gone from this view, so a
+    // multi-line heredoc command does not reach here.
+    if (/\n\s*\S/.test(bare)) return 'work steps separated by a newline';
     return null;
 }
 
@@ -238,23 +281,36 @@ const EDIT_BY_SHELL: ReadonlyArray<{ re: RegExp; seen: string }> = [
     // flag and stay silent; `--expression=…` cannot match because the class
     // admits letters only after the single leading dash.
     {
-        re: /(^|[\s;&|(])sed\s+(?:-[A-Za-z]+\s+)*(?:-[A-Za-z]*i[A-Za-z]*|--in-place)\b/,
+        re: /(^|[\s;&|(])sed\s+(?:-\S+\s+)*-(?:i|[nersuzE]*i[nersuzE]*|-in-place)(?:\.\S+)?(?=\s|$)/,
         seen: '`sed -i` edits a file in place',
     },
+    // The letter set is closed on purpose. Matching an `i` ANYWHERE in a flag
+    // cluster made `perl -Mstrict`, `perl -MList::Util` and `perl -Ilib` all
+    // report an in-place edit — the letters after `-M` and `-I` are a module
+    // name and a directory, not switches. Only perl's own one-letter switches
+    // may share the cluster with `i`.
     {
-        re: /(^|[\s;&|(])perl\s+(?:-[A-Za-z]+\s+)*-[A-Za-z]*i[A-Za-z]*\b/,
+        re: /(^|[\s;&|(])perl\s+(?:-\S+\s+)*-(?:i|[pnlaw]*i[pnlaw]*)(?:\.\S+)?(?=\s|$)/,
         seen: '`perl -i` edits a file in place',
     },
     // `[^\n]*` between the head and the redirect, so `cat <<'EOF' > out.txt`
     // and `cat a b > merged` both land, while `> /dev/null` and an fd
     // duplication (`2>&1`) are excluded by the lookahead at every position the
     // engine tries.
-    { re: /(^|[\s;&|(])cat\b[^\n]*>{1,2}\s*(?!&|\/dev\/null)\S/, seen: '`cat >` fills a file from the shell' },
-    // A flag cluster before the path is normal (`tee -a out.txt`); the first
-    // draft's `(?!-)` lookahead excluded every flagged form, which is most of
-    // the real ones.
+    // `[^\n|;&]*` — the redirect must belong to the SAME simple command. With
+    // `[^\n]*` this rule was a general redirect scanner for any cat-headed
+    // pipeline, so `cat f | grep x > out.txt` fired while the identical
+    // `grep x f > out.txt` stayed silent, which its own "positive list, not a
+    // redirect scan" comment forbids.
+    { re: /(^|[\s;&|(])cat\b[^\n|;&]*>{1,2}\s*(?!&|\/dev\/null)\S/, seen: '`cat >` fills a file from the shell' },
+    // A flag cluster before the path is normal (`tee -a out.txt`), and the path
+    // is REQUIRED. Dropping the original `(?!-)` lookahead to admit the flagged
+    // form turned a false negative into a false-positive class: `tee -a`,
+    // `foo | tee | wc -l`, `foo | tee -` and `tee -a /dev/null` all fired. The
+    // path token is therefore matched explicitly — not a flag, not a shell
+    // operator, not the null device.
     {
-        re: /(^|[\s;&|(])tee\s+(?:-[A-Za-z]+\s+)*(?!\/dev\/null)\S/,
+        re: /(^|[\s;&|(])tee\s+(?:-[A-Za-z]+\s+)*(?!\/dev\/null)[^-\s;&|<>][^\s;&|<>]*/,
         seen: '`tee` writes its input to a file',
     },
 ];
@@ -280,7 +336,12 @@ const PY_OPENS_FOR_WRITING = /\bopen\s*\([^)]*['"][wax]\+?['"]/;
  * been removed, and the write mode must be named in the RAW text.
  */
 export function detectEditByShell(command: string): string | null {
-    return _detectEditByShell(command, stripQuoted(command));
+    return _detectEditByShell(command, writeView(command));
+}
+
+/** The view the write rules read: no heredoc bodies, no quoted spans. */
+export function writeView(command: string): string {
+    return stripQuoted(stripHeredocBodies(command));
 }
 
 function _detectEditByShell(command: string, quotesStripped: string): string | null {
@@ -313,7 +374,7 @@ export function detectShape(command: string): NudgeFinding | null {
     // Each view is built once. This runs on every shell tool call and the
     // header documents 26 ms p95 as load-bearing, so calling the two exported
     // wrappers here would strip the same string twice per call for nothing.
-    const write = _detectEditByShell(command, stripQuoted(command));
+    const write = _detectEditByShell(command, writeView(command));
     if (write) return { klass: 'edit-by-shell', seen: write };
     const chained = _detectChaining(stripLiterals(command));
     if (chained) return { klass: 'chain', seen: chained };
@@ -385,9 +446,20 @@ export function withClassLatched(entry: LatchEntry | undefined, klass: NudgeClas
     return next;
 }
 
+/**
+ * The latch state, or `{}` for anything that is not a JSON object.
+ *
+ * The shape check is not decoration. `JSON.parse` returns `null` for a latch
+ * file holding `null` and a number for one holding `7`, neither of which throws
+ * — so the try/catch alone let a corrupted file reach the caller as a non-object
+ * and crash the property read. The helper this replaced guarded that by reading
+ * the property inside its own try; consolidating the read dropped the guard, and
+ * the header's "every failure path returns allow" stopped being true.
+ */
 function readLatch(root: string): Record<string, LatchEntry> {
     try {
-        return JSON.parse(fs.readFileSync(latchFile(root), 'utf-8')) as Record<string, LatchEntry>;
+        const parsed: unknown = JSON.parse(fs.readFileSync(latchFile(root), 'utf-8'));
+        return isObject(parsed as JsonValue) ? (parsed as Record<string, LatchEntry>) : {};
     } catch {
         return {};
     }
