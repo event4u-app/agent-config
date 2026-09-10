@@ -11,12 +11,14 @@ import * as path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
+    boundsRefusalHeader,
     evaluate,
     hostPayloadIds,
     hostPayloadRoots,
     main,
     measureHostPayload,
     readBudget,
+    renderBounds,
 } from '../../src/scripts/check_preamble_payload_budget.js';
 
 /** Repo root, resolved the way the gate resolves it. */
@@ -449,5 +451,47 @@ describe('the host flags reject every ambiguous invocation with exit 2', () => {
 
     it('an unknown host is exit 2, never a pass', () => {
         expect(main(['--host', 'not-a-host'])).toBe(2);
+    });
+});
+
+/**
+ * The rendered text, at the layer the lib-level tests skip.
+ *
+ * A completion review found that the enforcing refusal printed as a ceiling
+ * RISE on both stdout and stderr, and named why the five new lib tests had not
+ * caught it: they call `assertBoundsDidNotRise` directly and never reach
+ * `renderBounds` or the stderr header. A refusal whose message sends the reader
+ * to shrink a rule over a fetch problem costs operator time on every red run,
+ * so the message is asserted here rather than left to inspection.
+ */
+describe('--require-base — the refusal says which refusal it is', () => {
+    const risen = {
+        ok: false, verified: true, violations: ['rose from 1 to 2'],
+        baseGraceCeiling: 1, baseRef: 'abc', note: null,
+    };
+    const unverifiable = {
+        ok: false, verified: false, violations: ['no base ref resolved'],
+        baseGraceCeiling: null, baseRef: null, note: 'no base ref resolved, so …',
+    };
+
+    it('the stdout line names UNVERIFIED, never ROSE, when the bound was unreadable', () => {
+        expect(renderBounds(risen)).toMatch(/ROSE/);
+        expect(renderBounds(unverifiable)).toMatch(/UNVERIFIED/);
+        expect(renderBounds(unverifiable)).not.toMatch(/ROSE/);
+    });
+
+    it('the stderr header does not claim a rise that did not happen', () => {
+        expect(boundsRefusalHeader(risen)).toMatch(/ceiling rose in this change/);
+        expect(boundsRefusalHeader(unverifiable)).toMatch(/could not be VERIFIED/);
+        expect(boundsRefusalHeader(unverifiable)).not.toMatch(/rose/);
+    });
+
+    it('a verified pass is unchanged in both', () => {
+        const clean = {
+            ok: true, verified: true, violations: [],
+            baseGraceCeiling: 5, baseRef: 'abc', note: null,
+        };
+        expect(renderBounds(clean)).toMatch(/\bok\b/);
+        expect(renderBounds(clean)).not.toMatch(/ROSE|UNVERIFIED/);
     });
 });

@@ -219,3 +219,95 @@ describe('standing-payload grace ceiling is shrink-only', () => {
         expect(v.note).toMatch(/not parseable/);
     });
 });
+
+/**
+ * The enforcing posture, added 2026-09-10 after an AI council (2/2) made it
+ * blocking for the move to a base-measured ceiling.
+ *
+ * Every case here is the SAME input as an advisory case above, differing only
+ * by `requireBase`. That pairing is the point: a mode that only ever ran in one
+ * posture would prove nothing about the other, and the defect being closed was
+ * four independent `ok: true` returns nobody had compared.
+ */
+describe('assertBoundsDidNotRise — enforcing posture', () => {
+    const dead = (): { ok: boolean; stdout: string; stderr: string } => ({
+        ok: false,
+        stdout: '',
+        stderr: 'no such ref',
+    });
+
+    it('refuses instead of skipping when no base ref resolved', () => {
+        const opts = { repoRoot: '.', baseRef: null, headGraceCeiling: 1 };
+        expect(assertBoundsDidNotRise(opts).ok).toBe(true);
+        const v = assertBoundsDidNotRise({ ...opts, requireBase: true });
+        expect(v.ok).toBe(false);
+        expect(v.violations.join(' ')).toMatch(/no base ref resolved/);
+        // The note is KEPT on the refusal, not nulled. Nulling it was the first
+        // cut, and it made the refusal indistinguishable from a risen ceiling
+        // downstream — a completion review caught the renderer printing ROSE
+        // for a fetch problem.
+        expect(v.note).toMatch(/NOT verified/);
+        expect(v.verified).toBe(false);
+    });
+
+    it('refuses instead of skipping when the base config cannot be read', () => {
+        const opts = { repoRoot: '.', baseRef: 'deadbeef', git: dead, headGraceCeiling: 1 };
+        expect(assertBoundsDidNotRise(opts).ok).toBe(true);
+        const v = assertBoundsDidNotRise({ ...opts, requireBase: true });
+        expect(v.ok).toBe(false);
+        expect(v.violations.join(' ')).toMatch(/could not be read/);
+    });
+
+    it('refuses instead of skipping when the base config is unparseable', () => {
+        const opts = {
+            repoRoot: '.',
+            baseRef: 'deadbeef',
+            headGraceCeiling: 1,
+            git: (args: readonly string[]) =>
+                args[0] === 'show'
+                    ? { ok: true, stdout: '{ not json', stderr: '' }
+                    : { ok: true, stdout: '', stderr: '' },
+        };
+        expect(assertBoundsDidNotRise(opts).ok).toBe(true);
+        const v = assertBoundsDidNotRise({ ...opts, requireBase: true });
+        expect(v.ok).toBe(false);
+        expect(v.violations.join(' ')).toMatch(/not parseable/);
+    });
+
+    it('refuses instead of skipping when the base carries no bound at all', () => {
+        const opts = {
+            repoRoot: '.',
+            baseRef: 'deadbeef',
+            headGraceCeiling: 1,
+            git: (args: readonly string[]) =>
+                args[0] === 'show'
+                    ? { ok: true, stdout: JSON.stringify({ ci_delivery: {} }), stderr: '' }
+                    : { ok: true, stdout: '', stderr: '' },
+        };
+        expect(assertBoundsDidNotRise(opts).ok).toBe(true);
+        const v = assertBoundsDidNotRise({ ...opts, requireBase: true });
+        expect(v.ok).toBe(false);
+        expect(v.violations.join(' ')).toMatch(/no ci_delivery.grace_ceiling/);
+    });
+
+    it('does not change the verdict when the bound IS verifiable', () => {
+        const readable = (args: readonly string[]): { ok: boolean; stdout: string; stderr: string } =>
+            args[0] === 'show'
+                ? { ok: true, stdout: JSON.stringify({ ci_delivery: { grace_ceiling: 500 } }), stderr: '' }
+                : { ok: true, stdout: '', stderr: '' };
+        // The mode gates the UNVERIFIABLE cases only. A real comparison must
+        // reach the same answer in both postures, or the flag is not a mode
+        // gate but a second policy.
+        for (const requireBase of [false, true]) {
+            const within = assertBoundsDidNotRise({
+                repoRoot: '.', baseRef: 'deadbeef', git: readable, headGraceCeiling: 400, requireBase,
+            });
+            expect(within.ok).toBe(true);
+            const risen = assertBoundsDidNotRise({
+                repoRoot: '.', baseRef: 'deadbeef', git: readable, headGraceCeiling: 600, requireBase,
+            });
+            expect(risen.ok).toBe(false);
+            expect(risen.violations.join(' ')).toMatch(/rose from 500 to 600/);
+        }
+    });
+});

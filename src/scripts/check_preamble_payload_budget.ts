@@ -370,6 +370,8 @@ export interface DecideOptions {
     git?: GitRunner;
     /** Test seam: pin the base ref instead of resolving it. `null` = none resolved. */
     baseRef?: string | null;
+    /** Refuse instead of skipping when the shrink-only bound cannot be verified. */
+    requireBase?: boolean;
 }
 
 export function decide(opts: DecideOptions = {}): Decision {
@@ -384,6 +386,7 @@ export function decide(opts: DecideOptions = {}): Decision {
         baseRef,
         git,
         headGraceCeiling: opts.overrideCeiling ?? budget.grace_ceiling ?? 0,
+        requireBase: opts.requireBase === true,
     });
     return { verdict, bounds, ok: bounds.ok && verdict.withinBudget };
 }
@@ -449,6 +452,13 @@ function attributeGrowthAgainstBase(): string[] | null {
     }
 }
 
+/** The stderr header for a refused bound. Exported so both refusals are testable. */
+export function boundsRefusalHeader(b: BoundsRatchetVerdict): string {
+    return b.verified
+        ? '❌  the standing-payload ceiling rose in this change:\n'
+        : '❌  the standing-payload ceiling could not be VERIFIED, and this run requires it:\n';
+}
+
 /**
  * The bound check, rendered for a human — on BOTH paths, green and red.
  *
@@ -456,10 +466,23 @@ function attributeGrowthAgainstBase(): string[] | null {
  * already load-bearing. Printing the compared ref and the earlier bound on the
  * passing path is also the only way a reader can tell "verified and unchanged"
  * from "skipped because no base ref resolved", which are different facts.
+ *
+ * THREE STATES, not two, and the third is why this was rewritten. An
+ * unverifiable bound and a risen one are both `ok: false` and need opposite
+ * actions — repair the checkout, or lower the addition. The first cut of the
+ * enforcing posture rendered both as `ROSE`, which a completion review caught:
+ * it sends an operator to shrink a rule over a fetch problem. `SKIPPED` is
+ * reserved for the ADVISORY skip, where nothing was refused at all.
  */
-function renderBounds(b: BoundsRatchetVerdict): string {
-    if (b.note !== null) {
+export function renderBounds(b: BoundsRatchetVerdict): string {
+    if (b.note !== null && b.ok) {
         return `  ${'grace ceiling ratchet'.padEnd(38)} ${'SKIPPED'.padStart(8)} — ${b.note}\n`;
+    }
+    if (!b.verified) {
+        return (
+            `  ${'grace ceiling ratchet'.padEnd(38)} ${'UNVERIFIED'.padStart(8)} — ` +
+            `${b.note ?? 'the bound could not be read'} (this run requires it)\n`
+        );
     }
     const base = b.baseGraceCeiling === null ? 'n/a' : String(b.baseGraceCeiling);
     const state = b.ok ? 'ok' : 'ROSE';
@@ -477,6 +500,16 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     // tighter-than-design value is IGNORED rather than honoured — see `evaluate`.
     const ci = argv.indexOf('--ceiling');
     const override = ci !== -1 && argv[ci + 1] !== undefined ? Number(argv[ci + 1]) : undefined;
+
+    // `--require-base`: refuse instead of skipping when the shrink-only bound
+    // cannot be verified. An AI council (2/2, 2026-09-10) made this blocking
+    // before the ceiling may be measured at the base ref rather than stored,
+    // because an unreadable base costs a comparison today and would grant an
+    // unbounded budget there. Opt-in rather than the default, and rather than
+    // derived from `GITHUB_ACTIONS`: a shallow clone, a first commit and a
+    // detached build all legitimately have no base, and a gate that reds on a
+    // developer's machine gets switched off.
+    const requireBase = argv.includes('--require-base');
 
     // `--host <id>` / `--project-rules-dir <path>`: the additive host reading
     // (AI council 2026-09-09, option 1A). Mutually exclusive on purpose — a call
@@ -521,7 +554,10 @@ export function main(argv: string[] = process.argv.slice(2)): number {
 
     let decision: Decision;
     try {
-        decision = decide(override === undefined ? {} : { overrideCeiling: override });
+        decision = decide({
+            ...(override === undefined ? {} : { overrideCeiling: override }),
+            requireBase,
+        });
     } catch (err) {
         process.stderr.write(`❌  preamble-payload budget: ${(err as Error).message}\n`);
         return 2;
@@ -622,8 +658,11 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     // reporting that as "within budget" would be the config-weakening move
     // wearing a green checkmark.
     if (!decision.bounds.ok) {
+        // Two refusals, two different fixes. `verified: false` means the bound
+        // could not be READ under `--require-base`; the header must not send the
+        // reader to lower a ceiling that never moved.
         process.stderr.write(
-            '❌  the standing-payload ceiling rose in this change:\n' +
+            boundsRefusalHeader(decision.bounds) +
                 decision.bounds.violations.map((v) => `      · ${v}\n`).join(''),
         );
         return 1;

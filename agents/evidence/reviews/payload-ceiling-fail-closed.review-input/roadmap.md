@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: structural
 status: ready
@@ -31,7 +33,7 @@ estate_offset_exempt: "Offsets nothing at promotion. Phase 7 dispositions `later
 
 # Road to delivery for every host
 
-> **Source.** Owner instruction 2026-09-07 out of analysis round `inbox-2026-09-u`,
+> **Source[REDACTED:src-conf]
 > consumed to `agents/tmp.old/inbox-2026-09-u/`. Every number below was **re-measured at
 > `0918def55` (v14.20.0)** with the repo's own instruments before this file was authored;
 > where re-measurement contradicted the draft, the corrected figure carries
@@ -1071,132 +1073,6 @@ Defects this roadmap repairs:
       taken: in this repository `[-]` is CANCELLED and owner-reserved, and `[~]` requires a
       `carried-to=` receiver, which is the stub carrier the other seat forbade. `[ ]` with the
       question quoted in the PR body is what K9 prescribes, so `[ ]` is what it keeps.
-
-      **UPDATE 2026-09-10 — 3 AND 4 ARE NOW DECIDED. AI council 2/2 present, blind peer
-      review, under the written owner delegation (anthropic/claude-sonnet-4-5 +
-      openai/gpt-4o, the api rung; both cli seats read `quota_exhausted`). The box stays
-      `[ ]` — the verdict names owner actions outside the tree, and 4.4's own exit
-      condition is still unmet.**
-      **The measurement the last round asked for was taken first, because the cap question
-      was unanswerable without it.** Delta = payload(M) − payload(M^1) over `origin/main`'s
-      first-parent history, on the gate's own `measureDeterministicPayload`, so it cannot
-      drift from the ratchet. Every first-parent commit in the window IS a merged PR —
-      checked rather than assumed: 176 two-parent merges plus 75 squashes, all 75 carrying
-      a `(#NNNN)` subject, no direct push.
-
-      | window | N | p50 | p90 | p95 | p99 | max | min | delta ≤ 0 |
-      |---|---:|---:|---:|---:|---:|---:|---:|---:|
-      | 60 PRs (2.3 days) | 60 | 0 | 0 | 0 | +1 | +1 | −61 | 98.3 % |
-      | 250 PRs (11 days) | 250 | 0 | 0 | 0 | +167 | +288 | −61 | 96.8 % |
-      | the 20 movers only | 20 | −1 | +167 | +203 | +288 | +288 | −61 | 60.0 % |
-
-      Net drift across the 250-PR window: 137,828 → 138,413 = **+585 tok in 11 days**. The
-      20 non-zero deltas in full: `+288 +203 +167 +75 +7 +3 +2 +1 −1 −1 −1 −3 −3 −5 −7 −9
-      −11 −16 −43 −61`.
-      **And the measurement's own finding, which decided 4a: the sample is CENSORED by the
-      constraint the cap would relax.** The corpus is size-frozen across all 250 PRs — 119
-      rules and 299 skills at both ends, verified with `git ls-tree` rather than inferred
-      from a census count. So it measures what got through an already-binding ratchet, not
-      what was attempted, and a distribution of attempted deltas is not recoverable from
-      git. Two further honest limits carried with it: the basis is the gate's own `chars/4`
-      proxy, which over-states the rules bucket by 1.5 % against exact cl100k (122,822 vs
-      121,023) and for which no exact Claude BPE exists anywhere in this tree; and the
-      skills bucket sums only `name: description` lines, so 122 changed skill files moved
-      the payload by −1 token in the 60-PR window. Any cap governs the rules directory plus
-      description edits, not skill content.
-
-      **PREREQUISITE 3 — CONVERGED on base-ref pinning, with a residual both seats named.**
-      The measurement runs with the gate code **as it exists at the base ref**, not at HEAD,
-      so a pull request cannot change the code that measures it. Both seats chose it over
-      requiring code-owner review on the gate, which fails the owner constraint by putting
-      the maintainer in the path of every gate-editing PR.
-      **What it buys and what it does not, in the seats' own terms.** It converts an
-      invisible same-PR exploit into a two-PR sequence visible in `git log`. It does NOT
-      prevent that sequence: merge a gate weakening, then exploit it in the next PR, where
-      base and head both carry the weakened gate. anthropic put it plainly — *"the mechanism
-      does not prevent the exploit; it makes the exploit auditable … the gate is a forensic
-      control, not a preventive one."* Both seats assessed that as acceptable and both said
-      it must be written down rather than left to be discovered.
-      Its price, also stated: a legitimate gate FIX does not protect the PR that ships it,
-      and the gate must stay executable at recent `main` refs, which is a real constraint on
-      refactoring it.
-
-      **PREREQUISITE 4a — THE CAP IS NOT DERIVABLE, and that is the finding.** Both seats
-      agree no percentile of this data is valid, and the arithmetic is why: p50 is 0, so a
-      median cap blocks any growth at all; p95 is 0 in the short window and +167 in the long
-      one, so a p95 cap licenses the top 5 % of ordinary PRs to use the break-glass path
-      routinely, which makes it not exceptional. anthropic also refused the max-plus-epsilon
-      shape a round-1 reviewer proposed: *"+300 because max = +288 is not a bootstrap
-      heuristic — it is interpolation from one censored data point, and it inherits the same
-      flaw."*
-      **Where the two seats split, and it is a real split rather than a tie to be called.**
-      anthropic's Path A: no cap; the exception path takes a human, and the human judges the
-      delta, so the cap is implicit in the approval rather than explicit in the gate. openai:
-      a provisional +300, documented as a guess rather than a derivation, with rejected
-      attempts logged and the number re-derived once there is uncensored data.
-      **The converged floor under the split — and it is what the next change should build:**
-      instrument the rejections. Both seats named logging attempted-but-blocked deltas as
-      the thing that uncensors the distribution, and both refused to let any number be
-      presented as derived until it is. A cap chosen today is a guess whichever seat you
-      follow; only the instrumentation changes that.
-      Rejected explicitly, so it is not re-proposed: running the gate log-only for 30 days
-      to collect uncensored data. anthropic listed it *so the owner can reject it* — it
-      permits unbounded growth for the whole window, which is the owner constraint read
-      backwards.
-
-      **PREREQUISITE 4b — THERE IS NO APPROVER THAT IS NOT A PERSON, and both seats say so
-      without hedging.** The prerequisite asked for approval *"by a designated owner, outside
-      PR-modifiable policy"*. In this repository that is structurally impossible: outside
-      PR-modifiable policy means outside the tree, the only candidate is the GitHub ruleset,
-      and the ruleset is editable by repository admins — of whom there is one, who is also
-      the author of the pull requests. anthropic: *"Every mechanism the artefact lists is
-      PR-modifiable when the PR author is a repo admin and `bypass_actors: []`."*
-      **The answer that satisfies the owner constraint anyway, and why it does.** The human
-      goes in the EXCEPTION path, never the ordinary one. That is not a re-introduction of
-      the blocker the owner named: 96.8 % of merged pull requests move the payload by zero
-      or less, so the ordinary path stays fully autonomous and only the tail of the tail
-      reaches a person. Both seats reached this and openai stated the boundary as the point
-      — *"clearly separating routine from exceptional processes"*.
-      What would make a non-human approver possible is a second repository admin. That is an
-      owner decision about the project, not a gate design, and it is recorded here rather
-      than proposed.
-
-      **PREREQUISITE 4c — CATALOGUE COMPLETENESS IS NOT BLOCKING.** Both seats: a pull
-      request that adds payload to a location the census does not enumerate defeats the
-      STORED ceiling exactly as it defeats a measured one, so it is not a reason to prefer
-      the stored form. It is an independent defect in the enumeration, and its mitigation is
-      an exhaustiveness check that fails when a payload-shaped file sits outside every known
-      bucket. Under prerequisite 3 the enumeration pins with the gate code, so a PR adding a
-      bucket must edit the enumeration in the same commit.
-
-      **THREE PREMISE CORRECTIONS, checked against the tree rather than adopted — the same
-      discipline that caught `rules_bucket_ceiling` last round.** The seats reasoned about
-      `agents/runtime/state/standing-bounds.json`, a `.github/payload-exceptions/` directory
-      and a `PAYLOAD_BUCKETS` constant. **None of the three exists**; all are proposals
-      wearing the grammar of references, and one of them was inherited from a round-1
-      reviewer rather than invented fresh. The enumeration half is also further along than
-      either seat knew: `check_preamble_payload_budget.ts` already routes every bucket
-      through `surfaceRoot(...)` / `HOST_SURFACES` rather than a literal path list, so 4c's
-      mitigation is an exhaustiveness check over an enumeration that exists, not a new
-      constant.
-
-      **WHAT THIS ROUND DID NOT DO, deliberately: build any of it.** Two of the four
-      concrete actions are **repo-admin actions outside the tree** and therefore owner work,
-      not agent work — adding `Standing Payload Delta` to `required_status_checks`, and
-      whether `require_code_owner_review` is turned on at all. Both matter more than they
-      look: the payload gate is **advisory at the branch-protection layer today**. It runs
-      and it fails, but it is not in `required_status_checks`, so a red does not block the
-      merge button — only maintainer attention does. anthropic named the consequence in one
-      clause: without that ruleset edit *"the gate is advisory and the trust boundary is
-      theatrical."*
-      **THE QUESTION, for the owner, and it is a narrow one now.** Every design question this
-      step reserved is answered. What remains is two ruleset edits and one project fact:
-      (i) make `Standing Payload Delta` a required status check — yes or no; (ii) require
-      code-owner review on `src/scripts/check_preamble_payload_budget.ts` and
-      `src/scripts/_lib/standing_bound_ratchet.ts`, accepting that gate-editing PRs then
-      stall on you — yes or no; (iii) is a second repository admin on the table, which is the
-      only thing that makes 4b's non-human approver possible. Nothing else blocks the
-      measured ceiling.
 
 - [x] **4.5 Rollback fixture.** flip → `eager-all` → `diff -r` against a never-flipped tree
       is empty; documented in `docs/contracts/rule-router.md`.

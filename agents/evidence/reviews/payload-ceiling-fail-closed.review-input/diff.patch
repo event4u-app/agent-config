@@ -1,0 +1,383 @@
+diff --git a/.github/workflows/standing-payload-delta.yml b/.github/workflows/standing-payload-delta.yml
+index 113a20aea1ec74c3c16c7e20ed328c04999a1361..f058dc00959a243c2ea14707bede829bf60cfbe7 100644
+--- a/.github/workflows/standing-payload-delta.yml
++++ b/.github/workflows/standing-payload-delta.yml
+@@ -130,10 +130,19 @@ jobs:
+       # `--ceiling` is the GRACE ceiling from ci_delivery, not the design ceiling.
+       # It is read out of the budget file rather than written here, so the number
+       # has exactly one home and this workflow cannot drift from it.
++      #
++      # `--require-base` makes the shrink-only bound FAIL rather than skip when
++      # it cannot be verified. An AI council (2/2, 2026-09-10) made that blocking
++      # before the ceiling may be measured at the base ref instead of stored: an
++      # unreadable base costs a comparison today and would grant an unbounded
++      # budget then. It is passed HERE and not defaulted in the script, because
++      # a shallow clone, a first commit and a detached build legitimately have no
++      # base, and a gate that reds on a developer's machine gets switched off.
++      # This job checks out with a base available, so the strict posture is free.
+       - name: Preamble payload budget (blocking, grace ceiling)
+         if: always()
+         run: |
+           set -euo pipefail
+           ceiling="$(python3 -c "import json;print(json.load(open('src/config/preamble-payload-budget.json'))['ci_delivery']['grace_ceiling'])")"
+           echo "grace ceiling $ceiling (shrink-only, undated) — design ceiling is lower; see ci_delivery"
+-          ./scripts-run src/scripts/check_preamble_payload_budget --ceiling "$ceiling"
++          ./scripts-run src/scripts/check_preamble_payload_budget --ceiling "$ceiling" --require-base
+diff --git a/agents/roadmaps/road-to-delivery-for-every-host.md b/agents/roadmaps/road-to-delivery-for-every-host.md
+index 1e23fcd04c990a6aa5787498af4db1fc172482f4..9872531fc0b40b5c7ff9d719ce7777f0c7f3f91b 100644
+--- a/agents/roadmaps/road-to-delivery-for-every-host.md
++++ b/agents/roadmaps/road-to-delivery-for-every-host.md
+@@ -1018,6 +1018,51 @@ Defects this roadmap repairs:
+       may edit — which is repository governance rather than a gate edit. Implementing the
+       formula without them is the regression both seats warned about, so the next change is
+       the prerequisites, not the ceiling.
++
++      **UPDATE 2026-09-10 — PREREQUISITES 1 AND 2 ARE DONE. 3 AND 4 ARE NOT DECIDED, and
++      that is recorded as a non-decision rather than dressed as one.**
++      Owner instruction: build 1 and 2, put 3 and 4 to the council, and — the constraint
++      that shapes both — *"it must not block us completely again. We want an agent system
++      that can later develop autonomously, where tests and CI ensure quality."*
++
++      **1 and 2, shipped together because they are one branch.** Both prerequisites name the
++      same four `ok: true` returns in `_lib/standing_bound_ratchet.ts`. They now route
++      through a single `unverified()` helper with two postures: advisory (the default, and
++      what every existing caller keeps) reports the skip; enforcing (`requireBase: true`)
++      refuses. The CI step passes `--require-base`.
++      **Mode-gated rather than replaced, and the reason is in the module's own prose.** Its
++      docstring already argued the skip: a shallow clone, a first commit and a detached
++      build legitimately have no base, and a gate that reds on a developer's machine gets
++      switched off. That argument is still right for a cross-check and stops being right
++      once the base ref IS the ceiling — an unreadable base costs a comparison today and
++      would grant an unbounded budget then. anthropic's wording was "replaced or
++      mode-gated"; this is the gate, so no existing caller changes behaviour silently.
++      The flag is the caller's rather than derived from `GITHUB_ACTIONS`: a gate that infers
++      its own strictness from an environment variable is one `env` edit away from being
++      advisory everywhere.
++      SENSITIVITY: five new tests pair every enforcing case with the SAME input in advisory
++      posture, plus one asserting that a VERIFIABLE bound reaches the same verdict in both —
++      otherwise the flag would be a second policy rather than a mode gate. 12/12 green.
++
++      **3 and 4 could not be decided: the council is quota-exhausted.** Three attempts.
++      The first spent quota and wrote no file (the output path is validated after the spend
++      — a known trap). The second and third returned 1/2 with openai failing on
++      `os_error: ENOBUFS` twice, which is transport rather than refusal; shortening the
++      question from 4,504 to 2,563 bytes did not help, and the fourth attempt returned 0/2.
++      `council:status` now reads both seats `degraded (quota_exhausted)`.
++      **Two independent single-seat readings are not convergence, and this file will not
++      record one as a verdict.** What the answering seat argued is worth carrying as a
++      POINTER for the next round rather than as a decision: that neither a 5,000-token nor a
++      256-token exception cap was derived from anything, and that the cap has to come from
++      the measured distribution of payload deltas over recent merged pull requests — because
++      a guessed number either blocks most agent work or authorises abuse, which is exactly
++      the owner constraint above from both sides. It also named a gap neither prior round
++      had: **catalogue completeness** — a pull request can move payload into a location the
++      measurement does not enumerate, and no ceiling formula sees that.
++      **The cheapest thing that makes the next round conclusive** is measuring that
++      distribution — p50/p90/p95/p99 of payload delta over the last N merged PRs. It commits
++      to nothing, and it converts "pick a cap" into "here is the data". Not done here; named
++      so the next run starts with it rather than with another guess.
+       **Not attempted, deliberately, and unchanged from the earlier note:** raising
+       `design_ceiling` is K4 and shortening rule prose is K5. Added to that list by this
+       round: closing this roadmap through a stub carrier, which openai forbade in terms —
+diff --git a/src/scripts/_lib/standing_bound_ratchet.ts b/src/scripts/_lib/standing_bound_ratchet.ts
+index becd5f0206c5a2db6a5b6f38f885ce84b139a143..e7f44d1c80f43439e16403fe5ebf40f0a5e127df 100644
+--- a/src/scripts/_lib/standing_bound_ratchet.ts
++++ b/src/scripts/_lib/standing_bound_ratchet.ts
+@@ -64,22 +64,76 @@ function showAtRef(git: GitRunner, repoRoot: string, ref: string, relPath: strin
+     return r.ok ? r.stdout : null;
+ }
+ 
++/**
++ * A condition that stops the comparison: skip when advisory, refuse when not.
++ *
++ * One helper for all four causes rather than four inline branches, so the
++ * posture cannot drift between them — the failure this closes was four
++ * independent `ok: true` returns that all had to be found before any of them
++ * could be trusted.
++ */
++function unverified(
++    reason: string,
++    requireBase: boolean,
++    baseGraceCeiling: number | null,
++    baseRef: string | null,
++): BoundsRatchetVerdict {
++    if (requireBase) {
++        return {
++            ok: false,
++            baseGraceCeiling,
++            baseRef,
++            note: null,
++            violations: [
++                `the shrink-only bound could not be verified: ${reason}. This run is `
++                    + 'ENFORCING, so an unverifiable bound refuses rather than skips — an '
++                    + 'unreadable base would otherwise grant budget on an infrastructure '
++                    + 'failure. Fix the checkout (a full fetch of the base ref) or run '
++                    + 'without requireBase, which reports the skip instead.',
++            ],
++        };
++    }
++    return { ok: true, violations: [], baseGraceCeiling, baseRef, note: `${reason}, so the shrink-only bound was NOT verified` };
++}
++
+ /**
+  * Compare the grace ceiling in this tree against the one at the base ref.
+  *
+- * SKIPS rather than fails when the base ref or the base config cannot be read.
+- * That is the opposite of the fail-closed posture the same council demanded for
+- * the reserve, and the asymmetry is deliberate: an unreadable base there would
+- * have GRANTED budget on an infrastructure failure, whereas here it would REFUSE
+- * a change on one. A shallow clone, a first commit and a detached build all
+- * legitimately have no base, and a gate that reds on them gets switched off —
+- * which is how a repository loses the enforcement it just built. The skip is
+- * reported in both the human and JSON output so it cannot pass for a check.
++ * TWO POSTURES, AND WHICH ONE APPLIES IS THE CALLER'S TO DECLARE.
++ *
++ * Advisory (the default, and what every caller got before `requireBase`): a
++ * base ref or base config that cannot be read SKIPS, reported in both the human
++ * and JSON output so it cannot pass for a check. That default is not laziness
++ * and the original reasoning still holds — a shallow clone, a first commit and
++ * a detached build all legitimately have no base, and a gate that reds on them
++ * gets switched off, which is how a repository loses the enforcement it just
++ * built.
++ *
++ * Enforcing (`requireBase: true`): the same conditions REFUSE. An AI council
++ * (2/2, 2026-09-10) made this blocking for the move to a base-measured ceiling,
++ * and the reason is that the asymmetry above inverts once the base ref stops
++ * being a cross-check and becomes the ceiling itself. Today an unreadable base
++ * costs a comparison; there it would grant an unbounded budget on an
++ * infrastructure failure — the exact fail-open the reserve decision refused.
++ * anthropic's wording was "replaced or mode-gated"; this is the mode gate, so
++ * that no existing caller silently changes behaviour.
++ *
++ * The flag is the caller's rather than derived from `GITHUB_ACTIONS` here: this
++ * module cannot tell an enforcing CI run from a diagnostic one on the same
++ * runner, and a gate that guesses its own strictness from an environment
++ * variable is one `env` change away from being advisory everywhere.
+  */
+ export function assertBoundsDidNotRise(opts: {
+     repoRoot: string;
+     baseRef: string | null;
+     git?: GitRunner;
++    /**
++     * Refuse instead of skipping when the base cannot be read.
++     *
++     * Absent is advisory, which keeps every pre-existing caller on the
++     * behaviour it was written against. The CI path sets it.
++     */
++    requireBase?: boolean;
+     /**
+      * The ceiling this run actually compares the payload against.
+      *
+@@ -91,24 +145,18 @@ export function assertBoundsDidNotRise(opts: {
+     headGraceCeiling: number;
+ }): BoundsRatchetVerdict {
+     const git = opts.git ?? realGit;
++    const requireBase = opts.requireBase === true;
+     if (opts.baseRef === null || opts.baseRef.trim() === '') {
+-        return {
+-            ok: true,
+-            violations: [],
+-            baseGraceCeiling: null,
+-            baseRef: null,
+-            note: 'no base ref resolved, so the shrink-only bound was NOT verified in this run',
+-        };
++        return unverified('no base ref resolved', requireBase, null, null);
+     }
+     const cfg = showAtRef(git, opts.repoRoot, opts.baseRef, BUDGET_CONFIG_PATH);
+     if (cfg === null) {
+-        return {
+-            ok: true,
+-            violations: [],
+-            baseGraceCeiling: null,
+-            baseRef: opts.baseRef,
+-            note: `${BUDGET_CONFIG_PATH} could not be read at ${opts.baseRef}, so the shrink-only bound was NOT verified`,
+-        };
++        return unverified(
++            `${BUDGET_CONFIG_PATH} could not be read at ${opts.baseRef}`,
++            requireBase,
++            null,
++            opts.baseRef,
++        );
+     }
+     let baseGrace: number | null = null;
+     try {
+@@ -117,22 +165,20 @@ export function assertBoundsDidNotRise(opts: {
+         const n = Number(delivery['grace_ceiling']);
+         baseGrace = Number.isFinite(n) ? n : null;
+     } catch {
+-        return {
+-            ok: true,
+-            violations: [],
+-            baseGraceCeiling: null,
+-            baseRef: opts.baseRef,
+-            note: `${BUDGET_CONFIG_PATH} at ${opts.baseRef} is not parseable, so the shrink-only bound was NOT verified`,
+-        };
++        return unverified(
++            `${BUDGET_CONFIG_PATH} at ${opts.baseRef} is not parseable`,
++            requireBase,
++            null,
++            opts.baseRef,
++        );
+     }
+     if (baseGrace === null) {
+-        return {
+-            ok: true,
+-            violations: [],
+-            baseGraceCeiling: null,
+-            baseRef: opts.baseRef,
+-            note: `no ci_delivery.grace_ceiling at ${opts.baseRef}, so there is no earlier bound to ratchet against`,
+-        };
++        return unverified(
++            `no ci_delivery.grace_ceiling at ${opts.baseRef}, so there is no earlier bound to ratchet against`,
++            requireBase,
++            null,
++            opts.baseRef,
++        );
+     }
+     if (opts.headGraceCeiling > baseGrace) {
+         return {
+diff --git a/src/scripts/check_preamble_payload_budget.ts b/src/scripts/check_preamble_payload_budget.ts
+index 5a8f1eca5907a6e90885a4a6cec7c6a348bb9e7e..48f53012708b6156da843bb7ece9441793296cc7 100644
+--- a/src/scripts/check_preamble_payload_budget.ts
++++ b/src/scripts/check_preamble_payload_budget.ts
+@@ -370,6 +370,8 @@ export interface DecideOptions {
+     git?: GitRunner;
+     /** Test seam: pin the base ref instead of resolving it. `null` = none resolved. */
+     baseRef?: string | null;
++    /** Refuse instead of skipping when the shrink-only bound cannot be verified. */
++    requireBase?: boolean;
+ }
+ 
+ export function decide(opts: DecideOptions = {}): Decision {
+@@ -384,6 +386,7 @@ export function decide(opts: DecideOptions = {}): Decision {
+         baseRef,
+         git,
+         headGraceCeiling: opts.overrideCeiling ?? budget.grace_ceiling ?? 0,
++        requireBase: opts.requireBase === true,
+     });
+     return { verdict, bounds, ok: bounds.ok && verdict.withinBudget };
+ }
+@@ -478,6 +481,16 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+     const ci = argv.indexOf('--ceiling');
+     const override = ci !== -1 && argv[ci + 1] !== undefined ? Number(argv[ci + 1]) : undefined;
+ 
++    // `--require-base`: refuse instead of skipping when the shrink-only bound
++    // cannot be verified. An AI council (2/2, 2026-09-10) made this blocking
++    // before the ceiling may be measured at the base ref rather than stored,
++    // because an unreadable base costs a comparison today and would grant an
++    // unbounded budget there. Opt-in rather than the default, and rather than
++    // derived from `GITHUB_ACTIONS`: a shallow clone, a first commit and a
++    // detached build all legitimately have no base, and a gate that reds on a
++    // developer's machine gets switched off.
++    const requireBase = argv.includes('--require-base');
++
+     // `--host <id>` / `--project-rules-dir <path>`: the additive host reading
+     // (AI council 2026-09-09, option 1A). Mutually exclusive on purpose — a call
+     // passing both is asking two different questions and would silently get one
+@@ -521,7 +534,10 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+ 
+     let decision: Decision;
+     try {
+-        decision = decide(override === undefined ? {} : { overrideCeiling: override });
++        decision = decide({
++            ...(override === undefined ? {} : { overrideCeiling: override }),
++            requireBase,
++        });
+     } catch (err) {
+         process.stderr.write(`❌  preamble-payload budget: ${(err as Error).message}\n`);
+         return 2;
+diff --git a/tests/scripts/standing_bound_ratchet.test.ts b/tests/scripts/standing_bound_ratchet.test.ts
+index 0cd7f362a5bc15f0e29ad0286eec8eed1b159fe6..a315085082dc7a71bb66c4c258236011c771aa48 100644
+--- a/tests/scripts/standing_bound_ratchet.test.ts
++++ b/tests/scripts/standing_bound_ratchet.test.ts
+@@ -219,3 +219,90 @@ describe('standing-payload grace ceiling is shrink-only', () => {
+         expect(v.note).toMatch(/not parseable/);
+     });
+ });
++
++/**
++ * The enforcing posture, added 2026-09-10 after an AI council (2/2) made it
++ * blocking for the move to a base-measured ceiling.
++ *
++ * Every case here is the SAME input as an advisory case above, differing only
++ * by `requireBase`. That pairing is the point: a mode that only ever ran in one
++ * posture would prove nothing about the other, and the defect being closed was
++ * four independent `ok: true` returns nobody had compared.
++ */
++describe('assertBoundsDidNotRise — enforcing posture', () => {
++    const dead = (): { ok: boolean; stdout: string; stderr: string } => ({
++        ok: false,
++        stdout: '',
++        stderr: 'no such ref',
++    });
++
++    it('refuses instead of skipping when no base ref resolved', () => {
++        const opts = { repoRoot: '.', baseRef: null, headGraceCeiling: 1 };
++        expect(assertBoundsDidNotRise(opts).ok).toBe(true);
++        const v = assertBoundsDidNotRise({ ...opts, requireBase: true });
++        expect(v.ok).toBe(false);
++        expect(v.violations.join(' ')).toMatch(/no base ref resolved/);
++        expect(v.note).toBeNull();
++    });
++
++    it('refuses instead of skipping when the base config cannot be read', () => {
++        const opts = { repoRoot: '.', baseRef: 'deadbeef', git: dead, headGraceCeiling: 1 };
++        expect(assertBoundsDidNotRise(opts).ok).toBe(true);
++        const v = assertBoundsDidNotRise({ ...opts, requireBase: true });
++        expect(v.ok).toBe(false);
++        expect(v.violations.join(' ')).toMatch(/could not be read/);
++    });
++
++    it('refuses instead of skipping when the base config is unparseable', () => {
++        const opts = {
++            repoRoot: '.',
++            baseRef: 'deadbeef',
++            headGraceCeiling: 1,
++            git: (args: readonly string[]) =>
++                args[0] === 'show'
++                    ? { ok: true, stdout: '{ not json', stderr: '' }
++                    : { ok: true, stdout: '', stderr: '' },
++        };
++        expect(assertBoundsDidNotRise(opts).ok).toBe(true);
++        const v = assertBoundsDidNotRise({ ...opts, requireBase: true });
++        expect(v.ok).toBe(false);
++        expect(v.violations.join(' ')).toMatch(/not parseable/);
++    });
++
++    it('refuses instead of skipping when the base carries no bound at all', () => {
++        const opts = {
++            repoRoot: '.',
++            baseRef: 'deadbeef',
++            headGraceCeiling: 1,
++            git: (args: readonly string[]) =>
++                args[0] === 'show'
++                    ? { ok: true, stdout: JSON.stringify({ ci_delivery: {} }), stderr: '' }
++                    : { ok: true, stdout: '', stderr: '' },
++        };
++        expect(assertBoundsDidNotRise(opts).ok).toBe(true);
++        const v = assertBoundsDidNotRise({ ...opts, requireBase: true });
++        expect(v.ok).toBe(false);
++        expect(v.violations.join(' ')).toMatch(/no ci_delivery.grace_ceiling/);
++    });
++
++    it('does not change the verdict when the bound IS verifiable', () => {
++        const readable = (args: readonly string[]): { ok: boolean; stdout: string; stderr: string } =>
++            args[0] === 'show'
++                ? { ok: true, stdout: JSON.stringify({ ci_delivery: { grace_ceiling: 500 } }), stderr: '' }
++                : { ok: true, stdout: '', stderr: '' };
++        // The mode gates the UNVERIFIABLE cases only. A real comparison must
++        // reach the same answer in both postures, or the flag is not a mode
++        // gate but a second policy.
++        for (const requireBase of [false, true]) {
++            const within = assertBoundsDidNotRise({
++                repoRoot: '.', baseRef: 'deadbeef', git: readable, headGraceCeiling: 400, requireBase,
++            });
++            expect(within.ok).toBe(true);
++            const risen = assertBoundsDidNotRise({
++                repoRoot: '.', baseRef: 'deadbeef', git: readable, headGraceCeiling: 600, requireBase,
++            });
++            expect(risen.ok).toBe(false);
++            expect(risen.violations.join(' ')).toMatch(/rose from 500 to 600/);
++        }
++    });
++});
