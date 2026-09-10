@@ -33,6 +33,30 @@ capability_gap: >-
 ---
 # Road to adversarial verification and long runs
 
+> **Blocked on two dependencies AND on two blockers of its own, recorded 2026-09-10 by an
+> owner-delegated drain run under a 2/2 convergent AI council verdict.** Screened for
+> execution and left untouched — 0 of 30, no step started. The council required this file's
+> reason to be stated as **different** from its sibling's rather than folded together with it,
+> because completing the dependency chain would be necessary here and still not sufficient.
+>
+> `depends:` both `road-to-typed-grants-that-persist` and `road-to-decision-closure`. The first
+> cannot complete (five kernel steps are agent-denied and the deny's retirement needs an
+> admin-only forge settings change); the second is blocked solely on the first. On top of that
+> chain this file carries `forge-protection-settings` and `daemon-host-kill-switch`, both open
+> and both Class 3. openai: *"Completing `typed-grants` would therefore be necessary but not
+> sufficient."*
+>
+> **No step was executed as "dependency-free".** Same four-part independence test as the
+> sibling, same outcome: nobody named a qualifying step, so none were run. Recorded rather
+> than left to read as an oversight.
+>
+> **Nothing was descoped.** Both seats refused the drain run's terminal descope rule here for
+> the same reason as the sibling — the obligations are blocked, not abandoned.
+>
+> **One of its blockers is now partly measured; see `forge-protection-settings` below.** That
+> is the only forward motion this file received, and it is evidence rather than progress: no
+> checkbox moved.
+
 > **Source:** `agents/tmp.old/inbox-2026-09-w/` — an inbox round carrying two challenge-me
 > interviews with the owner plus three generations of consolidated proposals. Verified against
 > `main@399beecab` on 2026-09-08.
@@ -328,8 +352,50 @@ before the record is signed.
 - **If you do nothing:** merge delivery still refuses to bypass required protections, so
   nothing unsafe happens — but the control the narrowed Hard Floor was traded for does not
   exist, and Phase 3.2's acceptance criterion cannot be met.
-- **Resolved when:** `agent-config doctor --json` reports every `forge_protection` row true on
-  this repository.
+- **Resolved when:** **RE-SCOPED 2026-09-10** by an owner-delegated drain run under a 2/2
+  convergent AI council verdict, because the original criterion was unreadable on this
+  repository as written. New criterion, in the council's own words: *"A `forge_protection` row
+  is satisfied when current evidence from the repository's effective protection mechanism —
+  including applicable rulesets — demonstrates the required behavior. After Phase 3.2 lands,
+  `agent-config doctor --json` must report the same effective state without treating the
+  classic protection endpoint's 404 as absence of protection."*
+
+  **Why it needed re-scoping.** `repos/event4u-app/agent-config/branches/main/protection`
+  returns `404 {"message":"Branch not protected"}`. This repository uses repository
+  **rulesets**, and a checker reading the classic branch-protection endpoint sees nothing here
+  — so `doctor` reporting rows false could mean "not configured" or "read the wrong API", and
+  the old criterion could not tell those apart. The criterion deliberately does not name a
+  ruleset id: openai required that, since *"rulesets can be replaced or split"* and pinning
+  `17749383` would break on the first change.
+
+- **PARTIAL EVIDENCE, 2026-09-10 — preflight, not the post-Phase-3.2 run.** Measured directly
+  while building `check_platform_anchor` for `road-to-typed-grants-that-persist`. Recorded
+  here because the same forge visit answers rows on both blockers, and the council required
+  the freshness and the timing to be stated so a later reader cannot mistake this for a
+  current `doctor` verdict:
+
+  | Row | State | Evidence |
+  |---|---|---|
+  | default-branch protection | **satisfied** | an active ruleset with `target: branch`, `conditions.ref_name.include = ["~DEFAULT_BRANCH"]` |
+  | force-push disabled | **satisfied** | the ruleset carries a `rules[].type: non_fast_forward` entry |
+  | required checks | **provisional** | one context required, `Sync + Generate Tools Consistency`, `strict: true`. Whether one context is the intended required SET is undecided, so this is not counted satisfied |
+  | auto-merge available | **unmeasured** | not queried |
+  | deploy restricted to pipeline | **unmeasured** | not queried |
+
+  Method: `gh api repos/event4u-app/agent-config/rulesets` and `…/rulesets/17749383`,
+  2026-09-10, one active ruleset. **These are preflight measurements. Phase 3.2 has not
+  landed, so `doctor --json` has not run, and this table does not discharge the criterion —
+  post-Phase-3.2 verification must reproduce these results and confirm there is no
+  ruleset-detection gap.** Re-measure rather than citing this table if the date is stale.
+
+- **Cross-link, with the gates kept separate:** `ratification-platform-anchor` in
+  `agents/roadmaps/road-to-typed-grants-that-persist.md` needs a visit to the same ruleset
+  settings, so one admin session would move both. **It is not the same gate, and merging them
+  would silently change this one.** Independent approval (`required_approving_review_count`
+  is 0) and the unconditional `RepositoryRole` bypass are the anchor's criteria and are NOT
+  among the five `forge_protection` rows above — the drain run's own framing got that wrong
+  and both seats corrected it. openai: *"Adding it here without an explicit council re-scope
+  silently changes the gate."* So: read them together, resolve them separately.
 
 ### blocker: daemon-host-kill-switch
 - **Status:** open

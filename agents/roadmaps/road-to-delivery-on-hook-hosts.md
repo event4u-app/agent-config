@@ -534,6 +534,57 @@ admission. Cowork is excluded by the existing measurement.
   3. Or decide that E3's bar is not reachable for any host this year and re-scope Phase 2 rather than leaving it waiting on an empty set — an owner decision, since E3 is an owner ruling.
 - **Resolved when:** at least one host carries an `observed-true` row in `src/config/host-injection-effect.json` with a full citation (host version, transcript pointer, date), and `report_host_injection_effect` regenerates the census with that row admissible.
 - **Review trigger:** re-read when the blocker above resolves, since `delivery` going live is its precondition; otherwise 2026-12-08, matching the expiry the host table already carries for this observation state.
+- **UPDATE 2026-09-10 — this roadmap's two open steps reduce to ONE obstacle, and the
+  arithmetic is better than the file previously implied.** Recorded by an owner-delegated drain
+  run under an AI council verdict (anthropic/claude-sonnet-4-5 + openai/codex-default, 2/2
+  convergent, 2 rounds, blind peer review) that decided this roadmap **stays open** rather than
+  being descoped.
+
+  **A premise the run carried into the council was wrong, and is corrected rather than left to
+  read as true.** The run reported that step 2.1 had no target because `lean_projection.hosts`
+  lived only on the unmerged predecessor branch. That was step 2.1's own text of 2026-09-08,
+  which the blocker above superseded on 2026-09-09 and which is false at `origin/main` today:
+  `hosts: [claude-code]` is at `src/config/agent-settings.template.yml:214`, and
+  `docs/decisions/ADR-267-delivery-default-for-claude-code.md` <!-- ref-ignore --> is a file
+  this repository has. Verified on `f92a4d4ee`, not asserted.
+
+  So 2.1 is NOT waiting on a merge. It is waiting on limb (a) alone — no host is admissible —
+  and limb (a) is 1.1's second limb. Measured in
+  `src/config/host-injection-effect.json` at the same pin: `claude` is `unobserved`, `cowork`
+  is `observed-false`, and the other nine rows are `unobserved`. Nothing is `observed-true`, so
+  `admissibleUnderE3` returns true for nothing, which a test pins.
+
+  **Why the run did not produce the E3 transcript, stated as a declined action rather than as a
+  difficulty.** The recipe is known and is in `What to do` step 2: the concern and the SOURCE
+  dispatcher both deliver a body, while the BUILT `dist/hooks/dispatch.js` that the host
+  actually executes emits only the language pin. The fix is `npm run build:hooks`. But a
+  worktree-isolated session's `CLAUDE_PROJECT_DIR` resolves to the PARENT checkout, so the host
+  runs the parent's bundle — and the parent checkout had another session live in it, editing
+  files. Rebuilding a shared runtime artifact underneath another session's running work, to
+  satisfy a step, is a side effect on someone else's work. The run declined it and says so
+  here rather than doing it quietly. Both council seats endorsed the refusal; openai:
+  *"Mutating the runtime used by another live session is not justified by pressure to close a
+  roadmap."*
+
+  **Three ways this closes, and the third is the cheap one nobody had named.** (i) The other
+  session finishes, then rebuild in that checkout and observe. (ii) Coordinate with that
+  session's owner. (iii) **A standalone, non-worktree session** — its `CLAUDE_PROJECT_DIR` is
+  its own checkout, so the rebuild has no shared-tree side effect at all. anthropic added (iii)
+  explicitly: *"a standalone (non-worktree) session would have `$CLAUDE_PROJECT_DIR` pointing
+  to its own checkout, eliminating the side-effect concern entirely."*
+
+  **The closing criterion, in words a later reader can check** (openai's phrasing, adopted):
+  in an isolated or coordinated checkout, rebuild the hooks, confirm the host executes that
+  rebuilt artifact, trigger a labelled delivery rule, and capture a transcript in which the
+  following turn demonstrably reflects the delivered body. Then the `observed-true` row and its
+  citation land, `admissibleUnderE3` returns true for `claude-code`, and 2.1 executes against
+  the list that already exists.
+
+  **Neither obligation was descoped, and that was the decision rather than the default.** Both
+  seats held that the terminal descope rule does not reach work whose only obstacle is
+  operational: openai — *"do not convert unmet obligations into completed stubs merely to make
+  the drain appear empty"*; anthropic — *"the terminal rule's descoping clause applies only
+  when work is impossible or deliberately abandoned; here, all work remains valid."*
 
 ## Disposition, 2026-09-08 — K6 is honoured; this roadmap stays active
 

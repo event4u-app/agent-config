@@ -29,6 +29,34 @@ capability_gap: none
 ---
 # Road to decision closure
 
+> **Blocked on its declared dependency, recorded 2026-09-10 by an owner-delegated drain run
+> under a 2/2 convergent AI council verdict.** This file was screened for execution and left
+> untouched, deliberately rather than by omission — 0 of 22, and no step was started.
+>
+> `depends: road-to-typed-grants-that-persist`, and that roadmap cannot complete: its Phase 1
+> rewrites five kernel rules, `src/scripts/hooks/block_kernel_rule_writes.ts` denies those
+> writes at tool-call time with no agent-accessible override, and the deny may retire only once
+> `check_platform_anchor` reads compliant — which needs three repository-settings changes only
+> a forge administrator can make. The measurement and the gate landed on PR #1984; the
+> settings did not, because they cannot be a diff.
+>
+> **This file's own local blocker is NOT the obstacle.** `adr-266-acceptance-closure` reads
+> `resolved` and its condition re-verifies: `grep -m1 '^status:' docs/decisions/ADR-268-*.md`
+> reads `accepted`. The dependency is the whole of it.
+>
+> **No step was executed as "dependency-free", and that was a decision.** The council set a
+> four-part test for independence — a step qualifies only if it neither consumes nor assumes
+> the grant object or its behaviour, its output stays valid under any compliant implementation
+> of the dependency, its acceptance criterion can be evaluated now, and recording it cannot
+> imply that dependent integration was validated. openai: *"No step should be presumed
+> independent from the information supplied."* anthropic: *"the council cannot declare
+> 'execute dependency-free steps' without naming which those are."* Nobody named any, so none
+> were run, and this note says that instead of implying the file was merely skipped.
+>
+> **Nothing here was descoped.** Both seats refused the drain run's terminal descope rule for
+> this file: closing it around an unmet dependency would misrepresent the estate. Reopen when
+> `typed-grants` closes, not before.
+
 > **Source:** `agents/tmp.old/inbox-2026-09-w/` — an inbox round carrying two challenge-me
 > interviews with the owner plus three generations of consolidated proposals. Verified against
 > `main@399beecab` on 2026-09-08.
