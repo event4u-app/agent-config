@@ -392,7 +392,39 @@ item. Phases 1-6 may run once 0.2 is chosen.
   does, verified 2026-09-08.
 
 ### blocker: ratification-platform-anchor
-- **Status:** open
+- **Status:** open — **limb 1 met 2026-09-10, limb 2 blocked on a platform capability.**
+  This entry read `resolved` for one commit on the premise that both limbs were met. Limb 2 was
+  then falsified by CI and the claim is corrected here rather than left standing. **What limb 2
+  ran into:** the gate reads `repos/{owner}/{repo}/rulesets`, which needs the repository
+  `administration` permission — and that scope **does not exist for a workflow
+  `GITHUB_TOKEN`**. actionlint refused `administration: read` as an *"unknown permission
+  scope"* and listed the sixteen that do exist; none grants it. So the CI token structurally
+  cannot read the rulesets, the gate would report `UNVERIFIABLE`, and because it fails closed
+  by design that would red every kernel and governance pull request for a reason unrelated to
+  the platform's actual state. Three alternatives were rejected on the council's own reasoning:
+  `continue-on-error` makes the gate advisory, skipping when unauthenticated makes it fail
+  open, and wiring it into `Sync + Generate Tools Consistency` would freeze merges repo-wide on
+  any red. **What closes limb 2:** a PAT in a repository secret carrying
+  `administration: read`, then the workflow step. That is a human action. Until then the gate
+  runs in `taskfiles/ci-fast.yml` — a real pre-push control, and not a CI one, which is the
+  honest description. **Limb 1, verified rather than asserted:** the owner changed the three
+  ruleset settings and
+  `./scripts-run src/scripts/check_platform_anchor --files src/rules/commit-policy.md`
+  exits **0**, reporting `platform anchor COMPLIANT for event4u-app/agent-config` with
+  `approving reviews required: 1 (policy floor 1)`. Read back from the forge after the write:
+  ruleset `17749383` now carries `required_approving_review_count: 1`,
+  `require_last_push_approval: true`, `bypass_actors: []`, and `current_user_can_bypass` has
+  gone from `always` to **`never`** — all four rules (`deletion`, `pull_request`,
+  `required_status_checks`, `non_fast_forward`) preserved, enforcement still `active`, the
+  required context unchanged. **Limb 2, partially done:** `taskfiles/ci-fast.yml` carries the
+  gate in the `preflight` list and as its own `check-platform-anchor` target, and
+  `check_ci_local_parity` and `check_gate_reachability` both exit 0 over that wiring. The
+  workflow half is what the `administration` scope blocks, above. `rule-backstops.yml` carries
+  a comment recording the scope refusal in place of the step, so the next reader does not spend
+  the cycle re-discovering the scope list. **What this does NOT resolve:** the deny retirement. The precondition both 2026-09-10
+  council seats attached to it is now met, but the retirement itself was refused 2/2 in round 2
+  and needs its own council decision and its own ratification artifact —
+  `kernel-guard-first-crossing` stays open and may not cite this entry as approval.
 - **Owner:** maintainer
 - **Class:** 3 — human-only
 - **Blocks:** the deny retirement (5.2's second half) and therefore Phase 1's five kernel

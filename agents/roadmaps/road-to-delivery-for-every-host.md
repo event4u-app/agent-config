@@ -914,6 +914,110 @@ Defects this roadmap repairs:
       does not do — it returns `null` on every failure, correct for a diagnostic and
       unacceptable for a ceiling. The converged floor is therefore the narrower option, and
       the wider one is left as a separately reviewable change.
+      **UPDATE 2026-09-10 — the rejection premise is FOUR-FIFTHS ALREADY SOLVED, checked
+      against the tree rather than argued. The box stays `[ ]`; what is actually open is a
+      smaller and different question than the one that was reserved.**
+      openai listed five things whose behaviour was "unresolved" for a base-ref-measured
+      ceiling. Four of them are resolved in `src/scripts/_lib/ratchet_base_ref.ts`, with
+      recorded reasons — and THIS gate already calls that resolver, at
+      `check_preamble_payload_budget.ts:381`, for its shrink-only bound:
+
+      | Case named as unresolved | Where it is resolved |
+      |---|---|
+      | merge queue / PR-merge checkout | `:82` — `GITHUB_ACTIONS` plus a two-parent HEAD selects `HEAD^1`, and `:77-81` records why the gate on `GITHUB_ACTIONS` is load-bearing rather than incidental |
+      | rebase, and a changed default branch | `:67` — `GITHUB_BASE_REF` is consulted before `origin/main`/`main`, so neither a rebase nor a rename reaches the hardcoded pair |
+      | shallow history | `:44-50` — the resolver's stated reason for existing: a shallow PR-merge fetch has no `origin/main`, and the `HEAD^1` rung needs no network |
+      | measurement failure | `:93` — returns `null`, and `:52-53` states the contract: *"callers decide, and the honest default is to fail rather than to compare against an assumed-empty base"* |
+
+      The fifth is the real one, and anthropic named it exactly: the CALLER does not fail.
+      `_lib/standing_bound_ratchet.ts:96` returns `ok: true` with an explanatory note on a
+      null base ref, and again at `:106`, `:121` and `:130` for unreadable, unparseable and
+      absent config. That is correct for a diagnostic and is precisely what a ceiling may not
+      do. It is one branch to change, not a policy question.
+
+      **WHAT IS ACTUALLY UNRESOLVED, and it is not on either seat's list.** A ceiling of
+      `max(design_ceiling, base measurement)` has ZERO headroom: a pull request that grows by
+      one token reds. This repository has already recorded that exact failure in a sibling
+      budget — `src/config/pack-size-budget.json:12`, *"With 8.9 KB of headroom ANY commit
+      reds this gate, which is the failure the 2026-08-20 note predicted in writing, arriving
+      a second time three days later."* Adding headroom fixes it and introduces compounding
+      drift, because each pull request may then grow by the allowance. `headroom_pct: 5`
+      already exists in this file and is what `design_ceiling` is derived from, so the choice
+      is not whether a number exists but whether a per-PR allowance may compound against a
+      moving base.
+      **That is the question to put to the council, and it was never asked.** The seats
+      reserved a five-part specification, four parts of which the tree had already written;
+      the part that genuinely needs a decision was not among them. Recorded here so the next
+      round starts from the open question instead of re-deriving the closed four.
+      **Not attempted by this run, deliberately:** deciding the headroom policy alone. The
+      council quota was exhausted (0/50) when this was found, so the alternative to recording
+      it was one lane choosing a per-PR growth allowance for every pull request in the
+      repository, unreviewed. `K9` prescribes `[ ]` with the question quoted; the question is
+      now a sharper one.
+
+      **UPDATE 2026-09-10 — THE HEADROOM QUESTION WAS ASKED AND ANSWERED. AI council 2/2
+      convergent (anthropic/claude-sonnet-4-5 + openai/codex-default, blind peer review),
+      under the written owner delegation. The box still stays `[ ]`, and the verdict says so
+      explicitly.**
+
+      **Q1 — may a per-PR allowance compound against a moving base? NO.** Both seats, without
+      qualification. openai: *"Neither a percentage nor a fixed token allowance is safe
+      against a moving base: both authorize cumulative growth."* anthropic put the arithmetic
+      on it — 138,413 × 1.05^10 ≈ 225,000. `headroom_pct` belongs to deriving the FIXED
+      design ceiling from `baseline_tokens` and must not be re-applied to each moving base.
+      A capped variant (`min(base × 1.05, 138490)`) was raised in review and refused by both:
+      it preserves today's overage as permanent, and its reduction tracking is dormant until
+      the base drops below ~131,895, so the first ~6,518 tokens of any reduction become
+      reusable space instead of a lower ceiling — the opposite of shrink-only.
+
+      **THE FORMULA, converged:** `max(design_ceiling, payload_at_base_ref)`. Zero net growth
+      while the tree is over design; the design ceiling once it is at or below.
+
+      **Q2 — how does a necessary addition land with zero headroom?** Normally by a same-PR
+      offset, which the gate enforces mechanically (head payload ≤ base payload). For a
+      change where an offsetting reduction is genuinely unsafe, a break-glass path that both
+      seats specified in the same shape and that is ARCHITECTURAL rather than optional: a
+      fixed token grant · the pre-exception watermark recorded · approval by a designated
+      owner, outside PR-modifiable policy · all later net growth blocked until the debt is
+      repaid · a machine-enforced expiry · and the exceptional measurement must NEVER become
+      the next base. openai on today's slack: *"The current 77 tokens are slack under the
+      obsolete stored exception, not an entitlement that survives its removal."*
+
+      **Q3 — is a measured ceiling an improvement over the stored one? YES, and for one
+      reason.** It captures every merged reduction automatically; a stored ceiling stays at
+      138,490 until someone lowers it by hand, so payload that was removed can be added back
+      into the space it freed. That benefit disappears if an exception becomes the next base,
+      which is why the watermark is not optional.
+
+      **Q4 — may 4.4 close on this? YES, but not on the grep.** openai: *"It closes only when
+      the stored exception has been replaced by an active, required, fail-closed measured
+      ratchet and any exceptional growth preserves repayment debt. Until then, the `grep`
+      exit condition is insufficient evidence and 4.4 must remain open."*
+
+      **PREREQUISITES BOTH SEATS MADE BLOCKING — a measured ceiling without them is a
+      REGRESSION, not an improvement (anthropic's word).**
+      · `_lib/standing_bound_ratchet.ts`'s fail-open returns at `:96`, `:106`, `:121`, `:130`
+        must be replaced or mode-gated; a failed measurement may not read as `ok`.
+      · Base-resolution failure must BLOCK, not warn.
+      · **The trust boundary, which no prior round named and which is the sharpest finding
+        of this one:** the measurement code, the workflow invocation, the catalogue inclusion
+        rules and the base resolver are all editable by the pull request being measured. A
+        stored ceiling is protected from that by ADR-264 plus the shrink-only bound check; a
+        measured one is not, unless those surfaces are review-protected or workflow-pinned.
+
+      **ONE SEAT WENT FURTHER, and it is recorded because it reframes the target rather than
+      the mechanism.** anthropic: neither the stored nor the measured form plans to eliminate
+      the overage — 138,413 against a design ceiling of 107,646 is **30,767 tokens of debt**,
+      and both proposals normalise it. Its refinement makes the design ceiling the organising
+      principle: headroom applies only at or below it, the overage is measured and REPORTED
+      by the gate rather than merely compared against, and an exception carries a repayment
+      schedule. openai did not contradict this and its own mechanism is compatible with it.
+
+      **What this run did NOT do, deliberately: build it.** The verdict names four blocking
+      prerequisites, one of them a trust-boundary question about which surfaces a pull request
+      may edit — which is repository governance rather than a gate edit. Implementing the
+      formula without them is the regression both seats warned about, so the next change is
+      the prerequisites, not the ceiling.
       **Not attempted, deliberately, and unchanged from the earlier note:** raising
       `design_ceiling` is K4 and shortening rule prose is K5. Added to that list by this
       round: closing this roadmap through a stub carrier, which openai forbade in terms —

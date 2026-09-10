@@ -1,0 +1,1 @@
+**Skipped:** no code surface for this completion — the diff is one workflow comment, one taskfile target, a parity declaration, a reachability exemption and one blocker record, zero code paths of five changed files, scope 4413df34abc19ad5e074af490023694b374acedb0579f4ce012953b2745dca84, declared 2026-09-10
