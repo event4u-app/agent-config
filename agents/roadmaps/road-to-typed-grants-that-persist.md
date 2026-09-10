@@ -392,8 +392,8 @@ item. Phases 1-6 may run once 0.2 is chosen.
   does, verified 2026-09-08.
 
 ### blocker: ratification-platform-anchor
-- **Status:** open — **the criterion itself changed on 2026-09-10 by owner ruling, and what is
-  left is one collateral setting plus the CI wiring.** The owner ruled that a mandatory
+- **Status:** open — **the criterion itself changed on 2026-09-10 by owner ruling, and what
+  is left is the CI wiring plus an unrehearsed recovery path.** The owner ruled that a mandatory
   approving review is not wanted on this repository: *"I am the only maintainer, or the main
   one. There are others, but they are rarely active. That is why this would be a blocker."*
   Five accounts carry write access; four are rarely available. So the two approval dimensions
@@ -421,7 +421,11 @@ item. Phases 1-6 may run once 0.2 is chosen.
   honest three-part claim, and the limitation that the verifier cannot authenticate an owner
   ruling at all, are written into `docs/contracts/ratification-artifact.md`.
   Superseded reading, kept because it records what the criterion looked like before the ruling:
-  **limb 1 met 2026-09-10, limb 2 blocked on a platform capability.**
+  **limb 1 met 2026-09-10, limb 2 blocked on a platform capability.** The timing that reading
+  was written against, measured from the ruleset history rather than from memory: limb 1 was
+  met at 12:51 (version `49256548`) and owner-reversed in two single-field edits, `49271774`
+  at 15:14 and `49272069` at 15:16. Read the limb-1 paragraph below with those dates, not as
+  current state.
   This entry read `resolved` for one commit on the premise that both limbs were met. Limb 2 was
   then falsified by CI and the claim is corrected here rather than left standing. **What limb 2
   ran into:** the gate reads `repos/{owner}/{repo}/rulesets`, which needs the repository
@@ -456,10 +460,46 @@ item. Phases 1-6 may run once 0.2 is chosen.
   `check_ci_local_parity` and `check_gate_reachability` both exit 0 over that wiring. The
   workflow half is what the `administration` scope blocks, above. `rule-backstops.yml` carries
   a comment recording the scope refusal in place of the step, so the next reader does not spend
-  the cycle re-discovering the scope list. **What this does NOT resolve:** the deny retirement. The precondition both 2026-09-10
-  council seats attached to it is now met, but the retirement itself was refused 2/2 in round 2
-  and needs its own council decision and its own ratification artifact —
+  the cycle re-discovering the scope list. **What this does NOT resolve:** the deny retirement. The retirement itself was refused
+  2/2 in round 2 and needs its own council decision and its own ratification artifact —
   `kernel-guard-first-crossing` stays open and may not cite this entry as approval.
+
+  **LIMB 1 WAS UNDONE THE SAME AFTERNOON, BY THE OWNER, DELIBERATELY. The paragraph above
+  is the 12:51 reading and is no longer current state.** It is kept because it is the
+  verification that was actually performed, and because a record that quietly rewrites its
+  own measurements cannot be checked later. What happened after it: the 12:51 settings made
+  the repository unmergeable — this repository has zero eligible approvers, GitHub does not
+  permit approving your own pull request, and `bypass_actors` was emptied in the same edit.
+  PR #1988 measured `mergeable: MERGEABLE`, `mergeStateStatus: BLOCKED`,
+  `reviewDecision: REVIEW_REQUIRED` with every required check green.
+
+  **Six versions exist on 2026-09-10 and each edit changed one field.** `49271774` at 15:14
+  set `required_approving_review_count` back to `0`; `49272069` at 15:16 set
+  `require_last_push_approval` back to `false`; `49272180` at 15:18 changed **only**
+  `strict_required_status_checks_policy`, a separate owner decision on measured cost;
+  `49276909` at 16:04 restored that field on the mistaken assumption it had been a side
+  effect and `49277135` at 16:06 returned it. PR #1988 merged at `13:17:09Z` — 15:17:09
+  local, after 15:16 and before 15:18 exists, so the 15:18 edit is not part of what
+  unblocked it. `bypass_actors: []` and `current_user_can_bypass: never` still hold.
+
+  So limb 1 is **not met** and the gate reports three findings again — all three intended.
+  What it now waits on is the in-repository half: a structured, evidence-carrying exemption
+  rather than a lowered floor, per
+  `agents/roadmaps/road-to-bounded-approval-floor-waiver.md`. Verify with
+  `gh api repos/event4u-app/agent-config/rulesets/17749383/history` rather than from any
+  paragraph here.
+
+  **What is NOT discharged, corrected after a neutral review.** An earlier version of this
+  correction said the `bypass_actors` item "stands and is done" and that this entry's "what
+  may not stand" clause was "discharged on the platform side". That closed what both
+  2026-09-10 council seats flagged as open: with `bypass_actors: []` and no bypass, a future
+  ruleset mistake re-locks the sole maintainer out of the PR path exactly as 12:51 did, and
+  openai required that recoverability be *established* rather than inferred from
+  `current_user_can_bypass: never`, which describes bypass capability and not
+  ruleset-administration authority. `admin: true` is measured on the acting account, which is
+  a capability and not a rehearsed procedure. The removal satisfies
+  `allow_unconditional_bypass: false`; the recovery path is Phase 0.2 of the waiver roadmap
+  and is open.
 - **Owner:** maintainer
 - **Class:** 3 — human-only
 - **Blocks:** the deny retirement (5.2's second half) and therefore Phase 1's five kernel
@@ -468,6 +508,11 @@ item. Phases 1-6 may run once 0.2 is chosen.
   refused the retirement over the head-controlled enforcement path, and both 2026-09-10 council
   seats tied the retirement to this anchor reading compliant. So the dependency edge runs
   through here, and recording it as harmless would understate what is waiting on it.
+  **One qualification added 2026-09-10 afternoon:** "reading compliant" was written when
+  compliance meant the approval floor satisfied. Under the planned exemption it will mean
+  compliant-with-approvals-suspended, which is a weaker precondition than the seats had in
+  mind when they attached it. Whether that still satisfies the condition they set is part of
+  the retirement's own council decision, not something this entry may settle.
 - **What to do:** **THE DECISION IS MADE AND THE GATE IS BUILT, 2026-09-10. What is left is a
   repository-settings change only a human with admin rights can perform, which is why this
   entry stays open.** An AI council (anthropic/claude-sonnet-4-5 + openai/codex-default,
@@ -501,28 +546,65 @@ item. Phases 1-6 may run once 0.2 is chosen.
   later reader to restore them would mutate the live ruleset against a recorded ruling, which
   the ratification artifact for that change explicitly says its authority does not cover.
 
-  **THE ONE ACTION LEFT** is neither a setting nor a diff: a **PAT in a repository secret
-  carrying `administration: read`**, so the gate can run in a workflow. Everything else is
-  done. The rulesets endpoint needs that scope and a workflow `GITHUB_TOKEN` cannot be granted
-  it — actionlint refused `administration: read` as an *"unknown permission scope"* and listed
+  **TWO THINGS ARE LEFT, and an earlier version of this paragraph named only the first.**
+  It said "THE ONE ACTION LEFT ... Everything else is done", which dropped the second — a
+  claim the merge with the reversal record refuted rather than a summary of it.
+
+  **(1) A PAT in a repository secret carrying `administration: read`**, so the gate can run
+  in a workflow. Neither a setting nor a diff. The rulesets endpoint needs that scope and a
+  workflow `GITHUB_TOKEN` cannot be granted it — actionlint refused `administration: read` as an *"unknown permission scope"* and listed
   the sixteen that exist, none of which grants it. Until the secret exists the gate runs in
   `taskfiles/ci-fast.yml` (a real pre-push control, not a CI one), is declared under
   `local_only:` with the class `token-scope-unavailable`, and carries a reachability exemption
   naming this exact promotion condition.
+
+  **(2) Item 3 — the removed administrator bypass — is NOT discharged, and the CI-wiring
+  half above is not what it waits on.** Removing `bypass_actors` satisfies
+  `allow_unconditional_bypass: false` and simultaneously removes the recovery path from the
+  next lockout, which both 2026-09-10 council seats raised and neither closed. openai
+  required that recoverability be **established** rather than inferred from
+  `current_user_can_bypass: never`, which describes bypass capability and not
+  ruleset-administration authority; anthropic wrote that the design needs a tested
+  administrator-level recovery procedure *"which neither reviewer proposes"*. `admin: true`
+  on the acting account is a capability, not a rehearsed procedure. The owner question in
+  `threat_model_note` is likewise unchanged and still open. Measured state, so this is not
+  read from memory: `bypass_actors` is `[]` and `current_user_can_bypass` is `never`.
+
+  **The ruleset history behind all of it**, from
+  `gh api repos/event4u-app/agent-config/rulesets/17749383/history` rather than from
+  memory: six versions exist on 2026-09-10. `49256548` at 12:51 applied all three items,
+  which made the repository unmergeable — zero eligible approvers, no self-approval on
+  GitHub, and the administrator escape removed in the same edit; PR #1988 measured
+  `mergeStateStatus: BLOCKED` with every required check green. `49271774` at 15:14 and
+  `49272069` at 15:16 reversed items 1 and 2, one field each, and #1988 merged at 15:17:09
+  local — one minute *before* `49272180` at 15:18, which touched only
+  `strict_required_status_checks_policy`. `49276909` at 16:04 restored `strict` on the
+  assumption that 15:18 had been a side effect and `49277135` at 16:06 returned it to
+  `false` once the owner stated the intent.
+
+  **`agents/roadmaps/road-to-bounded-approval-floor-waiver.md` is superseded for the
+  approval half.** It plans a bounded waiver over `minimum_approving_reviews` and
+  `require_last_push_approval`; a later ruling removed both dimensions instead, and a
+  dimension outside the trust model is not a waived rule. Its mechanism did land — as
+  `accepted_risk_reductions`, over `strict_required_status_checks`, which is the one
+  dimension the repository still wants.
 
   Current verdict, reproducible:
   `./scripts-run src/scripts/check_platform_anchor --files src/rules/commit-policy.md` exits
   **0** with `PASS_WITH_ACCEPTED_RISK` — every hard dimension present, and
   `strict_required_status_checks` covered by waiver `arr-2026-09-10-strict-status-checks`,
   which expires 2026-12-09.
-- **Recommendation:** create the PAT secret, then wire the workflow step. Nothing else is
-  outstanding, and in particular do **not** re-add the approval dimensions — that is the
+- **Recommendation:** create the PAT secret, wire the workflow step, and establish the
+  administrator recovery procedure item 3 removed the escape from. In particular do **not**
+  re-add the approval dimensions — that is the
   instruction this entry used to carry and it is now contrary to a recorded owner ruling. The
   recommendation before that one — *"build it, scoped to the kernel/governance surface only"* —
   was discharged when the gate landed.
 - **If you do nothing:** the gate keeps running pre-push and never in CI, so a governance diff
-  pushed without `task preflight` reaches `main` with the anchor unchecked. That is the whole
-  residual, and it is smaller than this field used to describe: the anchor itself now passes,
+  pushed without `task preflight` reaches `main` with the anchor unchecked — and the next
+  ruleset lockout has no rehearsed way out, because the escape was removed and no procedure
+  replaced it. The residual is smaller than this field used to describe, but it is two items
+  rather than one: the anchor itself now passes,
   the accepted risk is recorded with an expiry, and
   `docs/contracts/ratification-artifact.md` states what a green anchor is and is not evidence
   of — no claim of independent approval, separation of duties, or protection against

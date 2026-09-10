@@ -312,6 +312,137 @@ The owner's ruling removed the approval requirement, not the bypass rule, and
 the emptied `bypass_actors` held through the later revert of the two approval
 dimensions.
 
+### Re-measured 2026-09-10, afternoon — one of those three readings is now history
+
+> **This whole section is itself now a dated reading, and two of its
+> present-tense claims are superseded by § `strict_required_status_checks` is
+> waived, not failing and not removed above.** It was written while the gate
+> exited 1 on three findings; the gate now exits **0** with
+> `PASS_WITH_ACCEPTED_RISK`, because the two approval dimensions left the
+> enforced set entirely by owner ruling and `strict_required_status_checks`
+> gained a bounded waiver. It stays as written for the same reason the block it
+> corrects does: it records the measurement the later decisions were taken
+> against. Read its verdict sentences with that date attached.
+
+The block above is a **dated** reading and stays as written. It was true at
+08:26 (commit `6bab400a8`) and it is not a complete description of the current
+state; rewriting it would destroy the evidence that the anchor was built
+against a measured failure. What follows is the later reading, recorded beside
+it rather than over it.
+
+**Which of its three bullets moved, precisely — because only one did.**
+Bullet 1 (`branches/main/protection` → 404, rulesets in use) still holds.
+Bullet 2 (`required_approving_review_count: 0`, `require_last_push_approval:
+false`) went to `1`/`true` at 12:51 and **back to `0`/`false` the same
+afternoon**, so it reads true again — by owner decision now rather than by
+neglect, which is the part that changed. Bullet 3 (`bypass_actors` carrying
+`{RepositoryRole 5, always}`) is history: it is `[]`, and
+`current_user_can_bypass` is `never`.
+
+**Six versions of ruleset `17749383` exist on 2026-09-10, not two.** All
+reproducible from
+`gh api repos/event4u-app/agent-config/rulesets/17749383/history`, and each
+edit changed one field:
+
+| At | Version | What changed |
+|---|---|---|
+| 12:51 | `49256548` | `required_approving_review_count` 0 → 1 · `require_last_push_approval` false → true · `bypass_actors` `{RepositoryRole 5, always}` → `[]` |
+| 15:14 | `49271774` | `required_approving_review_count` 1 → **0** |
+| 15:16 | `49272069` | `require_last_push_approval` true → **false** |
+| 15:18 | `49272180` | `strict_required_status_checks_policy` true → **false** |
+| 16:04 | `49276909` | `strict_required_status_checks_policy` false → **true** |
+| 16:06 | `49277135` | `strict_required_status_checks_policy` true → **false** |
+
+**The 12:51 edit made the repository unmergeable, and the 15:14 and 15:16 edits
+are the reversal.** This repository has zero eligible approvers and GitHub does
+not permit approving one's own pull request, so
+`required_approving_review_count: 1` could not be satisfied; with
+`bypass_actors` emptied in the same edit there was no administrator escape
+either. PR #1988 measured `mergeable: MERGEABLE`,
+`mergeStateStatus: BLOCKED`, `reviewDecision: REVIEW_REQUIRED` with every
+required check green, and merged at `2026-09-10T13:17:09Z` — **15:17:09 local,
+after the 15:16 edit and one minute before the 15:18 version exists.** So the
+15:18 edit is not part of what unblocked it, and an earlier version of this
+section said it was.
+
+**One framing correction, because it changes what the record claims.** Calling
+the state "structurally unsatisfiable" is the framing the 2026-09-10 council
+rejected: GitHub supports outside collaborators, teams and bots, so the
+approver count is zero because none has been configured — a deliberate
+single-operator model, not an external constraint. The exemption planned below
+therefore names an operational choice, and the reversal is an owner decision
+under `decision-revisit-gate`'s owner-reserved set.
+
+**Two present-tense claims in this document, and one in
+`src/config/platform-anchor.json`, are no longer current state.** They are
+bullet 3 of the dated block above and the sentence in the
+`HUMAN REVIEW REQUIRED` band that reads "while an administrator role bypasses
+unconditionally"; the third is `threat_model_note`. Trust layer 2 is **not**
+among them — it makes no bypass claim, it says the anchor measures a failure
+and points here. The **owner question** those passages record — whether
+administrators are meant to be a deliberate escape hatch — is untouched and
+stays open; only the measurement behind it has moved. Correcting the note
+inside `platform-anchor.json` is deferred to the roadmap below, because that
+file sits on `ANCHOR_PATHS` and a prose fix there needs its own ratification
+artifact.
+
+`./scripts-run src/scripts/check_platform_anchor --files src/rules/commit-policy.md`
+now exits 1 with three findings, and **all three are intended**. The committed
+expectation has not yet followed the platform, so the gate is correctly
+reporting a drift the repository knows about.
+
+`approvals-below-minimum` and `last-push-approval-missing` follow from the
+unsatisfiable-approval reasoning above. `status-checks-not-strict` is a
+separate owner decision with its own cost argument, recorded here because it
+first looked like an accident and is not one: `strict_required_status_checks_policy`
+lets a stale branch merge without re-running the required checks against the
+current base, and the owner has weighed that against what strictness costs on
+this repository — several branches are commonly green at once, and requiring
+each to be brought up to date re-runs the full check suite on every one of
+them, serially. The owner accepts a rare post-merge repair over that standing
+cost. It was briefly restored to `true` at 16:04 on the assumption that the
+15:18 change had been a side effect, and returned to `false` minutes later
+once the owner stated the intent; the round trip is recorded rather than
+tidied away, so a later reader does not read the restoration as the settled
+state.
+
+The residual is named rather than softened: with strictness off, a green check
+on a branch is evidence about that branch's base, not about the trunk it lands
+on. Nothing in the tree detects the case where two independently green
+branches conflict semantically after both merge.
+
+**Where the gate actually runs, since this matters for what the drift costs.**
+It is in `taskfiles/ci-fast.yml`, both in the `preflight` list and as its own
+`check-platform-anchor` target — a **pre-push** control, not a CI one, and the
+distinction is not cosmetic. No workflow can run it: the evaluator reads
+`repos/{owner}/{repo}/rulesets`, which needs the repository `administration`
+permission, and that scope does not exist for a workflow `GITHUB_TOKEN` —
+actionlint refuses `administration: read` as an unknown scope and none of the
+sixteen that do exist grants it. `rule-backstops.yml` carries a comment
+recording that refusal in place of a step. Closing it needs a PAT in a
+repository secret; that is a human action, tracked as limb 2 of the
+`ratification-platform-anchor` blocker.
+
+So the three findings red nothing on an ordinary pull request — the gate fires
+only on a diff that already requires ratification and exits before its first
+API call otherwise — but they **do** block every future kernel-rule,
+governance-hook and anchor-path change at pre-push, which is precisely the
+class of change this whole mechanism exists to govern. The drift is therefore
+not idle. The in-repository half of the reconciliation was planned in the
+`road-to-bounded-approval-floor-waiver` roadmap — named by slug rather than by
+path, per `no-roadmap-references`.
+
+**And it did not land in the shape that roadmap planned, which is worth stating
+here rather than only there.** The roadmap plans a bounded waiver over the two
+**approval** dimensions. A later ruling the same day removed both dimensions
+instead — from the expectation and from the floor — on the ground that a
+dimension outside the trust model is not a waived rule. The waiver mechanism
+did land, over `strict_required_status_checks`, which is the one dimension the
+repository still considers the safer setting. So the paragraph above describing
+three intended findings describes a state that lasted about three hours; the
+current verdict, and the reasoning for the split, are in
+§ `strict_required_status_checks` is waived, not failing and not removed.
+
 ### The bootstrap exception, which is sound exactly once
 
 The PR that *introduces* the gate has no base copy to be judged by. The
