@@ -424,8 +424,10 @@ item. Phases 1-6 may run once 0.2 is chosen.
   than reading one by id, which openai made a condition: assuming ruleset `17749383` or its
   name would break the first time an administrator splits it.
 
-  **What the human must change** — three items, measured live, each reproducible with
-  `gh api repos/event4u-app/agent-config/rulesets/17749383`:
+  **What the human must change — SUPERSEDED 2026-09-10 afternoon. The list below asked for
+  three settings changes; all three were made, two were then deliberately reversed by the
+  owner, and this entry must not go on instructing a future reader to undo that reversal.**
+  The original list, kept because it is what the morning measurement justified:
   1. `required_approving_review_count` is **0**. Set it to at least 1. Without it a
      ratification artifact lands reviewed by nobody the repository insisted on.
   2. `require_last_push_approval` is **false**. Set it true, so an approval cannot predate the
@@ -436,9 +438,46 @@ item. Phases 1-6 may run once 0.2 is chosen.
      deliberate escape hatch with an audited emergency procedure. What may not stand is the
      contract claiming protection against unilateral action while this remains.
 
+  **What actually happened**, from the ruleset history rather than from memory —
+  `gh api repos/event4u-app/agent-config/rulesets/17749383/history`. The owner applied all
+  three at 12:51 (version `49256548`), which made the repository unmergeable: with one
+  maintainer and GitHub's prohibition on approving one's own pull request, item 1 is not a
+  strict requirement but an unsatisfiable one, and item 3 removed the administrator escape in
+  the same edit. PR #1988 measured `mergeable: MERGEABLE`,
+  `mergeStateStatus: BLOCKED`, `reviewDecision: REVIEW_REQUIRED` with every required check
+  green. At 15:18 the owner reversed items 1 and 2. **Item 3 stands and is done** —
+  `bypass_actors` is `[]` and `current_user_can_bypass` is `never`, so this blocker's own
+  "what may not stand" clause is discharged on the platform side; the owner question it
+  names is unchanged and still open, and the passages still describing the old bypass as
+  current state are corrected in `docs/contracts/ratification-artifact.md`
+  § Re-measured 2026-09-10.
+
+  **What this blocker now waits on**, which is not items 1 and 2: the in-repository half
+  of the reversal — a bounded, expiring `approval_floor_waiver` rather than a lowered
+  floor, which both 2026-09-10 council seats required (openai would vote `refused` on an
+  indefinite self-asserted exemption). Planned in
+  `agents/roadmaps/road-to-bounded-approval-floor-waiver.md`.
+
+  **A third floor field is off by owner decision and is NOT waiting on anything.**
+  `strict_required_status_checks_policy` was `true` before 15:18 and is `false` now. It
+  looked like a side effect of the approval rollback and was briefly restored at 16:04 on
+  that assumption; the owner then stated the intent and it went back off. The argument is
+  a measured cost, not an oversight: several branches are commonly green at once here, and
+  requiring each to be brought up to date re-runs the full check suite on every one of
+  them, serially. The owner accepts a rare post-merge repair instead. Do not restore it as
+  a tidy-up — the residual (a green check is evidence about that branch's base, not about
+  the trunk it lands on) is accepted deliberately.
+
   Run `./scripts-run src/scripts/check_platform_anchor --files src/rules/commit-policy.md` to
-  see the current verdict. On 2026-09-10 it exits 1 and names exactly those three.
-- **Recommendation:** change the three settings, then re-run the gate. The build half is done
+  see the current verdict. On 2026-09-10 morning it exited 1 naming the three items above; on
+  the same afternoon it exits 1 naming `approvals-below-minimum`,
+  `last-push-approval-missing` and `status-checks-not-strict` — all three intended, the
+  first two pending the waiver and the third settled by the owner decision above.
+- **Recommendation:** land the bounded waiver from
+  `agents/roadmaps/road-to-bounded-approval-floor-waiver.md`, then re-run the gate.
+  **CORRECTED 2026-09-10 afternoon** — this line read *"change the three settings, then
+  re-run the gate"*, and two of those three have since been reversed by the owner. The
+  build half is done
   and the recommendation that used to sit here — *"build it, scoped to the kernel/governance
   surface only"* — is discharged. Both round-1 reviewers had converged on this being the real
   anchor, one writing that without it the gate *"enforces the format of the Iron Law, not the

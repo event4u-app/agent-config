@@ -161,6 +161,77 @@ claiming protection against unilateral action while an administrator role
 bypasses unconditionally. The question is recorded in `threat_model_note` in
 `src/config/platform-anchor.json` and is owner-reserved.
 
+### Re-measured 2026-09-10, afternoon — three of those readings are now history
+
+The block above is a **dated** reading and stays as written. It was true at
+08:26 and it is not the current state; rewriting it would destroy the evidence
+that the anchor was built against a measured failure. What follows is the
+later reading, recorded beside it rather than over it.
+
+Two owner edits to ruleset `17749383` on the same day, both reproducible from
+`gh api repos/event4u-app/agent-config/rulesets/17749383/history`:
+
+| At | Version | What changed |
+|---|---|---|
+| 12:51 | `49256548` | `required_approving_review_count` 0 → 1 · `require_last_push_approval` false → true · `bypass_actors` `{RepositoryRole 5, always}` → `[]` |
+| 15:18 | — | `required_approving_review_count` 1 → 0 · `require_last_push_approval` true → false · `strict_required_status_checks_policy` true → false |
+
+**The 12:51 edit made the repository unmergeable, and that is why the 15:18
+edit exists.** This repository has one maintainer, and GitHub does not permit
+approving one's own pull request — so `required_approving_review_count: 1` is
+not a strict requirement here but an unsatisfiable one, and with
+`bypass_actors` emptied in the same edit there was no administrator escape
+left either. PR #1988 measured `mergeable: MERGEABLE`,
+`mergeStateStatus: BLOCKED`, `reviewDecision: REVIEW_REQUIRED` with every
+required check green. Returning the two approval values is an owner decision
+under `decision-revisit-gate`'s owner-reserved set, taken deliberately.
+
+**Two claims elsewhere in this document and in
+`src/config/platform-anchor.json` are therefore no longer current state.** The
+`bypass_actors` entry and `current_user_can_bypass: always` describe the
+morning, not now: measured after 12:51, `bypass_actors` is `[]` and
+`current_user_can_bypass` is `never`. Trust layer 2 above and
+`threat_model_note` both still read as if an administrator bypasses
+unconditionally. The **owner question** those passages record — whether
+administrators are meant to be a deliberate escape hatch — is untouched and
+stays open; only the measurement behind it has moved. Correcting the note
+inside `platform-anchor.json` is deferred to the roadmap below, because that
+file sits on `ANCHOR_PATHS` and a prose fix there needs its own ratification
+artifact.
+
+`./scripts-run src/scripts/check_platform_anchor --files src/rules/commit-policy.md`
+now exits 1 with three findings, and **all three are intended**. The committed
+expectation has not yet followed the platform, so the gate is correctly
+reporting a drift the repository knows about.
+
+`approvals-below-minimum` and `last-push-approval-missing` follow from the
+unsatisfiable-approval reasoning above. `status-checks-not-strict` is a
+separate owner decision with its own cost argument, recorded here because it
+first looked like an accident and is not one: `strict_required_status_checks_policy`
+lets a stale branch merge without re-running the required checks against the
+current base, and the owner has weighed that against what strictness costs on
+this repository — several branches are commonly green at once, and requiring
+each to be brought up to date re-runs the full check suite on every one of
+them, serially. The owner accepts a rare post-merge repair over that standing
+cost. It was briefly restored to `true` at 16:04 on the assumption that the
+15:18 change had been a side effect, and returned to `false` minutes later
+once the owner stated the intent; the round trip is recorded rather than
+tidied away, so a later reader does not read the restoration as the settled
+state.
+
+The residual is named rather than softened: with strictness off, a green check
+on a branch is evidence about that branch's base, not about the trunk it lands
+on. Nothing in the tree detects the case where two independently green
+branches conflict semantically after both merge.
+
+Nothing in CI runs this gate — `grep -rn check_platform_anchor taskfiles/
+.github/workflows/ Taskfile.yml` returns nothing, as
+`drain-typed-grants-platform-anchor.md` records deliberately — so none of the
+three reds a check. The in-repository half of the reconciliation, including the
+bounded waiver both 2026-09-10 council seats required in place of a lowered
+floor, is planned in the `road-to-bounded-approval-floor-waiver` roadmap —
+named by slug rather than by path, per `no-roadmap-references`.
+
 ### The bootstrap exception, which is sound exactly once
 
 The PR that *introduces* the gate has no base copy to be judged by. The
