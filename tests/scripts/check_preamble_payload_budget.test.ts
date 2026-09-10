@@ -161,13 +161,63 @@ describe('the measurement is a deterministic census, not a sample', () => {
     });
 });
 
-/** `ci_delivery` straight off disk — the same read the CI step performs. */
-function rawCiDelivery(): { grace_ceiling: number; grace_end_date: string; posture: string } {
+/**
+ * `ci_delivery` straight off disk — the same read the CI step performs.
+ *
+ * `grace_end_date` is deliberately absent from this type. The key was deleted
+ * on 2026-09-10 (ADR-274) because nothing enforced it: it was read in exactly
+ * two places, an `echo` in the workflow and the return type of THIS helper, and
+ * the gate carries no date logic, so the concession never expired and the design
+ * ceiling never became operative on the date the config advertised. Typing a
+ * field nobody reads is how that fiction survived a year of review, so the
+ * removal is pinned below rather than merely performed.
+ */
+function rawCiDelivery(): { grace_ceiling: number; posture: string } {
     const raw = JSON.parse(
         fs.readFileSync(path.join('src', 'config', 'preamble-payload-budget.json'), 'utf-8'),
-    ) as { ci_delivery: { grace_ceiling: number; grace_end_date: string; posture: string } };
+    ) as { ci_delivery: { grace_ceiling: number; posture: string } };
     return raw.ci_delivery;
 }
+
+/** The two files that used to carry the unenforced expiry, read as text. */
+function readText(...rel: string[]): string {
+    return fs.readFileSync(path.join(REPO_ROOT_FOR_TESTS, ...rel), 'utf-8');
+}
+
+describe('the grace ceiling is enforced and undated', () => {
+    it('carries no grace_end_date key', () => {
+        // The regression pin. A future edit that reintroduces the key without
+        // also building the expiry recreates exactly the defect ADR-274 removed:
+        // a date the config states and no code reads.
+        expect(Object.keys(rawCiDelivery())).not.toContain('grace_end_date');
+    });
+
+    it('no consumer reads a grace_end_date, so none can go stale against one', () => {
+        // Sensitivity is the point: this assertion is what fails if someone puts
+        // the key back in the workflow's shell block. It reads the workflow and
+        // the taskfile as TEXT because that is where the only two reads lived.
+        expect(readText('.github', 'workflows', 'standing-payload-delta.yml')).not.toContain(
+            "['grace_end_date']",
+        );
+        expect(readText('taskfiles', 'ci-fast.yml')).not.toContain("['grace_end_date']");
+    });
+
+    it('still carries the ceiling the CI step passes, and it is above the design number', () => {
+        // Deleting the date must not have loosened the bound. What the ceiling
+        // DOES is asserted where that behaviour already lives and is not
+        // duplicated here: `the gate reds on growth past whichever ceiling
+        // applies` below owns the exit codes (and carries the caveat that a
+        // future reduction inverts one of them), and `the --ceiling override may
+        // only ever be LOOSER` owns the override direction. Re-asserting either
+        // would split one property across two places, and the copy would be the
+        // one without the caveat.
+        const grace = rawCiDelivery().grace_ceiling;
+        expect(typeof grace, 'ci_delivery.grace_ceiling must exist').toBe('number');
+        expect(grace).toBeGreaterThan(
+            Math.round(readBudget().baseline_tokens * (1 + readBudget().headroom_pct / 100)),
+        );
+    });
+});
 
 describe('the --ceiling override may only ever be LOOSER', () => {
     const design = (): number => {

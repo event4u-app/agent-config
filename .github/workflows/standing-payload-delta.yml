@@ -23,7 +23,16 @@ name: Standing Payload Delta
 # design ceiling: HEAD is 28.4 % over the design number, so blocking at it would
 # fail every PR from the moment this lands, and nobody can shed 30,566 tokens
 # inside the PR that arms the gate. Growth beyond today reds; today's tree passes.
-# The grace ceiling ratchets DOWN only, and expires at milestone 1 (2026-11-10).
+# The grace ceiling ratchets DOWN only. It does NOT expire, and this line used to
+# say it expired at milestone 1 (2026-11-10). Nothing ever implemented that: the
+# date was read once, into the echo below, and the gate carries no date logic, so
+# the design ceiling would not have become operative on that day. `grace_end_date`
+# was deleted rather than moved (AI council 2/2, 2026-09-10, under a written owner
+# delegation; ADR-274), because moving it re-publishes the same fiction with a
+# later number, and BUILDING the expiry was forbidden in the same verdict — it
+# would arm a repo-wide stop on a date where the budget file still records
+# `committed_reduction_mechanism` opening with NONE — a field whose value is a
+# paragraph, not the bare token, so it is paraphrased here rather than quoted.
 # Full record, including why one CI run is a sufficient sample for a deterministic
 # census: `src/config/preamble-payload-budget.json` → `ci_delivery`.
 #
@@ -126,6 +135,5 @@ jobs:
         run: |
           set -euo pipefail
           ceiling="$(python3 -c "import json;print(json.load(open('src/config/preamble-payload-budget.json'))['ci_delivery']['grace_ceiling'])")"
-          end="$(python3 -c "import json;print(json.load(open('src/config/preamble-payload-budget.json'))['ci_delivery']['grace_end_date'])")"
-          echo "grace ceiling $ceiling (expires $end) — design ceiling is lower; see ci_delivery"
+          echo "grace ceiling $ceiling (shrink-only, undated) — design ceiling is lower; see ci_delivery"
           ./scripts-run src/scripts/check_preamble_payload_budget --ceiling "$ceiling"
