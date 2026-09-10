@@ -1,15 +1,15 @@
 # Findings: packed-payload-cap
-<!-- completion-review: v1 | reviewed: 2026-09-10 | scope: 6f9f3194c883b5b809638b7c6ba2890dc538d5a551dceb0007f2098f718d2c31 | diff: 794c2913f4d71d102ee10464310c78ce56be78d6 | reviewer: r2-fresh-subagent-packed-payload-cap | prompt_hash: abf5ee908a7e02e5e102498c8665ead6d5b951253f7fe539c553197353dec567 -->
+<!-- completion-review: v1 | reviewed: 2026-09-10 | scope: 56222051ddd7f94db3c82a7e5a69e9e46b210c5fd725d344c21b857786ff1a05 | diff: c56809b134f4d39665016a23b556dc517cdcfe25 | reviewer: r2-fresh-subagent-packed-payload-cap | prompt_hash: abf5ee908a7e02e5e102498c8665ead6d5b951253f7fe539c553197353dec567 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-packed-payload-cap"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-09-10 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 794c2913f4d71d102ee10464310c78ce56be78d6
-  scope_hash: 6f9f3194c883b5b809638b7c6ba2890dc538d5a551dceb0007f2098f718d2c31
+  diff_sha: c56809b134f4d39665016a23b556dc517cdcfe25
+  scope_hash: 56222051ddd7f94db3c82a7e5a69e9e46b210c5fd725d344c21b857786ff1a05
   roadmap: agents/roadmaps/archive/road-to-the-packed-payload-cap.md
-  roadmap_hash: 3d3ffebb0178c1286432e2bfa52b22ea03dca27ea53502ec46f01b37b9779b35
-  ac_hash: b265507e57579f2021bc38749796c9fa131ae7566a0c2fdc1629b0f973601dfb
+  roadmap_hash: 67fa76aa0d7879549c97067511db0a0c34c663202c0a478fe3e8e464d5e71275
+  ac_hash: 76633a6a0e293ad8cc84936ccf4f87fae6daf1c99cdc08f8e79f1a851815cb5c
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
 dispatched: 2026-09-10T04:32:13Z
