@@ -1,15 +1,15 @@
 # Findings: drain-delivery-for-every-host-4-4-close
-<!-- completion-review: v1 | reviewed: 2026-09-10 | scope: 9635992650399f50fe1650fdef514ae8b4558201e8d865249bd39db84d6eac3a | diff: c4658aa959c9b4f4b29f1afef26e15cbc18c2bcb | reviewer: r2-fresh-subagent-drain-delivery-for-every-host-4-4-close | prompt_hash: 536d48566fe4545b90c8be070fada56757ecec4ead1a9158cd68df5eb5e21ea8 -->
+<!-- completion-review: v1 | reviewed: 2026-09-10 | scope: 4b6338451a69dd8fe16370b57d81f1a7413a6c942a25ae8526f02ce0c92c502d | diff: c4658aa959c9b4f4b29f1afef26e15cbc18c2bcb | reviewer: r2-fresh-subagent-drain-delivery-for-every-host-4-4-close | prompt_hash: 536d48566fe4545b90c8be070fada56757ecec4ead1a9158cd68df5eb5e21ea8 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-drain-delivery-for-every-host-4-4-close"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-09-10 -->
 
 <!-- context-manifest: v1
 inputs:
   diff_sha: c4658aa959c9b4f4b29f1afef26e15cbc18c2bcb
-  scope_hash: 9635992650399f50fe1650fdef514ae8b4558201e8d865249bd39db84d6eac3a
+  scope_hash: 4b6338451a69dd8fe16370b57d81f1a7413a6c942a25ae8526f02ce0c92c502d
   roadmap: agents/roadmaps/road-to-delivery-for-every-host.md
-  roadmap_hash: 98596f5cd2448999be39bea2ddca796d226ae12b409575f9fd9421cb3410afbe
-  ac_hash: b163bc3793e2d2f793a4e23026b709aeb5a5cad245c5f9963eef1485cc5c1a70
+  roadmap_hash: f996407b4019d4f9e6d4b379df1d481b93e875d67bf31662b25133d35d1309b1
+  ac_hash: 336cf5acce8b7138ae8feb08225583eb81d7918be2b99ee60f039864561202b0
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
 dispatched: 2026-09-10T06:19:39Z
@@ -52,6 +52,38 @@ rebound: 2026-09-10T09:20:00Z
   No finding is re-opened by it. The scope hash converged after this re-bind:
   `agents/evidence/reviews` is excluded from the scope, so writing this block is
   not itself a further move.
+-->
+<!-- rebind: v1
+rebound: 2026-09-10T10:30:00Z
+  THIRD re-bind, contract 2.7 path 1, all 9 rows still terminal. scope
+  96359926503 -> 4b6338451a69, roadmap_hash 98596f5cd244 -> f996407b4019,
+  ac_hash b163bc3793e2 -> 336cf5acce8b.
+  Cause: `origin/main` was merged in and it had taken ADR-273 for
+  `pack-size-caps-reset-on-a-reconstructed-clean-baseline`, so THIS record
+  renumbered to ADR-274. The scope is a merge-base diff, so a merge moves the
+  hash on its own; the renumber then moved the reviewed text as well.
+  Why this is a re-bind and not a fresh review, MEASURED rather than asserted.
+  The scope file set changed by exactly one entry, and it is the same file under
+  a new name -- ADR-273-the-grace-ceiling-... left, ADR-274-the-grace-ceiling-...
+  entered, the eleven others unchanged. The content delta across those eleven,
+  `git diff f7fb052ff HEAD` over the common set, is `ADR-273` -> `ADR-274` and
+  nothing else, plus the two generated artefacts picking up main's own ADR-273
+  row and its census counts. No bound, no assertion, no glyph, no acceptance
+  criterion moved.
+  `ac_hash` DID move this time, and it is the field that would have meant the
+  criteria were edited under the review, so it was diffed rather than trusted:
+  the acceptance-criteria snapshot differs at exactly two lines, both of the form
+  "`ADR-273`" -> "`ADR-274`" in prose pointing at step 4.4. The criteria
+  themselves are untouched, which is why the round is re-bound rather than
+  re-dispatched.
+  `diff_sha`, `reviewer` and `prompt_hash` are NOT updated -- `diff_sha` is
+  provenance and `dispatch_r2_reviewer.ts:1061` never compares it, and the other
+  two describe the as-dispatched scope, which is the binding
+  `check_review_prompt_binding` exists to keep.
+  The File:Line column still names `docs/decisions/ADR-273-the-grace-ceiling-...`
+  on findings 3, 4, 6, 8 and 9. Those paths are left as the reviewer wrote them,
+  for the same reason `prompt_hash` is: the column records what was read. Read
+  them at `ADR-274-the-grace-ceiling-...`, same file, renumbered by this merge.
 -->
 
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
