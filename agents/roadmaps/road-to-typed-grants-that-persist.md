@@ -457,10 +457,20 @@ item. Phases 1-6 may run once 0.2 is chosen.
   anchor diff for as long as this is untouched, which is the forcing function both council
   seats intended — anthropic: *"a verification gate that correctly detects a missing control
   is doing its job."*
-- **Resolved when:** `./scripts-run src/scripts/check_platform_anchor --files
-  src/rules/commit-policy.md` exits 0 against the live repository — which requires both the
-  gate (landed 2026-09-10) and the three settings changes named above. The second limb of the
-  original clause, *"or a recorded owner decision states that the platform's own enforcement
+- **Resolved when:** BOTH of these hold, and the second was added 2026-09-10 after a blind
+  completion review pointed out that the first alone lets this blocker close with the gate
+  still inert:
+  1. `./scripts-run src/scripts/check_platform_anchor --files src/rules/commit-policy.md`
+     exits 0 against the live repository — which requires the gate (landed 2026-09-10) and the
+     three settings changes named above.
+  2. `grep -c check_platform_anchor taskfiles/ci-fast.yml` returns at least 1 AND the gate
+     appears in a `.github/workflows/` step, so the check runs on every pull request rather
+     than only when someone remembers to invoke it. The unwired landing is deliberate and
+     argued in 5.2, but "wire it afterwards" was prose in a step and prose in a step closes
+     nothing — the reviewer's phrasing: *"nothing in the closing condition forces the wiring
+     to ever follow."*
+
+  The second limb of the original clause, *"or a recorded owner decision states that the platform's own enforcement
   is the anchor and the gate need not re-assert it"*, is **withdrawn**: the council rejected it
   on measurement, because the platform's own enforcement demonstrably does not include an
   independent approval, so a decision to rely on it would rely on nothing. openai:

@@ -4,12 +4,14 @@ import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {
+    checkAnchorIdentity,
     coversDefaultBranch,
     effectiveProtection,
     enforceFloor,
     evaluateAnchor,
     NON_NEGOTIABLE_FLOOR,
     readAnchorPolicy,
+    refPatternMatches,
     type AnchorPolicy,
     type RulesetDetail,
 } from '../../src/scripts/_lib/platform_anchor.js';
@@ -180,6 +182,151 @@ describe('reading the expectation refuses a half-read one', () => {
     });
 });
 
+/**
+ * Regressions from the blind completion review of 2026-09-10.
+ *
+ * Every case here was green before the fix, which is the point of keeping them
+ * in their own block: the original 25 asserted both polarities on every rule
+ * their author knew about, and these are the rules their author did not know
+ * about. Two were probed by the reviewer against the shipped evaluator and are
+ * reproduced as written.
+ */
+describe('the floor covers the selectors, not only the thresholds', () => {
+    it('refuses a policy that would read non-enforcing rulesets as protection', () => {
+        // Probed: `enforcement: "evaluate"` made a dry-run ruleset read as full
+        // protection and returned `compliant` with zero findings.
+        expect(enforceFloor(policy({ enforcement: 'evaluate' }))).toHaveLength(1);
+        expect(enforceFloor(policy({ target: 'tag' }))).toHaveLength(1);
+        expect(enforceFloor(policy({ covers_default_branch: false }))).toHaveLength(1);
+        expect(enforceFloor(policy({ required_review_thread_resolution: false }))).toHaveLength(1);
+    });
+
+    it('refuses a non-numeric approval floor instead of comparing against NaN', () => {
+        // `Number("one")` is NaN; `NaN < 1` is false, so a bare threshold
+        // comparison read it as satisfying the floor, and the same NaN then
+        // made `observed < NaN` false so the approval rule disappeared.
+        const text = JSON.stringify({
+            schema_version: 1,
+            required: { ...policy(), minimum_approving_reviews: 'one' },
+        });
+        const { policy: p, findings } = readAnchorPolicy(text);
+        expect(p).toBeNull();
+        expect(findings.some((f) => f.code === 'policy-below-floor')).toBe(true);
+    });
+
+    it('refuses a non-integer and an absurd approval floor', () => {
+        expect(enforceFloor(policy({ minimum_approving_reviews: 1.5 }))).toHaveLength(1);
+        expect(enforceFloor(policy({ minimum_approving_reviews: 10_000 }))).toHaveLength(1);
+        expect(enforceFloor(policy({ minimum_approving_reviews: 2 }))).toEqual([]);
+    });
+
+    it('refuses an unknown key in `required` rather than ignoring it', () => {
+        const text = JSON.stringify({
+            schema_version: 1,
+            required: { ...policy(), minimum_approvals: 1 },
+        });
+        const { policy: p, findings } = readAnchorPolicy(text);
+        expect(p).toBeNull();
+        expect(findings.some((f) => f.code === 'policy-unknown-field')).toBe(true);
+    });
+});
+
+describe('the expectation knows which repository it describes', () => {
+    it('refuses a repository that is not the one the expectation names', () => {
+        const text = JSON.stringify({ schema_version: 1, repository: 'a/b', required: policy() });
+        expect(checkAnchorIdentity(text, 'a/b')).toEqual([]);
+        const mismatch = checkAnchorIdentity(text, 'someone/fork');
+        expect(mismatch.map((f) => f.code)).toContain('policy-repository-mismatch');
+    });
+
+    it('refuses a schema version its reader does not support', () => {
+        const text = JSON.stringify({ schema_version: 2, repository: 'a/b', required: policy() });
+        expect(checkAnchorIdentity(text, 'a/b')).toHaveLength(1);
+    });
+
+    it('is checked by the gate, so a fork cannot pass on another expectation', () => {
+        const text = fs.readFileSync(path.join(REPO, POLICY_PATH), 'utf8');
+        const r = evaluateGate(
+            ['src/rules/commit-policy.md'],
+            text,
+            source([compliantRuleset()]),
+            'someone/fork',
+        );
+        expect(r.exitCode).toBe(1);
+        expect(r.lines.join('\n')).toContain('policy-repository-mismatch');
+    });
+});
+
+describe('ref conditions are fnmatch patterns, not literals', () => {
+    it('keeps a single star inside one segment and lets a double star cross', () => {
+        expect(refPatternMatches('refs/heads/*', 'refs/heads/main')).toBe(true);
+        expect(refPatternMatches('refs/heads/*', 'refs/heads/a/b')).toBe(false);
+        expect(refPatternMatches('refs/heads/**', 'refs/heads/a/b')).toBe(true);
+        expect(refPatternMatches('refs/heads/m?in', 'refs/heads/main')).toBe(true);
+        expect(refPatternMatches('refs/heads/m?in', 'refs/heads/mn')).toBe(false);
+    });
+
+    it('cannot widen itself through a regex metacharacter', () => {
+        expect(refPatternMatches('refs/heads/m.in', 'refs/heads/main')).toBe(false);
+        expect(refPatternMatches('refs/heads/m.in', 'refs/heads/m.in')).toBe(true);
+    });
+
+    it('honours a glob exclude — the one fail-OPEN direction the review found', () => {
+        // Probed: with `===` matching, `exclude: ["refs/heads/m*"]` under
+        // `include: ["~ALL"]` reported `main` as covered, crediting a ruleset
+        // that in fact excludes it.
+        const rs: RulesetDetail = {
+            conditions: { ref_name: { include: ['~ALL'], exclude: ['refs/heads/m*'] } },
+        };
+        expect(coversDefaultBranch(rs, 'main')).toBe(false);
+    });
+
+    it('honours a glob include, which the literal form read as no match', () => {
+        const rs: RulesetDetail = { conditions: { ref_name: { include: ['refs/heads/**'] } } };
+        expect(coversDefaultBranch(rs, 'main')).toBe(true);
+    });
+
+    it('treats an empty include as covering nothing', () => {
+        expect(coversDefaultBranch({ conditions: { ref_name: { include: [] } } }, 'main')).toBe(
+            false,
+        );
+        expect(coversDefaultBranch({}, 'main')).toBe(false);
+    });
+});
+
+describe('the gate accounts for each path and spends no wasted call', () => {
+    const text = (): string => fs.readFileSync(path.join(REPO, POLICY_PATH), 'utf8');
+
+    it('reports a ledger tally naming what it decided', () => {
+        const r = evaluateGate(
+            ['src/rules/commit-policy.md', 'README.md'],
+            text(),
+            source([compliantRuleset()]),
+            'event4u-app/agent-config',
+        );
+        expect(r.lines.join('\n')).toMatch(/ledger: planned 2 .* out_of_scope 1/);
+    });
+
+    it('does not ask for the default branch once the ruleset read has failed', () => {
+        let branchCalls = 0;
+        const spy: AnchorSource = {
+            rulesets: () => null,
+            defaultBranch: () => {
+                branchCalls += 1;
+                return 'main';
+            },
+        };
+        const r = evaluateGate(
+            ['src/rules/commit-policy.md'],
+            text(),
+            spy,
+            'event4u-app/agent-config',
+        );
+        expect(r.exitCode).toBe(1);
+        expect(branchCalls).toBe(0);
+    });
+});
+
 describe('ref matching', () => {
     const rs = (include: string[], exclude: string[] = []): RulesetDetail => ({
         conditions: { ref_name: { include, exclude } },
@@ -331,7 +478,7 @@ describe('the gate only consults the platform on a gated diff', () => {
             },
             defaultBranch: () => 'main',
         };
-        const r = evaluateGate(['README.md'], text(), spy, 'o/r');
+        const r = evaluateGate(['README.md'], text(), spy, 'event4u-app/agent-config');
         expect(r.exitCode).toBe(0);
         expect(asked).toBe(false);
     });
@@ -341,7 +488,7 @@ describe('the gate only consults the platform on a gated diff', () => {
             ['src/rules/commit-policy.md'],
             text(),
             source([compliantRuleset()]),
-            'o/r',
+            'event4u-app/agent-config',
         );
         expect(r.exitCode).toBe(0);
     });
@@ -351,14 +498,14 @@ describe('the gate only consults the platform on a gated diff', () => {
             ['src/rules/commit-policy.md'],
             text(),
             source([measured2026_09_10()]),
-            'o/r',
+            'event4u-app/agent-config',
         );
         expect(r.exitCode).toBe(1);
         expect(r.lines.join('\n')).toContain('NONCOMPLIANT');
     });
 
     it('fails closed when the platform cannot be read', () => {
-        const r = evaluateGate(['src/rules/commit-policy.md'], text(), source(null), 'o/r');
+        const r = evaluateGate(['src/rules/commit-policy.md'], text(), source(null), 'event4u-app/agent-config');
         expect(r.exitCode).toBe(1);
         expect(r.lines.join('\n')).toContain('UNVERIFIABLE');
     });
@@ -368,7 +515,7 @@ describe('the gate only consults the platform on a gated diff', () => {
             ['src/rules/commit-policy.md'],
             null,
             source([compliantRuleset()]),
-            'o/r',
+            'event4u-app/agent-config',
         );
         expect(r.exitCode).toBe(1);
         expect(r.lines.join('\n')).toContain('policy-missing');
@@ -377,7 +524,7 @@ describe('the gate only consults the platform on a gated diff', () => {
     it('treats an edit to the expectation itself as gated', () => {
         expect(touchesPolicy([POLICY_PATH])).toBe(true);
         expect(touchesPolicy(['README.md'])).toBe(false);
-        const r = evaluateGate([POLICY_PATH], text(), source([measured2026_09_10()]), 'o/r');
+        const r = evaluateGate([POLICY_PATH], text(), source([measured2026_09_10()]), 'event4u-app/agent-config');
         expect(r.exitCode).toBe(1);
     });
 });

@@ -109,12 +109,28 @@ export interface AnchorPolicy {
 export const NON_NEGOTIABLE_FLOOR = {
     minimum_approving_reviews: 1,
     require_last_push_approval: true,
+    required_review_thread_resolution: true,
     block_deletion: true,
     block_non_fast_forward: true,
     strict_required_status_checks: true,
     allow_unconditional_bypass: false,
     minimum_required_contexts: 1,
+    // The SELECTOR half. The six values above are thresholds a ruleset is
+    // measured against; these three decide WHICH rulesets are measured at all,
+    // and leaving them unfloored left the whole check reachable through a door
+    // the floor did not watch. A blind review probed it against this evaluator:
+    // `enforcement: "evaluate"` credited a non-enforcing dry-run ruleset as
+    // full protection and returned `compliant` with zero findings, and
+    // `covers_default_branch: false` credited a `refs/heads/release`-only
+    // ruleset to `main` while `main` carried no ruleset. Neither touched a
+    // threshold, so neither was caught.
+    enforcement: 'active',
+    target: 'branch',
+    covers_default_branch: true,
 } as const;
+
+/** The upper bound on the approval floor a policy may demand. */
+export const MAX_APPROVING_REVIEWS = 100;
 
 export type AnchorStatus = 'compliant' | 'noncompliant' | 'unverifiable';
 
@@ -123,6 +139,8 @@ export type AnchorCode =
     | 'policy-missing'
     | 'policy-unparseable'
     | 'policy-missing-field'
+    | 'policy-unknown-field'
+    | 'policy-repository-mismatch'
     | 'policy-below-floor'
     | 'rulesets-unreadable'
     | 'default-branch-unknown'
@@ -238,6 +256,23 @@ export function readAnchorPolicy(text: string | null): {
             });
         }
     }
+    // Unknown keys are refused, not ignored. A misspelled or stale key would
+    // otherwise sit in the expectation looking authoritative while the field it
+    // was meant to set falls back to a default nobody chose — and the council
+    // condition quoted above this file's floor says "reject unknown fields" in
+    // as many words, so ignoring them documented the code as doing the
+    // opposite of what it did.
+    for (const key of Object.keys(req)) {
+        if (!(POLICY_FIELDS as readonly string[]).includes(key)) {
+            findings.push({
+                code: 'policy-unknown-field',
+                message:
+                    `src/config/platform-anchor.json \`required\` carries an unknown key ` +
+                    `\`${key}\`. Every key must be one of: ${POLICY_FIELDS.join(', ')}. ` +
+                    'Explanatory prose belongs in a sibling `*_note` key outside `required`.',
+            });
+        }
+    }
     if (findings.length > 0) {
         return { policy: null, findings };
     }
@@ -278,6 +313,55 @@ export function readAnchorPolicy(text: string | null): {
     return { policy, findings: [] };
 }
 
+/** The expectation's supported schema version. Bump only with its reader. */
+export const SUPPORTED_ANCHOR_SCHEMA = 1;
+
+/**
+ * The two top-level fields that say WHICH expectation this is.
+ *
+ * Both were declared and read by nothing, which a blind review named: the gate
+ * could report `compliant` for a fork, or for whatever `--repo` was handed it,
+ * while quoting an expectation that names another repository. A verdict that
+ * does not know whose settings it measured is not a verdict.
+ */
+export function checkAnchorIdentity(text: string | null, repo: string): AnchorFinding[] {
+    if (text === null) {
+        return [];
+    }
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(text);
+    } catch {
+        return [];
+    }
+    if (!isObject(parsed)) {
+        return [];
+    }
+    const f: AnchorFinding[] = [];
+    const version = parsed['schema_version'];
+    if (version !== SUPPORTED_ANCHOR_SCHEMA) {
+        f.push({
+            code: 'policy-missing-field',
+            message:
+                `src/config/platform-anchor.json declares \`schema_version\` ` +
+                `${JSON.stringify(version)}; this reader supports ${SUPPORTED_ANCHOR_SCHEMA}. ` +
+                'A schema bump must land with the reader that understands it.',
+        });
+    }
+    const declared = parsed['repository'];
+    if (typeof declared === 'string' && declared !== repo) {
+        f.push({
+            code: 'policy-repository-mismatch',
+            message:
+                `src/config/platform-anchor.json states the expectation for \`${declared}\`, ` +
+                `but this run measured \`${repo}\`. A pass here would credit one repository's ` +
+                "settings to another's expectation — most likely a fork, or a --repo argument " +
+                'that does not match the checkout.',
+        });
+    }
+    return f;
+}
+
 /**
  * Reject a policy weaker than the floor.
  *
@@ -297,7 +381,41 @@ export function enforceFloor(policy: AnchorPolicy): AnchorFinding[] {
                 'src/scripts/_lib/platform_anchor.ts. A policy edit may not lower the floor.',
         });
     };
-    if (policy.minimum_approving_reviews < NON_NEGOTIABLE_FLOOR.minimum_approving_reviews) {
+
+    // The selectors first, because a weakened selector makes every threshold
+    // below it moot — it changes which rulesets are read rather than how they
+    // are judged, so a policy can neutralise the check without touching a
+    // single floored threshold.
+    if (policy.enforcement !== NON_NEGOTIABLE_FLOOR.enforcement) {
+        under('enforcement', policy.enforcement, NON_NEGOTIABLE_FLOOR.enforcement);
+    }
+    if (policy.target !== NON_NEGOTIABLE_FLOOR.target) {
+        under('target', policy.target, NON_NEGOTIABLE_FLOOR.target);
+    }
+    if (!policy.covers_default_branch) {
+        under('covers_default_branch', policy.covers_default_branch, true);
+    }
+
+    // Non-finite is its own failure, not a comparison. `Number("one")` is NaN
+    // and `NaN < 1` is false, so a threshold check alone reads a garbage value
+    // as satisfying the floor — and the same NaN then makes the downstream
+    // `observed < NaN` comparison false, so the approval rule disappears
+    // instead of failing. Both halves were reproduced by a blind review.
+    if (
+        !Number.isFinite(policy.minimum_approving_reviews) ||
+        !Number.isInteger(policy.minimum_approving_reviews) ||
+        policy.minimum_approving_reviews > MAX_APPROVING_REVIEWS
+    ) {
+        f.push({
+            code: 'policy-below-floor',
+            message:
+                'src/config/platform-anchor.json sets `minimum_approving_reviews` to ' +
+                `${JSON.stringify(policy.minimum_approving_reviews)}, which is not an integer ` +
+                `between ${NON_NEGOTIABLE_FLOOR.minimum_approving_reviews} and ` +
+                `${MAX_APPROVING_REVIEWS}. A non-numeric value would compare false against the ` +
+                'floor and then make the approval rule unreachable, so it is refused outright.',
+        });
+    } else if (policy.minimum_approving_reviews < NON_NEGOTIABLE_FLOOR.minimum_approving_reviews) {
         under(
             'minimum_approving_reviews',
             policy.minimum_approving_reviews,
@@ -306,6 +424,9 @@ export function enforceFloor(policy: AnchorPolicy): AnchorFinding[] {
     }
     if (!policy.require_last_push_approval) {
         under('require_last_push_approval', false, true);
+    }
+    if (!policy.required_review_thread_resolution) {
+        under('required_review_thread_resolution', false, true);
     }
     if (!policy.block_deletion) {
         under('block_deletion', false, true);
@@ -331,18 +452,62 @@ export function enforceFloor(policy: AnchorPolicy): AnchorFinding[] {
     return f;
 }
 
-/** True when a ruleset's ref conditions reach the default branch. */
+/**
+ * Match one ruleset ref pattern against a concrete ref.
+ *
+ * The forge treats these as fnmatch patterns, not literals, and comparing them
+ * with `===` was the one fail-OPEN direction in this evaluator: a blind review
+ * probed `exclude: ["refs/heads/m*"]` under `include: ["~ALL"]` and the equality
+ * form returned "covered" for `main`, crediting a ruleset that in fact excludes
+ * it. The mirror error also existed — `include: ["refs/heads/**"]` read as no
+ * match at all.
+ *
+ * `**` crosses `/`; `*` and `?` stay inside one segment. Everything else is
+ * escaped, so a pattern with regex metacharacters cannot widen itself.
+ */
+export function refPatternMatches(pattern: string, ref: string): boolean {
+    let re = '';
+    for (let i = 0; i < pattern.length; i += 1) {
+        const c = pattern[i] ?? '';
+        if (c === '*') {
+            if (pattern[i + 1] === '*') {
+                re += '.*';
+                i += 1;
+            } else {
+                re += '[^/]*';
+            }
+        } else if (c === '?') {
+            re += '[^/]';
+        } else {
+            re += c.replace(/[.+^${}()|[\]\\]/g, '\\$&');
+        }
+    }
+    try {
+        return new RegExp(`^${re}$`).test(ref);
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * True when a ruleset's ref conditions reach the default branch.
+ *
+ * An empty `include` is NOT a match: a ruleset that names no ref covers no ref,
+ * and reading absence as "everything" would be the fail-open reading again.
+ */
 export function coversDefaultBranch(rs: RulesetDetail, defaultBranch: string): boolean {
     const include = rs.conditions?.ref_name?.include ?? [];
     const exclude = rs.conditions?.ref_name?.exclude ?? [];
     const full = `refs/heads/${defaultBranch}`;
-    const excluded = exclude.some((p) => p === full || p === defaultBranch);
-    if (excluded) {
+    const hits = (p: string): boolean =>
+        p === '~DEFAULT_BRANCH' ||
+        p === '~ALL' ||
+        refPatternMatches(p, full) ||
+        refPatternMatches(p, defaultBranch);
+    if (exclude.some(hits)) {
         return false;
     }
-    return include.some(
-        (p) => p === '~DEFAULT_BRANCH' || p === '~ALL' || p === full || p === defaultBranch,
-    );
+    return include.some(hits);
 }
 
 function ruleParams(rs: RulesetDetail, type: string): Record<string, unknown> | null {
