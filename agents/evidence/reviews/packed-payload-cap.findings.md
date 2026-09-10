@@ -1,12 +1,12 @@
 # Findings: packed-payload-cap
-<!-- completion-review: v1 | reviewed: 2026-09-10 | scope: b0d243a9b7b60595103a5a4b69c7d202f902db8311f51db60de8027c1d2d1468 | diff: 368ccf2376e186980c543e311ade4b4e2750da8c | reviewer: r2-fresh-subagent-packed-payload-cap | prompt_hash: abf5ee908a7e02e5e102498c8665ead6d5b951253f7fe539c553197353dec567 -->
+<!-- completion-review: v1 | reviewed: 2026-09-10 | scope: 6f9f3194c883b5b809638b7c6ba2890dc538d5a551dceb0007f2098f718d2c31 | diff: 794c2913f4d71d102ee10464310c78ce56be78d6 | reviewer: r2-fresh-subagent-packed-payload-cap | prompt_hash: abf5ee908a7e02e5e102498c8665ead6d5b951253f7fe539c553197353dec567 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-packed-payload-cap"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-09-10 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 368ccf2376e186980c543e311ade4b4e2750da8c
-  scope_hash: b0d243a9b7b60595103a5a4b69c7d202f902db8311f51db60de8027c1d2d1468
+  diff_sha: 794c2913f4d71d102ee10464310c78ce56be78d6
+  scope_hash: 6f9f3194c883b5b809638b7c6ba2890dc538d5a551dceb0007f2098f718d2c31
   roadmap: agents/roadmaps/archive/road-to-the-packed-payload-cap.md
   roadmap_hash: 3d3ffebb0178c1286432e2bfa52b22ea03dca27ea53502ec46f01b37b9779b35
   ac_hash: b265507e57579f2021bc38749796c9fa131ae7566a0c2fdc1629b0f973601dfb
