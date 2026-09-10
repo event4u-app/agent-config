@@ -34,6 +34,27 @@
  * check's. Nor does it make the index trustworthy in the sense that a model may
  * act on it: the block stays spotlighted as DATA, per `untrusted-input-defense`,
  * and this module bounds only WHICH bytes reach that block.
+ *
+ * THE LOSS THIS MODULE APPLIES.
+ *
+ * P6 caps the block at `SESSION_INDEX_ROW_CAP` rows after ordering (`capRows`),
+ * so a curated corpus larger than the cap reaches the model shortened. The
+ * dropped rows are not destroyed: they stay in the curated corpus this block is
+ * built from, addressable by id, which is what makes the class
+ * `recoverable-lossy` rather than `ephemeral-lossy` — the locator is a real
+ * path a reader can open, not a promise. P4's total order is what makes the
+ * recovery meaningful: the same corpus truncates the same way twice, so "the
+ * rows below the cap" names a stable set rather than whatever the store
+ * happened to return.
+ *
+ * This module is not a hook concern script, so `check_loss_class_declared`
+ * reaches it only because `src/scripts/hot_context_hook.ts` names it in a
+ * `loss_module:` pointer. Removing that pointer removes this module from the
+ * gate's corpus — which is why the pointer is part of the concern's contract
+ * and not a convenience.
+ *
+ * loss_class: recoverable-lossy
+ * loss_recovery: agents/memory/ — the curated corpus the block is built from; rows dropped by `capRows` remain there, addressable by entry id
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';

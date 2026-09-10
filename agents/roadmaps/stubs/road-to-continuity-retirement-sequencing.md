@@ -21,7 +21,7 @@ review_by: 2026-10-07
 >
 > **Updated 2026-09-08.** That receiver ran and archived at 100%, closing five
 > of its nine items. The remaining four moved on again, to
-> `agents/roadmaps/road-to-continuity-writer-activation.md` — that is where the
+> `agents/roadmaps/archive/road-to-continuity-writer-activation.md` — that is where the
 > live work is now, and this file's rulings still govern it. The probe readings
 > below are re-measured in a section of their own at the end rather than edited
 > in place, so the 2026-09-07 baseline stays readable next to what changed.

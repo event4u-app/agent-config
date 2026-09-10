@@ -258,9 +258,15 @@ side's figure to the other, which is the arithmetic `lint_settings_classes` chec
 
 It rose on 2026-09-08 when `road-to-continuity-writer-activation`
 step 1.2 added `continuity.auto_record` — one C, `consent`: it arms an automatic
-producer on the normal session-end path, and the roadmap step requires the
-default to stay `off` until parity is measured, which is a decision no agent may
-take by writing the key. Step 1.4 added
+producer on the normal session-end path, and the roadmap step required the
+default to stay `off` until parity was measured, which is a decision no agent may
+take by writing the key. **It ships `on` since 2026-09-10.** The class did not
+change and neither did the write protection — `settings:set` still refuses this
+key. What changed is the shipped default, edited by hand in the template and the
+schema on a recorded AI-council verdict (2026-09-10, 2 seats, convergent, under
+the owner's written delegation), which is the route a class-C default moves by
+and the reason the refusal in `settings:set` is not a contradiction: the guard
+stops an agent from deciding, not a recorded decision from being applied. Step 1.4 added
 `continuity.run_checkpoints` the same day — a second C, shipping `on` because
 that is the behavior the tree already had. It exists so the three session-end
 handlers are independently disableable, which is what the 2026-09-07 council's
@@ -570,7 +576,7 @@ Rows follow template order, so a diff against the template reads straight down.
 | `commands.create_pr.screenshots` | C | `false` | puts captured screenshots into a published PR body | consent |
 | `commands.create_pr.ui_paths` | C | `[]` | glob allowlist | derivable — the frontend-surface heuristic the PR-description flow already applies when the glob list is empty |
 | `commands.create_pr.api_paths` | C | `[]` | glob allowlist | derivable — the API-endpoint heuristic the same flow already applies as its documented empty-list fallback |
-| `continuity.auto_record` | C | `"off"` | arms an automatic producer on the normal session-end path | consent |
+| `continuity.auto_record` | C | `"on"` | arms an automatic producer on the normal session-end path | consent |
 | `continuity.run_checkpoints` | C | `"on"` | disabling it removes a recovery artifact a killed run resumes from | consent |
 | `memory.cadence` | C | `always` | suppressing the visibility line hides what the agent learned from the user | derivable — the hits/asks count the memory-visibility summary already computes; the line only exists when memory was consulted |
 | `memory.review_threshold` | A | `10` | when a review preview surfaces; governs no gate | derivable — the unreviewed-intake count `/memory load` already computes before rendering its preview |

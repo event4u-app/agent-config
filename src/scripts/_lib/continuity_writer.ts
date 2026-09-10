@@ -4,9 +4,11 @@
  * `road-to-continuity-writer-activation` step 1.2. Until this module existed
  * `agent-config session:recycle` was the ONLY writer of the continuity record
  * in the tree, which is why `verb:session:recycle` counts on the
- * `public_continuity_commands` axis and why an advisory has to tell a human to
+ * `public_continuity_commands` axis and why an advisory had to tell a human to
  * run it before `/clear`: continuity did not happen unless somebody
- * remembered.
+ * remembered. Since step 3.2 (2026-09-10) this module is armed by default and
+ * that advisory is gone; the verb is retained as an explicit affordance, not
+ * as the normal path.
  *
  * Every field here is computed from on-disk state and nothing is asked of a
  * model. That is not a cost optimisation, it is what makes the record a
@@ -18,9 +20,11 @@
  *
  * Two gates, and both are needed:
  *
- *   1. `continuity.auto_record` must be `on`. It ships `off`, so with the
- *      shipped default this module is never reached and the tree behaves
- *      exactly as it does today.
+ *   1. `continuity.auto_record` must be `on`. It ships `on` since 2026-09-10
+ *      (step 3.2, AI council under the owner's written delegation); before
+ *      that it shipped `off` and this module was never reached on a default
+ *      install. The switch still exists and still fails CLOSED, so an
+ *      unreadable settings cascade disarms the producer rather than arming it.
  *   2. The session must be SUBSTANTIVE by the committed floor
  *      (`is_substantive`) and must have a resolvable task. Both come from the
  *      concern's own counters and claim state, never from file presence.
@@ -35,28 +39,72 @@
  */
 import * as fs from 'node:fs';
 
-import { load_agent_settings } from './agent_settings.js';
+import { load_agent_settings, settings_layer_states } from './agent_settings.js';
 import { resolvePredecessor } from './recycle_envelope_paths.js';
 import { CHECKBOX_LINE, phaseLines } from './roadmap_checkboxes.js';
 import { readHead, roadmapPath } from './run_checkpoint.js';
 import { is_substantive, type StoredEolCounters } from './session_eol.js';
 import { CAPSULE_SCHEMA_VERSION, MAX_ENTRIES, MAX_LINE_CHARS } from './subagent_capsule.js';
 
-/** Settings key that arms this writer. Ships `off`. */
+/** Settings key that arms this writer. Ships `on` since 2026-09-10 (step 3.2). */
 export const AUTO_RECORD_KEY = 'continuity.auto_record';
 
 /**
  * Read `continuity.auto_record` from the merged settings cascade.
  *
  * The cascade merges the shipped template, so a workspace with no settings file
- * resolves `off` through the template rather than through the trailing
- * `return false` — which is why that line is defence against an unreadable
- * cascade and not the path a default install takes. Both directions are pinned
- * by fixtures, because "absent" and "off" arriving by different routes is
- * exactly the kind of thing a reader assumes and a test has to establish.
+ * resolves the TEMPLATE's value. That is what the 2026-09-10 flip acts on:
+ * changing the template to `on` arms a default install.
+ *
+ * FAIL-CLOSED, AND IT IS NOW CARRIED BY CODE RATHER THAN BY THE DEFAULT.
+ *
+ * This function is documented — here, in `docs/contracts/continuity-rollback.md`
+ * and in step 1.4 of its roadmap — as failing closed: a settings cascade the
+ * user has broken must leave the producer disarmed. Until 2026-09-10 that
+ * property was carried by the TEMPLATE saying `off`, not by the `catch` below:
+ * measured, `load_agent_settings` does not throw on a malformed
+ * `.agent-settings.yml`; it skips the layer and returns the template's value.
+ * So the catch never ran for that case, and the flip to `on` removed the
+ * property outright — found by the fixture that was written to pin it.
+ *
+ * The repair is the property, not the wording. An AI council of 2026-09-10
+ * (2 seats, convergent, under the owner's written delegation) ruled option (A):
+ * openai — *"The defective implementation is grounds to repair the protection,
+ * not authority to repeal it."* Both seats classified the alternative (flipping
+ * the documented polarity to fail-open, matching `run_checkpoints_enabled`) as
+ * a WEAKENING of a class-C `consent` protection and therefore owner-reserved,
+ * not council-decidable, even done openly.
+ *
+ * So the malformed case is now decided by `settings_layer_states`, which
+ * reports per-layer validity instead of letting a resolved value stand in for
+ * it. The `catch` stays as the last resort for a genuine throw, and it is no
+ * longer the thing the claim rests on.
+ *
+ * The diagnostic is a required ATTEMPT with non-guaranteed delivery, which is
+ * the strongest promise this path can honestly make: the Stop slot never blocks
+ * and the dispatcher does not forward a concern's stderr on every host, so a
+ * line written here may reach nobody. Saying "warns you" would be the same
+ * class of claim this whole comment exists to correct.
  */
 export function auto_record_enabled(root: string): boolean {
     try {
+        // Fail-closed on a layer the USER can break, before the value is read.
+        // Order matters: reading first and checking second would let a valid
+        // template value decide a case in which the user's own file is broken.
+        const broken = settings_layer_states({ cwd: root }).filter((l) => l.state === 'malformed');
+        if (broken.length > 0) {
+            try {
+                process.stderr.write(
+                    `continuity: ${AUTO_RECORD_KEY} disabled for this invocation — ` +
+                        `unreadable or malformed settings layer(s): ` +
+                        `${broken.map((l) => l.path).join(', ')}. ` +
+                        `Validate the file; the shipped default cannot be trusted while a layer above it is broken.\n`,
+                );
+            } catch {
+                // a diagnostic that cannot be written must not change the verdict
+            }
+            return false;
+        }
         const settings = load_agent_settings({ cwd: root });
         const section = settings['continuity'];
         if (section && typeof section === 'object' && !Array.isArray(section)) {
@@ -65,7 +113,7 @@ export function auto_record_enabled(root: string): boolean {
             return v === 'on' || v === true;
         }
     } catch {
-        // fail-closed: unreadable settings leave the writer disarmed
+        // last resort: a genuine throw leaves the writer disarmed
     }
     return false;
 }
@@ -81,6 +129,17 @@ export const RUN_CHECKPOINTS_KEY = 'continuity.run_checkpoints';
  * leave it running. Its sibling arms something new, so an unreadable cascade
  * must leave that disarmed. A single helper with one polarity would have been
  * wrong for one of the two.
+ *
+ * ONE HONEST QUALIFICATION, from the 2026-09-10 audit of its sibling. This
+ * function's `catch` is unreachable for a malformed settings file too — the
+ * loader skips a broken layer instead of throwing. Its fail-OPEN claim is true
+ * anyway, because the template says `on` and a malformed layer therefore
+ * resolves to `on`. So the polarity holds while the shipped default happens to
+ * agree with it, which is exactly the accident that broke the sibling when its
+ * default flipped. It is left as it is deliberately: the behaviour is correct
+ * today, and hardening a reader whose claim is currently true is a change with
+ * no observable effect. If this key's default ever moves to `off`, this comment
+ * is the notice that the claim moves with it.
  */
 export function run_checkpoints_enabled(root: string): boolean {
     try {

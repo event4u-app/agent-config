@@ -75,6 +75,37 @@ export function parseLossDeclaration(source: string): LossDeclaration | Declarat
     return { lossClass: value, recovery };
 }
 
+/**
+ * Modules a concern script names as carrying its lossy transform.
+ *
+ * The declaration lives on the module that transforms, but the CORPUS is the
+ * hook manifest, so a transform one module deeper than a concern script is
+ * outside it. This pointer is how a concern brings such a module into scope:
+ *
+ *     loss_module: src/scripts/_lib/session_index_trust.ts
+ *
+ * A pointer is a CLAIM, and the gate treats it as one — a pointed module that
+ * declares nothing is a finding, not a pass. That is the opposite polarity from
+ * an allowlist, which is why this shape was chosen over widening the scan by
+ * static import closure: measured 2026-09-10 on this tree, that closure returns
+ * 11 modules of which 9 match on an identifier rather than on a transform, and
+ * it does NOT contain `session_index_trust.ts` at all, because the only concern
+ * that reaches it does so through `createRequire` for bundle safety. A widening
+ * that misses the module it was written for is not a widening.
+ *
+ * Paths are repository-relative. Anything else is ignored here and rejected by
+ * the caller, which is the layer that knows the repository root.
+ */
+export function parseLossModulePointers(source: string): string[] {
+    const out: string[] = [];
+    const re = /^[\s*/]*loss_module:\s*(\S+)\s*$/gm;
+    for (const m of source.matchAll(re)) {
+        const v = (m[1] ?? '').trim();
+        if (v !== '' && !out.includes(v)) out.push(v);
+    }
+    return out;
+}
+
 export function isProblem(v: LossDeclaration | DeclarationProblem): v is DeclarationProblem {
     return 'kind' in v;
 }
