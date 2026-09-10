@@ -441,11 +441,201 @@ function loadTemplate(p: string, profileValues: Record<string, string>): string 
   return renderTemplate(fs.readFileSync(p, 'utf-8'), profileValues);
 }
 
-function loadUser(p: string): Record<string, unknown> {
-  if (!isFile(p)) {
-    return {};
+export interface DuplicateRepair {
+  /** The document with every safely-collapsible duplicate run reduced to one. */
+  text: string;
+  /** Keys that were collapsed, in first-seen order. */
+  collapsed: string[];
+  /** Duplicated keys this pass refuses to touch, with the reason. */
+  unsafe: string[];
+}
+
+/**
+ * Collapse duplicate TOP-LEVEL inline-scalar keys, keeping the last value.
+ *
+ * A strict YAML parser rejects a duplicate mapping key outright, so one such
+ * pair takes the whole file — and with it `task sync`, `task release-prepare`
+ * and every release — out of service with "Map keys must be unique". The
+ * duplicates in the wild were written by `mergeIntoTemplate`, whose flat
+ * `a.b: value` append was not idempotent before this change: each wizard save
+ * re-appended the entire "Wizard-added keys" block. That writer is fixed, but
+ * every file it already corrupted stays unreadable until something repairs
+ * it, and a release is the worst moment to discover that.
+ *
+ * Last-wins is value-neutral, not a guess: a lenient reader already resolved
+ * such a run that way, so collapsing changes what the file PARSES as in no
+ * way — it only changes whether it parses at all.
+ *
+ * Deliberately narrow, and the narrowness is what makes last-wins safe. A key
+ * is collapsible only when EVERY occurrence in the run is ONE-LINE-ONLY — its
+ * value sits on the key's own line and it owns no continuation lines at all.
+ * Anything else is reported in `unsafe` and left alone, because dropping the
+ * loser of a multi-line pair does not drop its body: the body survives, stops
+ * being that key's value, and attaches to whatever line precedes it. That
+ * turns a parse error into silent data corruption, which is strictly worse.
+ *
+ * Refused for that reason: a block key with indented children, a block scalar
+ * (`|`, `>`), a flow collection opened on one line and closed on another, and
+ * an anchor / alias / tag / merge value, whose meaning depends on which
+ * occurrence a reader binds rather than only on the value.
+ *
+ * A multi-document stream (`---` / `...`) is not repaired either. The reader
+ * takes a single document and rejects such a file whatever this pass does, so
+ * collapsing across a boundary could only merge two documents' keys into one.
+ */
+export function collapseDuplicateFlatKeys(text: string): DuplicateRepair {
+  // Line endings are preserved: splitting on `\n` alone leaves a trailing
+  // `\r` on every CRLF line, which the key pattern then never matches — so a
+  // CRLF file reported zero duplicates and fell straight into the parse error
+  // this pass exists to prevent.
+  //
+  // The MAJORITY terminator, not "any CRLF present". A mostly-LF file with one
+  // stray CRLF line would otherwise be rewritten to CRLF throughout — a whole-
+  // file change nobody asked for, on a pass whose entire promise is that it
+  // touches only what it must. Matches `sync_yaml_rt.detectEol`.
+  const crlfCount = (text.match(/\r\n/g) ?? []).length;
+  const lfCount = (text.match(/(^|[^\r])\n/g) ?? []).length;
+  const eol = crlfCount > lfCount ? '\r\n' : '\n';
+  const lines = text.split(/\r?\n/);
+
+  // A document separator anywhere means more than one document may be in play.
+  if (lines.some((l) => /^(---|\.\.\.)\s*$/.test(l))) {
+    return { text, collapsed: [], unsafe: [] };
   }
-  const data = parseYaml(fs.readFileSync(p, 'utf-8'), { version: '1.1' });
+
+  // A mapping key ends at a colon FOLLOWED BY SPACE OR END OF LINE — YAML's
+  // own plain-scalar rule. Stopping at the first colon instead reads `a:b: 1`
+  // as the key `a`, so a file carrying both `a:b:` and `a:` saw two `a` heads
+  // and collapsed them: the `a:b` entry vanished and the result parsed
+  // cleanly, so nothing downstream could notice. `sync_yaml_rt`'s own
+  // tokeniser already had this right; the two disagreeing was the defect.
+  //
+  // The value is captured with `[\s\S]` rather than `.`, which does not match
+  // a lone `\r`. A line holding one (a value like `"x\ry"`) was not recognised
+  // as a head at all, so a duplicate of it stayed invisible and the parse
+  // error this pass exists to remove survived untouched.
+  const HEAD_RE = /^([A-Za-z_][A-Za-z0-9_.-]*)[ \t]*:(?=[ \t]|$)([\s\S]*)$/;
+
+  /** Top-level key lines, in order. */
+  const heads: { key: string; at: number; rest: string }[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line === undefined) continue;
+    if (line.trim() === '' || line.trimStart().startsWith('#')) continue;
+    // Top level only — an indented `a.b:` is somebody else's child key.
+    if (line.length !== line.trimStart().length) continue;
+    const m = HEAD_RE.exec(line);
+    if (m === null) continue;
+    heads.push({ key: m[1] as string, at: i, rest: (m[2] as string).trim() });
+  }
+
+  /**
+   * Why this key may NOT be collapsed, or null when it may.
+   *
+   * Collapsing is safe only for a key that occupies exactly its own line: its
+   * value is a plain inline scalar and nothing between here and the next
+   * top-level key belongs to it. Everything else keeps its real reason, so the
+   * refusal message names what actually blocked it rather than asserting
+   * "different children" over a null, an anchor or a block scalar.
+   */
+  const blocker = (h: { at: number; rest: string }, nextAt: number): string | null => {
+    const v = h.rest;
+    if (v === '' || v.startsWith('#')) return 'a block key or a null value';
+    if (/^[|>]/.test(v)) return 'a block scalar';
+    // An anchor, alias or tag ANYWHERE in the value, not merely at its start:
+    // `a: [&x 1]` fits on one line, and dropping it deletes an anchor that an
+    // alias on some other line binds to — turning a duplicate-key error into
+    // an unresolved-alias error. Token position only, so `a&b` in a plain
+    // scalar is left alone.
+    if (/(^|[\s[{,])[&*!]/.test(v)) return 'an anchor, alias or tag';
+    // A flow collection must open and close on this line.
+    const opens = (v.match(/[[{]/g) ?? []).length;
+    const closes = (v.match(/[\]}]/g) ?? []).length;
+    if (opens !== closes) return 'a flow collection spanning lines';
+    for (let i = h.at + 1; i < nextAt; i++) {
+      const line = lines[i];
+      if (line === undefined) continue;
+      if (line.trim() === '') continue;
+      if (line.trimStart().startsWith('#')) continue;
+      return 'a value spanning more than its own line';
+    }
+    return null;
+  };
+
+  const solo = new Set<number>();
+  const why = new Map<number, string>();
+  for (let n = 0; n < heads.length; n++) {
+    const h = heads[n] as { key: string; at: number; rest: string };
+    const nextAt = n + 1 < heads.length ? (heads[n + 1] as { at: number }).at : lines.length;
+    const reason = blocker(h, nextAt);
+    if (reason === null) solo.add(h.at);
+    else why.set(h.at, reason);
+  }
+
+  const seen = new Map<string, number[]>();
+  for (const h of heads) {
+    const at = seen.get(h.key);
+    if (at === undefined) seen.set(h.key, [h.at]);
+    else at.push(h.at);
+  }
+
+  const collapsed: string[] = [];
+  const unsafe: string[] = [];
+  const drop = new Set<number>();
+  for (const [key, hits] of seen) {
+    if (hits.length < 2) continue;
+    if (!hits.every((i) => solo.has(i))) {
+      const reason = hits.map((i) => why.get(i)).find((r) => r !== undefined) ?? 'not a plain one-line value';
+      unsafe.push(`${key} — ${reason}`);
+      continue;
+    }
+    collapsed.push(key);
+    // Keep the LAST occurrence's value at the FIRST occurrence's position, so
+    // the surrounding comments stay attached to the line they document.
+    lines[hits[0] as number] = lines[hits[hits.length - 1] as number] as string;
+    for (let i = 1; i < hits.length; i++) drop.add(hits[i] as number);
+  }
+
+  // Duplicates this pass cannot even SEE, reported rather than skipped.
+  //
+  // `HEAD_RE` recognises the key shapes the repair understands. A key starting
+  // with a digit (`2fa.on`) or a quoted key (`"a:b"`) matches nothing, so a
+  // file duplicating one used to come back with zero collapses AND zero
+  // refusals — and then died on the strict parse with the same opaque "Map keys
+  // must be unique" the whole repair exists to remove, giving the operator no
+  // hint that their key was the part being skipped. Shipping a repair pass
+  // creates the expectation that it either fixes the file or says why it
+  // cannot; silence is neither.
+  //
+  // Detection only. These keys are never collapsed — the shapes are exactly the
+  // ones whose tokenisation this pass does not model, which is why it declines
+  // to rewrite them.
+  const loose = new Map<string, number>();
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line === undefined) continue;
+    if (line.trim() === '' || line.trimStart().startsWith('#')) continue;
+    if (line.length !== line.trimStart().length) continue;
+    if (HEAD_RE.test(line)) continue;
+    const m = /^("[^"]*"|'[^']*'|[^\s:#][^:]*?)[ \t]*:(?=[ \t]|$)/.exec(line);
+    if (m === null) continue;
+    const key = m[1] as string;
+    loose.set(key, (loose.get(key) ?? 0) + 1);
+  }
+  for (const [key, count] of loose) {
+    if (count < 2) continue;
+    unsafe.push(`${key} — a key shape this repair does not model (quoted, or not starting with a letter)`);
+  }
+
+  if (collapsed.length === 0) {
+    return { text, collapsed, unsafe };
+  }
+  const kept = lines.filter((_, i) => !drop.has(i));
+  return { text: kept.join(eol), collapsed, unsafe };
+}
+
+function loadUserText(raw: string): Record<string, unknown> {
+  const data = parseYaml(raw, { version: '1.1' });
   if (data === null || data === undefined) {
     return {};
   }
@@ -655,10 +845,61 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
   const templatePath = args.template;
   const profileDir = args.profile_dir;
 
+  // Repair BEFORE the first parse. A duplicate mapping key makes the whole
+  // file unreadable, so without this the run dies here and takes the release
+  // with it — see `collapseDuplicateFlatKeys` for why last-wins is safe.
+  const rawText = isFile(target) ? fs.readFileSync(target, 'utf-8') : '';
+  const repair = collapseDuplicateFlatKeys(rawText);
+  if (repair.unsafe.length > 0) {
+    // Each entry carries the reason that key was refused. A single blanket
+    // sentence used to claim "different children" for every refusal — over a
+    // null value, a block scalar or an anchor that has none — which sends the
+    // reader looking for children to merge that are not there.
+    process.stderr.write(
+      `error: ${target} has duplicate mapping keys this tool will not collapse:\n` +
+        repair.unsafe.map((u) => `  - ${u}\n`).join('') +
+        `Keeping one occurrence would change what the file means. Merge them by hand, then re-run.\n`,
+    );
+    return 2;
+  }
+  if (repair.collapsed.length > 0) {
+    // NOT gated on --quiet, and not on stdout. Both callers that matter run
+    // quiet — the release's `sync-agent-settings` step and the pre-release
+    // probe — so gating this would let a release rewrite the operator's own
+    // settings file with no trace. `--quiet` suppresses routine success
+    // chatter; "I modified your file" is not that.
+    //
+    // The tense follows the mode. `--check` and `--dry-run` never write, so
+    // announcing a completed collapse there describes a write that did not
+    // happen — and the pre-release probe runs `--dry-run`, which made that the
+    // FIRST thing an operator saw on every release with a corrupted file.
+    const writes = !args.check && !args.dry_run;
+    const verb = writes
+      ? `collapsed ${repair.collapsed.length} duplicate key(s), last value kept`
+      : `would collapse ${repair.collapsed.length} duplicate key(s), keeping the last value (no write in this mode)`;
+    process.stderr.write(`🔧  ${target}: ${verb} — ${repair.collapsed.join(', ')}\n`);
+
+    // The collapse promises to change only WHETHER the file parses, never what
+    // it parses as — and that promise is only meaningful over an input that had
+    // a reading to preserve. If the original was unparseable for some further
+    // reason (an unterminated quote, say), the repaired file may parse to
+    // structure no human wrote, and the next `git diff` shows keys nobody
+    // added. Cheap to say, and the operator cannot recover it from the output.
+    try {
+      parseYaml(rawText, { version: '1.1', uniqueKeys: false });
+    } catch {
+      process.stderr.write(
+        `⚠️   ${target}: the original had a syntax error beyond the duplicate keys, so the ` +
+          `result may differ in structure, not only in duplicates — read the diff before trusting it.\n`,
+      );
+    }
+  }
+  const sourceText = repair.text;
+
   let profile: string;
   let templateBody: string;
   try {
-    const userData = loadUser(target);
+    const userData = loadUserText(sourceText);
     const personalRaw = userData['personal'];
     const personal =
       personalRaw !== null && typeof personalRaw === 'object' && !Array.isArray(personalRaw)
@@ -706,7 +947,12 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     throw err;
   }
 
-  const existingText = isFile(target) ? fs.readFileSync(target, 'utf-8') : '';
+  // The merge reads the REPAIRED text; every "did anything change" decision
+  // below compares against `rawText`, what is actually on disk. Comparing
+  // against the repaired text instead would report "already in sync" on a
+  // file whose collapse never reached disk — the repair would run on every
+  // invocation and fix nothing.
+  const existingText = sourceText;
 
   let newText: string;
   if (existingText) {
@@ -724,7 +970,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     newText = templateBody;
   }
 
-  if (newText === existingText) {
+  if (newText === rawText) {
     if (!args.quiet) {
       process.stdout.write(`✅  ${target}: already in sync (profile=${profile})\n`);
     }
@@ -732,14 +978,28 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
   }
 
   if (args.check) {
-    const diff = renderDiff(existingText, newText, String(target));
+    const diff = renderDiff(rawText, newText, String(target));
     process.stdout.write(diff);
-    process.stderr.write(`\n❌  ${target}: drift detected (profile=${profile})\n`);
+    // Name WHICH problem, because the two have different remedies and a CI job
+    // reading only "drift detected" cannot tell them apart. A repair-only diff
+    // means the file is corrupt, not out of step with the template; the
+    // discriminator is whether the merge changed anything beyond the collapse.
+    //
+    // Still exit 2 in both cases: the file needs a write either way, and a
+    // `--check` that returned 0 over a file the reader cannot parse would hide
+    // exactly the breakage this whole change exists to surface.
+    const repairOnly = repair.collapsed.length > 0 && newText === sourceText;
+    process.stderr.write(
+      repairOnly
+        ? `\n❌  ${target}: duplicate keys need collapsing — no template drift (profile=${profile})\n` +
+            `    Run \`sync_agent_settings\` without --check to apply the repair.\n`
+        : `\n❌  ${target}: drift detected (profile=${profile})\n`,
+    );
     return 2;
   }
 
   if (args.dry_run) {
-    const diff = renderDiff(existingText, newText, String(target));
+    const diff = renderDiff(rawText, newText, String(target));
     process.stdout.write(diff);
     if (!args.quiet) {
       process.stderr.write(`\n(dry-run) would update ${target} (profile=${profile})\n`);
