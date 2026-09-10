@@ -86,61 +86,101 @@ rebound: 2026-09-10T08:19:04Z
   them at `ADR-274-the-grace-ceiling-...`, same file, renumbered by this merge.
 -->
 
-<!-- correction: v1
-corrected: 2026-09-10
-  TWO PROSE DEFECTS in this artefact, found by a neutral cross-model review of
-  the merge that renumbered ADR-273 -> ADR-274, and fixed here. No finding is
-  re-opened, no hash moves: `agents/evidence/reviews` is excluded from the review
-  scope, so this artefact is not part of what any round measures.
+<!--
+  POST-MERGE PROSE CORRECTIONS, 2026-09-10. Not a re-bind and not a new block
+  kind: `docs/contracts/evidence-artifact-types.md` reasons deliberately about
+  which blocks this artefact class carries and why a re-bind carries no type, so
+  this is a plain comment rather than an invented `correction: v1` grammar -- an
+  earlier revision of this block used one, which was itself the kind of quiet
+  addition the contract argues against.
+  No finding is re-opened and no hash moves: `agents/evidence/reviews` is
+  excluded from the review scope (`dispatch_r2_reviewer.ts:115-118`), so nothing
+  written here is part of what any round measures. Verified after committing.
 
-  1. THE THREE `rebound:` TIMESTAMPS WERE IMPOSSIBLE. Each sat 11-13 minutes
-     AFTER the commit that wrote it, because local CEST was labelled `Z` and then
-     rounded forward. An event cannot post-date the commit recording it. Each now
-     carries the true UTC commit time of its own commit, verified with
+  1. THE THREE `rebound:` TIMESTAMPS WERE IMPOSSIBLE -- each POST-DATED the
+     commit that wrote it, because local CEST was labelled `Z`. Each now carries
+     the true UTC commit time of its own commit, read from
      `git log -1 --format=%cI`:
        6d7b8334a  2026-09-10T08:41:43+02:00  ->  06:41:43Z  (was 08:55:00Z)
        f7fb052ff  2026-09-10T09:07:03+02:00  ->  07:07:03Z  (was 09:20:00Z)
        431024d7e  2026-09-10T10:19:04+02:00  ->  08:19:04Z  (was 10:30:00Z)
-     Read them as the commit time rather than as a moment before it: the block is
-     written before its commit, and the only instant that is a checkable fact
-     afterwards is the commit's own.
+     The size of the error depends on the frame and both are worth stating,
+     because an earlier revision of this block gave one number in the frame the
+     `Z` label rules out: read as the UTC the label declares, the old values sat
+     133.3 / 132.9 / 130.9 minutes after their commits; read as local wall-clock,
+     13.3 / 12.9 / 10.9. The impossibility holds either way.
+     Read each value as the commit's own instant rather than as a moment before
+     it: the block is written before its commit, and the commit time is the only
+     instant that is a checkable fact afterwards.
 
-  2. FINDING 6's REMEDIATION CELL CITED A CORROBORATION THAT DOES NOT EXIST.
-     It claimed "the census row that independently computes E1". It does not:
-     `agents/evidence/analysis/adr-evidence-census-2026-08.md` has a `Proposed
-     strength` column and a `Current frontmatter` column
-     (`src/scripts/adr/evidence_census.ts`, `r.proposed.strength` vs `r.current`).
-     The row's proposal reads `E2`; the `E1` appears only in `Current
-     frontmatter`, which mirrors the declared value back. Citing it as
-     independent support for that same declared value is circular. The cell is
-     corrected; finding 6's material conclusion is untouched and still holds on
-     `adr-layout.md:178-181` alone.
+  2. FINDING 6's REMEDIATION CELL WAS STALE, NOT CIRCULAR -- and the first
+     attempt at this correction got that backwards. It claimed the cited
+     corroboration "does not exist" and was "circular". Measured instead of
+     asserted, `git show <commit>:agents/evidence/analysis/adr-evidence-census-2026-08.md`
+     over the four commits that touched it:
+       85666cbba 08:17:42  proposed E1  declared E3
+       fd54b3585 08:39:26  proposed E1  declared E3
+       6d7b8334a 08:41:43  proposed E1  declared E3   <- the cell was written here
+       c4658aa95 09:06:25  proposed E2  declared E1
+     So at the moment of writing, the census proposed `E1` while the record still
+     declared `E3`. The proposal disagreed with the declared value, which is
+     exactly what makes it independent -- it cannot have been a mirror of a value
+     it contradicted. The defect is that `c4658aa95` invalidated it 25 minutes
+     later, by adding the § that quotes the contract's E3 wording, which a
+     keyword scan then matched (`prereg @ ...:200`).
+     `ADR-274` § "The evidence grade, and why it came down" already had this
+     right: "computed `E1 ...` WHEN IT WAS FIRST SCANNED. That corroboration then
+     destroyed itself." The first revision of this block cited that sentence two
+     paragraphs after denying the corroboration ever existed. A thing that never
+     existed cannot destroy itself, and stating both was the same class of
+     over-claim this artefact exists to remove -- committed while accusing an
+     earlier reviewer of being partly wrong. Recorded rather than quietly fixed.
 
-  THE REVIEW THAT FOUND (2) ALSO GOT IT PARTLY WRONG, and that is worth stating
-  because a reader will otherwise trust the report over the record. It reported
-  the discrepancy as uncorrected. The ADR had already corrected it, more fully
-  than the report did: `ADR-274` § "The evidence grade, and why it came down"
-  states that the corroboration destroyed itself, that re-running the census
-  flips its proposal to `E2`, and names the mechanism -- the census is a keyword
-  scan, and the section's own quotation of the contract's E3 wording ("pre-
-  registered benchmark") is what the scan now matches, attributed to
-  `prereg @ ...:200`. So the stale claim survived in exactly one place, this
-  artefact, and only in the cell the implementer wrote.
+  3. WHAT IS NOT EDITED, stated completely this time. An earlier revision of this
+     block presented a two-item list as the whole residual. It was not.
+     (a) Finding 6's FINDING text carries the same census citation, in its MAIN
+         CLAUSE ("row added in this same diff independently computes `E1` ...").
+         Its closing parenthesis carries a different and correct caveat, so the
+         earlier revision named the wrong span when it superseded "the
+         parenthesis".
+     (b) The File:Line column names the old `ADR-273-the-grace-ceiling-...md`
+         path on rows 3, 4, 6, 8 and 9, with line suffixes `:9`, `:68`, `:17`,
+         `:112` and `:118` -- the earlier revision generalised the first to all
+         five. These resolve at `ADR-274-the-grace-ceiling-...`, same file.
+     (c) BARE `ADR-273:NNN` references on rows 1, 2, 3, 4, 8 and 9 --
+         `ADR-273:116`, `:83`, `:56`, `:118-121`, `:155-158`. These are WORSE
+         than (b) and the earlier revision omitted them entirely.
+         `docs/decisions/ADR-273-pack-size-caps-reset-on-a-reconstructed-clean-baseline.md`
+         EXISTS, so a bare number now resolves silently into the wrong record:
+         `sed -n '116p'` on it prints `| \`dist/agent-src\` | 2.6187 | 21.0 % |`.
+         The "same file, renumbered" remedy in (b) does not cover a bare number
+         that resolves to a different file. Read every bare `ADR-273:NNN` in this
+         table as `ADR-274:NNN`.
+     All three are the reviewer's own words, and this artefact does not rewrite
+     them -- the same reason `prompt_hash` and `reviewer` are never updated on a
+     re-bind. That reason is an inference from
+     `docs/contracts/plan-review-gates.md:301-303`, where `scope:` is the only
+     field staleness is decided on, rather than a rule stated in those terms.
 
-  WHAT IS DELIBERATELY NOT EDITED: finding 6's FINDING text still carries the
-  same claim in its closing parenthesis, and the File:Line column still names
-  the old `ADR-273-the-grace-ceiling-...` path on rows 3, 4, 6, 8 and 9. Both are
-  the reviewer's own words, and this artefact does not rewrite them -- the same
-  reason `prompt_hash` and `reviewer` are never updated on a re-bind. The
-  parenthesis is superseded by this block; the paths resolve at
-  `ADR-274-the-grace-ceiling-...`, same file.
+  4. THE BASIS FOR "AN EARLIER REVIEW REPORTED THIS AS UNCORRECTED" DOES NOT
+     RESOLVE IN A CLONE. Both reviews that produced these corrections ran as
+     subagents in a session; neither is committed anywhere under `agents/`, and
+     `gh pr view 1983` carries no review and no comment mentioning the census. So
+     that sentence adjudicates an artefact a reader cannot open. Kept because it
+     names where a claim came from, and flagged here because an unresolvable
+     citation is a weaker thing than a resolvable one.
 
-  ONE THING NO GATE WOULD HAVE CAUGHT, recorded rather than left implicit. The
-  dead ADR-273 paths in the table are invisible to `check_references`: its
-  `PATH_PATTERN` requires a delimiter from [`"\s,;)\]] immediately after `.md`,
-  and these are followed by `:9`, so the pattern does not match at all.
-  `check_completion_review` reads the table's header row, never the path cells.
-  Leaving them is therefore a decision, not a gate outcome.
+  ONE THING NO GATE CATCHES, and the mechanism corrected. The dead paths in (b)
+  are invisible to `check_references`: `PATH_PATTERN`
+  (`check_references.ts:160-161`) requires a delimiter from [`"\s,;)\]]
+  immediately after `.md`, and a `:` is not in that class -- exercised on the
+  real table lines, the regex returns 0 hits on rows 3, 4, 6, 8 and 9.
+  `check_completion_review` DOES read the path cell -- `fileLine: cells[2]` at
+  `check_completion_review.ts:630` -- but nothing ever consumes it; the field
+  appears only at its declaration (`:126`) and that assignment. An earlier
+  revision of this block said it "never reads the path cells", which was wrong
+  about the mechanism and right about the consequence. Leaving these references
+  is a decision, not a gate outcome.
 -->
 
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
@@ -150,7 +190,7 @@ corrected: 2026-09-10
 | 3 | medium | docs/decisions/ADR-273-the-grace-ceiling-expiry-was-never-enforced-and-the-date-is-deleted.md:9 | The change acts in a dimension the same roadmap twice recorded as owner-reserved, on council authority, with no owner decision on that dimension. roadmap:801-806 records anthropic verbatim: "Owner-reserved for extending grace_end_date beyond 2026-11-10 - extending the date increases permitted exposure duration and is a substantive relaxation requiring owner authority", and roadmap:841-843 adds "a split council does not acquire authority a converged one was denied". Deleting the bound is an UNBOUNDED relaxation of permitted exposure duration - strictly larger than the extension that was reserved - and the register's own new text concedes the result is "an undated, shrink-only tolerance 30,767 tokens above the design ceiling". The no-enforcement argument answers the executable half only; the reservation was recorded against exposure DURATION, which is what was removed. Compounding: the new record self-assigns `reopen_policy: directional` (council-decidable) while declaring `protected_dimensions: governance`, so the venue for reopening it is set by the body that decided it. | fixed | `fd54b3585` — `reopen_policy` corrected `directional` -> `owner`, and `ADR-273` gains § "The authority question, recorded rather than glossed": the reservation was recorded against exposure DURATION, deleting the bound is larger in that dimension than the reserved extension, the delegation is what the decision rests on, and it does not make the reservation vanish retroactively. A council acting in an owner-reserved dimension may not also set the venue for revisiting it. |
 | 4 | medium | docs/decisions/ADR-273-the-grace-ceiling-expiry-was-never-enforced-and-the-date-is-deleted.md:68 | "a shrink-only ratchet enforced against the base ref by `assertBoundsDidNotRise`" (and roadmap:1061's "real and enforced per PR") overstates a guard that fails OPEN. `src/scripts/_lib/standing_bound_ratchet.ts:94-135` returns `ok: true` on four base-ref failure modes - no base ref resolved, the budget config unreadable at the base ref, unparseable, or no `ci_delivery.grace_ceiling` at the base ref - each with an honest `note` but a passing verdict. So the ratchet is conditional on base-ref resolution (shallow clone, absent `origin/main`, unresolvable merge base) rather than unconditional. The inconsistency is internal to one document: ADR-273:155-158 disqualifies the base-ref-derived ceiling proposal on exactly this property ("returns `null` on every failure, correct for a diagnostic and unacceptable for a ceiling") while relying on the same property unqualified 90 lines earlier. This matters more after the change than before, because the ratchet is now the only enforced mitigation named. | fixed | `fd54b3585` — Both claims qualified. `ADR-273` § Context gains the four fail-open modes at `standing_bound_ratchet.ts:94-135` and states that the same property disqualifies the rival proposal in § Alternatives, so one standard gets one answer. Risk 3 in the roadmap now says "conditional rather than absolute" and "fails open" with the modes enumerated, instead of "real and enforced per PR". |
 | 5 | medium | taskfiles/ci-fast.yml:882 | Half-corrected string: the same `desc` clause that was edited to fix a stale ceiling figure still asserts "The tree measures 138,212". Verified by running the gate on this branch: measured total is 138,413 (`project-scope rules 122822 + preloaded skills catalog 14845 + CLAUDE.md 746`). The diff's own commit note says of the neighbouring clause "the figure was two raises stale as well", so the staleness class was known and the adjacent instance in the same string was left. Same pattern in `src/config/preamble-payload-budget.json:85`, which this diff also rewrites and which still opens "HEAD measures 138,212 ... nobody can reduce 30,566 tokens" (actual gap 30,767) - defensible as historical framing there, not defensible in a present-tense "The tree measures". | fixed | `fd54b3585` — `taskfiles/ci-fast.yml:882` now reads "measured 138,212 when this note was written and measures 138,413 on 2026-09-10". The budget file instance is left as historical framing, which the finding itself allows. |
-| 6 | medium | docs/decisions/ADR-273-the-grace-ceiling-expiry-was-never-enforced-and-the-date-is-deleted.md:17 | `evidence.strength: E3` is not supportable by the declared basis, and the grade is load-bearing. `docs/contracts/adr-layout.md:178-181` defines E1 as "One local observation - one incident, consumer, measurement, tree constraint" and reserves E3 for "pre-registered benchmark, production data, established community standard, applicable vendor guidance". The basis here is one dated inspection of one commit (`Measured 2026-09-10 in a worktree at origin/main 7bf325f3b`) - four greps and one gate run. `adr-layout.md:464` prices the reopen burden on the grade (E3/E4 requires "engaging the original evidence in kind"), so the overclaim raises the bar to reopen a governance record. Cross-check: sibling ADR-264, same subject and a stronger evidence resolution, declares E2. The `agents/evidence/analysis/adr-evidence-census-2026-08.md` row added in this same diff independently computes `E1 - one dated local observation` (that census is biased low by design, so it is corroboration rather than proof). | fixed | `fd54b3585` — `evidence.strength` corrected `E3` -> `E1`, with § "The evidence grade, and why it came down" citing `adr-layout.md:178-181` and `adr-layout.md:464` pricing the reopen burden on the grade. CORRECTED 2026-09-10 (see the correction block above the table): this cell used to cite "the census row that independently computes E1", which the census row does not do. Its `Proposed strength` column reads `E2`; the `E1` sits in `Current frontmatter`, which only mirrors the declared value. The record itself already says so and says why. An inflated grade would have raised the bar to reopen a record decided on one day of inspection. |
+| 6 | medium | docs/decisions/ADR-273-the-grace-ceiling-expiry-was-never-enforced-and-the-date-is-deleted.md:17 | `evidence.strength: E3` is not supportable by the declared basis, and the grade is load-bearing. `docs/contracts/adr-layout.md:178-181` defines E1 as "One local observation - one incident, consumer, measurement, tree constraint" and reserves E3 for "pre-registered benchmark, production data, established community standard, applicable vendor guidance". The basis here is one dated inspection of one commit (`Measured 2026-09-10 in a worktree at origin/main 7bf325f3b`) - four greps and one gate run. `adr-layout.md:464` prices the reopen burden on the grade (E3/E4 requires "engaging the original evidence in kind"), so the overclaim raises the bar to reopen a governance record. Cross-check: sibling ADR-264, same subject and a stronger evidence resolution, declares E2. The `agents/evidence/analysis/adr-evidence-census-2026-08.md` row added in this same diff independently computes `E1 - one dated local observation` (that census is biased low by design, so it is corroboration rather than proof). | fixed | `fd54b3585` — `evidence.strength` corrected `E3` -> `E1`, with § "The evidence grade, and why it came down" citing `adr-layout.md:178-181` and `adr-layout.md:464` pricing the reopen burden on the grade. CORRECTED 2026-09-10, TWICE, and the second correction retracts the first (see the block above the table): this cell cites "the census row that independently computes E1". That was TRUE when written and is STALE now. At `6d7b8334a` the row proposed `E1` against a declared `E3`, so the proposal was independent of the declared value; `c4658aa95` re-ran the census and flipped the proposal to `E2` -- because this very section quotes the contract's E3 wording and the census is a keyword scan. Read the citation as of the commit that made it. An inflated grade would have raised the bar to reopen a record decided on one day of inspection. |
 | 7 | low | tests/scripts/check_preamble_payload_budget.test.ts:205 | Two of the four added tests duplicate assertions already in this file. `:205-212` ("still ENFORCES the grace ceiling") asserts `main(['--ceiling', grace]) === 0` and `main([]) !== 0`, which is the entire `describe('the gate reds on growth past whichever ceiling applies')` block at `:265` and `:273`. `:215-219` asserts `evaluate(undefined, undefined, design - 1).ceiling === design`, verbatim the second expectation of `:237-243`, re-deriving a local `design` where a `design()` helper exists 18 lines below - and it sits in a describe about the date, not about override direction. Consequence beyond redundancy: the `main([]) !== 0` copy at `:211` drops the caveat carried at `:266-270` ("HEAD is over the design ceiling today ... when a reduction lands this flips and the assertion must be inverted"), so a future reduction reds two tests and only one carries the instruction. The roadmap's "37 tests ... including two new regression pins" is accurate for the two pins at `:187` and `:194`; the other two additions are not disclosed as duplicates. | fixed | `fd54b3585` — The two duplicates are gone. The block now asserts only what is not asserted elsewhere - that the ceiling exists and is above the design number - and its comment names the two describes that own the exit codes and the override direction, including that the surviving copy of the `main([]) !== 0` caveat lives there. 36 tests green; the two regression pins are untouched and remain the ones proven red under sabotage. |
 | 8 | low | docs/decisions/ADR-273-the-grace-ceiling-expiry-was-never-enforced-and-the-date-is-deleted.md:112 | "`status_2026_08_24.committed_reduction_mechanism` remains the string `NONE`" is not what the field holds. Its value is a multi-sentence paragraph beginning `"NONE. Stated explicitly because its absence is the finding: no mechanism in the tree is committed to closing 35,692 tokens by 2026-11-10 ..."`. The same overstatement appears at `.github/workflows/standing-payload-delta.yml:34` ("the budget file still records `committed_reduction_mechanism: NONE`") and in roadmap:1061 as "still recorded verbatim as `NONE`" - where "verbatim" is exactly wrong. Minor in itself; noted because the whole subject of this change is prose that claims more precision than the config supports. The embedded paragraph also still carries the 35,692/2026-11-10 pairing the change elsewhere corrects. | fixed | `fd54b3585` — Corrected in all three places: `ADR-273` § Consequences ("still opens with `NONE` - its value is a paragraph"), the workflow header comment, and the roadmap Risk 3 cell, which now names its own earlier use of "verbatim" as wrong. |
 | 9 | low | docs/decisions/ADR-273-the-grace-ceiling-expiry-was-never-enforced-and-the-date-is-deleted.md:118 | A known-dead `review_trigger` on an accepted owner-reserved governance record is left with no tracked carrier. ADR-273 correctly identifies that ADR-264's third `review_trigger` clause (verified verbatim at `docs/decisions/ADR-264-standing-payload-grace-ceiling-may-not-rise.md:26-27`) "cannot fire", and declines to edit ADR-264 on the defensible ground that its `reopen_policy` is `owner`. But nothing tracks the repair: no blocker, no stub, no roadmap step, and ADR-273's own `review_trigger` does not cover it. The only record that an accepted record carries an unfirable trigger is a prose bullet in a different ADR - the same discoverability failure that let the original fiction survive. | fixed | `fd54b3585` — `ADR-273`'s `review_trigger` now carries the repair explicitly - reopened when ADR-264's third trigger is repaired or that record superseded - so this record is the tracked carrier, and § Consequences says so. ADR-264 itself stays unedited: its `reopen_policy` is `owner`. |
