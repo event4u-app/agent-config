@@ -46,19 +46,18 @@ name: Standing Payload Delta
 # the moving ref attributed other people's merges to this PR. The merge-base is
 # the only ref that answers "what did THIS branch change".
 
+# NO `paths:` ON THE pull_request TRIGGER, DELIBERATELY, AND IT MAY NOT COME BACK.
+# This job is a REQUIRED check. A required check whose trigger carries a path
+# filter blocks every pull request that touches no filtered path — permanently,
+# with no failing check to fix, because GitHub reads "skipped" as "has not
+# reported" rather than as a pass. That is this repository's own documented trap
+# (`docs/contracts/branch-protection-policy.md` § The path-filter trap on a
+# required check), and it was reproduced before this edit: PR #1996 changed two
+# markdown files and this workflow did not report on it at all.
+# The filtering moved INSIDE the job, to the `scope` step below, which always
+# reports a conclusion. That is the shape the contract prescribes.
 on:
   pull_request:
-    paths:
-      - "src/rules/**"
-      - "src/skills/**/SKILL.md"
-      - "dist/agent-src/rules/**"
-      - "dist/agent-src/skills/**"
-      - "AGENTS.md"
-      - "src/config/preamble-payload-budget.json"
-      - "src/scripts/check_preamble_payload_budget.ts"
-      - "CLAUDE.md"
-      - "src/scripts/check_standing_payload_delta.ts"
-      - ".github/workflows/standing-payload-delta.yml"
   workflow_dispatch:
 
 # Write scope justified: `pull-requests: write` is needed by the sticky-comment
@@ -99,12 +98,65 @@ jobs:
         id: base
         run: |
           set -euo pipefail
-          base="$(git merge-base "origin/${{ github.base_ref }}" HEAD)"
+          # `github.base_ref` is empty on workflow_dispatch, where there is no
+          # base to resolve. Emit an empty merge_base rather than failing the
+          # step: the scope step below reads empty as "cannot narrow" and runs
+          # the full measurement, which is the safe direction. Before this the
+          # step died on `set -e` and took the whole job with it.
+          base=""
+          if [ -n "${{ github.base_ref }}" ]; then
+            base="$(git merge-base "origin/${{ github.base_ref }}" HEAD)"
+          fi
           echo "merge_base=$base" >> "$GITHUB_OUTPUT"
-          echo "merge-base: $base"
+          echo "merge-base: ${base:-<none — not a pull request>}"
+
+      # The path filter that used to sit on the trigger, moved here so the job
+      # always reports. `relevant=false` skips the measurement and the job still
+      # concludes success, which is what a required check needs.
+      #
+      # The list is the surface the gate MEASURES plus the files that decide how
+      # it measures. Getting it wrong in the narrow direction is a real risk and
+      # it is the catalogue-completeness gap named in
+      # `road-to-delivery-for-every-host` 4.4: a path that carries payload and is
+      # not listed here is a path this job skips. So the fallback is deliberately
+      # backwards from the usual one — anything unrecognised sets `relevant=true`
+      # and pays for a measurement, rather than being assumed harmless.
+      - name: Scope
+        id: scope
+        run: |
+          set -euo pipefail
+          base="${{ steps.base.outputs.merge_base }}"
+          if [ -z "$base" ]; then
+            echo "relevant=true" >> "$GITHUB_OUTPUT"
+            echo "no merge-base (manual dispatch) — measuring, since nothing can be ruled out"
+            exit 0
+          fi
+          changed="$(git diff --name-only "$base"...HEAD)"
+          relevant=false
+          while IFS= read -r f; do
+            [ -n "$f" ] || continue
+            case "$f" in
+              src/rules/*|dist/agent-src/rules/*|dist/agent-src/skills/*) relevant=true ;;
+              src/skills/*/SKILL.md) relevant=true ;;
+              AGENTS.md|CLAUDE.md) relevant=true ;;
+              src/config/preamble-payload-budget.json) relevant=true ;;
+              src/scripts/check_preamble_payload_budget.ts) relevant=true ;;
+              src/scripts/check_standing_payload_delta.ts) relevant=true ;;
+              src/scripts/_lib/standing_bound_ratchet.ts) relevant=true ;;
+              src/scripts/_lib/ratchet_base_ref.ts) relevant=true ;;
+              .github/workflows/standing-payload-delta.yml) relevant=true ;;
+            esac
+          done <<< "$changed"
+          echo "relevant=$relevant" >> "$GITHUB_OUTPUT"
+          if [ "$relevant" = "true" ]; then
+            echo "standing payload surface touched — measuring"
+          else
+            echo "no standing-payload surface in this diff — measurement skipped, check still reports"
+          fi
 
       - name: Measure standing-payload delta
         id: delta
+        if: steps.scope.outputs.relevant == 'true'
         run: |
           set -euo pipefail
           ./scripts-run src/scripts/check_standing_payload_delta \
@@ -112,14 +164,14 @@ jobs:
           cat /tmp/spd-comment.md
 
       - name: Post / update PR comment
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.scope.outputs.relevant == 'true'
         uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88  # v3.0.5
         with:
           header: standing-payload-delta
           path: /tmp/spd-comment.md
 
       - name: Job summary
-        if: always()
+        if: always() && steps.scope.outputs.relevant == 'true'
         run: cat /tmp/spd-comment.md >> "$GITHUB_STEP_SUMMARY"
 
       # THE BLOCKING STEP (road-to-standing-payload-truth 1.1). Deliberately LAST
@@ -146,7 +198,7 @@ jobs:
       # run an operator can re-trigger — and it is named here rather than left
       # to be discovered as a surprising red.
       - name: Preamble payload budget (blocking, grace ceiling)
-        if: always()
+        if: always() && steps.scope.outputs.relevant == 'true'
         run: |
           set -euo pipefail
           ceiling="$(python3 -c "import json;print(json.load(open('src/config/preamble-payload-budget.json'))['ci_delivery']['grace_ceiling'])")"
