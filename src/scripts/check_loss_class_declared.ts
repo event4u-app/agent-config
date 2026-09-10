@@ -161,7 +161,14 @@ const LOSSY_PATTERNS = [
  * what a specifier resolves to, and it accepts only code files, so an
  * extensionless import is a reach and `'./notes.md'` still is not.
  */
-const IMPORT_SPEC = /['"](\.\.?\/[^'"\n]*)['"]/g;
+// Anchored on an import or call position rather than matching any quoted
+// `./`-shaped string anywhere. Unanchored, a path in a prose message could pull
+// an unimported module into the gated population — over-match, so it costs a
+// declaration rather than a silent green, but a corpus member nobody imports is
+// the pro-forma shape this gate refuses. Measured: the corpus is the same 5
+// either way, so the narrowing loses no real edge, `from`/`(`/`,` still covers
+// static imports and every `createRequire` alias this tree writes.
+const IMPORT_SPEC = /(?:from\s*|[(,]\s*)['"](\.\.?\/[^'"\n]*)['"]/g;
 
 export interface LossFinding {
     concern: string;
@@ -412,7 +419,13 @@ export function isLossy(codeOnly: string): boolean {
  * VALIDATE). Three pro-forma declarations is the corpus this gate's own
  * docstring warns against, so the co-presence rule was measured and dropped.
  */
-const MARKER_SUBSTITUTION = /\.(?:replace|replaceAll)\s*\([^)]*?(?:redact|truncat)/i;
+// `(?:[^()]|\([^()]*\))*?` and not `[^)]*?`: the first form stopped at the
+// FIRST `)`, so `s.replace(buildPattern(), '[REDACTED]')` — marker after a
+// nested call — was invisible, which is a silent-green gap in the one mechanism
+// this pattern exists to close. One level of nesting covers every shape in this
+// tree; deeper nesting is a bounded under-match rather than an unbounded scan
+// that would run into the next statement.
+const MARKER_SUBSTITUTION = /\.(?:replace|replaceAll)\s*\((?:[^()]|\([^()]*\))*?(?:redact|truncat)/i;
 
 /**
  * Is this module lossy, judged on BOTH the blanked and the unblanked form?
@@ -466,8 +479,13 @@ export function resolveSpecifier(spec: string, fromFile: string, root: string): 
     // relative specifier on any reached path today. The gap is closed
     // prospectively, not because it was leaking. A self-test case pins that
     // the new candidates resolve at all, so the closure is not untested.
-    const candidates = /\.(?:js|ts|mjs|cjs)$/.test(base)
-        ? [base.replace(/\.(?:js|mjs|cjs)$/, '.ts'), base]
+    // `.mts` / `.cts` / `.tsx` / `.jsx` are in the list although this tree
+    // writes none of them on a reached path today. Leaving them out is a
+    // latent under-match that would surface as a silently smaller corpus the
+    // day one appears, which is the failure direction this whole gate exists
+    // to refuse; carrying them costs nothing.
+    const candidates = /\.(?:js|ts|mjs|cjs|mts|cts|tsx|jsx)$/.test(base)
+        ? [base.replace(/\.(?:js|mjs|cjs|jsx)$/, '.ts'), base]
         : [`${base}.ts`, `${base}.js`, path.join(base, 'index.ts'), path.join(base, 'index.js')];
     for (const candidate of candidates) {
         if (!candidate.startsWith(root + path.sep)) continue;
@@ -765,6 +783,12 @@ export function run() { return { context: rows.join('\\n') }; } // truncate the 
 const MARKER_REPLACEMENT_LIB = `
 export function scrub(s) { return s.replace(SECRET_RE, '[REDACTED]'); }
 `;
+// The same redaction with the marker AFTER a nested call. `[^)]*?` stopped at
+// the first `)` and made this shape invisible — a silent-green gap in the one
+// mechanism that pattern exists to close, and unpinned until this case.
+const NESTED_MARKER_LIB = `
+export function scrub(s) { return s.replace(buildPattern(kind), '[REDACTED]'); }
+`;
 const SCRUB_EMITTER = `
 import { scrub } from './_lib/fixture_lib.js';
 export function run() { return { context: scrub(body) }; }
@@ -887,6 +911,9 @@ function selfTestCases(): SelfTestCase[] {
         mk('a redaction whose only evidence is its replacement literal → reject', 'reject', {
             header: NO_DECL, body: SCRUB_EMITTER, libHeader: NO_DECL, lib: MARKER_REPLACEMENT_LIB,
         }),
+        mk('a marker after a nested call is still a redaction → reject', 'reject', {
+            header: NO_DECL, body: SCRUB_EMITTER, libHeader: NO_DECL, lib: NESTED_MARKER_LIB,
+        }),
         mk('an apostrophe in a template literal does not blank the code after it → reject', 'reject', {
             header: NO_DECL, body: TEMPLATE_APOSTROPHE_EMITTER,
         }),
@@ -909,7 +936,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         // silence, so it no longer defended the number `gate-coverage.yml`
         // documents. Raising a floor is a deliberate edit; letting one rot
         // below the corpus is not.
-        return runSelfTest({ gate: 'check_loss_class_declared', cases: selfTestCases(), minCases: 23, minRejectCases: 10 });
+        return runSelfTest({ gate: 'check_loss_class_declared', cases: selfTestCases(), minCases: 24, minRejectCases: 11 });
     }
     const quiet = argv.includes('--quiet');
     const json = argv.includes('--json');
