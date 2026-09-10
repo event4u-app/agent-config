@@ -103,6 +103,22 @@ export const POLICY_PATH = 'src/config/ratification-policy.json';
  */
 export const WORKFLOW_PATH = '.github/workflows/consistency.yml';
 
+/**
+ * The platform-anchor limb: the committed expectation, its pure evaluator and
+ * its gate.
+ *
+ * Watched for the reason the expectation file is committed at all. The
+ * expectation could otherwise be lowered by a diff nobody ratified, which would
+ * make the anchor as head-controlled as the settings it exists to check. The
+ * embedded floor in `_lib/platform_anchor.ts` stops a lowering from being
+ * honoured; this list is what makes the attempt visible.
+ */
+export const ANCHOR_PATHS: readonly string[] = [
+    'src/config/platform-anchor.json',
+    'src/scripts/_lib/platform_anchor.ts',
+    'src/scripts/check_platform_anchor.ts',
+];
+
 /** Governance hooks: the blocking PreToolUse guards. */
 const GOVERNANCE_HOOK_RE = /^src\/scripts\/hooks\/block_[a-z0-9_]+\.ts$/;
 
@@ -138,7 +154,13 @@ export function classifyPaths(files: readonly string[]): GatedPaths {
         if (p === '') {
             continue;
         }
-        if (p === SELF_PATH || p === READER_PATH || p === POLICY_PATH || p === WORKFLOW_PATH) {
+        if (
+            p === SELF_PATH ||
+            p === READER_PATH ||
+            p === POLICY_PATH ||
+            p === WORKFLOW_PATH ||
+            ANCHOR_PATHS.includes(p)
+        ) {
             self = true;
             continue;
         }

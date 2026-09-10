@@ -834,6 +834,80 @@ function _resolve_cascade_paths(
     ];
 }
 
+/** Per-layer read outcome. `absent` and `malformed` are NOT the same fact. */
+export type SettingsLayerState = 'absent' | 'valid' | 'malformed';
+
+export interface SettingsLayerReport {
+    path: string;
+    state: SettingsLayerState;
+}
+
+/**
+ * Probe one settings file WITHOUT merging it, distinguishing absent from broken.
+ *
+ * `_read_yaml` returns `null` for both, which is fine for merging — an absent
+ * layer and an unreadable one contribute nothing either way — and is wrong for
+ * anything that has to decide differently in the two cases. That conflation
+ * silently disabled a documented safety property; see
+ * {@link settings_layer_states}.
+ */
+function _probe_yaml(p: string): SettingsLayerState {
+    if (!_is_file(p)) return 'absent';
+    let YAML: typeof YamlModule;
+    try {
+        YAML = _require('yaml') as typeof YamlModule;
+    } catch {
+        // No parser: this layer cannot be validated, so it is not `valid`.
+        return 'malformed';
+    }
+    try {
+        YAML.parse(fs.readFileSync(p, 'utf-8'), { version: '1.1' });
+        return 'valid';
+    } catch (err) {
+        if (_is_yaml_error(err) || _is_os_error(err)) return 'malformed';
+        throw err;
+    }
+}
+
+/**
+ * Per-layer validity for the layers a caller can actually break.
+ *
+ * A repair, not a feature. `load_agent_settings` merges a broken layer as if it
+ * were absent, so a key's resolved value says nothing about whether the user's
+ * own file parsed — measured 2026-09-10, a project `.agent-settings.yml` of
+ * `:\n  - [\n` returns the template's values and throws nothing. Every reader
+ * shaped `try { …read… } catch { } return <default>` therefore has an
+ * UNREACHABLE catch for that case, and its "fails closed" claim is carried by
+ * its default value rather than by its own code. Worked example and the ruling
+ * that required this: `_lib/continuity_writer.ts` § `auto_record_enabled`.
+ *
+ * Scope is the user-global files and the in-project cascade — the layers a
+ * human edits. The shipped template is excluded deliberately: a malformed
+ * template is a package defect that already resolves every key to absent, so
+ * reporting it would blame a tree in which the user did nothing wrong.
+ *
+ * Reports, never decides. What a `malformed` layer MEANS is the key's polarity,
+ * which belongs to the caller.
+ */
+export function settings_layer_states(
+    options: {
+        project_path?: string | null;
+        user_global_path?: string | null;
+        cwd?: string | null;
+    } = {},
+): SettingsLayerReport[] {
+    const project_path = options.project_path ?? null;
+    const cwd = options.cwd ?? null;
+    const user_global = options.user_global_path
+        ? [options.user_global_path]
+        : user_global_settings_paths();
+    const out: SettingsLayerReport[] = [];
+    for (const p of [...user_global, ..._resolve_cascade_paths(cwd, project_path)]) {
+        out.push({ path: p, state: _probe_yaml(p) });
+    }
+    return out;
+}
+
 /**
  * Return the merged settings dict.
  *

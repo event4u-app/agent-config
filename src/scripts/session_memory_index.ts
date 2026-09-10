@@ -52,7 +52,20 @@ export function session_index_enabled(root: string): boolean {
             return v === 'on' || v === true;
         }
     } catch {
-        // fail-closed: unreadable settings → default off
+        // Fail-closed: a genuine throw leaves the index off.
+        //
+        // QUALIFIED 2026-09-10. This catch is unreachable for the case the
+        // comment reads as covering: `load_agent_settings` skips a malformed
+        // `.agent-settings.yml` rather than throwing, so a broken layer
+        // resolves to the shipped template. The claim is true anyway, because
+        // this key ships `off` — i.e. it rides on the default, not on this
+        // line. Its sibling `auto_record_enabled` made the same claim, had its
+        // default flipped to `on` (road-to-continuity-writer-activation step
+        // 3.2), and lost the property outright; it now decides the malformed
+        // case from `settings_layer_states`. Left as-is deliberately: the
+        // behaviour here is correct today and hardening it would change
+        // nothing. If this default ever moves to `on`, this comment is the
+        // notice that the property moves with it.
     }
     return false;
 }

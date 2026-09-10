@@ -464,9 +464,17 @@ blocker 6 is recorded as *deferred verification*, not resolution.
 **Revisit-if:** `check_preamble_payload_budget` reports a measured total at least
 49 tokens below `ci_delivery.grace_ceiling` on `origin/main` — via a committed
 rules reduction, not a catalogue trim — **and** the `skill_count` allowance is
-explicitly allocated across this roadmap and `-relational-modeling`. The
-`grace_end_date` of 2026-11-10 is a second trigger: at that date the design
-ceiling of 107,646 applies and the gap becomes 30,615 tokens rather than 49.
+explicitly allocated across this roadmap and `-relational-modeling`.
+**The second trigger this paragraph used to carry is DELETED, not merely stale
+(2026-09-10, `ADR-274`).** It read: "The `grace_end_date` of 2026-11-10 is a
+second trigger: at that date the design ceiling of 107,646 applies and the gap
+becomes 30,615 tokens rather than 49." That trigger could never have fired —
+nothing in the tree enforced `grace_end_date`, and the key no longer exists. A
+wake condition on an event no code produces is a park with no exit, so it is
+removed rather than re-dated. The first trigger above is unaffected and is now
+the only one: `ci_delivery.grace_ceiling` survives at 138,490, enforced and
+undated. Evidence:
+`agents/evidence/analysis/grace-ceiling-expiry-is-unenforced-2026-09-10.md`.
 
 ### What is NOT claimed
 

@@ -44,13 +44,6 @@
             "reason": "The writer`s own bookkeeping, not a record a successor reads. It holds counters and advisory stamps used across Stops within one session; nothing restores a session from it."
         },
         {
-            "id": "manual:run-session-recycle-before-clear",
-            "axis": "normal_path_manual_actions",
-            "disposition": "counted",
-            "locus": "src/scripts/hooks/session_eol_hook.ts:258",
-            "reason": "The advisory the stop slot injects past the recycle threshold instructs a human to run `agent-config session:recycle`, wait for the absolute path it prints, and only then `/clear`. That is a manual action on the normal path, and it exists precisely because no automatic writer does. It is what step 3.1 removes the need for."
-        },
-        {
             "id": ".dispatcher",
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",
@@ -125,7 +118,7 @@
             "axis": "persistent_continuity_artefacts",
             "disposition": "counted",
             "locus": "src/scripts/hooks/session_eol_hook.ts:31",
-            "reason": "Machine-readable fill level plus threshold state, overwritten every Stop. Written for later verification of whether the session crossed the recycle threshold. AUTHORISED FOR RETIREMENT and NOT RETIRED \u2014 the authorisation (AI council 2026-09-08 D1, resting on producer/no-consumer evidence) was obtained on incomplete facts. There is no consumer in code, but `agents/roadmaps/later/road-to-cost-parity-2-state-aware-dispatch.md` is a live parked roadmap whose open steps 1.1 and 1.4c read this file as a planned input, and 1.4c is specifically about bounding its staleness. The same council's own qualification anticipated this: \"no consumer in the tree\" proves no in-repository consumer, and a planned consumer inside the tree is a stronger objection than an external one because it is checkable. Retiring it is a decision for that roadmap's owner, not a side effect of this one. RETENTION DECIDED 2026-09-09 and this row is that decision, not a note about a pending one. An AI council under the owner's written delegation for the drain run (2 seats, anthropic + openai, quorum 2/2) resolved `context-fill-retirement-has-a-parked-consumer` as RETAIN: the file and `writeContextFill` stay, and this row stays `counted`. The named consumer is `agents/roadmaps/later/road-to-cost-parity-2-state-aware-dispatch.md` steps 1.1 and 1.4c. The alternative was re-anchoring those steps, which means editing a roadmap that is parked precisely because nobody is working on it — one small per-session write is the cheaper side of that trade. The artefact-axis reduction 5 to 4 is NOT claimed. Revisit when that roadmap is resumed, cancelled, or re-anchored onto another source. Blocker: `context-fill-retirement-has-a-parked-consumer`, resolved."
+            "reason": "Machine-readable fill level plus threshold state, overwritten every Stop. Written for later verification of whether the session crossed the recycle threshold. AUTHORISED FOR RETIREMENT and NOT RETIRED \u2014 the authorisation (AI council 2026-09-08 D1, resting on producer/no-consumer evidence) was obtained on incomplete facts. There is no consumer in code, but `agents/roadmaps/later/road-to-cost-parity-2-state-aware-dispatch.md` is a live parked roadmap whose open steps 1.1 and 1.4c read this file as a planned input, and 1.4c is specifically about bounding its staleness. The same council's own qualification anticipated this: \"no consumer in the tree\" proves no in-repository consumer, and a planned consumer inside the tree is a stronger objection than an external one because it is checkable. Retiring it is a decision for that roadmap's owner, not a side effect of this one. RETENTION DECIDED 2026-09-09 and this row is that decision, not a note about a pending one. An AI council under the owner's written delegation for the drain run (2 seats, anthropic + openai, quorum 2/2) resolved `context-fill-retirement-has-a-parked-consumer` as RETAIN: the file and `writeContextFill` stay, and this row stays `counted`. The named consumer is `agents/roadmaps/later/road-to-cost-parity-2-state-aware-dispatch.md` steps 1.1 and 1.4c. The alternative was re-anchoring those steps, which means editing a roadmap that is parked precisely because nobody is working on it \u2014 one small per-session write is the cheaper side of that trade. The artefact-axis reduction 5 to 4 is NOT claimed. Revisit when that roadmap is resumed, cancelled, or re-anchored onto another source. Blocker: `context-fill-retirement-has-a-parked-consumer`, resolved."
         },
         {
             "id": "context-hygiene.json",
@@ -258,7 +251,7 @@
             "axis": "persistent_continuity_artefacts",
             "disposition": "counted",
             "locus": "src/scripts/_cli/cmd_session_recycle.ts:9",
-            "reason": "The continuity record itself: written by `session:recycle`, resolved per session by `resolveContinuityRecord`, consumed once at `session_start` by the handoff-context concern. This is the artefact the whole roadmap is collapsing the others INTO \u2014 the surviving `1`."
+            "reason": "The continuity record itself: written by `session:recycle` and, since 2026-09-10, by the automatic writer in the session-eol concern (`src/scripts/_lib/continuity_writer.ts` via `writeContinuityRecord`), resolved per session by `resolveContinuityRecord`, consumed once at `session_start` by the handoff-context concern. This is the artefact the whole roadmap is collapsing the others INTO \u2014 the surviving `1`. The locus stays on the command because the command still writes it; the second producer is named here so a reader does not conclude from the locus that a human is still the only source."
         },
         {
             "id": "render",
@@ -475,7 +468,7 @@
             "axis": "public_continuity_commands",
             "disposition": "counted",
             "locus": "src/cli/registry.ts:73",
-            "reason": "REQUIRED on the normal path today: it is the only writer of the continuity record in the tree, so continuity does not happen unless a human runs it. That is what makes it a continuity command rather than an affordance, and it is on the owner-authorised retirement set of 2026-09-06."
+            "reason": "RETAINED as an explicit affordance, and no longer the normal path. It was the ONLY writer of the continuity record until step 3.2 of road-to-continuity-writer-activation armed the automatic writer by default (2026-09-10), which is why this row's earlier reason called it REQUIRED. The same AI council (2 seats, convergent, under the owner's written delegation) REFUSED to retire the verb: removing a public callable contract is a different act from removing a manual step, and the automatic writer is not a strict superset of this command \u2014 it leaves no record for a session that claimed no roadmap, and it omits the `git status` anchor fields the command collects. So it stays COUNTED on this axis rather than excluded: it is a public continuity command that exists, the axis counts what exists, and the target of 0 is therefore not reachable while this decision stands. Recorded here rather than argued away, on the same terms as the `verb:handoff` exclusion note above."
         },
         {
             "id": "picker:agent-handoff",
@@ -489,7 +482,7 @@
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",
             "locus": "src/scripts/_lib/session_index_trust.ts:251",
-            "reason": "A duplicate-suppression latch, not a record. It holds one file per session under agents/runtime/state/session-index-latch/ whose entire content is a claim timestamp, and nothing reads it to restore anything — a successor session that finds it learns only that THIS session already received the memory index, which is the opposite of resumable state. It exists because `session_start` can fire more than once for one session (resume, host reconnect, compaction boundary on some hosts) and two injections double a fixed cost while presenting two corpora as one session memory. Excluded on the same reasoning as schema:session-eol-state: the writer own bookkeeping, not a record a successor reads. Deleting the directory costs a session nothing but a possible second injection."
+            "reason": "A duplicate-suppression latch, not a record. It holds one file per session under agents/runtime/state/session-index-latch/ whose entire content is a claim timestamp, and nothing reads it to restore anything \u2014 a successor session that finds it learns only that THIS session already received the memory index, which is the opposite of resumable state. It exists because `session_start` can fire more than once for one session (resume, host reconnect, compaction boundary on some hosts) and two injections double a fixed cost while presenting two corpora as one session memory. Excluded on the same reasoning as schema:session-eol-state: the writer own bookkeeping, not a record a successor reads. Deleting the directory costs a session nothing but a possible second injection."
         }
     ]
 }
