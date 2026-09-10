@@ -252,6 +252,21 @@ admission. Cowork is excluded by the existing measurement.
       observer also may not be the session that produced the turn.
       Full reproduction, with the commands:
       `agents/evidence/analysis/e3-gate-closed-not-stale-bundle-2026-09-10.md`.
+      **UPDATE 2026-09-10 (later) — DELIVERY IS NOW LIVE ON THIS MACHINE, so the limb is
+      one live prompt away rather than one diagnosis away.** Owner chose to enable it.
+      `.agent-settings.yml` at the repository root now carries `lean_projection.mode:
+      delivery` and `hosts: [claude-code]`; the file is gitignored (`.gitignore:317`) so it
+      reaches no consumer and no commit. Verified through the INSTALLED carrier, not a
+      probe: `node dist/hooks/dispatch.js --platform claude --event user_prompt_submit`
+      over a prompt that trips three labelled rules now reports
+      `rule-inject: 3 rule body/bodies on user_prompt_submit (16378 B)`, where the same
+      command returned 826 B an hour earlier.
+      **What is still missing is the transcript, and it cannot be produced by the session
+      that would read it.** Two independent reasons, both unchanged: a live USER prompt is
+      needed and no autonomous run produces one for itself, and the observer may not be the
+      subject. The next session on this machine whose prompt trips a labelled rule is the
+      candidate; a second party then reads that turn and fills the waiting slot in
+      `src/config/host-injection-effect.json`, whose citation check refuses a partial row.
 - [x] **1.2 Run 1.1 on Cursor and Cline** (the two hosts binding `user_prompt_submit` with a
       `.md` rule tree). Record Windsurf, Gemini and Augment as `unobserved` unless a session
       exists.
