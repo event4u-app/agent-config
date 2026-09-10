@@ -275,6 +275,40 @@ ci_only:
 # worth remote enforcement, OR it should simply be added to a workflow. Prefer
 # adding it: a local-only gate is the direction that let real defects merge.
 local_only:
+  - id: check_platform_anchor
+    class: token-scope-unavailable
+    reason: >
+      Reads `repos/{owner}/{repo}/rulesets` to check that the forge actually
+      requires what the ratification mechanism claims it does — an active branch
+      ruleset over the default branch, an approving review, last-push approval,
+      deletion and force-push blocked, strict required checks, and no
+      unconditional bypass actor.
+
+      Local-only because the permission does not exist, not because remote
+      enforcement is unwanted — which is the opposite of the usual reason on this
+      list and is why the class says so. The rulesets endpoint needs the
+      repository `administration` scope, and a workflow `GITHUB_TOKEN` cannot be
+      granted it: `administration: read` was tried in `rule-backstops.yml` on
+      2026-09-10 and actionlint refused it as an *"unknown permission scope"*,
+      listing the sixteen that do exist. None grants it.
+
+      Wiring it anyway would be worse than leaving it here. The gate fails closed
+      by design — a platform state it cannot read is `UNVERIFIABLE`, which is a
+      failure — so an unauthorised token would red every kernel and governance
+      pull request for a reason unrelated to the platform's actual state. The
+      three escapes were each rejected on the reasoning of the council that
+      commissioned the gate: `continue-on-error` makes it advisory, skipping when
+      unauthenticated makes it fail open, and putting it in `Sync + Generate Tools
+      Consistency` would freeze merges repository-wide on any red, since that
+      job's context is the ruleset's single required status check.
+
+      What moves it off this list: a PAT in a repository secret carrying
+      `administration: read`, then the workflow step. That is a human action and
+      is recorded as the open half of blocker `ratification-platform-anchor` in
+      `agents/roadmaps/road-to-typed-grants-that-persist.md`. Until then the gate
+      runs in `taskfiles/ci-fast.yml` — a real pre-push control, and not a CI one,
+      which is the honest description of its reach.
+
   - id: check_host_loadability_reach
     class: developer-machine-scoped
     reason: >
