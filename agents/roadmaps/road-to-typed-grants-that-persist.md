@@ -392,7 +392,11 @@ item. Phases 1-6 may run once 0.2 is chosen.
   does, verified 2026-09-08.
 
 ### blocker: ratification-platform-anchor
-- **Status:** open — **limb 1 met 2026-09-10, limb 2 blocked on a platform capability.**
+- **Status:** open — **limb 1 was met at 12:51 on 2026-09-10 and owner-reversed at 15:14 and
+  15:16; limb 2 blocked on a platform capability.** Read the limb-1 paragraph below together
+  with the correction that follows it; the first is the 12:51 measurement, the second is what
+  the owner then decided. The limb-1 paragraph is present-tense about 12:51 and must be read
+  with that date, not as current state.
   This entry read `resolved` for one commit on the premise that both limbs were met. Limb 2 was
   then falsified by CI and the claim is corrected here rather than left standing. **What limb 2
   ran into:** the gate reads `repos/{owner}/{repo}/rulesets`, which needs the repository
@@ -421,10 +425,46 @@ item. Phases 1-6 may run once 0.2 is chosen.
   `check_ci_local_parity` and `check_gate_reachability` both exit 0 over that wiring. The
   workflow half is what the `administration` scope blocks, above. `rule-backstops.yml` carries
   a comment recording the scope refusal in place of the step, so the next reader does not spend
-  the cycle re-discovering the scope list. **What this does NOT resolve:** the deny retirement. The precondition both 2026-09-10
-  council seats attached to it is now met, but the retirement itself was refused 2/2 in round 2
-  and needs its own council decision and its own ratification artifact —
+  the cycle re-discovering the scope list. **What this does NOT resolve:** the deny retirement. The retirement itself was refused
+  2/2 in round 2 and needs its own council decision and its own ratification artifact —
   `kernel-guard-first-crossing` stays open and may not cite this entry as approval.
+
+  **LIMB 1 WAS UNDONE THE SAME AFTERNOON, BY THE OWNER, DELIBERATELY. The paragraph above
+  is the 12:51 reading and is no longer current state.** It is kept because it is the
+  verification that was actually performed, and because a record that quietly rewrites its
+  own measurements cannot be checked later. What happened after it: the 12:51 settings made
+  the repository unmergeable — this repository has zero eligible approvers, GitHub does not
+  permit approving your own pull request, and `bypass_actors` was emptied in the same edit.
+  PR #1988 measured `mergeable: MERGEABLE`, `mergeStateStatus: BLOCKED`,
+  `reviewDecision: REVIEW_REQUIRED` with every required check green.
+
+  **Six versions exist on 2026-09-10 and each edit changed one field.** `49271774` at 15:14
+  set `required_approving_review_count` back to `0`; `49272069` at 15:16 set
+  `require_last_push_approval` back to `false`; `49272180` at 15:18 changed **only**
+  `strict_required_status_checks_policy`, a separate owner decision on measured cost;
+  `49276909` at 16:04 restored that field on the mistaken assumption it had been a side
+  effect and `49277135` at 16:06 returned it. PR #1988 merged at `13:17:09Z` — 15:17:09
+  local, after 15:16 and before 15:18 exists, so the 15:18 edit is not part of what
+  unblocked it. `bypass_actors: []` and `current_user_can_bypass: never` still hold.
+
+  So limb 1 is **not met** and the gate reports three findings again — all three intended.
+  What it now waits on is the in-repository half: a structured, evidence-carrying exemption
+  rather than a lowered floor, per
+  `agents/roadmaps/road-to-bounded-approval-floor-waiver.md`. Verify with
+  `gh api repos/event4u-app/agent-config/rulesets/17749383/history` rather than from any
+  paragraph here.
+
+  **What is NOT discharged, corrected after a neutral review.** An earlier version of this
+  correction said the `bypass_actors` item "stands and is done" and that this entry's "what
+  may not stand" clause was "discharged on the platform side". That closed what both
+  2026-09-10 council seats flagged as open: with `bypass_actors: []` and no bypass, a future
+  ruleset mistake re-locks the sole maintainer out of the PR path exactly as 12:51 did, and
+  openai required that recoverability be *established* rather than inferred from
+  `current_user_can_bypass: never`, which describes bypass capability and not
+  ruleset-administration authority. `admin: true` is measured on the acting account, which is
+  a capability and not a rehearsed procedure. The removal satisfies
+  `allow_unconditional_bypass: false`; the recovery path is Phase 0.2 of the waiver roadmap
+  and is open.
 - **Owner:** maintainer
 - **Class:** 3 — human-only
 - **Blocks:** the deny retirement (5.2's second half) and therefore Phase 1's five kernel
@@ -433,6 +473,11 @@ item. Phases 1-6 may run once 0.2 is chosen.
   refused the retirement over the head-controlled enforcement path, and both 2026-09-10 council
   seats tied the retirement to this anchor reading compliant. So the dependency edge runs
   through here, and recording it as harmless would understate what is waiting on it.
+  **One qualification added 2026-09-10 afternoon:** "reading compliant" was written when
+  compliance meant the approval floor satisfied. Under the planned exemption it will mean
+  compliant-with-approvals-suspended, which is a weaker precondition than the seats had in
+  mind when they attached it. Whether that still satisfies the condition they set is part of
+  the retirement's own council decision, not something this entry may settle.
 - **What to do:** **THE DECISION IS MADE AND THE GATE IS BUILT, 2026-09-10. What is left is a
   repository-settings change only a human with admin rights can perform, which is why this
   entry stays open.** An AI council (anthropic/claude-sonnet-4-5 + openai/codex-default,
@@ -456,8 +501,10 @@ item. Phases 1-6 may run once 0.2 is chosen.
   than reading one by id, which openai made a condition: assuming ruleset `17749383` or its
   name would break the first time an administrator splits it.
 
-  **What the human must change** — three items, measured live, each reproducible with
-  `gh api repos/event4u-app/agent-config/rulesets/17749383`:
+  **What the human must change — SUPERSEDED 2026-09-10 afternoon. The list below asked for
+  three settings changes; all three were made, two were then deliberately reversed by the
+  owner, and this entry must not go on instructing a future reader to undo that reversal.**
+  The original list, kept because it is what the morning measurement justified:
   1. `required_approving_review_count` is **0**. Set it to at least 1. Without it a
      ratification artifact lands reviewed by nobody the repository insisted on.
   2. `require_last_push_approval` is **false**. Set it true, so an approval cannot predate the
@@ -468,9 +515,56 @@ item. Phases 1-6 may run once 0.2 is chosen.
      deliberate escape hatch with an audited emergency procedure. What may not stand is the
      contract claiming protection against unilateral action while this remains.
 
+  **What actually happened**, from the ruleset history rather than from memory —
+  `gh api repos/event4u-app/agent-config/rulesets/17749383/history`. The owner applied all
+  three at 12:51 (version `49256548`), which made the repository unmergeable: this repository
+  has zero eligible approvers, GitHub does not permit approving one's own pull request, and
+  item 3 removed the administrator escape in the same edit. PR #1988 measured
+  `mergeable: MERGEABLE`, `mergeStateStatus: BLOCKED`, `reviewDecision: REVIEW_REQUIRED` with
+  every required check green. Items 1 and 2 were reversed in two separate edits, `49271774`
+  at 15:14 and `49272069` at 15:16; #1988 merged at 15:17:09 local. Item 3 is unchanged on
+  the platform — `bypass_actors` is `[]` and `current_user_can_bypass` is `never` — and the
+  passages still describing the old bypass as current state are corrected in
+  `docs/contracts/ratification-artifact.md` § Re-measured 2026-09-10.
+
+  **Item 3 is NOT discharged, and an earlier version of this paragraph said it was.** It
+  read "Item 3 stands and is done" and called this blocker's "what may not stand" clause
+  "discharged on the platform side". Removing the bypass satisfies
+  `allow_unconditional_bypass: false` and simultaneously removes the recovery path from the
+  next lockout — which both 2026-09-10 council seats raised and neither closed. openai
+  required that recoverability be established rather than inferred from
+  `current_user_can_bypass: never`, which describes bypass capability and not
+  ruleset-administration authority; anthropic wrote that the design needs a tested
+  administrator-level recovery procedure "which neither reviewer proposes". `admin: true` is
+  measured on the acting account and is a capability, not a rehearsed procedure. The owner
+  question this entry names is likewise unchanged and still open.
+
+  **What this blocker now waits on**, which is not items 1 and 2: the in-repository half of
+  the reversal — a structured, evidence-carrying exemption rather than a lowered floor,
+  which both 2026-09-10 council seats converged on (openai would vote `refused` on an
+  indefinite self-asserted one) — plus the recovery procedure above. Planned in
+  `agents/roadmaps/road-to-bounded-approval-floor-waiver.md`, Phases 0 and 1.
+
+  **A third floor field is off by owner decision and is NOT waiting on anything.**
+  `strict_required_status_checks_policy` was `true` before 15:18 and is `false` now. It
+  looked like a side effect of the approval rollback and was briefly restored at 16:04 on
+  that assumption; the owner then stated the intent and it went back off. The argument is
+  a measured cost, not an oversight: several branches are commonly green at once here, and
+  requiring each to be brought up to date re-runs the full check suite on every one of
+  them, serially. The owner accepts a rare post-merge repair instead. Do not restore it as
+  a tidy-up — the residual (a green check is evidence about that branch's base, not about
+  the trunk it lands on) is accepted deliberately.
+
   Run `./scripts-run src/scripts/check_platform_anchor --files src/rules/commit-policy.md` to
-  see the current verdict. On 2026-09-10 it exits 1 and names exactly those three.
-- **Recommendation:** change the three settings, then re-run the gate. The build half is done
+  see the current verdict. On 2026-09-10 morning it exited 1 naming the three items above; on
+  the same afternoon it exits 1 naming `approvals-below-minimum`,
+  `last-push-approval-missing` and `status-checks-not-strict` — all three intended, the
+  first two pending the waiver and the third settled by the owner decision above.
+- **Recommendation:** land the bounded waiver from
+  `agents/roadmaps/road-to-bounded-approval-floor-waiver.md`, then re-run the gate.
+  **CORRECTED 2026-09-10 afternoon** — this line read *"change the three settings, then
+  re-run the gate"*, and two of those three have since been reversed by the owner. The
+  build half is done
   and the recommendation that used to sit here — *"build it, scoped to the kernel/governance
   surface only"* — is discharged. Both round-1 reviewers had converged on this being the real
   anchor, one writing that without it the gate *"enforces the format of the Iron Law, not the
