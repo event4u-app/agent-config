@@ -21,8 +21,8 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 6c543f0a268124d8018b108566d8561348623dc3, review
-  artefacts excluded), scope hash `59be5a1b45adbf6de0c0b75ec50c3fd93032b689f01ea5a3475f780e9b3e14d8`
+- diff: `diff.patch` — the review scope (branch head 65e260d78f63121b31f92020e4939fff33bc2780, review
+  artefacts excluded), scope hash `299d9815be877434bf8e3f8fe956d21e57918f8d55938d5bbf36aa1dfd765d24`
 - roadmap under review: none (`acceptance-criteria.md` is empty)
 
 Changed files:
@@ -33,6 +33,7 @@ Changed files:
 - src/scripts/autonomy_friction_traffic.ts
 - src/scripts/hook_manifest.json
 - src/scripts/hook_manifest.yaml
+- src/scripts/hooks/category_a.ts
 - src/scripts/hooks/chain_nudge_hook.ts
 - tests/scripts/autonomy_friction_traffic.test.ts
 - tests/scripts/hooks/chain_nudge_hook.test.ts
@@ -57,7 +58,7 @@ Fill the findings table in `feat-confirmation-friction-write-shape.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 59be5a1b45adbf6de0c0b75ec50c3fd93032b689f01ea5a3475f780e9b3e14d8, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 299d9815be877434bf8e3f8fe956d21e57918f8d55938d5bbf36aa1dfd765d24, reviewed <YYYY-MM-DD>
 ```
 
 ## Return channel
