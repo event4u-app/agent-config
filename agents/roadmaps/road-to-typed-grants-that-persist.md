@@ -392,7 +392,27 @@ item. Phases 1-6 may run once 0.2 is chosen.
   does, verified 2026-09-08.
 
 ### blocker: ratification-platform-anchor
-- **Status:** open
+- **Status:** resolved 2026-09-10. Both limbs of the `Resolved when` below are met, and each
+  was verified rather than asserted. **Limb 1** — the owner changed the three ruleset settings
+  and `./scripts-run src/scripts/check_platform_anchor --files src/rules/commit-policy.md`
+  exits **0**, reporting `platform anchor COMPLIANT for event4u-app/agent-config` with
+  `approving reviews required: 1 (policy floor 1)`. Read back from the forge after the write:
+  ruleset `17749383` now carries `required_approving_review_count: 1`,
+  `require_last_push_approval: true`, `bypass_actors: []`, and `current_user_can_bypass` has
+  gone from `always` to **`never`** — all four rules (`deletion`, `pull_request`,
+  `required_status_checks`, `non_fast_forward`) preserved, enforcement still `active`, the
+  required context unchanged. **Limb 2** — the gate is wired: `taskfiles/ci-fast.yml` carries
+  it in the `preflight` list and as its own `check-platform-anchor` target, and
+  `.github/workflows/rule-backstops.yml` runs it as a step with an explicit
+  `administration: read` grant, which is the permission the rulesets endpoint needs.
+  `check_ci_local_parity` and `check_gate_reachability` both exit 0 over the new wiring.
+  **Deliberately NOT wired into `Sync + Generate Tools Consistency`**: that job's context is
+  the ruleset's single required status check, so a red there would freeze merges for the whole
+  repository, while a red in the backstops workflow blocks only the pull request that caused
+  it. **What this does NOT resolve:** the deny retirement. The precondition both 2026-09-10
+  council seats attached to it is now met, but the retirement itself was refused 2/2 in round 2
+  and needs its own council decision and its own ratification artifact —
+  `kernel-guard-first-crossing` stays open and may not cite this entry as approval.
 - **Owner:** maintainer
 - **Class:** 3 — human-only
 - **Blocks:** the deny retirement (5.2's second half) and therefore Phase 1's five kernel

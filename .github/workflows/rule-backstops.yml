@@ -88,6 +88,10 @@ concurrency:
 
 permissions:
   contents: read
+  # The rulesets endpoint `check_platform_anchor` reads. Narrower than it
+  # sounds: read-only, and the only step that uses it is the platform-anchor
+  # gate at the end of this job.
+  administration: read
 
 jobs:
   rule-backstops:
@@ -608,3 +612,22 @@ jobs:
 
       - name: Roadmaps schedule no full-pipeline CI steps
         run: ./scripts-run src/scripts/lint_roadmap_ci_steps
+
+      # The platform anchor behind the ratification mechanism.
+      #
+      # Deliberately here and NOT in the `Sync + Generate Tools Consistency`
+      # job. That job's context is the ruleset's single required status check,
+      # so a step that reds there freezes merges for the whole repository; a
+      # red here blocks the pull request that caused it and nothing else. The
+      # gate only consults the forge on a diff that already requires
+      # ratification, so an ordinary pull request never reaches the network
+      # through it.
+      #
+      # `administration: read` is what the rulesets endpoint needs. Without it
+      # the gate reads the platform as UNVERIFIABLE, which it treats as a
+      # failure rather than a pass — correct behaviour, and the wrong reason to
+      # fail, so the grant is explicit rather than inherited.
+      - name: The forge enforces what the ratification mechanism claims
+        run: ./scripts-run src/scripts/check_platform_anchor
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
