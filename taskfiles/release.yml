@@ -1,6 +1,41 @@
 version: '3'
 
 tasks:
+  # Prove the release's own first read works, before anything else runs.
+  #
+  # `task release` step 2 of 10 is `task release-prepare`, whose `sync` step
+  # reads `agents/settings/.agent-settings.yml`. That file is gitignored local
+  # state: no CI job sees it, no fixture covers it, and a file the reader
+  # chokes on is discovered only by running a release — after the version bump,
+  # with package.json, the manifests and the CHANGELOG already rewritten.
+  # 15.0.0 hit exactly that on 47 duplicate mapping keys.
+  #
+  # `--dry-run` so the probe cannot write (the release asserts a clean tree
+  # moments later, and a probe that dirtied it would fail the check it is
+  # standing in front of). Drift is not a failure — the sync exits 0 whether or
+  # not the file is in step with the template, so this fires only on a file
+  # that cannot be READ. A gate that also fired on ordinary drift would fire on
+  # nearly every release and be switched off inside a month.
+  #
+  # stdout to /dev/null because a dry-run prints the drift diff; the diagnosis
+  # goes to stderr and survives.
+  #
+  # A Taskfile step rather than a guard inside release.ts: that file is 1826
+  # lines against a 1500-line shrink-only budget, so wiring three lines into
+  # `main()` would need a governance exception for a check that costs nothing
+  # here and runs at the same moment.
+  # The same existence test `sync-agent-settings` uses, for the same reason: on
+  # a fresh clone with no settings file the release skips the sync, so a probe
+  # that blocked there would refuse a release the sync would not have run at
+  # all. Both locations, because the script resolves canonical-first.
+  _settings-readable:
+    internal: true
+    silent: true
+    cmd: |
+      if [ -f agents/settings/.agent-settings.yml ] || [ -f .agent-settings.yml ]; then
+        ./scripts-run src/scripts/sync_agent_settings --dry-run --quiet > /dev/null
+      fi
+
   release:
     desc: |
       Release a new version end-to-end with auto-detected bump (the
@@ -18,7 +53,9 @@ tasks:
       task release -- --dry-run        # preview only
       task release -- --yes --no-wait  # non-interactive
     interactive: true
-    cmd: ./scripts-run src/scripts/release {{.CLI_ARGS}}
+    cmds:
+      - task: _settings-readable
+      - ./scripts-run src/scripts/release {{.CLI_ARGS}}
 
   release:verify:
     desc: |
@@ -33,7 +70,12 @@ tasks:
       task release:verify
       task release:verify -- --version 14.17.0
       task release:verify -- --list
-    cmd: ./scripts-run src/scripts/release_verify {{.CLI_ARGS}}
+    cmds:
+      # This is the documented "run it before `task release`" command, so the
+      # local-state probe belongs here too — otherwise the pre-check reports
+      # green for a release that dies at step 2.
+      - task: _settings-readable
+      - ./scripts-run src/scripts/release_verify {{.CLI_ARGS}}
 
   release:drill:
     desc: |
