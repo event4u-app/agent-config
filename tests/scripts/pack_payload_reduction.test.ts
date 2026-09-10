@@ -56,23 +56,49 @@ describe('the exclusions the harness proved safe are in files[]', () => {
     });
 });
 
-describe('the cap ratcheted DOWN', () => {
-    it('max is below the 9.2 it was raised to', () => {
-        expect(budget().budgets.packed_size_mb.max).toBeLessThan(9.2);
-    });
-
-    it('headroom over last_measured is real but is not overstated as 8%', () => {
+/**
+ * SUPERSEDED IN ITS LITERALS, KEPT IN ITS DISCIPLINE — ADR-273, 2026-09-10.
+ *
+ * This block used to pin `max < 9.2`, a headroom band of 6-8 %, and the literal
+ * strings `7.4 %` / `HEADROOM IS 7.4 %, NOT 8 %`. Those assert one historical
+ * moment — the 9.2 -> 9.1 reduction — rather than an invariant, and ADR-273
+ * reset the cap to 11.5 on a reconstructed clean baseline after establishing
+ * that the comparator every earlier figure was set against carried 0.4058 MB of
+ * stale build output. A test that pins a superseded moment fails on the change
+ * that supersedes it and says nothing about whether that change was sound.
+ *
+ * What is asserted instead is the part that does NOT expire: the cap is
+ * DERIVED, never chosen. This file's own documented formula is
+ * `max = last_measured x 1.095`, and every recorded reset in its history obeys
+ * it. Pinning the derivation catches the thing the old literals were really
+ * guarding — a cap nudged up to clear a failing check — at every future reset
+ * rather than only at this one.
+ */
+describe('the cap is derived from a measurement, never chosen', () => {
+    it('max never exceeds last_measured x 1.095', () => {
         const { max, last_measured: measured } = budget().budgets.packed_size_mb;
-        const headroom = (max - measured) / measured;
-        // Both council seats required the exact figure rather than a rounded 8%.
-        expect(headroom).toBeGreaterThan(0.06);
-        expect(headroom).toBeLessThan(0.08);
+        expect(max).toBeLessThanOrEqual(measured * 1.095);
     });
 
-    it('the note states the headroom exactly, not as ~8%', () => {
+    it('max leaves real headroom — a cap at or under the measurement reds on day one', () => {
+        const { max, last_measured: measured } = budget().budgets.packed_size_mb;
+        expect(max).toBeGreaterThan(measured);
+    });
+
+    it('the note states the headroom exactly, never rounded', () => {
         const raw = fs.readFileSync(path.join('src', 'config', 'pack-size-budget.json'), 'utf8');
-        expect(raw).toContain('7.4 %');
-        expect(raw).toContain('HEADROOM IS 7.4 %, NOT 8 %');
+        // The exact figure, and the sentence that says why a rounded one is not
+        // good enough — a previous entry in this file had to be corrected for it.
+        expect(raw).toContain('HEADROOM IS 9.47 %, NOT 9.5 %');
+    });
+
+    it('every cap value in the file is reachable from a dated baseline note', () => {
+        const raw = fs.readFileSync(path.join('src', 'config', 'pack-size-budget.json'), 'utf8');
+        const notes = raw.match(/"baseline_note_\d{4}_\d{2}_\d{2}"/g) ?? [];
+        // Four resets are recorded: 2026-08-20, 08-23, 08-24 and 09-10. A raise
+        // landing without one is the move this assertion exists to catch.
+        expect(notes.length).toBeGreaterThanOrEqual(4);
+        expect(raw).toContain('"baseline_note_2026_09_10"');
     });
 });
 
