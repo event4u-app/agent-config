@@ -35,6 +35,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { asOf } from './_lib/as_of.js';
 import { GateLedger } from './_lib/gate_ledger.js';
 import {
     checkAnchorIdentity,
@@ -164,7 +165,7 @@ export function evaluateGate(
     policyText: string | null,
     source: AnchorSource,
     repo: string,
-    now: Date = new Date(),
+    now: Date = asOf(),
 ): AnchorGateResult {
     const lines: string[] = [];
     const scanned = files.length;
