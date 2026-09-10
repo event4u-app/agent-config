@@ -121,7 +121,9 @@ describe('the cap is derived from a measurement, never chosen', () => {
         // is that the NEWEST note stops mentioning the number in force.
         expect(dates.length).toBeGreaterThan(0);
         const newest = dates.sort().at(-1) as string;
-        const note = (JSON.parse(raw) as Record<string, never>)['budgets']['packed_size_mb'][newest] as unknown;
+        const cap = (JSON.parse(raw) as { budgets: { packed_size_mb: Record<string, unknown> } })
+            .budgets.packed_size_mb;
+        const note = cap[newest];
         expect(typeof note, `${newest} must live under budgets.packed_size_mb`).toBe('string');
         expect(note as string).toContain(String(max));
     });
