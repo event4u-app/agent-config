@@ -51,7 +51,7 @@ tooling pointed at it reads "unprotected" for a protected branch.
 | Review-thread resolution | required |
 | Stale reviews dismissed on push | yes |
 | Allowed merge methods | merge · squash · rebase |
-| Branch must be up to date | yes (`strict_required_status_checks_policy: true`) |
+| Branch must be up to date | **no** (`strict_required_status_checks_policy: false`) — this row read `true` until 2026-09-10, when it was checked against the live ruleset while reasoning about a different question. The table's own "Read it" row is the authority; a hand-written value drifts silently because nothing compares them. |
 | **Required status checks** | **exactly one — `Sync + Generate Tools Consistency`** |
 | Bypass | repository-admin role, `always` |
 
