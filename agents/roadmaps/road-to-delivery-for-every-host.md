@@ -93,12 +93,24 @@ Measured at `0918def55` with `./scripts-run src/scripts/check_preamble_payload_b
 | **measured total** | **138,200 tok** |
 
 against `baseline_tokens` 102,520 (`src/config/preamble-payload-budget.json:23`),
-`design_ceiling` 107,646 (`:80`), and `grace_ceiling` 138,273 measured 2026-09-02 and
-expiring 2026-11-10 (`:81-83`). The gate exits 1 locally against the design ceiling and
+`design_ceiling` 107,646 (`:80`), and `grace_ceiling` 138,273 measured 2026-09-02
+(`:81-83`). The gate exits 1 locally against the design ceiling and
 passes CI only because the workflow reads `--ceiling` out of `ci_delivery.grace_ceiling`.
-**73 tokens of headroom, and a hard date.** After 2026-11-10 the design ceiling applies and
-every PR inherits the overage — the gate already prints "this diff did not cause the
-overage, it inherited it".
+**73 tokens of headroom, and a hard date.**
+
+**CORRECTED 2026-09-10 — there was no hard date, and this paragraph asserted one.** It read
+"expiring 2026-11-10" and "After 2026-11-10 the design ceiling applies and every PR inherits
+the overage". Nothing implemented that. `grace_end_date` was read in exactly two places — an
+`echo` in `standing-payload-delta.yml` and the return type of a test helper — and
+`check_preamble_payload_budget.ts` carried no date logic at all, so on 2026-11-10 the workflow
+would have passed `--ceiling 138490` exactly as before and every PR would have continued to
+pass. The key is now deleted rather than moved (`ADR-273`); the ceiling is unchanged at
+138,490, enforced, and undated. Reproduction:
+`agents/evidence/analysis/grace-ceiling-expiry-is-unenforced-2026-09-10.md`. Everything else
+in this section stands, including the headroom: the measured total re-read at `7bf325f3b` is
+138,413 against 138,490, and the gate still prints "this diff did not cause the overage, it
+inherited it". What changed is that the overage is now honestly undated instead of falsely
+deadlined.
 
 The rule corpus, re-derived: 119 files in `dist/agent-src/rules`, of which **102 carry
 `type: "auto"` (quoted), 9 `always`, 5 `manual`, and 3 carry bare unquoted `auto`**.
@@ -842,6 +854,75 @@ Defects this roadmap repairs:
       RAISE a baseline under language calling it a reduction. Both seats said so
       independently.
 
+      **UPDATE 2026-09-10 — a premise every prior round decided on is FALSE, and checking it
+      is the finding of this run. The box stays `[ ]`, and now for a different reason than
+      before.**
+      Every escalation above rests on one sentence: *"On that date the gate compares ~138,474
+      against `design_ceiling` 107,646 and reds every pull request."* **Nothing in the tree
+      implements it.** Reproduced at `7bf325f3b`: the only consumers of
+      `ci_delivery.grace_end_date` were an `echo` at
+      `.github/workflows/standing-payload-delta.yml:130` and the return-type annotation of a
+      test helper at `tests/scripts/check_preamble_payload_budget.test.ts:165,168`, which
+      asserted nothing about it; and `grep -n "new Date\|Date.now\|toISOString\|expire\|expiry"
+      src/scripts/check_preamble_payload_budget.ts` returns **no matches**. `taskfiles/ci-fast.yml`
+      never read the date at all. On 2026-11-10 the workflow would have read `grace_ceiling`
+      138,490, passed it as `--ceiling`, and every PR would have PASSED. The design ceiling
+      becomes operative when a human edits the config, and the date was the note reminding
+      them to. Full reproduction:
+      `agents/evidence/analysis/grace-ceiling-expiry-is-unenforced-2026-09-10.md`.
+      **The correction was put back to the council, which withdrew its own prior verdict.**
+      A round on 2026-09-10 had decided a one-time extension to 2026-12-15; re-asked on the
+      corrected facts, both seats abandoned it. openai, verbatim: *"The corrected premise
+      conclusively defeats P4: changing 2026-11-10 to 2026-12-15 neither extends nor relaxes
+      any executable rule. It merely changes misleading documentation."* anthropic: extending
+      it *"perpetuates theater"*. Re-asking was not verdict shopping — the seats had been
+      given a false premise by this run, out of this file's own text, and the removal of a
+      decisive argument is a different question rather than the same one asked twice.
+      **VERDICT (AI council 2/2, 2026-09-10, under the written owner delegation): option P3.**
+      Delete the unenforced `grace_end_date`; keep `grace_ceiling` at 138,490, shrink-only and
+      undated; correct every prose site that claimed the expiry; **build no expiry.** The last
+      clause was forbidden rather than merely declined — openai: *"Do not implement hard or
+      warning-only expiry under the guise of 'adding a test'"*; anthropic filed it under
+      `non-destructive-by-default`, because arming a repo-wide stop on a date where
+      `status_2026_08_24.committed_reduction_mechanism` is still the string `"NONE"` creates a
+      cliff nobody can clear. This is also why the previous round's instruction to *"add an
+      expiry-behaviour test"* was NOT executed: there is no expiry behaviour, and writing that
+      test means first building the cliff.
+      **What landed, with provenance at this commit.** `grace_end_date` deleted from
+      `src/config/preamble-payload-budget.json`; `why_a_grace_ceiling` there now records that
+      the expiry never existed instead of asserting it; the date read and the `(expires $end)`
+      message removed from `.github/workflows/standing-payload-delta.yml`; the stale
+      `"138,212, expires 2026-11-10"` clause corrected in `taskfiles/ci-fast.yml` (both halves
+      were wrong — the figure was two raises stale as well); the dead field dropped from the
+      test helper's type and a **regression pin** added asserting the key is absent AND that
+      neither the workflow nor the taskfile reads it. The pin was proven sensitive rather than
+      assumed: reintroducing the key with a `2026-12-15` value and restoring the workflow read
+      turned both assertions red, and the exact reverse edit restored 37/37 green.
+      `ADR-273` records the decision, the two rejected alternatives and the honest limits.
+      **What did NOT land, and why the box stays `[ ]`.** `grace_ceiling` is still 138,490, so
+      `grep -c grace_ceiling src/config/preamble-payload-budget.json` does not return 0 and
+      this step's own exit condition is unmet. Both seats said so explicitly and neither left
+      it to inference — openai: *"Step 4.4 must remain open. 'Grace ceiling gone' is false.
+      The roadmap must not be closed as complete."* anthropic reached the same place by its
+      fallback branch. The option that WOULD have satisfied the grep — replacing the stored
+      ceiling with `max(design_ceiling, measured-at-base-ref)` — was rejected **as unreviewed
+      rather than on the merits**: openai, *"Its behavior across merge queues, rebases, changed
+      default branches, shallow history, and measurement failure is unresolved. Those are
+      policy semantics, not implementation details."* anthropic would have attempted it behind
+      a specification of exactly those cases with every failure erroring loudly, which the
+      gate's existing base-ref reader (`src/scripts/check_preamble_payload_budget.ts:399-450`)
+      does not do — it returns `null` on every failure, correct for a diagnostic and
+      unacceptable for a ceiling. The converged floor is therefore the narrower option, and
+      the wider one is left as a separately reviewable change.
+      **Not attempted, deliberately, and unchanged from the earlier note:** raising
+      `design_ceiling` is K4 and shortening rule prose is K5. Added to that list by this
+      round: closing this roadmap through a stub carrier, which openai forbade in terms —
+      *"Do not close the roadmap through a stub, carrier, rewritten acceptance criterion, or
+      cosmetic grep compliance."* anthropic's suggestion to mark this step `[-]` was also not
+      taken: in this repository `[-]` is CANCELLED and owner-reserved, and `[~]` requires a
+      `carried-to=` receiver, which is the stub carrier the other seat forbade. `[ ]` with the
+      question quoted in the PR body is what K9 prescribes, so `[ ]` is what it keeps.
+
 - [x] **4.5 Rollback fixture.** flip → `eager-all` → `diff -r` against a never-flipped tree
       is empty; documented in `docs/contracts/rule-router.md`.
       verify: fixture green.
@@ -971,17 +1052,26 @@ Defects this roadmap repairs:
   routing an owner-reserved question to a council.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-09 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-09-10 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |---|---|---|---|---|---|
 | 1 | A rule stops being delivered and nobody notices | product | The whole flip rests on trigger-match delivery. A rule whose trigger never fires becomes invisible while the file still exists on disk, so every completeness check that counts files passes. | Phase 2 makes the recall floor a precondition: 102/102 reachable with 0 false fires on ≥ 202 near-misses, plus 2.2's eager fallback for a trigger-less `auto` rule and 2.3's MUST-LOAD floor for every `always` rule. **Re-reviewed 2026-09-08: mitigated, and the mitigation's own figure was WRONG.** Phase 2 is complete and the sibling roadmap's 3.1 measured description-only reachability at 179 → 284 of 309 auto-rule positives (57.9 % → 91.9 %). The `102/102` above is not the population: **8 of 105 auto rules carry no keyword or phrase trigger at all**, so the real denominator is 97. The floor held; the number it was written against did not, and it is corrected here rather than left to read as met. **Re-reviewed 2026-09-09: unchanged.** Nothing in the 2026-09-09 change touches trigger matching, the router, or any rule body — it adds a second reading to one gate and publishes a table. The recall floor and its corrected denominator stand as recorded. | Phase 2: Recall floor for Claude before the flip |
 | 2 | A non-Claude host silently loses its rule bodies | product | D1 is live today: the stub write is host-independent, so flipping the mode before Phase 1 lands reduces Cursor and Cline to pointers on hosts where hook delivery is unmeasured. | Phase 1.4 is a CI gate asserting byte-identity to `eager-all` for every host outside `hosts`, and K3 forbids thinning one; Phase 4 may not start before it is green | Phase 1: Host-scoped delivery (repairs D1) |
-| 3 | The 2026-11-10 date passes with the flip unlanded | implementation | 73 tokens of headroom at this pin. On expiry the design ceiling applies and every PR inherits a red gate, which converts one owner decision into a repo-wide stop. | ~~Phases are ordered so 4.2 flips this repo before 4.3 touches the package default; 4.4 lowers the baseline and deletes the grace block in the same commit.~~ **REFUTED 2026-09-08, and this is the finding of the run rather than a status update.** The mitigation assumed the flip moves the surface the gate measures. It does not: `check_preamble_payload_budget` reads the projection SOURCE by default, which the delivery flip never touches — measured 138,200 before the flip and 138,200 after. **Risk 3 was UNMITIGATED and is now HALF-MITIGATED — re-reviewed 2026-09-09.** The surface decision was taken: an AI council (2/2, converged) split the two quantities and gave the gate a `--host` reading while leaving the ratchet on the source (`ADR-270`). That closed 7.2, which is now ticked. **It did NOT close 4.4, and the council said so explicitly** — leaving the blocking ratchet source-based means unoptimized hosts still red on the deadline, which is this exact risk. **So the residual is unchanged in substance: on 2026-11-10 the gate compares ~138,474 against `design_ceiling` 107,646 and reds every pull request, whether or not `grace_ceiling` is deleted.** Doing nothing is deferral, not safety. What is different is that the remaining decision is now scoped, costed and owner-addressed rather than unowned: two mechanisms are quoted at step 4.4 (a dual-track retirement with the date held hard, or a one-time owner-approved date extension tied to a named migration), and both seats reserved the date dimension to the owner because moving it relaxes ADR-264 in the time dimension even with the numeric ceiling unchanged. A third finding landed with the review: 4.4's own instruction to set `baseline_tokens` to the measured post-flip total would RAISE the baseline by ~35,950 under language calling it a reduction, so the step could not have been executed as written even with the surface question settled. | Phase 4: Flip for Claude Code (E1) |
+| 3 | The standing-payload overage is carried indefinitely with no forcing function | implementation | 73 tokens of headroom at this pin, against a design ceiling 30,767 tokens below the measurement and no committed mechanism to close it. **The risk was MIS-STATED until 2026-09-10** — it read "The 2026-11-10 date passes with the flip unlanded / on expiry the design ceiling applies and every PR inherits a red gate", and no expiry existed to pass. The register is corrected rather than re-scored: the exposure is real, it is just not dated. | ~~Phases are ordered so 4.2 flips this repo before 4.3 touches the package default; 4.4 lowers the baseline and deletes the grace block in the same commit.~~ **REFUTED 2026-09-08, and this is the finding of the run rather than a status update.** The mitigation assumed the flip moves the surface the gate measures. It does not: `check_preamble_payload_budget` reads the projection SOURCE by default, which the delivery flip never touches — measured 138,200 before the flip and 138,200 after. **Risk 3 was UNMITIGATED and is now HALF-MITIGATED — re-reviewed 2026-09-09.** The surface decision was taken: an AI council (2/2, converged) split the two quantities and gave the gate a `--host` reading while leaving the ratchet on the source (`ADR-270`). That closed 7.2, which is now ticked. **It did NOT close 4.4, and the council said so explicitly** — leaving the blocking ratchet source-based means unoptimized hosts still red on the deadline, which is this exact risk. **So the residual is unchanged in substance: on 2026-11-10 the gate compares ~138,474 against `design_ceiling` 107,646 and reds every pull request, whether or not `grace_ceiling` is deleted.** Doing nothing is deferral, not safety. What is different is that the remaining decision is now scoped, costed and owner-addressed rather than unowned: two mechanisms are quoted at step 4.4 (a dual-track retirement with the date held hard, or a one-time owner-approved date extension tied to a named migration), and both seats reserved the date dimension to the owner because moving it relaxes ADR-264 in the time dimension even with the numeric ceiling unchanged. A third finding landed with the review: 4.4's own instruction to set `baseline_tokens` to the measured post-flip total would RAISE the baseline by ~35,950 under language calling it a reduction, so the step could not have been executed as written even with the surface question settled. **Re-reviewed 2026-09-10, and the fourth finding is the largest: the deadline this row was built around does not exist.** `grace_end_date` was enforced by nothing — two reads, an `echo` and a test-helper type, and no date logic in `check_preamble_payload_budget.ts` — so the "repo-wide stop" this row predicted for 2026-11-10 could not have occurred. The key is deleted (`ADR-273`), the ceiling stays 138,490 and enforced, and the residual is restated honestly: **an undated, shrink-only tolerance 30,767 tokens above the design ceiling, with `committed_reduction_mechanism` still recorded verbatim as `NONE`.** That is a WORSE standing position than the row claimed and a BETTER description of it: what was lost on 2026-09-10 is a forcing function that was fictional, and what was gained is that nobody plans against it again. Mitigation now: the shrink-only ratchet, which is real and enforced per PR (`assertBoundsDidNotRise`), plus `target_schedule.on_miss`, which requires the 2026-11-10 milestone miss to be PUBLISHED with its measured number — milestones are untouched here and that first miss will land on schedule. Not mitigated, and stated rather than implied: nothing converges the corpus toward 107,646. | Phase 4: Flip for Claude Code (E1) |
 | 4 | The activation charge reads as config weakening and stalls | implementation | The charge is literally a slot-sum raise plus a baseline move, and both shapes are what a reviewer or a guard is trained to refuse. | E2 names the file, line and target value, and cites the budget row's own reason text assigning the move to this run; `block_config_weakening.ts:96-98` classifies the file `advisory`, so its output is a warn to document, never a block. **Re-reviewed 2026-09-09: unchanged, and worth stating why the new work did not add to this risk.** The host reading is additive and moves no ceiling, no baseline and no slot sum — `preamble-payload-budget.json` is untouched by this change, so there is no second config-weakening shape for a reviewer to weigh | Phase 3: Pay the activation charge (E2) |
 | 5 | Post-compaction re-delivery is assumed rather than tested | implementation | `pre_compact` binding exists, but nothing in the tree asserts a body survives a compaction boundary — and a rule lost there is lost for the rest of the session. | 2.4 makes it a fixture with a stated contract in the hook header, not a property inferred from the binding | Phase 2: Recall floor for Claude before the flip |
 
 ## Acceptance Criteria
+
+**One misplaced note, named rather than deleted (2026-09-10).** The indented paragraph
+immediately below carries no checkbox and belongs to no criterion. It was written into this
+section by `b02ba958f` while step **7.3** was still `- [ ]`, and it is 7.3's status note — a
+reader arriving here otherwise sees what looks like an acceptance criterion whose checkbox
+vanished. **It is superseded:** 7.3 is now `[x]` and both `later/` roadmaps are archived under
+E7, so the note's own conclusion ("left for a separate change") has been discharged exactly as
+it proposed. Retained verbatim as the record of why the work was split, not rewritten to match
+the outcome.
 
       NOT DONE 2026-09-07, and deliberately not attempted. E7 archives two `later/` roadmaps
       "once Phase 7.1 flips the claim", which has now happened, so the precondition is met
@@ -1074,6 +1164,31 @@ Defects this roadmap repairs:
       still red on the deadline. Both seats reserved the date dimension to the owner. Two
       mechanisms are on the table and quoted at 4.4; neither may execute without an owner
       decision, and doing nothing reds every pull request on 2026-11-10 regardless.
+
+      **UPDATE 2026-09-10 — STILL two of three, and the last sentence above is now known to
+      be FALSE. The box stays `[ ]`.**
+      "Doing nothing reds every pull request on 2026-11-10 regardless" was never true.
+      `grace_end_date` had no enforcement anywhere in the tree — two reads, one an `echo` and
+      one a test-helper type, and no date logic in the gate — so nothing would have reded on
+      that date. Reproduction:
+      `agents/evidence/analysis/grace-ceiling-expiry-is-unenforced-2026-09-10.md`; decision:
+      `ADR-273`; the whole record is at step 4.4.
+      Limb by limb at this commit: **rollback fixture green** (unchanged, 4.5). **All quality
+      gates green** in this change — `check_preamble_payload_budget` (138,413 against the
+      138,490 grace ceiling), `lint_roadmap_blockers`, `lint_roadmap_complexity`,
+      `lint_roadmap_ci_steps`, `check_roadmap_trackable`, `check_no_roadmap_refs`,
+      `lint_empty_roadmaps`, `lint_roadmap_later_disposition`, `check_adr_frontmatter`,
+      `check_new_adr_evidence`, `check_estate_count`, `task preflight`, and 37 tests in
+      `tests/scripts/check_preamble_payload_budget.test.ts` including two new regression pins
+      proven red under the reintroduction they guard. **The grace ceiling is still NOT gone**
+      — 138,490, enforced, now undated instead of falsely deadlined. That is a real
+      improvement in the file's honesty and it is not this limb: the limb says *gone*.
+      The council was asked directly whether this criterion may be ticked and said no, in
+      terms: *"'Grace ceiling gone' is false. The roadmap must not be closed as complete."*
+      What would close it is written into `ADR-273`'s `review_trigger` and quoted at 4.4 — a
+      committed reduction mechanism for the ~30,800-token gap, or a separately reviewed
+      specification of the base-ref-derived bound. Neither is available to an autonomous lane,
+      and neither may be faked by deleting a key.
 
 ## Notes
 
