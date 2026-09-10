@@ -40,6 +40,7 @@ import {
     checkAnchorIdentity,
     evaluateAnchor,
     readAnchorPolicy,
+    readWaivers,
     type AnchorReading,
     type RulesetDetail,
 } from './_lib/platform_anchor.js';
@@ -163,6 +164,7 @@ export function evaluateGate(
     policyText: string | null,
     source: AnchorSource,
     repo: string,
+    now: Date = new Date(),
 ): AnchorGateResult {
     const lines: string[] = [];
     const scanned = files.length;
@@ -226,17 +228,39 @@ export function evaluateGate(
     // Short-circuited deliberately: when the ruleset read already failed there
     // is nothing the default-branch call can change, and evaluating both as
     // arguments spent an API round-trip on every failure path.
+    // A malformed waiver is a failure of its own, reported before the platform
+    // reading so a reader sees WHY a dimension they thought was waived reds.
+    const waivers = readWaivers(policyText, now);
+    for (const f of waivers.findings) {
+        lines.push(`  · [${f.code}] ${f.message}`);
+    }
+
     const rulesets = source.rulesets(repo);
     const reading: AnchorReading = evaluateAnchor(
         policy,
         rulesets,
         rulesets === null ? null : source.defaultBranch(repo),
+        waivers.honoured,
     );
     for (const e of reading.evidence) {
         lines.push(`   ${e}`);
     }
     if (reading.status === 'compliant') {
         lines.push(`✅  platform anchor COMPLIANT for ${repo}`);
+        close(true, '');
+        return { exitCode: 0, lines, scanned };
+    }
+    if (reading.status === 'compliant-with-accepted-risk') {
+        // Exit 0, and the wording carries the whole difference. Both council
+        // seats required that the assertion not imply merge-result validation:
+        // a required context certifies the commit it ran on, never that the
+        // change composes with the current base.
+        lines.push(
+            `✅  platform anchor PASS_WITH_ACCEPTED_RISK for ${repo} — every hard dimension is ` +
+                'present; the accepted risks above are recorded waivers with an expiry, not ' +
+                'silent passes. Current-base compatibility is NOT guaranteed while ' +
+                '`strict_required_status_checks` is waived.',
+        );
         close(true, '');
         return { exitCode: 0, lines, scanned };
     }

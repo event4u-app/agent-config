@@ -430,14 +430,20 @@ item. Phases 1-6 may run once 0.2 is chosen.
   any red. **What closes limb 2:** a PAT in a repository secret carrying
   `administration: read`, then the workflow step. That is a human action. Until then the gate
   runs in `taskfiles/ci-fast.yml` — a real pre-push control, and not a CI one, which is the
-  honest description. **Limb 1, verified rather than asserted:** the owner changed the three
+  honest description. **Limb 1 — SUPERSEDED READING of 2026-09-10 12:51, kept because it is
+  what was true for two and a half hours and a blind review caught it still standing as
+  present-tense fact.** Every part of it is now false: the two approval settings were reverted
+  by the owner at 15:18 and then ruled out of the trust model, and the gate does not report
+  `COMPLIANT` — it reports `PASS_WITH_ACCEPTED_RISK`, with `strict_required_status_checks`
+  covered by a dated waiver. The current verdict is in `What to do` below; this paragraph is
+  history, not status. Original text: the owner changed the three
   ruleset settings and
   `./scripts-run src/scripts/check_platform_anchor --files src/rules/commit-policy.md`
   exits **0**, reporting `platform anchor COMPLIANT for event4u-app/agent-config` with
   `approving reviews required: 1 (policy floor 1)`. Read back from the forge after the write:
   ruleset `17749383` now carries `required_approving_review_count: 1`,
   `require_last_push_approval: true`, `bypass_actors: []`, and `current_user_can_bypass` has
-  gone from `always` to **`never`** — all four rules (`deletion`, `pull_request`,
+  gone from `always` to **`never`** — all four rules (`deletion`, pull-request,
   `required_status_checks`, `non_fast_forward`) preserved, enforcement still `active`, the
   required context unchanged. **Limb 2, partially done:** `taskfiles/ci-fast.yml` carries the
   gate in the `preflight` list and as its own `check-platform-anchor` target, and
@@ -479,51 +485,56 @@ item. Phases 1-6 may run once 0.2 is chosen.
   than reading one by id, which openai made a condition: assuming ruleset `17749383` or its
   name would break the first time an administrator splits it.
 
-  **What the human must change** — three items, measured live, each reproducible with
-  `gh api repos/event4u-app/agent-config/rulesets/17749383`:
-  1. `required_approving_review_count` is **0**. Set it to at least 1. Without it a
-     ratification artifact lands reviewed by nobody the repository insisted on.
-  2. `require_last_push_approval` is **false**. Set it true, so an approval cannot predate the
-     final push and the reviewed diff is the merged diff.
-  3. `bypass_actors` carries `{actor_type: RepositoryRole, actor_id: 5, bypass_mode: always}`,
-     and the acting account reports `current_user_can_bypass: always`. Remove or restrict it,
-     or answer the owner question in `threat_model_note` and record administrators as a
-     deliberate escape hatch with an audited emergency procedure. What may not stand is the
-     contract claiming protection against unilateral action while this remains.
+  **SUPERSEDED, 2026-09-10 — the three settings this field used to demand are no longer the
+  action, and a blind completion review caught that they were still standing here.** The field
+  said: set `required_approving_review_count` to at least 1, set `require_last_push_approval`
+  true, and remove the unconditional bypass. Item 3 was done and held. Items 1 and 2 were done,
+  reverted by the owner, and then **ruled out of the trust model entirely** — the owner is the
+  one active maintainer and a mandatory approval is a stop rather than a control, so those two
+  dimensions left the enforced set and the floor rather than becoming exemptions. Instructing a
+  later reader to restore them would mutate the live ruleset against a recorded ruling, which
+  the ratification artifact for that change explicitly says its authority does not cover.
 
-  Run `./scripts-run src/scripts/check_platform_anchor --files src/rules/commit-policy.md` to
-  see the current verdict. On 2026-09-10 it exits 1 and names exactly those three.
-- **Recommendation:** change the three settings, then re-run the gate. The build half is done
-  and the recommendation that used to sit here — *"build it, scoped to the kernel/governance
-  surface only"* — is discharged. Both round-1 reviewers had converged on this being the real
-  anchor, one writing that without it the gate *"enforces the format of the Iron Law, not the
-  Iron Law itself"*, and the counter-argument they weighed was that GitHub already refuses the
-  merge when protection is configured. **Measurement settles that counter-argument against
-  itself:** protection is not configured in the sense the argument assumed — zero approvals,
-  no last-push approval, an unconditional admin bypass — so the gate is not re-asserting a
-  control the platform holds. It is reporting that the control is absent.
-- **If you do nothing:** the artifact's independence claim rests on the base-revision gate
-  alone — which is real and does close the self-judging path — with nothing mechanical behind
-  the human-review limb. A reviewer who credits the artifact's strings is trusting text the
-  proposing party wrote. That is now stated in the contract rather than implied:
-  `docs/contracts/ratification-artifact.md` § The platform anchor as measured carries the
-  three `gh api` readings and the sentence that the mechanism supplies process evidence rather
-  than a platform-enforced guarantee. The gate also stays RED on every kernel, governance and
-  anchor diff for as long as this is untouched, which is the forcing function both council
-  seats intended — anthropic: *"a verification gate that correctly detects a missing control
-  is doing its job."*
-- **Resolved when:** BOTH of these hold, and the second was added 2026-09-10 after a blind
-  completion review pointed out that the first alone lets this blocker close with the gate
-  still inert:
+  **THE ONE ACTION LEFT** is neither a setting nor a diff: a **PAT in a repository secret
+  carrying `administration: read`**, so the gate can run in a workflow. Everything else is
+  done. The rulesets endpoint needs that scope and a workflow `GITHUB_TOKEN` cannot be granted
+  it — actionlint refused `administration: read` as an *"unknown permission scope"* and listed
+  the sixteen that exist, none of which grants it. Until the secret exists the gate runs in
+  `taskfiles/ci-fast.yml` (a real pre-push control, not a CI one), is declared under
+  `local_only:` with the class `token-scope-unavailable`, and carries a reachability exemption
+  naming this exact promotion condition.
+
+  Current verdict, reproducible:
+  `./scripts-run src/scripts/check_platform_anchor --files src/rules/commit-policy.md` exits
+  **0** with `PASS_WITH_ACCEPTED_RISK` — every hard dimension present, and
+  `strict_required_status_checks` covered by waiver `arr-2026-09-10-strict-status-checks`,
+  which expires 2026-12-09.
+- **Recommendation:** create the PAT secret, then wire the workflow step. Nothing else is
+  outstanding, and in particular do **not** re-add the approval dimensions — that is the
+  instruction this entry used to carry and it is now contrary to a recorded owner ruling. The
+  recommendation before that one — *"build it, scoped to the kernel/governance surface only"* —
+  was discharged when the gate landed.
+- **If you do nothing:** the gate keeps running pre-push and never in CI, so a governance diff
+  pushed without `task preflight` reaches `main` with the anchor unchecked. That is the whole
+  residual, and it is smaller than this field used to describe: the anchor itself now passes,
+  the accepted risk is recorded with an expiry, and
+  `docs/contracts/ratification-artifact.md` states what a green anchor is and is not evidence
+  of — no claim of independent approval, separation of duties, or protection against
+  unilateral administrator action survives in it.
+- **Resolved when:** BOTH of these hold. The second was added 2026-09-10 after a blind review
+  pointed out that the first alone lets this blocker close with the gate inert, and it is
+  **re-scoped in the same breath rather than left unmeetable**, because its original wording
+  required a workflow step the platform cannot authenticate:
   1. `./scripts-run src/scripts/check_platform_anchor --files src/rules/commit-policy.md`
-     exits 0 against the live repository — which requires the gate (landed 2026-09-10) and the
-     three settings changes named above.
-  2. `grep -c check_platform_anchor taskfiles/ci-fast.yml` returns at least 1 AND the gate
-     appears in a `.github/workflows/` step, so the check runs on every pull request rather
-     than only when someone remembers to invoke it. The unwired landing is deliberate and
-     argued in 5.2, but "wire it afterwards" was prose in a step and prose in a step closes
-     nothing — the reviewer's phrasing: *"nothing in the closing condition forces the wiring
-     to ever follow."*
+     exits 0 against the live repository. **Met 2026-09-10** —
+     `PASS_WITH_ACCEPTED_RISK`, with the one waived dimension named and dated.
+  2. `grep -c check_platform_anchor taskfiles/ci-fast.yml` returns at least 1 — **met** — AND
+     the gate appears in a `.github/workflows/` step, which needs the PAT secret above.
+     Until then the honest substitute is in place and gate-verified rather than asserted: the
+     `local_only:` declaration and the reachability exemption both name the promotion
+     condition, and `check_ci_local_parity` and `check_gate_reachability --gate` exit 0 over
+     them. A reader can tell "not wired" from "wired and quietly skipping", which is what the
+     reviewer's objection was actually about.
 
   The second limb of the original clause, *"or a recorded owner decision states that the platform's own enforcement
   is the anchor and the gate need not re-assert it"*, is **withdrawn**: the council rejected it

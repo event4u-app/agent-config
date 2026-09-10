@@ -9,9 +9,12 @@ import {
     effectiveProtection,
     enforceFloor,
     evaluateAnchor,
+    NEVER_WAIVABLE,
     NON_NEGOTIABLE_FLOOR,
     readAnchorPolicy,
+    readWaivers,
     refPatternMatches,
+    SUPPORTED_ANCHOR_SCHEMA,
     type AnchorPolicy,
     type RulesetDetail,
 } from '../../src/scripts/_lib/platform_anchor.js';
@@ -213,12 +216,12 @@ describe('the floor covers the selectors, not only the thresholds', () => {
         expect(enforceFloor(policy({ covers_default_branch: false }))).toHaveLength(1);
     });
 
-    it('refuses each remaining weakening independently', () => {
-        // `required_review_thread_resolution` left the FLOOR with the approval
-        // dimensions — approval-adjacent, and near-vacuous once no review is
-        // required — but stays in the expectation, so the floor must not
-        // reject a policy that omits it while the checks still assert it.
-        expect(enforceFloor(policy({ required_review_thread_resolution: false }))).toEqual([]);
+    it('refuses a weakening of thread-resolution, strict checks and deletion', () => {
+        // `required_review_thread_resolution` is back in the floor. It briefly
+        // was not, on the implementer's own judgement, which a blind review
+        // caught: the change's record says only the owner may authorize a floor
+        // reduction, and the ruling names two dimensions and not this one.
+        expect(enforceFloor(policy({ required_review_thread_resolution: false }))).toHaveLength(1);
         expect(enforceFloor(policy({ strict_required_status_checks: false }))).toHaveLength(1);
         expect(enforceFloor(policy({ block_deletion: false }))).toHaveLength(1);
     });
@@ -251,14 +254,24 @@ describe('the floor covers the selectors, not only the thresholds', () => {
 
 describe('the expectation knows which repository it describes', () => {
     it('refuses a repository that is not the one the expectation names', () => {
-        const text = JSON.stringify({ schema_version: 1, repository: 'a/b', required: policy() });
+        // Keyed on the constant rather than a literal, so a schema bump does
+        // not red an identity test that is about the repository name.
+        const text = JSON.stringify({
+            schema_version: SUPPORTED_ANCHOR_SCHEMA,
+            repository: 'a/b',
+            required: policy(),
+        });
         expect(checkAnchorIdentity(text, 'a/b')).toEqual([]);
         const mismatch = checkAnchorIdentity(text, 'someone/fork');
         expect(mismatch.map((f) => f.code)).toContain('policy-repository-mismatch');
     });
 
     it('refuses a schema version its reader does not support', () => {
-        const text = JSON.stringify({ schema_version: 2, repository: 'a/b', required: policy() });
+        const text = JSON.stringify({
+            schema_version: SUPPORTED_ANCHOR_SCHEMA + 1,
+            repository: 'a/b',
+            required: policy(),
+        });
         expect(checkAnchorIdentity(text, 'a/b')).toHaveLength(1);
     });
 
@@ -517,6 +530,151 @@ describe('the verdict', () => {
     });
 });
 
+/**
+ * The waiver mechanism, both polarities on every rule that governs it.
+ *
+ * Two council seats warned that a waiver mechanism becomes an exemption
+ * registry that hollows out the floor, so the rules that bound it are the ones
+ * that most need a failing direction exercised. The invariant every case below
+ * serves: a malformed, expired or impermissible waiver must be WORSE than no
+ * waiver, never better.
+ */
+describe('an accepted-risk waiver is bounded, dated and refusable', () => {
+    const NOW = new Date('2026-09-10T12:00:00Z');
+
+    function waiver(over: Record<string, unknown> = {}): Record<string, unknown> {
+        return {
+            id: 'arr-test',
+            dimension: 'strict_required_status_checks',
+            baseline: true,
+            accepted: false,
+            failure_mode: 'semantic conflict',
+            cost_avoided: 'measured re-run cost',
+            frequency_assumption: 'assumption, owner-attested',
+            detection_and_repair: 'post-merge, owner repairs',
+            residual_protection: 'the required context still passes',
+            authority: 'owner',
+            decided: '2026-09-10',
+            expires: '2026-12-09',
+            review_triggers: ['CI under 10 minutes'],
+            ...over,
+        };
+    }
+
+    const withWaivers = (ws: Record<string, unknown>[]): string =>
+        JSON.stringify({ schema_version: 1, required: policy(), accepted_risk_reductions: ws });
+
+    /** A forge that satisfies everything except strictness. */
+    function notStrict(): RulesetDetail {
+        const rs = compliantRuleset();
+        rs.rules = (rs.rules ?? []).map((r) =>
+            r.type === 'required_status_checks'
+                ? {
+                      type: 'required_status_checks',
+                      parameters: {
+                          strict_required_status_checks_policy: false,
+                          required_status_checks: [{ context: 'Sync + Generate Tools Consistency' }],
+                      },
+                  }
+                : r,
+        );
+        return rs;
+    }
+
+    it('turns a violated dimension into an accepted risk rather than a finding', () => {
+        const { honoured, findings } = readWaivers(withWaivers([waiver()]), NOW);
+        expect(findings).toEqual([]);
+        const r = evaluateAnchor(policy(), [notStrict()], 'main', honoured);
+        expect(r.status).toBe('compliant-with-accepted-risk');
+        expect(r.findings).toEqual([]);
+        expect(r.evidence.join('\n')).toContain('ACCEPTED RISK');
+    });
+
+    it('without the waiver the same forge is a plain failure', () => {
+        const r = evaluateAnchor(policy(), [notStrict()], 'main');
+        expect(r.status).toBe('noncompliant');
+        expect(r.findings.map((f) => f.code)).toEqual(['status-checks-not-strict']);
+    });
+
+    it('refuses an incomplete waiver, so the dimension reds normally', () => {
+        for (const field of ['failure_mode', 'expires', 'authority', 'review_triggers']) {
+            const w = waiver();
+            delete w[field];
+            const { honoured, findings } = readWaivers(withWaivers([w]), NOW);
+            expect(findings[0]?.code).toBe('waiver-incomplete');
+            expect(honoured.size).toBe(0);
+            expect(evaluateAnchor(policy(), [notStrict()], 'main', honoured).status).toBe(
+                'noncompliant',
+            );
+        }
+    });
+
+    it('refuses an expired waiver and an unparseable expiry', () => {
+        const expired = readWaivers(withWaivers([waiver({ expires: '2026-09-09' })]), NOW);
+        expect(expired.findings[0]?.code).toBe('waiver-expired');
+        expect(expired.honoured.size).toBe(0);
+
+        const junk = readWaivers(withWaivers([waiver({ expires: 'soon' })]), NOW);
+        expect(junk.findings[0]?.code).toBe('waiver-incomplete');
+        expect(junk.honoured.size).toBe(0);
+    });
+
+    it('refuses a waiver over any never-waivable dimension', () => {
+        for (const dimension of NEVER_WAIVABLE) {
+            const { honoured, findings } = readWaivers(withWaivers([waiver({ dimension })]), NOW);
+            expect(findings[0]?.code).toBe('waiver-not-permitted');
+            expect(honoured.size).toBe(0);
+        }
+    });
+
+    it('an unconditional bypass stays a failure even with a waiver written for it', () => {
+        const { honoured } = readWaivers(
+            withWaivers([waiver({ dimension: 'allow_unconditional_bypass' })]),
+            NOW,
+        );
+        const r = evaluateAnchor(
+            policy(),
+            [
+                compliantRuleset({
+                    bypass_actors: [{ actor_type: 'RepositoryRole', actor_id: 5, bypass_mode: 'always' }],
+                }),
+            ],
+            'main',
+            honoured,
+        );
+        expect(r.status).toBe('noncompliant');
+        expect(r.findings.map((f) => f.code)).toEqual(['unconditional-bypass']);
+    });
+
+    it('reports a waiver the forge has made unnecessary', () => {
+        const { honoured } = readWaivers(withWaivers([waiver()]), NOW);
+        const r = evaluateAnchor(policy(), [compliantRuleset()], 'main', honoured);
+        expect(r.status).toBe('noncompliant');
+        expect(r.findings.map((f) => f.code)).toEqual(['waiver-unused']);
+    });
+
+    it('treats an absent or malformed waiver list as no waivers, never as a pass', () => {
+        expect(readWaivers(null, NOW).honoured.size).toBe(0);
+        expect(readWaivers('{ not json', NOW).honoured.size).toBe(0);
+        const bad = readWaivers(
+            JSON.stringify({ required: policy(), accepted_risk_reductions: 'yes' }),
+            NOW,
+        );
+        expect(bad.findings[0]?.code).toBe('waiver-incomplete');
+        expect(bad.honoured.size).toBe(0);
+    });
+
+    it('the committed waiver is well-formed and covers only a waivable dimension', () => {
+        const text = fs.readFileSync(path.join(REPO, POLICY_PATH), 'utf8');
+        const { honoured, findings } = readWaivers(text, NOW);
+        expect(findings).toEqual([]);
+        expect(honoured.has('strict_required_status_checks')).toBe(true);
+        for (const d of honoured.keys()) {
+            expect(NEVER_WAIVABLE).not.toContain(d);
+        }
+    });
+});
+
 describe('the gate only consults the platform on a gated diff', () => {
     const text = (): string => fs.readFileSync(path.join(REPO, POLICY_PATH), 'utf8');
 
@@ -534,14 +692,44 @@ describe('the gate only consults the platform on a gated diff', () => {
         expect(asked).toBe(false);
     });
 
-    it('consults it for a kernel rule and passes a compliant platform', () => {
+    it('reports a stale waiver rather than passing a platform that outgrew it', () => {
+        // Against the COMMITTED expectation, a fully strict forge makes the
+        // strictness waiver unnecessary — and an unnecessary waiver is stale
+        // record, which this gate reports rather than ignores. Not a pass:
+        // the configuration is safer than the file claims, and a reader should
+        // learn that from the gate rather than from a surprise later.
         const r = evaluateGate(
             ['src/rules/commit-policy.md'],
             text(),
             source([compliantRuleset()]),
             'event4u-app/agent-config',
         );
+        expect(r.exitCode).toBe(1);
+        expect(r.lines.join('\n')).toContain('waiver-unused');
+    });
+
+    it('passes with an accepted risk against the forge as it actually stands', () => {
+        const asItStands = compliantRuleset();
+        asItStands.rules = (asItStands.rules ?? []).map((rule) =>
+            rule.type === 'required_status_checks'
+                ? {
+                      type: 'required_status_checks',
+                      parameters: {
+                          strict_required_status_checks_policy: false,
+                          required_status_checks: [{ context: 'Sync + Generate Tools Consistency' }],
+                      },
+                  }
+                : rule,
+        );
+        const r = evaluateGate(
+            ['src/rules/commit-policy.md'],
+            text(),
+            source([asItStands]),
+            'event4u-app/agent-config',
+        );
         expect(r.exitCode).toBe(0);
+        expect(r.lines.join('\n')).toContain('PASS_WITH_ACCEPTED_RISK');
+        expect(r.lines.join('\n')).toContain('Current-base compatibility is NOT guaranteed');
     });
 
     it('fails a kernel rule against the measured platform', () => {
