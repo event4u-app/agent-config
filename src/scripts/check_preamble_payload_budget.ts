@@ -452,6 +452,13 @@ function attributeGrowthAgainstBase(): string[] | null {
     }
 }
 
+/** The stderr header for a refused bound. Exported so both refusals are testable. */
+export function boundsRefusalHeader(b: BoundsRatchetVerdict): string {
+    return b.verified
+        ? '❌  the standing-payload ceiling rose in this change:\n'
+        : '❌  the standing-payload ceiling could not be VERIFIED, and this run requires it:\n';
+}
+
 /**
  * The bound check, rendered for a human — on BOTH paths, green and red.
  *
@@ -459,10 +466,23 @@ function attributeGrowthAgainstBase(): string[] | null {
  * already load-bearing. Printing the compared ref and the earlier bound on the
  * passing path is also the only way a reader can tell "verified and unchanged"
  * from "skipped because no base ref resolved", which are different facts.
+ *
+ * THREE STATES, not two, and the third is why this was rewritten. An
+ * unverifiable bound and a risen one are both `ok: false` and need opposite
+ * actions — repair the checkout, or lower the addition. The first cut of the
+ * enforcing posture rendered both as `ROSE`, which a completion review caught:
+ * it sends an operator to shrink a rule over a fetch problem. `SKIPPED` is
+ * reserved for the ADVISORY skip, where nothing was refused at all.
  */
-function renderBounds(b: BoundsRatchetVerdict): string {
-    if (b.note !== null) {
+export function renderBounds(b: BoundsRatchetVerdict): string {
+    if (b.note !== null && b.ok) {
         return `  ${'grace ceiling ratchet'.padEnd(38)} ${'SKIPPED'.padStart(8)} — ${b.note}\n`;
+    }
+    if (!b.verified) {
+        return (
+            `  ${'grace ceiling ratchet'.padEnd(38)} ${'UNVERIFIED'.padStart(8)} — ` +
+            `${b.note ?? 'the bound could not be read'} (this run requires it)\n`
+        );
     }
     const base = b.baseGraceCeiling === null ? 'n/a' : String(b.baseGraceCeiling);
     const state = b.ok ? 'ok' : 'ROSE';
@@ -638,8 +658,11 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     // reporting that as "within budget" would be the config-weakening move
     // wearing a green checkmark.
     if (!decision.bounds.ok) {
+        // Two refusals, two different fixes. `verified: false` means the bound
+        // could not be READ under `--require-base`; the header must not send the
+        // reader to lower a ceiling that never moved.
         process.stderr.write(
-            '❌  the standing-payload ceiling rose in this change:\n' +
+            boundsRefusalHeader(decision.bounds) +
                 decision.bounds.violations.map((v) => `      · ${v}\n`).join(''),
         );
         return 1;

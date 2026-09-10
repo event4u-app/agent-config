@@ -242,7 +242,12 @@ describe('assertBoundsDidNotRise — enforcing posture', () => {
         const v = assertBoundsDidNotRise({ ...opts, requireBase: true });
         expect(v.ok).toBe(false);
         expect(v.violations.join(' ')).toMatch(/no base ref resolved/);
-        expect(v.note).toBeNull();
+        // The note is KEPT on the refusal, not nulled. Nulling it was the first
+        // cut, and it made the refusal indistinguishable from a risen ceiling
+        // downstream — a completion review caught the renderer printing ROSE
+        // for a fetch problem.
+        expect(v.note).toMatch(/NOT verified/);
+        expect(v.verified).toBe(false);
     });
 
     it('refuses instead of skipping when the base config cannot be read', () => {

@@ -57,6 +57,17 @@ export interface BoundsRatchetVerdict {
     baseRef: string | null;
     /** Why the comparison was skipped, when it was. Printed, never silent. */
     note: string | null;
+    /**
+     * `false` means the bound could not be READ, not that it rose.
+     *
+     * Two refusals reach a caller with `ok: false` and they need opposite
+     * actions: a risen ceiling is fixed by lowering the addition, an
+     * unverifiable one by repairing the checkout. A completion review caught
+     * both being rendered as "ROSE", which would send an operator to shrink a
+     * rule over what was a fetch problem. Absent means verified — the only
+     * `ok: false` that predates this field is a genuine rise.
+     */
+    verified: boolean;
 }
 
 function showAtRef(git: GitRunner, repoRoot: string, ref: string, relPath: string): string | null {
@@ -81,19 +92,27 @@ function unverified(
     if (requireBase) {
         return {
             ok: false,
+            verified: false,
             baseGraceCeiling,
             baseRef,
-            note: null,
+            note: `${reason}, so the shrink-only bound was NOT verified in this run`,
             violations: [
                 `the shrink-only bound could not be verified: ${reason}. This run is `
                     + 'ENFORCING, so an unverifiable bound refuses rather than skips — an '
                     + 'unreadable base would otherwise grant budget on an infrastructure '
-                    + 'failure. Fix the checkout (a full fetch of the base ref) or run '
-                    + 'without requireBase, which reports the skip instead.',
+                    + 'failure. This is NOT a ceiling rise: fix the checkout (a full fetch '
+                    + 'of the base ref) rather than lowering the addition.',
             ],
         };
     }
-    return { ok: true, violations: [], baseGraceCeiling, baseRef, note: `${reason}, so the shrink-only bound was NOT verified` };
+    return {
+        ok: true,
+        verified: false,
+        violations: [],
+        baseGraceCeiling,
+        baseRef,
+        note: `${reason}, so the shrink-only bound was NOT verified in this run`,
+    };
 }
 
 /**
@@ -174,7 +193,7 @@ export function assertBoundsDidNotRise(opts: {
     }
     if (baseGrace === null) {
         return unverified(
-            `no ci_delivery.grace_ceiling at ${opts.baseRef}, so there is no earlier bound to ratchet against`,
+            `there is no ci_delivery.grace_ceiling at ${opts.baseRef} to ratchet against`,
             requireBase,
             null,
             opts.baseRef,
@@ -183,6 +202,7 @@ export function assertBoundsDidNotRise(opts: {
     if (opts.headGraceCeiling > baseGrace) {
         return {
             ok: false,
+            verified: true,
             baseGraceCeiling: baseGrace,
             baseRef: opts.baseRef,
             note: null,
@@ -196,5 +216,5 @@ export function assertBoundsDidNotRise(opts: {
             ],
         };
     }
-    return { ok: true, violations: [], baseGraceCeiling: baseGrace, baseRef: opts.baseRef, note: null };
+    return { ok: true, verified: true, violations: [], baseGraceCeiling: baseGrace, baseRef: opts.baseRef, note: null };
 }
