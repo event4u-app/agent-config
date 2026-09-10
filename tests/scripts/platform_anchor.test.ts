@@ -182,12 +182,28 @@ describe('reading the expectation refuses a half-read one', () => {
     });
 
     it('a policy under the floor is rejected, not honoured', () => {
+        // Keyed on a FLOORED dimension. `strict_required_status_checks` used to
+        // sit here and no longer belongs: it left the floor when it gained a
+        // waiver, because a floored dimension is unwaivable by construction.
         const text = JSON.stringify({
-            required: { ...policy(), strict_required_status_checks: false },
+            required: { ...policy(), block_non_fast_forward: false },
         });
         const { policy: p, findings } = readAnchorPolicy(text);
         expect(p).toBeNull();
         expect(findings.some((f) => f.code === 'policy-below-floor')).toBe(true);
+    });
+
+    it('the floor and the never-waivable set cannot disagree', () => {
+        // Derived rather than hand-listed, after a blind review found the two
+        // had drifted: a dimension sat in the floor and was waivable, which is
+        // a second unauthenticated route to the reduction the floor forbids.
+        for (const key of Object.keys(NON_NEGOTIABLE_FLOOR)) {
+            if (key === 'minimum_required_contexts') {
+                continue;
+            }
+            expect(NEVER_WAIVABLE).toContain(key);
+        }
+        expect(NEVER_WAIVABLE).not.toContain('strict_required_status_checks');
     });
 
     it('the floor rejects each weakening independently', () => {
@@ -216,14 +232,17 @@ describe('the floor covers the selectors, not only the thresholds', () => {
         expect(enforceFloor(policy({ covers_default_branch: false }))).toHaveLength(1);
     });
 
-    it('refuses a weakening of thread-resolution, strict checks and deletion', () => {
+    it('refuses a weakening of thread-resolution and of deletion', () => {
         // `required_review_thread_resolution` is back in the floor. It briefly
         // was not, on the implementer's own judgement, which a blind review
         // caught: the change's record says only the owner may authorize a floor
         // reduction, and the ruling names two dimensions and not this one.
         expect(enforceFloor(policy({ required_review_thread_resolution: false }))).toHaveLength(1);
-        expect(enforceFloor(policy({ strict_required_status_checks: false }))).toHaveLength(1);
         expect(enforceFloor(policy({ block_deletion: false }))).toHaveLength(1);
+        // And strict is NOT floored — it is the waivable tier, which is the
+        // whole point of the two-tier split. Asserted so the split cannot be
+        // undone silently in either direction.
+        expect(enforceFloor(policy({ strict_required_status_checks: false }))).toEqual([]);
     });
 
     it('has no approval field left for a policy to lower', () => {
@@ -582,9 +601,9 @@ describe('an accepted-risk waiver is bounded, dated and refusable', () => {
     }
 
     it('turns a violated dimension into an accepted risk rather than a finding', () => {
-        const { honoured, findings } = readWaivers(withWaivers([waiver()]), NOW);
-        expect(findings).toEqual([]);
-        const r = evaluateAnchor(policy(), [notStrict()], 'main', honoured);
+        const reading = readWaivers(withWaivers([waiver()]), NOW);
+        expect(reading.findings).toEqual([]);
+        const r = evaluateAnchor(policy(), [notStrict()], 'main', reading);
         expect(r.status).toBe('compliant-with-accepted-risk');
         expect(r.findings).toEqual([]);
         expect(r.evidence.join('\n')).toContain('ACCEPTED RISK');
@@ -603,7 +622,7 @@ describe('an accepted-risk waiver is bounded, dated and refusable', () => {
             const { honoured, findings } = readWaivers(withWaivers([w]), NOW);
             expect(findings[0]?.code).toBe('waiver-incomplete');
             expect(honoured.size).toBe(0);
-            expect(evaluateAnchor(policy(), [notStrict()], 'main', honoured).status).toBe(
+            expect(evaluateAnchor(policy(), [notStrict()], 'main', { honoured, findings }).status).toBe(
                 'noncompliant',
             );
         }
@@ -628,7 +647,7 @@ describe('an accepted-risk waiver is bounded, dated and refusable', () => {
     });
 
     it('an unconditional bypass stays a failure even with a waiver written for it', () => {
-        const { honoured } = readWaivers(
+        const reading = readWaivers(
             withWaivers([waiver({ dimension: 'allow_unconditional_bypass' })]),
             NOW,
         );
@@ -640,17 +659,79 @@ describe('an accepted-risk waiver is bounded, dated and refusable', () => {
                 }),
             ],
             'main',
-            honoured,
+            reading,
         );
         expect(r.status).toBe('noncompliant');
-        expect(r.findings.map((f) => f.code)).toEqual(['unconditional-bypass']);
+        // BOTH: the refused waiver AND the violation it tried to cover.
+        expect(r.findings.map((f) => f.code)).toEqual([
+            'waiver-not-permitted',
+            'unconditional-bypass',
+        ]);
     });
 
     it('reports a waiver the forge has made unnecessary', () => {
-        const { honoured } = readWaivers(withWaivers([waiver()]), NOW);
-        const r = evaluateAnchor(policy(), [compliantRuleset()], 'main', honoured);
+        const reading = readWaivers(withWaivers([waiver()]), NOW);
+        const r = evaluateAnchor(policy(), [compliantRuleset()], 'main', reading);
         expect(r.status).toBe('noncompliant');
         expect(r.findings.map((f) => f.code)).toEqual(['waiver-unused']);
+    });
+
+    it('a refused waiver REDS the verdict, it does not merely fail to help', () => {
+        // The critical finding of round 2, pinned. The refusals used to be
+        // printed and never merged into the verdict, so an expired waiver over
+        // a dimension the forge happened to satisfy left the gate GREEN — while
+        // a WELL-FORMED waiver for that same satisfied dimension reded via
+        // `waiver-unused`. Malformed was strictly better than correct.
+        const reading = readWaivers(withWaivers([waiver({ expires: '2026-09-09' })]), NOW);
+        expect(reading.findings.map((f) => f.code)).toEqual(['waiver-expired']);
+        const r = evaluateAnchor(policy(), [compliantRuleset()], 'main', reading);
+        expect(r.status).toBe('noncompliant');
+        expect(r.findings.map((f) => f.code)).toContain('waiver-expired');
+    });
+
+    it('carries the refusal into the unverifiable verdict too', () => {
+        // The early-return paths built a fresh findings array and dropped the
+        // seed, so an unreadable platform hid a malformed waiver behind it.
+        const reading = readWaivers(withWaivers([waiver({ expires: '2026-09-09' })]), NOW);
+        const r = evaluateAnchor(policy(), null, 'main', reading);
+        expect(r.status).toBe('unverifiable');
+        expect(r.findings.map((f) => f.code)).toContain('waiver-expired');
+    });
+
+    it('refuses an authority that is not the owner', () => {
+        for (const authority of ['agent-self-service', 'council', 'session', '']) {
+            const { honoured, findings } = readWaivers(withWaivers([waiver({ authority })]), NOW);
+            expect(honoured.size).toBe(0);
+            expect(findings).toHaveLength(1);
+        }
+        expect(readWaivers(withWaivers([waiver()]), NOW).honoured.size).toBe(1);
+    });
+
+    it('refuses an empty or null field, not only an absent one', () => {
+        // Presence-only validation honoured `""` and `null` in every prose
+        // field — thirteen keys and no substance behind them.
+        for (const bad of [{ failure_mode: '' }, { cost_avoided: '   ' }, { authority: null }]) {
+            const { honoured, findings } = readWaivers(withWaivers([waiver(bad)]), NOW);
+            expect(honoured.size).toBe(0);
+            expect(findings).toHaveLength(1);
+        }
+        const empty = readWaivers(withWaivers([waiver({ review_triggers: [] })]), NOW);
+        expect(empty.honoured.size).toBe(0);
+    });
+
+    it('refuses a waiver that waives nothing, a typo, a duplicate and a bad date', () => {
+        for (const bad of [
+            { baseline: false },
+            { dimension: 'strict_requird_status_checks' },
+            { decided: 'yesterday' },
+        ]) {
+            const { honoured, findings } = readWaivers(withWaivers([waiver(bad)]), NOW);
+            expect(honoured.size).toBe(0);
+            expect(findings).toHaveLength(1);
+        }
+        const dup = readWaivers(withWaivers([waiver(), waiver({ id: 'arr-two' })]), NOW);
+        expect(dup.honoured.size).toBe(1);
+        expect(dup.findings.map((f) => f.code)).toEqual(['waiver-not-permitted']);
     });
 
     it('treats an absent or malformed waiver list as no waivers, never as a pass', () => {
@@ -698,11 +779,16 @@ describe('the gate only consults the platform on a gated diff', () => {
         // record, which this gate reports rather than ignores. Not a pass:
         // the configuration is safer than the file claims, and a reader should
         // learn that from the gate rather than from a surprise later.
+        // FIXED clock. Both gate tests here read the COMMITTED waiver, whose
+        // expiry is 2026-12-09 — against the real clock they would flip red on
+        // 2026-12-10 for a reason unrelated to what they assert. Injected after
+        // a blind review reproduced exactly that by moving the date.
         const r = evaluateGate(
             ['src/rules/commit-policy.md'],
             text(),
             source([compliantRuleset()]),
             'event4u-app/agent-config',
+            new Date('2026-09-10T12:00:00Z'),
         );
         expect(r.exitCode).toBe(1);
         expect(r.lines.join('\n')).toContain('waiver-unused');
@@ -726,10 +812,11 @@ describe('the gate only consults the platform on a gated diff', () => {
             text(),
             source([asItStands]),
             'event4u-app/agent-config',
+            new Date('2026-09-10T12:00:00Z'),
         );
         expect(r.exitCode).toBe(0);
         expect(r.lines.join('\n')).toContain('PASS_WITH_ACCEPTED_RISK');
-        expect(r.lines.join('\n')).toContain('Current-base compatibility is NOT guaranteed');
+        expect(r.lines.join('\n')).toContain('compatibility is NOT guaranteed');
     });
 
     it('fails a kernel rule against the measured platform', () => {

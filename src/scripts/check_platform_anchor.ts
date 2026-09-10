@@ -228,19 +228,16 @@ export function evaluateGate(
     // Short-circuited deliberately: when the ruleset read already failed there
     // is nothing the default-branch call can change, and evaluating both as
     // arguments spent an API round-trip on every failure path.
-    // A malformed waiver is a failure of its own, reported before the platform
-    // reading so a reader sees WHY a dimension they thought was waived reds.
+    // The WHOLE reading is passed on, not just the honoured map. Printing the
+    // refusals here and handing over only the map is what let a malformed
+    // waiver outrank a correct one: the refusals never reached the exit code.
     const waivers = readWaivers(policyText, now);
-    for (const f of waivers.findings) {
-        lines.push(`  · [${f.code}] ${f.message}`);
-    }
-
     const rulesets = source.rulesets(repo);
     const reading: AnchorReading = evaluateAnchor(
         policy,
         rulesets,
         rulesets === null ? null : source.defaultBranch(repo),
-        waivers.honoured,
+        waivers,
     );
     for (const e of reading.evidence) {
         lines.push(`   ${e}`);
@@ -255,11 +252,17 @@ export function evaluateGate(
         // seats required that the assertion not imply merge-result validation:
         // a required context certifies the commit it ran on, never that the
         // change composes with the current base.
+        // The waived dimensions are read from the verdict rather than named in
+        // this string. Hardcoding one made the message wrong the moment a
+        // second waiver existed, and this gate's whole subject is not saying
+        // more than it measured.
+        const waived = [...waivers.honoured.keys()].join(', ');
         lines.push(
             `✅  platform anchor PASS_WITH_ACCEPTED_RISK for ${repo} — every hard dimension is ` +
                 'present; the accepted risks above are recorded waivers with an expiry, not ' +
-                'silent passes. Current-base compatibility is NOT guaranteed while ' +
-                '`strict_required_status_checks` is waived.',
+                `silent passes. Waived: ${waived}. Where \`strict_required_status_checks\` is ` +
+                'among them, current-base compatibility is NOT guaranteed: a required check ' +
+                'certifies the commit it ran on, never the merge result.',
         );
         close(true, '');
         return { exitCode: 0, lines, scanned };

@@ -144,10 +144,16 @@ export const NON_NEGOTIABLE_FLOOR = {
     required_review_thread_resolution: true,
     block_deletion: true,
     block_non_fast_forward: true,
-    strict_required_status_checks: true,
     allow_unconditional_bypass: false,
     minimum_required_contexts: 1,
-    // The SELECTOR half. The six values above are thresholds a ruleset is
+    // `strict_required_status_checks` is NOT in the floor, and that is the
+    // second half of the same correction. It carries an active waiver, and a
+    // floored dimension is unwaivable by construction — holding it in both
+    // places was the contradiction a blind review surfaced from the other side.
+    // It stays a baseline expectation in `platform-anchor.json`, which is the
+    // tier a waiver may trade against.
+    //
+    // The SELECTOR half. The values above are thresholds a ruleset is
     // measured against; these three decide WHICH rulesets are measured at all,
     // and leaving them unfloored left the whole check reachable through a door
     // the floor did not watch. A blind review probed it against this evaluator:
@@ -204,21 +210,27 @@ export interface AcceptedRiskWaiver {
 /**
  * Dimensions no waiver may reach, whatever it documents.
  *
- * Both seats warned that a waiver mechanism becomes an exemption registry that
- * hollows out the floor, and this is the answer: eligibility is bounded by a
- * committed list rather than by the quality of the prose in the waiver. These
- * six are the ones whose absence makes every other assertion meaningless — a
- * ruleset that is not active, does not cover the branch, or lets an actor
- * bypass it unconditionally cannot be traded against a CI-duration saving.
+ * DERIVED FROM THE FLOOR, not hand-listed beside it. A blind review found the
+ * hand-written version had drifted from it in the worst possible direction:
+ * `required_review_thread_resolution` sat in the floor and was NOT on the
+ * never-waivable list, so the same change that restored it to the floor "to
+ * remove an unauthorized reduction" opened a second, unauthenticated route to
+ * exactly that reduction. Deriving the set makes the two impossible to
+ * disagree.
+ *
+ * The invariant this expresses: the FLOOR is the hard tier and is unwaivable by
+ * construction; the expectation's remaining dimensions are baseline
+ * expectations a complete, owner-authorised, unexpired waiver may trade. A
+ * dimension cannot be both floored and waivable, which is what the drift had
+ * made possible.
+ *
+ * `minimum_required_contexts` is excluded because it is a COUNT rather than a
+ * dimension name — it has no matching key in the expectation for a waiver to
+ * name, so listing it would bound nothing.
  */
-export const NEVER_WAIVABLE: readonly string[] = [
-    'enforcement',
-    'target',
-    'covers_default_branch',
-    'allow_unconditional_bypass',
-    'block_deletion',
-    'block_non_fast_forward',
-];
+export const NEVER_WAIVABLE: readonly string[] = Object.keys(NON_NEGOTIABLE_FLOOR).filter(
+    (k) => k !== 'minimum_required_contexts',
+);
 
 export type AnchorStatus =
     | 'compliant'
@@ -495,9 +507,6 @@ export function enforceFloor(policy: AnchorPolicy): AnchorFinding[] {
     if (!policy.block_non_fast_forward) {
         under('block_non_fast_forward', false, true);
     }
-    if (!policy.strict_required_status_checks) {
-        under('strict_required_status_checks', false, true);
-    }
     if (policy.allow_unconditional_bypass) {
         under('allow_unconditional_bypass', true, false);
     }
@@ -673,13 +682,24 @@ export interface WaiverReading {
     findings: AnchorFinding[];
 }
 
+/** The only values `authority` may carry. A floor trade is the owner's alone. */
+export const WAIVER_AUTHORITIES: readonly string[] = ['owner'];
+
 /**
  * Read the waivers, refusing every one that is not fully in order.
  *
- * A refused waiver does NOT silently become a pass: it is absent from
- * `honoured`, so the dimension it meant to cover is judged normally and reds.
- * That direction matters — a malformed waiver has to be worse than no waiver,
- * never better, or writing one badly becomes a way to skip a check.
+ * A refused waiver is absent from `honoured`, so the dimension it meant to
+ * cover is judged normally — AND its refusal is a finding the caller must merge
+ * into the verdict. Both halves are required, and the second was missing:
+ * a blind review reproduced the inversion end to end. The refusals were printed
+ * and never reached the exit code, so an EXPIRED waiver over a dimension the
+ * forge happened to satisfy left the gate green, while a WELL-FORMED waiver for
+ * the same satisfied dimension reded via `waiver-unused`. Malformed was strictly
+ * better than correct — the exact thing this function's contract forbids, and
+ * reachable by an ordinary lapsed expiry rather than only by malice.
+ *
+ * `evaluateAnchor` now takes the whole reading rather than just the map, so the
+ * findings cannot be dropped at a call site again.
  */
 export function readWaivers(text: string | null, now: Date): WaiverReading {
     const honoured = new Map<string, AcceptedRiskWaiver>();
@@ -714,18 +734,84 @@ export function readWaivers(text: string | null, now: Date): WaiverReading {
             continue;
         }
         const id = typeof entry['id'] === 'string' ? entry['id'] : '<no id>';
-        const missing = WAIVER_FIELDS.filter((f) => !(f in entry));
+
+        // Presence AND substance. Presence-only validation honoured an empty
+        // string and a null in every prose field, which is an undocumented
+        // deviation wearing thirteen keys — the blind review filed it as its
+        // own finding and it is the same defect class as the refusals not
+        // reaching the verdict: a check that reads a field without judging it.
+        const missing = WAIVER_FIELDS.filter((f) => {
+            if (!(f in entry)) {
+                return true;
+            }
+            const v = entry[f];
+            if (f === 'review_triggers') {
+                return !Array.isArray(v) || v.length === 0 || v.some((x) => String(x).trim() === '');
+            }
+            if (f === 'baseline' || f === 'accepted') {
+                return typeof v !== 'boolean';
+            }
+            return typeof v !== 'string' || v.trim() === '';
+        });
         if (missing.length > 0) {
             findings.push({
                 code: 'waiver-incomplete',
                 message:
-                    `waiver \`${id}\` is missing ${missing.join(', ')}. An incomplete waiver is an ` +
-                    'undocumented deviation, so it is refused rather than honoured and the ' +
-                    'dimension it names is judged normally.',
+                    `waiver \`${id}\` is missing or empty at ${missing.join(', ')}. An incomplete ` +
+                    'waiver is an undocumented deviation, so it is refused rather than honoured ' +
+                    'and the dimension it names is judged normally.',
+            });
+            continue;
+        }
+        if (!WAIVER_AUTHORITIES.includes(String(entry['authority']))) {
+            findings.push({
+                code: 'waiver-not-permitted',
+                message:
+                    `waiver \`${id}\` claims authority \`${String(entry['authority'])}\`, which is ` +
+                    `not one of ${WAIVER_AUTHORITIES.join(', ')}. Trading a baseline control is ` +
+                    'the owner\'s decision; a waiver that names anything else — an agent, a ' +
+                    'council, a session — is refused. The field was presence-checked and never ' +
+                    'value-checked, so `agent-self-service` was honoured while four prose ' +
+                    'surfaces rested on "only the owner may authorize a floor reduction".',
+            });
+            continue;
+        }
+        if (entry['baseline'] === entry['accepted']) {
+            findings.push({
+                code: 'waiver-incomplete',
+                message:
+                    `waiver \`${id}\` records the same value for \`baseline\` and \`accepted\`, so ` +
+                    'it waives nothing. Both were printed as record and neither was checked.',
             });
             continue;
         }
         const dimension = String(entry['dimension']);
+        if (!(POLICY_FIELDS as readonly string[]).includes(dimension)) {
+            findings.push({
+                code: 'waiver-not-permitted',
+                message:
+                    `waiver \`${id}\` names \`${dimension}\`, which is not a dimension of the ` +
+                    'expectation. A typo was previously honoured and then mis-diagnosed as an ' +
+                    'unused waiver, which sends a reader looking for the wrong problem.',
+            });
+            continue;
+        }
+        if (honoured.has(dimension)) {
+            findings.push({
+                code: 'waiver-not-permitted',
+                message:
+                    `waiver \`${id}\` is a second entry for \`${dimension}\`. Duplicates used to ` +
+                    'resolve last-wins, so which record governed depended on file order.',
+            });
+            continue;
+        }
+        if (Number.isNaN(new Date(String(entry['decided'])).getTime())) {
+            findings.push({
+                code: 'waiver-incomplete',
+                message: `waiver \`${id}\` has an unparseable \`decided\`; it must be an ISO date.`,
+            });
+            continue;
+        }
         if (NEVER_WAIVABLE.includes(dimension)) {
             findings.push({
                 code: 'waiver-not-permitted',
@@ -780,9 +866,13 @@ export function evaluateAnchor(
     policy: AnchorPolicy,
     rulesets: readonly RulesetDetail[] | null,
     defaultBranch: string | null,
-    waivers: ReadonlyMap<string, AcceptedRiskWaiver> = new Map(),
+    waiverReading: WaiverReading = { honoured: new Map(), findings: [] },
 ): AnchorReading {
-    const findings: AnchorFinding[] = [];
+    // Seeded, not appended later. The refusals ARE part of the verdict, and a
+    // caller that received only the map could drop them — which is the shape
+    // that produced the inversion this parameter now prevents.
+    const findings: AnchorFinding[] = [...waiverReading.findings];
+    const waivers = waiverReading.honoured;
     const evidence: string[] = [];
     const accepted: string[] = [];
     const used = new Set<string>();
@@ -812,6 +902,7 @@ export function evaluateAnchor(
         return {
             status: 'unverifiable',
             findings: [
+                ...findings,
                 {
                     code: 'rulesets-unreadable',
                     message:
@@ -828,6 +919,7 @@ export function evaluateAnchor(
         return {
             status: 'unverifiable',
             findings: [
+                ...findings,
                 {
                     code: 'default-branch-unknown',
                     message:
@@ -928,9 +1020,12 @@ export function evaluateAnchor(
     }
 
     // A waiver nobody needed is stale record, and stale records teach a reader
-    // to distrust the file they sit in. Reported rather than ignored, and
-    // deliberately NOT a failure: the configuration is safer than the waiver
-    // assumed, which is the good direction to be wrong in.
+    // to distrust the file they sit in. It IS a finding and therefore reds —
+    // the comment here used to say "deliberately NOT a failure" while the code
+    // returned noncompliant, which a blind review filed as its own
+    // contradiction. Kept as a failure and the comment corrected to match: the
+    // repair is deleting one stale entry, and leaving it green would let the
+    // file drift out of step with the forge unnoticed.
     for (const [dimension, w] of waivers) {
         if (!used.has(dimension)) {
             findings.push({

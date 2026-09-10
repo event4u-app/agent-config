@@ -404,12 +404,18 @@ item. Phases 1-6 may run once 0.2 is chosen.
   hard-coded would make red mean the repository intentionally chose a different trust model,
   rather than the configured platform violated its policy. That is not a useful compliance
   signal."*
-  **What the gate now reds on is exactly one dimension:** `strict_required_status_checks`,
-  which read true before this work and false after. The owner's ruling covers reviewer
-  availability, not whether a branch may merge against a stale base, so both council seats put
-  it out of scope for the ruling — and one added the constraint honoured here: approval of a
-  trust-model change is **not** authorization to mutate the live ruleset, so nothing was
-  restored on the forge. Restoring it is one setting and needs no reviewer.
+  **`strict_required_status_checks` is WAIVED, not failing — corrected the same day.** This
+  field first said the gate reds on exactly that one dimension, which was true for about three
+  hours. The owner then ruled on it too, and the reasoning is a cost trade-off rather than an
+  impossibility: three green branches should merge without sequential rebases, because each
+  rebase costs a full 20-30 minute re-run and the breakage it prevents is rare and repairable.
+  That falls on the other side of the boundary the approval ruling was recorded under, so the
+  council replaced the boundary rather than stretching it and gave the mechanism a third state.
+  The gate now reports `PASS_WITH_ACCEPTED_RISK`, with the waiver
+  `arr-2026-09-10-strict-status-checks` naming the failure mode, the measured cost, the
+  owner-attested frequency as an ASSUMPTION, the repair path and an expiry of 2026-12-09.
+  Nothing was restored on the forge: one seat's constraint, honoured — approval of a
+  trust-model change is not authorization to mutate the live ruleset.
   **What the anchor may no longer be cited as:** independent approval, separation of duties,
   protection against unilateral administrator action, or proof of council participation. The
   honest three-part claim, and the limitation that the verifier cannot authenticate an owner

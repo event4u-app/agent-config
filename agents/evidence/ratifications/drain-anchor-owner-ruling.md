@@ -76,6 +76,47 @@ Both refused the exemption shape (option c) on the ground that this is a
 **permanent policy choice, not a temporary waiver**, and an exception mechanism
 is how a control gets hollowed out.
 
+## Amended the same day — this record now also covers the waiver mechanism
+
+```
+THE PARAGRAPH ABOVE SAYS THE COUNCIL REFUSED AN EXEMPTION MECHANISM.
+THIS CHANGE SHIPS ONE. BOTH ARE TRUE, FOR DIFFERENT DIMENSIONS,
+AND A BLIND REVIEW WAS RIGHT THAT LEAVING IT THERE ALONE READ AS A
+RECORD REFUSING THE THING IT RATIFIES.
+```
+
+The refusal above is about the two **approval** dimensions: those are outside
+the trust model, so an exemption for them would have misdescribed a permanent
+choice as a temporary waiver. `strict_required_status_checks` is the opposite
+case — the repository still considers it the safer setting — and on that one a
+second council (same seats, 2 rounds, blind peer review, 2/2 convergent) chose
+**exactly** the mechanism the first refused, for the reason the first gave:
+deleting a dimension the repository still wants erases the difference between
+"never expected" and "knowingly waived".
+
+So this record is amended to cover it, rather than leaving the mechanism
+ratified by nothing — which is what a blind review found and which would have
+been the more serious gap of the two. What is ratified in addition:
+
+- `accepted_risk_reductions` in `src/config/platform-anchor.json`, and the one
+  entry in it, `arr-2026-09-10-strict-status-checks`, expiring 2026-12-09.
+- `AcceptedRiskWaiver`, `readWaivers`, `NEVER_WAIVABLE`, `WAIVER_AUTHORITIES`
+  and the third status `compliant-with-accepted-risk`.
+- The replacement boundary sentence, which permits an owner-accepted bounded
+  risk against a documented benefit and still refuses convenience alone.
+
+**And what that second review caught in the first implementation of it, because
+a ratification that hides its own defect history is worth less than one that
+does not.** The refusal findings were printed and never reached the exit code,
+so a malformed waiver was strictly better than a well-formed one — reachable by
+a lapsed expiry, not only by malice. `authority` was presence-checked and never
+value-checked, so `agent-self-service` was honoured against four prose surfaces
+saying only the owner may authorize. And `NEVER_WAIVABLE` had drifted from the
+floor, opening a second unauthenticated route to the very reduction the floor
+forbids. All three are closed, each with a failing-direction test, and the first
+was re-proven end to end against the live forge: an expired waiver now exits 1
+with `[waiver-expired]`.
+
 **Where the round-2 seats corrected the round-1 seats, and it matters here:** a
 round-1 reading held that a council decision could authorize the floor reduction.
 Both round-2 seats rejected that. openai: *"A committed council record can be
