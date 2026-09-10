@@ -35,11 +35,13 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { asOf } from './_lib/as_of.js';
 import { GateLedger } from './_lib/gate_ledger.js';
 import {
     checkAnchorIdentity,
     evaluateAnchor,
     readAnchorPolicy,
+    readWaivers,
     type AnchorReading,
     type RulesetDetail,
 } from './_lib/platform_anchor.js';
@@ -163,6 +165,7 @@ export function evaluateGate(
     policyText: string | null,
     source: AnchorSource,
     repo: string,
+    now: Date = asOf(),
 ): AnchorGateResult {
     const lines: string[] = [];
     const scanned = files.length;
@@ -226,17 +229,42 @@ export function evaluateGate(
     // Short-circuited deliberately: when the ruleset read already failed there
     // is nothing the default-branch call can change, and evaluating both as
     // arguments spent an API round-trip on every failure path.
+    // The WHOLE reading is passed on, not just the honoured map. Printing the
+    // refusals here and handing over only the map is what let a malformed
+    // waiver outrank a correct one: the refusals never reached the exit code.
+    const waivers = readWaivers(policyText, now);
     const rulesets = source.rulesets(repo);
     const reading: AnchorReading = evaluateAnchor(
         policy,
         rulesets,
         rulesets === null ? null : source.defaultBranch(repo),
+        waivers,
     );
     for (const e of reading.evidence) {
         lines.push(`   ${e}`);
     }
     if (reading.status === 'compliant') {
         lines.push(`✅  platform anchor COMPLIANT for ${repo}`);
+        close(true, '');
+        return { exitCode: 0, lines, scanned };
+    }
+    if (reading.status === 'compliant-with-accepted-risk') {
+        // Exit 0, and the wording carries the whole difference. Both council
+        // seats required that the assertion not imply merge-result validation:
+        // a required context certifies the commit it ran on, never that the
+        // change composes with the current base.
+        // The waived dimensions are read from the verdict rather than named in
+        // this string. Hardcoding one made the message wrong the moment a
+        // second waiver existed, and this gate's whole subject is not saying
+        // more than it measured.
+        const waived = [...waivers.honoured.keys()].join(', ');
+        lines.push(
+            `✅  platform anchor PASS_WITH_ACCEPTED_RISK for ${repo} — every hard dimension is ` +
+                'present; the accepted risks above are recorded waivers with an expiry, not ' +
+                `silent passes. Waived: ${waived}. Where \`strict_required_status_checks\` is ` +
+                'among them, current-base compatibility is NOT guaranteed: a required check ' +
+                'certifies the commit it ran on, never the merge result.',
+        );
         close(true, '');
         return { exitCode: 0, lines, scanned };
     }

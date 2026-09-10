@@ -20,10 +20,19 @@ PROVIDER DIVERSITY IS REQUIRED WHERE TWO PROVIDERS ARE CONFIGURED.
 
 ## Where it lives
 
-`agents/evidence/ratifications/<pr>.md` — one file per pull request, named for
-the PR number (`1981.md`). One directory, because the gate has to find the
-artifact from the diff alone and a search over the whole evidence tree would
-match a file that merely mentions the word.
+`agents/evidence/ratifications/<slug>.md` — one file per change, in one
+directory, because the gate has to find the artifact from the diff alone and a
+search over the whole evidence tree would match a file that merely mentions the
+word. The gate reads the directory, never the filename.
+
+**This used to say `<pr>.md`, named for the PR number, and every artifact ever
+written here deviated from it** — three of three by 2026-09-10, which a blind
+review counted. The convention was unpracticable rather than unpractised: the
+artifact has to exist before the pull request does, because the gate reads it on
+the first push, so a PR number is not available at write time. The first artifact
+recorded that in its own body and named itself for its branch instead. Corrected
+in the direction of what the mechanism allows, rather than leaving a rule nobody
+could follow and everybody broke.
 
 ## Frontmatter — all six fields required
 
@@ -108,38 +117,170 @@ it does and does not cover:
    that judges it. The quorum policy is read from the script's own tree for the
    same reason — otherwise the same PR could lower `required_providers` and
    have the base gate honour it.
-2. **The platform is supposed to hold the merge — and measured, it does not.**
-   Protected branches and required approvals are what would make a landed
-   artifact mean something. `check_platform_anchor` now reads the live rulesets
-   and compares them against `src/config/platform-anchor.json`, so the gap is at
-   last measurable instead of assumed. What it measures today is a failure; see
-   § The platform anchor as measured, below. Until that reads compliant, this
-   layer carries no weight and the reader should not credit it with any.
+2. **The platform holds the branch, and deliberately not the reviewer.**
+   `check_platform_anchor` reads the live rulesets and compares them against
+   `src/config/platform-anchor.json`, so what the forge enforces is measured
+   rather than assumed. What it enforces here is branch integrity — an active
+   ruleset over the default branch, deletion and force-push blocked, review-thread
+   resolution required, strict required checks, the context that carries the
+   ratification gate, no unconditional bypass actor. It does **not** include an approving review, by
+   owner ruling; see the next section, which states exactly what a green anchor
+   is and is not evidence of. Read that before crediting this layer with
+   anything.
 3. **The artifact is the durable record.** It is what a later reader opens to
    learn who reviewed what, and on what basis.
 
-### The platform anchor as measured
+### What a green platform anchor does and does not establish
 
 ```
-MEASURED 2026-09-10 ON `event4u-app/agent-config`: THE PLATFORM DOES NOT
-REQUIRE AN INDEPENDENT REVIEWER, AND AN ADMINISTRATOR BYPASSES EVERY RULE.
-UNTIL THAT CHANGES, THIS MECHANISM SUPPLIES PROCESS EVIDENCE — NOT A
-PLATFORM-ENFORCED RATIFICATION GUARANTEE. DO NOT CITE IT AS ONE.
+A GREEN ANCHOR PROVES THE OBSERVED PLATFORM CONFIGURATION MATCHES THIS
+REPOSITORY'S DECLARED, MECHANICALLY TESTED BASELINE AT THE TIME CHECKED.
+IT PROVES NOTHING ELSE. IT DOES NOT PROVE INDEPENDENT APPROVAL, SEPARATION
+OF DUTIES, PROTECTION AGAINST ADMINISTRATOR ACTION, OR THAT THE BASELINE
+ITSELF WAS INDEPENDENTLY AUTHORIZED. DO NOT CITE IT AS ANY OF THOSE.
 ```
 
-The three facts, from `gh api`, so a reader can re-run them rather than trust
-this paragraph:
+**This repository does not require an approving review, by owner ruling of
+2026-09-10, and that is a trust-model choice rather than a gap.** One
+maintainer is active; four other accounts hold write access and are rarely
+available, so a mandatory approval is a stop rather than a control. The two
+approval dimensions were therefore removed from the anchor's enforced set and
+from its non-negotiable floor — **not** waived as exceptions, because a
+dimension outside the trust model is not a suspended rule. Full record,
+including who may do this again and on what evidence:
+`owner_ruling_2026_09_10` in `src/config/platform-anchor.json`.
 
-- `repos/{owner}/{repo}/branches/main/protection` returns **404, "Branch not
-  protected"** — classic branch protection is not in use here at all. The live
-  surface is `repos/{owner}/{repo}/rulesets`, and any check written against the
-  classic endpoint measures nothing.
-- The one active branch ruleset covering `~DEFAULT_BRANCH` sets
-  **`required_approving_review_count: 0`** and `require_last_push_approval:
-  false`. A pull request is required; an *approving reviewer* is not. So a
-  ratification artifact can land reviewed by nobody the repository insisted on.
-- `bypass_actors` carries **`{actor_type: RepositoryRole, actor_id: 5,
-  bypass_mode: always}`**. Every rule above is advisory for that actor.
+**The vocabulary this contract may no longer use**, because each of these
+would now be false: *independent approval* · *separation of duties* · *no
+unilateral governance changes* · *administrator-resistant* · any claim that a
+green anchor proves council participation.
+
+**What independence actually rests on here — three parts, only one mechanical:**
+
+1. **Mechanical integrity.** The base-revision gate runs the base's copy of
+   `check_kernel_edit_ratified`, so a candidate diff cannot supply the code that
+   judges it, and the quorum policy is read from the same side. This part is
+   real and enforced.
+2. **Analytical independence.** The AI council is a different party from the
+   implementer and its verdicts are recorded verbatim. It is **not**
+   platform-enforced, it has no binding authority over the owner, and a
+   committed council record is evidence rather than authorization — the same
+   actor that edits the code could write it.
+3. **Owner authorization.** Real, and the owner is also the party gaining the
+   authority. This is not separation of powers and must never be described as
+   such.
+
+Together these prevent *accidental* weakening, create an *audit trail*, and
+supply *recorded multi-perspective review*. They do not constrain a determined
+administrator, and the mechanism cannot: the same account controls the verifier,
+its expectation file, the required contexts and the platform ruleset.
+
+**One limitation stated rather than hidden:** the verifier cannot authenticate
+that an owner ruling was given or correctly transcribed. It can only verify that
+a governance-labelled change was made and merged. An agent's transcription of a
+chat message into a floor reduction is not something any gate here can check —
+which is why the authorising event is the owner's own review and merge of a
+conspicuously labelled trust-model change, and never the transcription itself.
+
+### Emergency use, and what does not qualify
+
+The owner can bypass any gate here; the platform cannot prevent it. So this
+procedure is **detective and restorative, not preventive** — its job is that a
+bypass leaves a trace, not that it be impossible.
+
+1. **Trigger:** an active incident where an enforced control blocks time-critical
+   restoration or containment. Ordinary work, release pressure, convenience, and
+   *"the check is red"* are **not** emergencies.
+2. **Record** — before acting if feasible, immediately after if not: the
+   incident, the control changed, the reason, the affected revision, the
+   timestamp.
+3. **Change the smallest thing** that unblocks the incident.
+4. **Restore** the control as soon as the incident permits.
+5. **Verify** with `check_platform_anchor` after restoration and attach the
+   result to the incident record.
+6. **Commit** the record. An unrecorded bypass is the only failure mode this
+   procedure can actually have.
+
+### The measurement this section was written from
+
+```
+                                   before      written 10:51Z   now
+required_approving_review_count     0           1                0
+require_last_push_approval          false       true             false
+required_review_thread_resolution   true        true             true
+strict_required_status_checks       true        true             false
+bypass_actors                       1           0                0
+```
+
+`required_review_thread_resolution` is in the table because a blind review
+pointed out that it was the one dimension the evaluator still enforced whose
+live value nothing here had measured — so a claim about which dimensions fail
+rested on an unread field. Measured: true, throughout. It is enforced, satisfied,
+and covered by no waiver.
+
+`repos/{owner}/{repo}/branches/main/protection` returns **404** — this
+repository uses repository **rulesets**, so a checker written against the
+classic endpoint measures nothing. The emptied `bypass_actors` held;
+`current_user_can_bypass` went `always` → `never` and stayed there.
+
+### `strict_required_status_checks` is waived, not failing and not removed
+
+The owner ruled on it separately, later the same day, and the reasoning is a cost
+trade-off rather than an impossibility:
+
+> *"It is fine by me if 3 branches were green, then I want to be able to merge
+> all 3 without updating them. If something breaks in the process, I can fix it
+> afterwards. But that happens too rarely. And the other way currently costs me
+> too much time, because after every update all the checks have to run again."*
+
+That falls on the other side of the boundary the approval ruling was recorded
+under — *"legitimate only where the operating model cannot satisfy the floor,
+never where waiting is merely inconvenient"* — so it was not folded in with it.
+The council replaced the boundary rather than stretching it, and gave the
+mechanism a third state:
+
+> A baseline control may be waived only when the repository cannot reasonably
+> satisfy it, **or** when the accountable owner explicitly accepts a specific,
+> bounded risk in exchange for a documented and material operational benefit.
+> Every waiver must identify the failure mode, supporting evidence, scope,
+> authority, review trigger, and expiry or renewal date. Convenience or
+> preference alone is insufficient.
+
+So `strict_required_status_checks` stays a **baseline expectation** with an
+active waiver, and the gate reports `PASS_WITH_ACCEPTED_RISK` — exit 0, with the
+accepted risk, its authority, and its expiry named in the output. It is neither a
+silent pass nor a red. The waiver is `arr-2026-09-10-strict-status-checks` in
+`src/config/platform-anchor.json`, it expires **2026-12-09**, and renewal is a
+fresh decision with refreshed measurements rather than an extension.
+
+**What this specifically does not prove, and the gate says so in its own
+output:** that a change composes with the current base. A required status check
+certifies the commit it ran on. With strictness waived, two independently green
+branches may merge from stale bases and interact to break the result, and the
+staleness is not bounded to one commit.
+
+**What stops the waiver list becoming an exemption registry** — the failure both
+council seats named: eligibility is bounded by a committed `NEVER_WAIVABLE` list
+in code rather than by the quality of a waiver's prose; every field is required
+and an incomplete waiver is *refused* rather than honoured, so the dimension it
+names reds normally; an expired waiver is not honoured; and a waiver for a
+dimension the forge already satisfies is reported as stale. A malformed waiver is
+worse than no waiver, never better.
+
+**The floor is now two tiers, and calling it otherwise would be false.** Six
+dimensions are hard — enforcement, target, default-branch coverage,
+unconditional bypass, deletion, force-push. The rest are baseline expectations a
+complete, unexpired, owner-authorised waiver may trade against a documented
+benefit.
+
+The readings themselves are in § The measurement this section was written from,
+above, and are not repeated here — they were, and the duplicate said something
+the rest of this file no longer says. What that earlier copy framed as three
+findings is now one finding, one owner ruling and one waiver: the 404 stands and
+is why a classic-endpoint check would measure nothing; the zero approving reviews
+are a recorded trust-model choice rather than a gap; and the unconditional bypass
+was removed and is the only one of the three that was ever a defect this
+mechanism could act on.
 
 One clause that a first reading of this gap gets wrong, corrected here because
 it changes what a fix has to do: **the ratification gate IS a required status
@@ -153,15 +294,35 @@ the round-2 ratification review refused the deny-retirement over. It is
 necessary and not sufficient, and neither `check_platform_anchor` nor anything
 else in this tree closes it.
 
-**Whether repository administrators are inside the threat model is unanswered,
-and this contract must not pretend otherwise.** If they are a deliberate
-root-of-trust escape hatch, that belongs here in writing along with an audited
-emergency-use procedure; what may not stand is this document simultaneously
-claiming protection against unilateral action while an administrator role
-bypasses unconditionally. The question is recorded in `threat_model_note` in
-`src/config/platform-anchor.json` and is owner-reserved.
+**Whether repository administrators are inside the threat model is ANSWERED, as
+of 2026-09-10: they are the root of trust, by owner ruling.** The owner is the
+one active maintainer and a mandatory approving review would be a stop rather
+than a control, so the approval dimensions left the anchor's enforced set
+entirely. This contract therefore no longer claims protection against unilateral
+administrator action anywhere — see § What a green platform anchor does and does
+not establish for the vocabulary that is now forbidden, and § Emergency use for
+the audited procedure the answer obliges. The ruling is recorded in
+`owner_ruling_2026_09_10` in `src/config/platform-anchor.json`; the superseded
+`threat_model_note` beside it is kept because a superseded record reads
+differently from a deleted one.
+
+One half of that note still stands and is still enforced: an unconditional
+bypass actor remains a **failure**, and it is on the list no waiver may reach.
+The owner's ruling removed the approval requirement, not the bypass rule, and
+the emptied `bypass_actors` held through the later revert of the two approval
+dimensions.
 
 ### Re-measured 2026-09-10, afternoon — one of those three readings is now history
+
+> **This whole section is itself now a dated reading, and two of its
+> present-tense claims are superseded by § `strict_required_status_checks` is
+> waived, not failing and not removed above.** It was written while the gate
+> exited 1 on three findings; the gate now exits **0** with
+> `PASS_WITH_ACCEPTED_RISK`, because the two approval dimensions left the
+> enforced set entirely by owner ruling and `strict_required_status_checks`
+> gained a bounded waiver. It stays as written for the same reason the block it
+> corrects does: it records the measurement the later decisions were taken
+> against. Read its verdict sentences with that date attached.
 
 The block above is a **dated** reading and stays as written. It was true at
 08:26 (commit `6bab400a8`) and it is not a complete description of the current
@@ -267,10 +428,20 @@ only on a diff that already requires ratification and exits before its first
 API call otherwise — but they **do** block every future kernel-rule,
 governance-hook and anchor-path change at pre-push, which is precisely the
 class of change this whole mechanism exists to govern. The drift is therefore
-not idle. The in-repository half of the reconciliation, including the
-bounded waiver both 2026-09-10 council seats required in place of a lowered
-floor, is planned in the `road-to-bounded-approval-floor-waiver` roadmap —
-named by slug rather than by path, per `no-roadmap-references`.
+not idle. The in-repository half of the reconciliation was planned in the
+`road-to-bounded-approval-floor-waiver` roadmap — named by slug rather than by
+path, per `no-roadmap-references`.
+
+**And it did not land in the shape that roadmap planned, which is worth stating
+here rather than only there.** The roadmap plans a bounded waiver over the two
+**approval** dimensions. A later ruling the same day removed both dimensions
+instead — from the expectation and from the floor — on the ground that a
+dimension outside the trust model is not a waived rule. The waiver mechanism
+did land, over `strict_required_status_checks`, which is the one dimension the
+repository still considers the safer setting. So the paragraph above describing
+three intended findings describes a state that lasted about three hours; the
+current verdict, and the reasoning for the split, are in
+§ `strict_required_status_checks` is waived, not failing and not removed.
 
 ### The bootstrap exception, which is sound exactly once
 
@@ -315,8 +486,11 @@ The gate reads the artifact's shape and the diff's paths. It cannot read
 whether the review actually happened, whether `reviewed_by` names a session
 that ever ran, or whether the reviewer was steered
 ([`evaluator-independence`](../../src/rules/evaluator-independence.md) is the
-model-carried half). It also does not verify the platform controls named in
-§ Where the trust actually comes from — that is the open residual.
+model-carried half). The platform controls it once did not verify at all are now
+read by `check_platform_anchor` — corrected here because this was the last thing
+a reader was told on the subject and it had stopped being true. What remains is
+narrower: that gate runs pre-push and not in CI, because the rulesets endpoint
+needs a token scope a workflow `GITHUB_TOKEN` cannot carry.
 
 What it makes impossible is narrower and real: a kernel-rule edit landing with
 no record at all; a record whose reviewer is its own author; a diff that

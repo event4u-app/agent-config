@@ -38,6 +38,37 @@ relates:
 > The occasion was PR #1988 reporting `mergeStateStatus: BLOCKED`,
 > `reviewDecision: REVIEW_REQUIRED` with every required check green.
 
+## SUPERSEDED for the approval half — 2026-09-10, later the same day
+
+```
+THIS ROADMAP PLANS A BOUNDED WAIVER OVER THE TWO APPROVAL DIMENSIONS.
+A LATER OWNER RULING REMOVED BOTH DIMENSIONS INSTEAD, AND A DIMENSION
+OUTSIDE THE TRUST MODEL IS NOT A WAIVED RULE.
+DO NOT BUILD A WAIVER OVER `minimum_approving_reviews` OR
+`require_last_push_approval` — THEY NO LONGER EXIST TO WAIVE.
+```
+
+The council session quoted above is real and its reasoning held; what changed is
+the question. The owner then ruled that a mandatory approving review is not
+wanted on this repository at all — one active maintainer, four rarely-available
+write accounts, and a PR author cannot approve their own PR — so both dimensions
+left `src/config/platform-anchor.json` and `NON_NEGOTIABLE_FLOOR` rather than
+becoming exemptions. A second council (same seats, 2 rounds, blind peer review,
+2/2) decided that shape, and the owner authorised the policy.
+
+**The mechanism this roadmap designed did land**, and that is why the file stays
+rather than being deleted: `accepted_risk_reductions` in
+`src/config/platform-anchor.json`, `AcceptedRiskWaiver` / `readWaivers` /
+`NEVER_WAIVABLE` / `WAIVER_AUTHORITIES` in `src/scripts/_lib/platform_anchor.ts`,
+and the third status `compliant-with-accepted-risk`. It carries exactly one
+entry, `arr-2026-09-10-strict-status-checks`, over the one dimension the
+repository still considers the safer setting, expiring 2026-12-09.
+
+**What is genuinely still open, and it is not the waiver:** the administrator
+recovery procedure the 12:51 edit removed the escape for, plus the owner question
+in `threat_model_note`. Both are tracked as the second half of the
+`ratification-platform-anchor` blocker on `road-to-typed-grants-that-persist`.
+
 ## Goal
 
 `src/config/platform-anchor.json` describes the live ruleset truthfully again,

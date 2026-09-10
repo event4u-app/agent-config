@@ -392,11 +392,40 @@ item. Phases 1-6 may run once 0.2 is chosen.
   does, verified 2026-09-08.
 
 ### blocker: ratification-platform-anchor
-- **Status:** open — **limb 1 was met at 12:51 on 2026-09-10 and owner-reversed at 15:14 and
-  15:16; limb 2 blocked on a platform capability.** Read the limb-1 paragraph below together
-  with the correction that follows it; the first is the 12:51 measurement, the second is what
-  the owner then decided. The limb-1 paragraph is present-tense about 12:51 and must be read
-  with that date, not as current state.
+- **Status:** open — **the criterion itself changed on 2026-09-10 by owner ruling, and what
+  is left is the CI wiring plus an unrehearsed recovery path.** The owner ruled that a mandatory
+  approving review is not wanted on this repository: *"I am the only maintainer, or the main
+  one. There are others, but they are rarely active. That is why this would be a blocker."*
+  Five accounts carry write access; four are rarely available. So the two approval dimensions
+  left the anchor's enforced set and its non-negotiable floor — removed, **not** exempted,
+  because a dimension outside the trust model is not a waived rule. An AI council decided the
+  implementation shape (2/2 convergent on narrowing the enforced set rather than keeping an
+  unsatisfiable floor); the owner decided the policy. openai: *"Keeping those requirements
+  hard-coded would make red mean the repository intentionally chose a different trust model,
+  rather than the configured platform violated its policy. That is not a useful compliance
+  signal."*
+  **`strict_required_status_checks` is WAIVED, not failing — corrected the same day.** This
+  field first said the gate reds on exactly that one dimension, which was true for about three
+  hours. The owner then ruled on it too, and the reasoning is a cost trade-off rather than an
+  impossibility: three green branches should merge without sequential rebases, because each
+  rebase costs a full 20-30 minute re-run and the breakage it prevents is rare and repairable.
+  That falls on the other side of the boundary the approval ruling was recorded under, so the
+  council replaced the boundary rather than stretching it and gave the mechanism a third state.
+  The gate now reports `PASS_WITH_ACCEPTED_RISK`, with the waiver
+  `arr-2026-09-10-strict-status-checks` naming the failure mode, the measured cost, the
+  owner-attested frequency as an ASSUMPTION, the repair path and an expiry of 2026-12-09.
+  Nothing was restored on the forge: one seat's constraint, honoured — approval of a
+  trust-model change is not authorization to mutate the live ruleset.
+  **What the anchor may no longer be cited as:** independent approval, separation of duties,
+  protection against unilateral administrator action, or proof of council participation. The
+  honest three-part claim, and the limitation that the verifier cannot authenticate an owner
+  ruling at all, are written into `docs/contracts/ratification-artifact.md`.
+  Superseded reading, kept because it records what the criterion looked like before the ruling:
+  **limb 1 met 2026-09-10, limb 2 blocked on a platform capability.** The timing that reading
+  was written against, measured from the ruleset history rather than from memory: limb 1 was
+  met at 12:51 (version `49256548`) and owner-reversed in two single-field edits, `49271774`
+  at 15:14 and `49272069` at 15:16. Read the limb-1 paragraph below with those dates, not as
+  current state.
   This entry read `resolved` for one commit on the premise that both limbs were met. Limb 2 was
   then falsified by CI and the claim is corrected here rather than left standing. **What limb 2
   ran into:** the gate reads `repos/{owner}/{repo}/rulesets`, which needs the repository
@@ -411,14 +440,20 @@ item. Phases 1-6 may run once 0.2 is chosen.
   any red. **What closes limb 2:** a PAT in a repository secret carrying
   `administration: read`, then the workflow step. That is a human action. Until then the gate
   runs in `taskfiles/ci-fast.yml` — a real pre-push control, and not a CI one, which is the
-  honest description. **Limb 1, verified rather than asserted:** the owner changed the three
+  honest description. **Limb 1 — SUPERSEDED READING of 2026-09-10 12:51, kept because it is
+  what was true for two and a half hours and a blind review caught it still standing as
+  present-tense fact.** Every part of it is now false: the two approval settings were reverted
+  by the owner at 15:18 and then ruled out of the trust model, and the gate does not report
+  `COMPLIANT` — it reports `PASS_WITH_ACCEPTED_RISK`, with `strict_required_status_checks`
+  covered by a dated waiver. The current verdict is in `What to do` below; this paragraph is
+  history, not status. Original text: the owner changed the three
   ruleset settings and
   `./scripts-run src/scripts/check_platform_anchor --files src/rules/commit-policy.md`
   exits **0**, reporting `platform anchor COMPLIANT for event4u-app/agent-config` with
   `approving reviews required: 1 (policy floor 1)`. Read back from the forge after the write:
   ruleset `17749383` now carries `required_approving_review_count: 1`,
   `require_last_push_approval: true`, `bypass_actors: []`, and `current_user_can_bypass` has
-  gone from `always` to **`never`** — all four rules (`deletion`, `pull_request`,
+  gone from `always` to **`never`** — all four rules (`deletion`, pull-request,
   `required_status_checks`, `non_fast_forward`) preserved, enforcement still `active`, the
   required context unchanged. **Limb 2, partially done:** `taskfiles/ci-fast.yml` carries the
   gate in the `preflight` list and as its own `check-platform-anchor` target, and
@@ -501,100 +536,93 @@ item. Phases 1-6 may run once 0.2 is chosen.
   than reading one by id, which openai made a condition: assuming ruleset `17749383` or its
   name would break the first time an administrator splits it.
 
-  **What the human must change — SUPERSEDED 2026-09-10 afternoon. The list below asked for
-  three settings changes; all three were made, two were then deliberately reversed by the
-  owner, and this entry must not go on instructing a future reader to undo that reversal.**
-  The original list, kept because it is what the morning measurement justified:
-  1. `required_approving_review_count` is **0**. Set it to at least 1. Without it a
-     ratification artifact lands reviewed by nobody the repository insisted on.
-  2. `require_last_push_approval` is **false**. Set it true, so an approval cannot predate the
-     final push and the reviewed diff is the merged diff.
-  3. `bypass_actors` carries `{actor_type: RepositoryRole, actor_id: 5, bypass_mode: always}`,
-     and the acting account reports `current_user_can_bypass: always`. Remove or restrict it,
-     or answer the owner question in `threat_model_note` and record administrators as a
-     deliberate escape hatch with an audited emergency procedure. What may not stand is the
-     contract claiming protection against unilateral action while this remains.
+  **SUPERSEDED, 2026-09-10 — the three settings this field used to demand are no longer the
+  action, and a blind completion review caught that they were still standing here.** The field
+  said: set `required_approving_review_count` to at least 1, set `require_last_push_approval`
+  true, and remove the unconditional bypass. Item 3 was done and held. Items 1 and 2 were done,
+  reverted by the owner, and then **ruled out of the trust model entirely** — the owner is the
+  one active maintainer and a mandatory approval is a stop rather than a control, so those two
+  dimensions left the enforced set and the floor rather than becoming exemptions. Instructing a
+  later reader to restore them would mutate the live ruleset against a recorded ruling, which
+  the ratification artifact for that change explicitly says its authority does not cover.
 
-  **What actually happened**, from the ruleset history rather than from memory —
-  `gh api repos/event4u-app/agent-config/rulesets/17749383/history`. The owner applied all
-  three at 12:51 (version `49256548`), which made the repository unmergeable: this repository
-  has zero eligible approvers, GitHub does not permit approving one's own pull request, and
-  item 3 removed the administrator escape in the same edit. PR #1988 measured
-  `mergeable: MERGEABLE`, `mergeStateStatus: BLOCKED`, `reviewDecision: REVIEW_REQUIRED` with
-  every required check green. Items 1 and 2 were reversed in two separate edits, `49271774`
-  at 15:14 and `49272069` at 15:16; #1988 merged at 15:17:09 local. Item 3 is unchanged on
-  the platform — `bypass_actors` is `[]` and `current_user_can_bypass` is `never` — and the
-  passages still describing the old bypass as current state are corrected in
-  `docs/contracts/ratification-artifact.md` § Re-measured 2026-09-10.
+  **TWO THINGS ARE LEFT, and an earlier version of this paragraph named only the first.**
+  It said "THE ONE ACTION LEFT ... Everything else is done", which dropped the second — a
+  claim the merge with the reversal record refuted rather than a summary of it.
 
-  **Item 3 is NOT discharged, and an earlier version of this paragraph said it was.** It
-  read "Item 3 stands and is done" and called this blocker's "what may not stand" clause
-  "discharged on the platform side". Removing the bypass satisfies
+  **(1) A PAT in a repository secret carrying `administration: read`**, so the gate can run
+  in a workflow. Neither a setting nor a diff. The rulesets endpoint needs that scope and a
+  workflow `GITHUB_TOKEN` cannot be granted it — actionlint refused `administration: read` as an *"unknown permission scope"* and listed
+  the sixteen that exist, none of which grants it. Until the secret exists the gate runs in
+  `taskfiles/ci-fast.yml` (a real pre-push control, not a CI one), is declared under
+  `local_only:` with the class `token-scope-unavailable`, and carries a reachability exemption
+  naming this exact promotion condition.
+
+  **(2) Item 3 — the removed administrator bypass — is NOT discharged, and the CI-wiring
+  half above is not what it waits on.** Removing `bypass_actors` satisfies
   `allow_unconditional_bypass: false` and simultaneously removes the recovery path from the
-  next lockout — which both 2026-09-10 council seats raised and neither closed. openai
-  required that recoverability be established rather than inferred from
+  next lockout, which both 2026-09-10 council seats raised and neither closed. openai
+  required that recoverability be **established** rather than inferred from
   `current_user_can_bypass: never`, which describes bypass capability and not
   ruleset-administration authority; anthropic wrote that the design needs a tested
-  administrator-level recovery procedure "which neither reviewer proposes". `admin: true` is
-  measured on the acting account and is a capability, not a rehearsed procedure. The owner
-  question this entry names is likewise unchanged and still open.
+  administrator-level recovery procedure *"which neither reviewer proposes"*. `admin: true`
+  on the acting account is a capability, not a rehearsed procedure. The owner question in
+  `threat_model_note` is likewise unchanged and still open. Measured state, so this is not
+  read from memory: `bypass_actors` is `[]` and `current_user_can_bypass` is `never`.
 
-  **What this blocker now waits on**, which is not items 1 and 2: the in-repository half of
-  the reversal — a structured, evidence-carrying exemption rather than a lowered floor,
-  which both 2026-09-10 council seats converged on (openai would vote `refused` on an
-  indefinite self-asserted one) — plus the recovery procedure above. Planned in
-  `agents/roadmaps/road-to-bounded-approval-floor-waiver.md`, Phases 0 and 1.
+  **The ruleset history behind all of it**, from
+  `gh api repos/event4u-app/agent-config/rulesets/17749383/history` rather than from
+  memory: six versions exist on 2026-09-10. `49256548` at 12:51 applied all three items,
+  which made the repository unmergeable — zero eligible approvers, no self-approval on
+  GitHub, and the administrator escape removed in the same edit; PR #1988 measured
+  `mergeStateStatus: BLOCKED` with every required check green. `49271774` at 15:14 and
+  `49272069` at 15:16 reversed items 1 and 2, one field each, and #1988 merged at 15:17:09
+  local — one minute *before* `49272180` at 15:18, which touched only
+  `strict_required_status_checks_policy`. `49276909` at 16:04 restored `strict` on the
+  assumption that 15:18 had been a side effect and `49277135` at 16:06 returned it to
+  `false` once the owner stated the intent.
 
-  **A third floor field is off by owner decision and is NOT waiting on anything.**
-  `strict_required_status_checks_policy` was `true` before 15:18 and is `false` now. It
-  looked like a side effect of the approval rollback and was briefly restored at 16:04 on
-  that assumption; the owner then stated the intent and it went back off. The argument is
-  a measured cost, not an oversight: several branches are commonly green at once here, and
-  requiring each to be brought up to date re-runs the full check suite on every one of
-  them, serially. The owner accepts a rare post-merge repair instead. Do not restore it as
-  a tidy-up — the residual (a green check is evidence about that branch's base, not about
-  the trunk it lands on) is accepted deliberately.
+  **`agents/roadmaps/road-to-bounded-approval-floor-waiver.md` is superseded for the
+  approval half.** It plans a bounded waiver over `minimum_approving_reviews` and
+  `require_last_push_approval`; a later ruling removed both dimensions instead, and a
+  dimension outside the trust model is not a waived rule. Its mechanism did land — as
+  `accepted_risk_reductions`, over `strict_required_status_checks`, which is the one
+  dimension the repository still wants.
 
-  Run `./scripts-run src/scripts/check_platform_anchor --files src/rules/commit-policy.md` to
-  see the current verdict. On 2026-09-10 morning it exited 1 naming the three items above; on
-  the same afternoon it exits 1 naming `approvals-below-minimum`,
-  `last-push-approval-missing` and `status-checks-not-strict` — all three intended, the
-  first two pending the waiver and the third settled by the owner decision above.
-- **Recommendation:** land the bounded waiver from
-  `agents/roadmaps/road-to-bounded-approval-floor-waiver.md`, then re-run the gate.
-  **CORRECTED 2026-09-10 afternoon** — this line read *"change the three settings, then
-  re-run the gate"*, and two of those three have since been reversed by the owner. The
-  build half is done
-  and the recommendation that used to sit here — *"build it, scoped to the kernel/governance
-  surface only"* — is discharged. Both round-1 reviewers had converged on this being the real
-  anchor, one writing that without it the gate *"enforces the format of the Iron Law, not the
-  Iron Law itself"*, and the counter-argument they weighed was that GitHub already refuses the
-  merge when protection is configured. **Measurement settles that counter-argument against
-  itself:** protection is not configured in the sense the argument assumed — zero approvals,
-  no last-push approval, an unconditional admin bypass — so the gate is not re-asserting a
-  control the platform holds. It is reporting that the control is absent.
-- **If you do nothing:** the artifact's independence claim rests on the base-revision gate
-  alone — which is real and does close the self-judging path — with nothing mechanical behind
-  the human-review limb. A reviewer who credits the artifact's strings is trusting text the
-  proposing party wrote. That is now stated in the contract rather than implied:
-  `docs/contracts/ratification-artifact.md` § The platform anchor as measured carries the
-  three `gh api` readings and the sentence that the mechanism supplies process evidence rather
-  than a platform-enforced guarantee. The gate also stays RED on every kernel, governance and
-  anchor diff for as long as this is untouched, which is the forcing function both council
-  seats intended — anthropic: *"a verification gate that correctly detects a missing control
-  is doing its job."*
-- **Resolved when:** BOTH of these hold, and the second was added 2026-09-10 after a blind
-  completion review pointed out that the first alone lets this blocker close with the gate
-  still inert:
+  Current verdict, reproducible:
+  `./scripts-run src/scripts/check_platform_anchor --files src/rules/commit-policy.md` exits
+  **0** with `PASS_WITH_ACCEPTED_RISK` — every hard dimension present, and
+  `strict_required_status_checks` covered by waiver `arr-2026-09-10-strict-status-checks`,
+  which expires 2026-12-09.
+- **Recommendation:** create the PAT secret, wire the workflow step, and establish the
+  administrator recovery procedure item 3 removed the escape from. In particular do **not**
+  re-add the approval dimensions — that is the
+  instruction this entry used to carry and it is now contrary to a recorded owner ruling. The
+  recommendation before that one — *"build it, scoped to the kernel/governance surface only"* —
+  was discharged when the gate landed.
+- **If you do nothing:** the gate keeps running pre-push and never in CI, so a governance diff
+  pushed without `task preflight` reaches `main` with the anchor unchecked — and the next
+  ruleset lockout has no rehearsed way out, because the escape was removed and no procedure
+  replaced it. The residual is smaller than this field used to describe, but it is two items
+  rather than one: the anchor itself now passes,
+  the accepted risk is recorded with an expiry, and
+  `docs/contracts/ratification-artifact.md` states what a green anchor is and is not evidence
+  of — no claim of independent approval, separation of duties, or protection against
+  unilateral administrator action survives in it.
+- **Resolved when:** BOTH of these hold. The second was added 2026-09-10 after a blind review
+  pointed out that the first alone lets this blocker close with the gate inert, and it is
+  **re-scoped in the same breath rather than left unmeetable**, because its original wording
+  required a workflow step the platform cannot authenticate:
   1. `./scripts-run src/scripts/check_platform_anchor --files src/rules/commit-policy.md`
-     exits 0 against the live repository — which requires the gate (landed 2026-09-10) and the
-     three settings changes named above.
-  2. `grep -c check_platform_anchor taskfiles/ci-fast.yml` returns at least 1 AND the gate
-     appears in a `.github/workflows/` step, so the check runs on every pull request rather
-     than only when someone remembers to invoke it. The unwired landing is deliberate and
-     argued in 5.2, but "wire it afterwards" was prose in a step and prose in a step closes
-     nothing — the reviewer's phrasing: *"nothing in the closing condition forces the wiring
-     to ever follow."*
+     exits 0 against the live repository. **Met 2026-09-10** —
+     `PASS_WITH_ACCEPTED_RISK`, with the one waived dimension named and dated.
+  2. `grep -c check_platform_anchor taskfiles/ci-fast.yml` returns at least 1 — **met** — AND
+     the gate appears in a `.github/workflows/` step, which needs the PAT secret above.
+     Until then the honest substitute is in place and gate-verified rather than asserted: the
+     `local_only:` declaration and the reachability exemption both name the promotion
+     condition, and `check_ci_local_parity` and `check_gate_reachability --gate` exit 0 over
+     them. A reader can tell "not wired" from "wired and quietly skipping", which is what the
+     reviewer's objection was actually about.
 
   The second limb of the original clause, *"or a recorded owner decision states that the platform's own enforcement
   is the anchor and the gate need not re-assert it"*, is **withdrawn**: the council rejected it

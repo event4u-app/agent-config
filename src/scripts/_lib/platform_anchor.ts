@@ -3,19 +3,24 @@
  * mechanism's trust argument says it enforces?
  *
  * `check_kernel_edit_ratified` proves that a diff touching a kernel rule, a
- * governance hook or the ratification mechanism itself carries an independently
- * reviewed artifact. What it cannot prove is that the artifact was reviewed by
- * anyone the repository required — that half lives in repository settings, which
- * no diff contains. `docs/contracts/ratification-artifact.md` told a reader the
- * trust came from the base-revision gate PLUS human review of the pull request,
- * and nothing in the tree established the second limb.
+ * governance hook or the ratification mechanism itself carries a reviewed
+ * artifact. What no diff can contain is what the forge itself requires, and
+ * that is what this module reads.
  *
- * This module is the second limb, made checkable. It is deliberately PURE: it
- * evaluates ruleset payloads a caller fetched, so both polarities are testable
- * offline and no test needs a token. The impure half — the `gh api` calls and
- * the fail-closed exit codes — lives in `src/scripts/check_platform_anchor.ts`.
+ * It does NOT establish that the artifact was reviewed by anyone the repository
+ * insisted on: by owner ruling of 2026-09-10 this repository requires no
+ * approving review, because one maintainer is active and a mandatory approval
+ * would be a stop rather than a control. So what this module checks is branch
+ * integrity plus the presence of the required context that carries the gate —
+ * see `docs/contracts/ratification-artifact.md` for what a green anchor is and
+ * is not evidence of, which is the shorter list than it once was.
  *
- * Four constraints below are structural, and the code would read as arbitrary
+ * It is deliberately PURE: it evaluates ruleset payloads a caller fetched, so
+ * both polarities are testable offline and no test needs a token. The impure
+ * half — the `gh api` calls and the fail-closed exit codes — lives in
+ * `src/scripts/check_platform_anchor.ts`.
+ *
+ * Five constraints below are structural, and the code would read as arbitrary
  * without them:
  *
  * 1. **Effective combination, never a ruleset by id.** A repository may carry
@@ -24,21 +29,29 @@
  *    name would make this check wrong on the first split. So every applicable
  *    active ruleset is unioned: booleans OR together, the approval count takes
  *    the MAXIMUM, contexts union, and bypass actors accumulate.
- * 2. **A non-negotiable floor in the code.** The expectation lives in
- *    `src/config/platform-anchor.json` so that changing it is a reviewable
- *    governance diff. That alone is not enough: a policy-only edit could set
- *    `minimum_approving_reviews` to 0 and make itself green. `NON_NEGOTIABLE_FLOOR`
- *    below is the floor such an edit cannot cross, and a policy under it is
- *    rejected rather than honoured.
- * 3. **Two distinct negative outcomes.** `noncompliant` means the configuration
- *    was read and violates the policy. `unverifiable` means it could not be
- *    established. Both are failures — a control that passes when it cannot
- *    measure is advisory — but they are different repairs, so they are different
- *    statuses rather than one exit code.
+ * 2. **A non-negotiable floor in the code, in two tiers.** The expectation lives
+ *    in `src/config/platform-anchor.json` so that changing it is a reviewable
+ *    governance diff. That alone is not enough: a policy-only edit could lower a
+ *    threshold and make itself green, so `NON_NEGOTIABLE_FLOOR` below is what
+ *    such an edit cannot cross. `NEVER_WAIVABLE` is the harder tier inside it —
+ *    the dimensions no waiver may reach at all.
+ * 3. **Two distinct negative outcomes, and one qualified positive.**
+ *    `noncompliant` means the configuration was read and violates the policy;
+ *    `unverifiable` means it could not be established, and both are failures
+ *    because a control that passes when it cannot measure is advisory. They stay
+ *    separate statuses because they are different repairs.
+ *    `compliant-with-accepted-risk` is the third: every hard dimension present,
+ *    and at least one baseline expectation covered by a complete, unexpired,
+ *    owner-authorised waiver. It is neither a pass nor a failure, and the caller
+ *    must not print it as a plain pass.
  * 4. **Configured bypass actors, not the caller's own capability.** GitHub
  *    reports `current_user_can_bypass` for the acting identity, which varies by
  *    token and says nothing durable about the repository. The durable fact is
  *    the configured `bypass_actors` list, so that is what is judged.
+ * 5. **A malformed waiver is worse than no waiver.** An incomplete, expired or
+ *    impermissible waiver is refused, and the dimension it named is then judged
+ *    normally. The opposite direction — a badly written waiver skipping a check
+ *    — is how a waiver mechanism becomes an exemption registry.
  *
  * A required status check pins a JOB's reported name, never the steps inside it.
  * `check_kernel_edit_ratified` is a step inside `Sync + Generate Tools
@@ -88,8 +101,6 @@ export interface AnchorPolicy {
     enforcement: string;
     target: string;
     covers_default_branch: boolean;
-    minimum_approving_reviews: number;
-    require_last_push_approval: boolean;
     required_review_thread_resolution: boolean;
     block_deletion: boolean;
     block_non_fast_forward: boolean;
@@ -107,15 +118,42 @@ export interface AnchorPolicy {
  * redefining `minimumApprovals` to zero and making itself green."*
  */
 export const NON_NEGOTIABLE_FLOOR = {
-    minimum_approving_reviews: 1,
-    require_last_push_approval: true,
+    // `minimum_approving_reviews` and `require_last_push_approval` are NOT here,
+    // and their absence is a recorded trust-model decision rather than an
+    // oversight or a convenience. This repository has one active maintainer;
+    // the others hold write access and are rarely available. A mandatory
+    // approving review is therefore not a control here, it is a stop — and a
+    // floor nothing can satisfy makes red mean "the repository chose a
+    // different model" instead of "the platform violates its policy", which is
+    // the reading that gets a gate deleted or wired `continue-on-error`.
+    //
+    // The boundary this does NOT cross, stated because the mechanism cannot
+    // check it: a floor reduction is legitimate only where the operating model
+    // CANNOT satisfy the floor — no second human exists — never where waiting
+    // is merely inconvenient.
+    //
+    // `required_review_thread_resolution` IS here, and it was briefly not.
+    // Removing it was the implementer's own judgement — approval-adjacent,
+    // near-vacuous once no review is required — and a blind review caught that
+    // the same change's record says only the owner may authorize a floor
+    // reduction while the ruling names two dimensions and not this one. It also
+    // left the check policy-lowerable: one boolean flip in the expectation
+    // deleted it while the anchor still read compliant. Restored, and the forge
+    // has it true, so restoring costs nothing and removes an unauthorized
+    // reduction rather than adding a requirement.
     required_review_thread_resolution: true,
     block_deletion: true,
     block_non_fast_forward: true,
-    strict_required_status_checks: true,
     allow_unconditional_bypass: false,
     minimum_required_contexts: 1,
-    // The SELECTOR half. The six values above are thresholds a ruleset is
+    // `strict_required_status_checks` is NOT in the floor, and that is the
+    // second half of the same correction. It carries an active waiver, and a
+    // floored dimension is unwaivable by construction — holding it in both
+    // places was the contradiction a blind review surfaced from the other side.
+    // It stays a baseline expectation in `platform-anchor.json`, which is the
+    // tier a waiver may trade against.
+    //
+    // The SELECTOR half. The values above are thresholds a ruleset is
     // measured against; these three decide WHICH rulesets are measured at all,
     // and leaving them unfloored left the whole check reachable through a door
     // the floor did not watch. A blind review probed it against this evaluator:
@@ -129,10 +167,76 @@ export const NON_NEGOTIABLE_FLOOR = {
     covers_default_branch: true,
 } as const;
 
-/** The upper bound on the approval floor a policy may demand. */
-export const MAX_APPROVING_REVIEWS = 100;
+/**
+ * A dimension the owner has deliberately left unsatisfied, on record.
+ *
+ * The third state exists because the first two were both wrong for a real case.
+ * Deleting a dimension the repository still considers the safer configuration
+ * erases the difference between "never expected" and "expected and knowingly
+ * waived"; leaving it enforced-and-red makes the gate say the configuration
+ * violates its policy when the policy is what chose it. openai: *"If
+ * noncompliance does not fail the gate, that dimension is not enforced for the
+ * duration of the waiver. It remains a baseline expectation subject to an
+ * active exception."* This type is that exception, made checkable.
+ *
+ * Every field is required, and a waiver missing any of them is not honoured —
+ * an incomplete waiver is an undocumented deviation wearing a record's clothes.
+ * `expires` is the load-bearing one: without it a waiver outlives the cost
+ * premise that justified it, and the premise here is a CI duration, which is
+ * not a constant.
+ */
+export interface AcceptedRiskWaiver {
+    dimension: string;
+    baseline: boolean;
+    accepted: boolean;
+    /** What can go wrong, in concrete terms rather than as a category. */
+    failure_mode: string;
+    /** What the waiver buys, with the measurement it rests on. */
+    cost_avoided: string;
+    /** Explicitly an assumption unless incident data supports it. */
+    frequency_assumption: string;
+    /** How a breakage is noticed and by whom, and how it gets repaired. */
+    detection_and_repair: string;
+    /** What still protects the surface, and what that protection does NOT cover. */
+    residual_protection: string;
+    authority: string;
+    decided: string;
+    /** ISO date. A waiver past it is not honoured, renewal is a fresh decision. */
+    expires: string;
+    review_triggers: string[];
+    id: string;
+}
 
-export type AnchorStatus = 'compliant' | 'noncompliant' | 'unverifiable';
+/**
+ * Dimensions no waiver may reach, whatever it documents.
+ *
+ * DERIVED FROM THE FLOOR, not hand-listed beside it. A blind review found the
+ * hand-written version had drifted from it in the worst possible direction:
+ * `required_review_thread_resolution` sat in the floor and was NOT on the
+ * never-waivable list, so the same change that restored it to the floor "to
+ * remove an unauthorized reduction" opened a second, unauthenticated route to
+ * exactly that reduction. Deriving the set makes the two impossible to
+ * disagree.
+ *
+ * The invariant this expresses: the FLOOR is the hard tier and is unwaivable by
+ * construction; the expectation's remaining dimensions are baseline
+ * expectations a complete, owner-authorised, unexpired waiver may trade. A
+ * dimension cannot be both floored and waivable, which is what the drift had
+ * made possible.
+ *
+ * `minimum_required_contexts` is excluded because it is a COUNT rather than a
+ * dimension name — it has no matching key in the expectation for a waiver to
+ * name, so listing it would bound nothing.
+ */
+export const NEVER_WAIVABLE: readonly string[] = Object.keys(NON_NEGOTIABLE_FLOOR).filter(
+    (k) => k !== 'minimum_required_contexts',
+);
+
+export type AnchorStatus =
+    | 'compliant'
+    | 'compliant-with-accepted-risk'
+    | 'noncompliant'
+    | 'unverifiable';
 
 /** Stable codes, so a test asserts the reason rather than the wording. */
 export type AnchorCode =
@@ -141,12 +245,14 @@ export type AnchorCode =
     | 'policy-missing-field'
     | 'policy-unknown-field'
     | 'policy-repository-mismatch'
+    | 'waiver-incomplete'
+    | 'waiver-expired'
+    | 'waiver-not-permitted'
+    | 'waiver-unused'
     | 'policy-below-floor'
     | 'rulesets-unreadable'
     | 'default-branch-unknown'
     | 'no-applicable-ruleset'
-    | 'approvals-below-minimum'
-    | 'last-push-approval-missing'
     | 'thread-resolution-missing'
     | 'deletion-not-blocked'
     | 'non-fast-forward-not-blocked'
@@ -183,8 +289,6 @@ const POLICY_FIELDS: readonly (keyof AnchorPolicy)[] = [
     'enforcement',
     'target',
     'covers_default_branch',
-    'minimum_approving_reviews',
-    'require_last_push_approval',
     'required_review_thread_resolution',
     'block_deletion',
     'block_non_fast_forward',
@@ -296,8 +400,6 @@ export function readAnchorPolicy(text: string | null): {
         enforcement: String(req['enforcement']),
         target: String(req['target']),
         covers_default_branch: req['covers_default_branch'] === true,
-        minimum_approving_reviews: Number(req['minimum_approving_reviews']),
-        require_last_push_approval: req['require_last_push_approval'] === true,
         required_review_thread_resolution: req['required_review_thread_resolution'] === true,
         block_deletion: req['block_deletion'] === true,
         block_non_fast_forward: req['block_non_fast_forward'] === true,
@@ -314,7 +416,7 @@ export function readAnchorPolicy(text: string | null): {
 }
 
 /** The expectation's supported schema version. Bump only with its reader. */
-export const SUPPORTED_ANCHOR_SCHEMA = 1;
+export const SUPPORTED_ANCHOR_SCHEMA = 2;
 
 /**
  * The two top-level fields that say WHICH expectation this is.
@@ -396,35 +498,6 @@ export function enforceFloor(policy: AnchorPolicy): AnchorFinding[] {
         under('covers_default_branch', policy.covers_default_branch, true);
     }
 
-    // Non-finite is its own failure, not a comparison. `Number("one")` is NaN
-    // and `NaN < 1` is false, so a threshold check alone reads a garbage value
-    // as satisfying the floor — and the same NaN then makes the downstream
-    // `observed < NaN` comparison false, so the approval rule disappears
-    // instead of failing. Both halves were reproduced by a blind review.
-    if (
-        !Number.isFinite(policy.minimum_approving_reviews) ||
-        !Number.isInteger(policy.minimum_approving_reviews) ||
-        policy.minimum_approving_reviews > MAX_APPROVING_REVIEWS
-    ) {
-        f.push({
-            code: 'policy-below-floor',
-            message:
-                'src/config/platform-anchor.json sets `minimum_approving_reviews` to ' +
-                `${JSON.stringify(policy.minimum_approving_reviews)}, which is not an integer ` +
-                `between ${NON_NEGOTIABLE_FLOOR.minimum_approving_reviews} and ` +
-                `${MAX_APPROVING_REVIEWS}. A non-numeric value would compare false against the ` +
-                'floor and then make the approval rule unreachable, so it is refused outright.',
-        });
-    } else if (policy.minimum_approving_reviews < NON_NEGOTIABLE_FLOOR.minimum_approving_reviews) {
-        under(
-            'minimum_approving_reviews',
-            policy.minimum_approving_reviews,
-            NON_NEGOTIABLE_FLOOR.minimum_approving_reviews,
-        );
-    }
-    if (!policy.require_last_push_approval) {
-        under('require_last_push_approval', false, true);
-    }
     if (!policy.required_review_thread_resolution) {
         under('required_review_thread_resolution', false, true);
     }
@@ -433,9 +506,6 @@ export function enforceFloor(policy: AnchorPolicy): AnchorFinding[] {
     }
     if (!policy.block_non_fast_forward) {
         under('block_non_fast_forward', false, true);
-    }
-    if (!policy.strict_required_status_checks) {
-        under('strict_required_status_checks', false, true);
     }
     if (policy.allow_unconditional_bypass) {
         under('allow_unconditional_bypass', true, false);
@@ -590,6 +660,192 @@ export function effectiveProtection(
     return eff;
 }
 
+const WAIVER_FIELDS: readonly (keyof AcceptedRiskWaiver)[] = [
+    'dimension',
+    'baseline',
+    'accepted',
+    'failure_mode',
+    'cost_avoided',
+    'frequency_assumption',
+    'detection_and_repair',
+    'residual_protection',
+    'authority',
+    'decided',
+    'expires',
+    'review_triggers',
+    'id',
+];
+
+export interface WaiverReading {
+    /** Keyed by dimension. Only complete, permitted, unexpired waivers appear. */
+    honoured: Map<string, AcceptedRiskWaiver>;
+    findings: AnchorFinding[];
+}
+
+/** The only values `authority` may carry. A floor trade is the owner's alone. */
+export const WAIVER_AUTHORITIES: readonly string[] = ['owner'];
+
+/**
+ * Read the waivers, refusing every one that is not fully in order.
+ *
+ * A refused waiver is absent from `honoured`, so the dimension it meant to
+ * cover is judged normally — AND its refusal is a finding the caller must merge
+ * into the verdict. Both halves are required, and the second was missing:
+ * a blind review reproduced the inversion end to end. The refusals were printed
+ * and never reached the exit code, so an EXPIRED waiver over a dimension the
+ * forge happened to satisfy left the gate green, while a WELL-FORMED waiver for
+ * the same satisfied dimension reded via `waiver-unused`. Malformed was strictly
+ * better than correct — the exact thing this function's contract forbids, and
+ * reachable by an ordinary lapsed expiry rather than only by malice.
+ *
+ * `evaluateAnchor` now takes the whole reading rather than just the map, so the
+ * findings cannot be dropped at a call site again.
+ */
+export function readWaivers(text: string | null, now: Date): WaiverReading {
+    const honoured = new Map<string, AcceptedRiskWaiver>();
+    const findings: AnchorFinding[] = [];
+    if (text === null) {
+        return { honoured, findings };
+    }
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(text);
+    } catch {
+        return { honoured, findings };
+    }
+    if (!isObject(parsed) || parsed['accepted_risk_reductions'] === undefined) {
+        return { honoured, findings };
+    }
+    const list = parsed['accepted_risk_reductions'];
+    if (!Array.isArray(list)) {
+        findings.push({
+            code: 'waiver-incomplete',
+            message: '`accepted_risk_reductions` must be an array of waiver objects.',
+        });
+        return { honoured, findings };
+    }
+
+    for (const entry of list) {
+        if (!isObject(entry)) {
+            findings.push({
+                code: 'waiver-incomplete',
+                message: 'a waiver entry is not an object.',
+            });
+            continue;
+        }
+        const id = typeof entry['id'] === 'string' ? entry['id'] : '<no id>';
+
+        // Presence AND substance. Presence-only validation honoured an empty
+        // string and a null in every prose field, which is an undocumented
+        // deviation wearing thirteen keys — the blind review filed it as its
+        // own finding and it is the same defect class as the refusals not
+        // reaching the verdict: a check that reads a field without judging it.
+        const missing = WAIVER_FIELDS.filter((f) => {
+            if (!(f in entry)) {
+                return true;
+            }
+            const v = entry[f];
+            if (f === 'review_triggers') {
+                return !Array.isArray(v) || v.length === 0 || v.some((x) => String(x).trim() === '');
+            }
+            if (f === 'baseline' || f === 'accepted') {
+                return typeof v !== 'boolean';
+            }
+            return typeof v !== 'string' || v.trim() === '';
+        });
+        if (missing.length > 0) {
+            findings.push({
+                code: 'waiver-incomplete',
+                message:
+                    `waiver \`${id}\` is missing or empty at ${missing.join(', ')}. An incomplete ` +
+                    'waiver is an undocumented deviation, so it is refused rather than honoured ' +
+                    'and the dimension it names is judged normally.',
+            });
+            continue;
+        }
+        if (!WAIVER_AUTHORITIES.includes(String(entry['authority']))) {
+            findings.push({
+                code: 'waiver-not-permitted',
+                message:
+                    `waiver \`${id}\` claims authority \`${String(entry['authority'])}\`, which is ` +
+                    `not one of ${WAIVER_AUTHORITIES.join(', ')}. Trading a baseline control is ` +
+                    'the owner\'s decision; a waiver that names anything else — an agent, a ' +
+                    'council, a session — is refused. The field was presence-checked and never ' +
+                    'value-checked, so `agent-self-service` was honoured while four prose ' +
+                    'surfaces rested on "only the owner may authorize a floor reduction".',
+            });
+            continue;
+        }
+        if (entry['baseline'] === entry['accepted']) {
+            findings.push({
+                code: 'waiver-incomplete',
+                message:
+                    `waiver \`${id}\` records the same value for \`baseline\` and \`accepted\`, so ` +
+                    'it waives nothing. Both were printed as record and neither was checked.',
+            });
+            continue;
+        }
+        const dimension = String(entry['dimension']);
+        if (!(POLICY_FIELDS as readonly string[]).includes(dimension)) {
+            findings.push({
+                code: 'waiver-not-permitted',
+                message:
+                    `waiver \`${id}\` names \`${dimension}\`, which is not a dimension of the ` +
+                    'expectation. A typo was previously honoured and then mis-diagnosed as an ' +
+                    'unused waiver, which sends a reader looking for the wrong problem.',
+            });
+            continue;
+        }
+        if (honoured.has(dimension)) {
+            findings.push({
+                code: 'waiver-not-permitted',
+                message:
+                    `waiver \`${id}\` is a second entry for \`${dimension}\`. Duplicates used to ` +
+                    'resolve last-wins, so which record governed depended on file order.',
+            });
+            continue;
+        }
+        if (Number.isNaN(new Date(String(entry['decided'])).getTime())) {
+            findings.push({
+                code: 'waiver-incomplete',
+                message: `waiver \`${id}\` has an unparseable \`decided\`; it must be an ISO date.`,
+            });
+            continue;
+        }
+        if (NEVER_WAIVABLE.includes(dimension)) {
+            findings.push({
+                code: 'waiver-not-permitted',
+                message:
+                    `waiver \`${id}\` names \`${dimension}\`, which no waiver may reach. A ruleset ` +
+                    'that is not active, does not cover the branch, or lets an actor bypass it ' +
+                    'unconditionally makes every other assertion here meaningless, and that is ' +
+                    'not tradeable against an operational saving.',
+            });
+            continue;
+        }
+        const expires = new Date(String(entry['expires']));
+        if (Number.isNaN(expires.getTime())) {
+            findings.push({
+                code: 'waiver-incomplete',
+                message: `waiver \`${id}\` has an unparseable \`expires\`; it must be an ISO date.`,
+            });
+            continue;
+        }
+        if (expires.getTime() <= now.getTime()) {
+            findings.push({
+                code: 'waiver-expired',
+                message:
+                    `waiver \`${id}\` expired on ${String(entry['expires'])}. Renewal is a fresh ` +
+                    'decision with refreshed measurements rather than an extension — the premise ' +
+                    'it rests on is a cost, and a cost is not a constant.',
+            });
+            continue;
+        }
+        honoured.set(dimension, entry as unknown as AcceptedRiskWaiver);
+    }
+    return { honoured, findings };
+}
+
 /**
  * The verdict.
  *
@@ -598,19 +854,55 @@ export function effectiveProtection(
  * fail-closed direction both council seats required, and its blast radius is
  * only ever a diff on the gated surface, because the caller runs this check
  * exclusively when `requiresRatification` is true.
+ *
+ * A dimension covered by an honoured waiver does not become a finding; it is
+ * reported as a known accepted risk and the status becomes
+ * `compliant-with-accepted-risk`, which is neither a pass nor a failure. An
+ * unused waiver is itself reported: a waiver for a dimension the forge now
+ * satisfies is stale record, and stale records are how a reader learns to
+ * distrust the whole file.
  */
 export function evaluateAnchor(
     policy: AnchorPolicy,
     rulesets: readonly RulesetDetail[] | null,
     defaultBranch: string | null,
+    waiverReading: WaiverReading = { honoured: new Map(), findings: [] },
 ): AnchorReading {
-    const findings: AnchorFinding[] = [];
+    // Seeded, not appended later. The refusals ARE part of the verdict, and a
+    // caller that received only the map could drop them — which is the shape
+    // that produced the inversion this parameter now prevents.
+    const findings: AnchorFinding[] = [...waiverReading.findings];
+    const waivers = waiverReading.honoured;
     const evidence: string[] = [];
+    const accepted: string[] = [];
+    const used = new Set<string>();
+
+    /**
+     * Record a violated dimension as a finding, or as an accepted risk.
+     *
+     * The waiver check happens HERE rather than at the end, so a waived
+     * dimension never enters the findings list at all — filtering findings
+     * afterwards would leave the two states one refactor apart.
+     */
+    const violated = (dimension: string, finding: AnchorFinding): void => {
+        const w = waivers.get(dimension);
+        if (w === undefined) {
+            findings.push(finding);
+            return;
+        }
+        used.add(dimension);
+        accepted.push(
+            `${dimension}: baseline ${String(w.baseline)}, accepted ${String(w.accepted)} — ` +
+                `${w.id}, ${w.authority} ${w.decided}, expires ${w.expires}. ` +
+                `Residual: ${w.residual_protection}`,
+        );
+    };
 
     if (rulesets === null) {
         return {
             status: 'unverifiable',
             findings: [
+                ...findings,
                 {
                     code: 'rulesets-unreadable',
                     message:
@@ -627,6 +919,7 @@ export function evaluateAnchor(
         return {
             status: 'unverifiable',
             findings: [
+                ...findings,
                 {
                     code: 'default-branch-unknown',
                     message:
@@ -657,52 +950,41 @@ export function evaluateAnchor(
         return { status: 'noncompliant', findings, evidence };
     }
 
+    // Observed and reported, never judged. The two approval dimensions left the
+    // enforced set with the trust-model decision above, and deleting the
+    // MEASUREMENT with the requirement would have been the wrong half to drop:
+    // a reader still wants to see what the forge actually says, and a number
+    // that is reported without being a threshold cannot quietly become one.
     evidence.push(
-        `approving reviews required: ${eff.approvingReviews} (policy floor ` +
-            `${policy.minimum_approving_reviews})`,
+        `approving reviews required: ${eff.approvingReviews} · last-push approval: ` +
+            `${eff.requireLastPushApproval} — observed, not required here (see NON_NEGOTIABLE_FLOOR)`,
     );
-    if (eff.approvingReviews < policy.minimum_approving_reviews) {
-        findings.push({
-            code: 'approvals-below-minimum',
-            message:
-                `the effective ruleset requires ${eff.approvingReviews} approving review(s); the ` +
-                `policy requires at least ${policy.minimum_approving_reviews}. Without this, a ` +
-                'ratification artifact is reviewed by nobody the repository insisted on, and the ' +
-                "mechanism's independence claim rests on process evidence alone.",
-        });
-    }
-    if (policy.require_last_push_approval && !eff.requireLastPushApproval) {
-        findings.push({
-            code: 'last-push-approval-missing',
-            message:
-                '`require_last_push_approval` is off, so an approval can predate the final push ' +
-                'and the reviewed diff need not be the merged diff.',
-        });
-    }
     if (policy.required_review_thread_resolution && !eff.requireThreadResolution) {
-        findings.push({
+        violated('required_review_thread_resolution', {
             code: 'thread-resolution-missing',
             message: '`required_review_thread_resolution` is off, so an open objection cannot block a merge.',
         });
     }
     if (policy.block_deletion && !eff.blocksDeletion) {
-        findings.push({
+        violated('block_deletion', {
             code: 'deletion-not-blocked',
             message: 'the default branch is not protected against deletion.',
         });
     }
     if (policy.block_non_fast_forward && !eff.blocksNonFastForward) {
-        findings.push({
+        violated('block_non_fast_forward', {
             code: 'non-fast-forward-not-blocked',
             message: 'the default branch is not protected against force-pushes (non-fast-forward).',
         });
     }
     if (policy.strict_required_status_checks && !eff.strictStatusChecks) {
-        findings.push({
+        violated('strict_required_status_checks', {
             code: 'status-checks-not-strict',
             message:
-                '`strict_required_status_checks_policy` is off, so a stale branch can merge ' +
-                'without re-running the required checks against the current base.',
+                '`strict_required_status_checks_policy` is off, so a branch may merge on checks ' +
+                'that passed against a base it has not caught up with. The staleness is not ' +
+                'bounded to one commit: any number of merges may have landed since, so two ' +
+                'independently green branches can compose into a broken base.',
         });
     }
     evidence.push(
@@ -729,15 +1011,42 @@ export function evaluateAnchor(
             code: 'unconditional-bypass',
             message:
                 `${who} may bypass every rule above unconditionally (\`bypass_mode: always\`), so ` +
-                'each rule is advisory for that actor. Whether repository administrators are ' +
-                'inside the threat model is an owner question; until it is answered the mechanism ' +
-                'supplies process evidence rather than a platform-enforced guarantee. See ' +
-                '`threat_model_note` in src/config/platform-anchor.json.',
+                'each rule is advisory for that actor. The owner ruled on 2026-09-10 that ' +
+                'administrators are the root of trust here, and that ruling REMOVED the approval ' +
+                'dimensions rather than this one: an unconditional bypass actor is still a ' +
+                'failure and no waiver may reach it. See `owner_ruling_2026_09_10` in ' +
+                'src/config/platform-anchor.json.',
         });
     }
 
+    // A waiver nobody needed is stale record, and stale records teach a reader
+    // to distrust the file they sit in. It IS a finding and therefore reds —
+    // the comment here used to say "deliberately NOT a failure" while the code
+    // returned noncompliant, which a blind review filed as its own
+    // contradiction. Kept as a failure and the comment corrected to match: the
+    // repair is deleting one stale entry, and leaving it green would let the
+    // file drift out of step with the forge unnoticed.
+    for (const [dimension, w] of waivers) {
+        if (!used.has(dimension)) {
+            findings.push({
+                code: 'waiver-unused',
+                message:
+                    `waiver \`${w.id}\` covers \`${dimension}\`, which the forge now satisfies. ` +
+                    'The waiver is stale and should be removed — the risk it accepted is not ' +
+                    'being taken.',
+            });
+        }
+    }
+
+    for (const a of accepted) {
+        evidence.push(`ACCEPTED RISK — ${a}`);
+    }
+
+    if (findings.length > 0) {
+        return { status: 'noncompliant', findings, evidence };
+    }
     return {
-        status: findings.length === 0 ? 'compliant' : 'noncompliant',
+        status: accepted.length > 0 ? 'compliant-with-accepted-risk' : 'compliant',
         findings,
         evidence,
     };
