@@ -123,12 +123,19 @@ reproduce the measurement and may not act on it.
       binary axis read 28 observed against 3 allowed. (2) `dist/cli-delegate`
       held **105 esbuild chunks dated 2026-07-31 through 2026-09-07**: three
       esbuild runs share one `--outdir` with `--splitting`, names are
-      content-hashed, and none cleaned the directory. Fixed in this change by
-      prefixing `build:cli-delegate` with `rm -rf dist/cli-delegate`; worth
-      **−1.32 MB packed**. Defect-pattern search reported with its count: exactly
-      one further instance, `build:cli` (`tsc`, same missing clean), measured at
-      0.158 MB and NOT fixed here because `dist/install` is tracked and shares
-      that output root.
+      content-hashed, and none cleaned the directory. Worth **−1.32 MB packed**.
+      **The first fix here covered one of the three producers and the record
+      claimed the class could not recur — a completion review caught that, and
+      it was right.** The shipped fix binds the clean to the OUTDIR instead: a
+      `clean:cli-delegate` step and a `build:delegates` composite that runs it
+      once and then all three esbuild producers, with `build` calling the
+      composite. Cause (1) likewise got only a local deletion at first and now
+      carries `!**/__pycache__/**` and `!**/*.pyc` in `files[]`, proven by
+      planting a 200 KB `.pyc` and watching it stay out of the pack.
+      Defect-pattern search reported with its count: exactly one further
+      instance, `build:cli` (`tsc`, same missing clean), measured at 0.158 MB
+      and NOT fixed here because `dist/install` is tracked and shares that
+      output root.
 
       **The old baseline was polluted too, and it was reconstructed rather than
       assumed.** `ab398ed05` checked out detached, `npm ci` against its own
@@ -155,16 +162,16 @@ reproduce the measurement and may not act on it.
       which routes only SOME commands to `dist/cli-delegate/`. The provisional
       clause is discharged here, not carried.
 
-      **What landed:** `max` 9.1 → **11.5** (`10.5056 × 1.095 = 11.5036`, rounded
-      DOWN, stricter than the formula), `last_measured` → 10.5056, a new
-      `built_surface_measurement_2026_09_10` recording unbuilt 10.5056/3037 and
-      built 12.4539/3240, the 2026-08-24 record annotated in place (**not**
+      **What landed:** `max` 9.1 → **11.5** (`10.5078 × 1.095 = 11.5060`, rounded
+      DOWN, stricter than the formula), `last_measured` → 10.5078, a new
+      `built_surface_measurement_2026_09_10` recording unbuilt 10.5078/3039 and
+      built 12.4541/3240, the 2026-08-24 record annotated in place (**not**
       renamed — one seat's rename proposal rested on the selector skipping it,
       and `check_pack_size.ts:599-601` matches the prefix either way), and the
       build fix.
 
-      verify RESULT: unbuilt route **10.506 ≤ 11.5 ✅**, built route
-      **12.454 ≤ 13.699 ✅**, all four content classes 0, binary axis 3/3.
+      verify RESULT: unbuilt route **10.509 ≤ 11.5 ✅**, built route
+      **12.455 ≤ 13.700 ✅**, all four content classes 0, binary axis 3/3.
 
 ## Blockers
 
@@ -172,8 +179,8 @@ reproduce the measurement and may not act on it.
 
 - **Status:** resolved 2026-09-10. Option (a) taken by an AI council over three
   rounds under an owner delegation, recorded in `ADR-273`, executed in the same
-  change as the build defect fix. Both gate routes green: unbuilt 10.506 against
-  the reset `max` 11.5, built 12.454 against the derived ceiling 13.699. The
+  change as the build defect fix. Both gate routes green: unbuilt 10.509 against
+  the reset `max` 11.5, built 12.455 against the derived ceiling 13.700. The
   entry below is left standing as written, because every number in it was
   correct for the surface it measured and the `What to do` list is what this
   resolution followed. Two of its premises did change and are named here rather
@@ -334,9 +341,9 @@ substitution this repository's own discipline exists to catch.
       `origin/main` checkout with no local edits.
       MET 2026-09-10 on BOTH routes, which is more than this line asks and is
       stated because the distinction cost this roadmap a round: a clean checkout
-      with no build takes the UNBUILT route and reads **10.506 against the reset
+      with no build takes the UNBUILT route and reads **10.509 against the reset
       `max` 11.5**; the same tree after a full build takes the BUILT route and
-      reads **12.454 against the derived ceiling 13.699**. All four content
+      reads **12.455 against the derived ceiling 13.700**. All four content
       classes read 0 and the binary axis is 3 observed / 3 allowed — that last
       one was 28/3 before this change, because 25 gitignored `__pycache__/*.pyc`
       files were being packed through `files[]`.

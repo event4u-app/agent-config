@@ -11,8 +11,14 @@ import { markdown, type Delta } from '../../src/scripts/report_pack_delta';
  * `files[]` — are NOT run here: one harness invocation takes minutes, and a
  * unit suite that shells out to `npm install --global` is a suite nobody runs.
  * What is asserted here is everything a cheap check CAN see: that the
- * exclusions the harness proved safe are actually in `files[]`, that the cap
- * moved DOWN, and that the delta reporter's contract holds.
+ * exclusions the harness proved safe are actually in `files[]`, that the cap is
+ * DERIVED from a measurement and bounded by the value its newest dated note
+ * justifies, and that the delta reporter's contract holds.
+ *
+ * This paragraph used to end "that the cap moved DOWN". ADR-273 reset the cap
+ * upward on a reconstructed clean baseline, so that clause was false the moment
+ * the block below was rewritten and is corrected here rather than left for a
+ * reader to trip over.
  *
  * The behavioural evidence itself lives in
  * `agents/evidence/analysis/npm-payload-subtree-verdicts.md` and is reproducible
@@ -75,6 +81,15 @@ describe('the exclusions the harness proved safe are in files[]', () => {
  * rather than only at this one.
  */
 describe('the cap is derived from a measurement, never chosen', () => {
+    // The absolute anchor. The derivation check below is satisfied by raising
+    // `max` and `last_measured` together, which is precisely the move the block
+    // exists to catch — so a ceiling on the literal value has to sit beside it.
+    // This IS a moment pin and is meant to be: it is updated at each recorded
+    // reset, in the same diff as the `baseline_note_<date>` that justifies it.
+    it('max is at or below the value ADR-273 reset it to', () => {
+        expect(budget().budgets.packed_size_mb.max).toBeLessThanOrEqual(11.5);
+    });
+
     it('max never exceeds last_measured x 1.095', () => {
         const { max, last_measured: measured } = budget().budgets.packed_size_mb;
         expect(max).toBeLessThanOrEqual(measured * 1.095);
@@ -85,20 +100,30 @@ describe('the cap is derived from a measurement, never chosen', () => {
         expect(max).toBeGreaterThan(measured);
     });
 
-    it('the note states the headroom exactly, never rounded', () => {
+    it('the newest baseline note states the headroom exactly, and it matches the numbers', () => {
         const raw = fs.readFileSync(path.join('src', 'config', 'pack-size-budget.json'), 'utf8');
-        // The exact figure, and the sentence that says why a rounded one is not
-        // good enough — a previous entry in this file had to be corrected for it.
-        expect(raw).toContain('HEADROOM IS 9.47 %, NOT 9.5 %');
+        const { max, last_measured: measured } = budget().budgets.packed_size_mb;
+        // COMPUTED, not pinned. An earlier revision of this block asserted the
+        // literal `HEADROOM IS 7.4 %, NOT 8 %` and had to be hand-edited by the
+        // reset that superseded it; replacing one literal with the next would
+        // have reproduced that cost. Deriving the string means the assertion
+        // survives every future reset and still catches a rounded figure.
+        const pct = (((max - measured) / measured) * 100).toFixed(2);
+        expect(raw).toContain(`HEADROOM IS ${pct} %`);
     });
 
-    it('every cap value in the file is reachable from a dated baseline note', () => {
+    it('the newest baseline note names the cap value it justifies', () => {
         const raw = fs.readFileSync(path.join('src', 'config', 'pack-size-budget.json'), 'utf8');
-        const notes = raw.match(/"baseline_note_\d{4}_\d{2}_\d{2}"/g) ?? [];
-        // Four resets are recorded: 2026-08-20, 08-23, 08-24 and 09-10. A raise
-        // landing without one is the move this assertion exists to catch.
-        expect(notes.length).toBeGreaterThanOrEqual(4);
-        expect(raw).toContain('"baseline_note_2026_09_10"');
+        const { max } = budget().budgets.packed_size_mb;
+        const dates = [...raw.matchAll(/"(baseline_note_\d{4}_\d{2}_\d{2})"/g)].map((m) => m[1] as string);
+        // Counting notes proves nothing: the count only grows and is tied to no
+        // cap value. What a raise landing without justification actually breaks
+        // is that the NEWEST note stops mentioning the number in force.
+        expect(dates.length).toBeGreaterThan(0);
+        const newest = dates.sort().at(-1) as string;
+        const note = (JSON.parse(raw) as Record<string, never>)['budgets']['packed_size_mb'][newest] as unknown;
+        expect(typeof note, `${newest} must live under budgets.packed_size_mb`).toBe('string');
+        expect(note as string).toContain(String(max));
     });
 });
 
