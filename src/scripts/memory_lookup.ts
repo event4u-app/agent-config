@@ -3,12 +3,11 @@
  * File-first memory retrieval.
  *
  * Ported from the retired Python `src/scripts/memory_lookup.py` (ADR-200). The public
- * API and CLI contract mirror the retired Python implementation EXACTLY — same exported
- * names (snake_case kept deliberately, especially `retrieve(...)` whose
- * signature/return shape is cited by rules), same exit codes, stdout/stderr
- * split, byte-identical messages, same memory-file scan + ranking + JSON
- * output. No behaviour changes — latent Python bugs are replicated and
- * flagged as divergence candidates.
+ * API and CLI contract mirror it EXACTLY — same exported names (snake_case kept
+ * deliberately, especially `retrieve(...)`, whose signature and return shape are cited
+ * by rules), same exit codes, stdout/stderr split, byte-identical messages, same
+ * memory-file scan, ranking and JSON output. No behaviour changes; latent Python bugs
+ * are replicated and flagged as divergence candidates.
  *
  * Implements the shared `retrieve(types, keys, limit)` abstraction used
  * by skills. Reads YAML under `agents/memory/<type>/` (curated, hand-
@@ -16,9 +15,8 @@
  * append-only, supersede-chain aware), plus user-ingested `knowledge`
  * chunks and opted-in `cross-repo` matches.
  *
- * Retrieval is entirely repo-side and file-backed — there is no external
- * backend. (The former optional `@event4u/agent-memory` package routing
- * was removed; see `docs/decisions/` for the agent-memory removal ADR.)
+ * Retrieval is entirely repo-side and file-backed — no external backend. (The former
+ * optional `@event4u/agent-memory` routing was removed; see `docs/decisions/`.)
  *
  * Usage:
  *     memory_lookup --types domain-invariants,ownership --key "app/Http/Controllers/Foo" --limit 5
@@ -26,13 +24,8 @@
  *
  *     import { retrieve } from './memory_lookup.js';
  *     const hits = retrieve(['ownership'], ['app/Http'], 3);
- *
  * loss_class: recoverable-lossy
- * loss_recovery: the envelope's own `truncation` notice — when a positive
- * `token_budget` forces a cut, the response carries `truncation.omitted` plus a
- * hint naming the next concrete path under `agents/memory/`, so every omitted
- * hit stays addressable. With no budget the envelope is byte-identical and this
- * transform does not run at all.
+ * loss_recovery: the envelope's `truncation.omitted` plus its next-path hint under `agents/memory/`.
  */
 
 import * as fs from 'node:fs';

@@ -700,9 +700,23 @@ export function run() {
 }
 `;
 
+/**
+ * The specifier the self-test fixtures import, assembled rather than written.
+ *
+ * `prepack-check` scans every SHIPPED source for `from '<relative>'` and fails
+ * on one that does not resolve. These fixtures are template literals describing
+ * a file the self-test writes to a temp directory, so the path resolves there
+ * and nowhere here — and interpolating it keeps the literal form out of this
+ * file while leaving it intact in the fixture that gets written. The same shape
+ * this gate's own IMPORT_SPEC was narrowed for: a path in a string is not an
+ * import, and two different tools read it as one.
+ */
+const FIXTURE_LIB = './_lib/fixture_lib.js';
+const FIXTURE_LIB_BARE = './_lib/fixture_lib';
+
 /** An emitter that is clean itself and reaches a lossy `_lib` module. */
 const IMPORTING_EMITTER = `
-import { capRows } from './_lib/fixture_lib.js';
+import { capRows } from '${FIXTURE_LIB}';
 export function run() {
   return { context: capRows(rows).join('\\n') };
 }
@@ -710,7 +724,7 @@ export function run() {
 
 /** The same emitter, importing a module that shortens nothing. */
 const IMPORTING_CLEAN_EMITTER = `
-import { passthrough } from './_lib/fixture_lib.js';
+import { passthrough } from '${FIXTURE_LIB}';
 export function run() {
   return { context: passthrough(rows).join('\\n') };
 }
@@ -727,7 +741,7 @@ export function passthrough(rows) { return rows; }
 
 /** The same emitter again, reaching its lib through an EXTENSIONLESS specifier. */
 const EXTENSIONLESS_EMITTER = `
-import { capRows } from './_lib/fixture_lib';
+import { capRows } from '${FIXTURE_LIB_BARE}';
 export function run() {
   return { context: capRows(rows).join('\\n') };
 }
@@ -790,7 +804,7 @@ const NESTED_MARKER_LIB = `
 export function scrub(s) { return s.replace(buildPattern(kind), '[REDACTED]'); }
 `;
 const SCRUB_EMITTER = `
-import { scrub } from './_lib/fixture_lib.js';
+import { scrub } from '${FIXTURE_LIB}';
 export function run() { return { context: scrub(body) }; }
 `;
 
