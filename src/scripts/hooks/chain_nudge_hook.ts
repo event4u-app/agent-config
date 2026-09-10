@@ -18,11 +18,27 @@
  * a shape that cannot be written as an allowlist pattern at all. That class
  * shrinks only by not writing it.
  *
+ * THE SECOND CLASS, AND WHY IT BELONGS HERE. A Bash command that writes a
+ * file — `sed -i`, `cat > f`, `tee f`, `perl -i`, a `python3 -c` that opens a
+ * path for writing — costs a confirmation for a reason no allowlist entry
+ * fixes: a write-shaped Bash grant does NOT persist. The host's own
+ * permission documentation records that "don't ask again" saves a permanent
+ * rule for read-only and pre-approved commands and that write-shaped ones
+ * last until session end, so the same shape is confirmed again next session.
+ * The Edit and Write tools carry no such expiry for a path inside the working
+ * directory. That makes the substitution a strictly cheaper primitive rather
+ * than a style preference, which is why the concern that already reads
+ * `tool_input.command` carries it instead of a second concern reading the
+ * same field. Measured over 7,488 real Bash calls in 40 transcripts on the
+ * maintainer's machine: 326 (4.4 %) wrote a file through the shell — 214
+ * `cat >`, 61 `sed -i`, 49 `python3 -c` with a write-mode `open`.
+ *
  * WHAT IT DOES NOT FLAG, DELIBERATELY. A pipe of ordinary filters
  * (`grep foo file | head`) is one command with a filter, not two work steps.
- * A redirect has its target checked against the file rules on its own. A
- * heredoc is a command with input. Flagging any of those would make the
- * nudge noise, and a nudge that fires on correct usage is worse than none.
+ * A redirect whose target is not a file the shell is filling with content —
+ * `2>&1`, `> /dev/null` — is not a write. A heredoc is a command with input.
+ * Flagging any of those would make the nudge noise, and a nudge that fires on
+ * correct usage is worse than none.
  *
  * NEVER BLOCKS. The dispatcher contract is 0 allow · 2 warn, and a warn on
  * `pre_tool_use` with `severity: advisory` is an injection, not a deny — the
@@ -30,10 +46,23 @@
  * failure path returns allow: unreadable stdin, malformed JSON, unwritable
  * latch. A token optimisation must never break a tool call.
  *
- * ONCE PER SESSION. A latch keyed by session id, in the state directory
- * `code-graph-nudge.json` already occupies. The rule body reaches the model
- * once, early, on the first chained call — repeating it every call would be
- * the nagging this codebase refuses elsewhere.
+ * ONCE PER SHAPE CLASS PER SESSION. A latch keyed by session id, in the state
+ * directory `code-graph-nudge.json` already occupies. Each class reaches the
+ * model once, early, on the first call carrying it — so a session sees at most
+ * two lines, never one line for two different mistakes.
+ *
+ * That is a per-CLASS latch, not a per-CALL one, and the distinction is the
+ * whole reason it is allowed to change: the recorded decision this file
+ * carried refuses "repeating it every call", which is the nagging this
+ * codebase refuses elsewhere, and a second class firing once is a different
+ * mechanism from a first class firing twice. The single-boolean latch was
+ * written when there was one class; with two, it would have let whichever
+ * shape came first silence the other for the rest of the session.
+ *
+ * A latch file written by the single-class version holds `true` rather than an
+ * object. That is read as "the chain class has fired", which is what it meant,
+ * so an in-flight session upgrades without losing its latch and without
+ * replaying a line it already showed.
  *
  * ON BY DEFAULT, WITH AN OPT-OUT. Unlike `code-graph-nudge`, which gates on a
  * project capability that may not exist, the fact this nudge carries is a
@@ -149,6 +178,62 @@ export function detectChaining(command: string): string | null {
 }
 
 /**
+ * The five shapes that fill a file's content from the shell, each matched on
+ * the literal-stripped command so a quoted mention cannot fire it.
+ *
+ * A positive list, not a redirect scan: `>` alone is a redirect and the header
+ * says a redirect is not flagged. What is flagged is a command whose named
+ * operation IS "put this content in that path", which is the operation Edit
+ * and Write perform without an expiring grant. `/dev/null` and an fd
+ * duplication (`2>&1`) are excluded because neither names a file being filled.
+ */
+const EDIT_BY_SHELL: ReadonlyArray<{ re: RegExp; seen: string; raw?: true }> = [
+    { re: /(^|[\s;&|(])sed\s+(-[A-Za-z]+\s+)*-i\b/, seen: '`sed -i` edits a file in place' },
+    { re: /(^|[\s;&|(])perl\s+(-[A-Za-z]+\s+)*-[A-Za-z]*i\b/, seen: '`perl -i` edits a file in place' },
+    { re: /(^|[\s;&|(])cat\s*>{1,2}\s*(?!&|\/dev\/null)\S/, seen: '`cat >` fills a file from the shell' },
+    { re: /(^|[\s;&|(])tee\s+(?!-)(?!\/dev\/null)\S/, seen: '`tee` writes its input to a file' },
+    // RAW, and it has to be: an interpreter's program is a quoted argument, so
+    // `stripLiterals` removes the whole body and this rule could never fire
+    // against the stripped text. Matched on the raw string it needs the write
+    // MODE to be named — `open(p, "w")` — so a path merely being read, and a
+    // quoted mention of the shape in prose, both stay silent.
+    { re: /python3?\s+-c[\s\S]*\bopen\s*\([^)]*['"][wax]\+?['"]/, seen: 'a `python3 -c` one-liner opens a path for writing', raw: true },
+];
+
+/** What the write-shaped detector saw, or null when the call writes no file. */
+export function detectEditByShell(command: string): string | null {
+    const bare = stripLiterals(command);
+    for (const shape of EDIT_BY_SHELL) {
+        if (shape.re.test(shape.raw ? command : bare)) return shape.seen;
+    }
+    return null;
+}
+
+/** The two shape classes this concern carries. */
+export type NudgeClass = 'edit-by-shell' | 'chain';
+
+/** One finding: which class fired, and what it saw. */
+export interface NudgeFinding {
+    klass: NudgeClass;
+    seen: string;
+}
+
+/**
+ * The finding for this command, or null.
+ *
+ * `edit-by-shell` is tested first, and on a call that is both — `cd d && sed
+ * -i … f` is — it wins: its line names a primitive that costs no confirmation
+ * at all, while the chain line only explains why this one did.
+ */
+export function detectShape(command: string): NudgeFinding | null {
+    const write = detectEditByShell(command);
+    if (write) return { klass: 'edit-by-shell', seen: write };
+    const chained = detectChaining(command);
+    if (chained) return { klass: 'chain', seen: chained };
+    return null;
+}
+
+/**
  * Tools that carry a shell command. Mirrors `ship_diff_volume_hook` and
  * `git_command_classifier` rather than hardcoding `Bash`: the tool name is
  * host-specific, and the manifest's own `code-graph-nudge` block warns about
@@ -190,30 +275,69 @@ function latchFile(root: string): string {
     return path.join(root, 'agents', 'runtime', 'state', 'chain-nudge.json');
 }
 
-function alreadyNudged(root: string, session: string): boolean {
+/** One session's latch: the object form, or the pre-two-class `true`. */
+type LatchEntry = boolean | Record<string, boolean>;
+
+/**
+ * Has `klass` already fired for this session?
+ *
+ * A legacy `true` is read as the chain class having fired, which is what the
+ * single-class version wrote it to mean. The write class is then unlatched in
+ * that session and gets its first line — correct, because it never had one.
+ */
+export function classAlreadyNudged(entry: LatchEntry | undefined, klass: NudgeClass): boolean {
+    if (entry === true) return klass === 'chain';
+    if (isObject(entry)) return entry[klass] === true;
+    return false;
+}
+
+/** `klass` recorded on top of whatever the entry already held. */
+export function withClassLatched(entry: LatchEntry | undefined, klass: NudgeClass): Record<string, boolean> {
+    const next: Record<string, boolean> = entry === true ? { chain: true } : isObject(entry) ? { ...(entry as Record<string, boolean>) } : {};
+    next[klass] = true;
+    return next;
+}
+
+function readLatch(root: string): Record<string, LatchEntry> {
     try {
-        const state = JSON.parse(fs.readFileSync(latchFile(root), 'utf-8')) as Record<string, boolean>;
-        return state[session] === true;
+        return JSON.parse(fs.readFileSync(latchFile(root), 'utf-8')) as Record<string, LatchEntry>;
     } catch {
-        return false;
+        return {};
     }
 }
 
-function latch(root: string, session: string): void {
+function alreadyNudged(root: string, session: string, klass: NudgeClass): boolean {
+    return classAlreadyNudged(readLatch(root)[session], klass);
+}
+
+function latch(root: string, session: string, klass: NudgeClass): void {
     try {
         const p = latchFile(root);
-        let state: Record<string, boolean> = {};
-        try {
-            state = JSON.parse(fs.readFileSync(p, 'utf-8')) as Record<string, boolean>;
-        } catch {
-            /* fresh */
-        }
-        state[session] = true;
+        const state = readLatch(root);
+        state[session] = withClassLatched(state[session], klass);
         fs.mkdirSync(path.dirname(p), { recursive: true });
         fs.writeFileSync(p, JSON.stringify(state));
     } catch {
         /* fail-open: a persistence failure must not break the tool call */
     }
+}
+
+/** The write-shape line — names the expiry, then the primitive without one. */
+export function editByShellReason(seen: string): string {
+    return (
+        `This Bash call writes a file through the shell: ${seen}. A write-shaped ` +
+        'Bash grant does not persist — the host saves a permanent rule for ' +
+        'read-only commands, while a write-shaped one lasts until session end, so ' +
+        'this same shape costs another confirmation next session. Edit and Write ' +
+        'carry no such expiry inside the working directory: Edit for a targeted ' +
+        'change, Write for a new file, the shell for reads. ' +
+        'See `token-efficiency` § One command per Bash call.'
+    );
+}
+
+/** The line for a finding, dispatched on its class. */
+export function reasonFor(finding: NudgeFinding): string {
+    return finding.klass === 'edit-by-shell' ? editByShellReason(finding.seen) : nudgeReason(finding.seen);
 }
 
 /** The nudge line — one line, names what was seen and what to do instead. */
@@ -247,8 +371,8 @@ export function main(): number {
     const command = bashCommand(envelope);
     if (!command) return EXIT_ALLOW;
 
-    const seen = detectChaining(command);
-    if (!seen) return EXIT_ALLOW;
+    const finding = detectShape(command);
+    if (!finding) return EXIT_ALLOW;
 
     const cwd = envelope['cwd'];
     const pr = envelope['workspace_root'] ?? envelope['project_root'];
@@ -256,10 +380,10 @@ export function main(): number {
     if (!enabled(root)) return EXIT_ALLOW;
 
     const session = sessionId(envelope);
-    if (alreadyNudged(root, session)) return EXIT_ALLOW;
+    if (alreadyNudged(root, session, finding.klass)) return EXIT_ALLOW;
 
-    latch(root, session);
-    process.stdout.write(`${JSON.stringify({ decision: 'warn', reason: nudgeReason(seen) })}\n`);
+    latch(root, session, finding.klass);
+    process.stdout.write(`${JSON.stringify({ decision: 'warn', reason: reasonFor(finding) })}\n`);
     return EXIT_WARN;
 }
 

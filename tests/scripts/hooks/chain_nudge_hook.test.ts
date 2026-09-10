@@ -8,7 +8,19 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { bashCommand, detectChaining, enabled, nudgeReason, stripLiterals } from '../../../src/scripts/hooks/chain_nudge_hook.js';
+import {
+    bashCommand,
+    classAlreadyNudged,
+    detectChaining,
+    detectEditByShell,
+    detectShape,
+    editByShellReason,
+    enabled,
+    nudgeReason,
+    reasonFor,
+    stripLiterals,
+    withClassLatched,
+} from '../../../src/scripts/hooks/chain_nudge_hook.js';
 
 describe('detectChaining — fires', () => {
     const chained: ReadonlyArray<readonly [string, string]> = [
@@ -83,5 +95,97 @@ describe('nudgeReason', () => {
     });
     it('names what was seen', () => {
         expect(nudgeReason('a leading `VAR=…` assignment')).toContain('a leading `VAR=…` assignment');
+    });
+});
+
+describe('detectEditByShell — fires on the four write shapes', () => {
+    const writes: ReadonlyArray<readonly [string, string]> = [
+        ["sed -i '' -e 's/a/b/' docs/x.md", 'sed in-place, BSD two-arg form'],
+        ['sed -i.bak -e s/a/b/ f', 'sed in-place with a suffix'],
+        ['cat > out.txt', 'a file filled from the shell'],
+        ['cat >> out.txt', 'a file appended from the shell'],
+        ['tee report.txt', 'tee writing its input to a path'],
+        ["perl -i -pe 's/a/b/' f", 'perl in-place'],
+        ['python3 -c "open(\'f\',\'w\').write(x)"', 'an interpreter opening a path for writing'],
+    ];
+    for (const [cmd, why] of writes) {
+        it(`flags ${why}`, () => {
+            expect(detectEditByShell(cmd)).not.toBeNull();
+        });
+    }
+});
+
+describe('detectEditByShell — stays silent', () => {
+    const clean: ReadonlyArray<readonly [string, string]> = [
+        ['sed -n 2,8p f', 'sed in read mode'],
+        ['sed -e s/a/b/ f', 'sed printing to stdout, not editing in place'],
+        ['cat f', 'cat reading a file'],
+        ['cat f | grep x', 'cat feeding a filter'],
+        ['grep x f > /dev/null', 'a redirect to the null device'],
+        ['npm test 2>&1', 'an fd duplication, which names no file'],
+        ['tee -a', 'tee with no path argument'],
+        ['python3 -c "print(open(\'f\').read())"', 'an interpreter opening a path to READ'],
+        ["grep 'sed -i' f", 'the shape mentioned inside a quoted argument'],
+        ['ls -la', 'a plain command'],
+    ];
+    for (const [cmd, why] of clean) {
+        it(`ignores ${why}`, () => {
+            expect(detectEditByShell(cmd)).toBeNull();
+        });
+    }
+});
+
+describe('detectShape — the write class wins a call that is both', () => {
+    it('reports edit-by-shell for a cd-chain that ends in an in-place edit', () => {
+        const finding = detectShape("cd /other/tree && sed -i '' -e 's/a/b/' f");
+        expect(finding?.klass).toBe('edit-by-shell');
+    });
+    it('reports chain when nothing is written', () => {
+        expect(detectShape('cd /other/tree && git status')?.klass).toBe('chain');
+    });
+    it('reports nothing for a plain read', () => {
+        expect(detectShape('git -C /repo status')).toBeNull();
+    });
+});
+
+describe('the latch is per class, and a pre-two-class file still counts', () => {
+    it('a legacy `true` means the chain class fired, and only that one', () => {
+        expect(classAlreadyNudged(true, 'chain')).toBe(true);
+        expect(classAlreadyNudged(true, 'edit-by-shell')).toBe(false);
+    });
+    it('an unseen session has fired nothing', () => {
+        expect(classAlreadyNudged(undefined, 'chain')).toBe(false);
+        expect(classAlreadyNudged(undefined, 'edit-by-shell')).toBe(false);
+    });
+    it('one class firing does not silence the other', () => {
+        const after = withClassLatched(undefined, 'chain');
+        expect(classAlreadyNudged(after, 'chain')).toBe(true);
+        expect(classAlreadyNudged(after, 'edit-by-shell')).toBe(false);
+    });
+    it('upgrading a legacy entry keeps the chain latch it already held', () => {
+        const after = withClassLatched(true, 'edit-by-shell');
+        expect(classAlreadyNudged(after, 'chain')).toBe(true);
+        expect(classAlreadyNudged(after, 'edit-by-shell')).toBe(true);
+    });
+    it('a class never fires twice', () => {
+        const once = withClassLatched(undefined, 'edit-by-shell');
+        const twice = withClassLatched(once, 'edit-by-shell');
+        expect(classAlreadyNudged(twice, 'edit-by-shell')).toBe(true);
+        expect(Object.keys(twice)).toEqual(['edit-by-shell']);
+    });
+});
+
+describe('editByShellReason', () => {
+    it('stays inside the 1024-byte default concern cap', () => {
+        expect(Buffer.byteLength(editByShellReason('`sed -i` edits a file in place'), 'utf8')).toBeLessThan(1024);
+    });
+    it('names the primitive that carries no expiring grant', () => {
+        const line = editByShellReason('`cat >` fills a file from the shell');
+        expect(line).toContain('Edit');
+        expect(line).toContain('Write');
+    });
+    it('reasonFor dispatches on the class', () => {
+        expect(reasonFor({ klass: 'edit-by-shell', seen: 'x' })).toContain('writes a file through the shell');
+        expect(reasonFor({ klass: 'chain', seen: 'y' })).toContain('chains work');
     });
 });
