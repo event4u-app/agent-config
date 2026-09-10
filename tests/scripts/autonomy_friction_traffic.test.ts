@@ -16,29 +16,41 @@ import { describe, expect, it } from 'vitest';
 
 import {
     classify,
+    currentSessionTranscript,
+    dedupeCalls,
     defaultStore,
     extractCommands,
     firstDisqualifier,
     headToken,
     main,
+    SHELL_METACHARACTERS,
     transcriptPaths,
 } from '../../src/scripts/autonomy_friction_traffic.js';
+import { SHELL_METACHARACTERS as CATEGORY_A_METACHARACTERS } from '../../src/scripts/hooks/category_a.js';
 
-function transcriptLine(command: string): string {
+function transcriptLine(command: string, id = 'toolu_x'): string {
     return JSON.stringify({
         type: 'assistant',
-        message: { content: [{ type: 'tool_use', name: 'Bash', input: { command } }] },
+        message: { content: [{ type: 'tool_use', name: 'Bash', id, input: { command } }] },
     });
+}
+
+function commandsOf(text: string): string[] {
+    return extractCommands(text).map((c) => c.command);
 }
 
 describe('extractCommands', () => {
     it('reads the command out of a Bash tool-use block', () => {
-        expect(extractCommands(transcriptLine('ls -la'))).toEqual(['ls -la']);
+        expect(commandsOf(transcriptLine('ls -la'))).toEqual(['ls -la']);
+    });
+
+    it('carries the tool-use id, which is what identifies a call across files', () => {
+        expect(extractCommands(transcriptLine('ls -la', 'toolu_1'))[0]?.id).toBe('toolu_1');
     });
 
     it('skips a malformed line instead of losing the file', () => {
         const text = ['{"Bash": not json', transcriptLine('git status')].join('\n');
-        expect(extractCommands(text)).toEqual(['git status']);
+        expect(commandsOf(text)).toEqual(['git status']);
     });
 
     it('ignores a tool-use block for another tool', () => {
@@ -54,17 +66,84 @@ describe('extractCommands', () => {
     });
 });
 
+describe('dedupeCalls — a resumed session repeats its history', () => {
+    // Round-2 finding 9: a window of files double-counts the turns a resume
+    // copied forward, so the denominator was not the number of distinct calls.
+    it('keeps one copy of a call that appears in two transcripts', () => {
+        expect(dedupeCalls([
+            { id: 'toolu_1', command: 'ls' },
+            { id: 'toolu_1', command: 'ls' },
+        ])).toEqual(['ls']);
+    });
+
+    it('keeps two genuinely distinct calls that happen to be identical', () => {
+        expect(dedupeCalls([
+            { id: 'toolu_1', command: 'ls' },
+            { id: 'toolu_2', command: 'ls' },
+        ])).toEqual(['ls', 'ls']);
+    });
+
+    it('keeps an id-less call rather than shrinking the denominator', () => {
+        expect(dedupeCalls([
+            { id: '', command: 'ls' },
+            { id: '', command: 'ls' },
+        ])).toEqual(['ls', 'ls']);
+    });
+});
+
+describe('currentSessionTranscript — the probe excludes its own session', () => {
+    it('names the running session transcript when the host exports an id', () => {
+        const prior = process.env['CLAUDE_CODE_SESSION_ID'];
+        process.env['CLAUDE_CODE_SESSION_ID'] = 'sess-1';
+        expect(currentSessionTranscript('/store')).toBe(path.join('/store', 'sess-1.jsonl'));
+        if (prior === undefined) delete process.env['CLAUDE_CODE_SESSION_ID'];
+        else process.env['CLAUDE_CODE_SESSION_ID'] = prior;
+    });
+
+    it('names nothing when the host exports no id, so nothing is excluded', () => {
+        const prior = process.env['CLAUDE_CODE_SESSION_ID'];
+        delete process.env['CLAUDE_CODE_SESSION_ID'];
+        expect(currentSessionTranscript('/store')).toBeNull();
+        if (prior !== undefined) process.env['CLAUDE_CODE_SESSION_ID'] = prior;
+    });
+});
+
 describe('firstDisqualifier — only the first, because that is the one a fix removes', () => {
     it('names the metacharacter for a chained call whose head is also unlisted', () => {
         expect(firstDisqualifier('cd /x && frobnicate')).toBe('shell-metacharacter');
     });
 
-    it('names the head when the command is a single simple one', () => {
-        expect(firstDisqualifier('frobnicate --all')).toBe('head-or-subcommand-not-allowlisted');
-    });
-
     it('names an empty command as such', () => {
         expect(firstDisqualifier('   ')).toBe('empty-command');
+    });
+
+    // Round-2 finding 3. These three used to land in the head bucket, so a
+    // report saying "N fail on the head token" counted operations that
+    // category_a refuses on the operation whatever the head list says.
+    it('separates a consequence operation from a head-list miss', () => {
+        expect(firstDisqualifier('git push origin main')).toBe('names-a-consequence-operation');
+        expect(firstDisqualifier('gh pr merge 12')).toBe('names-a-consequence-operation');
+        expect(firstDisqualifier('rm -rf build')).toBe('names-a-consequence-operation');
+    });
+
+    it('names the residual bucket for a simple command that cleared both', () => {
+        expect(firstDisqualifier('frobnicate --all')).toBe('not-an-allowlisted-operation');
+    });
+
+    // The residual bucket is an UPPER BOUND, not an exact head count: this
+    // command's head IS allowlisted and it is refused for the absolute
+    // directory-flag value instead. Pinned so the doc sentence built on the
+    // bucket cannot be read as "adding this head would cover it".
+    it('also holds a refusal that is not about the head at all', () => {
+        expect(firstDisqualifier('git -C /abs/worktree status')).toBe('not-an-allowlisted-operation');
+    });
+});
+
+describe('the metacharacter class is shared with category_a, not copied', () => {
+    // Round-2 finding 2: this was a private regex literal here while the
+    // header claimed shared detectors, and it computes the load-bearing split.
+    it('is the same object the classifier refuses on', () => {
+        expect(SHELL_METACHARACTERS).toBe(CATEGORY_A_METACHARACTERS);
     });
 });
 
@@ -140,6 +219,17 @@ describe('defaultStore', () => {
         expect(defaultStore('/Users/x/projects/repo')).toBe(
             path.join(os.homedir(), '.claude', 'projects', '-Users-x-projects-repo'),
         );
+    });
+});
+
+describe('--limit is validated, not coerced', () => {
+    // Round-2 finding 11: a negative limit silently dropped the OLDEST
+    // transcripts through Array.slice, zero reported an empty store as the
+    // reason, and a typo fell back to 40 without saying so.
+    it('refuses a negative, a zero and a non-numeric limit', () => {
+        for (const bad of ['-5', '0', 'forty']) {
+            expect(main(['--store', '/nonexistent', '--limit', bad])).toBe(1);
+        }
     });
 });
 

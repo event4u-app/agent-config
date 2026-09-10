@@ -8,8 +8,8 @@
  * answer is "how much of what the agent actually types does the design
  * cover", because a hand-written corpus contains the shapes its author
  * thought of. That number turned out to be the one that mattered: measured
- * over 8,171 real Bash calls in 40 transcripts on 2026-09-10, category A
- * covered 126 of them — 1.5 %.
+ * over 7,530 distinct real Bash calls in 39 transcripts on 2026-09-10,
+ * category A covered 125 of them — 1.7 %.
  *
  * WHAT IT MEASURES, STATED NARROWLY. Three things, over a transcript store:
  * the share of Bash calls that are category A (the calls this package hands
@@ -31,13 +31,27 @@
  * an absent store is worse than one that refuses.
  *
  * SHARED DETECTORS, NOT A SECOND COPY. The avoidable-shape counts come from
- * the concern's own exported `detectEditByShell` / `detectChaining`, so a
- * detector change moves this report and the live nudge together. A private
- * regex here would let the two drift and the report would then describe a
- * carrier that does not exist.
+ * the concern's own exported `detectEditByShell` / `detectChaining`, and the
+ * metacharacter class is `category_a`'s own exported constant, so a change to
+ * either moves this report and the live carrier together. A private copy here
+ * would let the two drift and the report would then describe a carrier that
+ * does not exist — the first draft held exactly such a copy, and it computed
+ * the split the whole report turns on.
+ *
+ * WHAT MAKES A FIGURE FROM THIS PROBE COMPARABLE. Two properties, both of
+ * which the first draft lacked. Calls are deduplicated by tool-use id, because
+ * a resumed session rewrites its earlier turns into a new transcript and a
+ * window of files therefore counts them twice. And the running session's own
+ * transcript is excluded by default, because every call the probe itself makes
+ * lands in a file it is about to read — two runs minutes apart reported 7,518
+ * and 7,653 for the same tree before that. What remains uncontrolled is the
+ * window: `--limit 40` names the 40 most recent transcripts, and which files
+ * those are moves as new sessions appear. So pin the DATE with the figure and
+ * read a later run as measuring the window as well as the tree.
  *
  * Usage:
  *   ./scripts-run src/scripts/autonomy_friction_traffic [--store DIR] [--limit N] [--json]
+ *   … [--include-current]   include the running session's own transcript
  */
 import * as fs from "node:fs";
 import * as os from "node:os";
@@ -46,10 +60,17 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 
 import { detectChaining, detectEditByShell } from "./hooks/chain_nudge_hook.js";
-import { isCategoryABashCommand } from "./hooks/category_a.js";
+import {
+    isCategoryABashCommand,
+    namesConsequenceOperation,
+    SHELL_METACHARACTERS,
+} from "./hooks/category_a.js";
 
-/** The metacharacter class `category_a` refuses before reading any argv. */
-const SHELL_METACHARACTERS = /[;&|`$><\n\r(){}\\]/;
+// Re-exported so a test can assert this module refuses on the CLASSIFIER's
+// metacharacter set rather than on a copy of it. The first draft held a private
+// regex literal here while the header claimed shared detectors, and that copy
+// computed the split the whole report turns on.
+export { SHELL_METACHARACTERS };
 
 /** How many transcripts to read when `--limit` is absent. */
 const DEFAULT_LIMIT = 40;
@@ -70,15 +91,27 @@ export interface TrafficReport {
     editShapes: Record<string, number>;
 }
 
+/** One Bash call, with the tool-use id that identifies it across files. */
+export interface BashCall {
+    /** The host's `tool_use` id, or `""` when the record carries none. */
+    id: string;
+    command: string;
+}
+
 /**
- * Every Bash command in one transcript's text.
+ * Every Bash call in one transcript's text.
  *
  * Line-delimited JSON, one record per line, so a malformed line is skipped
  * rather than costing the file. The `"Bash"` pre-filter is a cheap reject: a
  * transcript is megabytes and most lines carry no tool call at all.
+ *
+ * The id comes out with the command because a resumed session writes a new
+ * transcript carrying the earlier turns again — counting a window of files
+ * therefore counts some calls twice, and the id is what tells the copies apart
+ * from two genuinely identical commands.
  */
-export function extractCommands(text: string): string[] {
-    const out: string[] = [];
+export function extractCommands(text: string): BashCall[] {
+    const out: BashCall[] = [];
     for (const line of text.split("\n")) {
         if (!line.includes('"Bash"')) continue;
         let rec: unknown;
@@ -90,12 +123,46 @@ export function extractCommands(text: string): string[] {
         const content = (rec as { message?: { content?: unknown } })?.message?.content;
         if (!Array.isArray(content)) continue;
         for (const block of content) {
-            const b = block as { type?: unknown; name?: unknown; input?: { command?: unknown } };
+            const b = block as { type?: unknown; name?: unknown; id?: unknown; input?: { command?: unknown } };
             if (b?.type !== "tool_use" || b?.name !== "Bash") continue;
-            if (typeof b.input?.command === "string") out.push(b.input.command);
+            if (typeof b.input?.command !== "string") continue;
+            out.push({ id: typeof b.id === "string" ? b.id : "", command: b.input.command });
         }
     }
     return out;
+}
+
+/**
+ * The distinct calls in `calls`, keyed by tool-use id.
+ *
+ * A call with no id cannot be deduplicated and is kept — dropping it would
+ * silently shrink the denominator, and an over-count biases the report toward
+ * looking worse than it is, which is the safe direction for a friction figure.
+ */
+export function dedupeCalls(calls: readonly BashCall[]): string[] {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const call of calls) {
+        if (call.id) {
+            if (seen.has(call.id)) continue;
+            seen.add(call.id);
+        }
+        out.push(call.command);
+    }
+    return out;
+}
+
+/**
+ * The transcript of the session running this probe, if the host names one.
+ *
+ * Excluded by default. A probe whose window includes its own session measures
+ * the measurement: every call this run makes lands in the file it is reading,
+ * so two runs minutes apart report different totals for the same tree and the
+ * figure cannot be pinned. `--include-current` opts back in.
+ */
+export function currentSessionTranscript(store: string): string | null {
+    const id = process.env["CLAUDE_CODE_SESSION_ID"];
+    return id ? path.join(store, `${id}.jsonl`) : null;
 }
 
 /** The head token of a command, lower-cased, or `""`. */
@@ -109,11 +176,23 @@ export function headToken(command: string): string {
  * Only the FIRST disqualifier is reported, because that is the one a change
  * would have to remove: a chained command whose head is also unlisted stays
  * uncovered if only the head is added.
+ *
+ * The buckets mirror `category_a`'s own order of refusal, including the
+ * consequence-word check — without it `git push origin main` and `gh pr merge`
+ * landed in the head bucket, and a report saying "N fail on the head token"
+ * then counted operations that would be refused whatever the head list said.
+ *
+ * The last bucket is still an UPPER BOUND rather than an exact head count: a
+ * simple command can also be refused for a directory flag whose value escapes
+ * the working tree, and that case is not separable from here without
+ * reimplementing the argv walk. Read it as "refused after the shape and the
+ * operation were cleared", and never as "adding this head would cover it".
  */
 export function firstDisqualifier(command: string): string {
     if (!command.trim()) return "empty-command";
     if (SHELL_METACHARACTERS.test(command)) return "shell-metacharacter";
-    return "head-or-subcommand-not-allowlisted";
+    if (namesConsequenceOperation(command)) return "names-a-consequence-operation";
+    return "not-an-allowlisted-operation";
 }
 
 /** Classify a command set. Pure — the caller supplies the strings. */
@@ -217,9 +296,11 @@ function argValue(argv: readonly string[], flag: string): string | undefined {
 export function main(argv: string[] = process.argv.slice(2)): number {
     if (argv.includes("--help") || argv.includes("-h")) {
         process.stdout.write(
-            "usage: autonomy_friction_traffic [--store DIR] [--limit N] [--json]\n" +
+            "usage: autonomy_friction_traffic [--store DIR] [--limit N] [--json] [--include-current]\n" +
                 "  Category-A coverage over the Bash calls in a transcript store,\n" +
-                "  plus the shape classes the chain-nudge concern flags.\n" +
+                "  plus the shape classes the chain-nudge concern flags. Calls are\n" +
+                "  deduplicated by tool-use id and the running session's own\n" +
+                "  transcript is excluded unless --include-current is passed.\n" +
                 "  Exit 1 when the store is unreadable or holds no Bash call.\n",
         );
         return 0;
@@ -227,10 +308,24 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
     const store = argValue(argv, "--store") ?? defaultStore(repoRoot);
     const limitRaw = argValue(argv, "--limit");
-    const limit = limitRaw && Number.isFinite(Number(limitRaw)) ? Number(limitRaw) : DEFAULT_LIMIT;
+    let limit = DEFAULT_LIMIT;
+    if (limitRaw !== undefined) {
+        const parsed = Number(limitRaw);
+        // Validated rather than coerced: `--limit -5` silently dropped the
+        // five OLDEST transcripts through `Array.slice`, `--limit 0` reported
+        // an empty store as the reason, and a typo fell back to 40 without
+        // saying so. A window is the report's denominator; a wrong one is a
+        // wrong measurement wearing the right shape.
+        if (!Number.isInteger(parsed) || parsed < 1) {
+            process.stderr.write(`autonomy_friction_traffic: --limit must be a positive integer, got ${limitRaw}\n`);
+            return 1;
+        }
+        limit = parsed;
+    }
 
-    const paths = transcriptPaths(store, limit);
-    const commands: string[] = [];
+    const current = argv.includes("--include-current") ? null : currentSessionTranscript(store);
+    const paths = transcriptPaths(store, limit).filter((p) => p !== current);
+    const calls: BashCall[] = [];
     for (const p of paths) {
         let text: string;
         try {
@@ -238,8 +333,9 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         } catch {
             continue;
         }
-        commands.push(...extractCommands(text));
+        calls.push(...extractCommands(text));
     }
+    const commands = dedupeCalls(calls);
     if (commands.length === 0) {
         process.stderr.write(
             `autonomy_friction_traffic: no Bash call found under ${store} ` +
