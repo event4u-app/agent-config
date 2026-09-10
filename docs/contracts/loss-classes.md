@@ -90,67 +90,85 @@ become so without being reclassified. That is the `revisit-if`.
 
 A hook concern bound on a slot whose output can reach the model, whose script
 **both** emits a context payload **and** applies a lossy operation to content —
-read from **code with comments stripped**.
+read from **code with comments stripped**. That single-file requirement is what
+the reachability walk below replaced; the two halves are now read from an
+emitter and the modules it reaches.
 
 The comment-stripping is not a detail. The first cut of this detector matched
 `truncat` inside three docblocks that *describe* truncation without performing
 any, and reported a corpus of four. Three of those four were prose. A gate that
 fires on writing about a defect rather than on the defect is how a real corpus of
 one becomes a pro-forma corpus of four, each carrying a declaration nobody meant.
+Comments are now found by the same single pass that finds literals, so a
+trailing `// truncate the rows` is prose too — two regexes guessing at each
+other's boundaries got that wrong in both directions.
 
 **Measured at landing: 1 module qualified** — `hot_context_hook`. **Measured
 2026-09-09: 0.** Step 3.1 of road-to-continuity-writer-activation retired that
 module's cache half, and with it both patterns the detector matched on.
-**Measured 2026-09-10: 1** — `src/scripts/_lib/session_index_trust.ts`, reached
-by the pointer described below.
+**Measured 2026-09-10 with the walk: 58 scanned, 7 emitters, 5 matched** —
+four declaring a lossy class and one declaring `exact`.
 
-A corpus of one was the honest state of this tree. A corpus of zero was not: the
-gate was green over an empty set, which proves nothing about any transform rather
-than proving there are none.
+MATCHED IS NOT LOSSY, and an earlier version of this line said otherwise. The
+detector establishes a match; the module's own declaration says whether anything
+is lost, and `exact` says nothing is.
 
-## `loss_module:` — how a module one layer below a concern enters the corpus
+A corpus of one was the honest state of this tree at the time. A corpus of zero
+was not: the gate was green over an empty set, which proves nothing about any
+transform rather than proving there are none.
+
+## Reachability — how a module one layer below a concern enters the corpus
 
 The declaration lives on the module that transforms; the corpus is the hook
-manifest. A transform one module deeper than a concern script therefore sits
+manifest. A transform one module deeper than a concern script therefore sat
 outside the corpus, which is how the 30-row cap in
 `src/scripts/_lib/session_index_trust.ts` became invisible when the concern
 script above it stopped transforming anything.
 
-A concern script brings such a module into scope by naming it:
+The gate now REACHES such a module instead of being told about it. An **emitter**
+is a concern script whose code emits a context payload. A **target** is any
+module that emitter reaches through relative specifiers — transitively, the
+emitter itself included — whose code applies a lossy operation. Both halves no
+longer have to live in one file, which is the whole reason a `_lib` helper could
+hide the transform.
 
-```
- * loss_module: src/scripts/_lib/session_index_trust.ts
-```
+### Specifiers, not import statements
 
-**A pointer is a claim, and the gate treats it as one.** A pointed module that
-declares nothing, does not exist, or resolves outside the repository is a
-finding at the concern's own tier. That polarity is the point: an allowlist
-removes things from a gate, and this adds them to it.
+The walk reads relative module SPECIFIERS wherever they appear, not `import`
+statements. That is not a shortcut: the hot paths in this tree load through
+`createRequire` for bundle safety, so `req('./_lib/session_index_trust.js')` and
+a static import are the same reach, and a walk that told them apart would miss
+exactly the edge that matters.
 
-### Why not a static-import closure — measured, not assumed
+### A superseded rejection, and the two premises that changed
 
-The obvious alternative is to follow each concern script's imports and scan
-what it reaches. Measured on this tree, 2026-09-10, that closure returns **11**
-applied-lossy modules, of which **9** match on an identifier rather than on a
-transform: a `truncated: boolean` field naming file rotation, a settings key
-called `knowledge.global_sharing.redaction.enabled`, a regex literal that
-*detects* `truncate table` in someone else's command. That is the same
-prose-versus-code failure the comment-stripping above exists to prevent, one
-layer up — matching writing *about* a transform instead of a transform.
+A `loss_module:` pointer held this ground between 2026-09-10 and this change: a
+concern named the module carrying its transform, and the gate then required that
+module to declare. It was chosen over a reachability walk on two measured
+grounds, and BOTH were re-measured and no longer hold:
 
-And decisively: the closure does **not** contain `session_index_trust.ts`. The
-only concern that reaches it, `hot-context`, loads it through `createRequire`
-for bundle safety, so no static walk sees the edge. A widening that misses the
-module it was written for, while adding nine it was not, is not a widening.
+| Premise for rejecting the walk | Re-measured |
+|---|---|
+| the closure does not contain `session_index_trust.ts` at all, because `hot-context` loads it through `createRequire` | a SPECIFIER walk reaches it; that module is in the corpus |
+| 11 applied-lossy modules, of which 9 match on an identifier rather than a transform — a `truncated: boolean` field, a settings key called `knowledge.global_sharing.redaction.enabled`, a regex that *detects* `truncate table` | 5 matched, 0 identifier-only. Literals are blanked on the lossy half, and a marker in a substitution's own arguments is what separates `s.replace(RE, '[REDACTED]')` from `db.exec(q)` |
 
-### What the pointer still does not catch
+The first premise measured a static-import closure and generalized it to every
+walk. The second measured raw patterns over the reached set without the
+literal-blanking the widening itself makes necessary. Neither was wrong about
+what it measured; both were about a narrower thing than the conclusion drawn.
 
-An **unpointed** lossy transform in a module a concern reaches. The gap is
-narrower than the one it replaces — that one was every non-concern module, with
-an empty corpus to show for it — and it is real. Closing it needs a lossy
-detector that matches an *applied* transform rather than an identifier; the
-11-versus-2 measurement above is the evidence for what building that would have
-to clear.
+**A co-presence rule was tried and dropped on the way.** Asking whether the
+module ALSO contains a shortening call anywhere took the corpus from 5 to 8,
+admitting settings key names containing `redaction`, a SQLite
+`PRAGMA wal_checkpoint(TRUNCATE)`, and length constants used only to validate.
+Co-presence in a file is not evidence, and three pro-forma declarations is the
+corpus this contract exists to prevent.
+
+### What the walk does not catch
+
+A module loaded through a COMPUTED specifier — the one thing a pointer did catch
+that a walk cannot. Nothing in the tree does that today. If something ever does,
+the answer is to name the module, not to reason about the walk.
 
 ## The passthrough invariant
 
@@ -171,11 +189,11 @@ case where emitting the larger output is right.
 
 ## What this contract does NOT claim
 
-- **It does not find undeclared transforms outside the hook manifest.** A helper
-  buried three imports deep is invisible to the detector unless a concern script
-  names it with `loss_module:`. The pointer makes a named module gateable; it
-  does not make an unnamed one visible, and nothing in this contract claims
-  otherwise.
+- **It does not find undeclared transforms outside what a concern reaches.** A
+  helper three imports deep IS visible now — that is what the walk changed, and
+  the bullet that used to stand here said the opposite. What stays invisible is
+  narrower and named above: a module loaded through a computed specifier, and
+  any module no context-emitting concern reaches at all.
 - **It does not verify a locator resolves.** It verifies one was *declared*.
   Whether the path it names still exists is a reviewer's judgement, and a gate
   claiming otherwise would be claiming more than it checks.

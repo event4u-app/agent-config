@@ -27,17 +27,20 @@
  * coverage change rather than an omission. The two lossy transforms the class
  * described — the 400-word cap and the fail-closed `_redact_lines` drop — left
  * with the cache. The 30-row cap the memory index still applies lives in
- * `_lib/session_index_trust.ts`, which is not a concern script and is reached
- * from here through `createRequire` rather than a static import, so neither the
- * old detector nor an import-closure widening of it can see the module.
+ * `_lib/session_index_trust.ts`, which is not a concern script.
  *
- * The `loss_module:` pointer below is how it re-enters the gate's corpus. It is
- * a claim, not an exemption: `check_loss_class_declared` requires the pointed
- * module to carry a valid declaration and fails when it does not. Deleting the
- * line silently removes a model-facing lossy transform from the gate, so it is
- * part of this concern's contract.
+ * A `loss_module:` pointer used to sit here, naming that module so the gate
+ * could see it. It is gone because the gate now REACHES the module instead of
+ * being told about it: `check_loss_class_declared` walks relative specifiers
+ * from every context-emitting concern, and this file's `createRequire` load of
+ * `_lib/session_index_trust.js` is one. The pointer's premise — that only a
+ * static-import closure was on offer and it could not see a `createRequire`
+ * load — is what changed; a specifier walk sees both.
  *
- * loss_module: src/scripts/_lib/session_index_trust.ts
+ * What that costs, stated because a pointer did catch one thing a walk cannot:
+ * a module loaded through a COMPUTED specifier is now invisible again. Nothing
+ * here does that, and if something ever does, the answer is to name the module
+ * rather than to reason about the walk.
  *
  * Reads the dispatcher JSON envelope on stdin
  * (`{platform, event, payload, workspace_root, …}`).

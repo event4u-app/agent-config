@@ -24,6 +24,27 @@
  *
  * Everything in this module is pure and clock-injected so the detectors can be
  * unit-tested without a host, a transcript, or a network.
+ *
+ * loss_class: ephemeral-lossy
+ *
+ * `sanitizeEvidence` replaces home paths and e-mail addresses with placeholders
+ * and hard-cuts the span at `MAX_EVIDENCE`. It owes no recovery locator and
+ * must not have one: storing what was dropped for privacy would defeat the
+ * reason it was dropped, which is the same ruling the retired `hot_context_hook`
+ * carried. `egressBlockedReason` is the gate; this is a narrowing pass.
+ *
+ * THE GATE DOES NOT SEE THAT CAP, and the declaration is here anyway.
+ * `check_loss_class_declared`'s cap pattern requires a unit word followed by a
+ * size noun (`ROW_CAP`, `WORD_CHARS`), so `MAX_EVIDENCE` does not match it.
+ * What pulls this module into the corpus is `\bredact` firing on the
+ * `redact_low_impact_entry` identifier imported just below — for the EGRESS
+ * gate, which loses nothing. So the real lossy operation in this file is
+ * declared and unenforced, and the enforcement rests on an unrelated import:
+ * rename or drop that import and this module leaves the corpus while still
+ * cutting the span. Widening the pattern to any `MAX_<WORD>` was measured and
+ * refused (it admits seven constants that cut nothing — see that gate's
+ * docstring), so the mismatch is recorded rather than closed. Keep this
+ * declaration on its own merits, not because the gate is watching.
  */
 import { createHash } from 'node:crypto';
 
