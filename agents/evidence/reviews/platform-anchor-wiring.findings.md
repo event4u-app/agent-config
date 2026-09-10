@@ -1,0 +1,1 @@
+**Skipped:** no code surface for this completion — the diff is one workflow step with its permission grant, one taskfile target and one blocker resolution, zero code paths of three changed files, scope a3b202ce33500fbd366a8d74bd167f7631a9d6fecf60cf86dab1557a71bc0083, declared 2026-09-10
