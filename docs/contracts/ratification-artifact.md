@@ -161,38 +161,64 @@ claiming protection against unilateral action while an administrator role
 bypasses unconditionally. The question is recorded in `threat_model_note` in
 `src/config/platform-anchor.json` and is owner-reserved.
 
-### Re-measured 2026-09-10, afternoon — three of those readings are now history
+### Re-measured 2026-09-10, afternoon — one of those three readings is now history
 
 The block above is a **dated** reading and stays as written. It was true at
-08:26 and it is not the current state; rewriting it would destroy the evidence
-that the anchor was built against a measured failure. What follows is the
-later reading, recorded beside it rather than over it.
+08:26 (commit `6bab400a8`) and it is not a complete description of the current
+state; rewriting it would destroy the evidence that the anchor was built
+against a measured failure. What follows is the later reading, recorded beside
+it rather than over it.
 
-Two owner edits to ruleset `17749383` on the same day, both reproducible from
-`gh api repos/event4u-app/agent-config/rulesets/17749383/history`:
+**Which of its three bullets moved, precisely — because only one did.**
+Bullet 1 (`branches/main/protection` → 404, rulesets in use) still holds.
+Bullet 2 (`required_approving_review_count: 0`, `require_last_push_approval:
+false`) went to `1`/`true` at 12:51 and **back to `0`/`false` the same
+afternoon**, so it reads true again — by owner decision now rather than by
+neglect, which is the part that changed. Bullet 3 (`bypass_actors` carrying
+`{RepositoryRole 5, always}`) is history: it is `[]`, and
+`current_user_can_bypass` is `never`.
+
+**Six versions of ruleset `17749383` exist on 2026-09-10, not two.** All
+reproducible from
+`gh api repos/event4u-app/agent-config/rulesets/17749383/history`, and each
+edit changed one field:
 
 | At | Version | What changed |
 |---|---|---|
 | 12:51 | `49256548` | `required_approving_review_count` 0 → 1 · `require_last_push_approval` false → true · `bypass_actors` `{RepositoryRole 5, always}` → `[]` |
-| 15:18 | — | `required_approving_review_count` 1 → 0 · `require_last_push_approval` true → false · `strict_required_status_checks_policy` true → false |
+| 15:14 | `49271774` | `required_approving_review_count` 1 → **0** |
+| 15:16 | `49272069` | `require_last_push_approval` true → **false** |
+| 15:18 | `49272180` | `strict_required_status_checks_policy` true → **false** |
+| 16:04 | `49276909` | `strict_required_status_checks_policy` false → **true** |
+| 16:06 | `49277135` | `strict_required_status_checks_policy` true → **false** |
 
-**The 12:51 edit made the repository unmergeable, and that is why the 15:18
-edit exists.** This repository has one maintainer, and GitHub does not permit
-approving one's own pull request — so `required_approving_review_count: 1` is
-not a strict requirement here but an unsatisfiable one, and with
+**The 12:51 edit made the repository unmergeable, and the 15:14 and 15:16 edits
+are the reversal.** This repository has zero eligible approvers and GitHub does
+not permit approving one's own pull request, so
+`required_approving_review_count: 1` could not be satisfied; with
 `bypass_actors` emptied in the same edit there was no administrator escape
-left either. PR #1988 measured `mergeable: MERGEABLE`,
+either. PR #1988 measured `mergeable: MERGEABLE`,
 `mergeStateStatus: BLOCKED`, `reviewDecision: REVIEW_REQUIRED` with every
-required check green. Returning the two approval values is an owner decision
-under `decision-revisit-gate`'s owner-reserved set, taken deliberately.
+required check green, and merged at `2026-09-10T13:17:09Z` — **15:17:09 local,
+after the 15:16 edit and one minute before the 15:18 version exists.** So the
+15:18 edit is not part of what unblocked it, and an earlier version of this
+section said it was.
 
-**Two claims elsewhere in this document and in
-`src/config/platform-anchor.json` are therefore no longer current state.** The
-`bypass_actors` entry and `current_user_can_bypass: always` describe the
-morning, not now: measured after 12:51, `bypass_actors` is `[]` and
-`current_user_can_bypass` is `never`. Trust layer 2 above and
-`threat_model_note` both still read as if an administrator bypasses
-unconditionally. The **owner question** those passages record — whether
+**One framing correction, because it changes what the record claims.** Calling
+the state "structurally unsatisfiable" is the framing the 2026-09-10 council
+rejected: GitHub supports outside collaborators, teams and bots, so the
+approver count is zero because none has been configured — a deliberate
+single-operator model, not an external constraint. The exemption planned below
+therefore names an operational choice, and the reversal is an owner decision
+under `decision-revisit-gate`'s owner-reserved set.
+
+**Two present-tense claims in this document, and one in
+`src/config/platform-anchor.json`, are no longer current state.** They are
+bullet 3 of the dated block above and the sentence in the
+`HUMAN REVIEW REQUIRED` band that reads "while an administrator role bypasses
+unconditionally"; the third is `threat_model_note`. Trust layer 2 is **not**
+among them — it makes no bypass claim, it says the anchor measures a failure
+and points here. The **owner question** those passages record — whether
 administrators are meant to be a deliberate escape hatch — is untouched and
 stays open; only the measurement behind it has moved. Correcting the note
 inside `platform-anchor.json` is deferred to the roadmap below, because that
