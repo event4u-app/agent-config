@@ -173,7 +173,7 @@ export const settingsSchema = z.object({
     }),
     chat_history: z.object({
         enabled: z.boolean().default(true).describe(
-            'Persist a structured log of every chat turn to .agent-config/chat-history/ so /chat-history:show, :import, and :learn can replay sessions. Turn off if you never want chat transcripts on disk.',
+            'Persist a structured log of every chat turn to agents/runtime/.agent-chat-history (JSONL). Recording only — no command in this package replays a session from the file; it is a record on disk that a human or a later tool can read. Turn off if you never want chat transcripts on disk.',
         ),
         frequency: chatFreq.default('per_turn').describe(
             'How often the chat-history writer flushes to disk. per_turn = after every user / agent exchange (default, lowest data loss on crash). per_phase = at phase boundaries (cheaper I/O). per_tool = after every tool call (highest fidelity, noisiest log).',
@@ -470,8 +470,8 @@ export const settingsSchema = z.object({
         }),
     }),
     continuity: z.object({
-        auto_record: z.enum(['on', 'off']).default('off').describe(
-            'Deterministic continuity-record writer at session end (road-to-continuity-writer-activation Phase 1). on = the session-eol concern writes the continuity_record capsule variant on Stop for a substantive session that has claimed a roadmap; every field is computed from on-disk state, with no model spend and no subprocess. off (default) = no automatic record — while session:recycle is still the normal path, a second producer on it before the parity evidence is in would be unverified.',
+        auto_record: z.enum(['on', 'off']).default('on').describe(
+            'Deterministic continuity-record writer at session end (road-to-continuity-writer-activation Phase 1). on (default since 2026-09-10) = the session-eol concern writes the continuity_record capsule variant on Stop for a substantive session that has claimed a roadmap; every field is computed from on-disk state, with no model spend and no subprocess. off = no automatic record, and only the explicit agent-config session:recycle writes one. The default flipped once the parity evidence landed, so the normal path carries an automatic writer rather than a remembered command; session:recycle is retained because the automatic writer skips a session that claimed no roadmap and omits the git-status anchors.',
         ),
         run_checkpoints: z.enum(['on', 'off']).default('on').describe(
             'Deterministic run-checkpoint production at session end (road-to-continuity-writer-activation Phase 1.4). on (default) = a session above the recycle threshold and inside a running roadmap contract leaves agents/runtime/state/checkpoints/<run>.json, so a killed run resumes from a derived checkpoint rather than from bookkeeping. off = no checkpoint; continuity writing, the recycle advisory and the context-fill surface are unaffected. Default ON because it is the behavior the tree already had — the switch exists to make the three session-end handlers independently disableable, not to change what ships.',

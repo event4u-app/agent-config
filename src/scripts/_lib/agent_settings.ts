@@ -834,6 +834,91 @@ function _resolve_cascade_paths(
     ];
 }
 
+/** Per-layer read outcome. `absent` and `malformed` are NOT the same fact. */
+export type SettingsLayerState = 'absent' | 'valid' | 'malformed';
+
+export interface SettingsLayerReport {
+    path: string;
+    state: SettingsLayerState;
+}
+
+/**
+ * Probe one settings file WITHOUT merging it, distinguishing absent from broken.
+ *
+ * `_read_yaml` returns `null` for both, which is fine for merging — an absent
+ * layer and an unreadable one contribute nothing either way — and is wrong for
+ * anything that has to decide differently in the two cases. That conflation
+ * silently disabled a documented safety property; see
+ * {@link settings_layer_states}.
+ */
+function _probe_yaml(p: string): SettingsLayerState {
+    if (!_is_file(p)) return 'absent';
+    let YAML: typeof YamlModule;
+    try {
+        YAML = _require('yaml') as typeof YamlModule;
+    } catch {
+        // No parser: this layer cannot be validated, so it is not `valid`.
+        return 'malformed';
+    }
+    try {
+        YAML.parse(fs.readFileSync(p, 'utf-8'), { version: '1.1' });
+        return 'valid';
+    } catch (err) {
+        if (_is_yaml_error(err) || _is_os_error(err)) return 'malformed';
+        throw err;
+    }
+}
+
+/**
+ * Per-layer validity for the layers a caller can actually break.
+ *
+ * WHY THIS EXISTS, and it is a repair rather than a feature.
+ *
+ * `load_agent_settings` merges a broken layer as if it were absent, so the
+ * resolved value of a key says nothing about whether the user's own settings
+ * file parsed. Every reader shaped `try { …read… } catch { } return <default>`
+ * therefore has an UNREACHABLE catch for the malformed-file case, and any
+ * "fails closed" claim such a reader makes is carried by its default value
+ * rather than by its own code.
+ *
+ * Measured 2026-09-10: with a project `.agent-settings.yml` containing `:\n  - [\n`,
+ * `load_agent_settings` returns the template's values and throws nothing. That
+ * is why `continuity.auto_record`'s documented fail-closed property evaporated
+ * the moment its template default flipped from `off` to `on`
+ * (road-to-continuity-writer-activation step 3.2), and why an AI council of
+ * 2026-09-10 (2 seats, convergent) ruled the repair is to make the property
+ * real rather than to redefine it: *"The defective implementation is grounds to
+ * repair the protection, not authority to repeal it."*
+ *
+ * Scope: the user-global files and the in-project cascade — the layers a human
+ * edits. The shipped template is excluded deliberately: a malformed template is
+ * a package defect that already resolves every key to absent, so a reader
+ * consulting this would report `malformed` for a tree in which nothing the user
+ * did was wrong.
+ *
+ * Reports, never decides. A caller chooses what a `malformed` layer means for
+ * its own key, because that choice is the key's polarity and not this
+ * function's.
+ */
+export function settings_layer_states(
+    options: {
+        project_path?: string | null;
+        user_global_path?: string | null;
+        cwd?: string | null;
+    } = {},
+): SettingsLayerReport[] {
+    const project_path = options.project_path ?? null;
+    const cwd = options.cwd ?? null;
+    const user_global = options.user_global_path
+        ? [options.user_global_path]
+        : user_global_settings_paths();
+    const out: SettingsLayerReport[] = [];
+    for (const p of [...user_global, ..._resolve_cascade_paths(cwd, project_path)]) {
+        out.push({ path: p, state: _probe_yaml(p) });
+    }
+    return out;
+}
+
 /**
  * Return the merged settings dict.
  *

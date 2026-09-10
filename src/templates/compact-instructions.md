@@ -1,9 +1,14 @@
 # Compact-instructions template — lose less when you compact anyway
 
 Fallback lane of `road-to-token-economy-recycling` Phase 3.3. The recycle
-envelope (`agent-config session:recycle` + `/clear`) is the primary path —
-validated state, no summarizer. This template is for the user who compacts
-instead: Claude Code honours a `# Compact instructions` section in the
+envelope is the primary path — validated state, no summarizer — and since
+2026-09-10 it is written for you: the `session-eol` concern publishes the
+continuity record at session end by default (`continuity.auto_record`), so
+`/clear` resumes from it with no command to remember.
+`agent-config session:recycle` still exists as an explicit affordance for the
+cases the automatic writer does not cover (a session that claimed no roadmap, or
+a record that should carry the `git status` anchors). This template is for the
+user who compacts instead: Claude Code honours a `# Compact instructions` section in the
 project's `CLAUDE.md` when it summarizes (see the "Manage context
 proactively" section of the host's cost docs), and `/compact <instructions>`
 accepts the same guidance ad hoc.
