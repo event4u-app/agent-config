@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: structural
 status: ready
@@ -31,7 +33,7 @@ estate_offset_exempt: "Offsets nothing at promotion. Phase 7 dispositions `later
 
 # Road to delivery for every host
 
-> **Source.** Owner instruction 2026-09-07 out of analysis round `inbox-2026-09-u`,
+> **Source[REDACTED:src-conf]
 > consumed to `agents/tmp.old/inbox-2026-09-u/`. Every number below was **re-measured at
 > `0918def55` (v14.20.0)** with the repo's own instruments before this file was authored;
 > where re-measurement contradicted the draft, the corrected figure carries
