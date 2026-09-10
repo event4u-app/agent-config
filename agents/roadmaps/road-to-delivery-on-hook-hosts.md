@@ -206,6 +206,52 @@ admission. Cowork is excluded by the existing measurement.
       now carries a rule body, then run a session and have a SECOND party read the
       transcript for the turn that reflects the body. The bar was never the problem; the
       carrier the sessions were running was.
+      **UPDATE 2026-09-10 — THE 2026-09-09 DIAGNOSIS IS WRONG, and the prescribed fix
+      closes nothing. Reproduced at `09d9bc760` on a bundle rebuilt the same day.**
+      `npm run build:hooks` was run, and `task preflight` independently verified the bundle
+      byte-identical to a rebuild from source (`sha256 72a0909d356d`). The built dispatcher
+      still emits **826 B** for the payload the source emits 17,823 B for. The bundle is
+      neither stale nor broken.
+      **Four measurements, one payload, one root:**
+
+      | invocation | bytes | rule bodies |
+      |---|---:|---|
+      | `npx tsx src/scripts/hooks/dispatch_hook.ts` | 17,823 | 3 (16,378 B) |
+      | the same, `AGENT_CONFIG_REPLAY=1` | **826** | none |
+      | `node dist/hooks/dispatch.js`, freshly built | **826** | none |
+      | the same bundle, `lean_projection.mode: delivery` set | **17,823** | 3 |
+
+      **Rows 2 and 3 being the same number is the finding.** Source and bundle agree exactly
+      once the probe branch is off, and 826 B is the language-mirror pin alone.
+      **Row 1 is the PROBE branch, which `gateOpen` documents as such in its own prose** —
+      *"A DIRECT CLI invocation is a probe by definition … so there the gate defaults to
+      open"* (`rule_inject_hook.ts:314-320`). `_isCliEntry()` at `:388` returns false
+      unconditionally under `__AGENT_CONFIG_BUNDLE__`, which is the whole of why the bundle
+      differs, and `AGENT_CONFIG_REPLAY=1` re-imposes the gate on the source path — row 2.
+      **Row 4 is the real cause: the gate is CLOSED BY CONFIGURATION.** `deliversBodies`
+      (`_lib/lean_projection_mode.ts:42-44`) is true for exactly `'delivery'`, and
+      `DEFAULT_LEAN_PROJECTION_MODE` at `:21` is **`eager-all`**. There is no
+      `.agent-settings.yml` here — gitignored at `.gitignore:317`, and absent IS the CI
+      shape — so the mode normalises to `eager-all` and both of `gateOpen`'s clauses are
+      false in every real session.
+      **So two claims this step and its blocker both carried are corrected.** That
+      *"`lean_projection.mode` resolves to `delivery` … from the shipped defaults"* — the
+      hosts half is right, the mode half is not. And that *"`gateOpen` therefore returns
+      true here"* — it returns true under a probe. **Every measurement offered as proof the
+      carrier works (5,346 B, 6,458 B, and row 1) was taken on the probe path.** That is
+      this file's own K1 conflation one layer further in: the round that rightly refused to
+      write `observed-true` off byte-equivalence then diagnosed the carrier off a probe.
+      **What actually closes the second limb**, unchanged in its independence requirement
+      and changed in every other part: write `.agent-settings.yml` with
+      `lean_projection.mode: delivery` and `hosts: [claude-code]`, run one live session with
+      a prompt that trips a labelled rule, and have a SECOND party read the transcript. The
+      config edit is local and gitignored, so it reaches no consumer — and it is not free:
+      row 4 measures 17,823 B of injected context on one prompt.
+      **Still open, and this run could not close it:** the transcript needs a live user
+      prompt after delivery is enabled, which no autonomous run produces for itself. The
+      observer also may not be the session that produced the turn.
+      Full reproduction, with the commands:
+      `agents/evidence/analysis/e3-gate-closed-not-stale-bundle-2026-09-10.md`.
 - [x] **1.2 Run 1.1 on Cursor and Cline** (the two hosts binding `user_prompt_submit` with a
       `.md` rule tree). Record Windsurf, Gemini and Augment as `unobserved` unless a session
       exists.
@@ -531,6 +577,25 @@ admission. Cowork is excluded by the existing measurement.
      a rule body for a prompt that trips a labelled rule, and only then attempt the
      session. Full evidence, including what is deliberately not claimed, is recorded at
      step 1.1.
+     **CORRECTED 2026-09-10, and the correction is the whole of step 1 above.** The
+     stale-bundle diagnosis is false and `npm run build:hooks` closes nothing. It was run,
+     and `task preflight` independently verified the bundle byte-identical to a rebuild
+     from source; the built dispatcher still emits 826 B where the source emits 17,823 B.
+     The two numbers agree exactly once `AGENT_CONFIG_REPLAY=1` re-imposes the gate on the
+     source path — because the source measurements were taken on the **probe branch**,
+     which `gateOpen` documents as opening for a direct CLI invocation, and which
+     `_isCliEntry()` hard-disables under `__AGENT_CONFIG_BUNDLE__`. The 5,346 B and 6,458 B
+     figures quoted just above are probe-path figures and say nothing about the configured
+     tree.
+     The gate is closed **by configuration**: `deliversBodies` accepts only `'delivery'`,
+     the shipped default is `eager-all`, and there is no `.agent-settings.yml` here — so
+     both of `gateOpen`'s clauses are false in every real session, which is exactly why no
+     `rule-inject` session state has ever existed on this machine.
+     **What to do instead:** write `.agent-settings.yml` with `lean_projection.mode:
+     delivery` and `hosts: [claude-code]` (local, gitignored, reaches no consumer), then
+     attempt the session. Costs 17,823 B of injected context on a prompt that trips three
+     labelled rules, which is worth knowing before enabling it. Reproduction with commands:
+     `agents/evidence/analysis/e3-gate-closed-not-stale-bundle-2026-09-10.md`.
   3. Or decide that E3's bar is not reachable for any host this year and re-scope Phase 2 rather than leaving it waiting on an empty set — an owner decision, since E3 is an owner ruling.
 - **Resolved when:** at least one host carries an `observed-true` row in `src/config/host-injection-effect.json` with a full citation (host version, transcript pointer, date), and `report_host_injection_effect` regenerates the census with that row admissible.
 - **Review trigger:** re-read when the blocker above resolves, since `delivery` going live is its precondition; otherwise 2026-12-08, matching the expiry the host table already carries for this observation state.
