@@ -201,8 +201,20 @@ constraint"* and reserves E3 for a pre-registered benchmark, production data, an
 established community standard, or applicable vendor guidance. The basis here is
 one dated inspection of one commit: four greps, one gate run, and one sabotage
 probe. That is an E1 basis however conclusive it feels, and the repository's own
-`adr-evidence-census` independently computes `E1 — one dated local observation`
-for this record in the same change.
+`adr-evidence-census` computed `E1 — one dated local observation` for this record
+when it was first scanned.
+
+**That corroboration then destroyed itself, and the mechanism is worth recording
+rather than quietly dropping.** Re-running the census after this section was
+added flips its proposal to `E2 — measurement against a benchmark or
+pre-registered threshold`, attributing it to `prereg @ …:200` — which is the
+sentence directly above quoting the contract's own definition of E3. The census
+is a keyword scan over the record's prose, so quoting the words
+"pre-registered benchmark" while arguing that this record is *not* one is enough
+to move its verdict. The census is explicitly a proposal surface that writes to
+no ADR, and this is an artefact of how it reads rather than new evidence, so the
+declared grade stays `E1`. Anyone re-running it will see `E2` proposed; that is
+this paragraph's doing, and it is not a reason to raise the grade.
 
 The correction matters in one direction specifically. `adr-layout.md:464` prices
 the reopen burden on the grade, so an inflated grade would have raised the bar
