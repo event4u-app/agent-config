@@ -18,7 +18,7 @@ evidence:
   basis:
     - src/config/pack-size-budget.json
     - src/scripts/check_pack_size.ts
-    - agents/roadmaps/road-to-the-packed-payload-cap.md
+    - agents/roadmaps/archive/road-to-the-packed-payload-cap.md
     - package.json
 review_trigger: >-
   `check_pack_size` gains a `.github` invocation, at which point the caps are
@@ -209,12 +209,16 @@ because it has no `.github` invocation.
 - `src/scripts/_dispatch.bash:462-483` — the shipped dispatcher's own
   documentation of its tsx resolution order, including that `npx tsx` is a last
   resort.
-- Council transcripts: `agents/runtime/council/responses/packed-payload-cap-*.md`
-  (gitignored, local-only, pruned on the retention window — cited by shape, not
-  as a durable link).
+- The council itself: three rounds on 2026-09-10, two seats
+  (`anthropic/claude-sonnet-4-5`, `openai/codex-default`), quorum 2/2 on rounds
+  2 and 3. Its artefacts are deliberately NOT linked: council responses live in
+  a gitignored, locally pruned tree, so a link from a durable record rots by
+  construction. Everything load-bearing from them is transcribed above — the
+  option chosen, the three preconditions, the preserved disagreement on the
+  rename, and the compression premise both seats got wrong.
 
 ## References
 
-- `agents/roadmaps/road-to-the-packed-payload-cap.md` — the roadmap this closes.
+- `agents/roadmaps/archive/road-to-the-packed-payload-cap.md` — the roadmap this closes.
 - ADR-264 — the sibling rule that a *grace* ceiling may not rise; a different
   file, a different ceiling, and untouched by this record.
