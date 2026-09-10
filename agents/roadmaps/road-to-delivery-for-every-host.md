@@ -914,6 +914,46 @@ Defects this roadmap repairs:
       does not do — it returns `null` on every failure, correct for a diagnostic and
       unacceptable for a ceiling. The converged floor is therefore the narrower option, and
       the wider one is left as a separately reviewable change.
+      **UPDATE 2026-09-10 — the rejection premise is FOUR-FIFTHS ALREADY SOLVED, checked
+      against the tree rather than argued. The box stays `[ ]`; what is actually open is a
+      smaller and different question than the one that was reserved.**
+      openai listed five things whose behaviour was "unresolved" for a base-ref-measured
+      ceiling. Four of them are resolved in `src/scripts/_lib/ratchet_base_ref.ts`, with
+      recorded reasons — and THIS gate already calls that resolver, at
+      `check_preamble_payload_budget.ts:381`, for its shrink-only bound:
+
+      | Case named as unresolved | Where it is resolved |
+      |---|---|
+      | merge queue / PR-merge checkout | `:82` — `GITHUB_ACTIONS` plus a two-parent HEAD selects `HEAD^1`, and `:77-81` records why the gate on `GITHUB_ACTIONS` is load-bearing rather than incidental |
+      | rebase, and a changed default branch | `:67` — `GITHUB_BASE_REF` is consulted before `origin/main`/`main`, so neither a rebase nor a rename reaches the hardcoded pair |
+      | shallow history | `:44-50` — the resolver's stated reason for existing: a shallow PR-merge fetch has no `origin/main`, and the `HEAD^1` rung needs no network |
+      | measurement failure | `:93` — returns `null`, and `:52-53` states the contract: *"callers decide, and the honest default is to fail rather than to compare against an assumed-empty base"* |
+
+      The fifth is the real one, and anthropic named it exactly: the CALLER does not fail.
+      `_lib/standing_bound_ratchet.ts:96` returns `ok: true` with an explanatory note on a
+      null base ref, and again at `:106`, `:121` and `:130` for unreadable, unparseable and
+      absent config. That is correct for a diagnostic and is precisely what a ceiling may not
+      do. It is one branch to change, not a policy question.
+
+      **WHAT IS ACTUALLY UNRESOLVED, and it is not on either seat's list.** A ceiling of
+      `max(design_ceiling, base measurement)` has ZERO headroom: a pull request that grows by
+      one token reds. This repository has already recorded that exact failure in a sibling
+      budget — `src/config/pack-size-budget.json:12`, *"With 8.9 KB of headroom ANY commit
+      reds this gate, which is the failure the 2026-08-20 note predicted in writing, arriving
+      a second time three days later."* Adding headroom fixes it and introduces compounding
+      drift, because each pull request may then grow by the allowance. `headroom_pct: 5`
+      already exists in this file and is what `design_ceiling` is derived from, so the choice
+      is not whether a number exists but whether a per-PR allowance may compound against a
+      moving base.
+      **That is the question to put to the council, and it was never asked.** The seats
+      reserved a five-part specification, four parts of which the tree had already written;
+      the part that genuinely needs a decision was not among them. Recorded here so the next
+      round starts from the open question instead of re-deriving the closed four.
+      **Not attempted by this run, deliberately:** deciding the headroom policy alone. The
+      council quota was exhausted (0/50) when this was found, so the alternative to recording
+      it was one lane choosing a per-PR growth allowance for every pull request in the
+      repository, unreviewed. `K9` prescribes `[ ]` with the question quoted; the question is
+      now a sharper one.
       **Not attempted, deliberately, and unchanged from the earlier note:** raising
       `design_ceiling` is K4 and shortening rule prose is K5. Added to that list by this
       round: closing this roadmap through a stub carrier, which openai forbade in terms —
