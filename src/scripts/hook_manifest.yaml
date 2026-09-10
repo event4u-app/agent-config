@@ -415,8 +415,21 @@ concerns:
   # and 5,037 of those were a leading `VAR=…` assignment — a shape no allowlist
   # pattern can express. It shrinks only by not being written.
   #
-  # Warn-only, once per session, ON by default with `hooks.chain_nudge.enabled:
-  # false` as the opt-out. The inverted default is deliberate and differs from
+  # SECOND SHAPE CLASS (2026-09-10). A Bash command that fills a file — `sed
+  # -i`, `cat > f`, `tee f`, `perl -i`, a `python3 -c` opening a path for
+  # writing — costs a confirmation no allowlist entry removes: the host's own
+  # permission documentation records a permanent saved rule for a read-only
+  # command and a session-lifetime one for a write-shaped command, so the same
+  # shape is confirmed again next session. Edit and Write carry no such expiry
+  # inside the working directory. Measured over 7,518 real Bash calls in 40
+  # transcripts: 293 (3.9 %) wrote a file through the shell, 215 of them
+  # `cat >`. Re-measure with `./scripts-run src/scripts/autonomy_friction_traffic`.
+  #
+  # Warn-only, once per SHAPE CLASS per session, ON by default with
+  # `hooks.chain_nudge.enabled: false` as the opt-out. Per class, not per
+  # call: the anti-nagging decision this concern was written under refuses
+  # repeating a line every call, and a single boolean latch would have let
+  # whichever shape came first silence the other for the rest of the session. The inverted default is deliberate and differs from
   # `code-graph-context` below: that one gates on a project capability that may
   # be absent, while the fact this one carries is a property of the HOST's
   # permission matcher and therefore holds in every consumer.

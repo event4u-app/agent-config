@@ -220,6 +220,39 @@ Over 40,268 real Bash calls from one maintainer's transcripts:
   measurement artifact. It is not: that shape cannot be written as an
   allowlist pattern at all, so it shrinks only by not being written.
 
+### Re-measured 2026-09-10, with a shipped probe
+
+The figures above were computed once by hand. `autonomy_friction_traffic`
+(`./scripts-run src/scripts/autonomy_friction_traffic --store <dir> --limit 40`)
+recomputes them from a transcript store and shares the live detectors, so the
+report and the carrier cannot drift. Over 7,518 Bash calls in 40 transcripts:
+
+- **1.6 %** are category A. 7,095 of the 7,394 uncovered calls are disqualified
+  by a shell metacharacter before their argv is read; only 299 fail on the head
+  token. Widening the head list therefore cannot move this number — the shape
+  can.
+- **60.3 %** carry the chain class. `cd` is the head of 3,512 of them.
+- **3.9 %** (293) write a file through the shell: 215 `cat >`, 60 `sed -i`,
+  11 a `python3 -c` opening a path for writing, 7 `perl -i`.
+
+**Two host facts, verified against the host's own permission documentation,
+that decide what any of this can buy.** First, `permissions.allow` does **not**
+bypass the auto-mode classifier — the two are layers, the rules are consulted
+first and the classifier still judges what passes, so an allow entry cannot
+make a prompt go away on its own. Second, "don't ask again" saves a permanent
+rule for a read-only command and only a session-lifetime one for a
+write-shaped command. That second fact is the reason the write class earns its
+own advisory line: no amount of confirming makes the next `sed -i` cheaper.
+
+**And a correction to the table below.** `git -C /repo status` is the right
+substitution for the host's matcher, but it is **not** category A: `category_a`
+refuses a global option whose value is absolute, and every cross-worktree
+invocation in a multi-worktree checkout writes an absolute one. So unwinding a
+chain removes the metacharacter without buying the allow. The row stays because
+it is still the cheaper shape; what changes is the claim that it lands inside
+category A. Pinned in `tests/scripts/autonomy_friction_traffic.test.ts` §
+"the recommended substitution is only covered with a RELATIVE path".
+
 ### The substitutions
 
 | Instead of | Write |
@@ -228,6 +261,9 @@ Over 40,268 real Bash calls from one maintainer's transcripts:
 | `V=$(git rev-parse HEAD); echo $V` | two calls, the second using the printed value |
 | `mkdir -p x && cp a x/` | two calls in the same block |
 | `cd sub && <cmd>` | the directory flag the tool already has (`-C`, `--cwd`, `--prefix`) |
+| `sed -i '' -e 's/a/b/' f` | the **Edit** tool — a write-shaped Bash grant expires with the session |
+| `cat > f <<'EOF' … EOF` | the **Write** tool for a new file, **Edit** for a change to an existing one |
+| `python3 -c "open(p,'w').write(s)"` | the same two tools; keep the interpreter for reads and computation |
 
 A loop that genuinely cannot be expressed without the shell stays a loop —
 prefer a script file over an inline `for` when it recurs.
@@ -244,7 +280,14 @@ first time a session chains work. It is ON by default with
 because the fact this one carries is a property of the host's permission
 matcher and holds in every consumer.
 
-**It never blocks, and it fires once.** So it changes what the agent knows,
+Since 2026-09-10 it carries a second shape class — a Bash command that fills a
+file (`sed -i`, `cat > f`, `tee f`, `perl -i`, a `python3 -c` opening a path for
+writing) — and the latch is per class, so a session sees at most one line per
+class instead of one line for whichever mistake came first. A redirect that
+names no file being filled (`2>&1`, `> /dev/null`) is still not a write and is
+still not flagged.
+
+**It never blocks, and each class fires once.** So it changes what the agent knows,
 not what the agent may do: compliance stays model-carried, and the concern's
 tests establish detector behavior, not adherence. On a host with no
 `pre_tool_use` slot nothing fires at all and the rule is model-carried end to
