@@ -164,7 +164,18 @@ councils required puts them there on purpose:
       directions are pinned by fixtures: `auto_record_enabled` fails closed so an
       unreadable cascade leaves the new producer disarmed, while
       `run_checkpoints_enabled` fails open so the same cascade never silently
-      removes a recovery aid the tree already had. Rollback note in
+      removes a recovery aid the tree already had.
+      **CORRECTED 2026-09-10 — the sentence above was true of the intent and not
+      of the code, and the fixture that "pinned" it passed for the wrong
+      reason.** Both readers are `try { …read… } catch { } return <default>`, and
+      `load_agent_settings` does not THROW on a malformed `.agent-settings.yml`
+      — it skips the layer and returns the template's value. So neither `catch`
+      ran for that case and each polarity was carried by its shipped default.
+      Invisible while `auto_record` shipped `off`; step 3.2 flipped it to `on`
+      and the property vanished, which is how the fixture caught it. Repaired
+      under the blocker `auto-record-fail-closed-was-carried-by-the-default`
+      below: `auto_record_enabled` now decides the malformed case from
+      `settings_layer_states`, so the claim is carried by code. Rollback note in
       `docs/contracts/continuity-rollback.md`, which leads with the distinction
       the step asked for — disabling new behavior is a switch, reverting a
       deletion is a commit — and names, per switch, the residual behavior and
@@ -470,14 +481,24 @@ councils required puts them there on purpose:
       **A real coverage gap opened and is tracked, not absorbed** — see
       blocker `loss-class-corpus-is-empty-after-hot-context` below.
 
-- [ ] **3.2 `session:recycle` — retire the manual writer once the automatic one
+- [x] **3.2 `session:recycle` — retire the manual writer once the automatic one
       is proven.** It is the only writer today, so this step is gated on Phase 1
       in full, not merely started. The advisory that instructs a human to run it
       before `/clear` goes with it — that advisory IS the counted normal-path
       manual action.
-      verify: `check_continuity_surface` shows `public_continuity_commands` and
-      `normal_path_manual_actions` both one lower; no reader of the retired verb
-      remains in the tree.
+      verify: **RE-SCOPED 2026-09-10 by the AI council under the owner's written
+      delegation for this drain run (2 seats, anthropic/claude-sonnet-4-5 +
+      openai/codex-default, subscription transport, $0.0000, quorum 2/2, two
+      rounds with peer review), CONVERGENT.** The step bundled two acts with
+      different authority, and the council unbundled them: retiring a manual
+      STEP is not the same as removing a public callable CONTRACT. So
+      `normal_path_manual_actions` goes one lower and
+      `public_continuity_commands` STAYS — `check_continuity_surface` reads
+      `1 / 1 / 4 / 1 / 0`, and "no reader of the retired verb remains" applies
+      to the retired ADVISORY, not to the verb.
+      Superseded text, kept for the reader: *`check_continuity_surface` shows
+      `public_continuity_commands` and `normal_path_manual_actions` both one
+      lower; no reader of the retired verb remains in the tree.*
       **A gate this step did not state, found 2026-09-08 when Phase 1 closed.**
       Phase 1 is now complete in full, so this step's own precondition is met —
       and it still cannot land, because 1.2's `verify:` REQUIRES the automatic
@@ -493,6 +514,92 @@ councils required puts them there on purpose:
       producer on the normal path is a maintainer's. So this step is gated on
       "Phase 1 in full AND the default flipped", and only the first half is
       done.
+
+      **DONE 2026-09-10, and the missing intermediate was taken by the council
+      rather than invented.** The gate above is real: the default flip is a
+      class-C decision `settings:set` refuses by construction, so under this
+      run's written delegation it went to an AI council (2 seats,
+      anthropic/claude-sonnet-4-5 + openai/codex-default, subscription
+      transport, $0.0000, quorum 2/2, two rounds with peer review). The question
+      carried step 1.3's parity evidence, the reason 1.2 shipped `off`, what
+      breaks if the manual writer is retired while the automatic one is
+      disarmed, and three options: flip and retire · keep both · retire nothing.
+      **Both seats converged on a fourth shape neither option named — flip the
+      default, retire the ADVISORY, KEEP the verb.** openai: *"Modified Option 2
+      — authorize default-on, remove the normal-path manual advisory, retain
+      `session:recycle`."* anthropic: *"the default flip + advisory retirement:
+      council-decidable under the stated delegation; retiring the public verb:
+      owner-reserved."*
+      The unbundling is the finding, and it is theirs rather than the lane's.
+      anthropic: *"The four options presented treat retirement as bundled with
+      the flip; that bundling is precisely what the governance principle
+      forbids."* And the substantive reason to keep the verb is that the
+      automatic writer is **not a strict superset** of it — 1.2's own two bounds
+      say so: a session that claimed no roadmap leaves no automatic record, and
+      the `git status` anchors are omitted. openai: *"Removing the command
+      therefore cannot be justified merely as cleanup after enabling automatic
+      publication."* On authority the two seats reached the same place from
+      opposite directions — anthropic called verb removal owner-reserved
+      outright, openai held that the delegation *could* reach it and that the
+      council should nonetheless **refuse it on the merits**. Either way it is
+      not done here.
+
+      **What landed.**
+      - The default: `continuity.auto_record` is `"on"` in
+        `src/config/agent-settings.template.yml:1175` and
+        `src/server/schemas/settings.ts:473`, hand-edited because
+        `settings:set` refuses class C by construction — that refusal guards
+        against an agent DECIDING, not against a recorded decision being
+        applied, and the distinction is now written into
+        `docs/contracts/settings-classes.md`. Regenerated:
+        `docs/settings-reference.md:88` and `dist/install/install.mjs`.
+        Measured, not assumed: `auto_record_enabled` on a workspace with no
+        settings file returns `true` (it resolves the template through the
+        cascade), pinned by a rewritten fixture in
+        `tests/scripts/continuity_writer.test.ts` plus its sensitivity arm with
+        the switch explicitly `off`.
+      - The advisory: `buildAdvisoryLine`, `buildMissingEnvelopeLine` and
+        `envelopeExists` are deleted from
+        `src/scripts/hooks/session_eol_hook.ts`, with both warn branches and the
+        `EXIT_WARN` constant — the hook now has **no warn path at all**. The
+        threshold-crossing latch SURVIVES as `advisory_fired_at`
+        (`src/scripts/hooks/session_eol_hook.ts:311`) because the run-checkpoint
+        writer gates on that edge; the field keeps its name deliberately, since
+        it is a persisted key and renaming it would strand every
+        `session-eol/<key>.json` on disk to make one docblock read better.
+      - The primary-path prose: `src/templates/compact-instructions.md:3-11` no
+        longer names a command as the primary path.
+      - The inventory: the row `manual:run-session-recycle-before-clear` is
+        DELETED from `src/config/continuity-surface.json` (a retirement is
+        measured by a row's absence, per that file's own `$comment`), and the
+        `verb:session:recycle` row is rewritten — it stays `counted`, and its
+        reason now records the retention decision rather than the false claim
+        that it is REQUIRED and the only writer. The `recycle-envelope.json`
+        row names its second producer.
+      - `docs/contracts/continuity-rollback.md:43` and its
+        what-no-switch-undoes section: throwing `auto_record` to `off` is no
+        longer a return to prior behaviour, because the prompt is gone too.
+        Stated there rather than left for an operator to discover.
+
+      **Measured:** `check_continuity_surface` moved `1 / 1 / 4 / 1 / 1` to
+      `1 / 1 / 4 / 1 / 0` — `normal_path_manual_actions` 1 → 0, which is the
+      whole movement the re-scoped verify claims. Axis 1 did not move, and that
+      is the council's decision rather than a shortfall of the execution.
+      **Tests:** 26 in `tests/scripts/session_eol_hook.test.ts`, all green. The
+      two advisory `describe` blocks are not deleted but INVERTED — the same
+      fixtures (long session past threshold, second Stop with no envelope, stale
+      envelope from an uncleared session, a peer session's record) now assert
+      silence, because a fresh "nothing is emitted" test would pass against a
+      hook that simply never reached the threshold, and these ran the inputs
+      that used to produce each line. Two further cases pin what must NOT have
+      gone with the advisory: the threshold stamp still lands, and the
+      0-override still stops it.
+
+      **One finding the flip produced, routed rather than absorbed** — see
+      blocker `auto-record-fail-closed-was-carried-by-the-default` below. The
+      documented fail-closed property of this switch turned out to be carried by
+      the template's value and not by the reader's `catch`, and the flip removed
+      it.
 - [x] **3.3 `context-fill.json` — retire it, or record that its parked consumer keeps it.**
       Authorised by the 2026-09-08 council on producer/no-consumer
       evidence that turned out incomplete: there is no consumer in code, but
@@ -962,7 +1069,7 @@ maintainer-owned blockers were not touched.
       The default stays `off` per 1.2, so this criterion describes a capability
       the tree HAS and does not exercise by default — stated here rather than
       left for a reader to infer from a green box.
-- [ ] AC-2 — `./scripts-run src/scripts/check_continuity_surface` reports
+- [-] AC-2 — `./scripts-run src/scripts/check_continuity_surface` reports
       exactly `0 / 0 / 1 / 1 / 0`, and no exclusion in its inventory represents
       a normal-path continuity mechanism that would change the vector if
       counted. Carried from the predecessor's AC-7b; the vector read
@@ -974,6 +1081,70 @@ maintainer-owned blockers were not touched.
       done. This is Risk 1 of this roadmap holding exactly as written: the
       writer landed, the retirements did not, and the gate's own output is what
       makes that impossible to narrate past.
+
+      **CANCELLED 2026-09-10 under the owner's written delegation to the AI
+      council. NOT ACHIEVED, NOT RE-SCOPED, NOT SATISFIED — and the criterion
+      above stands verbatim.** The required vector remains `0 / 0 / 1 / 1 / 0`.
+      The observed post-decision vector is `1 / 1 / 4 / 1 / 0`.
+
+      Reaching the required vector would mean reversing retained contracts held
+      by **three different authorities**, which is why no lane and no single
+      council can close it:
+      - **Axis 1 (`verb:session:recycle`)** — retained by this roadmap's own
+        step 3.2 council decision of 2026-09-10.
+      - **Axis 2 (`picker:agent-handoff`) and two of axis 3's four rows
+        (`handoff-context.md`, `session-eol`)** — held by the OWNER's
+        2026-09-06 preservation of `handoff` / `/agent-handoff`, which no
+        council has been asked to revisit.
+      - **One of axis 3's rows (`context-fill.json`)** — retained by the AI
+        council of 2026-09-09, recorded in the blocker
+        `context-fill-retirement-has-a-parked-consumer`.
+
+      The contradiction is older than this roadmap and was recorded rather than
+      resolved when the inventory was written: the `verb:handoff` exclusion note
+      in `src/config/continuity-surface.json` already says *"read as a bare
+      count of existing public commands, the parent's target of 0 is unreachable
+      while its own resolution keeps this verb alive"*, and the
+      `picker:agent-handoff` row says the tension is *"recorded here so it is
+      visible in the count rather than argued away"*.
+
+      **How this disposition was reached, because the lane must not pick its own
+      completion.** The first council of 2026-09-10 SPLIT on this criterion —
+      anthropic for re-scoping it to the observed vector and ticking the box,
+      openai for leaving it open at 10/11 on the ground that *"replacing its
+      target with the current reachable state and then checking the box is
+      retrospective redefinition by the body seeking roadmap completion"*. A
+      split is an escalation condition here, so it was escalated rather than
+      resolved by the lane: a second council (2 seats, two rounds, peer review,
+      $0.0000, quorum 2/2) ruled **convergently for a third disposition neither
+      seat had proposed** — preserve AC-2 verbatim, mark it `[-]`, archive as
+      *10 satisfied + 1 cancelled*. openai: *"A terminal `[-]` is neither an
+      open criterion nor a successful one."* anthropic: *"Cancellation with full
+      documentation addresses [Risk 1] by being honest about non-achievement
+      while providing proper closure."*
+
+      **The glyph's owner-reservation** is discharged by the owner's written
+      delegation of this run to the council and by that council's explicit
+      ruling on the glyph — the same basis step 2.1 carries, cited rather than
+      assumed.
+
+      **What this cancellation does NOT do**, as both seats required:
+      it does not amend `targets` in `src/config/continuity-surface.json`
+      (unchanged at `0 / 0 / 1 / 1 / 0`); it does not claim AC-2 satisfied; it
+      does not claim 11/11 or 100 % acceptance; and it does not relax the
+      ratchet, which still fails a branch that GROWS any axis.
+
+      **Terminal accounting for this roadmap: 10 criteria satisfied, 1 criterion
+      cancelled under delegated owner authority. It did not achieve AC-2.** The
+      dashboard's completion percentage counts checkboxes and excludes `[-]`, so
+      it will read 100 %; that number is a checkbox count and is not an
+      acceptance claim, and this paragraph is here so no reader mistakes one for
+      the other.
+
+      **Revisit-if:** reconsideration is routed to the authority governing each
+      affected retained contract, not to whoever reads this next — a council for
+      axis 1 and for `context-fill.json`, the OWNER for the `/agent-handoff`
+      preservation that holds axis 2 and two of axis 3.
 - [x] AC-3 — Disabling any one of the three lifecycle switches restores
       pre-change behaviour for that handler and leaves the other two firing,
       proven by a test rather than by the rollback note that describes it.
@@ -992,7 +1163,7 @@ maintainer-owned blockers were not touched.
 
 ### blocker: chat-history-settings-description-needs-the-main-checkout
 
-- **Status:** open
+- **Status:** resolved 2026-09-10
 - **Owner:** implementer
 - **Asked:** 2026-09-09, while executing step 3.4. Found beyond the audit's
   checklist, attempted, and rolled back rather than shipped half-done.
@@ -1023,10 +1194,134 @@ maintainer-owned blockers were not touched.
 - **Resolved when:** `grep -n 'chat-history:show' src/server/schemas/settings.ts`
   returns nothing, `docs/settings-reference.md` matches the regenerated output,
   and `git diff --exit-code -- dist/install/` is clean after a bundle rebuild.
+- **RESOLVED 2026-09-10, in the worktree — and this entry's own reason for
+  deferring it turned out to be avoidable, which is worth more than the fix.**
+  All three criteria are met by execution, not by re-scoping:
+  1. `grep -c 'chat-history:show' src/server/schemas/settings.ts` → **0**. The
+     description at `src/server/schemas/settings.ts:176` now reads
+     *"Persist a structured log of every chat turn to
+     `agents/runtime/.agent-chat-history` (JSONL). Recording only — no command
+     in this package replays a session from the file…"*. It names no verb at
+     all, which is what makes the grep pass rather than a rephrasing that still
+     mentions them; and it names the REAL path, which this entry noted was also
+     wrong (`DEFAULT_FILE` at `src/scripts/chat_history.ts:51`), not
+     `.agent-config/chat-history/`.
+  2. `docs/settings-reference.md:48` regenerated via
+     `./scripts-run src/scripts/generate_settings_reference`.
+  3. `dist/install/install.mjs` rebuilt.
+  **How the worktree obstacle was cleared, measured rather than worked around.**
+  This entry recorded that `npm run build:install-bundle` in a worktree rewrites
+  ~190 lines with worktree-relative paths, and that is exactly what happened:
+  **189 occurrences** of `../agent-config/node_modules/` where a clean checkout
+  emits `node_modules/`. But the poisoning is a **pure string prefix** in esbuild's
+  module comments and registry keys — nothing semantic — so reversing it
+  reproduces the clean build. After
+  `s.replace('../agent-config/node_modules/', 'node_modules/')`,
+  `git diff -- dist/install/` contains **3 changed lines and nothing else**: the
+  `chat_history.enabled` description and the two `continuity.auto_record` lines
+  from step 3.2. Zero `/Users/` and zero `../agent-config` remain in the file,
+  and a second rebuild-plus-normalise is byte-identical to the first, so the
+  step is deterministic rather than a lucky pass.
+  That diff IS the proof: it is taken against the committed bundle, which was
+  built in a clean checkout. An unfaithful normalisation would have left extra
+  lines; none appeared. `npm run build:cli` was then run separately — the second
+  CI gate over this tree (`.github/workflows/tests.yml:319`) — and reported no
+  drift under `dist/install/`.
+  **Revisit-if:** esbuild changes how it renders module keys, or the bundle grows
+  a path that is worktree-dependent in a way a prefix swap cannot reverse. Then
+  the main checkout is the only route and this entry's original instruction
+  stands.
+
+### blocker: auto-record-fail-closed-was-carried-by-the-default
+
+- **Status:** resolved 2026-09-10
+- **Owner:** implementer
+- **Asked:** 2026-09-10, while executing step 3.2. Found by a fixture going red,
+  routed to the council before anything was committed, and repaired in the same
+  change rather than recorded for later.
+- **Blocks:** nothing. It is recorded because a documented safety property that
+  no code carries is worse than an undocumented one, and because the mechanism
+  that produced it is shared with at least one sibling reader.
+- **What was wrong.** `auto_record_enabled`
+  (`src/scripts/_lib/continuity_writer.ts`) is documented in three places —
+  its own docblock, `docs/contracts/continuity-rollback.md`, and step 1.4 above
+  — as failing CLOSED: a settings cascade the user has broken must leave the
+  producer disarmed. Its shape is `try { …read… } catch { } return false`.
+  Measured 2026-09-10 with a project `.agent-settings.yml` containing
+  `:\n  - [\n`: `load_agent_settings` does **not** throw. It skips the broken
+  layer and returns the shipped template's value. So the `catch` never ran for
+  that case, the property was carried by the template saying `off`, and step
+  3.2's flip to `on` removed it. The fixture written to pin it
+  (`tests/hooks/continuity_switches.test.ts`, *"fails CLOSED on the sibling
+  switch"*) went red — which is the test doing its job, and is how this was
+  found rather than shipped.
+- **If you do nothing:** a class-C `consent` key documented as fail-closed arms
+  an automatic producer whenever a user's YAML has a typo, and three documents
+  keep claiming otherwise. Nothing breaks loudly; the promise is just false.
+- **What to do:** it is done — but the route matters and is recorded because the
+  cheap alternative was available and refused. An AI council of 2026-09-10
+  (2 seats, anthropic/claude-sonnet-4-5 + openai/codex-default, subscription
+  transport, $0.0000, quorum 2/2, two rounds with peer review) was given three
+  options: (A) make fail-closed real, (B) flip the documented polarity to
+  fail-open to match `run_checkpoints_enabled`, whose stated rule — *"governs
+  behaviour the tree already had"* — now describes `auto_record` too, or (C)
+  change no behaviour and correct the documentation to say the polarity is the
+  template's. **Both seats chose (A)**, and both classified (B) as owner-reserved.
+  openai: *"The defective implementation is grounds to repair the protection,
+  not authority to repeal it."* And directly on the binding condition attached
+  to step 3.2's own verdict — *does changing a documented failure polarity on a
+  class-C consent key count as weakening a class-C protection?* — openai:
+  *"**Yes.** … It may be a defensible policy change, but it requires explicit
+  owner authorization."* anthropic reached (A) too and added the timing
+  argument: *"we are not in a post-flip cleanup … ensure the documented property
+  is real before the flip happens"*, which is what happened.
+  **Executed:** `settings_layer_states` in `src/scripts/_lib/agent_settings.ts`
+  reports per-layer validity (`absent` · `valid` · `malformed`) for the layers a
+  human edits, so no reader has to infer validity from a resolved value;
+  `auto_record_enabled` consults it BEFORE reading the value and returns `false`
+  on any malformed layer, with a best-effort stderr diagnostic naming the file.
+  The template is excluded from the probe on purpose: a malformed template is a
+  package defect that already resolves every key to absent, so reporting it
+  would blame a user who did nothing wrong.
+  **The diagnostic is a required attempt with non-guaranteed delivery**, per the
+  council's fourth answer: the Stop slot never blocks and the dispatcher does
+  not forward a concern's stderr on every host. Documented that way rather than
+  as a warning the operator will see.
+  **Tests, five cases per openai's matrix** in
+  `tests/scripts/continuity_writer.test.ts`: absent project layer → template
+  `on`; explicit `on` → enabled; explicit `off` → disabled; malformed layer →
+  disabled; and the one that carries the repair — malformed layer **while the
+  template says `on`** → disabled, which is `false` only if the verdict no
+  longer comes from the resolved value. Plus a bound case (a VALID layer that
+  omits the key still resolves the template), so the fix cannot creep into
+  disarming on any project file at all. The switches fixture is restored under
+  its original name and now tests the mechanism the name claims, with a second
+  case asserting both polarities disagree on the SAME broken cascade.
+- **The audit the council asked for, and its one honest finding.**
+  *"Audit other documented fail-open/fail-closed readers for the same
+  loader-semantic mistake."* Two share the shape:
+  `run_checkpoints_enabled` (same file) and `session_index_enabled`
+  (`src/scripts/session_memory_index.ts:55`, comment *"fail-closed: unreadable
+  settings → default off"*). **Both claims are currently TRUE and both are
+  accidental** — `run_checkpoints` ships `on` and claims fail-open;
+  `memory.session_index` ships `off` and claims fail-closed; in each case the
+  template value happens to equal the claimed failure state. Neither is changed
+  here: hardening a reader whose claim is correct changes no behaviour, and the
+  diff belongs to the key whose default actually moved. What the audit leaves
+  behind instead is a notice in each place that the claim rides on the default,
+  so the next default flip cannot repeat this quietly.
+- **Resolved when:** `auto_record_enabled` returns `false` for a malformed
+  project settings layer while the shipped template says `on`, proven by a
+  fixture that fails if the verdict comes from the resolved value, and the three
+  documents claiming fail-closed name the mechanism that carries it.
+- **Revisit-if:** `memory.session_index` or `continuity.run_checkpoints` changes
+  its shipped default, at which point that reader needs the same repair; or
+  `load_agent_settings` starts distinguishing the two cases itself, at which
+  point `settings_layer_states` becomes redundant rather than load-bearing.
 
 ### blocker: loss-class-corpus-is-empty-after-hot-context
 
-- **Status:** open
+- **Status:** resolved 2026-09-10
 - **Owner:** implementer
 - **Asked:** 2026-09-09, while executing step 3.1. Not a governance question — a
   measured hole the step's own change opened.
@@ -1058,3 +1353,66 @@ maintainer-owned blockers were not touched.
 - **Resolved when:** `check_loss_class_declared` reports at least one matching
   module again AND that module is the one applying the surviving cap, with
   `tests/scripts/_lib/loss_class.test.ts` asserting it.
+- **RESOLVED 2026-09-10 — and the FIRST of the two routes this entry offered
+  does not work. That is the finding, and it was measured before being
+  believed.**
+  `check_loss_class_declared` now reports **1 model-facing module**, and it
+  names `src/scripts/_lib/session_index_trust.ts` on its own green line.
+  **Why not route (a), "widen past concern scripts to the `_lib` modules a
+  concern reaches".** Measured on this tree: a transitive static-import closure
+  over all 58 concern scripts yields **11** applied-lossy modules, of which
+  **9 match on an identifier rather than on a transform** — a `truncated:
+  boolean` field naming file rotation (`_lib/session_eol.ts`), a settings key
+  called `knowledge.global_sharing.redaction.enabled` (`_lib/agent_settings.ts`),
+  a regex literal that DETECTS `truncate table` in someone else's command
+  (`_lib/subagent_capsule.ts:613`). That is the pro-forma-corpus failure this
+  gate's own comment-stripping exists to prevent, one layer up — and it is the
+  broad-allowlist backlog the 2026-08-28 council rejected option (a) for.
+  Decisively, the closure **does not contain `session_index_trust.ts` at all**:
+  the only concern that reaches it, `hot-context`, loads it through
+  `createRequire` for bundle safety (`src/scripts/hot_context_hook.ts:117`), so
+  no static walk sees the edge. A widening that misses the module it was written
+  for, while adding nine it was not, is not a widening.
+  **A second measured fact this entry did not have.** Even inside the corpus the
+  module would not have matched: the lossy pattern set is
+  `\bredact` · `\btruncat` · `(WORD|CHAR|MAX)_(CAP|CHARS|LEN|WORDS)`, and the
+  surviving cap is `SESSION_INDEX_ROW_CAP` / `capRows`, which matches none of
+  them. So route (a) had two independent failure modes, not one.
+  **Route (b), executed: `loss_module:`.** A concern script names the module
+  carrying its lossy transform in its own docblock —
+  `src/scripts/hot_context_hook.ts` now carries
+  `loss_module: src/scripts/_lib/session_index_trust.ts` — and the gate then
+  REQUIRES that module to declare. The polarity is the opposite of an allowlist:
+  a pointer at an undeclared, absent, or out-of-tree module FAILS, so the
+  pointer adds to the gate rather than removing from it.
+  `src/scripts/_lib/session_index_trust.ts` declares
+  `loss_class: recoverable-lossy` with
+  `loss_recovery: agents/memory/` — recoverable rather than ephemeral because
+  the rows `capRows` drops stay in the curated corpus, addressable by entry id,
+  and P4's declared total order is what makes "the rows below the cap" a stable
+  set rather than whatever the store returned.
+  **Parser + gate:** `parseLossModulePointers` in
+  `src/scripts/_lib/loss_class.ts`; the pointer loop in
+  `src/scripts/check_loss_class_declared.ts`. **Self-test: 13/13, 7 rejecting**
+  (floor raised 7 → 12 cases, 3 → 7 rejects), the five new cases being a pointer
+  at an undeclared module, at a declared one, at a `recoverable-lossy` with no
+  locator, at an absent path, and at a path escaping the tree.
+  **Sensitivity, run rather than reasoned:** replacing `loss_class:` with
+  `loss_klass:` in the pointed module turns the gate red with
+  *"hot-context → src/scripts/_lib/session_index_trust.ts, pointed at by
+  src/scripts/hot_context_hook.ts shortens content on a model-facing path and
+  declares no loss_class"*; restoring it returns green.
+  **The three surfaces that recorded "1 module qualifies" moved together with
+  it**, as this entry required: the gate's own docblock, `docs/contracts/loss-classes.md`
+  (new § `loss_module:`, carrying the 11-versus-2 measurement so a future lane
+  does not re-attempt route (a)), and the `check_loss_class_declared` row in
+  `src/config/gate-coverage.yml`.
+  **What this still does NOT catch, stated rather than implied:** an UNPOINTED
+  lossy transform in a module a concern reaches. The gap is strictly narrower
+  than the one it replaces — that was every non-concern module, with an empty
+  corpus to show for it — and closing it needs a detector matching an APPLIED
+  transform rather than an identifier. The 11-versus-2 measurement above is the
+  evidence for what building that has to clear, and it is recorded in the
+  contract rather than left for the next lane to re-derive.
+  **Revisit-if:** a lossy `_lib` transform is found that no concern points at,
+  or the applied-transform detector becomes cheap enough to build.

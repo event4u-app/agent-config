@@ -1,12 +1,17 @@
 /**
- * session-eol hook — record-only instrument + once-per-session recycle
- * advisory (road-to-token-economy-recycling 1.1 / 3.2 / 4.2).
+ * session-eol hook — record-only instrument, no advisory
+ * (road-to-token-economy-recycling 1.1 / 3.2 / 4.2, and the retirement of the
+ * advisory in road-to-continuity-writer-activation step 3.2).
  *
  * Properties pinned:
  *   - recording is incremental and silent (exit 0, no stdout) below threshold;
- *   - the advisory fires ONCE past threshold on a long session, never on a
- *     short one, and never a second time (F2);
- *   - absent threshold config = recording continues, advisory lane disabled;
+ *   - AND silent past it: the recycle advisory and its missing-envelope
+ *     counter-check are retired, so this hook has no warn path left. The
+ *     fixtures that used to assert each line now assert its absence, on the
+ *     exact inputs that produced it;
+ *   - the threshold-crossing stamp still lands on the first Stop past the
+ *     threshold, because the run-checkpoint writer gates on that edge;
+ *   - absent threshold config = recording continues, threshold lane disabled;
  *   - an unreadable transcript is silence, never a block (fail-open);
  *   - the Phase 4.2 read surface carries counts only.
  */
@@ -17,8 +22,6 @@ import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
-    buildAdvisoryLine,
-    buildMissingEnvelopeLine,
     main,
     readState,
     readThresholdTokens,
@@ -79,9 +82,10 @@ function writeThreshold(tokens: number): void {
 /**
  * Put a pending recycle envelope in the workspace.
  *
- * `written_at` matters: the counter-check compares it against the advisory
- * stamp, so a fixture written with a past date is how a stale envelope from an
- * uncleared session is expressed. Default is now — this session's.
+ * Kept after the counter-check's retirement because the retirement fixtures
+ * need its inputs: the stale-envelope case is the one that used to produce a
+ * warn line, so asserting silence on it is what proves the line is gone rather
+ * than merely unreached. Default `written_at` is now — this session's.
  */
 function writeEnvelope(
     writtenAt: string = new Date().toISOString(),
@@ -94,6 +98,11 @@ function writeEnvelope(
     const target = path.join(workspace, recycle_envelope_rel(sessionId));
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, JSON.stringify({ written_at: writtenAt }));
+}
+
+/** The state file this suite's session writes: keyed by the hashed session id. */
+function stateOf(sessionId = 'session-a'): ReturnType<typeof readState> {
+    return readState(stateFile(workspace, eolSessionKey(sessionId)));
 }
 
 function runMain(sessionId = 'session-a'): { rc: number; out: string } {
@@ -180,147 +189,93 @@ describe('recording (Phase 1.1)', () => {
     });
 });
 
-describe('recycle advisory (Phase 3.2)', () => {
-    it('fires once past threshold on a long session — and never twice', () => {
+// Step 3.2 retired the advisory and its counter-check.
+//
+// Both emitters told a human to run `agent-config session:recycle` before
+// `/clear`. `writeContinuityRecord` now writes the record itself, armed by
+// default (AI council 2026-09-10, 2 seats, convergent, under the owner's
+// written delegation), so the advice is an instruction to do by hand what the
+// concern already did.
+//
+// These cases are the previous suite's fixtures with their assertions
+// inverted, deliberately. A fresh "asserts nothing is emitted" test would pass
+// against a hook that simply never reached the threshold; running the ORIGINAL
+// inputs — long session past threshold, second Stop with no envelope, stale
+// envelope from an uncleared session, peer session's record — is what makes the
+// silence evidence.
+
+describe('retired recycle advisory (step 3.2)', () => {
+    it('is silent past the threshold on a long session, where it used to warn', () => {
         writeThreshold(100_000);
         fs.writeFileSync(transcript, assistantLine(5_000, 120_000));
         const first = runMain();
-        expect(first.rc).toBe(2);
-        const parsed = JSON.parse(first.out) as Record<string, string>;
-        expect(parsed['decision']).toBe('warn');
-        expect(parsed['additional_context']).toContain('session:recycle');
+        expect(first.rc).toBe(0);
+        expect(first.out).toBe('');
+    });
 
-        // The operator acts on the advisory. Written AFTER it fired, which is
-        // both the real sequence and what the freshness check requires — an
-        // envelope predating the advisory belongs to an earlier session.
-        writeEnvelope();
+    it('still stamps the threshold-crossing edge the checkpoint writer gates on', () => {
+        writeThreshold(100_000);
+        fs.writeFileSync(transcript, assistantLine(5_000, 120_000));
+        runMain();
+        // The field keeps its old name; what it marks is the crossing, not a
+        // line anybody saw. Without this the retirement would have quietly
+        // taken the run checkpoint with it.
+        expect(stateOf().advisory_fired_at).not.toBeNull();
+    });
+
+    it('emits nothing naming the command on any Stop after the crossing', () => {
+        writeThreshold(100_000);
+        fs.writeFileSync(transcript, assistantLine(5_000, 120_000));
+        expect(runMain().out).toBe('');
+        // The Stop that used to carry the missing-envelope counter-check: the
+        // stamp is set and no envelope exists, which was exactly its trigger.
         fs.appendFileSync(transcript, assistantLine(6_000, 130_000));
         const second = runMain();
         expect(second.rc).toBe(0);
         expect(second.out).toBe('');
-    });
-
-    // Sensitivity arm for the Phase-2.1 keying. Without it the previous test
-    // would pass against a checker that still read the shared legacy path: the
-    // fixture is absent there too. This one writes a record belonging to a
-    // DIFFERENT session and asserts the warning still fires — a peer's record
-    // is not proof that this session wrote one.
-    it('a peer session record does not silence the counter-check', () => {
-        writeThreshold(100_000);
-        fs.writeFileSync(transcript, assistantLine(5_000, 120_000));
-        expect(runMain().rc).toBe(2);
-
-        writeEnvelope(new Date().toISOString(), 'some-other-session');
-        fs.appendFileSync(transcript, assistantLine(6_000, 130_000));
-        const second = runMain();
-        expect(second.rc).toBe(2);
-        expect(JSON.parse(second.out)['reason']).toContain('no envelope written');
-    });
-
-    it('names the absolute path as the proof to wait for, not a bare /clear', () => {
-        writeThreshold(100_000);
-        writeEnvelope();
-        fs.writeFileSync(transcript, assistantLine(5_000, 120_000));
-        const parsed = JSON.parse(runMain().out) as Record<string, string>;
-        const line = parsed['additional_context'] as string;
-        expect(line).toContain('absolute path');
-        // The instruction that destroys the session must carry its condition.
-        expect(line).toContain('/clear only after');
-    });
-
-    it('never fires on a short session', () => {
-        writeThreshold(100_000);
-        fs.writeFileSync(transcript, assistantLine(1_000, 2_000));
-        const r = runMain();
-        expect(r.rc).toBe(0);
-        expect(r.out).toBe('');
-    });
-});
-
-describe('missing-envelope counter-check', () => {
-    it('warns once on the Stop after the advisory when no envelope was written', () => {
-        writeThreshold(100_000);
-        fs.writeFileSync(transcript, assistantLine(5_000, 120_000));
-        expect(runMain().rc).toBe(2); // the advisory itself
-
-        fs.appendFileSync(transcript, assistantLine(6_000, 130_000));
-        const second = runMain();
-        expect(second.rc).toBe(2);
-        const parsed = JSON.parse(second.out) as Record<string, string>;
-        expect(parsed['reason']).toContain('no envelope written');
-        expect(parsed['additional_context']).toContain(path.join(workspace, recycle_envelope_rel('session-a')));
-        expect(parsed['additional_context']).toContain('/clear now starts the successor from nothing');
-
-        // …and never again: one reminder is a net, one per Stop is a nag.
         fs.appendFileSync(transcript, assistantLine(7_000, 140_000));
-        const third = runMain();
-        expect(third.rc).toBe(0);
-        expect(third.out).toBe('');
-    });
-
-    it('stays silent when the envelope arrived between the two stops', () => {
-        writeThreshold(100_000);
-        fs.writeFileSync(transcript, assistantLine(5_000, 120_000));
-        expect(runMain().rc).toBe(2);
-
-        writeEnvelope(); // the operator ran the command
-        fs.appendFileSync(transcript, assistantLine(6_000, 130_000));
-        const second = runMain();
-        expect(second.rc).toBe(0);
-        expect(second.out).toBe('');
-    });
-
-    it('never fires when the advisory never fired', () => {
-        writeThreshold(100_000);
-        // Below threshold: no advisory, so a missing envelope means nothing —
-        // most sessions never recycle at all.
-        fs.writeFileSync(transcript, assistantLine(1_000, 2_000));
-        expect(runMain()).toEqual({ rc: 0, out: '' });
-        fs.appendFileSync(transcript, assistantLine(1_000, 3_000));
         expect(runMain()).toEqual({ rc: 0, out: '' });
     });
 
-    it('the 0-override silences BOTH warn paths, not just the advisory', () => {
-        // The advisory fires under a live threshold…
+    it('never writes the counter-check stamp any more, on its own trigger', () => {
         writeThreshold(100_000);
         fs.writeFileSync(transcript, assistantLine(5_000, 120_000));
-        expect(runMain().rc).toBe(2);
-
-        // …then the emergency switch goes in. The counter-check would
-        // otherwise fire next Stop: the stamp is set and no envelope exists.
-        writeThreshold(0);
+        runMain();
         fs.appendFileSync(transcript, assistantLine(6_000, 130_000));
-        const after = runMain();
-        expect(after.rc).toBe(0);
-        expect(after.out).toBe('');
+        runMain();
+        // `session_eol_report.ts` still READS this field for state written
+        // before the retirement; nothing writes it now, and that is the
+        // difference between preserving history and producing more of it.
+        expect(stateOf().missing_envelope_warned_at ?? null).toBeNull();
     });
 
-    it('ignores a stale envelope from a session that never cleared', () => {
+    it('a stale envelope from an uncleared session produces no line either', () => {
         writeThreshold(100_000);
-        // Written BEFORE the advisory fires — the consumer moves an envelope
-        // aside at session_start, so one still sitting here is another
-        // session's, and /clear would resume from its state.
         writeEnvelope('2020-01-01T00:00:00.000Z');
         fs.writeFileSync(transcript, assistantLine(5_000, 120_000));
-        expect(runMain().rc).toBe(2); // the advisory
-
+        expect(runMain()).toEqual({ rc: 0, out: '' });
         fs.appendFileSync(transcript, assistantLine(6_000, 130_000));
-        const second = runMain();
-        expect(second.rc).toBe(2);
-        expect(JSON.parse(second.out)['reason']).toContain('no envelope written');
+        expect(runMain()).toEqual({ rc: 0, out: '' });
     });
 
-    it('keeps the counter-check line to one line under the injection budget', () => {
-        // Same budget as its sibling, and this line embeds an unbounded
-        // absolute path — deep worktree roots are where it would blow.
-        const line = buildMissingEnvelopeLine('/'.padEnd(200, 'x'));
-        expect(line).not.toContain('\n');
-        expect(Buffer.byteLength(line, 'utf-8')).toBeLessThan(512);
+    it("a peer session's record produces no line either", () => {
+        writeThreshold(100_000);
+        fs.writeFileSync(transcript, assistantLine(5_000, 120_000));
+        expect(runMain()).toEqual({ rc: 0, out: '' });
+        writeEnvelope(new Date().toISOString(), 'some-other-session');
+        fs.appendFileSync(transcript, assistantLine(6_000, 130_000));
+        expect(runMain()).toEqual({ rc: 0, out: '' });
+    });
+
+    it('never fires on a short session — unchanged', () => {
+        writeThreshold(100_000);
+        fs.writeFileSync(transcript, assistantLine(1_000, 2_000));
+        expect(runMain()).toEqual({ rc: 0, out: '' });
     });
 });
 
-describe('advisory lane configuration (Phase 3.2)', () => {
-    it('advisory lane is disabled by the 0-override while recording continues (emergency off)', () => {
+describe('threshold lane configuration (Phase 3.2)', () => {
+    it('threshold lane is disabled by the 0-override while recording continues (emergency off)', () => {
         writeThreshold(0);
         fs.writeFileSync(transcript, assistantLine(5_000, 900_000));
         const r = runMain();
@@ -335,10 +290,16 @@ describe('advisory lane configuration (Phase 3.2)', () => {
         expect(readThresholdTokens()).toBe(800_000);
     });
 
-    it('keeps the advisory to one line under the injection budget', () => {
-        const line = buildAdvisoryLine(812_345, 800_000);
-        expect(line).not.toContain('\n');
-        expect(Buffer.byteLength(line, 'utf-8')).toBeLessThan(512);
+    it('the 0-override also stops the threshold-crossing stamp, so the checkpoint lane is off', () => {
+        // The injection-budget tests that stood here are gone with the two
+        // builders they measured. What replaces them is the property the
+        // override still has to carry: switching the lane off must stop the
+        // stamp too, or the run-checkpoint writer keeps firing after the
+        // emergency switch.
+        writeThreshold(0);
+        fs.writeFileSync(transcript, assistantLine(5_000, 900_000));
+        runMain();
+        expect(stateOf().advisory_fired_at).toBeNull();
     });
 });
 
@@ -375,8 +336,8 @@ describe('slot + replay guards', () => {
 
 // ── UOTL Phase 6.1 — the deterministic checkpoint ───────────────────────────
 //
-// The advisory alone cannot help a session that has no context left to write a
-// summary with. The checkpoint is DERIVED from the roadmap on disk, so a dying
+// A human writing a summary cannot help a session that has no context left to
+// write one with. The checkpoint is DERIVED from the roadmap on disk, so a dying
 // session produces it correctly regardless, and a resumed run can re-verify
 // every field rather than trusting a record (Phase 3.2).
 //
@@ -397,11 +358,11 @@ describe('deterministic checkpoint (UOTL Phase 6.1)', () => {
         fs.writeFileSync(claim, JSON.stringify({ slug: SLUG, session_id: sessionId }), 'utf-8');
     }
 
-    it('writes a derived checkpoint when the advisory fires inside a contract', () => {
+    it('writes a derived checkpoint on the threshold crossing inside a contract', () => {
         writeThreshold(10);
         claimRoadmap('session-a', ['- [x] done', '- [ ] the next one', '- [~] parked']);
         fs.writeFileSync(transcript, assistantLine(5_000, 120_000));
-        expect(runMain().rc).toBe(2);
+        expect(runMain().rc).toBe(0);
 
         const cp = readCheckpoint(workspace, eolSessionKey('session-a'));
         expect(cp).not.toBeNull();
@@ -417,11 +378,11 @@ describe('deterministic checkpoint (UOTL Phase 6.1)', () => {
     it('writes NOTHING without a claim — a checkpoint outside a contract names nobody work', () => {
         writeThreshold(10);
         fs.writeFileSync(transcript, assistantLine(5_000, 120_000));
-        expect(runMain().rc).toBe(2); // the advisory still fires
+        expect(runMain().rc).toBe(0);
         expect(readCheckpoint(workspace, eolSessionKey('session-a'))).toBeNull();
     });
 
-    it('writes nothing below the threshold — the checkpoint rides the advisory', () => {
+    it('writes nothing below the threshold — the checkpoint rides the crossing', () => {
         writeThreshold(1_000_000);
         claimRoadmap('session-a', ['- [ ] open']);
         fs.writeFileSync(transcript, assistantLine(5_000, 1_000));
@@ -435,21 +396,23 @@ describe('deterministic checkpoint (UOTL Phase 6.1)', () => {
         fs.mkdirSync(path.dirname(claim), { recursive: true });
         fs.writeFileSync(claim, JSON.stringify({ slug: 'gone', session_id: 'session-a' }), 'utf-8');
         fs.writeFileSync(transcript, assistantLine(5_000, 120_000));
-        expect(runMain().rc).toBe(2);
+        expect(runMain().rc).toBe(0);
         expect(readCheckpoint(workspace, eolSessionKey('session-a'))).toBeNull();
     });
 
-    it('the advisory still fires when the checkpoint cannot be built', () => {
+    it('a failed checkpoint does not take the rest of the Stop path with it', () => {
         // Best-effort by construction: a checkpoint is a recovery aid, and a
-        // recovery aid that can suppress the advisory is a liability.
+        // recovery aid that can fail a Stop is a liability. Before step 3.2
+        // this case asserted the advisory still fired; with no warn path left,
+        // the observable is that the Stop still completes and still records.
         writeThreshold(10);
         const claim = path.join(workspace, roadmap_claim_rel('session-a'));
         fs.mkdirSync(path.dirname(claim), { recursive: true });
         fs.writeFileSync(claim, JSON.stringify({ slug: 'gone', session_id: 'session-a' }), 'utf-8');
         fs.writeFileSync(transcript, assistantLine(5_000, 120_000));
         const r = runMain();
-        expect(r.rc).toBe(2);
-        expect(r.out).toContain('warn');
+        expect(r).toEqual({ rc: 0, out: '' });
+        expect(stateOf().advisory_fired_at).not.toBeNull();
     });
 });
 

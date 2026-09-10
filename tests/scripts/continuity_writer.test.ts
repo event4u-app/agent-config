@@ -172,8 +172,13 @@ afterEach(() => {
 });
 
 describe('the switch', () => {
-    it('is off when the settings cascade says nothing', () => {
-        expect(auto_record_enabled(workspace)).toBe(false);
+    it('resolves ON from the shipped template when the workspace says nothing', () => {
+        // The cascade merges the shipped template, so "absent" is not "off" —
+        // it is whatever the template says. That was `off` until 2026-09-10
+        // and is `on` since (step 3.2). Pinned in this direction deliberately:
+        // the flip is a change to what a default install DOES, and a test that
+        // still asserted `false` here would be asserting the old product.
+        expect(auto_record_enabled(workspace)).toBe(true);
     });
 
     it('accepts the string `on` and YAML’s bare `on`', () => {
@@ -183,6 +188,45 @@ describe('the switch', () => {
             path.join(workspace, '.agent-settings.yml'),
             'continuity:\n  auto_record: on\n',
         );
+        expect(auto_record_enabled(workspace)).toBe(true);
+    });
+
+    // ── the fail-closed matrix (AI council 2026-09-10, option A) ───────
+    //
+    // The property was documented from step 1.4 and carried by the TEMPLATE's
+    // `off`, not by the reader — `load_agent_settings` skips a malformed layer
+    // instead of throwing, so the `catch` never ran for that case. The flip to
+    // `on` exposed it. These cases pin the property for the reason its name
+    // gives, which is the part the previous fixture could not do.
+
+    it('a malformed project settings layer disarms the writer', () => {
+        fs.writeFileSync(path.join(workspace, '.agent-settings.yml'), ':\n  - [\n');
+        expect(auto_record_enabled(workspace)).toBe(false);
+    });
+
+    it('and it disarms it INDEPENDENTLY of the template, which now says `on`', () => {
+        // The sensitivity arm, and the whole reason option (A) was executed. If
+        // the verdict still came from the resolved value, this would be `true`:
+        // a malformed layer resolves to the template, and the template is `on`.
+        expect(auto_record_enabled(workspace)).toBe(true); // template, no project file
+        fs.writeFileSync(path.join(workspace, '.agent-settings.yml'), 'continuity: [\n');
+        expect(auto_record_enabled(workspace)).toBe(false);
+    });
+
+    it('a malformed layer is not confused with an absent one', () => {
+        // Both merge to nothing, which is why the loader conflated them. The
+        // repair is that they now decide differently.
+        expect(auto_record_enabled(workspace)).toBe(true);
+        fs.writeFileSync(path.join(workspace, '.agent-settings.yml'), '\t- }{\n');
+        expect(auto_record_enabled(workspace)).toBe(false);
+        fs.rmSync(path.join(workspace, '.agent-settings.yml'));
+        expect(auto_record_enabled(workspace)).toBe(true);
+    });
+
+    it('a VALID layer that omits the key still resolves the template', () => {
+        // The bound of the repair: only a broken layer disarms. A well-formed
+        // file that simply says nothing about this key must not.
+        fs.writeFileSync(path.join(workspace, '.agent-settings.yml'), 'quality:\n  local_auto_run: false\n');
         expect(auto_record_enabled(workspace)).toBe(true);
     });
 
@@ -345,9 +389,29 @@ describe('through the real hook, on the Stop path', () => {
         expect(validateRecycleEnvelope(rec)).toEqual([]);
     });
 
-    it('leaves NO record with the switch at its shipped default', () => {
+    it('writes a record with the switch at its shipped default (step 3.2)', () => {
+        // The inverse of what this case asserted before 2026-09-10, and the
+        // inversion IS the step: a substantive session inside a claimed
+        // roadmap now leaves a record with no settings file and no command
+        // run. Without this the flip would be a template edit nothing observes.
         writeRoadmap();
         claim();
+        process.env[THRESHOLD_OVERRIDE_ENV] = '10000';
+        fs.writeFileSync(transcript, USER_LINE + assistantLine(1_000, 50_000));
+
+        runMain();
+        const rec = recordAt();
+        expect(rec).not.toBeNull();
+        expect((rec as Record<string, unknown>)['variant']).toBe('continuity_record');
+    });
+
+    it('leaves NO record with the switch explicitly off — the switch still works', () => {
+        // The sensitivity arm for the case above. Without it, "writes a record
+        // by default" would pass equally against a writer that ignores the
+        // switch entirely.
+        writeRoadmap();
+        claim();
+        arm('off');
         process.env[THRESHOLD_OVERRIDE_ENV] = '10000';
         fs.writeFileSync(transcript, USER_LINE + assistantLine(1_000, 50_000));
 

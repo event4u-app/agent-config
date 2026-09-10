@@ -57,6 +57,34 @@ const BUILTINS = new Set([
     ...PREFIX_ONLY_BUILTINS,
 ]);
 
+/**
+ * Is `target` reachable from `npm run build`, following `npm run X` hops?
+ *
+ * A flat `scripts.build.includes(target)` was the earlier form and it broke the
+ * moment the three delegate producers moved behind a `build:delegates`
+ * composite — the composite exists because all three write to one `--outdir`
+ * with `--splitting` and a clean bound to a single script left two of them
+ * accreting orphan chunks. The invariant was never "build names this script";
+ * it is "prepack's build runs it, or the tarball ships no bundle", and that
+ * survives an indirection this assertion should follow rather than forbid.
+ */
+function reachableFromBuild(scripts: Record<string, string>, target: string): boolean {
+    const seen = new Set<string>();
+    const queue = ['build'];
+    while (queue.length > 0) {
+        const name = queue.shift() as string;
+        if (seen.has(name)) continue;
+        seen.add(name);
+        const body = scripts[name] ?? '';
+        for (const m of body.matchAll(/npm run ([\w:-]+)/g)) {
+            const next = m[1] as string;
+            if (next === target) return true;
+            queue.push(next);
+        }
+    }
+    return false;
+}
+
 /** Bare-specifier → npm package name (`@scope/pkg/sub` → `@scope/pkg`). */
 function packageName(specifier: string): string {
     const parts = specifier.split('/');
@@ -157,7 +185,7 @@ describe('runtime dependencies — consumer dispatcher surface', () => {
         expect(delegateBuild, 'package.json needs a build:cli-delegate script').not.toBe('');
         expect(delegateBuild).toContain('--outdir=dist/cli-delegate');
         // Wired into the build `prepack` runs, or the tarball ships no bundle.
-        expect(scripts.build ?? '').toContain('build:cli-delegate');
+        expect(reachableFromBuild(scripts, 'build:cli-delegate'), 'build must reach build:cli-delegate').toBe(true);
 
         // Coverage is structural, not a hand-maintained list: the build globs
         // the whole `_cli` command directory, so a NEW command is bundled
@@ -206,7 +234,7 @@ describe('runtime dependencies — consumer dispatcher surface', () => {
         const build = scripts['build:agent-src-delegate'] ?? '';
         expect(build, 'package.json needs a build:agent-src-delegate script').not.toBe('');
         expect(build).toContain('--outdir=dist/cli-delegate');
-        expect(scripts.build ?? '').toContain('build:agent-src-delegate');
+        expect(reachableFromBuild(scripts, 'build:agent-src-delegate'), 'build must reach build:agent-src-delegate').toBe(true);
 
         const ENTRY_GLOB = 'src/agent-src/scripts/*.ts';
         expect(build).toContain(ENTRY_GLOB);
@@ -253,7 +281,7 @@ describe('runtime dependencies — consumer dispatcher surface', () => {
         expect(aux).toContain('src/scripts/_lib/pin_resolver.ts');
         expect(aux).toContain('src/scripts/check_update_banner.ts');
         expect(aux).toContain('--outdir=dist/cli-delegate');
-        expect(scripts.build ?? '').toContain('build:delegate-aux');
+        expect(reachableFromBuild(scripts, 'build:delegate-aux'), 'build must reach build:delegate-aux').toBe(true);
 
         // The pin resolver and the update banner run before/after EVERY command.
         // While they carried an `npx tsx` last resort, a consumer whose npm

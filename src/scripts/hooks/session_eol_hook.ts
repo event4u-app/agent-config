@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
- * session-eol — Stop-slot session end-of-life instrument + recycle advisory
- * (road-to-token-economy-recycling Phases 1.1 / 3.2 / 4.2).
+ * session-eol — Stop-slot session end-of-life instrument + automatic
+ * continuity record (road-to-token-economy-recycling Phases 1.1 / 3.2 / 4.2,
+ * road-to-continuity-writer-activation Phase 1 and step 3.2).
  *
  * Phase 1.1 (record-only): per session, maintain counts-only end-of-life
  * state — final main-chain context size in parsed tokens (via
@@ -10,22 +11,31 @@
  * `agents/runtime/state/session-eol/<sha256(session)>.json`. Incremental:
  * each Stop reads only the transcript bytes appended since the last scan.
  *
- * Phase 3.2 (advisory, once per session): past the committed recycle
- * threshold (`src/config/recycle-threshold-budget.json`), inject ONE line
- * advising `session:recycle` — the F2 once-per-session pattern of
- * `end_review_nudge_hook.ts`. Absent/unreadable config or transcript is
- * SILENCE, never a block (fail-open); hooks cannot inject `/clear`, so the
- * recycle action itself stays advisory-carried by design (roadmap 5.1).
+ * Phase 3.2 — RETIRED 2026-09-10 (road-to-continuity-writer-activation step
+ * 3.2). This hook used to inject one line past the committed recycle threshold
+ * (`src/config/recycle-threshold-budget.json`) advising a human to run
+ * `agent-config session:recycle` before `/clear`, plus a second line when that
+ * advice had been given and no envelope had appeared. Both are gone. They
+ * existed because nothing else wrote the continuity record, and
+ * `writeContinuityRecord` below now does — armed by default since the same
+ * change, on an AI-council verdict of 2026-09-10 (2 seats, convergent, under
+ * the owner's written delegation). An advisory telling a human to do by hand
+ * what the concern now does on its own is a manual action on the normal path,
+ * which is what step 3.2 removes and what `check_continuity_surface` counts on
+ * its `normal_path_manual_actions` axis.
  *
- * Counter-check (second warn path, also once per session): when the advisory
- * fired on an earlier Stop and no envelope written since then exists, inject
- * one further line saying so — the advisory recommends an action whose next
- * step destroys the session, so recommending it without ever checking the
- * result is how a silent write failure becomes total context loss. Stamped by
- * `missing_envelope_warned_at`, gated on the same threshold, so the emergency
- * off-switch silences BOTH paths. Two independent emitters, at most one line
- * each per session — the budget the Stop slot carries from this hook is two,
- * not one.
+ * `agent-config session:recycle` itself is RETAINED, and deliberately: the
+ * same verdict refused to retire a public callable contract, and the automatic
+ * writer is not a strict superset of it — it skips a session that claimed no
+ * roadmap and omits the `git status` anchors the command collects. It is an
+ * explicit affordance now, not a step anybody is told to remember.
+ *
+ * What SURVIVES the retirement is the state machine underneath it.
+ * `advisory_fired_at` still stamps the first Stop at which a session crosses
+ * the recycle threshold, because the run-checkpoint writer below gates on
+ * exactly that edge. The field keeps its name: it is a persisted state key
+ * under `agents/runtime/state/session-eol/`, and renaming it would strand
+ * every state file already on disk to make one docblock read better.
  *
  * Phase 4.2 (read surface): every Stop also overwrites
  * `agents/runtime/state/context-fill.json` with the machine-readable fill
@@ -33,9 +43,10 @@
  * carries counts only, and this hook's behaviour is identical whether or
  * not anything reads it.
  *
- * Never blocks: exit 0 on every silent path; the advisory reports at
- * exit 2 ({decision:"warn", additional_context}) which `host_semantics`
- * reduces to a non-blocking warn on claude. `AGENT_CONFIG_REPLAY=1` → no-op.
+ * Never blocks: exit 0 on every path. With both advisory emitters retired this
+ * hook no longer returns the warn exit at all — it records, writes the context
+ * fill, the run checkpoint and the continuity record, and says nothing.
+ * `AGENT_CONFIG_REPLAY=1` → no-op.
  */
 
 import * as fs from 'node:fs';
@@ -48,7 +59,6 @@ import recycleThresholdConfig from '../../config/recycle-threshold-budget.json';
 import {
     listContinuityRecords,
     RECYCLE_MAX_AGE_HOURS,
-    recycle_envelope_rel,
 } from '../_lib/recycle_envelope_paths.js';
 import {
     emptyCounters,
@@ -72,12 +82,11 @@ import { readHookStdin } from './hook_stdin.js';
 import { atomic_write_json, is_replay_mode } from './state_io.js';
 import { isSafeTranscriptPath } from './end_review_nudge_hook.js';
 
-const EXIT_WARN = 2;
-
 /**
  * Per-process threshold override — the test seam and the emergency off
- * switch (`0` or any non-positive value disables the advisory lane while
- * recording continues). The committed value lives in
+ * switch (`0` or any non-positive value disables the threshold lane, so the
+ * run checkpoint and the continuity record stop while plain recording
+ * continues). The committed value lives in
  * `src/config/recycle-threshold-budget.json` and is statically imported so
  * the hook bundle carries it into consumers — one threshold, one constant.
  */
@@ -89,11 +98,24 @@ export const CONTEXT_FILL_REL = path.join('agents', 'runtime', 'state', 'context
 export interface SessionEolState {
     schema_version: 1;
     counters: EolCounters;
-    /** ISO stamp when the recycle advisory fired for this session (F2), or null. */
+    /**
+     * ISO stamp of the first Stop at which this session crossed the recycle
+     * threshold, or null.
+     *
+     * Named for the advisory it used to fire (retired 2026-09-10, step 3.2).
+     * The name is kept because this is a persisted key: renaming it would
+     * strand every `session-eol/<key>.json` already on disk. What it marks is
+     * the threshold-crossing edge, which the run-checkpoint writer still gates
+     * on.
+     */
     advisory_fired_at: string | null;
     /**
      * ISO stamp when the follow-up "advised, but no envelope exists" line
-     * fired, or null. Separate from `advisory_fired_at` so the counter-check
+     * fired, or null. NOTHING WRITES THIS ANY MORE — the counter-check was
+     * retired with the advisory on 2026-09-10 (step 3.2). It is still parsed,
+     * and `session_eol_report.ts` still counts it, because state files written
+     * before that date carry it and dropping the read would silently reinterpret
+     * their history as "never happened". Separate from `advisory_fired_at` so the counter-check
      * is once-per-session in its own right: one reminder is a safety net, one
      * per Stop for the rest of the session is a nag the reader learns to skip.
      */
@@ -173,54 +195,6 @@ export function readState(file: string): SessionEolState {
 }
 
 /**
- * Is there a recycle envelope under this workspace, written since `since`?
- *
- * Two properties, both load-bearing:
- *
- * **Only ENOENT counts as missing.** `fs.existsSync` swallows every error into
- * `false`, so an unreadable directory (EACCES on a mounted or root-owned tree)
- * would read as "no envelope" and produce the manufactured "your envelope is
- * gone" warning this check exists to avoid. `statSync` + an errno test is the
- * only shape that can tell the two apart.
- *
- * **Freshness, not mere existence.** The consumer moves the envelope aside at
- * session_start, so a file still sitting here belongs to a session that never
- * cleared. Counting it would silence the warning in the case it exists to
- * catch, and worse: `/clear` would then resume the successor from another
- * session's state — a wrong resume instead of an empty one. An envelope whose
- * `written_at` predates the advisory is not this session's.
- */
-export function envelopeExists(
-    workspaceRoot: string,
-    since: string | null = null,
-    sessionId: string | null = null,
-): boolean {
-    // Phase 2.1: the record is keyed by session, so the counter-check must look
-    // at THIS session's path. Checking the shared name would read a peer's
-    // record as proof that this session wrote one — the same cross-session
-    // confusion the key exists to remove, re-created in the checker.
-    const target = path.join(workspaceRoot, recycle_envelope_rel(sessionId));
-    let raw: string;
-    try {
-        raw = fs.readFileSync(target, 'utf-8');
-    } catch (exc) {
-        // ENOENT is the real "no envelope"; anything else is a failed CHECK,
-        // and a failed check must never assert absence.
-        return (exc as NodeJS.ErrnoException)?.code !== 'ENOENT';
-    }
-    if (since === null) return true;
-    try {
-        const written = (JSON.parse(raw) as { written_at?: unknown }).written_at;
-        // Unparseable or undated: present, and not provably stale. Treat it as
-        // this session's — the alternative warns about a file that is there.
-        if (typeof written !== 'string') return true;
-        return Date.parse(written) >= Date.parse(since);
-    } catch {
-        return true;
-    }
-}
-
-/**
  * Records that were written and never read — the detection layer this defect
  * did not have.
  *
@@ -277,25 +251,6 @@ export function unconsumedRecordLines(
 }
 
 /**
- * The follow-up line: the advisory already fired, and no envelope arrived.
- *
- * This is the half of the reported minimum fix that lives outside the command
- * — the hook that recommends the call making the same counter-check before the
- * operator acts on it. Whatever stopped the write (a wrong root, a refusal
- * scrolled past, a forgotten step), the state visible here is identical, and
- * the next action the advisory recommended is the one that destroys the
- * session.
- */
-export function buildMissingEnvelopeLine(workspaceRoot: string, sessionId: string | null = null): string {
-    return (
-        `recycle advised earlier, but no envelope exists at ` +
-        `${path.join(workspaceRoot, recycle_envelope_rel(sessionId))} — /clear now starts the successor ` +
-        `from nothing. Re-run \`agent-config session:recycle\` and check that it prints the ` +
-        `absolute path it wrote before clearing.`
-    );
-}
-
-/**
  * Resolve the recycle threshold (Phase 3.1): the per-process override wins
  * (tests; `0` = advisory lane off), else the committed constant from
  * `recycle-threshold-budget.json`. Returns `null` when the lane is
@@ -310,25 +265,6 @@ export function readThresholdTokens(): number | null {
     }
     const value = (recycleThresholdConfig as Record<string, unknown>)['recycle_threshold_tokens'];
     return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : null;
-}
-
-/**
- * The exactly-one advisory line injected past threshold (Phase 3.2).
- *
- * The `/clear` half is conditional on purpose. An earlier wording read
- * `run X … then /clear`, which is an instruction to destroy the session with
- * no check in between — and a reader who followed it while the command was
- * silently writing nothing lost everything. The proof to wait for is the
- * absolute path the command prints; naming it costs one clause.
- */
-export function buildAdvisoryLine(tokens: number, threshold: number): string {
-    return (
-        `context past recycle threshold (${tokens.toLocaleString('en-US')} of ` +
-        `${threshold.toLocaleString('en-US')} tokens): run \`agent-config session:recycle\` to ` +
-        `write the recycle envelope. It prints the absolute path it wrote — /clear only after ` +
-        `you have seen that line. The successor session then resumes from the envelope at ` +
-        `session_start (road-to-token-economy-recycling)`
-    );
 }
 
 /** Overwrite the Phase 4.2 read surface. Counts only; failures are swallowed. */
@@ -392,38 +328,32 @@ export function main(): number {
     const threshold = readThresholdTokens();
     const tokens = counters.final_context_tokens;
 
-    const shouldAdvise =
+    // The threshold-crossing edge: the first Stop at which this session went
+    // past the recycle threshold. It used to fire the recycle advisory (retired
+    // 2026-09-10, step 3.2) and it still gates the run-checkpoint writer below,
+    // which needs "crossed, once" rather than "is above".
+    const crossedThresholdNow =
         threshold !== null &&
         tokens !== null &&
         tokens >= threshold &&
         state.advisory_fired_at === null;
 
-    // The counter-check: the advisory fired on an EARLIER Stop (so `state`,
-    // the pre-update snapshot, already carries the stamp) and no envelope has
-    // appeared since. It can never collide with `shouldAdvise` — that branch
-    // requires `advisory_fired_at === null` — so at most one line is emitted
-    // per Stop, and this one at most once per session.
-    //
-    // `threshold !== null` gates it for the same reason the advisory is gated:
-    // `AGENT_RECYCLE_THRESHOLD_TOKENS=0` is documented as the emergency switch
-    // for the whole advisory lane, and a lane that keeps one more warn after
-    // being switched off is not off.
     // Raw id, not `sessionKey`: the record path is built from the id the host
     // exported (`safe_stem`), never from the hashed state-file key.
     const rawSessionId = payloadSessionId(payload, envelope) || null;
-    const shouldWarnMissing =
-        threshold !== null &&
-        state.advisory_fired_at !== null &&
-        (state.missing_envelope_warned_at ?? null) === null &&
-        !envelopeExists(workspaceRoot, state.advisory_fired_at, rawSessionId);
 
+    // `missing_envelope_warned_at` is carried forward, never set. Its writer —
+    // the "advised, but no envelope exists" counter-check — retired with the
+    // advisory it was checking on: with the record written automatically there
+    // is no advice to have been ignored, and the line it emitted told a human
+    // to run the command that step 3.2 removed from the normal path. The field
+    // is preserved on read so state written before that date keeps its history
+    // (`session_eol_report.ts` still counts it).
     const nextState: SessionEolState = {
         schema_version: 1,
         counters,
-        advisory_fired_at: shouldAdvise ? now : state.advisory_fired_at,
-        missing_envelope_warned_at: shouldWarnMissing
-            ? now
-            : (state.missing_envelope_warned_at ?? null),
+        advisory_fired_at: crossedThresholdNow ? now : state.advisory_fired_at,
+        missing_envelope_warned_at: state.missing_envelope_warned_at ?? null,
         updated_at: now,
     };
     try {
@@ -455,7 +385,7 @@ export function main(): number {
     // Best-effort throughout. A checkpoint is a recovery aid, and a
     // recovery aid that can fail a Stop is a liability.
     const checkpointRunId = payloadSessionId(payload, envelope);
-    if (shouldAdvise && checkpointRunId !== '' && run_checkpoints_enabled(workspaceRoot)) {
+    if (crossedThresholdNow && checkpointRunId !== '' && run_checkpoints_enabled(workspaceRoot)) {
         try {
             const slug = read_claimed_slug(workspaceRoot, checkpointRunId);
             if (slug !== null) {
@@ -479,26 +409,10 @@ export function main(): number {
 
     writeContinuityRecord(workspaceRoot, rawSessionId, counters, threshold, tokens);
 
-    if (shouldAdvise && threshold !== null && tokens !== null) {
-        process.stdout.write(
-            `${JSON.stringify({
-                decision: 'warn',
-                reason: `session-eol: context ${tokens} >= recycle threshold ${threshold}`,
-                additional_context: buildAdvisoryLine(tokens, threshold),
-            })}\n`,
-        );
-        return EXIT_WARN;
-    }
-    if (shouldWarnMissing) {
-        process.stdout.write(
-            `${JSON.stringify({
-                decision: 'warn',
-                reason: 'session-eol: recycle advised, no envelope written',
-                additional_context: buildMissingEnvelopeLine(workspaceRoot, rawSessionId),
-            })}\n`,
-        );
-        return EXIT_WARN;
-    }
+    // No warn path. Both emitters this hook used to carry were the recycle
+    // advisory and its counter-check, and both are retired (step 3.2). The hook
+    // records, writes the context fill, the checkpoint and the continuity
+    // record, and returns silently.
     return 0;
 }
 

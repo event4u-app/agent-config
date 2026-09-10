@@ -57,7 +57,7 @@ const PATH_KEYS: readonly string[] = [
  * tries to parse past them is a shell parser with a security boundary attached.
  * Refusing the whole shape is both smaller and correct.
  */
-const SHELL_METACHARACTERS = /[;&|`$><\n\r(){}\\]/;
+export const SHELL_METACHARACTERS = /[;&|`$><\n\r(){}\\]/;
 
 /**
  * Words naming a consequence operation, matched as whole tokens anywhere in

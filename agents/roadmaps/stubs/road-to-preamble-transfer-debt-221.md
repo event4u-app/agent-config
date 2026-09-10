@@ -40,7 +40,7 @@ review_by: 2026-09-26
   while main sits on the ceiling. **CORRECTED 2026-09-10:** this bullet said the
   grace ceiling "expires **2026-11-10**, at which point the design ceiling
   (107,646) applies". It never expired — `grace_end_date` was read by nothing but
-  an `echo`, and the key is now deleted (`ADR-273`). The ceiling is 138,490,
+  an `echo`, and the key is now deleted (`ADR-274`). The ceiling is 138,490,
   enforced and undated, against a tree measuring ~138,413, so this 221 is the
   smallest part of a ~30,800-token gap that no date will close on its own.
 - **Resolved when:** `./scripts-run src/scripts/check_preamble_payload_budget`
@@ -101,7 +101,7 @@ strings, so applying them later is mechanical.
 The concurring seat's conditions still hold, and cost nothing now:
 
 - **No ceiling raise.** `grace_ceiling` stays where it is — 138,490 as of
-  2026-09-08, shrink-only and undated since `ADR-273`; the `138,212, expiry
+  2026-09-08, shrink-only and undated since `ADR-274`; the `138,212, expiry
   2026-11-10` this line used to carry was stale in the figure and false in the date.
 - **A numeric target**, not a promise: ≤ 138,212 with the 14 applied.
 - **Recorded where a maintainer reads it** — this stub is counted in the
@@ -114,7 +114,7 @@ The concurring seat's conditions still hold, and cost nothing now:
    this stub.
 2. **This probe step was unresolvable and is replaced.** It read "If the grace
    ceiling has expired (after 2026-11-10)", a condition that can never be true:
-   nothing enforced `grace_end_date` and the key no longer exists (`ADR-273`).
+   nothing enforced `grace_end_date` and the key no longer exists (`ADR-274`).
    Read instead: if `ci_delivery.grace_ceiling` has been retired, or the measured
    total no longer clears it, the design ceiling of 107,646 applies and this 221
    is the smallest part of a much larger gap — at which point this stub is

@@ -165,7 +165,7 @@ describe('the measurement is a deterministic census, not a sample', () => {
  * `ci_delivery` straight off disk — the same read the CI step performs.
  *
  * `grace_end_date` is deliberately absent from this type. The key was deleted
- * on 2026-09-10 (ADR-273) because nothing enforced it: it was read in exactly
+ * on 2026-09-10 (ADR-274) because nothing enforced it: it was read in exactly
  * two places, an `echo` in the workflow and the return type of THIS helper, and
  * the gate carries no date logic, so the concession never expired and the design
  * ceiling never became operative on the date the config advertised. Typing a
@@ -187,7 +187,7 @@ function readText(...rel: string[]): string {
 describe('the grace ceiling is enforced and undated', () => {
     it('carries no grace_end_date key', () => {
         // The regression pin. A future edit that reintroduces the key without
-        // also building the expiry recreates exactly the defect ADR-273 removed:
+        // also building the expiry recreates exactly the defect ADR-274 removed:
         // a date the config states and no code reads.
         expect(Object.keys(rawCiDelivery())).not.toContain('grace_end_date');
     });

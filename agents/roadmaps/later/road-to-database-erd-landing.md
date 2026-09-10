@@ -466,7 +466,7 @@ blocker 6 is recorded as *deferred verification*, not resolution.
 rules reduction, not a catalogue trim — **and** the `skill_count` allowance is
 explicitly allocated across this roadmap and `-relational-modeling`.
 **The second trigger this paragraph used to carry is DELETED, not merely stale
-(2026-09-10, `ADR-273`).** It read: "The `grace_end_date` of 2026-11-10 is a
+(2026-09-10, `ADR-274`).** It read: "The `grace_end_date` of 2026-11-10 is a
 second trigger: at that date the design ceiling of 107,646 applies and the gap
 becomes 30,615 tokens rather than 49." That trigger could never have fired —
 nothing in the tree enforced `grace_end_date`, and the key no longer exists. A

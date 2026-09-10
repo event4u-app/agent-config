@@ -40,7 +40,9 @@
     "!src/**/*.test.ts",
     "!src/**/*.spec.ts",
     "!dist/agent-src/skills/**/evals/**",
-    "!dist/**/*.map"
+    "!dist/**/*.map",
+    "!**/__pycache__/**",
+    "!**/*.pyc"
   ],
   "npmignore": [
     ".idea/",
@@ -65,5 +67,5 @@
     "agents/",
     "vendor/"
   ],
-  "shadowed_measured_in": "unbuilt tree (payload carries no dist/cli/**)"
+  "shadowed_measured_in": "built tree (payload carries dist/cli/**)"
 }

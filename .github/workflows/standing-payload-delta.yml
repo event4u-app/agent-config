@@ -28,7 +28,7 @@ name: Standing Payload Delta
 # date was read once, into the echo below, and the gate carries no date logic, so
 # the design ceiling would not have become operative on that day. `grace_end_date`
 # was deleted rather than moved (AI council 2/2, 2026-09-10, under a written owner
-# delegation; ADR-273), because moving it re-publishes the same fiction with a
+# delegation; ADR-274), because moving it re-publishes the same fiction with a
 # later number, and BUILDING the expiry was forbidden in the same verdict — it
 # would arm a repo-wide stop on a date where the budget file still records
 # `committed_reduction_mechanism` opening with NONE — a field whose value is a

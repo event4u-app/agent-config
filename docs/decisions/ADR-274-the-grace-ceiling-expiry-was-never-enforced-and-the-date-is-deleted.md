@@ -1,5 +1,5 @@
 ---
-adr: 273
+adr: 274
 status: accepted
 date: 2026-09-10
 decision: grace-end-date-deleted-because-nothing-enforced-it-ceiling-kept-undated
@@ -37,7 +37,7 @@ review_trigger: >-
   original fiction survive.
 ---
 
-# ADR-273 — the grace ceiling's expiry was never enforced, so the date is deleted rather than moved
+# ADR-274 — the grace ceiling's expiry was never enforced, so the date is deleted rather than moved
 
 ## Status
 

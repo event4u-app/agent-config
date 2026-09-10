@@ -2365,7 +2365,7 @@ gates:
   - id: check_loss_class_declared
     argv: []
     min_scanned: 45
-    corpus: "every hook-manifest concern whose script exists (53 at baseline); of those, the model-facing lossy subset is the gated population"
+    corpus: "every hook-manifest concern whose script exists (53 at baseline, 58 on 2026-09-10), plus every module a concern script names with `loss_module:`; of those, the model-facing lossy subset is the gated population. Measured 2026-09-10: 1 module gated — src/scripts/_lib/session_index_trust.ts, reached by pointer from hot_context_hook.ts. It was 0 between 2026-09-09 and 2026-09-10, when the hot-context cache retirement emptied the matched subset; the pointer is what refilled it."
     status: enforced
     canary:
       class: contract-violation

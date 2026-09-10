@@ -198,10 +198,32 @@ describe('switch 2 — continuity.run_checkpoints', () => {
     });
 
     it('fails CLOSED on the sibling switch, so the same cascade leaves the new producer disarmed', () => {
+        // This case PASSED FOR THE WRONG REASON until 2026-09-10 and the flip
+        // in step 3.2 is what exposed it. `load_agent_settings` skips a
+        // malformed layer rather than throwing, so `auto_record_enabled`'s
+        // `catch` never ran here; the `false` came from the template saying
+        // `off`. When the template flipped to `on` this case went red — which
+        // is the test doing its job — and an AI council ruled the repair is to
+        // make the property real (`settings_layer_states`), not to redefine it.
+        //
+        // It is kept at the same name because it now tests the same claim, and
+        // for the first time it tests it against the mechanism that carries it.
         const root = writeWorkspace({ auto_record: 'on', run_checkpoints: 'on' });
         fs.writeFileSync(path.join(root, '.agent-settings.yml'), ':\n  - [\n');
         dispatch('stop', root, { transcript_path: writeTranscript() });
         expect(outcomes(root).record).toBe(false);
+    });
+
+    it('and the two polarities still disagree on the SAME broken cascade', () => {
+        // The asymmetry is the point of having two readers, so it is asserted
+        // in one fixture rather than inferred from two. Same broken file: the
+        // recovery aid the tree already had keeps running, the producer that
+        // needs consent does not.
+        const root = writeWorkspace({ auto_record: 'on', run_checkpoints: 'on' });
+        fs.writeFileSync(path.join(root, '.agent-settings.yml'), ':\n  - [\n');
+        dispatch('stop', root, { transcript_path: writeTranscript() });
+        const o = outcomes(root);
+        expect({ record: o.record, checkpoint: o.checkpoint }).toEqual({ record: false, checkpoint: true });
     });
 });
 

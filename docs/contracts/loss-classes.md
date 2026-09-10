@@ -101,14 +101,56 @@ one becomes a pro-forma corpus of four, each carrying a declaration nobody meant
 **Measured at landing: 1 module qualified** — `hot_context_hook`. **Measured
 2026-09-09: 0.** Step 3.1 of road-to-continuity-writer-activation retired that
 module's cache half, and with it both patterns the detector matched on.
+**Measured 2026-09-10: 1** — `src/scripts/_lib/session_index_trust.ts`, reached
+by the pointer described below.
 
-A corpus of one was the honest state of this tree. A corpus of zero is not: the
-30-row cap in `src/scripts/_lib/session_index_trust.ts` is still a model-facing
-lossy transform, and this detector reads concern scripts only, so it cannot see
-it. The gate is green over an empty set — which proves nothing about any
-transform, rather than proving there are none. Widening the detector past concern
-scripts is what closes that, tracked as blocker
-`loss-class-corpus-is-empty-after-hot-context`.
+A corpus of one was the honest state of this tree. A corpus of zero was not: the
+gate was green over an empty set, which proves nothing about any transform rather
+than proving there are none.
+
+## `loss_module:` — how a module one layer below a concern enters the corpus
+
+The declaration lives on the module that transforms; the corpus is the hook
+manifest. A transform one module deeper than a concern script therefore sits
+outside the corpus, which is how the 30-row cap in
+`src/scripts/_lib/session_index_trust.ts` became invisible when the concern
+script above it stopped transforming anything.
+
+A concern script brings such a module into scope by naming it:
+
+```
+ * loss_module: src/scripts/_lib/session_index_trust.ts
+```
+
+**A pointer is a claim, and the gate treats it as one.** A pointed module that
+declares nothing, does not exist, or resolves outside the repository is a
+finding at the concern's own tier. That polarity is the point: an allowlist
+removes things from a gate, and this adds them to it.
+
+### Why not a static-import closure — measured, not assumed
+
+The obvious alternative is to follow each concern script's imports and scan
+what it reaches. Measured on this tree, 2026-09-10, that closure returns **11**
+applied-lossy modules, of which **9** match on an identifier rather than on a
+transform: a `truncated: boolean` field naming file rotation, a settings key
+called `knowledge.global_sharing.redaction.enabled`, a regex literal that
+*detects* `truncate table` in someone else's command. That is the same
+prose-versus-code failure the comment-stripping above exists to prevent, one
+layer up — matching writing *about* a transform instead of a transform.
+
+And decisively: the closure does **not** contain `session_index_trust.ts`. The
+only concern that reaches it, `hot-context`, loads it through `createRequire`
+for bundle safety, so no static walk sees the edge. A widening that misses the
+module it was written for, while adding nine it was not, is not a widening.
+
+### What the pointer still does not catch
+
+An **unpointed** lossy transform in a module a concern reaches. The gap is
+narrower than the one it replaces — that one was every non-concern module, with
+an empty corpus to show for it — and it is real. Closing it needs a lossy
+detector that matches an *applied* transform rather than an identifier; the
+11-versus-2 measurement above is the evidence for what building that would have
+to clear.
 
 ## The passthrough invariant
 
@@ -130,8 +172,10 @@ case where emitting the larger output is right.
 ## What this contract does NOT claim
 
 - **It does not find undeclared transforms outside the hook manifest.** A helper
-  buried three imports deep is invisible to the detector; the declaration lives on
-  the module that emits, and a module that emits nothing is not in the corpus.
+  buried three imports deep is invisible to the detector unless a concern script
+  names it with `loss_module:`. The pointer makes a named module gateable; it
+  does not make an unnamed one visible, and nothing in this contract claims
+  otherwise.
 - **It does not verify a locator resolves.** It verifies one was *declared*.
   Whether the path it names still exists is a reviewer's judgement, and a gate
   claiming otherwise would be claiming more than it checks.

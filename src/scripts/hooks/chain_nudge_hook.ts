@@ -18,11 +18,37 @@
  * a shape that cannot be written as an allowlist pattern at all. That class
  * shrinks only by not writing it.
  *
+ * THE SECOND CLASS, AND WHY IT BELONGS HERE. A Bash command that writes a
+ * file — `sed -i`, `cat > f`, `tee f`, `perl -i`, a `python3 -c` that opens a
+ * path for writing — costs a confirmation for a reason no allowlist entry
+ * fixes: a write-shaped Bash grant does NOT persist. The host's own
+ * permission documentation records that "don't ask again" saves a permanent
+ * rule for read-only and pre-approved commands and that write-shaped ones
+ * last until session end, so the same shape is confirmed again next session.
+ * The Edit and Write tools carry no such expiry for a path inside the working
+ * directory. That makes the substitution a strictly cheaper primitive rather
+ * than a style preference, which is why the concern that already reads
+ * `tool_input.command` carries it instead of a second concern reading the
+ * same field. Measured on 2026-09-10 over 7,569 distinct real Bash calls in
+ * 39 transcripts on the maintainer's machine: 306 (4.0 %) wrote a file
+ * through the shell — 216 `cat >`, 66 `sed -i`, 16 `python3 -c` with a
+ * write-mode `open`, 7 `perl -i`, 1 `tee`. Recompute with
+ * `./scripts-run src/scripts/autonomy_friction_traffic`, which shares these
+ * detectors; every figure in this change comes from that one run.
+ *
+ * THE COUNT IS A FLOOR, and the five rules are why. `echo >`, `printf >`,
+ * `jq >`, `awk >`, `git show >` and `cp` all fill a file and none is matched:
+ * the list is positive by design, and a generic redirect scanner would fire on
+ * `grep x f > out.txt`, where the shell is not the thing doing the writing.
+ * A heredoc whose BODY performs the write is invisible for the same reason the
+ * body is stripped at all. Read 4.0 % as "at least".
+ *
  * WHAT IT DOES NOT FLAG, DELIBERATELY. A pipe of ordinary filters
  * (`grep foo file | head`) is one command with a filter, not two work steps.
- * A redirect has its target checked against the file rules on its own. A
- * heredoc is a command with input. Flagging any of those would make the
- * nudge noise, and a nudge that fires on correct usage is worse than none.
+ * A redirect whose target is not a file the shell is filling with content —
+ * `2>&1`, `> /dev/null` — is not a write. A heredoc is a command with input.
+ * Flagging any of those would make the nudge noise, and a nudge that fires on
+ * correct usage is worse than none.
  *
  * NEVER BLOCKS. The dispatcher contract is 0 allow · 2 warn, and a warn on
  * `pre_tool_use` with `severity: advisory` is an injection, not a deny — the
@@ -30,10 +56,23 @@
  * failure path returns allow: unreadable stdin, malformed JSON, unwritable
  * latch. A token optimisation must never break a tool call.
  *
- * ONCE PER SESSION. A latch keyed by session id, in the state directory
- * `code-graph-nudge.json` already occupies. The rule body reaches the model
- * once, early, on the first chained call — repeating it every call would be
- * the nagging this codebase refuses elsewhere.
+ * ONCE PER SHAPE CLASS PER SESSION. A latch keyed by session id, in the state
+ * directory `code-graph-nudge.json` already occupies. Each class reaches the
+ * model once, early, on the first call carrying it — so a session sees at most
+ * two lines, never one line for two different mistakes.
+ *
+ * That is a per-CLASS latch, not a per-CALL one, and the distinction is the
+ * whole reason it is allowed to change: the recorded decision this file
+ * carried refuses "repeating it every call", which is the nagging this
+ * codebase refuses elsewhere, and a second class firing once is a different
+ * mechanism from a first class firing twice. The single-boolean latch was
+ * written when there was one class; with two, it would have let whichever
+ * shape came first silence the other for the rest of the session.
+ *
+ * A latch file written by the single-class version holds `true` rather than an
+ * object. That is read as "the chain class has fired", which is what it meant,
+ * so an in-flight session upgrades without losing its latch and without
+ * replaying a line it already showed.
  *
  * ON BY DEFAULT, WITH AN OPT-OUT. Unlike `code-graph-nudge`, which gates on a
  * project capability that may not exist, the fact this nudge carries is a
@@ -137,14 +176,208 @@ export function stripLiterals(cmd: string): string {
     return out;
 }
 
+/**
+ * Heredoc BODIES removed, the command line they sit on kept.
+ *
+ * `stripLiterals` runs from `<<` to the closing tag and so deletes the redirect
+ * that shares the command line; leaving the body in instead let a heredoc that
+ * merely MENTIONS a write shape fire the nudge and spend the session's one
+ * write line. Neither view is right for the write rules, so this is the third:
+ * the marker and the rest of the command line survive, the body does not.
+ *
+ * Consequence, stated because it is a real false negative: a heredoc whose BODY
+ * performs the write — `python3 - <<PY` opening a path — is invisible here. The
+ * class is a floor, and this is one of the reasons.
+ */
+export function stripHeredocBodies(cmd: string): string {
+    const marker = /<<-?\s*(['"]?)([A-Za-z_][A-Za-z0-9_]*)\1/g;
+    let out = '';
+    let cursor = 0;
+    let m: RegExpExecArray | null;
+    while ((m = marker.exec(cmd)) !== null) {
+        const tag = m[2] as string;
+        const nl = cmd.indexOf('\n', m.index + m[0].length);
+        if (nl === -1) break;
+        const close = cmd.indexOf(`\n${tag}`, nl);
+        const end = close === -1 ? cmd.length : close + tag.length + 1;
+        out += cmd.slice(cursor, m.index) + '<<' + cmd.slice(m.index + m[0].length, nl);
+        cursor = end;
+        marker.lastIndex = end;
+    }
+    return out + cmd.slice(cursor);
+}
+
+/**
+ * Quoted spans removed, heredoc bodies LEFT IN PLACE.
+ *
+ * The sibling of `stripLiterals` for the write rules. That one must consume a
+ * heredoc, because an operator in its body is not chaining; this one must not,
+ * because the heredoc marker and the redirect share a command line and
+ * consuming to the closing tag takes the redirect with it.
+ */
+export function stripQuoted(cmd: string): string {
+    let out = '';
+    let i = 0;
+    let quote: string | null = null;
+    while (i < cmd.length) {
+        const c = cmd[i] as string;
+        if (quote) {
+            if (c === '\\' && quote === '"') {
+                i += 2;
+                continue;
+            }
+            if (c === quote) quote = null;
+            i += 1;
+            continue;
+        }
+        if (c === '\\') {
+            i += 2;
+            continue;
+        }
+        if (c === '"' || c === "'") {
+            quote = c;
+            i += 1;
+            continue;
+        }
+        out += c;
+        i += 1;
+    }
+    return out;
+}
+
 /** What the nudge saw, or null when the command is not chained work. */
 export function detectChaining(command: string): string | null {
-    const bare = stripLiterals(command);
+    return _detectChaining(stripLiterals(command));
+}
+
+function _detectChaining(bare: string): string | null {
     if (/^\s*[A-Za-z_][A-Za-z0-9_]*=/.test(bare) && /[;\n]/.test(bare)) {
         return 'a leading `VAR=…` assignment carrying state into a later segment';
     }
     if (/&&|\|\|/.test(bare)) return 'work steps chained with `&&` / `||`';
     if (/;\s*\S/.test(bare)) return 'work steps chained with `;`';
+    // The header names newlines among the host's split points and this rule did
+    // not read them, so `git status\ngit diff` — two work steps by any reading —
+    // was silent. Heredoc bodies are already gone from this view, so a
+    // multi-line heredoc command does not reach here.
+    if (/\n\s*\S/.test(bare)) return 'work steps separated by a newline';
+    return null;
+}
+
+/**
+ * The five shapes that fill a file's content from the shell, each matched on
+ * the literal-stripped command so a quoted mention cannot fire it.
+ *
+ * A positive list, not a redirect scan: `>` alone is a redirect and the header
+ * says a redirect is not flagged. What is flagged is a command whose named
+ * operation IS "put this content in that path", which is the operation Edit
+ * and Write perform without an expiring grant. `/dev/null` and an fd
+ * duplication (`2>&1`) are excluded because neither names a file being filled.
+ */
+const EDIT_BY_SHELL: ReadonlyArray<{ re: RegExp; seen: string }> = [
+    // `-i` may ride inside a flag cluster (`-ri`, `-Ei`) or carry a backup
+    // suffix (`-i.bak`), so the letter is matched inside the cluster rather
+    // than as a token. `sed -n 2,8p` and `sed -e s/a/b/ f` have no `i` in any
+    // flag and stay silent; `--expression=…` cannot match because the class
+    // admits letters only after the single leading dash.
+    {
+        re: /(^|[\s;&|(])sed\s+(?:-\S+\s+)*-(?:i|[nersuzE]*i[nersuzE]*|-in-place)(?:\.\S+)?(?=\s|$)/,
+        seen: '`sed -i` edits a file in place',
+    },
+    // The letter set is closed on purpose. Matching an `i` ANYWHERE in a flag
+    // cluster made `perl -Mstrict`, `perl -MList::Util` and `perl -Ilib` all
+    // report an in-place edit — the letters after `-M` and `-I` are a module
+    // name and a directory, not switches. Only perl's own one-letter switches
+    // may share the cluster with `i`.
+    {
+        re: /(^|[\s;&|(])perl\s+(?:-\S+\s+)*-(?:i|[pnlaw]*i[pnlaw]*)(?:\.\S+)?(?=\s|$)/,
+        seen: '`perl -i` edits a file in place',
+    },
+    // `[^\n]*` between the head and the redirect, so `cat <<'EOF' > out.txt`
+    // and `cat a b > merged` both land, while `> /dev/null` and an fd
+    // duplication (`2>&1`) are excluded by the lookahead at every position the
+    // engine tries.
+    // `[^\n|;&]*` — the redirect must belong to the SAME simple command. With
+    // `[^\n]*` this rule was a general redirect scanner for any cat-headed
+    // pipeline, so `cat f | grep x > out.txt` fired while the identical
+    // `grep x f > out.txt` stayed silent, which its own "positive list, not a
+    // redirect scan" comment forbids.
+    { re: /(^|[\s;&|(])cat\b[^\n|;&]*>{1,2}\s*(?!&|\/dev\/null)\S/, seen: '`cat >` fills a file from the shell' },
+    // A flag cluster before the path is normal (`tee -a out.txt`), and the path
+    // is REQUIRED. Dropping the original `(?!-)` lookahead to admit the flagged
+    // form turned a false negative into a false-positive class: `tee -a`,
+    // `foo | tee | wc -l`, `foo | tee -` and `tee -a /dev/null` all fired. The
+    // path token is therefore matched explicitly — not a flag, not a shell
+    // operator, not the null device.
+    {
+        re: /(^|[\s;&|(])tee\s+(?:-[A-Za-z]+\s+)*(?!\/dev\/null)[^-\s;&|<>][^\s;&|<>]*/,
+        seen: '`tee` writes its input to a file',
+    },
+];
+
+/** The interpreter form, split across the two views for the reason below. */
+const PY_AT_COMMAND_POSITION = /(^|[\s;&|(])python3?\s+-c\b/;
+const PY_OPENS_FOR_WRITING = /\bopen\s*\([^)]*['"][wax]\+?['"]/;
+
+/**
+ * What the write-shaped detector saw, or null when the call writes no file.
+ *
+ * `stripQuoted` rather than `stripLiterals` for the redirect rules: the
+ * heredoc branch of `stripLiterals` runs to the closing tag and swallows the
+ * command line with it, so `cat <<'EOF' > out.txt` lost its own redirect and
+ * the largest measured write shape went undetected in its most common spelling.
+ *
+ * The interpreter rule reads BOTH views, and needs to. Its program is a quoted
+ * argument, so the write mode is only visible in the raw string; but matching
+ * the raw string alone fires on any command that merely QUOTES the shape —
+ * `git commit -m "use python3 -c open(p,'w')"` did, and this change ships that
+ * exact string in a substitution table. So the interpreter must sit at a
+ * command position in the STRIPPED text, where a quoted mention has already
+ * been removed, and the write mode must be named in the RAW text.
+ */
+export function detectEditByShell(command: string): string | null {
+    return _detectEditByShell(command, writeView(command));
+}
+
+/** The view the write rules read: no heredoc bodies, no quoted spans. */
+export function writeView(command: string): string {
+    return stripQuoted(stripHeredocBodies(command));
+}
+
+function _detectEditByShell(command: string, quotesStripped: string): string | null {
+    for (const shape of EDIT_BY_SHELL) {
+        if (shape.re.test(quotesStripped)) return shape.seen;
+    }
+    if (PY_AT_COMMAND_POSITION.test(quotesStripped) && PY_OPENS_FOR_WRITING.test(command)) {
+        return 'a `python3 -c` one-liner opens a path for writing';
+    }
+    return null;
+}
+
+/** The two shape classes this concern carries. */
+export type NudgeClass = 'edit-by-shell' | 'chain';
+
+/** One finding: which class fired, and what it saw. */
+export interface NudgeFinding {
+    klass: NudgeClass;
+    seen: string;
+}
+
+/**
+ * The finding for this command, or null.
+ *
+ * `edit-by-shell` is tested first, and on a call that is both — `cd d && sed
+ * -i … f` is — it wins: its line names a primitive that costs no confirmation
+ * at all, while the chain line only explains why this one did.
+ */
+export function detectShape(command: string): NudgeFinding | null {
+    // Each view is built once. This runs on every shell tool call and the
+    // header documents 26 ms p95 as load-bearing, so calling the two exported
+    // wrappers here would strip the same string twice per call for nothing.
+    const write = _detectEditByShell(command, writeView(command));
+    if (write) return { klass: 'edit-by-shell', seen: write };
+    const chained = _detectChaining(stripLiterals(command));
+    if (chained) return { klass: 'chain', seen: chained };
     return null;
 }
 
@@ -190,30 +423,82 @@ function latchFile(root: string): string {
     return path.join(root, 'agents', 'runtime', 'state', 'chain-nudge.json');
 }
 
-function alreadyNudged(root: string, session: string): boolean {
+/** One session's latch: the object form, or the pre-two-class `true`. */
+type LatchEntry = boolean | Record<string, boolean>;
+
+/**
+ * Has `klass` already fired for this session?
+ *
+ * A legacy `true` is read as the chain class having fired, which is what the
+ * single-class version wrote it to mean. The write class is then unlatched in
+ * that session and gets its first line — correct, because it never had one.
+ */
+export function classAlreadyNudged(entry: LatchEntry | undefined, klass: NudgeClass): boolean {
+    if (entry === true) return klass === 'chain';
+    if (isObject(entry)) return entry[klass] === true;
+    return false;
+}
+
+/** `klass` recorded on top of whatever the entry already held. */
+export function withClassLatched(entry: LatchEntry | undefined, klass: NudgeClass): Record<string, boolean> {
+    const next: Record<string, boolean> = entry === true ? { chain: true } : isObject(entry) ? { ...(entry as Record<string, boolean>) } : {};
+    next[klass] = true;
+    return next;
+}
+
+/**
+ * The latch state, or `{}` for anything that is not a JSON object.
+ *
+ * The shape check is not decoration. `JSON.parse` returns `null` for a latch
+ * file holding `null` and a number for one holding `7`, neither of which throws
+ * — so the try/catch alone let a corrupted file reach the caller as a non-object
+ * and crash the property read. The helper this replaced guarded that by reading
+ * the property inside its own try; consolidating the read dropped the guard, and
+ * the header's "every failure path returns allow" stopped being true.
+ */
+function readLatch(root: string): Record<string, LatchEntry> {
     try {
-        const state = JSON.parse(fs.readFileSync(latchFile(root), 'utf-8')) as Record<string, boolean>;
-        return state[session] === true;
+        const parsed: unknown = JSON.parse(fs.readFileSync(latchFile(root), 'utf-8'));
+        return isObject(parsed as JsonValue) ? (parsed as Record<string, LatchEntry>) : {};
     } catch {
-        return false;
+        return {};
     }
 }
 
-function latch(root: string, session: string): void {
+/**
+ * Record `klass` into an ALREADY-READ state and persist it.
+ *
+ * The state is passed in rather than re-read: the caller has just consulted it
+ * to decide whether to fire, and reading the same file twice per firing call is
+ * the kind of hot-path waste this file's own ordering comment exists to avoid.
+ */
+function latch(root: string, session: string, klass: NudgeClass, state: Record<string, LatchEntry>): void {
     try {
         const p = latchFile(root);
-        let state: Record<string, boolean> = {};
-        try {
-            state = JSON.parse(fs.readFileSync(p, 'utf-8')) as Record<string, boolean>;
-        } catch {
-            /* fresh */
-        }
-        state[session] = true;
+        state[session] = withClassLatched(state[session], klass);
         fs.mkdirSync(path.dirname(p), { recursive: true });
         fs.writeFileSync(p, JSON.stringify(state));
     } catch {
         /* fail-open: a persistence failure must not break the tool call */
     }
+}
+
+/** The write-shape line — names the expiry, then the primitive without one. */
+export function editByShellReason(seen: string): string {
+    return (
+        `This Bash call writes a file through the shell: ${seen}. A write-shaped ` +
+        'Bash grant does not persist — the host saves a permanent rule for ' +
+        'read-only commands, while a write-shaped one lasts until session end, so ' +
+        'this same shape costs another confirmation next session. Edit and Write ' +
+        'carry no such expiry inside the working directory: Edit for a targeted ' +
+        'change, Write for a new file, the shell for reads. ' +
+        'See `token-efficiency` § One command per Bash call.'
+    );
+}
+
+/** The line for a finding, dispatched on its class. */
+export function reasonFor(finding: NudgeFinding): string {
+    return finding.klass === 'edit-by-shell' ? editByShellReason(finding.seen) : nudgeReason(finding.seen);
 }
 
 /** The nudge line — one line, names what was seen and what to do instead. */
@@ -247,8 +532,8 @@ export function main(): number {
     const command = bashCommand(envelope);
     if (!command) return EXIT_ALLOW;
 
-    const seen = detectChaining(command);
-    if (!seen) return EXIT_ALLOW;
+    const finding = detectShape(command);
+    if (!finding) return EXIT_ALLOW;
 
     const cwd = envelope['cwd'];
     const pr = envelope['workspace_root'] ?? envelope['project_root'];
@@ -256,10 +541,11 @@ export function main(): number {
     if (!enabled(root)) return EXIT_ALLOW;
 
     const session = sessionId(envelope);
-    if (alreadyNudged(root, session)) return EXIT_ALLOW;
+    const state = readLatch(root);
+    if (classAlreadyNudged(state[session], finding.klass)) return EXIT_ALLOW;
 
-    latch(root, session);
-    process.stdout.write(`${JSON.stringify({ decision: 'warn', reason: nudgeReason(seen) })}\n`);
+    latch(root, session, finding.klass, state);
+    process.stdout.write(`${JSON.stringify({ decision: 'warn', reason: reasonFor(finding) })}\n`);
     return EXIT_WARN;
 }
 
