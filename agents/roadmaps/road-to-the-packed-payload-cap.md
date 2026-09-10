@@ -63,7 +63,7 @@ reproduce the measurement and may not act on it.
 
 ## Phase 1 — The decision
 
-- [ ] **1.1 Pick one of (a), (b), (c)** below and execute it in a change that is
+- [x] **1.1 Pick one of (a), (b), (c)** below and execute it in a change that is
       *only* that. A budget move buried in a feature branch is how the
       2026-08-24 cap trip became a merge artifact nobody could attribute.
       verify: `./scripts-run src/scripts/check_pack_size` exits 0 on a clean
@@ -105,11 +105,82 @@ reproduce the measurement and may not act on it.
       execution run may reproduce the measurement and may not act on it. The
       measurement is now sharp enough to decide against.
 
+      **DONE 2026-09-10 — option (a), decided by an AI council over three rounds
+      under an owner delegation, recorded in `ADR-273`.** The 2026-09-09 note
+      above stands as written and is superseded only in its last paragraph: the
+      decision the maintainer owned was delegated, and the council took it.
+
+      **Both axes were red, not one.** The 2026-09-09 reproduction measured the
+      BUILT route only. A clean checkout with no build takes the UNBUILT route
+      and read **10.503 against `max` 9.1** — and the UNBUILT route is the one
+      this step's own `verify:` names, because "a clean `origin/main` checkout
+      with no local edits" has no `dist/cli/**`. So the closing condition was
+      never the axis the earlier note measured.
+
+      **Two defects were separated from the growth before anything was reset.**
+      (1) 25 gitignored `__pycache__/*.pyc` files were being packed —
+      `.npmignore` cannot withhold what `files[]` admits — which is why the
+      binary axis read 28 observed against 3 allowed. (2) `dist/cli-delegate`
+      held **105 esbuild chunks dated 2026-07-31 through 2026-09-07**: three
+      esbuild runs share one `--outdir` with `--splitting`, names are
+      content-hashed, and none cleaned the directory. Fixed in this change by
+      prefixing `build:cli-delegate` with `rm -rf dist/cli-delegate`; worth
+      **−1.32 MB packed**. Defect-pattern search reported with its count: exactly
+      one further instance, `build:cli` (`tsc`, same missing clean), measured at
+      0.158 MB and NOT fixed here because `dist/install` is tracked and shares
+      that output root.
+
+      **The old baseline was polluted too, and it was reconstructed rather than
+      assumed.** `ab398ed05` checked out detached, `npm ci` against its own
+      lockfile, full `npm run build`, packed: **10.1467 MB / 2785 entries** clean
+      against **10.5525 / 2808** recorded. Real clean-to-clean growth is
+      **+2.3424 MB / +456 entries**, *larger* than a naive subtraction — the
+      pollution masked growth rather than inventing it.
+
+      **The attribution both earlier readings would have got wrong.** Measured in
+      PACKED bytes by `files[]` negation: `src/scripts` **6.0231 MB (48.2 %)**,
+      `dist/agent-src` 2.6187, `dist/cli-delegate` 0.6462, `dist/mcp` 0.5319,
+      `src/vendor` **0.3752**, `dist/hooks` 0.3308. Two council rounds had
+      asserted WASM "compresses poorly" and that the tree-sitter grammars
+      explained most of the growth; 3.807 MB unpacked → 0.3752 packed is ~90 %
+      compression, so they are 19 % of it, not the majority.
+
+      **`src/scripts` was proven necessary rather than grandfathered.** Both
+      seats specified a differential packed-consumer test and both proposed
+      carrying it as a provisional clause. It was RUN: two real tarballs (12.489
+      MB full, 6.466 MB with `!src/scripts/**`), each installed `--omit=dev` into
+      an empty project and driven through twelve entry points. The stripped
+      install fails **every** command but `--version` and `--help` with rc=127 on
+      a missing `src/scripts/_dispatch.bash` — the shipped consumer entry point,
+      which routes only SOME commands to `dist/cli-delegate/`. The provisional
+      clause is discharged here, not carried.
+
+      **What landed:** `max` 9.1 → **11.5** (`10.5056 × 1.095 = 11.5036`, rounded
+      DOWN, stricter than the formula), `last_measured` → 10.5056, a new
+      `built_surface_measurement_2026_09_10` recording unbuilt 10.5056/3037 and
+      built 12.4539/3240, the 2026-08-24 record annotated in place (**not**
+      renamed — one seat's rename proposal rested on the selector skipping it,
+      and `check_pack_size.ts:599-601` matches the prefix either way), and the
+      build fix.
+
+      verify RESULT: unbuilt route **10.506 ≤ 11.5 ✅**, built route
+      **12.454 ≤ 13.699 ✅**, all four content classes 0, binary axis 3/3.
+
 ## Blockers
 
 ### blocker: pack-size-budget-preexisting-overage
 
-- **Status:** open
+- **Status:** resolved 2026-09-10. Option (a) taken by an AI council over three
+  rounds under an owner delegation, recorded in `ADR-273`, executed in the same
+  change as the build defect fix. Both gate routes green: unbuilt 10.506 against
+  the reset `max` 11.5, built 12.454 against the derived ceiling 13.699. The
+  entry below is left standing as written, because every number in it was
+  correct for the surface it measured and the `What to do` list is what this
+  resolution followed. Two of its premises did change and are named here rather
+  than edited into the body: its costing advice *"start from 12.140 against
+  10.5525"* rested on a baseline now proven to carry 0.4058 MB of stale build
+  output, and its `If you do nothing` said the gate's size axis was dead — it is
+  live again, on both routes.
 - **Owner:** maintainer
 - **Blocks:** step 1.1 of this roadmap, and nothing else anywhere. **CORRECTED
   ON RELOCATION** — in its original home this field read "nothing in this
@@ -179,7 +250,10 @@ reproduce the measurement and may not act on it.
   3. Whichever is chosen, do it in a change that is *only* that.
 - **Resolved when:** `./scripts-run src/scripts/check_pack_size` exits 0 on
   `origin/main` with no local edits, and `pack-size-budget.json` records the
-  tree its figures were measured in.
+  tree its figures were measured in. MET 2026-09-10 on both counts:
+  `built_surface_measurement_2026_09_10` records the commit, the command, the
+  build state and the machine class for every figure it carries, and the gate
+  exits 0 on the unbuilt route this condition describes.
 - **Review trigger:** `budgets.packed_size_mb.review_by: 2027-07-31`. Unchanged
   by the relocation.
 
@@ -256,11 +330,33 @@ substitution this repository's own discipline exists to catch.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 `./scripts-run src/scripts/check_pack_size` exits 0 on a clean
+- [x] AC-1 `./scripts-run src/scripts/check_pack_size` exits 0 on a clean
       `origin/main` checkout with no local edits.
-- [ ] AC-2 `src/config/pack-size-budget.json` records the tree its figures were
+      MET 2026-09-10 on BOTH routes, which is more than this line asks and is
+      stated because the distinction cost this roadmap a round: a clean checkout
+      with no build takes the UNBUILT route and reads **10.506 against the reset
+      `max` 11.5**; the same tree after a full build takes the BUILT route and
+      reads **12.454 against the derived ceiling 13.699**. All four content
+      classes read 0 and the binary axis is 3 observed / 3 allowed — that last
+      one was 28/3 before this change, because 25 gitignored `__pycache__/*.pyc`
+      files were being packed through `files[]`.
+- [x] AC-2 `src/config/pack-size-budget.json` records the tree its figures were
       measured in, per the convention every `baseline_note_*` in that file
       already follows.
-- [ ] AC-3 Whichever of (a) / (b) / (c) was taken is recorded in that file with
+      MET 2026-09-10. `built_surface_measurement_2026_09_10` carries, per
+      figure: the exact command, whether the tree was built, the entry count,
+      and the machine class. It also states plainly that every number is a
+      workstation reading and that no CI reading exists or can, because
+      `check_pack_size` has no `.github` invocation — only
+      `taskfiles/ci-fast.yml:846`.
+- [x] AC-3 Whichever of (a) / (b) / (c) was taken is recorded in that file with
       its measurement, its method, and the alternatives that were examined and
       rejected — the shape its existing notes use.
+      MET 2026-09-10. Option (a), in `baseline_note_2026_09_10` and
+      `built_surface_measurement_2026_09_10`, with the full record in `ADR-273`:
+      the `× 1.095` derivation, the historical clean reconstruction at
+      `ab398ed05` that proved the old comparator carried 0.4058 MB of pollution,
+      the packed-bytes attribution table that refuted the council's own
+      compression premise, the differential packed-consumer test that proved
+      `src/scripts` load-bearing, and each of (b), (c) and the two rejected
+      procedural proposals with the reason it was rejected.
