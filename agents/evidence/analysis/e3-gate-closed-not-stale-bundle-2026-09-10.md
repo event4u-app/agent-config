@@ -2,7 +2,7 @@
 title: The E3 injection gate is closed by configuration, not by a stale hook bundle
 date: 2026-09-10
 ---
-<!-- evidence-type: v1 | type: analysis | declared: 2026-09-10 -->
+<!-- evidence-type: analysis -->
 
 # The E3 injection gate is closed by configuration, not by a stale hook bundle
 
