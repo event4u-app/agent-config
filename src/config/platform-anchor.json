@@ -1,0 +1,24 @@
+{
+    "$comment": "The platform configuration the ratification mechanism's trust argument depends on, committed IN THE REPOSITORY so that changing the EXPECTATION is itself a reviewable governance diff rather than a settings change nobody sees. Written 2026-09-10 to the specification of an AI council (anthropic/claude-sonnet-4-5 + openai/codex-default, 2/2 convergent, 2 rounds, blind peer review) under a written owner delegation, resolving blocker `ratification-platform-anchor` of `agents/roadmaps/road-to-typed-grants-that-persist.md`. Both seats required that only generic evaluation logic live in code and that this file sit on the gated-surface list, so a policy-only edit reds `check_kernel_edit_ratified` without its own ratification. openai additionally required a non-negotiable floor embedded in the verifier itself, so that an edit HERE cannot set `minimum_approving_reviews` to 0 and make itself green; that floor is `NON_NEGOTIABLE_FLOOR` in `src/scripts/_lib/platform_anchor.ts` and this file is rejected when it falls below it.",
+    "schema_version": 1,
+    "repository": "event4u-app/agent-config",
+    "required": {
+        "enforcement": "active",
+        "target": "branch",
+        "covers_default_branch": true,
+        "minimum_approving_reviews": 1,
+        "require_last_push_approval": true,
+        "required_review_thread_resolution": true,
+        "block_deletion": true,
+        "block_non_fast_forward": true,
+        "strict_required_status_checks": true,
+        "required_status_check_contexts": [
+            "Sync + Generate Tools Consistency"
+        ],
+        "allow_unconditional_bypass": false
+    },
+    "required_status_check_contexts_note": "The context that CARRIES the ratification gate, not the gate's own script name. `check_kernel_edit_ratified` is a STEP inside the `Sync + Generate Tools Consistency` job (`.github/workflows/consistency.yml:811-825`), and a GitHub required status check pins a job's reported context, never the steps inside it. This distinction is load-bearing and was corrected mid-decision: the council question asserted that the gate 'is not a required status check at all', which measurement then falsified — the containing job IS the ruleset's one required context. What survives the correction, and what the round-2 ratification review actually refused the deny-retirement over, is that pinning a job name does not pin its steps: a candidate branch may delete the gate's step and the job still reports the same context, green. A required context is therefore necessary and not sufficient, and this file asserts the necessary half.",
+    "threat_model_note": "UNRESOLVED, and named rather than assumed. openai/codex-default made this an explicit condition: the contract must state whether repository administrators are inside the threat model. Measured 2026-09-10, `bypass_actors` carries `{actor_type: RepositoryRole, actor_id: 5, bypass_mode: always}` and the acting account reports `current_user_can_bypass: always`, so every rule above is advisory for that actor. `allow_unconditional_bypass: false` records the council's answer for the mechanism's own surface — an unconditional bypass actor is a FAILURE — but whether the owner intends administrators as a deliberate root-of-trust escape hatch is an owner question this file cannot answer. Until it is answered the mechanism supplies process evidence, not a platform-enforced guarantee, which is what `docs/contracts/ratification-artifact.md` now says.",
+    "evaluation_note": "The verifier evaluates the EFFECTIVE combination of every applicable ACTIVE branch ruleset, never a single ruleset by id or name. openai required this explicitly: ruleset 17749383 ('main protection') is what exists today, and assuming its id, its name, or that one monolithic ruleset carries every rule would make the check wrong the first time an administrator splits it.",
+    "revisit_if": "The repository's governance model changes; or the default branch's protection moves back to classic branch protection (this file's evaluator reads rulesets, and `repos/{owner}/{repo}/branches/main/protection` returned 404 on 2026-09-10); or the job that carries the ratification gate is renamed, in which case `required_status_check_contexts` names a context that no longer exists and the verifier reds until this file is corrected."
+}
