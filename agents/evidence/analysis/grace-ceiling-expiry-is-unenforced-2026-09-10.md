@@ -49,6 +49,34 @@ $ grep -n "new Date\|Date.now\|toISOString\|expire\|expiry" src/scripts/check_pr
 
 `taskfiles/ci-fast.yml` reads `grace_ceiling` (`:884`) and does not read the date.
 
+### The grep above is CODE-scoped, and that mattered
+
+`--include=*.ts --include=*.yml --include=*.yaml --include=*.json` cannot see a
+markdown consumer, so the first version of this artifact established "no code
+reads the date" and the ADR built on it said "the only consumers **in the tree**".
+The completion review caught the gap. The `.md` sweep, run afterwards:
+
+```
+$ grep -rln "2026-11-10" --include="*.md" .   # minus node_modules, dist/, archive/, runtime/
+agents/roadmaps/road-to-delivery-for-every-host.md          (this roadmap, corrected)
+agents/roadmaps/stubs/road-to-preamble-transfer-debt-221.md (probe step, corrected)
+agents/roadmaps/later/road-to-database-erd-landing.md       (wake trigger, corrected)
+agents/roadmaps/later/road-to-database-relational-modeling.md (wake trigger, corrected)
+agents/settings/contexts/cache-injection-anatomy.md         (a `review by:` date, unrelated)
+```
+
+Two of those were **live parked roadmaps** carrying the expiry as a `Revisit-if`
+wake trigger — *"The `grace_end_date` of 2026-11-10 is a second trigger: at that
+date the design ceiling of 107,646 applies"*. A park whose exit condition is an
+event no code produces is a park with no exit, so both were repaired in the same
+change rather than left as stale prose. The remaining hits in
+`agents/roadmaps/archive/` and in dated evidence artifacts are historical records
+and are deliberately untouched.
+
+The distinction the first draft blurred is worth keeping: **a code consumer makes
+the date do something; a prose consumer makes a reader plan around it.** Only the
+first was searched, and the second was where the live damage was.
+
 ## What actually happens on 2026-11-10
 
 The workflow reads `ci_delivery.grace_ceiling` — 138,490 — passes it as `--ceiling`, and the

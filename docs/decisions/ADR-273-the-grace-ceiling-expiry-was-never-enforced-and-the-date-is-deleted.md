@@ -6,7 +6,7 @@ decision: grace-end-date-deleted-because-nothing-enforced-it-ceiling-kept-undate
 supersedes: —
 superseded_by: —
 type: structural
-reopen_policy: directional
+reopen_policy: owner
 protected_dimensions: governance
 provenance:
   kind: agentic
@@ -14,7 +14,7 @@ provenance:
   decision_makers: [council]
   human_directed: true
 evidence:
-  strength: E3
+  strength: E1
   basis:
     - agents/evidence/analysis/grace-ceiling-expiry-is-unenforced-2026-09-10.md
     - src/config/preamble-payload-budget.json
@@ -30,7 +30,11 @@ review_trigger: >-
   `tests/scripts/check_preamble_payload_budget.test.ts` fails in that case, and a
   deliberate reintroduction has to reopen this rather than route around the pin.
   Also reopened if the base-ref-derived growth bound rejected here is specified
-  and separately reviewed.
+  and separately reviewed. And reopened when ADR-264's third `review_trigger`
+  clause is repaired or that record is superseded — this record is the tracked
+  carrier for that unfirable trigger, because nothing else tracks it and a prose
+  bullet in a neighbouring ADR is the discoverability failure that let the
+  original fiction survive.
 ---
 
 # ADR-273 — the grace ceiling's expiry was never enforced, so the date is deleted rather than moved
@@ -57,15 +61,34 @@ only consumers of `grace_end_date` in the tree were an `echo` on
 `standing-payload-delta.yml:130` and the return-type annotation of a test helper
 (`check_preamble_payload_budget.test.ts:165,168`, asserting nothing), and
 `check_preamble_payload_budget.ts` matched none of `new Date`, `Date.now`,
-`toISOString`, `expire`, `expiry`. On 2026-11-10 the workflow would have read
+`toISOString`, `expire`, `expiry`. **Those were the only consumers in CODE, and
+the first draft of this sentence said "in the tree" — an over-claim, caught by
+the completion review.** The reproducing grep restricted itself to
+`*.ts *.yml *.yaml *.json`, so no markdown consumer was ever visible to it, and
+two live parked roadmaps carried the date as a wake trigger. They are repaired in
+the same change (`agents/roadmaps/later/road-to-database-erd-landing.md`,
+`agents/roadmaps/later/road-to-database-relational-modeling.md`): a park whose
+exit condition is an event no code produces is a park with no exit. On 2026-11-10 the workflow would have read
 `grace_ceiling` 138,490 exactly as before, passed it as `--ceiling`, and every
 pull request would have continued to pass. The full reproduction is in
 `agents/evidence/analysis/grace-ceiling-expiry-is-unenforced-2026-09-10.md`.
 
 The measurement half was never in doubt and is unaffected: measured total
 138,413, `baseline_tokens` 102,520, `design_ceiling` 107,646, `grace_ceiling`
-138,490 with a shrink-only ratchet enforced against the base ref by
+138,490 with a shrink-only ratchet checked against the base ref by
 `assertBoundsDidNotRise`. What did not exist was the **time** limb.
+
+**That ratchet is conditional, not absolute, and saying so is load-bearing here.**
+`src/scripts/_lib/standing_bound_ratchet.ts:94-135` returns `ok: true` on four
+base-ref failure modes — no base ref resolved, the budget config unreadable at
+the base ref, unparseable, or carrying no `ci_delivery.grace_ceiling` there —
+each with an honest `note` and a passing verdict. So it **fails open** on a
+shallow clone or an unresolvable merge base. This paragraph originally called it
+"enforced" flat, and § Alternatives below disqualifies the base-ref-derived
+ceiling proposal on precisely this property. One standard, one answer: the
+ratchet is real where the base ref resolves, it is the only enforced mitigation
+this change leaves standing, and that makes its failure-open behaviour more
+consequential after this record than before it.
 
 This mattered because three consecutive decisions were taken on the false
 premise. Step 4.4 of `road-to-delivery-for-every-host` escalated to the owner on
@@ -109,9 +132,16 @@ to say, none of them moved:
   closing on a date.
 - **The ~30,800-token gap is unresolved and now visibly undated.** That is a
   loss of a (fictional) forcing function, recorded rather than softened.
-  `status_2026_08_24.committed_reduction_mechanism` remains the string `"NONE"`,
-  and `target_schedule.milestones` still carries 102,520 by 2026-11-10 with an
-  `on_miss` clause requiring the miss to be published with its measured number.
+  `status_2026_08_24.committed_reduction_mechanism` still opens with `NONE` — its
+  value is a paragraph explaining why the absence is the finding, not the bare
+  token an earlier draft of this line quoted — and `target_schedule.milestones`
+  still carries 102,520 by 2026-11-10 with an `on_miss` clause. **That clause is
+  prose with no reader:** `grep -rn "target_schedule"` and `grep -rnw on_miss`
+  over `*.ts *.js *.yml *.yaml *.sh` outside `dist/` return 0 hits, so nothing
+  publishes anything on that date either. It is named here as an unenforced
+  commitment rather than offered as the replacement forcing function, which is
+  the mistake the completion review caught in this change's own risk
+  register.
   Those milestones are untouched by this record: they are owner-set, they were
   never the enforcement surface, and the first of them will be missed and
   published on schedule.
@@ -119,11 +149,67 @@ to say, none of them moved:
   date-driven event no code produces. ADR-264 is deliberately **not edited
   here**: its `reopen_policy` is `owner`, its cap survives this change untouched,
   and nothing in this decision needs it reopened. The unfirable clause is named
-  here so the next reader of that record does not wait for it.
+  here so the next reader of that record does not wait for it, and this record's
+  own `review_trigger` carries the repair so the dead clause has a tracked
+  carrier rather than only a prose mention.
 - Step 4.4 of `road-to-delivery-for-every-host` and its acceptance criterion
   **stay open**. Both seats were explicit: the grace ceiling remains, so *"grace
   ceiling gone"* is false, and neither the deletion of a date nor a stub carrier
   may be read as closing them.
+
+## The authority question, recorded rather than glossed
+
+The completion review raised this and it is the strongest objection to this
+record, so it is answered in the open rather than left to the reader.
+
+`road-to-delivery-for-every-host` twice recorded the date dimension as
+owner-reserved. anthropic, verbatim in that file: *"Owner-reserved for extending
+`grace_end_date` beyond 2026-11-10 — extending the date increases permitted
+exposure duration and is a substantive relaxation requiring owner authority."*
+And: *"a split council does not acquire authority a converged one was denied."*
+
+**Deleting the bound is larger in that dimension than the extension that was
+reserved, not smaller.** An extension to 2026-12-15 would have lengthened
+permitted exposure by 35 days; deleting the field leaves it unbounded. The
+argument that the field was unenforced answers the *executable* half — nothing
+changes about what CI does — and it does not by itself answer the *governance*
+half, because the reservation was recorded against exposure **duration** as a
+commitment, and a commitment can be relaxed by deleting it as surely as by
+re-dating it.
+
+Three things are true at once and the record keeps all three:
+
+1. **The authority exists.** The written owner delegation covering this drain run
+   is what both councils were told they held, and both rounds decided under it.
+   That is the sign-off this decision rests on.
+2. **What the delegation cannot do is make the reservation disappear
+   retroactively.** So the deletion is recorded here as an exercise of delegated
+   owner authority in an owner-reserved dimension — not as a dimension that
+   turned out to be council-decidable after all.
+3. **The venue for reopening is therefore not this body's to set.**
+   `reopen_policy` was drafted `directional` and is corrected to `owner`: a
+   council that has just acted in an owner-reserved dimension may not also assign
+   itself the right to revisit that action. If the owner reads this and wants the
+   date back — at any value, enforced or not — that is a reopen this record
+   invites rather than resists.
+
+## The evidence grade, and why it came down
+
+Drafted `E3`, corrected to `E1`. `docs/contracts/adr-layout.md:178-181` defines
+E1 as *"One local observation — one incident, consumer, measurement, tree
+constraint"* and reserves E3 for a pre-registered benchmark, production data, an
+established community standard, or applicable vendor guidance. The basis here is
+one dated inspection of one commit: four greps, one gate run, and one sabotage
+probe. That is an E1 basis however conclusive it feels, and the repository's own
+`adr-evidence-census` independently computes `E1 — one dated local observation`
+for this record in the same change.
+
+The correction matters in one direction specifically. `adr-layout.md:464` prices
+the reopen burden on the grade, so an inflated grade would have raised the bar
+for reopening a governance record — the opposite of what a record decided on a
+single day's inspection should do. Sibling ADR-264, on the same subject with a
+stronger evidence resolution, declares `E2`; claiming `E3` here would have put
+this record above it.
 
 ## Alternatives
 

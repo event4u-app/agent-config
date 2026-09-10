@@ -202,20 +202,20 @@ describe('the grace ceiling is enforced and undated', () => {
         expect(readText('taskfiles', 'ci-fast.yml')).not.toContain("['grace_end_date']");
     });
 
-    it('still ENFORCES the grace ceiling, which is the half that was always real', () => {
-        // Deleting the date must not have loosened the bound. The ceiling is
-        // still compared against the measured total, still above the design
-        // ceiling, and still the number the CI step passes.
+    it('still carries the ceiling the CI step passes, and it is above the design number', () => {
+        // Deleting the date must not have loosened the bound. What the ceiling
+        // DOES is asserted where that behaviour already lives and is not
+        // duplicated here: `the gate reds on growth past whichever ceiling
+        // applies` below owns the exit codes (and carries the caveat that a
+        // future reduction inverts one of them), and `the --ceiling override may
+        // only ever be LOOSER` owns the override direction. Re-asserting either
+        // would split one property across two places, and the copy would be the
+        // one without the caveat.
         const grace = rawCiDelivery().grace_ceiling;
         expect(typeof grace, 'ci_delivery.grace_ceiling must exist').toBe('number');
-        expect(main(['--ceiling', String(grace)])).toBe(0);
-        expect(main([])).not.toBe(0);
-    });
-
-    it('refuses a ceiling override that is TIGHTER than design, so the bound cannot be lowered by a caller', () => {
-        const b = readBudget();
-        const design = Math.round(b.baseline_tokens * (1 + b.headroom_pct / 100));
-        expect(evaluate(undefined, undefined, design - 1).ceiling).toBe(design);
+        expect(grace).toBeGreaterThan(
+            Math.round(readBudget().baseline_tokens * (1 + readBudget().headroom_pct / 100)),
+        );
     });
 });
 

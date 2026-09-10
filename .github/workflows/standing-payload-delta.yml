@@ -31,7 +31,8 @@ name: Standing Payload Delta
 # delegation; ADR-273), because moving it re-publishes the same fiction with a
 # later number, and BUILDING the expiry was forbidden in the same verdict — it
 # would arm a repo-wide stop on a date where the budget file still records
-# `committed_reduction_mechanism: NONE`.
+# `committed_reduction_mechanism` opening with NONE — a field whose value is a
+# paragraph, not the bare token, so it is paraphrased here rather than quoted.
 # Full record, including why one CI run is a sufficient sample for a deterministic
 # census: `src/config/preamble-payload-budget.json` → `ci_delivery`.
 #
