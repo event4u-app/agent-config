@@ -1,12 +1,12 @@
 # Findings: drain-delivery-for-every-host-4-4-close
-<!-- completion-review: v1 | reviewed: 2026-09-10 | scope: 4c2de56a7eb206daca8917c512d7d0900e2a81309ddce43681d88103ca405250 | diff: fd54b3585493c289c27acc83b625789f7bfbf17d | reviewer: r2-fresh-subagent-drain-delivery-for-every-host-4-4-close | prompt_hash: 536d48566fe4545b90c8be070fada56757ecec4ead1a9158cd68df5eb5e21ea8 -->
+<!-- completion-review: v1 | reviewed: 2026-09-10 | scope: 9635992650399f50fe1650fdef514ae8b4558201e8d865249bd39db84d6eac3a | diff: c4658aa959c9b4f4b29f1afef26e15cbc18c2bcb | reviewer: r2-fresh-subagent-drain-delivery-for-every-host-4-4-close | prompt_hash: 536d48566fe4545b90c8be070fada56757ecec4ead1a9158cd68df5eb5e21ea8 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-drain-delivery-for-every-host-4-4-close"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-09-10 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: fd54b3585493c289c27acc83b625789f7bfbf17d
-  scope_hash: 4c2de56a7eb206daca8917c512d7d0900e2a81309ddce43681d88103ca405250
+  diff_sha: c4658aa959c9b4f4b29f1afef26e15cbc18c2bcb
+  scope_hash: 9635992650399f50fe1650fdef514ae8b4558201e8d865249bd39db84d6eac3a
   roadmap: agents/roadmaps/road-to-delivery-for-every-host.md
   roadmap_hash: 98596f5cd2448999be39bea2ddca796d226ae12b409575f9fd9421cb3410afbe
   ac_hash: b163bc3793e2d2f793a4e23026b709aeb5a5cad245c5f9963eef1485cc5c1a70
@@ -35,6 +35,23 @@ rebound: 2026-09-10T08:55:00Z
   `agents/evidence/reviews` is excluded from the review scope
   (`dispatch_r2_reviewer.ts:115-118`), so this re-bind is a fixed point rather
   than a chase.
+-->
+<!-- rebind: v1
+rebound: 2026-09-10T09:20:00Z
+  SECOND re-bind, same contract 2.7 path 1, all 9 rows still terminal. scope
+  4c2de56a7eb2 -> 96359926503, diff fd54b3585493 -> c4658aa959c9. `roadmap_hash`
+  and `ac_hash` are both UNCHANGED (98596f5cd244 / b163bc3793e2): this move
+  touched only `ADR-273` and its two derived files, not the roadmap and not the
+  acceptance criteria.
+  Why a second one was owed rather than avoidable: closing finding 6 lowered
+  `evidence.strength` from E3 to E1, and the ADR index carries that grade in a
+  column, so CI went red on `stale: docs/decisions/INDEX.md` — the derived-file
+  half of the same finding. Regenerating the index and the census moved the
+  reviewed content again, which is the normal consequence of remediating inside
+  a reviewed scope and is why the contract has this path at all.
+  No finding is re-opened by it. The scope hash converged after this re-bind:
+  `agents/evidence/reviews` is excluded from the scope, so writing this block is
+  not itself a further move.
 -->
 
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
