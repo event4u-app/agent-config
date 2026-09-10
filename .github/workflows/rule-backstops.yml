@@ -608,3 +608,24 @@ jobs:
 
       - name: Roadmaps schedule no full-pipeline CI steps
         run: ./scripts-run src/scripts/lint_roadmap_ci_steps
+
+      # `check_platform_anchor` is NOT wired here, and the reason is a platform
+      # capability rather than a choice.
+      #
+      # It reads `repos/{owner}/{repo}/rulesets`, which needs the repository
+      # `administration` permission. That scope does not exist for a workflow
+      # `GITHUB_TOKEN`: actionlint refused `administration: read` outright —
+      # "unknown permission scope" — and listed the sixteen scopes that do
+      # exist, none of which grants it. So the token structurally cannot read
+      # the rulesets, the gate would report UNVERIFIABLE, and because it fails
+      # closed by design that would red every kernel and governance pull
+      # request for a reason unrelated to the platform's actual state.
+      #
+      # Wiring it anyway would need a PAT in a repository secret with
+      # `administration: read` — a human action, recorded as the open half of
+      # blocker `ratification-platform-anchor`. The alternatives were rejected
+      # on the council's own reasoning: `continue-on-error` makes it advisory,
+      # and skipping when unauthenticated makes it fail open. Until the secret
+      # exists the gate runs in `taskfiles/ci-fast.yml` only, which is a real
+      # pre-push control and not a CI one, and this comment is here so the next
+      # reader does not spend the cycle re-discovering the scope list.

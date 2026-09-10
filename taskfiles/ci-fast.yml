@@ -150,6 +150,11 @@ tasks:
       # it reads a name-only diff and, on the overwhelming majority of PRs,
       # finds no kernel rule and no governance hook and exits at once.
       - ./scripts-run src/scripts/check_kernel_edit_ratified
+      # The platform half of the same mechanism: the artifact records who
+      # reviewed, this checks the forge actually required anyone to. Same cheap
+      # shape — it consults the network only on a diff that already needs
+      # ratification, so an ordinary PR exits before the first API call.
+      - ./scripts-run src/scripts/check_platform_anchor
       # Catches the one failure that is invisible to CI AND to the test suite:
       # a self-hosted hook bundle older than the hook sources it bundles, i.e.
       # the agent running a merged hook fix that was never built. On 2026-08-06
@@ -2074,6 +2079,21 @@ tasks:
       tool-call deny, not in place of it: a two-round independent review refused
       the replacement while the required check is not platform-anchored.
     cmd: ./scripts-run src/scripts/check_kernel_edit_ratified {{.QUIET_FLAG}}
+
+  # Same desc discipline as its sibling above: no other `src/scripts/…` path in
+  # the prose before the cmd, or `scriptOf` reads the wrong script.
+  check-platform-anchor:
+    silent: true
+    desc: >-
+      The platform half of the ratification mechanism. The artifact records who
+      reviewed a kernel or governance edit; this checks the forge actually
+      required anyone to — an active branch ruleset over the default branch, at
+      least one approving review, last-push approval, deletion and force-push
+      blocked, strict required checks carrying the context the ratification gate
+      runs in, and no unconditional bypass actor. Fails closed: a platform state
+      it cannot read is UNVERIFIABLE, which is a failure and not a pass. Fires
+      only on a diff that already requires ratification.
+    cmd: ./scripts-run src/scripts/check_platform_anchor {{.QUIET_FLAG}}
 
   check-gate-coverage:
     silent: true
