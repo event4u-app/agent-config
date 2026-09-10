@@ -108,24 +108,112 @@ it does and does not cover:
    that judges it. The quorum policy is read from the script's own tree for the
    same reason — otherwise the same PR could lower `required_providers` and
    have the base gate honour it.
-2. **The platform is supposed to hold the merge — and measured, it does not.**
-   Protected branches and required approvals are what would make a landed
-   artifact mean something. `check_platform_anchor` now reads the live rulesets
-   and compares them against `src/config/platform-anchor.json`, so the gap is at
-   last measurable instead of assumed. What it measures today is a failure; see
-   § The platform anchor as measured, below. Until that reads compliant, this
-   layer carries no weight and the reader should not credit it with any.
+2. **The platform holds the branch, and deliberately not the reviewer.**
+   `check_platform_anchor` reads the live rulesets and compares them against
+   `src/config/platform-anchor.json`, so what the forge enforces is measured
+   rather than assumed. What it enforces here is branch integrity — an active
+   ruleset over the default branch, deletion and force-push blocked, strict
+   required checks, the context that carries the ratification gate, no
+   unconditional bypass actor. It does **not** include an approving review, by
+   owner ruling; see the next section, which states exactly what a green anchor
+   is and is not evidence of. Read that before crediting this layer with
+   anything.
 3. **The artifact is the durable record.** It is what a later reader opens to
    learn who reviewed what, and on what basis.
 
-### The platform anchor as measured
+### What a green platform anchor does and does not establish
 
 ```
-MEASURED 2026-09-10 ON `event4u-app/agent-config`: THE PLATFORM DOES NOT
-REQUIRE AN INDEPENDENT REVIEWER, AND AN ADMINISTRATOR BYPASSES EVERY RULE.
-UNTIL THAT CHANGES, THIS MECHANISM SUPPLIES PROCESS EVIDENCE — NOT A
-PLATFORM-ENFORCED RATIFICATION GUARANTEE. DO NOT CITE IT AS ONE.
+A GREEN ANCHOR PROVES THE OBSERVED PLATFORM CONFIGURATION MATCHES THIS
+REPOSITORY'S DECLARED, MECHANICALLY TESTED BASELINE AT THE TIME CHECKED.
+IT PROVES NOTHING ELSE. IT DOES NOT PROVE INDEPENDENT APPROVAL, SEPARATION
+OF DUTIES, PROTECTION AGAINST ADMINISTRATOR ACTION, OR THAT THE BASELINE
+ITSELF WAS INDEPENDENTLY AUTHORIZED. DO NOT CITE IT AS ANY OF THOSE.
 ```
+
+**This repository does not require an approving review, by owner ruling of
+2026-09-10, and that is a trust-model choice rather than a gap.** One
+maintainer is active; four other accounts hold write access and are rarely
+available, so a mandatory approval is a stop rather than a control. The two
+approval dimensions were therefore removed from the anchor's enforced set and
+from its non-negotiable floor — **not** waived as exceptions, because a
+dimension outside the trust model is not a suspended rule. Full record,
+including who may do this again and on what evidence:
+`owner_ruling_2026_09_10` in `src/config/platform-anchor.json`.
+
+**The vocabulary this contract may no longer use**, because each of these
+would now be false: *independent approval* · *separation of duties* · *no
+unilateral governance changes* · *administrator-resistant* · any claim that a
+green anchor proves council participation.
+
+**What independence actually rests on here — three parts, only one mechanical:**
+
+1. **Mechanical integrity.** The base-revision gate runs the base's copy of
+   `check_kernel_edit_ratified`, so a candidate diff cannot supply the code that
+   judges it, and the quorum policy is read from the same side. This part is
+   real and enforced.
+2. **Analytical independence.** The AI council is a different party from the
+   implementer and its verdicts are recorded verbatim. It is **not**
+   platform-enforced, it has no binding authority over the owner, and a
+   committed council record is evidence rather than authorization — the same
+   actor that edits the code could write it.
+3. **Owner authorization.** Real, and the owner is also the party gaining the
+   authority. This is not separation of powers and must never be described as
+   such.
+
+Together these prevent *accidental* weakening, create an *audit trail*, and
+supply *recorded multi-perspective review*. They do not constrain a determined
+administrator, and the mechanism cannot: the same account controls the verifier,
+its expectation file, the required contexts and the platform ruleset.
+
+**One limitation stated rather than hidden:** the verifier cannot authenticate
+that an owner ruling was given or correctly transcribed. It can only verify that
+a governance-labelled change was made and merged. An agent's transcription of a
+chat message into a floor reduction is not something any gate here can check —
+which is why the authorising event is the owner's own review and merge of a
+conspicuously labelled trust-model change, and never the transcription itself.
+
+### Emergency use, and what does not qualify
+
+The owner can bypass any gate here; the platform cannot prevent it. So this
+procedure is **detective and restorative, not preventive** — its job is that a
+bypass leaves a trace, not that it be impossible.
+
+1. **Trigger:** an active incident where an enforced control blocks time-critical
+   restoration or containment. Ordinary work, release pressure, convenience, and
+   *"the check is red"* are **not** emergencies.
+2. **Record** — before acting if feasible, immediately after if not: the
+   incident, the control changed, the reason, the affected revision, the
+   timestamp.
+3. **Change the smallest thing** that unblocks the incident.
+4. **Restore** the control as soon as the incident permits.
+5. **Verify** with `check_platform_anchor` after restoration and attach the
+   result to the incident record.
+6. **Commit** the record. An unrecorded bypass is the only failure mode this
+   procedure can actually have.
+
+### The measurement this section was written from
+
+```
+                                   before      written 10:51Z   now
+required_approving_review_count     0           1                0
+require_last_push_approval          false       true             false
+strict_required_status_checks       true        true             false
+bypass_actors                       1           0                0
+```
+
+`repos/{owner}/{repo}/branches/main/protection` returns **404** — this
+repository uses repository **rulesets**, so a checker written against the
+classic endpoint measures nothing. The emptied `bypass_actors` held;
+`current_user_can_bypass` went `always` → `never` and stayed there.
+
+**`strict_required_status_checks` is the one dimension still failing, and it is
+deliberately still enforced.** It read true before this work and false after,
+and the owner's ruling covers reviewer availability rather than whether a branch
+may merge against a stale base — so it is collateral rather than part of the
+decision, and it was left untouched on the forge because approval of a
+trust-model change is not authorization to mutate the live ruleset. Restoring it
+is one setting and needs no reviewer.
 
 The three facts, from `gh api`, so a reader can re-run them rather than trust
 this paragraph:

@@ -37,8 +37,6 @@ function policy(over: Partial<AnchorPolicy> = {}): AnchorPolicy {
         enforcement: 'active',
         target: 'branch',
         covers_default_branch: true,
-        minimum_approving_reviews: 1,
-        require_last_push_approval: true,
         required_review_thread_resolution: true,
         block_deletion: true,
         block_non_fast_forward: true,
@@ -133,10 +131,23 @@ describe('the committed expectation', () => {
         const { policy: read, findings } = readAnchorPolicy(text);
         expect(findings).toEqual([]);
         expect(read).not.toBeNull();
-        expect(read?.minimum_approving_reviews).toBeGreaterThanOrEqual(
-            NON_NEGOTIABLE_FLOOR.minimum_approving_reviews,
-        );
         expect(read?.allow_unconditional_bypass).toBe(false);
+        expect(read?.strict_required_status_checks).toBe(true);
+    });
+
+    it('carries no approval dimension, which is the recorded trust-model decision', () => {
+        // The owner ruled on 2026-09-10 that a mandatory approving review is a
+        // stop rather than a control on a single-maintainer repository. The
+        // dimensions are GONE, not exempted — a dimension outside the trust
+        // model is not a waived rule — so a future edit cannot re-add one by
+        // flipping an exemption flag, and this asserts both halves.
+        const text = fs.readFileSync(path.join(REPO, POLICY_PATH), 'utf8');
+        const raw = JSON.parse(text) as { required: Record<string, unknown> };
+        expect(Object.keys(raw.required)).not.toContain('minimum_approving_reviews');
+        expect(Object.keys(raw.required)).not.toContain('require_last_push_approval');
+        expect(Object.keys(NON_NEGOTIABLE_FLOOR)).not.toContain('minimum_approving_reviews');
+        expect(Object.keys(NON_NEGOTIABLE_FLOOR)).not.toContain('require_last_push_approval');
+        expect(text).toContain('owner_ruling_2026_09_10');
     });
 
     it('is itself a gated surface, so lowering it needs its own ratification', () => {
@@ -168,7 +179,9 @@ describe('reading the expectation refuses a half-read one', () => {
     });
 
     it('a policy under the floor is rejected, not honoured', () => {
-        const text = JSON.stringify({ required: { ...policy(), minimum_approving_reviews: 0 } });
+        const text = JSON.stringify({
+            required: { ...policy(), strict_required_status_checks: false },
+        });
         const { policy: p, findings } = readAnchorPolicy(text);
         expect(p).toBeNull();
         expect(findings.some((f) => f.code === 'policy-below-floor')).toBe(true);
@@ -198,26 +211,31 @@ describe('the floor covers the selectors, not only the thresholds', () => {
         expect(enforceFloor(policy({ enforcement: 'evaluate' }))).toHaveLength(1);
         expect(enforceFloor(policy({ target: 'tag' }))).toHaveLength(1);
         expect(enforceFloor(policy({ covers_default_branch: false }))).toHaveLength(1);
-        expect(enforceFloor(policy({ required_review_thread_resolution: false }))).toHaveLength(1);
     });
 
-    it('refuses a non-numeric approval floor instead of comparing against NaN', () => {
-        // `Number("one")` is NaN; `NaN < 1` is false, so a bare threshold
-        // comparison read it as satisfying the floor, and the same NaN then
-        // made `observed < NaN` false so the approval rule disappeared.
+    it('refuses each remaining weakening independently', () => {
+        // `required_review_thread_resolution` left the FLOOR with the approval
+        // dimensions — approval-adjacent, and near-vacuous once no review is
+        // required — but stays in the expectation, so the floor must not
+        // reject a policy that omits it while the checks still assert it.
+        expect(enforceFloor(policy({ required_review_thread_resolution: false }))).toEqual([]);
+        expect(enforceFloor(policy({ strict_required_status_checks: false }))).toHaveLength(1);
+        expect(enforceFloor(policy({ block_deletion: false }))).toHaveLength(1);
+    });
+
+    it('has no approval field left for a policy to lower', () => {
+        // The NaN hole the blind review probed is closed by DELETION rather
+        // than by a guard: with no `minimum_approving_reviews` field there is
+        // nothing to pass a non-numeric value to. Recorded here because the
+        // guard it replaced was itself a regression test, and losing the test
+        // with the code would leave the closure unwitnessed.
         const text = JSON.stringify({
             schema_version: 1,
             required: { ...policy(), minimum_approving_reviews: 'one' },
         });
         const { policy: p, findings } = readAnchorPolicy(text);
         expect(p).toBeNull();
-        expect(findings.some((f) => f.code === 'policy-below-floor')).toBe(true);
-    });
-
-    it('refuses a non-integer and an absurd approval floor', () => {
-        expect(enforceFloor(policy({ minimum_approving_reviews: 1.5 }))).toHaveLength(1);
-        expect(enforceFloor(policy({ minimum_approving_reviews: 10_000 }))).toHaveLength(1);
-        expect(enforceFloor(policy({ minimum_approving_reviews: 2 }))).toEqual([]);
+        expect(findings.some((f) => f.code === 'policy-unknown-field')).toBe(true);
     });
 
     it('refuses an unknown key in `required` rather than ignoring it', () => {
@@ -429,13 +447,43 @@ describe('the verdict', () => {
     it('names each violated rule with its own code', () => {
         const bare = compliantRuleset({ rules: [], bypass_actors: [] });
         const codes = evaluateAnchor(policy(), [bare], 'main').findings.map((f) => f.code);
-        expect(codes).toContain('approvals-below-minimum');
-        expect(codes).toContain('last-push-approval-missing');
         expect(codes).toContain('thread-resolution-missing');
         expect(codes).toContain('deletion-not-blocked');
         expect(codes).toContain('non-fast-forward-not-blocked');
         expect(codes).toContain('status-checks-not-strict');
         expect(codes).toContain('required-context-missing');
+    });
+
+    it('reports the approval dimensions as evidence and never as a finding', () => {
+        // The load-bearing half of the trust-model decision: a ruleset with
+        // zero approvals and no last-push approval is COMPLIANT here, and the
+        // report still says what the forge holds. If either ever became a
+        // finding again it would be a floor reduction reversed by accident.
+        const noApprovals = compliantRuleset({
+            rules: [
+                { type: 'deletion' },
+                { type: 'non_fast_forward' },
+                {
+                    type: 'pull_request',
+                    parameters: {
+                        required_approving_review_count: 0,
+                        require_last_push_approval: false,
+                        required_review_thread_resolution: true,
+                    },
+                },
+                {
+                    type: 'required_status_checks',
+                    parameters: {
+                        strict_required_status_checks_policy: true,
+                        required_status_checks: [{ context: 'Sync + Generate Tools Consistency' }],
+                    },
+                },
+            ],
+        });
+        const r = evaluateAnchor(policy(), [noApprovals], 'main');
+        expect(r.status).toBe('compliant');
+        expect(r.findings).toEqual([]);
+        expect(r.evidence.join('\n')).toContain('observed, not required here');
     });
 
     it('fails an unconditional bypass actor', () => {
@@ -452,17 +500,20 @@ describe('the verdict', () => {
         expect(r.findings.map((f) => f.code)).toEqual(['unconditional-bypass']);
     });
 
-    it('reports the 2026-09-10 measured configuration as noncompliant on three counts', () => {
+    it('reports the 2026-09-10 pre-ruling configuration as failing on the bypass alone', () => {
+        // The same fixture, re-judged under the trust model the owner then
+        // ruled. Kept rather than deleted because it is the configuration that
+        // made the anchor a finding, and what changed is the JUDGEMENT, not the
+        // measurement: of the three counts it once failed, only the
+        // unconditional bypass is still a rule here — and that is the one the
+        // owner's change actually fixed and left fixed.
         const r = evaluateAnchor(policy(), [measured2026_09_10()], 'main');
         expect(r.status).toBe('noncompliant');
-        const codes = r.findings.map((f) => f.code);
-        expect(codes).toContain('approvals-below-minimum');
-        expect(codes).toContain('last-push-approval-missing');
-        expect(codes).toContain('unconditional-bypass');
+        expect(r.findings.map((f) => f.code)).toEqual(['unconditional-bypass']);
         // The gate's containing job IS a required context, so this is NOT among
         // the findings — the correction that a required check pins a job name
         // and not its steps.
-        expect(codes).not.toContain('required-context-missing');
+        expect(r.findings.map((f) => f.code)).not.toContain('required-context-missing');
     });
 });
 

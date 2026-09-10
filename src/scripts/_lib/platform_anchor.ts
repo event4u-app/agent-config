@@ -88,8 +88,6 @@ export interface AnchorPolicy {
     enforcement: string;
     target: string;
     covers_default_branch: boolean;
-    minimum_approving_reviews: number;
-    require_last_push_approval: boolean;
     required_review_thread_resolution: boolean;
     block_deletion: boolean;
     block_non_fast_forward: boolean;
@@ -107,9 +105,25 @@ export interface AnchorPolicy {
  * redefining `minimumApprovals` to zero and making itself green."*
  */
 export const NON_NEGOTIABLE_FLOOR = {
-    minimum_approving_reviews: 1,
-    require_last_push_approval: true,
-    required_review_thread_resolution: true,
+    // `minimum_approving_reviews` and `require_last_push_approval` are NOT here,
+    // and their absence is a recorded trust-model decision rather than an
+    // oversight or a convenience. This repository has one active maintainer;
+    // the others hold write access and are rarely available. A mandatory
+    // approving review is therefore not a control here, it is a stop — and a
+    // floor nothing can satisfy makes red mean "the repository chose a
+    // different model" instead of "the platform violates its policy", which is
+    // the reading that gets a gate deleted or wired `continue-on-error`.
+    //
+    // The boundary this does NOT cross, stated because the mechanism cannot
+    // check it: a floor reduction is legitimate only where the operating model
+    // CANNOT satisfy the floor — no second human exists — never where waiting
+    // is merely inconvenient.
+    //
+    // `required_review_thread_resolution` is also absent, and that one is the
+    // implementer's judgement rather than a council ruling: it is
+    // approval-adjacent and near-vacuous once no review is required, so the
+    // floor should not mandate it. It stays in the expectation, because the
+    // forge currently sets it and an asserted true fact costs nothing.
     block_deletion: true,
     block_non_fast_forward: true,
     strict_required_status_checks: true,
@@ -129,9 +143,6 @@ export const NON_NEGOTIABLE_FLOOR = {
     covers_default_branch: true,
 } as const;
 
-/** The upper bound on the approval floor a policy may demand. */
-export const MAX_APPROVING_REVIEWS = 100;
-
 export type AnchorStatus = 'compliant' | 'noncompliant' | 'unverifiable';
 
 /** Stable codes, so a test asserts the reason rather than the wording. */
@@ -145,8 +156,6 @@ export type AnchorCode =
     | 'rulesets-unreadable'
     | 'default-branch-unknown'
     | 'no-applicable-ruleset'
-    | 'approvals-below-minimum'
-    | 'last-push-approval-missing'
     | 'thread-resolution-missing'
     | 'deletion-not-blocked'
     | 'non-fast-forward-not-blocked'
@@ -183,8 +192,6 @@ const POLICY_FIELDS: readonly (keyof AnchorPolicy)[] = [
     'enforcement',
     'target',
     'covers_default_branch',
-    'minimum_approving_reviews',
-    'require_last_push_approval',
     'required_review_thread_resolution',
     'block_deletion',
     'block_non_fast_forward',
@@ -296,8 +303,6 @@ export function readAnchorPolicy(text: string | null): {
         enforcement: String(req['enforcement']),
         target: String(req['target']),
         covers_default_branch: req['covers_default_branch'] === true,
-        minimum_approving_reviews: Number(req['minimum_approving_reviews']),
-        require_last_push_approval: req['require_last_push_approval'] === true,
         required_review_thread_resolution: req['required_review_thread_resolution'] === true,
         block_deletion: req['block_deletion'] === true,
         block_non_fast_forward: req['block_non_fast_forward'] === true,
@@ -396,38 +401,6 @@ export function enforceFloor(policy: AnchorPolicy): AnchorFinding[] {
         under('covers_default_branch', policy.covers_default_branch, true);
     }
 
-    // Non-finite is its own failure, not a comparison. `Number("one")` is NaN
-    // and `NaN < 1` is false, so a threshold check alone reads a garbage value
-    // as satisfying the floor — and the same NaN then makes the downstream
-    // `observed < NaN` comparison false, so the approval rule disappears
-    // instead of failing. Both halves were reproduced by a blind review.
-    if (
-        !Number.isFinite(policy.minimum_approving_reviews) ||
-        !Number.isInteger(policy.minimum_approving_reviews) ||
-        policy.minimum_approving_reviews > MAX_APPROVING_REVIEWS
-    ) {
-        f.push({
-            code: 'policy-below-floor',
-            message:
-                'src/config/platform-anchor.json sets `minimum_approving_reviews` to ' +
-                `${JSON.stringify(policy.minimum_approving_reviews)}, which is not an integer ` +
-                `between ${NON_NEGOTIABLE_FLOOR.minimum_approving_reviews} and ` +
-                `${MAX_APPROVING_REVIEWS}. A non-numeric value would compare false against the ` +
-                'floor and then make the approval rule unreachable, so it is refused outright.',
-        });
-    } else if (policy.minimum_approving_reviews < NON_NEGOTIABLE_FLOOR.minimum_approving_reviews) {
-        under(
-            'minimum_approving_reviews',
-            policy.minimum_approving_reviews,
-            NON_NEGOTIABLE_FLOOR.minimum_approving_reviews,
-        );
-    }
-    if (!policy.require_last_push_approval) {
-        under('require_last_push_approval', false, true);
-    }
-    if (!policy.required_review_thread_resolution) {
-        under('required_review_thread_resolution', false, true);
-    }
     if (!policy.block_deletion) {
         under('block_deletion', false, true);
     }
@@ -657,28 +630,15 @@ export function evaluateAnchor(
         return { status: 'noncompliant', findings, evidence };
     }
 
+    // Observed and reported, never judged. The two approval dimensions left the
+    // enforced set with the trust-model decision above, and deleting the
+    // MEASUREMENT with the requirement would have been the wrong half to drop:
+    // a reader still wants to see what the forge actually says, and a number
+    // that is reported without being a threshold cannot quietly become one.
     evidence.push(
-        `approving reviews required: ${eff.approvingReviews} (policy floor ` +
-            `${policy.minimum_approving_reviews})`,
+        `approving reviews required: ${eff.approvingReviews} · last-push approval: ` +
+            `${eff.requireLastPushApproval} — observed, not required here (see NON_NEGOTIABLE_FLOOR)`,
     );
-    if (eff.approvingReviews < policy.minimum_approving_reviews) {
-        findings.push({
-            code: 'approvals-below-minimum',
-            message:
-                `the effective ruleset requires ${eff.approvingReviews} approving review(s); the ` +
-                `policy requires at least ${policy.minimum_approving_reviews}. Without this, a ` +
-                'ratification artifact is reviewed by nobody the repository insisted on, and the ' +
-                "mechanism's independence claim rests on process evidence alone.",
-        });
-    }
-    if (policy.require_last_push_approval && !eff.requireLastPushApproval) {
-        findings.push({
-            code: 'last-push-approval-missing',
-            message:
-                '`require_last_push_approval` is off, so an approval can predate the final push ' +
-                'and the reviewed diff need not be the merged diff.',
-        });
-    }
     if (policy.required_review_thread_resolution && !eff.requireThreadResolution) {
         findings.push({
             code: 'thread-resolution-missing',

@@ -392,7 +392,30 @@ item. Phases 1-6 may run once 0.2 is chosen.
   does, verified 2026-09-08.
 
 ### blocker: ratification-platform-anchor
-- **Status:** open — **limb 1 met 2026-09-10, limb 2 blocked on a platform capability.**
+- **Status:** open — **the criterion itself changed on 2026-09-10 by owner ruling, and what is
+  left is one collateral setting plus the CI wiring.** The owner ruled that a mandatory
+  approving review is not wanted on this repository: *"I am the only maintainer, or the main
+  one. There are others, but they are rarely active. That is why this would be a blocker."*
+  Five accounts carry write access; four are rarely available. So the two approval dimensions
+  left the anchor's enforced set and its non-negotiable floor — removed, **not** exempted,
+  because a dimension outside the trust model is not a waived rule. An AI council decided the
+  implementation shape (2/2 convergent on narrowing the enforced set rather than keeping an
+  unsatisfiable floor); the owner decided the policy. openai: *"Keeping those requirements
+  hard-coded would make red mean the repository intentionally chose a different trust model,
+  rather than the configured platform violated its policy. That is not a useful compliance
+  signal."*
+  **What the gate now reds on is exactly one dimension:** `strict_required_status_checks`,
+  which read true before this work and false after. The owner's ruling covers reviewer
+  availability, not whether a branch may merge against a stale base, so both council seats put
+  it out of scope for the ruling — and one added the constraint honoured here: approval of a
+  trust-model change is **not** authorization to mutate the live ruleset, so nothing was
+  restored on the forge. Restoring it is one setting and needs no reviewer.
+  **What the anchor may no longer be cited as:** independent approval, separation of duties,
+  protection against unilateral administrator action, or proof of council participation. The
+  honest three-part claim, and the limitation that the verifier cannot authenticate an owner
+  ruling at all, are written into `docs/contracts/ratification-artifact.md`.
+  Superseded reading, kept because it records what the criterion looked like before the ruling:
+  **limb 1 met 2026-09-10, limb 2 blocked on a platform capability.**
   This entry read `resolved` for one commit on the premise that both limbs were met. Limb 2 was
   then falsified by CI and the claim is corrected here rather than left standing. **What limb 2
   ran into:** the gate reads `repos/{owner}/{repo}/rulesets`, which needs the repository
