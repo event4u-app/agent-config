@@ -23,14 +23,21 @@
  *     (untrusted-input-defense).
  *   - Never blocks: exit 0 on every path; failures are silent (stderr note).
  *
- * No `loss_class` is declared here any more, and that is a real coverage change
- * rather than an omission. The two lossy transforms the class described — the
- * 400-word cap and the fail-closed `_redact_lines` drop — left with the cache.
- * The 30-row cap the memory index still applies lives in
- * `_lib/session_index_trust.ts`, which is not a concern script, so
- * `check_loss_class_declared` cannot see it. Widening the detector past
- * concern scripts is what would close that, and it is tracked as its own
- * blocker.
+ * No `loss_class` is declared on THIS file any more, and that is a real
+ * coverage change rather than an omission. The two lossy transforms the class
+ * described — the 400-word cap and the fail-closed `_redact_lines` drop — left
+ * with the cache. The 30-row cap the memory index still applies lives in
+ * `_lib/session_index_trust.ts`, which is not a concern script and is reached
+ * from here through `createRequire` rather than a static import, so neither the
+ * old detector nor an import-closure widening of it can see the module.
+ *
+ * The `loss_module:` pointer below is how it re-enters the gate's corpus. It is
+ * a claim, not an exemption: `check_loss_class_declared` requires the pointed
+ * module to carry a valid declaration and fails when it does not. Deleting the
+ * line silently removes a model-facing lossy transform from the gate, so it is
+ * part of this concern's contract.
+ *
+ * loss_module: src/scripts/_lib/session_index_trust.ts
  *
  * Reads the dispatcher JSON envelope on stdin
  * (`{platform, event, payload, workspace_root, …}`).

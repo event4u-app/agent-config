@@ -29,14 +29,37 @@
  * Measured at landing: **1** module qualified — `hot_context_hook`, the
  * `ephemeral-lossy` exemplar the contract classifies. Measured 2026-09-09 after
  * road-to-continuity-writer-activation step 3.1 retired that module's cache
- * half: **0**. The scanned corpus is unchanged at 58 hook scripts; the matched
- * subset is empty, so this gate now passes over nothing.
+ * half: **0** — the scanned corpus unchanged at 58 hook scripts and the matched
+ * subset empty, so the gate passed over nothing. Measured 2026-09-10 after the
+ * `loss_module:` pointer below: **1** again, and it is
+ * `_lib/session_index_trust.ts`, the module that applies the surviving 30-row
+ * cap.
  *
- * That is a hole, not a clean bill. The 30-row cap in
- * `_lib/session_index_trust.ts` is still a model-facing lossy transform, and
- * this detector cannot see it because it reads concern scripts only. Widening
- * it past concern scripts is what closes that, tracked as blocker
- * `loss-class-corpus-is-empty-after-hot-context`.
+ * THE POINTER, AND WHY IT IS NOT AN IMPORT-CLOSURE WIDENING
+ * --------------------------------------------------------
+ * The blocker `loss-class-corpus-is-empty-after-hot-context` offered two
+ * routes, and the first one does not work. Measured 2026-09-10: a transitive
+ * static-import closure over all 58 concern scripts returns 11 applied-lossy
+ * modules, of which 9 match on an identifier rather than on a transform (a
+ * `truncated: boolean` field, a settings key named `…redaction.enabled`, a
+ * regex literal detecting `truncate table`) — the pro-forma-corpus failure the
+ * comment-stripping above already exists to prevent, one layer up. And the
+ * closure does NOT contain `session_index_trust.ts` at all: the only concern
+ * that reaches it, `hot-context`, loads it through `createRequire` for bundle
+ * safety. A widening that misses the module it was written for, while adding
+ * nine it was not, is not a widening.
+ *
+ * So the second route: a concern script names the module carrying its lossy
+ * transform with `loss_module: <repo-relative path>`, and the gate then
+ * REQUIRES that module to declare. The polarity is the opposite of an
+ * allowlist — a pointer at an undeclared, absent, or out-of-tree module fails.
+ *
+ * WHAT THIS STILL DOES NOT CATCH, stated rather than implied: an UNPOINTED
+ * lossy transform in a module a concern reaches. That gap is narrower than the
+ * one it replaces (which was every non-concern module, with an empty corpus to
+ * show for it) and it is real. Closing it needs a lossy detector that matches
+ * an applied transform rather than an identifier; the measurement above is the
+ * evidence for what that would cost.
  *
  * Exit codes: 0 clean (warnings allowed) · 1 an undeclared model-facing
  * transform · 2 misuse / unreadable manifest.
@@ -52,7 +75,7 @@ import * as path from 'node:path';
 
 import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
-import { isProblem, parseLossDeclaration, type DeclarationProblem } from './_lib/loss_class.js';
+import { isProblem, parseLossDeclaration, parseLossModulePointers, type DeclarationProblem } from './_lib/loss_class.js';
 import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
 
 const HERE = path.dirname(new URL(import.meta.url).pathname);
@@ -76,14 +99,19 @@ const LOSSY_PATTERNS = [/\bredact/i, /\btruncat/i, /\b(?:WORD|CHAR|MAX)_(?:CAP|C
 
 export interface LossFinding {
     concern: string;
+    /** The file that owes the declaration: the concern script, or a module it points at. */
     script: string;
     tier: 'fail' | 'warn';
     problem: DeclarationProblem;
+    /** Set when the finding is on a `loss_module:` pointer rather than the concern script. */
+    pointedFrom?: string;
 }
 
 export interface LossVerdict {
     scanned: number;
     modelFacing: number;
+    /** Modules brought into scope by a `loss_module:` pointer, repo-relative. */
+    pointedModules: string[];
     findings: LossFinding[];
 }
 
@@ -143,6 +171,7 @@ export function evaluate(root: string = REPO_ROOT, ledger?: GateLedger): LossVer
     }
 
     const findings: LossFinding[] = [];
+    const pointedModules: string[] = [];
     let scanned = 0;
     let modelFacing = 0;
 
@@ -163,26 +192,66 @@ export function evaluate(root: string = REPO_ROOT, ledger?: GateLedger): LossVer
 
         const source = fs.readFileSync(abs, 'utf-8');
         const code = stripComments(source);
-        if (!isLossy(code) || !emitsContext(code)) {
-            // Not a lossy model-facing transform: the check does not apply to it.
-            ledger?.outOfScope(name, 'not_applicable_kind');
-            continue;
-        }
 
         // Unknown reachability fails closed: a bound concern this gate cannot
         // place on a known slot is treated as model-reaching.
         const reaches = facing.has(name) || !bound.has(name);
+
+        // A `loss_module:` pointer is a CLAIM by this concern that a named
+        // module carries its lossy transform. The claim brings that module into
+        // the corpus and then requires it to declare — so a pointer without a
+        // declaration fails rather than exempting anything. This is the only
+        // route by which a non-concern module is gated; see
+        // `parseLossModulePointers` for why the alternative was rejected.
+        const pointers = parseLossModulePointers(source);
+        for (const target of pointers) {
+            const targetAbs = path.resolve(root, target);
+            if (!targetAbs.startsWith(path.resolve(root) + path.sep) || !fs.existsSync(targetAbs)) {
+                findings.push({
+                    concern: name,
+                    script: target,
+                    tier: reaches ? 'fail' : 'warn',
+                    problem: { kind: 'missing' },
+                    pointedFrom: rel,
+                });
+                ledger?.fail(name, `loss_module points at a path outside the tree or absent: ${target}`);
+                continue;
+            }
+            if (!pointedModules.includes(target)) pointedModules.push(target);
+            if (reaches) modelFacing += 1;
+            const pd = parseLossDeclaration(fs.readFileSync(targetAbs, 'utf-8'));
+            if (!isProblem(pd)) continue;
+            findings.push({
+                concern: name,
+                script: target,
+                tier: reaches ? 'fail' : 'warn',
+                problem: pd,
+                pointedFrom: rel,
+            });
+            ledger?.fail(name, `pointed module ${target}: undeclared or malformed loss_class (${pd.kind})`);
+        }
+
+        if (!isLossy(code) || !emitsContext(code)) {
+            // The script itself is not a lossy model-facing transform. It may
+            // still have brought a module into scope above, in which case the
+            // check DID apply to this concern and the ledger must not say
+            // otherwise.
+            if (pointers.length === 0) ledger?.outOfScope(name, 'not_applicable_kind');
+            else if (!findings.some((f) => f.concern === name)) ledger?.complete(name);
+            continue;
+        }
+
         if (reaches) modelFacing += 1;
 
         const decl = parseLossDeclaration(source);
         if (!isProblem(decl)) {
-            ledger?.complete(name);
+            if (!findings.some((f) => f.concern === name)) ledger?.complete(name);
             continue;
         }
         findings.push({ concern: name, script: rel, tier: reaches ? 'fail' : 'warn', problem: decl });
         ledger?.fail(name, `undeclared or malformed loss_class (${decl.kind})`);
     }
-    return { scanned, modelFacing, findings };
+    return { scanned, modelFacing, pointedModules, findings };
 }
 
 // ---------------------------------------------------------------- self-test
@@ -195,8 +264,15 @@ export function run() {
 }
 `;
 
-function plant(dir: string, header: string, body: string, slot = 'session_start'): void {
+function plant(dir: string, header: string, body: string, slot = 'session_start', pointedHeader?: string): void {
     fs.mkdirSync(path.join(dir, 'src', 'scripts'), { recursive: true });
+    if (pointedHeader !== undefined) {
+        fs.mkdirSync(path.join(dir, 'src', 'scripts', '_lib'), { recursive: true });
+        fs.writeFileSync(
+            path.join(dir, 'src', 'scripts', '_lib', 'pointed.ts'),
+            pointedHeader + 'const ROW_CAP = 30;\nexport const capRows = (r: string[]) => r.slice(0, ROW_CAP);\n',
+        );
+    }
     fs.writeFileSync(path.join(dir, 'src', 'scripts', 'fixture_hook.ts'), header + body);
     fs.writeFileSync(
         path.join(dir, 'src', 'scripts', 'hook_manifest.yaml'),
@@ -210,14 +286,26 @@ const DECL_RECOVERABLE_NO_LOCATOR = '/**\n * loss_class: recoverable-lossy\n */\
 const DECL_EPHEMERAL = '/**\n * loss_class: ephemeral-lossy\n */\n';
 const DECL_TYPO = '/**\n * loss_class: recoverable_lossy\n */\n';
 
+const POINTER = '/**\n * loss_module: src/scripts/_lib/pointed.ts\n */\n';
+const POINTER_ABSENT = '/**\n * loss_module: src/scripts/_lib/does_not_exist.ts\n */\n';
+const POINTER_ESCAPE = '/**\n * loss_module: ../outside/pointed.ts\n */\n';
+const PLAIN_EMITTER = `export function run(){return {context:'hi'};}`;
+
 function selfTestCases(): SelfTestCase[] {
-    const mk = (name: string, expect: 'reject' | 'accept', header: string, body: string, slot?: string): SelfTestCase => ({
+    const mk = (
+        name: string,
+        expect: 'reject' | 'accept',
+        header: string,
+        body: string,
+        slot?: string,
+        pointedHeader?: string,
+    ): SelfTestCase => ({
         name,
         expect,
         run: () => {
             const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'lcd-'));
             try {
-                plant(dir, header, body, slot);
+                plant(dir, header, body, slot, pointedHeader);
                 return runGateCli(REPO_ROOT, 'src/scripts/check_loss_class_declared.ts', ['--root', dir, '--quiet'], REPO_ROOT);
             } finally {
                 fs.rmSync(dir, { recursive: true, force: true });
@@ -233,6 +321,22 @@ function selfTestCases(): SelfTestCase[] {
         mk('non-lossy emitter needs no declaration → accept', 'accept', NO_DECL, `export function run(){return {context:'hi'};}`),
         mk('lossy but emits no context → accept', 'accept', NO_DECL, `const WORD_CAP=5;export function run(){return body.slice(0,WORD_CAP);}`),
         mk('prose about truncation is not truncation → accept', 'accept', NO_DECL, `/* we deliberately never truncate or redact here */\nexport function run(){return {context:'hi'};}`),
+        // The `loss_module:` pointer. A pointer is a claim, so the polarity is
+        // the opposite of an allowlist: pointing at an undeclared module is the
+        // reject case, and it is the one that proves the mechanism gates rather
+        // than exempts.
+        mk('a pointer at an UNDECLARED module → reject', 'reject', POINTER, PLAIN_EMITTER, undefined, NO_DECL),
+        mk('a pointer at a declared module → accept', 'accept', POINTER, PLAIN_EMITTER, undefined, DECL_EPHEMERAL),
+        mk(
+            'a pointer at a recoverable-lossy module with no locator → reject',
+            'reject',
+            POINTER,
+            PLAIN_EMITTER,
+            undefined,
+            DECL_RECOVERABLE_NO_LOCATOR,
+        ),
+        mk('a pointer at a path that does not exist → reject', 'reject', POINTER_ABSENT, PLAIN_EMITTER),
+        mk('a pointer escaping the tree → reject', 'reject', POINTER_ESCAPE, PLAIN_EMITTER),
     ];
 }
 
@@ -240,7 +344,7 @@ function selfTestCases(): SelfTestCase[] {
 
 export function main(argv: string[] = process.argv.slice(2)): number {
     if (argv.includes('--self-test')) {
-        return runSelfTest({ gate: 'check_loss_class_declared', cases: selfTestCases(), minCases: 7, minRejectCases: 3 });
+        return runSelfTest({ gate: 'check_loss_class_declared', cases: selfTestCases(), minCases: 12, minRejectCases: 7 });
     }
     const quiet = argv.includes('--quiet');
     const json = argv.includes('--json');
@@ -287,7 +391,11 @@ export function main(argv: string[] = process.argv.slice(2)): number {
 
     for (const f of v.findings) {
         const stream = f.tier === 'fail' ? process.stderr : process.stdout;
-        stream.write(`${f.tier === 'fail' ? '❌' : '⚠️ '}  ${f.concern} (${f.script}) shortens content on a model-facing path and ${say(f)}\n`);
+        const where =
+            f.pointedFrom === undefined
+                ? `${f.concern} (${f.script})`
+                : `${f.concern} → ${f.script}, pointed at by ${f.pointedFrom}`;
+        stream.write(`${f.tier === 'fail' ? '❌' : '⚠️ '}  ${where} shortens content on a model-facing path and ${say(f)}\n`);
     }
 
     if (v.findings.some((f) => f.tier === 'fail')) {
@@ -300,9 +408,13 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         return 1;
     }
     if (!quiet) {
+        const pointed =
+            v.pointedModules.length === 0
+                ? ''
+                : `; ${String(v.pointedModules.length)} declared via loss_module: ${v.pointedModules.join(', ')}`;
         process.stdout.write(
             `✅  every model-facing lossy transform declares its loss class ` +
-                `(${String(v.modelFacing)} model-facing of ${String(v.scanned)} hook script(s)).\n`,
+                `(${String(v.modelFacing)} model-facing of ${String(v.scanned)} hook script(s)${pointed}).\n`,
         );
     }
     return 0;
