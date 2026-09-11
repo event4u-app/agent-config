@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: draft
+status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: >-
@@ -32,7 +32,7 @@ saying why it stays.
 
 ## Phase 1 — the two that mislead a reader
 
-- [ ] **1.1 Remove the stale flat twin when the nested key wins.**
+- [x] **1.1 Remove the stale flat twin when the nested key wins.**
       `mergeIntoTemplate` hits the nested key and returns, so a file the
       pre-15.0.0 writer produced keeps a dead top-level `personal.ide: <stale>`
       line beside the real nested one. It parses (the nested key wins by YAML
@@ -42,7 +42,7 @@ saying why it stays.
       the merge, and asserting no `^personal\.ide:` line survives — observed
       failing before the change.
 
-- [ ] **1.2 Drop an orphaned `# Wizard-added keys` header.**
+- [x] **1.2 Drop an orphaned `# Wizard-added keys` header.**
       Collapsing the duplicated block can leave the comment header with nothing
       under it, and the next append writes a second header below the first, so
       they accumulate.
@@ -52,7 +52,7 @@ saying why it stays.
 
 ## Phase 2 — the two that need a decision, not a patch
 
-- [ ] **2.1 Decide `--check` over a corrupt file.**
+- [x] **2.1 Decide `--check` over a corrupt file.**
       Today it exits 2 and names the repair explicitly (distinct from template
       drift). The council split on whether a repair-only difference should exit
       0; this branch kept 2, on the ground that a green `--check` over a file
@@ -61,7 +61,17 @@ saying why it stays.
       verify: either the exit code changes with a test pinning the new
       contract, or a dated line here records the decision to keep 2.
 
-- [ ] **2.2 Decide whether an unparseable input may be repaired at all.**
+      2026-09-11 — Keep exit 2 for a repair-only difference: the target still
+      requires a write and cannot be consumed by the strict YAML reader, so a
+      green `--check` would hide the breakage. The documented contract is
+      corrected from "exit 2 on drift" to "exit 2 when synchronization requires
+      intervention", since the code already exits 2 for both cases. Reopen when:
+      an identified consumer integrates `--check` specifically for template-drift
+      detection and demonstrates a reproducible need to machine-distinguish
+      repair-only remediation from drift while still treating both as
+      unsuccessful checks. (AI council, 2 of 2 seats, converged.)
+
+- [x] **2.2 Decide whether an unparseable input may be repaired at all.**
       An input broken beyond its duplicate keys (an unterminated quote) can be
       collapsed into a document that parses to structure nobody wrote. The
       branch ships a warning naming exactly that. The alternative is to refuse
@@ -70,6 +80,43 @@ saying why it stays.
       going to hand-edit anyway.
       verify: either the refusal ships with a test, or a dated line records why
       the warning is enough.
+
+      2026-09-11 — Refuse the repair, before any durable write. The collapse's
+      safety rests on preserving the original's last-wins reading, and a
+      document invalid for some further reason has no reading to preserve — so
+      the pass can emit valid YAML carrying structure nobody authored, which
+      then passes every downstream check. A stderr warning is a weak control
+      against a silent outcome; a refusal is loud and recoverable. Implemented:
+      `main` calls `residualParseError` on the raw text before the collapse
+      notice and returns 2 with the parser's own first message line, its error
+      code and line/column; the target is left byte-for-byte unchanged (the
+      single `writeFileSync` is the last statement in `main`, with no temporary
+      file and no rename). No `--repair-anyway` flag — both seats rejected one:
+      an operator who understands the file well enough to invoke it understands
+      it well enough to fix the error first, and "read the diff" is not a
+      trustworthy acceptance oracle for YAML semantics. Reopen when: a real
+      input class appears where the residual error is provably independent of
+      the duplicated keys AND a hand fix is not available to the caller.
+      (AI council, 2 of 2 seats, converged.)
+
+## Sibling site, searched and deliberately left
+
+The wrong construct behind 1.1 is *`findScalarLine` hits → `replaceScalar` →
+return, without consulting the flat form*. Grepped: it occurs at exactly **two**
+sites — `mergeIntoTemplate` (fixed) and `upsertScalar` (`src/server/io/yamlIO.ts`,
+the `replaceScalar` branch). The second is left, as a decision rather than an
+omission: `upsertScalar` has never written a flat twin — its absent-path branch
+creates real nesting, and its own docstring names the flat form as the wrong
+shape for a nested key. So any flat `a.b:` it meets is by construction **not its
+own leftover**, which is precisely where risk-register row 2 bites hardest.
+Extending the deletion there would outrun the provenance argument that makes it
+safe in `mergeIntoTemplate`. Reopen if a caller is found that routes a
+wizard-written flat key through `upsertScalar`.
+
+A second construct was searched on the same pass: the documented `--check`
+contract that 2.1 corrected. `grep 'exit 2 on drift'` found **two** sites —
+`sync_agent_settings.ts`'s header and `src/scripts/_dispatch.bash`'s help text —
+and both are corrected here. The grep now returns zero.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-10 | reviewer: claude/host -->
@@ -81,10 +128,10 @@ saying why it stays.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — No `mergeIntoTemplate` output carries a flat dotted line whose
+- [x] AC-1 — No `mergeIntoTemplate` output carries a flat dotted line whose
       nested twin exists in the same document, and a test fails if one does.
-- [ ] AC-2 — A repaired file carries at most one `# Wizard-added keys` header,
+- [x] AC-2 — A repaired file carries at most one `# Wizard-added keys` header,
       and never one with no keys beneath it.
-- [ ] AC-3 — Each Phase 2 item is either implemented with a test pinning the
+- [x] AC-3 — Each Phase 2 item is either implemented with a test pinning the
       new contract, or carries a dated line in this file recording the decision
       to keep the current behaviour and what evidence would reopen it.
