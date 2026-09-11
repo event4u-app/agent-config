@@ -15,9 +15,10 @@ estate_growth_exempt: >-
   Three surfaces on which this repository describes its own loop behaviour contradict each other,
   and nothing owns the contradiction. Verified 2026-09-11: `docs/decisions/ADR-118` § 3 forbids a
   run-until-condition surface while `src/scripts/hooks/run_continuation_hook.ts` ships 1,529 lines
-  of exactly that, delivered afterwards under a different roadmap; and the source set cites
-  `docs/guidelines/enforcement-by-host.md` throughout, a path that does not exist — the file is
-  `docs/enforcement-by-host.md`. Prose-only, no runtime change. Also grows open_blockers by two.
+  of exactly that, delivered afterwards under a different roadmap; and the source set cites the
+  host enforcement matrix under a `docs/guidelines/` prefix throughout, which resolves to nothing
+  — the file sits at `docs/enforcement-by-host.md`. Prose-only, no runtime change. Also grows
+  open_blockers by two.
 estate_offset_exempt: >-
   Nothing in the active estate can be offset. This roadmap changes documentation and one ADR's
   amendment note; the active roadmaps are all mechanism work and none of them is a trade for a
