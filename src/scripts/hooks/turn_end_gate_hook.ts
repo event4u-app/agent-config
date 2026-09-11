@@ -176,11 +176,6 @@ import { statePathFor as ciStatePathFor } from '../before_complete_hook.js';
 // guard alone would not settle it; what does is the `.__direct__` argv rewrite
 // in the `build:hooks` banner. Named here so a future change to that banner
 // does not silently start running a lint's `main()` on every hook dispatch.
-import {
-    find_option_blocks,
-    recommendationsUnder,
-    splitAndMask,
-} from '../check_reply_consistency.js';
 // Detector E, extracted to `_lib` where its prose costs no ratchet debt.
 // Re-exported so every existing importer of this module is unchanged.
 import { detectDroppedDecision } from '../_lib/dropped_decision.js';
