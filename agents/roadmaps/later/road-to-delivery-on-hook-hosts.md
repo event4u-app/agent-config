@@ -1,6 +1,31 @@
 ---
 complexity: structural
-status: ready
+status: later
+review_by: 2026-12-08
+entry_condition:
+  what: >
+    A transcript qualifying under the amended E3 criterion — a delivered rule's
+    externally observable obligation discharged in ordinary work, with an exposure
+    audit showing injection was the SOLE source of that obligation body in the
+    session. Measured 2026-09-11: no such candidate can exist in this repository,
+    because 106 of 106 `type: auto` rules already carry a byte-equivalent body
+    unconditionally (89 in `~/.claude/rules/`, 3 differing by one blank line, 14
+    inline in the system prompt). So the condition is met only from a clean
+    environment, or by a rule that exists solely in the delivery channel.
+    Alternatively, and independently: the boundary below arriving without such a
+    witness, which fires the already-authorised descope.
+  when: >
+    On the 12th genuine eligible opportunity, or on 2026-12-08, whichever comes
+    first. The counter is at 0 as of the park date — the four candidates judged on
+    2026-09-11 do NOT count toward it, because they were taken before the exposure
+    audit became a precondition and are recorded as non-identifying rather than as
+    attempts. An earlier host-admission event, should one occur by another route,
+    is a separate and earlier wake.
+  who: >
+    The maintainer, or any drain run reaching the boundary date. No external party
+    is required — both wake conditions are observable from this repository, and the
+    date is the expiry the host table already carries for this observation state,
+    so no new clock was introduced.
 execution:
   mode: phase-checkpoints
 owner: maintainer
@@ -17,7 +42,7 @@ relates:
     note: >
       Archived. Its 2026-09-07 host table is the input to Phase 1; this file turns
       that table's slot counts into a measured injection verdict per host.
-estate_growth_exempt: "Owner-delegated drain run 2026-09-08, THIRD CHARGE: +2 open_blockers, for two entries this file owed and did not carry. Three of its steps (1.1, 2.1, 4.2) record themselves BLOCKED in their own bodies while the file had no `## Blockers` section at all, so the dashboard read 0 blockers for it and `check_estate_count` — where `open_blockers` is a RATCHETED metric — was ratcheting on an undercount. This is a CORRECTION of a miscount rather than new estate: the blockages already existed, in prose, in this file. The gate has no field for that distinction, so it takes the claim path like any growth. SECOND CHARGE — Owner-instructed 2026-09-08: +1 concern_count for `chain-nudge`, the pre_tool_use carrier that delivers token-efficiency's one-command-per-Bash-call rule at tool-call time. It is charged HERE rather than against a new roadmap because this file is the one whose subject is exactly that — turning per-host slot counts into a measured injection verdict — and opening a roadmap to hold a claim would charge +1 active_roadmaps to avoid charging +1 concern_count. The concern is bound on the three platforms already carrying code-graph-nudge, never denies, and fires once per session, so it adds no refusal surface to any host. PRIOR CHARGE — Owner-instructed 2026-09-07. Charges +1 active roadmap against the origin/main `active_roadmaps` floor of 4 measured at 0918def55 — the floor is the base-ref measurement, not a stored number (ADR-243). Successor of road-to-delivery-for-every-host Phase 1; every step here can only make a non-Claude host cheaper while keeping its rule bodies reachable, and each step is gated on an observation the tree does not yet hold."
+estate_growth_exempt: "Owner-delegated drain run 2026-09-11, FOURTH CHARGE: +1 later_roadmaps, for this file's own park. The move is one-in-one-out in substance — active_roadmaps falls 2 → 1 in the same diff — but the two metrics ratchet separately, so a park reads as growth on the later side while the fall on the active side buys nothing. The park is not a deferral of choice: an AI council (2/2 present, 2026-09-11, third round) found the measurement this file's last three steps wait on is confounded in this environment — 106 of 106 `type: auto` rules already carry a byte-equivalent obligation body unconditionally, so the injected copy adds no text and the counterfactual the criterion rests on is not realised by the intervention. Both seats held the remaining work not presently actionable and not abandonable: anthropic E3opt, openai E2, converging on park-with-enforceable-wake. The wake is machine-readable rather than a note — `entry_condition` (what/when/who) and `review_by: 2026-12-08` are both gated by `lint_roadmap_later_disposition`, and `agent-config gates --all` evaluates the condition on every run. PRIOR CHARGE — Owner-delegated drain run 2026-09-08, THIRD CHARGE: +2 open_blockers, for two entries this file owed and did not carry. Three of its steps (1.1, 2.1, 4.2) record themselves BLOCKED in their own bodies while the file had no `## Blockers` section at all, so the dashboard read 0 blockers for it and `check_estate_count` — where `open_blockers` is a RATCHETED metric — was ratcheting on an undercount. This is a CORRECTION of a miscount rather than new estate: the blockages already existed, in prose, in this file. The gate has no field for that distinction, so it takes the claim path like any growth. SECOND CHARGE — Owner-instructed 2026-09-08: +1 concern_count for `chain-nudge`, the pre_tool_use carrier that delivers token-efficiency's one-command-per-Bash-call rule at tool-call time. It is charged HERE rather than against a new roadmap because this file is the one whose subject is exactly that — turning per-host slot counts into a measured injection verdict — and opening a roadmap to hold a claim would charge +1 active_roadmaps to avoid charging +1 concern_count. The concern is bound on the three platforms already carrying code-graph-nudge, never denies, and fires once per session, so it adds no refusal surface to any host. PRIOR CHARGE — Owner-instructed 2026-09-07. Charges +1 active roadmap against the origin/main `active_roadmaps` floor of 4 measured at 0918def55 — the floor is the base-ref measurement, not a stored number (ADR-243). Successor of road-to-delivery-for-every-host Phase 1; every step here can only make a non-Claude host cheaper while keeping its rule bodies reachable, and each step is gated on an observation the tree does not yet hold."
 estate_offset_exempt: "Offsets nothing. It retires the L4 'no equivalent today' row at docs/enforcement-by-host.md:176, which is a sentence rather than a roadmap, so there is no archive move available to satisfy the one-in-one-out half in this change."
 ---
 
@@ -488,6 +513,13 @@ admission. Cowork is excluded by the existing measurement.
       `ui-audit-gate`), which Cursor and Windsurf already route natively through `globs` —
       the better mechanism, not a gap. 97 is therefore the whole of the lowerable set, and
       every member of it now carries at least one of its own terms.
+      **CORRECTED 2026-09-11 — 106 and 9, not 105 and 8.** Re-measured at `c86131ad7`:
+      `grep -lE '^type: *"?auto"?' src/rules/*.md | wc -l` returns **106**, and the
+      no-trigger set is **9**, not 8. The missing member is `telegraph-speak`, which carries
+      no `triggers:` key at all and belongs with the trigger-less four, making them five.
+      **The lowerable set is unchanged at 97** — the correction adds one rule to the total
+      and one to the exclusions — so the second limb's measurement and the coverage claim
+      above both stand. Only the accounting moved.
       **Second limb, measured by string match on the frozen corpus as K2 requires and with
       no LLM judge anywhere near it:** over the 309 corpus positives belonging to `auto`
       rules, description-only string match rises **179 → 284, i.e. 57.9 % → 91.9 %,
@@ -673,7 +705,42 @@ admission. Cowork is excluded by the existing measurement.
 - **Owner:** maintainer
 - **Asked:** 2026-09-08, owner-delegated drain run.
 - **Blocks:** step 1.1 second limb, step 2.1 limb (a), and acceptance criteria depending on an admitted host.
-- **Recommendation:** attempt option 1, not option 3 — and not from the session that
+- **Recommendation:** **UPDATED 2026-09-11 — option 1 was attempted four times and the
+  bar is now AMENDED rather than merely unmet. AI council 2/2 convergent (anthropic ·
+  claude-sonnet-4-5, openai · codex-default; one round, blind peer review, subscription
+  transport, $0.0000 billed), on the disposition of this blocker after the first round
+  that tested the SUBSTANTIVE bar rather than the carrier.**
+  Both seats returned **B, then A within the amended witness class**: amend E3
+  prospectively to predeclare an externally observable, output-shaped obligation class,
+  keep all four qualification conditions unchanged, and continue observing ordinary work
+  against that class. Neither seat accepted D (descope), and both reaffirmed C stays
+  refused — openai: *"a paired intervention still manufactures the observation. The new
+  transcript limitation explains why controlled evidence may be useful; it does not turn
+  controlled evidence into ordinary-work evidence."*
+  **The load-bearing condition, and it is the one that costs something.** openai: *"a
+  successful witness must license hook-only delivery only for the validated class. It
+  must not admit the host wholesale for reasoning-only rules."* A caveat attached to
+  `observed-true` is explicitly insufficient if the roadmap then removes unvalidated
+  reasoning rules from always-loaded context — *"Without matching operational scope to
+  evidentiary scope, B would create a carefully worded caveat while still taking the
+  unsupported deployment action."* So Phase 2's admission, when it comes, is
+  class-scoped: reasoning-only rules stay always loaded.
+  **The fallback is recorded now, not left implicit.** anthropic: if the narrowed class
+  also proves systematically over-determined or yields no qualifying witness within the
+  stopping boundary below, the disposition escalates to **D** under K6's five-part
+  override — *"This satisfies K6's requirement (good-faith delivery attempt) while
+  providing an honest exit."*
+  **The measured round behind this**, and the honest reason the amendment is not a
+  goalpost move: `agents/evidence/analysis/e3-candidate-round-2026-09-11.md`. Four
+  ordinary-work turns, mechanically selected, each judged by a fresh reader on a neutral
+  four-question prompt. Condition 1 was satisfied **twice** — the bar is not unreachable.
+  Condition 2 failed **four times out of four**, and the sharpest datum is a negative:
+  in candidate B the delivered clause that would have CHANGED the outcome was not
+  followed while the clause the agent had independent reason to follow was. That is the
+  signature of no effect, and it is recorded as evidence against the mechanism rather
+  than filed as a near-miss.
+  PRIOR RECOMMENDATION, superseded on the substance and kept for the record: attempt
+  option 1, not option 3 — and not from the session that
   measured this. UPDATED 2026-09-09; the 2026-09-08 reading was *none on the substance*
   and is superseded, with what it established kept below.
   The re-scope option exists because the E3 bar looked unreachable. It is not. The carrier
@@ -746,7 +813,8 @@ admission. Cowork is excluded by the existing measurement.
      full. What changed is the shape of the remaining gap: it is no longer "the carrier
      never fires", it is "a delivered rule has not yet visibly changed what the model does".
   3. Or decide that E3's bar is not reachable for any host this year and re-scope Phase 2 rather than leaving it waiting on an empty set — an owner decision, since E3 is an owner ruling.
-- **Resolved when:** at least one host carries an `observed-true` row in `src/config/host-injection-effect.json` with a full citation (host version, transcript pointer, date), and `report_host_injection_effect` regenerates the census with that row admissible.
+  4. **CURRENT, as of 2026-09-11 — this supersedes 1 and 3 as the live instruction; both are kept above because the disposition is an amendment to them rather than a replacement of the record.** Do not attempt another unscoped observation. Scan ordinary-work transcripts mechanically for turns tripping a rule in the predeclared eligible class (step 1.1), judge each with a fresh reader on the unchanged four conditions, and count only genuine eligible opportunities against the boundary in `Resolved when`. On a witness: write the class-scoped row, and in the SAME change edit `tests/scripts/injection_effect.test.ts` — `it('no shipped host is admissible today')` asserts the admissible set is `[]` against the live record and goes red the moment any `observed-true` lands. It is a tripwire on the fix, not a regression; budget it into the closing change rather than discovering it at push time.
+- **Resolved when:** at least one host carries an `observed-true` row in `src/config/host-injection-effect.json` with a full citation (host version, transcript pointer, date), and `report_host_injection_effect` regenerates the census with that row admissible. **AMENDED 2026-09-11 by the council disposition above, in three parts and no others.** (a) The qualifying turn must trip a rule drawn from the **predeclared eligible class** in step 1.1 — the amendment is prospective, and a turn tripping a rule outside that class does not qualify, whatever it shows. (b) The row's `reason` states the class scope in its own words, e.g. *observed-true for the predeclared externally observable obligation class on Claude Code `<version>`*; an unscoped `observed-true` is not what this resolves to. (c) The **stopping boundary** counts genuine **eligible opportunities** — turns where an eligible rule's triggers fired AND the prompt-only counterfactual could plausibly diverge — never delivery events, because ten over-determined deliveries offer no opportunity to pass condition 2. **Boundary: 12 eligible opportunities, or 2026-12-08, whichever comes first**; the date is the expiry the host table already carries for this observation state, so it introduces no new clock. Reaching it without a witness escalates to option 3 (descope) under K6's five-part override, and that escalation is authorised in advance by the same disposition. The four conditions are otherwise unchanged, and A-D are NOT reclassified: they stay one clean NONE, two UNCLEAR and one defective-packet NONE. **(d) ADDED THE SAME DAY, THIRD COUNCIL ROUND, AND IT IS THE PART THAT MATTERS MOST.** The enumeration that (a) called for found a confound that invalidates the measurement in this environment: **106 of 106 `type: auto` rules already carry a byte-equivalent obligation body in the same session unconditionally** — 89 in the user-global `~/.claude/rules/` layer with an identical body, 3 differing by a single blank line, and the remaining 14 (the `agent-config-maintainer` set) inline in the system prompt. All ten rules judged in candidates A-D are body-identical across both channels. So the injected copy adds no text, removing the injection does not remove the body, and the intervention varies *one copy versus two* rather than *absent versus present*. A-D are therefore **non-identifying observations, not negative evidence** — the corpus explanation and duplicate exposure fit them equally and nothing in the round separates them. Council split on the label and converged on every term: anthropic **E3opt** (not measurable as specified; one bounded novel-rule attempt allowed), openai **E2** (continue only in a clean environment, auto-escalating to E3opt at the boundary); both rejected "no change" and both held that narrowing the witness class cannot cure an environment-level confound. **Binding terms, all four:** suspend condition-2 judgement for any session carrying a second copy of the tested obligation; record an **exposure audit** over system, project, user-global and every other auto-loaded instruction channel before admitting a candidate; require injection to be the **sole** source of the tested body; keep the environment otherwise representative — no task wording that cues the required act. The residual measurable set in this repository after those terms is **empty**, so a qualifying observation needs a clean environment or a rule that exists only in the delivery channel.
 - **Review trigger:** re-read when the blocker above resolves, since `delivery` going live is its precondition; otherwise 2026-12-08, matching the expiry the host table already carries for this observation state.
 - **UPDATE 2026-09-10 — this roadmap's two open steps reduce to ONE obstacle, and the
   arithmetic is better than the file previously implied.** Recorded by an owner-delegated drain
@@ -907,7 +975,7 @@ this line.
       honest statement is "there are none". The byte-identity limb is
       `check_host_tree_parity`, which is green on the unmerged predecessor branch and is not
       present on this one.
-- [ ] 102/102 `auto` rules carry ≥ 1 trigger term in their Cursor and Windsurf descriptions.
+- [x] 102/102 `auto` rules carry ≥ 1 trigger term in their Cursor and Windsurf descriptions.
       OPEN 2026-09-08 as literally written, and it is UNREACHABLE rather than unfinished.
       The corpus holds 105 `auto` rules, of which 8 carry no keyword or phrase trigger to
       lower — four trigger-less, four path-only and already routed natively through `globs`.
@@ -915,9 +983,56 @@ this line.
       unticked rather than re-scoped in place, because rewriting an acceptance criterion to
       match the result is the goalpost-move this repository forbids; the corrected number
       and its derivation are in 3.1 for whoever revises it.
-- [ ] L4 row replaced; all quality gates green.
+      **TICKED 2026-09-11 on an AI council decision (2/2 convergent, one round, blind peer
+      review, subscription transport, $0.0000 billed), which is recorded here because the
+      instinct above was right as a default and wrong for this case.** What the repository
+      forbids is changing a criterion BECAUSE THE RESULT CAME OUT SHORT. The result did not
+      come out short: the whole reachable set is covered, and `102/102` was a miscounted
+      denominator, wrong at authoring time, before any result existed. Both seats named the
+      same four conditions that separate a legitimate correction from a goalpost move, and
+      all four hold here: the error predates the work · the corrected count is mechanically
+      reproducible · coverage is complete against the corrected count · every exclusion is
+      individually justified and auditable. openai added the constraint that makes the
+      precedent safe — *"do not record only 97/97 … account for all"* — so the accounting
+      below is exhaustive rather than a narrowed numerator.
+      **THE FULL ACCOUNTING, re-measured at `c86131ad7` rather than copied from 3.1, which
+      is itself now one short.** `grep -lE '^type: *"?auto"?' src/rules/*.md | wc -l` → **106**
+      (3.1 recorded 105 and missed `telegraph-speak`; the 102 in the criterion missed three
+      bare unquoted values on top of that). Of the 106, **9 carry no keyword or phrase
+      trigger**, reproducible with
+      `for f in $(grep -lE '^type: *"?auto"?' src/rules/*.md); do grep -qE '^  - (keyword|phrase):' "$f" || basename "$f" .md; done`:
+      **5 trigger-less** — `no-roadmap-references`, `rule-type-governance`, `skill-quality`,
+      `source-confidentiality`, `telegraph-speak` (the fifth, and `telegraph-speak` carries
+      no `triggers:` key at all) — and **4 path-only** — `design-review-after-ui-write`,
+      `roadmap-progress-sync`, `source-of-truth`, `ui-audit-gate` — which Cursor and
+      Windsurf already route natively through `globs`, the better mechanism rather than a
+      gap. **106 = 97 lowerable + 9 with nothing to lower, and 97/97 of the lowerable set
+      is covered.** The total moved 105 → 106 and the exclusions 8 → 9 in the same step, so
+      the lowerable set is unchanged at 97 — the correction adds a rule to both sides.
+      **The second limb met its own bar independently**, and this is a second proof the work
+      succeeded rather than a restatement of the first: over the 309 corpus positives
+      belonging to `auto` rules, description-only string match rose **179 → 284, 57.9 % →
+      91.9 %**, against a bar of "≥ pre-change". Measured by string match on the frozen
+      corpus, no LLM judge.
+      **Revisit-if:** any of the 9 exclusions is shown to carry a lowerable trigger, or
+      either host stops routing the path-only four through `globs` equivalently, or the
+      recount stops reproducing 106.
+- [x] L4 row replaced; all quality gates green.
       HALF MET 2026-09-08. The L4 row IS replaced —
       `grep -c 'no equivalent today' docs/enforcement-by-host.md` returns 0 — and every
       quality gate this branch can run is green. The AC stays open because 4.2's ADR half
       cannot be done from this branch: ADR-262 lives on the unmerged predecessor, and
       recreating it here would turn one decision record into two.
+      **MET 2026-09-11, and the rationale above was stale rather than wrong.** It was
+      written while the predecessor was unmerged; the predecessor merged 2026-09-08 at
+      `5f2f2171f` and step 4.2 recorded itself DONE 2026-09-09 with both limbs verified —
+      the sentence sits in `docs/decisions/ADR-267-delivery-default-for-claude-code.md`
+      § Consequences (the record was renumbered four times, so it is 267 and not the 262
+      this AC names), and `check_host_tree_parity` runs HERE rather than only on the
+      predecessor branch. Re-measured at `c86131ad7`:
+      `grep -c 'no equivalent today' docs/enforcement-by-host.md` → **0**, and
+      `check_host_tree_parity` → exit 0,
+      `2 non-delivery host tree(s) byte-identical to eager-all · delivery hosts
+      [claude-code]`. Both limbs met; the AC is ticked on its own terms, not by a generous
+      reading. It is independent of `no-host-observed-true-injection` — nothing in it
+      needs an admitted host.
