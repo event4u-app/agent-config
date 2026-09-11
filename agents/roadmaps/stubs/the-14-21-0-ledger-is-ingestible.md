@@ -5,6 +5,38 @@ review_by: 2026-10-07
 
 # Stub: nothing runs the ingest step, so the ledger goes missing once per release
 
+> **THE TITLE IS NOW FALSE, AND THAT IS THE POINT — 2026-09-11, owner decision
+> after arrival 6.** Something runs the ingest step: `release.ts` gained step 7,
+> `settle_findings_ledger`, between the CI wait and the merge. It downloads the
+> `self-review-findings` artifact from the newest finished run on the release
+> branch, ingests it, commits the ledger to that branch, and then **stops the
+> release** while any blocking finding carries no disposition.
+>
+> **Before the merge on purpose.** "Just before the tag" reads as the natural
+> seam, because the tag is what turns an absent ledger into a repo-wide failure.
+> It is two steps too late: the ledger is read off the release *branch*, and the
+> merge deletes it. Step 7 is the last moment the branch that must carry the
+> file still exists.
+>
+> **A second defect was found while fixing the first, and it is why a diligent
+> maintainer could still not have closed this by hand.** `--ingest` rebuilt the
+> ledger from `{schema_version, release, findings}` and dropped every integrity
+> field the artifact carries — `review_independence`, `context_relation`,
+> `acceptance_status`, `assurance`, `reviewers`, `coverage`. `check_review_schema`
+> derives `acceptance_status` and `assurance` from `review_independence` and reds
+> a ledger that declares neither, so the ingest path produced a file the gate
+> reading it could not accept. Every committed ledger from 14.19.0 on carries the
+> full set; only the ingest produced files without it. Measured against
+> `14.23.0.json`, an ingested ledger is now field-identical.
+>
+> **What remains open, and it is not the mechanism.** The 15.0.0 instance is
+> still unclosed: 50 findings, 4 critical and 13 high, needing an adjudication
+> per blocking finding that no automation may write. Step 7 does not
+> retroactively produce a ledger for a release that already shipped — it stops
+> the *next* one. The count below stands at six arrivals and five instance
+> fixes; the sixth instance is the owner's, and the mechanism column finally
+> moves off zero.
+
 > **Arrival 6 — 2026-09-11, release 15.0.0, instance OPEN and deliberately left
 > open.** Count: **6 arrivals, 5 instance fixes, 0 mechanism fixes.** Found the
 > same way as arrival 5 — settling CI on a roadmap-only PR (#2003) that inherited

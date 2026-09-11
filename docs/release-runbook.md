@@ -120,7 +120,7 @@ the **workflow_dispatch** on `release.yml` (inputs: `bump`, `version`,
       run without a `release/*` head branch (their `if:` admits dispatch), which
       is intended — a shape failure there is a real signal about `main`.
 
-## 2. The pipeline — what `release.ts` does (9 steps)
+## 2. The pipeline — what `release.ts` does (11 steps)
 
 Both entry points run these in order. Each step prints what it will do before
 doing it, so a crash localises to a step.
@@ -138,12 +138,25 @@ doing it, so a crash localises to a step.
    post-mortem).
 5. **Commit + push** — commit `release: X.Y.Z`, push the branch, open the PR.
 6. **Wait for CI** — `gh pr checks --watch` (skippable with `--no-wait`).
-7. **Merge** — `gh pr merge --merge --delete-branch`.
-8. **Tag main** — fast-forward `main`, tag the merge commit, push the tag.
-9. **GitHub Release** — `gh release create X.Y.Z --notes <changelog>`. Under
+7. **Findings ledger** — download the `self-review-findings` artifact from the
+   newest finished `self-review-gate` run on the release branch, ingest it into
+   `agents/evidence/release-findings/X.Y.Z.json`, commit it to the branch, and
+   **stop** while any blocking finding carries no disposition. Filling those is
+   a human adjudication — a status, a rationale and a named verifier per
+   finding — and no automation writes one. Resume with
+   `task release -- --resume --yes` once they are filled and pushed.
+   *Before the merge on purpose:* the ledger is read off the release branch, and
+   step 8 deletes it. The tag, which is what turns an absent ledger into a
+   repo-wide failure, is two steps too late.
+8. **Merge** — `gh pr merge --merge --delete-branch`.
+9. **Tag main** — fast-forward `main`, tag the merge commit, push the tag.
+10. **GitHub Release** — `gh release create X.Y.Z --notes <changelog>`. Under
    `--ci`, also dispatches `release-guard.yml` + `publish-npm.yml` +
    `cloud-release.yml` (a bot-pushed tag does not trigger them on its own —
    GitHub's `GITHUB_TOKEN` recursion guard).
+11. **Delete the merged release branch**, local and remote. This step was in
+    `release.ts` before this list mentioned it; it is written down here now
+    rather than left as the drift found while adding step 7.
 
 ## 3. The two ways to run it
 
@@ -165,7 +178,7 @@ doing it, so a crash localises to a step.
 
 ### B. Local (`task release`)
 
-1. `task release` — interactive; it runs the same 9 steps and asks once at
+1. `task release` — interactive; it runs the same 11 steps and asks once at
    step 3. Use `--as minor` / `--version X.Y.Z` to override the bump; `--dry-run`
    to preview with zero git/gh mutations.
 2. Watch it merge + tag. The tag push triggers `publish-npm.yml` directly (local

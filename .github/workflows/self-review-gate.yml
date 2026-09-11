@@ -72,12 +72,20 @@ jobs:
       - name: Dogfooded self-review (advisory; skips if ANTHROPIC_API_KEY absent)
         run: ./node_modules/.bin/tsx src/scripts/self_review_gate.ts --base "origin/${{ github.base_ref }}" --findings-out /tmp/self-review-findings.json
 
-      # Release-truth Phase 3: findings now carry stable ids and a durable
-      # ingestion artifact. On a release PR, blocking findings must be
-      # ingested + dispositioned in agents/evidence/release-findings/
-      # (`check_finding_dispositions --ingest /tmp/self-review-findings.json`)
-      # — the deterministic `finding-dispositions` job in release-validation
-      # is red until then. This job stays advisory by design.
+      # Release-truth Phase 3: findings carry stable ids and a durable ingestion
+      # artifact. This upload is the INPUT to the release's own step 7
+      # (`settle_findings_ledger` in src/scripts/release.ts), which downloads
+      # this artifact from the newest finished run on the release branch,
+      # ingests it into agents/evidence/release-findings/<version>.json, commits
+      # it to the branch, and then STOPS the release while any blocking finding
+      # carries no disposition. The deterministic `finding-dispositions` job in
+      # release-validation reads that committed file.
+      #
+      # Until 2026-09-11 this comment said a human runs the ingest. Nobody did:
+      # the ledger went missing once per release, six times between 14.19.0 and
+      # 15.0.0, and each absence turned every pull request in the repository red
+      # after the tag. The step is in the release flow now; this job stays
+      # advisory by design and its artifact is what that step consumes.
       - name: Upload findings artifact (ingestion input for the disposition ledger)
         # hashFiles() only sees GITHUB_WORKSPACE — gate on the file directly
         # and let a missing file (NEUTRAL run, no findings) be a clean no-op.
