@@ -110,11 +110,6 @@ interface ExecResult {
 
 const OK: ExecResult = { status: 0, stdout: '', stderr: '' };
 
-/** The head step 7 requires a review run to have looked at. */
-const DRILL_HEAD_SHA = 'deadbeefcafe0000000000000000000000000000';
-/** A run that reviewed some other push — step 7 must refuse its artifact. */
-const DRILL_OTHER_SHA = '0000000000000000000000000000cafedeadbeef';
-
 /** Knobs a scenario turns to inject the measured failure modes. */
 interface WorldConfig {
     /** `git push -u` is rejected this many times before succeeding (9.15.0). */
@@ -149,26 +144,15 @@ interface WorldConfig {
     /** PR checks fail (watch exits non-zero) — the release must die. */
     checks_fail?: boolean;
     /**
-     * Step 7's world: whether the ledger is already committed on the branch,
-     * what `gh run list` answers, whether a download yields an artifact, and
-     * what the disposition gate says.
+     * Step 7's world — two knobs, because the step asks two questions.
      *
-     * Four knobs rather than one because the step's failure modes are four
-     * different things and an independent review found three of them wrong at
-     * once: a finished run with no artifact (ordinary — the workflow uploads
-     * conditionally), a ledger on disk but not on the branch (a push that
-     * failed), a gate refusing for a reason the operator never saw, and a
-     * review that found nothing deadlocking the release.
+     * It VERIFIES: the ledger is produced by the self-review workflow, so the
+     * only things a scenario can vary are whether the file is on the remote
+     * branch and what the disposition gate answers. An earlier version of this
+     * step ingested, and carried four more knobs for run discovery and artifact
+     * download; those went with it when the owner moved the ingest into CI.
      */
     ledger_on_branch?: boolean;
-    findings_runs?: Array<{
-        databaseId: number;
-        conclusion: string | null;
-        createdAt: string;
-        headSha?: string;
-    }>;
-    /** Run ids whose download produces an artifact. Others answer "not found". */
-    findings_artifact_on?: number[];
     /** Exit code + streams the disposition gate answers with. */
     disposition_verdict?: { status: number; stdout: string; stderr: string };
     /**
@@ -329,14 +313,6 @@ class FakeWorld {
     private merge_fails_hard: boolean;
     private checks_fail: boolean;
     private readonly ledger_on_branch: boolean;
-    readonly head_sha = DRILL_HEAD_SHA;
-    private readonly findings_runs: ReadonlyArray<{
-        databaseId: number;
-        conclusion: string | null;
-        createdAt: string;
-        headSha?: string;
-    }>;
-    private readonly findings_artifact_on: readonly number[];
     private readonly disposition_verdict: { status: number; stdout: string; stderr: string };
     private readonly changelog: string;
     /** Working-tree content; see `WorldConfig.changelog_file`. */
@@ -363,8 +339,6 @@ class FakeWorld {
         // already on the branch and the gate is happy, so step 7 is a two-call
         // no-op and the sequencing scenarios stay about sequencing.
         this.ledger_on_branch = cfg.ledger_on_branch ?? true;
-        this.findings_runs = cfg.findings_runs ?? [];
-        this.findings_artifact_on = cfg.findings_artifact_on ?? [];
         this.disposition_verdict = cfg.disposition_verdict ?? { status: 0, stdout: '', stderr: '' };
     }
 
@@ -532,44 +506,6 @@ class FakeWorld {
         if (cmd.startsWith('git cat-file -e ')) {
             return this.ledger_on_branch ? OK : { ...OK, status: 1 };
         }
-        if (args[0] === 'git' && args[1] === 'rev-parse' && args[2] === 'HEAD') {
-            return { ...OK, stdout: this.head_sha };
-        }
-        if (args[0] === 'gh' && args[1] === 'run' && args[2] === 'list') {
-            return { ...OK, stdout: JSON.stringify(this.findings_runs) };
-        }
-        if (args[0] === 'gh' && args[1] === 'run' && args[2] === 'download') {
-            const runId = Number(args[3]);
-            if (!this.findings_artifact_on.includes(runId)) {
-                return { status: 1, stdout: '', stderr: 'artifact not found' };
-            }
-            // The real download writes into --dir; the drill writes the file so
-            // the caller's readdir sees exactly what a real run would leave.
-            const dirIdx = args.indexOf('--dir');
-            if (dirIdx >= 0) {
-                const dir = String(args[dirIdx + 1]);
-                fs.writeFileSync(
-                    path.join(dir, 'self-review-findings.json'),
-                    JSON.stringify({ schema_version: 1, findings: [] }),
-                );
-            }
-            return OK;
-        }
-        if (cmd.includes('check_finding_dispositions --ingest')) {
-            return OK;
-        }
-        if (cmd.startsWith('git add agents/evidence/release-findings/')) {
-            return OK;
-        }
-        if (cmd.startsWith('git commit -m chore(release): ingest self-review findings')) {
-            return OK;
-        }
-        if (cmd.startsWith('git status --porcelain -- agents/evidence/release-findings/')) {
-            // The ingest just wrote the file, so it is always dirty here. A
-            // clean answer would mean the ingest produced nothing, which the
-            // artifact scenarios do not simulate.
-            return { ...OK, stdout: ' M agents/evidence/release-findings/x.json\n' };
-        }
         if (cmd.includes('check_finding_dispositions --release')) {
             return { ...this.disposition_verdict };
         }
@@ -606,73 +542,60 @@ function _count(world: FakeWorld, needle: string): number {
 }
 
 const SCENARIOS: Record<string, Scenario> = {
-    'findings-ledger-ingested-and-rechecked': {
+    'findings-ledger-verified-on-the-remote-branch': {
         summary:
-            'step 7: no ledger on the branch, a finished run carries the artifact — ingest, commit, push, re-wait, then continue',
-        config: {
-            ledger_on_branch: false,
-            findings_runs: [
-                { databaseId: 7, conclusion: 'success', createdAt: '2026-09-11T01:00:00Z', headSha: DRILL_HEAD_SHA },
-            ],
-            findings_artifact_on: [7],
-        },
+            'step 7: the ledger is on the remote branch and the gate passes — the release continues without producing anything',
+        // Step 7 VERIFIES. The ingest lives in the self-review workflow, which
+        // commits the ledger to the release branch; two review rounds showed no
+        // placement inside this script can produce it, because the gate it
+        // anticipates already reds the check step 6 waits on.
+        config: { ledger_on_branch: true },
         expect_success: true,
         verify: (w) => {
             const f: string[] = [];
-            const ingest = w.calls.findIndex((c) => c.includes('--ingest'));
-            const merge = w.calls.indexOf(`gh pr merge ${w.branch} --merge --delete-branch`);
-            _expect(ingest >= 0, 'the artifact was never ingested', f);
+            const probe = w.calls.find((c) => c.startsWith('git cat-file -e '));
+            _expect(probe !== undefined, 'the ledger presence was never probed', f);
             _expect(
-                w.calls.some((c) => c.startsWith('git commit') && c.includes('--')),
-                'the ingest commit was not path-scoped',
+                (probe ?? '').includes('origin/'),
+                `the probe read a local ref, which a failed push makes true: ${probe ?? '(none)'}`,
                 f,
             );
-            _expect(merge >= 0, 'the release never reached the merge', f);
             _expect(
-                ingest < merge,
-                'the ingest ran AFTER the merge — the branch it writes to is gone by then',
+                !w.calls.some((c) => c.includes('--ingest')),
+                'step 7 ingested — that belongs to the workflow now, not the release',
                 f,
             );
-            // The push invalidates the head step 6 waited on; without a re-wait
-            // the merge lands on a head whose required checks never ran.
-            const push = w.calls.lastIndexOf(`git push -u origin ${w.branch}`);
-            const lastWatch = w.calls.map((c) => c.startsWith('gh pr checks')).lastIndexOf(true);
             _expect(
-                lastWatch > push,
-                'no check wait after the ingest push — the merge would race the checks',
+                !w.calls.some((c) => c.startsWith('gh run download')),
+                'step 7 downloaded an artifact — the release no longer produces the ledger',
+                f,
+            );
+            _expect(
+                w.calls.includes(`gh pr merge ${w.branch} --merge --delete-branch`),
+                'the release never reached the merge',
                 f,
             );
             return f;
         },
     },
-    'findings-ledger-no-artifact-stops-the-release': {
+    'findings-ledger-absent-stops-the-release': {
         summary:
-            'step 7: finished runs exist but none carries an artifact — the release STOPS rather than warning and tagging without a ledger',
-        // The conditional upload makes this ordinary, not exceptional: no API
-        // key, no reviewable files, no chunk completed all yield a green run
-        // with no artifact. The old code died on a raw `gh` error here, and the
-        // version before it merged anyway after printing a warning.
-        config: {
-            ledger_on_branch: false,
-            findings_runs: [
-                { databaseId: 7, conclusion: 'success', createdAt: '2026-09-11T01:00:00Z', headSha: DRILL_HEAD_SHA },
-            ],
-            findings_artifact_on: [],
-        },
+            'step 7: no ledger on the remote branch — the release STOPS rather than merging and tagging without one',
+        config: { ledger_on_branch: false },
         expect_success: false,
         verify: (w, error) => {
             const f: string[] = [];
             _expect(
-                (error ?? '').includes('no self-review-findings artifact'),
-                `the stop did not name the missing artifact: ${error ?? '(no error)'}`,
+                (error ?? '').includes('is not on origin/'),
+                `the stop did not name the ref it checked: ${error ?? '(no error)'}`,
                 f,
             );
             _expect(
                 !w.calls.includes(`gh pr merge ${w.branch} --merge --delete-branch`),
-                'merged despite having no ledger — the failure this step exists to end',
+                'merged with no ledger — the failure this step exists to end',
                 f,
             );
-            _expect(!w.tag_remote, 'tagged despite having no ledger', f);
+            _expect(!w.tag_remote, 'tagged with no ledger', f);
             return f;
         },
     },
@@ -704,72 +627,6 @@ const SCENARIOS: Record<string, Scenario> = {
                 'merged over an undispositioned ledger',
                 f,
             );
-            return f;
-        },
-    },
-    'findings-ledger-absent-from-the-remote-branch': {
-        summary:
-            'step 7: the presence probe asks the REMOTE branch — not the working tree, and not the local ref a failed push already advanced',
-        // Renamed from `findings-ledger-on-disk-but-not-on-the-branch`, which a
-        // second review round found tested neither half of its own name: the
-        // world models no filesystem state for the ledger, so "on disk" was
-        // never simulated. What is checkable here is which REF the probe reads,
-        // and that is the half the first fix got wrong — it read the local
-        // branch, which the failed-to-push ingest commit has just advanced.
-        config: {
-            ledger_on_branch: false,
-            findings_runs: [
-                { databaseId: 9, conclusion: 'success', createdAt: '2026-09-11T02:00:00Z', headSha: DRILL_HEAD_SHA },
-            ],
-            findings_artifact_on: [9],
-        },
-        expect_success: true,
-        verify: (w) => {
-            const f: string[] = [];
-            const probe = w.calls.find((c) => c.startsWith('git cat-file -e '));
-            _expect(probe !== undefined, 'the ledger presence was never probed', f);
-            _expect(
-                (probe ?? '').includes('origin/'),
-                `the probe read a local ref, which a failed push makes true: ${probe ?? '(none)'}`,
-                f,
-            );
-            _expect(
-                w.calls.some((c) => c.includes('--ingest')),
-                'the ingest was skipped on a branch that has no ledger',
-                f,
-            );
-            return f;
-        },
-    },
-    'findings-ledger-refuses-a-run-that-reviewed-another-head': {
-        summary:
-            'step 7: a finished run whose artifact reviewed a different commit is not this release’s review — the release stops',
-        // Reachable without anything breaking: the newest run is cancelled or
-        // its download 404s, and the walk falls through to a run from an earlier
-        // push. A zero-findings artifact from that run would write "the review
-        // ran and reported no findings" into the durable record for a head
-        // nobody reviewed.
-        config: {
-            ledger_on_branch: false,
-            findings_runs: [
-                { databaseId: 4, conclusion: 'success', createdAt: '2026-09-11T03:00:00Z', headSha: DRILL_OTHER_SHA },
-            ],
-            findings_artifact_on: [4],
-        },
-        expect_success: false,
-        verify: (w, error) => {
-            const f: string[] = [];
-            _expect(
-                !w.calls.some((c) => c.includes('--ingest')),
-                'ingested an artifact that reviewed a different commit',
-                f,
-            );
-            _expect(
-                (error ?? '').includes('no self-review-findings artifact'),
-                `the stop did not name the missing review: ${error ?? '(no error)'}`,
-                f,
-            );
-            _expect(!w.tag_remote, 'tagged on a review of another head', f);
             return f;
         },
     },

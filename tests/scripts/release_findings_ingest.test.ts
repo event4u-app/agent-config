@@ -1,9 +1,8 @@
 import * as fs from 'node:fs';
-import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { afterEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import {
     INTEGRITY_FIELDS,
@@ -12,19 +11,12 @@ import {
     merge_ingest,
 } from '../../src/scripts/check_finding_dispositions.js';
 import {
-    FINDINGS_ARTIFACT,
     FINDINGS_WORKFLOW,
-    type WorkflowRun,
     dispositionStopMessage,
-    downloadArgv,
-    eligibleRuns,
+    ledgerAbsentMessage,
     ledgerOnBranchArgv,
     ledgerRelPath,
-    noArtifactMessage,
-    planIngest,
-    runLookupArgv,
 } from '../../src/scripts/_lib/release_findings_ingest.js';
-import { _download_findings, _set_exec_override } from '../../src/scripts/release.js';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -32,99 +24,53 @@ function emptyLedger(release = '9.9.9'): Ledger {
     return { schema_version: 1, release, findings: [] };
 }
 
-describe('the literals this module shares with the workflow', () => {
-    // The module names a workflow file and an artifact by string. A rename on
-    // either side without the other silently turns the release step into a
-    // permanent "no finished run" no-op, which looks like a clean skip.
+// The workflow this module names is the one that PRODUCES the ledger. Every
+// assertion here is about a coupling that, if broken, leaves the release
+// stopping on a missing file with a message pointing at a job that no longer
+// does the thing — a failure whose cause is one file away and invisible.
+describe('the workflow this module points the operator at', () => {
     const workflow = fs.readFileSync(
         path.join(REPO_ROOT, '.github', 'workflows', FINDINGS_WORKFLOW),
         'utf-8',
     );
 
-    it('names a workflow file that exists', () => {
+    it('exists', () => {
         expect(workflow.length).toBeGreaterThan(0);
     });
 
-    it('names the artifact the workflow actually uploads', () => {
-        expect(workflow).toContain(`name: ${FINDINGS_ARTIFACT}`);
+    it('carries the job that commits the ledger', () => {
+        expect(workflow).toContain('ingest-release-ledger:');
     });
 
-    it('targets a workflow that still uploads an artifact at all', () => {
-        expect(workflow).toContain('upload-artifact');
+    // The whole reason the ingest lives in CI: the ledger has to be committed,
+    // and a job without write scope cannot do it.
+    it('grants that job the write scope it needs, and nothing broader', () => {
+        expect(workflow).toMatch(/ingest-release-ledger:[\s\S]*?permissions:\s*\n\s*contents: write/);
+        expect(workflow).toMatch(/^permissions:\n\s*contents: read/m);
     });
 
-    // `gh run download` extracts by the BASENAME of the uploaded `path:`, not by
-    // the artifact name. Reading only `name:` left the concrete case where the
-    // code is wrong and every test passes: change `path:` to /tmp/findings.json
-    // and the release dies on every run while the suite stays green.
-    it('uploads a path whose basename the download step can find', () => {
-        const m = /path:\s*(\S+)/.exec(workflow);
-        expect(m, 'the workflow declares no upload path').not.toBeNull();
-        expect(path.basename(m![1]!)).toMatch(/\.json$/);
+    it('restricts it to a release branch', () => {
+        expect(workflow).toContain("startsWith(github.head_ref, 'release/')");
     });
 
-    it('ignores a missing file rather than failing — which is why absence is normal', () => {
+    // A fork PR gets a read-only token, so the push would fail rather than
+    // skip; and a bot actor would re-trigger the job its own push created.
+    it('restricts it to the same repository and a non-bot actor', () => {
+        expect(workflow).toContain('github.event.pull_request.head.repo.full_name');
+        expect(workflow).toContain("github.actor != 'github-actions[bot]'");
+    });
+
+    it('ingests the artifact of ITS OWN run, so no run-picking is possible', () => {
+        expect(workflow).toContain('gh run download "${{ github.run_id }}"');
+    });
+
+    it('commits path-scoped, so nothing else rides in', () => {
+        expect(workflow).toMatch(/git commit -m .+ -- "\$ledger"/);
+    });
+
+    it('ignores a missing findings file rather than failing — absence is normal', () => {
         expect(workflow).toContain('if-no-files-found: ignore');
-    });
-});
-
-describe('eligibleRuns', () => {
-    const run = (id: number, conclusion: string | null, createdAt: string): WorkflowRun => ({
-        databaseId: id,
-        conclusion,
-        createdAt,
-    });
-
-    it('is empty when nothing has finished', () => {
-        expect(eligibleRuns([run(1, null, '2026-09-11T01:00:00Z')])).toEqual([]);
-    });
-
-    it('drops a cancelled run — a superseded push has no complete artifact', () => {
-        const ids = eligibleRuns([
-            run(2, 'cancelled', '2026-09-11T02:00:00Z'),
-            run(1, 'success', '2026-09-11T01:00:00Z'),
-        ]).map((r) => r.databaseId);
-        expect(ids).toEqual([1]);
-    });
-
-    it('keeps a failed run — its red comes from the dry-run job, not the review', () => {
-        expect(eligibleRuns([run(3, 'failure', '2026-09-11T03:00:00Z')])[0]?.databaseId).toBe(3);
-    });
-
-    it('returns every candidate newest-first, because artifact presence decides', () => {
-        const ids = eligibleRuns([
-            run(1, 'success', '2026-09-11T01:00:00Z'),
-            run(3, 'success', '2026-09-11T03:00:00Z'),
-            run(2, 'success', '2026-09-11T02:00:00Z'),
-        ]).map((r) => r.databaseId);
-        expect(ids).toEqual([3, 2, 1]);
-    });
-});
-
-describe('planIngest', () => {
-    const ok: WorkflowRun = {
-        databaseId: 7,
-        conclusion: 'success',
-        createdAt: '2026-09-11T01:00:00Z',
-    };
-
-    it('is a no-op when the ledger is already on the branch', () => {
-        expect(planIngest(true, [ok], 'release/1.0.0')).toEqual({ kind: 'present' });
-    });
-
-    it('does not look for a run when the ledger is on the branch', () => {
-        expect(planIngest(true, [], 'release/1.0.0')).toEqual({ kind: 'present' });
-    });
-
-    it('reports the branch when no run has finished', () => {
-        expect(planIngest(false, [], 'release/1.0.0')).toEqual({
-            kind: 'no-run',
-            branch: 'release/1.0.0',
-        });
-    });
-
-    it('hands back every candidate, not one — absence of an artifact is not an error', () => {
-        expect(planIngest(false, [ok], 'release/1.0.0')).toEqual({ kind: 'ingest', runIds: [7] });
+        expect(workflow).toContain('nothing to ingest');
     });
 });
 
@@ -144,116 +90,6 @@ describe('ledgerOnBranchArgv', () => {
         expect(ledgerOnBranchArgv('upstream', 'release/1.2.3', 'a/b.json')[2]).toBe(
             'upstream/release/1.2.3:a/b.json',
         );
-    });
-});
-
-describe('eligibleRuns — the head the run reviewed', () => {
-    const run = (id: number, headSha?: string): WorkflowRun => ({
-        databaseId: id,
-        conclusion: 'success',
-        createdAt: '2026-09-11T01:00:00Z',
-        headSha,
-    });
-
-    it('drops a run that reviewed a different commit', () => {
-        expect(eligibleRuns([run(1, 'aaa'), run(2, 'bbb')], 'bbb').map((r) => r.databaseId)).toEqual(
-            [2],
-        );
-    });
-
-    it('keeps everything when no head is supplied', () => {
-        expect(eligibleRuns([run(1, 'aaa'), run(2, 'bbb')]).map((r) => r.databaseId)).toHaveLength(
-            2,
-        );
-    });
-
-    // An older gh does not return the field. Emptying the list there would
-    // block every release on a tooling version rather than on evidence.
-    it('keeps a run whose head is unknown rather than refusing it', () => {
-        expect(eligibleRuns([run(1)], 'bbb').map((r) => r.databaseId)).toEqual([1]);
-    });
-
-    it('asks gh for the head, or the guard has nothing to read', () => {
-        const fields = runLookupArgv('b')[runLookupArgv('b').indexOf('--json') + 1] ?? '';
-        expect(fields).toContain('headSha');
-    });
-});
-
-describe('_download_findings', () => {
-    afterEach(() => {
-        _set_exec_override(null);
-    });
-
-    function withDest<T>(fn: (dest: string) => T): T {
-        const dest = fs.mkdtempSync(path.join(os.tmpdir(), 'findings-test-'));
-        try {
-            return fn(dest);
-        } finally {
-            fs.rmSync(dest, { recursive: true, force: true });
-        }
-    }
-
-    it('returns null when no run carries the artifact — the case that used to die raw', () => {
-        withDest((dest) => {
-            _set_exec_override(() => ({ status: 1, stdout: '', stderr: 'artifact not found' }));
-            expect(_download_findings([3, 2, 1], dest)).toBeNull();
-        });
-    });
-
-    it('falls through to an older run when the newest has no artifact', () => {
-        withDest((dest) => {
-            _set_exec_override((args) => {
-                if (args.includes('2')) {
-                    fs.writeFileSync(path.join(dest, 'self-review-findings.json'), '{}');
-                    return { status: 0, stdout: '', stderr: '' };
-                }
-                return { status: 1, stdout: '', stderr: 'not found' };
-            });
-            const got = _download_findings([3, 2, 1], dest);
-            expect(got).not.toBeNull();
-            expect(path.basename(got!)).toBe('self-review-findings.json');
-        });
-    });
-
-    it('accepts whatever single JSON file the artifact holds, not a guessed name', () => {
-        withDest((dest) => {
-            _set_exec_override(() => {
-                fs.writeFileSync(path.join(dest, 'renamed-by-the-workflow.json'), '{}');
-                return { status: 0, stdout: '', stderr: '' };
-            });
-            expect(path.basename(_download_findings([1], dest)!)).toBe(
-                'renamed-by-the-workflow.json',
-            );
-        });
-    });
-
-    it('returns null on an exit-0 download that produced nothing', () => {
-        withDest((dest) => {
-            _set_exec_override(() => ({ status: 0, stdout: '', stderr: '' }));
-            expect(_download_findings([1], dest)).toBeNull();
-        });
-    });
-});
-
-describe('the gh argv', () => {
-    it('scopes the run lookup to the branch and the findings workflow', () => {
-        const argv = runLookupArgv('release/1.2.3');
-        expect(argv).toContain('--branch');
-        expect(argv[argv.indexOf('--branch') + 1]).toBe('release/1.2.3');
-        expect(argv[argv.indexOf('--workflow') + 1]).toBe(FINDINGS_WORKFLOW);
-    });
-
-    it('asks for the fields pickRun reads, and no others it does not', () => {
-        const fields = runLookupArgv('b')[runLookupArgv('b').indexOf('--json') + 1] ?? '';
-        for (const f of ['databaseId', 'conclusion', 'createdAt']) {
-            expect(fields).toContain(f);
-        }
-    });
-
-    it('downloads only the findings artifact', () => {
-        const argv = downloadArgv(42, '/tmp/x');
-        expect(argv[argv.indexOf('--name') + 1]).toBe(FINDINGS_ARTIFACT);
-        expect(argv).toContain('42');
     });
 });
 
@@ -428,17 +264,30 @@ describe('dispositionStopMessage', () => {
     });
 });
 
-describe('noArtifactMessage', () => {
-    it('stops rather than warns, and says why continuing would be worse', () => {
-        const msg = noArtifactMessage('1.2.3', 'release/1.2.3', 2);
-        expect(msg).toContain('merge and tag with no ledger');
-        expect(msg).toContain('2 finished');
+describe('ledgerAbsentMessage', () => {
+    it('names the ref it actually checked, not just the branch', () => {
+        const msg = ledgerAbsentMessage('1.2.3', 'release/1.2.3', 'origin');
+        expect(msg).toContain('origin/release/1.2.3');
+        expect(msg).toContain(ledgerRelPath('1.2.3'));
     });
 
-    it('names the ordinary causes, two of which are not breakage', () => {
-        const msg = noArtifactMessage('1.2.3', 'release/1.2.3', 0);
-        expect(msg).toContain('--no-wait');
+    it('says why continuing would be worse than stopping', () => {
+        expect(ledgerAbsentMessage('1.2.3', 'b', 'origin')).toContain(
+            'reds every pull request in the repository',
+        );
+    });
+
+    // Most causes are ordinary and one is a standing cost. An operator who
+    // meets this message needs to know which, in the order worth checking.
+    it('names waiting first, and the keyless case as its own answer', () => {
+        const msg = ledgerAbsentMessage('1.2.3', 'b', 'origin');
+        expect(msg).toContain('has not finished yet');
         expect(msg).toContain('ANTHROPIC_API_KEY');
+        expect(msg).toContain('no_findings_reason');
+    });
+
+    it('points at the workflow that produces the file', () => {
+        expect(ledgerAbsentMessage('1.2.3', 'b', 'origin')).toContain(FINDINGS_WORKFLOW);
     });
 });
 

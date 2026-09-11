@@ -29,9 +29,16 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 # Write scope justified (road-to-ci-supply-chain-integrity 1.3, 2026-08-22):
-#   pull-requests: write — the gate posts its verdict onto the PR. contents
-#   stays read; nothing in this workflow writes to the repository. No
+#   pull-requests: write — the gate posts its verdict onto the PR. No
 #   pull_request_target in this tree, so a fork PR is capped read-only.
+#
+# `contents: read` here is the FLOOR, and one job raises it. Since 2026-09-11
+# `ingest-release-ledger` declares `contents: write` on itself so it can commit
+# the findings ledger to a release branch — the owner's decision, after two
+# review rounds showed the release flow cannot produce that file at any point in
+# its own sequence. The scope stays on that job rather than moving up here, so
+# `gate-dry-run` and `live-advisory` remain unable to write, and the job's own
+# `if:` restricts it to a same-repo `release/*` head.
 permissions:
   contents: read
   pull-requests: write
@@ -73,19 +80,14 @@ jobs:
         run: ./node_modules/.bin/tsx src/scripts/self_review_gate.ts --base "origin/${{ github.base_ref }}" --findings-out /tmp/self-review-findings.json
 
       # Release-truth Phase 3: findings carry stable ids and a durable ingestion
-      # artifact. This upload is the INPUT to the release's own step 7
-      # (`settle_findings_ledger` in src/scripts/release.ts), which downloads
-      # this artifact from the newest finished run on the release branch,
-      # ingests it into agents/evidence/release-findings/<version>.json, commits
-      # it to the branch, and then STOPS the release while any blocking finding
-      # carries no disposition. The deterministic `finding-dispositions` job in
-      # release-validation reads that committed file.
+      # artifact. On a release PR the `ingest-release-ledger` job below turns
+      # this artifact into the committed ledger; everywhere else the artifact is
+      # the record and this job stays advisory.
       #
       # Until 2026-09-11 this comment said a human runs the ingest. Nobody did:
       # the ledger went missing once per release, six times between 14.19.0 and
       # 15.0.0, and each absence turned every pull request in the repository red
-      # after the tag. The step is in the release flow now; this job stays
-      # advisory by design and its artifact is what that step consumes.
+      # after the tag.
       - name: Upload findings artifact (ingestion input for the disposition ledger)
         # hashFiles() only sees GITHUB_WORKSPACE — gate on the file directly
         # and let a missing file (NEUTRAL run, no findings) be a clean no-op.
@@ -96,3 +98,95 @@ jobs:
           path: /tmp/self-review-findings.json
           retention-days: 30
           if-no-files-found: ignore
+
+  # ── the ledger, produced where the artifact already is ────────────────────
+  #
+  # Release PRs only. The findings ledger is the durable record a release makes
+  # about its own review, and `check_finding_dispositions` fails a SHIPPED
+  # version that has none — on every pull request in the repository, because
+  # `consistency.yml` runs the same check without `--release`. Producing it was
+  # documented and unowned: the comment above used to tell a human to run
+  # `--ingest`, and the ledger went missing once per release, six times between
+  # 14.19.0 and 15.0.0.
+  #
+  # WHY HERE AND NOT IN `release.ts`. Two independent review rounds established
+  # that no placement inside the release flow works. `finding-dispositions` runs
+  # on the release PR and reds while the ledger lacks a finding the review
+  # reported, so a release step that produced the ledger AFTER its check wait
+  # could never run — the wait had already died on that red check — and one that
+  # produced it BEFORE the wait pushed a commit whose checks had not started.
+  # This job holds the artifact already, so the ledger exists before any gate
+  # looks for it. The release now only VERIFIES (step 7) and stops.
+  #
+  # WHAT IT NEVER DOES. It writes findings with EMPTY dispositions, on purpose.
+  # Filling one states what the release ships, with a rationale and a named
+  # verifier; `finding-dispositions` stays red until a human does, and that red
+  # is the point rather than a gap.
+  ingest-release-ledger:
+    name: Commit the findings ledger (release PRs)
+    needs: live-advisory
+    if: >-
+      github.event_name == 'pull_request' &&
+      startsWith(github.head_ref, 'release/') &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    # The one job in this workflow that writes. Scoped to the job rather than
+    # the workflow so `gate-dry-run` and `live-advisory` stay read-only, and
+    # gated above on a same-repo release branch: a fork PR gets a read-only
+    # token and would fail the push rather than skip it.
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ github.head_ref }}
+          # The push needs a credential, unlike every other checkout here.
+          persist-credentials: true
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version: '20'
+      - run: npm ci --no-audit --no-fund --prefer-offline
+
+      # `gh run download` on THIS run rather than the download-artifact action:
+      # `gh` is preinstalled, so there is no action version to pin, and scoping
+      # the download to `github.run_id` makes it structurally impossible to
+      # ingest an artifact from a run that reviewed a different head — which was
+      # a real defect in the release-side version of this step, caught by
+      # review, and is now unrepresentable rather than guarded against.
+      - name: Ingest and commit
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version="${HEAD_REF#release/}"
+          mkdir -p /tmp/findings
+          gh run download "${{ github.run_id }}" --name self-review-findings \
+            --dir /tmp/findings || true
+          if [ ! -f /tmp/findings/self-review-findings.json ]; then
+            # Ordinary, not broken: the upload carries `if-no-files-found:
+            # ignore` and the review exits 0 without writing the file when
+            # there is no API key, nothing reviewable, or no chunk completed.
+            # The release's step 7 is what refuses a missing ledger; saying so
+            # twice, in two places, would put the decision in the wrong one.
+            echo "::notice::no findings artifact for $version — nothing to ingest"
+            exit 0
+          fi
+          ./scripts-run src/scripts/check_finding_dispositions \
+            --ingest /tmp/findings/self-review-findings.json --release "$version"
+          ledger="agents/evidence/release-findings/$version.json"
+          if git diff --quiet -- "$ledger"; then
+            echo "::notice::ledger for $version already current — nothing to commit"
+            exit 0
+          fi
+          git config user.name  'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          # Path-scoped: nothing else in this checkout belongs in this commit,
+          # and the message claims to be one thing.
+          git commit -m "chore(release): ingest self-review findings for $version" -- "$ledger"
+          # The push re-triggers `pull_request`, which is why the job skips a
+          # bot actor above: the second run ingests the same finding ids, the
+          # diff is empty, and the loop stops without a third.
+          git push origin "HEAD:$HEAD_REF"

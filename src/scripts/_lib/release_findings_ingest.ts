@@ -1,30 +1,30 @@
 /**
- * The release step that turns a self-review artifact into a committed ledger.
+ * The release's side of the findings-ledger contract: verification, not
+ * production.
  *
- * WHY THIS EXISTS. The findings ledger is the durable record a release makes
- * about what its own review found, and `check_finding_dispositions` treats an
- * absent one for a SHIPPED version as a failure — repo-wide, because the same
- * check runs on every pull request. Producing it was documented and unowned:
- * the self-review workflow uploads an artifact and its own comment says a human
- * must run `--ingest`, and the release flow never mentions findings at all.
- * Nothing ran the step, so the ledger went missing once per release, six times
- * between 14.19.0 and 15.0.0 — and each time the red was cleared by whoever
- * happened to be pushing an unrelated change, under time pressure, on a record
- * that is supposed to be deliberate.
+ * WHY THE CONTRACT EXISTS. The findings ledger is the durable record a release
+ * makes about what its own review found, and `check_finding_dispositions`
+ * treats an absent one for a SHIPPED version as a failure — repo-wide, because
+ * the same check runs on every pull request. Producing it was documented and
+ * unowned: the self-review workflow uploaded an artifact and its own comment
+ * said a human should run `--ingest`. Nobody did, so the ledger went missing
+ * once per release, six times between 14.19.0 and 15.0.0, and each absence was
+ * cleared by whoever happened to be pushing an unrelated change.
  *
- * WHERE THE STEP BELONGS, and it is not where it looks. The natural place is
- * "just before the tag", because the tag is what flips an absent ledger from a
- * normal in-flight state into a failure. That is too late: the ledger is read
- * off the release BRANCH by the `finding-dispositions` job, and after the merge
- * the branch is gone. So the step runs after the checks settle and before the
- * merge, while the branch that must carry the file still exists.
+ * WHY THE INGEST IS NOT HERE. Two review rounds established that no placement
+ * inside `release.ts` works. `finding-dispositions` runs on the release PR and
+ * reds while the ledger lacks a finding the review reported, so a step that
+ * produced the ledger after the check wait could never run — the wait had
+ * already died on that red check — and a step that produced it before the wait
+ * pushed a commit the wait then had to redo, on a head whose checks had not
+ * started. The owner's decision on 2026-09-11 was to move the ingest into the
+ * workflow that already holds the artifact, which is the one place where the
+ * ledger can exist before any gate looks for it.
  *
- * WHAT IT DOES NOT DO. It never writes a disposition. Ingest produces findings
- * with empty dispositions on purpose, and filling them is an adjudication of
- * what the release is shipping — a human judgement with a rationale and a named
- * verifier per finding. This module's whole contribution is that the judgement
- * is demanded at the release, on the branch, before the tag, instead of being
- * discovered by a stranger three days later on someone else's pull request.
+ * WHAT IS LEFT HERE. Two questions and a stop for each: is the ledger on the
+ * REMOTE branch, and does the disposition gate pass. Neither is repaired by
+ * the release — filling a disposition states what the release ships, with a
+ * rationale and a named verifier, and no automation writes one.
  */
 
 /** Where a release's ledger lives, relative to the repository root. */
@@ -33,57 +33,27 @@ export function ledgerRelPath(version: string): string {
 }
 
 /**
- * The workflow whose run carries the findings artifact, and the artifact's own
- * name. Both are literals in `.github/workflows/self-review-gate.yml`; a rename
- * there without one here is caught by `release_findings_ingest.test.ts`, which
- * reads the workflow rather than trusting these strings.
+ * The workflow that produces and commits the ledger, named so a message can
+ * point the operator at the right run log.
+ *
+ * A rename there without one here is caught by
+ * `release_findings_ingest.test.ts`, which reads the workflow file rather than
+ * trusting this string.
  */
 export const FINDINGS_WORKFLOW = 'self-review-gate.yml';
-export const FINDINGS_ARTIFACT = 'self-review-findings';
-
-/**
- * Argv for the run lookup on `branch`.
- *
- * `headSha` is requested because without it nothing ties the ingested artifact
- * to the commit being released: the walk takes the first run that still has an
- * artifact, which on a branch pushed more than once is a run that reviewed an
- * earlier head. A zero-findings artifact from that run would write "the review
- * ran and reported no findings" into the durable record for a head nobody
- * reviewed — the inversion the disposition gate's own header exists to stop
- * ("absence is not evidence of zero"), produced automatically rather than by
- * omission.
- */
-export function runLookupArgv(branch: string): string[] {
-    return [
-        'run',
-        'list',
-        '--workflow',
-        FINDINGS_WORKFLOW,
-        '--branch',
-        branch,
-        '--limit',
-        '10',
-        '--json',
-        'databaseId,conclusion,createdAt,headSha',
-    ];
-}
-
-/** Argv for the artifact download of `runId` into `dest`. */
-export function downloadArgv(runId: number, dest: string): string[] {
-    return ['run', 'download', String(runId), '--name', FINDINGS_ARTIFACT, '--dir', dest];
-}
 
 /**
  * Argv proving the ledger is on the REMOTE branch — the only ref that answers
- * the question the step is asking.
+ * the question the release is asking.
  *
  * Three refs give three different answers and only one is right. The working
  * tree says "a file exists here", which a by-hand ingest also satisfies. The
- * LOCAL branch ref says "a commit here carries it", which the failed-to-push
- * ingest commit has just made true — so probing it answers identically to the
+ * LOCAL branch ref says "a commit here carries it", which a commit that failed
+ * to push has already made true — so probing it answers identically to the
  * filesystem in exactly the case the probe exists for, which is the defect a
- * second review round caught in the first fix. The remote-tracking ref is the
- * one that goes false when the push fails, and the merge reads the remote.
+ * second review round caught in the first attempt at this fix. The
+ * remote-tracking ref is the one that goes false when a push fails, and the
+ * merge reads the remote.
  *
  * `remote` is a parameter rather than a constant so a fork or a mirror is not
  * silently assumed to be `origin`.
@@ -92,89 +62,31 @@ export function ledgerOnBranchArgv(remote: string, branch: string, rel: string):
     return ['cat-file', '-e', `${remote}/${branch}:${rel}`];
 }
 
-export interface WorkflowRun {
-    databaseId: number;
-    conclusion: string | null;
-    createdAt: string;
-    /** The commit the run reviewed. Absent on an older `gh` — see eligibleRuns. */
-    headSha?: string;
-}
-
 /**
- * The finished runs whose artifact is worth trying, newest first.
+ * Why the release refuses to continue without a ledger on the branch.
  *
- * A LIST, not a pick, and that is the correction: eligibility cannot be read
- * off a run's conclusion, because the artifact is CONDITIONAL. The workflow
- * uploads with `if-no-files-found: ignore`, and the review script returns 0
- * without writing the file on several paths — no API key, no reviewable files,
- * no chunk completed, an exception. Each of those is a finished run with
- * conclusion `success` and no artifact. Keying on conclusion made the designed
- * "no artifact anywhere" branch unreachable and turned the common case into a
- * raw download failure, so the caller walks this list and lets absence be the
- * answer.
+ * Continuing would merge and tag with no ledger, and an absent ledger becomes a
+ * repo-wide failure the moment the tag exists — that is the six-release failure
+ * this mechanism ends, so it is a stop rather than a warning.
  *
- * `conclusion: null` is dropped (in flight) and `cancelled` is dropped (a newer
- * push superseded it, so its artifact is partial at best). Everything else is
- * tried, `failure` included: a `failure` conclusion here means the dry-run job
- * failed, since the review job is `continue-on-error` and cannot redden the
- * run — so refusing it would skip a run whose artifact is perfectly good.
+ * The causes are named because the operator has to pick one and most of them
+ * are ordinary. With the ingest in CI, "it has not happened yet" is the common
+ * case and waiting is the answer; a repository without the review secret never
+ * gets one at all and needs the ledger by hand, once per release, which is a
+ * real cost and is stated here rather than discovered.
  */
-export function eligibleRuns(runs: readonly WorkflowRun[], headSha?: string): WorkflowRun[] {
-    return runs
-        .filter((r) => r.conclusion !== null && r.conclusion !== 'cancelled')
-        // A run that reviewed a different commit is not this release's review.
-        // Dropped rather than preferred-last: taking it would put a verdict
-        // about another head into the permanent record. When `headSha` is not
-        // supplied — an older `gh` that does not return the field — the filter
-        // is skipped rather than emptying the list, and the caller says so.
-        .filter((r) => headSha === undefined || r.headSha === undefined || r.headSha === headSha)
-        .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-}
-
-export type IngestOutcome =
-    /** The ledger is already committed on the branch; nothing to fetch. */
-    | { kind: 'present' }
-    /** No finished run at all — distinct from finished-but-carrying-no-artifact. */
-    | { kind: 'no-run'; branch: string }
-    /** Try these runs newest-first; absence of an artifact is not an error here. */
-    | { kind: 'ingest'; runIds: number[] };
-
-/** What the release step should do, given the ledger state and the run list. */
-export function planIngest(
-    ledgerOnBranch: boolean,
-    runs: readonly WorkflowRun[],
-    branch: string,
-    headSha?: string,
-): IngestOutcome {
-    if (ledgerOnBranch) {
-        return { kind: 'present' };
-    }
-    const usable = eligibleRuns(runs, headSha);
-    return usable.length === 0
-        ? { kind: 'no-run', branch }
-        : { kind: 'ingest', runIds: usable.map((r) => r.databaseId) };
-}
-
-/**
- * Why the release refuses to continue without a ledger.
- *
- * Reached when no finished run carried an artifact. Continuing would merge and
- * tag with no ledger, which is the six-release failure this step exists to end —
- * so it is a stop, not a warning. The three ways to get here are named because
- * the operator has to pick one, and two of them are ordinary situations rather
- * than breakage.
- */
-export function noArtifactMessage(version: string, branch: string, runsSeen: number): string {
+export function ledgerAbsentMessage(version: string, branch: string, remote: string): string {
     return (
-        `no ${FINDINGS_ARTIFACT} artifact for ${version} on ${branch} ` +
-        `(${runsSeen} finished ${FINDINGS_WORKFLOW} run(s) checked).\n` +
-        '  The release stops rather than warns: continuing would merge and tag with no ledger, ' +
-        'which is exactly the state this step exists to prevent, and an absent ledger becomes a ' +
-        'repo-wide failure the moment the tag exists.\n' +
-        '  Three ordinary causes: the review has not finished (do not use --no-wait for a ' +
-        'release), no ANTHROPIC_API_KEY so the review was a no-op, or the run produced no ' +
-        'findings file. Settle the review, or commit a ledger with a no_findings_reason by hand, ' +
-        'then resume.'
+        `${ledgerRelPath(version)} is not on ${remote}/${branch}.\n` +
+        '  The release stops: continuing would merge and tag with no findings ledger, and an ' +
+        'absent ledger for a shipped version reds every pull request in the repository.\n' +
+        `  The ${FINDINGS_WORKFLOW} workflow commits it to the release branch once it has ` +
+        'reviewed the head. Ordinary causes, in the order to check them: the review has not ' +
+        'finished yet (wait, then resume); the review found nothing and its commit is still in ' +
+        'flight (same); no ANTHROPIC_API_KEY, so no review ran and no ledger will appear — write ' +
+        `one with a no_findings_reason and push it to ${branch}; or the workflow could not push, ` +
+        'which its run log will say.\n' +
+        '  Then: `git pull` on the release branch, and resume.'
     );
 }
 
@@ -199,9 +111,7 @@ export function dispositionStopMessage(
     resumeCmd: string,
 ): string {
     const count =
-        blocking > 0
-            ? `  ${blocking} of them are blocking findings with no status yet.\n`
-            : '';
+        blocking > 0 ? `  ${blocking} of them are blocking findings with no status yet.\n` : '';
     return (
         `the disposition gate refuses ${version}. Its own report:\n` +
         `${gateOutput.trim() || '  (the gate printed nothing — run it directly to see why)'}\n` +

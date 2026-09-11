@@ -6,17 +6,22 @@ review_by: 2026-10-07
 # Stub: nothing runs the ingest step, so the ledger goes missing once per release
 
 > **THE TITLE IS NOW FALSE, AND THAT IS THE POINT — 2026-09-11, owner decision
-> after arrival 6.** Something runs the ingest step: `release.ts` gained step 7,
-> `settle_findings_ledger`, between the CI wait and the merge. It downloads the
-> `self-review-findings` artifact from the newest finished run on the release
-> branch, ingests it, commits the ledger to that branch, and then **stops the
-> release** while any blocking finding carries no disposition.
+> after arrival 6.** Something runs the ingest: the `ingest-release-ledger` job
+> in `self-review-gate.yml` commits the ledger to the release branch as soon as
+> it has reviewed the head, and `release.ts` gained step 7, which **verifies**
+> that the ledger is on the remote branch and that the disposition gate passes —
+> and stops the release otherwise.
 >
-> **Before the merge on purpose.** "Just before the tag" reads as the natural
-> seam, because the tag is what turns an absent ledger into a repo-wide failure.
-> It is two steps too late: the ledger is read off the release *branch*, and the
-> merge deletes it. Step 7 is the last moment the branch that must carry the
-> file still exists.
+> **The ingest is in CI rather than in the release, and that took two review
+> rounds to establish.** The first attempt put it in `release.ts` between the
+> check wait and the merge. An independent reviewer showed that path is
+> unreachable: `finding-dispositions` runs on the release PR and reds while the
+> ledger lacks a finding the review reported, so the check wait had already
+> killed the release before the step could run — and moving the step earlier
+> pushed a commit whose checks had not started. The job that holds the artifact
+> is the one place the ledger can exist before any gate looks for it. Everything
+> the release needed to discover a run, download an artifact and match its head
+> became unnecessary and was deleted rather than left as a second path.
 >
 > **A second defect was found while fixing the first, and it is why a diligent
 > maintainer could still not have closed this by hand.** `--ingest` rebuilt the

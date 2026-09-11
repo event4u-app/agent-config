@@ -112,7 +112,6 @@
  */
 
 import * as fs from 'node:fs';
-import * as os from 'node:os';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -137,16 +136,10 @@ import {
 import { canPrompt, promptLine } from './_lib/tty_prompt.js';
 import { preflightPosition } from './_lib/release_position.js';
 import {
-    FINDINGS_ARTIFACT,
-    FINDINGS_WORKFLOW,
-    type WorkflowRun,
     dispositionStopMessage,
-    downloadArgv,
+    ledgerAbsentMessage,
     ledgerOnBranchArgv,
     ledgerRelPath,
-    noArtifactMessage,
-    planIngest,
-    runLookupArgv,
 } from './_lib/release_findings_ingest.js';
 import { isBlocking, parse_ledger } from './check_finding_dispositions.js';
 import {
@@ -1000,123 +993,51 @@ function _step(n: number, total: number, msg: string): void {
 }
 
 /**
- * Make the release carry its own findings ledger, or stop.
+ * Verify the release carries its own findings ledger, or stop.
  *
- * Three outcomes and no fourth: the ledger is already on the remote branch and
- * the step is a no-op; no finished run carries an artifact, which STOPS the
- * release — continuing would merge and tag with no ledger, the state this step
- * exists to prevent, so warning-and-continuing was the wrong reading and an
- * earlier version of this comment said otherwise; or an artifact exists, is
- * ingested, committed, pushed, and the release stops until a human dispositions
- * what it found.
+ * VERIFIES, NEVER PRODUCES. The ingest lives in the self-review workflow, which
+ * commits the ledger to the release branch as soon as it has reviewed it. That
+ * placement was the owner's decision on 2026-09-11 after two review rounds, and
+ * the reason is that every other placement fights an ordering it cannot win:
+ * `finding-dispositions` runs on the release PR and reds while the ledger lacks
+ * a finding the review reported, so a step that produced the ledger AFTER the
+ * check wait could never run — the wait had already died on the red check — and
+ * one that produced it before the wait would push a commit the wait then had to
+ * re-do. Producing it in CI means the ledger exists before any gate looks.
  *
- * The stop on a missing artifact has a cost worth knowing before it is hit: a
- * repository without the review secret produces finished runs with no artifact
- * on every release, so every release stops here and needs a hand-written ledger
- * carrying a `no_findings_reason`. `noArtifactMessage` names that escape.
+ * So this step asks two questions and answers them with a stop:
  *
- * Stopping is the point. `--ingest` deliberately writes empty dispositions,
- * and filling them states what the release ships and who verified it. Before
- * this step existed the demand was real but arrived after the tag, on an
- * unrelated pull request, which is how six releases in a row got their ledger
- * from whoever was unlucky rather than from the release that produced it.
+ *   1. Is the ledger on the remote branch? The REMOTE, because that is the ref
+ *      the merge reads; a local commit that failed to push is not on the branch
+ *      however much the working tree suggests otherwise.
+ *   2. Does the disposition gate pass? Asked with `--pr`, the same mode the CI
+ *      job uses, so the release cannot pass a weaker check than the one it is
+ *      trying to pre-satisfy.
+ *
+ * Neither answer is repaired here. Filling a disposition states what the release
+ * ships, with a rationale and a named verifier; no automation writes one.
  */
-function settle_findings_ledger(
-    version: string,
-    branch: string,
-    opts: { wait_for_checks: boolean },
-): void {
+function settle_findings_ledger(version: string, branch: string, pr: number | null): void {
     const rel = ledgerRelPath(version);
     const abs = path.join(REPO_ROOT, rel);
-
-    const listed = gh(runLookupArgv(branch), { check: false });
-    let runs: WorkflowRun[] = [];
-    if (listed.returncode === 0 && listed.stdout.trim()) {
-        try {
-            runs = JSON.parse(listed.stdout) as WorkflowRun[];
-        } catch {
-            die(
-                `could not read the ${FINDINGS_WORKFLOW} run list for ${branch}: gh returned ` +
-                    'output that is not JSON. Re-run, or settle the ledger by hand; treating ' +
-                    'this as "no runs" would merge and tag with no ledger.',
-            );
-        }
-    } else if (listed.returncode !== 0) {
-        die(
-            `could not list ${FINDINGS_WORKFLOW} runs for ${branch} (gh exit ` +
-                `${listed.returncode}): ${(listed.stderr || listed.stdout).trim()}\n` +
-                '  The release stops rather than assuming there are none — that assumption is ' +
-                'how a release ships without a ledger.',
-        );
-    }
 
     const onBranch =
         run(['git', ...ledgerOnBranchArgv(REMOTE, branch, rel)], { check: false, capture: true })
             .returncode === 0;
-    const headSha = git(['rev-parse', 'HEAD'], { capture: true });
-    const plan = planIngest(onBranch, runs, branch, headSha);
-
-    if (plan.kind === 'present') {
-        process.stdout.write(`    ledger already committed on ${branch}: ${rel}\n`);
-    } else if (plan.kind === 'no-run') {
-        die(noArtifactMessage(version, branch, 0));
-    } else {
-        const dest = fs.mkdtempSync(path.join(os.tmpdir(), 'release-findings-'));
-        try {
-            const artifact = _download_findings(plan.runIds, dest);
-            if (artifact === null) {
-                die(noArtifactMessage(version, branch, plan.runIds.length));
-            }
-            run(
-                [
-                    './scripts-run',
-                    'src/scripts/check_finding_dispositions',
-                    '--ingest',
-                    artifact,
-                    '--release',
-                    version,
-                ],
-                { capture: false },
-            );
-        } finally {
-            fs.rmSync(dest, { recursive: true, force: true });
-        }
-        git(['add', rel]);
-        if (git(['status', '--porcelain', '--', rel], { capture: true })) {
-            // Path-scoped: a resume can re-enter with an index someone else
-            // staged, and this commit's message claims to be one thing.
-            git([
-                'commit',
-                '-m',
-                `chore(release): ingest self-review findings for ${version}`,
-                '--',
-                rel,
-            ]);
-            push_release_branch(branch);
-            // The push invalidated the head step 6 waited on. Step 8 merges
-            // without re-waiting except on the moving-base path, so without this
-            // the merge either bounces on pending required checks or lands on a
-            // head whose checks — `finding-dispositions` among them — never ran.
-            if (opts.wait_for_checks) {
-                process.stdout.write('    re-waiting for checks on the ingest commit\n');
-                watch_pr_checks(branch);
-            } else {
-                process.stdout.write(
-                    '    ⚠️  --no-wait: the ingest commit is pushed and its checks were not ' +
-                        'awaited; the merge in step 8 may bounce or land on an unchecked head\n',
-                );
-            }
-        }
+    if (!onBranch) {
+        die(ledgerAbsentMessage(version, branch, REMOTE));
     }
+    process.stdout.write(`    ledger on ${REMOTE}/${branch}: ${rel}\n`);
 
-    // Re-checked on every path, the already-present one included: a ledger a
-    // previous attempt committed may still be undispositioned, and skipping the
-    // check because the file exists is how the file came to exist without
-    // deciding anything.
-    const verdict = run(
-        ['./scripts-run', 'src/scripts/check_finding_dispositions', '--release', version],
-        { check: false, capture: true },
-    );
+    // `--pr` is the durable trigger for an un-ingested finding: it compares the
+    // review's own report against the committed ledger. Without it the release
+    // would pass a strictly weaker check than `finding-dispositions` and learn
+    // about the gap from CI instead.
+    const argv = ['./scripts-run', 'src/scripts/check_finding_dispositions', '--release', version];
+    if (pr !== null) {
+        argv.push('--pr', String(pr));
+    }
+    const verdict = run(argv, { check: false, capture: true });
     if (verdict.returncode !== 0) {
         die(
             dispositionStopMessage(
@@ -1131,38 +1052,6 @@ function settle_findings_ledger(
             ),
         );
     }
-}
-
-/**
- * Download the findings artifact from the first run that has one.
- *
- * Returns the artifact path, or null when no run carried one. Absence is an
- * ordinary answer here rather than a failure: the workflow uploads with
- * `if-no-files-found: ignore` and the review script exits 0 without writing the
- * file on several paths, so a finished, green run with no artifact is normal.
- */
-function _download_findings(runIds: readonly number[], dest: string): string | null {
-    for (const runId of runIds) {
-        const r = gh(downloadArgv(runId, dest), { check: false });
-        if (r.returncode !== 0) {
-            continue;
-        }
-        const found = fs
-            .readdirSync(dest)
-            .filter((n) => n.endsWith('.json'))
-            .map((n) => path.join(dest, n));
-        if (found.length === 1) {
-            return found[0]!;
-        }
-        if (found.length > 1) {
-            die(
-                `run ${runId}'s ${FINDINGS_ARTIFACT} artifact holds ${found.length} JSON files ` +
-                    `(${found.map((f) => path.basename(f)).join(', ')}) — the release cannot ` +
-                    'guess which is the findings file.',
-            );
-        }
-    }
-    return null;
 }
 
 /**
@@ -1207,12 +1096,12 @@ function execute(
     const pr_state = pr_info ? pr_info['state'] : undefined;
     const pr_merged = pr_state === 'MERGED';
 
-    // ─── 1. branch ──────────────────────────────────────────────────────────
+    // Step 1 — branch
     checkout_release_branch(branch, pr_merged, (m) => {
         _step(1, total, m);
     });
 
-    // ─── 1b. era split (optional, separate commit) ─────────────────────────
+    // Step 1b — era split (optional, separate commit)
     // Lands as `chore(changelog): split era ...` BEFORE the release commit
     // so the split is reviewable on its own and the release commit only
     // touches the bump + new entry. Idempotent: archive already on disk
@@ -1245,7 +1134,7 @@ function execute(
         }
     }
 
-    // ─── 2. file mutations ──────────────────────────────────────────────────
+    // Step 2 — file mutations
     if (pr_merged) {
         _step(2, total, 'PR already merged — skip file bumps');
     } else {
@@ -1365,16 +1254,21 @@ function execute(
     }
 
     // Step 7 — findings ledger
-    // Before the merge, not before the tag. The tag is what turns an absent
-    // ledger from a normal in-flight state into a repo-wide failure, so "just
-    // before the tag" reads as the natural seam — but the ledger is read off
-    // the release BRANCH, and step 8 deletes it. This is the last moment the
-    // branch that has to carry the file still exists.
+    // Verification only; the self-review workflow produces the ledger. Placed
+    // before the merge because the ledger lives on the release branch and step 8
+    // deletes it, so this is the last moment the check means anything — and
+    // after the check wait, so a red `finding-dispositions` has already stopped
+    // the release at step 6 with the check name rather than here with a
+    // duplicate of it.
     if (pr_merged) {
-        _step(7, total, 'PR already merged — findings ledger cannot land on the branch, skip');
+        _step(7, total, 'PR already merged — the ledger rode in with it, skip');
     } else {
-        _step(7, total, 'Settle the self-review findings ledger');
-        settle_findings_ledger(plan.target, branch, { wait_for_checks });
+        _step(7, total, 'Verify the self-review findings ledger');
+        settle_findings_ledger(
+            plan.target,
+            branch,
+            pr_info === null ? null : Number(pr_info['number']),
+        );
     }
 
     // Step 8 — merge
@@ -2005,7 +1899,6 @@ if (_isCliEntry() || process.argv[1] === _HERE) {
 export {
     main,
     settle_findings_ledger,
-    _download_findings,
     _blocking_without_disposition,
     _parse_args,
     parse_version,

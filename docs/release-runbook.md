@@ -138,16 +138,24 @@ doing it, so a crash localises to a step.
    post-mortem).
 5. **Commit + push** — commit `release: X.Y.Z`, push the branch, open the PR.
 6. **Wait for CI** — `gh pr checks --watch` (skippable with `--no-wait`).
-7. **Findings ledger** — download the `self-review-findings` artifact from the
-   newest finished `self-review-gate` run on the release branch, ingest it into
-   `agents/evidence/release-findings/X.Y.Z.json`, commit it to the branch, and
-   **stop** while any blocking finding carries no disposition. Filling those is
-   a human adjudication — a status, a rationale and a named verifier per
-   finding — and no automation writes one. Resume with
-   `task release -- --resume --yes` once they are filled and pushed.
-   *Before the merge on purpose:* the ledger is read off the release branch, and
-   step 8 deletes it. The tag, which is what turns an absent ledger into a
-   repo-wide failure, is two steps too late.
+7. **Findings ledger — verify only.** Asserts that
+   `agents/evidence/release-findings/X.Y.Z.json` is on **`origin/release/X.Y.Z`**
+   and that the disposition gate passes (in `--pr` mode, the same one CI uses),
+   and **stops** otherwise. It produces nothing.
+   *The ledger is produced by CI:* the `ingest-release-ledger` job in
+   `self-review-gate.yml` commits it to the release branch as soon as it has
+   reviewed the head. That placement is deliberate — two review rounds showed
+   `release.ts` cannot produce the file at any point in its own sequence,
+   because `finding-dispositions` already reds the check step 6 waits on.
+   *If it stops:* for an absent ledger, wait for the review to finish, `git pull`
+   the release branch, resume. In a repository with no `ANTHROPIC_API_KEY` no
+   review runs and no ledger ever appears — write one carrying a
+   `no_findings_reason` and push it, once per release. For a refusing gate, fill
+   each blocking finding's `{status, rationale, verified_by}` (and `commit`, when
+   the status is `fixed`), push, then `task release -- --resume --yes`. No
+   automation writes a disposition.
+   *Before the merge on purpose:* the ledger lives on the release branch and
+   step 8 deletes it, so this is the last moment the check means anything.
 8. **Merge** — `gh pr merge --merge --delete-branch`.
 9. **Tag main** — fast-forward `main`, tag the merge commit, push the tag.
 10. **GitHub Release** — `gh release create X.Y.Z --notes <changelog>`. Under
@@ -291,11 +299,11 @@ for wf in evaluator-umbrella consumer-matrix release-validation; do
   grep -q "workflow_dispatch" ".github/workflows/$wf.yml" \
     || { echo "stale: $wf.yml no longer accepts workflow_dispatch"; exit 1; }
 done
-# step 7 exists and still names the artifact it consumes:
+# step 7 verifies, and the job that produces what it verifies still exists:
 grep -q "settle_findings_ledger" src/scripts/release.ts \
   || { echo "stale: the findings-ledger step is gone from release.ts"; exit 1; }
-grep -q "self-review-findings" .github/workflows/self-review-gate.yml \
-  || { echo "stale: step 7 has no artifact to ingest"; exit 1; }
+grep -q "ingest-release-ledger:" .github/workflows/self-review-gate.yml \
+  || { echo "stale: nothing produces the ledger step 7 requires"; exit 1; }
 ```
 
 A written-steps-only **dry run** (cut a no-op release following ONLY this doc,
