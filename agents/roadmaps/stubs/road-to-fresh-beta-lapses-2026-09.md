@@ -5,6 +5,31 @@ review_by: 2026-09-15
 
 # Stub: six beta contracts lapse fresh between 2026-09-10 and 2026-09-15
 
+> **FIRED — the first of the six lapsed on 2026-09-10 and is now red.**
+> `docs/contracts/release-sizing.md` carries `keep-beta-until: 2026-09-10`, the
+> date passed, and `check_beta_review_markers` now exits 1 on **every** pull
+> request in the repository — not only on changes to that contract's surface.
+> First observed 2026-09-11 on PR #2003, whose diff is markdown under
+> `agents/` and touches no contract at all; `main`'s last Consistency run was
+> 2026-09-10T22:10Z, before the date rolled, so `main` is green only because
+> nothing has re-run there since.
+>
+> Nothing was decided here and nothing was edited under time pressure, which is
+> what this stub exists to prevent. The four legal actions below are unchanged
+> and all four remain owner-reserved; this line records that the prediction came
+> true on schedule, so the next reader meets a fired condition rather than an
+> upcoming one.
+>
+> **The horizon re-read on 2026-09-11**, because the set is not the six this
+> stub was written about. `check_beta_review_markers --horizon 14` now reports
+> **six upcoming fresh lapses**: `harness-expectations.md`, `install-layout.md`,
+> `install-scopes.md` and `surface-tiers.md` on 2026-09-15 (4 days), plus
+> `auto-orchestration-v1.md` on 2026-09-23 and `write-engine.md` on 2026-09-24 —
+> the last two are **not** in the original six and are new to this stub.
+> `reasoning-discipline-protocol.md` no longer appears in the upcoming set at
+> all; its disposition is recorded in the analysis this stub already cites, and
+> nothing in this edit re-opens it.
+
 > **Stub — not active work.** It exists so that six dates inside two weeks are
 > reachable by grep from a non-archived roadmap, and so that each has an owner
 > before it fires rather than on the day it does. Created by
