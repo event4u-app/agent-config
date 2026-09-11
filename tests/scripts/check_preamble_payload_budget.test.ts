@@ -374,6 +374,14 @@ function commitFixture(root: string): void {
     run('config', 'user.name', 'fixture');
     run('add', '-A');
     run('commit', '--quiet', '-m', 'fixture base');
+    // `main()` resolves the base ref from the environment, and CI sets
+    // GITHUB_BASE_REF — so the resolver looks for `origin/main`, which a
+    // throwaway repository does not have. Without these two refs the fixture's
+    // ceiling is UNESTABLISHED in CI and established locally, which made the
+    // case pass here and fail there for a reason that had nothing to do with
+    // its subject. Written with `update-ref` rather than `git branch`, which
+    // refuses to force the branch that is checked out.
+    run('update-ref', 'refs/remotes/origin/main', 'HEAD');
 }
 
 /** The budget config a `--repo-root` fixture needs before the gate will read it. */
