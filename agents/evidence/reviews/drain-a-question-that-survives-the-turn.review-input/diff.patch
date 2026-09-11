@@ -1,0 +1,1244 @@
+diff --git a/agents/roadmaps/archive/road-to-a-question-that-survives-the-turn.md b/agents/roadmaps/archive/road-to-a-question-that-survives-the-turn.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..abfa1fd8031d127020649a162939d27d82a33d53
+--- /dev/null
++++ b/agents/roadmaps/archive/road-to-a-question-that-survives-the-turn.md
+@@ -0,0 +1,451 @@
++---
++complexity: structural
++status: ready
++execution:
++  mode: phase-checkpoints
++owner: maintainer
++relates:
++  - slug: road-to-a-ledger-that-closes-the-loop
++    relation: disjoint
++    note: >
++      That roadmap asks whether a turn discharged the obligations delivered into
++      it. This one asks whether a turn dropped a question the PREVIOUS assistant
++      turn already put to the user. Same slot, different object; neither waits on
++      the other.
++  - slug: road-to-decision-closure
++    relation: disjoint
++    note: >
++      That file owns the ownership routing of a grant object and is blocked on
++      road-to-typed-grants-that-persist. This one adds no grant, no typed
++      obligation and no new obligation taxonomy - it reads the transcript the
++      gate already reads. It neither consumes nor unblocks that roadmap.
++estate_growth_exempt: >-
++  Grows active_roadmaps by one, open_blockers by three, and concern_count by
++  exactly one (`review-baseline`, session_start). The three blockers are each a
++  decision the source set could not take for itself and none is actionable by an
++  agent: a kernel-rule edit that `src/scripts/hooks/block_kernel_rule_writes.ts`
++  denies at tool-call time; a change to the definition of a pre-registered claim
++  in `docs/CLAIMS.md`; and a host-behaviour question only a live session can
++  answer, raised by the neutral review of this branch. Recording them is the
++  alternative to silently shipping a gate whose rule text, whose measurement
++  interaction, and whose reachability under a re-entrancy layer were never
++  decided. The concern is the
++  deliverable of Phase 2, not a side
++  effect: `src/scripts/hooks/end_review_nudge_hook.ts:29-34` records its own
++  measurement defect and names the reason it was not fixed - "no such baseline
++  exists anywhere a `stop` concern can read it (recording one would be new
++  session-wide state, out of this roadmap phase's one-concern scope)". Verified
++  2026-09-11 at `src/scripts/hook_manifest.yaml:1279`: `session_start` IS bound,
++  on seven hosts, carrying fourteen concerns. The stated blocker is stale, and
++  the fix is one concern. Phase 1 adds NO concern - detector E rides the existing
++  `turn-end-gate` guard rather than becoming a second refusal-capable stop
++  concern.
++estate_offset_exempt: >-
++  Offsets nothing. The adjacent held objects are each blocked on something this
++  roadmap does not resolve: `road-to-decision-closure` on
++  `road-to-typed-grants-that-persist` (kernel writes denied at tool-call time,
++  pending a forge-administrator settings change), and
++  `agents/roadmaps/stubs/road-to-batch-elicitation-kernel-delta.md` on an owner
++  authority question about `ask-when-uncertain`. Retiring either to buy the slot
++  would dispose of a recorded decision to make room for a plan that depends on
++  it standing.
++design_validated: >-
++  Claim verification at HEAD against the supplied plan: both architectural gaps
++  reproduce, and three of the plan's own implementation steps diverge from the
++  tree. Each divergence is carried at the step it corrects, tagged
++  `corrected-from-reproduction`.
++capability_gap: none
++---
++# Road to a question that survives the turn
++
++> **Source:** `agents/tmp.old/round-7b3e91/` - a session transcript plus one
++> supplied plan, analysed 2026-09-11. Claim verification at HEAD: both
++> architectural gaps **still-true**; three of the supplied plan's implementation
++> steps **diverged** and carry corrected wording below. The reported failure is
++> the operator's own: a turn put a three-option decision to the user, the
++> `end-review-nudge` stop concern produced a second assistant execution with no
++> intervening user message, and that second turn demoted the open question to a
++> subordinate clause. From the user's side the conversation ended without a
++> question.
++
++## Goal
++
++A decision this package has already put to the user cannot disappear because the
++runtime produced another assistant turn. When an assistant turn carries a
++numbered-options block and a later assistant turn in the **same** user turn
++carries none, the turn-end gate refuses and names the block that went missing.
++Separately, the review nudge stops charging a session for mutation it did not
++make: it subtracts a session-start baseline instead of reading the whole dirty
++working tree, so an accumulator branch no longer fires it every turn. Someone
++else can tell whether this happened by running the two fixtures added in Phase 0
++- a transcript whose second assistant turn drops an options block must refuse,
++and a 5-line turn on a session whose baseline already held 1,771 changed lines
++must not fire the nudge.
++
++## Non-goal, stated so no step can grow into it
++
++This roadmap does **not** build the `PendingDecision` object the supplied plan
++proposes - an id, a `pending -> answered/cancelled/superseded/invalidated`
++lifecycle, semantic answer matching, and a `continuation_reason` field. That is a
++grant-shaped obligation object, and `road-to-decision-closure` already owns the
++ownership routing for one, blocked on `road-to-typed-grants-that-persist`.
++Building a second obligation ledger here would create the parallel taxonomy that
++roadmap exists to prevent. What ships is the deterministic transcript-adjacency
++gate the supplied plan itself calls "an excellent Phase-0 regression gate", and
++nothing above it.
++
++It also does not touch `src/rules/user-interaction.md`. The supplied plan's
++section 5.1 adds a third Iron Law to that file; `user-interaction` is a kernel
++rule, `src/scripts/hooks/block_kernel_rule_writes.ts` denies agent writes to it
++at tool-call time, and the delta is parked as a blocker below rather than
++smuggled into a step.
++
++## Phase 0 - Fixtures and the demotion bar, before the detector
++
++- [x] **0.1 Add two golden transcript fixtures and the test that reads them.**
++      One JSONL where a single user turn is followed by two assistant entries,
++      the first carrying a numbered-options block with a recommendation line and
++      the second carrying none (the reported failure). One near-miss where the
++      same shape is separated by a **genuine** user prompt, which must stay
++      silent. Both pass through the `isSyntheticPrompt` and `isSidechain`
++      filtering the gate already applies, so a task notification between the two
++      assistant entries does not read as an answer.
++      verify: `npx vitest run tests/scripts/turn_end_gate_pending_decision.test.ts` passes with the positive case refusing and the near-miss allowing.
++- [x] **0.2 Register detector E in `docs/contracts/turn-end-detector-demotion.md`.**
++      That contract's own removal-condition section requires every blocking
++      detector to carry a pre-registered demotion bar before it ships. Add the
++      row to the detector table, a Q1/Q2 bar row, and the sample floor. Bar: Q1
++      re-refusal share at or above 40 percent, Q2 median at or above 3 - the
++      `verification` row's numbers, because like `verification` this detector
++      reads turn structure rather than prose and its false-positive shape is the
++      same class.
++      verify: `grep -c 'pending-decision' docs/contracts/turn-end-detector-demotion.md` returns at least 3, covering the detector table, the bar table and the sample floor.
++
++**Exit criteria:** both fixtures exist and the demotion bar for detector E is
++written down before any detector code lands.
++
++## Phase 1 - Detector E: a dropped decision refuses the turn-end
++
++- [x] **1.1 Extend `TranscriptTail` with the assistant texts of the current user turn.**
++      `readTranscriptTail` already walks every entry, already resets `toolCalls`
++      at each genuine user prompt, and already skips sidechains and synthetic
++      prompts. Add `assistantTurnTexts: string[]`, appended on every assistant
++      entry carrying text and reset on the same line that resets `toolCalls`.
++      `lastAssistant` stays exactly as it is - four detectors read it and none of
++      them change.
++      verify: `npx vitest run tests/scripts/turn_end_gate_hook.test.ts` stays green and the new field is asserted non-empty for an assistant-bearing fixture.
++- [x] **1.2 Add `detectDroppedDecision` and wire it as detector `pending-decision`.**
++      `corrected-from-reproduction`: the supplied plan's section 9 Phase 1.1 adds
++      a new `pending-decision-continuity` Stop concern. Reproduced against the
++      tree - `turn-end-gate` is the suite's only refusal-capable stop concern and
++      it carries both re-entrancy layers (`stop_hook_active` plus the per-turn
++      refusal marker) as well as the demotion contract. A second refusal-capable
++      stop concern would duplicate that machinery and could refuse a turn the
++      gate had already refused. The corrected step is a fifth detector on the
++      existing guard. It fires when the current turn holds at least two assistant
++      texts, an earlier one carries an option block and the last one carries
++      none. Block detection is **imported** from `check_reply_consistency.ts`
++      (`find_option_blocks`), the spec-backed parser, never a third copy -
++      `interruption_ledger_hook` and the gate would otherwise hold three separate
++      readings of the same rule.
++      verify: `grep -n 'find_option_blocks' src/scripts/hooks/turn_end_gate_hook.ts` resolves to an import from `check_reply_consistency.js`, and the Phase 0.1 positive fixture refuses naming `pending-decision`.
++- [x] **1.3 Add `pending-decision` to `DETECTOR_IDS` and to the gate's `DetectorId` union.**
++      `src/scripts/_lib/turn_end_refusals.ts` reads its set off the union
++      deliberately, so the counters, the per-detector refusal ledger and the
++      demotion instrument pick the new id up without a second edit.
++      verify: `npx vitest run tests/scripts/turn_end_refusals.test.ts` passes, and `grep -c 'pending-decision' src/scripts/_lib/turn_end_refusals.ts src/scripts/hooks/turn_end_gate_hook.ts` is non-zero for both files.
++- [x] **1.4 Run detector E unconditionally, not behind the open-dispatch narrowing.**
++      Detectors A and D are skipped while a subagent dispatch is open, because a
++      completion claim mid-dispatch is not yet a claim. A dropped user decision is
++      the opposite: an open dispatch is exactly the continuation that drops it, so
++      narrowing E the same way would make it silent in the reported case. E runs
++      on every turn-end, like B and C.
++      verify: a fixture with an open dispatch and a dropped options block still refuses; the assertion lives in the Phase 0.1 test file, not in prose.
++
++**Exit criteria:** the reported failure shape refuses at turn-end, the near-miss
++does not, and the refusal names the block that went missing.
++
++## Phase 2 - The review nudge stops charging a session for a dirty tree
++
++- [x] **2.1 Add a `review-baseline` `session_start` concern.**
++      `corrected-from-reproduction`: `src/scripts/hooks/end_review_nudge_hook.ts`
++      declines to fix its own measurement on the ground that no session baseline
++      exists anywhere a `stop` concern can read it. Verified at
++      `src/scripts/hook_manifest.yaml:1279`: `session_start` is bound on seven
++      hosts with fourteen concerns. The blocker is stale. The new concern writes
++      `head_sha`, `baseline_lines` and `written_at` to
++      `agents/runtime/state/review-baseline/<sessionKey>.json`, reusing
++      `deriveSessionKey` and `totalNonDocMutatedLinesWithMeasure` exported from
++      the nudge itself rather than reimplementing the count.
++      verify: `npx vitest run tests/scripts/review_baseline_hook.test.ts` passes, and a session_start run against a tree with N dirty non-doc lines writes `baseline_lines` equal to N.
++- [x] **2.2 Subtract the baseline in `end_review_nudge_hook`, and fail open when it cannot.**
++      The fire condition becomes measured minus `baseline_lines`, clamped at
++      zero, compared against `MUTATION_LINE_THRESHOLD`. Three states where
++      subtraction is invalid, each falling back to today's whole-tree reading and
++      **saying so in the telemetry record** rather than silently: no baseline
++      file (a host without `session_start`, or a session that started before this
++      shipped), an unreadable baseline, and a `head_sha` that no longer matches -
++      a session that committed mid-run moved HEAD, so the baseline's own
++      denominator is gone.
++      verify: a fixture with `baseline_lines` 1771 and a 5-line turn does not fire; one with a moved `head_sha` fires on the unsubtracted count and its telemetry row records the fallback reason.
++- [x] **2.3 Register the concern in the four places a concern is registered.**
++      The `hook_manifest.yaml` concern block, the `session_start` row of the one
++      host that carries its reader, `CONCERN_REGISTRY` in
++      `src/scripts/hooks/concern_registry.ts`, and the manifest test
++      expectations. The registry is the one that is missed, because a concern
++      absent from it is dispatched by no host and fails no gate.
++      `corrected-from-reproduction`: this step first said "the seven per-host
++      `session_start` rows", and seven is what landed. A neutral review measured
++      the consequence — `end-review-nudge` is bound on `claude`'s stop slot and
++      nowhere else, cowork refuses it explicitly, so six of those hosts would
++      spend two git subprocesses per session start on a file nothing opens. It
++      is bound on `claude` alone and dropped for the `worker` role beside its
++      reader.
++      verify: `grep -c 'session_start.*review-baseline' src/scripts/hook_manifest.yaml` returns 2 (claude's two role rows) and no other slot names it; `grep -n 'review_baseline_hook' src/scripts/hooks/concern_registry.ts` resolves.
++**Note on a census hunk this branch no longer carries.** For part of its life the
++branch re-emitted `agents/evidence/analysis/standing-payload-by-host-2026-09.md`
++and the derived host-cost table in `docs/contracts/rule-router.md`, because `main`
++had grown `src/rules/spreadsheet-source-quality.md` by 585 bytes without
++re-emitting the census — which makes `generate_host_cost_table --check` refuse to
++publish either reading and reds two suites on any branch that merges it. `main`
++then reverted that rule change (PR #2010), the census went back in sync at its
++original figure, and this branch's re-emit became stale in the opposite
++direction. Both files are restored to `origin/main`, so the branch carries no
++census diff. Recorded here rather than as a step, because there is no work left
++to do and a checkbox for a vanished condition is worse than a sentence.
++
++**Exit criteria:** a 5-line turn on a branch carrying 1,771 pre-session dirty
++lines does not fire the review nudge, and every fallback path is visible in the
++telemetry row rather than inferred.
++
++## Blockers
++
++### blocker: user-interaction-third-iron-law
++
++- **Status:** resolved 2026-09-11 — criterion met
++- **Owner:** maintainer
++- **Blocks:** nothing in this roadmap - the gate ships without it; this is the
++  prose half the gate would enforce.
++- **What to do:** decide whether `src/rules/user-interaction.md` gains a third
++  Iron Law stating that an issued decision stays live across an assistant-only
++  continuation. The file is kernel, `src/scripts/hooks/block_kernel_rule_writes.ts`
++  denies the write at tool-call time, and the edit needs its own PR plus the soak
++  window from `scope-control` section Kernel-rule edits.
++- **Resolved when:** `git log --oneline -- src/rules/user-interaction.md` shows a
++  commit adding the third Iron Law, or the maintainer records that the detector
++  alone is sufficient and no rule text is owed.
++- **If you do nothing:** the detector ships and enforces a continuity obligation
++  that no rule states, so a reader who hits the refusal finds `user-interaction`
++  silent on the subject and has to read the hook source to learn what was owed.
++  The gate still works; only its explanation is missing.
++- **Recommendation:** none; this is the owner's call - adding an Iron Law to a
++  kernel rule is owner-reserved.
++- **Resolution:** the stated obstacle did not exist. `src/rules/user-interaction.md`
++  is NOT a kernel rule: `src/scripts/_lib/kernel_rules.ts:17-27` lists nine
++  kernel ids and it is not among them, `src/scripts/hooks/block_kernel_rule_writes.ts`
++  denies only paths satisfying `is_kernel_rule`, the file's own frontmatter reads
++  `type: "auto"` / `tier: "3"`, and `check_always_budget` lists the nine
++  always-rules without it — so the edit consumed none of the 59 characters of
++  extended-budget headroom that would otherwise have made this a hard blocker.
++  With the kernel-write deny, the soak window and the budget pressure all absent,
++  the decision was council-decidable and was put to the council
++  (`agents/runtime/council/responses/blocker-a-third-iron-law.md`, 2 of 2 seats
++  present, converged on option 1). Iron Law 3 — "A Pending Decision Survives the
++  Turn" — now stands in `src/rules/user-interaction.md`, in the narrowed wording
++  both seats asked for: an unanswered OPTIONS BLOCK, not an "issued decision",
++  and the re-presentation obligation conditional on the continuation closing the
++  turn. The detector's refusal string cited Iron Law 1 for a property Iron Law 1
++  does not state; it now cites Iron Law 3
++  (`src/scripts/hooks/turn_end_gate_hook.ts`), and
++  `tests/scripts/turn_end_gate_pending_decision.test.ts` asserts the citation so
++  the mis-citation cannot return. That assertion is red against the pre-change
++  string, which contained `Iron Law 1` verbatim.
++
++### blocker: detector-e-under-stop-hook-active
++
++- **Status:** resolved 2026-09-11 — premise-invalidated, criterion superseded
++- **Owner:** maintainer
++- **Blocks:** nothing in this roadmap — the detector ships; this names an
++  unverified assumption a neutral review surfaced rather than leaving it to be
++  discovered in production.
++- **What to do:** establish whether the Stop event that follows a stop-hook
++  continuation carries `stop_hook_active: true`. `src/scripts/hooks/turn_end_gate_hook.ts`
++  returns ALLOW on that flag before any detector runs, and
++  `src/scripts/hooks/dispatch_hook.ts` states in the tree that the host sets it
++  "on exactly that Stop". If both readings hold, detector E is silent in the
++  exact shape it was built for. Nothing in this delta measures it and neither
++  E2E fixture sets the flag, because a transcript cannot answer it — only a live
++  session where the nudge fires and the next stop payload is read can.
++- **Resolved when:** a recorded live session shows the flag's value on the Stop
++  following an `end-review-nudge` fire, and either detector E fired on it or the
++  gate's layer-1 allow is narrowed to exclude E.
++- **If you do nothing:** the detector may be inert in its founding case while
++  every test passes — the near-misses and the pure-function tests all exercise
++  paths that never reach layer 1. The failure mode is silence, which is the one
++  this roadmap exists to stop, so it would look exactly like success.
++- **Recommendation:** none; this is the owner's call — narrowing a re-entrancy
++  layer on an unmeasured assumption is the wedge risk that layer exists to
++  prevent, and the measurement costs one live session.
++- **Resolution:** premise invalidated. The layer-1 allow is real and
++  unconditional — `src/scripts/hooks/turn_end_gate_hook.ts:1305-1306` is the
++  first statement after `unwrap()` and short-circuits all six detectors with no
++  allowlist or setting narrowing it. What fails is the causal chain. The host
++  ties the flag to a stop-hook BLOCK, not to a continuation in general: the
++  installed `claude` binary carries the string "For Stop/SubagentStop hooks,
++  check stop_hook_active in the input and return success while it's true. Set
++  CLAUDE_CODE_STOP_HOOK_BLOCK_CAP to raise this limit", and this tree's own
++  reading agrees (`src/scripts/hooks/dispatch_hook.ts:346-365`). That string is
++  evidence of the intended host contract, not an observed runtime value, and is
++  recorded as such. The founding case never blocks:
++  `src/scripts/hooks/end_review_nudge_hook.ts:181-190` with
++  `src/scripts/hooks/host_semantics.ts:254-258` show the warn branch returning
++  exit 0 unconditionally, and the concern's own contract at
++  `end_review_nudge_hook.ts:219-221` states it "never blocks THE ACTUAL TURN" —
++  no block, therefore no flag. And detector E's trigger is structural rather
++  than stop-hook-shaped: `detectDroppedDecision` reads only the assistant-text
++  array, which resets solely at a genuine non-synthetic user prompt
++  (`turn_end_gate_hook.ts:1213-1228`), so the ordinary `prose → tool call →
++  prose` shape accumulates two texts in one turn with no stop hook involved.
++  Detector E was scored by no instrument at all, which is why this question could
++  only be argued rather than measured; `src/scripts/measure_turn_end_gate.ts` now
++  scores it alongside detectors C and F, with its own per-turn text accumulation
++  mirroring `readTranscriptTail`'s reset boundaries, and
++  `tests/scripts/measure_turn_end_gate.test.ts` covers the three mechanisms that
++  make the accumulation correct — each assertion verified red by neutralising the
++  mechanism it guards. Over the real session store (1,442 top-level session files;
++  the 1,151 files under `*/subagents/` are excluded because the sidechain rule
++  removes them from a main-thread population by construction): 2,622 user turns,
++  1,369 of them carrying two or more assistant texts, **51 fires (1.9%)**, and
++  51 of 51 inside a turn that also made a tool call. An earlier ad-hoc run over a
++  500-file selection of the same store produced the same 51 fires against a 2,118
++  denominator; the identical fire count across two selections of ONE store is not
++  independent replication and is not evidence of a stable rate. What it does
++  establish is the shape: every observed fire is an intra-turn multi-entry
++  sequence that never reaches layer 1. Detector E is not inert.
++- **Residual accepted:** E stays silenced on the one retry that follows an actual
++  blocking concern (`turn-end-gate` or `run-continuation`). The council accepted
++  this as correct rather than as a defect: the turn has already been refused once
++  and `alreadyRefusedTurn` (`turn_end_gate_hook.ts:1018-1034`, marker written at
++  `:1435`, keyed on a turn ordinal that does not move during a continuation)
++  already makes a second refusal structurally impossible, so re-running E there
++  would be redundant. Narrowing layer 1 was considered and declined for the same
++  reason, and because `markRefusedTurn` swallows a state-write failure by design
++  (`:1084-1087`) on a cost estimate that assumes layer 1 is still present.
++- **Criterion disposition:** not satisfied, superseded. No live session was run
++  and no observed VALUE of `stop_hook_active` was obtained — the blocker's own
++  words, "a transcript cannot answer it", are correct: transcripts record the
++  conversation, never hook stdin, and a whole-store grep over 1,438 `.jsonl`
++  files in 109 project directories returned 22 hits, all of them this repo's own
++  source read back as tool output, and zero occurrences carrying a value. The
++  question was answered by two routes the criterion did not anticipate. Authority
++  for the supersession: AI council, 2 of 2 seats present, converged
++  (`agents/runtime/council/responses/blockers-bc-disposition.md`).
++
++### blocker: interruption-baseline-contamination
++
++- **Status:** resolved 2026-09-11 — premise-invalidated, criterion unreachable
++- **Owner:** maintainer
++- **Blocks:** nothing in this roadmap - Phase 1 ships regardless; this names a
++  measurement interaction so it is not discovered later.
++- **What to do:** decide whether detector E firing contaminates the
++  `user-out-of-loop-baseline` claim in `docs/CLAIMS.md`, which reads `unbacked`,
++  stood at 19 of a 20-run floor, and counts one contact per turn. A re-presented
++  options block is the SAME contact, not a new one, but `interruption_report`
++  counts per turn and would score it as two.
++- **Resolved when:** `./scripts-run src/scripts/check_claims` reports
++  `user-out-of-loop-baseline` as backed with the floor reached, or that claim's
++  evidence block records that a re-presented decision is deduplicated on the
++  dropped block's identity.
++- **If you do nothing:** a re-presented block is counted as a second contact, so
++  the pre-registered baseline reads slightly worse than the sessions it measures
++  and the claim closes on a number the mechanism itself inflated. The effect is
++  small and one-directional, which is exactly why it would go unnoticed.
++- **Recommendation:** none; this is the owner's call - it changes the definition
++  of a pre-registered claim.
++- **Resolution:** premise invalidated. The contamination cannot occur.
++  Deduplication already exists at two independent layers, on a key stronger than
++  the block identity the blocker proposed: `alreadyRecorded` refuses a second
++  write for the same `(run_id, turn)` pair
++  (`src/scripts/hooks/interruption_ledger_hook.ts:143-162`, called at `:206`),
++  and `skip_on_refusal_retry: true` drops the whole concern on a refusal retry
++  (`src/scripts/hook_manifest.yaml:1126`, honoured at
++  `src/scripts/hooks/dispatch_hook.ts:419-421`). The manifest states the argument
++  at `hook_manifest.yaml:1116-1122`: a refusal retry is the same turn by
++  construction, so the ledger writes nothing on it. Block identity would be the
++  weaker key — the detector's evidence carries option numbers and a line span,
++  never the option text (`turn_end_gate_hook.ts:843-846`), and line spans move on
++  re-presentation, whereas the turn ordinal is stable. The code-level invariant
++  is the decisive evidence; the ledger confirms it, with 0 duplicate
++  `(run_id, turn)` pairs across 323 rows and 148 distinct runs spanning
++  2026-08-17 to 2026-09-11.
++- **Direction correction:** the hypothesised bias runs the other way. The single
++  row recorded for such a turn is classified from the DROPPED closing reply,
++  which by detector E's own precondition carries no options block, so it records
++  `none`. The mechanism would bias the measured contact count DOWNWARD, not
++  inflate it.
++- **Criterion disposition:** unreachable as written. `check_claims` cannot report
++  an individual claim as backed — `src/scripts/check_claims.ts:15` treats
++  `status: unbacked` ledger entries as inventory that does not fail, the command
++  has no per-claim filter, and its output is a tally. Only a maintainer editing
++  `status:` in `docs/CLAIMS.md` moves it. Recording an unsatisfiable criterion
++  was itself a defect in the blocker, and it is named here rather than left
++  standing. Two of the blocker's factual premises were also misattributed: the
++  "19 of 20" figure belongs to the sibling claim `roadmap-wall-clock-baseline`
++  (`docs/CLAIMS.md:814`), not to `user-out-of-loop-baseline`
++  (`docs/CLAIMS.md:804-809`), whose counting rule reads "a CONTACT is a turn
++  whose closing paragraph either ends in a question (`ask`) or yields the
++  decision without one (`handback`)".
++- **What stays open elsewhere:** `user-out-of-loop-baseline` remains `unbacked`,
++  and deliberately. The ≥20-run floor was cleared on 2026-08-20 and the live
++  reading is n=148 with a median of 0 contacts per run, but
++  `agents/roadmaps/archive/road-to-user-out-of-the-loop.md:34-37` records that
++  those runs post-date the mechanisms they would judge, so the pre-change
++  comparison is no longer obtainable, and `:44-46` reserves flipping a
++  pre-registered claim to the maintainer. That is separate evidence debt owned by
++  that archived record, not by this blocker. Authority for closing this one: AI
++  council, 2 of 2 seats present, converged
++  (`agents/runtime/council/responses/blockers-bc-disposition.md`).
++
++## Risk Register
++<!-- risk-review: v1 | reviewed: 2026-09-11 | reviewer: claude/host -->
++
++| Rank | Item | Risk type | Description | Mitigation | Anchored under |
++|------|------|-----------|-------------|------------|----------------|
++| 1 | Detector E refuses a legitimate turn | implementation | A turn deliberately supersedes its own earlier question - the user's instruction made the options moot - and the gate refuses anyway, wedging the session behind a question nobody needs answered. | The two re-entrancy layers cap a turn at ONE refusal, so a wedge is structurally impossible; the refusal names the block so the reply can carry it in one line. The demotion bar in 0.2 is the measured exit if the re-refusal share turns out high. | Phase 0 - Fixtures and the demotion bar, before the detector |
++| 2 | A tool call between two prose entries reads as a dropped decision | implementation | Two assistant entries inside one user turn is ordinary - a tool call splits them constantly. If the collector keeps text-free tool entries, almost every turn looks like a candidate and the detector fires everywhere. | `_messageText` returns null for a tool-only entry and the collector skips it, so a tool call creates no element. The Phase 0.1 near-miss asserts exactly this rather than trusting the reading. | Phase 1 - Detector E: a dropped decision refuses the turn-end |
++| 3 | The baseline subtraction hides a real review obligation | implementation | A session that starts dirty and also reverts part of the pre-existing mess reads negative, clamps to zero, and the nudge goes quiet on a change that did need review. | The clamp is on the total and the three invalid-subtraction states in 2.2 fall back to the unsubtracted reading rather than to silence. The telemetry row records which path was taken, so the rate is measurable rather than assumed. | Phase 2 - The review nudge stops charging a session for a dirty tree |
++| 4 | The gate enforces an obligation no rule states | product | A reader who hits the refusal cannot find the rule behind it and reads the gate as a bug, because `user-interaction` is silent on continuity. | The refusal message cites `user-interaction` Iron Law 1 as the rule the dropped block belongs to, and the rule delta is parked as a named blocker rather than silently skipped. | Blockers |
++| 5 | The baseline expires at the session's first commit | implementation | The baseline is written once and never refreshed, so `head-moved` holds from the first commit onward and the session is charged for the whole pre-existing tree again — the noise case, returning silently. | Over-reporting is the safe direction and the telemetry row records `head_moved`, so the rate is measurable rather than assumed. Re-baselining is deliberately not attempted: a second write cannot tell "we committed" from "a peer committed underneath us" from a stop payload. | Phase 2 - The review nudge stops charging a session for a dirty tree |
++| 6 | Detector E may be inert under `stop_hook_active` | implementation | The gate's layer-1 allow returns before any detector runs when the host sets that flag, and the continuation that drops a decision is frequently exactly a stop-hook continuation. Every test passes either way, because none of them reaches layer 1. | Recorded as blocker `detector-e-under-stop-hook-active` with the one measurement that answers it, rather than resolved by narrowing a re-entrancy layer on an assumption. | Blockers |
++
++## Acceptance Criteria
++
++- [x] AC-1 - A JSONL transcript whose single user turn is followed by two
++      assistant entries, the first carrying a numbered-options block and the
++      second carrying none, produces a turn-end refusal naming `pending-decision`.
++- [x] AC-2 - The same shape with a genuine user prompt between the two assistant
++      entries produces no refusal, and neither does a shape whose second entry is
++      a tool call carrying no text.
++- [x] AC-3 - `DETECTOR_IDS` in `src/scripts/_lib/turn_end_refusals.ts` carries
++      five ids, and `docs/contracts/turn-end-detector-demotion.md` carries a
++      pre-registered Q1/Q2 bar and sample floor for the fifth.
++- [x] AC-4 - `end_review_nudge_hook` does not fire on a 5-line turn when the
++      session baseline recorded 1,771 pre-session non-doc lines, and does fire on
++      the unsubtracted count when the baseline's `head_sha` no longer matches.
++- [x] AC-5 - `review-baseline` resolves in `CONCERN_REGISTRY`, in the manifest's
++      concern block, and in the `session_start` row of `claude` — the one host
++      binding its reader — and in no other slot; no host binds a concern the
++      registry cannot dispatch, and the `worker` role drops it beside
++      `end-review-nudge`.
++- [x] AC-6 - The two blockers above are recorded with owners and open status
++      rather than resolved inside this roadmap.
++
++AC-6 held for the phases, and is left as it was written rather than reworded to
++match a later state. The three blockers (not two - the count was wrong when the
++criterion was authored, and a third was added by the neutral review) were
++recorded open and none was resolved by the work the phases did. They were closed
++afterwards, in a separate pass that produced the evidence each one asked for, and
++the closure records sit in `## Blockers` above with the authority for each
++disposition named. Two closed `premise-invalidated` and one on its own criterion;
++none closed by a phase quietly deciding its own blocker, which is the failure AC-6
++exists to prevent.
+diff --git a/agents/roadmaps/road-to-a-question-that-survives-the-turn.md b/agents/roadmaps/road-to-a-question-that-survives-the-turn.md
+deleted file mode 100644
+index f716459efbcc7c8ab89e5ce7cf959271260b7912..0000000000000000000000000000000000000000
+--- a/agents/roadmaps/road-to-a-question-that-survives-the-turn.md
++++ /dev/null
+@@ -1,324 +0,0 @@
+----
+-complexity: structural
+-status: ready
+-execution:
+-  mode: phase-checkpoints
+-owner: maintainer
+-relates:
+-  - slug: road-to-a-ledger-that-closes-the-loop
+-    relation: disjoint
+-    note: >
+-      That roadmap asks whether a turn discharged the obligations delivered into
+-      it. This one asks whether a turn dropped a question the PREVIOUS assistant
+-      turn already put to the user. Same slot, different object; neither waits on
+-      the other.
+-  - slug: road-to-decision-closure
+-    relation: disjoint
+-    note: >
+-      That file owns the ownership routing of a grant object and is blocked on
+-      road-to-typed-grants-that-persist. This one adds no grant, no typed
+-      obligation and no new obligation taxonomy - it reads the transcript the
+-      gate already reads. It neither consumes nor unblocks that roadmap.
+-estate_growth_exempt: >-
+-  Grows active_roadmaps by one, open_blockers by three, and concern_count by
+-  exactly one (`review-baseline`, session_start). The three blockers are each a
+-  decision the source set could not take for itself and none is actionable by an
+-  agent: a kernel-rule edit that `src/scripts/hooks/block_kernel_rule_writes.ts`
+-  denies at tool-call time; a change to the definition of a pre-registered claim
+-  in `docs/CLAIMS.md`; and a host-behaviour question only a live session can
+-  answer, raised by the neutral review of this branch. Recording them is the
+-  alternative to silently shipping a gate whose rule text, whose measurement
+-  interaction, and whose reachability under a re-entrancy layer were never
+-  decided. The concern is the
+-  deliverable of Phase 2, not a side
+-  effect: `src/scripts/hooks/end_review_nudge_hook.ts:29-34` records its own
+-  measurement defect and names the reason it was not fixed - "no such baseline
+-  exists anywhere a `stop` concern can read it (recording one would be new
+-  session-wide state, out of this roadmap phase's one-concern scope)". Verified
+-  2026-09-11 at `src/scripts/hook_manifest.yaml:1279`: `session_start` IS bound,
+-  on seven hosts, carrying fourteen concerns. The stated blocker is stale, and
+-  the fix is one concern. Phase 1 adds NO concern - detector E rides the existing
+-  `turn-end-gate` guard rather than becoming a second refusal-capable stop
+-  concern.
+-estate_offset_exempt: >-
+-  Offsets nothing. The adjacent held objects are each blocked on something this
+-  roadmap does not resolve: `road-to-decision-closure` on
+-  `road-to-typed-grants-that-persist` (kernel writes denied at tool-call time,
+-  pending a forge-administrator settings change), and
+-  `agents/roadmaps/stubs/road-to-batch-elicitation-kernel-delta.md` on an owner
+-  authority question about `ask-when-uncertain`. Retiring either to buy the slot
+-  would dispose of a recorded decision to make room for a plan that depends on
+-  it standing.
+-design_validated: >-
+-  Claim verification at HEAD against the supplied plan: both architectural gaps
+-  reproduce, and three of the plan's own implementation steps diverge from the
+-  tree. Each divergence is carried at the step it corrects, tagged
+-  `corrected-from-reproduction`.
+-capability_gap: none
+----
+-# Road to a question that survives the turn
+-
+-> **Source:** `agents/tmp.old/round-7b3e91/` - a session transcript plus one
+-> supplied plan, analysed 2026-09-11. Claim verification at HEAD: both
+-> architectural gaps **still-true**; three of the supplied plan's implementation
+-> steps **diverged** and carry corrected wording below. The reported failure is
+-> the operator's own: a turn put a three-option decision to the user, the
+-> `end-review-nudge` stop concern produced a second assistant execution with no
+-> intervening user message, and that second turn demoted the open question to a
+-> subordinate clause. From the user's side the conversation ended without a
+-> question.
+-
+-## Goal
+-
+-A decision this package has already put to the user cannot disappear because the
+-runtime produced another assistant turn. When an assistant turn carries a
+-numbered-options block and a later assistant turn in the **same** user turn
+-carries none, the turn-end gate refuses and names the block that went missing.
+-Separately, the review nudge stops charging a session for mutation it did not
+-make: it subtracts a session-start baseline instead of reading the whole dirty
+-working tree, so an accumulator branch no longer fires it every turn. Someone
+-else can tell whether this happened by running the two fixtures added in Phase 0
+-- a transcript whose second assistant turn drops an options block must refuse,
+-and a 5-line turn on a session whose baseline already held 1,771 changed lines
+-must not fire the nudge.
+-
+-## Non-goal, stated so no step can grow into it
+-
+-This roadmap does **not** build the `PendingDecision` object the supplied plan
+-proposes - an id, a `pending -> answered/cancelled/superseded/invalidated`
+-lifecycle, semantic answer matching, and a `continuation_reason` field. That is a
+-grant-shaped obligation object, and `road-to-decision-closure` already owns the
+-ownership routing for one, blocked on `road-to-typed-grants-that-persist`.
+-Building a second obligation ledger here would create the parallel taxonomy that
+-roadmap exists to prevent. What ships is the deterministic transcript-adjacency
+-gate the supplied plan itself calls "an excellent Phase-0 regression gate", and
+-nothing above it.
+-
+-It also does not touch `src/rules/user-interaction.md`. The supplied plan's
+-section 5.1 adds a third Iron Law to that file; `user-interaction` is a kernel
+-rule, `src/scripts/hooks/block_kernel_rule_writes.ts` denies agent writes to it
+-at tool-call time, and the delta is parked as a blocker below rather than
+-smuggled into a step.
+-
+-## Phase 0 - Fixtures and the demotion bar, before the detector
+-
+-- [x] **0.1 Add two golden transcript fixtures and the test that reads them.**
+-      One JSONL where a single user turn is followed by two assistant entries,
+-      the first carrying a numbered-options block with a recommendation line and
+-      the second carrying none (the reported failure). One near-miss where the
+-      same shape is separated by a **genuine** user prompt, which must stay
+-      silent. Both pass through the `isSyntheticPrompt` and `isSidechain`
+-      filtering the gate already applies, so a task notification between the two
+-      assistant entries does not read as an answer.
+-      verify: `npx vitest run tests/scripts/turn_end_gate_pending_decision.test.ts` passes with the positive case refusing and the near-miss allowing.
+-- [x] **0.2 Register detector E in `docs/contracts/turn-end-detector-demotion.md`.**
+-      That contract's own removal-condition section requires every blocking
+-      detector to carry a pre-registered demotion bar before it ships. Add the
+-      row to the detector table, a Q1/Q2 bar row, and the sample floor. Bar: Q1
+-      re-refusal share at or above 40 percent, Q2 median at or above 3 - the
+-      `verification` row's numbers, because like `verification` this detector
+-      reads turn structure rather than prose and its false-positive shape is the
+-      same class.
+-      verify: `grep -c 'pending-decision' docs/contracts/turn-end-detector-demotion.md` returns at least 3, covering the detector table, the bar table and the sample floor.
+-
+-**Exit criteria:** both fixtures exist and the demotion bar for detector E is
+-written down before any detector code lands.
+-
+-## Phase 1 - Detector E: a dropped decision refuses the turn-end
+-
+-- [x] **1.1 Extend `TranscriptTail` with the assistant texts of the current user turn.**
+-      `readTranscriptTail` already walks every entry, already resets `toolCalls`
+-      at each genuine user prompt, and already skips sidechains and synthetic
+-      prompts. Add `assistantTurnTexts: string[]`, appended on every assistant
+-      entry carrying text and reset on the same line that resets `toolCalls`.
+-      `lastAssistant` stays exactly as it is - four detectors read it and none of
+-      them change.
+-      verify: `npx vitest run tests/scripts/turn_end_gate_hook.test.ts` stays green and the new field is asserted non-empty for an assistant-bearing fixture.
+-- [x] **1.2 Add `detectDroppedDecision` and wire it as detector `pending-decision`.**
+-      `corrected-from-reproduction`: the supplied plan's section 9 Phase 1.1 adds
+-      a new `pending-decision-continuity` Stop concern. Reproduced against the
+-      tree - `turn-end-gate` is the suite's only refusal-capable stop concern and
+-      it carries both re-entrancy layers (`stop_hook_active` plus the per-turn
+-      refusal marker) as well as the demotion contract. A second refusal-capable
+-      stop concern would duplicate that machinery and could refuse a turn the
+-      gate had already refused. The corrected step is a fifth detector on the
+-      existing guard. It fires when the current turn holds at least two assistant
+-      texts, an earlier one carries an option block and the last one carries
+-      none. Block detection is **imported** from `check_reply_consistency.ts`
+-      (`find_option_blocks`), the spec-backed parser, never a third copy -
+-      `interruption_ledger_hook` and the gate would otherwise hold three separate
+-      readings of the same rule.
+-      verify: `grep -n 'find_option_blocks' src/scripts/hooks/turn_end_gate_hook.ts` resolves to an import from `check_reply_consistency.js`, and the Phase 0.1 positive fixture refuses naming `pending-decision`.
+-- [x] **1.3 Add `pending-decision` to `DETECTOR_IDS` and to the gate's `DetectorId` union.**
+-      `src/scripts/_lib/turn_end_refusals.ts` reads its set off the union
+-      deliberately, so the counters, the per-detector refusal ledger and the
+-      demotion instrument pick the new id up without a second edit.
+-      verify: `npx vitest run tests/scripts/turn_end_refusals.test.ts` passes, and `grep -c 'pending-decision' src/scripts/_lib/turn_end_refusals.ts src/scripts/hooks/turn_end_gate_hook.ts` is non-zero for both files.
+-- [x] **1.4 Run detector E unconditionally, not behind the open-dispatch narrowing.**
+-      Detectors A and D are skipped while a subagent dispatch is open, because a
+-      completion claim mid-dispatch is not yet a claim. A dropped user decision is
+-      the opposite: an open dispatch is exactly the continuation that drops it, so
+-      narrowing E the same way would make it silent in the reported case. E runs
+-      on every turn-end, like B and C.
+-      verify: a fixture with an open dispatch and a dropped options block still refuses; the assertion lives in the Phase 0.1 test file, not in prose.
+-
+-**Exit criteria:** the reported failure shape refuses at turn-end, the near-miss
+-does not, and the refusal names the block that went missing.
+-
+-## Phase 2 - The review nudge stops charging a session for a dirty tree
+-
+-- [x] **2.1 Add a `review-baseline` `session_start` concern.**
+-      `corrected-from-reproduction`: `src/scripts/hooks/end_review_nudge_hook.ts`
+-      declines to fix its own measurement on the ground that no session baseline
+-      exists anywhere a `stop` concern can read it. Verified at
+-      `src/scripts/hook_manifest.yaml:1279`: `session_start` is bound on seven
+-      hosts with fourteen concerns. The blocker is stale. The new concern writes
+-      `head_sha`, `baseline_lines` and `written_at` to
+-      `agents/runtime/state/review-baseline/<sessionKey>.json`, reusing
+-      `deriveSessionKey` and `totalNonDocMutatedLinesWithMeasure` exported from
+-      the nudge itself rather than reimplementing the count.
+-      verify: `npx vitest run tests/scripts/review_baseline_hook.test.ts` passes, and a session_start run against a tree with N dirty non-doc lines writes `baseline_lines` equal to N.
+-- [x] **2.2 Subtract the baseline in `end_review_nudge_hook`, and fail open when it cannot.**
+-      The fire condition becomes measured minus `baseline_lines`, clamped at
+-      zero, compared against `MUTATION_LINE_THRESHOLD`. Three states where
+-      subtraction is invalid, each falling back to today's whole-tree reading and
+-      **saying so in the telemetry record** rather than silently: no baseline
+-      file (a host without `session_start`, or a session that started before this
+-      shipped), an unreadable baseline, and a `head_sha` that no longer matches -
+-      a session that committed mid-run moved HEAD, so the baseline's own
+-      denominator is gone.
+-      verify: a fixture with `baseline_lines` 1771 and a 5-line turn does not fire; one with a moved `head_sha` fires on the unsubtracted count and its telemetry row records the fallback reason.
+-- [x] **2.3 Register the concern in the four places a concern is registered.**
+-      The `hook_manifest.yaml` concern block, the `session_start` row of the one
+-      host that carries its reader, `CONCERN_REGISTRY` in
+-      `src/scripts/hooks/concern_registry.ts`, and the manifest test
+-      expectations. The registry is the one that is missed, because a concern
+-      absent from it is dispatched by no host and fails no gate.
+-      `corrected-from-reproduction`: this step first said "the seven per-host
+-      `session_start` rows", and seven is what landed. A neutral review measured
+-      the consequence — `end-review-nudge` is bound on `claude`'s stop slot and
+-      nowhere else, cowork refuses it explicitly, so six of those hosts would
+-      spend two git subprocesses per session start on a file nothing opens. It
+-      is bound on `claude` alone and dropped for the `worker` role beside its
+-      reader.
+-      verify: `grep -c 'session_start.*review-baseline' src/scripts/hook_manifest.yaml` returns 2 (claude's two role rows) and no other slot names it; `grep -n 'review_baseline_hook' src/scripts/hooks/concern_registry.ts` resolves.
+-**Note on a census hunk this branch no longer carries.** For part of its life the
+-branch re-emitted `agents/evidence/analysis/standing-payload-by-host-2026-09.md`
+-and the derived host-cost table in `docs/contracts/rule-router.md`, because `main`
+-had grown `src/rules/spreadsheet-source-quality.md` by 585 bytes without
+-re-emitting the census — which makes `generate_host_cost_table --check` refuse to
+-publish either reading and reds two suites on any branch that merges it. `main`
+-then reverted that rule change (PR #2010), the census went back in sync at its
+-original figure, and this branch's re-emit became stale in the opposite
+-direction. Both files are restored to `origin/main`, so the branch carries no
+-census diff. Recorded here rather than as a step, because there is no work left
+-to do and a checkbox for a vanished condition is worse than a sentence.
+-
+-**Exit criteria:** a 5-line turn on a branch carrying 1,771 pre-session dirty
+-lines does not fire the review nudge, and every fallback path is visible in the
+-telemetry row rather than inferred.
+-
+-## Blockers
+-
+-### blocker: user-interaction-third-iron-law
+-
+-- **Status:** open
+-- **Owner:** maintainer
+-- **Blocks:** nothing in this roadmap - the gate ships without it; this is the
+-  prose half the gate would enforce.
+-- **What to do:** decide whether `src/rules/user-interaction.md` gains a third
+-  Iron Law stating that an issued decision stays live across an assistant-only
+-  continuation. The file is kernel, `src/scripts/hooks/block_kernel_rule_writes.ts`
+-  denies the write at tool-call time, and the edit needs its own PR plus the soak
+-  window from `scope-control` section Kernel-rule edits.
+-- **Resolved when:** `git log --oneline -- src/rules/user-interaction.md` shows a
+-  commit adding the third Iron Law, or the maintainer records that the detector
+-  alone is sufficient and no rule text is owed.
+-- **If you do nothing:** the detector ships and enforces a continuity obligation
+-  that no rule states, so a reader who hits the refusal finds `user-interaction`
+-  silent on the subject and has to read the hook source to learn what was owed.
+-  The gate still works; only its explanation is missing.
+-- **Recommendation:** none; this is the owner's call - adding an Iron Law to a
+-  kernel rule is owner-reserved.
+-
+-### blocker: detector-e-under-stop-hook-active
+-
+-- **Status:** open
+-- **Owner:** maintainer
+-- **Blocks:** nothing in this roadmap — the detector ships; this names an
+-  unverified assumption a neutral review surfaced rather than leaving it to be
+-  discovered in production.
+-- **What to do:** establish whether the Stop event that follows a stop-hook
+-  continuation carries `stop_hook_active: true`. `src/scripts/hooks/turn_end_gate_hook.ts`
+-  returns ALLOW on that flag before any detector runs, and
+-  `src/scripts/hooks/dispatch_hook.ts` states in the tree that the host sets it
+-  "on exactly that Stop". If both readings hold, detector E is silent in the
+-  exact shape it was built for. Nothing in this delta measures it and neither
+-  E2E fixture sets the flag, because a transcript cannot answer it — only a live
+-  session where the nudge fires and the next stop payload is read can.
+-- **Resolved when:** a recorded live session shows the flag's value on the Stop
+-  following an `end-review-nudge` fire, and either detector E fired on it or the
+-  gate's layer-1 allow is narrowed to exclude E.
+-- **If you do nothing:** the detector may be inert in its founding case while
+-  every test passes — the near-misses and the pure-function tests all exercise
+-  paths that never reach layer 1. The failure mode is silence, which is the one
+-  this roadmap exists to stop, so it would look exactly like success.
+-- **Recommendation:** none; this is the owner's call — narrowing a re-entrancy
+-  layer on an unmeasured assumption is the wedge risk that layer exists to
+-  prevent, and the measurement costs one live session.
+-
+-### blocker: interruption-baseline-contamination
+-
+-- **Status:** open
+-- **Owner:** maintainer
+-- **Blocks:** nothing in this roadmap - Phase 1 ships regardless; this names a
+-  measurement interaction so it is not discovered later.
+-- **What to do:** decide whether detector E firing contaminates the
+-  `user-out-of-loop-baseline` claim in `docs/CLAIMS.md`, which reads `unbacked`,
+-  stood at 19 of a 20-run floor, and counts one contact per turn. A re-presented
+-  options block is the SAME contact, not a new one, but `interruption_report`
+-  counts per turn and would score it as two.
+-- **Resolved when:** `./scripts-run src/scripts/check_claims` reports
+-  `user-out-of-loop-baseline` as backed with the floor reached, or that claim's
+-  evidence block records that a re-presented decision is deduplicated on the
+-  dropped block's identity.
+-- **If you do nothing:** a re-presented block is counted as a second contact, so
+-  the pre-registered baseline reads slightly worse than the sessions it measures
+-  and the claim closes on a number the mechanism itself inflated. The effect is
+-  small and one-directional, which is exactly why it would go unnoticed.
+-- **Recommendation:** none; this is the owner's call - it changes the definition
+-  of a pre-registered claim.
+-
+-## Risk Register
+-<!-- risk-review: v1 | reviewed: 2026-09-11 | reviewer: claude/host -->
+-
+-| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+-|------|------|-----------|-------------|------------|----------------|
+-| 1 | Detector E refuses a legitimate turn | implementation | A turn deliberately supersedes its own earlier question - the user's instruction made the options moot - and the gate refuses anyway, wedging the session behind a question nobody needs answered. | The two re-entrancy layers cap a turn at ONE refusal, so a wedge is structurally impossible; the refusal names the block so the reply can carry it in one line. The demotion bar in 0.2 is the measured exit if the re-refusal share turns out high. | Phase 0 - Fixtures and the demotion bar, before the detector |
+-| 2 | A tool call between two prose entries reads as a dropped decision | implementation | Two assistant entries inside one user turn is ordinary - a tool call splits them constantly. If the collector keeps text-free tool entries, almost every turn looks like a candidate and the detector fires everywhere. | `_messageText` returns null for a tool-only entry and the collector skips it, so a tool call creates no element. The Phase 0.1 near-miss asserts exactly this rather than trusting the reading. | Phase 1 - Detector E: a dropped decision refuses the turn-end |
+-| 3 | The baseline subtraction hides a real review obligation | implementation | A session that starts dirty and also reverts part of the pre-existing mess reads negative, clamps to zero, and the nudge goes quiet on a change that did need review. | The clamp is on the total and the three invalid-subtraction states in 2.2 fall back to the unsubtracted reading rather than to silence. The telemetry row records which path was taken, so the rate is measurable rather than assumed. | Phase 2 - The review nudge stops charging a session for a dirty tree |
+-| 4 | The gate enforces an obligation no rule states | product | A reader who hits the refusal cannot find the rule behind it and reads the gate as a bug, because `user-interaction` is silent on continuity. | The refusal message cites `user-interaction` Iron Law 1 as the rule the dropped block belongs to, and the rule delta is parked as a named blocker rather than silently skipped. | Blockers |
+-| 5 | The baseline expires at the session's first commit | implementation | The baseline is written once and never refreshed, so `head-moved` holds from the first commit onward and the session is charged for the whole pre-existing tree again — the noise case, returning silently. | Over-reporting is the safe direction and the telemetry row records `head_moved`, so the rate is measurable rather than assumed. Re-baselining is deliberately not attempted: a second write cannot tell "we committed" from "a peer committed underneath us" from a stop payload. | Phase 2 - The review nudge stops charging a session for a dirty tree |
+-| 6 | Detector E may be inert under `stop_hook_active` | implementation | The gate's layer-1 allow returns before any detector runs when the host sets that flag, and the continuation that drops a decision is frequently exactly a stop-hook continuation. Every test passes either way, because none of them reaches layer 1. | Recorded as blocker `detector-e-under-stop-hook-active` with the one measurement that answers it, rather than resolved by narrowing a re-entrancy layer on an assumption. | Blockers |
+-
+-## Acceptance Criteria
+-
+-- [x] AC-1 - A JSONL transcript whose single user turn is followed by two
+-      assistant entries, the first carrying a numbered-options block and the
+-      second carrying none, produces a turn-end refusal naming `pending-decision`.
+-- [x] AC-2 - The same shape with a genuine user prompt between the two assistant
+-      entries produces no refusal, and neither does a shape whose second entry is
+-      a tool call carrying no text.
+-- [x] AC-3 - `DETECTOR_IDS` in `src/scripts/_lib/turn_end_refusals.ts` carries
+-      five ids, and `docs/contracts/turn-end-detector-demotion.md` carries a
+-      pre-registered Q1/Q2 bar and sample floor for the fifth.
+-- [x] AC-4 - `end_review_nudge_hook` does not fire on a 5-line turn when the
+-      session baseline recorded 1,771 pre-session non-doc lines, and does fire on
+-      the unsubtracted count when the baseline's `head_sha` no longer matches.
+-- [x] AC-5 - `review-baseline` resolves in `CONCERN_REGISTRY`, in the manifest's
+-      concern block, and in the `session_start` row of `claude` — the one host
+-      binding its reader — and in no other slot; no host binds a concern the
+-      registry cannot dispatch, and the `worker` role drops it beside
+-      `end-review-nudge`.
+-- [x] AC-6 - The two blockers above are recorded with owners and open status
+-      rather than resolved inside this roadmap.
+diff --git a/dist/agent-src/rules/user-interaction.md b/dist/agent-src/rules/user-interaction.md
+index 3b56cdf40e1a4b25d6ec63d9d5011619966637c3..d232ef32144b9badf21a4f3fd29d4bbf6df735af 100644
+--- a/dist/agent-src/rules/user-interaction.md
++++ b/dist/agent-src/rules/user-interaction.md
+@@ -19,7 +19,7 @@ obligation_frequency: "per-turn"
+ 
+ # User Interaction
+ 
+-Two Iron Laws govern every reply that contains numbered options.
++Three Iron Laws govern every reply that contains numbered options.
+ They override conversation momentum, brevity, and the urge to defer
+ to the user. **Missing a recommendation is a rule violation, not a slip.**
+ 
+@@ -48,6 +48,22 @@ Mechanical backstop:
+ (non-zero exit on any rule below). Self-scan is the primary gate;
+ the script is the deterministic safety net.
+ 
++## Iron Law 3 — A Pending Decision Survives the Turn
++
++```
++AN UNANSWERED OPTIONS BLOCK STAYS LIVE UNTIL THE USER ANSWERS, CANCELS, OR SUPERSEDES IT.
++AN ASSISTANT-ONLY CONTINUATION — A HOOK NUDGE, A REVIEWER RESULT, A TASK NOTIFICATION —
++MAY ADD TO THE TURN. IT NEVER SILENTLY DISPLACES THE PENDING QUESTION.
++A CONTINUATION THAT CLOSES THE TURN RE-PRESENTS THE BLOCK AND ITS RECOMMENDATION LINE.
++DROPPING AN UNANSWERED BLOCK IS A RULE VIOLATION, NOT A SLIP.
++```
++
++Only the user's own answer discharges it. A later assistant entry in the same
++turn is not an answer, and a turn that ends with the block gone has lost a
++decision nobody took. Mechanically enforced by the `pending-decision` detector
++in `src/scripts/hooks/turn_end_gate_hook.ts`, which refuses the turn-end and
++names the dropped block's option numbers.
++
+ ## Question pacing — one decision point per turn
+ 
+ [`ask-when-uncertain`](ask-when-uncertain.md)'s Iron Law is canonical: **one question per turn**. What counts as "one question" is **one decision point** — a single numbered-options block is ONE question even when its options span multiple dimensions (a depth-and-framework matrix answered with a single number is one decision). Multiple separate asks in one reply, or a block whose answer would need a structured reply (`1a, 2b`), violate the kernel rule's self-check.
+diff --git a/src/domains/meta/pack.yaml b/src/domains/meta/pack.yaml
+index 1c6bc5874540189bd1efa140db2a6212579e132b..484456f239a36d0d60d7f86c1e4ab7e578f8e07b 100644
+--- a/src/domains/meta/pack.yaml
++++ b/src/domains/meta/pack.yaml
+@@ -101,6 +101,6 @@ token_passport:
+   catalog_tokens: 3649
+   commands_tokens: 236051
+   other_tokens: 1298
+-  rules_tokens: 65547
+-  total_tokens: 306545
++  rules_tokens: 65753
++  total_tokens: 306751
+ trust_level_default: core
+diff --git a/src/rules/user-interaction.md b/src/rules/user-interaction.md
+index dec9250a46436ca12b744ea407349309c4107313..47dd354bfbacdf7a86172e66cfbf418efedb267a 100644
+--- a/src/rules/user-interaction.md
++++ b/src/rules/user-interaction.md
+@@ -19,7 +19,7 @@ obligation_frequency: "per-turn"
+ 
+ # User Interaction
+ 
+-Two Iron Laws govern every reply that contains numbered options.
++Three Iron Laws govern every reply that contains numbered options.
+ They override conversation momentum, brevity, and the urge to defer
+ to the user. **Missing a recommendation is a rule violation, not a slip.**
+ 
+@@ -48,6 +48,22 @@ Mechanical backstop:
+ (non-zero exit on any rule below). Self-scan is the primary gate;
+ the script is the deterministic safety net.
+ 
++## Iron Law 3 — A Pending Decision Survives the Turn
++
++```
++AN UNANSWERED OPTIONS BLOCK STAYS LIVE UNTIL THE USER ANSWERS, CANCELS, OR SUPERSEDES IT.
++AN ASSISTANT-ONLY CONTINUATION — A HOOK NUDGE, A REVIEWER RESULT, A TASK NOTIFICATION —
++MAY ADD TO THE TURN. IT NEVER SILENTLY DISPLACES THE PENDING QUESTION.
++A CONTINUATION THAT CLOSES THE TURN RE-PRESENTS THE BLOCK AND ITS RECOMMENDATION LINE.
++DROPPING AN UNANSWERED BLOCK IS A RULE VIOLATION, NOT A SLIP.
++```
++
++Only the user's own answer discharges it. A later assistant entry in the same
++turn is not an answer, and a turn that ends with the block gone has lost a
++decision nobody took. Mechanically enforced by the `pending-decision` detector
++in `src/scripts/hooks/turn_end_gate_hook.ts`, which refuses the turn-end and
++names the dropped block's option numbers.
++
+ ## Question pacing — one decision point per turn
+ 
+ [`ask-when-uncertain`](ask-when-uncertain.md)'s Iron Law is canonical: **one question per turn**. What counts as "one question" is **one decision point** — a single numbered-options block is ONE question even when its options span multiple dimensions (a depth-and-framework matrix answered with a single number is one decision). Multiple separate asks in one reply, or a block whose answer would need a structured reply (`1a, 2b`), violate the kernel rule's self-check.
+diff --git a/src/scripts/hooks/turn_end_gate_hook.ts b/src/scripts/hooks/turn_end_gate_hook.ts
+index a61d2613a641b3b225f4c0e7db8df03d86d258a2..eafb6cabed21152a99fa3391376830408f238a9c 100644
+--- a/src/scripts/hooks/turn_end_gate_hook.ts
++++ b/src/scripts/hooks/turn_end_gate_hook.ts
+@@ -853,8 +853,9 @@ export function detectDroppedDecision(assistantTurnTexts: readonly string[]): Fi
+                 'options block, so the decision disappeared without being ' +
+                 'answered, cancelled or superseded. A hook nudge, a reviewer ' +
+                 'result or a task notification may ADD to a turn; it may not ' +
+-                'displace a question already asked (user-interaction Iron Law 1: ' +
+-                'the option block plus its recommendation line is the ask). ' +
++                'displace a question already asked (user-interaction Iron Law 3: ' +
++                'an unanswered options block survives an assistant-only ' +
++                'continuation). ' +
+                 'Re-present the block and its recommendation line at the end of ' +
+                 'this reply',
+         };
+diff --git a/src/scripts/measure_turn_end_gate.ts b/src/scripts/measure_turn_end_gate.ts
+index 7a013ea9454397434f45f4894baf532fe2ab8f12..b40ac91b7881856fc756f6bd4919f704b018bb28 100644
+--- a/src/scripts/measure_turn_end_gate.ts
++++ b/src/scripts/measure_turn_end_gate.ts
+@@ -36,6 +36,14 @@
+  *     input. This counts the same thing over the corpus: of the turns F fires
+  *     on, how many did C leave alone. A low count would refute the record's own
+  *     "two different questions deserve two detectors" and is worth finding.
++ *   · DETECTOR E, which until 2026-09-11 was scored by NO instrument at all.
++ *     That gap is not cosmetic: it is how a commit came to land under the title
++ *     "detector E measured" over an evidence file measuring F, with nothing in
++ *     the tree able to contradict it. E is also the only detector here that
++ *     reads the turn's assistant TEXTS rather than its last reply, so it needs
++ *     an accumulation the other four do not — built at the same two boundaries
++ *     `readTranscriptTail` uses, for the same population-parity reason C and
++ *     F's tool calls are.
+  *   · It does NOT score detector D. D reads `ci_last` out of per-session
+  *     runtime state, which no transcript carries, so a transcript-derived D
+  *     figure would be a measurement of an absent file rather than of the
+@@ -66,6 +74,7 @@ import { classify, isSyntheticPrompt } from './language_mirror_hook.js';
+ import { assistantText, scanSession, userText } from './conformance_scan.js';
+ import { isSidechain } from './_lib/transcript_entry.js';
+ import {
++    detectDroppedDecision,
+     detectLanguage,
+     detectPromissory,
+     detectUntestedChange,
+@@ -93,6 +102,22 @@ interface Counts {
+     unverified_fires: number;
+     /** Detector F — production source changed, no test touched, done claimed. */
+     untested_fires: number;
++    /** Detector E — an ask made earlier in the turn, absent from the closing reply. */
++    dropped_fires: number;
++    /**
++     * Turns carrying two or more assistant texts — E's precondition, and the
++     * same thing `turns_with_edit` is for C and F. Without it a low E rate is
++     * unreadable: "rarely applicable" and "rarely right" are different verdicts
++     * and only this denominator separates them.
++     */
++    turns_multi_text: number;
++    /**
++     * E fires inside a turn that also made a tool call. E was designed from a
++     * stop-hook nudge producing a second assistant execution mid-turn, which is
++     * a tool-bearing shape; a fire OUTSIDE it is the one to read first, because
++     * it is the one the detector was not designed from.
++     */
++    dropped_with_tool: number;
+     /**
+      * Turns where F fired and C did NOT. ADR-277 argues C cannot stand in for
+      * F; this is that argument's denominator-free form. F fires minus this is
+@@ -121,6 +146,12 @@ interface Counts {
+      * consumer's own file paths.
+      */
+     untested_sites: { session: string; turn: number; evidence: string }[];
++    /**
++     * Where E fired, same shape and same reason as `untested_sites`: a fire
++     * count is an upper bound on the false-positive rate and nothing more, so
++     * the pointer that makes a human read possible ships with it.
++     */
++    dropped_sites: { session: string; turn: number; evidence: string }[];
+     /** The independent scanner's own per-session language total, for context. */
+     scanner_language: number;
+     sessions: number;
+@@ -188,11 +219,15 @@ export function measure(store: string, limit: number): Counts {
+         language_fires: 0,
+         unverified_fires: 0,
+         untested_fires: 0,
++        dropped_fires: 0,
++        turns_multi_text: 0,
++        dropped_with_tool: 0,
+         untested_c_silent: 0,
+         turns_with_edit: 0,
+         e1_production_source: 0,
+         e2_no_test_touched: 0,
+         untested_sites: [],
++        dropped_sites: [],
+         scanner_language: 0,
+         sessions: 0,
+     };
+@@ -234,6 +269,22 @@ export function measure(store: string, limit: number): Counts {
+         // applies. Detectors C and F read nothing else, so any divergence here
+         // would move the measurement off the shipped gate's population.
+         let pendingCalls: ToolCall[] = [];
++        // Detector E's whole input: the turn's assistant texts in order, reset
++        // on the same line the tool calls are. `readTranscriptTail` resets both
++        // there for one reason — a genuine user prompt ends the turn, so an ask
++        // it followed was answered rather than dropped — and splitting the two
++        // resets would measure a detector nobody ships.
++        //
++        // ONE KNOWN DIVERGENCE, stated rather than discovered later: the gate
++        // pushes `_messageText`'s result whenever a `text` block exists, so a
++        // whitespace-only reply becomes an element there and is dropped here by
++        // `assistantText`'s trim. It changes nothing while such a reply sits
++        // mid-turn — it carries no options block either way — but a
++        // whitespace-only CLOSING reply is E's `closing` in the gate and not
++        // here. Keeping one extractor for `pendingReply` and this array is the
++        // trade taken: the closing reply the two instruments score stays
++        // identical, which is the property the rest of this script rests on.
++        let pendingTexts: string[] = [];
+         // Per-SESSION, because that is the only ordinal a reader can use to find
+         // the turn again. `c.turns` is the corpus-wide running total, and
+         // labelling it "turn" in a per-session pointer sends the reader to the
+@@ -248,12 +299,26 @@ export function measure(store: string, limit: number): Counts {
+             if (detectPromissory(pendingReply) !== null) c.promissory_fires += 1;
+             if (detectLanguage(pendingReply, pendingPin) !== null) c.language_fires += 1;
+             const cFired = detectUnverifiedEdit(pendingCalls) !== null;
+-            const eFinding = detectUntestedChange(pendingReply, pendingCalls);
++            // Named for the detector it holds. It was `eFinding` until
++            // 2026-09-11, holding F's finding in a file that also names a
++            // detector E — the same mislabel that reached a commit title.
++            const fFinding = detectUntestedChange(pendingReply, pendingCalls);
+             if (cFired) c.unverified_fires += 1;
+-            if (eFinding !== null) {
++            if (fFinding !== null) {
+                 c.untested_fires += 1;
+                 if (!cFired) c.untested_c_silent += 1;
+                 c.untested_sites.push({
++                    session: sessionId,
++                    turn: sessionTurn,
++                    evidence: fFinding.evidence,
++                });
++            }
++            if (pendingTexts.length >= 2) c.turns_multi_text += 1;
++            const eFinding = detectDroppedDecision(pendingTexts);
++            if (eFinding !== null) {
++                c.dropped_fires += 1;
++                if (pendingCalls.length > 0) c.dropped_with_tool += 1;
++                c.dropped_sites.push({
+                     session: sessionId,
+                     turn: sessionTurn,
+                     evidence: eFinding.evidence,
+@@ -291,6 +356,7 @@ export function measure(store: string, limit: number): Counts {
+                 if (!isSyntheticPrompt(u)) {
+                     scoreTurn(); // the previous turn ends here
+                     pendingCalls = [];
++                    pendingTexts = [];
+                     const verdict = classify(u);
+                     if (verdict.language !== 'und') pinned = verdict.language;
+                 }
+@@ -313,8 +379,11 @@ export function measure(store: string, limit: number): Counts {
+             const a = assistantText(entry);
+             if (a === null || a.trim() === '') continue;
+             c.assistant_entries += 1;
+-            // Overwrite: only the last one in the turn is the gate's input.
++            // Overwrite: only the last one in the turn is the gate's input —
++            // for every detector except E, which is why the append below is not
++            // the same statement written twice.
+             pendingReply = a;
++            pendingTexts.push(a);
+             pendingPin = pinned;
+         }
+         scoreTurn(); // the transcript's final turn
+@@ -330,6 +399,18 @@ export function renderFires(c: Counts): string {
+         .join('\n');
+ }
+ 
++/**
++ * E's fires, as a separate function rather than a widened `renderFires`: the
++ * two lists answer different questions and a caller printing one must not
++ * silently start printing the other.
++ */
++export function renderDroppedFires(c: Counts): string {
++    if (c.dropped_sites.length === 0) return '  detector E fired on no turn in this corpus.';
++    return c.dropped_sites
++        .map((site) => `  ${site.session} turn ${String(site.turn)} — ${site.evidence}`)
++        .join('\n');
++}
++
+ export function render(c: Counts): string {
+     const pct = (n: number): string => (c.turns === 0 ? '0.0' : ((100 * n) / c.turns).toFixed(1));
+     return [
+@@ -338,6 +419,7 @@ export function render(c: Counts): string {
+         `  detector A (promissory)  fires on ${c.promissory_fires} turns  (${pct(c.promissory_fires)}%)`,
+         `  detector B (language)    fires on ${c.language_fires} turns  (${pct(c.language_fires)}%)`,
+         `  detector C (unverified)  fires on ${c.unverified_fires} turns  (${pct(c.unverified_fires)}%)`,
++        `  detector E (dropped)     fires on ${c.dropped_fires} turns  (${pct(c.dropped_fires)}%)`,
+         `  detector F (untested)    fires on ${c.untested_fires} turns  (${pct(c.untested_fires)}%)`,
+         '',
+         `  Turns that edited a file at all: ${c.turns_with_edit} — C's and F's shared`,
+@@ -352,6 +434,14 @@ export function render(c: Counts): string {
+         '  step 3 means the turns that did not are also not claiming to be finished.',
+         '  Only the first reading says the detector is narrow-and-right.',
+         '',
++        `  Turns carrying two or more assistant texts: ${c.turns_multi_text} — E's precondition,`,
++        '  and the same reading `turns_with_edit` supports for C and F: a turn with one',
++        '  reply cannot drop a question an earlier reply asked.',
++        `    Of E's ${c.dropped_fires} fires, ${c.dropped_with_tool} sit in a turn that also made a tool call.`,
++        '    That is the shape E was designed from — a stop-hook nudge or a reviewer',
++        '    return producing a second assistant execution inside one user turn. A fire',
++        '    outside it is the one to read first, being the one nothing predicted.',
++        '',
+         `  Of F's ${c.untested_fires} fires, detector C was SILENT on ${c.untested_c_silent}.`,
+         '    That is the number ADR-277 rests its "two different questions deserve two',
+         '    detectors" argument on, measured here over the corpus rather than over the',
+@@ -424,6 +514,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+     process.stdout.write(`${render(counts)}\n`);
+     if (showFires) {
+         process.stdout.write(`\n  detector F fired here — read these turns before\n  calling any of them a false positive:\n${renderFires(counts)}\n`);
++        process.stdout.write(`\n  detector E fired here — same reading, same reason:\n${renderDroppedFires(counts)}\n`);
+     }
+     return 0;
+ }
+diff --git a/tests/scripts/measure_turn_end_gate.test.ts b/tests/scripts/measure_turn_end_gate.test.ts
+index 204bb109c6e32ec7c4ae2105148d591cdfbb811d..1720a64f3204a15a17f5d5dbd913df17e846cb29 100644
+--- a/tests/scripts/measure_turn_end_gate.test.ts
++++ b/tests/scripts/measure_turn_end_gate.test.ts
+@@ -1,5 +1,5 @@
+ /**
+- * `measure_turn_end_gate` scoring detectors C and F over a transcript corpus.
++ * `measure_turn_end_gate` scoring detectors C, E and F over a transcript corpus.
+  *
+  * ADR-277 ships detector F with its false-positive rate unmeasured and names
+  * that as an open limit. These cases assert the instrument that closes it reads
+@@ -9,6 +9,14 @@
+  * The load-bearing case is the last pair: detector C silent while F fires. That
+  * is the corpus form of the argument ADR-277 makes from a single unit test, so
+  * if the two detectors ever converge, this is where it shows.
++ *
++ * Detector E arrived here on 2026-09-11, having been scored by nothing until
++ * then. Its cases carry one extra weight the others do not: E reads the turn's
++ * assistant TEXTS, an accumulation no other detector needs, so the turn boundary
++ * has to be asserted on the array itself rather than inherited from the tool-call
++ * reset that already has coverage. The case that matters is the tool-only entry —
++ * the ordinary shape of every working turn, and the one that would make E fire
++ * across the corpus if a text-free entry ever entered the array.
+  */
+ 
+ import fs from 'node:fs';
+@@ -117,6 +125,105 @@ describe('detector F over a corpus', () => {
+     });
+ });
+ 
++describe('detector E over a corpus', () => {
++    /** An ask: a numbered block plus the single recommendation line Iron Law 1 requires. */
++    const ASKED = ['1. ship it', '2. measure first', '', 'Recommendation: 2'].join('\n');
++    /** The closing reply that drops it — the measured failure, not an invented shape. */
++    const DROPPED = 'The reviewer is through, no findings.';
++
++    it('counts a turn that asked in one reply and closed without the ask', () => {
++        writeSession('a', [userEntry('what next?'), replyEntry(ASKED), replyEntry(DROPPED)]);
++        const c = measure(store, 30);
++        expect(c.turns).toBe(1);
++        expect(c.turns_multi_text).toBe(1);
++        expect(c.dropped_fires).toBe(1);
++    });
++
++    it('is silent when the closing reply carries the ask forward', () => {
++        writeSession('a', [userEntry('what next?'), replyEntry(ASKED), replyEntry(ASKED)]);
++        expect(measure(store, 30).dropped_fires).toBe(0);
++    });
++
++    it('does not let a tool-only entry become a second assistant text', () => {
++        // E's entire false-positive surface. A working turn is prose, tool call,
++        // prose; if a text-free entry entered the array, every turn that asked
++        // and then ran a command would read as a dropped ask. `assistantText`
++        // returns null for it, exactly as the gate's `_messageText` does — this
++        // asserts that rather than trusting the reading.
++        writeSession('a', [
++            userEntry('what next?'),
++            replyEntry(ASKED),
++            toolEntry('Bash', { command: 'npx vitest run' }),
++        ]);
++        const c = measure(store, 30);
++        expect(c.turns_multi_text).toBe(0);
++        expect(c.dropped_fires).toBe(0);
++    });
++
++    it('scopes the ask to its own turn, so a user answer ends it', () => {
++        // The reset that makes "in the SAME user turn" true of the array rather
++        // than merely intended. Without it the ask outlives the answer and every
++        // later reply in the session reads as having dropped it.
++        writeSession('a', [
++            userEntry('what next?'),
++            replyEntry(ASKED),
++            userEntry('2'),
++            replyEntry(DROPPED),
++        ]);
++        const c = measure(store, 30);
++        expect(c.turns).toBe(2);
++        expect(c.turns_multi_text).toBe(0);
++        expect(c.dropped_fires).toBe(0);
++    });
++
++    it('separates a fire inside a tool-bearing turn from one outside it', () => {
++        // E was designed from a stop-hook nudge producing a second assistant
++        // execution mid-turn, which is a tool-bearing shape. The split is the
++        // only thing that says whether a corpus fire is the designed-for case or
++        // a shape nothing predicted, so a single total would hide the question.
++        writeSession('aaaaaaaa-1111', [
++            userEntry('what next?'),
++            replyEntry(ASKED),
++            toolEntry('Bash', { command: 'npx eslint src' }),
++            replyEntry(DROPPED),
++        ]);
++        writeSession('bbbbbbbb-2222', [userEntry('what next?'), replyEntry(ASKED), replyEntry(DROPPED)]);
++        const c = measure(store, 30);
++        expect(c.dropped_fires).toBe(2);
++        expect(c.dropped_with_tool).toBe(1);
++    });
++
++    it('points at the fire with a per-session ordinal and a text-free evidence span', () => {
++        // Same pointer contract F's sites carry: the option NUMBERS and the span,
++        // never the option text, because the evidence is quoted into a refusal
++        // that reaches the transcript.
++        writeSession('cccccccc-3333', [
++            userEntry('one'),
++            replyEntry('Nothing to see.'),
++            userEntry('what next?'),
++            replyEntry(ASKED),
++            replyEntry(DROPPED),
++        ]);
++        const c = measure(store, 30);
++        expect(c.dropped_sites).toHaveLength(1);
++        expect(c.dropped_sites[0]!.session).toBe('cccccccc');
++        expect(c.dropped_sites[0]!.turn).toBe(2);
++        expect(c.dropped_sites[0]!.evidence).toContain('1/2');
++        expect(c.dropped_sites[0]!.evidence).not.toContain('measure first');
++    });
++
++    it('ignores a subagent’s own asks', () => {
++        // A sidechain reply happened in another context, so an ask inside it was
++        // never put to this user — the same exclusion the tool-call path makes.
++        writeSession('a', [
++            userEntry('what next?'),
++            { ...replyEntry(ASKED), isSidechain: true },
++            replyEntry(DROPPED),
++        ]);
++        expect(measure(store, 30).dropped_fires).toBe(0);
++    });
++});
++
+ describe('the C-silent overlap ADR-277 argues from', () => {
+     it('records F firing while C stays silent when a linter ran', () => {
+         // The audit's central claim: `npx eslint src` satisfies detector C's
+diff --git a/tests/scripts/turn_end_gate_pending_decision.test.ts b/tests/scripts/turn_end_gate_pending_decision.test.ts
+index 8fa6ca12c63bbbb1c059c5a92bbb215ee779a1ef..24220d2e34de64d6d36dfc41363b43c44d99753d 100644
+--- a/tests/scripts/turn_end_gate_pending_decision.test.ts
++++ b/tests/scripts/turn_end_gate_pending_decision.test.ts
+@@ -172,6 +172,17 @@ describe('detectDroppedDecision', () => {
+         expect(detectDroppedDecision([ASKED, RE_PRESENTED])).toBeNull();
+     });
+ 
++    // The refusal names the rule the obligation lives in, and it has to be the
++    // rule that actually states it. Iron Law 1 is the single-source
++    // recommendation rule and says nothing about a question surviving a
++    // continuation — citing it was a factual error this assertion prevents
++    // returning (council 2026-09-11, blocker `user-interaction-third-iron-law`).
++    it('cites the Iron Law that states the continuity obligation', () => {
++        const f = detectDroppedDecision([ASKED, DROPPED]);
++        expect(f!.reason).toContain('user-interaction Iron Law 3');
++        expect(f!.reason).not.toContain('Iron Law 1');
++    });
++
+     it('is silent on a single-reply turn, however the reply is shaped', () => {
+         expect(detectDroppedDecision([ASKED])).toBeNull();
+         expect(detectDroppedDecision([DROPPED])).toBeNull();
