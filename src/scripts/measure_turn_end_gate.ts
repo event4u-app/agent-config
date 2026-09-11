@@ -36,6 +36,14 @@
  *     input. This counts the same thing over the corpus: of the turns F fires
  *     on, how many did C leave alone. A low count would refute the record's own
  *     "two different questions deserve two detectors" and is worth finding.
+ *   · DETECTOR E, which until 2026-09-11 was scored by NO instrument at all.
+ *     That gap is not cosmetic: it is how a commit came to land under the title
+ *     "detector E measured" over an evidence file measuring F, with nothing in
+ *     the tree able to contradict it. E is also the only detector here that
+ *     reads the turn's assistant TEXTS rather than its last reply, so it needs
+ *     an accumulation the other four do not — built at the same two boundaries
+ *     `readTranscriptTail` uses, for the same population-parity reason C and
+ *     F's tool calls are.
  *   · It does NOT score detector D. D reads `ci_last` out of per-session
  *     runtime state, which no transcript carries, so a transcript-derived D
  *     figure would be a measurement of an absent file rather than of the
@@ -66,6 +74,7 @@ import { classify, isSyntheticPrompt } from './language_mirror_hook.js';
 import { assistantText, scanSession, userText } from './conformance_scan.js';
 import { isSidechain } from './_lib/transcript_entry.js';
 import {
+    detectDroppedDecision,
     detectLanguage,
     detectPromissory,
     detectUntestedChange,
@@ -93,6 +102,22 @@ interface Counts {
     unverified_fires: number;
     /** Detector F — production source changed, no test touched, done claimed. */
     untested_fires: number;
+    /** Detector E — an ask made earlier in the turn, absent from the closing reply. */
+    dropped_fires: number;
+    /**
+     * Turns carrying two or more assistant texts — E's precondition, and the
+     * same thing `turns_with_edit` is for C and F. Without it a low E rate is
+     * unreadable: "rarely applicable" and "rarely right" are different verdicts
+     * and only this denominator separates them.
+     */
+    turns_multi_text: number;
+    /**
+     * E fires inside a turn that also made a tool call. E was designed from a
+     * stop-hook nudge producing a second assistant execution mid-turn, which is
+     * a tool-bearing shape; a fire OUTSIDE it is the one to read first, because
+     * it is the one the detector was not designed from.
+     */
+    dropped_with_tool: number;
     /**
      * Turns where F fired and C did NOT. ADR-277 argues C cannot stand in for
      * F; this is that argument's denominator-free form. F fires minus this is
@@ -121,6 +146,12 @@ interface Counts {
      * consumer's own file paths.
      */
     untested_sites: { session: string; turn: number; evidence: string }[];
+    /**
+     * Where E fired, same shape and same reason as `untested_sites`: a fire
+     * count is an upper bound on the false-positive rate and nothing more, so
+     * the pointer that makes a human read possible ships with it.
+     */
+    dropped_sites: { session: string; turn: number; evidence: string }[];
     /** The independent scanner's own per-session language total, for context. */
     scanner_language: number;
     sessions: number;
@@ -188,11 +219,15 @@ export function measure(store: string, limit: number): Counts {
         language_fires: 0,
         unverified_fires: 0,
         untested_fires: 0,
+        dropped_fires: 0,
+        turns_multi_text: 0,
+        dropped_with_tool: 0,
         untested_c_silent: 0,
         turns_with_edit: 0,
         e1_production_source: 0,
         e2_no_test_touched: 0,
         untested_sites: [],
+        dropped_sites: [],
         scanner_language: 0,
         sessions: 0,
     };
@@ -234,6 +269,22 @@ export function measure(store: string, limit: number): Counts {
         // applies. Detectors C and F read nothing else, so any divergence here
         // would move the measurement off the shipped gate's population.
         let pendingCalls: ToolCall[] = [];
+        // Detector E's whole input: the turn's assistant texts in order, reset
+        // on the same line the tool calls are. `readTranscriptTail` resets both
+        // there for one reason — a genuine user prompt ends the turn, so an ask
+        // it followed was answered rather than dropped — and splitting the two
+        // resets would measure a detector nobody ships.
+        //
+        // ONE KNOWN DIVERGENCE, stated rather than discovered later: the gate
+        // pushes `_messageText`'s result whenever a `text` block exists, so a
+        // whitespace-only reply becomes an element there and is dropped here by
+        // `assistantText`'s trim. It changes nothing while such a reply sits
+        // mid-turn — it carries no options block either way — but a
+        // whitespace-only CLOSING reply is E's `closing` in the gate and not
+        // here. Keeping one extractor for `pendingReply` and this array is the
+        // trade taken: the closing reply the two instruments score stays
+        // identical, which is the property the rest of this script rests on.
+        let pendingTexts: string[] = [];
         // Per-SESSION, because that is the only ordinal a reader can use to find
         // the turn again. `c.turns` is the corpus-wide running total, and
         // labelling it "turn" in a per-session pointer sends the reader to the
@@ -248,12 +299,26 @@ export function measure(store: string, limit: number): Counts {
             if (detectPromissory(pendingReply) !== null) c.promissory_fires += 1;
             if (detectLanguage(pendingReply, pendingPin) !== null) c.language_fires += 1;
             const cFired = detectUnverifiedEdit(pendingCalls) !== null;
-            const eFinding = detectUntestedChange(pendingReply, pendingCalls);
+            // Named for the detector it holds. It was `eFinding` until
+            // 2026-09-11, holding F's finding in a file that also names a
+            // detector E — the same mislabel that reached a commit title.
+            const fFinding = detectUntestedChange(pendingReply, pendingCalls);
             if (cFired) c.unverified_fires += 1;
-            if (eFinding !== null) {
+            if (fFinding !== null) {
                 c.untested_fires += 1;
                 if (!cFired) c.untested_c_silent += 1;
                 c.untested_sites.push({
+                    session: sessionId,
+                    turn: sessionTurn,
+                    evidence: fFinding.evidence,
+                });
+            }
+            if (pendingTexts.length >= 2) c.turns_multi_text += 1;
+            const eFinding = detectDroppedDecision(pendingTexts);
+            if (eFinding !== null) {
+                c.dropped_fires += 1;
+                if (pendingCalls.length > 0) c.dropped_with_tool += 1;
+                c.dropped_sites.push({
                     session: sessionId,
                     turn: sessionTurn,
                     evidence: eFinding.evidence,
@@ -291,6 +356,7 @@ export function measure(store: string, limit: number): Counts {
                 if (!isSyntheticPrompt(u)) {
                     scoreTurn(); // the previous turn ends here
                     pendingCalls = [];
+                    pendingTexts = [];
                     const verdict = classify(u);
                     if (verdict.language !== 'und') pinned = verdict.language;
                 }
@@ -313,8 +379,11 @@ export function measure(store: string, limit: number): Counts {
             const a = assistantText(entry);
             if (a === null || a.trim() === '') continue;
             c.assistant_entries += 1;
-            // Overwrite: only the last one in the turn is the gate's input.
+            // Overwrite: only the last one in the turn is the gate's input —
+            // for every detector except E, which is why the append below is not
+            // the same statement written twice.
             pendingReply = a;
+            pendingTexts.push(a);
             pendingPin = pinned;
         }
         scoreTurn(); // the transcript's final turn
@@ -330,6 +399,18 @@ export function renderFires(c: Counts): string {
         .join('\n');
 }
 
+/**
+ * E's fires, as a separate function rather than a widened `renderFires`: the
+ * two lists answer different questions and a caller printing one must not
+ * silently start printing the other.
+ */
+export function renderDroppedFires(c: Counts): string {
+    if (c.dropped_sites.length === 0) return '  detector E fired on no turn in this corpus.';
+    return c.dropped_sites
+        .map((site) => `  ${site.session} turn ${String(site.turn)} — ${site.evidence}`)
+        .join('\n');
+}
+
 export function render(c: Counts): string {
     const pct = (n: number): string => (c.turns === 0 ? '0.0' : ((100 * n) / c.turns).toFixed(1));
     return [
@@ -338,6 +419,7 @@ export function render(c: Counts): string {
         `  detector A (promissory)  fires on ${c.promissory_fires} turns  (${pct(c.promissory_fires)}%)`,
         `  detector B (language)    fires on ${c.language_fires} turns  (${pct(c.language_fires)}%)`,
         `  detector C (unverified)  fires on ${c.unverified_fires} turns  (${pct(c.unverified_fires)}%)`,
+        `  detector E (dropped)     fires on ${c.dropped_fires} turns  (${pct(c.dropped_fires)}%)`,
         `  detector F (untested)    fires on ${c.untested_fires} turns  (${pct(c.untested_fires)}%)`,
         '',
         `  Turns that edited a file at all: ${c.turns_with_edit} — C's and F's shared`,
@@ -351,6 +433,14 @@ export function render(c: Counts): string {
         '  A large drop at step 2 means the corpus writes its tests; a large drop at',
         '  step 3 means the turns that did not are also not claiming to be finished.',
         '  Only the first reading says the detector is narrow-and-right.',
+        '',
+        `  Turns carrying two or more assistant texts: ${c.turns_multi_text} — E's precondition,`,
+        '  and the same reading `turns_with_edit` supports for C and F: a turn with one',
+        '  reply cannot drop a question an earlier reply asked.',
+        `    Of E's ${c.dropped_fires} fires, ${c.dropped_with_tool} sit in a turn that also made a tool call.`,
+        '    That is the shape E was designed from — a stop-hook nudge or a reviewer',
+        '    return producing a second assistant execution inside one user turn. A fire',
+        '    outside it is the one to read first, being the one nothing predicted.',
         '',
         `  Of F's ${c.untested_fires} fires, detector C was SILENT on ${c.untested_c_silent}.`,
         '    That is the number ADR-277 rests its "two different questions deserve two',
@@ -424,6 +514,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     process.stdout.write(`${render(counts)}\n`);
     if (showFires) {
         process.stdout.write(`\n  detector F fired here — read these turns before\n  calling any of them a false positive:\n${renderFires(counts)}\n`);
+        process.stdout.write(`\n  detector E fired here — same reading, same reason:\n${renderDroppedFires(counts)}\n`);
     }
     return 0;
 }
