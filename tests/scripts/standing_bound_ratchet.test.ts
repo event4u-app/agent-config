@@ -16,7 +16,7 @@ import * as path from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { decide } from '../../src/scripts/check_preamble_payload_budget.js';
+import { decide, main } from '../../src/scripts/check_preamble_payload_budget.js';
 import {
     assertBoundsDidNotRise,
     BUDGET_CONFIG_PATH,
@@ -103,13 +103,13 @@ describe('standing-payload grace ceiling is shrink-only', () => {
     it('REFUSES a grace_ceiling raised in the config against the base ref', () => {
         const { root, base } = fixture(500, BODY);
         writeBudget(root, 700);
-        // `overrideCeiling` mirrors the CI step, which reads the ceiling out of
-        // the config and passes it as a flag — so the raise arrives through both
-        // surfaces at once, which is what a real raising PR looks like.
+        // The config is now the ONLY surface the ceiling can be widened
+        // through. `--ceiling` used to be a second one and was removed with the
+        // move to a measured ceiling — the case below pins that it is refused
+        // rather than ignored.
         const d = decide({
             repoRoot: root,
             budgetFile: path.join(root, BUDGET_CONFIG_PATH),
-            overrideCeiling: 700,
             baseRef: base,
         });
         expect(d.bounds.ok).toBe(false);
@@ -121,20 +121,26 @@ describe('standing-payload grace ceiling is shrink-only', () => {
         expect(d.verdict.withinBudget).toBe(true);
     });
 
-    it('REFUSES a bigger ceiling smuggled through --ceiling with no config edit', () => {
-        const { root, base } = fixture(500, BODY);
-        const d = decide({
-            repoRoot: root,
-            budgetFile: path.join(root, BUDGET_CONFIG_PATH),
-            overrideCeiling: 900,
-            baseRef: base,
-        });
-        // Nothing in the diff changed. The CI step reads the ceiling out of the
-        // config and passes it as a flag, so the flag is the second way to raise
-        // the effective bound and it closes here rather than in a second check.
-        expect(fs.readFileSync(path.join(root, BUDGET_CONFIG_PATH), 'utf-8')).toContain('500');
-        expect(d.bounds.ok).toBe(false);
-        expect(d.bounds.violations.join(' ')).toMatch(/rose from 500 to 900/);
+    it('REFUSES --ceiling outright — the second widening surface is gone, not ignored', () => {
+        // `--ceiling` was how the CI step handed the gate the stored ceiling,
+        // and it was therefore a second way to widen the effective bound. The
+        // measured ceiling removes the need for it. Refusing loudly rather than
+        // ignoring it is the point: a caller still passing a number believes it
+        // is setting the bound, and silently measuring something else would be
+        // the most expensive kind of no-op.
+        const err: string[] = [];
+        const write = process.stderr.write.bind(process.stderr);
+        process.stderr.write = ((s: string) => {
+            err.push(s);
+            return true;
+        }) as typeof process.stderr.write;
+        try {
+            expect(main(['--ceiling', '900'])).toBe(2);
+        } finally {
+            process.stderr.write = write;
+        }
+        expect(err.join('')).toMatch(/--ceiling was removed/);
+        expect(err.join('')).toMatch(/preamble-payload-exceptions\.json/);
     });
 
     it('REFUSES payload growth past an unchanged ceiling', () => {
@@ -148,7 +154,6 @@ describe('standing-payload grace ceiling is shrink-only', () => {
         const d = decide({
             repoRoot: root,
             budgetFile: path.join(root, BUDGET_CONFIG_PATH),
-            overrideCeiling: pin,
             baseRef: pinned,
         });
         expect(d.bounds.ok).toBe(true);
@@ -161,11 +166,10 @@ describe('standing-payload grace ceiling is shrink-only', () => {
         const d = decide({
             repoRoot: root,
             budgetFile: path.join(root, BUDGET_CONFIG_PATH),
-            overrideCeiling: 900,
             baseRef: base,
         });
         expect(d.bounds.ok).toBe(true);
-        expect(d.bounds.baseGraceCeiling).toBe(900);
+        expect(d.bounds.baseBounds?.['stored_ceiling']).toBe(900);
         expect(d.verdict.withinBudget).toBe(true);
         expect(d.ok).toBe(true);
         // Green with a stated comparison, never green with a silent skip: the
@@ -179,11 +183,10 @@ describe('standing-payload grace ceiling is shrink-only', () => {
         const d = decide({
             repoRoot: root,
             budgetFile: path.join(root, BUDGET_CONFIG_PATH),
-            overrideCeiling: 600,
             baseRef: base,
         });
         expect(d.bounds.ok).toBe(true);
-        expect(d.bounds.baseGraceCeiling).toBe(900);
+        expect(d.bounds.baseBounds?.['stored_ceiling']).toBe(900);
         expect(d.ok).toBe(true);
     });
 
@@ -201,7 +204,7 @@ describe('standing-payload grace ceiling is shrink-only', () => {
         // shallow clone must not red, and the skip is stated, not silent.
         expect(d.bounds.ok).toBe(true);
         expect(d.bounds.note).toMatch(/NOT verified/);
-        expect(d.bounds.baseGraceCeiling).toBeNull();
+        expect(d.bounds.baseBounds).toBeNull();
     });
 
     it('reports NOT verified when the base config is unparseable', () => {
@@ -209,7 +212,7 @@ describe('standing-payload grace ceiling is shrink-only', () => {
         const v = assertBoundsDidNotRise({
             repoRoot: root,
             baseRef: base,
-            headGraceCeiling: 999_999,
+            headBounds: { stored_ceiling: 999_999 },
             git: (args) =>
                 args[0] === 'show'
                     ? { ok: true, stdout: '{ not json', stderr: '' }
@@ -237,7 +240,7 @@ describe('assertBoundsDidNotRise — enforcing posture', () => {
     });
 
     it('refuses instead of skipping when no base ref resolved', () => {
-        const opts = { repoRoot: '.', baseRef: null, headGraceCeiling: 1 };
+        const opts = { repoRoot: '.', baseRef: null, headBounds: { stored_ceiling: 1 } };
         expect(assertBoundsDidNotRise(opts).ok).toBe(true);
         const v = assertBoundsDidNotRise({ ...opts, requireBase: true });
         expect(v.ok).toBe(false);
@@ -251,7 +254,7 @@ describe('assertBoundsDidNotRise — enforcing posture', () => {
     });
 
     it('refuses instead of skipping when the base config cannot be read', () => {
-        const opts = { repoRoot: '.', baseRef: 'deadbeef', git: dead, headGraceCeiling: 1 };
+        const opts = { repoRoot: '.', baseRef: 'deadbeef', git: dead, headBounds: { stored_ceiling: 1 } };
         expect(assertBoundsDidNotRise(opts).ok).toBe(true);
         const v = assertBoundsDidNotRise({ ...opts, requireBase: true });
         expect(v.ok).toBe(false);
@@ -262,7 +265,7 @@ describe('assertBoundsDidNotRise — enforcing posture', () => {
         const opts = {
             repoRoot: '.',
             baseRef: 'deadbeef',
-            headGraceCeiling: 1,
+            headBounds: { stored_ceiling: 1 },
             git: (args: readonly string[]) =>
                 args[0] === 'show'
                     ? { ok: true, stdout: '{ not json', stderr: '' }
@@ -278,7 +281,7 @@ describe('assertBoundsDidNotRise — enforcing posture', () => {
         const opts = {
             repoRoot: '.',
             baseRef: 'deadbeef',
-            headGraceCeiling: 1,
+            headBounds: { stored_ceiling: 1 },
             git: (args: readonly string[]) =>
                 args[0] === 'show'
                     ? { ok: true, stdout: JSON.stringify({ ci_delivery: {} }), stderr: '' }
@@ -287,24 +290,24 @@ describe('assertBoundsDidNotRise — enforcing posture', () => {
         expect(assertBoundsDidNotRise(opts).ok).toBe(true);
         const v = assertBoundsDidNotRise({ ...opts, requireBase: true });
         expect(v.ok).toBe(false);
-        expect(v.violations.join(' ')).toMatch(/no ci_delivery.grace_ceiling/);
+        expect(v.violations.join(' ')).toMatch(/no shrink-only bounds/);
     });
 
     it('does not change the verdict when the bound IS verifiable', () => {
         const readable = (args: readonly string[]): { ok: boolean; stdout: string; stderr: string } =>
             args[0] === 'show'
-                ? { ok: true, stdout: JSON.stringify({ ci_delivery: { grace_ceiling: 500 } }), stderr: '' }
+                ? { ok: true, stdout: JSON.stringify({ baseline_tokens: 1, headroom_pct: 0, ci_delivery: { grace_ceiling: 500 } }), stderr: '' }
                 : { ok: true, stdout: '', stderr: '' };
         // The mode gates the UNVERIFIABLE cases only. A real comparison must
         // reach the same answer in both postures, or the flag is not a mode
         // gate but a second policy.
         for (const requireBase of [false, true]) {
             const within = assertBoundsDidNotRise({
-                repoRoot: '.', baseRef: 'deadbeef', git: readable, headGraceCeiling: 400, requireBase,
+                repoRoot: '.', baseRef: 'deadbeef', git: readable, headBounds: { stored_ceiling: 400 }, requireBase,
             });
             expect(within.ok).toBe(true);
             const risen = assertBoundsDidNotRise({
-                repoRoot: '.', baseRef: 'deadbeef', git: readable, headGraceCeiling: 600, requireBase,
+                repoRoot: '.', baseRef: 'deadbeef', git: readable, headBounds: { stored_ceiling: 600 }, requireBase,
             });
             expect(risen.ok).toBe(false);
             expect(risen.violations.join(' ')).toMatch(/rose from 500 to 600/);

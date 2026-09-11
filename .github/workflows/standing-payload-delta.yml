@@ -19,20 +19,34 @@ name: Standing Payload Delta
 # `b-preamble-ci-placement` — fold it in here rather than add a third surface,
 # because this workflow already computes the neighbouring number.
 #
-# It runs against a GRACE CEILING equal to the 2026-08-24 measurement, not the
-# design ceiling: HEAD is 28.4 % over the design number, so blocking at it would
-# fail every PR from the moment this lands, and nobody can shed 30,566 tokens
-# inside the PR that arms the gate. Growth beyond today reds; today's tree passes.
-# The grace ceiling ratchets DOWN only. It does NOT expire, and this line used to
-# say it expired at milestone 1 (2026-11-10). Nothing ever implemented that: the
-# date was read once, into the echo below, and the gate carries no date logic, so
-# the design ceiling would not have become operative on that day. `grace_end_date`
-# was deleted rather than moved (AI council 2/2, 2026-09-10, under a written owner
-# delegation; ADR-274), because moving it re-publishes the same fiction with a
-# later number, and BUILDING the expiry was forbidden in the same verdict — it
-# would arm a repo-wide stop on a date where the budget file still records
-# `committed_reduction_mechanism` opening with NONE — a field whose value is a
-# paragraph, not the bare token, so it is paraphrased here rather than quoted.
+# THE CEILING IS MEASURED, NOT STORED (ADR-275, roadmap step 4.4 of
+# road-to-delivery-for-every-host). It is computed per run as
+#
+#     max(design_ceiling, payload at the base ref + active grants)
+#
+# plus, while stage 1 lasts, the retained stored allowance. HEAD is 28.4 % over
+# the design number, so blocking at that alone would fail every PR from the
+# moment it lands and nobody can shed 30,767 tokens inside the arming PR. The
+# base-measured term gives ZERO NET GROWTH instead: today's tree passes, growth
+# beyond it reds, and every merged reduction lowers the ceiling automatically —
+# which the stored number never did, because it stayed where it was put until a
+# human lowered it, letting removed payload be added back into the space it
+# freed. AI council 2/2 convergent, 2026-09-10, under a written owner delegation.
+#
+# STAGE 1 OF TWO, and the reason is structural. Under the base-ref pinning below
+# the gate runs as it exists at the BASE ref, so the new gate cannot validate its
+# own introduction — at the base ref the measuring code is still the old one. A
+# second council round (2/2, 2026-09-11) therefore refused to remove the stored
+# ceiling or make this check required in the same change. Stage 2 does both, from
+# a base that already carries this code.
+#
+# The stored allowance no longer expires and never did: `grace_end_date` was read
+# once, into an echo, and the gate carried no date logic, so the design ceiling
+# would not have become operative on 2026-11-10. It was deleted rather than moved
+# (AI council 2/2, 2026-09-10; ADR-274) because moving it re-publishes the same
+# fiction with a later number, and BUILDING the expiry was forbidden in the same
+# verdict — it would arm a repo-wide stop on a date where the budget file still
+# records `committed_reduction_mechanism` opening with NONE.
 # Full record, including why one CI run is a sufficient sample for a deterministic
 # census: `src/config/preamble-payload-budget.json` → `ci_delivery`.
 #
@@ -47,7 +61,14 @@ name: Standing Payload Delta
 # the only ref that answers "what did THIS branch change".
 
 # NO `paths:` ON THE pull_request TRIGGER, DELIBERATELY, AND IT MAY NOT COME BACK.
-# This job is a REQUIRED check. A required check whose trigger carries a path
+# This job is SLATED to become a required check in stage 2 and is NOT one today.
+# CORRECTED 2026-09-11: this line read "This job is a REQUIRED check" as a
+# statement of fact, and `gh api repos/:owner/:repo/rulesets` says otherwise —
+# `required_status_checks` carries exactly one context, "Sync + Generate Tools
+# Consistency". The prohibition below is unchanged and is the reason the line
+# stays: it describes what a path filter would do once the job IS required, and
+# adding one now would arm the trap for whoever flips that switch.
+# A required check whose trigger carries a path
 # filter blocks every pull request that touches no filtered path — permanently,
 # with no failing check to fix, because GitHub reads "skipped" as "has not
 # reported" rather than as a pass. That is this repository's own documented trap
@@ -147,10 +168,28 @@ jobs:
               src/skills/*/SKILL.md) relevant=true ;;
               AGENTS.md|CLAUDE.md) relevant=true ;;
               src/config/preamble-payload-budget.json) relevant=true ;;
+              src/config/preamble-payload-exceptions.json) relevant=true ;;
               src/scripts/check_preamble_payload_budget.ts) relevant=true ;;
               src/scripts/check_standing_payload_delta.ts) relevant=true ;;
               src/scripts/_lib/standing_bound_ratchet.ts) relevant=true ;;
               src/scripts/_lib/ratchet_base_ref.ts) relevant=true ;;
+              src/scripts/_lib/base_ref_payload.ts) relevant=true ;;
+              src/scripts/_lib/measured_payload_ceiling.ts) relevant=true ;;
+              src/scripts/_lib/payload_catalogue_completeness.ts) relevant=true ;;
+              src/scripts/_lib/prefix_stable_surfaces.ts) relevant=true ;;
+              # `src/scripts/preamble_byte_census.ts` belongs in this list by
+              # meaning — it computes the buckets — and may NOT be added to it.
+              # `check_ci_local_parity` derives the CI-side gate set by regexing
+              # workflow text for `src/scripts/<name>`, and cannot tell a path
+              # FILTER from an invocation, so listing the census here registers
+              # it as a gate CI runs and nothing local reaches. Declaring it
+              # `ci_only:` to silence that would assert it cannot run locally,
+              # which is false. The residual: a pull request touching ONLY the
+              # census skips this measurement. It is bounded — the gate that
+              # imports it is listed above, and catalogue completeness is
+              # separately enforced by `_lib/payload_catalogue_completeness.ts`
+              # — and it is recorded here rather than closed by a declaration
+              # that would be untrue.
               .github/workflows/standing-payload-delta.yml) relevant=true ;;
             esac
           done <<< "$changed"
@@ -204,10 +243,144 @@ jobs:
       # it used to skip. That is the intended direction — a dispatch is the one
       # run an operator can re-trigger — and it is named here rather than left
       # to be discovered as a surprising red.
-      - name: Preamble payload budget (blocking, grace ceiling)
+      # Prerequisite 3 of the measured-ceiling verdict (AI council 2/2,
+      # 2026-09-10): the gate that measures a pull request is the gate AS IT
+      # EXISTS AT THE BASE REF, so the change under review cannot edit the code
+      # that judges it. Both seats chose this over code-owner review on the
+      # gate, which would put the sole maintainer in the path of every
+      # gate-editing pull request and fails the owner's autonomy constraint.
+      #
+      # Its honest limit, in anthropic's words: "the mechanism does not prevent
+      # the exploit; it makes the exploit auditable." A weakening merged first
+      # and exploited second is visible in `git log` and is NOT blocked. It is a
+      # forensic control, not a preventive one. Its price is also real: a
+      # legitimate gate FIX does not protect the pull request that ships it, and
+      # the gate must stay executable at recent `main` refs.
+      #
+      # The base copy lands INSIDE the workspace on purpose — Node resolves
+      # `yaml` and the other runtime deps by walking up from the importing file,
+      # and a copy under /tmp would find no node_modules.
+      - name: Materialise the gate at the base ref
+        id: pinned
         if: always() && steps.scope.outputs.relevant == 'true'
         run: |
           set -euo pipefail
-          ceiling="$(python3 -c "import json;print(json.load(open('src/config/preamble-payload-budget.json'))['ci_delivery']['grace_ceiling'])")"
-          echo "grace ceiling $ceiling (shrink-only, undated) — design ceiling is lower; see ci_delivery"
-          ./scripts-run src/scripts/check_preamble_payload_budget --ceiling "$ceiling" --require-base
+          base="${{ steps.base.outputs.merge_base }}"
+          out=".payload-gate-at-base"
+          rm -rf "$out"
+          if [ -z "$base" ]; then
+            echo "usable=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::no merge-base (manual dispatch) — measuring with the gate at HEAD"
+            exit 0
+          fi
+          mkdir -p "$out"
+          # `git archive` is NOT used here, and that is deliberate: it honours
+          # `export-ignore`, and `.gitattributes` marks paths this gate needs.
+          # `git checkout-index` reads the object graph and knows nothing about it.
+          GIT_INDEX_FILE="$RUNNER_TEMP/payload-base-index" git read-tree "$base"
+          GIT_INDEX_FILE="$RUNNER_TEMP/payload-base-index" \
+            git checkout-index -a --prefix="$out/"
+          rm -f "$RUNNER_TEMP/payload-base-index"
+          # BOOTSTRAP: the base ref predates `--repo-root` until this change has
+          # merged once. Fall back rather than fail, and say so loudly — a
+          # silent fallback would make an unpinned run indistinguishable from a
+          # pinned one, which is the whole property being bought here.
+          if grep -q -- '--repo-root' "$out/src/scripts/check_preamble_payload_budget.ts" 2>/dev/null; then
+            echo "usable=true" >> "$GITHUB_OUTPUT"
+            echo "measuring with the gate as it exists at $base"
+          else
+            echo "usable=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::the gate at $base predates --repo-root, so this run is NOT base-pinned. Expected exactly once, on the pull request that introduces the flag."
+          fi
+
+      # Grants are honoured only when their approval event is verified OUTSIDE
+      # the diff that requests them — the council's hardest pushback in both
+      # seats: `approved_by` written by the pull request asking for the grant is
+      # self-asserted data authenticating nothing. The ledger ships EMPTY and is
+      # expected to stay empty (96.8 % of merged pull requests move this payload
+      # by zero or less), so this step is normally a no-op that prints nothing.
+      - name: Verify exception approvals
+        id: approvals
+        if: always() && steps.scope.outputs.relevant == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          set -euo pipefail
+          ids="$(python3 - <<'PY'
+          import json, os, datetime
+          p = 'src/config/preamble-payload-exceptions.json'
+          today = datetime.date.today().isoformat()
+          try:
+              rows = json.load(open(p)).get('exceptions', [])
+          except FileNotFoundError:
+              rows = []
+          live = [r['id'] for r in rows
+                  if r.get('repaid_at') is None and str(r.get('expires_at', '')) >= today]
+          print(' '.join(live))
+          PY
+          )"
+          if [ -z "$ids" ]; then
+            echo "approved=" >> "$GITHUB_OUTPUT"
+            echo "no live payload exceptions — nothing to verify"
+            exit 0
+          fi
+          # An approving review from someone other than the author is the
+          # trusted platform signal available here. With a single repository
+          # admin no such review can exist, which means a grant cannot be
+          # authenticated and is therefore refused — recorded honestly rather
+          # than worked around, and the reason a second reviewer is the owner
+          # decision that would make the exception path usable at all.
+          approver_count=0
+          if [ -n "${PR:-}" ]; then
+            approver_count="$(gh api "repos/${{ github.repository }}/pulls/$PR/reviews" \
+              --jq "[.[] | select(.state == \"APPROVED\") | select(.user.login != \"$AUTHOR\")] | length")"
+          fi
+          if [ "$approver_count" -gt 0 ]; then
+            flags=""
+            for id in $ids; do flags="$flags --approved $id"; done
+            echo "approved=$flags" >> "$GITHUB_OUTPUT"
+            echo "verified $approver_count independent approval(s) for: $ids"
+          else
+            echo "approved=" >> "$GITHUB_OUTPUT"
+            echo "::warning::live payload exception(s) [$ids] carry no independent approving review, so they are refused."
+          fi
+
+      # THE BLOCKING STEP (road-to-standing-payload-truth 1.1). Deliberately LAST
+      # and `if: always()`, so the delta report and the PR comment land even when
+      # this fails — a gate that suppresses the diagnostic explaining it is worse
+      # than no gate.
+      #
+      # `--ceiling` is GONE. The ceiling is measured per run as
+      # max(design_ceiling, payload at the base ref + active grants) plus, while
+      # stage 1 lasts, the retained stored allowance. There is no number to pass.
+      #
+      # `--require-base` makes the base reading FAIL rather than skip when it
+      # cannot be established. An AI council (2/2, 2026-09-10) made that blocking
+      # for the move to a measured ceiling: an unreadable base cost a comparison
+      # under the stored one and would grant an unbounded budget under this one.
+      # It is passed HERE and not defaulted in the script, because a shallow
+      # clone, a first commit and a detached build legitimately have no base, and
+      # a gate that reds on a developer's machine gets switched off. On the
+      # `pull_request` trigger the base is always available, so the strict
+      # posture costs nothing there. On `workflow_dispatch` there is no
+      # GITHUB_BASE_REF and `resolveBaseRef` falls back to origin/main, so a
+      # manual run on a branch with no shared history with main FAILS where it
+      # used to skip — the intended direction, named here rather than left to be
+      # discovered as a surprising red.
+      - name: Preamble payload budget (blocking, measured ceiling)
+        if: always() && steps.scope.outputs.relevant == 'true'
+        run: |
+          set -euo pipefail
+          gate="src/scripts/check_preamble_payload_budget"
+          if [ "${{ steps.pinned.outputs.usable }}" = "true" ]; then
+            npx --no-install tsx ".payload-gate-at-base/$gate.ts" \
+              --repo-root "$PWD" --require-base ${{ steps.approvals.outputs.approved }}
+          else
+            ./scripts-run "$gate" --require-base ${{ steps.approvals.outputs.approved }}
+          fi
+
+      - name: Drop the base-ref gate copy
+        if: always()
+        run: rm -rf .payload-gate-at-base

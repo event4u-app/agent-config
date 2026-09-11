@@ -12,6 +12,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import {
     boundsRefusalHeader,
+    decide,
     evaluate,
     hostPayloadIds,
     hostPayloadRoots,
@@ -264,16 +265,29 @@ describe('the --ceiling override may only ever be LOOSER', () => {
 });
 
 describe('the gate reds on growth past whichever ceiling applies', () => {
-    it('exits non-zero at the design ceiling on the current tree', () => {
-        // Sensitivity, stated as the honest fact it is: HEAD is over the design
-        // ceiling today, so this asserts the gate is RED right now. When a
-        // reduction lands this flips and the assertion must be inverted with the
-        // measurement recorded — it is not a permanent expectation.
-        expect(main([])).not.toBe(0);
+    // THE PREMISE OF THIS BLOCK CHANGED, and the change is the point of the
+    // measured ceiling rather than an accommodation of it.
+    //
+    // It used to read: a bare `main([])` is RED, because a bare invocation
+    // judged the tree against the DESIGN ceiling (107,646) while the tree
+    // measured ~138,413, and only the CI step passed `--ceiling` to reach the
+    // stored allowance. So the gate a developer ran locally was red on a tree
+    // remote CI passed — the mirror image of the green-locally/red-remotely
+    // class, and just as misleading.
+    //
+    // The ceiling is measured at the base ref now, so a bare invocation and the
+    // CI invocation are the SAME comparison, and both are green on a tree
+    // nobody grew. That is what these two cases assert instead.
+    it('is green on an unchanged tree — local and CI now make the same comparison', () => {
+        expect(main([])).toBe(0);
     });
 
-    it('exits 0 under the grace ceiling the CI step passes', () => {
-        expect(main(['--ceiling', String(rawCiDelivery().grace_ceiling)])).toBe(0);
+    it('the ceiling it compares against is at least the design ceiling, never below', () => {
+        // The one property the formula must never lose: `max` means the design
+        // ceiling is a FLOOR. A measured base below it may tighten nothing.
+        const d = decide({ today: '2026-09-11' });
+        expect(d.ceiling.ceiling).toBeGreaterThanOrEqual(d.ceiling.designCeiling);
+        expect(d.verdict.ceiling).toBe(d.ceiling.ceiling);
     });
 });
 
@@ -301,6 +315,19 @@ function fakeRepoWithHostTree(sourceRules: string[], hostRules: string[]): strin
     return root;
 }
 
+/** A rule body big enough to put a fixture source over a small baseline. */
+const BIG = '# r\n\n' + 'x'.repeat(4000) + '\n';
+
+/** The budget config a `--repo-root` fixture needs before the gate will read it. */
+function writeFakeBudget(root: string, over: Record<string, unknown>): void {
+    fs.mkdirSync(path.join(root, 'src', 'config'), { recursive: true });
+    fs.writeFileSync(
+        path.join(root, 'src', 'config', 'preamble-payload-budget.json'),
+        JSON.stringify({ baseline_tokens: 1, headroom_pct: 0, target_tokens: { median: 1, p95: 2 }, ...over }),
+        'utf-8',
+    );
+}
+
 // `.claude/rules` and `.claude/skills` are GENERATED and untracked (`git
 // ls-files .claude/rules` returns nothing), so a clean CI checkout has no host
 // tree at all and `--host claude-code` correctly refuses with exit 2. That is
@@ -314,12 +341,11 @@ describe('the host reading is additive and never moves the ratchet', () => {
     it('the source verdict is byte-identical with and without a host flag', () => {
         // The load-bearing assertion of option 1A. `evaluate` is the source
         // reading; nothing about a host argument may reach it.
-        const ceiling = String(rawCiDelivery().grace_ceiling);
         const before = evaluate();
-        expect(main(['--ceiling', ceiling])).toBe(0);
+        expect(main([])).toBe(0);
         // With a host tree: the exit code must be IDENTICAL. Without one: the
         // documented refusal, which is exit 2 and never a silent 0.
-        expect(main(['--host', 'claude-code', '--ceiling', ceiling])).toBe(hostTreeExists ? 0 : 2);
+        expect(main(['--host', 'claude-code'])).toBe(hostTreeExists ? 0 : 2);
         const after = evaluate();
         expect(after.measured).toBe(before.measured);
         expect(after.ceiling).toBe(before.ceiling);
@@ -330,22 +356,26 @@ describe('the host reading is additive and never moves the ratchet', () => {
         // The sabotage direction, and the one test here with PROVEN sensitivity.
         // Verified 2026-09-09 by neutralising the mechanism: routing the host
         // total into verdict.withinBudget and decision.ok turns this case RED
-        // (1 failed | 31 passed) and restoring it turns it green (32 passed).
+        // and restoring it turns it green.
         //
-        // Stated because the sibling test above does NOT have that property: it
-        // compares evaluate() either side of a main() call, and evaluate() is
-        // untouched by any sabotage in main, so a first probe left all 32 green.
-        // This is the assertion that would actually catch a host flag quietly
-        // redirecting the gated surface.
-        const overBudget = main([]);
-        expect(overBudget, 'HEAD is over the design ceiling today').not.toBe(0);
-        if (!hostTreeExists) {
-            // No tree to be smaller — the refusal is the property here, and it
-            // is asserted rather than skipped so this case is never vacuous.
-            expect(main(['--host', 'claude-code'])).toBe(2);
-            return;
-        }
-        expect(main(['--host', 'claude-code'])).toBe(overBudget);
+        // It used to ride on the real tree being over the design ceiling, which
+        // was true only while a bare invocation judged against that ceiling. The
+        // measured ceiling makes the real tree GREEN, and a green tree cannot
+        // witness "a small host tree does not rescue an over-budget source" —
+        // the case would have kept passing with the mechanism removed. So it
+        // builds a root that IS over budget instead: sensitivity now comes from
+        // the fixture rather than from a property of HEAD that has since moved.
+        const root = fakeRepoWithHostTree(
+            [BIG, BIG, BIG], // source: far over the tiny baseline below
+            ['# h\n'], // host: a single trivial rule
+        );
+        writeFakeBudget(root, { baseline_tokens: 10, headroom_pct: 0 });
+        const overBudget = main(['--repo-root', root]);
+        expect(overBudget, 'the fixture source is over its own ceiling').not.toBe(0);
+        // The host reading must not move it. If the host total were routed into
+        // the gated verdict, this tiny tree would drag the run under the ceiling
+        // and the exit code would drop to 0.
+        expect(main(['--repo-root', root, '--host', 'claude-code'])).toBe(overBudget);
     });
 
     it('a host id whose tree was never projected REFUSES rather than reporting zero', () => {
@@ -467,11 +497,11 @@ describe('the host flags reject every ambiguous invocation with exit 2', () => {
 describe('--require-base — the refusal says which refusal it is', () => {
     const risen = {
         ok: false, verified: true, violations: ['rose from 1 to 2'],
-        baseGraceCeiling: 1, baseRef: 'abc', note: null,
+        baseBounds: { stored_ceiling: 1 }, baseRef: 'abc', note: null,
     };
     const unverifiable = {
         ok: false, verified: false, violations: ['no base ref resolved'],
-        baseGraceCeiling: null, baseRef: null, note: 'no base ref resolved, so …',
+        baseBounds: null, baseRef: null, note: 'no base ref resolved, so …',
     };
 
     it('the stdout line names UNVERIFIED, never ROSE, when the bound was unreadable', () => {
@@ -481,7 +511,7 @@ describe('--require-base — the refusal says which refusal it is', () => {
     });
 
     it('the stderr header does not claim a rise that did not happen', () => {
-        expect(boundsRefusalHeader(risen)).toMatch(/ceiling rose in this change/);
+        expect(boundsRefusalHeader(risen)).toMatch(/bound rose in this change/);
         expect(boundsRefusalHeader(unverifiable)).toMatch(/could not be VERIFIED/);
         expect(boundsRefusalHeader(unverifiable)).not.toMatch(/rose/);
     });
@@ -489,7 +519,7 @@ describe('--require-base — the refusal says which refusal it is', () => {
     it('a verified pass is unchanged in both', () => {
         const clean = {
             ok: true, verified: true, violations: [],
-            baseGraceCeiling: 5, baseRef: 'abc', note: null,
+            baseBounds: { stored_ceiling: 5 }, baseRef: 'abc', note: null,
         };
         expect(renderBounds(clean)).toMatch(/\bok\b/);
         expect(renderBounds(clean)).not.toMatch(/ROSE|UNVERIFIED/);
