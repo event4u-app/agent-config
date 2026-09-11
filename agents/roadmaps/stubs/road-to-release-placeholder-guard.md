@@ -12,6 +12,12 @@ blocker_opened: 2026-08-23
 ---
 # Stub: a release-placeholder guard that fits the ratchet
 
+> **Arrivals:** 2 (at least) - latest `inbox-2026-09-w` (2026-09-11). Counted as
+> distinct prior round directories under the consumed-inbox tree, which is gitignored -
+> so the count is machine-local and the ordering is the finding, not the exact figure.
+> Read `(at least)` strictly: a broad keyword sweep returns a larger set that includes
+> incidental mentions, so this is the subject-matched floor.
+
 > **Stub — not active work, and a third class.** `stubs/README.md` distinguishes
 > *org-mode* stubs (demand-gated: should this be built at all?) from *drain-run
 > transfers* (capability-gated: the run lacked an environment). This file is

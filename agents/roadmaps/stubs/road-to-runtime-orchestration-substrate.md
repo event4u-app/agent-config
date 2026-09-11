@@ -5,6 +5,12 @@ review_by: 2026-12-27
 
 # Road to a runtime orchestration substrate — stub
 
+> **Arrivals:** 10 (at least) - latest `inbox-2026-09-y` (2026-09-11). Counted as
+> distinct prior round directories under the consumed-inbox tree, which is gitignored -
+> so the count is machine-local and the ordering is the finding, not the exact figure.
+> Read `(at least)` strictly: a broad keyword sweep returns a larger set that includes
+> incidental mentions, so this is the subject-matched floor.
+
 > **Source:** `agents/tmp.old/inbox-2026-08-h/` — landed by `/analyze:inbox` on
 > 2026-08-27. Drafted against `f2ed85e`, which **is** `origin/main` at
 > authoring time, so nothing here is stale-by-window.

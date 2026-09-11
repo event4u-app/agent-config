@@ -5,6 +5,12 @@ status: later
 
 # Road to worker-generation recycling — a worker at its budget hands off instead of dying
 
+> **Arrivals:** 4 (at least) - latest `inbox-2026-09-y` (2026-09-11). Counted as
+> distinct prior round directories under the consumed-inbox tree, which is gitignored -
+> so the count is machine-local and the ordering is the finding, not the exact figure.
+> Read `(at least)` strictly: a broad keyword sweep returns a larger set that includes
+> incidental mentions, so this is the subject-matched floor.
+
 > **Parked in `later/` (2026-08-09).** Phases 0-1 shipped (PR #1228); every open
 > step is gated on something outside this roadmap: Phase 2 on the maintainer
 > blockers `host-worker-respawn` (its open half IS step 2.1),

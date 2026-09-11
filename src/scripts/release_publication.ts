@@ -956,7 +956,7 @@ function _remote_tag_commit(tag: string): string | null {
 
 /**
  * Push a tag, tolerating exactly ONE failure: the concurrent-release race.
- * `_tag_exists_remote` in step 8 is a live check, but between it and this
+ * `_tag_exists_remote` in step 9 is a live check, but between it and this
  * push a parallel `task release` run can land the same tag (measured
  * 2026-08-09, 9.28.0). When the remote tag already points at the same commit
  * as the local one, the repository IS in the desired state — continue. Any

@@ -16,11 +16,18 @@ probe: none
 > under `decision-revisit-gate`'s reserved set — an agent may neither take it
 > nor keep re-deriving it from zero every round.
 
-> **Arrivals:** 3 (at least) — latest `inbox-2026-09-q` (2026-09-06); earlier:
-> `agents/tmp.old/inbox-2026-09-e/` (the round that produced the measurement
-> roadmap, itself recording two consecutive prior cycles that neither built nor
-> declined). This counter exists so the fourth round meets a number instead of
-> a fresh argument.
+> **Arrivals:** 6 (at least) — corrected upward from 3 on 2026-09-11 by round
+> `inbox-2026-09-y`, which subject-matched three further prior rounds this line
+> had not counted. Latest `inbox-2026-09-y` (2026-09-11); before it
+> `inbox-2026-09-q` (2026-09-06) and `agents/tmp.old/inbox-2026-09-e/` (the round
+> that produced the measurement roadmap, itself recording two consecutive prior
+> cycles that neither built nor declined). This counter exists so the seventh
+> round meets a number instead of a fresh argument.
+>
+> **What the seventh round will meet if nothing changes.** The mix was 62:13 at
+> release 14.23.0 and 76:10 at 15.0.0 — the ratio moved the wrong way after five
+> readings asked for the opposite. The three options below are unchanged and
+> still unanswered; the count sets the venue, never the verdict.
 
 ## The measured state at `99d14b2e7`
 

@@ -57,7 +57,7 @@ function _package_name(): string {
  *
  * This probe used to answer local-OR-remote, and that made the gate reply
  * "tagged, therefore published" to the exact state it exists to detect. A tag
- * created by `release.ts` step 8 whose push then failed sits in the local
+ * created by `release.ts` step 9 whose push then failed sits in the local
  * repository while nothing has shipped: `publish-npm.yml` triggers on
  * `push: tags:`, so a tag that never reached the remote published nothing.
  * Measured 2026-08-20 on 14.6.0 — main carried `package.json` 14.6.0, the tag

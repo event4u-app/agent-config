@@ -5,6 +5,12 @@ review_by: 2026-12-24
 
 # Stub: road to a subagent return gate
 
+> **Arrivals:** 24 (at least) - latest `inbox-2026-09-y` (2026-09-11). Counted as
+> distinct prior round directories under the consumed-inbox tree, which is gitignored -
+> so the count is machine-local and the ordering is the finding, not the exact figure.
+> Read `(at least)` strictly: a broad keyword sweep returns a larger set that includes
+> incidental mentions, so this is the subject-matched floor.
+
 > **Stub — not active work.** Drain-run transfer, 2026-08-22, from
 > [`road-to-subagent-lifecycle-integrity.md`](../archive/road-to-subagent-lifecycle-integrity.md)
 > Phase 2 Steps 2 and 3. Council disposition 2/2 convergent, recorded in

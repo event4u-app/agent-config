@@ -144,6 +144,27 @@ interface WorldConfig {
     /** PR checks fail (watch exits non-zero) — the release must die. */
     checks_fail?: boolean;
     /**
+     * Step 7's world — two knobs, because the step asks two questions.
+     *
+     * It VERIFIES: the ledger is produced by the self-review workflow, so the
+     * only things a scenario can vary are whether the file is on the remote
+     * branch and what the disposition gate answers. An earlier version of this
+     * step ingested, and carried four more knobs for run discovery and artifact
+     * download; those went with it when the owner moved the ingest into CI.
+     */
+    ledger_on_branch?: boolean;
+    /**
+     * Whether the ledger is on the TRUNK — the ref the merged path asks.
+     *
+     * Separate from `ledger_on_branch` because the two states worth testing are
+     * exactly the ones a single boolean cannot express: present on the branch
+     * and not on the trunk, and the reverse. Defaults to `ledger_on_branch`, so
+     * every scenario written before this knob keeps its answer.
+     */
+    ledger_on_trunk?: boolean;
+    /** Exit code + streams the disposition gate answers with. */
+    disposition_verdict?: { status: number; stdout: string; stderr: string };
+    /**
      * Content `git show <target>:CHANGELOG.md` returns.
      *
      * Step 1.3 of `road-to-release-publication-integrity`, decided by AI council
@@ -169,7 +190,7 @@ interface WorldConfig {
     changelog?: string;
     /**
      * Content the WORKING-TREE read returns — `read_changelog_text()`, used by
-     * step 5 (PR body) and step 8 (annotated-tag message).
+     * step 5 (PR body) and step 9 (annotated-tag message).
      *
      * Added 2026-09-01 with the publication guard (roadmap § 3.1). `changelog`
      * above only covers `git show <tag>:CHANGELOG.md`; the working tree was
@@ -189,19 +210,20 @@ interface WorldConfig {
      */
     tag_created_unpushed?: boolean;
     /**
-     * The tag is already on the remote, so step 8 skips entirely and step 9 —
+     * The tag is already on the remote, so step 9 skips entirely and step 10 —
      * the GitHub Release body — is the FIRST irreversible transition the run
      * reaches. The only state in which the Release guard can be exercised on
-     * its own, because a marker otherwise stops the run at step 8.
+     * its own, because a marker otherwise stops the run at step 9.
      */
     tag_already_remote?: boolean;
     /**
      * The release PR is ALREADY merged when the run starts — the real
-     * resume-after-merge state, in which steps 1 through 7 skip and step 8 is
-     * the first step that does work.
+     * resume-after-merge state, in which steps 1 through 6 skip, step 7 still
+     * verifies the ledger (on the trunk, since the branch is gone) and step 8
+     * is the first step that does work.
      *
      * Added 2026-09-02 with `guard_release_branch_push`. Before that guard, a
-     * marker scenario could start from scratch and still reach step 8, because
+     * marker scenario could start from scratch and still reach step 9, because
      * nothing between the changelog write and the tag looked at the section.
      * The push guard now stops such a run at step 4 — correctly, and that is
      * the point of it — which makes this knob the only way left to exercise
@@ -300,6 +322,9 @@ class FakeWorld {
     private merge_races_once: boolean;
     private merge_fails_hard: boolean;
     private checks_fail: boolean;
+    private readonly ledger_on_branch: boolean;
+    private readonly ledger_on_trunk: boolean | undefined;
+    private readonly disposition_verdict: { status: number; stdout: string; stderr: string };
     private readonly changelog: string;
     /** Working-tree content; see `WorldConfig.changelog_file`. */
     readonly changelog_file: string;
@@ -321,6 +346,12 @@ class FakeWorld {
         this.checks_fail = cfg.checks_fail ?? false;
         this.pr_merged = cfg.pr_already_merged ?? false;
         this.release_verify_fails = cfg.release_verify_fails ?? false;
+        // Defaults keep every pre-2026-09-11 scenario green: the ledger is
+        // already on the branch and the gate is happy, so step 7 is a two-call
+        // no-op and the sequencing scenarios stay about sequencing.
+        this.ledger_on_branch = cfg.ledger_on_branch ?? true;
+        this.ledger_on_trunk = cfg.ledger_on_trunk;
+        this.disposition_verdict = cfg.disposition_verdict ?? { status: 0, stdout: '', stderr: '' };
     }
 
     exec(args: readonly string[]): ExecResult {
@@ -483,6 +514,21 @@ class FakeWorld {
             return OK;
         }
 
+        // Step 7 — the findings ledger.
+        if (cmd.startsWith('git cat-file -e ')) {
+            // REF-AWARE, because one boolean for every ref made the two states
+            // that distinguish right from wrong inexpressible: on the branch
+            // but not the trunk, and the reverse. A fourth review named the
+            // merged-path scenario as asserting a string in the argv rather
+            // than the ref that was read.
+            const onTrunk = this.ledger_on_trunk ?? this.ledger_on_branch;
+            const present = cmd.includes('/main:') ? onTrunk : this.ledger_on_branch;
+            return present ? OK : { ...OK, status: 1 };
+        }
+        if (cmd.includes('check_finding_dispositions --release')) {
+            return { ...this.disposition_verdict };
+        }
+
         throw new Error(`FakeWorld: unscripted command: ${cmd}`);
     }
 }
@@ -515,6 +561,139 @@ function _count(world: FakeWorld, needle: string): number {
 }
 
 const SCENARIOS: Record<string, Scenario> = {
+    'findings-ledger-verified-on-the-remote-branch': {
+        summary:
+            'step 7: the ledger is on the remote branch and the gate passes — the release continues without producing anything',
+        // Step 7 VERIFIES. The ingest lives in the self-review workflow, which
+        // commits the ledger to the release branch; two review rounds showed no
+        // placement inside this script can produce it, because the gate it
+        // anticipates already reds the check step 6 waits on.
+        // `resume: false` is load-bearing, not tidiness. `resume` defaults to
+        // TRUE here, and on a resumed run the PR number is already in hand — so
+        // a scenario that kept the default could not see the `--pr` flag being
+        // dropped, which is exactly the hole this scenario asserts against.
+        config: { ledger_on_branch: true, resume: false },
+        expect_success: true,
+        verify: (w) => {
+            const f: string[] = [];
+            const probe = w.calls.find((c) => c.startsWith('git cat-file -e '));
+            _expect(probe !== undefined, 'the ledger presence was never probed', f);
+            _expect(
+                (probe ?? '').includes('origin/'),
+                `the probe read a local ref, which a failed push makes true: ${probe ?? '(none)'}`,
+                f,
+            );
+            _expect(
+                !w.calls.some((c) => c.includes('--ingest')),
+                'step 7 ingested — that belongs to the workflow now, not the release',
+                f,
+            );
+            _expect(
+                !w.calls.some((c) => c.startsWith('gh run download')),
+                'step 7 downloaded an artifact — the release no longer produces the ledger',
+                f,
+            );
+            // `--pr` is what makes the gate compare the review's own report
+            // against the committed ledger. The PR number used to come only
+            // from the resume-time probe, so on a FIRST run — this scenario —
+            // the flag was silently dropped and the release passed a strictly
+            // weaker check than the one it was trying to pre-satisfy.
+            _expect(
+                w.calls.some(
+                    (c) => c.includes('check_finding_dispositions --release') && c.includes('--pr '),
+                ),
+                'the disposition gate ran without --pr, so an un-ingested finding would pass here',
+                f,
+            );
+            _expect(
+                w.calls.includes(`gh pr merge ${w.branch} --merge --delete-branch`),
+                'the release never reached the merge',
+                f,
+            );
+            return f;
+        },
+    },
+    'findings-ledger-absent-stops-the-release': {
+        summary:
+            'step 7: no ledger on the remote branch — the release STOPS rather than merging and tagging without one',
+        config: { ledger_on_branch: false },
+        expect_success: false,
+        verify: (w, error) => {
+            const f: string[] = [];
+            _expect(
+                (error ?? '').includes('is not on origin/'),
+                `the stop did not name the ref it checked: ${error ?? '(no error)'}`,
+                f,
+            );
+            _expect(
+                !w.calls.includes(`gh pr merge ${w.branch} --merge --delete-branch`),
+                'merged with no ledger — the failure this step exists to end',
+                f,
+            );
+            _expect(!w.tag_remote, 'tagged with no ledger', f);
+            return f;
+        },
+    },
+    'findings-ledger-absent-after-a-hand-merge-still-stops': {
+        summary:
+            'step 7: the PR is already merged and no ledger reached the trunk — the release STOPS instead of tagging a version whose ledger does not exist',
+        // The reachable path to a shipped version with no ledger, and the one
+        // the old code asserted away: the ingest produces nothing, step 7
+        // stops, a human merges the PR, and the resumed run used to print "the
+        // ledger rode in with it" without reading anything.
+        // The two knobs differ on purpose: the ledger IS on the release branch
+        // and is NOT on the trunk. A run that read the branch ref would pass
+        // here, which is the wrong answer — the branch is deleted and the merge
+        // is what decides whether the ledger shipped.
+        config: { pr_already_merged: true, ledger_on_branch: true, ledger_on_trunk: false },
+        expect_success: false,
+        verify: (w, error) => {
+            const f: string[] = [];
+            _expect(
+                (error ?? '').includes('already merged'),
+                `the stop did not name the merged state: ${error ?? '(no error)'}`,
+                f,
+            );
+            _expect(
+                w.calls.some((c) => c.startsWith('git cat-file -e ') && c.includes('/main:')),
+                'the merged path never asked the trunk whether the ledger is there',
+                f,
+            );
+            _expect(!w.tag_remote, 'tagged a version whose findings ledger does not exist', f);
+            return f;
+        },
+    },
+    'findings-ledger-undispositioned-stops-and-shows-why': {
+        summary:
+            'step 7: the disposition gate refuses — the release stops and the operator is shown the gate report, not just its scan line',
+        config: {
+            ledger_on_branch: true,
+            disposition_verdict: {
+                status: 1,
+                stdout: 'scanned: 1',
+                stderr: '- `a1` (critical security: x): no disposition status',
+            },
+        },
+        expect_success: false,
+        verify: (w, error) => {
+            const f: string[] = [];
+            // The defect an independent review reproduced: the stop message
+            // preferred stdout, so the operator saw `scanned: 1` and the entire
+            // per-finding diagnosis — which the gate writes to stderr — was
+            // discarded on the one path where the message has to carry content.
+            _expect(
+                (error ?? '').includes('no disposition status'),
+                `the gate's own diagnosis was swallowed: ${error ?? '(no error)'}`,
+                f,
+            );
+            _expect(
+                !w.calls.includes(`gh pr merge ${w.branch} --merge --delete-branch`),
+                'merged over an undispositioned ledger',
+                f,
+            );
+            return f;
+        },
+    },
     'plain-run-reuses-an-existing-branch': {
         summary:
             'step 1: a PLAIN run (no --resume) over an existing release branch checks it out instead of dying at `git checkout -b`',
@@ -664,7 +843,7 @@ const SCENARIOS: Record<string, Scenario> = {
     },
     'marker-refuses-before-tag': {
         summary:
-            'step 8: a draft marker in the merged section refuses BEFORE the annotated tag is created',
+            'step 9: a draft marker in the merged section refuses BEFORE the annotated tag is created',
         config: {
             pr_already_merged: true,
             changelog_file: markedChangelogFixture(current_version()),
@@ -691,7 +870,7 @@ const SCENARIOS: Record<string, Scenario> = {
     },
     'marker-refuses-resumed-tag-push': {
         summary:
-            'step 8 (§ 3.2): a tag created but never pushed is NOT pushed when its section carries the marker',
+            'step 9 (§ 3.2): a tag created but never pushed is NOT pushed when its section carries the marker',
         config: {
             pr_already_merged: true,
             tag_created_unpushed: true,
@@ -720,7 +899,7 @@ const SCENARIOS: Record<string, Scenario> = {
     },
     'marker-refuses-github-release': {
         summary:
-            'step 9: with the tag already pushed, a marker in the TAGGED section refuses before the Release is created',
+            'step 10: with the tag already pushed, a marker in the TAGGED section refuses before the Release is created',
         config: {
             pr_already_merged: true,
             tag_already_remote: true,
@@ -793,7 +972,7 @@ const SCENARIOS: Record<string, Scenario> = {
         },
     },
     'behind-then-merge': {
-        summary: 'step 7: head BEHIND main — update branch, re-run checks, merge (9.16.0)',
+        summary: 'step 8: head BEHIND main — update branch, re-run checks, merge (9.16.0)',
         config: { behind_probes: 1 },
         expect_success: true,
         verify: (w, _err) => {
@@ -813,7 +992,7 @@ const SCENARIOS: Record<string, Scenario> = {
         },
     },
     'merge-race-recovers': {
-        summary: 'step 7: main moves between the CLEAN probe and the merge — retry, not crash',
+        summary: 'step 8: main moves between the CLEAN probe and the merge — retry, not crash',
         config: { merge_races_once: true },
         expect_success: true,
         verify: (w, _err) => {
@@ -828,7 +1007,7 @@ const SCENARIOS: Record<string, Scenario> = {
         },
     },
     'behind-forever-dies': {
-        summary: `step 7: BEHIND persists past ${_MERGE_UPDATE_ROUNDS} update rounds — die with the resume command`,
+        summary: `step 8: BEHIND persists past ${_MERGE_UPDATE_ROUNDS} update rounds — die with the resume command`,
         config: { behind_probes: 99 },
         expect_success: false,
         verify: (w, err) => {
@@ -845,7 +1024,7 @@ const SCENARIOS: Record<string, Scenario> = {
         },
     },
     'merge-fails-hard-surfaces': {
-        summary: 'step 7: a non-BEHIND merge failure surfaces unchanged instead of looping',
+        summary: 'step 8: a non-BEHIND merge failure surfaces unchanged instead of looping',
         config: { merge_fails_hard: true },
         expect_success: false,
         verify: (w, err) => {
@@ -905,7 +1084,7 @@ function run_scenario(name: string): ScenarioOutcome {
     const tree_snapshot = _snapshot_step_2_files();
     _set_exec_override((args) => world.exec(args));
     // The working-tree read, faked for the same reason the command layer is.
-    // Without this the drill's step 8 reads the repository's real CHANGELOG.md.
+    // Without this the drill's step 9 reads the repository's real CHANGELOG.md.
     _set_changelog_reader(() => world.changelog_file);
     try {
         execute(plan, { wait_for_checks: true, dry_run: false, resume: scenario.config.resume ?? true });
