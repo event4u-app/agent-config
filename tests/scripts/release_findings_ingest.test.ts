@@ -129,11 +129,53 @@ describe('planIngest', () => {
 });
 
 describe('ledgerOnBranchArgv', () => {
-    // The whole point of the fix: fs.existsSync answers "is it on disk", which a
-    // failed push makes true while the branch has nothing.
-    it('asks git about the branch, not the filesystem', () => {
-        const argv = ledgerOnBranchArgv('release/1.2.3', 'a/b.json');
-        expect(argv).toEqual(['cat-file', '-e', 'release/1.2.3:a/b.json']);
+    // Three refs, three answers, one right. The working tree says "a file
+    // exists here". The LOCAL branch ref says "a commit here carries it" — true
+    // the moment the ingest commit lands, push or no push, which is why the
+    // first fix answered identically to the filesystem check it replaced. Only
+    // the remote-tracking ref goes false when the push fails, and the merge
+    // reads the remote.
+    it('asks about the remote-tracking ref, not the local branch', () => {
+        const argv = ledgerOnBranchArgv('origin', 'release/1.2.3', 'a/b.json');
+        expect(argv).toEqual(['cat-file', '-e', 'origin/release/1.2.3:a/b.json']);
+    });
+
+    it('takes the remote as a parameter, so a fork is not assumed to be origin', () => {
+        expect(ledgerOnBranchArgv('upstream', 'release/1.2.3', 'a/b.json')[2]).toBe(
+            'upstream/release/1.2.3:a/b.json',
+        );
+    });
+});
+
+describe('eligibleRuns — the head the run reviewed', () => {
+    const run = (id: number, headSha?: string): WorkflowRun => ({
+        databaseId: id,
+        conclusion: 'success',
+        createdAt: '2026-09-11T01:00:00Z',
+        headSha,
+    });
+
+    it('drops a run that reviewed a different commit', () => {
+        expect(eligibleRuns([run(1, 'aaa'), run(2, 'bbb')], 'bbb').map((r) => r.databaseId)).toEqual(
+            [2],
+        );
+    });
+
+    it('keeps everything when no head is supplied', () => {
+        expect(eligibleRuns([run(1, 'aaa'), run(2, 'bbb')]).map((r) => r.databaseId)).toHaveLength(
+            2,
+        );
+    });
+
+    // An older gh does not return the field. Emptying the list there would
+    // block every release on a tooling version rather than on evidence.
+    it('keeps a run whose head is unknown rather than refusing it', () => {
+        expect(eligibleRuns([run(1)], 'bbb').map((r) => r.databaseId)).toEqual([1]);
+    });
+
+    it('asks gh for the head, or the guard has nothing to read', () => {
+        const fields = runLookupArgv('b')[runLookupArgv('b').indexOf('--json') + 1] ?? '';
+        expect(fields).toContain('headSha');
     });
 });
 
@@ -316,6 +358,21 @@ describe('merge_ingest — a review that found nothing', () => {
     it('still writes a reason when the artifact carries no coverage block', () => {
         const { ledger } = merge_ingest(emptyLedger(), { findings: [] });
         expect(empty_ledger_problem(ledger)).toBeNull();
+    });
+
+    // Without the key check, any JSON object reads as an empty finding set and
+    // the sentence asserts a review that never happened — in the durable
+    // record, which is worse than the deadlock it replaces.
+    it('asserts nothing about a file that does not declare a findings array', () => {
+        const { ledger, reasoned } = merge_ingest(emptyLedger(), { schema_version: 1 });
+        expect(reasoned).toBe(false);
+        expect(ledger.no_findings_reason).toBeUndefined();
+        expect(empty_ledger_problem(ledger)).not.toBeNull();
+    });
+
+    it('treats a non-array findings value as undeclared rather than empty', () => {
+        const { reasoned } = merge_ingest(emptyLedger(), { findings: null });
+        expect(reasoned).toBe(false);
     });
 
     it('does not overwrite a reason a human already wrote', () => {

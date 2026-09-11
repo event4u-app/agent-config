@@ -41,7 +41,18 @@ export function ledgerRelPath(version: string): string {
 export const FINDINGS_WORKFLOW = 'self-review-gate.yml';
 export const FINDINGS_ARTIFACT = 'self-review-findings';
 
-/** Argv for the run lookup — newest run of the findings workflow on `branch`. */
+/**
+ * Argv for the run lookup on `branch`.
+ *
+ * `headSha` is requested because without it nothing ties the ingested artifact
+ * to the commit being released: the walk takes the first run that still has an
+ * artifact, which on a branch pushed more than once is a run that reviewed an
+ * earlier head. A zero-findings artifact from that run would write "the review
+ * ran and reported no findings" into the durable record for a head nobody
+ * reviewed — the inversion the disposition gate's own header exists to stop
+ * ("absence is not evidence of zero"), produced automatically rather than by
+ * omission.
+ */
 export function runLookupArgv(branch: string): string[] {
     return [
         'run',
@@ -53,7 +64,7 @@ export function runLookupArgv(branch: string): string[] {
         '--limit',
         '10',
         '--json',
-        'databaseId,conclusion,createdAt',
+        'databaseId,conclusion,createdAt,headSha',
     ];
 }
 
@@ -63,22 +74,30 @@ export function downloadArgv(runId: number, dest: string): string[] {
 }
 
 /**
- * Argv proving the ledger is committed on `branch`, not merely present on disk.
+ * Argv proving the ledger is on the REMOTE branch — the only ref that answers
+ * the question the step is asking.
  *
- * `fs.existsSync` answers a different question, and the difference is reachable:
- * a push that failed after the ingest commit leaves the file local, and a later
- * resume would read "already on the branch" off its own working tree, skip the
- * retry, and merge a head with no ledger — restoring the failure under a line
- * asserting the opposite. A stray by-hand ingest produces the same false skip.
+ * Three refs give three different answers and only one is right. The working
+ * tree says "a file exists here", which a by-hand ingest also satisfies. The
+ * LOCAL branch ref says "a commit here carries it", which the failed-to-push
+ * ingest commit has just made true — so probing it answers identically to the
+ * filesystem in exactly the case the probe exists for, which is the defect a
+ * second review round caught in the first fix. The remote-tracking ref is the
+ * one that goes false when the push fails, and the merge reads the remote.
+ *
+ * `remote` is a parameter rather than a constant so a fork or a mirror is not
+ * silently assumed to be `origin`.
  */
-export function ledgerOnBranchArgv(branch: string, rel: string): string[] {
-    return ['cat-file', '-e', `${branch}:${rel}`];
+export function ledgerOnBranchArgv(remote: string, branch: string, rel: string): string[] {
+    return ['cat-file', '-e', `${remote}/${branch}:${rel}`];
 }
 
 export interface WorkflowRun {
     databaseId: number;
     conclusion: string | null;
     createdAt: string;
+    /** The commit the run reviewed. Absent on an older `gh` — see eligibleRuns. */
+    headSha?: string;
 }
 
 /**
@@ -100,9 +119,15 @@ export interface WorkflowRun {
  * failed, since the review job is `continue-on-error` and cannot redden the
  * run — so refusing it would skip a run whose artifact is perfectly good.
  */
-export function eligibleRuns(runs: readonly WorkflowRun[]): WorkflowRun[] {
+export function eligibleRuns(runs: readonly WorkflowRun[], headSha?: string): WorkflowRun[] {
     return runs
         .filter((r) => r.conclusion !== null && r.conclusion !== 'cancelled')
+        // A run that reviewed a different commit is not this release's review.
+        // Dropped rather than preferred-last: taking it would put a verdict
+        // about another head into the permanent record. When `headSha` is not
+        // supplied — an older `gh` that does not return the field — the filter
+        // is skipped rather than emptying the list, and the caller says so.
+        .filter((r) => headSha === undefined || r.headSha === undefined || r.headSha === headSha)
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
@@ -119,11 +144,12 @@ export function planIngest(
     ledgerOnBranch: boolean,
     runs: readonly WorkflowRun[],
     branch: string,
+    headSha?: string,
 ): IngestOutcome {
     if (ledgerOnBranch) {
         return { kind: 'present' };
     }
-    const usable = eligibleRuns(runs);
+    const usable = eligibleRuns(runs, headSha);
     return usable.length === 0
         ? { kind: 'no-run', branch }
         : { kind: 'ingest', runIds: usable.map((r) => r.databaseId) };

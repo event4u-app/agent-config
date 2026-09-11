@@ -1002,12 +1002,18 @@ function _step(n: number, total: number, msg: string): void {
 /**
  * Make the release carry its own findings ledger, or stop.
  *
- * Three outcomes and no fourth: the ledger is already on the branch and the
- * step is a no-op; there is no finished review run to ingest from, which is
- * reported and does not stop the release because a release with no review
- * artifact is a different problem from one with an unadjudicated review; or an
- * artifact exists, is ingested, committed, pushed, and the release stops until
- * a human dispositions what it found.
+ * Three outcomes and no fourth: the ledger is already on the remote branch and
+ * the step is a no-op; no finished run carries an artifact, which STOPS the
+ * release — continuing would merge and tag with no ledger, the state this step
+ * exists to prevent, so warning-and-continuing was the wrong reading and an
+ * earlier version of this comment said otherwise; or an artifact exists, is
+ * ingested, committed, pushed, and the release stops until a human dispositions
+ * what it found.
+ *
+ * The stop on a missing artifact has a cost worth knowing before it is hit: a
+ * repository without the review secret produces finished runs with no artifact
+ * on every release, so every release stops here and needs a hand-written ledger
+ * carrying a `no_findings_reason`. `noArtifactMessage` names that escape.
  *
  * Stopping is the point. `--ingest` deliberately writes empty dispositions,
  * and filling them states what the release ships and who verified it. Before
@@ -1045,9 +1051,10 @@ function settle_findings_ledger(
     }
 
     const onBranch =
-        run(['git', ...ledgerOnBranchArgv(branch, rel)], { check: false, capture: true })
+        run(['git', ...ledgerOnBranchArgv(REMOTE, branch, rel)], { check: false, capture: true })
             .returncode === 0;
-    const plan = planIngest(onBranch, runs, branch);
+    const headSha = git(['rev-parse', 'HEAD'], { capture: true });
+    const plan = planIngest(onBranch, runs, branch, headSha);
 
     if (plan.kind === 'present') {
         process.stdout.write(`    ledger already committed on ${branch}: ${rel}\n`);
@@ -1310,7 +1317,7 @@ function execute(
         // `git push -u` is naturally idempotent — it prints "Everything
         // up-to-date" when remote already matches. push_release_branch
         // additionally absorbs a remote that moved under us.
-        // Not a `_step`: a second `[4/10]` makes the cited evidence anchors ambiguous.
+        // Not a `_step`: a second `[4/11]` makes the cited evidence anchors ambiguous.
         process.stdout.write('        · verifying release gates locally (`task release:verify -- --cheap`)\n');
         run(local_release_gate_argv());
 

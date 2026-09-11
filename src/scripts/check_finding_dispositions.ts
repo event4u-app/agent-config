@@ -187,8 +187,17 @@ export function merge_ingest(
             carried.push(key);
         }
     }
+    // Only on an artifact that actually SAYS it found nothing. Without the key
+    // check, any JSON object without a `findings` key reads as an empty finding
+    // set, and the sentence below would assert a review that never happened —
+    // into the permanent record, which is worse than the deadlock it replaces.
     let reasoned = false;
-    if (ledger.findings.length === 0 && (ledger.no_findings_reason ?? '').trim() === '') {
+    const declaresFindings = Array.isArray(artifact['findings']);
+    if (
+        declaresFindings &&
+        ledger.findings.length === 0 &&
+        (ledger.no_findings_reason ?? '').trim() === ''
+    ) {
         ledger.no_findings_reason = _clean_review_reason(artifact);
         reasoned = true;
     }
@@ -495,19 +504,38 @@ function main(argv: readonly string[]): number {
     const ledgerPath = _ledger_path(dir, release);
 
     if (ingest) {
-        const artifact = JSON.parse(fs.readFileSync(ingest, 'utf-8')) as Record<string, unknown>;
-        // Validate the incoming finding shape through the same parser the
-        // committed ledger goes through, and keep the RESULT — the findings that
-        // get merged are the validated ones, not the raw artifact objects a
-        // discarded validation would have left unchecked.
-        const incoming = parse_ledger(
-            JSON.stringify({
-                schema_version: 1,
-                release,
-                findings: (artifact['findings'] as LedgerFinding[] | undefined) ?? [],
-            }),
-            ingest,
-        );
+        // Guarded: a truncated or corrupt artifact otherwise exits the child on
+        // an uncaught exception, and the release reports only "command failed"
+        // with no indication that the artifact is the problem.
+        let artifact: Record<string, unknown>;
+        try {
+            artifact = JSON.parse(fs.readFileSync(ingest, 'utf-8')) as Record<string, unknown>;
+        } catch (e) {
+            process.stderr.write(
+                `❌  ${ingest}: not readable as JSON (${e instanceof Error ? e.message : String(e)})\n`,
+            );
+            return 2;
+        }
+        // Run the incoming findings through the parser the committed ledger goes
+        // through, and keep the RESULT rather than discarding it. What that buys
+        // is narrow and worth stating: the parser checks the envelope and that
+        // every entry has a non-empty `finding_id`. It does NOT check severity,
+        // kind or title, so an entry with a bad severity still lands — the
+        // schema gate is what reads those, on the committed file.
+        let incoming: Ledger;
+        try {
+            incoming = parse_ledger(
+                JSON.stringify({
+                    schema_version: 1,
+                    release,
+                    findings: (artifact['findings'] as LedgerFinding[] | undefined) ?? [],
+                }),
+                ingest,
+            );
+        } catch (e) {
+            process.stderr.write(`❌  ${e instanceof Error ? e.message : String(e)}\n`);
+            return 2;
+        }
         let ledger: Ledger = { schema_version: 1, release, findings: [] };
         if (fs.existsSync(ledgerPath)) {
             ledger = parse_ledger(fs.readFileSync(ledgerPath, 'utf-8'), ledgerPath);

@@ -110,6 +110,11 @@ interface ExecResult {
 
 const OK: ExecResult = { status: 0, stdout: '', stderr: '' };
 
+/** The head step 7 requires a review run to have looked at. */
+const DRILL_HEAD_SHA = 'deadbeefcafe0000000000000000000000000000';
+/** A run that reviewed some other push — step 7 must refuse its artifact. */
+const DRILL_OTHER_SHA = '0000000000000000000000000000cafedeadbeef';
+
 /** Knobs a scenario turns to inject the measured failure modes. */
 interface WorldConfig {
     /** `git push -u` is rejected this many times before succeeding (9.15.0). */
@@ -156,7 +161,12 @@ interface WorldConfig {
      * review that found nothing deadlocking the release.
      */
     ledger_on_branch?: boolean;
-    findings_runs?: Array<{ databaseId: number; conclusion: string | null; createdAt: string }>;
+    findings_runs?: Array<{
+        databaseId: number;
+        conclusion: string | null;
+        createdAt: string;
+        headSha?: string;
+    }>;
     /** Run ids whose download produces an artifact. Others answer "not found". */
     findings_artifact_on?: number[];
     /** Exit code + streams the disposition gate answers with. */
@@ -319,10 +329,12 @@ class FakeWorld {
     private merge_fails_hard: boolean;
     private checks_fail: boolean;
     private readonly ledger_on_branch: boolean;
+    readonly head_sha = DRILL_HEAD_SHA;
     private readonly findings_runs: ReadonlyArray<{
         databaseId: number;
         conclusion: string | null;
         createdAt: string;
+        headSha?: string;
     }>;
     private readonly findings_artifact_on: readonly number[];
     private readonly disposition_verdict: { status: number; stdout: string; stderr: string };
@@ -520,6 +532,9 @@ class FakeWorld {
         if (cmd.startsWith('git cat-file -e ')) {
             return this.ledger_on_branch ? OK : { ...OK, status: 1 };
         }
+        if (args[0] === 'git' && args[1] === 'rev-parse' && args[2] === 'HEAD') {
+            return { ...OK, stdout: this.head_sha };
+        }
         if (args[0] === 'gh' && args[1] === 'run' && args[2] === 'list') {
             return { ...OK, stdout: JSON.stringify(this.findings_runs) };
         }
@@ -596,7 +611,9 @@ const SCENARIOS: Record<string, Scenario> = {
             'step 7: no ledger on the branch, a finished run carries the artifact — ingest, commit, push, re-wait, then continue',
         config: {
             ledger_on_branch: false,
-            findings_runs: [{ databaseId: 7, conclusion: 'success', createdAt: '2026-09-11T01:00:00Z' }],
+            findings_runs: [
+                { databaseId: 7, conclusion: 'success', createdAt: '2026-09-11T01:00:00Z', headSha: DRILL_HEAD_SHA },
+            ],
             findings_artifact_on: [7],
         },
         expect_success: true,
@@ -637,7 +654,9 @@ const SCENARIOS: Record<string, Scenario> = {
         // version before it merged anyway after printing a warning.
         config: {
             ledger_on_branch: false,
-            findings_runs: [{ databaseId: 7, conclusion: 'success', createdAt: '2026-09-11T01:00:00Z' }],
+            findings_runs: [
+                { databaseId: 7, conclusion: 'success', createdAt: '2026-09-11T01:00:00Z', headSha: DRILL_HEAD_SHA },
+            ],
             findings_artifact_on: [],
         },
         expect_success: false,
@@ -688,23 +707,30 @@ const SCENARIOS: Record<string, Scenario> = {
             return f;
         },
     },
-    'findings-ledger-on-disk-but-not-on-the-branch': {
+    'findings-ledger-absent-from-the-remote-branch': {
         summary:
-            'step 7: a ledger the working tree has and the branch does not is NOT treated as present — the push is retried',
-        // The reachable case: push_release_branch died after the ingest commit,
-        // so the file is local only. Probing the filesystem would report
-        // "already on the branch" and merge a head without it.
+            'step 7: the presence probe asks the REMOTE branch — not the working tree, and not the local ref a failed push already advanced',
+        // Renamed from `findings-ledger-on-disk-but-not-on-the-branch`, which a
+        // second review round found tested neither half of its own name: the
+        // world models no filesystem state for the ledger, so "on disk" was
+        // never simulated. What is checkable here is which REF the probe reads,
+        // and that is the half the first fix got wrong — it read the local
+        // branch, which the failed-to-push ingest commit has just advanced.
         config: {
             ledger_on_branch: false,
-            findings_runs: [{ databaseId: 9, conclusion: 'success', createdAt: '2026-09-11T02:00:00Z' }],
+            findings_runs: [
+                { databaseId: 9, conclusion: 'success', createdAt: '2026-09-11T02:00:00Z', headSha: DRILL_HEAD_SHA },
+            ],
             findings_artifact_on: [9],
         },
         expect_success: true,
         verify: (w) => {
             const f: string[] = [];
+            const probe = w.calls.find((c) => c.startsWith('git cat-file -e '));
+            _expect(probe !== undefined, 'the ledger presence was never probed', f);
             _expect(
-                w.calls.some((c) => c.startsWith('git cat-file -e ')),
-                'the branch was never asked whether it carries the ledger',
+                (probe ?? '').includes('origin/'),
+                `the probe read a local ref, which a failed push makes true: ${probe ?? '(none)'}`,
                 f,
             );
             _expect(
@@ -712,6 +738,38 @@ const SCENARIOS: Record<string, Scenario> = {
                 'the ingest was skipped on a branch that has no ledger',
                 f,
             );
+            return f;
+        },
+    },
+    'findings-ledger-refuses-a-run-that-reviewed-another-head': {
+        summary:
+            'step 7: a finished run whose artifact reviewed a different commit is not this release’s review — the release stops',
+        // Reachable without anything breaking: the newest run is cancelled or
+        // its download 404s, and the walk falls through to a run from an earlier
+        // push. A zero-findings artifact from that run would write "the review
+        // ran and reported no findings" into the durable record for a head
+        // nobody reviewed.
+        config: {
+            ledger_on_branch: false,
+            findings_runs: [
+                { databaseId: 4, conclusion: 'success', createdAt: '2026-09-11T03:00:00Z', headSha: DRILL_OTHER_SHA },
+            ],
+            findings_artifact_on: [4],
+        },
+        expect_success: false,
+        verify: (w, error) => {
+            const f: string[] = [];
+            _expect(
+                !w.calls.some((c) => c.includes('--ingest')),
+                'ingested an artifact that reviewed a different commit',
+                f,
+            );
+            _expect(
+                (error ?? '').includes('no self-review-findings artifact'),
+                `the stop did not name the missing review: ${error ?? '(no error)'}`,
+                f,
+            );
+            _expect(!w.tag_remote, 'tagged on a review of another head', f);
             return f;
         },
     },
@@ -993,7 +1051,7 @@ const SCENARIOS: Record<string, Scenario> = {
         },
     },
     'behind-then-merge': {
-        summary: 'step 7: head BEHIND main — update branch, re-run checks, merge (9.16.0)',
+        summary: 'step 8: head BEHIND main — update branch, re-run checks, merge (9.16.0)',
         config: { behind_probes: 1 },
         expect_success: true,
         verify: (w, _err) => {
@@ -1013,7 +1071,7 @@ const SCENARIOS: Record<string, Scenario> = {
         },
     },
     'merge-race-recovers': {
-        summary: 'step 7: main moves between the CLEAN probe and the merge — retry, not crash',
+        summary: 'step 8: main moves between the CLEAN probe and the merge — retry, not crash',
         config: { merge_races_once: true },
         expect_success: true,
         verify: (w, _err) => {
@@ -1028,7 +1086,7 @@ const SCENARIOS: Record<string, Scenario> = {
         },
     },
     'behind-forever-dies': {
-        summary: `step 7: BEHIND persists past ${_MERGE_UPDATE_ROUNDS} update rounds — die with the resume command`,
+        summary: `step 8: BEHIND persists past ${_MERGE_UPDATE_ROUNDS} update rounds — die with the resume command`,
         config: { behind_probes: 99 },
         expect_success: false,
         verify: (w, err) => {
@@ -1045,7 +1103,7 @@ const SCENARIOS: Record<string, Scenario> = {
         },
     },
     'merge-fails-hard-surfaces': {
-        summary: 'step 7: a non-BEHIND merge failure surfaces unchanged instead of looping',
+        summary: 'step 8: a non-BEHIND merge failure surfaces unchanged instead of looping',
         config: { merge_fails_hard: true },
         expect_success: false,
         verify: (w, err) => {
