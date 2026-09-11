@@ -1,0 +1,28 @@
+{
+  "_comment": "The break-glass ledger for the standing-payload ceiling. EMPTY, and expected to stay empty: 96.8 % of the last 250 merged pull requests moved this payload by zero or less, so the ordinary path is zero net growth and fully autonomous. This file is for the tail of the tail -- a change whose offsetting reduction is genuinely unsafe. Reading order: src/scripts/_lib/measured_payload_ceiling.ts carries the mechanism and the six contract rules with the reasoning behind each; ADR-275 carries the decision; src/config/preamble-payload-budget.json carries the ceiling this widens.",
+  "schema_version": 1,
+  "registered_at": "2026-09-11",
+  "owner": "maintainer",
+  "exceptions": [],
+  "contract": {
+    "ceiling_effect": "ceiling = max(design_ceiling, min(payload_at_base_ref, watermark) + granted_tokens, stored_ceiling?). The base is PINNED to the watermark while a grant is live, which is what stops the grant becoming permanent: without the pin, the grant raises the measurement, the next pull request measures the raised base, and the exceptional growth is the new ordinary one merge later.",
+    "at_most_one_active": "At most ONE grant may be active at a time. Overlapping grants have no defined composition -- a later watermark can already contain an earlier grant's growth, so summing counts it twice. Repay or expire one before recording the next. (AI council 2026-09-11, blocking finding 1.)",
+    "approval_must_be_authenticated": "approval_event names a platform event OUTSIDE the diff that requests the grant, and the gate honours the grant only when a caller with platform access has verified it (--approved <id>). An approval recorded solely by the change requesting it is self-asserted data: the same diff can claim the grant, the approver and the date. An unverified grant contributes ZERO tokens and refuses the run. (Blocking finding 2, and the council's hardest pushback in both seats.)",
+    "deletion_cannot_discharge_debt": "A record may not be deleted. Removing an entry that exists at the base ref is refused by the shrink-only ratchet: a deleted record is not a repaid one, and erasing it erases the evidence along with the debt. (Blocking finding 3.)",
+    "repayment_is_measured": "repaid_at RECORDS a measurement, it does not assert one. Repayment is established by the payload returning to the watermark; a record marked repaid while the measurement says otherwise is refused. (Blocking finding 4.)",
+    "consumption_is_derived": "There is deliberately no consumed_tokens field. Consumption is measured - watermark, computed by the gate. A stored copy would be an editable assertion about a measurement. It matters because any future numeric cap must come from actual CONSUMED tokens rather than granted ones -- both seats refused to derive a cap from granted amounts. (Blocking finding 5 / Q3.)",
+    "expiry_is_evaluated_at_gate_time": "Expiry is read when the gate runs, which on a required check is merge time. A grant that expires while its pull request sits in review reds that pull request. The fix is a fresh approved grant, never an edit to the old one's date -- which the shrink-only ratchet refuses anyway. (Blocking finding 6.)",
+    "no_numeric_cap": "There is no aggregate token cap, and its absence is a finding rather than an omission. The 250-PR delta distribution (p50 0, p90 0, p95 0/+167, max +288) is CENSORED by the very ratchet a cap would relax, so every percentile describes what got through rather than what was attempted. A p95 cap would license the top 5 % of ordinary work to use the break-glass routinely, which makes it not exceptional. Until rejection instrumentation and derived consumption uncensor the distribution, the approver is the cap.",
+    "honest_limit": "This file is editable by the pull request it governs, exactly like the gate code. It is an auditable control, not a preventive one -- the council's own words for the sibling mechanism: 'the mechanism does not prevent the exploit; it makes the exploit auditable'. The two rules that keep it from being weaker than that are approval verification (an unverified grant buys nothing) and the deletion check (a removed grant is still owed)."
+  },
+  "entry_shape": {
+    "id": "stable identifier; it is the record's identity and may not be reused",
+    "granted_tokens": "positive integer; may never be enlarged after the fact -- record a new grant instead",
+    "watermark": "the payload measured immediately BEFORE the grant; immutable, including across a rebase",
+    "reason": "why an offsetting reduction was unsafe for this change specifically",
+    "approval_event": "reference to the platform event that authorised it, outside this diff",
+    "approved_at": "YYYY-MM-DD",
+    "expires_at": "YYYY-MM-DD; after it, an unrepaid grant is a hard refusal",
+    "repaid_at": "YYYY-MM-DD once the payload has measurably returned to the watermark, else null"
+  }
+}
