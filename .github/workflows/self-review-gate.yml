@@ -264,6 +264,7 @@ jobs:
           # GITHUB_TOKEN version of this job. `RELEASE_PR_TOKEN` is the pattern
           # `release.yml` already uses for the same class of problem.
           token: ${{ secrets.RELEASE_PR_TOKEN || github.token }}
+          # persist-credentials KEPT: the `git push origin "HEAD:$HEAD_REF"` below pushes the ledger commit with this credential.
           persist-credentials: true
 
       - name: Place, commit and push the ledger

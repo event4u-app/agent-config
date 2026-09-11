@@ -153,6 +153,15 @@ interface WorldConfig {
      * download; those went with it when the owner moved the ingest into CI.
      */
     ledger_on_branch?: boolean;
+    /**
+     * Whether the ledger is on the TRUNK — the ref the merged path asks.
+     *
+     * Separate from `ledger_on_branch` because the two states worth testing are
+     * exactly the ones a single boolean cannot express: present on the branch
+     * and not on the trunk, and the reverse. Defaults to `ledger_on_branch`, so
+     * every scenario written before this knob keeps its answer.
+     */
+    ledger_on_trunk?: boolean;
     /** Exit code + streams the disposition gate answers with. */
     disposition_verdict?: { status: number; stdout: string; stderr: string };
     /**
@@ -314,6 +323,7 @@ class FakeWorld {
     private merge_fails_hard: boolean;
     private checks_fail: boolean;
     private readonly ledger_on_branch: boolean;
+    private readonly ledger_on_trunk: boolean | undefined;
     private readonly disposition_verdict: { status: number; stdout: string; stderr: string };
     private readonly changelog: string;
     /** Working-tree content; see `WorldConfig.changelog_file`. */
@@ -340,6 +350,7 @@ class FakeWorld {
         // already on the branch and the gate is happy, so step 7 is a two-call
         // no-op and the sequencing scenarios stay about sequencing.
         this.ledger_on_branch = cfg.ledger_on_branch ?? true;
+        this.ledger_on_trunk = cfg.ledger_on_trunk;
         this.disposition_verdict = cfg.disposition_verdict ?? { status: 0, stdout: '', stderr: '' };
     }
 
@@ -505,7 +516,14 @@ class FakeWorld {
 
         // Step 7 — the findings ledger.
         if (cmd.startsWith('git cat-file -e ')) {
-            return this.ledger_on_branch ? OK : { ...OK, status: 1 };
+            // REF-AWARE, because one boolean for every ref made the two states
+            // that distinguish right from wrong inexpressible: on the branch
+            // but not the trunk, and the reverse. A fourth review named the
+            // merged-path scenario as asserting a string in the argv rather
+            // than the ref that was read.
+            const onTrunk = this.ledger_on_trunk ?? this.ledger_on_branch;
+            const present = cmd.includes('/main:') ? onTrunk : this.ledger_on_branch;
+            return present ? OK : { ...OK, status: 1 };
         }
         if (cmd.includes('check_finding_dispositions --release')) {
             return { ...this.disposition_verdict };
@@ -623,7 +641,11 @@ const SCENARIOS: Record<string, Scenario> = {
         // the old code asserted away: the ingest produces nothing, step 7
         // stops, a human merges the PR, and the resumed run used to print "the
         // ledger rode in with it" without reading anything.
-        config: { pr_already_merged: true, ledger_on_branch: false },
+        // The two knobs differ on purpose: the ledger IS on the release branch
+        // and is NOT on the trunk. A run that read the branch ref would pass
+        // here, which is the wrong answer — the branch is deleted and the merge
+        // is what decides whether the ledger shipped.
+        config: { pr_already_merged: true, ledger_on_branch: true, ledger_on_trunk: false },
         expect_success: false,
         verify: (w, error) => {
             const f: string[] = [];

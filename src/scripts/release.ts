@@ -30,28 +30,21 @@
  *     3. Confirm           — show preview, ask once (skippable with --yes;
  *                            `--ci` always needs --yes — CI has no terminal).
  *     4. Branch + bump     — create `release/X.Y.Z`, update package.json,
- *                            .claude-plugin/marketplace.json, CHANGELOG.md,
- *                            then run `task release-prepare` so pack
- *                            manifests and tool projections pick up the
- *                            new version (otherwise the PR's own consistency
- *                            check fails — see PR #226 post-mortem).
+ *                            marketplace.json and CHANGELOG.md, then run
+ *                            `task release-prepare` so pack manifests and tool
+ *                            projections pick up the new version (skip it and
+ *                            the PR's own consistency check fails — PR #226).
  *     5. Commit + push     — `release: X.Y.Z`, push branch, open PR.
  *     6. Wait for CI       — `gh pr checks --watch` (skippable with --no-wait).
- *     7. Findings ledger   — VERIFY that the ledger for this version is on the
- *                            remote release branch and that the disposition
- *                            gate passes, and STOP otherwise. Produces
- *                            nothing: `self-review-gate.yml` builds and commits
- *                            it. Before the merge because the ledger is read
- *                            off the branch and step 8 deletes it.
+ *     7. Findings ledger   — VERIFY it is on the branch and dispositioned, and
+ *                            STOP otherwise; `self-review-gate.yml` builds it.
  *     8. Merge             — `gh pr merge --merge --delete-branch`.
- *     9. Tag main          — fast-forward main, tag the merge commit, push
- *                            the tag (triggers publish-npm.yml — except
- *                            under `--ci`, see step 10).
- *    10. GitHub Release    — `gh release create X.Y.Z --notes <changelog>`;
- *                            under `--ci`, also dispatches
- *                            release-guard.yml + publish-npm.yml +
- *                            cloud-release.yml explicitly.
- *    11. Delete the merged release branch, local and remote.
+ *     9. Tag main          — fast-forward main, tag the merge commit, push the
+ *                            tag (triggers publish-npm.yml, except under --ci).
+ *    10. GitHub Release    — `gh release create X.Y.Z --notes <changelog>`; under
+ *                            `--ci`, also dispatches release-guard.yml,
+ *                            publish-npm.yml and cloud-release.yml explicitly.
+ *    11. Cleanup           — delete the merged release branch, local + remote.
  *
  * Idempotency: pass `--resume` to recover from a partial failure. Each
  * step then probes existing state (branch, commit, PR, tag, GitHub
@@ -135,14 +128,8 @@ import {
 } from './_lib/release_highlights.js';
 import { canPrompt, promptLine } from './_lib/tty_prompt.js';
 import { preflightPosition } from './_lib/release_position.js';
-import {
-    dispositionStopMessage,
-    ledgerAbsentAfterMergeMessage,
-    ledgerAbsentMessage,
-    ledgerOnBranchArgv,
-    ledgerRelPath,
-} from './_lib/release_findings_ingest.js';
-import { isBlocking, parse_ledger } from './check_finding_dispositions.js';
+import { settleFindingsLedger } from './_lib/release_findings_ingest.js';
+import { TAG_TRIGGERED_WORKFLOWS, dispatchTagWorkflows } from './_lib/release_tag_dispatch.js';
 import {
     RELEASE_HEAD_DEFAULT,
     extract_changelog_section,
@@ -993,102 +980,6 @@ function _step(n: number, total: number, msg: string): void {
     process.stdout.write(`[${n}/${total}] ${msg}\n`);
 }
 
-/**
- * Verify the release carries its own findings ledger, or stop.
- *
- * VERIFIES, NEVER PRODUCES. The ingest lives in the self-review workflow, which
- * commits the ledger to the release branch as soon as it has reviewed it. That
- * placement was the owner's decision on 2026-09-11 after two review rounds, and
- * the reason is that every other placement fights an ordering it cannot win:
- * `finding-dispositions` runs on the release PR and reds while the ledger lacks
- * a finding the review reported, so a step that produced the ledger AFTER the
- * check wait could never run — the wait had already died on the red check — and
- * one that produced it before the wait would push a commit the wait then had to
- * re-do. Producing it in CI means the ledger exists before any gate looks.
- *
- * So this step asks two questions and answers them with a stop:
- *
- *   1. Is the ledger on the remote branch? The REMOTE, because that is the ref
- *      the merge reads; a local commit that failed to push is not on the branch
- *      however much the working tree suggests otherwise.
- *   2. Does the disposition gate pass? Asked with `--pr`, the same mode the CI
- *      job uses, so the release cannot pass a weaker check than the one it is
- *      trying to pre-satisfy.
- *
- * Neither answer is repaired here. Filling a disposition states what the release
- * ships, with a rationale and a named verifier; no automation writes one.
- */
-function settle_findings_ledger(
-    version: string,
-    branch: string,
-    pr: number | null,
-    merged = false,
-): void {
-    const rel = ledgerRelPath(version);
-    const abs = path.join(REPO_ROOT, rel);
-
-    // Which ref carries the answer depends on whether the branch still exists.
-    // On a merged PR the release branch is deleted and the ledger, if it was
-    // ever produced, rode into the trunk — so the trunk is the ref to ask.
-    // Asking nothing was the old behaviour and it asserted the good case.
-    const ref = merged ? MAIN_BRANCH : branch;
-    const onBranch =
-        run(['git', ...ledgerOnBranchArgv(REMOTE, ref, rel)], { check: false, capture: true })
-            .returncode === 0;
-    if (!onBranch) {
-        die(
-            merged
-                ? ledgerAbsentAfterMergeMessage(version, MAIN_BRANCH, REMOTE)
-                : ledgerAbsentMessage(version, branch, REMOTE),
-        );
-    }
-    process.stdout.write(`    ledger on ${REMOTE}/${ref}: ${rel}\n`);
-
-    // `--pr` is the durable trigger for an un-ingested finding: it compares the
-    // review's own report against the committed ledger. Without it the release
-    // would pass a strictly weaker check than `finding-dispositions` and learn
-    // about the gap from CI instead.
-    const argv = ['./scripts-run', 'src/scripts/check_finding_dispositions', '--release', version];
-    if (pr !== null) {
-        argv.push('--pr', String(pr));
-    }
-    const verdict = run(argv, { check: false, capture: true });
-    if (verdict.returncode !== 0) {
-        die(
-            dispositionStopMessage(
-                version,
-                // BOTH streams. The gate writes its scan line to stdout and its
-                // per-finding diagnosis to stderr, so preferring stdout showed
-                // the operator `scanned: N` and discarded the entire reason the
-                // release stopped.
-                [verdict.stdout, verdict.stderr].map((s) => s.trim()).filter(Boolean).join('\n'),
-                _blocking_without_disposition(abs),
-                'task release -- --resume --yes',
-            ),
-        );
-    }
-}
-
-/**
- * How many blocking findings carry no status — a figure for the stop message,
- * never the reason for it.
- *
- * The gate refuses for more shapes than this counts (an unknown status, an
- * empty rationale or verifier, a `fixed` with no commit, a malformed ledger),
- * which is why the gate's own output is what the operator is shown.
- */
-function _blocking_without_disposition(ledgerAbs: string): number {
-    if (!fs.existsSync(ledgerAbs)) {
-        return 0;
-    }
-    try {
-        const ledger = parse_ledger(fs.readFileSync(ledgerAbs, 'utf-8'), ledgerAbs);
-        return ledger.findings.filter((f) => isBlocking(f) && !f.status).length;
-    } catch {
-        return 0;
-    }
-}
-
 function execute(
     plan: Plan,
     opts: { wait_for_checks: boolean; dry_run: boolean; resume?: boolean; ci?: boolean },
@@ -1268,40 +1159,12 @@ function execute(
         _step(6, total, 'Skip waiting for checks (--no-wait)');
     }
 
-    // Step 7 — findings ledger
-    // Verification only; the self-review workflow produces the ledger. Placed
-    // before the merge because the ledger lives on the release branch and step 8
-    // deletes it, so this is the last moment the check means anything — and
-    // after the check wait, so a red `finding-dispositions` has already stopped
-    // the release at step 6 with the check name rather than here with a
-    // duplicate of it.
-    {
-        _step(
-            7,
-            total,
-            pr_merged
-                ? 'Verify the findings ledger rode in with the merge'
-                : 'Verify the self-review findings ledger',
-        );
-        // `pr_info` is probed at the top ONLY on a resumed run, so on a first
-        // run it is null and `--pr` was silently dropped — the release then
-        // passed a strictly weaker check than `finding-dispositions` and learnt
-        // about an un-ingested finding from CI. The PR exists by now either way
-        // (step 5 opened it), so re-probe rather than skip the flag.
-        const pr_for_ledger = pr_info ?? _pr_for_branch(branch);
-        // The merged branch used to SKIP this step on the strength of its own
-        // banner — "the ledger rode in with it" — while reading nothing. That
-        // is a reachable state and it is the original failure: the ingest
-        // no-ops, step 7 stops, the PR is merged by hand, and a resumed run
-        // then tags and publishes a version with no ledger.
-        settle_findings_ledger(
-            plan.target,
-            branch,
-            pr_for_ledger === null ? null : Number(pr_for_ledger['number']),
-            pr_merged,
-        );
-    }
-
+    // Step 7 — the findings ledger: verify, never produce; the module says why.
+    settleFindingsLedger({
+        run, die, repoRoot: REPO_ROOT, remote: REMOTE, trunk: MAIN_BRANCH,
+        step: (m) => { _step(7, total, m); }, write: (s) => process.stdout.write(s),
+        resolvePr: () => Number((pr_info ?? _pr_for_branch(branch))?.['number'] ?? NaN) || null,
+    }, plan.target, branch, pr_merged);
     // Step 8 — merge
     if (pr_merged) {
         _step(8, total, `PR #${pr_info!['number']} already merged — skip`);
@@ -1379,31 +1242,11 @@ function execute(
         // branch above), so a --resume re-run never re-dispatches a
         // publish that already happened.
         if (ci) {
-            _step(10, total, 'Dispatch release-guard.yml + publish-npm.yml + cloud-release.yml for the tag');
-            // NON-FATAL by design. By this point the release is already complete
-            // — the tag is pushed and the GitHub Release is created above, and
-            // npm publish runs asynchronously. These explicit dispatches are a
-            // FALLBACK for a tag pushed with the default GITHUB_TOKEN, which does
-            // NOT fire tag-triggered workflows (GitHub's recursion guard). When
-            // the tag was pushed with a PAT (RELEASE_PR_TOKEN), those three
-            // workflows already fired on the push and this dispatch is redundant.
-            // Dispatching via the API additionally needs the token's
-            // `actions:write` scope; a 403 here (scope missing) must NOT mark an
-            // already-shipped release as failed — warn and continue.
-            for (const wf of ['release-guard.yml', 'publish-npm.yml', 'cloud-release.yml']) {
-                const r = run(['gh', 'workflow', 'run', wf, '--ref', MAIN_BRANCH, '-f', `tag=${plan.target}`], {
-                    check: false,
-                });
-                if (r.returncode !== 0) {
-                    process.stderr.write(
-                        `⚠️  Could not dispatch ${wf} (exit ${r.returncode}) — the release ${plan.target} is ` +
-                            `already complete (tag + GitHub Release created; npm publishes async). If the tag was ` +
-                            `pushed with a PAT, ${wf} already fired on the tag push. If you rely on the explicit ` +
-                            `dispatch, grant RELEASE_PR_TOKEN the "Actions: read and write" scope (fine-grained PAT) ` +
-                            `or the "workflow" scope (classic PAT).\n`,
-                    );
-                }
-            }
+            _step(10, total, `Dispatch ${TAG_TRIGGERED_WORKFLOWS.join(' + ')} for the tag`);
+            dispatchTagWorkflows(
+                { run, warn: (s) => process.stderr.write(s), trunk: MAIN_BRANCH },
+                plan.target,
+            );
         }
     }
 
@@ -1437,7 +1280,7 @@ function execute(
     process.stdout.write('   npm publish runs asynchronously via publish-npm.yml on the tag.\n');
 }
 
-// ─── entrypoint ───────────────────────────────────────────────────────────────
+// Entrypoint.
 
 /** Mirror of `argparse.Namespace` for this CLI. */
 interface Args {

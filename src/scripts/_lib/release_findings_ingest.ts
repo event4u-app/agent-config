@@ -36,6 +36,11 @@
  * the release — filling a disposition states what the release ships, with a
  * rationale and a named verifier, and no automation writes one.
  */
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+
+import { isBlocking, parse_ledger } from '../check_finding_dispositions.js';
+
 
 /** Where a release's ledger lives, relative to the repository root. */
 export function ledgerRelPath(version: string): string {
@@ -165,4 +170,155 @@ export function dispositionStopMessage(
         'named verifier, and no automation may write one.\n' +
         `  Resolve what the report names, push the release branch, then: ${resumeCmd}`
     );
+}
+
+/** The release's own subprocess result shape, mirrored so this module stays free of it. */
+interface StepRunResult {
+    returncode: number;
+    stdout: string;
+    stderr: string;
+}
+
+/**
+ * What the step needs from the release script, injected rather than imported.
+ *
+ * `release.ts` sits past the source-size cap where every line is charged, and
+ * this step is the release's side of the contract this module already owns — so
+ * it lives here. Injection rather than an import of `release_publication.ts`
+ * keeps `_lib` free of a dependency on its own caller.
+ */
+export interface LedgerStepDeps {
+    run: (argv: string[], opts: { check: boolean; capture: boolean }) => StepRunResult;
+    die: (msg: string) => never;
+    /** Prints the step banner, so the caller keeps the step number. */
+    step: (msg: string) => void;
+    /** Where the step reports the ref it read. */
+    write: (s: string) => void;
+    /** Absolute repository root, for resolving the ledger on disk. */
+    repoRoot: string;
+    /** Remote name, never assumed to be `origin`. */
+    remote: string;
+    /** The trunk the release merges into — the ref to ask once the branch is gone. */
+    trunk: string;
+    /**
+     * The PR number for `--pr`, resolved late.
+     *
+     * Late because the release probes its PR once at the top and only on a
+     * resumed run, so on a first run the number was null here and `--pr` was
+     * silently dropped — and the release then passed a strictly weaker check
+     * than `finding-dispositions`, learning about an un-ingested finding from
+     * CI instead. By the time this step runs the PR exists either way.
+     */
+    resolvePr: () => number | null;
+}
+
+/**
+ * Verify the release carries its own findings ledger, or stop.
+ *
+ * VERIFIES, NEVER PRODUCES — the why is the module docstring above. Placed
+ * between the check wait and the merge: the ledger lives on the release branch
+ * and the merge deletes it, so this is the last moment the question means
+ * anything, and after the wait so a red `finding-dispositions` has already
+ * stopped the release with the check's own name rather than a duplicate of it.
+ *
+ * Two questions, each answered with a stop:
+ *
+ *   1. Is the ledger on the ref the merge will read? On an open PR that is the
+ *      remote release branch; once the PR is merged the branch is deleted and
+ *      the ledger, if it was ever produced, rode into the trunk. The merged
+ *      path used to ask nothing and assert the good case.
+ *   2. Does the disposition gate pass, in `--pr` mode — the same mode CI uses,
+ *      so the release cannot pass a weaker check than the one it is trying to
+ *      pre-satisfy.
+ *
+ * Neither answer is repaired here. Filling a disposition states what the release
+ * ships, with a rationale and a named verifier; no automation writes one.
+ */
+export function settleFindingsLedger(
+    deps: LedgerStepDeps,
+    version: string,
+    branch: string,
+    merged: boolean,
+): void {
+    deps.step(
+        merged
+            ? 'Verify the findings ledger rode in with the merge'
+            : 'Verify the self-review findings ledger',
+    );
+    const rel = ledgerRelPath(version);
+    const ref = merged ? deps.trunk : branch;
+
+    // REFRESH BEFORE READING, AND FAST-FORWARD BEFORE ASKING THE GATE. Both
+    // halves are a defect a fourth review measured, and they are the same
+    // defect seen from two sides. `cat-file -e <remote>/<ref>:<path>` reads
+    // `.git`, not GitHub — and nothing in a first run refreshes that
+    // remote-tracking ref after CI commits the ledger: preflight fetches before
+    // the branch exists, and step 4's push sets the ref to the pushed commit,
+    // which is strictly older than the ledger commit. So the probe answered
+    // "absent" on every first release. The disposition gate then reads the
+    // WORKING TREE, which the same push left equally stale, so a fetch alone
+    // would fix the probe and hand the gate an empty ledger instead.
+    //
+    // `--ff-only` on purpose: the release pushed this ref itself, so the only
+    // commit ahead of it should be CI's. Anything else means the branch moved
+    // under the run, and stopping is better than merging a tree nobody read.
+    // Both are `check: false` — a fetch that fails leaves the probe to report
+    // the absence with a message that says what to do.
+    deps.run(['git', 'fetch', deps.remote, ref], { check: false, capture: true });
+    deps.run(['git', 'pull', '--ff-only', deps.remote, ref], { check: false, capture: true });
+
+    const onBranch =
+        deps.run(['git', ...ledgerOnBranchArgv(deps.remote, ref, rel)], {
+            check: false,
+            capture: true,
+        }).returncode === 0;
+    if (!onBranch) {
+        deps.die(
+            merged
+                ? ledgerAbsentAfterMergeMessage(version, deps.trunk, deps.remote)
+                : ledgerAbsentMessage(version, branch, deps.remote),
+        );
+    }
+    deps.write(`    ledger on ${deps.remote}/${ref}: ${rel}\n`);
+
+    const argv = ['./scripts-run', 'src/scripts/check_finding_dispositions', '--release', version];
+    const pr = deps.resolvePr();
+    if (pr !== null) {
+        argv.push('--pr', String(pr));
+    }
+    const verdict = deps.run(argv, { check: false, capture: true });
+    if (verdict.returncode !== 0) {
+        deps.die(
+            dispositionStopMessage(
+                version,
+                // BOTH streams. The gate writes its scan line to stdout and its
+                // per-finding diagnosis to stderr, so preferring stdout showed
+                // the operator `scanned: N` and discarded the entire reason the
+                // release stopped.
+                [verdict.stdout, verdict.stderr].map((s) => s.trim()).filter(Boolean).join('\n'),
+                blockingWithoutDisposition(path.join(deps.repoRoot, rel)),
+                'task release -- --resume --yes',
+            ),
+        );
+    }
+}
+
+/**
+ * How many blocking findings carry no status — a figure for the stop message,
+ * never the reason for it.
+ *
+ * The gate refuses for more shapes than this counts (an unknown status, an
+ * empty rationale or verifier, a `fixed` with no commit, a malformed ledger),
+ * which is why the gate's own output is what the operator is shown.
+ */
+function blockingWithoutDisposition(ledgerAbs: string): number {
+    if (!fs.existsSync(ledgerAbs)) {
+        return 0;
+    }
+    try {
+        const ledger = parse_ledger(fs.readFileSync(ledgerAbs, 'utf-8'), ledgerAbs);
+        return ledger.findings.filter((f) => isBlocking(f) && !f.status).length;
+    } catch {
+        return 0;
+    }
 }
