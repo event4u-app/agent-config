@@ -318,8 +318,16 @@ item. Phases 1-6 may run once 0.2 is chosen.
       runnable and unwired, so nothing that was enforcing becomes non-enforcing and no
       agent-writable bypass is introduced, and the wiring is the second half of
       `ratification-platform-anchor` — after the settings change, when the gate can go green
-      on merit. A reader can audit that choice from the tree: the gate exists,
-      `grep -c check_platform_anchor taskfiles/ci-fast.yml` returns 0.
+      on merit. A reader can audit that choice from the tree: the gate exists and is
+      invoked from the pre-push chain but from no workflow —
+      `grep -rc check_platform_anchor .github/workflows/*.yml | grep -v ':0'` returns only
+      `rule-backstops.yml:1`, and that one hit is a comment saying it is NOT wired there.
+      **Corrected 2026-09-11 by a release-review adjudication:** this line used to read
+      `grep -c check_platform_anchor taskfiles/ci-fast.yml` returns 0. It returns **2**
+      (`:157`, `:2096`), because the pre-push chain is exactly where the gate IS wired — so
+      a reader following the old instruction would have concluded the opposite of what the
+      step says. The substantive claim (unwired in CI) was right; the command tested the
+      wrong file.
       **This is K7 unhonoured on purpose.** The kill register forbids keeping the deny AND the
       gate. Two mechanisms is the interim the review forced, and it is the safe direction: the
       gate only ever refuses, so it cannot produce a state weaker than today's.

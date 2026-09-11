@@ -66,8 +66,15 @@ the **workflow_dispatch** on `release.yml` (inputs: `bump`, `version`,
       is checked for you, and the judgement behind it — remove, or revise the
       commitment — always was and remains yours.
 - [ ] The release satisfies [`release-sizing.md`](contracts/release-sizing.md) —
-      one primary product goal, and a `Rollback:` line for every new /
-      substantially reworked subsystem (gate: `src/scripts/lint_changelog_rollback.ts`).
+      a `Rollback:` line for every new / substantially reworked subsystem
+      (gate: `src/scripts/lint_changelog_rollback.ts`), a disable path where
+      feasible, and the consumer-matrix floor.
+- [ ] The release satisfies
+      [`release-primary-goal.md`](contracts/release-primary-goal.md) — one
+      primary product goal, declared as a literal `Primary-Goal:` line in the
+      release PR body. Split out of `release-sizing.md` on 2026-09-11 because
+      it was honoured in 0 of the 6 releases cut under it; still beta, and
+      still unenforced, so this checkbox is the only thing asking for it today.
 - [ ] **One capability track this minor.** Not one commit and not one subsystem —
       one *track* a reader can name in a sentence. A minor that carries two
       unrelated capability tracks is two releases sharing a tag, and every

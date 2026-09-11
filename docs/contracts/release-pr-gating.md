@@ -223,6 +223,10 @@ name alone never bypasses the heavy matrix.
   CI-native (`release`-label) entry point into the same script.
 - [`docs/distribution/consumer-matrix.md`](../distribution/consumer-matrix.md) —
   pack-based consumer E2E; the documented exemption from the cut surface.
-- [`release-sizing.md`](release-sizing.md) — release scope floor: one primary
-  goal per minor, `Rollback:` lines for new / reworked subsystems (gate:
-  `src/scripts/lint_changelog_rollback.ts`).
+- [`release-sizing.md`](release-sizing.md) — release safety floor: disable
+  paths, `Rollback:` lines for new / reworked subsystems (gate:
+  `src/scripts/lint_changelog_rollback.ts`), and the consumer-matrix floor.
+- [`release-primary-goal.md`](release-primary-goal.md) — release scope floor:
+  one primary goal per minor and the `Primary-Goal:` declaration. Split out of
+  `release-sizing.md` on 2026-09-11 and still in beta; this document's
+  release-shape detection is where a declaration check would bind.
