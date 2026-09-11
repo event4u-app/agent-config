@@ -34,6 +34,33 @@
  */
 export type MutationMeasure = 'exact' | 'capped_approximation';
 
+/**
+ * Whether `diff_lines` had this session's start-of-session baseline subtracted,
+ * and when it did not, WHY.
+ *
+ * A closed four-value enum, never free text, so the privacy floor below still
+ * holds by construction. It exists because the subtraction's three failure
+ * modes all fall back to the unsubtracted count — which is the safe direction
+ * and also an invisible one: without this field, a line reading 1,771 cannot be
+ * told apart from a session that really did mutate 1,771 lines, and the rate at
+ * which the mechanism is degrading would be unmeasurable from its own stream.
+ *
+ * `absent` is the expected steady state on a host with no `session_start` slot
+ * and on every session that predates the baseline concern; `unreadable` is a
+ * corrupt write and a rate above noise is a defect in the mechanism itself;
+ * `head_moved` is a session that committed mid-run, which moves `git diff
+ * HEAD`'s base and makes the subtraction arithmetic over two different
+ * quantities.
+ */
+export type BaselineApplication = 'applied' | 'absent' | 'unreadable' | 'head_moved';
+
+const BASELINE_APPLICATIONS: readonly BaselineApplication[] = [
+    'applied',
+    'absent',
+    'unreadable',
+    'head_moved',
+];
+
 import { appliedIds } from './audit_field_provenance.js';
 import type { NoFreeForm } from './runtime_journal.js';
 import { type PrivacyClass } from './privacy_class.js';
@@ -51,6 +78,13 @@ export interface ReviewSkippedInput {
     diff_lines: number;
     /** Whether `diff_lines` is exact or a capped approximation — see above. */
     mutation_measure: MutationMeasure;
+    /**
+     * Whether the session baseline was subtracted from `diff_lines`, and if not
+     * why. OPTIONAL, and absence is honest rather than a default: a line written
+     * by a producer that predates the baseline mechanism recorded nothing about
+     * it, and writing `absent` for those would assert a measurement nobody made.
+     */
+    baseline?: BaselineApplication | undefined;
     /** ISO-8601 UTC timestamp; caller supplies (keeps this fn pure/deterministic). */
     ts: string;
     /** Stable id (ULID, UUID, or content hash); caller supplies. */
@@ -103,6 +137,9 @@ export function buildReviewSkippedLine(input: ReviewSkippedInput): BuiltReviewSk
     }
     if (!input.ts) errors.push('ts (ISO-8601 UTC) is required');
     if (!input.id) errors.push('id (ULID, UUID, or content hash) is required');
+    if (input.baseline !== undefined && !BASELINE_APPLICATIONS.includes(input.baseline)) {
+        errors.push(`baseline must be one of ${BASELINE_APPLICATIONS.join(', ')}`);
+    }
 
     if (errors.length) return { line: null, errors };
 
@@ -131,7 +168,14 @@ export function buildReviewSkippedLine(input: ReviewSkippedInput): BuiltReviewSk
         persona: null,
         input_kind: 'prompt',
         type: 'note',
-        review_skipped: { diff_lines: input.diff_lines, mutation_measure: input.mutation_measure },
+        review_skipped: {
+            diff_lines: input.diff_lines,
+            mutation_measure: input.mutation_measure,
+            // Omitted, not defaulted, when the producer recorded nothing —
+            // audit-log-v1's absent-versus-present split is the same one
+            // `skills_applied` uses above, for the same reason.
+            ...(input.baseline === undefined ? {} : { baseline: input.baseline }),
+        },
     };
 
     return { line, errors: [] };

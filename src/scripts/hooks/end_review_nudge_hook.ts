@@ -220,7 +220,17 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { buildReviewSkippedLine, type MutationMeasure } from '../_lib/review_skipped_record.js';
+import {
+    applyBaseline,
+    currentHeadSha,
+    readBaseline,
+    type BaselineOutcome,
+} from '../_lib/review_baseline.js';
+import {
+    buildReviewSkippedLine,
+    type BaselineApplication,
+    type MutationMeasure,
+} from '../_lib/review_skipped_record.js';
 import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
 import { atomic_write_json, is_replay_mode } from './state_io.js';
@@ -606,6 +616,7 @@ export function appendReviewSkippedTelemetry(
     workspaceRoot: string,
     diffLines: number,
     mutationMeasure: MutationMeasure,
+    baseline?: BaselineApplication,
 ): void {
     if (is_replay_mode()) return;
     const ts = new Date().toISOString();
@@ -614,6 +625,7 @@ export function appendReviewSkippedTelemetry(
         mutation_measure: mutationMeasure,
         ts,
         id: crypto.randomUUID(),
+        baseline,
     });
     if (errors.length || line === null) return; // refused input — never write a broken line
     try {
@@ -705,15 +717,39 @@ export function main(): number {
     const workspace_root =
         String(envelope['workspace_root'] ?? '').trim() || process.cwd();
 
-    let diffLines: number;
+    let measuredLines: number;
     let mutationMeasure: MutationMeasure;
     try {
         const measured = totalNonDocMutatedLinesWithMeasure(workspace_root);
-        diffLines = measured.lines;
+        measuredLines = measured.lines;
         mutationMeasure = measured.measure;
     } catch {
         return 0; // fail-open — never block the agent loop
     }
+
+    // The session key is derived HERE rather than after the threshold test,
+    // because the threshold is now taken on the SUBTRACTED count and the
+    // baseline is keyed on the session. That is a real reordering: one extra
+    // `sha256` of a string and one `readFileSync` of a ~100-byte JSON file now
+    // run on every stop, including the majority that end below threshold. The
+    // alternative — testing the unsubtracted count first as a cheap
+    // pre-filter — is wrong in the one direction that matters: on an
+    // accumulator branch EVERY turn clears the unsubtracted threshold, so the
+    // pre-filter would pass exactly when the subtraction is needed and save
+    // nothing.
+    const sessionKey = deriveSessionKey(envelope, payload);
+    const baselineOutcome: BaselineOutcome = applyBaseline(
+        measuredLines,
+        readBaseline(workspace_root, sessionKey),
+        currentHeadSha(workspace_root),
+    );
+    const diffLines = baselineOutcome.lines;
+    const baselineApplication: BaselineApplication = baselineOutcome.applied
+        ? 'applied'
+        : baselineOutcome.fallback === 'head-moved'
+          ? 'head_moved'
+          : baselineOutcome.fallback;
+
     if (diffLines <= MUTATION_LINE_THRESHOLD) {
         return 0; // below threshold, or a doc-only diff — nothing to nudge
     }
@@ -723,7 +759,6 @@ export function main(): number {
     // JSON parse below. A session that already fired stops here, at a
     // single `fs.existsSync` call, without re-reading a (potentially
     // large) transcript file it already knows the answer for.
-    const sessionKey = deriveSessionKey(envelope, payload);
     if (hasFiredThisSession(workspace_root, sessionKey)) {
         return 0;
     }
@@ -756,7 +791,12 @@ export function main(): number {
     markFiredThisSession(workspace_root, sessionKey, new Date().toISOString());
 
     try {
-        appendReviewSkippedTelemetry(workspace_root, diffLines, mutationMeasure);
+        appendReviewSkippedTelemetry(
+            workspace_root,
+            diffLines,
+            mutationMeasure,
+            baselineApplication,
+        );
     } catch {
         // never let a telemetry failure block or fail the turn
     }
