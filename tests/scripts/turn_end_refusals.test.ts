@@ -220,13 +220,16 @@ describe('step 1.1 — per detector, never pooled', () => {
     it('covers every detector the gate can emit', () => {
         // A detector added to the gate without being added here would silently
         // stop being counted. The roadmap's own prose says three; the gate has
-        // five.
+        // six — this case is what caught detector F's addition and made the
+        // ledger update part of shipping it rather than a follow-up nobody
+        // filed.
         expect([...DETECTOR_IDS]).toEqual([
             'promissory',
             'language',
             'verification',
             'completion',
             'pending-decision',
+            'untested',
         ]);
     });
 

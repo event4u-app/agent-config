@@ -27,6 +27,7 @@ import {
     detectCompletionClaim,
     detectLanguage,
     detectPromissory,
+    detectUntestedChange,
     detectUnverifiedEdit,
     deriveSessionKey,
     finalParagraph,
@@ -1289,6 +1290,87 @@ describe('round 2, findings 15 + 16 — detector A precision and recall', () => 
 function call(name: string, extra: { command?: string; path?: string } = {}): ToolCall {
     return { name, ...extra };
 }
+
+describe('detector F — a completion claim over code no test accompanies', () => {
+    const edit = (p: string): ToolCall => ({ name: 'Edit', path: p });
+    const bash = (c: string): ToolCall => ({ name: 'Bash', command: c });
+    const DONE = 'Fertig. Die Liste rendert jetzt.';
+
+    // THE CASE THIS EXISTS FOR, from a real report (2026-09-11): a feature
+    // shipped whose detail view crashed on open, with no test anywhere. Under
+    // detector C alone this turn is clean — the linter ran.
+    it('REFUSES a feature turn that ran the linter and wrote no test', () => {
+        const f = detectUntestedChange(DONE, [
+            edit('src/components/TodoList.tsx'),
+            edit('src/components/TodoFlyout.tsx'),
+            bash('npx eslint src'),
+        ]);
+        expect(f?.detector).toBe('untested');
+        expect(f?.evidence).toContain('TodoList.tsx');
+        expect(f?.reason).toMatch(/NO test file touched/);
+    });
+
+    it('SENSITIVITY: detector C is silent on the identical turn — that is the hole', () => {
+        // Stated as a case rather than as prose, because the whole argument for
+        // adding E is that C passes this input. If C ever starts catching it,
+        // E is redundant and this case says so by failing.
+        expect(
+            detectUnverifiedEdit([
+                edit('src/components/TodoList.tsx'),
+                bash('npx eslint src'),
+            ]),
+        ).toBeNull();
+    });
+
+    it('is silent when the turn DID touch a test — any test clears it', () => {
+        for (const t of [
+            'tests/todo.test.ts',
+            'src/components/__tests__/TodoList.spec.tsx',
+            'e2e/todo.spec.ts',
+            'app/Http/TodoControllerTest.php',
+            'internal/todo_test.go',
+            'tests/test_todo.py',
+            'features/todo.feature',
+        ]) {
+            expect(
+                detectUntestedChange(DONE, [edit('src/todo.ts'), edit(t)]),
+                `${t} must read as a test`,
+            ).toBeNull();
+        }
+    });
+
+    it('is silent mid-cycle — no completion claim, no finding', () => {
+        // The red step of red-green-refactor edits production code and claims
+        // nothing. Refusing it would refuse the discipline the detector exists
+        // to encourage, which is how a guard gets switched off.
+        expect(detectUntestedChange('Next I add the failing case.', [edit('src/todo.ts')])).toBeNull();
+    });
+
+    it('is silent on an honest not-done line that opens with the same word', () => {
+        expect(detectUntestedChange('Fertig ist das noch nicht.', [edit('src/todo.ts')])).toBeNull();
+    });
+
+    it('is silent on a docs-, config- or prose-only turn', () => {
+        for (const p of ['README.md', 'docs/x.md', 'package.json', 'src/config/a.yaml', '.github/workflows/ci.yml']) {
+            expect(detectUntestedChange(DONE, [edit(p)]), p).toBeNull();
+        }
+    });
+
+    it('is silent when the turn edited nothing', () => {
+        expect(detectUntestedChange(DONE, [bash('git status')])).toBeNull();
+    });
+
+    it('names at most three paths, and says how many more', () => {
+        const f = detectUntestedChange(DONE, [
+            edit('a.ts'), edit('b.ts'), edit('c.ts'), edit('d.ts'), edit('e.ts'),
+        ]);
+        expect(f?.evidence).toBe('a.ts, b.ts, c.ts (+2 more)');
+    });
+
+    it('a test-only turn is not production source, so it cannot trigger itself', () => {
+        expect(detectUntestedChange(DONE, [edit('tests/a.test.ts')])).toBeNull();
+    });
+});
 
 describe('isVerificationCommand — narrow on purpose', () => {
     it('claims the project runners', () => {

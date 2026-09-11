@@ -25,11 +25,14 @@ NEVER A DEMOTION. FRICTION ALONE NEVER DEMOTES A DETECTOR.
 A BAR SET ON AN UNMEASURABLE QUANTITY IS INERT AND SAYS SO.
 ```
 
-## The five detectors
+## The six detectors
 
 Read off `DetectorId` in `src/scripts/hooks/turn_end_gate_hook.ts`, never off
-prose — the roadmap that opened this question named three, the tree had four, and
-`pending-decision` made it five.
+prose — the roadmap that opened this question named three, the tree had four,
+`pending-decision` made it five, and `untested` made it six on the same day.
+That last pair is the argument for reading the union rather than this heading:
+two detectors landed on 2026-09-11 from two unrelated roadmaps, and either one
+counted alone would have under-reported the gate.
 
 | Id | Fires when | Protects | Runs |
 |---|---|---|---|
@@ -38,6 +41,7 @@ prose — the roadmap that opened this question named three, the tree had four, 
 | C `verification` | the turn changed a file and ran no verify-shaped command | engineering safety | every turn-end |
 | D `completion` | a completion claim carries no fresh evidence | the truthfulness of "done" | only when no dispatch is open |
 | E `pending-decision` | an earlier assistant turn in the SAME user turn put numbered options to the user and the closing one carries none | the liveness of an issued decision | every turn-end |
+| F `untested` | a completion claim over production source the turn changed, with no test file touched anywhere in the turn | that "done" means exercised, not merely run | only when no dispatch is open |
 
 **Why E runs on every turn-end rather than joining A and D.** The conditional
 pair is excused by an open dispatch because a completion claim mid-dispatch is
@@ -46,8 +50,15 @@ drops it is frequently a dispatch or a hook nudge, so narrowing E the same way
 would silence it in exactly the case it exists for. It is grouped with B and C,
 which also read turn structure rather than the truthfulness of a claim.
 
-**Two of the five are conditional, and the fourth column is load-bearing.**
-`main()` runs A and D only when `dispatchOpen` is false — an open subagent
+**Why F is conditional where E is not, one row below it.** The two take
+opposite sides of the same question and sit adjacent in `main()` for that
+reason. E fires on a question already put to the user, which an open dispatch
+cannot excuse — the dispatch IS the continuation that drops it. F fires on a
+completion CLAIM, and a turn waiting on a subagent has not finished, so its
+closing is not the claim F is about. Same slot, opposite trigger.
+
+**Three of the six are conditional, and the fourth column is load-bearing.**
+`main()` runs A, D and F only when `dispatchOpen` is false — an open subagent
 dispatch excuses a promissory closing and an unsettled completion claim, and
 excuses nothing about B or C. So there are **three** allow paths, not two: the two
 re-entrancy layers below, plus this one. It suppresses A and D for a whole turn,
@@ -125,6 +136,7 @@ elsewhere. Q2 is measurable today from `RefusalRecord.counts`
 | C `verification` | ≥ 40 % | ≥ 3 |
 | D `completion` | ≥ 40 % | ≥ 3 |
 | E `pending-decision` | ≥ 40 % | ≥ 3 |
+| F `untested` | ≥ 40 % | ≥ 3 |
 
 **These are policy choices, not findings, and they differ on purpose.**
 
@@ -158,6 +170,15 @@ calls its own numbers policy choices to be argued.
   additional line in a reply, while a false negative loses a decision the user
   was already owed and never learns was dropped. The asymmetry is the argument,
   and it points the opposite way from B's.
+- **F at 40 % / 3, and it is the ONE row with a measurement behind it.** F is the
+  only detector whose fire rate was measured before its bar was set: 1 fire in
+  335 turns across two corpora, and a hand read of that fire says it was right
+  (`agents/evidence/analysis/detector-f-measured-over-two-corpora-2026-09-11.md`).
+  So the caution that places D and E here — no distribution to argue from — does
+  not apply, and F sits at 40 % for C's reason instead: it protects the practice
+  most directly tied to a changed file. A 40 % re-refusal share over a detector
+  measured at 0.3 % is a very large change in behavior and would be a real
+  signal rather than sparse-data noise.
 
 The supporting measurement behind A and D is the *general* one — advisory carriers
 reached no measurable effect where blocking carriers reached zero violations — not
@@ -165,10 +186,10 @@ a per-obligation reading of either, and it is stated at that strength rather tha
 borrowed as if it had been measured on these two detectors specifically.
 
 **The counter-argument, kept on the record rather than answered away:**
-differentiated bars encode five unmeasured judgements about relative harm, and a
-single shared bar would be methodologically cleaner on sparse data. It is
-rejected because pretending the five protected harms are interchangeable would
-hide those judgements rather than remove them.
+differentiated bars encode six judgements about relative harm — five of them
+unmeasured — and a single shared bar would be methodologically cleaner on sparse
+data. It is rejected because pretending the six protected harms are
+interchangeable would hide those judgements rather than remove them.
 
 ***Revisit-if*, split so that the reachable half can actually fire.** Drafted as
 one conjunctive clause over both quantities, it was unfalsifiable by

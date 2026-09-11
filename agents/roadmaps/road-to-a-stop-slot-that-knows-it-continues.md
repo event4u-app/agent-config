@@ -137,7 +137,13 @@ asserts a control-flow property this tree has not established.
       is what reaches a reader.
       **This is a read-source change only.** `detectDroppedDecision`
       (`:825`) is untouched, and so are detectors A–D, which keep reading
-      `lastAssistant` exactly as they do today.
+      `lastAssistant` exactly as they do today. Detector F (`untested`) landed
+      on `main` while this branch was open and reads `lastAssistant` too; it is
+      left unchanged deliberately, not overlooked. Every detector reading that
+      field inherits the same lag, and widening the fix to all six is a
+      behaviour change across five detectors that no fixture here covers — it
+      belongs in its own change, gated on the same live measurement as blocker
+      `warn-continuation-on-stop`.
       verify: `grep -n 'last_assistant_message' src/scripts/hooks/turn_end_gate_hook.ts` resolves, and `npx vitest run tests/scripts/turn_end_gate_hook.test.ts tests/scripts/turn_end_gate_pending_decision.test.ts` stays green.
 - [x] **2.2 Add the lagging-transcript fixture.**
       One case where the transcript tail holds only the FIRST assistant text of

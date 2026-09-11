@@ -79,6 +79,15 @@ Every produced error must carry: `code` (stable string), `message` (human-readab
 
 Forbidden: secrets, raw SQL, full stack traces in user-facing surfaces, internal class names leaked through API boundaries.
 
+**"User-facing" means PRODUCTION, and the missing half of that sentence cost a real failure.** Read without the qualifier — as it stood until 2026-09-11 — this clause forbids the developer's own diagnostics in their own dev environment, which is the opposite of what it is for. The measured consequence, reported by the maintainer: a feature whose detail view crashed on open and showed a blank region, so neither the developer nor the agent could see *what* was missing, and the failure had to be reconstructed by hand.
+
+| Environment | What a failed render or request shows |
+|---|---|
+| local / dev / preview | the **full** diagnostic, visibly: what was expected, what arrived, which field or endpoint, the stack. A toast, an error overlay, an inline panel — anything the developer cannot miss. Silence here is the defect. |
+| production | the sanitized payload above, plus a correlation id the developer can look up. Never the stack. |
+
+**A blank page is never an acceptable failure mode in dev.** If a component cannot render because data is missing or a contract changed, it says so on screen in dev and degrades to a stated empty/error state in production — never to nothing. That is the same obligation the four completeness rows in [`ai-code-blindspots`](../ai-code-blindspots/SKILL.md) put on the render surface, stated here for the error path that reaches it.
+
 ### Step 5 — Define the boundary
 
 Exactly **one** layer translates internal errors to the egress format (HTTP status + body, queue requeue policy, CLI exit code). Anywhere else doing this duplication is the bug.

@@ -219,7 +219,8 @@ export type DetectorId =
     | 'language'
     | 'verification'
     | 'completion'
-    | 'pending-decision';
+    | 'pending-decision'
+    | 'untested';
 
 export interface Finding {
     detector: DetectorId;
@@ -868,6 +869,110 @@ export function detectDroppedDecision(
 }
 
 // ---------------------------------------------------------------------------
+// Detector F — a completion claim over production code no test accompanies
+// ---------------------------------------------------------------------------
+
+/**
+ * WHY THIS EXISTS, and why detector C did not already cover it.
+ *
+ * Detector C asks "did ANY verification command run after the last edit". It is
+ * satisfied by `eslint`. That is deliberate — see `isVerificationCommand`, which
+ * is narrow about what counts as a command and says nothing about what the
+ * command COVERS. So a turn can write four hundred lines of feature code, run
+ * the linter, claim done, and pass every guard in this file.
+ *
+ * Measured consequence, reported by the maintainer 2026-09-11 about a consumer
+ * project: a feature shipped whose detail view crashed on open, whose flyouts
+ * were broken, and for which the maintainer then had to hand-enumerate what
+ * should have been exercised — every view, every CRUD path, drag-and-drop,
+ * mobile, filters. Their words: *"Solche Fehler können nur auftreten, weil Du
+ * nicht TDD gearbeitet ... hast."* Nothing in the suite refused that turn,
+ * because nothing in the suite asks whether the change is TESTED — only whether
+ * something ran.
+ *
+ * THE SIGNAL, and why it is this one. "Is the change covered" is undecidable
+ * from a transcript: coverage lives in the consumer's tooling, which this hook
+ * cannot run. What IS decidable is the cheapest possible proxy, and it happens
+ * to be the exact shape of the reported failure — **production source changed,
+ * no test file touched, done claimed**. A proxy is worth shipping here precisely
+ * because the population it flags is small and the failure it catches is total:
+ * a feature with zero new test lines is not under-tested, it is untested.
+ *
+ * WHY IT IS GATED ON THE CLAIM rather than on the edit. Firing on every edit
+ * would refuse the first turn of every red-green-refactor cycle — the discipline
+ * it exists to encourage — and a guard that fires on the majority of turns is a
+ * guard that gets switched off. The obligation belongs to the CLAIM, which is
+ * also where `verify-before-complete` puts it and where detector D already sits.
+ *
+ * WHAT IT CANNOT DO. It cannot tell a good test from a token one: a turn that
+ * touches any test file clears it. That is a deliberate floor rather than an
+ * oversight — `testing-anti-patterns` owns assertion quality, and a guard that
+ * tried to judge it from a path would be judging something it cannot see. The
+ * honest claim is narrow: this refuses the case where the agent wrote NO test at
+ * all and said it was finished.
+ */
+
+/** Extensions that carry behaviour a test can be owed for. */
+const _SOURCE_RE = /\.(?:ts|tsx|js|jsx|mjs|cjs|vue|svelte|php|py|rb|go|rs|java|kt|swift|cs|scala|ex|exs)$/i;
+
+/**
+ * Paths that ARE tests, across the conventions this suite's stacks use.
+ *
+ * Deliberately generous: a false NEGATIVE here (calling a test file a test) only
+ * silences the detector, while a false positive would refuse a turn that did
+ * write its tests — the direction that gets a guard disabled.
+ */
+const _TEST_PATH_RE =
+    /(?:^|\/)(?:tests?|specs?|__tests__|__specs__|e2e|cypress|playwright|features)\//i;
+const _TEST_FILE_RE =
+    /(?:\.(?:test|spec)\.[a-z]+$)|(?:_test\.[a-z]+$)|(?:(?:^|\/)test_[^/]+$)|(?:Test\.php$)|(?:Spec\.php$)|(?:\.feature$)/i;
+
+function _isTestPath(p: string): boolean {
+    return _TEST_PATH_RE.test(p) || _TEST_FILE_RE.test(p);
+}
+
+function _isProductionSource(p: string): boolean {
+    return _SOURCE_RE.test(p) && !_isTestPath(p);
+}
+
+/**
+ * Fire when the turn changed production code, touched no test, and said done.
+ *
+ * All three conditions are load-bearing. Drop the first and it fires on a docs
+ * turn; drop the second and it fires on a turn that did its job; drop the third
+ * and it fires mid-cycle on the red step of red-green-refactor.
+ */
+export function detectUntestedChange(reply: string, toolCalls: readonly ToolCall[]): Finding | null {
+    const edited = toolCalls
+        .filter((c) => _EDIT_TOOLS.has(c.name) && c.path !== undefined)
+        .map((c) => c.path as string);
+    const source = edited.filter(_isProductionSource);
+    if (source.length === 0) return null;
+    if (edited.some(_isTestPath)) return null;
+
+    // The claim gate, reusing detector D's pair rather than a second dialect of
+    // "done" — two lists of completion phrasings would drift, and the negation
+    // check is what keeps an honest "noch nicht fertig" from being refused.
+    const prose = visibleProse(reply);
+    const m = _COMPLETION_RE.exec(prose);
+    if (!m) return null;
+    if (_NEGATED_CLAIM_RE.test(_lineAround(prose, m.index))) return null;
+
+    const shown = source.slice(0, 3).join(', ');
+    return {
+        detector: 'untested',
+        evidence: shown + (source.length > 3 ? ` (+${String(source.length - 3)} more)` : ''),
+        reason:
+            'a completion claim over production code this turn changed, with NO test file ' +
+            'touched anywhere in the turn — running a linter is not evidence the change ' +
+            'works. Write the test that would have caught the failure, and enumerate the ' +
+            'states the change actually has (every view, every CRUD path, the empty and ' +
+            'error states) rather than the happy one. If a test genuinely does not belong ' +
+            'here, say which file carries the coverage instead',
+    };
+}
+
+// ---------------------------------------------------------------------------
 // Re-entrancy — the guard, keyed on the turn, not on the reply
 // ---------------------------------------------------------------------------
 
@@ -1110,7 +1215,7 @@ export function readTranscriptTail(
         // only a tool_use block has no text at all, so `continue`-ing on a null
         // text would drop exactly the entries this detector exists to see.
         if (role === 'assistant') {
-            toolCalls.push(..._toolCalls(content));
+            toolCalls.push(...extractToolCalls(content));
         }
         const text = _messageText(content);
         if (text === null) continue;
@@ -1143,8 +1248,15 @@ export function readTranscriptTail(
  * Extract this entry's tool calls, keeping only name, shell command and target
  * path. A tool input can hold a whole file body; nothing but those three fields
  * is carried forward.
+ *
+ * Exported because `measure_turn_end_gate` scores detectors C and E over a real
+ * transcript corpus and therefore has to rebuild the same `ToolCall[]` the gate
+ * sees. A second extractor there would be a second dialect of "what the turn
+ * did", and the measurement would then be of that dialect rather than of the
+ * shipped gate — the exact population-parity defect that script's own header
+ * documents twice.
  */
-function _toolCalls(content: unknown): ToolCall[] {
+export function extractToolCalls(content: unknown): ToolCall[] {
     if (!Array.isArray(content)) return [];
     const out: ToolCall[] = [];
     for (const blk of content) {
@@ -1341,6 +1453,13 @@ export function main(): number {
         // the decision, so narrowing E the same way would silence it in exactly
         // the case it exists for.
         detectDroppedDecision(turnTexts, closingFromPayload),
+        // Detector F takes the OTHER side of that same question, and the two
+        // sitting adjacent is the clearest place to say why. E fires on a
+        // question already asked, which an open dispatch cannot excuse. F fires
+        // on a completion CLAIM, and a turn waiting on a subagent has not
+        // finished — so its closing is not the claim F is about. Same slot,
+        // opposite trigger, opposite treatment of `dispatchOpen`.
+        dispatchOpen ? null : detectUntestedChange(lastAssistant, toolCalls),
     ]) {
         if (f) findings.push(f);
     }
