@@ -1291,7 +1291,7 @@ function call(name: string, extra: { command?: string; path?: string } = {}): To
     return { name, ...extra };
 }
 
-describe('detector E — a completion claim over code no test accompanies', () => {
+describe('detector F — a completion claim over code no test accompanies', () => {
     const edit = (p: string): ToolCall => ({ name: 'Edit', path: p });
     const bash = (c: string): ToolCall => ({ name: 'Bash', command: c });
     const DONE = 'Fertig. Die Liste rendert jetzt.';

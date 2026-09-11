@@ -23,17 +23,17 @@
  *     classifier), and this script does no per-turn matching between them.
  *     R2 finding 7 removed the per-session min/max arithmetic that used to
  *     report disjoint findings of equal count as full agreement.
- *   · DETECTORS C AND E, added 2026-09-11 for ADR-277's named open limit: that
- *     record ships detector E with its false-positive rate UNMEASURED and says
+ *   · DETECTORS C AND F, added 2026-09-11 for ADR-277's named open limit: that
+ *     record ships detector F with its false-positive rate UNMEASURED and says
  *     so. The rate below is the fire rate over a real corpus, which is the
  *     upper bound on it — every fire is a turn the shipped gate would have
  *     refused, and how many of those were wrong still needs a human read of the
  *     turns. An upper bound is not a precision figure and is not reported as
  *     one.
  *   · The C-SILENT OVERLAP, which is the one number ADR-277 rests an argument
- *     on. The record claims detector C does not already cover E's case, and the
- *     evidence for it was a single unit test asserting C stays silent on E's
- *     input. This counts the same thing over the corpus: of the turns E fires
+ *     on. The record claims detector C does not already cover F's case, and the
+ *     evidence for it was a single unit test asserting C stays silent on F's
+ *     input. This counts the same thing over the corpus: of the turns F fires
  *     on, how many did C leave alone. A low count would refute the record's own
  *     "two different questions deserve two detectors" and is worth finding.
  *   · It does NOT score detector D. D reads `ci_last` out of per-session
@@ -91,18 +91,18 @@ interface Counts {
     language_fires: number;
     /** Detector C — an edit with nothing run after it that could have checked it. */
     unverified_fires: number;
-    /** Detector E — production source changed, no test touched, done claimed. */
+    /** Detector F — production source changed, no test touched, done claimed. */
     untested_fires: number;
     /**
-     * Turns where E fired and C did NOT. ADR-277 argues C cannot stand in for
-     * E; this is that argument's denominator-free form. E fires minus this is
+     * Turns where F fired and C did NOT. ADR-277 argues C cannot stand in for
+     * F; this is that argument's denominator-free form. F fires minus this is
      * the set both would have caught.
      */
     untested_c_silent: number;
-    /** Turns that edited at least one file — E's and C's shared precondition. */
+    /** Turns that edited at least one file — F's and C's shared precondition. */
     turns_with_edit: number;
     /**
-     * E's conditions, counted cumulatively, so a zero fire count is readable.
+     * F's conditions, counted cumulatively, so a zero fire count is readable.
      * A detector that never fires is either narrow-and-right or inert, and the
      * difference is entirely in WHICH condition did the silencing — reporting
      * only the fire count leaves that unanswerable and invites the wrong one of
@@ -112,7 +112,7 @@ interface Counts {
     /** …and touched no test file anywhere in the turn. */
     e2_no_test_touched: number;
     /**
-     * Where E fired — session prefix and turn ordinal only, plus the detector's
+     * Where F fired — session prefix and turn ordinal only, plus the detector's
      * own evidence span. ADR-277's open limit is a false-POSITIVE rate, and no
      * instrument can decide that: only a human reading the turn can say whether
      * a refusal would have been right. This is the pointer that makes the read
@@ -135,14 +135,14 @@ interface Counts {
 const _EDIT_TOOL_NAMES = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
 
 /**
- * The path shapes detector E reads, restated here for the CUMULATIVE-CONDITION
+ * The path shapes detector F reads, restated here for the CUMULATIVE-CONDITION
  * breakdown only — never for a scored rate, which always goes through
  * `detectUntestedChange` itself.
  *
  * Restating them is the lesser of two bad options. The alternative is exporting
  * two more internals from the hook purely so a diagnostic line can be printed,
  * which widens the gate's public surface for a number that is context. If these
- * drift from the hook's own, the breakdown stops adding to E's fire count and
+ * drift from the hook's own, the breakdown stops adding to F's fire count and
  * the discrepancy is visible in the same output.
  */
 const _SOURCE_EXT_RE =
@@ -231,7 +231,7 @@ export function measure(store: string, limit: number): Counts {
         let pendingPin: 'de' | 'en' | 'und' = 'und';
         // The turn's tool calls, rebuilt with the gate's OWN extractor and reset
         // at every genuine user prompt — the same two rules `readTranscriptTail`
-        // applies. Detectors C and E read nothing else, so any divergence here
+        // applies. Detectors C and F read nothing else, so any divergence here
         // would move the measurement off the shipped gate's population.
         let pendingCalls: ToolCall[] = [];
         // Per-SESSION, because that is the only ordinal a reader can use to find
@@ -300,7 +300,7 @@ export function measure(store: string, limit: number): Counts {
             // Tool calls are collected BEFORE the text guard, exactly as the gate
             // does it: an assistant entry carrying only a `tool_use` block has no
             // text, so a `continue` above this line would drop precisely the
-            // entries detectors C and E exist to read.
+            // entries detectors C and F exist to read.
             if (entry['type'] === 'assistant' && !isSidechain(entry)) {
                 const msg = entry['message'];
                 if (typeof msg === 'object' && msg !== null && !Array.isArray(msg)) {
@@ -324,7 +324,7 @@ export function measure(store: string, limit: number): Counts {
 }
 
 export function renderFires(c: Counts): string {
-    if (c.untested_sites.length === 0) return '  detector E fired on no turn in this corpus.';
+    if (c.untested_sites.length === 0) return '  detector F fired on no turn in this corpus.';
     return c.untested_sites
         .map((site) => `  ${site.session} turn ${String(site.turn)} — ${site.evidence}`)
         .join('\n');
@@ -338,21 +338,21 @@ export function render(c: Counts): string {
         `  detector A (promissory)  fires on ${c.promissory_fires} turns  (${pct(c.promissory_fires)}%)`,
         `  detector B (language)    fires on ${c.language_fires} turns  (${pct(c.language_fires)}%)`,
         `  detector C (unverified)  fires on ${c.unverified_fires} turns  (${pct(c.unverified_fires)}%)`,
-        `  detector E (untested)    fires on ${c.untested_fires} turns  (${pct(c.untested_fires)}%)`,
+        `  detector F (untested)    fires on ${c.untested_fires} turns  (${pct(c.untested_fires)}%)`,
         '',
-        `  Turns that edited a file at all: ${c.turns_with_edit} — C's and E's shared`,
-        '  precondition, printed so a low E rate can be read as "rarely applicable"',
+        `  Turns that edited a file at all: ${c.turns_with_edit} — C's and F's shared`,
+        '  precondition, printed so a low F rate can be read as "rarely applicable"',
         '  rather than as "rarely right".',
         '',
-        "  E's three conditions, cumulative — where the silence comes from:",
+        "  F's three conditions, cumulative — where the silence comes from:",
         `    1. edited production source          ${c.e1_production_source} turns`,
         `    2. …and touched no test file         ${c.e2_no_test_touched} turns`,
-        `    3. …and claimed done  (= E fires)    ${c.untested_fires} turns`,
+        `    3. …and claimed done  (= F fires)    ${c.untested_fires} turns`,
         '  A large drop at step 2 means the corpus writes its tests; a large drop at',
         '  step 3 means the turns that did not are also not claiming to be finished.',
         '  Only the first reading says the detector is narrow-and-right.',
         '',
-        `  Of E's ${c.untested_fires} fires, detector C was SILENT on ${c.untested_c_silent}.`,
+        `  Of F's ${c.untested_fires} fires, detector C was SILENT on ${c.untested_c_silent}.`,
         '    That is the number ADR-277 rests its "two different questions deserve two',
         '    detectors" argument on, measured here over the corpus rather than over the',
         '    one unit test that asserted it. A count at or near zero refutes the record.',
@@ -423,7 +423,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     }
     process.stdout.write(`${render(counts)}\n`);
     if (showFires) {
-        process.stdout.write(`\n  detector E fired here — read these turns before\n  calling any of them a false positive:\n${renderFires(counts)}\n`);
+        process.stdout.write(`\n  detector F fired here — read these turns before\n  calling any of them a false positive:\n${renderFires(counts)}\n`);
     }
     return 0;
 }

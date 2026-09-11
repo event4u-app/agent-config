@@ -1,12 +1,12 @@
 /**
- * `measure_turn_end_gate` scoring detectors C and E over a transcript corpus.
+ * `measure_turn_end_gate` scoring detectors C and F over a transcript corpus.
  *
- * ADR-277 ships detector E with its false-positive rate unmeasured and names
+ * ADR-277 ships detector F with its false-positive rate unmeasured and names
  * that as an open limit. These cases assert the instrument that closes it reads
  * the population the SHIPPED gate reads — which is the only property that makes
  * the resulting number about the gate rather than about the instrument.
  *
- * The load-bearing case is the last pair: detector C silent while E fires. That
+ * The load-bearing case is the last pair: detector C silent while F fires. That
  * is the corpus form of the argument ADR-277 makes from a single unit test, so
  * if the two detectors ever converge, this is where it shows.
  */
@@ -54,7 +54,7 @@ function writeSession(name: string, entries: Record<string, unknown>[]): void {
     );
 }
 
-describe('detector E over a corpus', () => {
+describe('detector F over a corpus', () => {
     it('counts a turn that wrote production code, no test, and claimed done', () => {
         writeSession('a', [
             userEntry('add the toggle'),
@@ -68,7 +68,7 @@ describe('detector E over a corpus', () => {
     });
 
     it('does not count the same turn once a test file is touched', () => {
-        // The second of E's three conditions, isolated: everything else about
+        // The second of F's three conditions, isolated: everything else about
         // this turn is identical to the case above.
         writeSession('a', [
             userEntry('add the toggle'),
@@ -90,7 +90,7 @@ describe('detector E over a corpus', () => {
 
     it('scopes tool calls to their own turn, so a later turn is not charged', () => {
         // The reset the gate does at every genuine user prompt. Without it the
-        // second turn inherits the first turn's edit and E fires on a reply that
+        // second turn inherits the first turn's edit and F fires on a reply that
         // changed nothing — which would make every trailing "done" a fire and
         // the published rate meaningless.
         writeSession('a', [
@@ -118,7 +118,7 @@ describe('detector E over a corpus', () => {
 });
 
 describe('the C-silent overlap ADR-277 argues from', () => {
-    it('records E firing while C stays silent when a linter ran', () => {
+    it('records F firing while C stays silent when a linter ran', () => {
         // The audit's central claim: `npx eslint src` satisfies detector C's
         // "did anything verify" question and says nothing about whether the
         // change is tested. If this ever reads 0, ADR-277's "two different

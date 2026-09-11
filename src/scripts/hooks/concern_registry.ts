@@ -69,6 +69,7 @@ import { main as delegationNudgeMain } from './delegation_nudge_hook.js';
 import { main as skillRouteMain } from './skill_route_hook.js';
 import { main as ruleInjectMain } from './rule_inject_hook.js';
 import { main as endReviewNudgeMain } from './end_review_nudge_hook.js';
+import { main as reviewBaselineMain } from './review_baseline_hook.js';
 import { main as turnEndGateMain } from './turn_end_gate_hook.js';
 import { main as editShapeMain } from './edit_shape_hook.js';
 import { main as commentDisciplineMain } from './comment_discipline_hook.js';
@@ -132,6 +133,7 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
     'src/scripts/hooks/skill_route_hook.ts': skillRouteMain as ConcernMain,
     'src/scripts/hooks/rule_inject_hook.ts': ruleInjectMain as ConcernMain,
     'src/scripts/hooks/end_review_nudge_hook.ts': endReviewNudgeMain as ConcernMain,
+    'src/scripts/hooks/review_baseline_hook.ts': reviewBaselineMain as ConcernMain,
     'src/scripts/hooks/turn_end_gate_hook.ts': turnEndGateMain as ConcernMain,
     'src/scripts/hooks/edit_shape_hook.ts': editShapeMain as ConcernMain,
     'src/scripts/hooks/comment_discipline_hook.ts': commentDisciplineMain as ConcernMain,

@@ -62,7 +62,7 @@ const TTL_CONFIG: ReadonlyArray<{
     },
     // ── Session-scoped runtime state (Step 4.1) ────────────────────────────
     //
-    // These four directories accrete ONE entry per session behind a
+    // These five directories accrete ONE entry per session behind a
     // once-per-session latch, and nothing in the tree removed them: writers
     // and readers existed, no reaper did. They are named INDIVIDUALLY rather
     // than sweeping `agents/runtime/state` as a whole, and that is the
@@ -98,6 +98,13 @@ const TTL_CONFIG: ReadonlyArray<{
         dir: 'agents/runtime/state/probe-throttle',
         ttlDays: 7,
         description: 'Per-session probe throttle latch',
+        owner: 'maintainer',
+        reviewBy: '2026-11-10',
+    },
+    {
+        dir: 'agents/runtime/state/review-baseline',
+        ttlDays: 7,
+        description: 'Per-session start-of-session mutation baseline (one file per session)',
         owner: 'maintainer',
         reviewBy: '2026-11-10',
     },

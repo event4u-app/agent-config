@@ -1,8 +1,8 @@
 <!-- evidence-type: analysis -->
 
-# Detector E, measured — one fire in 335 turns, and it is the reported failure
+# Detector F, measured — one fire in 335 turns, and it is the reported failure
 
-ADR-277 shipped detector E with its false-positive rate **unmeasured** and said so in
+ADR-277 shipped detector F with its false-positive rate **unmeasured** and said so in
 § Honest limits. This closes that limit as far as an instrument can: the fire rate is
 measured over two real transcript corpora, and the single fire was read by hand.
 
@@ -20,13 +20,13 @@ Command, re-runnable:
 | turns that edited any file | 34 | 40 |
 | 1. edited production source | 16 | 24 |
 | 2. …and touched no test file | 7 | 9 |
-| 3. …and claimed done (**E fires**) | **0** | **1** |
+| 3. …and claimed done (**F fires**) | **0** | **1** |
 | detector C fired on those | — | **0** |
 
 Combined: **1 fire in 335 turns (0.3 %)**, over 74 turns that edited something at all.
 
 Detector C, for comparison on the same population: 13 turns (12.7 %) and 8 turns (3.4 %).
-So E is roughly an order of magnitude quieter than the gate's existing edit-shaped
+So F is roughly an order of magnitude quieter than the gate's existing edit-shaped
 detector, which is what a three-condition conjunction should look like.
 
 ## The one fire is a true positive, and it is the reported feature
@@ -43,7 +43,7 @@ breakage the maintainer reported on 2026-09-11 and which
 `why-the-suite-did-not-require-a-test-2026-09-11.md` was written to explain.
 
 So the detector's single fire over 335 turns is the exact turn the audit was about. That
-is the strongest form of the argument available short of a labelled corpus: E was
+is the strongest form of the argument available short of a labelled corpus: F was
 designed from a described failure and then found that failure, unprompted, in a
 transcript it was not tuned on.
 
@@ -51,17 +51,17 @@ transcript it was not tuned on.
 
 **Established.** An upper bound on the false-positive rate: at most 1 in 335 turns, and
 a hand read of that one says it was right — so the measured false-positive count is
-**0**. E's noise cost is not a design argument any more.
+**0**. F's noise cost is not a design argument any more.
 
-**Established.** ADR-277's claim that detector C does not already cover E. C was
-**silent on the one turn E fired on**, over a real transcript rather than over the unit
+**Established.** ADR-277's claim that detector C does not already cover F. C was
+**silent on the one turn F fired on**, over a real transcript rather than over the unit
 test that asserted it. The record's "two different questions deserve two detectors"
 survives contact with a corpus.
 
 **NOT established: recall.** One fire is not a rate of catching the failure class, and
-nothing here scores the turns E stayed silent on. The cumulative breakdown is what makes
+nothing here scores the turns F stayed silent on. The cumulative breakdown is what makes
 the silence readable rather than mysterious: of 40 turns that edited production source
-across both corpora, 16 touched no test, and 15 of those 16 did not claim done. E is
+across both corpora, 16 touched no test, and 15 of those 16 did not claim done. F is
 silent there **by design** — that is the red step of red-green-refactor, and refusing it
 is the failure mode the third condition exists to avoid.
 

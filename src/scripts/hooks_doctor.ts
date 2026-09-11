@@ -40,6 +40,7 @@ import * as hooks_status from "./hooks_status.js";
 import {
   DETECTOR_IDS,
   collectRefusalStats,
+  emptyCounts,
   readInstallBoundary,
   type InstallBoundary,
   type RefusalStats,
@@ -268,7 +269,9 @@ export function collect(
     turn_end_refusals = {
       sessionsWithRefusals: 0,
       total: 0,
-      byDetector: { promissory: 0, language: 0, verification: 0, completion: 0, untested: 0 },
+      // Derived, never a literal: a fifth detector made the old four-key object
+      // a type error here and a silent `NaN` in the aggregator it mirrors.
+      byDetector: emptyCounts(),
       byPeriod: [],
       legacyRecords: 0,
       unversionedRecords: 0,

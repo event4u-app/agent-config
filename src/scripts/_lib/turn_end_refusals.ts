@@ -45,12 +45,14 @@ import { read_lockfile } from './installed_lock.js';
  *
  * The roadmap's § 0 names three (A promissory, B language, C verification).
  * That was true of the draft and is not true of the tree: detector D
- * (`completion`) landed under round 7 § Phase 1 and detector E (`untested`) on
- * 2026-09-11, and both run in the same detector list as the other three.
- * Counting three would silently drop a detector's refusals, so the set is read
- * off `DetectorId` in the gate rather than off the prose.
+ * (`completion`) landed under round 7 § Phase 1, detector E
+ * (`pending-decision`) under road-to-a-question-that-survives-the-turn, and
+ * detector F (`untested`) on 2026-09-11 — all of which run in the same detector
+ * list as the first three. Counting three would silently drop a detector's
+ * refusals, so the set is read off `DetectorId` in the gate rather than off the
+ * prose.
  *
- * E is the one that asks whether a change is TESTED rather than whether
+ * F is the one that asks whether a change is TESTED rather than whether
  * something ran: C is satisfied by `eslint`, which is how a feature with zero
  * test lines passed every guard in that file.
  *
@@ -67,6 +69,7 @@ export const DETECTOR_IDS = [
     'language',
     'verification',
     'completion',
+    'pending-decision',
     'untested',
 ] as const;
 
@@ -145,8 +148,23 @@ export interface RefusalRecord {
     agent_config_version?: string;
 }
 
+/**
+ * A zeroed counter per detector, DERIVED from `DETECTOR_IDS` rather than
+ * written out.
+ *
+ * It was an object literal of four keys until detector E landed, and the
+ * literal is what made adding a detector a silent arithmetic defect rather than
+ * a type error: `DetectorCounts` is `Record<RefusalDetectorId, number>`, the
+ * literal satisfied it for the union of the day, and a fifth id then read back
+ * as `undefined` — so every `+=` over it produced `NaN` and the whole rollup
+ * went quiet. The sibling test asserts that the id list and the gate's union
+ * agree; nothing asserted that the COUNTER covered the list, which is the half
+ * this construction removes the need to assert.
+ */
 export function emptyCounts(): DetectorCounts {
-    return { promissory: 0, language: 0, verification: 0, completion: 0, untested: 0 };
+    const out = {} as DetectorCounts;
+    for (const id of DETECTOR_IDS) out[id] = 0;
+    return out;
 }
 
 function isDetector(v: unknown): v is RefusalDetectorId {

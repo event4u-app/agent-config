@@ -1,0 +1,2655 @@
+diff --git a/agents/decisions/concern-admissions.jsonl b/agents/decisions/concern-admissions.jsonl
+index a2ceee20e23199e45d339eac1ac020753a48ecf6..b9403b7a41bf0c6ad487d48c21cbb30d018d0e73 100644
+--- a/agents/decisions/concern-admissions.jsonl
++++ b/agents/decisions/concern-admissions.jsonl
+@@ -6,3 +6,4 @@
+ {"concern": "one-question-per-ask", "decision": "admitted", "admitted_at": "2026-09-07", "slot": "pre_tool_use", "binding_hosts": "claude ONLY, and deliberately narrower than the slot's declared set. augment, cowork, cursor, cline and gemini all declare pre_tool_use, but claude is the one platform this repository has verified both binds the slot and acts on the dispatcher's verdict (hook-architecture-v1.md, Which hosts carry pre_tool_use). augment's and cowork's trampolines discard dispatcher output and exit 0 unconditionally, so a deny bound there would run and be ignored. `agent-config hooks:status` answers this for the host actually running, and it is the answer to prefer over this row.", "behaviour_where_deny_ignored": "It is not bound where the deny would be ignored, so there is no such host today \u2014 that is the whole reason for the narrow binding above. If it were later bound on a discarding host, the refusal would become a no-op and the constraint would fall back to prose: ask-when-uncertain's one-question-per-turn Iron Law and user-interaction's one-decision-point clause, which are always-loaded kernel rules and are the floor on every host regardless. Nothing else changes: the concern writes no state, reads no file and makes no network call.", "why_not_extend": "The four existing pre_tool_use refusals answer disjoint questions on disjoint payloads: block-no-verify classifies a git command string, block-kernel-rule-writes and block-speaking-inbox-dir classify a target PATH, block-config-weakening counts allowlist entries across a session. This one classifies the ARITY of a question payload on a tool none of them targets, and it is the only one whose subject is ask shape rather than a write. Folding it into any of them would give that concern two unrelated fire conditions, two payload readers and one rollback switch for both \u2014 and would inherit a tools: filter that is exactly wrong for it. evidence-independence is the nearest by subject (it also reads a prompt the agent is about to send) and is still the wrong home: it judges an evaluation prompt's neutrality, which shares no predicate with counting questions.", "per_event_budget_impact": "+1 on claude's pre_tool_use, taking that slot from 14 to 15 against DEFAULT_MAX_PER_EVENT=8 \u2014 a cap this slot already exceeds and which ships DEFAULT_HARD_FAIL=false. Stated rather than minimised: the slot is over its nominal budget and this addition does not fix that. The runtime cost is bounded far below the other entries, though, because the manifest's per-concern tools: filter means the dispatcher skips it in-process for every tool that is not a structured-ask candidate \u2014 which is every tool call on every host measured today. When it does run it is one JSON.parse of a payload already in memory plus one regex test: no fs read, no spawn, no git call.", "reason": "ask-when-uncertain's Iron Law is one question per turn and user-interaction narrows 'one' to one decision point answerable with a single reply. Both are kernel rules and both are model-carried at the ask surface: user-interaction.md records a 30-session conformance audit in which every malformed ask escaped the numbered-block surface that check_reply_consistency reads, and states plainly that no gate ships for that class. A host's native question picker makes the N-in-one violation cheap and structured, which is precisely the shape a deterministic check CAN see \u2014 a payload's question array has a length, where prose does not. The concern fires on nothing today (no host in the capability registry carries an observed structured-ask tool, per _lib/structured_ask.ts) and exists so the first host to ship a picker meets the rule already in force rather than after a measured regression. It denies rather than truncating to the first question: a truncation would hide exactly the decisions the user was owed, invisibly, at the moment they were asked for."}
+ {"concern": "chain-nudge", "decision": "admitted", "admitted_at": "2026-09-08", "slot": "pre_tool_use", "binding_hosts": "Bound on all three platforms whose pre_tool_use list already carries code-graph-nudge (augment, claude, cowork). Only claude is verified to forward a warn verdict's additionalContext to the model; on augment and cowork the trampolines discard dispatcher output and exit 0, so the advisory is emitted and its delivery is unverified. That costs nothing here because the concern never denies — there is no refusal to be discarded. Hosts with no pre_tool_use binding carry the obligation through the rule text alone. `agent-config hooks:status` answers this for the host actually running and is the answer to prefer over this row.", "behaviour_where_deny_ignored": "Identical everywhere: this concern never denies. It reports severity advisory at EXIT_WARN, which host_semantics.emitFor reduces to exit 0 with the text in additionalContext, verified end-to-end through the dispatcher in both polarities. A host that discards dispatcher output loses one advisory line and changes nothing else. No deterministic refusal sits behind it and none is claimed: compliance with the rule stays model-carried on every host, including claude.", "why_not_extend": "The nearest neighbours read a different thing for a different purpose. rtk-wrap and ship-diff-volume both read a shell command string, but rtk-wrap decides output filtering and ship-diff-volume classifies a ship VERB against diff volume — neither has a predicate about command COMPOSITION, and folding this in would give one concern two unrelated fire conditions on overlapping payloads with one rollback switch for both. code-graph-nudge is the closest in shape (advisory, once per session, same slot) and is the wrong home by subject: it answers whether a code-graph should be queried before a read, which shares no predicate with whether a call chains work steps. rule-inject is the one concern that could have delivered this rule body instead, and it ships default-off behind lean_projection.mode: delivery and unbound on the default role, so it is not a carrier today.", "per_event_budget_impact": "+1 on the pre_tool_use slot of three platforms. Emission is 491 bytes, under the 1024-byte default_cap_bytes in hook-token-budget.json, so no per-concern row is registered. It fires at most ONCE per session (a latch keyed by session id under agents/runtime/state/), so its contribution to the 2048-byte per-slot sum is a one-time 491 bytes rather than a per-call cost. On every other call the work is one JSON.parse of a payload already in memory, a set membership test on the tool name, and a single-pass scan of the command string: no fs read outside the latch check, no spawn, no network.", "reason": "token-efficiency's One command per Bash call is a permission rule whose obligation applies at tool-call time, and its own triggers match the PROMPT — nothing in a prompt announces that the next call will be chained, so the rule was unreachable exactly when it mattered. The host splits a compound command on the shell operators and requires each segment to match the allowlist independently, so one unmatched segment sends the whole call down the permission path even when every other segment was allowed. Measured over 40,268 real Bash calls: 97.7% carry a shell metacharacter, 17.9% have a head token matching no allowlist pattern, and 5,037 of those are a leading VAR= assignment — a shape no allowlist pattern can express, so it shrinks only by not being written. The concern is the reach, and it is advisory because the alternative would be a shell parser with a security boundary attached."}
+ {"concern": "code-graph-context", "decision": "admitted", "admitted_at": "2026-09-08", "slot": "pre_tool_use", "binding_hosts": "Bound on the same three platforms whose pre_tool_use list carried its predecessor code-graph-nudge, which this concern replaces one-for-one (verified: three pre_tool_use lists name it, and none names the old id). Only claude is verified to forward a warn verdict's additionalContext to the model; on augment and cowork the trampolines discard dispatcher output and exit 0, so the line is emitted and its delivery is unverified. Hosts with no pre_tool_use binding carry the same obligation through the rule text instead — external-code-graph-interop was condensed in this change and now points at code-intelligence for the per-host delivery detail. `agent-config hooks:status` answers this for the host actually running and is the answer to prefer over this row.", "behaviour_where_deny_ignored": "Identical everywhere: this concern never denies. severity advisory at EXIT_WARN, which host_semantics.emitFor reduces to exit 0 with the text in hookSpecificOutput.additionalContext on claude. A host that discards dispatcher output loses one state line and changes nothing else, and the hook's own header states that case explicitly. No deterministic refusal sits behind it and none is claimed.", "why_not_extend": "It IS the extension — of code-graph-nudge, which it replaces rather than joins, and the replacement is why a new id exists at all. Two behavioural changes make it not a rename: the nudge also fired on ABSENT, advertising a capability the consumer had not built and, before the parsers shipped, could not build; and it carried an instruction where this carries STATE (`fresh` / `behind:N`), which is a fact the model cannot otherwise see. Silent-on-absent is what makes default-on defensible. Folding it back into the nudge would mean keeping the advertisement.", "per_event_budget_impact": "Net ZERO on the pre_tool_use slot count: one concern replaces one concern on all three binding platforms. No per-concern row is registered in hook-token-budget.json (verified: the file carries no code_graph entry), so it sits under the 1024-byte default_cap_bytes. NOT independently measured in this change, and the figure is deliberately not asserted: the emission size belongs to the branch that authored the hook. A `tools:` filter restricts it to Grep / Glob / Read, pinned by a test against the hook's own branch surface, so it is skipped in-process on every other tool.", "reason": "The flag the predecessor shipped behind (hooks.code_graph.enabled) gated a nudge whose common case was 'you do not have this'. Phase 0.1 of road-to-a-graph-that-is-shipped made the parser install unnecessary, so the flag's premise was gone; the replacement speaks only when a graph exists and reports its staleness, which is the one thing that changes a decision — an answer from a graph N commits stale is worth less than the same answer from a fresh one, and only the hook knows N. This row was missing on arrival and is written here rather than left for the gate to keep reporting; every claim in it is transcribed from the hook's own header, the manifest, or a file read, and the one figure that would have needed a fresh measurement is declined above instead of invented."}
++{"concern": "review-baseline", "decision": "admitted", "admitted_at": "2026-09-11", "slot": "session_start", "binding_hosts": "Bound on `claude` ALONE, which is narrower than the seven platforms whose session_start list it could have joined. The reason is the reader: `end-review-nudge` is bound on claude's stop slot and nowhere else, and cowork refuses it explicitly in the manifest. Binding the writer on the other six would spend two git subprocesses per session start to produce a file nothing opens. It is also dropped for the `worker` role beside its reader, for the same derived reason rather than a clause of its own. Where the baseline is absent the nudge reads `absent` and degrades to exactly its pre-change behaviour, recorded in its telemetry row rather than inferred. `agent-config hooks:status` answers this for the host actually running and is the answer to prefer over this row.", "behaviour_where_deny_ignored": "Identical everywhere: this concern never denies and emits no context. It is capture-only, always returns 0, and its entire output is one JSON file under `agents/runtime/state/review-baseline/`. A host that discards dispatcher output loses nothing, because there is nothing on stdout to discard. An unwritable state directory is caught and degrades the reader to `absent`; a session start is never failed by it. No deterministic refusal sits behind it and none is claimed.", "why_not_extend": "`session-register` is the closest neighbour — same slot, already writes per-session state, already prunes — and it is the wrong home by subject: it answers which sessions are live on this repository, and folding a git measurement into it would give one concern two unrelated fire conditions and one rollback switch for both. `end-review-nudge` itself cannot hold it: it runs on `stop`, and by its first stop the session has already mutated the tree the baseline is supposed to predate. That ordering is the whole mechanism, not an implementation detail. What IS shared rather than duplicated is the measurement: `totalNonDocMutatedLinesWithMeasure` and `deriveSessionKey` are imported from the nudge, so the two sides cannot drift on what a non-doc mutated line is or on how a session is keyed.", "per_event_budget_impact": "+1 on the session_start slot of ONE platform. Emission is zero bytes — the concern writes no stdout at all, so no per-concern row is registered in hook-token-budget.json and it cannot contribute to the per-slot sum. The cost is wall-clock rather than tokens, and it is stated rather than estimated: measured on this tree, `git rev-parse HEAD` 11-14 ms, `git diff --numstat HEAD` 22-29 ms, `git ls-files --others` 55-57 ms — about 91 ms, ONCE per session, behind an `existsSync` latch that makes a second session_start a no-op. On the reader's side the change is net-negative on two of three branches: `currentHeadSha` is now passed as a thunk, so the `absent` and `unreadable` paths — the steady state on every host without the nudge — no longer spawn a git process they would have discarded.", "reason": "`end_review_nudge_hook`'s own header recorded a measurement defect and the reason it was not fixed: pre-existing uncommitted changes are charged to the session, because 'no such baseline exists anywhere a `stop` concern can read it (recording one would be new session-wide state, out of this roadmap phase's one-concern scope)'. That reason went stale — session_start is bound on seven hosts carrying fourteen concerns — and the defect escalated: on an accumulator branch the nudge read 1,771 lines of two crashed sessions' uncommitted work and fired every turn. An advisory that always fires is noise, and noise is worse than silence because it trains the reader to skip the one that mattered. Three states make the subtraction invalid — no baseline, an unreadable one, a moved HEAD, and a mixed measure — and all of them fall back to the UNSUBTRACTED count rather than to silence, because a safety advisory must not be disarmed by its own instrumentation failing. Each fallback is carried into the `review_skipped` row as a closed enum, so the rate at which the mechanism degrades is measurable from its own stream rather than assumed. Honest limit, recorded here and at the mechanism: the baseline is written once and never refreshed, so from a session's first commit onward `head_moved` holds and the pre-existing tree is charged again. Re-baselining is not attempted because a second write cannot tell 'we committed our own work' from 'a peer session committed underneath us' from a stop payload."}
+diff --git a/agents/evidence/analysis/standing-payload-by-host-2026-09.md b/agents/evidence/analysis/standing-payload-by-host-2026-09.md
+index 1374045016fd04c061734bd6d47d6959795ca6a9..5a77ce92de5f5b0771fd2b1a9f8c8128d8b62866 100644
+--- a/agents/evidence/analysis/standing-payload-by-host-2026-09.md
++++ b/agents/evidence/analysis/standing-payload-by-host-2026-09.md
+@@ -1,8 +1,8 @@
+ <!-- evidence-type: analysis -->
+ # Standing rule payload, per host
+ 
+-Pinned to commit `d421f13224820ea01a2e022310acb5f0afb43081`. Generated by
+-`./scripts-run src/scripts/report_standing_payload_by_host --emit --pin d421f13224820ea01a2e022310acb5f0afb43081`;
++Pinned to commit `76e53e2084d92f31cbd3f89fadeacd87e74649e6`. Generated by
++`./scripts-run src/scripts/report_standing_payload_by_host --emit --pin 76e53e2084d92f31cbd3f89fadeacd87e74649e6`;
+ a re-run at the same pin is byte-identical — no value is read from `$HOME` and no
+ timestamp is written.
+ 
+@@ -29,19 +29,19 @@ would look identical here.
+ | `.md` files in `dist/agent-src/rules` | 119 |
+ | of those, `type: manual` (never projected, ADR-004) | 5 |
+ | projected to a per-rule host tree | 114 |
+-| bytes of the projected set | 485826 |
+-| chars/4 tokens of the projected set | 121457 |
++| bytes of the projected set | 486411 |
++| chars/4 tokens of the projected set | 121603 |
+ 
+ ## Per host
+ 
+ | Host | Surface | Shape | Bytes | chars/4 tok | Writer |
+ |---|---|---|---:|---:|---|
+-| `augment` | `.augment/rules` | per-rule tree | 485826 | 121457 | `src/scripts/condense.ts:2495` |
+-| `claude-code` | `.claude/rules` | per-rule tree | 485826 | 121457 | `src/scripts/condense.ts:1188` |
+-| `cline` | `.clinerules` | per-rule tree | 485826 | 121457 | `src/scripts/condense.ts:1190` |
++| `augment` | `.augment/rules` | per-rule tree | 486411 | 121603 | `src/scripts/condense.ts:2495` |
++| `claude-code` | `.claude/rules` | per-rule tree | 486411 | 121603 | `src/scripts/condense.ts:1188` |
++| `cline` | `.clinerules` | per-rule tree | 486411 | 121603 | `src/scripts/condense.ts:1190` |
+ | `copilot` | `.github/copilot-instructions.md` | single file | 7491 | 1873 | `src/scripts/generate_capability_matrix.ts:138` |
+ | `cowork` | — | none | — | — | — |
+-| `cursor` | `.cursor/rules` | per-rule tree | 485826 | 121457 | `src/scripts/condense.ts:1190` |
++| `cursor` | `.cursor/rules` | per-rule tree | 486411 | 121603 | `src/scripts/condense.ts:1190` |
+ | `gemini` | `GEMINI.md` | single file | 2982 | 746 | `src/scripts/condense.ts:1494` |
+ | `windsurf` | `.windsurfrules` | single file | 34160 | 8540 | `src/scripts/condense.ts:1238` |
+ | `codex` | `.codex/agent-config.md` | single file | absent | absent | `src/scripts/install.ts:1541` |
+@@ -61,11 +61,11 @@ Notes per host:
+ ## The two units, recorded once
+ 
+ - **chars/4** is what `check_preamble_payload_budget` reports. Its rules bucket is
+-  derived here as **122822 tok** (every `.md` in the projection directory).
++  derived here as **122968 tok** (every `.md` in the projection directory).
+   The other two buckets are that gate's own readings, last taken 2026-09-08 and NOT
+   recomputed by this script: preloaded skills catalog 14846 ·
+   CLAUDE.md hierarchy 746, for a measured total of
+-  **138414 tok**. Re-read it with
++  **138560 tok**. Re-read it with
+   `./scripts-run src/scripts/check_preamble_payload_budget` rather than quoting this line.
+ - **Exact BPE** is the unit `docs/CLAIMS.md:365` uses for the delivery experiment:
+   120,582 → 18,573 exact-BPE standing tokens for the rule corpus under
+@@ -73,10 +73,10 @@ Notes per host:
+   is computed between them here.
+ 
+ **Reconciling the two rule figures, because they differ and both are right.** The
+-census bucket reads 122822 chars/4 tok over the projection directory; the projected-set
+-row above reads 121457. The gap is the 5 `type: manual` rules: the census counts every
++census bucket reads 122968 chars/4 tok over the projection directory; the projected-set
++row above reads 121603. The gap is the 5 `type: manual` rules: the census counts every
+ `.md` in the directory, this table counts only what a per-tool tree receives. 5460 bytes
+-= 1365 tok, and 121457 + 1365 = 122822. A manual rule reaches no host tree
++= 1365 tok, and 121603 + 1365 = 122968. A manual rule reaches no host tree
+ by ADR-004, so excluding it is correct here and including it is correct there.
+ 
+ ## Per-slot delivery fire sizes — the activation charge (3.1)
+diff --git a/agents/roadmaps/road-to-a-question-that-survives-the-turn.md b/agents/roadmaps/road-to-a-question-that-survives-the-turn.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..e9440b1c345e8ec4e0fc80113caf0c083a693963
+--- /dev/null
++++ b/agents/roadmaps/road-to-a-question-that-survives-the-turn.md
+@@ -0,0 +1,304 @@
++---
++complexity: structural
++status: ready
++execution:
++  mode: phase-checkpoints
++owner: maintainer
++relates:
++  - slug: road-to-a-ledger-that-closes-the-loop
++    relation: disjoint
++    note: >
++      That roadmap asks whether a turn discharged the obligations delivered into
++      it. This one asks whether a turn dropped a question the PREVIOUS assistant
++      turn already put to the user. Same slot, different object; neither waits on
++      the other.
++  - slug: road-to-decision-closure
++    relation: disjoint
++    note: >
++      That file owns the ownership routing of a grant object and is blocked on
++      road-to-typed-grants-that-persist. This one adds no grant, no typed
++      obligation and no new obligation taxonomy - it reads the transcript the
++      gate already reads. It neither consumes nor unblocks that roadmap.
++estate_growth_exempt: >-
++  Grows active_roadmaps by one, open_blockers by three, and concern_count by
++  exactly one (`review-baseline`, session_start). The three blockers are each a
++  decision the source set could not take for itself and none is actionable by an
++  agent: a kernel-rule edit that `src/scripts/hooks/block_kernel_rule_writes.ts`
++  denies at tool-call time; a change to the definition of a pre-registered claim
++  in `docs/CLAIMS.md`; and a host-behaviour question only a live session can
++  answer, raised by the neutral review of this branch. Recording them is the
++  alternative to silently shipping a gate whose rule text, whose measurement
++  interaction, and whose reachability under a re-entrancy layer were never
++  decided. The concern is the
++  deliverable of Phase 2, not a side
++  effect: `src/scripts/hooks/end_review_nudge_hook.ts:29-34` records its own
++  measurement defect and names the reason it was not fixed - "no such baseline
++  exists anywhere a `stop` concern can read it (recording one would be new
++  session-wide state, out of this roadmap phase's one-concern scope)". Verified
++  2026-09-11 at `src/scripts/hook_manifest.yaml:1279`: `session_start` IS bound,
++  on seven hosts, carrying fourteen concerns. The stated blocker is stale, and
++  the fix is one concern. Phase 1 adds NO concern - detector E rides the existing
++  `turn-end-gate` guard rather than becoming a second refusal-capable stop
++  concern.
++estate_offset_exempt: >-
++  Offsets nothing. The adjacent held objects are each blocked on something this
++  roadmap does not resolve: `road-to-decision-closure` on
++  `road-to-typed-grants-that-persist` (kernel writes denied at tool-call time,
++  pending a forge-administrator settings change), and
++  `agents/roadmaps/stubs/road-to-batch-elicitation-kernel-delta.md` on an owner
++  authority question about `ask-when-uncertain`. Retiring either to buy the slot
++  would dispose of a recorded decision to make room for a plan that depends on
++  it standing.
++design_validated: >-
++  Claim verification at HEAD against the supplied plan: both architectural gaps
++  reproduce, and three of the plan's own implementation steps diverge from the
++  tree. Each divergence is carried at the step it corrects, tagged
++  `corrected-from-reproduction`.
++capability_gap: none
++---
++# Road to a question that survives the turn
++
++> **Source:** `agents/tmp.old/round-7b3e91/` - a session transcript plus one
++> supplied plan, analysed 2026-09-11. Claim verification at HEAD: both
++> architectural gaps **still-true**; three of the supplied plan's implementation
++> steps **diverged** and carry corrected wording below. The reported failure is
++> the operator's own: a turn put a three-option decision to the user, the
++> `end-review-nudge` stop concern produced a second assistant execution with no
++> intervening user message, and that second turn demoted the open question to a
++> subordinate clause. From the user's side the conversation ended without a
++> question.
++
++## Goal
++
++A decision this package has already put to the user cannot disappear because the
++runtime produced another assistant turn. When an assistant turn carries a
++numbered-options block and a later assistant turn in the **same** user turn
++carries none, the turn-end gate refuses and names the block that went missing.
++Separately, the review nudge stops charging a session for mutation it did not
++make: it subtracts a session-start baseline instead of reading the whole dirty
++working tree, so an accumulator branch no longer fires it every turn. Someone
++else can tell whether this happened by running the two fixtures added in Phase 0
++- a transcript whose second assistant turn drops an options block must refuse,
++and a 5-line turn on a session whose baseline already held 1,771 changed lines
++must not fire the nudge.
++
++## Non-goal, stated so no step can grow into it
++
++This roadmap does **not** build the `PendingDecision` object the supplied plan
++proposes - an id, a `pending -> answered/cancelled/superseded/invalidated`
++lifecycle, semantic answer matching, and a `continuation_reason` field. That is a
++grant-shaped obligation object, and `road-to-decision-closure` already owns the
++ownership routing for one, blocked on `road-to-typed-grants-that-persist`.
++Building a second obligation ledger here would create the parallel taxonomy that
++roadmap exists to prevent. What ships is the deterministic transcript-adjacency
++gate the supplied plan itself calls "an excellent Phase-0 regression gate", and
++nothing above it.
++
++It also does not touch `src/rules/user-interaction.md`. The supplied plan's
++section 5.1 adds a third Iron Law to that file; `user-interaction` is a kernel
++rule, `src/scripts/hooks/block_kernel_rule_writes.ts` denies agent writes to it
++at tool-call time, and the delta is parked as a blocker below rather than
++smuggled into a step.
++
++## Phase 0 - Fixtures and the demotion bar, before the detector
++
++- [x] **0.1 Add two golden transcript fixtures and the test that reads them.**
++      One JSONL where a single user turn is followed by two assistant entries,
++      the first carrying a numbered-options block with a recommendation line and
++      the second carrying none (the reported failure). One near-miss where the
++      same shape is separated by a **genuine** user prompt, which must stay
++      silent. Both pass through the `isSyntheticPrompt` and `isSidechain`
++      filtering the gate already applies, so a task notification between the two
++      assistant entries does not read as an answer.
++      verify: `npx vitest run tests/scripts/turn_end_gate_pending_decision.test.ts` passes with the positive case refusing and the near-miss allowing.
++- [x] **0.2 Register detector E in `docs/contracts/turn-end-detector-demotion.md`.**
++      That contract's own removal-condition section requires every blocking
++      detector to carry a pre-registered demotion bar before it ships. Add the
++      row to the detector table, a Q1/Q2 bar row, and the sample floor. Bar: Q1
++      re-refusal share at or above 40 percent, Q2 median at or above 3 - the
++      `verification` row's numbers, because like `verification` this detector
++      reads turn structure rather than prose and its false-positive shape is the
++      same class.
++      verify: `grep -c 'pending-decision' docs/contracts/turn-end-detector-demotion.md` returns at least 3, covering the detector table, the bar table and the sample floor.
++
++**Exit criteria:** both fixtures exist and the demotion bar for detector E is
++written down before any detector code lands.
++
++## Phase 1 - Detector E: a dropped decision refuses the turn-end
++
++- [x] **1.1 Extend `TranscriptTail` with the assistant texts of the current user turn.**
++      `readTranscriptTail` already walks every entry, already resets `toolCalls`
++      at each genuine user prompt, and already skips sidechains and synthetic
++      prompts. Add `assistantTurnTexts: string[]`, appended on every assistant
++      entry carrying text and reset on the same line that resets `toolCalls`.
++      `lastAssistant` stays exactly as it is - four detectors read it and none of
++      them change.
++      verify: `npx vitest run tests/scripts/turn_end_gate_hook.test.ts` stays green and the new field is asserted non-empty for an assistant-bearing fixture.
++- [x] **1.2 Add `detectDroppedDecision` and wire it as detector `pending-decision`.**
++      `corrected-from-reproduction`: the supplied plan's section 9 Phase 1.1 adds
++      a new `pending-decision-continuity` Stop concern. Reproduced against the
++      tree - `turn-end-gate` is the suite's only refusal-capable stop concern and
++      it carries both re-entrancy layers (`stop_hook_active` plus the per-turn
++      refusal marker) as well as the demotion contract. A second refusal-capable
++      stop concern would duplicate that machinery and could refuse a turn the
++      gate had already refused. The corrected step is a fifth detector on the
++      existing guard. It fires when the current turn holds at least two assistant
++      texts, an earlier one carries an option block and the last one carries
++      none. Block detection is **imported** from `check_reply_consistency.ts`
++      (`find_option_blocks`), the spec-backed parser, never a third copy -
++      `interruption_ledger_hook` and the gate would otherwise hold three separate
++      readings of the same rule.
++      verify: `grep -n 'find_option_blocks' src/scripts/hooks/turn_end_gate_hook.ts` resolves to an import from `check_reply_consistency.js`, and the Phase 0.1 positive fixture refuses naming `pending-decision`.
++- [x] **1.3 Add `pending-decision` to `DETECTOR_IDS` and to the gate's `DetectorId` union.**
++      `src/scripts/_lib/turn_end_refusals.ts` reads its set off the union
++      deliberately, so the counters, the per-detector refusal ledger and the
++      demotion instrument pick the new id up without a second edit.
++      verify: `npx vitest run tests/scripts/turn_end_refusals.test.ts` passes, and `grep -c 'pending-decision' src/scripts/_lib/turn_end_refusals.ts src/scripts/hooks/turn_end_gate_hook.ts` is non-zero for both files.
++- [x] **1.4 Run detector E unconditionally, not behind the open-dispatch narrowing.**
++      Detectors A and D are skipped while a subagent dispatch is open, because a
++      completion claim mid-dispatch is not yet a claim. A dropped user decision is
++      the opposite: an open dispatch is exactly the continuation that drops it, so
++      narrowing E the same way would make it silent in the reported case. E runs
++      on every turn-end, like B and C.
++      verify: a fixture with an open dispatch and a dropped options block still refuses; the assertion lives in the Phase 0.1 test file, not in prose.
++
++**Exit criteria:** the reported failure shape refuses at turn-end, the near-miss
++does not, and the refusal names the block that went missing.
++
++## Phase 2 - The review nudge stops charging a session for a dirty tree
++
++- [x] **2.1 Add a `review-baseline` `session_start` concern.**
++      `corrected-from-reproduction`: `src/scripts/hooks/end_review_nudge_hook.ts`
++      declines to fix its own measurement on the ground that no session baseline
++      exists anywhere a `stop` concern can read it. Verified at
++      `src/scripts/hook_manifest.yaml:1279`: `session_start` is bound on seven
++      hosts with fourteen concerns. The blocker is stale. The new concern writes
++      `head_sha`, `baseline_lines` and `written_at` to
++      `agents/runtime/state/review-baseline/<sessionKey>.json`, reusing
++      `deriveSessionKey` and `totalNonDocMutatedLinesWithMeasure` exported from
++      the nudge itself rather than reimplementing the count.
++      verify: `npx vitest run tests/scripts/review_baseline_hook.test.ts` passes, and a session_start run against a tree with N dirty non-doc lines writes `baseline_lines` equal to N.
++- [x] **2.2 Subtract the baseline in `end_review_nudge_hook`, and fail open when it cannot.**
++      The fire condition becomes measured minus `baseline_lines`, clamped at
++      zero, compared against `MUTATION_LINE_THRESHOLD`. Three states where
++      subtraction is invalid, each falling back to today's whole-tree reading and
++      **saying so in the telemetry record** rather than silently: no baseline
++      file (a host without `session_start`, or a session that started before this
++      shipped), an unreadable baseline, and a `head_sha` that no longer matches -
++      a session that committed mid-run moved HEAD, so the baseline's own
++      denominator is gone.
++      verify: a fixture with `baseline_lines` 1771 and a 5-line turn does not fire; one with a moved `head_sha` fires on the unsubtracted count and its telemetry row records the fallback reason.
++- [x] **2.3 Register the concern in the four places a concern is registered.**
++      The `hook_manifest.yaml` concern block, the seven per-host `session_start`
++      rows, `CONCERN_REGISTRY` in `src/scripts/hooks/concern_registry.ts`, and
++      the manifest test expectations. The registry is the one that is missed,
++      because a concern absent from it is dispatched by no host and fails no
++      gate.
++      verify: `grep -c 'review-baseline' src/scripts/hook_manifest.yaml` returns at least 8, and `grep -n 'review_baseline_hook' src/scripts/hooks/concern_registry.ts` resolves.
++
++**Exit criteria:** a 5-line turn on a branch carrying 1,771 pre-session dirty
++lines does not fire the review nudge, and every fallback path is visible in the
++telemetry row rather than inferred.
++
++## Blockers
++
++### blocker: user-interaction-third-iron-law
++
++- **Status:** open
++- **Owner:** maintainer
++- **Blocks:** nothing in this roadmap - the gate ships without it; this is the
++  prose half the gate would enforce.
++- **What to do:** decide whether `src/rules/user-interaction.md` gains a third
++  Iron Law stating that an issued decision stays live across an assistant-only
++  continuation. The file is kernel, `src/scripts/hooks/block_kernel_rule_writes.ts`
++  denies the write at tool-call time, and the edit needs its own PR plus the soak
++  window from `scope-control` section Kernel-rule edits.
++- **Resolved when:** `git log --oneline -- src/rules/user-interaction.md` shows a
++  commit adding the third Iron Law, or the maintainer records that the detector
++  alone is sufficient and no rule text is owed.
++- **If you do nothing:** the detector ships and enforces a continuity obligation
++  that no rule states, so a reader who hits the refusal finds `user-interaction`
++  silent on the subject and has to read the hook source to learn what was owed.
++  The gate still works; only its explanation is missing.
++- **Recommendation:** none; this is the owner's call - adding an Iron Law to a
++  kernel rule is owner-reserved.
++
++### blocker: detector-e-under-stop-hook-active
++
++- **Status:** open
++- **Owner:** maintainer
++- **Blocks:** nothing in this roadmap — the detector ships; this names an
++  unverified assumption a neutral review surfaced rather than leaving it to be
++  discovered in production.
++- **What to do:** establish whether the Stop event that follows a stop-hook
++  continuation carries `stop_hook_active: true`. `src/scripts/hooks/turn_end_gate_hook.ts`
++  returns ALLOW on that flag before any detector runs, and
++  `src/scripts/hooks/dispatch_hook.ts` states in the tree that the host sets it
++  "on exactly that Stop". If both readings hold, detector E is silent in the
++  exact shape it was built for. Nothing in this delta measures it and neither
++  E2E fixture sets the flag, because a transcript cannot answer it — only a live
++  session where the nudge fires and the next stop payload is read can.
++- **Resolved when:** a recorded live session shows the flag's value on the Stop
++  following an `end-review-nudge` fire, and either detector E fired on it or the
++  gate's layer-1 allow is narrowed to exclude E.
++- **If you do nothing:** the detector may be inert in its founding case while
++  every test passes — the near-misses and the pure-function tests all exercise
++  paths that never reach layer 1. The failure mode is silence, which is the one
++  this roadmap exists to stop, so it would look exactly like success.
++- **Recommendation:** none; this is the owner's call — narrowing a re-entrancy
++  layer on an unmeasured assumption is the wedge risk that layer exists to
++  prevent, and the measurement costs one live session.
++
++### blocker: interruption-baseline-contamination
++
++- **Status:** open
++- **Owner:** maintainer
++- **Blocks:** nothing in this roadmap - Phase 1 ships regardless; this names a
++  measurement interaction so it is not discovered later.
++- **What to do:** decide whether detector E firing contaminates the
++  `user-out-of-loop-baseline` claim in `docs/CLAIMS.md`, which reads `unbacked`,
++  stood at 19 of a 20-run floor, and counts one contact per turn. A re-presented
++  options block is the SAME contact, not a new one, but `interruption_report`
++  counts per turn and would score it as two.
++- **Resolved when:** `./scripts-run src/scripts/check_claims` reports
++  `user-out-of-loop-baseline` as backed with the floor reached, or that claim's
++  evidence block records that a re-presented decision is deduplicated on the
++  dropped block's identity.
++- **If you do nothing:** a re-presented block is counted as a second contact, so
++  the pre-registered baseline reads slightly worse than the sessions it measures
++  and the claim closes on a number the mechanism itself inflated. The effect is
++  small and one-directional, which is exactly why it would go unnoticed.
++- **Recommendation:** none; this is the owner's call - it changes the definition
++  of a pre-registered claim.
++
++## Risk Register
++<!-- risk-review: v1 | reviewed: 2026-09-11 | reviewer: claude/host -->
++
++| Rank | Item | Risk type | Description | Mitigation | Anchored under |
++|------|------|-----------|-------------|------------|----------------|
++| 1 | Detector E refuses a legitimate turn | implementation | A turn deliberately supersedes its own earlier question - the user's instruction made the options moot - and the gate refuses anyway, wedging the session behind a question nobody needs answered. | The two re-entrancy layers cap a turn at ONE refusal, so a wedge is structurally impossible; the refusal names the block so the reply can carry it in one line. The demotion bar in 0.2 is the measured exit if the re-refusal share turns out high. | Phase 0 - Fixtures and the demotion bar, before the detector |
++| 2 | A tool call between two prose entries reads as a dropped decision | implementation | Two assistant entries inside one user turn is ordinary - a tool call splits them constantly. If the collector keeps text-free tool entries, almost every turn looks like a candidate and the detector fires everywhere. | `_messageText` returns null for a tool-only entry and the collector skips it, so a tool call creates no element. The Phase 0.1 near-miss asserts exactly this rather than trusting the reading. | Phase 1 - Detector E: a dropped decision refuses the turn-end |
++| 3 | The baseline subtraction hides a real review obligation | implementation | A session that starts dirty and also reverts part of the pre-existing mess reads negative, clamps to zero, and the nudge goes quiet on a change that did need review. | The clamp is on the total and the three invalid-subtraction states in 2.2 fall back to the unsubtracted reading rather than to silence. The telemetry row records which path was taken, so the rate is measurable rather than assumed. | Phase 2 - The review nudge stops charging a session for a dirty tree |
++| 4 | The gate enforces an obligation no rule states | product | A reader who hits the refusal cannot find the rule behind it and reads the gate as a bug, because `user-interaction` is silent on continuity. | The refusal message cites `user-interaction` Iron Law 1 as the rule the dropped block belongs to, and the rule delta is parked as a named blocker rather than silently skipped. | Blockers |
++| 5 | The baseline expires at the session's first commit | implementation | The baseline is written once and never refreshed, so `head-moved` holds from the first commit onward and the session is charged for the whole pre-existing tree again — the noise case, returning silently. | Over-reporting is the safe direction and the telemetry row records `head_moved`, so the rate is measurable rather than assumed. Re-baselining is deliberately not attempted: a second write cannot tell "we committed" from "a peer committed underneath us" from a stop payload. | Phase 2 - The review nudge stops charging a session for a dirty tree |
++| 6 | Detector E may be inert under `stop_hook_active` | implementation | The gate's layer-1 allow returns before any detector runs when the host sets that flag, and the continuation that drops a decision is frequently exactly a stop-hook continuation. Every test passes either way, because none of them reaches layer 1. | Recorded as blocker `detector-e-under-stop-hook-active` with the one measurement that answers it, rather than resolved by narrowing a re-entrancy layer on an assumption. | Blockers |
++
++## Acceptance Criteria
++
++- [x] AC-1 - A JSONL transcript whose single user turn is followed by two
++      assistant entries, the first carrying a numbered-options block and the
++      second carrying none, produces a turn-end refusal naming `pending-decision`.
++- [x] AC-2 - The same shape with a genuine user prompt between the two assistant
++      entries produces no refusal, and neither does a shape whose second entry is
++      a tool call carrying no text.
++- [x] AC-3 - `DETECTOR_IDS` in `src/scripts/_lib/turn_end_refusals.ts` carries
++      five ids, and `docs/contracts/turn-end-detector-demotion.md` carries a
++      pre-registered Q1/Q2 bar and sample floor for the fifth.
++- [x] AC-4 - `end_review_nudge_hook` does not fire on a 5-line turn when the
++      session baseline recorded 1,771 pre-session non-doc lines, and does fire on
++      the unsubtracted count when the baseline's `head_sha` no longer matches.
++- [x] AC-5 - `review-baseline` resolves in `CONCERN_REGISTRY`, in the manifest's
++      concern block, and in every host's `session_start` row; no host binds a
++      concern the registry cannot dispatch.
++- [x] AC-6 - The two blockers above are recorded with owners and open status
++      rather than resolved inside this roadmap.
+diff --git a/docs/contracts/rule-router.md b/docs/contracts/rule-router.md
+index 41ae8e1c2f730b41ea5bc3e99e84e4e3810a00c5..bd094b6e1acfae582cacb21dbdb0e4bfea9dcb30 100644
+--- a/docs/contracts/rule-router.md
++++ b/docs/contracts/rule-router.md
+@@ -540,18 +540,18 @@ promise; see the frontmatter table above.
+ 
+ ### Standing rule cost, per host
+ 
+-Generated by `./scripts-run src/scripts/generate_host_cost_table` from `agents/evidence/analysis/standing-payload-by-host-2026-09.md`, pinned to `d421f13224820ea01a2e022310acb5f0afb43081`. Do not hand-edit between the markers.
++Generated by `./scripts-run src/scripts/generate_host_cost_table` from `agents/evidence/analysis/standing-payload-by-host-2026-09.md`, pinned to `76e53e2084d92f31cbd3f89fadeacd87e74649e6`. Do not hand-edit between the markers.
+ 
+ The unit is the projection **source** minus the ADR-004 `type: manual` rules no per-tool tree receives — the upper bound a host loads on an unscoped, un-deduplicated install. Every scope narrowing (user-scope dedup, workspace and pack scope) moves a host DOWN from these figures, never up. **This measures delivery, not consumption:** whether a host reads what it is handed is the axis `docs/enforcement-by-host.md` owns.
+ 
+ | Host | Surface | Shape | Bytes | chars/4 tok |
+ |---|---|---|---:|---:|
+-| `augment` | `.augment/rules` | per-rule tree | 485826 | 121457 |
+-| `claude-code` | `.claude/rules` | per-rule tree | 485826 | 121457 |
+-| `cline` | `.clinerules` | per-rule tree | 485826 | 121457 |
++| `augment` | `.augment/rules` | per-rule tree | 486411 | 121603 |
++| `claude-code` | `.claude/rules` | per-rule tree | 486411 | 121603 |
++| `cline` | `.clinerules` | per-rule tree | 486411 | 121603 |
+ | `copilot` | `.github/copilot-instructions.md` | single file | 7491 | 1873 |
+ | `cowork` | — | none | — | — |
+-| `cursor` | `.cursor/rules` | per-rule tree | 485826 | 121457 |
++| `cursor` | `.cursor/rules` | per-rule tree | 486411 | 121603 |
+ | `gemini` | `GEMINI.md` | single file | 2982 | 746 |
+ | `windsurf` | `.windsurfrules` | single file | 34160 | 8540 |
+ | `codex` | `.codex/agent-config.md` | single file | absent | absent |
+diff --git a/docs/contracts/turn-end-detector-demotion.md b/docs/contracts/turn-end-detector-demotion.md
+index 4cb5d64d075671a217f478ce9edeb6bc23880fa6..df23c89d57f56040e3781dc1d76d9d98826d96d4 100644
+--- a/docs/contracts/turn-end-detector-demotion.md
++++ b/docs/contracts/turn-end-detector-demotion.md
+@@ -25,10 +25,11 @@ NEVER A DEMOTION. FRICTION ALONE NEVER DEMOTES A DETECTOR.
+ A BAR SET ON AN UNMEASURABLE QUANTITY IS INERT AND SAYS SO.
+ ```
+ 
+-## The four detectors
++## The five detectors
+ 
+ Read off `DetectorId` in `src/scripts/hooks/turn_end_gate_hook.ts`, never off
+-prose — the roadmap that opened this question named three, and the tree has four.
++prose — the roadmap that opened this question named three, the tree had four, and
++`pending-decision` made it five.
+ 
+ | Id | Fires when | Protects | Runs |
+ |---|---|---|---|
+@@ -36,8 +37,16 @@ prose — the roadmap that opened this question named three, and the tree has fo
+ | B `language` | the reply language differs from that turn's fresh pin | the user-facing contract | every turn-end |
+ | C `verification` | the turn changed a file and ran no verify-shaped command | engineering safety | every turn-end |
+ | D `completion` | a completion claim carries no fresh evidence | the truthfulness of "done" | only when no dispatch is open |
++| E `pending-decision` | an earlier assistant turn in the SAME user turn put numbered options to the user and the closing one carries none | the liveness of an issued decision | every turn-end |
+ 
+-**Two of the four are conditional, and the fourth column is load-bearing.**
++**Why E runs on every turn-end rather than joining A and D.** The conditional
++pair is excused by an open dispatch because a completion claim mid-dispatch is
++not yet a claim. A dropped decision is the mirror image: the continuation that
++drops it is frequently a dispatch or a hook nudge, so narrowing E the same way
++would silence it in exactly the case it exists for. It is grouped with B and C,
++which also read turn structure rather than the truthfulness of a claim.
++
++**Two of the five are conditional, and the fourth column is load-bearing.**
+ `main()` runs A and D only when `dispatchOpen` is false — an open subagent
+ dispatch excuses a promissory closing and an unsettled completion claim, and
+ excuses nothing about B or C. So there are **three** allow paths, not two: the two
+@@ -115,6 +124,7 @@ elsewhere. Q2 is measurable today from `RefusalRecord.counts`
+ | B `language` | ≥ 20 % | ≥ 2 |
+ | C `verification` | ≥ 40 % | ≥ 3 |
+ | D `completion` | ≥ 40 % | ≥ 3 |
++| E `pending-decision` | ≥ 40 % | ≥ 3 |
+ 
+ **These are policy choices, not findings, and they differ on purpose.**
+ 
+@@ -141,6 +151,13 @@ calls its own numbers policy choices to be argued.
+   against its benefit, and a bar set low would demote a detector on a
+   distribution nobody has seen. It ties C by coincidence of caution, not because
+   it does comparable work.
++- **E at 40 % / 3, for D's reason and not C's.** E is new and has never fired, so
++  like D there is no measured cost to weigh and a low bar would demote it on a
++  distribution nobody has seen. It is placed with the cautious pair rather than
++  with B for a second reason of its own: a false positive on E costs one
++  additional line in a reply, while a false negative loses a decision the user
++  was already owed and never learns was dropped. The asymmetry is the argument,
++  and it points the opposite way from B's.
+ 
+ The supporting measurement behind A and D is the *general* one — advisory carriers
+ reached no measurable effect where blocking carriers reached zero violations — not
+@@ -148,22 +165,22 @@ a per-obligation reading of either, and it is stated at that strength rather tha
+ borrowed as if it had been measured on these two detectors specifically.
+ 
+ **The counter-argument, kept on the record rather than answered away:**
+-differentiated bars encode four unmeasured judgements about relative harm, and a
++differentiated bars encode five unmeasured judgements about relative harm, and a
+ single shared bar would be methodologically cleaner on sparse data. It is
+-rejected because pretending the four protected harms are interchangeable would
++rejected because pretending the five protected harms are interchangeable would
+ hide those judgements rather than remove them.
+ 
+ ***Revisit-if*, split so that the reachable half can actually fire.** Drafted as
+ one conjunctive clause over both quantities, it was unfalsifiable by
+ construction — it required Q1 shares, which this file declares unmeasurable until
+-an instrument that does not ship here lands, so the only escape from four bars
++an instrument that does not ship here lands, so the only escape from five bars
+ to one could never open.
+ 
+ - **On Q2 alone, and it stands today:** two or more detectors reach their floors
+   and their Q2 medians sit within ±1 of each other → the architectural argument is
+-  refuted *for those detectors* and their bars merge. It does not need all four,
++  refuted *for those detectors* and their bars merge. It does not need all five,
+   and it does not need D, whose floor is currently unreachable.
+-- **On Q1, contingent:** once instrument 1 lands and Q1 becomes readable, all four
++- **On Q1, contingent:** once instrument 1 lands and Q1 becomes readable, all five
+   shares within ±10 points collapses the bars to one.
+ 
+ Either half fires alone. Naming the contingency is the point: a revisit condition
+@@ -188,7 +205,7 @@ A detector's bar may not be read until **all four** hold for that detector:
+    **Carve-out, or condition 4 eats its own enabler:** a change that only ADDS a
+    field or a counter, leaving every existing count and every allow path
+    untouched, does not reset. Without this, shipping instrument 1 would reset all
+-   four windows — it writes `would_refuse_again` onto the session record, which is
++   five windows — it writes `would_refuse_again` onto the session record, which is
+    the refusal instrumentation — and no window accumulated before it lands would
+    ever be readable. That would contradict this file's own claim that Q2 is
+    measurable today.
+@@ -212,11 +229,12 @@ The refusal state carries a **90-day TTL** (`pruneAgedRefusalState`, run at
+ corpus reachable by counting records is never more than 90 days deep, and
+ condition 1 asks for 100 eligible refusals **per detector**.
+ 
+-The arithmetic decides it, and it decides against two detectors. On this
++The arithmetic decides it, and it decides against three detectors. On this
+ branch's own published reading — promissory 5 refusals over a 5-day window, about
+ 1/day — detector A needs roughly 100 days to reach 100 and is pruned at 90.
+-Dormant D needs unbounded time. Only C, at 22 over the same window, clears 100
+-inside the retention window at all.
++Dormant D needs unbounded time, and E is dormant by construction on the day it
++ships. Only C, at 22 over the same window, clears 100 inside the retention window
++at all.
+ 
+ Left there, this file would have reintroduced exactly the failure it rejects for
+ Q2's denominator: a bar that cannot fire, arrived at through retention instead of
+@@ -228,8 +246,8 @@ discovered:
+   Counting live records is not an implementation of condition 1, it is a
+   different and smaller question.
+ - **Until that aggregate exists, condition 1 is satisfiable only by a detector
+-  firing ≥ 100 times within 90 days** — which is C, and no other. A and D are not
+-  merely far from their floors; they cannot reach them. The file says so here
++  firing ≥ 100 times within 90 days** — which is C, and no other. A, D and E are
++  not merely far from their floors; they cannot reach them. The file says so here
+   rather than letting a future reader conclude the bars were simply never
+   crossed.
+ - The aggregate is a count, never a copy of the pruned record: retention exists
+@@ -383,6 +401,6 @@ reason.
+ 
+ - [`concern-activation-policy`](concern-activation-policy.md) — the ladder, the generic reverse triggers, and the `would_fire` shadow mechanism instrument 1 applies.
+ - [`hook-architecture-v1`](hook-architecture-v1.md) — the dispatcher contract, and which hosts carry a `stop` slot at all.
+-- `src/scripts/hooks/turn_end_gate_hook.ts` — the gate, its four detectors, and the two re-entrancy layers Q1 dies on.
++- `src/scripts/hooks/turn_end_gate_hook.ts` — the gate, its five detectors, and the two re-entrancy layers Q1 dies on.
+ - `src/scripts/_lib/turn_end_refusals.ts` — `DETECTOR_IDS`, `RefusalRecord`, and the counts Q2 is read from.
+ - [`condensation-default-kill-criterion`](condensation-default-kill-criterion.md) — the sibling shape: one feature's kill criterion, pre-registered with its decision table.
+diff --git a/src/config/continuity-surface.json b/src/config/continuity-surface.json
+index d5d1c4c19ff5a25ac8b74a8cb43312c4acc3e641..272b771b3e87266d9869f01d83154f8bffbc262a 100644
+--- a/src/config/continuity-surface.json
++++ b/src/config/continuity-surface.json
+@@ -274,6 +274,13 @@
+             "locus": "src/scripts/review_axis_report.ts:209",
+             "reason": "Review-axis report state. Analysis output."
+         },
++        {
++            "id": "review-baseline",
++            "axis": "persistent_continuity_artefacts",
++            "disposition": "excluded",
++            "locus": "src/scripts/_lib/review_baseline.ts:35",
++            "reason": "Start-of-session mutation baseline the end-review nudge subtracts. Two numbers and a timestamp, written once at session_start and read at stop; it carries no continuity across sessions and by construction cannot hold a path, a diff or a file body."
++        },
+         {
+             "id": "routing-telemetry.jsonl",
+             "axis": "persistent_continuity_artefacts",
+diff --git a/src/scripts/_lib/review_baseline.ts b/src/scripts/_lib/review_baseline.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..c86925674f63dc33c2585bb028f49dd9368a22da
+--- /dev/null
++++ b/src/scripts/_lib/review_baseline.ts
+@@ -0,0 +1,235 @@
++/**
++ * Session review baseline — the shape, the path, and the subtraction.
++ *
++ * WHY IT EXISTS. `end_review_nudge_hook` measures "did this session mutate
++ * enough to owe a review" as `git diff --numstat HEAD` plus untracked non-doc
++ * files, and its own header records the defect that reading produces: an
++ * uncommitted change that PREDATES the session is charged to the session. The
++ * header also records why it was not fixed — "no such baseline exists anywhere a
++ * `stop` concern can read it (recording one would be new session-wide state, out
++ * of this roadmap phase's one-concern scope)".
++ *
++ * That reason went stale. `session_start` is bound on seven hosts carrying
++ * fourteen concerns (`hook_manifest.yaml`), so a per-session baseline has a slot
++ * to be written from. The measured cost of leaving it: on an accumulator branch
++ * the nudge fired on 1,771 lines of another session's uncommitted work and
++ * became noise, which is worse than silence — an advisory that always fires is
++ * an advisory nobody reads.
++ *
++ * ONE MODULE FOR BOTH SIDES, deliberately. The writer is a `session_start`
++ * concern and the reader is a `stop` concern; if each owned its own idea of the
++ * path or the field names, the reader would silently find nothing and the whole
++ * mechanism would degrade to today's behaviour with no signal. That is the same
++ * argument `turn_end_refusals.ts` makes for its own shared path, and it is why
++ * `BASELINE_STATE_REL` is here rather than in either hook.
++ *
++ * WHAT IT IS NOT. It is not a change set: no paths, no fingerprints, no patch.
++ * It answers exactly the question the nudge asks — how many non-doc lines were
++ * already dirty when this session began — and nothing else. A path-level ledger
++ * is a bigger object with a bigger privacy surface, and nothing in the nudge
++ * consumes one.
++ */
++import { spawnSync } from 'node:child_process';
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++
++/**
++ * HEAD at this moment, or null.
++ *
++ * It lives HERE rather than in the writer because both sides need it and the
++ * writer already imports from the reader's module: putting it in the hook would
++ * make `end_review_nudge_hook → review_baseline_hook → end_review_nudge_hook` a
++ * cycle. The shared module is the only place with no edge back.
++ *
++ * Null is a real answer and not an error path — a workspace that is not a git
++ * repository, or one with no commit yet, has no HEAD, and `applyBaseline`
++ * compares null to null happily. What it must never do is throw: one caller runs
++ * on session start and the other on the stop path.
++ */
++export function currentHeadSha(cwd: string): string | null {
++    try {
++        const r = spawnSync('git', ['rev-parse', 'HEAD'], { cwd, encoding: 'utf8' });
++        if (r.status !== 0) return null;
++        const out = (r.stdout ?? '').trim();
++        return out === '' ? null : out;
++    } catch {
++        return null;
++    }
++}
++
++/** State directory, relative to a workspace root. */
++export const BASELINE_STATE_REL = path.join('agents', 'runtime', 'state', 'review-baseline');
++
++export function baselineStateDir(workspaceRoot: string): string {
++    return path.join(workspaceRoot, BASELINE_STATE_REL);
++}
++
++export function baselineStateFile(workspaceRoot: string, sessionKey: string): string {
++    return path.join(baselineStateDir(workspaceRoot), `${sessionKey}.json`);
++}
++
++/**
++ * Whether a line count is an exact sum or the capped, guaranteed-over-threshold
++ * approximation `end_review_nudge_hook` returns past `UNTRACKED_FILE_CAP`.
++ *
++ * Structurally identical to that module's `MutationMeasure` and deliberately
++ * NOT imported from it: this module is the shared floor both hooks sit on, and
++ * importing the consumer would put the cycle back that `currentHeadSha` lives
++ * here to avoid.
++ */
++export type BaselineMeasure = 'exact' | 'capped_approximation';
++
++/** What `session_start` records, and `stop` reads back. */
++export interface ReviewBaseline {
++    /** HEAD at session start, or null where there is no repo / no commit yet. */
++    head_sha: string | null;
++    /** Non-doc mutated lines already present when the session began. */
++    baseline_lines: number;
++    /**
++     * Whether `baseline_lines` is exact or the capped approximation.
++     *
++     * It is recorded because subtracting one kind from the other is arithmetic
++     * over two different quantities — the same defect `head_sha` catches on the
++     * other axis. The capped path returns `THRESHOLD + 1 + tracked`, a synthetic
++     * number chosen to be over the bar rather than to be true, so a session that
++     * starts past the cap and then cleans up would have a real `exact` stop
++     * measurement reduced by a number that never counted anything.
++     *
++     * Optional: a record written before this field existed has no measure, and
++     * defaulting it to `exact` would assert the more permissive of the two on no
++     * evidence. Absent reads as unknown and refuses to subtract.
++     */
++    measure?: BaselineMeasure;
++    written_at: string;
++}
++
++/**
++ * Why a `stop` read could not subtract. Each value is written into the
++ * `review_skipped` telemetry row, because a fallback nobody can see is
++ * indistinguishable from the mechanism never having shipped.
++ */
++export type BaselineFallback =
++    | 'absent' // no file — a host without session_start, or a session older than this
++    | 'unreadable' // present and malformed, or unreadable for any non-ENOENT reason
++    | 'head-moved' // the session committed, so the baseline's denominator is gone
++    | 'mixed-measure'; // one side is a capped approximation and the other is not
++
++export type BaselineOutcome =
++    | { readonly applied: true; readonly baseline: ReviewBaseline; readonly lines: number }
++    | { readonly applied: false; readonly fallback: BaselineFallback; readonly lines: number };
++
++export function parseBaseline(raw: string): ReviewBaseline | null {
++    let decoded: unknown;
++    try {
++        decoded = JSON.parse(raw);
++    } catch {
++        return null;
++    }
++    if (typeof decoded !== 'object' || decoded === null || Array.isArray(decoded)) return null;
++    const o = decoded as Record<string, unknown>;
++    const lines = o['baseline_lines'];
++    if (typeof lines !== 'number' || !Number.isFinite(lines) || lines < 0) return null;
++    const written = o['written_at'];
++    if (typeof written !== 'string') return null;
++    const head = o['head_sha'];
++    const measure = o['measure'];
++    return {
++        head_sha: typeof head === 'string' && head !== '' ? head : null,
++        baseline_lines: lines,
++        ...(measure === 'exact' || measure === 'capped_approximation' ? { measure } : {}),
++        written_at: written,
++    };
++}
++
++/**
++ * The baseline, or WHICH of the two not-found states applies.
++ *
++ * `absent` and `unreadable` are kept apart all the way to the telemetry row,
++ * and collapsing them would have been the easy shape: both mean "cannot
++ * subtract", both fall back identically. They are different findings. `absent`
++ * is the expected steady state on a host with no `session_start` slot and on
++ * every session that started before this shipped; `unreadable` is a corrupt
++ * write, and a rate of it above noise is a defect in this mechanism rather than
++ * a property of the host. A single bucket would hide the second inside the
++ * first, which is the population it is smallest against.
++ */
++export function readBaseline(
++    workspaceRoot: string,
++    sessionKey: string,
++): ReviewBaseline | 'absent' | 'unreadable' {
++    const file = baselineStateFile(workspaceRoot, sessionKey);
++    let raw: string;
++    try {
++        raw = fs.readFileSync(file, 'utf-8');
++    } catch (exc) {
++        // ONLY a genuinely missing file is `absent`. Every other IO failure —
++        // EACCES, EISDIR, EMFILE — is a defect in this mechanism, which is the
++        // population `unreadable` exists to make visible; routing them all to
++        // `absent` would bury them inside the one bucket that is legitimately
++        // large on every host without a session_start slot.
++        const code = (exc as NodeJS.ErrnoException | null)?.code;
++        return code === 'ENOENT' ? 'absent' : 'unreadable';
++    }
++    return parseBaseline(raw) ?? 'unreadable';
++}
++
++/**
++ * Apply the baseline to a measured line count.
++ *
++ * FAIL OPEN, NEVER SILENT — the three not-applied branches all return the
++ * UNSUBTRACTED count, so every failure mode of this mechanism degrades to
++ * exactly the behaviour that shipped before it. The alternative, returning zero
++ * or refusing to fire, would let a missing state file silence a genuine review
++ * obligation, and a safety advisory must not be disarmed by its own
++ * instrumentation failing.
++ *
++ * `head-moved` is the branch worth naming, and worth naming honestly: it is
++ * TERMINAL for the session. A session that committed mid-run moved HEAD, so
++ * `git diff HEAD` now measures against a different base than the baseline did
++ * and the subtraction is arithmetic over two different quantities. It is caught
++ * rather than absorbed, because absorbing it would UNDER-report on exactly the
++ * sessions that did the most work — but the baseline is written once per
++ * session and never refreshed, so from the first commit onward that session is
++ * charged for the whole pre-existing dirty tree again. The mechanism's useful
++ * life is "until this session's first commit", which is stated here rather than
++ * discovered later. Re-baselining after a commit is the obvious repair and is
++ * NOT taken here: a second write has to distinguish "HEAD moved because we
++ * committed our own work" from "a peer session committed underneath us", and
++ * nothing in a stop payload answers that.
++ *
++ * `mixed-measure` is the same defect on the third axis. Past
++ * `UNTRACKED_FILE_CAP` the measurement is a synthetic `THRESHOLD + 1 + tracked`
++ * chosen to be over the bar rather than to be true, so subtracting it from — or
++ * out of — an exact count is meaningless in both directions.
++ *
++ * The clamp at zero is not cosmetic either: a session that reverts part of a
++ * pre-existing dirty tree measures below its own baseline, and a negative
++ * comparison against the threshold would read as "no mutation" for a session
++ * that deleted a thousand lines.
++ */
++export function applyBaseline(
++    measuredLines: number,
++    baseline: ReviewBaseline | 'absent' | 'unreadable',
++    headSha: () => string | null,
++    measuredMeasure: BaselineMeasure = 'exact',
++): BaselineOutcome {
++    if (baseline === 'absent' || baseline === 'unreadable') {
++        return { applied: false, fallback: baseline, lines: measuredLines };
++    }
++    // The measure check runs BEFORE the HEAD check because it needs no subprocess.
++    // `headSha` is a thunk for the same reason: on the two fallback branches above
++    // — the steady state on every host without the nudge, and on every session
++    // before its first baseline write — the value is discarded, and evaluating it
++    // eagerly spent an 11-14 ms `git rev-parse` on each of those stops.
++    if (baseline.measure !== measuredMeasure) {
++        return { applied: false, fallback: 'mixed-measure', lines: measuredLines };
++    }
++    if (baseline.head_sha !== headSha()) {
++        return { applied: false, fallback: 'head-moved', lines: measuredLines };
++    }
++    return {
++        applied: true,
++        baseline,
++        lines: Math.max(0, measuredLines - baseline.baseline_lines),
++    };
++}
+diff --git a/src/scripts/_lib/review_skipped_record.ts b/src/scripts/_lib/review_skipped_record.ts
+index 6ecf5a22049cae0c1f6242dff42cd558175ffc79..5e3ee50feed8ec95dbb9dfbc960ca50be23bc7eb 100644
+--- a/src/scripts/_lib/review_skipped_record.ts
++++ b/src/scripts/_lib/review_skipped_record.ts
+@@ -34,6 +34,40 @@
+  */
+ export type MutationMeasure = 'exact' | 'capped_approximation';
+ 
++/**
++ * Whether `diff_lines` had this session's start-of-session baseline subtracted,
++ * and when it did not, WHY.
++ *
++ * A closed four-value enum, never free text, so the privacy floor below still
++ * holds by construction. It exists because the subtraction's three failure
++ * modes all fall back to the unsubtracted count — which is the safe direction
++ * and also an invisible one: without this field, a line reading 1,771 cannot be
++ * told apart from a session that really did mutate 1,771 lines, and the rate at
++ * which the mechanism is degrading would be unmeasurable from its own stream.
++ *
++ * `absent` is the expected steady state on a host with no `session_start` slot
++ * and on every session that predates the baseline concern; `unreadable` is a
++ * corrupt write and a rate above noise is a defect in the mechanism itself;
++ * `head_moved` is a session that committed mid-run, which moves `git diff
++ * HEAD`'s base and makes the subtraction arithmetic over two different
++ * quantities; `mixed_measure` is the same failure on the capped-approximation
++ * axis, where one side is a synthetic over-threshold number rather than a count.
++ */
++export type BaselineApplication =
++    | 'applied'
++    | 'absent'
++    | 'unreadable'
++    | 'head_moved'
++    | 'mixed_measure';
++
++const BASELINE_APPLICATIONS: readonly BaselineApplication[] = [
++    'applied',
++    'absent',
++    'unreadable',
++    'head_moved',
++    'mixed_measure',
++];
++
+ import { appliedIds } from './audit_field_provenance.js';
+ import type { NoFreeForm } from './runtime_journal.js';
+ import { type PrivacyClass } from './privacy_class.js';
+@@ -51,6 +85,13 @@ export interface ReviewSkippedInput {
+     diff_lines: number;
+     /** Whether `diff_lines` is exact or a capped approximation — see above. */
+     mutation_measure: MutationMeasure;
++    /**
++     * Whether the session baseline was subtracted from `diff_lines`, and if not
++     * why. OPTIONAL, and absence is honest rather than a default: a line written
++     * by a producer that predates the baseline mechanism recorded nothing about
++     * it, and writing `absent` for those would assert a measurement nobody made.
++     */
++    baseline?: BaselineApplication | undefined;
+     /** ISO-8601 UTC timestamp; caller supplies (keeps this fn pure/deterministic). */
+     ts: string;
+     /** Stable id (ULID, UUID, or content hash); caller supplies. */
+@@ -103,6 +144,9 @@ export function buildReviewSkippedLine(input: ReviewSkippedInput): BuiltReviewSk
+     }
+     if (!input.ts) errors.push('ts (ISO-8601 UTC) is required');
+     if (!input.id) errors.push('id (ULID, UUID, or content hash) is required');
++    if (input.baseline !== undefined && !BASELINE_APPLICATIONS.includes(input.baseline)) {
++        errors.push(`baseline must be one of ${BASELINE_APPLICATIONS.join(', ')}`);
++    }
+ 
+     if (errors.length) return { line: null, errors };
+ 
+@@ -131,7 +175,14 @@ export function buildReviewSkippedLine(input: ReviewSkippedInput): BuiltReviewSk
+         persona: null,
+         input_kind: 'prompt',
+         type: 'note',
+-        review_skipped: { diff_lines: input.diff_lines, mutation_measure: input.mutation_measure },
++        review_skipped: {
++            diff_lines: input.diff_lines,
++            mutation_measure: input.mutation_measure,
++            // Omitted, not defaulted, when the producer recorded nothing —
++            // audit-log-v1's absent-versus-present split is the same one
++            // `skills_applied` uses above, for the same reason.
++            ...(input.baseline === undefined ? {} : { baseline: input.baseline }),
++        },
+     };
+ 
+     return { line, errors: [] };
+diff --git a/src/scripts/_lib/turn_end_refusals.ts b/src/scripts/_lib/turn_end_refusals.ts
+index 312aa54259e62467b0fa919be2d277817d3575e3..fccf7c1bad221c3be775d46db9d011bd883368f9 100644
+--- a/src/scripts/_lib/turn_end_refusals.ts
++++ b/src/scripts/_lib/turn_end_refusals.ts
+@@ -41,14 +41,15 @@ import * as path from 'node:path';
+ import { read_lockfile } from './installed_lock.js';
+ 
+ /**
+- * The four detectors, in the order the gate runs them.
++ * The five detectors, in the order the gate runs them.
+  *
+  * The roadmap's § 0 names three (A promissory, B language, C verification).
+  * That was true of the draft and is not true of the tree: detector D
+- * (`completion`) landed under round 7 § Phase 1 and runs in the same detector
+- * list as the other three. Counting three would silently drop a detector's
+- * refusals, so the set is read off `DetectorId` in the gate rather than off the
+- * prose.
++ * (`completion`) landed under round 7 § Phase 1, detector E
++ * (`pending-decision`) under road-to-a-question-that-survives-the-turn, and both
++ * run in the same detector list as the first three. Counting three would
++ * silently drop a detector's refusals, so the set is read off `DetectorId` in
++ * the gate rather than off the prose.
+  *
+  * This said "the same UNCONDITIONAL list" until 2026-08-18, which was wrong and
+  * is worth naming rather than quietly rewording: `main()` runs A and D only when
+@@ -63,6 +64,7 @@ export const DETECTOR_IDS = [
+     'language',
+     'verification',
+     'completion',
++    'pending-decision',
+ ] as const;
+ 
+ export type RefusalDetectorId = (typeof DETECTOR_IDS)[number];
+@@ -140,8 +142,23 @@ export interface RefusalRecord {
+     agent_config_version?: string;
+ }
+ 
++/**
++ * A zeroed counter per detector, DERIVED from `DETECTOR_IDS` rather than
++ * written out.
++ *
++ * It was an object literal of four keys until detector E landed, and the
++ * literal is what made adding a detector a silent arithmetic defect rather than
++ * a type error: `DetectorCounts` is `Record<RefusalDetectorId, number>`, the
++ * literal satisfied it for the union of the day, and a fifth id then read back
++ * as `undefined` — so every `+=` over it produced `NaN` and the whole rollup
++ * went quiet. The sibling test asserts that the id list and the gate's union
++ * agree; nothing asserted that the COUNTER covered the list, which is the half
++ * this construction removes the need to assert.
++ */
+ export function emptyCounts(): DetectorCounts {
+-    return { promissory: 0, language: 0, verification: 0, completion: 0 };
++    const out = {} as DetectorCounts;
++    for (const id of DETECTOR_IDS) out[id] = 0;
++    return out;
+ }
+ 
+ function isDetector(v: unknown): v is RefusalDetectorId {
+diff --git a/src/scripts/check_reply_consistency.ts b/src/scripts/check_reply_consistency.ts
+index d6722e318172f9ddf85e8f089584677a38aaadc9..d0ae0dbe03f452dd31cf1f7ec84d819194e3efc0 100644
+--- a/src/scripts/check_reply_consistency.ts
++++ b/src/scripts/check_reply_consistency.ts
+@@ -143,6 +143,55 @@ export function find_option_blocks(text: string): OptionBlock[] {
+     return blocks;
+ }
+ 
++/** A recommendation line found in a block's adjacency window. */
++export interface RecommendationLine {
++    /** 1-based line of the recommendation. */
++    line: number;
++    /** The number it names. Not necessarily one of the block's options. */
++    num: number;
++}
++
++/**
++ * The recommendation line(s) sitting in ONE block's adjacency window.
++ *
++ * Extracted from `check_reply` rather than copied, because it has a second
++ * caller: `turn_end_gate_hook`'s `pending-decision` detector needs the same
++ * question this answers — is this numbered block an ASK, or is it a narrative
++ * list? Iron Law 1 says the recommendation line IS the ask, so a block without
++ * one was never a decision put to the user.
++ *
++ * That distinction is not decoration. Replayed over this repository's own 592
++ * assistant turns, a detector keyed on the block alone fired 29 times and 8 of
++ * those blocks carried no recommendation line anywhere near them — plans,
++ * findings lists, ordinary enumerations. Requiring the line removes that whole
++ * class, and it removes it by applying the rule the gate already cites rather
++ * than by adding a heuristic beside it.
++ *
++ * Returns every recommendation in the window, not the first: `check_reply`
++ * treats two as its own finding, and a caller that only wanted existence can
++ * read `.length > 0`.
++ */
++export function recommendationsUnder(text: string, block: OptionBlock): RecommendationLine[] {
++    const lines = mask_fences(_splitlines(text));
++    const recs: RecommendationLine[] = [];
++    let inspected = 0;
++    for (let idx = block.endLine; idx < lines.length && inspected < REC_ADJACENCY_WINDOW; idx++) {
++        const line = lines[idx]!;
++        if (line.trim() === '') {
++            continue; // blank lines do not consume the adjacency window
++        }
++        if (HEADING_RE.test(line) || OPTION_LINE_RE.test(line)) {
++            break; // a new heading or a new options block ends this block's window
++        }
++        inspected += 1;
++        const m = REC_LINE_RE.exec(line);
++        if (m) {
++            recs.push({ line: idx + 1, num: parseInt(m[1]!, 10) });
++        }
++    }
++    return recs;
++}
++
+ /**
+  * Core check — the exported function tests drive. Returns all findings for
+  * one reply draft; empty array = the draft is consistent.
+@@ -166,22 +215,7 @@ export function check_reply(text: string): Finding[] {
+     // Per-block: exactly one adjacent recommendation line, number in range.
+     const blocks = find_option_blocks(text);
+     for (const block of blocks) {
+-        const recs: Array<{ line: number; num: number }> = [];
+-        let inspected = 0;
+-        for (let idx = block.endLine; idx < lines.length && inspected < REC_ADJACENCY_WINDOW; idx++) {
+-            const line = lines[idx]!;
+-            if (line.trim() === '') {
+-                continue; // blank lines do not consume the adjacency window
+-            }
+-            if (HEADING_RE.test(line) || OPTION_LINE_RE.test(line)) {
+-                break; // a new heading or a new options block ends this block's window
+-            }
+-            inspected += 1;
+-            const m = REC_LINE_RE.exec(line);
+-            if (m) {
+-                recs.push({ line: idx + 1, num: parseInt(m[1]!, 10) });
+-            }
+-        }
++        const recs = recommendationsUnder(text, block);
+         if (recs.length === 0) {
+             findings.push({
+                 line: block.startLine,
+diff --git a/src/scripts/hook_manifest.json b/src/scripts/hook_manifest.json
+index 22cd85c511f533cc37bab0c7c8466afd242c9b41..04652214923f96f6f313eb2288e5b41ed4742a1f 100644
+--- a/src/scripts/hook_manifest.json
++++ b/src/scripts/hook_manifest.json
+@@ -1 +1 @@
+-{"fingerprint":"33e5cccd:90644","manifest":{"schema_version":1,"concerns":{"chat-history":{"script":"src/scripts/chat_history.ts","args":["hook-dispatch"],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["result"]},"hot-context":{"script":"src/scripts/hot_context_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"handoff-context":{"script":"src/scripts/handoff_context_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"roadmap-progress":{"script":"src/scripts/roadmap_progress_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"onboarding-gate":{"script":"src/scripts/onboarding_gate_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"context-hygiene":{"script":"src/scripts/context_hygiene_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"verify-before-complete":{"script":"src/scripts/before_complete_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input","result"]},"ship-diff-volume":{"script":"src/scripts/hooks/ship_diff_volume_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"minimal-safe-diff":{"script":"src/scripts/minimal_safe_diff_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"injection-scan":{"script":"src/scripts/injection_scan_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input","result"]},"block-no-verify":{"script":"src/scripts/hooks/block_no_verify.ts","args":[],"fail_closed":true,"severity":"blocking","needs_payload_bodies":["input"]},"block-kernel-rule-writes":{"script":"src/scripts/hooks/block_kernel_rule_writes.ts","args":[],"fail_closed":true,"severity":"blocking","needs_payload_bodies":["input"]},"one-question-per-ask":{"script":"src/scripts/hooks/one_question_per_ask_hook.ts","args":[],"fail_closed":false,"severity":"blocking","tools":["AskUserQuestion","AskQuestion","UserQuestion","ask_user_question","ask_question","user_question"],"needs_payload_bodies":["input"]},"block-speaking-inbox-dir":{"script":"src/scripts/hooks/block_speaking_inbox_dir.ts","args":[],"fail_closed":false,"severity":"blocking","needs_payload_bodies":["input"]},"block-config-weakening":{"script":"src/scripts/hooks/block_config_weakening.ts","args":[],"fail_closed":false,"severity":"blocking","needs_payload_bodies":["input"]},"rtk-wrap":{"script":"src/scripts/hooks/rtk_wrap_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"design-slop":{"script":"src/scripts/hooks/design_slop_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"design-pass":{"script":"src/scripts/hooks/design_pass_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"design-pass-stop":{"script":"src/scripts/hooks/design_pass_hook.ts","args":["--slot","stop"],"fail_closed":false,"severity":"advisory"},"ui-route-nudge":{"script":"src/scripts/hooks/ui_route_nudge_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"suggestion-capture":{"script":"src/scripts/hooks/suggestion_capture_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"chain-nudge":{"script":"src/scripts/hooks/chain_nudge_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"code-graph-context":{"script":"src/scripts/hooks/code_graph_context_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Grep","Glob","Read"],"needs_payload_bodies":["input"]},"memory-learn":{"script":"src/scripts/memory_learn_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"first-run-gate":{"script":"src/scripts/first_run_gate_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"profile-staleness":{"script":"src/scripts/profile_staleness_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"wrapper-freshness":{"script":"src/scripts/wrapper_freshness_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"surface-probe":{"script":"src/scripts/surface_probe_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"team-review-gate":{"script":"src/scripts/team_review_gate_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"pr-url-reminder":{"script":"src/scripts/pr_url_reminder_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input","result"]},"push-settle":{"script":"src/scripts/hooks/push_settle_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input","result"]},"language-mirror":{"script":"src/scripts/language_mirror_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"git-authorization":{"script":"src/scripts/git_authorization_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"evidence-independence":{"script":"src/scripts/hooks/evidence_independence.ts","args":[],"fail_closed":false,"severity":"blocking","needs_payload_bodies":["input"]},"session-canary":{"script":"src/scripts/session_canary_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"council-availability":{"script":"src/scripts/council_availability_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"telemetry-disclosure":{"script":"src/scripts/telemetry_disclosure_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"telemetry-flush":{"script":"src/scripts/hooks/telemetry_flush_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"self-repair":{"script":"src/scripts/self_repair_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"session-register":{"script":"src/scripts/session_register_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"orchestration-record":{"script":"src/scripts/hooks/orchestration_record_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Agent","Task"],"needs_payload_bodies":["input","result"]},"telemetry-usage":{"script":"src/scripts/hooks/telemetry_usage_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Skill"],"needs_payload_bodies":["input"]},"delegation-nudge":{"script":"src/scripts/hooks/delegation_nudge_hook.ts","args":[],"fail_closed":false,"severity":"advisory","nudge_rank":1},"skill-route":{"script":"src/scripts/hooks/skill_route_hook.ts","args":[],"fail_closed":false,"severity":"advisory","nudge_rank":2},"rule-inject":{"script":"src/scripts/hooks/rule_inject_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"end-review-nudge":{"script":"src/scripts/hooks/end_review_nudge_hook.ts","args":[],"fail_closed":false,"severity":"advisory","skip_on_refusal_retry":true},"turn-end-gate":{"script":"src/scripts/hooks/turn_end_gate_hook.ts","args":[],"fail_closed":false,"severity":"blocking"},"comment-discipline":{"script":"src/scripts/hooks/comment_discipline_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Write","Edit"],"needs_payload_bodies":["input"]},"edit-shape":{"script":"src/scripts/hooks/edit_shape_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Write"],"needs_payload_bodies":["input"]},"reread-guard":{"script":"src/scripts/hooks/reread_guard_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Read","Edit","Write"],"needs_payload_bodies":["input"]},"session-eol":{"script":"src/scripts/hooks/session_eol_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"run-continuation":{"script":"src/scripts/hooks/run_continuation_hook.ts","args":[],"fail_closed":false,"severity":"blocking"},"interruption-ledger":{"script":"src/scripts/hooks/interruption_ledger_hook.ts","args":[],"fail_closed":false,"severity":"advisory","skip_on_refusal_retry":true},"subagent-ledger":{"script":"src/scripts/hooks/subagent_ledger_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"tool-result-bytes":{"script":"src/scripts/hooks/tool_result_bytes_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"spawn-guard-shadow":{"script":"src/scripts/hooks/spawn_guard_shadow_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Agent","Task"]},"source-first-gate":{"script":"src/scripts/hooks/source_first_gate_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"journal-record":{"script":"src/scripts/hooks/journal_record_hook.ts","args":[],"fail_closed":false,"severity":"advisory"}},"roles":{"worker":{"drop":["delegation-nudge","skill-route","end-review-nudge","council-availability","team-review-gate","self-repair","session-eol","interruption-ledger"]}},"platforms":{"augment":{"session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress","telemetry-flush"],"stop":["chat-history","verify-before-complete","self-repair","session-register","roadmap-progress","design-pass-stop"],"pre_tool_use":["block-no-verify","evidence-independence","block-kernel-rule-writes","block-config-weakening","block-speaking-inbox-dir","rtk-wrap","design-slop","ui-route-nudge","code-graph-context","chain-nudge","ship-diff-volume","reread-guard"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","push-settle","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape","comment-discipline","design-pass"]},"claude":{"session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register","journal-record"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress","telemetry-flush","journal-record"],"stop":["chat-history","verify-before-complete","team-review-gate","end-review-nudge","turn-end-gate","self-repair","session-register","session-eol","interruption-ledger","roadmap-progress","design-pass-stop","suggestion-capture","journal-record","run-continuation"],"user_prompt_submit":["chat-history","verify-before-complete","minimal-safe-diff","language-mirror","delegation-nudge","skill-route","git-authorization","session-canary","self-repair","session-register","rule-inject","suggestion-capture","journal-record"],"pre_tool_use":["block-no-verify","evidence-independence","block-kernel-rule-writes","block-config-weakening","block-speaking-inbox-dir","one-question-per-ask","rtk-wrap","design-slop","ui-route-nudge","code-graph-context","chain-nudge","ship-diff-volume","reread-guard","spawn-guard-shadow","source-first-gate"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","push-settle","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape","comment-discipline","language-mirror","design-pass","journal-record"],"pre_compact":["language-mirror","rule-inject","journal-record"],"subagent_start":["subagent-ledger","journal-record"],"subagent_stop":["subagent-ledger","journal-record"]},"cowork":{"session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress","telemetry-flush"],"stop":["chat-history","verify-before-complete","self-repair","session-register","roadmap-progress","design-pass-stop"],"user_prompt_submit":["chat-history","verify-before-complete","minimal-safe-diff","language-mirror","git-authorization","session-canary","self-repair","session-register"],"pre_tool_use":["block-no-verify","evidence-independence","block-kernel-rule-writes","block-config-weakening","block-speaking-inbox-dir","rtk-wrap","design-slop","ui-route-nudge","code-graph-context","chain-nudge","ship-diff-volume","reread-guard","spawn-guard-shadow","source-first-gate"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","push-settle","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape","comment-discipline","design-pass"],"subagent_start":["subagent-ledger"],"subagent_stop":["subagent-ledger"]},"cursor":{"session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress","telemetry-flush"],"stop":["chat-history","verify-before-complete","self-repair","session-register","roadmap-progress","design-pass-stop"],"user_prompt_submit":["chat-history","verify-before-complete","minimal-safe-diff","language-mirror","git-authorization","session-canary","self-repair","session-register"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","push-settle","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape","comment-discipline","design-pass"]},"cline":{"session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress","telemetry-flush"],"stop":["chat-history","verify-before-complete","self-repair","session-register","roadmap-progress","design-pass-stop"],"user_prompt_submit":["chat-history","verify-before-complete","minimal-safe-diff","language-mirror","git-authorization","session-canary","self-repair","session-register"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","push-settle","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape","comment-discipline","design-pass"]},"windsurf":{"session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","profile-staleness","wrapper-freshness","surface-probe","session-register"],"stop":["chat-history","verify-before-complete","self-repair","session-register","design-pass-stop"],"user_prompt_submit":["chat-history","verify-before-complete","language-mirror","git-authorization","session-canary","self-repair","session-register"]},"gemini":{"session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress","telemetry-flush"],"stop":["chat-history","verify-before-complete","self-repair","session-register","roadmap-progress","design-pass-stop"],"user_prompt_submit":["chat-history","verify-before-complete","minimal-safe-diff","language-mirror","git-authorization","session-canary","self-repair","session-register"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","push-settle","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape","comment-discipline","design-pass"]},"copilot":{"fallback_only":true}},"native_event_aliases":{"augment":{"SessionStart":"session_start","SessionEnd":"session_end","Stop":"stop","PostToolUse":"post_tool_use","PreToolUse":"pre_tool_use"},"claude":{"SessionStart":"session_start","SessionEnd":"session_end","Stop":"stop","UserPromptSubmit":"user_prompt_submit","PostToolUse":"post_tool_use","PreToolUse":"pre_tool_use","PreCompact":"pre_compact","SubagentStart":"subagent_start","SubagentStop":"subagent_stop"},"cowork":{"SessionStart":"session_start","SessionEnd":"session_end","Stop":"stop","UserPromptSubmit":"user_prompt_submit","PostToolUse":"post_tool_use","PreToolUse":"pre_tool_use","PreCompact":"pre_compact","SubagentStart":"subagent_start","SubagentStop":"subagent_stop"},"cursor":{"sessionStart":"session_start","sessionEnd":"session_end","stop":"stop","beforeSubmitPrompt":"user_prompt_submit","postToolUse":"post_tool_use","preToolUse":"pre_tool_use","preCompact":"pre_compact"},"cline":{"TaskStart":"session_start","TaskResume":"session_start","TaskComplete":"session_end","TaskCancel":"stop","UserPromptSubmit":"user_prompt_submit","PostToolUse":"post_tool_use","PreToolUse":"pre_tool_use","PreCompact":"pre_compact"},"windsurf":{"pre_user_prompt":"user_prompt_submit","post_cascade_response":"stop","post_setup_worktree":"session_start"},"gemini":{"SessionStart":"session_start","SessionEnd":"session_end","BeforeAgent":"user_prompt_submit","AfterAgent":"stop","BeforeTool":"pre_tool_use","AfterTool":"post_tool_use"}}}}
+\ No newline at end of file
++{"fingerprint":"98bf3b44:92876","manifest":{"schema_version":1,"concerns":{"chat-history":{"script":"src/scripts/chat_history.ts","args":["hook-dispatch"],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["result"]},"hot-context":{"script":"src/scripts/hot_context_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"handoff-context":{"script":"src/scripts/handoff_context_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"roadmap-progress":{"script":"src/scripts/roadmap_progress_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"onboarding-gate":{"script":"src/scripts/onboarding_gate_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"context-hygiene":{"script":"src/scripts/context_hygiene_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"verify-before-complete":{"script":"src/scripts/before_complete_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input","result"]},"ship-diff-volume":{"script":"src/scripts/hooks/ship_diff_volume_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"minimal-safe-diff":{"script":"src/scripts/minimal_safe_diff_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"injection-scan":{"script":"src/scripts/injection_scan_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input","result"]},"block-no-verify":{"script":"src/scripts/hooks/block_no_verify.ts","args":[],"fail_closed":true,"severity":"blocking","needs_payload_bodies":["input"]},"block-kernel-rule-writes":{"script":"src/scripts/hooks/block_kernel_rule_writes.ts","args":[],"fail_closed":true,"severity":"blocking","needs_payload_bodies":["input"]},"one-question-per-ask":{"script":"src/scripts/hooks/one_question_per_ask_hook.ts","args":[],"fail_closed":false,"severity":"blocking","tools":["AskUserQuestion","AskQuestion","UserQuestion","ask_user_question","ask_question","user_question"],"needs_payload_bodies":["input"]},"block-speaking-inbox-dir":{"script":"src/scripts/hooks/block_speaking_inbox_dir.ts","args":[],"fail_closed":false,"severity":"blocking","needs_payload_bodies":["input"]},"block-config-weakening":{"script":"src/scripts/hooks/block_config_weakening.ts","args":[],"fail_closed":false,"severity":"blocking","needs_payload_bodies":["input"]},"rtk-wrap":{"script":"src/scripts/hooks/rtk_wrap_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"design-slop":{"script":"src/scripts/hooks/design_slop_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"design-pass":{"script":"src/scripts/hooks/design_pass_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"design-pass-stop":{"script":"src/scripts/hooks/design_pass_hook.ts","args":["--slot","stop"],"fail_closed":false,"severity":"advisory"},"ui-route-nudge":{"script":"src/scripts/hooks/ui_route_nudge_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"suggestion-capture":{"script":"src/scripts/hooks/suggestion_capture_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"chain-nudge":{"script":"src/scripts/hooks/chain_nudge_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"code-graph-context":{"script":"src/scripts/hooks/code_graph_context_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Grep","Glob","Read"],"needs_payload_bodies":["input"]},"memory-learn":{"script":"src/scripts/memory_learn_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"first-run-gate":{"script":"src/scripts/first_run_gate_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"profile-staleness":{"script":"src/scripts/profile_staleness_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"wrapper-freshness":{"script":"src/scripts/wrapper_freshness_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"surface-probe":{"script":"src/scripts/surface_probe_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"team-review-gate":{"script":"src/scripts/team_review_gate_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"pr-url-reminder":{"script":"src/scripts/pr_url_reminder_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input","result"]},"push-settle":{"script":"src/scripts/hooks/push_settle_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input","result"]},"language-mirror":{"script":"src/scripts/language_mirror_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"git-authorization":{"script":"src/scripts/git_authorization_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"evidence-independence":{"script":"src/scripts/hooks/evidence_independence.ts","args":[],"fail_closed":false,"severity":"blocking","needs_payload_bodies":["input"]},"session-canary":{"script":"src/scripts/session_canary_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"council-availability":{"script":"src/scripts/council_availability_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"telemetry-disclosure":{"script":"src/scripts/telemetry_disclosure_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"telemetry-flush":{"script":"src/scripts/hooks/telemetry_flush_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"self-repair":{"script":"src/scripts/self_repair_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"session-register":{"script":"src/scripts/session_register_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"orchestration-record":{"script":"src/scripts/hooks/orchestration_record_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Agent","Task"],"needs_payload_bodies":["input","result"]},"telemetry-usage":{"script":"src/scripts/hooks/telemetry_usage_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Skill"],"needs_payload_bodies":["input"]},"delegation-nudge":{"script":"src/scripts/hooks/delegation_nudge_hook.ts","args":[],"fail_closed":false,"severity":"advisory","nudge_rank":1},"skill-route":{"script":"src/scripts/hooks/skill_route_hook.ts","args":[],"fail_closed":false,"severity":"advisory","nudge_rank":2},"rule-inject":{"script":"src/scripts/hooks/rule_inject_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"end-review-nudge":{"script":"src/scripts/hooks/end_review_nudge_hook.ts","args":[],"fail_closed":false,"severity":"advisory","skip_on_refusal_retry":true},"review-baseline":{"script":"src/scripts/hooks/review_baseline_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"turn-end-gate":{"script":"src/scripts/hooks/turn_end_gate_hook.ts","args":[],"fail_closed":false,"severity":"blocking"},"comment-discipline":{"script":"src/scripts/hooks/comment_discipline_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Write","Edit"],"needs_payload_bodies":["input"]},"edit-shape":{"script":"src/scripts/hooks/edit_shape_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Write"],"needs_payload_bodies":["input"]},"reread-guard":{"script":"src/scripts/hooks/reread_guard_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Read","Edit","Write"],"needs_payload_bodies":["input"]},"session-eol":{"script":"src/scripts/hooks/session_eol_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"run-continuation":{"script":"src/scripts/hooks/run_continuation_hook.ts","args":[],"fail_closed":false,"severity":"blocking"},"interruption-ledger":{"script":"src/scripts/hooks/interruption_ledger_hook.ts","args":[],"fail_closed":false,"severity":"advisory","skip_on_refusal_retry":true},"subagent-ledger":{"script":"src/scripts/hooks/subagent_ledger_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"tool-result-bytes":{"script":"src/scripts/hooks/tool_result_bytes_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"spawn-guard-shadow":{"script":"src/scripts/hooks/spawn_guard_shadow_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Agent","Task"]},"source-first-gate":{"script":"src/scripts/hooks/source_first_gate_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"journal-record":{"script":"src/scripts/hooks/journal_record_hook.ts","args":[],"fail_closed":false,"severity":"advisory"}},"roles":{"worker":{"drop":["delegation-nudge","skill-route","end-review-nudge","review-baseline","council-availability","team-review-gate","self-repair","session-eol","interruption-ledger"]}},"platforms":{"augment":{"session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress","telemetry-flush"],"stop":["chat-history","verify-before-complete","self-repair","session-register","roadmap-progress","design-pass-stop"],"pre_tool_use":["block-no-verify","evidence-independence","block-kernel-rule-writes","block-config-weakening","block-speaking-inbox-dir","rtk-wrap","design-slop","ui-route-nudge","code-graph-context","chain-nudge","ship-diff-volume","reread-guard"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","push-settle","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape","comment-discipline","design-pass"]},"claude":{"session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register","review-baseline","journal-record"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress","telemetry-flush","journal-record"],"stop":["chat-history","verify-before-complete","team-review-gate","end-review-nudge","turn-end-gate","self-repair","session-register","session-eol","interruption-ledger","roadmap-progress","design-pass-stop","suggestion-capture","journal-record","run-continuation"],"user_prompt_submit":["chat-history","verify-before-complete","minimal-safe-diff","language-mirror","delegation-nudge","skill-route","git-authorization","session-canary","self-repair","session-register","rule-inject","suggestion-capture","journal-record"],"pre_tool_use":["block-no-verify","evidence-independence","block-kernel-rule-writes","block-config-weakening","block-speaking-inbox-dir","one-question-per-ask","rtk-wrap","design-slop","ui-route-nudge","code-graph-context","chain-nudge","ship-diff-volume","reread-guard","spawn-guard-shadow","source-first-gate"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","push-settle","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape","comment-discipline","language-mirror","design-pass","journal-record"],"pre_compact":["language-mirror","rule-inject","journal-record"],"subagent_start":["subagent-ledger","journal-record"],"subagent_stop":["subagent-ledger","journal-record"]},"cowork":{"session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress","telemetry-flush"],"stop":["chat-history","verify-before-complete","self-repair","session-register","roadmap-progress","design-pass-stop"],"user_prompt_submit":["chat-history","verify-before-complete","minimal-safe-diff","language-mirror","git-authorization","session-canary","self-repair","session-register"],"pre_tool_use":["block-no-verify","evidence-independence","block-kernel-rule-writes","block-config-weakening","block-speaking-inbox-dir","rtk-wrap","design-slop","ui-route-nudge","code-graph-context","chain-nudge","ship-diff-volume","reread-guard","spawn-guard-shadow","source-first-gate"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","push-settle","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape","comment-discipline","design-pass"],"subagent_start":["subagent-ledger"],"subagent_stop":["subagent-ledger"]},"cursor":{"session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress","telemetry-flush"],"stop":["chat-history","verify-before-complete","self-repair","session-register","roadmap-progress","design-pass-stop"],"user_prompt_submit":["chat-history","verify-before-complete","minimal-safe-diff","language-mirror","git-authorization","session-canary","self-repair","session-register"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","push-settle","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape","comment-discipline","design-pass"]},"cline":{"session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress","telemetry-flush"],"stop":["chat-history","verify-before-complete","self-repair","session-register","roadmap-progress","design-pass-stop"],"user_prompt_submit":["chat-history","verify-before-complete","minimal-safe-diff","language-mirror","git-authorization","session-canary","self-repair","session-register"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","push-settle","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape","comment-discipline","design-pass"]},"windsurf":{"session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","profile-staleness","wrapper-freshness","surface-probe","session-register"],"stop":["chat-history","verify-before-complete","self-repair","session-register","design-pass-stop"],"user_prompt_submit":["chat-history","verify-before-complete","language-mirror","git-authorization","session-canary","self-repair","session-register"]},"gemini":{"session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress","telemetry-flush"],"stop":["chat-history","verify-before-complete","self-repair","session-register","roadmap-progress","design-pass-stop"],"user_prompt_submit":["chat-history","verify-before-complete","minimal-safe-diff","language-mirror","git-authorization","session-canary","self-repair","session-register"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","push-settle","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape","comment-discipline","design-pass"]},"copilot":{"fallback_only":true}},"native_event_aliases":{"augment":{"SessionStart":"session_start","SessionEnd":"session_end","Stop":"stop","PostToolUse":"post_tool_use","PreToolUse":"pre_tool_use"},"claude":{"SessionStart":"session_start","SessionEnd":"session_end","Stop":"stop","UserPromptSubmit":"user_prompt_submit","PostToolUse":"post_tool_use","PreToolUse":"pre_tool_use","PreCompact":"pre_compact","SubagentStart":"subagent_start","SubagentStop":"subagent_stop"},"cowork":{"SessionStart":"session_start","SessionEnd":"session_end","Stop":"stop","UserPromptSubmit":"user_prompt_submit","PostToolUse":"post_tool_use","PreToolUse":"pre_tool_use","PreCompact":"pre_compact","SubagentStart":"subagent_start","SubagentStop":"subagent_stop"},"cursor":{"sessionStart":"session_start","sessionEnd":"session_end","stop":"stop","beforeSubmitPrompt":"user_prompt_submit","postToolUse":"post_tool_use","preToolUse":"pre_tool_use","preCompact":"pre_compact"},"cline":{"TaskStart":"session_start","TaskResume":"session_start","TaskComplete":"session_end","TaskCancel":"stop","UserPromptSubmit":"user_prompt_submit","PostToolUse":"post_tool_use","PreToolUse":"pre_tool_use","PreCompact":"pre_compact"},"windsurf":{"pre_user_prompt":"user_prompt_submit","post_cascade_response":"stop","post_setup_worktree":"session_start"},"gemini":{"SessionStart":"session_start","SessionEnd":"session_end","BeforeAgent":"user_prompt_submit","AfterAgent":"stop","BeforeTool":"pre_tool_use","AfterTool":"post_tool_use"}}}}
+\ No newline at end of file
+diff --git a/src/scripts/hook_manifest.yaml b/src/scripts/hook_manifest.yaml
+index 96f47bba544143a60fd3c707f7b58abf115437e9..a415bad6969e59abb1858ca461e1c354534a6d5e 100644
+--- a/src/scripts/hook_manifest.yaml
++++ b/src/scripts/hook_manifest.yaml
+@@ -919,13 +919,49 @@ concerns:
+     # about it. The saving is the module load rather than a large read, which is
+     # the smaller of the two flags below it and is stated as such.
+     skip_on_refusal_retry: true
++  # road-to-a-question-that-survives-the-turn Phase 2 — the session baseline
++  # `end-review-nudge` subtracts. CAPTURE ONLY: one small JSON file per session
++  # under agents/runtime/state/review-baseline/ (gitignored), holding HEAD and
++  # the count of non-doc lines already dirty when the session began. It emits no
++  # context, never warns, and always exits 0.
++  #
++  # WHY. `end_review_nudge_hook`'s own header records that a dirty tree
++  # predating the session is charged to the session, and names the reason it was
++  # left: "no such baseline exists anywhere a `stop` concern can read it". That
++  # was true of a one-concern phase and stale by the time it mattered —
++  # session_start is bound on seven hosts here. Measured cost of leaving it: on
++  # an accumulator branch the nudge read 1,771 lines of two crashed sessions'
++  # uncommitted work and fired every turn.
++  #
++  # The counting function is IMPORTED from the nudge, so the baseline and the
++  # measurement cannot drift on what a non-doc mutated line is.
++  #
++  # BOUND ON `claude` ALONE, and narrowly on purpose. Seven hosts carry
++  # session_start, but `end-review-nudge` — the only reader — is bound on
++  # claude's stop slot and nowhere else (cowork refuses it explicitly). Binding
++  # the writer everywhere would spend ~91 ms of git per session start on six
++  # hosts to produce a file nothing opens. It is dropped for the `worker` role
++  # alongside its reader, for the same reason. Where the baseline is absent the
++  # nudge reads `absent` and degrades to exactly its previous behaviour,
++  # recorded in its telemetry row rather than inferred. fail_closed: false.
++  review-baseline:
++    script: src/scripts/hooks/review_baseline_hook.ts
++    args: []
++    fail_closed: false
++    severity: advisory
+   # road-to-conformance-round5 Phase 3 — the FIRST concern that can refuse a
+   # turn-END. Round 5 measured the reason: both blocking carriers reached zero
+   # violations, neither advisory carrier did, and 19 language violations
+   # survived a pin that had fired 26-35 seconds earlier. Refusal-capable
+   # intercepts enforce; context injection requests.
+   #
+-  # Two detectors on one guard — promissory closing (20 measured) and language
++  # FIVE detectors on one guard — promissory closing, language mismatch,
++  # unverified edit, unsettled completion claim, and a decision the turn asked
++  # and then dropped. This said "Two" and named the first pair, which was true
++  # of the concern on the day it was registered and of nothing since; the
++  # authority is `DetectorId` in the hook, and the demotion contract carries the
++  # per-detector bars. Original note, kept because its reason still holds:
++  # promissory closing (20 measured) and language
+   # mismatch (19 measured) — because building the unsafe part twice is how a
+   # second detector becomes a second outage.
+   #
+@@ -1272,7 +1308,7 @@ roles:
+     # contacts, so a worker turn that ends in a question to its orchestrator
+     # would be recorded as a contact that never reached a human, inflating the
+     # exact baseline Phase 0 pre-registers.
+-    drop: [delegation-nudge, skill-route, end-review-nudge, council-availability, team-review-gate, self-repair, session-eol, interruption-ledger]
++    drop: [delegation-nudge, skill-route, end-review-nudge, review-baseline, council-availability, team-review-gate, self-repair, session-eol, interruption-ledger]
+ 
+ platforms:
+   augment:
+@@ -1283,7 +1319,7 @@ platforms:
+     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape, comment-discipline, design-pass]
+ 
+   claude:
+-    session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register, journal-record]
++    session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register, review-baseline, journal-record]
+     session_end:      [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush, journal-record]
+     stop:             [chat-history, verify-before-complete, team-review-gate, end-review-nudge, turn-end-gate, self-repair, session-register, session-eol, interruption-ledger, roadmap-progress, design-pass-stop, suggestion-capture, journal-record, run-continuation]
+     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, skill-route, git-authorization, session-canary, self-repair, session-register, rule-inject, suggestion-capture, journal-record]
+diff --git a/src/scripts/hooks/concern_registry.ts b/src/scripts/hooks/concern_registry.ts
+index 7fe9d144ed11c15af1b5c4972611a4fa6ccf69ee..4697eff08a69e998de0be499d5bff2d0ba1a9251 100644
+--- a/src/scripts/hooks/concern_registry.ts
++++ b/src/scripts/hooks/concern_registry.ts
+@@ -69,6 +69,7 @@ import { main as delegationNudgeMain } from './delegation_nudge_hook.js';
+ import { main as skillRouteMain } from './skill_route_hook.js';
+ import { main as ruleInjectMain } from './rule_inject_hook.js';
+ import { main as endReviewNudgeMain } from './end_review_nudge_hook.js';
++import { main as reviewBaselineMain } from './review_baseline_hook.js';
+ import { main as turnEndGateMain } from './turn_end_gate_hook.js';
+ import { main as editShapeMain } from './edit_shape_hook.js';
+ import { main as commentDisciplineMain } from './comment_discipline_hook.js';
+@@ -132,6 +133,7 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
+     'src/scripts/hooks/skill_route_hook.ts': skillRouteMain as ConcernMain,
+     'src/scripts/hooks/rule_inject_hook.ts': ruleInjectMain as ConcernMain,
+     'src/scripts/hooks/end_review_nudge_hook.ts': endReviewNudgeMain as ConcernMain,
++    'src/scripts/hooks/review_baseline_hook.ts': reviewBaselineMain as ConcernMain,
+     'src/scripts/hooks/turn_end_gate_hook.ts': turnEndGateMain as ConcernMain,
+     'src/scripts/hooks/edit_shape_hook.ts': editShapeMain as ConcernMain,
+     'src/scripts/hooks/comment_discipline_hook.ts': commentDisciplineMain as ConcernMain,
+diff --git a/src/scripts/hooks/end_review_nudge_hook.ts b/src/scripts/hooks/end_review_nudge_hook.ts
+index dd17ebb17a4c1e2cc80353d58fe35f9e29d87f22..735cdd2a7227325cc77d51e0ada5723cd6f31285 100644
+--- a/src/scripts/hooks/end_review_nudge_hook.ts
++++ b/src/scripts/hooks/end_review_nudge_hook.ts
+@@ -28,17 +28,26 @@
+  * (`git ls-files --others --exclude-standard`, each one READ from the
+  * filesystem rather than diffed in a subprocess — see "Untracked files" below;
+  * fixes a review finding, F6, that a brand-new file was previously invisible
+- * to this count entirely). Chosen over a session-start SHA/timestamp
+- * baseline because no such baseline exists anywhere a `stop` concern can
+- * read it (recording one would be new session-wide state, out of this
+- * roadmap phase's one-concern scope). Two consequences, stated rather than
+- * hidden:
+- *   - Uncommitted changes that PREDATE this session (a dirty working tree
+- *     the user already had) are counted as if they were this session's
+- *     mutation. Per `commit-policy`, an agent almost never commits without
+- *     explicit permission, so "uncommitted since HEAD" is usually a good
+- *     proxy for "mutated this session" in practice — but it is a proxy, not
+- *     an exact measure.
++ * to this count entirely).
++ *
++ * SINCE 2026-09-11 THIS READING IS BASELINE-CORRECTED ON `claude`, and this
++ * block used to say the opposite — that a session-start baseline was rejected
++ * "because no such baseline exists anywhere a `stop` concern can read it". That
++ * was true of a one-concern roadmap phase and stale by the time it mattered:
++ * `session_start` is bound on seven hosts, and `review-baseline` now records
++ * HEAD plus the already-dirty non-doc line count there. `_lib/review_baseline.ts`
++ * cites this paragraph as the defect it closes, so leaving the paragraph
++ * standing would have made the two files contradict each other.
++ *
++ * What the correction does and does not cover:
++ *   - Uncommitted changes that PREDATE the session are SUBTRACTED where a
++ *     baseline is readable and its HEAD and measure still match. Absent,
++ *     unreadable, head-moved or mixed-measure → the unsubtracted count, with
++ *     the reason carried in the `review_skipped` row.
++ *   - The baseline is written once per session and never refreshed, so from a
++ *     session's first commit onward `head-moved` holds and the pre-existing
++ *     tree is charged again. Over-reporting is the safe direction; the limit is
++ *     real and is stated in `review_baseline.ts` rather than implied away.
+  *   - A session that DID commit mid-turn (one of `commit-policy`'s four
+  *     exceptions) moves HEAD, so mutations already committed are invisible
+  *     to this diff. Declared, not silently assumed away.
+@@ -220,7 +229,18 @@ import * as os from 'node:os';
+ import * as path from 'node:path';
+ import { fileURLToPath, pathToFileURL } from 'node:url';
+ 
+-import { buildReviewSkippedLine, type MutationMeasure } from '../_lib/review_skipped_record.js';
++import {
++    applyBaseline,
++    currentHeadSha,
++    readBaseline,
++    type BaselineFallback,
++    type BaselineOutcome,
++} from '../_lib/review_baseline.js';
++import {
++    buildReviewSkippedLine,
++    type BaselineApplication,
++    type MutationMeasure,
++} from '../_lib/review_skipped_record.js';
+ import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
+ import { readHookStdin } from './hook_stdin.js';
+ import { atomic_write_json, is_replay_mode } from './state_io.js';
+@@ -606,6 +626,7 @@ export function appendReviewSkippedTelemetry(
+     workspaceRoot: string,
+     diffLines: number,
+     mutationMeasure: MutationMeasure,
++    baseline?: BaselineApplication,
+ ): void {
+     if (is_replay_mode()) return;
+     const ts = new Date().toISOString();
+@@ -614,6 +635,7 @@ export function appendReviewSkippedTelemetry(
+         mutation_measure: mutationMeasure,
+         ts,
+         id: crypto.randomUUID(),
++        baseline,
+     });
+     if (errors.length || line === null) return; // refused input — never write a broken line
+     try {
+@@ -694,6 +716,23 @@ function _read_stdin(): string {
+     return readHookStdin();
+ }
+ 
++/**
++ * The one place the two spellings meet.
++ *
++ * `BaselineFallback` is kebab-cased because it is a TypeScript union read only
++ * in this process; `BaselineApplication` is snake_cased because it is written
++ * into an audit line and every other enum in that stream is. A hand-written
++ * ternary translated them until a review pointed out that `head-moved` and
++ * `head_moved` differ by one character in a conditional nobody would re-read —
++ * an exhaustive record makes a new fallback a compile error instead.
++ */
++const FALLBACK_TO_TELEMETRY: Readonly<Record<BaselineFallback, BaselineApplication>> = {
++    absent: 'absent',
++    unreadable: 'unreadable',
++    'head-moved': 'head_moved',
++    'mixed-measure': 'mixed_measure',
++};
++
+ export function main(): number {
+     const [envelope, payload] = unwrap(_read_stdin(), 'claude');
+ 
+@@ -705,15 +744,43 @@ export function main(): number {
+     const workspace_root =
+         String(envelope['workspace_root'] ?? '').trim() || process.cwd();
+ 
+-    let diffLines: number;
++    let measuredLines: number;
+     let mutationMeasure: MutationMeasure;
+     try {
+         const measured = totalNonDocMutatedLinesWithMeasure(workspace_root);
+-        diffLines = measured.lines;
++        measuredLines = measured.lines;
+         mutationMeasure = measured.measure;
+     } catch {
+         return 0; // fail-open — never block the agent loop
+     }
++
++    // The session key is derived HERE rather than after the threshold test,
++    // because the threshold is now taken on the SUBTRACTED count and the
++    // baseline is keyed on the session. That is a real reordering: one extra
++    // `sha256` of a string and one `readFileSync` of a ~100-byte JSON file now
++    // run on every stop, including the majority that end below threshold. The
++    // alternative — testing the unsubtracted count first as a cheap
++    // pre-filter — is wrong in the one direction that matters: on an
++    // accumulator branch EVERY turn clears the unsubtracted threshold, so the
++    // pre-filter would pass exactly when the subtraction is needed and save
++    // nothing.
++    const sessionKey = deriveSessionKey(envelope, payload);
++    const baselineOutcome: BaselineOutcome = applyBaseline(
++        measuredLines,
++        readBaseline(workspace_root, sessionKey),
++        // A THUNK, not a value: on the `absent` and `unreadable` branches the
++        // result is discarded, and those two are the steady state on every host
++        // without this nudge and on every session before its first baseline
++        // write. Passing the value eagerly spent an 11-14 ms `git rev-parse` on
++        // each of those stops for nothing.
++        () => currentHeadSha(workspace_root),
++        mutationMeasure,
++    );
++    const diffLines = baselineOutcome.lines;
++    const baselineApplication: BaselineApplication = baselineOutcome.applied
++        ? 'applied'
++        : FALLBACK_TO_TELEMETRY[baselineOutcome.fallback];
++
+     if (diffLines <= MUTATION_LINE_THRESHOLD) {
+         return 0; // below threshold, or a doc-only diff — nothing to nudge
+     }
+@@ -723,7 +790,6 @@ export function main(): number {
+     // JSON parse below. A session that already fired stops here, at a
+     // single `fs.existsSync` call, without re-reading a (potentially
+     // large) transcript file it already knows the answer for.
+-    const sessionKey = deriveSessionKey(envelope, payload);
+     if (hasFiredThisSession(workspace_root, sessionKey)) {
+         return 0;
+     }
+@@ -756,7 +822,12 @@ export function main(): number {
+     markFiredThisSession(workspace_root, sessionKey, new Date().toISOString());
+ 
+     try {
+-        appendReviewSkippedTelemetry(workspace_root, diffLines, mutationMeasure);
++        appendReviewSkippedTelemetry(
++            workspace_root,
++            diffLines,
++            mutationMeasure,
++            baselineApplication,
++        );
+     } catch {
+         // never let a telemetry failure block or fail the turn
+     }
+diff --git a/src/scripts/hooks/review_baseline_hook.ts b/src/scripts/hooks/review_baseline_hook.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..fc67e00285a6132ce109cc34511dd0bd4d021b6c
+--- /dev/null
++++ b/src/scripts/hooks/review_baseline_hook.ts
+@@ -0,0 +1,130 @@
++#!/usr/bin/env node
++/**
++ * review-baseline — `session_start` concern
++ * (road-to-a-question-that-survives-the-turn Phase 2).
++ *
++ * WHAT IT DOES, and it is the whole of it: on session start, record how many
++ * non-doc lines were ALREADY dirty, and what HEAD was. `end-review-nudge`
++ * subtracts that at `stop` so a session is charged for its own mutation instead
++ * of for whatever the working tree happened to be carrying.
++ *
++ * THE DEFECT IT CLOSES. `end_review_nudge_hook`'s own header names it: a dirty
++ * tree that predates the session is counted as the session's, and the reason it
++ * was not fixed was "no such baseline exists anywhere a `stop` concern can read
++ * it". That was true of a phase with a one-concern scope, and stale by the time
++ * it mattered — `session_start` is bound on seven hosts carrying fourteen
++ * concerns. The measured consequence of leaving it: on a branch deliberately
++ * accumulating work, the nudge read 1,771 lines of two crashed sessions'
++ * uncommitted work and fired every turn. An advisory that always fires is noise,
++ * and noise is worse than silence because it trains the reader to skip the one
++ * that mattered.
++ *
++ * MEASURED WITH THE READER'S OWN INSTRUMENT. `totalNonDocMutatedLinesWithMeasure`
++ * is imported from the nudge rather than reimplemented, so the two sides cannot
++ * drift on what a "non-doc mutated line" is. A second counting implementation
++ * would produce a baseline in one unit and a measurement in another, and the
++ * subtraction would be silently wrong rather than visibly broken.
++ *
++ * CAPTURE ONLY. It never emits context, never warns, and always returns 0. A
++ * `session_start` concern that could refuse would turn an unreadable git
++ * directory into a session that cannot start, which is a far worse failure than
++ * the noise it is fixing.
++ *
++ * NO PATHS, NO FINGERPRINTS. The record is two numbers and a timestamp. A
++ * path-level change set was the shape the source draft proposed; it is a bigger
++ * object with a bigger privacy surface, and nothing in the nudge consumes one.
++ * The file cannot hold a path, a diff or a file body by construction, which is
++ * the same PII-exclusion-by-construction the telemetry record keeps.
++ */
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++import { fileURLToPath, pathToFileURL } from 'node:url';
++
++import {
++    baselineStateFile,
++    currentHeadSha,
++    type ReviewBaseline,
++} from '../_lib/review_baseline.js';
++import { deriveSessionKey, totalNonDocMutatedLinesWithMeasure } from './end_review_nudge_hook.js';
++import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
++import { readHookStdin } from './hook_stdin.js';
++import { atomic_write_json } from './state_io.js';
++
++const EXIT_OK = 0;
++
++export function buildBaseline(workspaceRoot: string, now: Date = new Date()): ReviewBaseline {
++    const measured = totalNonDocMutatedLinesWithMeasure(workspaceRoot);
++    return {
++        head_sha: currentHeadSha(workspaceRoot),
++        baseline_lines: measured.lines,
++        // Carried, not discarded. Past `UNTRACKED_FILE_CAP` the count is a
++        // synthetic `THRESHOLD + 1 + tracked` chosen to be over the bar rather
++        // than to be true, and subtracting that from a later exact count is
++        // arithmetic over two different quantities. The consumer refuses the
++        // subtraction when the two measures disagree; it can only do that if the
++        // writer says which one it took.
++        measure: measured.measure,
++        written_at: now.toISOString(),
++    };
++}
++
++export function main(): number {
++    let envelope: JsonObject;
++    let payload: JsonObject;
++    try {
++        [envelope, payload] = unwrap(readHookStdin(), 'claude');
++    } catch {
++        return EXIT_OK;
++    }
++
++    const event = String(envelope['event'] ?? '');
++    if (event !== '' && event !== 'session_start') return EXIT_OK;
++
++    const workspaceRoot =
++        String((envelope['workspace_root'] as JsonValue | undefined) ?? '').trim() || process.cwd();
++
++    // A baseline is written ONCE per session. A host that fires session_start
++    // twice — Cline maps both TaskStart and TaskResume onto it — must not
++    // re-baseline mid-session: the second write would fold everything the
++    // session had already changed into its own baseline and the nudge would go
++    // permanently quiet for that session. Over-writing is the silent failure
++    // direction, so it is the one guarded.
++    const sessionKey = deriveSessionKey(envelope, payload);
++    const file = baselineStateFile(workspaceRoot, sessionKey);
++    try {
++        if (fs.existsSync(file)) return EXIT_OK;
++    } catch {
++        return EXIT_OK;
++    }
++
++    try {
++        // `atomic_write_json` is already `AGENT_CONFIG_REPLAY`-aware, so a
++        // fixture-replay run leaves no baseline behind.
++        atomic_write_json(file, buildBaseline(workspaceRoot) as unknown as JsonObject);
++    } catch {
++        // An unwritable state dir degrades to today's behaviour — the nudge
++        // reads `absent` and does not subtract. Never a failed session start.
++    }
++    return EXIT_OK;
++}
++
++// Bundle-safety: never auto-run when inlined into an esbuild bundle, where
++// every module shares the bundle's `import.meta.url`.
++declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
++function _isCliEntry(): boolean {
++    if (typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__) return false;
++    if (process.argv[1] === undefined) return false;
++    const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
++    if (import.meta.url === argvUrl) return true;
++    try {
++        const here = fs.realpathSync(fileURLToPath(import.meta.url));
++        const argv = fs.realpathSync(path.resolve(process.argv[1]));
++        return here === argv;
++    } catch {
++        return false;
++    }
++}
++
++if (_isCliEntry()) {
++    process.exit(main());
++}
+diff --git a/src/scripts/hooks/turn_end_gate_hook.ts b/src/scripts/hooks/turn_end_gate_hook.ts
+index 6267b3251e08767f1614326e3829a63db4c9fc12..541b3d5f373d2fb5cb72ed83ad167b7af728e456 100644
+--- a/src/scripts/hooks/turn_end_gate_hook.ts
++++ b/src/scripts/hooks/turn_end_gate_hook.ts
+@@ -9,7 +9,7 @@
+  * is deliberately not another reminder. It is a check at the point of
+  * delivery that can say no.
+  *
+- * FOUR detectors ride on one guard, because building the unsafe part twice
++ * FIVE detectors ride on one guard, because building the unsafe part twice
+  * is how a second detector becomes a second outage:
+  *
+  *   A — promissory closing  (FC-5, 20 measured occurrences)
+@@ -22,11 +22,18 @@
+  *                            only, so tool activity is invisible to A and B.)
+  *   D — completion claim    (a claim of done carrying no fresh evidence; landed
+  *                            under conformance round 7 § Phase 1.)
++ *   E — pending decision    (an earlier reply in the SAME user turn put numbered
++ *                            options to the user and the closing reply carries
++ *                            none — the turn asked and then dropped the ask.
++ *                            Read off `assistantTurnTexts`, which is why that
++ *                            field exists: every other detector reads
++ *                            `lastAssistant` alone and therefore cannot see a
++ *                            question that was asked one reply earlier.)
+  *
+- * TWO of the four are CONDITIONAL, and saying "unconditional" here would be the
++ * TWO of the five are CONDITIONAL, and saying "unconditional" here would be the
+  * same stale-header defect this block corrects below. A and D are the
+  * completion-adjacent pair an open subagent dispatch excuses, so `main()` runs
+- * them only when `dispatchOpen` is false; B and C run on every turn-end. That
++ * them only when `dispatchOpen` is false; B, C and E run on every turn-end. That
+  * narrowing is deliberate (Phase 3 Step 2, narrowed again by R2 round 2) and is
+  * the third allow path, alongside the two re-entrancy layers — see the
+  * per-detector list in `main()`.
+@@ -35,7 +42,7 @@
+  * below has carried four since round 7. `DETECTOR_IDS` in
+  * `_lib/turn_end_refusals.ts` is read off that union rather than off this
+  * comment for exactly that reason, and the count is corrected here rather than
+- * left as a stale header the next reader has to disbelieve.
++ * left as a stale header the next reader has to disbelieve. E made it five.
+  *
+  * ## Removal condition
+  *
+@@ -157,6 +164,19 @@ import {
+ // agreement invisible when the producer's layout moved. A builder makes the move
+ // a type error.
+ import { statePathFor as ciStatePathFor } from '../before_complete_hook.js';
++// The spec-backed options-block reading, imported rather than re-derived:
++// `user-interaction` Iron Law 1's definition of an ask — a block PLUS its
++// recommendation line — lives in exactly one place and detector E reads it from
++// there.
++//
++// WHAT KEEPS IT FROM RUNNING ON IMPORT, stated precisely because the obvious
++// answer is wrong: that module is `_isCliEntry`-guarded, but WITHOUT the
++// `__AGENT_CONFIG_BUNDLE__` early-out this file carries. Inside
++// `dist/hooks/dispatch.js` every module shares one `import.meta.url`, so the
++// guard alone would not settle it; what does is the `.__direct__` argv rewrite
++// in the `build:hooks` banner. Named here so a future change to that banner
++// does not silently start running a lint's `main()` on every hook dispatch.
++import { find_option_blocks, recommendationsUnder } from '../check_reply_consistency.js';
+ import { isSafeTranscriptPath } from './end_review_nudge_hook.js';
+ import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
+ import { readHookStdin } from './hook_stdin.js';
+@@ -190,7 +210,12 @@ const EXIT_ALLOW = 0;
+ export const TRANSCRIPT_READ_MAX_BYTES = 8 * 1024 * 1024; // 8 MB
+ 
+ /** Detector identity, used in the state marker and the refusal text. */
+-export type DetectorId = 'promissory' | 'language' | 'verification' | 'completion';
++export type DetectorId =
++    | 'promissory'
++    | 'language'
++    | 'verification'
++    | 'completion'
++    | 'pending-decision';
+ 
+ export interface Finding {
+     detector: DetectorId;
+@@ -723,6 +748,89 @@ export function detectUnverifiedEdit(toolCalls: readonly ToolCall[]): Finding |
+     };
+ }
+ 
++/**
++ * Detector E — a decision put to the user in this turn, dropped before the turn
++ * ended.
++ *
++ * THE MEASURED FAILURE. An assistant turn put three numbered options and a
++ * recommendation line to the user. The `end-review-nudge` stop concern then
++ * produced a SECOND assistant execution with no intervening user message, and
++ * that second reply handled the nudge while demoting the open question to a
++ * subordinate clause — "bleibt davon unberührt und liegt bei Dir". From the
++ * user's side the conversation ended without a question. No existing rule
++ * catches this: `user-interaction` Iron Law 1 inspects a reply that HAS an
++ * options block, `check_reply_consistency` receives a draft and not a
++ * transcript, `active-remediation` governs findings rather than issued
++ * decisions, and `no-cheap-questions` guards the opposite direction.
++ *
++ * WHAT IT READS. `assistantTurnTexts` — the assistant texts since the last
++ * GENUINE user prompt, with synthetic prompts and sidechain entries already
++ * filtered by `readTranscriptTail`. So a task notification, a system reminder or
++ * a subagent's own prompt does not read as an answer, which is the whole point:
++ * the failure is defined by the absence of a real user turn.
++ *
++ * WHAT IT DELIBERATELY DOES NOT DO. It does not model the decision — no id, no
++ * `pending → answered` lifecycle, no semantic matching of a free-text reply
++ * against an option. That object is grant-shaped and
++ * `road-to-decision-closure` owns its ownership routing; a second obligation
++ * ledger here would be the parallel taxonomy that roadmap exists to prevent.
++ * This is transcript adjacency and nothing above it.
++ *
++ * AN ASK IS A BLOCK **PLUS** ITS RECOMMENDATION LINE, and that qualifier is
++ * load-bearing rather than pedantic. `find_option_blocks` calls any run of two
++ * or more consecutive numbered lines a block — a plan, a findings list, an
++ * ordinary enumeration. Keyed on the block alone this detector fired on 29 of
++ * this repository's own 592 assistant turns, and 8 of those blocks carried no
++ * recommendation line anywhere near them: pure false positives on narrative
++ * lists, in a detector that can REFUSE a turn. `user-interaction` Iron Law 1
++ * already says the recommendation line is the ask, so requiring it removes that
++ * whole class by applying the rule this refusal cites rather than by bolting a
++ * heuristic beside it.
++ *
++ * The cost, stated rather than discovered: an options block whose recommendation
++ * line was omitted is invisible here. That reply is ALREADY a
++ * `check_reply_consistency` finding and a stated Iron Law 1 violation, so it is
++ * the malformed-ask problem rather than the dropped-ask problem — a different
++ * defect with a different owner.
++ *
++ * REUSE. `find_option_blocks` and `recommendationsUnder` are both the
++ * spec-backed readings behind `check_reply_consistency`, extracted rather than
++ * copied. `interruption_ledger_hook` carries its own `hasNumberedOptions` for
++ * the capture-only ledger; a third reading of the same rule would drift from
++ * both.
++ */
++export function detectDroppedDecision(assistantTurnTexts: readonly string[]): Finding | null {
++    if (assistantTurnTexts.length < 2) return null;
++    const asksIn = (text: string): ReturnType<typeof find_option_blocks> =>
++        find_option_blocks(text).filter((b) => recommendationsUnder(text, b).length > 0);
++    const closing = assistantTurnTexts[assistantTurnTexts.length - 1]!;
++    if (asksIn(closing).length > 0) return null;
++    for (let i = assistantTurnTexts.length - 2; i >= 0; i -= 1) {
++        const earlier = assistantTurnTexts[i]!;
++        const blocks = asksIn(earlier);
++        if (blocks.length === 0) continue;
++        const block = blocks[blocks.length - 1]!;
++        return {
++            detector: 'pending-decision',
++            // The option NUMBERS and the line span, never the option text: the
++            // evidence is quoted into a refusal that reaches the transcript, and
++            // an options block can carry anything the reply carried.
++            evidence: `options ${block.numbers.join('/')} at lines ${block.startLine}-${block.endLine} of an earlier reply this turn`,
++            reason:
++                'an earlier reply in THIS turn put numbered options to the user ' +
++                'and no user answer followed — this closing reply carries no ' +
++                'options block, so the decision disappeared without being ' +
++                'answered, cancelled or superseded. A hook nudge, a reviewer ' +
++                'result or a task notification may ADD to a turn; it may not ' +
++                'displace a question already asked (user-interaction Iron Law 1: ' +
++                'the option block plus its recommendation line is the ask). ' +
++                'Re-present the block and its recommendation line at the end of ' +
++                'this reply',
++        };
++    }
++    return null;
++}
++
+ // ---------------------------------------------------------------------------
+ // Re-entrancy — the guard, keyed on the turn, not on the reply
+ // ---------------------------------------------------------------------------
+@@ -868,6 +976,20 @@ export interface ToolCall {
+ 
+ export interface TranscriptTail {
+     lastAssistant: string;
++    /**
++     * Every assistant text of the CURRENT turn, in order — reset at each genuine
++     * user prompt exactly like `toolCalls`, and for the same reason: a question
++     * asked three turns ago was answered, a question asked earlier in THIS turn
++     * was not. Detector E reads it; the other four read `lastAssistant`, which is
++     * always the last element when this is non-empty.
++     *
++     * A tool-only assistant entry contributes NOTHING here. `_messageText`
++     * returns null for it and the collector skips it, so the ordinary shape of a
++     * working turn — prose, tool call, prose — produces two elements and not
++     * three. That is the whole false-positive surface of detector E, and it is
++     * closed here rather than in the detector.
++     */
++    assistantTurnTexts: string[];
+     /**
+      * How many GENUINE user prompts the transcript carries — harness-injected
+      * user-role entries excluded via `isSyntheticPrompt`. This is the turn's
+@@ -899,7 +1021,12 @@ export function readTranscriptTail(
+     transcriptPath: string,
+     opts: { homeDir?: string; maxBytes?: number } = {},
+ ): TranscriptTail {
+-    const empty: TranscriptTail = { lastAssistant: '', turnOrdinal: 0, toolCalls: [] };
++    const empty: TranscriptTail = {
++        lastAssistant: '',
++        turnOrdinal: 0,
++        toolCalls: [],
++        assistantTurnTexts: [],
++    };
+     if (!transcriptPath || !isSafeTranscriptPath(transcriptPath, opts)) return empty;
+     let lines: string[];
+     try {
+@@ -919,6 +1046,7 @@ export function readTranscriptTail(
+     let lastAssistant = '';
+     let turnOrdinal = 0;
+     let toolCalls: ToolCall[] = [];
++    let assistantTurnTexts: string[] = [];
+     for (const rawLine of lines) {
+         const line = rawLine.trim();
+         if (!line) continue;
+@@ -950,6 +1078,7 @@ export function readTranscriptTail(
+         if (text === null) continue;
+         if (role === 'assistant') {
+             lastAssistant = text;
++            assistantTurnTexts.push(text);
+         } else if (!isSyntheticPrompt(text)) {
+             turnOrdinal += 1;
+             // A genuine user prompt starts a new turn, so the previous turn's
+@@ -957,9 +1086,19 @@ export function readTranscriptTail(
+             // run three turns ago would vouch for an edit made now — the
+             // "fresh" in edit-without-FRESH-verification is this line.
+             toolCalls = [];
++            // Same boundary, same reason, for detector E: an options block the
++            // user has since replied to is answered, not dropped. Resetting on
++            // the identical line is what makes "in the SAME user turn" true of
++            // the array rather than merely intended.
++            assistantTurnTexts = [];
+         }
+     }
+-    return { lastAssistant: lastAssistant.trim(), turnOrdinal, toolCalls };
++    return {
++        lastAssistant: lastAssistant.trim(),
++        turnOrdinal,
++        toolCalls,
++        assistantTurnTexts,
++    };
+ }
+ 
+ /**
+@@ -1074,9 +1213,10 @@ export function main(): number {
+     // in production while its comment claimed it was enforced — the same
+     // fixed-the-definition-not-the-caller shape as two other findings in that
+     // round, which is why this line exists rather than a default parameter.
+-    const { lastAssistant, turnOrdinal, toolCalls } = readTranscriptTail(transcriptPath, {
+-        maxBytes: TRANSCRIPT_READ_MAX_BYTES,
+-    });
++    const { lastAssistant, turnOrdinal, toolCalls, assistantTurnTexts } = readTranscriptTail(
++        transcriptPath,
++        { maxBytes: TRANSCRIPT_READ_MAX_BYTES },
++    );
+     if (!lastAssistant) return EXIT_ALLOW;
+ 
+     // Layer 2 — keyed on the turn's ORDINAL, never on the prompt's text.
+@@ -1129,6 +1269,15 @@ export function main(): number {
+         dispatchOpen
+             ? null
+             : detectCompletionClaim(lastAssistant, readCiSettled(workspaceRoot, rawSessionId)),
++        // Detector E is UNCONDITIONAL, and that is the opposite choice from A
++        // and D one line above rather than an oversight. An open dispatch
++        // excuses a promissory closing because the work is genuinely still
++        // running; it excuses nothing about a question the user was already
++        // asked. Worse: a dispatch — or the `end-review-nudge` stop concern
++        // that produced the measured failure — IS the continuation that drops
++        // the decision, so narrowing E the same way would silence it in exactly
++        // the case it exists for.
++        detectDroppedDecision(assistantTurnTexts),
+     ]) {
+         if (f) findings.push(f);
+     }
+@@ -1147,8 +1296,9 @@ export function main(): number {
+     process.stderr.write(
+         `turn-end-gate: REFUSED — this turn is not finished.\n${lines.join('\n')}\n` +
+             '  Do the promised work now, correct the language, run the ' +
+-            'verification the edit needs, or read the CI verdict before claiming ' +
+-            'it — then end the turn.\n' +
++            'verification the edit needs, read the CI verdict before claiming ' +
++            'it, or re-present the options block this turn dropped — then end ' +
++            'the turn.\n' +
+             '  This turn will not be refused a second time.\n',
+     );
+     return EXIT_BLOCK;
+diff --git a/src/scripts/hooks_doctor.ts b/src/scripts/hooks_doctor.ts
+index fbf059cf831b42693d5352056f3971d391f221c3..4775074b78b9f95148eed7ed294f5c96ed62ffdf 100644
+--- a/src/scripts/hooks_doctor.ts
++++ b/src/scripts/hooks_doctor.ts
+@@ -40,6 +40,7 @@ import * as hooks_status from "./hooks_status.js";
+ import {
+   DETECTOR_IDS,
+   collectRefusalStats,
++  emptyCounts,
+   readInstallBoundary,
+   type InstallBoundary,
+   type RefusalStats,
+@@ -268,7 +269,9 @@ export function collect(
+     turn_end_refusals = {
+       sessionsWithRefusals: 0,
+       total: 0,
+-      byDetector: { promissory: 0, language: 0, verification: 0, completion: 0 },
++      // Derived, never a literal: a fifth detector made the old four-key object
++      // a type error here and a silent `NaN` in the aggregator it mirrors.
++      byDetector: emptyCounts(),
+       byPeriod: [],
+       legacyRecords: 0,
+       unversionedRecords: 0,
+diff --git a/src/scripts/janitor.ts b/src/scripts/janitor.ts
+index 137db091d75941dadd0554b1da587da983e4ece7..268e27dd93c84868f9f2079362055342d5decf2c 100644
+--- a/src/scripts/janitor.ts
++++ b/src/scripts/janitor.ts
+@@ -62,7 +62,7 @@ const TTL_CONFIG: ReadonlyArray<{
+     },
+     // ── Session-scoped runtime state (Step 4.1) ────────────────────────────
+     //
+-    // These four directories accrete ONE entry per session behind a
++    // These five directories accrete ONE entry per session behind a
+     // once-per-session latch, and nothing in the tree removed them: writers
+     // and readers existed, no reaper did. They are named INDIVIDUALLY rather
+     // than sweeping `agents/runtime/state` as a whole, and that is the
+@@ -101,6 +101,13 @@ const TTL_CONFIG: ReadonlyArray<{
+         owner: 'maintainer',
+         reviewBy: '2026-11-10',
+     },
++    {
++        dir: 'agents/runtime/state/review-baseline',
++        ttlDays: 7,
++        description: 'Per-session start-of-session mutation baseline (one file per session)',
++        owner: 'maintainer',
++        reviewBy: '2026-11-10',
++    },
+ ];
+ 
+ // Directories that must NEVER be auto-swept
+diff --git a/tests/scripts/hook_role_axis.test.ts b/tests/scripts/hook_role_axis.test.ts
+index 783e5c63225802bda32ecf21f165d0e503d107cb..bbb058a29b7947a776e146e78b02f08c90c821a7 100644
+--- a/tests/scripts/hook_role_axis.test.ts
++++ b/tests/scripts/hook_role_axis.test.ts
+@@ -41,6 +41,12 @@ const WORKER_DROP = [
+     'delegation-nudge',
+     'skill-route',
+     'end-review-nudge',
++    // Joined in road-to-a-question-that-survives-the-turn Phase 2, and the first
++    // member here for a DERIVED reason rather than a clause of its own: it
++    // exists only to be read by `end-review-nudge`, which is dropped one line
++    // above. A writer whose only reader is absent spends two git subprocesses
++    // per session start to produce a file nothing opens.
++    'review-baseline',
+     'council-availability',
+     'team-review-gate',
+     'self-repair',
+diff --git a/tests/scripts/review_baseline_hook.test.ts b/tests/scripts/review_baseline_hook.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..99f473222cda469d750ecb249830bd584a701627
+--- /dev/null
++++ b/tests/scripts/review_baseline_hook.test.ts
+@@ -0,0 +1,431 @@
++/**
++ * `review-baseline` — the session-start baseline `end-review-nudge` subtracts.
++ *
++ * The case that motivated it is the last describe block: a branch carrying 1,771
++ * lines of another session's uncommitted work, and a turn that changed five
++ * lines. Before the baseline the nudge fired on 1,771 every turn and became
++ * noise; after it, that turn measures five and stays silent.
++ *
++ * The three fallbacks get their own tests, because all three resolve to the
++ * UNSUBTRACTED count and that is by construction an invisible failure — a line
++ * reading 1,771 is indistinguishable from a session that really mutated 1,771
++ * unless the telemetry says which path produced it.
++ */
++import { spawnSync } from 'node:child_process';
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++import { fileURLToPath } from 'node:url';
++
++import { afterAll, describe, expect, it } from 'vitest';
++
++import {
++    applyBaseline,
++    baselineStateFile,
++    currentHeadSha,
++    parseBaseline,
++    readBaseline,
++    type ReviewBaseline,
++} from '../../src/scripts/_lib/review_baseline.js';
++import { buildReviewSkippedLine } from '../../src/scripts/_lib/review_skipped_record.js';
++import { deriveSessionKey } from '../../src/scripts/hooks/end_review_nudge_hook.js';
++
++const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
++const HOOK = path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'review_baseline_hook.ts');
++const TSX = path.join(REPO_ROOT, 'node_modules', '.bin', 'tsx');
++
++const tmp_dirs: string[] = [];
++afterAll(() => {
++    for (const d of tmp_dirs) {
++        try {
++            fs.rmSync(d, { recursive: true, force: true });
++        } catch {
++            /* a temp dir that will not delete is not a test failure */
++        }
++    }
++});
++
++function makeRoot(): string {
++    const d = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'review-baseline-')));
++    tmp_dirs.push(d);
++    return d;
++}
++
++function writeBaselineFile(root: string, key: string, body: unknown): void {
++    const file = baselineStateFile(root, key);
++    fs.mkdirSync(path.dirname(file), { recursive: true });
++    fs.writeFileSync(file, typeof body === 'string' ? body : JSON.stringify(body));
++}
++
++const BASE: ReviewBaseline = {
++    head_sha: 'abc123',
++    baseline_lines: 1771,
++    measure: 'exact',
++    written_at: '2026-09-11T10:00:00.000Z',
++};
++
++describe('parseBaseline', () => {
++    it('reads a well-formed record', () => {
++        expect(parseBaseline(JSON.stringify(BASE))).toEqual(BASE);
++    });
++
++    it('treats a missing HEAD as null rather than as a parse failure', () => {
++        // A workspace with no git repo, or no commit yet, is a real state and
++        // not a corrupt record — applyBaseline compares null to null happily.
++        const rec = parseBaseline(
++            JSON.stringify({ head_sha: null, baseline_lines: 0, written_at: BASE.written_at }),
++        );
++        expect(rec).not.toBeNull();
++        expect(rec!.head_sha).toBeNull();
++    });
++
++    it('refuses anything whose line count is not a non-negative number', () => {
++        for (const bad of [
++            '{ not json',
++            JSON.stringify({ baseline_lines: -1, written_at: 'x' }),
++            JSON.stringify({ baseline_lines: 'many', written_at: 'x' }),
++            JSON.stringify({ baseline_lines: 5 }),
++            JSON.stringify([1, 2, 3]),
++        ]) {
++            expect(parseBaseline(bad)).toBeNull();
++        }
++    });
++});
++
++describe('readBaseline keeps absent and unreadable apart', () => {
++    it('reports absent when no file was ever written', () => {
++        expect(readBaseline(makeRoot(), 'no-such-session')).toBe('absent');
++    });
++
++    it('reports unreadable when the file is there and malformed', () => {
++        // Collapsing this into `absent` would hide a corrupt write inside the
++        // population it is smallest against — every session on a host with no
++        // session_start slot reads `absent` legitimately.
++        const root = makeRoot();
++        writeBaselineFile(root, 'sess', '{ truncated');
++        expect(readBaseline(root, 'sess')).toBe('unreadable');
++    });
++
++    it('reads back what was written', () => {
++        const root = makeRoot();
++        writeBaselineFile(root, 'sess', BASE);
++        expect(readBaseline(root, 'sess')).toEqual(BASE);
++    });
++});
++
++describe('applyBaseline', () => {
++    it('subtracts when HEAD still matches', () => {
++        const out = applyBaseline(1776, BASE, () => 'abc123');
++        expect(out.applied).toBe(true);
++        expect(out.lines).toBe(5);
++    });
++
++    it('clamps at zero when the session reverted part of the dirty tree', () => {
++        // Without the clamp a negative count compares below the threshold as if
++        // nothing happened — for a session that deleted a thousand lines.
++        const out = applyBaseline(700, BASE, () => 'abc123');
++        expect(out.applied).toBe(true);
++        expect(out.lines).toBe(0);
++    });
++
++    it('falls back to the UNSUBTRACTED count when HEAD moved', () => {
++        // A session that committed mid-run moved `git diff HEAD`'s base, so the
++        // subtraction would be arithmetic over two different quantities. Falling
++        // back over-reports, which is the safe direction; absorbing it would
++        // under-report on exactly the sessions that did the most work.
++        const out = applyBaseline(1776, BASE, () => 'def456');
++        expect(out.applied).toBe(false);
++        expect(out.lines).toBe(1776);
++        expect(out.applied === false && out.fallback).toBe('head-moved');
++    });
++
++    it('falls back on absent and on unreadable, carrying each reason through', () => {
++        for (const state of ['absent', 'unreadable'] as const) {
++            const out = applyBaseline(1776, state, () => 'abc123');
++            expect(out.applied).toBe(false);
++            expect(out.lines).toBe(1776);
++            expect(out.applied === false && out.fallback).toBe(state);
++        }
++    });
++
++    it('matches a null HEAD against a null HEAD', () => {
++        const noRepo: ReviewBaseline = { ...BASE, head_sha: null, baseline_lines: 10 };
++        const out = applyBaseline(60, noRepo, () => null);
++        expect(out.applied).toBe(true);
++        expect(out.lines).toBe(50);
++    });
++
++    it('refuses to subtract a capped approximation from an exact count', () => {
++        // Past UNTRACKED_FILE_CAP the count is a synthetic THRESHOLD + 1 +
++        // tracked, chosen to be over the bar rather than to be true. Subtracting
++        // it from a later exact measurement is arithmetic over two different
++        // quantities — the same defect head-moved catches on its own axis.
++        const capped: ReviewBaseline = { ...BASE, measure: 'capped_approximation' };
++        const out = applyBaseline(1776, capped, () => 'abc123', 'exact');
++        expect(out.applied).toBe(false);
++        expect(out.lines).toBe(1776);
++        expect(out.applied === false && out.fallback).toBe('mixed-measure');
++    });
++
++    it('refuses in the other direction too', () => {
++        const out = applyBaseline(1776, BASE, () => 'abc123', 'capped_approximation');
++        expect(out.applied === false && out.fallback).toBe('mixed-measure');
++    });
++
++    it('refuses a record written before the measure existed', () => {
++        // Absent reads as unknown, never as the more permissive `exact`.
++        const { measure: _drop, ...legacy } = BASE;
++        const out = applyBaseline(1776, legacy as ReviewBaseline, () => 'abc123');
++        expect(out.applied === false && out.fallback).toBe('mixed-measure');
++    });
++
++    it('does not read HEAD on a branch that discards the value', () => {
++        // P1: `git rev-parse` costs 11-14 ms and the absent/unreadable branches
++        // are the steady state on every host without this nudge. The thunk is
++        // what keeps that spawn off those stops; a counter proves it stayed one.
++        let calls = 0;
++        const head = (): string | null => {
++            calls += 1;
++            return 'abc123';
++        };
++        applyBaseline(1776, 'absent', head);
++        applyBaseline(1776, 'unreadable', head);
++        expect(calls).toBe(0);
++        applyBaseline(1776, BASE, head);
++        expect(calls).toBe(1);
++    });
++});
++
++// ---------------------------------------------------------------------------
++// The hook itself — main(), through the real process
++// ---------------------------------------------------------------------------
++
++describe('review_baseline_hook main()', () => {
++    function runHook(cwd: string, event: string, sessionId: string) {
++        const stdin = JSON.stringify({
++            schema_version: 1,
++            platform: 'claude',
++            event,
++            native_event: 'SessionStart',
++            session_id: sessionId,
++            workspace_root: cwd,
++            payload: {},
++            settings: {},
++        });
++        const r = spawnSync(TSX, [HOOK], { encoding: 'utf8', cwd, input: stdin });
++        return { status: r.status ?? -1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
++    }
++
++    /** A real repo, because the hook shells out to git and counts real lines. */
++    function makeRepo(): string {
++        const dir = makeRoot();
++        for (const args of [
++            ['init', '-q'],
++            ['config', 'user.email', 't@example.com'],
++            ['config', 'user.name', 'T'],
++        ]) {
++            spawnSync('git', args, { cwd: dir, encoding: 'utf8' });
++        }
++        fs.writeFileSync(path.join(dir, 'seed.ts'), 'export const a = 1;\n');
++        spawnSync('git', ['add', '-A'], { cwd: dir, encoding: 'utf8' });
++        spawnSync('git', ['commit', '-qm', 'seed'], { cwd: dir, encoding: 'utf8' });
++        return dir;
++    }
++
++    it('writes a baseline on session_start, and stays silent doing it', () => {
++        const dir = makeRepo();
++        fs.writeFileSync(path.join(dir, 'dirty.ts'), 'const a = 1;\nconst b = 2;\n');
++        const r = runHook(dir, 'session_start', 'sess-write');
++        expect(r.status).toBe(0);
++        expect(r.stdout.trim()).toBe(''); // capture only — it emits no context
++        const rec = readBaseline(dir, deriveSessionKey({ session_id: 'sess-write' }, {}));
++        expect(rec).not.toBe('absent');
++        expect(rec).not.toBe('unreadable');
++        const baseline = rec as ReviewBaseline;
++        expect(baseline.baseline_lines).toBe(2);
++        expect(baseline.measure).toBe('exact');
++        expect(baseline.head_sha).toMatch(/^[0-9a-f]{40}$/);
++    });
++
++    it('does NOT re-baseline on a second session_start', () => {
++        // The guard the hook's own comment calls the protection against silent
++        // failure, and which nothing exercised. A host that fires session_start
++        // twice — Cline maps TaskStart and TaskResume onto it — would otherwise
++        // fold the session's own work into its baseline and go quiet for good.
++        const dir = makeRepo();
++        fs.writeFileSync(path.join(dir, 'dirty.ts'), 'const a = 1;\nconst b = 2;\n');
++        runHook(dir, 'session_start', 'sess-twice');
++        fs.writeFileSync(path.join(dir, 'more.ts'), 'x\n'.repeat(300));
++        runHook(dir, 'session_start', 'sess-twice');
++        const rec = readBaseline(dir, deriveSessionKey({ session_id: 'sess-twice' }, {})) as
++            | ReviewBaseline
++            | string;
++        expect((rec as ReviewBaseline).baseline_lines).toBe(2);
++    });
++
++    it('ignores every event that is not session_start', () => {
++        const dir = makeRepo();
++        expect(runHook(dir, 'stop', 'sess-wrong-event').status).toBe(0);
++        expect(readBaseline(dir, deriveSessionKey({ session_id: 'sess-wrong-event' }, {}))).toBe(
++            'absent',
++        );
++    });
++
++    it('records zero on a clean tree rather than refusing to write', () => {
++        // A zero baseline is a real answer: it means the session starts clean and
++        // every line it measures later is its own.
++        const dir = makeRepo();
++        runHook(dir, 'session_start', 'sess-clean');
++        const rec = readBaseline(dir, deriveSessionKey({ session_id: 'sess-clean' }, {}));
++        expect((rec as ReviewBaseline).baseline_lines).toBe(0);
++    });
++});
++
++// ---------------------------------------------------------------------------
++// Producer → consumer, through both real hooks
++// ---------------------------------------------------------------------------
++
++describe('the nudge subtracts what the baseline recorded', () => {
++    const NUDGE = path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'end_review_nudge_hook.ts');
++
++    function repoWithDirt(lines: number): string {
++        const dir = makeRoot();
++        for (const args of [
++            ['init', '-q'],
++            ['config', 'user.email', 't@example.com'],
++            ['config', 'user.name', 'T'],
++        ]) {
++            spawnSync('git', args, { cwd: dir, encoding: 'utf8' });
++        }
++        fs.writeFileSync(path.join(dir, 'seed.ts'), 'export const a = 1;\n');
++        // Production reality, and NOT fixture convenience: this repository
++        // gitignores `agents/runtime/`, so the baseline file the session_start
++        // hook writes is invisible to `git ls-files --others`. Without the line,
++        // the fixture measured the mechanism's own 6-line state file as session
++        // mutation — a real observation about an unignored consumer, and the
++        // wrong thing to bake into an assertion about subtraction.
++        fs.writeFileSync(path.join(dir, '.gitignore'), 'agents/runtime/\n');
++        spawnSync('git', ['add', '-A'], { cwd: dir, encoding: 'utf8' });
++        spawnSync('git', ['commit', '-qm', 'seed'], { cwd: dir, encoding: 'utf8' });
++        fs.writeFileSync(path.join(dir, 'pre.ts'), 'x\n'.repeat(lines));
++        return dir;
++    }
++
++    function run(script: string, cwd: string, event: string, sessionId: string) {
++        const stdin = JSON.stringify({
++            schema_version: 1,
++            platform: 'claude',
++            event,
++            native_event: event === 'stop' ? 'Stop' : 'SessionStart',
++            session_id: sessionId,
++            workspace_root: cwd,
++            payload: {},
++            settings: {},
++        });
++        const r = spawnSync(TSX, [script], { encoding: 'utf8', cwd, input: stdin });
++        return { status: r.status ?? -1, stdout: r.stdout ?? '' };
++    }
++
++    it('a small turn on a 200-line dirty tree does not fire the nudge', () => {
++        // The measured failure, in miniature. Unsubtracted, 205 clears the
++        // 50-line threshold on every turn of the session. Both hooks derive the
++        // session key from the same envelope through the same exported function,
++        // so this exercises the real keying rather than a shared constant.
++        const dir = repoWithDirt(200);
++        expect(run(HOOK, dir, 'session_start', 'sess-e2e').status).toBe(0);
++        fs.writeFileSync(path.join(dir, 'mine.ts'), 'y\n'.repeat(5));
++        const stop = run(NUDGE, dir, 'stop', 'sess-e2e');
++        expect(stop.status).toBe(0);
++        expect(stop.stdout.trim()).toBe('');
++    });
++
++    it('and a large turn on the same tree still does', () => {
++        // The half that proves the fix did not simply disarm the nudge.
++        const dir = repoWithDirt(200);
++        expect(run(HOOK, dir, 'session_start', 'sess-e2e-big').status).toBe(0);
++        fs.writeFileSync(path.join(dir, 'mine.ts'), 'y\n'.repeat(300));
++        const stop = run(NUDGE, dir, 'stop', 'sess-e2e-big');
++        expect(stop.status).toBe(2); // EXIT_WARN
++        expect(JSON.parse(stop.stdout.trim())['reason']).toContain('300 non-doc lines');
++    });
++
++    it('without a baseline it fires on the whole dirty tree, as it always did', () => {
++        // The degradation path. No session_start ran, so `readBaseline` reads
++        // absent and the nudge reports the unsubtracted count — exactly its
++        // behaviour before this mechanism existed.
++        const dir = repoWithDirt(200);
++        const stop = run(NUDGE, dir, 'stop', 'sess-e2e-nobaseline');
++        expect(stop.status).toBe(2);
++        expect(JSON.parse(stop.stdout.trim())['reason']).toContain('200 non-doc lines');
++    });
++});
++
++describe('currentHeadSha', () => {
++    it('returns null for a directory that is not a repository, without throwing', () => {
++        expect(currentHeadSha(makeRoot())).toBeNull();
++    });
++});
++
++describe('the telemetry row carries which path produced the count', () => {
++    it('records the baseline application when one is supplied', () => {
++        const { line, errors } = buildReviewSkippedLine({
++            diff_lines: 60,
++            mutation_measure: 'exact',
++            ts: '2026-09-11T10:00:00.000Z',
++            id: 'id-1',
++            baseline: 'applied',
++        });
++        expect(errors).toEqual([]);
++        expect((line!['review_skipped'] as Record<string, unknown>)['baseline']).toBe('applied');
++    });
++
++    it('OMITS the field when the producer recorded nothing', () => {
++        // Absent means "not recorded", the same split audit-log-v1 uses for
++        // `skills_applied`. Defaulting it to `absent` would assert a measurement
++        // a pre-baseline producer never made.
++        const { line } = buildReviewSkippedLine({
++            diff_lines: 60,
++            mutation_measure: 'exact',
++            ts: '2026-09-11T10:00:00.000Z',
++            id: 'id-2',
++        });
++        expect(Object.keys(line!['review_skipped'] as object)).toEqual([
++            'diff_lines',
++            'mutation_measure',
++        ]);
++    });
++
++    it('refuses a value outside the closed enum rather than writing it', () => {
++        const { line, errors } = buildReviewSkippedLine({
++            diff_lines: 60,
++            mutation_measure: 'exact',
++            ts: '2026-09-11T10:00:00.000Z',
++            id: 'id-3',
++            baseline: 'probably fine' as never,
++        });
++        expect(line).toBeNull();
++        expect(errors.join(' ')).toContain('baseline must be one of');
++    });
++});
++
++describe('the 1,771-line accumulator branch', () => {
++    it('a five-line turn no longer clears the fire threshold', () => {
++        // MUTATION_LINE_THRESHOLD is 50. Unsubtracted, 1,776 clears it on every
++        // turn of the session — which is the measured failure. Subtracted, the
++        // same turn measures 5.
++        const root = makeRoot();
++        writeBaselineFile(root, 'accumulator', BASE);
++        const out = applyBaseline(1776, readBaseline(root, 'accumulator'), () => 'abc123');
++        expect(out.lines).toBe(5);
++        expect(out.lines).toBeLessThanOrEqual(50);
++    });
++
++    it('and a genuinely large turn on the same branch still does', () => {
++        // The half that proves the fix did not simply disarm the nudge.
++        const root = makeRoot();
++        writeBaselineFile(root, 'accumulator', BASE);
++        const out = applyBaseline(1771 + 300, readBaseline(root, 'accumulator'), () => 'abc123');
++        expect(out.lines).toBe(300);
++        expect(out.lines).toBeGreaterThan(50);
++    });
++});
+diff --git a/tests/scripts/turn_end_gate_pending_decision.test.ts b/tests/scripts/turn_end_gate_pending_decision.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..9e8df72423b08779d3dce8cefb045edf56addeac
+--- /dev/null
++++ b/tests/scripts/turn_end_gate_pending_decision.test.ts
+@@ -0,0 +1,391 @@
++/**
++ * Detector E — `pending-decision`: a question asked inside a turn and dropped
++ * before that turn ended.
++ *
++ * THE FIXTURE IS THE MEASURED FAILURE, not an invented shape. One user turn,
++ * two assistant entries: the first carries three numbered options and a
++ * recommendation line, the second handles a stop-hook nudge and demotes the open
++ * question to a subordinate clause. No user message sits between them.
++ *
++ * The near-miss is the half that decides whether the detector is usable, so it
++ * is tested in three directions rather than one:
++ *
++ *   1. a GENUINE user prompt between the two assistant entries — answered, silent;
++ *   2. a SYNTHETIC user-role entry between them (a task notification, a
++ *      `<system-reminder>`) — not an answer, still refuses;
++ *   3. a TOOL-ONLY assistant entry between them — the ordinary shape of every
++ *      working turn, and the one that would make this detector fire everywhere
++ *      if `assistantTurnTexts` collected text-free entries.
++ *
++ * Case 3 is the whole false-positive surface. `_messageText` returns null for a
++ * tool-only entry, so the collector never sees it; asserting that here rather
++ * than trusting the reading is the difference between a tested claim and a
++ * comment.
++ */
++import { spawnSync } from 'node:child_process';
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++import { fileURLToPath } from 'node:url';
++
++import { afterAll, describe, expect, it } from 'vitest';
++
++import {
++    detectDroppedDecision,
++    readTranscriptTail,
++} from '../../src/scripts/hooks/turn_end_gate_hook.js';
++
++const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
++const HOOK = path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'turn_end_gate_hook.ts');
++const TSX = path.join(REPO_ROOT, 'node_modules', '.bin', 'tsx');
++const SESSION_ID = 'sess-pending-decision';
++
++const tmp_dirs: string[] = [];
++afterAll(() => {
++    for (const d of tmp_dirs) {
++        try {
++            fs.rmSync(d, { recursive: true, force: true });
++        } catch {
++            /* a temp dir that will not delete is not a test failure */
++        }
++    }
++});
++
++/** The reply that asks. Three options plus the single recommendation line. */
++const ASKED = [
++    'Zwei Wege sind moeglich, und die Wahl ist Deine:',
++    '',
++    '1. Den Detektor sofort scharf schalten',
++    '2. Erst eine Woche im Advisory-Modus messen',
++    '3. Gar nicht bauen',
++    '',
++    '**Empfehlung: 2** — die Fehlerrate ist noch unbekannt.',
++].join('\n');
++
++/** The reply that drops it. Handles the nudge, demotes the question to a clause. */
++const DROPPED = [
++    'Der Reviewer laeuft jetzt ueber den Diff.',
++    '',
++    'Die offene Frage bleibt davon unberuehrt und liegt bei Dir.',
++].join('\n');
++
++/** A reply that carries the block forward — the corrected behaviour. */
++const RE_PRESENTED = [
++    'Der Reviewer ist durch, keine Findings.',
++    '',
++    '1. Den Detektor sofort scharf schalten',
++    '2. Erst eine Woche im Advisory-Modus messen',
++    '3. Gar nicht bauen',
++    '',
++    '**Empfehlung: 2** — unveraendert.',
++].join('\n');
++
++type Entry =
++    | { role: 'user'; text: string }
++    | { role: 'assistant'; text: string }
++    | { role: 'assistant-tool'; name: string };
++
++function writeTranscript(home: string, entries: readonly Entry[], tag: string): string {
++    const file = path.join(home, `transcript-${tag}.jsonl`);
++    const lines = entries.map((e) => {
++        if (e.role === 'user') {
++            return JSON.stringify({ type: 'user', message: { content: e.text } });
++        }
++        if (e.role === 'assistant') {
++            return JSON.stringify({
++                type: 'assistant',
++                message: { content: [{ type: 'text', text: e.text }] },
++            });
++        }
++        return JSON.stringify({
++            type: 'assistant',
++            message: { content: [{ type: 'tool_use', name: e.name, input: {} }] },
++        });
++    });
++    fs.writeFileSync(file, lines.join('\n') + '\n');
++    return file;
++}
++
++function makeHome(): string {
++    const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'pending-decision-home-')));
++    tmp_dirs.push(home);
++    return home;
++}
++
++function tailOf(entries: readonly Entry[], tag: string): string[] {
++    const home = makeHome();
++    const file = writeTranscript(home, entries, tag);
++    return readTranscriptTail(file, { homeDir: home }).assistantTurnTexts;
++}
++
++// ---------------------------------------------------------------------------
++// The detector, as a pure function
++// ---------------------------------------------------------------------------
++
++describe('detectDroppedDecision', () => {
++    it('fires when an earlier reply in the turn asked and the closing one does not', () => {
++        const f = detectDroppedDecision([ASKED, DROPPED]);
++        expect(f).not.toBeNull();
++        expect(f!.detector).toBe('pending-decision');
++        // The evidence carries the option NUMBERS and the span, never the option
++        // text — a refusal reaches the transcript and an options block can carry
++        // anything the reply carried.
++        expect(f!.evidence).toContain('1/2/3');
++        expect(f!.evidence).not.toContain('Advisory');
++    });
++
++    it('is silent when the closing reply carries the block forward', () => {
++        expect(detectDroppedDecision([ASKED, RE_PRESENTED])).toBeNull();
++    });
++
++    it('is silent on a single-reply turn, however the reply is shaped', () => {
++        expect(detectDroppedDecision([ASKED])).toBeNull();
++        expect(detectDroppedDecision([DROPPED])).toBeNull();
++        expect(detectDroppedDecision([])).toBeNull();
++    });
++
++    it('is silent when no reply in the turn ever asked', () => {
++        expect(detectDroppedDecision([DROPPED, DROPPED])).toBeNull();
++    });
++
++    it('reaches back past intervening replies, not only to the one before', () => {
++        const f = detectDroppedDecision([ASKED, 'Kurzer Zwischenstand.', DROPPED]);
++        expect(f).not.toBeNull();
++        expect(f!.detector).toBe('pending-decision');
++    });
++
++    it('is silent on a numbered list carrying NO recommendation line', () => {
++        // The finding that nearly shipped. `find_option_blocks` calls any run of
++        // two or more numbered lines a block, so a plan, a findings list or an
++        // ordinary enumeration looked exactly like an ask. Replayed over this
++        // repository's own 592 assistant turns, the block-only detector fired 29
++        // times and 8 of those blocks had no recommendation line anywhere near
++        // them — false positives in a detector that can REFUSE a turn.
++        const plan = [
++            'Plan:',
++            '',
++            '1. Read the failing test',
++            '2. Fix the parser',
++            '3. Re-run the suite',
++        ].join('\n');
++        expect(detectDroppedDecision([plan, 'Done. All 41 tests pass.'])).toBeNull();
++    });
++
++    it('fires on the ask and ignores the narrative list in the same reply', () => {
++        // Both shapes in one text, which is the ordinary case: the detector must
++        // key on the block that carries the recommendation, not on the last one.
++        const mixed = [
++            'Was ich geaendert habe:',
++            '',
++            '1. den Parser',
++            '2. den Test',
++            '',
++            'Und eine Entscheidung liegt bei Dir:',
++            '',
++            '1. Sofort mergen',
++            '2. Erst messen',
++            '',
++            '**Empfehlung: 2**',
++        ].join('\n');
++        const f = detectDroppedDecision([mixed, DROPPED]);
++        expect(f).not.toBeNull();
++        expect(f!.evidence).toContain('1/2');
++    });
++
++    it('accepts either language label, since Iron Law 1 accepts both', () => {
++        const en = ['1. ship it', '2. measure first', '', 'Recommendation: 2'].join('\n');
++        expect(detectDroppedDecision([en, DROPPED])).not.toBeNull();
++    });
++
++    it('does not read a fenced example block as a live ask', () => {
++        // `find_option_blocks` masks fences, and detector E inherits that rather
++        // than re-deciding it. A skill body quoting an options block is
++        // illustration, not a question put to anyone.
++        const fenced = ['Beispiel:', '', '```', '1. eins', '2. zwei', '```'].join('\n');
++        expect(detectDroppedDecision([fenced, DROPPED])).toBeNull();
++    });
++});
++
++// ---------------------------------------------------------------------------
++// `assistantTurnTexts` — the turn boundary, and what does NOT enter it
++// ---------------------------------------------------------------------------
++
++describe('readTranscriptTail collects the turn assistant texts', () => {
++    it('keeps both assistant replies of one user turn, in order', () => {
++        const texts = tailOf(
++            [
++                { role: 'user', text: 'Bau den Detektor.' },
++                { role: 'assistant', text: ASKED },
++                { role: 'assistant', text: DROPPED },
++            ],
++            'two-replies',
++        );
++        expect(texts).toEqual([ASKED, DROPPED]);
++        expect(detectDroppedDecision(texts)).not.toBeNull();
++    });
++
++    it('NEAR-MISS 1: a genuine user prompt resets the turn, so nothing fires', () => {
++        const texts = tailOf(
++            [
++                { role: 'user', text: 'Bau den Detektor.' },
++                { role: 'assistant', text: ASKED },
++                { role: 'user', text: '2' },
++                { role: 'assistant', text: DROPPED },
++            ],
++            'answered',
++        );
++        expect(texts).toEqual([DROPPED]);
++        expect(detectDroppedDecision(texts)).toBeNull();
++    });
++
++    it('NEAR-MISS 2: a synthetic user-role entry is not an answer', () => {
++        // A task notification and a `<system-reminder>` both occupy the user role
++        // without being anything the user said. If either reset the turn, the
++        // detector would be silent in precisely the hook-nudge case that produced
++        // it — the continuation is what injects them.
++        const texts = tailOf(
++            [
++                { role: 'user', text: 'Bau den Detektor.' },
++                { role: 'assistant', text: ASKED },
++                { role: 'user', text: '<system-reminder>\nBackground task finished.\n</system-reminder>' },
++                { role: 'assistant', text: DROPPED },
++            ],
++            'synthetic',
++        );
++        expect(texts).toEqual([ASKED, DROPPED]);
++        expect(detectDroppedDecision(texts)).not.toBeNull();
++    });
++
++    it('NEAR-MISS 3: a tool-only assistant entry contributes no element', () => {
++        // The ordinary shape of a working turn. If this produced an element,
++        // every turn that asks and then runs one command would look like a drop.
++        const texts = tailOf(
++            [
++                { role: 'user', text: 'Lies die Datei.' },
++                { role: 'assistant', text: 'Ich schaue nach.' },
++                { role: 'assistant-tool', name: 'Read' },
++                { role: 'assistant', text: 'Steht alles drin.' },
++            ],
++            'tool-only',
++        );
++        expect(texts).toEqual(['Ich schaue nach.', 'Steht alles drin.']);
++        expect(detectDroppedDecision(texts)).toBeNull();
++    });
++});
++
++// ---------------------------------------------------------------------------
++// Through the real process — the refusal, and the open-dispatch case
++// ---------------------------------------------------------------------------
++
++function makeWorkspace(): string {
++    const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'pending-decision-ws-')));
++    tmp_dirs.push(dir);
++    return dir;
++}
++
++/** One open subagent-ledger record, so `dispatchOpen` is genuinely true. */
++function plantOpenDispatch(dir: string): void {
++    const openDir = path.join(dir, 'agents', 'runtime', 'state', 'subagent-ledger', 'open');
++    fs.mkdirSync(openDir, { recursive: true });
++    fs.writeFileSync(
++        path.join(openDir, 'aaaaaaaaaaaa.json'),
++        JSON.stringify({
++            ref: 'aaaaaaaaaaaa',
++            agent_type: 'Explore',
++            started_at: new Date().toISOString(),
++            parent_ref: null,
++            depth: 1,
++            depth_basis: 'assumed-root',
++            session_id: null,
++        }),
++        'utf8',
++    );
++}
++
++function runHook(cwd: string, transcriptPath: string, home: string, extra: object = {}) {
++    const stdin = JSON.stringify({
++        schema_version: 1,
++        platform: 'claude',
++        event: 'stop',
++        native_event: 'Stop',
++        session_id: SESSION_ID,
++        workspace_root: cwd,
++        payload: { transcript_path: transcriptPath, ...extra },
++        settings: {},
++    });
++    const r = spawnSync(TSX, [HOOK], {
++        encoding: 'utf8',
++        cwd,
++        input: stdin,
++        env: {
++            ...process.env,
++            HOME: home,
++            USERPROFILE: home,
++            EVENT4U_CONFIG_HOME: path.join(home, '.event4u', 'agent-config'),
++        },
++    });
++    return { status: r.status ?? -1, stderr: r.stderr ?? '' };
++}
++
++describe('the gate refuses a turn that dropped its own question', () => {
++    it('refuses, and names the block that went missing', () => {
++        const dir = makeWorkspace();
++        const home = makeHome();
++        const t = writeTranscript(
++            home,
++            [
++                { role: 'user', text: 'Bau den Detektor.' },
++                { role: 'assistant', text: ASKED },
++                { role: 'assistant', text: DROPPED },
++            ],
++            'e2e-drop',
++        );
++        const r = runHook(dir, t, home);
++        expect(r.status).toBe(1);
++        expect(r.stderr).toContain('pending-decision');
++        expect(r.stderr).toContain('1/2/3');
++        expect(r.stderr).toContain('re-present the options block');
++    });
++
++    it('still refuses with a subagent dispatch REALLY open — E is unconditional', () => {
++        // A and D are excused by an open dispatch; E must not be. The dispatch IS
++        // the continuation that drops the decision, so excusing it here would
++        // silence the detector in its own founding case.
++        //
++        // The ledger is PLANTED rather than assumed. This test first asserted the
++        // claim against an empty workspace, where `openRecordStats` reads zero and
++        // `dispatchOpen` is false — so a regression wrapping E in
++        // `dispatchOpen ? null : …` would have passed it. A review caught that the
++        // test named the property it did not exercise.
++        const dir = makeWorkspace();
++        const home = makeHome();
++        plantOpenDispatch(dir);
++        const t = writeTranscript(
++            home,
++            [
++                { role: 'user', text: 'Bau den Detektor.' },
++                { role: 'assistant', text: ASKED },
++                { role: 'assistant', text: 'Der Reviewer ist durch, keine Findings.' },
++            ],
++            'e2e-clean-drop',
++        );
++        const r = runHook(dir, t, home, { stop_hook_active: false });
++        expect(r.status).toBe(1);
++        expect(r.stderr).toContain('pending-decision');
++    });
++
++    it('lets the turn end when the block was carried forward', () => {
++        const dir = makeWorkspace();
++        const home = makeHome();
++        const t = writeTranscript(
++            home,
++            [
++                { role: 'user', text: 'Bau den Detektor.' },
++                { role: 'assistant', text: ASKED },
++                { role: 'assistant', text: RE_PRESENTED },
++            ],
++            'e2e-carried',
++        );
++        expect(runHook(dir, t, home).status).toBe(0);
++    });
++});
+diff --git a/tests/scripts/turn_end_refusals.test.ts b/tests/scripts/turn_end_refusals.test.ts
+index 776eb975390420583e28a80f964506b1b0c55c92..93340b40741d745c876c5978aacbadf47a642f52 100644
+--- a/tests/scripts/turn_end_refusals.test.ts
++++ b/tests/scripts/turn_end_refusals.test.ts
+@@ -188,14 +188,27 @@ describe('step 1.1 — per detector, never pooled', () => {
+     it('covers every detector the gate can emit', () => {
+         // A detector added to the gate without being added here would silently
+         // stop being counted. The roadmap's own prose says three; the gate has
+-        // four.
++        // five.
+         expect([...DETECTOR_IDS]).toEqual([
+             'promissory',
+             'language',
+             'verification',
+             'completion',
++            'pending-decision',
+         ]);
+     });
++
++    it('the zeroed counter covers every id, so no detector aggregates to NaN', () => {
++        // The half the assertion above does not make. `emptyCounts` was a
++        // four-key object literal, which satisfies
++        // `Record<RefusalDetectorId, number>` for the union of the day and reads
++        // back `undefined` for the next id added — turning every `+=` in the
++        // rollup into `NaN` with no type error anywhere. Deriving it from
++        // `DETECTOR_IDS` is the fix; this pins that it stays derived.
++        const zeroed = emptyCounts();
++        expect(Object.keys(zeroed).sort()).toEqual([...DETECTOR_IDS].sort());
++        for (const id of DETECTOR_IDS) expect(zeroed[id]).toBe(0);
++    });
+ });
+ 
+ describe('step 1.2 — the TTL the header admitted was missing', () => {

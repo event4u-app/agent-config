@@ -126,7 +126,7 @@ The only deterministic consumer-side lever is the hook layer, and per
 ## What this change does about it
 
 Moves the load-bearing obligation from the layer measured at zero use into the layer
-that can refuse: **detector E** on the turn-end gate — production source changed, no
+that can refuse: **detector F** on the turn-end gate — production source changed, no
 test file touched anywhere in the turn, done claimed ⇒ refuse. Plus the two prose
 defects above (the missing dev/prod split, the pre-interaction completion contract).
 

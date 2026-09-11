@@ -9,7 +9,7 @@
  * is deliberately not another reminder. It is a check at the point of
  * delivery that can say no.
  *
- * FOUR detectors ride on one guard, because building the unsafe part twice
+ * FIVE detectors ride on one guard, because building the unsafe part twice
  * is how a second detector becomes a second outage:
  *
  *   A — promissory closing  (FC-5, 20 measured occurrences)
@@ -22,11 +22,18 @@
  *                            only, so tool activity is invisible to A and B.)
  *   D — completion claim    (a claim of done carrying no fresh evidence; landed
  *                            under conformance round 7 § Phase 1.)
+ *   E — pending decision    (an earlier reply in the SAME user turn put numbered
+ *                            options to the user and the closing reply carries
+ *                            none — the turn asked and then dropped the ask.
+ *                            Read off `assistantTurnTexts`, which is why that
+ *                            field exists: every other detector reads
+ *                            `lastAssistant` alone and therefore cannot see a
+ *                            question that was asked one reply earlier.)
  *
- * TWO of the four are CONDITIONAL, and saying "unconditional" here would be the
+ * TWO of the five are CONDITIONAL, and saying "unconditional" here would be the
  * same stale-header defect this block corrects below. A and D are the
  * completion-adjacent pair an open subagent dispatch excuses, so `main()` runs
- * them only when `dispatchOpen` is false; B and C run on every turn-end. That
+ * them only when `dispatchOpen` is false; B, C and E run on every turn-end. That
  * narrowing is deliberate (Phase 3 Step 2, narrowed again by R2 round 2) and is
  * the third allow path, alongside the two re-entrancy layers — see the
  * per-detector list in `main()`.
@@ -35,7 +42,7 @@
  * below has carried four since round 7. `DETECTOR_IDS` in
  * `_lib/turn_end_refusals.ts` is read off that union rather than off this
  * comment for exactly that reason, and the count is corrected here rather than
- * left as a stale header the next reader has to disbelieve.
+ * left as a stale header the next reader has to disbelieve. E made it five.
  *
  * ## Removal condition
  *
@@ -157,6 +164,23 @@ import {
 // agreement invisible when the producer's layout moved. A builder makes the move
 // a type error.
 import { statePathFor as ciStatePathFor } from '../before_complete_hook.js';
+// The spec-backed options-block reading, imported rather than re-derived:
+// `user-interaction` Iron Law 1's definition of an ask — a block PLUS its
+// recommendation line — lives in exactly one place and detector E reads it from
+// there.
+//
+// WHAT KEEPS IT FROM RUNNING ON IMPORT, stated precisely because the obvious
+// answer is wrong: that module is `_isCliEntry`-guarded, but WITHOUT the
+// `__AGENT_CONFIG_BUNDLE__` early-out this file carries. Inside
+// `dist/hooks/dispatch.js` every module shares one `import.meta.url`, so the
+// guard alone would not settle it; what does is the `.__direct__` argv rewrite
+// in the `build:hooks` banner. Named here so a future change to that banner
+// does not silently start running a lint's `main()` on every hook dispatch.
+import {
+    find_option_blocks,
+    recommendationsUnder,
+    splitAndMask,
+} from '../check_reply_consistency.js';
 import { isSafeTranscriptPath } from './end_review_nudge_hook.js';
 import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
@@ -190,7 +214,13 @@ const EXIT_ALLOW = 0;
 export const TRANSCRIPT_READ_MAX_BYTES = 8 * 1024 * 1024; // 8 MB
 
 /** Detector identity, used in the state marker and the refusal text. */
-export type DetectorId = 'promissory' | 'language' | 'verification' | 'completion' | 'untested';
+export type DetectorId =
+    | 'promissory'
+    | 'language'
+    | 'verification'
+    | 'completion'
+    | 'pending-decision'
+    | 'untested';
 
 export interface Finding {
     detector: DetectorId;
@@ -723,8 +753,117 @@ export function detectUnverifiedEdit(toolCalls: readonly ToolCall[]): Finding | 
     };
 }
 
+/**
+ * Detector E — a decision put to the user in this turn, dropped before the turn
+ * ended.
+ *
+ * THE MEASURED FAILURE. An assistant turn put three numbered options and a
+ * recommendation line to the user. The `end-review-nudge` stop concern then
+ * produced a SECOND assistant execution with no intervening user message, and
+ * that second reply handled the nudge while demoting the open question to a
+ * subordinate clause — "bleibt davon unberührt und liegt bei Dir". From the
+ * user's side the conversation ended without a question. No existing rule
+ * catches this: `user-interaction` Iron Law 1 inspects a reply that HAS an
+ * options block, `check_reply_consistency` receives a draft and not a
+ * transcript, `active-remediation` governs findings rather than issued
+ * decisions, and `no-cheap-questions` guards the opposite direction.
+ *
+ * WHAT IT READS. `assistantTurnTexts` — the assistant texts since the last
+ * GENUINE user prompt, with synthetic prompts and sidechain entries already
+ * filtered by `readTranscriptTail`. So a task notification, a system reminder or
+ * a subagent's own prompt does not read as an answer, which is the whole point:
+ * the failure is defined by the absence of a real user turn.
+ *
+ * WHAT IT DELIBERATELY DOES NOT DO. It does not model the decision — no id, no
+ * `pending → answered` lifecycle, no semantic matching of a free-text reply
+ * against an option. That object is grant-shaped and
+ * `road-to-decision-closure` owns its ownership routing; a second obligation
+ * ledger here would be the parallel taxonomy that roadmap exists to prevent.
+ * This is transcript adjacency and nothing above it.
+ *
+ * AN ASK IS A BLOCK **PLUS** ITS RECOMMENDATION LINE, and that qualifier is
+ * load-bearing rather than pedantic. `find_option_blocks` calls any run of two
+ * or more consecutive numbered lines a block — a plan, a findings list, an
+ * ordinary enumeration. Keyed on the block alone this detector fired on 29 of
+ * this repository's own 592 assistant turns, and 8 of those blocks carried no
+ * recommendation line anywhere near them: pure false positives on narrative
+ * lists, in a detector that can REFUSE a turn. `user-interaction` Iron Law 1
+ * already says the recommendation line is the ask, so requiring it removes that
+ * whole class by applying the rule this refusal cites rather than by bolting a
+ * heuristic beside it.
+ *
+ * The cost, stated rather than discovered: an options block whose recommendation
+ * line was omitted is invisible here. That reply is ALREADY a
+ * `check_reply_consistency` finding and a stated Iron Law 1 violation, so it is
+ * the malformed-ask problem rather than the dropped-ask problem — a different
+ * defect with a different owner.
+ *
+ * REUSE. `find_option_blocks` and `recommendationsUnder` are both the
+ * spec-backed readings behind `check_reply_consistency`, extracted rather than
+ * copied. `interruption_ledger_hook` carries its own `hasNumberedOptions` for
+ * the capture-only ledger; a third reading of the same rule would drift from
+ * both.
+ *
+ * TWO KNOWN FALSE-POSITIVE PATHS, named because a refusing detector owes its
+ * residual rather than only its fix:
+ *
+ *   · A BLOCKQUOTED illustration of an ask — `> 1.` / `> 2.` plus a quoted
+ *     recommendation line — reads as live. `OPTION_LINE_RE` accepts a leading
+ *     `>` deliberately, because this suite's own documented ask shape is often
+ *     blockquoted, so excluding it would miss real asks to avoid a quoted one.
+ *     Fenced illustrations ARE excluded and tested; blockquoted ones are not,
+ *     and narrowing the shared parser to fix that would change what
+ *     `check_reply_consistency` enforces about Iron Law 1.
+ *   · A genuine user turn carrying NO `type: 'text'` block — an image-only
+ *     message — does not reset the turn, because `readTranscriptTail` skips an
+ *     entry with no text before reaching the reset. Changing that would move
+ *     `turnOrdinal` for all four other detectors on a shape none of them has
+ *     been measured against.
+ *
+ * Both cost one extra line in a reply, once: the re-entrancy layers cap a turn
+ * at ONE refusal, so neither can wedge a session.
+ */
+export function detectDroppedDecision(assistantTurnTexts: readonly string[]): Finding | null {
+    if (assistantTurnTexts.length < 2) return null;
+    // Masked once per text, not once per block: this runs on the stop path over
+    // every assistant text of the turn, and a reply with four numbered blocks
+    // would otherwise split and fence-mask the whole reply four times.
+    const asksIn = (text: string): ReturnType<typeof find_option_blocks> => {
+        const blocks = find_option_blocks(text);
+        if (blocks.length === 0) return blocks;
+        const masked = splitAndMask(text);
+        return blocks.filter((b) => recommendationsUnder(text, b, masked).length > 0);
+    };
+    const closing = assistantTurnTexts[assistantTurnTexts.length - 1]!;
+    if (asksIn(closing).length > 0) return null;
+    for (let i = assistantTurnTexts.length - 2; i >= 0; i -= 1) {
+        const earlier = assistantTurnTexts[i]!;
+        const blocks = asksIn(earlier);
+        if (blocks.length === 0) continue;
+        const block = blocks[blocks.length - 1]!;
+        return {
+            detector: 'pending-decision',
+            // The option NUMBERS and the line span, never the option text: the
+            // evidence is quoted into a refusal that reaches the transcript, and
+            // an options block can carry anything the reply carried.
+            evidence: `options ${block.numbers.join('/')} at lines ${block.startLine}-${block.endLine} of an earlier reply this turn`,
+            reason:
+                'an earlier reply in THIS turn put numbered options to the user ' +
+                'and no user answer followed — this closing reply carries no ' +
+                'options block, so the decision disappeared without being ' +
+                'answered, cancelled or superseded. A hook nudge, a reviewer ' +
+                'result or a task notification may ADD to a turn; it may not ' +
+                'displace a question already asked (user-interaction Iron Law 1: ' +
+                'the option block plus its recommendation line is the ask). ' +
+                'Re-present the block and its recommendation line at the end of ' +
+                'this reply',
+        };
+    }
+    return null;
+}
+
 // ---------------------------------------------------------------------------
-// Detector E — a completion claim over production code no test accompanies
+// Detector F — a completion claim over production code no test accompanies
 // ---------------------------------------------------------------------------
 
 /**
@@ -973,6 +1112,20 @@ export interface ToolCall {
 export interface TranscriptTail {
     lastAssistant: string;
     /**
+     * Every assistant text of the CURRENT turn, in order — reset at each genuine
+     * user prompt exactly like `toolCalls`, and for the same reason: a question
+     * asked three turns ago was answered, a question asked earlier in THIS turn
+     * was not. Detector E reads it; the other four read `lastAssistant`, which is
+     * always the last element when this is non-empty.
+     *
+     * A tool-only assistant entry contributes NOTHING here. `_messageText`
+     * returns null for it and the collector skips it, so the ordinary shape of a
+     * working turn — prose, tool call, prose — produces two elements and not
+     * three. That is the whole false-positive surface of detector E, and it is
+     * closed here rather than in the detector.
+     */
+    assistantTurnTexts: string[];
+    /**
      * How many GENUINE user prompts the transcript carries — harness-injected
      * user-role entries excluded via `isSyntheticPrompt`. This is the turn's
      * identity; see `alreadyRefusedTurn` for why the prompt's text is not.
@@ -1003,7 +1156,12 @@ export function readTranscriptTail(
     transcriptPath: string,
     opts: { homeDir?: string; maxBytes?: number } = {},
 ): TranscriptTail {
-    const empty: TranscriptTail = { lastAssistant: '', turnOrdinal: 0, toolCalls: [] };
+    const empty: TranscriptTail = {
+        lastAssistant: '',
+        turnOrdinal: 0,
+        toolCalls: [],
+        assistantTurnTexts: [],
+    };
     if (!transcriptPath || !isSafeTranscriptPath(transcriptPath, opts)) return empty;
     let lines: string[];
     try {
@@ -1023,6 +1181,7 @@ export function readTranscriptTail(
     let lastAssistant = '';
     let turnOrdinal = 0;
     let toolCalls: ToolCall[] = [];
+    let assistantTurnTexts: string[] = [];
     for (const rawLine of lines) {
         const line = rawLine.trim();
         if (!line) continue;
@@ -1054,6 +1213,7 @@ export function readTranscriptTail(
         if (text === null) continue;
         if (role === 'assistant') {
             lastAssistant = text;
+            assistantTurnTexts.push(text);
         } else if (!isSyntheticPrompt(text)) {
             turnOrdinal += 1;
             // A genuine user prompt starts a new turn, so the previous turn's
@@ -1061,9 +1221,19 @@ export function readTranscriptTail(
             // run three turns ago would vouch for an edit made now — the
             // "fresh" in edit-without-FRESH-verification is this line.
             toolCalls = [];
+            // Same boundary, same reason, for detector E: an options block the
+            // user has since replied to is answered, not dropped. Resetting on
+            // the identical line is what makes "in the SAME user turn" true of
+            // the array rather than merely intended.
+            assistantTurnTexts = [];
         }
     }
-    return { lastAssistant: lastAssistant.trim(), turnOrdinal, toolCalls };
+    return {
+        lastAssistant: lastAssistant.trim(),
+        turnOrdinal,
+        toolCalls,
+        assistantTurnTexts,
+    };
 }
 
 /**
@@ -1185,9 +1355,10 @@ export function main(): number {
     // in production while its comment claimed it was enforced — the same
     // fixed-the-definition-not-the-caller shape as two other findings in that
     // round, which is why this line exists rather than a default parameter.
-    const { lastAssistant, turnOrdinal, toolCalls } = readTranscriptTail(transcriptPath, {
-        maxBytes: TRANSCRIPT_READ_MAX_BYTES,
-    });
+    const { lastAssistant, turnOrdinal, toolCalls, assistantTurnTexts } = readTranscriptTail(
+        transcriptPath,
+        { maxBytes: TRANSCRIPT_READ_MAX_BYTES },
+    );
     if (!lastAssistant) return EXIT_ALLOW;
 
     // Layer 2 — keyed on the turn's ORDINAL, never on the prompt's text.
@@ -1240,10 +1411,21 @@ export function main(): number {
         dispatchOpen
             ? null
             : detectCompletionClaim(lastAssistant, readCiSettled(workspaceRoot, rawSessionId)),
-        // Detector E. Excused by an open dispatch for the same reason A and D
-        // are: a turn waiting on a subagent has not finished, so its closing is
-        // not the claim this fires on. Otherwise unconditional — it reads the
-        // turn's own edits and its own prose, and needs no state file.
+        // Detector E is UNCONDITIONAL, and that is the opposite choice from A
+        // and D one line above rather than an oversight. An open dispatch
+        // excuses a promissory closing because the work is genuinely still
+        // running; it excuses nothing about a question the user was already
+        // asked. Worse: a dispatch — or the `end-review-nudge` stop concern
+        // that produced the measured failure — IS the continuation that drops
+        // the decision, so narrowing E the same way would silence it in exactly
+        // the case it exists for.
+        detectDroppedDecision(assistantTurnTexts),
+        // Detector F takes the OTHER side of that same question, and the two
+        // sitting adjacent is the clearest place to say why. E fires on a
+        // question already asked, which an open dispatch cannot excuse. F fires
+        // on a completion CLAIM, and a turn waiting on a subagent has not
+        // finished — so its closing is not the claim F is about. Same slot,
+        // opposite trigger, opposite treatment of `dispatchOpen`.
         dispatchOpen ? null : detectUntestedChange(lastAssistant, toolCalls),
     ]) {
         if (f) findings.push(f);
@@ -1263,8 +1445,9 @@ export function main(): number {
     process.stderr.write(
         `turn-end-gate: REFUSED — this turn is not finished.\n${lines.join('\n')}\n` +
             '  Do the promised work now, correct the language, run the ' +
-            'verification the edit needs, or read the CI verdict before claiming ' +
-            'it — then end the turn.\n' +
+            'verification the edit needs, read the CI verdict before claiming ' +
+            'it, or re-present the options block this turn dropped — then end ' +
+            'the turn.\n' +
             '  This turn will not be refused a second time.\n',
     );
     return EXIT_BLOCK;
