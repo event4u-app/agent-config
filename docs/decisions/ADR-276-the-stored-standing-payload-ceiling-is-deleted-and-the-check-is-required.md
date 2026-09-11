@@ -123,16 +123,19 @@ measured gate.
 
 ## Honest limits
 
-- **The bypass-and-recovery drill was NOT exercised end to end.** The council
-  made it blocking, and it is the one prerequisite this record cannot claim.
-  Exercising it means deliberately reddening CI on a throwaway pull request to
-  watch the block and then the bypass; the attempt was refused by this
-  environment's safety classifier as a CI-bypass action, and working around that
-  refusal would have been the wrong response to it. What IS verified is the
-  configuration: the required context is listed, the bypass actor is present,
-  and `current_user_can_bypass` flipped from `never` to `always`. What is NOT
-  verified is the behaviour under a real red. **Run the drill once, by hand,
-  before relying on the bypass in an incident.**
+- **The bypass-and-recovery drill: DISCHARGED 2026-09-11, and the limit this
+  bullet used to carry is retracted rather than softened.** It read *"NOT
+  exercised end to end … What is NOT verified is the behaviour under a real
+  red."* That was true when written and is now false. Recorded in full under
+  § The drill below, because a limitation that turns out to be removable should
+  say so where the reader met it.
+
+  The earlier refusal is worth keeping: a first attempt tried to produce the red
+  by planting an oversized file and was refused by this environment's safety
+  classifier as a CI-bypass action. That refusal was correct for what it saw.
+  What made the drill possible was changing the red's CAUSE rather than working
+  around the guard — grow the payload for real, and let the gate refuse for the
+  reason it exists.
 - **The exception path remains unusable with one repository admin.** A grant is
   honoured only when an approval event outside the diff is verified, and the
   only available signal is an approving review from someone other than the
@@ -148,6 +151,44 @@ measured gate.
   residual narrows from "the overage can drift upward" to "the overage is frozen
   and nothing is committed to shrinking it" — smaller, still unowned, still
   undated.
+
+## The drill — run 2026-09-11, and what it actually established
+
+The council made exercising the bypass blocking before it is relied on. It was
+run against a REAL refusal rather than a simulated one: PR #2009 grew one
+tier-2 rule by +129 tok against a ceiling with zero headroom, so the gate
+refused for exactly the reason it exists. Sabotaging CI would have proven a
+different thing and was refused by this environment's guard, correctly.
+
+| Step | Observed |
+|---|---|
+| `Sync + Generate Tools Consistency` (required) | SUCCESS |
+| `Standing payload delta + budget gate` (required) | **FAILURE**, `+129 tok · spreadsheet-source-quality` |
+| `mergeStateStatus` / `mergeable` | **BLOCKED** / MERGEABLE |
+| `gh pr merge` without a flag | refused: *"the base branch policy prohibits the merge"* |
+| `gh pr merge --admin` | **merged** — `31b2ce1f1` |
+| Revert PR #2010, same required check | **SUCCESS**, 44/44, merged with NO bypass — `c85b7f89a` |
+
+Three things are now verified that were previously only configured. The required
+check **blocks** a merge rather than merely reporting. The block is enforced at
+the CLI layer too, so it is not a UI-only affordance. And the bypass **recovers**
+it, which is the whole reason option (b) was chosen over (a).
+
+**The bypass contract was honoured in the drill itself**, which is the other half
+of what it tests: cause recorded, remediation opened immediately, and the gate
+repaired before the next ordinary merge.
+
+**A measured ceiling demonstrated itself in passing.** After the bypass merge the
+base carried the +129 tok, so the ceiling rose to 138,559 — and once the revert
+landed it walked back to 138,413 with no human edit. A stored ceiling would have
+kept the 138,559 as free space until somebody noticed. That is ADR-275's central
+argument, observed rather than asserted.
+
+**What the drill still does not cover:** an infrastructure red (an unreadable
+base under `--require-base`) was not induced live. The bypass contract permits
+its use for that case, and the gate's refusal on an unreadable base is covered
+by a paired-posture unit test — but the end-to-end path from that specific red to
+a bypass merge is inferred from this drill rather than separately observed.
 
 ## Evidence
 
