@@ -103,6 +103,65 @@ export interface Ledger {
     findings: LedgerFinding[];
     /** Why the finding set is empty. Required when it is; see empty_ledger_problem. */
     no_findings_reason?: string;
+    /** Integrity fields carried from the producing review — see INTEGRITY_FIELDS. */
+    [k: string]: unknown;
+}
+
+/**
+ * Fields the self-review artifact carries that say how much a ledger's silence
+ * is worth, and which `--ingest` used to drop on the floor.
+ *
+ * `check_review_schema` derives `acceptance_status` and `assurance` from
+ * `review_independence` and fails a ledger whose declarations disagree — so an
+ * ingested ledger missing all three was not merely thinner than a hand-written
+ * one, it could not satisfy the gate that reads it. Every committed ledger from
+ * 14.19.0 onward carries the full set; only the ingest path produced files
+ * without it, which is one of the two reasons nobody could run the ingest and
+ * get a green tree.
+ *
+ * Carried rather than recomputed: the producing run is the only thing that
+ * knows how many reviewers answered and how much of the diff they saw, and a
+ * consumer inferring it from the findings would be inventing the integrity
+ * claim the fields exist to record.
+ */
+export const INTEGRITY_FIELDS = [
+    'review_independence',
+    'context_relation',
+    'acceptance_status',
+    'assurance',
+    'reviewers',
+    'coverage',
+] as const;
+
+/**
+ * Merge a self-review artifact into a ledger: new findings by id, and the
+ * integrity fields on first write.
+ *
+ * The integrity fields are written only when the ledger does not already carry
+ * them. A second ingest into a ledger a human has since adjudicated must not
+ * silently restate what the earlier run claimed about independence — the first
+ * producing run is the one whose claim the dispositions were filled against.
+ */
+export function merge_ingest(
+    ledger: Ledger,
+    artifact: Record<string, unknown>,
+): { ledger: Ledger; added: number; carried: string[] } {
+    const known = new Set(ledger.findings.map((f) => f.finding_id));
+    let added = 0;
+    for (const f of (artifact['findings'] as LedgerFinding[] | undefined) ?? []) {
+        if (!known.has(f.finding_id)) {
+            ledger.findings.push(f);
+            added++;
+        }
+    }
+    const carried: string[] = [];
+    for (const key of INTEGRITY_FIELDS) {
+        if (ledger[key] === undefined && artifact[key] !== undefined) {
+            ledger[key] = artifact[key];
+            carried.push(key);
+        }
+    }
+    return { ledger, added, carried };
 }
 
 /** Mirrors self_review_gate.classifyBlocking — security/claim × critical/high. */
@@ -389,11 +448,15 @@ function main(argv: readonly string[]): number {
     const ledgerPath = _ledger_path(dir, release);
 
     if (ingest) {
-        const incoming = parse_ledger(
+        const artifact = JSON.parse(fs.readFileSync(ingest, 'utf-8')) as Record<string, unknown>;
+        // Validate the finding shape through the same parser the committed
+        // ledger goes through, so a malformed artifact is rejected here rather
+        // than written to disk and discovered by the gate that reads it.
+        parse_ledger(
             JSON.stringify({
                 schema_version: 1,
                 release,
-                findings: (JSON.parse(fs.readFileSync(ingest, 'utf-8')) as { findings: LedgerFinding[] }).findings,
+                findings: (artifact['findings'] as LedgerFinding[] | undefined) ?? [],
             }),
             ingest,
         );
@@ -401,20 +464,24 @@ function main(argv: readonly string[]): number {
         if (fs.existsSync(ledgerPath)) {
             ledger = parse_ledger(fs.readFileSync(ledgerPath, 'utf-8'), ledgerPath);
         }
-        const known = new Set(ledger.findings.map((f) => f.finding_id));
-        let added = 0;
-        for (const f of incoming.findings) {
-            if (!known.has(f.finding_id)) {
-                ledger.findings.push(f);
-                added++;
-            }
-        }
+        const { added, carried } = merge_ingest(ledger, artifact);
         fs.mkdirSync(path.dirname(ledgerPath), { recursive: true });
         fs.writeFileSync(ledgerPath, JSON.stringify(ledger, null, 2) + '\n');
         process.stdout.write(
             `📥  ingested ${added} new finding(s) into ${path.relative(REPO_ROOT, ledgerPath)} — ` +
                 'fill dispositions before the release validation goes green\n',
         );
+        if (carried.length > 0) {
+            process.stdout.write(`    carried integrity fields: ${carried.join(', ')}\n`);
+        }
+        const absent = INTEGRITY_FIELDS.filter((k) => ledger[k] === undefined);
+        if (absent.length > 0) {
+            process.stdout.write(
+                `⚠️   artifact carried no ${absent.join(', ')} — ` +
+                    'check_review_schema derives acceptance_status and assurance from ' +
+                    'review_independence and will red on a ledger that declares neither\n',
+            );
+        }
         return 0;
     }
 
