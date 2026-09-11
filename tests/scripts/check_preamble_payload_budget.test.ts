@@ -4,6 +4,7 @@
 // the line. So these tests pin BOTH directions: within budget passes, growth
 // past the headroom fails, and a budget file that cannot be parsed is a misuse
 // exit rather than a silent pass.
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -297,6 +298,27 @@ describe('the gate reds on growth past whichever ceiling applies', () => {
         expect(main([])).toBe(0);
     });
 
+    it('an UNESTABLISHED ceiling does not become an over-budget verdict', () => {
+        // The defect this pins was invisible until the stored ceiling was
+        // deleted, because that number was the advisory fallback. Without it,
+        // a run that cannot read the base fell back to the DESIGN ceiling — and
+        // this tree is 28 % over design, so an unreadable base reported as
+        // "payload grew past the ratchet". That is the "I could not look" /
+        // "I looked and it grew" conflation the enforcing refusal is worded to
+        // prevent, arriving one layer up. Measured in CI: the Node Tests
+        // checkout has no reachable base, and two cases here went red for a
+        // reason no diff caused.
+        const advisory = decide({ baseRef: null, today: '2026-09-11' });
+        expect(advisory.ceiling.verified).toBe(false);
+        expect(advisory.ok, 'an advisory run reports, it does not gate').toBe(true);
+
+        // SENSITIVITY, and the reason this is not a hole: the identical input
+        // under the posture CI actually uses REFUSES.
+        const enforcing = decide({ baseRef: null, requireBase: true, today: '2026-09-11' });
+        expect(enforcing.ok).toBe(false);
+        expect(enforcing.ceiling.violations.join(' ')).toMatch(/ENFORCING/);
+    });
+
     it('the ceiling it compares against is at least the design ceiling, never below', () => {
         // The one property the formula must never lose: `max` means the design
         // ceiling is a FLOOR. A measured base below it may tighten nothing.
@@ -332,6 +354,27 @@ function fakeRepoWithHostTree(sourceRules: string[], hostRules: string[]): strin
 
 /** A rule body big enough to put a fixture source over a small baseline. */
 const BIG = '# r\n\n' + 'x'.repeat(4000) + '\n';
+
+/**
+ * Turn a fixture root into a git repository with one commit.
+ *
+ * The ceiling is MEASURED at the base ref, so a fixture with no base leaves it
+ * unestablished — and an unestablished ceiling reports rather than gates, which
+ * would make an over-budget assertion vacuous. Hooks and signing are disabled
+ * so the fixture cannot inherit this repository's own guards.
+ */
+function commitFixture(root: string): void {
+    const run = (...args: string[]): void => {
+        execFileSync('git', args, { cwd: root, stdio: 'ignore' });
+    };
+    run('init', '--quiet');
+    run('config', 'core.hooksPath', path.join(root, '.no-hooks'));
+    run('config', 'commit.gpgsign', 'false');
+    run('config', 'user.email', 'fixture@example.com');
+    run('config', 'user.name', 'fixture');
+    run('add', '-A');
+    run('commit', '--quiet', '-m', 'fixture base');
+}
 
 /** The budget config a `--repo-root` fixture needs before the gate will read it. */
 function writeFakeBudget(root: string, over: Record<string, unknown>): void {
@@ -381,10 +424,19 @@ describe('the host reading is additive and never moves the ratchet', () => {
         // builds a root that IS over budget instead: sensitivity now comes from
         // the fixture rather than from a property of HEAD that has since moved.
         const root = fakeRepoWithHostTree(
-            [BIG, BIG, BIG], // source: far over the tiny baseline below
+            ['# r\n'], // source at the BASE commit: trivially small
             ['# h\n'], // host: a single trivial rule
         );
         writeFakeBudget(root, { baseline_tokens: 10, headroom_pct: 0 });
+        // A real base commit, because the ceiling is measured at one now: a
+        // fixture with no base leaves the ceiling UNESTABLISHED, and an
+        // unestablished ceiling reports rather than gates, so the case would be
+        // vacuous instead of red.
+        commitFixture(root);
+        // Now grow the source far past the base. Ceiling = max(10, base), and
+        // base is the small committed tree, so this is over budget.
+        const src = path.join(root, 'dist', 'agent-src', 'rules');
+        [BIG, BIG, BIG].forEach((b, i) => fs.writeFileSync(path.join(src, `big${i}.md`), b, 'utf-8'));
         const overBudget = main(['--repo-root', root]);
         expect(overBudget, 'the fixture source is over its own ceiling').not.toBe(0);
         // The host reading must not move it. If the host total were routed into
