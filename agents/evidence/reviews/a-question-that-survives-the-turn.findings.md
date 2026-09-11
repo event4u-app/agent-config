@@ -1,15 +1,15 @@
 # Findings: a-question-that-survives-the-turn
-<!-- completion-review: v1 | reviewed: 2026-09-11 | scope: 3c27fbb93814a3662780b5db99898540b825d0e872839e2e37789247fc0b5110 | diff: 16d7354fdfecad08562cb9cf30e06b2b87c5d1db | reviewer: r2-fresh-subagent-a-question-that-survives-the-turn | prompt_hash: 6f21b1e72bed974063153024fd65ac9600b40e1f0da3f92d3482ae30503c7b0d -->
+<!-- completion-review: v1 | reviewed: 2026-09-11 | scope: 9015abeb0b762538a19a1fdd9e15bf4a5aa7d80035cea9095767307ce2be43b2 | diff: 1e5003fb89225e650c4fa9dbb28169530cfc6a25 | reviewer: r2-fresh-subagent-a-question-that-survives-the-turn | prompt_hash: 6f21b1e72bed974063153024fd65ac9600b40e1f0da3f92d3482ae30503c7b0d -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-a-question-that-survives-the-turn"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-09-11 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 16d7354fdfecad08562cb9cf30e06b2b87c5d1db
-  scope_hash: 3c27fbb93814a3662780b5db99898540b825d0e872839e2e37789247fc0b5110
+  diff_sha: 1e5003fb89225e650c4fa9dbb28169530cfc6a25
+  scope_hash: 9015abeb0b762538a19a1fdd9e15bf4a5aa7d80035cea9095767307ce2be43b2
   roadmap: agents/roadmaps/road-to-a-question-that-survives-the-turn.md
-  roadmap_hash: 5bf806949684426516d94b3defadc864a4de09e5bf9619d91ba2f81d9c3906f5
-  ac_hash: 042a1b4078f8e9528ea0c0d3d625ff47f267374efeaafc7a06a1135ca02476b3
+  roadmap_hash: 8764bcddb3e90ed733e8b4227ec117aa1939cc2871082439fc171a020aa7dd66
+  ac_hash: 726a4a494212897c5d266a1144f1ca4409503968c9305ec7868731938b842350
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
 dispatched: 2026-09-11T15:05:51Z
