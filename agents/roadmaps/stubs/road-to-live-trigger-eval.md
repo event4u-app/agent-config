@@ -5,6 +5,12 @@ review_by: 2026-09-25
 
 # Stub: road to the live trigger-eval reading
 
+> **Arrivals:** 10 (at least) - latest `inbox-2026-09-y` (2026-09-11). Counted as
+> distinct prior round directories under the consumed-inbox tree, which is gitignored -
+> so the count is machine-local and the ordering is the finding, not the exact figure.
+> Read `(at least)` strictly: a broad keyword sweep returns a larger set that includes
+> incidental mentions, so this is the subject-matched floor.
+
 > **Stub — not active work.** One evidence gap under two names, transferred out
 > of **two** parent roadmaps on 2026-08-20 by the drain-run disposition
 > framework

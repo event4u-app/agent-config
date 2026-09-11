@@ -30,21 +30,21 @@
  *     3. Confirm           — show preview, ask once (skippable with --yes;
  *                            `--ci` always needs --yes — CI has no terminal).
  *     4. Branch + bump     — create `release/X.Y.Z`, update package.json,
- *                            .claude-plugin/marketplace.json, CHANGELOG.md,
- *                            then run `task release-prepare` so pack
- *                            manifests and tool projections pick up the
- *                            new version (otherwise the PR's own consistency
- *                            check fails — see PR #226 post-mortem).
+ *                            marketplace.json and CHANGELOG.md, then run
+ *                            `task release-prepare` so pack manifests and tool
+ *                            projections pick up the new version (skip it and
+ *                            the PR's own consistency check fails — PR #226).
  *     5. Commit + push     — `release: X.Y.Z`, push branch, open PR.
  *     6. Wait for CI       — `gh pr checks --watch` (skippable with --no-wait).
- *     7. Merge             — `gh pr merge --merge --delete-branch`.
- *     8. Tag main          — fast-forward main, tag the merge commit, push
- *                            the tag (triggers publish-npm.yml — except
- *                            under `--ci`, see step 9).
- *     9. GitHub Release     — `gh release create X.Y.Z --notes <changelog>`;
- *                            under `--ci`, also dispatches
- *                            release-guard.yml + publish-npm.yml +
- *                            cloud-release.yml explicitly.
+ *     7. Findings ledger   — VERIFY it is on the branch and dispositioned, and
+ *                            STOP otherwise; `self-review-gate.yml` builds it.
+ *     8. Merge             — `gh pr merge --merge --delete-branch`.
+ *     9. Tag main          — fast-forward main, tag the merge commit, push the
+ *                            tag (triggers publish-npm.yml, except under --ci).
+ *    10. GitHub Release    — `gh release create X.Y.Z --notes <changelog>`; under
+ *                            `--ci`, also dispatches release-guard.yml,
+ *                            publish-npm.yml and cloud-release.yml explicitly.
+ *    11. Cleanup           — delete the merged release branch, local + remote.
  *
  * Idempotency: pass `--resume` to recover from a partial failure. Each
  * step then probes existing state (branch, commit, PR, tag, GitHub
@@ -128,6 +128,8 @@ import {
 } from './_lib/release_highlights.js';
 import { canPrompt, promptLine } from './_lib/tty_prompt.js';
 import { preflightPosition } from './_lib/release_position.js';
+import { settleFindingsLedger } from './_lib/release_findings_ingest.js';
+import { TAG_TRIGGERED_WORKFLOWS, dispatchTagWorkflows } from './_lib/release_tag_dispatch.js';
 import {
     RELEASE_HEAD_DEFAULT,
     extract_changelog_section,
@@ -858,7 +860,7 @@ function preflight(target: string, opts: { resume?: boolean; ci?: boolean } = {}
     // The local-in-sync-with-origin check only applies to main; if we're
     // already on the release branch in resume mode, the relevant invariant
     // is "main hasn't moved beyond what release/X.Y.Z branched off", which
-    // `git pull --ff-only` enforces in step 8 anyway.
+    // `git pull --ff-only` enforces in step 9 anyway.
     if (branch === MAIN_BRANCH) {
         const local = git(['rev-parse', 'HEAD'], { capture: true });
         const remote = git(['rev-parse', `${REMOTE}/${MAIN_BRANCH}`], { capture: true });
@@ -972,7 +974,7 @@ export function confirmGate(target: string, yes: boolean): ConfirmVerdict {
     return { proceed: true };
 }
 
-// ─── orchestration ────────────────────────────────────────────────────────────
+// Orchestration.
 
 function _step(n: number, total: number, msg: string): void {
     process.stdout.write(`[${n}/${total}] ${msg}\n`);
@@ -988,7 +990,7 @@ function execute(
     const ci = opts.ci ?? false;
 
     const branch = `release/${plan.target}`;
-    const total = 10;
+    const total = 11;
 
     if (dry_run) {
         process.stdout.write('(dry-run) no git/gh mutations will be performed.\n');
@@ -1000,12 +1002,12 @@ function execute(
     const pr_state = pr_info ? pr_info['state'] : undefined;
     const pr_merged = pr_state === 'MERGED';
 
-    // ─── 1. branch ──────────────────────────────────────────────────────────
+    // Step 1 — branch
     checkout_release_branch(branch, pr_merged, (m) => {
         _step(1, total, m);
     });
 
-    // ─── 1b. era split (optional, separate commit) ─────────────────────────
+    // Step 1b — era split (optional, separate commit)
     // Lands as `chore(changelog): split era ...` BEFORE the release commit
     // so the split is reviewable on its own and the release commit only
     // touches the bump + new entry. Idempotent: archive already on disk
@@ -1038,7 +1040,7 @@ function execute(
         }
     }
 
-    // ─── 2. file mutations ──────────────────────────────────────────────────
+    // Step 2 — file mutations
     if (pr_merged) {
         _step(2, total, 'PR already merged — skip file bumps');
     } else {
@@ -1074,7 +1076,7 @@ function execute(
 
     guard_release_curation(plan.target, pr_merged);
 
-    // ─── 3. commit ──────────────────────────────────────────────────────────
+    // Step 3 — commit
     if (pr_merged) {
         _step(3, total, 'PR already merged — skip commit');
     } else {
@@ -1110,7 +1112,7 @@ function execute(
         // `git push -u` is naturally idempotent — it prints "Everything
         // up-to-date" when remote already matches. push_release_branch
         // additionally absorbs a remote that moved under us.
-        // Not a `_step`: a second `[4/10]` makes the cited evidence anchors ambiguous.
+        // Not a `_step`: a second `[4/11]` makes the cited evidence anchors ambiguous.
         process.stdout.write('        · verifying release gates locally (`task release:verify -- --cheap`)\n');
         run(local_release_gate_argv());
 
@@ -1147,7 +1149,7 @@ function execute(
             '--title', `release: ${plan.target}`, '--body', pr_body]);
     }
 
-    // ─── 6. wait for checks ─────────────────────────────────────────────────
+    // Step 6 — wait for checks
     if (pr_merged) {
         _step(6, total, 'PR already merged — skip checks wait');
     } else if (wait_for_checks) {
@@ -1157,17 +1159,23 @@ function execute(
         _step(6, total, 'Skip waiting for checks (--no-wait)');
     }
 
-    // ─── 7. merge ───────────────────────────────────────────────────────────
+    // Step 7 — the findings ledger: verify, never produce; the module says why.
+    settleFindingsLedger({
+        run, die, repoRoot: REPO_ROOT, remote: REMOTE, trunk: MAIN_BRANCH,
+        step: (m) => { _step(7, total, m); }, write: (s) => process.stdout.write(s),
+        resolvePr: () => Number((pr_info ?? _pr_for_branch(branch))?.['number'] ?? NaN) || null,
+    }, plan.target, branch, pr_merged);
+    // Step 8 — merge
     if (pr_merged) {
-        _step(7, total, `PR #${pr_info!['number']} already merged — skip`);
+        _step(8, total, `PR #${pr_info!['number']} already merged — skip`);
     } else {
-        _step(7, total, 'Merge pull request (merge commit) and delete branch');
+        _step(8, total, 'Merge pull request (merge commit) and delete branch');
         merge_release_pr(branch, wait_for_checks);
     }
 
-    // ─── 8. tag main + push tag ─────────────────────────────────────────────
+    // Step 9 — tag main + push tag
     // Always idempotent — even outside resume mode this prevents a mid-flight
-    // crash on step 9 from leaving a half-tagged release that subsequent
+    // crash on step 10 from leaving a half-tagged release that subsequent
     // `task release` invocations can't recover from without `--resume`.
     if (git(['rev-parse', '--abbrev-ref', 'HEAD'], { capture: true }) !== MAIN_BRANCH) {
         run(['git', 'checkout', MAIN_BRANCH]);
@@ -1176,29 +1184,29 @@ function execute(
 
     if (_tag_exists_local(plan.target)) {
         if (_tag_exists_remote(plan.target)) {
-            _step(8, total, `Tag ${plan.target} already on ${REMOTE} — skip`);
+            _step(9, total, `Tag ${plan.target} already on ${REMOTE} — skip`);
         } else {
-            _step(8, total, `Tag ${plan.target} exists locally — push only`);
+            _step(9, total, `Tag ${plan.target} exists locally — push only`);
             guard_publication(plan.target, 'tag push (resumed)');
             _push_tag(plan.target);
         }
     } else {
         // Sequencing is load-bearing (release-truth Phase 1, council
-        // 2026-08-03): merge FIRST (step 7), pull main (above), THEN derive
+        // 2026-08-03): merge FIRST (step 8), pull main (above), THEN derive
         // the tag message from the MERGED changelog — tagging before the
         // merge would read a section that does not exist yet. The annotated
         // tag replaces the previous lightweight one so tag metadata is a
         // fourth surface carrying the same single-source content.
-        _step(8, total, `Tag merge commit (annotated, from merged CHANGELOG) and push ${plan.target}`);
+        _step(9, total, `Tag merge commit (annotated, from merged CHANGELOG) and push ${plan.target}`);
         create_and_push_annotated_tag(plan.target);
     }
 
-    // ─── 9. GitHub Release ──────────────────────────────────────────────────
+    // Step 10 — GitHub Release
     if (_release_exists(plan.target)) {
-        _step(9, total, `GitHub Release ${plan.target} already exists — skip`);
+        _step(10, total, `GitHub Release ${plan.target} already exists — skip`);
     } else {
         _step(
-            9,
+            10,
             total,
             ci
                 ? 'Create GitHub Release (tag push under GITHUB_TOKEN triggers nothing — dispatching next)'
@@ -1223,7 +1231,7 @@ function execute(
         guard_publication(plan.target, 'GitHub Release notes');
         gh(['release', 'create', plan.target, '--title', plan.target, '--notes', notes]);
 
-        // ─── 9b. dispatch-chain the tag-triggered workflows (--ci only) ──────
+        // Step 10b — dispatch-chain the tag-triggered workflows (--ci only)
         // release-guard.yml, publish-npm.yml, and cloud-release.yml all
         // trigger on `push: tags: [0-9]+.[0-9]+.[0-9]+`, but a tag pushed
         // with the default GITHUB_TOKEN does NOT fire other workflows
@@ -1234,41 +1242,21 @@ function execute(
         // branch above), so a --resume re-run never re-dispatches a
         // publish that already happened.
         if (ci) {
-            _step(9, total, 'Dispatch release-guard.yml + publish-npm.yml + cloud-release.yml for the tag');
-            // NON-FATAL by design. By this point the release is already complete
-            // — the tag is pushed and the GitHub Release is created above, and
-            // npm publish runs asynchronously. These explicit dispatches are a
-            // FALLBACK for a tag pushed with the default GITHUB_TOKEN, which does
-            // NOT fire tag-triggered workflows (GitHub's recursion guard). When
-            // the tag was pushed with a PAT (RELEASE_PR_TOKEN), those three
-            // workflows already fired on the push and this dispatch is redundant.
-            // Dispatching via the API additionally needs the token's
-            // `actions:write` scope; a 403 here (scope missing) must NOT mark an
-            // already-shipped release as failed — warn and continue.
-            for (const wf of ['release-guard.yml', 'publish-npm.yml', 'cloud-release.yml']) {
-                const r = run(['gh', 'workflow', 'run', wf, '--ref', MAIN_BRANCH, '-f', `tag=${plan.target}`], {
-                    check: false,
-                });
-                if (r.returncode !== 0) {
-                    process.stderr.write(
-                        `⚠️  Could not dispatch ${wf} (exit ${r.returncode}) — the release ${plan.target} is ` +
-                            `already complete (tag + GitHub Release created; npm publishes async). If the tag was ` +
-                            `pushed with a PAT, ${wf} already fired on the tag push. If you rely on the explicit ` +
-                            `dispatch, grant RELEASE_PR_TOKEN the "Actions: read and write" scope (fine-grained PAT) ` +
-                            `or the "workflow" scope (classic PAT).\n`,
-                    );
-                }
-            }
+            _step(10, total, `Dispatch ${TAG_TRIGGERED_WORKFLOWS.join(' + ')} for the tag`);
+            dispatchTagWorkflows(
+                { run, warn: (s) => process.stderr.write(s), trunk: MAIN_BRANCH },
+                plan.target,
+            );
         }
     }
 
-    // ─── 10. delete the merged release branch (local + remote) ───────────────
+    // Step 11 — delete the merged release branch (local + remote)
     // Branch hygiene: a merged-but-undeleted release/X.Y.Z is what made
     // `--resume` mis-detect an old version. Delete it now so it can never
     // accumulate. Idempotent — skips whatever is already gone. Never touches
     // `main` or any tag.
     if (dry_run) {
-        _step(10, total, `Would delete merged branch ${branch} (local + remote)`);
+        _step(11, total, `Would delete merged branch ${branch} (local + remote)`);
     } else {
         const deleted: string[] = [];
         if (
@@ -1283,7 +1271,7 @@ function execute(
             deleted.push('remote');
         }
         const where = deleted.length > 0 ? deleted.join(' + ') : 'already gone';
-        _step(10, total, `Delete merged branch ${branch} (${where})`);
+        _step(11, total, `Delete merged branch ${branch} (${where})`);
     }
 
     process.stdout.write('\n');
@@ -1292,7 +1280,7 @@ function execute(
     process.stdout.write('   npm publish runs asynchronously via publish-npm.yml on the tag.\n');
 }
 
-// ─── entrypoint ───────────────────────────────────────────────────────────────
+// Entrypoint.
 
 /** Mirror of `argparse.Namespace` for this CLI. */
 interface Args {

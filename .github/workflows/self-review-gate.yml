@@ -29,9 +29,20 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 # Write scope justified (road-to-ci-supply-chain-integrity 1.3, 2026-08-22):
-#   pull-requests: write — the gate posts its verdict onto the PR. contents
-#   stays read; nothing in this workflow writes to the repository. No
+#   pull-requests: write — the gate posts its verdict onto the PR. No
 #   pull_request_target in this tree, so a fork PR is capped read-only.
+#
+# `contents: read` here is the FLOOR, and exactly one job raises it. Since
+# 2026-09-11 `commit-release-ledger` declares `contents: write` on itself so it
+# can commit the findings ledger to a release branch — the owner's decision,
+# after two review rounds showed the release flow cannot produce that file at
+# any point in its own sequence. The scope stays on that job rather than moving
+# up here, so nothing else in this workflow can write, and its own `if:`
+# restricts it to a same-repo `release/*` head.
+#
+# Every job that reaches this run's artifacts also re-declares `actions: read`,
+# because a job-level block REPLACES this map instead of extending it — a read
+# scope is not inherited from here.
 permissions:
   contents: read
   pull-requests: write
@@ -72,12 +83,15 @@ jobs:
       - name: Dogfooded self-review (advisory; skips if ANTHROPIC_API_KEY absent)
         run: ./node_modules/.bin/tsx src/scripts/self_review_gate.ts --base "origin/${{ github.base_ref }}" --findings-out /tmp/self-review-findings.json
 
-      # Release-truth Phase 3: findings now carry stable ids and a durable
-      # ingestion artifact. On a release PR, blocking findings must be
-      # ingested + dispositioned in agents/evidence/release-findings/
-      # (`check_finding_dispositions --ingest /tmp/self-review-findings.json`)
-      # — the deterministic `finding-dispositions` job in release-validation
-      # is red until then. This job stays advisory by design.
+      # Release-truth Phase 3: findings carry stable ids and a durable ingestion
+      # artifact. On a release PR the two jobs below turn this artifact into the
+      # committed ledger; everywhere else the artifact is the record and this
+      # job stays advisory.
+      #
+      # Until 2026-09-11 this comment said a human runs the ingest. Nobody did:
+      # the ledger went missing once per release, six times between 14.19.0 and
+      # 15.0.0, and each absence turned every pull request in the repository red
+      # after the tag.
       - name: Upload findings artifact (ingestion input for the disposition ledger)
         # hashFiles() only sees GITHUB_WORKSPACE — gate on the file directly
         # and let a missing file (NEUTRAL run, no findings) be a clean no-op.
@@ -88,3 +102,262 @@ jobs:
           path: /tmp/self-review-findings.json
           retention-days: 30
           if-no-files-found: ignore
+
+  # The ledger is built here, where the findings artifact already is, and
+  # committed by the job after this one. Why it is two jobs, why the commit
+  # needs a PAT, and what the arrangement does and does not guarantee are all
+  # stated above `commit-release-ledger` rather than twice.
+  ingest-release-ledger:
+    name: Build the findings ledger (release PRs)
+    needs: live-advisory
+    # No actor condition. An earlier version compared `github.actor` against
+    # the actions bot as a recursion guard, and that skipped the job on exactly
+    # the CI-native release path, where the release PR is opened by
+    # GITHUB_TOKEN and the actor IS the bot — so the one flow that cannot
+    # ingest by hand was the one flow that never got a ledger. Recursion is
+    # bounded on the head commit instead, in both jobs below.
+    if: >-
+      github.event_name == 'pull_request' &&
+      startsWith(github.head_ref, 'release/') &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    # READ-ONLY, and that is the point of splitting this in two. This job runs
+    # `npm ci` and then a script from the checked-out release branch, so it
+    # executes third-party lifecycle scripts; the commit job below carries the
+    # write credential and installs nothing. A single job doing both put a
+    # repo-write token in `.git/config` next to `npm ci`, which is the
+    # supply-chain discipline `road-to-ci-supply-chain-integrity` exists for.
+    #
+    # `actions: read` is named explicitly because a job-level block REPLACES
+    # the workflow grant rather than extending it — without it `gh run
+    # download` 403s, and a tolerated 403 reads as a review that found nothing.
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ github.head_ref }}
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version: '20'
+      - run: npm ci --no-audit --no-fund --prefer-offline
+
+      - name: Build the ledger from this run's own findings
+        id: build
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          version="${HEAD_REF#release/}"
+          subject="chore(release): ingest self-review findings for $version"
+
+          # Recursion bound, checked before any spend. The commit job pushes
+          # with a PAT, and a PAT push DOES create a run — that is the whole
+          # point of it — so this workflow re-enters on its own commit. The
+          # head-commit subject terminates the chain deterministically at one
+          # push, and it does not depend on who the actor is.
+          #
+          # The trade is named rather than hidden: a finding this run raises
+          # ABOUT the ledger commit itself is not ingested. That is one
+          # marginal finding against a guaranteed-terminating push loop on a
+          # release branch.
+          if [ "$(git log -1 --pretty=%s)" = "$subject" ]; then
+            echo "::notice::head is this workflow's own ingest commit — nothing to do"
+            exit 0
+          fi
+
+          # ASK WHETHER THE ARTIFACT EXISTS, THEN DOWNLOAD. `gh run download
+          # || true` collapsed four different worlds into one green path: a
+          # missing permission, an API outage, a renamed artifact, and a review
+          # that genuinely found nothing. Only the last is ordinary.
+          if ! gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}/artifacts" \
+              --jq '.artifacts[].name' > /tmp/artifact-names; then
+            echo "::error::cannot list this run's artifacts — the ledger for $version was not built"
+            exit 1
+          fi
+          if ! grep -qx 'self-review-findings' /tmp/artifact-names; then
+            # Ordinary, not broken: the upload carries `if-no-files-found:
+            # ignore` and the review exits 0 without writing the file when
+            # there is no API key, nothing reviewable, or no chunk completed.
+            echo "::notice::no findings artifact for $version — nothing to ingest"
+            exit 0
+          fi
+
+          mkdir -p /tmp/findings
+          gh run download "$RUN_ID" --name self-review-findings --dir /tmp/findings
+          ./scripts-run src/scripts/check_finding_dispositions \
+            --ingest /tmp/findings/self-review-findings.json --release "$version"
+
+          ledger="agents/evidence/release-findings/$version.json"
+          mkdir -p /tmp/ledger
+          cp "$ledger" "/tmp/ledger/$version.json"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Hand the ledger to the commit job
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: release-ledger
+          path: /tmp/ledger/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # ── the commit, with the write credential and nothing else ────────────────
+  #
+  # Release PRs only. The findings ledger is the durable record a release makes
+  # about its own review, and `check_finding_dispositions` fails a SHIPPED
+  # version that has none — on every pull request in the repository, because
+  # `consistency.yml` runs the same check without `--release`. Producing it was
+  # documented and unowned: the comment above used to tell a human to run
+  # `--ingest`, and the ledger went missing once per release, six times between
+  # 14.19.0 and 15.0.0.
+  #
+  # WHY IN CI AND NOT IN `release.ts`. Two independent review rounds
+  # established that no placement inside the release flow works.
+  # `finding-dispositions` runs on the release PR and reds while the ledger
+  # lacks a finding the review reported, so a release step that produced the
+  # ledger AFTER its check wait could never run — the wait had already died on
+  # that red check — and one that produced it BEFORE the wait pushed a commit
+  # whose checks had not started.
+  #
+  # WHAT THIS BUYS, EXACTLY. The ledger reaches the release branch before the
+  # MERGE, which is the thing the release needs and could not do for itself. It
+  # buys NO ordering against `finding-dispositions`, which lives in
+  # `release-validation.yml` and is triggered by the same event with no
+  # ordering relation — `needs:` cannot cross workflows, and that gate has been
+  # measured in this repository reading its inputs before they existed.
+  #
+  # WHAT IT NEVER DOES. It writes findings with EMPTY dispositions, on purpose.
+  # Filling one states what the release ships, with a rationale and a named
+  # verifier; `finding-dispositions` stays red until a human does, and that red
+  # is the point rather than a gap.
+  commit-release-ledger:
+    name: Commit the findings ledger (release PRs)
+    needs: ingest-release-ledger
+    if: >-
+      github.event_name == 'pull_request' &&
+      startsWith(github.head_ref, 'release/') &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    # The one job in this workflow that writes, and the one that installs
+    # nothing and runs no repository script. `actions: read` is for the
+    # artifact handover; it is re-declared here because a job-level block
+    # replaces the workflow grant instead of extending it.
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ github.head_ref }}
+          # THE PAT IS THE MECHANISM, NOT A CONVENIENCE. A push authenticated
+          # with GITHUB_TOKEN creates no workflow run — this repository's own
+          # runbook asserts that twice — so the head it produces carries zero
+          # checks against a branch protection that requires one, and the
+          # release's own `gh pr checks --watch` then waits for checks that can
+          # never start. A third review round measured that deadlock in the
+          # GITHUB_TOKEN version of this job. `RELEASE_PR_TOKEN` is the pattern
+          # `release.yml` already uses for the same class of problem.
+          token: ${{ secrets.RELEASE_PR_TOKEN || github.token }}
+          # persist-credentials KEPT: the `git push origin "HEAD:$HEAD_REF"` below pushes the ledger commit with this credential.
+          persist-credentials: true
+
+      - name: Place, commit and push the ledger
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.run_id }}
+          # `secrets` is unavailable in a job-level `if:`, so the presence of
+          # the PAT is resolved here and acted on below.
+          HAVE_RELEASE_PR_TOKEN: ${{ secrets.RELEASE_PR_TOKEN != '' }}
+        run: |
+          set -euo pipefail
+          version="${HEAD_REF#release/}"
+          subject="chore(release): ingest self-review findings for $version"
+
+          if [ "$(git log -1 --pretty=%s)" = "$subject" ]; then
+            echo "::notice::head is this workflow's own ingest commit — nothing to do"
+            exit 0
+          fi
+
+          if [ "$HAVE_RELEASE_PR_TOKEN" != 'true' ]; then
+            # Deliberately green, and deliberately not a half-measure. Without
+            # the PAT this job could still commit, and the push it would make
+            # is the deadlock described above — so it does not make one. The
+            # release's step 7 is the single place that refuses a missing
+            # ledger, and `ledgerAbsentMessage` names this cause among the
+            # others.
+            echo "::warning::RELEASE_PR_TOKEN is not configured — no ledger will be pushed for $version"
+            exit 0
+          fi
+
+          if ! gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}/artifacts" \
+              --jq '.artifacts[].name' > /tmp/artifact-names; then
+            echo "::error::cannot list this run's artifacts — cannot tell whether a ledger was built"
+            exit 1
+          fi
+          if ! grep -qx 'release-ledger' /tmp/artifact-names; then
+            echo "::notice::no ledger was built for $version — nothing to commit"
+            exit 0
+          fi
+
+          mkdir -p /tmp/ledger
+          gh run download "$RUN_ID" --name release-ledger --dir /tmp/ledger
+          ledger="agents/evidence/release-findings/$version.json"
+          mkdir -p "$(dirname "$ledger")"
+
+          place_and_stage() {
+            cp "/tmp/ledger/$version.json" "$ledger"
+            # STAGE FIRST, THEN ASK. `git diff --quiet -- <path>` exits 0 on an
+            # UNTRACKED path, so for a version whose ledger is new — every
+            # first ingest, which is the only case that matters — the unstaged
+            # form reported "already current" and the job exited green having
+            # written nothing. Staging makes the new file visible to the
+            # comparison, and is also what makes the path-scoped commit below
+            # possible at all: `git commit -- <untracked>` fails on the
+            # pathspec.
+            git add -- "$ledger"
+          }
+
+          place_and_stage
+          if git diff --cached --quiet -- "$ledger"; then
+            echo "::notice::ledger for $version already current — nothing to commit"
+            exit 0
+          fi
+
+          git config user.name  'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          # Path-scoped: nothing else in this checkout belongs in this commit,
+          # and the message claims to be one thing.
+          git commit -m "$subject" -- "$ledger"
+
+          if git push origin "HEAD:$HEAD_REF"; then
+            exit 0
+          fi
+
+          # The branch moved after the checkout — a maintainer pushing a
+          # disposition fix, or a `--resume` re-push. Rebuild the commit on the
+          # current tip and try once more. The ledger is a whole file from the
+          # artifact, so replaying it needs no merge.
+          echo "::notice::push rejected — rebuilding the ledger commit on the current tip"
+          git fetch origin "$HEAD_REF"
+          git reset --hard "origin/$HEAD_REF"
+          place_and_stage
+          if git diff --cached --quiet -- "$ledger"; then
+            echo "::notice::the branch already carries this ledger — nothing to commit"
+            exit 0
+          fi
+          git commit -m "$subject" -- "$ledger"
+          if git push origin "HEAD:$HEAD_REF"; then
+            exit 0
+          fi
+          # A CLEAN NO-OP, NOT A RED CHECK. A failing check run here is what
+          # `watch_pr_checks` would report to the operator, so the release
+          # would die naming a bot job instead of naming the ledger. Step 7
+          # stops on the absent ledger with a message that says what to do.
+          echo "::warning::could not push the ledger for $version — release step 7 will stop and say so"

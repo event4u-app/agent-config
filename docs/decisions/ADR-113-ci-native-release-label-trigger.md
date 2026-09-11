@@ -132,7 +132,7 @@ maintainer approves the run once per release.
   on this repo) removes the approval requirement entirely — documented as
   the zero-friction upgrade path in `release.yml`'s header comment. The
   `actions: write` scope ("Actions: read and write" on a fine-grained PAT,
-  or the classic `workflow` scope) is required by release.ts step 9's
+  or the classic `workflow` scope) is required by release.ts step 10's
   explicit `gh workflow run` dispatch of the tag-triggered workflows
   (release-guard / publish-npm / cloud-release); without it that dispatch
   returns HTTP 403. As of 2026-07-21 that dispatch is **non-fatal** — the

@@ -5,6 +5,12 @@ review_by: 2026-12-07
 
 # Stub: road to ingesting the 14.21.0 self-review findings
 
+> **Arrivals:** 3 (at least) - latest `inbox-2026-09-w` (2026-09-11). Counted as
+> distinct prior round directories under the consumed-inbox tree, which is gitignored -
+> so the count is machine-local and the ordering is the finding, not the exact figure.
+> Read `(at least)` strictly: a broad keyword sweep returns a larger set that includes
+> incidental mentions, so this is the subject-matched floor.
+
 > **Stub — not active work.** Found 2026-09-07 while settling CI on an unrelated
 > delivery-layer branch. `Consistency` reds with
 > `14.21.0 has shipped and carries no findings ledger at

@@ -103,6 +103,121 @@ export interface Ledger {
     findings: LedgerFinding[];
     /** Why the finding set is empty. Required when it is; see empty_ledger_problem. */
     no_findings_reason?: string;
+    // The six integrity fields, declared rather than swept into an index
+    // signature. An index signature would hold them, and would also disable
+    // excess-property and typo detection on the whole type for every consumer:
+    // under `--strict`, `l.findigs` type-checks against a Ledger carrying one.
+    // The set is known and finite, so it costs six lines to keep the type.
+    review_independence?: string;
+    context_relation?: string;
+    acceptance_status?: string;
+    assurance?: string;
+    reviewers?: string[];
+    coverage?: unknown;
+}
+
+/**
+ * Fields the self-review artifact carries that say how much a ledger's silence
+ * is worth, and which `--ingest` used to drop on the floor.
+ *
+ * `check_review_schema` derives `acceptance_status` and `assurance` from
+ * `review_independence` and fails a ledger whose declarations disagree — so an
+ * ingested ledger missing all three was not merely thinner than a hand-written
+ * one, it could not satisfy the gate that reads it. Every committed ledger from
+ * 14.19.0 onward carries the full set; only the ingest path produced files
+ * without it, which is one of the two reasons nobody could run the ingest and
+ * get a green tree.
+ *
+ * Carried rather than recomputed: the producing run is the only thing that
+ * knows how many reviewers answered and how much of the diff they saw, and a
+ * consumer inferring it from the findings would be inventing the integrity
+ * claim the fields exist to record.
+ */
+export const INTEGRITY_FIELDS = [
+    'review_independence',
+    'context_relation',
+    'acceptance_status',
+    'assurance',
+    'reviewers',
+    'coverage',
+] as const;
+
+/**
+ * Merge a self-review artifact into a ledger: new findings by id, the integrity
+ * fields on first write, and — when the review found nothing — the reason that
+ * makes an empty ledger legible.
+ *
+ * MUTATES AND RETURNS THE SAME OBJECT. Callers must use the returned `ledger`
+ * rather than relying on the mutation; the two are the same reference today and
+ * the signature is what a later reader will trust.
+ *
+ * The integrity fields are written only when the ledger does not already carry
+ * them. A second ingest into a ledger a human has since adjudicated must not
+ * silently restate what the earlier run claimed about independence — the first
+ * producing run is the one whose claim the dispositions were filled against.
+ *
+ * The empty-findings case is the one that used to deadlock a release. A clean
+ * review produces `findings: []`, `empty_ledger_problem` refuses an empty
+ * ledger with no `no_findings_reason`, and the release then stopped demanding
+ * dispositions for zero findings — an instruction nobody can follow. An ingest
+ * knows exactly what a clean review means and writes it, with the coverage
+ * numbers as the checkable part rather than a bare assurance.
+ */
+export function merge_ingest(
+    ledger: Ledger,
+    artifact: Record<string, unknown>,
+): { ledger: Ledger; added: number; carried: string[]; reasoned: boolean } {
+    const known = new Set(ledger.findings.map((f) => f.finding_id));
+    let added = 0;
+    for (const f of (artifact['findings'] as LedgerFinding[] | undefined) ?? []) {
+        if (!known.has(f.finding_id)) {
+            ledger.findings.push(f);
+            added++;
+        }
+    }
+    // Assigned through one `unknown` view rather than per field: the six are a
+    // closed set the type declares, and spelling out six near-identical
+    // if-blocks to satisfy the checker would make the set harder to extend than
+    // the type is to read. The view is local to this loop.
+    const carried: string[] = [];
+    const sink = ledger as unknown as Record<string, unknown>;
+    for (const key of INTEGRITY_FIELDS) {
+        if (sink[key] === undefined && artifact[key] !== undefined) {
+            sink[key] = artifact[key];
+            carried.push(key);
+        }
+    }
+    // Only on an artifact that actually SAYS it found nothing. Without the key
+    // check, any JSON object without a `findings` key reads as an empty finding
+    // set, and the sentence below would assert a review that never happened —
+    // into the permanent record, which is worse than the deadlock it replaces.
+    let reasoned = false;
+    const declaresFindings = Array.isArray(artifact['findings']);
+    if (
+        declaresFindings &&
+        ledger.findings.length === 0 &&
+        (ledger.no_findings_reason ?? '').trim() === ''
+    ) {
+        ledger.no_findings_reason = _clean_review_reason(artifact);
+        reasoned = true;
+    }
+    return { ledger, added, carried, reasoned };
+}
+
+/** The `no_findings_reason` an ingest of a zero-findings artifact writes. */
+function _clean_review_reason(artifact: Record<string, unknown>): string {
+    const cov = artifact['coverage'] as Record<string, unknown> | undefined;
+    const reviewed = cov?.['filesReviewed'];
+    const total = cov?.['filesTotal'];
+    const scope =
+        typeof reviewed === 'number' && typeof total === 'number'
+            ? ` over ${reviewed} of ${total} changed file(s)`
+            : '';
+    return (
+        `The self-review ran and reported no findings${scope}; ingested from its own ` +
+        'artifact by the release, so the empty set is a result rather than an absence. ' +
+        'Check it against the coverage block above and the run that produced it.'
+    );
 }
 
 /** Mirrors self_review_gate.classifyBlocking — security/claim × critical/high. */
@@ -389,32 +504,68 @@ function main(argv: readonly string[]): number {
     const ledgerPath = _ledger_path(dir, release);
 
     if (ingest) {
-        const incoming = parse_ledger(
-            JSON.stringify({
-                schema_version: 1,
-                release,
-                findings: (JSON.parse(fs.readFileSync(ingest, 'utf-8')) as { findings: LedgerFinding[] }).findings,
-            }),
-            ingest,
-        );
+        // Guarded: a truncated or corrupt artifact otherwise exits the child on
+        // an uncaught exception, and the release reports only "command failed"
+        // with no indication that the artifact is the problem.
+        let artifact: Record<string, unknown>;
+        try {
+            artifact = JSON.parse(fs.readFileSync(ingest, 'utf-8')) as Record<string, unknown>;
+        } catch (e) {
+            process.stderr.write(
+                `❌  ${ingest}: not readable as JSON (${e instanceof Error ? e.message : String(e)})\n`,
+            );
+            return 2;
+        }
+        // Run the incoming findings through the parser the committed ledger goes
+        // through, and keep the RESULT rather than discarding it. What that buys
+        // is narrow and worth stating: the parser checks the envelope and that
+        // every entry has a non-empty `finding_id`. It does NOT check severity,
+        // kind or title, so an entry with a bad severity still lands — the
+        // schema gate is what reads those, on the committed file.
+        let incoming: Ledger;
+        try {
+            incoming = parse_ledger(
+                JSON.stringify({
+                    schema_version: 1,
+                    release,
+                    findings: (artifact['findings'] as LedgerFinding[] | undefined) ?? [],
+                }),
+                ingest,
+            );
+        } catch (e) {
+            process.stderr.write(`❌  ${e instanceof Error ? e.message : String(e)}\n`);
+            return 2;
+        }
         let ledger: Ledger = { schema_version: 1, release, findings: [] };
         if (fs.existsSync(ledgerPath)) {
             ledger = parse_ledger(fs.readFileSync(ledgerPath, 'utf-8'), ledgerPath);
         }
-        const known = new Set(ledger.findings.map((f) => f.finding_id));
-        let added = 0;
-        for (const f of incoming.findings) {
-            if (!known.has(f.finding_id)) {
-                ledger.findings.push(f);
-                added++;
-            }
-        }
+        const merged = merge_ingest(ledger, { ...artifact, findings: incoming.findings });
+        ledger = merged.ledger;
+        const { added, carried, reasoned } = merged;
         fs.mkdirSync(path.dirname(ledgerPath), { recursive: true });
         fs.writeFileSync(ledgerPath, JSON.stringify(ledger, null, 2) + '\n');
         process.stdout.write(
             `📥  ingested ${added} new finding(s) into ${path.relative(REPO_ROOT, ledgerPath)} — ` +
                 'fill dispositions before the release validation goes green\n',
         );
+        if (carried.length > 0) {
+            process.stdout.write(`    carried integrity fields: ${carried.join(', ')}\n`);
+        }
+        if (reasoned) {
+            process.stdout.write(
+                '    the review reported nothing — wrote no_findings_reason so the empty ' +
+                    'ledger is a result rather than an absence\n',
+            );
+        }
+        const absent = INTEGRITY_FIELDS.filter((k) => ledger[k] === undefined);
+        if (absent.length > 0) {
+            process.stdout.write(
+                `⚠️   artifact carried no ${absent.join(', ')} — ` +
+                    'check_review_schema derives acceptance_status and assurance from ' +
+                    'review_independence and will red on a ledger that declares neither\n',
+            );
+        }
         return 0;
     }
 

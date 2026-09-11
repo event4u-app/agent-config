@@ -5,6 +5,89 @@ review_by: 2026-09-15
 
 # Stub: six beta contracts lapse fresh between 2026-09-10 and 2026-09-15
 
+> **FIRED, then resolved the same day — kept as the record of what the gate did.**
+> `docs/contracts/release-sizing.md` carried `keep-beta-until: 2026-09-10`, the
+> date passed, and `check_beta_review_markers` exited 1 on **every** pull
+> request in the repository — not only on changes to that contract's surface.
+> First observed 2026-09-11 on PR #2003, whose diff is markdown under
+> `agents/` and touches no contract at all; `main`'s last Consistency run was
+> 2026-09-10T22:10Z, before the date rolled, so `main` is green only because
+> nothing has re-run there since.
+>
+> Nothing was decided here and nothing was edited under time pressure, which is
+> what this stub exists to prevent. The four legal actions below are unchanged
+> and all four remain owner-reserved; this line records that the prediction came
+> true on schedule, so the next reader meets a fired condition rather than an
+> upcoming one.
+>
+> **The horizon re-read on 2026-09-11**, because the set is not the six this
+> stub was written about. `check_beta_review_markers --horizon 14` now reports
+> **six upcoming fresh lapses**: `harness-expectations.md`, `install-layout.md`,
+> `install-scopes.md` and `surface-tiers.md` on 2026-09-15 (4 days), plus
+> `auto-orchestration-v1.md` on 2026-09-23 and `write-engine.md` on 2026-09-24 —
+> the last two are **not** in the original six and are new to this stub.
+> `reasoning-discipline-protocol.md` no longer appears in the upcoming set at
+> all; its disposition is recorded in the analysis this stub already cites, and
+> nothing in this edit re-opens it.
+
+> **DECIDED 2026-09-11 — promoted, and the date rule itself is going.** The
+> owner took option 2: `docs/contracts/release-sizing.md` now reads
+> `stability: stable` and carries no `keep-beta-until` line. The gate exits 0.
+>
+> The owner also rejected the premise underneath this whole stub, which matters
+> more than the one contract: **calendar time is not a proxy for maturity, and
+> under AI-driven development it is an actively misleading one.** A contract can
+> accumulate hundreds of real executions and several releases inside days while
+> another sits unexercised after ninety. So `keep-beta-until` is to stop being a
+> blocking gate at all, promotion binds to observable criteria — active
+> enforcement, consumer reliance, no known pending incompatible change — checked
+> on demand, and no graduation criterion may carry an elapsed-time term.
+> The principle and the mechanical change are at
+> [`road-to-evidence-driven-stability`](road-to-evidence-driven-stability.md).
+>
+> **What this supersedes in this file:** the four-legal-actions framing below
+> still describes today's gate, but its premise — that each contract must be
+> acted on *before its date* — is retired. The four lapsing 2026-09-15 are to be
+> evaluated individually against the three criteria, **with no new deadline
+> set**. The council's extend-with-a-60-day-window option is superseded
+> specifically: a falsifiable condition bolted onto a waiting period is still
+> the age rule.
+
+> **Council, 2026-09-11, on `release-sizing.md` specifically — extend or
+> promote.** Two seats (anthropic/claude-sonnet-4-5, openai/codex-default), two
+> rounds, peer-review, blind chairman, subscription transport, nothing billed.
+> Both **final** texts answered *promote to stable*, on the policy's own stated
+> criterion: the contract has not changed since the day it was written 63 days
+> ago, it is the normative source for a live changelog gate, it is referenced
+> from consumer-facing distribution documentation, and it passed through a major
+> release. Both seats also agreed the decision RULE generalises to the four
+> contracts lapsing 2026-09-15 while the RESULT does not — each is evaluated on
+> passage through a major, real enforcement or reliance, and known pending
+> incompatible change.
+>
+> **It is not a clean 2/2, and the reason is a fact the council did not have.**
+> One seat listed, among the conditions that would flip it: *"15.0.0 shipped
+> this morning and post-release testing is incomplete. If the merge happened
+> hours ago, extend 30 days"* — and resolved it by guessing the merge was
+> "yesterday or earlier". It was **5 h 09 min** before the run (merged
+> 2026-09-10T22:10:26Z, council 2026-09-11T03:19Z). That seat's own stated flip
+> condition is met on the evidence, so its answer is not the one its text
+> records. The other seat weighed the same proximity explicitly, called it the
+> strongest counter-argument, and stayed on promote because live enforcement and
+> consumer references resolve it.
+>
+> The peer-review stage produced the thing the extend option was missing — a
+> falsifiable readiness condition: *extend roughly 60 days, promote once the
+> first post-15.0.0 minor ships without requiring a scope-discipline revision.*
+> That is now a real option rather than a deadline moved because a deadline
+> arrived.
+>
+> **Nothing was executed.** Promotion creates a public compatibility commitment
+> (a breaking change would then require a major), which `decision-revisit-gate`
+> reserves to the owner, and a council split is an escalation condition rather
+> than a verdict. One further caution the council raised and this record keeps:
+> the blocked pull request establishes urgency, never which answer is correct.
+
 > **Stub — not active work.** It exists so that six dates inside two weeks are
 > reachable by grep from a non-archived roadmap, and so that each has an owner
 > before it fires rather than on the day it does. Created by
