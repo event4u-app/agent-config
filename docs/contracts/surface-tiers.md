@@ -1,9 +1,28 @@
 ---
-stability: beta
-keep-beta-until: 2026-09-15
+stability: stable
 ---
 
 # Surface tiers — core vs lab
+
+> **Status:** active · **stable** since 2026-09-11 · council-locked 2026-06-17.
+> Promoted on evidence rather than on elapsed time, against the three
+> graduation criteria and against no date; the reading is
+> `agents/evidence/analysis/beta-window-2026-09-15-evaluation.md`.
+>
+> **Active enforcement.** `check_surface_tiers` runs in `taskfiles/ci-fast.yml`
+> and `tests/scripts/check_surface_tiers.test.ts` holds it to golden parity over
+> both a fixture repository and this tree — so the split is measured on every
+> run rather than asserted here.
+>
+> **Consumer reliance.** `surface_tier` is read by `install.ts`,
+> `_lib/scoped_projection.ts`, `generate_pack_manifests.ts`,
+> `schemas/pack.schema.json`, `src/config/discovery/packs.yml`,
+> `lint_legal_pack` and `lint_pack_risk_class`.
+>
+> **No known pending incompatible change.** The split is council-locked and the
+> Python-to-TypeScript port of its checker (ADR-200) is complete.
+>
+> A breaking change here now requires a major.
 
 Every shipped artefact carries a **surface tier** so lab churn cannot
 destabilise the lean engine users install (road-to-install-contract-stability
