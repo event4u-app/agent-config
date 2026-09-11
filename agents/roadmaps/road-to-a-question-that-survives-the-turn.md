@@ -58,6 +58,11 @@ capability_gap: none
 ---
 # Road to a question that survives the turn
 
+> **Arrivals:** 2 — latest `round-c4e08a` (2026-09-11), which deepened the same
+> analysis over three loops and produced
+> `road-to-a-stop-slot-that-knows-it-continues`; earlier `round-7b3e91`, which
+> produced this file.
+>
 > **Source:** `agents/tmp.old/round-7b3e91/` - a session transcript plus one
 > supplied plan, analysed 2026-09-11. Claim verification at HEAD: both
 > architectural gaps **still-true**; three of the supplied plan's implementation
