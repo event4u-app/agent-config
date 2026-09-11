@@ -107,11 +107,21 @@ faked (§ Honest-degrade). "Looks good" is not a verification result.
 3. **Desktop + mobile viewport** (`screenshot`) — inspect a desktop width and ~375px; no overflow / clipping.
 4. **Text fit / no overlap** (`screenshot`, degrade `static_inspect`) — no collisions or truncation at the target breakpoints.
 5. **Referenced assets decode** (`image_decode`) — every referenced image / font resolves and decodes (no broken `src`).
-6. **Key interaction state** (`playwright`) — the primary interaction (open / submit / toggle) behaves; description-only where unavailable.
+6. **Every interaction the change introduces or touches** (`playwright`) — each one behaves: open, submit, toggle, and every view mode, filter and drag the change ships. Description-only where unavailable.
 7. **Capture evidence only when supported** (`screenshot`) — attach a screenshot / diff when the host can; otherwise cite what was statically checked.
 
 **Completion contract.** A design task with render capability present cannot
-claim "done" without at least steps 1–5 as evidence. Where capability is absent
+claim "done" without at least steps 1–**6** as evidence.
+
+**Step 6 moved INTO the mandatory range on 2026-09-11, and it read "the PRIMARY
+interaction" until then — both halves were the defect.** A contract whose
+mandatory range ends at step 5 is satisfied by an artifact that opens, paints,
+fits its viewports and decodes its assets while every button on it is dead;
+"primary", singular, then excused every interaction after the first. Measured
+consequence, reported by the maintainer: a feature whose detail view crashed on
+open and whose flyouts never fired, after which the states that should have been
+exercised — every view mode, every CRUD verb, drag-and-drop, the filters — had to
+be enumerated by hand. Steps 1-5 would all have passed on that page. Where capability is absent
 (no browser / renderer), report that plainly (§ Rollback language) and keep the
 completion claim scoped to what was actually checked. The checklist is exercised
 by the verification golden tasks in
