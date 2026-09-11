@@ -18,6 +18,12 @@ estate_growth_exempt: "Adds one later/ roadmap to receive the release-findings O
 ---
 # Road to the release-finding ordering guarantee
 
+> **Arrivals:** 3 (at least) - latest `inbox-2026-09-y` (2026-09-11). Counted as
+> distinct prior round directories under the consumed-inbox tree, which is gitignored -
+> so the count is machine-local and the ordering is the finding, not the exact figure.
+> Read `(at least)` strictly: a broad keyword sweep returns a larger set that includes
+> incidental mentions, so this is the subject-matched floor.
+
 > **Parked, not abandoned.** Created 2026-09-03 from `road-to-binding-findings`,
 > on a 2/2 AI-council verdict to partition rather than either weaken the
 > acceptance criterion or hold four verified fixes hostage to it.

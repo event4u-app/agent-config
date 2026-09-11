@@ -12,6 +12,12 @@ estate_offset_exempt: >-
 
 # Road to a run-continuation engagement anybody can point at
 
+> **Arrivals:** 4 (at least) - latest `inbox-2026-09-y` (2026-09-11). Counted as
+> distinct prior round directories under the consumed-inbox tree, which is gitignored -
+> so the count is machine-local and the ordering is the finding, not the exact figure.
+> Read `(at least)` strictly: a broad keyword sweep returns a larger set that includes
+> incidental mentions, so this is the subject-matched floor.
+
 > **Parked 2026-08-19. Resume when** any roadmap carrying
 > `execution.mode: autonomous` with open steps in three or more `## Phase`
 > sections is run to completion from a worktree and reaches a PR — then read the
