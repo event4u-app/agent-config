@@ -22,11 +22,15 @@ evidence:
     - src/skills/error-handling-patterns/SKILL.md
     - docs/contracts/design-artifact-verification.md
     - tests/scripts/turn_end_gate_hook.test.ts
+    - agents/evidence/analysis/detector-e-measured-over-two-corpora-2026-09-11.md
 review_trigger: >-
-  Detector E's false-positive rate is measured on a real transcript corpus with
-  `measure_turn_end_gate`, at which point this record is reopened to decide
+  The false-positive half fired and was discharged on 2026-09-11 (0 false
+  positives in 335 turns; see § Honest limits). What remains open is RECALL:
+  reopened when E's catch rate is measured against a labelled corpus, to decide
   whether the claim gate is the right trigger or whether it should also fire on
-  a ship verb. Also reopened if skill activation stops being zero — the whole
+  a ship verb — the measurement showed 15 of 16 no-test production turns did
+  not claim done, so the claim gate is where nearly all the filtering happens
+  and is the right thing to question first. Also reopened if skill activation stops being zero — the whole
   argument for moving this obligation into a hook is that the skill layer
   carrying it is measured at 0 invocations over 11,338 turns, and a non-zero
   figure changes that premise. Also reopened if a second host gains a
@@ -137,10 +141,17 @@ suite's only refusal-capable surface had a hole, and the fix belongs in it.
   hand — entity × CRUD verb × view mode × viewport × filter — is still enumerated
   by no artifact in this suite. Detector E refuses the turn that wrote none of
   it; it does not produce the list.
-- **The false-positive rate is unmeasured.** `measure_turn_end_gate` can derive
-  it against a real transcript store and has not been run for E. The design
-  argument for a low rate is the three-condition conjunction, not a measurement,
-  and the `review_trigger` above says so.
+- **~~The false-positive rate is unmeasured.~~ MEASURED 2026-09-11, same day.**
+  `measure_turn_end_gate` now scores E (and C) over a real corpus:
+  **1 fire in 335 turns across two stores**, and a hand read of that one fire
+  says it was right — so the measured false-positive count is **0**. The fire
+  is the reported feature itself: a turn that edited 28 production PHP files of
+  the ToDo recurrence module, touched no test, and opened with *"Fertig. E9 ist
+  umgesetzt und belegt."* Detector C was silent on it, which is this record's
+  own C-does-not-cover-E argument surviving contact with a corpus.
+  **RECALL stays unmeasured** — one fire is not a catch rate, and nothing
+  scores the turns E stayed silent on.
+  `agents/evidence/analysis/detector-e-measured-over-two-corpora-2026-09-11.md`.
 
 ## Alternatives rejected
 
@@ -171,5 +182,11 @@ suite's only refusal-capable surface had a hole, and the fix belongs in it.
   identical input**, so the argument for adding E fails loudly if C ever starts
   covering it. Sensitivity proven by neutralising the test-path check: 1 red,
   restored 108 green.
+- `agents/evidence/analysis/detector-e-measured-over-two-corpora-2026-09-11.md`
+  — the fire rate over two corpora, the cumulative condition breakdown that
+  makes E's silence readable, and the hand read of the single fire.
+- `src/scripts/measure_turn_end_gate.ts`,
+  `tests/scripts/measure_turn_end_gate.test.ts` — the instrument that produced
+  it, scoring with the shipped detectors over the gate's own population.
 - `src/skills/error-handling-patterns/SKILL.md`,
   `docs/contracts/design-artifact-verification.md` — the two prose fixes.
