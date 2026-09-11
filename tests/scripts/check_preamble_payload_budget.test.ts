@@ -205,20 +205,37 @@ describe('the grace ceiling is enforced and undated', () => {
         expect(readText('taskfiles', 'ci-fast.yml')).not.toContain("['grace_end_date']");
     });
 
-    it('still carries the ceiling the CI step passes, and it is above the design number', () => {
-        // Deleting the date must not have loosened the bound. What the ceiling
-        // DOES is asserted where that behaviour already lives and is not
-        // duplicated here: `the gate reds on growth past whichever ceiling
-        // applies` below owns the exit codes (and carries the caveat that a
-        // future reduction inverts one of them), and `the --ceiling override may
-        // only ever be LOOSER` owns the override direction. Re-asserting either
-        // would split one property across two places, and the copy would be the
-        // one without the caveat.
-        const grace = rawCiDelivery().grace_ceiling;
-        expect(typeof grace, 'ci_delivery.grace_ceiling must exist').toBe('number');
-        expect(grace).toBeGreaterThan(
-            Math.round(readBudget().baseline_tokens * (1 + readBudget().headroom_pct / 100)),
-        );
+    it('carries NO stored ceiling at all — there is no number left to edit upward', () => {
+        // The second regression pin, and the one roadmap step 4.4 exits on.
+        // `ci_delivery` stored a ceiling from 2026-08-24 until 2026-09-11; it is
+        // deleted (ADR-276) and the bound is measured at the base ref instead.
+        // Reintroducing a stored ceiling recreates the defect the measured form
+        // removed: a number that stays where a human last put it, so payload a
+        // merge REMOVED can be added straight back into the space it freed.
+        const keys = Object.keys(rawCiDelivery());
+        expect(keys).not.toContain('grace_ceiling');
+        expect(keys).not.toContain('grace_measured_at');
+        // The file-level grep 4.4 names, asserted as the file sees it rather
+        // than only as the parsed object does — a reintroduction inside a prose
+        // field would pass the key check and fail this one.
+        expect(readText('src', 'config', 'preamble-payload-budget.json')).not.toContain('grace_ceiling');
+    });
+
+    it('no consumer passes a stored ceiling any more — both call sites invoke the gate bare', () => {
+        // Sensitivity, same shape as the grace_end_date pin above: this is what
+        // fails if someone re-adds the `--ceiling` plumbing to either caller.
+        //
+        // Scoped to INVOCATION lines rather than the whole file on purpose. Both
+        // files carry prose explaining that the flag is gone, and a whole-file
+        // grep would fail on the explanation — a test that forbids documenting
+        // its own subject is a test people delete.
+        const invokesWithCeiling = (...seg: string[]): string[] =>
+            readText(...seg)
+                .split('\n')
+                .filter((l) => !l.trimStart().startsWith('#'))
+                .filter((l) => l.includes('check_preamble_payload_budget') && l.includes('--ceiling'));
+        expect(invokesWithCeiling('.github', 'workflows', 'standing-payload-delta.yml')).toStrictEqual([]);
+        expect(invokesWithCeiling('taskfiles', 'ci-fast.yml')).toStrictEqual([]);
     });
 });
 
@@ -249,18 +266,16 @@ describe('the --ceiling override may only ever be LOOSER', () => {
         expect(evaluate(undefined, undefined, Number.NaN).ceiling).toBe(design());
     });
 
-    it('the CI grace ceiling in the budget file is looser than the design ceiling', () => {
-        // If a future edit tightened grace_ceiling below the design number, the
-        // override would silently stop applying and the CI step would go red for a
-        // reason nobody wrote down. Pin the relationship, not the value.
+    it('no caller supplies one — the override survives only as an internal seam', () => {
+        // `evaluate`'s third parameter is still exercised above, and nothing in
+        // the tree passes it any more: `decide` hands it the COMPUTED ceiling,
+        // and the CLI refuses `--ceiling` outright. It is kept because the
+        // looser-only guard is a real property of the function and cheap to
+        // hold; what changed is that no configuration can reach it.
         //
-        // Read from the raw JSON, not `readBudget()`: that reader returns only the
-        // three fields the ratchet needs, so `ci_delivery` is not on its type — a
-        // deliberate narrowness, and the CI step reads the raw file for the same
-        // reason.
-        const grace = rawCiDelivery().grace_ceiling;
-        expect(typeof grace, 'ci_delivery.grace_ceiling must exist').toBe('number');
-        expect(grace).toBeGreaterThan(design());
+        // The pin that matters is therefore the absence of a stored number to
+        // pass, which lives in the block above.
+        expect(Object.keys(rawCiDelivery())).not.toContain('grace_ceiling');
     });
 });
 

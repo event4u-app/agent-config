@@ -130,10 +130,14 @@ describe('ceiling = max(design, effective base + grant, retained stored)', () =>
         expect(c.boundBy).toBe('design');
     });
 
-    it('the retained stored allowance can only WIDEN, never tighten', () => {
-        expect(base({ storedCeiling: 138_490 }).ceiling).toBe(138_490);
-        // Below the measured base it is simply outvoted by the max.
-        expect(base({ storedCeiling: 100 }).ceiling).toBe(138_413);
+    it('the formula has exactly two terms — no stored allowance can be passed in', () => {
+        // Stage 1 kept a third `max` term reading `ci_delivery.grace_ceiling`.
+        // Stage 2 deleted it (ADR-276), so the only way to widen the ceiling is
+        // for the BASE to be wider — which a pull request cannot arrange,
+        // because the base is the ref it branched from.
+        expect(base().ceiling).toBe(138_413);
+        expect(base({ basePayload: 200_000, headPayload: 200_000 }).ceiling).toBe(200_000);
+        expect(base({ basePayload: 1, headPayload: 1 }).ceiling).toBe(DESIGN);
     });
 
     it('no per-PR headroom: ten runs at the ceiling do not compound', () => {
