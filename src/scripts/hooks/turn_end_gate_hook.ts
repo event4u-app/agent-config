@@ -1048,7 +1048,7 @@ export function readTranscriptTail(
         // only a tool_use block has no text at all, so `continue`-ing on a null
         // text would drop exactly the entries this detector exists to see.
         if (role === 'assistant') {
-            toolCalls.push(..._toolCalls(content));
+            toolCalls.push(...extractToolCalls(content));
         }
         const text = _messageText(content);
         if (text === null) continue;
@@ -1070,8 +1070,15 @@ export function readTranscriptTail(
  * Extract this entry's tool calls, keeping only name, shell command and target
  * path. A tool input can hold a whole file body; nothing but those three fields
  * is carried forward.
+ *
+ * Exported because `measure_turn_end_gate` scores detectors C and E over a real
+ * transcript corpus and therefore has to rebuild the same `ToolCall[]` the gate
+ * sees. A second extractor there would be a second dialect of "what the turn
+ * did", and the measurement would then be of that dialect rather than of the
+ * shipped gate — the exact population-parity defect that script's own header
+ * documents twice.
  */
-function _toolCalls(content: unknown): ToolCall[] {
+export function extractToolCalls(content: unknown): ToolCall[] {
     if (!Array.isArray(content)) return [];
     const out: ToolCall[] = [];
     for (const blk of content) {
