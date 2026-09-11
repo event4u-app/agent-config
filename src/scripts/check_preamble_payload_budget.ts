@@ -109,17 +109,6 @@ interface Budget {
     baseline_tokens: number;
     headroom_pct: number;
     target_tokens: { median: number; p95: number };
-    /**
-     * `ci_delivery.grace_ceiling`, the RETAINED stored allowance — stage 1.
-     *
-     * It enters the ceiling through a `max`, so it can only ever widen the
-     * bound and never tighten it. It is retained rather than deleted in the
-     * change that introduces the measured ceiling because the gate runs at the
-     * base ref and cannot validate its own introduction; stage 2 removes this
-     * term from a base that already carries the measured code. `null` once it
-     * is gone, and the formula then has one term fewer.
-     */
-    stored_ceiling: number | null;
 }
 
 export interface BudgetVerdict {
@@ -142,13 +131,10 @@ export function readBudget(file: string = BUDGET_FILE): Budget {
         throw new Error(`${file}: baseline_tokens and headroom_pct must both be numbers`);
     }
     const target = (raw['target_tokens'] ?? {}) as Record<string, unknown>;
-    const delivery = (raw['ci_delivery'] ?? {}) as Record<string, unknown>;
-    const stored = Number(delivery['grace_ceiling']);
     return {
         baseline_tokens: baseline,
         headroom_pct: headroom,
         target_tokens: { median: Number(target['median']), p95: Number(target['p95']) },
-        stored_ceiling: Number.isFinite(stored) ? stored : null,
     };
 }
 
@@ -497,7 +483,6 @@ export function decide(opts: DecideOptions = {}): Decision {
         exceptions: ex.exceptions,
         exceptionErrors: ex.errors,
         verifiedApprovals: opts.verifiedApprovals ?? [],
-        storedCeiling: budget.stored_ceiling,
         // Through the as-of seam, not the wall clock. An exception expiry is
         // exactly the kind of verdict that must be reproducible from the
         // commit: a grant that expires overnight would make the same tree pass

@@ -112,15 +112,12 @@ export function boundsFrom(budget: unknown, exceptions: unknown): BoundSet | nul
     const baseline = Number(b['baseline_tokens']);
     const headroom = Number(b['headroom_pct']);
     if (!Number.isFinite(baseline) || !Number.isFinite(headroom)) return null;
+    // `design_ceiling` is the whole config-side bound now. The retained stored
+    // allowance stage 1 kept beside it was deleted in stage 2 (ADR-276), so a
+    // tree at or below design is bounded by this number and a tree above it is
+    // bounded by its own base measurement — neither of which lives in a field
+    // anyone can edit upward.
     const out: BoundSet = { design_ceiling: Math.round(baseline * (1 + headroom / 100)) };
-
-    // The retained stored allowance, while stage 1 keeps one. It enters the
-    // ceiling through a `max`, so it can only widen the bound — which is
-    // exactly why it must not be allowed to grow. Absent once stage 2 removes
-    // it, and an absent bound is simply not compared.
-    const delivery = (b['ci_delivery'] ?? {}) as Record<string, unknown>;
-    const stored = Number(delivery['grace_ceiling']);
-    if (Number.isFinite(stored)) out['stored_ceiling'] = stored;
 
     const ex = (exceptions ?? null) as Record<string, unknown> | null;
     const list = ex === null ? null : ex['exceptions'];
@@ -276,7 +273,9 @@ export function assertBoundsDidNotRise(opts: {
     // gone at head was not repaid, it was erased — the 2026-09-11 council's
     // blocking finding #3, and the one failure a shrink-only comparison misses
     // by construction, because a removed number is not a smaller number.
-    // `stored_ceiling` is deliberately exempt: removing it IS stage 2.
+    // Only `exception:` bounds are checked for deletion: `design_ceiling` is
+    // always present, and the stored allowance that used to need an exemption
+    // here no longer exists.
     const reportedDeletions = new Set<string>();
     for (const name of Object.keys(baseBounds)) {
         if (!name.startsWith('exception:')) continue;
@@ -304,15 +303,6 @@ export function assertBoundsDidNotRise(opts: {
  *  reader nowhere, and the three kinds have three different fixes. */
 function explain(name: string, base: number, head: number, baseRef: string): string {
     const rose = `rose from ${String(base)} to ${String(head)} against ${baseRef}`;
-    if (name === 'stored_ceiling') {
-        return (
-            `the retained stored standing-payload allowance ${rose}. It enters the ceiling through a max, ` +
-            'so it can only widen the bound — which is why it may not grow. ADR-264 decided that ' +
-            'standing-rule growth needs a compensating reduction elsewhere, not a bigger ceiling. This ' +
-            'term is scheduled for removal in stage 2 of the measured-ceiling migration; raising it now ' +
-            'moves in the opposite direction.'
-        );
-    }
     if (name === 'design_ceiling') {
         return (
             `the standing-payload design ceiling ${rose}. It derives from baseline_tokens × ` +

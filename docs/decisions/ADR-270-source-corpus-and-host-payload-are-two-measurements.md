@@ -44,7 +44,7 @@ peer review.
 The same council was asked three linked questions. This record carries **only the
 first**, which both seats classified as council-decidable. The other two were
 classified **owner-reserved by both seats** and are recorded as open questions in
-`agents/roadmaps/road-to-delivery-for-every-host.md` steps 4.2 and 4.4 — see
+`agents/roadmaps/archive/road-to-delivery-for-every-host.md` steps 4.2 and 4.4 — see
 § What this record deliberately does not decide.
 
 ## Context
@@ -208,7 +208,7 @@ only on argument.**
 
 ## References
 
-- `agents/roadmaps/road-to-delivery-for-every-host.md` — steps 4.2, 4.4, 7.2
+- `agents/roadmaps/archive/road-to-delivery-for-every-host.md` — steps 4.2, 4.4, 7.2
 - `docs/decisions/ADR-264-standing-payload-grace-ceiling-may-not-rise.md`
 - `docs/decisions/ADR-267-delivery-default-for-claude-code.md`
 - `docs/contracts/rule-router.md` — where the generated table lands
