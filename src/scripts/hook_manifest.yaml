@@ -919,13 +919,49 @@ concerns:
     # about it. The saving is the module load rather than a large read, which is
     # the smaller of the two flags below it and is stated as such.
     skip_on_refusal_retry: true
+  # road-to-a-question-that-survives-the-turn Phase 2 — the session baseline
+  # `end-review-nudge` subtracts. CAPTURE ONLY: one small JSON file per session
+  # under agents/runtime/state/review-baseline/ (gitignored), holding HEAD and
+  # the count of non-doc lines already dirty when the session began. It emits no
+  # context, never warns, and always exits 0.
+  #
+  # WHY. `end_review_nudge_hook`'s own header records that a dirty tree
+  # predating the session is charged to the session, and names the reason it was
+  # left: "no such baseline exists anywhere a `stop` concern can read it". That
+  # was true of a one-concern phase and stale by the time it mattered —
+  # session_start is bound on seven hosts here. Measured cost of leaving it: on
+  # an accumulator branch the nudge read 1,771 lines of two crashed sessions'
+  # uncommitted work and fired every turn.
+  #
+  # The counting function is IMPORTED from the nudge, so the baseline and the
+  # measurement cannot drift on what a non-doc mutated line is.
+  #
+  # BOUND ON `claude` ALONE, and narrowly on purpose. Seven hosts carry
+  # session_start, but `end-review-nudge` — the only reader — is bound on
+  # claude's stop slot and nowhere else (cowork refuses it explicitly). Binding
+  # the writer everywhere would spend ~91 ms of git per session start on six
+  # hosts to produce a file nothing opens. It is dropped for the `worker` role
+  # alongside its reader, for the same reason. Where the baseline is absent the
+  # nudge reads `absent` and degrades to exactly its previous behaviour,
+  # recorded in its telemetry row rather than inferred. fail_closed: false.
+  review-baseline:
+    script: src/scripts/hooks/review_baseline_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
   # road-to-conformance-round5 Phase 3 — the FIRST concern that can refuse a
   # turn-END. Round 5 measured the reason: both blocking carriers reached zero
   # violations, neither advisory carrier did, and 19 language violations
   # survived a pin that had fired 26-35 seconds earlier. Refusal-capable
   # intercepts enforce; context injection requests.
   #
-  # Two detectors on one guard — promissory closing (20 measured) and language
+  # FIVE detectors on one guard — promissory closing, language mismatch,
+  # unverified edit, unsettled completion claim, and a decision the turn asked
+  # and then dropped. This said "Two" and named the first pair, which was true
+  # of the concern on the day it was registered and of nothing since; the
+  # authority is `DetectorId` in the hook, and the demotion contract carries the
+  # per-detector bars. Original note, kept because its reason still holds:
+  # promissory closing (20 measured) and language
   # mismatch (19 measured) — because building the unsafe part twice is how a
   # second detector becomes a second outage.
   #
@@ -1272,7 +1308,7 @@ roles:
     # contacts, so a worker turn that ends in a question to its orchestrator
     # would be recorded as a contact that never reached a human, inflating the
     # exact baseline Phase 0 pre-registers.
-    drop: [delegation-nudge, skill-route, end-review-nudge, council-availability, team-review-gate, self-repair, session-eol, interruption-ledger]
+    drop: [delegation-nudge, skill-route, end-review-nudge, review-baseline, council-availability, team-review-gate, self-repair, session-eol, interruption-ledger]
 
 platforms:
   augment:
@@ -1283,7 +1319,7 @@ platforms:
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape, comment-discipline, design-pass]
 
   claude:
-    session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register, journal-record]
+    session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register, review-baseline, journal-record]
     session_end:      [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush, journal-record]
     stop:             [chat-history, verify-before-complete, team-review-gate, end-review-nudge, turn-end-gate, self-repair, session-register, session-eol, interruption-ledger, roadmap-progress, design-pass-stop, suggestion-capture, journal-record, run-continuation]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, skill-route, git-authorization, session-canary, self-repair, session-register, rule-inject, suggestion-capture, journal-record]

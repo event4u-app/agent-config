@@ -41,6 +41,12 @@ const WORKER_DROP = [
     'delegation-nudge',
     'skill-route',
     'end-review-nudge',
+    // Joined in road-to-a-question-that-survives-the-turn Phase 2, and the first
+    // member here for a DERIVED reason rather than a clause of its own: it
+    // exists only to be read by `end-review-nudge`, which is dropped one line
+    // above. A writer whose only reader is absent spends two git subprocesses
+    // per session start to produce a file nothing opens.
+    'review-baseline',
     'council-availability',
     'team-review-gate',
     'self-repair',

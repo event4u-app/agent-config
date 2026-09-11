@@ -28,17 +28,26 @@
  * (`git ls-files --others --exclude-standard`, each one READ from the
  * filesystem rather than diffed in a subprocess — see "Untracked files" below;
  * fixes a review finding, F6, that a brand-new file was previously invisible
- * to this count entirely). Chosen over a session-start SHA/timestamp
- * baseline because no such baseline exists anywhere a `stop` concern can
- * read it (recording one would be new session-wide state, out of this
- * roadmap phase's one-concern scope). Two consequences, stated rather than
- * hidden:
- *   - Uncommitted changes that PREDATE this session (a dirty working tree
- *     the user already had) are counted as if they were this session's
- *     mutation. Per `commit-policy`, an agent almost never commits without
- *     explicit permission, so "uncommitted since HEAD" is usually a good
- *     proxy for "mutated this session" in practice — but it is a proxy, not
- *     an exact measure.
+ * to this count entirely).
+ *
+ * SINCE 2026-09-11 THIS READING IS BASELINE-CORRECTED ON `claude`, and this
+ * block used to say the opposite — that a session-start baseline was rejected
+ * "because no such baseline exists anywhere a `stop` concern can read it". That
+ * was true of a one-concern roadmap phase and stale by the time it mattered:
+ * `session_start` is bound on seven hosts, and `review-baseline` now records
+ * HEAD plus the already-dirty non-doc line count there. `_lib/review_baseline.ts`
+ * cites this paragraph as the defect it closes, so leaving the paragraph
+ * standing would have made the two files contradict each other.
+ *
+ * What the correction does and does not cover:
+ *   - Uncommitted changes that PREDATE the session are SUBTRACTED where a
+ *     baseline is readable and its HEAD and measure still match. Absent,
+ *     unreadable, head-moved or mixed-measure → the unsubtracted count, with
+ *     the reason carried in the `review_skipped` row.
+ *   - The baseline is written once per session and never refreshed, so from a
+ *     session's first commit onward `head-moved` holds and the pre-existing
+ *     tree is charged again. Over-reporting is the safe direction; the limit is
+ *     real and is stated in `review_baseline.ts` rather than implied away.
  *   - A session that DID commit mid-turn (one of `commit-policy`'s four
  *     exceptions) moves HEAD, so mutations already committed are invisible
  *     to this diff. Declared, not silently assumed away.
@@ -220,7 +229,18 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { buildReviewSkippedLine, type MutationMeasure } from '../_lib/review_skipped_record.js';
+import {
+    applyBaseline,
+    currentHeadSha,
+    readBaseline,
+    type BaselineFallback,
+    type BaselineOutcome,
+} from '../_lib/review_baseline.js';
+import {
+    buildReviewSkippedLine,
+    type BaselineApplication,
+    type MutationMeasure,
+} from '../_lib/review_skipped_record.js';
 import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
 import { atomic_write_json, is_replay_mode } from './state_io.js';
@@ -606,6 +626,7 @@ export function appendReviewSkippedTelemetry(
     workspaceRoot: string,
     diffLines: number,
     mutationMeasure: MutationMeasure,
+    baseline?: BaselineApplication,
 ): void {
     if (is_replay_mode()) return;
     const ts = new Date().toISOString();
@@ -614,6 +635,7 @@ export function appendReviewSkippedTelemetry(
         mutation_measure: mutationMeasure,
         ts,
         id: crypto.randomUUID(),
+        baseline,
     });
     if (errors.length || line === null) return; // refused input — never write a broken line
     try {
@@ -694,6 +716,23 @@ function _read_stdin(): string {
     return readHookStdin();
 }
 
+/**
+ * The one place the two spellings meet.
+ *
+ * `BaselineFallback` is kebab-cased because it is a TypeScript union read only
+ * in this process; `BaselineApplication` is snake_cased because it is written
+ * into an audit line and every other enum in that stream is. A hand-written
+ * ternary translated them until a review pointed out that `head-moved` and
+ * `head_moved` differ by one character in a conditional nobody would re-read —
+ * an exhaustive record makes a new fallback a compile error instead.
+ */
+const FALLBACK_TO_TELEMETRY: Readonly<Record<BaselineFallback, BaselineApplication>> = {
+    absent: 'absent',
+    unreadable: 'unreadable',
+    'head-moved': 'head_moved',
+    'mixed-measure': 'mixed_measure',
+};
+
 export function main(): number {
     const [envelope, payload] = unwrap(_read_stdin(), 'claude');
 
@@ -705,15 +744,43 @@ export function main(): number {
     const workspace_root =
         String(envelope['workspace_root'] ?? '').trim() || process.cwd();
 
-    let diffLines: number;
+    let measuredLines: number;
     let mutationMeasure: MutationMeasure;
     try {
         const measured = totalNonDocMutatedLinesWithMeasure(workspace_root);
-        diffLines = measured.lines;
+        measuredLines = measured.lines;
         mutationMeasure = measured.measure;
     } catch {
         return 0; // fail-open — never block the agent loop
     }
+
+    // The session key is derived HERE rather than after the threshold test,
+    // because the threshold is now taken on the SUBTRACTED count and the
+    // baseline is keyed on the session. That is a real reordering: one extra
+    // `sha256` of a string and one `readFileSync` of a ~100-byte JSON file now
+    // run on every stop, including the majority that end below threshold. The
+    // alternative — testing the unsubtracted count first as a cheap
+    // pre-filter — is wrong in the one direction that matters: on an
+    // accumulator branch EVERY turn clears the unsubtracted threshold, so the
+    // pre-filter would pass exactly when the subtraction is needed and save
+    // nothing.
+    const sessionKey = deriveSessionKey(envelope, payload);
+    const baselineOutcome: BaselineOutcome = applyBaseline(
+        measuredLines,
+        readBaseline(workspace_root, sessionKey),
+        // A THUNK, not a value: on the `absent` and `unreadable` branches the
+        // result is discarded, and those two are the steady state on every host
+        // without this nudge and on every session before its first baseline
+        // write. Passing the value eagerly spent an 11-14 ms `git rev-parse` on
+        // each of those stops for nothing.
+        () => currentHeadSha(workspace_root),
+        mutationMeasure,
+    );
+    const diffLines = baselineOutcome.lines;
+    const baselineApplication: BaselineApplication = baselineOutcome.applied
+        ? 'applied'
+        : FALLBACK_TO_TELEMETRY[baselineOutcome.fallback];
+
     if (diffLines <= MUTATION_LINE_THRESHOLD) {
         return 0; // below threshold, or a doc-only diff — nothing to nudge
     }
@@ -723,7 +790,6 @@ export function main(): number {
     // JSON parse below. A session that already fired stops here, at a
     // single `fs.existsSync` call, without re-reading a (potentially
     // large) transcript file it already knows the answer for.
-    const sessionKey = deriveSessionKey(envelope, payload);
     if (hasFiredThisSession(workspace_root, sessionKey)) {
         return 0;
     }
@@ -756,7 +822,12 @@ export function main(): number {
     markFiredThisSession(workspace_root, sessionKey, new Date().toISOString());
 
     try {
-        appendReviewSkippedTelemetry(workspace_root, diffLines, mutationMeasure);
+        appendReviewSkippedTelemetry(
+            workspace_root,
+            diffLines,
+            mutationMeasure,
+            baselineApplication,
+        );
     } catch {
         // never let a telemetry failure block or fail the turn
     }

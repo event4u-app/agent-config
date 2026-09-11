@@ -82,6 +82,10 @@ function _strip_codespans(line: string): string {
 }
 
 /** Split on \n / \r\n / \r, dropping a single trailing empty element. */
+export function splitAndMask(text: string): string[] {
+    return mask_fences(_splitlines(text));
+}
+
 function _splitlines(text: string): string[] {
     if (text === '') return [];
     const parts = text.split(/\r\n|\r|\n/);
@@ -143,6 +147,64 @@ export function find_option_blocks(text: string): OptionBlock[] {
     return blocks;
 }
 
+/** A recommendation line found in a block's adjacency window. */
+export interface RecommendationLine {
+    /** 1-based line of the recommendation. */
+    line: number;
+    /** The number it names. Not necessarily one of the block's options. */
+    num: number;
+}
+
+/**
+ * The recommendation line(s) sitting in ONE block's adjacency window.
+ *
+ * Extracted from `check_reply` rather than copied, because it has a second
+ * caller: `turn_end_gate_hook`'s `pending-decision` detector needs the same
+ * question this answers — is this numbered block an ASK, or is it a narrative
+ * list? Iron Law 1 says the recommendation line IS the ask, so a block without
+ * one was never a decision put to the user.
+ *
+ * That distinction is not decoration. Replayed over this repository's own 592
+ * assistant turns, a detector keyed on the block alone fired 29 times and 8 of
+ * those blocks carried no recommendation line anywhere near them — plans,
+ * findings lists, ordinary enumerations. Requiring the line removes that whole
+ * class, and it removes it by applying the rule the gate already cites rather
+ * than by adding a heuristic beside it.
+ *
+ * Returns every recommendation in the window, not the first: `check_reply`
+ * treats two as its own finding, and a caller that only wanted existence can
+ * read `.length > 0`.
+ */
+export function recommendationsUnder(
+    text: string,
+    block: OptionBlock,
+    maskedLines?: readonly string[],
+): RecommendationLine[] {
+    // `maskedLines` lets a caller with several blocks over one text mask once
+    // instead of once per block. It is the SAME array `check_reply` and
+    // `find_option_blocks` compute; passing anything else silently changes the
+    // line numbers this returns, which is why it is an optimisation parameter
+    // and not part of the contract.
+    const lines = maskedLines ?? mask_fences(_splitlines(text));
+    const recs: RecommendationLine[] = [];
+    let inspected = 0;
+    for (let idx = block.endLine; idx < lines.length && inspected < REC_ADJACENCY_WINDOW; idx++) {
+        const line = lines[idx]!;
+        if (line.trim() === '') {
+            continue; // blank lines do not consume the adjacency window
+        }
+        if (HEADING_RE.test(line) || OPTION_LINE_RE.test(line)) {
+            break; // a new heading or a new options block ends this block's window
+        }
+        inspected += 1;
+        const m = REC_LINE_RE.exec(line);
+        if (m) {
+            recs.push({ line: idx + 1, num: parseInt(m[1]!, 10) });
+        }
+    }
+    return recs;
+}
+
 /**
  * Core check — the exported function tests drive. Returns all findings for
  * one reply draft; empty array = the draft is consistent.
@@ -166,22 +228,7 @@ export function check_reply(text: string): Finding[] {
     // Per-block: exactly one adjacent recommendation line, number in range.
     const blocks = find_option_blocks(text);
     for (const block of blocks) {
-        const recs: Array<{ line: number; num: number }> = [];
-        let inspected = 0;
-        for (let idx = block.endLine; idx < lines.length && inspected < REC_ADJACENCY_WINDOW; idx++) {
-            const line = lines[idx]!;
-            if (line.trim() === '') {
-                continue; // blank lines do not consume the adjacency window
-            }
-            if (HEADING_RE.test(line) || OPTION_LINE_RE.test(line)) {
-                break; // a new heading or a new options block ends this block's window
-            }
-            inspected += 1;
-            const m = REC_LINE_RE.exec(line);
-            if (m) {
-                recs.push({ line: idx + 1, num: parseInt(m[1]!, 10) });
-            }
-        }
+        const recs = recommendationsUnder(text, block);
         if (recs.length === 0) {
             findings.push({
                 line: block.startLine,
@@ -421,7 +468,24 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     return 2;
 }
 
+// Bundle-safety: never auto-run when inlined into an esbuild bundle, where
+// every module shares the bundle's `import.meta.url`.
+//
+// This module is not a hook, and until `turn_end_gate_hook` began importing
+// `find_option_blocks` / `recommendationsUnder` from it, it was never inside
+// one. It is now pulled into `dist/hooks/dispatch.js`, where without this guard
+// the `import.meta.url === argvUrl` comparison below is TRUE for every bundled
+// module — so importing this file would call `process.exit(main())` and take the
+// whole dispatch down at import time. The build banner's `.__direct__` argv
+// rewrite also prevents it, and a comment in the gate says so; a guard the other
+// bundled entries all carry is the load-bearing half, and depending on the
+// banner alone is depending on something no test pins.
+declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
+
 function _isCliEntry(): boolean {
+    if (typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__) {
+        return false;
+    }
     if (process.argv[1] === undefined) {
         return false;
     }
@@ -442,7 +506,12 @@ function _isCliEntry(): boolean {
     }
 }
 
-if (_isCliEntry() || process.argv[1] === _HERE) {
+// The `|| process.argv[1] === _HERE` arm is the reason the bundle check lives in
+// BOTH places: inside a bundle `_HERE` resolves to the bundle's own path and so
+// does `process.argv[1]`, so this arm would be true and would route straight past
+// a guard that only sat in `_isCliEntry`.
+const _IN_BUNDLE = typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__;
+if (!_IN_BUNDLE && (_isCliEntry() || process.argv[1] === _HERE)) {
     process.exit(main());
 }
 

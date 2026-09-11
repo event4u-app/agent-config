@@ -188,13 +188,26 @@ describe('step 1.1 — per detector, never pooled', () => {
     it('covers every detector the gate can emit', () => {
         // A detector added to the gate without being added here would silently
         // stop being counted. The roadmap's own prose says three; the gate has
-        // four.
+        // five.
         expect([...DETECTOR_IDS]).toEqual([
             'promissory',
             'language',
             'verification',
             'completion',
+            'pending-decision',
         ]);
+    });
+
+    it('the zeroed counter covers every id, so no detector aggregates to NaN', () => {
+        // The half the assertion above does not make. `emptyCounts` was a
+        // four-key object literal, which satisfies
+        // `Record<RefusalDetectorId, number>` for the union of the day and reads
+        // back `undefined` for the next id added — turning every `+=` in the
+        // rollup into `NaN` with no type error anywhere. Deriving it from
+        // `DETECTOR_IDS` is the fix; this pins that it stays derived.
+        const zeroed = emptyCounts();
+        expect(Object.keys(zeroed).sort()).toEqual([...DETECTOR_IDS].sort());
+        for (const id of DETECTOR_IDS) expect(zeroed[id]).toBe(0);
     });
 });
 
