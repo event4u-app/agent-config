@@ -177,7 +177,7 @@ calls its own numbers policy choices to be argued.
   So the caution that places D and E here — no distribution to argue from — does
   not apply, and F sits at 40 % for C's reason instead: it protects the practice
   most directly tied to a changed file. A 40 % re-refusal share over a detector
-  measured at 0.3 % is a very large change in behaviour and would be a real
+  measured at 0.3 % is a very large change in behavior and would be a real
   signal rather than sparse-data noise.
 
 The supporting measurement behind A and D is the *general* one — advisory carriers
