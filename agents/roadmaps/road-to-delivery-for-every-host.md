@@ -1198,6 +1198,81 @@ Defects this roadmap repairs:
       only thing that makes 4b's non-human approver possible. Nothing else blocks the
       measured ceiling.
 
+      **UPDATE 2026-09-11 — THE MECHANISM IS BUILT AND SHIPPED. The box still stays `[ ]`,
+      and this time the reason is a sequencing verdict rather than an undecided design.**
+      Everything the previous rounds reserved is now code: `ADR-275`. What changed about
+      the answer is that a fresh council round (2/2 present, blind peer review, 3 rounds)
+      was asked whether the stored ceiling may be removed in the same change, and both
+      seats said no on a ground no earlier round had named.
+      **THE SEQUENCING FINDING, and it is structural rather than cautious.** Prerequisite 3
+      pins the gate to the BASE ref so a pull request cannot edit the code that measures it.
+      That means the new gate cannot validate its own introduction — openai, verbatim:
+      *"while the implementation PR runs, the authoritative measuring code at the base ref
+      is still the old implementation … If required-check configuration and ceiling removal
+      happen before the base contains working recovery-aware code, step N directly blocks
+      step N+1."* anthropic reached the same two-stage sequence independently (its § 6).
+      So this change is **stage 1**: the whole mechanism lands with the stored number
+      retained as an ADDITIONAL term in `max(design_ceiling, base + grant, stored)`. It can
+      only ever widen the bound, so nothing binds more tightly than it did yesterday, and
+      stage 2 removes one term from a base that already carries this code.
+      **WHAT SHIPPED, with the file for each.** `_lib/measured_payload_ceiling.ts` — the
+      formula, the watermark pin, and the six ledger contract rules. `_lib/base_ref_payload.ts`
+      — the base measurement. `_lib/payload_catalogue_completeness.ts` — prerequisite 4c.
+      `_lib/standing_bound_ratchet.ts` — generalised from one bound to `design_ceiling`, the
+      retained allowance, and every existing grant and watermark, plus a DELETION check (a
+      removed number is not a smaller number, so a shrink-only comparison misses it by
+      construction). `check_preamble_payload_budget.ts` — `--repo-root` for the base-ref
+      pinning, `--approved <id>` for verified grants, `--ceiling` removed and refused with
+      an explanation, and the rejection instrumentation that uncensors the delta
+      distribution. `src/config/preamble-payload-exceptions.json` — the ledger, empty.
+      `standing-payload-delta.yml` — base-tree materialisation, approval verification, and
+      the blocking step without a ceiling argument. 31 new tests plus 51 updated ones.
+      **THE SIX CONTRACT RULES, each from a blocking finding both seats raised.** At most one
+      active grant (overlap has no defined composition — a later watermark can already
+      contain an earlier grant's growth, so summing counts it twice). Approval must be
+      VERIFIED outside the diff (their hardest pushback in both seats: `approved_by` written
+      by the pull request requesting the grant authenticates nothing). Deletion cannot
+      discharge debt. `repaid_at` records a measurement rather than asserting one.
+      Consumption is derived, never stored — which is what a future cap must be derived
+      from. Expiry is evaluated at gate time.
+      **A LATENT MEASUREMENT DEFECT WAS FOUND ON THE WAY, and it was live in the direction
+      that blocks honest work.** `git archive` honours `export-ignore`, and
+      `.gitattributes:26` marks `/CLAUDE.md` export-ignore so release tarballs stay clean.
+      `git archive HEAD -- CLAUDE.md | tar -t` emits **zero entries and exits 0**, so the
+      first base reading came back at 137,667 against a direct reading of 138,413 — 746 tok
+      light on a tree nobody had changed, which is a ceiling 746 tok too TIGHT. The base
+      reader uses `git ls-tree` + `git cat-file` instead, which know nothing about
+      `export-ignore`. Reproduction:
+      `agents/evidence/analysis/git-archive-drops-a-declared-payload-surface-2026-09-11.md`.
+      Stated because it is the kind of defect that would never have surfaced from the gate's
+      own output: every number looked ordinary.
+      **THE THREE OWNER QUESTIONS ABOVE ARE NOW TWO, AND ONE IS ANSWERED.** On (ii)
+      code-owner review: **no** — both seats chose base-ref pinning over it precisely
+      because it puts the sole maintainer in the path of every gate-editing pull request,
+      which is the owner constraint read backwards. On (i) the required status check: both
+      seats chose **option (b)** — make it required AND give the sole admin bypass
+      authority, because with `bypass_actors: []` and `current_user_can_bypass: "never"`
+      (measured live 2026-09-11) any infrastructure red becomes an unbypassable merge block
+      for the only person who could fix it. (b) is conditional on a kill-switch contract
+      both seats specified in the same shape: bypass permitted only for an infrastructure
+      failure or a demonstrated gate defect, every use recording cause and remediation, the
+      gate repaired before the next ordinary merge, and the bypass-and-recovery procedure
+      EXERCISED once before the check is relied on. On (iii) a second repository admin:
+      still owner-only, and now with a concrete consequence — with one admin who authors
+      every pull request, no approving review from another party can exist, so no grant can
+      be authenticated and the exception path is fail-closed and effectively unusable. That
+      is the safe reading rather than a defect, and the repo-admin bypass is the recovery
+      path in its place.
+      **WHAT STAGE 2 IS, exactly.** From a base carrying this code: exercise the induced-red
+      and bypass-recovery procedure; add `Standing payload delta + budget gate` to
+      `required_status_checks` with the admin as a bypass actor; remove the stored allowance
+      from `ci_delivery` and from `boundsFrom`. Only then does `grep -c grace_ceiling` return
+      0, and only then is the "required" limb of the Q4 verdict met.
+      **Not attempted by this run, deliberately.** Removing the stored ceiling anyway would
+      have satisfied this step's `grep` while the required limb stayed unmet — which openai
+      named in terms as closing the roadmap through *"cosmetic grep compliance"*, and which
+      K9 forbids. `[ ]` with the question quoted is what K9 prescribes.
+
 - [x] **4.5 Rollback fixture.** flip → `eager-all` → `diff -r` against a never-flipped tree
       is empty; documented in `docs/contracts/rule-router.md`.
       verify: fixture green.
@@ -1333,7 +1408,7 @@ Defects this roadmap repairs:
 |---|---|---|---|---|---|
 | 1 | A rule stops being delivered and nobody notices | product | The whole flip rests on trigger-match delivery. A rule whose trigger never fires becomes invisible while the file still exists on disk, so every completeness check that counts files passes. | Phase 2 makes the recall floor a precondition: 102/102 reachable with 0 false fires on ≥ 202 near-misses, plus 2.2's eager fallback for a trigger-less `auto` rule and 2.3's MUST-LOAD floor for every `always` rule. **Re-reviewed 2026-09-08: mitigated, and the mitigation's own figure was WRONG.** Phase 2 is complete and the sibling roadmap's 3.1 measured description-only reachability at 179 → 284 of 309 auto-rule positives (57.9 % → 91.9 %). The `102/102` above is not the population: **8 of 105 auto rules carry no keyword or phrase trigger at all**, so the real denominator is 97. The floor held; the number it was written against did not, and it is corrected here rather than left to read as met. **Re-reviewed 2026-09-09: unchanged.** Nothing in the 2026-09-09 change touches trigger matching, the router, or any rule body — it adds a second reading to one gate and publishes a table. The recall floor and its corrected denominator stand as recorded. | Phase 2: Recall floor for Claude before the flip |
 | 2 | A non-Claude host silently loses its rule bodies | product | D1 is live today: the stub write is host-independent, so flipping the mode before Phase 1 lands reduces Cursor and Cline to pointers on hosts where hook delivery is unmeasured. | Phase 1.4 is a CI gate asserting byte-identity to `eager-all` for every host outside `hosts`, and K3 forbids thinning one; Phase 4 may not start before it is green | Phase 1: Host-scoped delivery (repairs D1) |
-| 3 | The standing-payload overage is carried indefinitely with no forcing function | implementation | 73 tokens of headroom at this pin, against a design ceiling 30,767 tokens below the measurement and no committed mechanism to close it. **The risk was MIS-STATED until 2026-09-10** — it read "The 2026-11-10 date passes with the flip unlanded / on expiry the design ceiling applies and every PR inherits a red gate", and no expiry existed to pass. The register is corrected rather than re-scored: the exposure is real, it is just not dated. | ~~Phases are ordered so 4.2 flips this repo before 4.3 touches the package default; 4.4 lowers the baseline and deletes the grace block in the same commit.~~ **REFUTED 2026-09-08, and this is the finding of the run rather than a status update.** The mitigation assumed the flip moves the surface the gate measures. It does not: `check_preamble_payload_budget` reads the projection SOURCE by default, which the delivery flip never touches — measured 138,200 before the flip and 138,200 after. **Risk 3 was UNMITIGATED and is now HALF-MITIGATED — re-reviewed 2026-09-09.** The surface decision was taken: an AI council (2/2, converged) split the two quantities and gave the gate a `--host` reading while leaving the ratchet on the source (`ADR-270`). That closed 7.2, which is now ticked. **It did NOT close 4.4, and the council said so explicitly** — leaving the blocking ratchet source-based means unoptimized hosts still red on the deadline, which is this exact risk. **So the residual is unchanged in substance: on 2026-11-10 the gate compares ~138,474 against `design_ceiling` 107,646 and reds every pull request, whether or not `grace_ceiling` is deleted.** Doing nothing is deferral, not safety. What is different is that the remaining decision is now scoped, costed and owner-addressed rather than unowned: two mechanisms are quoted at step 4.4 (a dual-track retirement with the date held hard, or a one-time owner-approved date extension tied to a named migration), and both seats reserved the date dimension to the owner because moving it relaxes ADR-264 in the time dimension even with the numeric ceiling unchanged. A third finding landed with the review: 4.4's own instruction to set `baseline_tokens` to the measured post-flip total would RAISE the baseline by ~35,950 under language calling it a reduction, so the step could not have been executed as written even with the surface question settled. **Re-reviewed 2026-09-10, and the fourth finding is the largest: the deadline this row was built around does not exist.** `grace_end_date` was enforced by nothing — two reads, an `echo` and a test-helper type, and no date logic in `check_preamble_payload_budget.ts` — so the "repo-wide stop" this row predicted for 2026-11-10 could not have occurred. The key is deleted (`ADR-274`), the ceiling stays 138,490 and enforced, and the residual is restated honestly: **an undated, shrink-only tolerance 30,767 tokens above the design ceiling, with `committed_reduction_mechanism` still recorded verbatim as `NONE`.** That is a WORSE standing position than the row claimed and a BETTER description of it: what was lost on 2026-09-10 is a forcing function that was fictional, and what was gained is that nobody plans against it again. **Mitigation now, stated after the completion review caught this cell over-claiming twice.** The draft of this row named `target_schedule.on_miss` as the replacement forcing function — that *"requires"* the 2026-11-10 miss to be published and that the miss *"will land on schedule"*. **That was the same defect one paragraph after removing it:** `grep -rn "target_schedule"` and `grep -rnw on_miss` over `*.ts *.js *.yml *.yaml *.sh` outside `dist/` return **0** hits, so nothing will publish anything on any date, and `ADR-274` says in the same commit that those milestones *"were never the enforcement surface"*. Retracted here rather than softened. **What is actually enforced is one thing and it bounds growth only:** the shrink-only ratchet, per PR, against the base ref. And it is conditional rather than absolute — `assertBoundsDidNotRise` (`src/scripts/_lib/standing_bound_ratchet.ts:94-135`) returns `ok: true` on four base-ref failure modes (no base ref resolved, budget config unreadable at the base ref, unparseable, or no `ci_delivery.grace_ceiling` there), each with an honest note and a passing verdict, so it **fails open** on a shallow clone or an unresolvable merge base. Naming that is not optional here: `ADR-274` disqualifies a rival proposal for exactly this property, so relying on it unqualified would be the same standard applied twice with two answers. **NOT mitigated, and now with nothing standing in for it:** no enforced mechanism converges the corpus toward 107,646, and after this change no dated one purports to either. `status_2026_08_24.committed_reduction_mechanism` opens with `NONE` and continues into a paragraph explaining why the absence is the finding — it is not the bare token this row once called it *"verbatim"*. | Phase 4: Flip for Claude Code (E1) |
+| 3 | The standing-payload overage is carried indefinitely with no forcing function | implementation | 73 tokens of headroom at this pin, against a design ceiling 30,767 tokens below the measurement and no committed mechanism to close it. **The risk was MIS-STATED until 2026-09-10** — it read "The 2026-11-10 date passes with the flip unlanded / on expiry the design ceiling applies and every PR inherits a red gate", and no expiry existed to pass. The register is corrected rather than re-scored: the exposure is real, it is just not dated. | ~~Phases are ordered so 4.2 flips this repo before 4.3 touches the package default; 4.4 lowers the baseline and deletes the grace block in the same commit.~~ **REFUTED 2026-09-08, and this is the finding of the run rather than a status update.** The mitigation assumed the flip moves the surface the gate measures. It does not: `check_preamble_payload_budget` reads the projection SOURCE by default, which the delivery flip never touches — measured 138,200 before the flip and 138,200 after. **Risk 3 was UNMITIGATED and is now HALF-MITIGATED — re-reviewed 2026-09-09.** The surface decision was taken: an AI council (2/2, converged) split the two quantities and gave the gate a `--host` reading while leaving the ratchet on the source (`ADR-270`). That closed 7.2, which is now ticked. **It did NOT close 4.4, and the council said so explicitly** — leaving the blocking ratchet source-based means unoptimized hosts still red on the deadline, which is this exact risk. **So the residual is unchanged in substance: on 2026-11-10 the gate compares ~138,474 against `design_ceiling` 107,646 and reds every pull request, whether or not `grace_ceiling` is deleted.** Doing nothing is deferral, not safety. What is different is that the remaining decision is now scoped, costed and owner-addressed rather than unowned: two mechanisms are quoted at step 4.4 (a dual-track retirement with the date held hard, or a one-time owner-approved date extension tied to a named migration), and both seats reserved the date dimension to the owner because moving it relaxes ADR-264 in the time dimension even with the numeric ceiling unchanged. A third finding landed with the review: 4.4's own instruction to set `baseline_tokens` to the measured post-flip total would RAISE the baseline by ~35,950 under language calling it a reduction, so the step could not have been executed as written even with the surface question settled. **Re-reviewed 2026-09-10, and the fourth finding is the largest: the deadline this row was built around does not exist.** `grace_end_date` was enforced by nothing — two reads, an `echo` and a test-helper type, and no date logic in `check_preamble_payload_budget.ts` — so the "repo-wide stop" this row predicted for 2026-11-10 could not have occurred. The key is deleted (`ADR-274`), the ceiling stays 138,490 and enforced, and the residual is restated honestly: **an undated, shrink-only tolerance 30,767 tokens above the design ceiling, with `committed_reduction_mechanism` still recorded verbatim as `NONE`.** That is a WORSE standing position than the row claimed and a BETTER description of it: what was lost on 2026-09-10 is a forcing function that was fictional, and what was gained is that nobody plans against it again. **Mitigation now, stated after the completion review caught this cell over-claiming twice.** The draft of this row named `target_schedule.on_miss` as the replacement forcing function — that *"requires"* the 2026-11-10 miss to be published and that the miss *"will land on schedule"*. **That was the same defect one paragraph after removing it:** `grep -rn "target_schedule"` and `grep -rnw on_miss` over `*.ts *.js *.yml *.yaml *.sh` outside `dist/` return **0** hits, so nothing will publish anything on any date, and `ADR-274` says in the same commit that those milestones *"were never the enforcement surface"*. Retracted here rather than softened. **What is actually enforced is one thing and it bounds growth only:** the shrink-only ratchet, per PR, against the base ref. And it is conditional rather than absolute — `assertBoundsDidNotRise` (`src/scripts/_lib/standing_bound_ratchet.ts:94-135`) returns `ok: true` on four base-ref failure modes (no base ref resolved, budget config unreadable at the base ref, unparseable, or no `ci_delivery.grace_ceiling` there), each with an honest note and a passing verdict, so it **fails open** on a shallow clone or an unresolvable merge base. Naming that is not optional here: `ADR-274` disqualifies a rival proposal for exactly this property, so relying on it unqualified would be the same standard applied twice with two answers. **NOT mitigated, and now with nothing standing in for it:** no enforced mechanism converges the corpus toward 107,646, and after this change no dated one purports to either. `status_2026_08_24.committed_reduction_mechanism` opens with `NONE` and continues into a paragraph explaining why the absence is the finding — it is not the bare token this row once called it *"verbatim"*. **Re-reviewed 2026-09-11: PARTIALLY MITIGATED, and the mitigation is a mechanism rather than a date.** The ceiling is no longer stored, it is measured at the base ref (`ADR-275`), which changes this row's residual in one specific way: a stored ceiling stays where it was put until a human lowers it, so payload a merge REMOVED could be added straight back into the space it freed — that is the drift this row describes, and it is now closed by construction, because every merged reduction lowers the ceiling automatically. What is NOT closed, and this is the honest half: nothing yet CONVERGES the corpus toward 107,646. A ratchet that captures reductions is not a mechanism that produces them, and `committed_reduction_mechanism` still opens with `NONE`. So the residual narrows from "the overage can drift upward indefinitely" to "the overage is frozen at today's measurement and nothing is committed to shrinking it" — a smaller exposure, still unowned, and still undated, which after `ADR-274` is the honest description rather than a gap. | Phase 4: Flip for Claude Code (E1) |
 | 4 | The activation charge reads as config weakening and stalls | implementation | The charge is literally a slot-sum raise plus a baseline move, and both shapes are what a reviewer or a guard is trained to refuse. | E2 names the file, line and target value, and cites the budget row's own reason text assigning the move to this run; `block_config_weakening.ts:96-98` classifies the file `advisory`, so its output is a warn to document, never a block. **Re-reviewed 2026-09-09: unchanged, and worth stating why the new work did not add to this risk.** The host reading is additive and moves no ceiling, no baseline and no slot sum — `preamble-payload-budget.json` is untouched by this change, so there is no second config-weakening shape for a reviewer to weigh | Phase 3: Pay the activation charge (E2) |
 | 5 | Post-compaction re-delivery is assumed rather than tested | implementation | `pre_compact` binding exists, but nothing in the tree asserts a body survives a compaction boundary — and a rule lost there is lost for the rest of the session. | 2.4 makes it a fixture with a stated contract in the hook header, not a property inferred from the binding | Phase 2: Recall floor for Claude before the flip |
 
@@ -1464,6 +1539,27 @@ the outcome.
       committed reduction mechanism for the ~30,800-token gap, or a separately reviewed
       specification of the base-ref-derived bound. Neither is available to an autonomous lane,
       and neither may be faked by deleting a key.
+
+      **UPDATE 2026-09-11 — the second of those two conditions is now MET, and the limb is
+      still two of three. The box stays `[ ]`.**
+      The base-ref-derived bound named above as "not available to an autonomous lane" was
+      specified and separately reviewed: two AI-council rounds, 2/2 present and convergent
+      on the operative moves in both, and it is built — `ADR-275`. So the sentence that
+      stood here is discharged rather than repeated.
+      Limb by limb at this commit. **Rollback fixture green** (unchanged, 4.5). **All
+      quality gates green** in this change: `check_preamble_payload_budget` (138,413 against
+      a measured ceiling of 138,490), `check_adr_frontmatter`, `typecheck-ts`, and 82 tests
+      across the three files this change touches — 31 of them new, with the watermark pin
+      proven sensitive by neutralising it (2 red) and restoring it (31 green). **The stored
+      ceiling is still NOT gone** — 138,490, and deliberately retained as stage 1 of two.
+      The reason is the sequencing finding quoted in full at 4.4: the gate runs at the base
+      ref, so it cannot validate its own introduction, and removing the number before the
+      base carries recovery-aware code makes step N block step N+1. Both seats said so
+      independently.
+      That is a real improvement in what the tree enforces — the ceiling is computed rather
+      than stored, every merged reduction now lowers it automatically, the base reading
+      fails closed, the gate is pinned against self-measurement, and payload outside the
+      catalogue refuses — and it is not this limb, which says *gone*.
 
 ## Notes
 
