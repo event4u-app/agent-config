@@ -164,11 +164,19 @@ import {
 // agreement invisible when the producer's layout moved. A builder makes the move
 // a type error.
 import { statePathFor as ciStatePathFor } from '../before_complete_hook.js';
-// The spec-backed options-block parser, imported rather than re-derived:
-// `user-interaction` Iron Law 1's definition of a block lives in exactly one
-// place and detector E reads it from there. The module is `_isCliEntry`-guarded
-// like this one, so importing it runs nothing.
-import { find_option_blocks } from '../check_reply_consistency.js';
+// The spec-backed options-block reading, imported rather than re-derived:
+// `user-interaction` Iron Law 1's definition of an ask — a block PLUS its
+// recommendation line — lives in exactly one place and detector E reads it from
+// there.
+//
+// WHAT KEEPS IT FROM RUNNING ON IMPORT, stated precisely because the obvious
+// answer is wrong: that module is `_isCliEntry`-guarded, but WITHOUT the
+// `__AGENT_CONFIG_BUNDLE__` early-out this file carries. Inside
+// `dist/hooks/dispatch.js` every module shares one `import.meta.url`, so the
+// guard alone would not settle it; what does is the `.__direct__` argv rewrite
+// in the `build:hooks` banner. Named here so a future change to that banner
+// does not silently start running a lint's `main()` on every hook dispatch.
+import { find_option_blocks, recommendationsUnder } from '../check_reply_consistency.js';
 import { isSafeTranscriptPath } from './end_review_nudge_hook.js';
 import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
@@ -768,18 +776,38 @@ export function detectUnverifiedEdit(toolCalls: readonly ToolCall[]): Finding | 
  * ledger here would be the parallel taxonomy that roadmap exists to prevent.
  * This is transcript adjacency and nothing above it.
  *
- * REUSE. `find_option_blocks` is the spec-backed parser behind
- * `check_reply_consistency` — fence-masked, two-or-more consecutive numbered
- * lines. `interruption_ledger_hook` carries its own `hasNumberedOptions` for the
- * capture-only ledger; a third reading of the same rule would drift from both.
+ * AN ASK IS A BLOCK **PLUS** ITS RECOMMENDATION LINE, and that qualifier is
+ * load-bearing rather than pedantic. `find_option_blocks` calls any run of two
+ * or more consecutive numbered lines a block — a plan, a findings list, an
+ * ordinary enumeration. Keyed on the block alone this detector fired on 29 of
+ * this repository's own 592 assistant turns, and 8 of those blocks carried no
+ * recommendation line anywhere near them: pure false positives on narrative
+ * lists, in a detector that can REFUSE a turn. `user-interaction` Iron Law 1
+ * already says the recommendation line is the ask, so requiring it removes that
+ * whole class by applying the rule this refusal cites rather than by bolting a
+ * heuristic beside it.
+ *
+ * The cost, stated rather than discovered: an options block whose recommendation
+ * line was omitted is invisible here. That reply is ALREADY a
+ * `check_reply_consistency` finding and a stated Iron Law 1 violation, so it is
+ * the malformed-ask problem rather than the dropped-ask problem — a different
+ * defect with a different owner.
+ *
+ * REUSE. `find_option_blocks` and `recommendationsUnder` are both the
+ * spec-backed readings behind `check_reply_consistency`, extracted rather than
+ * copied. `interruption_ledger_hook` carries its own `hasNumberedOptions` for
+ * the capture-only ledger; a third reading of the same rule would drift from
+ * both.
  */
 export function detectDroppedDecision(assistantTurnTexts: readonly string[]): Finding | null {
     if (assistantTurnTexts.length < 2) return null;
+    const asksIn = (text: string): ReturnType<typeof find_option_blocks> =>
+        find_option_blocks(text).filter((b) => recommendationsUnder(text, b).length > 0);
     const closing = assistantTurnTexts[assistantTurnTexts.length - 1]!;
-    if (find_option_blocks(closing).length > 0) return null;
+    if (asksIn(closing).length > 0) return null;
     for (let i = assistantTurnTexts.length - 2; i >= 0; i -= 1) {
         const earlier = assistantTurnTexts[i]!;
-        const blocks = find_option_blocks(earlier);
+        const blocks = asksIn(earlier);
         if (blocks.length === 0) continue;
         const block = blocks[blocks.length - 1]!;
         return {

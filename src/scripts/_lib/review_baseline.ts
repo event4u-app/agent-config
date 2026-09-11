@@ -68,12 +68,38 @@ export function baselineStateFile(workspaceRoot: string, sessionKey: string): st
     return path.join(baselineStateDir(workspaceRoot), `${sessionKey}.json`);
 }
 
+/**
+ * Whether a line count is an exact sum or the capped, guaranteed-over-threshold
+ * approximation `end_review_nudge_hook` returns past `UNTRACKED_FILE_CAP`.
+ *
+ * Structurally identical to that module's `MutationMeasure` and deliberately
+ * NOT imported from it: this module is the shared floor both hooks sit on, and
+ * importing the consumer would put the cycle back that `currentHeadSha` lives
+ * here to avoid.
+ */
+export type BaselineMeasure = 'exact' | 'capped_approximation';
+
 /** What `session_start` records, and `stop` reads back. */
 export interface ReviewBaseline {
     /** HEAD at session start, or null where there is no repo / no commit yet. */
     head_sha: string | null;
     /** Non-doc mutated lines already present when the session began. */
     baseline_lines: number;
+    /**
+     * Whether `baseline_lines` is exact or the capped approximation.
+     *
+     * It is recorded because subtracting one kind from the other is arithmetic
+     * over two different quantities — the same defect `head_sha` catches on the
+     * other axis. The capped path returns `THRESHOLD + 1 + tracked`, a synthetic
+     * number chosen to be over the bar rather than to be true, so a session that
+     * starts past the cap and then cleans up would have a real `exact` stop
+     * measurement reduced by a number that never counted anything.
+     *
+     * Optional: a record written before this field existed has no measure, and
+     * defaulting it to `exact` would assert the more permissive of the two on no
+     * evidence. Absent reads as unknown and refuses to subtract.
+     */
+    measure?: BaselineMeasure;
     written_at: string;
 }
 
@@ -84,8 +110,9 @@ export interface ReviewBaseline {
  */
 export type BaselineFallback =
     | 'absent' // no file — a host without session_start, or a session older than this
-    | 'unreadable' // present and malformed
-    | 'head-moved'; // the session committed, so the baseline's denominator is gone
+    | 'unreadable' // present and malformed, or unreadable for any non-ENOENT reason
+    | 'head-moved' // the session committed, so the baseline's denominator is gone
+    | 'mixed-measure'; // one side is a capped approximation and the other is not
 
 export type BaselineOutcome =
     | { readonly applied: true; readonly baseline: ReviewBaseline; readonly lines: number }
@@ -105,9 +132,11 @@ export function parseBaseline(raw: string): ReviewBaseline | null {
     const written = o['written_at'];
     if (typeof written !== 'string') return null;
     const head = o['head_sha'];
+    const measure = o['measure'];
     return {
         head_sha: typeof head === 'string' && head !== '' ? head : null,
         baseline_lines: lines,
+        ...(measure === 'exact' || measure === 'capped_approximation' ? { measure } : {}),
         written_at: written,
     };
 }
@@ -132,8 +161,14 @@ export function readBaseline(
     let raw: string;
     try {
         raw = fs.readFileSync(file, 'utf-8');
-    } catch {
-        return 'absent';
+    } catch (exc) {
+        // ONLY a genuinely missing file is `absent`. Every other IO failure —
+        // EACCES, EISDIR, EMFILE — is a defect in this mechanism, which is the
+        // population `unreadable` exists to make visible; routing them all to
+        // `absent` would bury them inside the one bucket that is legitimately
+        // large on every host without a session_start slot.
+        const code = (exc as NodeJS.ErrnoException | null)?.code;
+        return code === 'ENOENT' ? 'absent' : 'unreadable';
     }
     return parseBaseline(raw) ?? 'unreadable';
 }
@@ -148,11 +183,24 @@ export function readBaseline(
  * obligation, and a safety advisory must not be disarmed by its own
  * instrumentation failing.
  *
- * `head-moved` is the branch worth naming. A session that committed mid-run
- * moved HEAD, so `git diff HEAD` now measures against a different base than the
- * baseline did and the subtraction is arithmetic over two different quantities.
- * It is caught rather than absorbed, because absorbing it would UNDER-report on
- * exactly the sessions that did the most work.
+ * `head-moved` is the branch worth naming, and worth naming honestly: it is
+ * TERMINAL for the session. A session that committed mid-run moved HEAD, so
+ * `git diff HEAD` now measures against a different base than the baseline did
+ * and the subtraction is arithmetic over two different quantities. It is caught
+ * rather than absorbed, because absorbing it would UNDER-report on exactly the
+ * sessions that did the most work — but the baseline is written once per
+ * session and never refreshed, so from the first commit onward that session is
+ * charged for the whole pre-existing dirty tree again. The mechanism's useful
+ * life is "until this session's first commit", which is stated here rather than
+ * discovered later. Re-baselining after a commit is the obvious repair and is
+ * NOT taken here: a second write has to distinguish "HEAD moved because we
+ * committed our own work" from "a peer session committed underneath us", and
+ * nothing in a stop payload answers that.
+ *
+ * `mixed-measure` is the same defect on the third axis. Past
+ * `UNTRACKED_FILE_CAP` the measurement is a synthetic `THRESHOLD + 1 + tracked`
+ * chosen to be over the bar rather than to be true, so subtracting it from — or
+ * out of — an exact count is meaningless in both directions.
  *
  * The clamp at zero is not cosmetic either: a session that reverts part of a
  * pre-existing dirty tree measures below its own baseline, and a negative
@@ -162,12 +210,21 @@ export function readBaseline(
 export function applyBaseline(
     measuredLines: number,
     baseline: ReviewBaseline | 'absent' | 'unreadable',
-    currentHeadSha: string | null,
+    headSha: () => string | null,
+    measuredMeasure: BaselineMeasure = 'exact',
 ): BaselineOutcome {
     if (baseline === 'absent' || baseline === 'unreadable') {
         return { applied: false, fallback: baseline, lines: measuredLines };
     }
-    if (baseline.head_sha !== currentHeadSha) {
+    // The measure check runs BEFORE the HEAD check because it needs no subprocess.
+    // `headSha` is a thunk for the same reason: on the two fallback branches above
+    // — the steady state on every host without the nudge, and on every session
+    // before its first baseline write — the value is discarded, and evaluating it
+    // eagerly spent an 11-14 ms `git rev-parse` on each of those stops.
+    if (baseline.measure !== measuredMeasure) {
+        return { applied: false, fallback: 'mixed-measure', lines: measuredLines };
+    }
+    if (baseline.head_sha !== headSha()) {
         return { applied: false, fallback: 'head-moved', lines: measuredLines };
     }
     return {

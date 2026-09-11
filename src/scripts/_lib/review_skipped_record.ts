@@ -50,15 +50,22 @@ export type MutationMeasure = 'exact' | 'capped_approximation';
  * corrupt write and a rate above noise is a defect in the mechanism itself;
  * `head_moved` is a session that committed mid-run, which moves `git diff
  * HEAD`'s base and makes the subtraction arithmetic over two different
- * quantities.
+ * quantities; `mixed_measure` is the same failure on the capped-approximation
+ * axis, where one side is a synthetic over-threshold number rather than a count.
  */
-export type BaselineApplication = 'applied' | 'absent' | 'unreadable' | 'head_moved';
+export type BaselineApplication =
+    | 'applied'
+    | 'absent'
+    | 'unreadable'
+    | 'head_moved'
+    | 'mixed_measure';
 
 const BASELINE_APPLICATIONS: readonly BaselineApplication[] = [
     'applied',
     'absent',
     'unreadable',
     'head_moved',
+    'mixed_measure',
 ];
 
 import { appliedIds } from './audit_field_provenance.js';

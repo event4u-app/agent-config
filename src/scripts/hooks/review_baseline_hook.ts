@@ -53,9 +53,17 @@ import { atomic_write_json } from './state_io.js';
 const EXIT_OK = 0;
 
 export function buildBaseline(workspaceRoot: string, now: Date = new Date()): ReviewBaseline {
+    const measured = totalNonDocMutatedLinesWithMeasure(workspaceRoot);
     return {
         head_sha: currentHeadSha(workspaceRoot),
-        baseline_lines: totalNonDocMutatedLinesWithMeasure(workspaceRoot).lines,
+        baseline_lines: measured.lines,
+        // Carried, not discarded. Past `UNTRACKED_FILE_CAP` the count is a
+        // synthetic `THRESHOLD + 1 + tracked` chosen to be over the bar rather
+        // than to be true, and subtracting that from a later exact count is
+        // arithmetic over two different quantities. The consumer refuses the
+        // subtraction when the two measures disagree; it can only do that if the
+        // writer says which one it took.
+        measure: measured.measure,
         written_at: now.toISOString(),
     };
 }

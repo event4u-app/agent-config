@@ -154,6 +154,49 @@ describe('detectDroppedDecision', () => {
         expect(f!.detector).toBe('pending-decision');
     });
 
+    it('is silent on a numbered list carrying NO recommendation line', () => {
+        // The finding that nearly shipped. `find_option_blocks` calls any run of
+        // two or more numbered lines a block, so a plan, a findings list or an
+        // ordinary enumeration looked exactly like an ask. Replayed over this
+        // repository's own 592 assistant turns, the block-only detector fired 29
+        // times and 8 of those blocks had no recommendation line anywhere near
+        // them — false positives in a detector that can REFUSE a turn.
+        const plan = [
+            'Plan:',
+            '',
+            '1. Read the failing test',
+            '2. Fix the parser',
+            '3. Re-run the suite',
+        ].join('\n');
+        expect(detectDroppedDecision([plan, 'Done. All 41 tests pass.'])).toBeNull();
+    });
+
+    it('fires on the ask and ignores the narrative list in the same reply', () => {
+        // Both shapes in one text, which is the ordinary case: the detector must
+        // key on the block that carries the recommendation, not on the last one.
+        const mixed = [
+            'Was ich geaendert habe:',
+            '',
+            '1. den Parser',
+            '2. den Test',
+            '',
+            'Und eine Entscheidung liegt bei Dir:',
+            '',
+            '1. Sofort mergen',
+            '2. Erst messen',
+            '',
+            '**Empfehlung: 2**',
+        ].join('\n');
+        const f = detectDroppedDecision([mixed, DROPPED]);
+        expect(f).not.toBeNull();
+        expect(f!.evidence).toContain('1/2');
+    });
+
+    it('accepts either language label, since Iron Law 1 accepts both', () => {
+        const en = ['1. ship it', '2. measure first', '', 'Recommendation: 2'].join('\n');
+        expect(detectDroppedDecision([en, DROPPED])).not.toBeNull();
+    });
+
     it('does not read a fenced example block as a live ask', () => {
         // `find_option_blocks` masks fences, and detector E inherits that rather
         // than re-deciding it. A skill body quoting an options block is
@@ -240,6 +283,25 @@ function makeWorkspace(): string {
     return dir;
 }
 
+/** One open subagent-ledger record, so `dispatchOpen` is genuinely true. */
+function plantOpenDispatch(dir: string): void {
+    const openDir = path.join(dir, 'agents', 'runtime', 'state', 'subagent-ledger', 'open');
+    fs.mkdirSync(openDir, { recursive: true });
+    fs.writeFileSync(
+        path.join(openDir, 'aaaaaaaaaaaa.json'),
+        JSON.stringify({
+            ref: 'aaaaaaaaaaaa',
+            agent_type: 'Explore',
+            started_at: new Date().toISOString(),
+            parent_ref: null,
+            depth: 1,
+            depth_basis: 'assumed-root',
+            session_id: null,
+        }),
+        'utf8',
+    );
+}
+
 function runHook(cwd: string, transcriptPath: string, home: string, extra: object = {}) {
     const stdin = JSON.stringify({
         schema_version: 1,
@@ -285,17 +347,19 @@ describe('the gate refuses a turn that dropped its own question', () => {
         expect(r.stderr).toContain('re-present the options block');
     });
 
-    it('still refuses with a subagent dispatch open — E is unconditional', () => {
+    it('still refuses with a subagent dispatch REALLY open — E is unconditional', () => {
         // A and D are excused by an open dispatch; E must not be. The dispatch IS
         // the continuation that drops the decision, so excusing it here would
-        // silence the detector in its own founding case. No ledger is written in
-        // this workspace, so `openRecordStats` reads zero — the assertion that
-        // carries the claim is the DETECTOR LIST in `main()`, exercised by the
-        // fixture below carrying a promissory closing that A would have caught
-        // too. What this pins is that E fires on a reply whose ONLY defect is the
-        // dropped block.
+        // silence the detector in its own founding case.
+        //
+        // The ledger is PLANTED rather than assumed. This test first asserted the
+        // claim against an empty workspace, where `openRecordStats` reads zero and
+        // `dispatchOpen` is false — so a regression wrapping E in
+        // `dispatchOpen ? null : …` would have passed it. A review caught that the
+        // test named the property it did not exercise.
         const dir = makeWorkspace();
         const home = makeHome();
+        plantOpenDispatch(dir);
         const t = writeTranscript(
             home,
             [

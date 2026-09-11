@@ -20,14 +20,16 @@ relates:
       obligation and no new obligation taxonomy - it reads the transcript the
       gate already reads. It neither consumes nor unblocks that roadmap.
 estate_growth_exempt: >-
-  Grows active_roadmaps by one, open_blockers by two, and concern_count by
-  exactly one (`review-baseline`, session_start). The two blockers are both
-  decisions the source set could not take for itself and neither is actionable
-  by an agent: one is a kernel-rule edit that
-  `src/scripts/hooks/block_kernel_rule_writes.ts` denies at tool-call time, the
-  other changes the definition of a pre-registered claim in `docs/CLAIMS.md`.
-  Recording them is the alternative to silently shipping a gate whose rule text
-  and whose measurement interaction were never decided. The concern is the
+  Grows active_roadmaps by one, open_blockers by three, and concern_count by
+  exactly one (`review-baseline`, session_start). The three blockers are each a
+  decision the source set could not take for itself and none is actionable by an
+  agent: a kernel-rule edit that `src/scripts/hooks/block_kernel_rule_writes.ts`
+  denies at tool-call time; a change to the definition of a pre-registered claim
+  in `docs/CLAIMS.md`; and a host-behaviour question only a live session can
+  answer, raised by the neutral review of this branch. Recording them is the
+  alternative to silently shipping a gate whose rule text, whose measurement
+  interaction, and whose reachability under a re-entrancy layer were never
+  decided. The concern is the
   deliverable of Phase 2, not a side
   effect: `src/scripts/hooks/end_review_nudge_hook.ts:29-34` records its own
   measurement defect and names the reason it was not fixed - "no such baseline
@@ -221,6 +223,32 @@ telemetry row rather than inferred.
 - **Recommendation:** none; this is the owner's call - adding an Iron Law to a
   kernel rule is owner-reserved.
 
+### blocker: detector-e-under-stop-hook-active
+
+- **Status:** open
+- **Owner:** maintainer
+- **Blocks:** nothing in this roadmap — the detector ships; this names an
+  unverified assumption a neutral review surfaced rather than leaving it to be
+  discovered in production.
+- **What to do:** establish whether the Stop event that follows a stop-hook
+  continuation carries `stop_hook_active: true`. `src/scripts/hooks/turn_end_gate_hook.ts`
+  returns ALLOW on that flag before any detector runs, and
+  `src/scripts/hooks/dispatch_hook.ts` states in the tree that the host sets it
+  "on exactly that Stop". If both readings hold, detector E is silent in the
+  exact shape it was built for. Nothing in this delta measures it and neither
+  E2E fixture sets the flag, because a transcript cannot answer it — only a live
+  session where the nudge fires and the next stop payload is read can.
+- **Resolved when:** a recorded live session shows the flag's value on the Stop
+  following an `end-review-nudge` fire, and either detector E fired on it or the
+  gate's layer-1 allow is narrowed to exclude E.
+- **If you do nothing:** the detector may be inert in its founding case while
+  every test passes — the near-misses and the pure-function tests all exercise
+  paths that never reach layer 1. The failure mode is silence, which is the one
+  this roadmap exists to stop, so it would look exactly like success.
+- **Recommendation:** none; this is the owner's call — narrowing a re-entrancy
+  layer on an unmeasured assumption is the wedge risk that layer exists to
+  prevent, and the measurement costs one live session.
+
 ### blocker: interruption-baseline-contamination
 
 - **Status:** open
@@ -252,6 +280,8 @@ telemetry row rather than inferred.
 | 2 | A tool call between two prose entries reads as a dropped decision | implementation | Two assistant entries inside one user turn is ordinary - a tool call splits them constantly. If the collector keeps text-free tool entries, almost every turn looks like a candidate and the detector fires everywhere. | `_messageText` returns null for a tool-only entry and the collector skips it, so a tool call creates no element. The Phase 0.1 near-miss asserts exactly this rather than trusting the reading. | Phase 1 - Detector E: a dropped decision refuses the turn-end |
 | 3 | The baseline subtraction hides a real review obligation | implementation | A session that starts dirty and also reverts part of the pre-existing mess reads negative, clamps to zero, and the nudge goes quiet on a change that did need review. | The clamp is on the total and the three invalid-subtraction states in 2.2 fall back to the unsubtracted reading rather than to silence. The telemetry row records which path was taken, so the rate is measurable rather than assumed. | Phase 2 - The review nudge stops charging a session for a dirty tree |
 | 4 | The gate enforces an obligation no rule states | product | A reader who hits the refusal cannot find the rule behind it and reads the gate as a bug, because `user-interaction` is silent on continuity. | The refusal message cites `user-interaction` Iron Law 1 as the rule the dropped block belongs to, and the rule delta is parked as a named blocker rather than silently skipped. | Blockers |
+| 5 | The baseline expires at the session's first commit | implementation | The baseline is written once and never refreshed, so `head-moved` holds from the first commit onward and the session is charged for the whole pre-existing tree again — the noise case, returning silently. | Over-reporting is the safe direction and the telemetry row records `head_moved`, so the rate is measurable rather than assumed. Re-baselining is deliberately not attempted: a second write cannot tell "we committed" from "a peer committed underneath us" from a stop payload. | Phase 2 - The review nudge stops charging a session for a dirty tree |
+| 6 | Detector E may be inert under `stop_hook_active` | implementation | The gate's layer-1 allow returns before any detector runs when the host sets that flag, and the continuation that drops a decision is frequently exactly a stop-hook continuation. Every test passes either way, because none of them reaches layer 1. | Recorded as blocker `detector-e-under-stop-hook-active` with the one measurement that answers it, rather than resolved by narrowing a re-entrancy layer on an assumption. | Blockers |
 
 ## Acceptance Criteria
 

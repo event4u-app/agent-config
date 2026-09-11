@@ -165,7 +165,7 @@ a per-obligation reading of either, and it is stated at that strength rather tha
 borrowed as if it had been measured on these two detectors specifically.
 
 **The counter-argument, kept on the record rather than answered away:**
-differentiated bars encode four unmeasured judgements about relative harm, and a
+differentiated bars encode five unmeasured judgements about relative harm, and a
 single shared bar would be methodologically cleaner on sparse data. It is
 rejected because pretending the five protected harms are interchangeable would
 hide those judgements rather than remove them.
@@ -178,7 +178,7 @@ to one could never open.
 
 - **On Q2 alone, and it stands today:** two or more detectors reach their floors
   and their Q2 medians sit within ±1 of each other → the architectural argument is
-  refuted *for those detectors* and their bars merge. It does not need all four,
+  refuted *for those detectors* and their bars merge. It does not need all five,
   and it does not need D, whose floor is currently unreachable.
 - **On Q1, contingent:** once instrument 1 lands and Q1 becomes readable, all five
   shares within ±10 points collapses the bars to one.
