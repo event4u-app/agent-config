@@ -200,7 +200,7 @@ function splitlines(text: string): string[] {
   return parts;
 }
 
-function _render(
+export function _render(
   version: string,
   tools: string[],
   installed_at: string,

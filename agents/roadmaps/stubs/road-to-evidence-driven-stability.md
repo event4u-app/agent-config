@@ -67,29 +67,42 @@ inverse gate reintroduces the age rule through the back door.
 
 ## What changes mechanically
 
-- [ ] `check_beta_review_markers` stops exiting non-zero on a lapsed
-      `keep-beta-until`. A passed date becomes an advisory line naming the
-      contract and the three criteria to check.
-- [ ] The frozen 85-entry lapsed baseline is retired with it. It exists only to
-      keep inherited lapses from failing the build; once a lapse cannot fail the
-      build, the baseline has no job.
-- [ ] The fresh-versus-inherited distinction goes with it. It is the mechanism
-      that made one contract's date red every unrelated pull request.
+- [x] `check_beta_review_markers` stops exiting non-zero on a lapsed
+      `keep-beta-until`. Done 2026-09-11: `LAPSED_SEVERITY_FRESH` is `warning`,
+      the upcoming-lapse advisory no longer promises an error on the date, and
+      the gate's three remaining errors are the ones that were never about time
+      — no disposition declared, two declared, or a window past the maximum.
+- [ ] The frozen 85-entry lapsed baseline is retired with it. **Narrowed, still
+      open**: it no longer gates anything, so it is a label rather than a
+      ratchet, and the report still uses it to tell cohort debt from a lapse
+      that arrived since. Deleting the file removes that distinction from the
+      report too, which is a separate call and stays on this stub rather than
+      being taken silently inside a change about the blocking half.
+- [x] The fresh-versus-inherited distinction stops being the mechanism that made
+      one contract's date red every unrelated pull request. It survives as
+      reporting only; nothing branches on it for the exit code.
 - [ ] The stability policy gains the principle above and the three criteria, so
       a reader learns the rule from the contract rather than from a stub.
-- [ ] The four contracts lapsing 2026-09-15 — `harness-expectations.md`,
+- [x] The four contracts lapsing 2026-09-15 — `harness-expectations.md`,
       `install-layout.md`, `install-scopes.md`, `surface-tiers.md` — are each
-      evaluated against the three criteria, **with no new deadline set**. Same
-      for `auto-orchestration-v1.md` and `write-engine.md`.
+      evaluated against the three criteria, **with no new deadline set**. Done
+      2026-09-11; the record is
+      `agents/evidence/analysis/beta-window-2026-09-15-evaluation.md`, and three
+      of the four carried a repairable defect that is repaired in the same
+      change. `auto-orchestration-v1.md` and `write-engine.md` are still owed.
 
 ## Why this is a stub rather than active work
 
 The mechanical change removes a blocking gate. Removing a gate is a governance
-decision the owner takes, and the owner took the principle on 2026-09-11; what
-is not yet decided is whether the advisory replacement lives in the same script,
-whether the baseline file is deleted or emptied, and whether the stability
-policy change wants a decision record of its own. Those are one session's work
-once someone picks.
+decision the owner takes; the owner took the principle on 2026-09-11 and
+authorised the removal the same day, so the blocking half is done rather than
+planned. The advisory replacement lives in the same script, which was the
+cheapest of the three open questions and the only one the change had to answer.
+
+What is still open, and why it is not folded in here: whether the baseline file
+is deleted or emptied — it gates nothing now, so the remaining question is about
+the REPORT and not about the build — and whether the stability-policy edit wants
+a decision record of its own.
 
 ## What already happened, so it is not re-derived
 

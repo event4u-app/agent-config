@@ -42,6 +42,12 @@ const KEEP_RE = /^keep-beta-until:\s*(\d{4}-\d{2}-\d{2})\s*$/m;
  *   - a lapsed contract **in** the baseline  -> warning (inherited debt)
  *   - a lapsed contract **not** in it        -> ERROR   (a fresh lapse, today)
  *
+ * SUPERSEDED 2026-09-11 on the second line: a fresh lapse is a warning too, and
+ * the reason is at {@link LAPSED_SEVERITY_FRESH}. The council's choice of a
+ * ratchet over a flat error stands as the record of what was decided then; what
+ * changed is the owner's ruling that no date may red CI by itself. The baseline
+ * therefore labels rather than gates.
+ *
  * So new work is enforced immediately while the 86-contract cohort does not red
  * an arbitrary future PR whose author caused none of it. The cohort is real:
  * 44 of the 86 lapsed on the same day and 64 within four days, which is one past
@@ -116,7 +122,31 @@ export function _resetLapsedBaseline(): void {
  * whether this becomes an error is that roadmap's step 0.2 and is not taken here.
  */
 const LAPSED_SEVERITY_IN_BASELINE: 'error' | 'warning' = 'warning';
-const LAPSED_SEVERITY_FRESH: 'error' | 'warning' = 'error';
+/**
+ * A fresh lapse is a WARNING since 2026-09-11, by owner decision.
+ *
+ * It was an error, and the error said: this contract must still be beta,
+ * because a date passed. That is the one thing a date cannot establish.
+ * Stability is decided on observable criteria — active enforcement, consumer
+ * reliance, no known pending incompatible change — and none of them contains an
+ * elapsed-time term. `keep-beta-until` SCHEDULES A REVIEW. It does not prohibit
+ * promotion before that date, does not require continued beta after it, and
+ * must not turn CI red on its own.
+ *
+ * What this gate still errors on is unchanged and is the part that was never
+ * about time: a beta contract declaring NO disposition at all, one declaring
+ * two, and a window set further out than the maximum — a contract that says
+ * nothing about its own maturity, or parks the question indefinitely. Those are
+ * statements about missing or contradictory evidence, which CI may absolutely
+ * refuse. "The window expired" is not one of them.
+ *
+ * The inherited/fresh distinction stays in the REPORT because it still tells a
+ * reader which lapses are cohort debt and which arrived since. It no longer
+ * gates anything, so the frozen baseline is now a label rather than a ratchet;
+ * retiring it is the remaining step, recorded in
+ * `stubs/road-to-evidence-driven-stability.md`.
+ */
+const LAPSED_SEVERITY_FRESH: 'error' | 'warning' = 'warning';
 const SUPERSEDED_RE = /^superseded-by:\s*\S+\s*$/m;
 
 const MAX_REVIEW_WINDOW_DAYS = 90;
@@ -569,9 +599,10 @@ function main(): number {
         }
         if (upcoming.length > 0) {
             process.stdout.write(
-                `\nUpcoming FRESH lapses within ${String(args.horizon)} day(s) — advisory, ` +
-                    'exit code unchanged. These are absent from the frozen baseline, so each\n' +
-                    'becomes an ERROR on its date rather than an inherited warning:\n',
+                `\nReviews falling due within ${String(args.horizon)} day(s) — advisory, ` +
+                    'exit code unchanged, and it stays unchanged when the date passes:\n' +
+                    'the window schedules a maturity DECISION, it does not require continued\n' +
+                    'beta and it never reds CI on its own. Evidence decides; the date only asks:\n',
             );
             for (const u of upcoming) {
                 process.stdout.write(
