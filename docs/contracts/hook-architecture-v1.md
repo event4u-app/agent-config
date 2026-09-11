@@ -123,7 +123,7 @@ under the concurrency rules below.
 | `1` | block | dispatcher exits 1, surfaces `reason` to platform's deny channel |
 | `2` | warn | dispatcher exits 0, logs `reason` to stderr, sets `additionalContext` if platform supports it |
 | `≥ 3` | error | dispatcher logs full traceback, exits 0 (fail-open) unless `concerns.<name>.fail_closed: true` in settings |
-| `continue: false` (field) | **not adopted as of 2026-09-12** | this suite does not emit this primitive and defines no precedence for it. Any proposal to emit it must reopen this decision and specify precedence, emitter ownership, supported-host behaviour, and the use case that existing verdicts cannot express |
+| `continue: false` (field) | **not adopted as of 2026-09-12** | this suite does not emit this primitive and defines no precedence for it. Any proposal to emit it must reopen this decision and specify precedence, emitter ownership, supported-host behavior, and the use case that existing verdicts cannot express |
 
 **The `warn` row above says what the dispatcher does, and nothing about whether
 the turn ends.** Read as a complete account it invites the conclusion that an
@@ -139,7 +139,7 @@ occurs only when `payload.stop_hook_active === true`
 (`src/scripts/hooks/dispatch_hook.ts:355-366`, with the
 `skip_on_refusal_retry` entries at `src/scripts/hook_manifest.yaml:921,1126`).
 
-This is n=1. It establishes behaviour for the measured session, host and
+This is n=1. It establishes behavior for the measured session, host and
 revision, and for nothing else: **not** that warn-only stops always continue,
 not that any other host behaves this way, and not that a future Claude Code
 version will. The continuation is observed; the payload value is a deterministic
