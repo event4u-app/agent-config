@@ -74,8 +74,8 @@ the question ended without the question.
 it refuses a turn-end when an earlier reply in the same user turn carried a
 block and the closing reply carries none. It sees one user turn on one host,
 so everything outside that is model-carried, exactly like Iron Law 2's own
-"no gate ships for this" note below. `check_reply_consistency` validates a
-single draft and holds no cross-turn state; it cannot see this law at all.
+"no gate ships for this" note below. `check_reply_consistency` reads a single
+draft and holds no cross-turn state; it cannot see this law at all.
 
 ## Question pacing — one decision point per turn
 
