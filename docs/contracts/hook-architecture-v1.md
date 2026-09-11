@@ -131,10 +131,12 @@ came to be treated as inert (`agents/evidence/analysis/stop-slot-continuation-ce
 Stated plainly: whether `additionalContext` delivered on `stop` /
 `subagent_stop` causes the host to run the agent again is
 **not established by this tree**.
-Nothing here measures it, and the blocker
-`warn-continuation-on-stop` in
-`agents/roadmaps/road-to-a-stop-slot-that-knows-it-continues.md` names the one
-live session that would. Until it is answered, an advisory verdict on those two
+Nothing here measures it. What would: one recorded live session in which an
+advisory `stop` concern fires, capturing whether the turn continues and whether
+the following `Stop` payload carries `stop_hook_active: true`. The open blocker
+carrying that measurement is `warn-continuation-on-stop` — `grep -rn
+'warn-continuation-on-stop' agents/roadmaps/` finds wherever it currently
+lives. Until it is answered, an advisory verdict on those two
 events is not known to be free, and a concern header that argues only about its
 exit code has proved that it never **refuses** — never that it does not
 **extend**.
