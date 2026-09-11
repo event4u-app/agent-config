@@ -41,14 +41,18 @@ import * as path from 'node:path';
 import { read_lockfile } from './installed_lock.js';
 
 /**
- * The four detectors, in the order the gate runs them.
+ * The five detectors, in the order the gate runs them.
  *
  * The roadmap's § 0 names three (A promissory, B language, C verification).
  * That was true of the draft and is not true of the tree: detector D
- * (`completion`) landed under round 7 § Phase 1 and runs in the same detector
- * list as the other three. Counting three would silently drop a detector's
- * refusals, so the set is read off `DetectorId` in the gate rather than off the
- * prose.
+ * (`completion`) landed under round 7 § Phase 1 and detector E (`untested`) on
+ * 2026-09-11, and both run in the same detector list as the other three.
+ * Counting three would silently drop a detector's refusals, so the set is read
+ * off `DetectorId` in the gate rather than off the prose.
+ *
+ * E is the one that asks whether a change is TESTED rather than whether
+ * something ran: C is satisfied by `eslint`, which is how a feature with zero
+ * test lines passed every guard in that file.
  *
  * This said "the same UNCONDITIONAL list" until 2026-08-18, which was wrong and
  * is worth naming rather than quietly rewording: `main()` runs A and D only when
@@ -63,6 +67,7 @@ export const DETECTOR_IDS = [
     'language',
     'verification',
     'completion',
+    'untested',
 ] as const;
 
 export type RefusalDetectorId = (typeof DETECTOR_IDS)[number];
@@ -141,7 +146,7 @@ export interface RefusalRecord {
 }
 
 export function emptyCounts(): DetectorCounts {
-    return { promissory: 0, language: 0, verification: 0, completion: 0 };
+    return { promissory: 0, language: 0, verification: 0, completion: 0, untested: 0 };
 }
 
 function isDetector(v: unknown): v is RefusalDetectorId {

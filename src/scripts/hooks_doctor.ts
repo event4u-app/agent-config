@@ -268,7 +268,7 @@ export function collect(
     turn_end_refusals = {
       sessionsWithRefusals: 0,
       total: 0,
-      byDetector: { promissory: 0, language: 0, verification: 0, completion: 0 },
+      byDetector: { promissory: 0, language: 0, verification: 0, completion: 0, untested: 0 },
       byPeriod: [],
       legacyRecords: 0,
       unversionedRecords: 0,
