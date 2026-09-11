@@ -112,10 +112,16 @@ which one is read off the following rather than argued:
   surfaces and neither disposition fits.
 
 **Precondition, and it is the whole point of the window:** the mechanism has to
-exist before the window can measure anything. It is two pieces — a release PR
-template carrying the line, and a check that reads it on a release-shaped PR —
-tracked at
-[`agents/roadmaps/stubs/road-to-a-primary-goal-that-is-asked-for.md`](../../agents/roadmaps/stubs/road-to-a-primary-goal-that-is-asked-for.md).
+exist before the window can measure anything. It is two pieces, stated here
+rather than behind a pointer, because a contract that depends on work tracked
+elsewhere must still be readable when that tracking is gone:
+
+1. **A release PR template field** carrying the `Primary-Goal:` line, so the
+   obligation is visible while cutting rather than only in this document.
+2. **A check that reads it on a release-shaped PR.** Release-shape detection
+   already exists in [`release-pr-gating.md`](release-pr-gating.md), so this
+   binds there rather than inventing a second notion of "is this a release".
+
 **If the mechanism has not landed by 2026-11-11, the disposition is
 `supersede`, not another extension.** A second uninstrumented window is the
 failure this split exists to prevent, and naming its consequence in advance is
