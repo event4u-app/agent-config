@@ -19,9 +19,11 @@ obligation_frequency: "per-turn"
 
 # User Interaction
 
-Two Iron Laws govern every reply that contains numbered options.
-They override conversation momentum, brevity, and the urge to defer
-to the user. **Missing a recommendation is a rule violation, not a slip.**
+Three Iron Laws govern a decision put to the user. The first two govern
+the reply that contains it; the third governs what happens when the agent
+runs again before the answer arrives. They override conversation momentum,
+brevity, and the urge to defer to the user. **Missing a recommendation is
+a rule violation, not a slip.**
 
 ## Iron Law 1 — Single-Source Recommendation
 
@@ -47,6 +49,33 @@ Mechanical backstop:
 `./scripts-run src/scripts/check_reply_consistency --stdin < draft.md`
 (non-zero exit on any rule below). Self-scan is the primary gate;
 the script is the deterministic safety net.
+
+## Iron Law 3 — A Decision Outlives the Turn
+
+```
+A DECISION HANDED TO THE USER STAYS LIVE UNTIL THE USER ANSWERS IT.
+THE AGENT RUNS AGAIN WITHOUT AN ANSWER — HOOK CONTINUATION, TASK
+NOTIFICATION, WAKE, OR RETRY — AND THE OPTIONS BLOCK PLUS ITS
+RECOMMENDATION LINE ARE RE-PRESENTED IN THE SAME FORM.
+A SUBORDINATE CLAUSE IS NOT A RE-PRESENTATION — "THE OPEN QUESTION IS
+UNAFFECTED AND IS YOURS TO DECIDE" IS NOT A RE-PRESENTATION.
+A HOOK'S CONCERN MAY BE ADDED TO A PENDING DECISION. IT NEVER REPLACES ONE.
+ONLY THE USER CLOSES IT — BY ANSWERING, OR BY AN INSTRUCTION THAT MAKES IT MOOT.
+```
+
+Iron Laws 1 and 2 are discharged by the shape of the reply that carries the
+block. Neither survives a turn boundary, which is the gap this closes: a
+second assistant execution with no user message between it and the ask is
+not a new conversation, and from the user's side a thread that ends without
+the question ended without the question.
+
+**Carrier, stated honestly.** The deterministic half is the
+`pending-decision` detector in `src/scripts/hooks/turn_end_gate_hook.ts` —
+it refuses a turn-end when an earlier reply in the same user turn carried a
+block and the closing reply carries none. It sees one user turn on one host,
+so everything outside that is model-carried, exactly like Iron Law 2's own
+"no gate ships for this" note below. `check_reply_consistency` validates a
+single draft and holds no cross-turn state; it cannot see this law at all.
 
 ## Question pacing — one decision point per turn
 
