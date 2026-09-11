@@ -37,12 +37,12 @@
  *                            check fails — see PR #226 post-mortem).
  *     5. Commit + push     — `release: X.Y.Z`, push branch, open PR.
  *     6. Wait for CI       — `gh pr checks --watch` (skippable with --no-wait).
- *     7. Findings ledger   — ingest the self-review artifact into the release
- *                            findings ledger for this version, commit it to the
- *                            branch, and STOP while any blocking finding
- *                            carries no disposition. Before the merge because
- *                            the ledger is read off the branch and step 8
- *                            deletes it.
+ *     7. Findings ledger   — VERIFY that the ledger for this version is on the
+ *                            remote release branch and that the disposition
+ *                            gate passes, and STOP otherwise. Produces
+ *                            nothing: `self-review-gate.yml` builds and commits
+ *                            it. Before the merge because the ledger is read
+ *                            off the branch and step 8 deletes it.
  *     8. Merge             — `gh pr merge --merge --delete-branch`.
  *     9. Tag main          — fast-forward main, tag the merge commit, push
  *                            the tag (triggers publish-npm.yml — except
@@ -137,6 +137,7 @@ import { canPrompt, promptLine } from './_lib/tty_prompt.js';
 import { preflightPosition } from './_lib/release_position.js';
 import {
     dispositionStopMessage,
+    ledgerAbsentAfterMergeMessage,
     ledgerAbsentMessage,
     ledgerOnBranchArgv,
     ledgerRelPath,
@@ -1017,17 +1018,31 @@ function _step(n: number, total: number, msg: string): void {
  * Neither answer is repaired here. Filling a disposition states what the release
  * ships, with a rationale and a named verifier; no automation writes one.
  */
-function settle_findings_ledger(version: string, branch: string, pr: number | null): void {
+function settle_findings_ledger(
+    version: string,
+    branch: string,
+    pr: number | null,
+    merged = false,
+): void {
     const rel = ledgerRelPath(version);
     const abs = path.join(REPO_ROOT, rel);
 
+    // Which ref carries the answer depends on whether the branch still exists.
+    // On a merged PR the release branch is deleted and the ledger, if it was
+    // ever produced, rode into the trunk — so the trunk is the ref to ask.
+    // Asking nothing was the old behaviour and it asserted the good case.
+    const ref = merged ? MAIN_BRANCH : branch;
     const onBranch =
-        run(['git', ...ledgerOnBranchArgv(REMOTE, branch, rel)], { check: false, capture: true })
+        run(['git', ...ledgerOnBranchArgv(REMOTE, ref, rel)], { check: false, capture: true })
             .returncode === 0;
     if (!onBranch) {
-        die(ledgerAbsentMessage(version, branch, REMOTE));
+        die(
+            merged
+                ? ledgerAbsentAfterMergeMessage(version, MAIN_BRANCH, REMOTE)
+                : ledgerAbsentMessage(version, branch, REMOTE),
+        );
     }
-    process.stdout.write(`    ledger on ${REMOTE}/${branch}: ${rel}\n`);
+    process.stdout.write(`    ledger on ${REMOTE}/${ref}: ${rel}\n`);
 
     // `--pr` is the durable trigger for an un-ingested finding: it compares the
     // review's own report against the committed ledger. Without it the release
@@ -1243,7 +1258,7 @@ function execute(
             '--title', `release: ${plan.target}`, '--body', pr_body]);
     }
 
-    // ─── 6. wait for checks ─────────────────────────────────────────────────
+    // Step 6 — wait for checks
     if (pr_merged) {
         _step(6, total, 'PR already merged — skip checks wait');
     } else if (wait_for_checks) {
@@ -1260,14 +1275,30 @@ function execute(
     // after the check wait, so a red `finding-dispositions` has already stopped
     // the release at step 6 with the check name rather than here with a
     // duplicate of it.
-    if (pr_merged) {
-        _step(7, total, 'PR already merged — the ledger rode in with it, skip');
-    } else {
-        _step(7, total, 'Verify the self-review findings ledger');
+    {
+        _step(
+            7,
+            total,
+            pr_merged
+                ? 'Verify the findings ledger rode in with the merge'
+                : 'Verify the self-review findings ledger',
+        );
+        // `pr_info` is probed at the top ONLY on a resumed run, so on a first
+        // run it is null and `--pr` was silently dropped — the release then
+        // passed a strictly weaker check than `finding-dispositions` and learnt
+        // about an un-ingested finding from CI. The PR exists by now either way
+        // (step 5 opened it), so re-probe rather than skip the flag.
+        const pr_for_ledger = pr_info ?? _pr_for_branch(branch);
+        // The merged branch used to SKIP this step on the strength of its own
+        // banner — "the ledger rode in with it" — while reading nothing. That
+        // is a reachable state and it is the original failure: the ingest
+        // no-ops, step 7 stops, the PR is merged by hand, and a resumed run
+        // then tags and publishes a version with no ledger.
         settle_findings_ledger(
             plan.target,
             branch,
-            pr_info === null ? null : Number(pr_info['number']),
+            pr_for_ledger === null ? null : Number(pr_for_ledger['number']),
+            pr_merged,
         );
     }
 
@@ -1898,8 +1929,6 @@ if (_isCliEntry() || process.argv[1] === _HERE) {
 
 export {
     main,
-    settle_findings_ledger,
-    _blocking_without_disposition,
     _parse_args,
     parse_version,
     bump_version,

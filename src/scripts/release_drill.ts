@@ -181,7 +181,7 @@ interface WorldConfig {
     changelog?: string;
     /**
      * Content the WORKING-TREE read returns — `read_changelog_text()`, used by
-     * step 5 (PR body) and step 8 (annotated-tag message).
+     * step 5 (PR body) and step 9 (annotated-tag message).
      *
      * Added 2026-09-01 with the publication guard (roadmap § 3.1). `changelog`
      * above only covers `git show <tag>:CHANGELOG.md`; the working tree was
@@ -201,19 +201,20 @@ interface WorldConfig {
      */
     tag_created_unpushed?: boolean;
     /**
-     * The tag is already on the remote, so step 8 skips entirely and step 9 —
+     * The tag is already on the remote, so step 9 skips entirely and step 10 —
      * the GitHub Release body — is the FIRST irreversible transition the run
      * reaches. The only state in which the Release guard can be exercised on
-     * its own, because a marker otherwise stops the run at step 8.
+     * its own, because a marker otherwise stops the run at step 9.
      */
     tag_already_remote?: boolean;
     /**
      * The release PR is ALREADY merged when the run starts — the real
-     * resume-after-merge state, in which steps 1 through 7 skip and step 8 is
-     * the first step that does work.
+     * resume-after-merge state, in which steps 1 through 6 skip, step 7 still
+     * verifies the ledger (on the trunk, since the branch is gone) and step 8
+     * is the first step that does work.
      *
      * Added 2026-09-02 with `guard_release_branch_push`. Before that guard, a
-     * marker scenario could start from scratch and still reach step 8, because
+     * marker scenario could start from scratch and still reach step 9, because
      * nothing between the changelog write and the tag looked at the section.
      * The push guard now stops such a run at step 4 — correctly, and that is
      * the point of it — which makes this knob the only way left to exercise
@@ -549,7 +550,11 @@ const SCENARIOS: Record<string, Scenario> = {
         // commits the ledger to the release branch; two review rounds showed no
         // placement inside this script can produce it, because the gate it
         // anticipates already reds the check step 6 waits on.
-        config: { ledger_on_branch: true },
+        // `resume: false` is load-bearing, not tidiness. `resume` defaults to
+        // TRUE here, and on a resumed run the PR number is already in hand — so
+        // a scenario that kept the default could not see the `--pr` flag being
+        // dropped, which is exactly the hole this scenario asserts against.
+        config: { ledger_on_branch: true, resume: false },
         expect_success: true,
         verify: (w) => {
             const f: string[] = [];
@@ -568,6 +573,18 @@ const SCENARIOS: Record<string, Scenario> = {
             _expect(
                 !w.calls.some((c) => c.startsWith('gh run download')),
                 'step 7 downloaded an artifact — the release no longer produces the ledger',
+                f,
+            );
+            // `--pr` is what makes the gate compare the review's own report
+            // against the committed ledger. The PR number used to come only
+            // from the resume-time probe, so on a FIRST run — this scenario —
+            // the flag was silently dropped and the release passed a strictly
+            // weaker check than the one it was trying to pre-satisfy.
+            _expect(
+                w.calls.some(
+                    (c) => c.includes('check_finding_dispositions --release') && c.includes('--pr '),
+                ),
+                'the disposition gate ran without --pr, so an un-ingested finding would pass here',
                 f,
             );
             _expect(
@@ -596,6 +613,31 @@ const SCENARIOS: Record<string, Scenario> = {
                 f,
             );
             _expect(!w.tag_remote, 'tagged with no ledger', f);
+            return f;
+        },
+    },
+    'findings-ledger-absent-after-a-hand-merge-still-stops': {
+        summary:
+            'step 7: the PR is already merged and no ledger reached the trunk — the release STOPS instead of tagging a version whose ledger does not exist',
+        // The reachable path to a shipped version with no ledger, and the one
+        // the old code asserted away: the ingest produces nothing, step 7
+        // stops, a human merges the PR, and the resumed run used to print "the
+        // ledger rode in with it" without reading anything.
+        config: { pr_already_merged: true, ledger_on_branch: false },
+        expect_success: false,
+        verify: (w, error) => {
+            const f: string[] = [];
+            _expect(
+                (error ?? '').includes('already merged'),
+                `the stop did not name the merged state: ${error ?? '(no error)'}`,
+                f,
+            );
+            _expect(
+                w.calls.some((c) => c.startsWith('git cat-file -e ') && c.includes('/main:')),
+                'the merged path never asked the trunk whether the ledger is there',
+                f,
+            );
+            _expect(!w.tag_remote, 'tagged a version whose findings ledger does not exist', f);
             return f;
         },
     },
@@ -779,7 +821,7 @@ const SCENARIOS: Record<string, Scenario> = {
     },
     'marker-refuses-before-tag': {
         summary:
-            'step 8: a draft marker in the merged section refuses BEFORE the annotated tag is created',
+            'step 9: a draft marker in the merged section refuses BEFORE the annotated tag is created',
         config: {
             pr_already_merged: true,
             changelog_file: markedChangelogFixture(current_version()),
@@ -806,7 +848,7 @@ const SCENARIOS: Record<string, Scenario> = {
     },
     'marker-refuses-resumed-tag-push': {
         summary:
-            'step 8 (§ 3.2): a tag created but never pushed is NOT pushed when its section carries the marker',
+            'step 9 (§ 3.2): a tag created but never pushed is NOT pushed when its section carries the marker',
         config: {
             pr_already_merged: true,
             tag_created_unpushed: true,
@@ -835,7 +877,7 @@ const SCENARIOS: Record<string, Scenario> = {
     },
     'marker-refuses-github-release': {
         summary:
-            'step 9: with the tag already pushed, a marker in the TAGGED section refuses before the Release is created',
+            'step 10: with the tag already pushed, a marker in the TAGGED section refuses before the Release is created',
         config: {
             pr_already_merged: true,
             tag_already_remote: true,
@@ -1020,7 +1062,7 @@ function run_scenario(name: string): ScenarioOutcome {
     const tree_snapshot = _snapshot_step_2_files();
     _set_exec_override((args) => world.exec(args));
     // The working-tree read, faked for the same reason the command layer is.
-    // Without this the drill's step 8 reads the repository's real CHANGELOG.md.
+    // Without this the drill's step 9 reads the repository's real CHANGELOG.md.
     _set_changelog_reader(() => world.changelog_file);
     try {
         execute(plan, { wait_for_checks: true, dry_run: false, resume: scenario.config.resume ?? true });

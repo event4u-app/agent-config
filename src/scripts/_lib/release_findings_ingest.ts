@@ -21,6 +21,16 @@
  * workflow that already holds the artifact, which is the one place where the
  * ledger can exist before any gate looks for it.
  *
+ * WHY THE PUSH NEEDS A PAT. A third review round found that the move alone did
+ * not fix the ordering, it relocated it: the ingest job is a check run of the
+ * same `pull_request` event, so its push lands inside the release's own check
+ * wait — and a push authenticated with GITHUB_TOKEN creates no run, leaving a
+ * head with zero checks against a protection that requires one. The job pushes
+ * with `RELEASE_PR_TOKEN` instead, the pattern `release.yml` already uses, so
+ * the push produces the checks the wait is waiting for. Without that secret the
+ * job declines to push at all rather than produce the deadlock, and the absence
+ * arrives here as a missing ledger with the cause named.
+ *
  * WHAT IS LEFT HERE. Two questions and a stop for each: is the ledger on the
  * REMOTE branch, and does the disposition gate pass. Neither is repaired by
  * the release — filling a disposition states what the release ships, with a
@@ -84,9 +94,43 @@ export function ledgerAbsentMessage(version: string, branch: string, remote: str
         'reviewed the head. Ordinary causes, in the order to check them: the review has not ' +
         'finished yet (wait, then resume); the review found nothing and its commit is still in ' +
         'flight (same); no ANTHROPIC_API_KEY, so no review ran and no ledger will appear — write ' +
-        `one with a no_findings_reason and push it to ${branch}; or the workflow could not push, ` +
-        'which its run log will say.\n' +
+        `one with a no_findings_reason and push it to ${branch}; no RELEASE_PR_TOKEN, in which ` +
+        'case the job refuses to push rather than deadlock this wait and says so as a warning in ' +
+        'its run log — configure the PAT, or write the ledger by hand; or the workflow could not ' +
+        'push, which its run log will say.\n' +
         '  Then: `git pull` on the release branch, and resume.'
+    );
+}
+
+/**
+ * Why the release refuses to continue when the PR is already merged and the
+ * ledger is not on the trunk either.
+ *
+ * This is the state the whole mechanism exists to prevent, reached the one way
+ * that survives every guard before it: the ingest produced nothing, step 7
+ * stopped, and the PR was merged by hand anyway. A resumed run then finds
+ * `state === 'MERGED'` and — until this check existed — printed "the ledger
+ * rode in with it" without reading anything, tagged, and published. The absent
+ * ledger for a shipped version is what reds every pull request in the
+ * repository, so the assertion had to become a question.
+ *
+ * The release branch is gone by now, so there is no workflow run left to wait
+ * for: the remaining path is a ledger written onto the trunk by hand.
+ */
+export function ledgerAbsentAfterMergeMessage(
+    version: string,
+    trunk: string,
+    remote: string,
+): string {
+    return (
+        `${ledgerRelPath(version)} is on neither the release branch nor ${remote}/${trunk}, and ` +
+        'the release pull request is already merged.\n' +
+        '  The release stops: tagging now ships a version whose findings ledger does not exist, ' +
+        'and an absent ledger for a shipped version reds every pull request in the repository.\n' +
+        `  The release branch is gone, so the ${FINDINGS_WORKFLOW} run that would have committed ` +
+        'the ledger cannot be waited for. Write the ledger on the trunk instead — the review for ' +
+        'this version is in its own workflow run, or record a no_findings_reason if none ran — ' +
+        'push it, and resume.'
     );
 }
 
