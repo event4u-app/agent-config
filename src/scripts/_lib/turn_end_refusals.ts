@@ -140,6 +140,20 @@ export interface RefusalRecord {
     counts?: Partial<DetectorCounts>;
     /** Package version recorded at the most recent refusal, when readable. */
     agent_config_version?: string;
+    /**
+     * The host's own id for the prompt being processed at the most recent
+     * refusal, when the payload carries one.
+     *
+     * Recorded BESIDE `refused_turn`, never instead of it. The ordinal stays the
+     * re-entrancy key — its drift history is why both guard layers exist, and
+     * swapping the key of a wedge-critical guard on an axis nothing measures is
+     * a behaviour change dressed as a correction. What the pair buys is the
+     * measurement: two refusals carrying the same `refused_prompt_id` and
+     * different `refused_turn` are one prompt whose ordinal drifted, which is
+     * the failure this file's own header describes and which the ordinal alone
+     * cannot distinguish from two genuine turns.
+     */
+    refused_prompt_id?: string;
 }
 
 /**
@@ -190,6 +204,9 @@ export function parseRecord(raw: string): RefusalRecord | null {
     if (typeof o['first_refused_at'] === 'string') rec.first_refused_at = o['first_refused_at'];
     if (typeof o['agent_config_version'] === 'string') {
         rec.agent_config_version = o['agent_config_version'];
+    }
+    if (typeof o['refused_prompt_id'] === 'string') {
+        rec.refused_prompt_id = o['refused_prompt_id'];
     }
     const counts = o['counts'];
     if (typeof counts === 'object' && counts !== null && !Array.isArray(counts)) {
@@ -248,6 +265,7 @@ export function foldRefusal(
         turnOrdinal: number;
         at: string;
         version?: string | undefined;
+        promptId?: string | undefined;
     },
 ): RefusalRecord {
     const counts = prev === null ? emptyCounts() : countsOf(prev);
@@ -263,6 +281,12 @@ export function foldRefusal(
     if (input.version !== undefined) rec.agent_config_version = input.version;
     else if (prev?.agent_config_version !== undefined) {
         rec.agent_config_version = prev.agent_config_version;
+    }
+    // Not inherited from `prev` when this refusal carries none: the field
+    // describes THIS refusal's prompt, and carrying a previous one forward would
+    // read as an identity the payload never supplied.
+    if (input.promptId !== undefined && input.promptId !== '') {
+        rec.refused_prompt_id = input.promptId;
     }
     return rec;
 }

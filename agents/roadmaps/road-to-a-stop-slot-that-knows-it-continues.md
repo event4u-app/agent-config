@@ -154,7 +154,7 @@ exactly as before.
 
 ## Phase 3 — Turn identity is recorded from the host, not only derived
 
-- [ ] **3.1 Carry `prompt_id` alongside the derived ordinal.**
+- [x] **3.1 Carry `prompt_id` alongside the derived ordinal.**
       `src/scripts/hooks/turn_end_gate_hook.ts:74-80` documents the ordinal
       drifting within a turn because a compaction summary, a `<system-reminder>`
       and a sidechain prompt all arrive in the user role. The host supplies

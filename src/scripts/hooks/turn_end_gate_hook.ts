@@ -955,6 +955,7 @@ function markRefusedTurn(
     sessionKey: string,
     turnOrdinal: number,
     detectors: readonly DetectorId[],
+    promptId: string,
 ): void {
     if (is_replay_mode()) return;
     const file = sessionStateFile(workspaceRoot, sessionKey);
@@ -979,6 +980,7 @@ function markRefusedTurn(
                 turnOrdinal,
                 at: new Date().toISOString(),
                 version,
+                promptId,
             }) as unknown as Record<string, unknown>,
         );
     } catch {
@@ -1286,6 +1288,13 @@ export function main(): number {
     // producer keys that on the raw `session_id`. Passing `sessionKey` here would
     // read a path nothing writes — the same shape as the STATE_FILE break this
     // parameter exists to close.
+    // The host's own id for the prompt being processed. Read here and recorded
+    // beside the ordinal in the refusal marker — never used as the guard key.
+    // The ordinal's drift is what both re-entrancy layers exist for, so a later
+    // reading needs the pair to tell a drifted ordinal from a second prompt.
+    const promptId = str(
+        (payload['prompt_id'] ?? payload['promptId']) as JsonValue | undefined,
+    );
     const rawSessionId = str(envelope['session_id'] as JsonValue | undefined) || '';
     const sessionKey = deriveSessionKey(rawSessionId || 'unknown-session');
     if (alreadyRefusedTurn(workspaceRoot, sessionKey, turnOrdinal)) return EXIT_ALLOW;
@@ -1342,6 +1351,7 @@ export function main(): number {
         sessionKey,
         turnOrdinal,
         findings.map((f) => f.detector),
+        promptId,
     );
 
     const lines = findings.map(
