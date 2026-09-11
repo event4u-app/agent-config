@@ -30,6 +30,41 @@ review_by: 2026-09-15
 > all; its disposition is recorded in the analysis this stub already cites, and
 > nothing in this edit re-opens it.
 
+> **Council, 2026-09-11, on `release-sizing.md` specifically — extend or
+> promote.** Two seats (anthropic/claude-sonnet-4-5, openai/codex-default), two
+> rounds, peer-review, blind chairman, subscription transport, nothing billed.
+> Both **final** texts answered *promote to stable*, on the policy's own stated
+> criterion: the contract has not changed since the day it was written 63 days
+> ago, it is the normative source for a live changelog gate, it is referenced
+> from consumer-facing distribution documentation, and it passed through a major
+> release. Both seats also agreed the decision RULE generalises to the four
+> contracts lapsing 2026-09-15 while the RESULT does not — each is evaluated on
+> passage through a major, real enforcement or reliance, and known pending
+> incompatible change.
+>
+> **It is not a clean 2/2, and the reason is a fact the council did not have.**
+> One seat listed, among the conditions that would flip it: *"15.0.0 shipped
+> this morning and post-release testing is incomplete. If the merge happened
+> hours ago, extend 30 days"* — and resolved it by guessing the merge was
+> "yesterday or earlier". It was **5 h 09 min** before the run (merged
+> 2026-09-10T22:10:26Z, council 2026-09-11T03:19Z). That seat's own stated flip
+> condition is met on the evidence, so its answer is not the one its text
+> records. The other seat weighed the same proximity explicitly, called it the
+> strongest counter-argument, and stayed on promote because live enforcement and
+> consumer references resolve it.
+>
+> The peer-review stage produced the thing the extend option was missing — a
+> falsifiable readiness condition: *extend roughly 60 days, promote once the
+> first post-15.0.0 minor ships without requiring a scope-discipline revision.*
+> That is now a real option rather than a deadline moved because a deadline
+> arrived.
+>
+> **Nothing was executed.** Promotion creates a public compatibility commitment
+> (a breaking change would then require a major), which `decision-revisit-gate`
+> reserves to the owner, and a council split is an escalation condition rather
+> than a verdict. One further caution the council raised and this record keeps:
+> the blocked pull request establishes urgency, never which answer is correct.
+
 > **Stub — not active work.** It exists so that six dates inside two weeks are
 > reachable by grep from a non-archived roadmap, and so that each has an owner
 > before it fires rather than on the day it does. Created by
