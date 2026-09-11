@@ -102,20 +102,20 @@ describe('check_beta_review_markers — behavioural spec', () => {
         expect(v[0]!.reason).toContain('10 day(s) ago');
     });
 
-    it('a lapse OUTSIDE the frozen baseline is an ERROR', () => {
+    it('a lapse OUTSIDE the frozen baseline is REPORTED, and does not fail', () => {
         const p = path.join(tmp, 'c.md');
         write(p, '---\nstability: beta\nkeep-beta-until: 2025-12-31\n---\n');
         const v = bm.check_one(p, TODAY)[0]!;
-        // A tmp fixture is by construction not one of the 86 inherited
-        // contracts, so it is a FRESH lapse and must fail. This assertion is the
-        // ratchet: without it the baseline file is a plain allowlist.
-        //
-        // It replaced an earlier assertion that pinned `warning`
-        // unconditionally, which was correct while the gate shipped flat-report
-        // and became wrong the moment step 0.2 chose the ratchet. It is recorded
-        // rather than quietly swapped because the test caught its own
-        // obsolescence — which is what it was for.
-        expect(v.severity).toBe('error');
+        // A tmp fixture is by construction not one of the inherited contracts,
+        // so it is a FRESH lapse — still labelled as one, and no longer an
+        // error. This assertion has now moved twice and both moves are the
+        // point of keeping it: `warning` while the gate shipped flat-report,
+        // `error` when step 0.2 chose the ratchet, and `warning` again since
+        // the owner ruled on 2026-09-11 that a passed date may not red CI by
+        // itself. What the date buys is a review; what decides stability is
+        // evidence. The label survives the severity so a reader can still tell
+        // cohort debt from a lapse that arrived since.
+        expect(v.severity).toBe('warning');
         expect(v.reason).toContain('FRESH lapse');
     });
 
@@ -138,10 +138,15 @@ describe('check_beta_review_markers — behavioural spec', () => {
 //
 // The decision was neither "report" nor "fail" but a ratchet: the 86 contracts
 // already lapsed on 2026-08-25 WARN as inherited debt, and any lapsed contract
-// outside that frozen list is an ERROR. These cases pin the half that does the
-// work — a baseline that cannot grow. Without the fresh-lapse error the file is
-// just an allowlist, and an allowlist that only ever absorbs new entries is the
-// permanent exception registry one seat warned it could become.
+// outside that frozen list was an ERROR.
+//
+// SUPERSEDED 2026-09-11 on the severity, not on the shape. The owner ruled that
+// `keep-beta-until` may never red CI by itself — a date cannot establish that a
+// contract must still be beta, and every graduation criterion this suite ships
+// is evidence-shaped with no elapsed-time term in it. So the baseline now
+// decides the LABEL (cohort debt vs a lapse that arrived since) and nothing
+// else, and the seat's warning about a permanent exception registry is answered
+// by retiring the file rather than by erroring on the contracts outside it.
 describe('lapsed-beta baseline ratchet', () => {
     const REAL = 'docs/contracts/some-inherited-contract.md';
     const FRESH = 'docs/contracts/a-brand-new-contract.md';
@@ -308,24 +313,34 @@ describe('inherited/fresh label moves with the exit-code severity', () => {
         expect(v[0]!.severity).toBe('warning');
     });
 
-    it('out of the baseline: label says FRESH AND severity is error', () => {
+    it('out of the baseline: the label still says FRESH', () => {
         const p = setup([]);
         const v = bm.check_one(p, TODAY, root);
         expect(v).toHaveLength(1);
         expect(v[0]!.reason).toContain('FRESH');
         expect(v[0]!.reason).not.toContain('inherited');
-        expect(v[0]!.severity).toBe('error');
     });
 
-    it('deleting the baseline file turns every inherited warning into an error', () => {
-        // AC-3's second half: the baseline is load-bearing, and removing it is
-        // not a silent pass. Sensitivity check — the assertion above would also
-        // hold if `loadLapsedBaseline` defaulted everything to fresh, so this
-        // case starts from the green state and removes only the file.
+    // Since 2026-09-11 the baseline decides the LABEL and no longer the
+    // severity: no lapse of either kind fails the gate, because a passed date
+    // establishes nothing about maturity. Both halves are pinned, in both
+    // directions, so a future change that re-couples them is visible.
+    it('neither kind of lapse fails the gate', () => {
+        expect(bm.check_one(setup([REL]), TODAY, root)[0]!.severity).toBe('warning');
+        expect(bm.check_one(setup([]), TODAY, root)[0]!.severity).toBe('warning');
+    });
+
+    it('deleting the baseline file changes the label and not the severity', () => {
+        // The sensitivity half of the case above: start from a labelled-
+        // inherited finding and remove only the file. The label has to move —
+        // otherwise `loadLapsedBaseline` could be returning a constant and both
+        // assertions would hold for the wrong reason.
         const p = setup([REL]);
-        expect(bm.check_one(p, TODAY, root)[0]!.severity).toBe('warning');
+        expect(bm.check_one(p, TODAY, root)[0]!.reason).toContain('inherited');
         fs.rmSync(path.join(root, 'src', 'config', 'lapsed-beta-baseline.json'));
         bm._resetLapsedBaseline();
-        expect(bm.check_one(p, TODAY, root)[0]!.severity).toBe('error');
+        const v = bm.check_one(p, TODAY, root)[0]!;
+        expect(v.reason).toContain('FRESH');
+        expect(v.severity).toBe('warning');
     });
 });

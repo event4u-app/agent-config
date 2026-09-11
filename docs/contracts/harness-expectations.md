@@ -91,7 +91,15 @@ Nothing — the loading strategy is the harness's contract with the model. Skill
 1. Run `ToolSearch` with `select:<name>` to load the schema.
 2. Call the tool with the now-known parameters.
 
-Skills in this package that need deferred tools document the load step explicitly (see `agents-md-thin-root` § Tool loading for the pattern).
+The two steps above ARE the pattern; there is no second place to read it. This
+line used to point at an `agents-md-thin-root` § Tool loading section for it —
+that skill has no such section and does not mention deferred tools, and a
+2026-09-04 contract review recorded the dead pointer without repairing it.
+Repaired here by measurement rather than by repointing: **no skill in this
+package names `ToolSearch` at all** (`grep -rl ToolSearch src/skills/ src/rules/`
+is empty), so there is no in-tree example to cite and inventing one would
+restate the same defect at a new address. A skill that does need a deferred tool
+writes the two steps inline.
 
 ### Where to look for the true source
 

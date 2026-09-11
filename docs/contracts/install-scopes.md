@@ -2,17 +2,19 @@
 stability: beta
 keep-beta-until: 2026-09-15
 keep-beta-reason: >-
-  Beta review 2026-09-05, extended to the anchor's date rather than a round
-  number. `install-layout.md` names this file as its companion contract and owns
-  the on-disk paths the scope table enumerates; its own `keep-beta-until` is
-  2026-09-15, so reviewing the install-surface pair on one date is what stops
-  them drifting apart again. Not promotable today: § 23 says on its own face that
-  the contract "works toward" an invariant that is not achieved, and the work
-  that would achieve it — single-delivery Phase 2 — is recorded HALTED since
-  2026-08-19. Before the window ends: restore the safety regression cited at § 83
-  (it exists under no extension — the citation is corrected to name the gap in
-  this change) or delete the promise, and resolve § 23 either by unblocking
-  Phase 2 or by restating the line as an aspiration.
+  Reviewed 2026-09-11 against the three graduation criteria and against no date;
+  the record is
+  `agents/evidence/analysis/beta-window-2026-09-15-evaluation.md`. Both
+  preconditions the previous reason named are now discharged: the safety
+  regression is restored as `tests/scripts/cleanup_other_scope.test.ts`, and the
+  claim that single-delivery Phase 2 was "recorded HALTED since 2026-08-19" no
+  longer describes the tree — `road-to-single-delivery.md` and its closure
+  correction are both archived and the partition holds on a freshly regenerated
+  projection. That stale sentence is the reason this field is rewritten rather
+  than extended: a window that renews itself on a three-week-old description
+  renews on nobody's judgement. What remains is a promotion decision, which is a
+  public compatibility commitment and therefore the owner's; the date below
+  schedules that decision and blocks nothing.
 ---
 
 # Install Scopes — user-global vs project-local
@@ -92,9 +94,18 @@ The scope guard does **not** make the picking decision; it enforces "one scope p
 - [`docs/contracts/skill-distribution-channels.md`](skill-distribution-channels.md) — per-tool canonical channel.
 - [`src/scripts/_lib/scope_guard.sh`](../../src/scripts/_lib/scope_guard.sh) — guard implementation.
 - [`src/scripts/cleanup_other_scope.sh`](../../src/scripts/cleanup_other_scope.sh) — companion cleanup.
-- **Safety regression — MISSING.** This list cited `tests/test_cleanup_other_scope.py`
-  until 2026-09-05; it exists under no extension, and nothing else in the tree
-  covers the cleanup path. The citation is removed rather than repointed, because
-  repointing it at a neighbouring test would claim coverage that is not there.
-  Restoring it is the named precondition on this contract's beta window.
+- [`tests/scripts/cleanup_other_scope.test.ts`](../../tests/scripts/cleanup_other_scope.test.ts) —
+  the safety regression, restored 2026-09-11. It runs the real script against a
+  throwaway root and pins what the contract actually promises: a bare run
+  deletes nothing and still names what it would remove; `--confirm` removes
+  every declared target and leaves `.agent-settings.yml`, `agents/` and
+  everything outside the declared set standing; `--tools` narrows rather than
+  widens, and an empty selection is refused instead of falling back to
+  everything; a missing or absent `--project` path exits non-zero. Sensitivity
+  was measured rather than assumed — injecting `agents` as a target into a COPY
+  of the script deletes the protected file, so the central assertion fails when
+  the protection does. This list cited `tests/test_cleanup_other_scope.py` until
+  2026-09-05, when a review established it existed under no extension; the
+  citation was removed rather than repointed, and restoring the coverage was the
+  named precondition on this contract's beta window.
 - [`README.md` § Installation](../../README.md) — consumer-facing install path.

@@ -1920,7 +1920,7 @@ const _CLAUDE_SKILL_BUNDLE: ReadonlyArray<readonly [string, string]> = [
     ['dist/agent-src/personas', 'personas'],
 ];
 
-const GLOBAL_DEPLOY_SOURCES: Record<string, ReadonlyArray<readonly [string, string]>> = {
+export const GLOBAL_DEPLOY_SOURCES: Record<string, ReadonlyArray<readonly [string, string]>> = {
     'claude-code': _CLAUDE_SKILL_BUNDLE,
     augment: [
         ['dist/agent-src/rules', 'rules'],
