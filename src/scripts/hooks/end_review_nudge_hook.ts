@@ -216,11 +216,20 @@
  * exit-2 warn onto an unverified propagation path is exactly the
  * speculative mapping `host_semantics.ts` exists to avoid.
  *
- * CONTRACT: never blocks THE ACTUAL TURN. The DISPATCHER-INTERNAL exit is 2
- * on a fire (never 1/BLOCK, never >=3), `fail_closed: false`; the HOST-FACING
- * exit on `claude` is 0 either way, per the proof above. Doc-only
- * diffs, a reviewer having run, or any unreadable/malformed input all
- * resolve to silence (dispatcher-internal exit 0), not a crash.
+ * CONTRACT: never REFUSES a turn. The DISPATCHER-INTERNAL exit is 2 on a fire
+ * (never 1/BLOCK, never >=3), `fail_closed: false`; the HOST-FACING exit on
+ * `claude` is 0 either way, per the proof above. Doc-only diffs, a reviewer
+ * having run, or any unreadable/malformed input all resolve to silence
+ * (dispatcher-internal exit 0), not a crash.
+ *
+ * WHAT THE PROOF ABOVE DOES NOT COVER. Every term of it is an exit code, so it
+ * settles refusal and nothing else. Whether the `additionalContext` payload
+ * this concern emits at `stop` causes the host to run the agent AGAIN is a
+ * separate question, and this tree does not answer it — see
+ * `docs/contracts/hook-architecture-v1.md` under the exit-code table, which
+ * names the measurement that would. So do not read the proof above as
+ * establishing that this concern leaves the turn alone; it establishes only
+ * that the concern never refuses it.
  */
 import { spawnSync } from 'node:child_process';
 import * as crypto from 'node:crypto';
