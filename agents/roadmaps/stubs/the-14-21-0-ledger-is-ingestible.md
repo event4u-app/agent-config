@@ -5,6 +5,38 @@ review_by: 2026-10-07
 
 # Stub: nothing runs the ingest step, so the ledger goes missing once per release
 
+> **Arrival 6 — 2026-09-11, release 15.0.0, instance OPEN and deliberately left
+> open.** Count: **6 arrivals, 5 instance fixes, 0 mechanism fixes.** Found the
+> same way as arrival 5 — settling CI on a roadmap-only PR (#2003) that inherited
+> the red from `main`, whose own last Consistency run predates the tag. The gate
+> line is verbatim: *"15.0.0 has shipped and carries no findings ledger"* — at the
+> `15.0.0.json` that would sit beside its five predecessors in
+> `agents/evidence/release-findings/`. The filename is named apart from its
+> directory on purpose: it is precisely the path that does not exist.
+>
+> **It is ingestible, not absent, and this was checked before anything was
+> written.** The `self-review-gate` run for `release/15.0.0` (2026-09-10T21:56Z)
+> **succeeded** and carries an unexpired `self-review-findings` artifact of
+> 71,629 B. Downloaded and read: schema_version 1, `review_independence:
+> single-member`, `acceptance_status: provisional`, `assurance: single-pass`,
+> reviewers `[anthropic]`, coverage 181 of 258 files over 6 chunks, and **50
+> findings — 4 critical, 13 high, 22 medium, 11 low.** It lacks only the
+> `release` field the ingest step adds.
+>
+> **Why this lane did not ingest it.** `--ingest` merges findings with an *empty*
+> disposition and validation stays red until a human fills each one, so ingesting
+> converts one red into a red carrying **17 blocking findings with no
+> disposition**. Each needs a status, a rationale and a `verified_by` — an
+> adjudication of the 15.0.0 release record that no agent has standing to write,
+> and that has nothing to do with the inbox round this PR carries. Arrivals 1–5
+> were each closed by someone doing exactly that adjudication under time
+> pressure while settling an unrelated PR. This one is recorded instead.
+>
+> **What that makes visible.** Five instance fixes have not reduced the arrival
+> rate at all: the interval between arrivals 5 and 6 is two days, and 15.0.0 is
+> a major. The mechanism question in this stub's own title is now six releases
+> old, and the sixth arrival is the first that was not paid for by a passing lane.
+
 > **Arrival 5 — 2026-09-09, release 14.23.0, instance CLOSED BY A PARALLEL LANE,
 > and option 1's open question is now ANSWERED.** Found while settling CI on a
 > roadmap-only PR (#1971) that inherited the red from `main`. Count: **5
