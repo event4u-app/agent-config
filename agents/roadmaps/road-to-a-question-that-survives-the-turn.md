@@ -100,10 +100,21 @@ gate the supplied plan itself calls "an excellent Phase-0 regression gate", and
 nothing above it.
 
 It also does not touch `src/rules/user-interaction.md`. The supplied plan's
-section 5.1 adds a third Iron Law to that file; `user-interaction` is a kernel
-rule, `src/scripts/hooks/block_kernel_rule_writes.ts` denies agent writes to it
-at tool-call time, and the delta is parked as a blocker below rather than
-smuggled into a step.
+section 5.1 adds a third Iron Law to that file, and the delta is parked as a
+blocker below rather than smuggled into a step.
+
+**Corrected 2026-09-11.** This paragraph read that `user-interaction` is a
+kernel rule whose writes `src/scripts/hooks/block_kernel_rule_writes.ts` denies
+at tool-call time. That is false, and the blocker below was parked on it.
+`src/scripts/_lib/kernel_rules.ts:17-27` lists nine ids — `agent-authority`,
+`ask-when-uncertain`, `commit-policy`, `direct-answers`, `language-and-tone`,
+`no-cheap-questions`, `non-destructive-by-default`, `scope-control`,
+`verify-before-complete` — and `user-interaction` is not among them, so the
+guard never denied this write and the maintainer-only kernel process was never
+on the path. The amendment shipped in
+`road-to-a-stop-slot-that-knows-it-continues` Phase 4. What stays true is that
+this roadmap did not make it: the scope decision was right, the reason given
+for it was wrong.
 
 ## Phase 0 - Fixtures and the demotion bar, before the detector
 
@@ -227,18 +238,23 @@ telemetry row rather than inferred.
 
 ### blocker: user-interaction-third-iron-law
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** nothing in this roadmap - the gate ships without it; this is the
   prose half the gate would enforce.
-- **What to do:** decide whether `src/rules/user-interaction.md` gains a third
-  Iron Law stating that an issued decision stays live across an assistant-only
-  continuation. The file is kernel, `src/scripts/hooks/block_kernel_rule_writes.ts`
-  denies the write at tool-call time, and the edit needs its own PR plus the soak
-  window from `scope-control` section Kernel-rule edits.
+- **What to do:** nothing further. Resolved 2026-09-11 by commit `4b093d510`,
+  which adds Iron Law 3 ("A Decision Outlives the Turn") to
+  `src/rules/user-interaction.md`. **The premise this blocker was parked on was
+  false:** it stated the file is kernel and that
+  `src/scripts/hooks/block_kernel_rule_writes.ts` denies the write at tool-call
+  time, so the edit needed its own PR plus the `scope-control` kernel soak
+  window. `src/scripts/_lib/kernel_rules.ts:17-27` lists nine ids and
+  `user-interaction` is not one of them; the guard never applied and no soak
+  window was owed.
 - **Resolved when:** `git log --oneline -- src/rules/user-interaction.md` shows a
   commit adding the third Iron Law, or the maintainer records that the detector
-  alone is sufficient and no rule text is owed.
+  alone is sufficient and no rule text is owed. **Met:** `grep -c 'Iron Law 3'
+  src/rules/user-interaction.md` is non-zero.
 - **If you do nothing:** the detector ships and enforces a continuity obligation
   that no rule states, so a reader who hits the refusal finds `user-interaction`
   silent on the subject and has to read the hook source to learn what was owed.

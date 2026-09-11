@@ -177,7 +177,7 @@ the marker it already writes, and nothing about when it refuses has changed.
 
 ## Phase 4 — The rule states the obligation the gate enforces
 
-- [ ] **4.1 Add the third Iron Law to `src/rules/user-interaction.md`.**
+- [x] **4.1 Add the third Iron Law to `src/rules/user-interaction.md`.**
       The shipped detector's refusal text (`turn_end_gate_hook.ts:850-856`) cites
       "user-interaction Iron Law 1" for a continuity obligation that file does
       not state: a grep of it for `next turn` / `survive` / `cross-turn` returns
@@ -189,7 +189,7 @@ the marker it already writes, and nothing about when it refuses has changed.
       to a pending decision, never replace one — and change the opening sentence
       from two laws to three.
       verify: `grep -c 'Iron Law 3' src/rules/user-interaction.md` returns at least 1, `./scripts-run src/scripts/check_always_budget` stays green, and `./scripts-run src/scripts/lint_rule_tiers` passes.
-- [ ] **4.2 Correct the false premise and close the blocker it parked.**
+- [x] **4.2 Correct the false premise and close the blocker it parked.**
       `agents/roadmaps/road-to-a-question-that-survives-the-turn.md:97-99` and its
       `### blocker: user-interaction-third-iron-law` both state that
       `user-interaction` is a kernel rule whose writes
@@ -202,7 +202,7 @@ the marker it already writes, and nothing about when it refuses has changed.
       what is true, and flip that blocker to `Status: resolved` naming the commit
       from 4.1, since its own resolution condition is a commit adding the third
       Iron Law.
-      verify: `grep -c 'is a kernel rule' agents/roadmaps/road-to-a-question-that-survives-the-turn.md` returns 0, and the blocker's `- **Status:**` line reads `resolved`.
+      verify: `grep -c 'is a kernel rule' agents/roadmaps/road-to-a-question-that-survives-the-turn.md` returns 0, the blocker's `- **Status:**` line reads `resolved`, and `lint_roadmap_blockers` stays green. The three remaining tree-wide hits for that phrase are in THIS file, each naming the premise as false rather than asserting it.
 
 **Exit criteria:** a reader who meets the `pending-decision` refusal finds the
 obligation written in the rule it cites, and no roadmap in the tree describes
@@ -309,8 +309,10 @@ checkout's, and a fresh-worktree run says so instead of reporting a null.
 - [ ] AC-4 — `src/rules/user-interaction.md` carries a third Iron Law stating
       that a decision handed to the user outlives the turn, and
       `check_always_budget` is green.
-- [ ] AC-5 — No roadmap in `agents/roadmaps/` describes `user-interaction` as a
-      kernel rule, and `road-to-a-question-that-survives-the-turn`'s
+- [ ] AC-5 — No roadmap in `agents/roadmaps/` **asserts** that
+      `user-interaction` is a kernel rule; the only remaining occurrences of the
+      phrase are in this file, each naming it as the false premise it was. And
+      `road-to-a-question-that-survives-the-turn`'s
       `user-interaction-third-iron-law` blocker reads `Status: resolved`.
 - [ ] AC-6 — `agents/roadmaps/later/road-to-residual-interruption-measurement.md`
       no longer presents `n=0` as the contact axis's state and records that the
