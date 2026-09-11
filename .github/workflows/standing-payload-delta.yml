@@ -177,7 +177,19 @@ jobs:
               src/scripts/_lib/measured_payload_ceiling.ts) relevant=true ;;
               src/scripts/_lib/payload_catalogue_completeness.ts) relevant=true ;;
               src/scripts/_lib/prefix_stable_surfaces.ts) relevant=true ;;
-              src/scripts/preamble_byte_census.ts) relevant=true ;;
+              # `src/scripts/preamble_byte_census.ts` belongs in this list by
+              # meaning — it computes the buckets — and may NOT be added to it.
+              # `check_ci_local_parity` derives the CI-side gate set by regexing
+              # workflow text for `src/scripts/<name>`, and cannot tell a path
+              # FILTER from an invocation, so listing the census here registers
+              # it as a gate CI runs and nothing local reaches. Declaring it
+              # `ci_only:` to silence that would assert it cannot run locally,
+              # which is false. The residual: a pull request touching ONLY the
+              # census skips this measurement. It is bounded — the gate that
+              # imports it is listed above, and catalogue completeness is
+              # separately enforced by `_lib/payload_catalogue_completeness.ts`
+              # — and it is recorded here rather than closed by a declaration
+              # that would be untrue.
               .github/workflows/standing-payload-delta.yml) relevant=true ;;
             esac
           done <<< "$changed"

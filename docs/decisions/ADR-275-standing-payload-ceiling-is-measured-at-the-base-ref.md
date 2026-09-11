@@ -79,7 +79,7 @@ Five parts, each from a converged verdict:
    Both seats refused a percentage or fixed allowance against a moving base
    because both authorise cumulative growth — 138,413 × 1.05^10 ≈ 225,000 after
    ten pull requests. A capped variant (`min(base × 1.05, 138490)`) was raised in
-   review and refused by both: it freezes today's overage as permanent, and its
+   review and refused by both: it locks today's overage in place, and its
    reduction tracking stays dormant until the base drops ~6,500 tokens.
 
 2. **Fail-closed.** `--require-base` makes an unestablishable base REFUSE rather

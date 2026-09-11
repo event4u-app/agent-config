@@ -64,6 +64,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { asOf } from './_lib/as_of.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { censusClaudeMdHierarchy, censusRuleDir, censusSkillsCatalog } from './preamble_byte_census.js';
 import { PREFIX_STABLE_SURFACES, prefixStableRoots } from './_lib/prefix_stable_surfaces.js';
@@ -497,7 +498,11 @@ export function decide(opts: DecideOptions = {}): Decision {
         exceptionErrors: ex.errors,
         verifiedApprovals: opts.verifiedApprovals ?? [],
         storedCeiling: budget.stored_ceiling,
-        today: opts.today ?? new Date().toISOString().slice(0, 10),
+        // Through the as-of seam, not the wall clock. An exception expiry is
+        // exactly the kind of verdict that must be reproducible from the
+        // commit: a grant that expires overnight would make the same tree pass
+        // and then fail with nothing in the diff to explain it.
+        today: opts.today ?? asOf().toISOString().slice(0, 10),
         requireBase: opts.requireBase === true,
     });
 
