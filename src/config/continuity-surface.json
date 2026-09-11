@@ -275,6 +275,13 @@
             "reason": "Review-axis report state. Analysis output."
         },
         {
+            "id": "review-baseline",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/_lib/review_baseline.ts:35",
+            "reason": "Start-of-session mutation baseline the end-review nudge subtracts. Two numbers and a timestamp, written once at session_start and read at stop; it carries no continuity across sessions and by construction cannot hold a path, a diff or a file body."
+        },
+        {
             "id": "routing-telemetry.jsonl",
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",
