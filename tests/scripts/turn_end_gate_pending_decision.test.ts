@@ -434,3 +434,77 @@ describe('the gate refuses a turn that dropped its own question', () => {
         expect(runHook(dir, t, home).status).toBe(0);
     });
 });
+
+// ---------------------------------------------------------------------------
+// The transcript lags the payload — the second way this detector goes silent
+// ---------------------------------------------------------------------------
+//
+// The host writes the transcript asynchronously, so on `stop` the tail can be
+// one assistant entry short of the conversation. `detectDroppedDecision` needs
+// two texts to compare; with one it returns null. That is silence in exactly
+// the shape the detector was built for, and no fixture reached it while the
+// gate read the transcript alone.
+describe('the closing reply comes from the stop payload when the transcript lags', () => {
+    it('refuses when only the ASKING reply reached the transcript', () => {
+        const dir = makeWorkspace();
+        const home = makeHome();
+        const t = writeTranscript(
+            home,
+            [
+                { role: 'user', text: 'Bau den Detektor.' },
+                { role: 'assistant', text: ASKED },
+            ],
+            'e2e-lagging',
+        );
+        const r = runHook(dir, t, home, { last_assistant_message: DROPPED });
+        expect(r.status).toBe(1);
+        expect(r.stderr).toContain('pending-decision');
+        expect(r.stderr).toContain('1/2/3');
+        expect(r.stderr).toContain('the stop payload');
+    });
+
+    it('is unchanged on a host that supplies no such field', () => {
+        const dir = makeWorkspace();
+        const home = makeHome();
+        const t = writeTranscript(
+            home,
+            [
+                { role: 'user', text: 'Bau den Detektor.' },
+                { role: 'assistant', text: ASKED },
+            ],
+            'e2e-lagging-nofield',
+        );
+        expect(runHook(dir, t, home).status).toBe(0);
+    });
+
+    it('does not double-count a closing reply the transcript already carries', () => {
+        const dir = makeWorkspace();
+        const home = makeHome();
+        const t = writeTranscript(
+            home,
+            [
+                { role: 'user', text: 'Bau den Detektor.' },
+                { role: 'assistant', text: ASKED },
+                { role: 'assistant', text: DROPPED },
+            ],
+            'e2e-duplicate',
+        );
+        const r = runHook(dir, t, home, { last_assistant_message: DROPPED });
+        expect(r.status).toBe(1);
+        expect(r.stderr).toContain('the transcript');
+    });
+
+    it('still lets the turn end when the payload carries the block forward', () => {
+        const dir = makeWorkspace();
+        const home = makeHome();
+        const t = writeTranscript(
+            home,
+            [
+                { role: 'user', text: 'Bau den Detektor.' },
+                { role: 'assistant', text: ASKED },
+            ],
+            'e2e-lagging-carried',
+        );
+        expect(runHook(dir, t, home, { last_assistant_message: RE_PRESENTED }).status).toBe(0);
+    });
+});

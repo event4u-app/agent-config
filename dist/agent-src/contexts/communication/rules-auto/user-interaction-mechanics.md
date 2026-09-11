@@ -203,24 +203,52 @@ After completing a batch of actions, provide a summary table:
 | 3 | `config.php` | Skipped (intentional) |
 ```
 
-## The trigger is a decision, not a format — the measurement
+## The trigger is a decision, not a format — the measurement behind it
 
-Migrated out of the rule body 2026-09-11 to pay for Iron Law 3 under the
-per-spawn preamble ratchet. Nothing is dropped; the rule keeps the obligation
-and points here for the evidence.
+Migrated out of `user-interaction.md` on 2026-09-11 to pay for Iron Law 3
+under the per-spawn preamble budget. The obligation stays in the rule; this
+is the evidence for it.
 
-Measured (30-session conformance audit, 2026-08-06): **every** malformed ask was
-a one-line parenthetical or a trailing free-text offer — *"sag Bescheid, wenn
-ich die drei Zeilen mitnehmen soll"*, *"Soll ich das so umsetzen?"* — while the
-same sessions formatted their **large** asks perfectly. So the rule is being
-read as *if numbered options, then a recommendation line*. It is the other way
-round, and an ask that feels too small for a block is exactly the one that
-escapes the format. Three further caught shapes: a contentless filler option; an
-inline `(Empfohlen)` tag **beside** the recommendation line (the dual source
+Measured (30-session conformance audit, 2026-08-06): **every** malformed ask
+was a one-line parenthetical or a trailing free-text offer — a German
+"say the word if I should take the three lines along", an English "shall I
+implement it this way?" — while the same sessions formatted their **large**
+asks perfectly. So the rule is being read as *if numbered options, then a
+recommendation line*. It is the other way round, and an ask that feels too
+small for a block is exactly the one that escapes the format.
+
+Three further caught shapes: a contentless filler option; an inline
+"(recommended)" tag **beside** the recommendation line (the dual source
 Iron Law 1 forbids); an option set answerable only as `1,3,4`.
 
-**No gate ships for this.** `check_reply_consistency` can read a draft on stdin,
-but it inspects *numbered-option blocks* — and every measured failure had no
-block by construction, so it scans exactly the surface that did not fail.
-`conformance:behavior` deliberately does not score ask-shape, so an unmoved rate
-is a finding rather than a silence.
+**No gate ships for this.** `check_reply_consistency` can read a draft on
+stdin, but it inspects *numbered-option blocks* — and every measured failure
+had no block by construction, so it scans exactly the surface that did not
+fail. `conformance:behavior` deliberately does not score ask-shape, so an
+unmoved rate is a finding rather than a silence.
+
+## Iron Law 3 — why laws 1 and 2 do not reach across a turn boundary
+
+Iron Laws 1 and 2 are discharged by the shape of the reply that carries the
+block. Neither survives a turn boundary, which is the gap Iron Law 3 closes:
+a second assistant execution with no user message between it and the ask is
+not a new conversation, and from the user's side a thread that ends without
+the question ended without the question.
+
+**The measured failure.** A turn put three numbered options and a
+recommendation line to the user. A `stop` concern then produced a second
+assistant execution with no intervening user message, and that second reply
+handled the concern while demoting the open question to a subordinate clause.
+The four rules that could have caught it did not, each for a stated reason:
+Iron Law 1 inspects a reply that HAS an options block, `check_reply_consistency`
+receives a draft rather than a transcript, `active-remediation` governs
+findings rather than issued decisions, and `no-cheap-questions` guards the
+opposite direction.
+
+**Carrier, stated honestly.** The deterministic half is the
+`pending-decision` detector in `src/scripts/hooks/turn_end_gate_hook.ts` —
+it refuses a turn-end when an earlier reply in the same user turn carried a
+block and the closing reply carries none. It sees one user turn on one host,
+so everything outside that is model-carried, exactly like Iron Law 2's own
+"no gate ships for this" note. `check_reply_consistency` reads a single draft
+and holds no cross-turn state; it cannot see this law at all.

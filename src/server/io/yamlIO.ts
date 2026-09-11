@@ -366,6 +366,49 @@ function replaceFlatDottedKey(
 }
 
 /**
+ * Drop every top-level `a.b.c:` line for a path whose NESTED form the caller
+ * has just resolved.
+ *
+ * Which reader this preserves, because the two forms can disagree and only one
+ * of them is ever consulted: by YAML semantics `a.b.c` is reached by walking
+ * the `a` mapping, so a top-level key literally named "a.b.c" is a DIFFERENT
+ * path that no lookup of the dotted one visits. Removing it therefore changes
+ * no reader's answer — strict and lenient alike already resolve through the
+ * nesting — while leaving it keeps the one line a human scanning the file
+ * reads as the value, saying something the program never agreed with. It
+ * cannot self-heal either: the duplicate-key pass sees a single occurrence,
+ * and `mergeIntoTemplate` writes the nested side, so the line is permanent.
+ *
+ * The nested twin IS the safety argument, not a convenience. A flat `a.b:`
+ * standing ALONE is a key somebody may have meant — `mergeIntoTemplate`'s own
+ * fallback branch writes exactly that shape for a path the template lacks — and
+ * this function is never reached for one: the caller takes the
+ * `replaceFlatDottedKey` branch instead, which updates that line in place.
+ *
+ * Two bounds, each of which turns the sweep into a data-loss bug if dropped:
+ *
+ *   - Two segments minimum. A one-segment path joins to a name with no dot, so
+ *     the match below would hit the very line `replaceScalar` just wrote and
+ *     delete the key the caller asked to set — a rewrite silently becoming a
+ *     removal. Same guard, same reason, as `replaceFlatDottedKey`.
+ *   - Top level only, the bound `replaceFlatDottedKey` also draws: an INDENTED
+ *     `a.b:` is somebody else's child key (`parent:` / `  a.b:` means
+ *     `parent['a.b']`), an unrelated path this sweep has no claim on.
+ */
+function dropFlatDottedTwins(template: string, dottedPath: string[]): string {
+    if (dottedPath.length < 2) return template;
+    const flat = dottedPath.join('.');
+    const lines = template.split('\n');
+    const kept = lines.filter((line) => {
+        if (line.length !== line.trimStart().length) return true;
+        const m = /^([A-Za-z_][A-Za-z0-9_.-]*)\s*:/.exec(line);
+        return m === null || m[1] !== flat;
+    });
+    if (kept.length === lines.length) return template;
+    return kept.join('\n');
+}
+
+/**
  * Apply every leaf change from `newValues` to `templateBody`. Paths that
  * are not present in the template are appended at the end. Comments are
  * preserved for every key that already exists in the template.
@@ -383,6 +426,11 @@ export function mergeIntoTemplate(templateBody: string, newValues: Record<string
         // see `findScalarLine`. Writing the value it already holds is a hit.
         if (findScalarLine(body.split('\n'), sections, leaf) !== -1) {
             body = replaceScalar(body, entry.path, entry.value);
+            // The nested form won, so any flat twin of this same path is dead
+            // and stays dead. The probe above is what licenses the removal:
+            // without a nested key to resolve through, a flat `a.b:` is the
+            // real entry and the branch below owns it.
+            body = dropFlatDottedTwins(body, entry.path);
             continue;
         }
         // Not in the template's nested form. It may still be here as a flat

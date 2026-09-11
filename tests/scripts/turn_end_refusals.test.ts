@@ -112,6 +112,38 @@ describe('step 1.1 — per detector, never pooled', () => {
         expect(rec.counts).toEqual({ ...emptyCounts(), language: 1, verification: 1 });
         expect(rec.detector).toBe('language'); // compatibility field, unchanged
         expect(rec.refused_turn).toBe(7); // the re-entrancy marker survives
+        expect(rec.refused_prompt_id).toBeUndefined(); // absent payload id stays absent
+    });
+
+    it('records the host prompt id beside the ordinal, and never in its place', () => {
+        // The pair is the point: the ordinal stays the re-entrancy key, and the
+        // id is what lets a later reading tell one prompt whose ordinal drifted
+        // from two genuine turns. A refusal carrying no id does NOT inherit the
+        // previous one — that would read as an identity the payload never sent.
+        let rec = foldRefusal(null, {
+            detectors: ['pending-decision'],
+            turnOrdinal: 3,
+            at: '2026-09-11T10:00:00.000Z',
+            promptId: 'p-aaaa',
+        });
+        expect(rec.refused_prompt_id).toBe('p-aaaa');
+        expect(rec.refused_turn).toBe(3);
+
+        rec = foldRefusal(rec, {
+            detectors: ['pending-decision'],
+            turnOrdinal: 4,
+            at: '2026-09-11T10:01:00.000Z',
+            promptId: 'p-aaaa',
+        });
+        expect(rec.refused_prompt_id).toBe('p-aaaa'); // same prompt, drifted ordinal
+        expect(rec.refused_turn).toBe(4);
+
+        rec = foldRefusal(rec, {
+            detectors: ['pending-decision'],
+            turnOrdinal: 5,
+            at: '2026-09-11T10:02:00.000Z',
+        });
+        expect(rec.refused_prompt_id).toBeUndefined();
     });
 
     it('accumulates across refusals in the same session', () => {

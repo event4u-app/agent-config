@@ -269,7 +269,9 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
   settings:sync              Additively merge new template keys into an existing
                              .agent-settings.yml (user lines preserved verbatim).
                              Run automatically by `upgrade`. Flags: --path <file>
-                             | --dry-run | --check (exit 2 on drift) | --profile.
+                             | --dry-run | --check (exit 2 when a write is
+                             required — template drift OR duplicate-key repair;
+                             the stderr message names which) | --profile.
   settings:migrate           Lift project-local .agent-settings.yml / .agent-user.yml into
                              ~/.event4u/agent-config/ (the global-only consumer surface,
                              ADR-020). Idempotent; --force overwrites a non-empty global

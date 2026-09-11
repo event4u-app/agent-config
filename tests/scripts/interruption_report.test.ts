@@ -167,6 +167,12 @@ describe('buildReport — the short-window honesty requirement', () => {
         const report = buildReport(root, 30);
         expect(report.median_contacts_per_run).toBeNull();
         expect(report.notes.join(' ')).toContain('interruptions.jsonl is empty or absent');
+        // An absence reported without naming WHY a checkout can be empty reads as
+        // the instrument having no data, and was once parked as exactly that
+        // while the ledger already held three weeks of records. The note names
+        // the per-checkout property and the flag that answers it.
+        expect(report.notes.join(' ')).toContain('--root');
+        expect(report.notes.join(' ')).toContain('gitignored');
     });
 });
 

@@ -19,9 +19,10 @@ obligation_frequency: "per-turn"
 
 # User Interaction
 
-Three Iron Laws govern every reply that contains numbered options.
-They override conversation momentum, brevity, and the urge to defer
-to the user. **Missing a recommendation is a rule violation, not a slip.**
+Three Iron Laws govern a decision put to the user — two on the reply that
+carries it, one on what happens if the agent runs again before the answer.
+They override conversation momentum, brevity, and the urge to defer to the
+user. **Missing a recommendation is a rule violation, not a slip.**
 
 ## Iron Law 1 — Single-Source Recommendation
 
@@ -43,33 +44,28 @@ EVERY REPLY WITH NUMBERED OPTIONS RUNS THE SELF-CHECK. NO EXCEPTIONS.
 SKIPPING IT IS A RULE VIOLATION, NOT A SLIP.
 ```
 
-Mechanical backstop for Iron Laws 1 and 2:
+Mechanical backstop for Iron Laws 1 and 2 (non-zero exit on either), a safety
+net under the self-scan rather than a replacement for it:
 `./scripts-run src/scripts/check_reply_consistency --stdin < draft.md`
-(non-zero exit on either). It takes a DRAFT, so it cannot see Iron Law 3,
-which is about a transcript. Self-scan is the primary gate; the script is
-the deterministic safety net.
+It takes a DRAFT, so it cannot see Iron Law 3, which is about a transcript.
 
-## Iron Law 3 — A Pending Decision Survives the Turn
+## Iron Law 3 — A Decision Outlives the Turn
 
 ```
-AN UNANSWERED OPTIONS BLOCK STAYS LIVE UNTIL THE USER ANSWERS, CANCELS, OR SUPERSEDES IT.
-AN ASSISTANT-ONLY CONTINUATION — A HOOK NUDGE, A REVIEWER RESULT, A TASK NOTIFICATION —
-MAY ADD TO THE TURN. IT NEVER SILENTLY DISPLACES THE PENDING QUESTION.
-A CONTINUATION THAT CLOSES THE TURN RE-PRESENTS THE BLOCK AND ITS RECOMMENDATION LINE.
-DROPPING AN UNANSWERED BLOCK IS A RULE VIOLATION, NOT A SLIP.
+A DECISION HANDED TO THE USER STAYS LIVE UNTIL THE USER ANSWERS IT.
+THE AGENT RUNS AGAIN WITHOUT AN ANSWER — HOOK CONTINUATION, NOTIFICATION,
+WAKE, RETRY — AND THE BLOCK PLUS ITS RECOMMENDATION LINE ARE RE-PRESENTED
+IN THE SAME FORM. A SUBORDINATE CLAUSE IS NOT A RE-PRESENTATION.
+A HOOK'S CONCERN MAY BE ADDED TO A PENDING DECISION, NEVER REPLACE ONE.
+ONLY THE USER CLOSES IT — BY ANSWERING, OR BY MAKING IT MOOT.
 ```
 
-Only the user's own answer discharges it. A later assistant entry in the same
-turn is not an answer, and a turn that ends with the block gone has lost a
-decision nobody took. The `pending-decision` detector in
-`src/scripts/hooks/turn_end_gate_hook.ts` refuses such a turn-end and names the
-dropped block's option numbers — but it binds on `claude`'s `stop` slot alone,
-so everywhere else this law is model-carried and nothing catches a dropped
-block.
+Carrier: the `pending-decision` detector on `turn-end-gate`, one user turn on
+one host; the rest is model-carried. Mechanics carries the measured failure.
 
 ## Question pacing — one decision point per turn
 
-[`ask-when-uncertain`](ask-when-uncertain.md)'s Iron Law is canonical: **one question per turn**. What counts as "one question" is **one decision point** — a single numbered-options block is ONE question even when its options span multiple dimensions (a depth-and-framework matrix answered with a single number is one decision). Multiple separate asks in one reply, or a block whose answer would need a structured reply (`1a, 2b`), violate the kernel rule's self-check.
+[`ask-when-uncertain`](ask-when-uncertain.md)'s Iron Law is canonical: **one question per turn**. What counts as "one question" is **one decision point** — one numbered-options block is ONE question even when its options span several dimensions, provided a single number answers it. Multiple separate asks in one reply, or a block needing a structured reply (`1a, 2b`), violate the kernel rule's self-check.
 
 If in doubt, split into serial turns — never a long batched prompt.
 
@@ -81,8 +77,11 @@ NOT ON THE PRESENCE OF A NUMBERED LIST.
 A TRAILING FREE-TEXT OFFER IS AN ASK. A BARE YES/NO IS AN ASK.
 ```
 
-The measurement behind this clause, the three further caught shapes, and why no
-gate ships for it: [`user-interaction-mechanics`](../contexts/communication/rules-auto/user-interaction-mechanics.md) § The trigger is a decision.
+Measured (30-session audit, 2026-08-06): **every** malformed ask was a one-line
+parenthetical or a trailing offer, while the same sessions formatted their
+**large** asks perfectly — the ask that feels too small for a block is the one
+that escapes the format. **No gate ships for this**: the backstop inspects
+numbered-option blocks, and every measured failure had none. Detail: mechanics.
 
 ## Mechanics — rationale, failure modes, format details, examples
 

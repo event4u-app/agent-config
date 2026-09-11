@@ -24,13 +24,22 @@
  * Usage:
  *     sync_agent_settings                       # write (default)
  *     sync_agent_settings --dry-run             # show diff, no write
- *     sync_agent_settings --check               # exit 2 on drift (for CI)
+ *     sync_agent_settings --check               # exit 2 if a sync is needed (CI)
  *     sync_agent_settings --profile balanced    # use a specific profile
  *     sync_agent_settings --path path/to/.agent-settings.yml
  *
  * Exit codes:
  *     0 — already in sync, or changes applied (or --dry-run ran cleanly)
- *     2 — drift detected under --check, or invalid arguments / missing files
+ *     2 — under --check, synchronization requires intervention; also invalid
+ *         arguments, missing files, and a duplicate-key repair this tool
+ *         refuses to perform.
+ *
+ * `--check` has two diagnostic cases and its stderr line already separates
+ * them, because the remedies differ: template drift ("drift detected"), and a
+ * duplicate-key repair with no drift ("duplicate keys need collapsing"). Both
+ * exit 2 — the target needs a write either way, and a green `--check` over a
+ * file the strict reader cannot parse would hide the breakage. A caller that
+ * needs the distinction reads the message, not the code.
  *
  * No behaviour changes vs. the retired Python implementation — historical quirks preserved (consumers pin the exact behaviour).
  */
@@ -441,6 +450,52 @@ function loadTemplate(p: string, profileValues: Record<string, string>): string 
   return renderTemplate(fs.readFileSync(p, 'utf-8'), profileValues);
 }
 
+/**
+ * The comment `mergeIntoTemplate` writes above its appended flat-key block.
+ *
+ * Duplicated here rather than imported: the writer holds it as a literal in
+ * `src/server/io/yamlIO.ts` and exports no constant, and that module belongs
+ * to the server tree this CLI does not otherwise depend on. Keep the two in
+ * step — a drift makes the sweep below silently stop matching.
+ */
+const WIZARD_BLOCK_HEADER = '# Wizard-added keys (no template entry)';
+
+/**
+ * Drop a wizard-block header the collapse emptied.
+ *
+ * The non-idempotent writer appended the header AND its keys on every save, so
+ * a collapse that removes the later block's key lines leaves that block's
+ * header behind with nothing under it — and the next append puts a fresh
+ * header below the orphan, one more per save. A header names the keys beneath
+ * it; with none beneath it, it names nothing and misleads the next reader.
+ *
+ * A header counts as emptied only when no key line stands between it and the
+ * next header or EOF. Blanks and further comments do not count: a user comment
+ * written between the header and its first key is part of the block, not a
+ * replacement for it.
+ */
+function dropOrphanedWizardHeaders(lines: readonly string[]): string[] {
+  const drop = new Set<number>();
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i]?.trim() !== WIZARD_BLOCK_HEADER) continue;
+    let hasKey = false;
+    for (let j = i + 1; j < lines.length; j++) {
+      const l = lines[j];
+      if (l === undefined) continue;
+      if (l.trim() === WIZARD_BLOCK_HEADER) break;
+      if (l.trim() === '' || l.trimStart().startsWith('#')) continue;
+      hasKey = true;
+      break;
+    }
+    if (hasKey) continue;
+    drop.add(i);
+    // The writer emits the blank line above the header as part of the block,
+    // so removing the header alone widens the gap by one line per repair.
+    if (i > 0 && lines[i - 1]?.trim() === '') drop.add(i - 1);
+  }
+  return drop.size === 0 ? [...lines] : lines.filter((_, i) => !drop.has(i));
+}
+
 export interface DuplicateRepair {
   /** The document with every safely-collapsible duplicate run reduced to one. */
   text: string;
@@ -482,6 +537,9 @@ export interface DuplicateRepair {
  * A multi-document stream (`---` / `...`) is not repaired either. The reader
  * takes a single document and rejects such a file whatever this pass does, so
  * collapsing across a boundary could only merge two documents' keys into one.
+ *
+ * When — and only when — something did collapse, a wizard-block header the
+ * collapse emptied is removed with it; see `dropOrphanedWizardHeaders`.
  */
 export function collapseDuplicateFlatKeys(text: string): DuplicateRepair {
   // Line endings are preserved: splitting on `\n` alone leaves a trailing
@@ -630,8 +688,51 @@ export function collapseDuplicateFlatKeys(text: string): DuplicateRepair {
   if (collapsed.length === 0) {
     return { text, collapsed, unsafe };
   }
-  const kept = lines.filter((_, i) => !drop.has(i));
+  const kept = dropOrphanedWizardHeaders(lines.filter((_, i) => !drop.has(i)));
   return { text: kept.join(eol), collapsed, unsafe };
+}
+
+/**
+ * The parse error an input still carries once its duplicate keys are excused,
+ * or null when the duplicates were its only problem.
+ *
+ * `uniqueKeys: false` is what excuses them: the duplicate-key rejection is the
+ * single error the collapse has a mandate to remove, so anything the parser
+ * still raises is an error the collapse was never licensed to touch.
+ */
+function residualParseError(text: string): Error | null {
+  try {
+    parseYaml(text, { version: '1.1', uniqueKeys: false });
+    return null;
+  } catch (err) {
+    return err instanceof Error ? err : new Error(String(err));
+  }
+}
+
+/**
+ * What the parser reliably exposes about a failure, as one indented block.
+ *
+ * Available on every `YAMLParseError` observed from this parser: `message`,
+ * whose first line already carries `at line L, column C` plus the detail, and
+ * `code`, a stable identifier. `linePos` is populated too, but only while
+ * `prettyErrors` stays on (the library's own condition), so it is printed when
+ * present and never relied on. Nothing here is asserted beyond the parser's
+ * own first message line, which is derived in the test rather than hardcoded —
+ * pinning a format this module does not own would make a safety test fail on a
+ * dependency's wording change.
+ */
+function formatParserDetail(err: Error): string {
+  const first = err.message.split('\n')[0] ?? err.message;
+  const parts: string[] = [`    ${first}`];
+  const code = (err as { code?: unknown }).code;
+  const linePos = (err as { linePos?: { line: number; col: number }[] }).linePos;
+  const at = linePos?.[0];
+  if (typeof code === 'string' && at !== undefined) {
+    parts.push(`    (${code} at line ${at.line}, column ${at.col})`);
+  } else if (typeof code === 'string') {
+    parts.push(`    (${code})`);
+  }
+  return parts.join('\n') + '\n';
 }
 
 function loadUserText(raw: string): Record<string, unknown> {
@@ -863,6 +964,42 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     return 2;
   }
   if (repair.collapsed.length > 0) {
+    // Refuse before anything else in this branch, including the notice below:
+    // in write mode that notice is past tense ("collapsed …"), so announcing
+    // it and then refusing describes a write that never happened.
+    //
+    // The collapse's safety rests on preserving the original's last-wins
+    // reading, and a document that is invalid for some FURTHER reason has no
+    // reading to preserve — the pass can then emit valid YAML carrying
+    // structure nobody authored, which every downstream check accepts. A
+    // stderr warning (what this branch used to do) is a weak control against a
+    // silent outcome; a refusal is loud and the operator can still recover.
+    // AI council, 2026-09-11, 2 of 2 seats, converged — including a rejection
+    // of any `--repair-anyway` escape: an operator who understands the file
+    // well enough to use it understands it well enough to fix the error first,
+    // and "read the diff" is not a trustworthy oracle for YAML semantics.
+    //
+    // Exit 2, per the taxonomy in this file's header: 2 is "this tool cannot
+    // proceed with this input", which is also what the sibling refusal above
+    // (duplicates it will not collapse) returns. 1 is spoken for — it is the
+    // mirrored `install.fail` exit and means a broken install asset.
+    //
+    // Nothing durable precedes this point: the only write in `main` is the
+    // single `writeFileSync` at the end, there is no temporary file and no
+    // rename, so the refusal leaves the target byte-for-byte unchanged.
+    const residual = residualParseError(rawText);
+    if (residual !== null) {
+      process.stderr.write(
+        `❌  ${target}: refusing the automatic duplicate repair — the file has ` +
+          `another YAML error besides its duplicate keys.\n` +
+          formatParserDetail(residual) +
+          `    Collapsing changes only WHETHER a file parses, never what it parses as, ` +
+          `and that promise is empty over a document with no valid reading.\n` +
+          `    Fix the syntax error by hand, then re-run to apply the duplicate repair.\n`,
+      );
+      return 2;
+    }
+
     // NOT gated on --quiet, and not on stdout. Both callers that matter run
     // quiet — the release's `sync-agent-settings` step and the pre-release
     // probe — so gating this would let a release rewrite the operator's own
@@ -878,21 +1015,6 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
       ? `collapsed ${repair.collapsed.length} duplicate key(s), last value kept`
       : `would collapse ${repair.collapsed.length} duplicate key(s), keeping the last value (no write in this mode)`;
     process.stderr.write(`🔧  ${target}: ${verb} — ${repair.collapsed.join(', ')}\n`);
-
-    // The collapse promises to change only WHETHER the file parses, never what
-    // it parses as — and that promise is only meaningful over an input that had
-    // a reading to preserve. If the original was unparseable for some further
-    // reason (an unterminated quote, say), the repaired file may parse to
-    // structure no human wrote, and the next `git diff` shows keys nobody
-    // added. Cheap to say, and the operator cannot recover it from the output.
-    try {
-      parseYaml(rawText, { version: '1.1', uniqueKeys: false });
-    } catch {
-      process.stderr.write(
-        `⚠️   ${target}: the original had a syntax error beyond the duplicate keys, so the ` +
-          `result may differ in structure, not only in duplicates — read the diff before trusting it.\n`,
-      );
-    }
   }
   const sourceText = repair.text;
 

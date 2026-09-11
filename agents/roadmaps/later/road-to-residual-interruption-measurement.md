@@ -45,12 +45,33 @@ note: interruptions.jsonl is empty or absent — the contact axis has no observa
 note: no chat history with session tags — the wall-clock axis has no observations.
 ```
 
-**Both** observation axes are empty. The SHORT WINDOW flag is the tool correctly
-reporting that the observations do not exist yet — it is not a threshold a
-longer run clears, and with zero observations a smaller window is equally unmet.
+**Corrected 2026-09-11 — the contact axis was never empty, and this reading
+measured the checkout it ran in.** `agents/runtime/` is gitignored and therefore
+per-checkout: a fresh worktree starts with none, and the report then says so in
+words that read as a property of the instrument. Re-run against a checkout
+carrying live runtime state, the same script reports:
 
-No amount of work performed today satisfies the deferred half. That is the whole
-reason it is parked rather than an open step.
+```
+CONTACT AXIS  ·  n=148 runs (≥ 20 floor cleared)
+  median contacts per run:   0
+WALL-CLOCK AXIS  ·  n=5 runs — ⚠️  UNDERPOWERED, floor is 20
+  median user wait:          11.1 min  ·  n=16 gap(s), not runs
+```
+
+The ledger's earliest record is **2026-08-17**, three weeks BEFORE the reading
+above called it absent, so the data existed on the day it was recorded as
+missing. **Reading rule, from here on:** this instrument is measured with
+`--root` pointed at a checkout with live runtime state, never from a fresh
+worktree, and a `0 session(s)` line is checked against
+`agents/runtime/state/interruptions.jsonl` before it is believed.
+
+**What survives unchanged.** The wall-clock axis genuinely is underpowered —
+`n=5` against a floor of 20 — and that is the half this roadmap is parked on.
+The contact half is no longer a measured absence; it is a floor already cleared,
+and whoever resumes this reads it rather than re-deriving it.
+
+No amount of work performed today satisfies the wall-clock half. That is the
+whole reason it is parked rather than an open step.
 
 ## Three shortcuts, each refused explicitly
 

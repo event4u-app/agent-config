@@ -396,43 +396,206 @@ describe('--check distinguishes a repair from template drift', () => {
     });
 });
 
-describe('the unparseable-input warning', () => {
-    it('fires when the original was broken beyond its duplicate keys', () => {
-        workspace = makeWorkspace();
-        const target = path.join(workspace, '.agent-settings.yml');
-        // An unterminated quote: the collapse can turn this into a document
-        // that parses to structure no human wrote.
-        fs.writeFileSync(target, 'rule_loading_tier: minimal\na: "x\nk: 1\nk: 2\n', 'utf-8');
+/**
+ * The wizard block's comment header is written by the same non-idempotent
+ * append that produced the duplicates, so a repair that removes the later
+ * block's keys must remove its header too — otherwise the next save writes a
+ * fresh header below the orphan and they accumulate one per save.
+ */
+describe('the wizard-block header after a repair', () => {
+    const HEADER_RE = /^# Wizard-added keys \(no template entry\)$/gm;
 
-        const chunks: string[] = [];
-        const original = process.stderr.write.bind(process.stderr);
-        process.stderr.write = ((c: string | Uint8Array): boolean => {
-            chunks.push(String(c));
-            return true;
-        }) as typeof process.stderr.write;
-        try {
-            run(workspace, ['--dry-run']);
-        } finally {
-            process.stderr.write = original;
-        }
-        expect(chunks.join('')).toContain('syntax error beyond the duplicate keys');
+    it('survives exactly once, with a key under it, when the whole block collapses', () => {
+        const r = collapseDuplicateFlatKeys(CORRUPTED);
+        expect(r.text.match(HEADER_RE) ?? []).toHaveLength(1);
+
+        const lines = r.text.split('\n');
+        const at = lines.findIndex((l) => l.trim() === '# Wizard-added keys (no template entry)');
+        const below = lines
+            .slice(at + 1)
+            .filter((l) => l.trim() !== '' && !l.trimStart().startsWith('#'));
+        expect(below.length).toBeGreaterThan(0);
+        expect(below[0]).toMatch(/^[A-Za-z_][A-Za-z0-9_.-]*:/);
     });
 
-    it('stays silent on an input whose only problem was the duplicates', () => {
+    it('reaches disk as one header, and stays one across a second sync', () => {
         workspace = makeWorkspace();
-        fs.writeFileSync(path.join(workspace, '.agent-settings.yml'), CORRUPTED, 'utf-8');
+        const target = path.join(workspace, '.agent-settings.yml');
+        fs.writeFileSync(target, CORRUPTED, 'utf-8');
 
+        expect(run(workspace)).toBe(0);
+        expect(fs.readFileSync(target, 'utf-8').match(HEADER_RE) ?? []).toHaveLength(1);
+
+        expect(run(workspace)).toBe(0);
+        expect(fs.readFileSync(target, 'utf-8').match(HEADER_RE) ?? []).toHaveLength(1);
+    });
+
+    it('keeps a header whose keys are merely separated from it by a comment', () => {
+        // A user comment between the header and its first key is part of the
+        // block, not evidence that the block is gone.
+        const text = [
+            'k: 1',
+            'k: 2',
+            '',
+            '# Wizard-added keys (no template entry)',
+            '# chosen during onboarding',
+            'profile.id: developer',
+            '',
+        ].join('\n');
+        expect(collapseDuplicateFlatKeys(text).text.match(HEADER_RE) ?? []).toHaveLength(1);
+    });
+});
+
+/**
+ * Council verdict, 2026-09-11 (2 of 2 seats, converged): `--check` keeps exit 2
+ * for a repair-only difference. The two diagnostic cases are separated by the
+ * MESSAGE, not the code, so the distinction is what needs pinning — a
+ * repair-only run collapsing into the generic drift wording would send a CI
+ * reader to the template when the problem is a corrupt file.
+ */
+describe('--check: one exit code, two diagnoses', () => {
+    function runCapturing(ws: string, extra: string[] = []): { code: number; err: string } {
         const chunks: string[] = [];
         const original = process.stderr.write.bind(process.stderr);
-        process.stderr.write = ((c: string | Uint8Array): boolean => {
-            chunks.push(String(c));
+        process.stderr.write = ((chunk: string | Uint8Array): boolean => {
+            chunks.push(String(chunk));
             return true;
         }) as typeof process.stderr.write;
         try {
-            run(workspace, ['--dry-run']);
+            return { code: run(ws, extra), err: chunks.join('') };
         } finally {
             process.stderr.write = original;
         }
-        expect(chunks.join('')).not.toContain('syntax error beyond');
+    }
+
+    function checkOver(text: string): { code: number; err: string } {
+        workspace = makeWorkspace();
+        fs.writeFileSync(path.join(workspace, '.agent-settings.yml'), text, 'utf-8');
+        return runCapturing(workspace, ['--check']);
+    }
+
+    it('exits 2 for a repair-only difference AND names the repair, not drift', () => {
+        // In step with the template, so the collapse is the only difference.
+        const repairOnly = checkOver('rule_loading_tier: minimal\npersonal:\n  ide: ""\nk: 1\nk: 2\n');
+
+        expect(repairOnly.code).toBe(2);
+        expect(repairOnly.err).toContain('duplicate keys need collapsing');
+        expect(repairOnly.err).toContain('no template drift');
+        expect(repairOnly.err).not.toMatch(/drift detected/);
+        // The remedy, not only the diagnosis: --check never writes, so the
+        // operator is told which invocation does.
+        expect(repairOnly.err).toMatch(/without --check/);
+    });
+
+    it('exits 2 for genuine drift too, under the other wording', () => {
+        const drift = checkOver('rule_loading_tier: minimal\n');
+
+        expect(drift.code).toBe(2);
+        expect(drift.err).toContain('drift detected');
+        expect(drift.err).not.toContain('duplicate keys need collapsing');
+    });
+});
+
+/**
+ * Council verdict, 2026-09-11 (2 of 2 seats, converged): an input invalid for
+ * some reason BEYOND its duplicate keys is refused, not repaired with a
+ * warning. `collapseDuplicateFlatKeys` is safe because it preserves the
+ * original's last-wins reading; a document with no valid reading has nothing
+ * to preserve, so the pass can emit valid YAML carrying structure nobody
+ * wrote — which then passes every downstream check. A warning is a weak
+ * control against a silent outcome.
+ */
+describe('an input broken beyond its duplicate keys', () => {
+    const BROKEN = 'rule_loading_tier: minimal\na: "x\nk: 1\nk: 2\n';
+
+    function runCapturing(ws: string, extra: string[] = []): { code: number; err: string } {
+        const chunks: string[] = [];
+        const original = process.stderr.write.bind(process.stderr);
+        process.stderr.write = ((chunk: string | Uint8Array): boolean => {
+            chunks.push(String(chunk));
+            return true;
+        }) as typeof process.stderr.write;
+        try {
+            return { code: run(ws, extra), err: chunks.join('') };
+        } finally {
+            process.stderr.write = original;
+        }
+    }
+
+    it('refuses, leaves the target byte-for-byte, and names the other error', () => {
+        workspace = makeWorkspace();
+        const target = path.join(workspace, '.agent-settings.yml');
+        fs.writeFileSync(target, BROKEN, 'utf-8');
+
+        // Derived from the parser rather than hardcoded: the wording belongs to
+        // the `yaml` package, and pinning its phrasing here would make a safety
+        // test fail on a dependency's cosmetic change.
+        let parserFirstLine = '';
+        try {
+            parseYaml(BROKEN, { version: '1.1', uniqueKeys: false });
+        } catch (err) {
+            parserFirstLine = String((err as Error).message).split('\n')[0] ?? '';
+        }
+        expect(parserFirstLine).not.toBe('');
+
+        const { code, err } = runCapturing(workspace);
+
+        expect(code).not.toBe(0);
+        expect(fs.readFileSync(target, 'utf-8')).toBe(BROKEN);
+        // Nothing partial and nothing temporary beside it either.
+        expect(fs.readdirSync(workspace).sort()).toEqual(['.agent-settings.yml', 'config']);
+
+        expect(err).toContain('refusing the automatic duplicate repair');
+        expect(err).toContain('another YAML error');
+        expect(err).toContain(parserFirstLine);
+        expect(err).toMatch(/[Ff]ix the syntax error by hand/);
+        expect(err).toMatch(/re-run/);
+        // A past-tense repair notice must not precede a refusal — it would
+        // report a write that never happened.
+        expect(err).not.toMatch(/: collapsed /);
+    });
+
+    it('refuses the case where the collapse would hide the error entirely', () => {
+        // The dropped duplicate IS the broken line, so the collapsed text
+        // parses cleanly — to a `k` the operator never wrote. Nothing
+        // downstream can notice, which is why the refusal has to happen here
+        // and not by the parse failing again later.
+        const SILENT = 'rule_loading_tier: minimal\nk: "unterminated\nk: 2\n';
+        expect(() => parseYaml(SILENT, { version: '1.1', uniqueKeys: false })).toThrow();
+
+        workspace = makeWorkspace();
+        const target = path.join(workspace, '.agent-settings.yml');
+        fs.writeFileSync(target, SILENT, 'utf-8');
+
+        const { code, err } = runCapturing(workspace);
+        expect(code).not.toBe(0);
+        expect(fs.readFileSync(target, 'utf-8')).toBe(SILENT);
+        expect(err).toContain('refusing the automatic duplicate repair');
+    });
+
+    it('refuses under --dry-run too, rather than warning and carrying on', () => {
+        workspace = makeWorkspace();
+        fs.writeFileSync(path.join(workspace, '.agent-settings.yml'), BROKEN, 'utf-8');
+
+        const { code, err } = runCapturing(workspace, ['--dry-run']);
+        expect(code).not.toBe(0);
+        expect(err).toContain('refusing the automatic duplicate repair');
+        expect(err).not.toContain('syntax error beyond the duplicate keys');
+    });
+
+    it('does NOT refuse the path it guards: eligible duplicates still repair', () => {
+        workspace = makeWorkspace();
+        const target = path.join(workspace, '.agent-settings.yml');
+        fs.writeFileSync(target, CORRUPTED, 'utf-8');
+
+        const { code, err } = runCapturing(workspace);
+        expect(code).toBe(0);
+        expect(err).not.toContain('refusing the automatic duplicate repair');
+
+        const written = fs.readFileSync(target, 'utf-8');
+        expect(() => parseYaml(written, { uniqueKeys: true })).not.toThrow();
+        const doc = parseYaml(written, { uniqueKeys: true }) as Record<string, unknown>;
+        expect(doc['profile.id']).toBe('maintainer');
+        expect(doc['cost.enforcement']).toBe('blocking');
     });
 });

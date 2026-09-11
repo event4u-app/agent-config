@@ -23,8 +23,8 @@ estate_growth_exempt: >-
   Grows active_roadmaps by one, open_blockers by three, and concern_count by
   exactly one (`review-baseline`, session_start). The three blockers are each a
   decision the source set could not take for itself and none is actionable by an
-  agent: a rule edit believed at authoring time to be kernel-denied (it is not -
-  see the correction under Non-goal); a change to the definition of a pre-registered claim
+  agent: a kernel-rule edit that `src/scripts/hooks/block_kernel_rule_writes.ts`
+  denies at tool-call time; a change to the definition of a pre-registered claim
   in `docs/CLAIMS.md`; and a host-behaviour question only a live session can
   answer, raised by the neutral review of this branch. Recording them is the
   alternative to silently shipping a gate whose rule text, whose measurement
@@ -58,6 +58,11 @@ capability_gap: none
 ---
 # Road to a question that survives the turn
 
+> **Arrivals:** 2 — latest `round-c4e08a` (2026-09-11), which deepened the same
+> analysis over three loops and produced
+> `road-to-a-stop-slot-that-knows-it-continues`; earlier `round-7b3e91`, which
+> produced this file.
+>
 > **Source:** `agents/tmp.old/round-7b3e91/` - a session transcript plus one
 > supplied plan, analysed 2026-09-11. Claim verification at HEAD: both
 > architectural gaps **still-true**; three of the supplied plan's implementation
@@ -98,14 +103,18 @@ It also does not touch `src/rules/user-interaction.md`. The supplied plan's
 section 5.1 adds a third Iron Law to that file, and the delta is parked as a
 blocker below rather than smuggled into a step.
 
-<!-- corrected-from-reproduction 2026-09-11: the reason given here was that
-`user-interaction` is a kernel rule whose write `block_kernel_rule_writes.ts`
-denies. That is false at every HEAD - `src/scripts/_lib/kernel_rules.ts:17-27`
-lists nine ids and this is not among them, and the file is `type: auto` /
-`tier: 3`. The non-goal itself stands as written: the phases did not touch the
-rule. Iron Law 3 landed later, in the blocker-resolution pass, under a council
-decision recorded in `## Blockers`. The false reason is corrected rather than
-the non-goal rewritten, because the non-goal was honoured. -->
+**Corrected 2026-09-11.** This paragraph read that `user-interaction` is a
+kernel rule whose writes `src/scripts/hooks/block_kernel_rule_writes.ts` denies
+at tool-call time. That is false, and the blocker below was parked on it.
+`src/scripts/_lib/kernel_rules.ts:17-27` lists nine ids — `agent-authority`,
+`ask-when-uncertain`, `commit-policy`, `direct-answers`, `language-and-tone`,
+`no-cheap-questions`, `non-destructive-by-default`, `scope-control`,
+`verify-before-complete` — and `user-interaction` is not among them, so the
+guard never denied this write and the maintainer-only kernel process was never
+on the path. The amendment shipped in
+`road-to-a-stop-slot-that-knows-it-continues` Phase 4. What stays true is that
+this roadmap did not make it: the scope decision was right, the reason given
+for it was wrong.
 
 ## Phase 0 - Fixtures and the demotion bar, before the detector
 
@@ -227,46 +236,42 @@ telemetry row rather than inferred.
 
 ## Blockers
 
+> **Merge note, 2026-09-12.** Two branches reached this file independently and
+> both found the same thing about blocker A: the premise that parked it — that
+> `user-interaction` is a kernel rule whose write the guard denies — is false at
+> every HEAD. `road-to-a-stop-slot-that-knows-it-continues` landed first and its
+> resolution is the one recorded below. This branch's resolution said the same
+> and is not duplicated here; what it adds is the resolution of the other two
+> blockers, which that branch left open. Independent concurrence on the false
+> premise is worth more than either record alone, which is why this note exists
+> rather than one record silently replacing the other.
+
+
 ### blocker: user-interaction-third-iron-law
 
-- **Status:** resolved 2026-09-11 — criterion met
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** nothing in this roadmap - the gate ships without it; this is the
   prose half the gate would enforce.
-- **What to do:** decide whether `src/rules/user-interaction.md` gains a third
-  Iron Law stating that an issued decision stays live across an assistant-only
-  continuation. The file is kernel, `src/scripts/hooks/block_kernel_rule_writes.ts`
-  denies the write at tool-call time, and the edit needs its own PR plus the soak
-  window from `scope-control` section Kernel-rule edits.
+- **What to do:** nothing further. Resolved 2026-09-11 by commit `4b093d510`,
+  which adds Iron Law 3 ("A Decision Outlives the Turn") to
+  `src/rules/user-interaction.md`. **The premise this blocker was parked on was
+  false:** it stated the file is kernel and that
+  `src/scripts/hooks/block_kernel_rule_writes.ts` denies the write at tool-call
+  time, so the edit needed its own PR plus the `scope-control` kernel soak
+  window. `src/scripts/_lib/kernel_rules.ts:17-27` lists nine ids and
+  `user-interaction` is not one of them; the guard never applied and no soak
+  window was owed.
 - **Resolved when:** `git log --oneline -- src/rules/user-interaction.md` shows a
   commit adding the third Iron Law, or the maintainer records that the detector
-  alone is sufficient and no rule text is owed.
+  alone is sufficient and no rule text is owed. **Met:** `grep -c 'Iron Law 3'
+  src/rules/user-interaction.md` is non-zero.
 - **If you do nothing:** the detector ships and enforces a continuity obligation
   that no rule states, so a reader who hits the refusal finds `user-interaction`
   silent on the subject and has to read the hook source to learn what was owed.
   The gate still works; only its explanation is missing.
 - **Recommendation:** none; this is the owner's call - adding an Iron Law to a
   kernel rule is owner-reserved.
-- **Resolution:** the stated obstacle did not exist. `src/rules/user-interaction.md`
-  is NOT a kernel rule: `src/scripts/_lib/kernel_rules.ts:17-27` lists nine
-  kernel ids and it is not among them, `src/scripts/hooks/block_kernel_rule_writes.ts`
-  denies only paths satisfying `is_kernel_rule`, the file's own frontmatter reads
-  `type: "auto"` / `tier: "3"`, and `check_always_budget` lists the nine
-  always-rules without it — so the edit consumed none of the 59 characters of
-  extended-budget headroom that would otherwise have made this a hard blocker.
-  With the kernel-write deny, the soak window and the budget pressure all absent,
-  the decision was council-decidable and was put to the council
-  (`agents/runtime/council/responses/blocker-a-third-iron-law.md`, 2 of 2 seats
-  present, converged on option 1). Iron Law 3 — "A Pending Decision Survives the
-  Turn" — now stands in `src/rules/user-interaction.md`, in the narrowed wording
-  both seats asked for: an unanswered OPTIONS BLOCK, not an "issued decision",
-  and the re-presentation obligation conditional on the continuation closing the
-  turn. The detector's refusal string cited Iron Law 1 for a property Iron Law 1
-  does not state; it now cites Iron Law 3
-  (`src/scripts/hooks/turn_end_gate_hook.ts`), and
-  `tests/scripts/turn_end_gate_pending_decision.test.ts` asserts the citation so
-  the mis-citation cannot return. That assertion is red against the pre-change
-  string, which contained `Iron Law 1` verbatim.
 
 ### blocker: detector-e-under-stop-hook-active
 
