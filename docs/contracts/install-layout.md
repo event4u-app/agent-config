@@ -14,10 +14,24 @@ configs, and any automation that reads the lockfile all depend on it staying
 stable.
 
 This document is the **frozen source** the install-ABI conformance test
-(`tests/test_install_layout_contract.py`) guards against. Any change to the
-shape below must (a) bump `install_layout_version` and (b) carry a
-`### Breaking` / deprecation note per the install-ABI deprecation-window rule in
+([`tests/install/install_layout_contract.test.ts`](../../tests/install/install_layout_contract.test.ts))
+guards against, together with the golden snapshot
+`tests/fixtures/install_layout_v1.json`. Any change to the shape below must
+(a) bump `install_layout_version` and (b) carry a `### Breaking` / deprecation
+note per the install-ABI deprecation-window rule in
 [`BREAKING_CHANGES.md`](../../BREAKING_CHANGES.md).
+
+> **This sentence named a test that did not exist, from 2026-08 until
+> 2026-09-11.** `tests/test_install_layout_contract.py` shipped with the golden
+> fixture on 2026-06-17 and was deleted in the Python→TS migration (ADR-200)
+> without being ported, so the fixture was read by nothing and the contract
+> advertised a guard the tree did not have. The test above is the port, with the
+> same two-part scope the original declared: the tools set, bridge markers,
+> user-scope paths, deploy sources and lockfile field order are live-derived
+> from source, while the claimed pointer keys are doc-locked and cross-checked
+> against the table below. The live layout matches the frozen golden, so nothing
+> drifted in the interval — which is luck rather than coverage, and is exactly
+> what the restored test now stops being luck.
 
 - **Authoritative writer:** [`src/scripts/install.py`](../../src/scripts/install.ts)
   (the wizard plans via `src/install/`, then `src/scripts/install.ts --apply-payload`
