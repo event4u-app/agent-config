@@ -98,7 +98,7 @@ const CHANGELOG = path.join(REPO_ROOT, 'CHANGELOG.md');
  * Mirrors `_set_exec_override` in `release_publication.ts`, and exists for the
  * same reason: `execute()` reads `CHANGELOG.md` off disk at two points (the PR
  * body and the annotated-tag message), and the release drill fakes commands
- * but not the filesystem. Before this seam the drill's step 8 read the
+ * but not the filesystem. Before this seam the drill's step 9 read the
  * repository's REAL changelog — whose current section carries four
  * `_auto-derived, rewrite before merge:_` lines at `14.13.0` — so a
  * publication guard added at that call site refused every drill scenario for a

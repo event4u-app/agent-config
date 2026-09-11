@@ -164,7 +164,7 @@ jobs:
       - name: Install Node deps
         run: npm ci --no-audit --no-fund --prefer-offline
 
-      # release.ts step [2/10] shells out to `task release-prepare`
+      # release.ts step [2/11] shells out to `task release-prepare`
       # (sync + build-discovery + generate-tools). Without this the CI-native
       # path dies with `spawnSync task ENOENT` — the local `task release`
       # path never hits this because task is on the maintainer's PATH.
