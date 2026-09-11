@@ -19,7 +19,7 @@ obligation_frequency: "per-turn"
 
 # User Interaction
 
-Two Iron Laws govern every reply that contains numbered options.
+Three Iron Laws govern every reply that contains numbered options.
 They override conversation momentum, brevity, and the urge to defer
 to the user. **Missing a recommendation is a rule violation, not a slip.**
 
@@ -47,6 +47,22 @@ Mechanical backstop:
 `./scripts-run src/scripts/check_reply_consistency --stdin < draft.md`
 (non-zero exit on any rule below). Self-scan is the primary gate;
 the script is the deterministic safety net.
+
+## Iron Law 3 — A Pending Decision Survives the Turn
+
+```
+AN UNANSWERED OPTIONS BLOCK STAYS LIVE UNTIL THE USER ANSWERS, CANCELS, OR SUPERSEDES IT.
+AN ASSISTANT-ONLY CONTINUATION — A HOOK NUDGE, A REVIEWER RESULT, A TASK NOTIFICATION —
+MAY ADD TO THE TURN. IT NEVER SILENTLY DISPLACES THE PENDING QUESTION.
+A CONTINUATION THAT CLOSES THE TURN RE-PRESENTS THE BLOCK AND ITS RECOMMENDATION LINE.
+DROPPING AN UNANSWERED BLOCK IS A RULE VIOLATION, NOT A SLIP.
+```
+
+Only the user's own answer discharges it. A later assistant entry in the same
+turn is not an answer, and a turn that ends with the block gone has lost a
+decision nobody took. Mechanically enforced by the `pending-decision` detector
+in `src/scripts/hooks/turn_end_gate_hook.ts`, which refuses the turn-end and
+names the dropped block's option numbers.
 
 ## Question pacing — one decision point per turn
 

@@ -853,8 +853,9 @@ export function detectDroppedDecision(assistantTurnTexts: readonly string[]): Fi
                 'options block, so the decision disappeared without being ' +
                 'answered, cancelled or superseded. A hook nudge, a reviewer ' +
                 'result or a task notification may ADD to a turn; it may not ' +
-                'displace a question already asked (user-interaction Iron Law 1: ' +
-                'the option block plus its recommendation line is the ask). ' +
+                'displace a question already asked (user-interaction Iron Law 3: ' +
+                'an unanswered options block survives an assistant-only ' +
+                'continuation). ' +
                 'Re-present the block and its recommendation line at the end of ' +
                 'this reply',
         };

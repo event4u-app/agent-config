@@ -172,6 +172,17 @@ describe('detectDroppedDecision', () => {
         expect(detectDroppedDecision([ASKED, RE_PRESENTED])).toBeNull();
     });
 
+    // The refusal names the rule the obligation lives in, and it has to be the
+    // rule that actually states it. Iron Law 1 is the single-source
+    // recommendation rule and says nothing about a question surviving a
+    // continuation — citing it was a factual error this assertion prevents
+    // returning (council 2026-09-11, blocker `user-interaction-third-iron-law`).
+    it('cites the Iron Law that states the continuity obligation', () => {
+        const f = detectDroppedDecision([ASKED, DROPPED]);
+        expect(f!.reason).toContain('user-interaction Iron Law 3');
+        expect(f!.reason).not.toContain('Iron Law 1');
+    });
+
     it('is silent on a single-reply turn, however the reply is shaped', () => {
         expect(detectDroppedDecision([ASKED])).toBeNull();
         expect(detectDroppedDecision([DROPPED])).toBeNull();
