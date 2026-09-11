@@ -1,11 +1,14 @@
 ---
-stability: beta
-keep-beta-until: 2026-09-10
+stability: stable
 ---
 
 # Release Sizing
 
-> **Status:** active · v0 / beta · 2026-07-10. Governs how much a
+> **Status:** active · stable since 2026-09-11 · landed 2026-07-10. Promoted on
+> evidence rather than on elapsed time: unchanged since the day it was written,
+> normative source for the changelog rollback lint, referenced from the consumer
+> matrix, and carried through release 15.0.0 without breaking. A breaking change
+> here now requires a major. Governs how much a
 > minor release may carry and what every shipped subsystem owes the
 > reader: one primary goal, a disable path, and a named rollback.
 > No version numbers appear here as commitments — this contract
