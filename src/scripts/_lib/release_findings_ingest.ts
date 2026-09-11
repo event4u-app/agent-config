@@ -62,6 +62,19 @@ export function downloadArgv(runId: number, dest: string): string[] {
     return ['run', 'download', String(runId), '--name', FINDINGS_ARTIFACT, '--dir', dest];
 }
 
+/**
+ * Argv proving the ledger is committed on `branch`, not merely present on disk.
+ *
+ * `fs.existsSync` answers a different question, and the difference is reachable:
+ * a push that failed after the ingest commit leaves the file local, and a later
+ * resume would read "already on the branch" off its own working tree, skip the
+ * retry, and merge a head with no ledger — restoring the failure under a line
+ * asserting the opposite. A stray by-hand ingest produces the same false skip.
+ */
+export function ledgerOnBranchArgv(branch: string, rel: string): string[] {
+    return ['cat-file', '-e', `${branch}:${rel}`];
+}
+
 export interface WorkflowRun {
     databaseId: number;
     conclusion: string | null;
@@ -69,62 +82,107 @@ export interface WorkflowRun {
 }
 
 /**
- * The run whose artifact to ingest: the newest one that actually finished.
+ * The finished runs whose artifact is worth trying, newest first.
  *
- * `conclusion` is null while a run is in flight and `cancelled` when a newer
- * push superseded it; neither has a complete artifact, and taking the newest
- * row unconditionally would download a partial review on a branch that was
- * pushed twice. A `failure` run IS eligible — the review job is
- * `continue-on-error` and uploads its artifact on `always()`, so a red run can
- * still carry the findings, and refusing it would reintroduce the gap on
- * exactly the releases most likely to have findings.
+ * A LIST, not a pick, and that is the correction: eligibility cannot be read
+ * off a run's conclusion, because the artifact is CONDITIONAL. The workflow
+ * uploads with `if-no-files-found: ignore`, and the review script returns 0
+ * without writing the file on several paths — no API key, no reviewable files,
+ * no chunk completed, an exception. Each of those is a finished run with
+ * conclusion `success` and no artifact. Keying on conclusion made the designed
+ * "no artifact anywhere" branch unreachable and turned the common case into a
+ * raw download failure, so the caller walks this list and lets absence be the
+ * answer.
+ *
+ * `conclusion: null` is dropped (in flight) and `cancelled` is dropped (a newer
+ * push superseded it, so its artifact is partial at best). Everything else is
+ * tried, `failure` included: a `failure` conclusion here means the dry-run job
+ * failed, since the review job is `continue-on-error` and cannot redden the
+ * run — so refusing it would skip a run whose artifact is perfectly good.
  */
-export function pickRun(runs: readonly WorkflowRun[]): WorkflowRun | null {
-    const usable = runs
-        .filter((r) => r.conclusion === 'success' || r.conclusion === 'failure')
+export function eligibleRuns(runs: readonly WorkflowRun[]): WorkflowRun[] {
+    return runs
+        .filter((r) => r.conclusion !== null && r.conclusion !== 'cancelled')
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-    return usable[0] ?? null;
 }
 
 export type IngestOutcome =
-    /** The ledger already exists on the branch; nothing to fetch. */
+    /** The ledger is already committed on the branch; nothing to fetch. */
     | { kind: 'present' }
-    /** No finished run carries an artifact — the reason is the operator's to read. */
+    /** No finished run at all — distinct from finished-but-carrying-no-artifact. */
     | { kind: 'no-run'; branch: string }
-    /** An artifact was found and should be ingested from `runId`. */
-    | { kind: 'ingest'; runId: number };
+    /** Try these runs newest-first; absence of an artifact is not an error here. */
+    | { kind: 'ingest'; runIds: number[] };
 
 /** What the release step should do, given the ledger state and the run list. */
 export function planIngest(
-    ledgerExists: boolean,
+    ledgerOnBranch: boolean,
     runs: readonly WorkflowRun[],
     branch: string,
 ): IngestOutcome {
-    if (ledgerExists) {
+    if (ledgerOnBranch) {
         return { kind: 'present' };
     }
-    const run = pickRun(runs);
-    return run === null ? { kind: 'no-run', branch } : { kind: 'ingest', runId: run.databaseId };
+    const usable = eligibleRuns(runs);
+    return usable.length === 0
+        ? { kind: 'no-run', branch }
+        : { kind: 'ingest', runIds: usable.map((r) => r.databaseId) };
 }
 
 /**
- * The message a release stops with when findings are ingested and undecided.
+ * Why the release refuses to continue without a ledger.
  *
- * It names the file, the count and the resume command, because the operator
- * reading it has a merged-or-unmerged release branch in front of them and the
- * next action is not guessable from the failure alone.
+ * Reached when no finished run carried an artifact. Continuing would merge and
+ * tag with no ledger, which is the six-release failure this step exists to end —
+ * so it is a stop, not a warning. The three ways to get here are named because
+ * the operator has to pick one, and two of them are ordinary situations rather
+ * than breakage.
  */
-export function undispositionedMessage(
+export function noArtifactMessage(version: string, branch: string, runsSeen: number): string {
+    return (
+        `no ${FINDINGS_ARTIFACT} artifact for ${version} on ${branch} ` +
+        `(${runsSeen} finished ${FINDINGS_WORKFLOW} run(s) checked).\n` +
+        '  The release stops rather than warns: continuing would merge and tag with no ledger, ' +
+        'which is exactly the state this step exists to prevent, and an absent ledger becomes a ' +
+        'repo-wide failure the moment the tag exists.\n' +
+        '  Three ordinary causes: the review has not finished (do not use --no-wait for a ' +
+        'release), no ANTHROPIC_API_KEY so the review was a no-op, or the run produced no ' +
+        'findings file. Settle the review, or commit a ledger with a no_findings_reason by hand, ' +
+        'then resume.'
+    );
+}
+
+/**
+ * The message a release stops with when the disposition gate refuses.
+ *
+ * `blocking` is what the release could count itself: findings that are blocking
+ * and carry no `status`. It is deliberately NOT presented as the reason — the
+ * gate refuses for more shapes than that (an unknown status, an empty rationale
+ * or verifier, a `fixed` with no commit, a malformed ledger, an undeterminable
+ * release status), and an earlier version of this message asserted "N blocking
+ * … carry no disposition" for every one of them. At N = 0 that produced an
+ * instruction nobody could follow.
+ *
+ * So the gate's own output is the reason, passed in and printed, and this text
+ * only says where the file is, why the release stopped, and how to resume.
+ */
+export function dispositionStopMessage(
     version: string,
+    gateOutput: string,
     blocking: number,
     resumeCmd: string,
 ): string {
+    const count =
+        blocking > 0
+            ? `  ${blocking} of them are blocking findings with no status yet.\n`
+            : '';
     return (
-        `${blocking} blocking self-review finding(s) for ${version} carry no disposition.\n` +
-        `  The ledger is committed at ${ledgerRelPath(version)} and the release stops here ` +
-        'by design: a disposition is an adjudication of what this release ships, with a ' +
-        'rationale and a named verifier, and no automation may write one.\n' +
-        `  Fill each {status, rationale, verified_by} (and commit, when status is fixed), ` +
-        `push the release branch, then: ${resumeCmd}`
+        `the disposition gate refuses ${version}. Its own report:\n` +
+        `${gateOutput.trim() || '  (the gate printed nothing — run it directly to see why)'}\n` +
+        count +
+        `  The ledger is at ${ledgerRelPath(version)} and the release stops here by design: a ` +
+        'disposition is an adjudication of what this release ships, with a rationale and a ' +
+        'named verifier, and no automation may write one.\n' +
+        `  Resolve what the report names, push the release branch, then: ${resumeCmd}`
     );
 }

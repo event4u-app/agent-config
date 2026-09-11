@@ -37,14 +37,21 @@
  *                            check fails — see PR #226 post-mortem).
  *     5. Commit + push     — `release: X.Y.Z`, push branch, open PR.
  *     6. Wait for CI       — `gh pr checks --watch` (skippable with --no-wait).
- *     7. Merge             — `gh pr merge --merge --delete-branch`.
- *     8. Tag main          — fast-forward main, tag the merge commit, push
+ *     7. Findings ledger   — ingest the self-review artifact into the release
+ *                            findings ledger for this version, commit it to the
+ *                            branch, and STOP while any blocking finding
+ *                            carries no disposition. Before the merge because
+ *                            the ledger is read off the branch and step 8
+ *                            deletes it.
+ *     8. Merge             — `gh pr merge --merge --delete-branch`.
+ *     9. Tag main          — fast-forward main, tag the merge commit, push
  *                            the tag (triggers publish-npm.yml — except
- *                            under `--ci`, see step 9).
- *     9. GitHub Release     — `gh release create X.Y.Z --notes <changelog>`;
+ *                            under `--ci`, see step 10).
+ *    10. GitHub Release    — `gh release create X.Y.Z --notes <changelog>`;
  *                            under `--ci`, also dispatches
  *                            release-guard.yml + publish-npm.yml +
  *                            cloud-release.yml explicitly.
+ *    11. Delete the merged release branch, local and remote.
  *
  * Idempotency: pass `--resume` to recover from a partial failure. Each
  * step then probes existing state (branch, commit, PR, tag, GitHub
@@ -133,11 +140,13 @@ import {
     FINDINGS_ARTIFACT,
     FINDINGS_WORKFLOW,
     type WorkflowRun,
+    dispositionStopMessage,
     downloadArgv,
+    ledgerOnBranchArgv,
     ledgerRelPath,
+    noArtifactMessage,
     planIngest,
     runLookupArgv,
-    undispositionedMessage,
 } from './_lib/release_findings_ingest.js';
 import { isBlocking, parse_ledger } from './check_finding_dispositions.js';
 import {
@@ -870,7 +879,7 @@ function preflight(target: string, opts: { resume?: boolean; ci?: boolean } = {}
     // The local-in-sync-with-origin check only applies to main; if we're
     // already on the release branch in resume mode, the relevant invariant
     // is "main hasn't moved beyond what release/X.Y.Z branched off", which
-    // `git pull --ff-only` enforces in step 8 anyway.
+    // `git pull --ff-only` enforces in step 9 anyway.
     if (branch === MAIN_BRANCH) {
         const local = git(['rev-parse', 'HEAD'], { capture: true });
         const remote = git(['rev-parse', `${REMOTE}/${MAIN_BRANCH}`], { capture: true });
@@ -984,7 +993,7 @@ export function confirmGate(target: string, yes: boolean): ConfirmVerdict {
     return { proceed: true };
 }
 
-// ─── orchestration ────────────────────────────────────────────────────────────
+// Orchestration.
 
 function _step(n: number, total: number, msg: string): void {
     process.stdout.write(`[${n}/${total}] ${msg}\n`);
@@ -1006,7 +1015,11 @@ function _step(n: number, total: number, msg: string): void {
  * unrelated pull request, which is how six releases in a row got their ledger
  * from whoever was unlucky rather than from the release that produced it.
  */
-function settle_findings_ledger(version: string, branch: string): void {
+function settle_findings_ledger(
+    version: string,
+    branch: string,
+    opts: { wait_for_checks: boolean },
+): void {
     const rel = ledgerRelPath(version);
     const abs = path.join(REPO_ROOT, rel);
 
@@ -1016,67 +1029,143 @@ function settle_findings_ledger(version: string, branch: string): void {
         try {
             runs = JSON.parse(listed.stdout) as WorkflowRun[];
         } catch {
-            runs = [];
+            die(
+                `could not read the ${FINDINGS_WORKFLOW} run list for ${branch}: gh returned ` +
+                    'output that is not JSON. Re-run, or settle the ledger by hand; treating ' +
+                    'this as "no runs" would merge and tag with no ledger.',
+            );
         }
+    } else if (listed.returncode !== 0) {
+        die(
+            `could not list ${FINDINGS_WORKFLOW} runs for ${branch} (gh exit ` +
+                `${listed.returncode}): ${(listed.stderr || listed.stdout).trim()}\n` +
+                '  The release stops rather than assuming there are none — that assumption is ' +
+                'how a release ships without a ledger.',
+        );
     }
 
-    const plan = planIngest(fs.existsSync(abs), runs, branch);
+    const onBranch =
+        run(['git', ...ledgerOnBranchArgv(branch, rel)], { check: false, capture: true })
+            .returncode === 0;
+    const plan = planIngest(onBranch, runs, branch);
+
     if (plan.kind === 'present') {
-        process.stdout.write(`    ledger already on the branch: ${rel}\n`);
+        process.stdout.write(`    ledger already committed on ${branch}: ${rel}\n`);
     } else if (plan.kind === 'no-run') {
-        process.stdout.write(
-            `    ⚠️  no finished ${FINDINGS_WORKFLOW} run on ${plan.branch} carries a ` +
-                `${FINDINGS_ARTIFACT} artifact — no ledger written. If the review did run, ` +
-                'ingest it by hand before the tag; an absent ledger becomes a repo-wide ' +
-                'failure the moment the tag exists.\n',
-        );
-        return;
+        die(noArtifactMessage(version, branch, 0));
     } else {
         const dest = fs.mkdtempSync(path.join(os.tmpdir(), 'release-findings-'));
-        run(['gh', ...downloadArgv(plan.runId, dest)], { capture: true });
-        const artifact = path.join(dest, `${FINDINGS_ARTIFACT}.json`);
-        if (!fs.existsSync(artifact)) {
-            die(`downloaded run ${plan.runId} but ${FINDINGS_ARTIFACT}.json is not in ${dest}`);
+        try {
+            const artifact = _download_findings(plan.runIds, dest);
+            if (artifact === null) {
+                die(noArtifactMessage(version, branch, plan.runIds.length));
+            }
+            run(
+                [
+                    './scripts-run',
+                    'src/scripts/check_finding_dispositions',
+                    '--ingest',
+                    artifact,
+                    '--release',
+                    version,
+                ],
+                { capture: false },
+            );
+        } finally {
+            fs.rmSync(dest, { recursive: true, force: true });
         }
-        run(
-            [
-                './scripts-run',
-                'src/scripts/check_finding_dispositions',
-                '--ingest',
-                artifact,
-                '--release',
-                version,
-            ],
-            { capture: false },
-        );
         git(['add', rel]);
         if (git(['status', '--porcelain', '--', rel], { capture: true })) {
-            git(['commit', '-m', `chore(release): ingest self-review findings for ${version}`]);
+            // Path-scoped: a resume can re-enter with an index someone else
+            // staged, and this commit's message claims to be one thing.
+            git([
+                'commit',
+                '-m',
+                `chore(release): ingest self-review findings for ${version}`,
+                '--',
+                rel,
+            ]);
             push_release_branch(branch);
+            // The push invalidated the head step 6 waited on. Step 8 merges
+            // without re-waiting except on the moving-base path, so without this
+            // the merge either bounces on pending required checks or lands on a
+            // head whose checks — `finding-dispositions` among them — never ran.
+            if (opts.wait_for_checks) {
+                process.stdout.write('    re-waiting for checks on the ingest commit\n');
+                watch_pr_checks(branch);
+            } else {
+                process.stdout.write(
+                    '    ⚠️  --no-wait: the ingest commit is pushed and its checks were not ' +
+                        'awaited; the merge in step 8 may bounce or land on an unchecked head\n',
+                );
+            }
         }
     }
 
-    // Always re-check, including on the already-present path: a ledger committed
-    // by an earlier attempt may still be undispositioned, and skipping the check
-    // because the file exists is how the file came to exist without deciding
-    // anything.
+    // Re-checked on every path, the already-present one included: a ledger a
+    // previous attempt committed may still be undispositioned, and skipping the
+    // check because the file exists is how the file came to exist without
+    // deciding anything.
     const verdict = run(
         ['./scripts-run', 'src/scripts/check_finding_dispositions', '--release', version],
         { check: false, capture: true },
     );
     if (verdict.returncode !== 0) {
-        process.stdout.write(`${(verdict.stdout || verdict.stderr).trim()}\n`);
         die(
-            undispositionedMessage(
+            dispositionStopMessage(
                 version,
+                // BOTH streams. The gate writes its scan line to stdout and its
+                // per-finding diagnosis to stderr, so preferring stdout showed
+                // the operator `scanned: N` and discarded the entire reason the
+                // release stopped.
+                [verdict.stdout, verdict.stderr].map((s) => s.trim()).filter(Boolean).join('\n'),
                 _blocking_without_disposition(abs),
-                `task release -- --resume --yes`,
+                'task release -- --resume --yes',
             ),
         );
     }
 }
 
-/** How many blocking findings in `ledgerAbs` still carry no status. */
+/**
+ * Download the findings artifact from the first run that has one.
+ *
+ * Returns the artifact path, or null when no run carried one. Absence is an
+ * ordinary answer here rather than a failure: the workflow uploads with
+ * `if-no-files-found: ignore` and the review script exits 0 without writing the
+ * file on several paths, so a finished, green run with no artifact is normal.
+ */
+function _download_findings(runIds: readonly number[], dest: string): string | null {
+    for (const runId of runIds) {
+        const r = gh(downloadArgv(runId, dest), { check: false });
+        if (r.returncode !== 0) {
+            continue;
+        }
+        const found = fs
+            .readdirSync(dest)
+            .filter((n) => n.endsWith('.json'))
+            .map((n) => path.join(dest, n));
+        if (found.length === 1) {
+            return found[0]!;
+        }
+        if (found.length > 1) {
+            die(
+                `run ${runId}'s ${FINDINGS_ARTIFACT} artifact holds ${found.length} JSON files ` +
+                    `(${found.map((f) => path.basename(f)).join(', ')}) — the release cannot ` +
+                    'guess which is the findings file.',
+            );
+        }
+    }
+    return null;
+}
+
+/**
+ * How many blocking findings carry no status — a figure for the stop message,
+ * never the reason for it.
+ *
+ * The gate refuses for more shapes than this counts (an unknown status, an
+ * empty rationale or verifier, a `fixed` with no commit, a malformed ledger),
+ * which is why the gate's own output is what the operator is shown.
+ */
 function _blocking_without_disposition(ledgerAbs: string): number {
     if (!fs.existsSync(ledgerAbs)) {
         return 0;
@@ -1185,7 +1274,7 @@ function execute(
 
     guard_release_curation(plan.target, pr_merged);
 
-    // ─── 3. commit ──────────────────────────────────────────────────────────
+    // Step 3 — commit
     if (pr_merged) {
         _step(3, total, 'PR already merged — skip commit');
     } else {
@@ -1278,7 +1367,7 @@ function execute(
         _step(7, total, 'PR already merged — findings ledger cannot land on the branch, skip');
     } else {
         _step(7, total, 'Settle the self-review findings ledger');
-        settle_findings_ledger(plan.target, branch);
+        settle_findings_ledger(plan.target, branch, { wait_for_checks });
     }
 
     // Step 8 — merge
@@ -1291,7 +1380,7 @@ function execute(
 
     // Step 9 — tag main + push tag
     // Always idempotent — even outside resume mode this prevents a mid-flight
-    // crash on step 9 from leaving a half-tagged release that subsequent
+    // crash on step 10 from leaving a half-tagged release that subsequent
     // `task release` invocations can't recover from without `--resume`.
     if (git(['rev-parse', '--abbrev-ref', 'HEAD'], { capture: true }) !== MAIN_BRANCH) {
         run(['git', 'checkout', MAIN_BRANCH]);
@@ -1308,7 +1397,7 @@ function execute(
         }
     } else {
         // Sequencing is load-bearing (release-truth Phase 1, council
-        // 2026-08-03): merge FIRST (step 7), pull main (above), THEN derive
+        // 2026-08-03): merge FIRST (step 8), pull main (above), THEN derive
         // the tag message from the MERGED changelog — tagging before the
         // merge would read a section that does not exist yet. The annotated
         // tag replaces the previous lightweight one so tag metadata is a
@@ -1322,7 +1411,7 @@ function execute(
         _step(10, total, `GitHub Release ${plan.target} already exists — skip`);
     } else {
         _step(
-            9,
+            10,
             total,
             ci
                 ? 'Create GitHub Release (tag push under GITHUB_TOKEN triggers nothing — dispatching next)'
@@ -1347,7 +1436,7 @@ function execute(
         guard_publication(plan.target, 'GitHub Release notes');
         gh(['release', 'create', plan.target, '--title', plan.target, '--notes', notes]);
 
-        // ─── 9b. dispatch-chain the tag-triggered workflows (--ci only) ──────
+        // Step 10b — dispatch-chain the tag-triggered workflows (--ci only)
         // release-guard.yml, publish-npm.yml, and cloud-release.yml all
         // trigger on `push: tags: [0-9]+.[0-9]+.[0-9]+`, but a tag pushed
         // with the default GITHUB_TOKEN does NOT fire other workflows
@@ -1908,6 +1997,9 @@ if (_isCliEntry() || process.argv[1] === _HERE) {
 
 export {
     main,
+    settle_findings_ledger,
+    _download_findings,
+    _blocking_without_disposition,
     _parse_args,
     parse_version,
     bump_version,

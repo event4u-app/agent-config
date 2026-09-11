@@ -103,8 +103,17 @@ export interface Ledger {
     findings: LedgerFinding[];
     /** Why the finding set is empty. Required when it is; see empty_ledger_problem. */
     no_findings_reason?: string;
-    /** Integrity fields carried from the producing review — see INTEGRITY_FIELDS. */
-    [k: string]: unknown;
+    // The six integrity fields, declared rather than swept into an index
+    // signature. An index signature would hold them, and would also disable
+    // excess-property and typo detection on the whole type for every consumer:
+    // under `--strict`, `l.findigs` type-checks against a Ledger carrying one.
+    // The set is known and finite, so it costs six lines to keep the type.
+    review_independence?: string;
+    context_relation?: string;
+    acceptance_status?: string;
+    assurance?: string;
+    reviewers?: string[];
+    coverage?: unknown;
 }
 
 /**
@@ -134,18 +143,30 @@ export const INTEGRITY_FIELDS = [
 ] as const;
 
 /**
- * Merge a self-review artifact into a ledger: new findings by id, and the
- * integrity fields on first write.
+ * Merge a self-review artifact into a ledger: new findings by id, the integrity
+ * fields on first write, and — when the review found nothing — the reason that
+ * makes an empty ledger legible.
+ *
+ * MUTATES AND RETURNS THE SAME OBJECT. Callers must use the returned `ledger`
+ * rather than relying on the mutation; the two are the same reference today and
+ * the signature is what a later reader will trust.
  *
  * The integrity fields are written only when the ledger does not already carry
  * them. A second ingest into a ledger a human has since adjudicated must not
  * silently restate what the earlier run claimed about independence — the first
  * producing run is the one whose claim the dispositions were filled against.
+ *
+ * The empty-findings case is the one that used to deadlock a release. A clean
+ * review produces `findings: []`, `empty_ledger_problem` refuses an empty
+ * ledger with no `no_findings_reason`, and the release then stopped demanding
+ * dispositions for zero findings — an instruction nobody can follow. An ingest
+ * knows exactly what a clean review means and writes it, with the coverage
+ * numbers as the checkable part rather than a bare assurance.
  */
 export function merge_ingest(
     ledger: Ledger,
     artifact: Record<string, unknown>,
-): { ledger: Ledger; added: number; carried: string[] } {
+): { ledger: Ledger; added: number; carried: string[]; reasoned: boolean } {
     const known = new Set(ledger.findings.map((f) => f.finding_id));
     let added = 0;
     for (const f of (artifact['findings'] as LedgerFinding[] | undefined) ?? []) {
@@ -154,14 +175,40 @@ export function merge_ingest(
             added++;
         }
     }
+    // Assigned through one `unknown` view rather than per field: the six are a
+    // closed set the type declares, and spelling out six near-identical
+    // if-blocks to satisfy the checker would make the set harder to extend than
+    // the type is to read. The view is local to this loop.
     const carried: string[] = [];
+    const sink = ledger as unknown as Record<string, unknown>;
     for (const key of INTEGRITY_FIELDS) {
-        if (ledger[key] === undefined && artifact[key] !== undefined) {
-            ledger[key] = artifact[key];
+        if (sink[key] === undefined && artifact[key] !== undefined) {
+            sink[key] = artifact[key];
             carried.push(key);
         }
     }
-    return { ledger, added, carried };
+    let reasoned = false;
+    if (ledger.findings.length === 0 && (ledger.no_findings_reason ?? '').trim() === '') {
+        ledger.no_findings_reason = _clean_review_reason(artifact);
+        reasoned = true;
+    }
+    return { ledger, added, carried, reasoned };
+}
+
+/** The `no_findings_reason` an ingest of a zero-findings artifact writes. */
+function _clean_review_reason(artifact: Record<string, unknown>): string {
+    const cov = artifact['coverage'] as Record<string, unknown> | undefined;
+    const reviewed = cov?.['filesReviewed'];
+    const total = cov?.['filesTotal'];
+    const scope =
+        typeof reviewed === 'number' && typeof total === 'number'
+            ? ` over ${reviewed} of ${total} changed file(s)`
+            : '';
+    return (
+        `The self-review ran and reported no findings${scope}; ingested from its own ` +
+        'artifact by the release, so the empty set is a result rather than an absence. ' +
+        'Check it against the coverage block above and the run that produced it.'
+    );
 }
 
 /** Mirrors self_review_gate.classifyBlocking — security/claim × critical/high. */
@@ -449,10 +496,11 @@ function main(argv: readonly string[]): number {
 
     if (ingest) {
         const artifact = JSON.parse(fs.readFileSync(ingest, 'utf-8')) as Record<string, unknown>;
-        // Validate the finding shape through the same parser the committed
-        // ledger goes through, so a malformed artifact is rejected here rather
-        // than written to disk and discovered by the gate that reads it.
-        parse_ledger(
+        // Validate the incoming finding shape through the same parser the
+        // committed ledger goes through, and keep the RESULT — the findings that
+        // get merged are the validated ones, not the raw artifact objects a
+        // discarded validation would have left unchecked.
+        const incoming = parse_ledger(
             JSON.stringify({
                 schema_version: 1,
                 release,
@@ -464,7 +512,9 @@ function main(argv: readonly string[]): number {
         if (fs.existsSync(ledgerPath)) {
             ledger = parse_ledger(fs.readFileSync(ledgerPath, 'utf-8'), ledgerPath);
         }
-        const { added, carried } = merge_ingest(ledger, artifact);
+        const merged = merge_ingest(ledger, { ...artifact, findings: incoming.findings });
+        ledger = merged.ledger;
+        const { added, carried, reasoned } = merged;
         fs.mkdirSync(path.dirname(ledgerPath), { recursive: true });
         fs.writeFileSync(ledgerPath, JSON.stringify(ledger, null, 2) + '\n');
         process.stdout.write(
@@ -473,6 +523,12 @@ function main(argv: readonly string[]): number {
         );
         if (carried.length > 0) {
             process.stdout.write(`    carried integrity fields: ${carried.join(', ')}\n`);
+        }
+        if (reasoned) {
+            process.stdout.write(
+                '    the review reported nothing — wrote no_findings_reason so the empty ' +
+                    'ledger is a result rather than an absence\n',
+            );
         }
         const absent = INTEGRITY_FIELDS.filter((k) => ledger[k] === undefined);
         if (absent.length > 0) {

@@ -144,6 +144,24 @@ interface WorldConfig {
     /** PR checks fail (watch exits non-zero) — the release must die. */
     checks_fail?: boolean;
     /**
+     * Step 7's world: whether the ledger is already committed on the branch,
+     * what `gh run list` answers, whether a download yields an artifact, and
+     * what the disposition gate says.
+     *
+     * Four knobs rather than one because the step's failure modes are four
+     * different things and an independent review found three of them wrong at
+     * once: a finished run with no artifact (ordinary — the workflow uploads
+     * conditionally), a ledger on disk but not on the branch (a push that
+     * failed), a gate refusing for a reason the operator never saw, and a
+     * review that found nothing deadlocking the release.
+     */
+    ledger_on_branch?: boolean;
+    findings_runs?: Array<{ databaseId: number; conclusion: string | null; createdAt: string }>;
+    /** Run ids whose download produces an artifact. Others answer "not found". */
+    findings_artifact_on?: number[];
+    /** Exit code + streams the disposition gate answers with. */
+    disposition_verdict?: { status: number; stdout: string; stderr: string };
+    /**
      * Content `git show <target>:CHANGELOG.md` returns.
      *
      * Step 1.3 of `road-to-release-publication-integrity`, decided by AI council
@@ -300,6 +318,14 @@ class FakeWorld {
     private merge_races_once: boolean;
     private merge_fails_hard: boolean;
     private checks_fail: boolean;
+    private readonly ledger_on_branch: boolean;
+    private readonly findings_runs: ReadonlyArray<{
+        databaseId: number;
+        conclusion: string | null;
+        createdAt: string;
+    }>;
+    private readonly findings_artifact_on: readonly number[];
+    private readonly disposition_verdict: { status: number; stdout: string; stderr: string };
     private readonly changelog: string;
     /** Working-tree content; see `WorldConfig.changelog_file`. */
     readonly changelog_file: string;
@@ -321,6 +347,13 @@ class FakeWorld {
         this.checks_fail = cfg.checks_fail ?? false;
         this.pr_merged = cfg.pr_already_merged ?? false;
         this.release_verify_fails = cfg.release_verify_fails ?? false;
+        // Defaults keep every pre-2026-09-11 scenario green: the ledger is
+        // already on the branch and the gate is happy, so step 7 is a two-call
+        // no-op and the sequencing scenarios stay about sequencing.
+        this.ledger_on_branch = cfg.ledger_on_branch ?? true;
+        this.findings_runs = cfg.findings_runs ?? [];
+        this.findings_artifact_on = cfg.findings_artifact_on ?? [];
+        this.disposition_verdict = cfg.disposition_verdict ?? { status: 0, stdout: '', stderr: '' };
     }
 
     exec(args: readonly string[]): ExecResult {
@@ -483,6 +516,49 @@ class FakeWorld {
             return OK;
         }
 
+        // Step 7 — the findings ledger.
+        if (cmd.startsWith('git cat-file -e ')) {
+            return this.ledger_on_branch ? OK : { ...OK, status: 1 };
+        }
+        if (args[0] === 'gh' && args[1] === 'run' && args[2] === 'list') {
+            return { ...OK, stdout: JSON.stringify(this.findings_runs) };
+        }
+        if (args[0] === 'gh' && args[1] === 'run' && args[2] === 'download') {
+            const runId = Number(args[3]);
+            if (!this.findings_artifact_on.includes(runId)) {
+                return { status: 1, stdout: '', stderr: 'artifact not found' };
+            }
+            // The real download writes into --dir; the drill writes the file so
+            // the caller's readdir sees exactly what a real run would leave.
+            const dirIdx = args.indexOf('--dir');
+            if (dirIdx >= 0) {
+                const dir = String(args[dirIdx + 1]);
+                fs.writeFileSync(
+                    path.join(dir, 'self-review-findings.json'),
+                    JSON.stringify({ schema_version: 1, findings: [] }),
+                );
+            }
+            return OK;
+        }
+        if (cmd.includes('check_finding_dispositions --ingest')) {
+            return OK;
+        }
+        if (cmd.startsWith('git add agents/evidence/release-findings/')) {
+            return OK;
+        }
+        if (cmd.startsWith('git commit -m chore(release): ingest self-review findings')) {
+            return OK;
+        }
+        if (cmd.startsWith('git status --porcelain -- agents/evidence/release-findings/')) {
+            // The ingest just wrote the file, so it is always dirty here. A
+            // clean answer would mean the ingest produced nothing, which the
+            // artifact scenarios do not simulate.
+            return { ...OK, stdout: ' M agents/evidence/release-findings/x.json\n' };
+        }
+        if (cmd.includes('check_finding_dispositions --release')) {
+            return { ...this.disposition_verdict };
+        }
+
         throw new Error(`FakeWorld: unscripted command: ${cmd}`);
     }
 }
@@ -515,6 +591,130 @@ function _count(world: FakeWorld, needle: string): number {
 }
 
 const SCENARIOS: Record<string, Scenario> = {
+    'findings-ledger-ingested-and-rechecked': {
+        summary:
+            'step 7: no ledger on the branch, a finished run carries the artifact — ingest, commit, push, re-wait, then continue',
+        config: {
+            ledger_on_branch: false,
+            findings_runs: [{ databaseId: 7, conclusion: 'success', createdAt: '2026-09-11T01:00:00Z' }],
+            findings_artifact_on: [7],
+        },
+        expect_success: true,
+        verify: (w) => {
+            const f: string[] = [];
+            const ingest = w.calls.findIndex((c) => c.includes('--ingest'));
+            const merge = w.calls.indexOf(`gh pr merge ${w.branch} --merge --delete-branch`);
+            _expect(ingest >= 0, 'the artifact was never ingested', f);
+            _expect(
+                w.calls.some((c) => c.startsWith('git commit') && c.includes('--')),
+                'the ingest commit was not path-scoped',
+                f,
+            );
+            _expect(merge >= 0, 'the release never reached the merge', f);
+            _expect(
+                ingest < merge,
+                'the ingest ran AFTER the merge — the branch it writes to is gone by then',
+                f,
+            );
+            // The push invalidates the head step 6 waited on; without a re-wait
+            // the merge lands on a head whose required checks never ran.
+            const push = w.calls.lastIndexOf(`git push -u origin ${w.branch}`);
+            const lastWatch = w.calls.map((c) => c.startsWith('gh pr checks')).lastIndexOf(true);
+            _expect(
+                lastWatch > push,
+                'no check wait after the ingest push — the merge would race the checks',
+                f,
+            );
+            return f;
+        },
+    },
+    'findings-ledger-no-artifact-stops-the-release': {
+        summary:
+            'step 7: finished runs exist but none carries an artifact — the release STOPS rather than warning and tagging without a ledger',
+        // The conditional upload makes this ordinary, not exceptional: no API
+        // key, no reviewable files, no chunk completed all yield a green run
+        // with no artifact. The old code died on a raw `gh` error here, and the
+        // version before it merged anyway after printing a warning.
+        config: {
+            ledger_on_branch: false,
+            findings_runs: [{ databaseId: 7, conclusion: 'success', createdAt: '2026-09-11T01:00:00Z' }],
+            findings_artifact_on: [],
+        },
+        expect_success: false,
+        verify: (w, error) => {
+            const f: string[] = [];
+            _expect(
+                (error ?? '').includes('no self-review-findings artifact'),
+                `the stop did not name the missing artifact: ${error ?? '(no error)'}`,
+                f,
+            );
+            _expect(
+                !w.calls.includes(`gh pr merge ${w.branch} --merge --delete-branch`),
+                'merged despite having no ledger — the failure this step exists to end',
+                f,
+            );
+            _expect(!w.tag_remote, 'tagged despite having no ledger', f);
+            return f;
+        },
+    },
+    'findings-ledger-undispositioned-stops-and-shows-why': {
+        summary:
+            'step 7: the disposition gate refuses — the release stops and the operator is shown the gate report, not just its scan line',
+        config: {
+            ledger_on_branch: true,
+            disposition_verdict: {
+                status: 1,
+                stdout: 'scanned: 1',
+                stderr: '- `a1` (critical security: x): no disposition status',
+            },
+        },
+        expect_success: false,
+        verify: (w, error) => {
+            const f: string[] = [];
+            // The defect an independent review reproduced: the stop message
+            // preferred stdout, so the operator saw `scanned: 1` and the entire
+            // per-finding diagnosis — which the gate writes to stderr — was
+            // discarded on the one path where the message has to carry content.
+            _expect(
+                (error ?? '').includes('no disposition status'),
+                `the gate's own diagnosis was swallowed: ${error ?? '(no error)'}`,
+                f,
+            );
+            _expect(
+                !w.calls.includes(`gh pr merge ${w.branch} --merge --delete-branch`),
+                'merged over an undispositioned ledger',
+                f,
+            );
+            return f;
+        },
+    },
+    'findings-ledger-on-disk-but-not-on-the-branch': {
+        summary:
+            'step 7: a ledger the working tree has and the branch does not is NOT treated as present — the push is retried',
+        // The reachable case: push_release_branch died after the ingest commit,
+        // so the file is local only. Probing the filesystem would report
+        // "already on the branch" and merge a head without it.
+        config: {
+            ledger_on_branch: false,
+            findings_runs: [{ databaseId: 9, conclusion: 'success', createdAt: '2026-09-11T02:00:00Z' }],
+            findings_artifact_on: [9],
+        },
+        expect_success: true,
+        verify: (w) => {
+            const f: string[] = [];
+            _expect(
+                w.calls.some((c) => c.startsWith('git cat-file -e ')),
+                'the branch was never asked whether it carries the ledger',
+                f,
+            );
+            _expect(
+                w.calls.some((c) => c.includes('--ingest')),
+                'the ingest was skipped on a branch that has no ledger',
+                f,
+            );
+            return f;
+        },
+    },
     'plain-run-reuses-an-existing-branch': {
         summary:
             'step 1: a PLAIN run (no --resume) over an existing release branch checks it out instead of dying at `git checkout -b`',
