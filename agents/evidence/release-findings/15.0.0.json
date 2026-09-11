@@ -1,6 +1,328 @@
 {
   "schema_version": 1,
   "release": "15.0.0",
+  "review_independence": "single-member",
+  "context_relation": "unknown",
+  "acceptance_status": "provisional",
+  "assurance": "single-pass",
+  "reviewers": [
+    "anthropic"
+  ],
+  "coverage": {
+    "chunks": 6,
+    "filesReviewed": 181,
+    "filesTotal": 258,
+    "unreviewed": [
+      {
+        "path": "agents/evidence/reviews/feat-cdd-fidelity-council.review-input/diff.patch",
+        "reason": "single-file diff of 1638702 chars exceeds the 432000-char request budget; not split, because a diff cut mid-hunk yields findings about code that does not exist"
+      },
+      {
+        "path": "src/scripts/_lib/tolerance_shadow.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/ai_council/redact_low_impact_entry.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/autonomy_friction_traffic.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/check_kernel_edit_ratified.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/check_loss_class_declared.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/check_platform_anchor.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/check_preamble_payload_budget.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/check_projected_rule_routes.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/code_graph/cli.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/condense.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/generate_host_cost_table.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hook_manifest.json",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hook_manifest.yaml",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks/category_a.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks/chain_nudge_hook.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks/session_eol_hook.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks/source_first_gate_hook.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks/ui_route_nudge_hook.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hot_context_hook.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/lint_evidence_artifacts.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/lint_knowledge_scale.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/memory_lookup.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/report_standing_payload_by_host.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/session_memory_index.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/sync_agent_settings.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/server/io/yamlIO.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/server/schemas/settings.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/shared/settingsSurface.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/brand-to-tokens/SKILL.md",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/design-system-capture/references/design-system-json.md",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/design-tokens/SKILL.md",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/existing-ui-audit/SKILL.md",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/learning-to-rule-or-skill/SKILL.md",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/tailwind-engineer/SKILL.md",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/ui-component-architect/SKILL.md",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/templates/compact-instructions.md",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "taskfiles/ci-fast.yml",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "taskfiles/content.yml",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "taskfiles/release.yml",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/design-artifacts/fixtures/handoff-bundle/design-system.json",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/design-artifacts/fixtures/wireframe.html",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/hooks/continuity_switches.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/hooks/session_index_trust_e2e.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/install/settings_surface_snapshot.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/lib/agent_settings.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/_cli/cmd_settings_get_user_global_drop.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/_lib/loss_class.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/artifact_maturity.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/autonomy_friction_traffic.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/check_kernel_edit_ratified.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/check_preamble_payload_budget.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/check_projected_rule_routes.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/code_graph_rev_option_injection.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/conformance_report.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/continuity_writer.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/design_fidelity_routing.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/design_system_import.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/design_tolerance.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/generate_host_cost_table.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/hooks/chain_nudge_hook.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/hot_context_hook.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/lint_knowledge_scale.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/lint_skill_originality.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/pack_payload_reduction.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/platform_anchor.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/ratification_artifact.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/release_14_23_0_security_dispositions.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/runtime_dependencies.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/security_lint_bound_pragma.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/session_eol_hook.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/standing_bound_ratchet.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/sync_agent_settings.duplicate_repair.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/tolerance_shadow.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/ui_route_nudge.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/ui_route_nudge_artifact_read.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/server/yamlIO.merge-idempotence.test.ts",
+        "reason": "the span needs 8 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      }
+    ]
+  },
   "findings": [
     {
       "finding_id": "245393dc3d9d",
