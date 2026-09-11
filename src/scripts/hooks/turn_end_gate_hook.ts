@@ -176,7 +176,11 @@ import { statePathFor as ciStatePathFor } from '../before_complete_hook.js';
 // guard alone would not settle it; what does is the `.__direct__` argv rewrite
 // in the `build:hooks` banner. Named here so a future change to that banner
 // does not silently start running a lint's `main()` on every hook dispatch.
-import { find_option_blocks, recommendationsUnder } from '../check_reply_consistency.js';
+import {
+    find_option_blocks,
+    recommendationsUnder,
+    splitAndMask,
+} from '../check_reply_consistency.js';
 import { isSafeTranscriptPath } from './end_review_nudge_hook.js';
 import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
@@ -798,11 +802,37 @@ export function detectUnverifiedEdit(toolCalls: readonly ToolCall[]): Finding | 
  * copied. `interruption_ledger_hook` carries its own `hasNumberedOptions` for
  * the capture-only ledger; a third reading of the same rule would drift from
  * both.
+ *
+ * TWO KNOWN FALSE-POSITIVE PATHS, named because a refusing detector owes its
+ * residual rather than only its fix:
+ *
+ *   · A BLOCKQUOTED illustration of an ask — `> 1.` / `> 2.` plus a quoted
+ *     recommendation line — reads as live. `OPTION_LINE_RE` accepts a leading
+ *     `>` deliberately, because this suite's own documented ask shape is often
+ *     blockquoted, so excluding it would miss real asks to avoid a quoted one.
+ *     Fenced illustrations ARE excluded and tested; blockquoted ones are not,
+ *     and narrowing the shared parser to fix that would change what
+ *     `check_reply_consistency` enforces about Iron Law 1.
+ *   · A genuine user turn carrying NO `type: 'text'` block — an image-only
+ *     message — does not reset the turn, because `readTranscriptTail` skips an
+ *     entry with no text before reaching the reset. Changing that would move
+ *     `turnOrdinal` for all four other detectors on a shape none of them has
+ *     been measured against.
+ *
+ * Both cost one extra line in a reply, once: the re-entrancy layers cap a turn
+ * at ONE refusal, so neither can wedge a session.
  */
 export function detectDroppedDecision(assistantTurnTexts: readonly string[]): Finding | null {
     if (assistantTurnTexts.length < 2) return null;
-    const asksIn = (text: string): ReturnType<typeof find_option_blocks> =>
-        find_option_blocks(text).filter((b) => recommendationsUnder(text, b).length > 0);
+    // Masked once per text, not once per block: this runs on the stop path over
+    // every assistant text of the turn, and a reply with four numbered blocks
+    // would otherwise split and fence-mask the whole reply four times.
+    const asksIn = (text: string): ReturnType<typeof find_option_blocks> => {
+        const blocks = find_option_blocks(text);
+        if (blocks.length === 0) return blocks;
+        const masked = splitAndMask(text);
+        return blocks.filter((b) => recommendationsUnder(text, b, masked).length > 0);
+    };
     const closing = assistantTurnTexts[assistantTurnTexts.length - 1]!;
     if (asksIn(closing).length > 0) return null;
     for (let i = assistantTurnTexts.length - 2; i >= 0; i -= 1) {

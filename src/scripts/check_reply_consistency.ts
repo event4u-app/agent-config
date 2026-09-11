@@ -82,6 +82,10 @@ function _strip_codespans(line: string): string {
 }
 
 /** Split on \n / \r\n / \r, dropping a single trailing empty element. */
+export function splitAndMask(text: string): string[] {
+    return mask_fences(_splitlines(text));
+}
+
 function _splitlines(text: string): string[] {
     if (text === '') return [];
     const parts = text.split(/\r\n|\r|\n/);
@@ -171,8 +175,17 @@ export interface RecommendationLine {
  * treats two as its own finding, and a caller that only wanted existence can
  * read `.length > 0`.
  */
-export function recommendationsUnder(text: string, block: OptionBlock): RecommendationLine[] {
-    const lines = mask_fences(_splitlines(text));
+export function recommendationsUnder(
+    text: string,
+    block: OptionBlock,
+    maskedLines?: readonly string[],
+): RecommendationLine[] {
+    // `maskedLines` lets a caller with several blocks over one text mask once
+    // instead of once per block. It is the SAME array `check_reply` and
+    // `find_option_blocks` compute; passing anything else silently changes the
+    // line numbers this returns, which is why it is an optimisation parameter
+    // and not part of the contract.
+    const lines = maskedLines ?? mask_fences(_splitlines(text));
     const recs: RecommendationLine[] = [];
     let inspected = 0;
     for (let idx = block.endLine; idx < lines.length && inspected < REC_ADJACENCY_WINDOW; idx++) {
@@ -455,7 +468,24 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     return 2;
 }
 
+// Bundle-safety: never auto-run when inlined into an esbuild bundle, where
+// every module shares the bundle's `import.meta.url`.
+//
+// This module is not a hook, and until `turn_end_gate_hook` began importing
+// `find_option_blocks` / `recommendationsUnder` from it, it was never inside
+// one. It is now pulled into `dist/hooks/dispatch.js`, where without this guard
+// the `import.meta.url === argvUrl` comparison below is TRUE for every bundled
+// module — so importing this file would call `process.exit(main())` and take the
+// whole dispatch down at import time. The build banner's `.__direct__` argv
+// rewrite also prevents it, and a comment in the gate says so; a guard the other
+// bundled entries all carry is the load-bearing half, and depending on the
+// banner alone is depending on something no test pins.
+declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
+
 function _isCliEntry(): boolean {
+    if (typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__) {
+        return false;
+    }
     if (process.argv[1] === undefined) {
         return false;
     }
@@ -476,7 +506,12 @@ function _isCliEntry(): boolean {
     }
 }
 
-if (_isCliEntry() || process.argv[1] === _HERE) {
+// The `|| process.argv[1] === _HERE` arm is the reason the bundle check lives in
+// BOTH places: inside a bundle `_HERE` resolves to the bundle's own path and so
+// does `process.argv[1]`, so this arm would be true and would route straight past
+// a guard that only sat in `_isCliEntry`.
+const _IN_BUNDLE = typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__;
+if (!_IN_BUNDLE && (_isCliEntry() || process.argv[1] === _HERE)) {
     process.exit(main());
 }
 

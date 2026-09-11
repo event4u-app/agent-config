@@ -38,12 +38,21 @@ export type MutationMeasure = 'exact' | 'capped_approximation';
  * Whether `diff_lines` had this session's start-of-session baseline subtracted,
  * and when it did not, WHY.
  *
- * A closed four-value enum, never free text, so the privacy floor below still
- * holds by construction. It exists because the subtraction's three failure
- * modes all fall back to the unsubtracted count — which is the safe direction
- * and also an invisible one: without this field, a line reading 1,771 cannot be
- * told apart from a session that really did mutate 1,771 lines, and the rate at
- * which the mechanism is degrading would be unmeasurable from its own stream.
+ * A closed enum, never free text, so the privacy floor below still holds by
+ * construction. It exists because the subtraction's failure modes all fall back
+ * to the unsubtracted count — which is the safe direction and also an invisible
+ * one: without this field, a line reading 1,771 cannot be told apart from a
+ * session that really did mutate 1,771 lines.
+ *
+ * WHAT IT MEASURES, and the half it cannot. This line is written only when the
+ * nudge FIRES, so the distribution here is the fallback rate among firing
+ * sessions. The sessions the subtraction silenced — the mechanism working —
+ * produce no line at all, so the silence rate is NOT observable from this
+ * stream and no clause here should be read as claiming it is. Recording a row
+ * for a nudge that did not fire would put a `review_skipped` event in the audit
+ * log for a session where no review was skipped, which is a worse defect than
+ * the blind spot; measuring it properly needs a counter of its own, and that is
+ * a decision rather than an oversight.
  *
  * `absent` is the expected steady state on a host with no `session_start` slot
  * and on every session that predates the baseline concern; `unreadable` is a

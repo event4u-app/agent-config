@@ -189,12 +189,29 @@ does not, and the refusal names the block that went missing.
       denominator is gone.
       verify: a fixture with `baseline_lines` 1771 and a 5-line turn does not fire; one with a moved `head_sha` fires on the unsubtracted count and its telemetry row records the fallback reason.
 - [x] **2.3 Register the concern in the four places a concern is registered.**
-      The `hook_manifest.yaml` concern block, the seven per-host `session_start`
-      rows, `CONCERN_REGISTRY` in `src/scripts/hooks/concern_registry.ts`, and
-      the manifest test expectations. The registry is the one that is missed,
-      because a concern absent from it is dispatched by no host and fails no
-      gate.
-      verify: `grep -c 'review-baseline' src/scripts/hook_manifest.yaml` returns at least 8, and `grep -n 'review_baseline_hook' src/scripts/hooks/concern_registry.ts` resolves.
+      The `hook_manifest.yaml` concern block, the `session_start` row of the one
+      host that carries its reader, `CONCERN_REGISTRY` in
+      `src/scripts/hooks/concern_registry.ts`, and the manifest test
+      expectations. The registry is the one that is missed, because a concern
+      absent from it is dispatched by no host and fails no gate.
+      `corrected-from-reproduction`: this step first said "the seven per-host
+      `session_start` rows", and seven is what landed. A neutral review measured
+      the consequence — `end-review-nudge` is bound on `claude`'s stop slot and
+      nowhere else, cowork refuses it explicitly, so six of those hosts would
+      spend two git subprocesses per session start on a file nothing opens. It
+      is bound on `claude` alone and dropped for the `worker` role beside its
+      reader.
+      verify: `grep -c 'session_start.*review-baseline' src/scripts/hook_manifest.yaml` returns 2 (claude's two role rows) and no other slot names it; `grep -n 'review_baseline_hook' src/scripts/hooks/concern_registry.ts` resolves.
+- [x] **2.4 Re-emit the standing-payload census `main` left stale.**
+      Not this branch's work and carried here because this branch is where it
+      surfaced: `main` grew `src/rules/spreadsheet-source-quality.md` by 585
+      bytes without re-emitting
+      `agents/evidence/analysis/standing-payload-by-host-2026-09.md`, so
+      `generate_host_cost_table --check` refuses to publish either reading and
+      two suites go red on any branch that merges it — its own, and
+      `activation_receipt_producer`, which reads the same projection. The step
+      is recorded rather than left as an unexplained diff hunk.
+      verify: `./scripts-run src/scripts/generate_host_cost_table --check` exits 0, and `npx vitest run tests/scripts/generate_host_cost_table.test.ts tests/scripts/activation_receipt_producer.test.ts` is green.
 
 **Exit criteria:** a 5-line turn on a branch carrying 1,771 pre-session dirty
 lines does not fire the review nudge, and every fallback path is visible in the
@@ -298,7 +315,9 @@ telemetry row rather than inferred.
       session baseline recorded 1,771 pre-session non-doc lines, and does fire on
       the unsubtracted count when the baseline's `head_sha` no longer matches.
 - [x] AC-5 - `review-baseline` resolves in `CONCERN_REGISTRY`, in the manifest's
-      concern block, and in every host's `session_start` row; no host binds a
-      concern the registry cannot dispatch.
+      concern block, and in the `session_start` row of `claude` — the one host
+      binding its reader — and in no other slot; no host binds a concern the
+      registry cannot dispatch, and the `worker` role drops it beside
+      `end-review-nudge`.
 - [x] AC-6 - The two blockers above are recorded with owners and open status
       rather than resolved inside this roadmap.

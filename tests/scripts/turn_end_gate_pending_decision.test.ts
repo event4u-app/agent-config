@@ -119,6 +119,40 @@ function tailOf(entries: readonly Entry[], tag: string): string[] {
 }
 
 // ---------------------------------------------------------------------------
+// The import that pulled a CLI lint into the hook bundle
+// ---------------------------------------------------------------------------
+
+describe('check_reply_consistency is bundle-safe now that a hook imports it', () => {
+    // Detector E reads `find_option_blocks` / `recommendationsUnder` from that
+    // module, which drags it into `dist/hooks/dispatch.js`. Every module in a
+    // bundle shares one `import.meta.url`, so without the `__AGENT_CONFIG_BUNDLE__`
+    // early-out its CLI guard is TRUE for every bundled module and importing it
+    // would `process.exit(main())` — taking the whole dispatch down at import.
+    //
+    // The build banner's `.__direct__` argv rewrite also prevents it. That is a
+    // second line of defence, not the first: it lives in package.json, nothing
+    // ties it to this module, and the guard is what every other bundled entry
+    // carries. Asserted on the SOURCE because the failure is at import time in a
+    // bundle this test does not build.
+    const SRC = path.join(REPO_ROOT, 'src', 'scripts', 'check_reply_consistency.ts');
+
+    it('guards BOTH entry arms, not only the function', () => {
+        const src = fs.readFileSync(SRC, 'utf-8');
+        expect(src).toContain('declare const __AGENT_CONFIG_BUNDLE__');
+        // The `|| process.argv[1] === _HERE` arm is the one a guard placed only
+        // inside `_isCliEntry` would miss: in a bundle `_HERE` and `argv[1]` are
+        // both the bundle path, so that arm alone is true.
+        const entry = /if \(!_IN_BUNDLE && \(_isCliEntry\(\) \|\| process\.argv\[1\] === _HERE\)\)/;
+        expect(entry.test(src)).toBe(true);
+    });
+
+    it('and the esbuild define that makes the guard fire still exists', () => {
+        const pkg = fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf-8');
+        expect(pkg).toContain('--define:__AGENT_CONFIG_BUNDLE__=true');
+    });
+});
+
+// ---------------------------------------------------------------------------
 // The detector, as a pure function
 // ---------------------------------------------------------------------------
 

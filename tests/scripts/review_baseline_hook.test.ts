@@ -172,6 +172,19 @@ describe('applyBaseline', () => {
         expect(out.applied === false && out.fallback).toBe('mixed-measure');
     });
 
+    it('refuses when BOTH sides are capped — the dangerous symmetric case', () => {
+        // The first version guarded only the asymmetric case and let this one
+        // through, which is the worse half: both readings carry the same
+        // synthetic THRESHOLD + 1 constant, so it CANCELS. An untracked-only
+        // session on a tree that was already past the cap subtracts to zero and
+        // silences the nudge — the direction this module's header forbids.
+        const capped: ReviewBaseline = { ...BASE, measure: 'capped_approximation' };
+        const out = applyBaseline(1776, capped, () => 'abc123', 'capped_approximation');
+        expect(out.applied).toBe(false);
+        expect(out.lines).toBe(1776);
+        expect(out.applied === false && out.fallback).toBe('mixed-measure');
+    });
+
     it('refuses a record written before the measure existed', () => {
         // Absent reads as unknown, never as the more permissive `exact`.
         const { measure: _drop, ...legacy } = BASE;

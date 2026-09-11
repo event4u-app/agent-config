@@ -23,6 +23,13 @@
  * argument `turn_end_refusals.ts` makes for its own shared path, and it is why
  * `BASELINE_STATE_REL` is here rather than in either hook.
  *
+ * ONE SELF-REFERENCE, named because it is invisible: the file this concern
+ * writes is itself an untracked non-doc file, so in a workspace where
+ * `agents/runtime/` is NOT gitignored it is counted by the very measurement it
+ * feeds — about six lines, once. This repository ignores that path, so the
+ * effect is zero here; a consumer whose ignore file does not cover it sees the
+ * nudge's count six lines high for the session.
+ *
  * WHAT IT IS NOT. It is not a change set: no paths, no fingerprints, no patch.
  * It answers exactly the question the nudge asks — how many non-doc lines were
  * already dirty when this session began — and nothing else. A path-level ledger
@@ -197,10 +204,15 @@ export function readBaseline(
  * committed our own work" from "a peer session committed underneath us", and
  * nothing in a stop payload answers that.
  *
- * `mixed-measure` is the same defect on the third axis. Past
- * `UNTRACKED_FILE_CAP` the measurement is a synthetic `THRESHOLD + 1 + tracked`
- * chosen to be over the bar rather than to be true, so subtracting it from — or
- * out of — an exact count is meaningless in both directions.
+ * `mixed-measure` is the same defect on the third axis, and it covers the
+ * SYMMETRIC case too. Past `UNTRACKED_FILE_CAP` the measurement is a synthetic
+ * `THRESHOLD + 1 + tracked` chosen to be over the bar rather than to be true, so
+ * subtracting it from — or out of — an exact count is meaningless in both
+ * directions; and subtracting one capped reading from another cancels the
+ * constant, which is worse than meaningless because it silences the nudge. The
+ * name is kept over a more literal `not-both-exact` because the fallback's
+ * subject is the measure, and a telemetry enum is read far more often than it is
+ * renamed.
  *
  * The clamp at zero is not cosmetic either: a session that reverts part of a
  * pre-existing dirty tree measures below its own baseline, and a negative
@@ -221,7 +233,14 @@ export function applyBaseline(
     // — the steady state on every host without the nudge, and on every session
     // before its first baseline write — the value is discarded, and evaluating it
     // eagerly spent an 11-14 ms `git rev-parse` on each of those stops.
-    if (baseline.measure !== measuredMeasure) {
+    // Refused when the two measures DISAGREE, and equally when both are capped.
+    // The symmetric case is the dangerous one and the first version missed it:
+    // the capped path returns `THRESHOLD + 1 + tracked`, so two capped readings
+    // cancel their synthetic constant and an untracked-only session that started
+    // past the cap subtracts to ZERO — silencing the nudge, which is the one
+    // direction this module's own header forbids. Only `exact` minus `exact` is
+    // arithmetic over two counts of the same thing.
+    if (baseline.measure !== 'exact' || measuredMeasure !== 'exact') {
         return { applied: false, fallback: 'mixed-measure', lines: measuredLines };
     }
     if (baseline.head_sha !== headSha()) {
