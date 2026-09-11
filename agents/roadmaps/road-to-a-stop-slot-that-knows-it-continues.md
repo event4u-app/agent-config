@@ -70,7 +70,7 @@ owner.
 
 ## Phase 1 — The stop slot's own account of what it does
 
-- [ ] **1.1 Write the stop-slot continuation census.**
+- [x] **1.1 Write the stop-slot continuation census.**
       `src/scripts/hook_manifest.yaml:1324` binds fourteen concerns on `claude`'s
       `stop` slot; exactly two are `severity: blocking` (`turn-end-gate` at
       `:980`, `run-continuation` at `:1077`) and twelve are advisory. Every
@@ -83,7 +83,7 @@ owner.
       plainly which column is measured and which is read off the manifest.
       verify: the file exists, opens with `<!-- evidence-type: analysis -->`, and
       `grep -c '^| ' agents/evidence/analysis/stop-slot-continuation-census-2026-09-11.md` returns at least 15 (header plus fourteen rows).
-- [ ] **1.2 Say in the exit-code contract what the warn row does not establish.**
+- [x] **1.2 Say in the exit-code contract what the warn row does not establish.**
       `docs/contracts/hook-architecture-v1.md:124` describes exit 2 as "logs
       `reason` to stderr, sets `additionalContext` if platform supports it" —
       three mechanical facts and no statement about whether the turn ends. A
@@ -99,7 +99,7 @@ owner.
       reference this tree cannot check. Writing the stronger sentence would trade
       one unverified claim for its opposite.
       verify: `grep -n 'not established by this tree' docs/contracts/hook-architecture-v1.md` resolves within 15 lines of the exit-code table, and the sentence names the blocker id.
-- [ ] **1.3 Correct the one concern whose header states the opposite contract.**
+- [x] **1.3 Correct the one concern whose header states the opposite contract.**
       `src/scripts/hooks/end_review_nudge_hook.ts:219-220` reads "CONTRACT: never
       blocks THE ACTUAL TURN", and the proof it cites (`:180` onward) reasons
       entirely about exit codes — 2 versus 0, `fail_closed`, "never 1/BLOCK".

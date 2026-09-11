@@ -124,6 +124,21 @@ under the concurrency rules below.
 | `2` | warn | dispatcher exits 0, logs `reason` to stderr, sets `additionalContext` if platform supports it |
 | `≥ 3` | error | dispatcher logs full traceback, exits 0 (fail-open) unless `concerns.<name>.fail_closed: true` in settings |
 
+**The `warn` row above says what the dispatcher does, and nothing about whether
+the turn ends.** Read as a complete account it invites the conclusion that an
+advisory verdict is free, which is how a slot carrying twelve advisory concerns
+came to be treated as inert (`agents/evidence/analysis/stop-slot-continuation-census-2026-09-11.md`).
+Stated plainly: whether `additionalContext` delivered on `stop` /
+`subagent_stop` causes the host to run the agent again is
+**not established by this tree**.
+Nothing here measures it, and the blocker
+`warn-continuation-on-stop` in
+`agents/roadmaps/road-to-a-stop-slot-that-knows-it-continues.md` names the one
+live session that would. Until it is answered, an advisory verdict on those two
+events is not known to be free, and a concern header that argues only about its
+exit code has proved that it never **refuses** — never that it does not
+**extend**.
+
 ## What a concern may block on — severity follows the INPUT TYPE
 
 ```
