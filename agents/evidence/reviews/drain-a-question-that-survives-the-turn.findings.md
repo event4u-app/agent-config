@@ -8,8 +8,8 @@ inputs:
   diff_sha: c510f016302a6e7e3af379c30e1717d6df2d399e
   scope_hash: 921e7fcfff0fc2a05c9f1f49bf179d66f6e62ac617dafdb4906f7b3eb75dca9b
   roadmap: agents/roadmaps/archive/road-to-a-question-that-survives-the-turn.md
-  roadmap_hash: c11d620509cb93788e67593ed59d349b32af2e9ee168d069d1f167fe126a9bf9
-  ac_hash: 195c55f0d4967575512bd84361a2794966b3938e40b664105c2004289b410be9
+  roadmap_hash: 9c416b5e4b0aa6af8c87bed63aa98102b125dedfe26f0022000d7b5f9ef144f2
+  ac_hash: 14fc2b05ffce5600556dbb4bb45136de845567885cb616d0e0dfb1fba1981993
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
 dispatched: 2026-09-11T20:04:14Z
