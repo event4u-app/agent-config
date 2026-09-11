@@ -1,10 +1,16 @@
-// The standing-payload grace ceiling is shrink-only, and until this landed
-// nothing checked it. The budget file said "It may never move UP" from
-// 2026-08-24 and its own `grace_ceiling_history` records it rising twice
-// afterwards, on 2026-09-02 and 2026-09-08, each time with a careful prose
-// justification and no objection from any gate. ADR-264 resolved the
-// contradiction in favour of the sentence; these tests are what makes the
-// sentence cost something.
+// The standing-payload bounds are shrink-only, and until this landed nothing
+// checked them. The budget file said "It may never move UP" from 2026-08-24 and
+// its own raise history records the stored ceiling rising twice afterwards, on
+// 2026-09-02 and 2026-09-08, each time with a careful prose justification and no
+// objection from any gate. ADR-264 resolved the contradiction in favour of the
+// sentence; these tests are what makes the sentence cost something.
+//
+// THE SUBJECT MOVED, 2026-09-11. The stored ceiling is gone (ADR-276) and the
+// bound is measured at the base ref, so what a config edit can still widen is
+// `design_ceiling` (derived from baseline_tokens x headroom_pct) plus every
+// existing exception grant and watermark. Those are what these cases now pin —
+// the mechanism is unchanged, the numbers it guards are different, and a
+// deleted grant is refused on top because a removed number is not a smaller one.
 //
 // Both directions are pinned. A ratchet that only ever passes is the failure
 // this repository already paid for once, so every case below either refuses or
@@ -32,18 +38,23 @@ function git(args: readonly string[], cwd: string): string {
     return execFileSync('git', [...args], { cwd, encoding: 'utf-8' });
 }
 
-function writeBudget(root: string, grace: number): void {
+/**
+ * The bound under test is `design_ceiling` now.
+ *
+ * It used to be `ci_delivery.grace_ceiling`, a number stored beside the design
+ * one. That key is gone (ADR-276): the ceiling is measured at the base ref, so
+ * the only config-side number that can widen it is `baseline_tokens` x
+ * `headroom_pct`, which derives `design_ceiling`. With `headroom_pct: 0` the
+ * baseline IS the design ceiling, so every case below keeps its shape — a
+ * fixture written at 500 and raised to 700 is still a raise.
+ */
+function writeBudget(root: string, designCeiling: number): void {
     const dir = path.join(root, path.dirname(BUDGET_CONFIG_PATH));
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(
         path.join(root, BUDGET_CONFIG_PATH),
         JSON.stringify(
-            {
-                baseline_tokens: 1,
-                headroom_pct: 0,
-                target_tokens: { median: 1, p95: 2 },
-                ci_delivery: { grace_ceiling: grace },
-            },
+            { baseline_tokens: designCeiling, headroom_pct: 0, target_tokens: { median: 1, p95: 2 } },
             null,
             2,
         ),
@@ -67,14 +78,14 @@ function writePayload(root: string, ruleBody: string): void {
 }
 
 /**
- * A throwaway repository whose BASE commit carries `baseGrace` and `baseBody`.
+ * A throwaway repository whose BASE commit carries `baseDesignCeiling` and `baseBody`.
  *
  * Real git, not a stub, because the module's whole claim is about what
  * `git show <ref>:<path>` returns — a stubbed git would prove the comparison and
  * none of the reading it depends on. Hooks and signing are disabled so the
  * fixture cannot inherit this repository's own guards.
  */
-function fixture(baseGrace: number, baseBody: string): { root: string; base: string } {
+function fixture(baseDesignCeiling: number, baseBody: string): { root: string; base: string } {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bound-ratchet-'));
     tmps.push(root);
     git(['init', '--quiet'], root);
@@ -82,7 +93,7 @@ function fixture(baseGrace: number, baseBody: string): { root: string; base: str
     git(['config', 'commit.gpgsign', 'false'], root);
     git(['config', 'user.email', 'fixture@example.com'], root);
     git(['config', 'user.name', 'fixture'], root);
-    writeBudget(root, baseGrace);
+    writeBudget(root, baseDesignCeiling);
     writePayload(root, baseBody);
     git(['add', '-A'], root);
     git(['commit', '--quiet', '-m', 'base'], root);
@@ -99,8 +110,8 @@ function measured(root: string, base: string): number {
     }).verdict.measured;
 }
 
-describe('standing-payload grace ceiling is shrink-only', () => {
-    it('REFUSES a grace_ceiling raised in the config against the base ref', () => {
+describe('the standing-payload design ceiling is shrink-only', () => {
+    it('REFUSES a design ceiling raised in the config against the base ref', () => {
         const { root, base } = fixture(500, BODY);
         writeBudget(root, 700);
         // The config is now the ONLY surface the ceiling can be widened
@@ -169,7 +180,7 @@ describe('standing-payload grace ceiling is shrink-only', () => {
             baseRef: base,
         });
         expect(d.bounds.ok).toBe(true);
-        expect(d.bounds.baseBounds?.['stored_ceiling']).toBe(900);
+        expect(d.bounds.baseBounds?.['design_ceiling']).toBe(900);
         expect(d.verdict.withinBudget).toBe(true);
         expect(d.ok).toBe(true);
         // Green with a stated comparison, never green with a silent skip: the
@@ -186,7 +197,7 @@ describe('standing-payload grace ceiling is shrink-only', () => {
             baseRef: base,
         });
         expect(d.bounds.ok).toBe(true);
-        expect(d.bounds.baseBounds?.['stored_ceiling']).toBe(900);
+        expect(d.bounds.baseBounds?.['design_ceiling']).toBe(900);
         expect(d.ok).toBe(true);
     });
 
@@ -212,7 +223,7 @@ describe('standing-payload grace ceiling is shrink-only', () => {
         const v = assertBoundsDidNotRise({
             repoRoot: root,
             baseRef: base,
-            headBounds: { stored_ceiling: 999_999 },
+            headBounds: { design_ceiling: 999_999 },
             git: (args) =>
                 args[0] === 'show'
                     ? { ok: true, stdout: '{ not json', stderr: '' }
@@ -240,7 +251,7 @@ describe('assertBoundsDidNotRise — enforcing posture', () => {
     });
 
     it('refuses instead of skipping when no base ref resolved', () => {
-        const opts = { repoRoot: '.', baseRef: null, headBounds: { stored_ceiling: 1 } };
+        const opts = { repoRoot: '.', baseRef: null, headBounds: { design_ceiling: 1 } };
         expect(assertBoundsDidNotRise(opts).ok).toBe(true);
         const v = assertBoundsDidNotRise({ ...opts, requireBase: true });
         expect(v.ok).toBe(false);
@@ -254,7 +265,7 @@ describe('assertBoundsDidNotRise — enforcing posture', () => {
     });
 
     it('refuses instead of skipping when the base config cannot be read', () => {
-        const opts = { repoRoot: '.', baseRef: 'deadbeef', git: dead, headBounds: { stored_ceiling: 1 } };
+        const opts = { repoRoot: '.', baseRef: 'deadbeef', git: dead, headBounds: { design_ceiling: 1 } };
         expect(assertBoundsDidNotRise(opts).ok).toBe(true);
         const v = assertBoundsDidNotRise({ ...opts, requireBase: true });
         expect(v.ok).toBe(false);
@@ -265,7 +276,7 @@ describe('assertBoundsDidNotRise — enforcing posture', () => {
         const opts = {
             repoRoot: '.',
             baseRef: 'deadbeef',
-            headBounds: { stored_ceiling: 1 },
+            headBounds: { design_ceiling: 1 },
             git: (args: readonly string[]) =>
                 args[0] === 'show'
                     ? { ok: true, stdout: '{ not json', stderr: '' }
@@ -281,7 +292,7 @@ describe('assertBoundsDidNotRise — enforcing posture', () => {
         const opts = {
             repoRoot: '.',
             baseRef: 'deadbeef',
-            headBounds: { stored_ceiling: 1 },
+            headBounds: { design_ceiling: 1 },
             git: (args: readonly string[]) =>
                 args[0] === 'show'
                     ? { ok: true, stdout: JSON.stringify({ ci_delivery: {} }), stderr: '' }
@@ -296,18 +307,18 @@ describe('assertBoundsDidNotRise — enforcing posture', () => {
     it('does not change the verdict when the bound IS verifiable', () => {
         const readable = (args: readonly string[]): { ok: boolean; stdout: string; stderr: string } =>
             args[0] === 'show'
-                ? { ok: true, stdout: JSON.stringify({ baseline_tokens: 1, headroom_pct: 0, ci_delivery: { grace_ceiling: 500 } }), stderr: '' }
+                ? { ok: true, stdout: JSON.stringify({ baseline_tokens: 500, headroom_pct: 0 }), stderr: '' }
                 : { ok: true, stdout: '', stderr: '' };
         // The mode gates the UNVERIFIABLE cases only. A real comparison must
         // reach the same answer in both postures, or the flag is not a mode
         // gate but a second policy.
         for (const requireBase of [false, true]) {
             const within = assertBoundsDidNotRise({
-                repoRoot: '.', baseRef: 'deadbeef', git: readable, headBounds: { stored_ceiling: 400 }, requireBase,
+                repoRoot: '.', baseRef: 'deadbeef', git: readable, headBounds: { design_ceiling: 400 }, requireBase,
             });
             expect(within.ok).toBe(true);
             const risen = assertBoundsDidNotRise({
-                repoRoot: '.', baseRef: 'deadbeef', git: readable, headBounds: { stored_ceiling: 600 }, requireBase,
+                repoRoot: '.', baseRef: 'deadbeef', git: readable, headBounds: { design_ceiling: 600 }, requireBase,
             });
             expect(risen.ok).toBe(false);
             expect(risen.violations.join(' ')).toMatch(/rose from 500 to 600/);

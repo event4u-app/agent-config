@@ -109,17 +109,6 @@ interface Budget {
     baseline_tokens: number;
     headroom_pct: number;
     target_tokens: { median: number; p95: number };
-    /**
-     * `ci_delivery.grace_ceiling`, the RETAINED stored allowance — stage 1.
-     *
-     * It enters the ceiling through a `max`, so it can only ever widen the
-     * bound and never tighten it. It is retained rather than deleted in the
-     * change that introduces the measured ceiling because the gate runs at the
-     * base ref and cannot validate its own introduction; stage 2 removes this
-     * term from a base that already carries the measured code. `null` once it
-     * is gone, and the formula then has one term fewer.
-     */
-    stored_ceiling: number | null;
 }
 
 export interface BudgetVerdict {
@@ -142,13 +131,10 @@ export function readBudget(file: string = BUDGET_FILE): Budget {
         throw new Error(`${file}: baseline_tokens and headroom_pct must both be numbers`);
     }
     const target = (raw['target_tokens'] ?? {}) as Record<string, unknown>;
-    const delivery = (raw['ci_delivery'] ?? {}) as Record<string, unknown>;
-    const stored = Number(delivery['grace_ceiling']);
     return {
         baseline_tokens: baseline,
         headroom_pct: headroom,
         target_tokens: { median: Number(target['median']), p95: Number(target['p95']) },
-        stored_ceiling: Number.isFinite(stored) ? stored : null,
     };
 }
 
@@ -497,7 +483,6 @@ export function decide(opts: DecideOptions = {}): Decision {
         exceptions: ex.exceptions,
         exceptionErrors: ex.errors,
         verifiedApprovals: opts.verifiedApprovals ?? [],
-        storedCeiling: budget.stored_ceiling,
         // Through the as-of seam, not the wall clock. An exception expiry is
         // exactly the kind of verdict that must be reproducible from the
         // commit: a grant that expires overnight would make the same tree pass
@@ -539,7 +524,22 @@ export function decide(opts: DecideOptions = {}): Decision {
         bounds,
         ceiling,
         catalogue,
-        ok: bounds.ok && ceiling.ok && catalogue.findings.length === 0 && verdict.withinBudget,
+        // THE SIZE COMPARISON IS ONLY MADE AGAINST A CEILING THAT WAS
+        // ESTABLISHED. An advisory run that could not read the base has no
+        // bound to compare against, and falling back to the design ceiling
+        // would report a 28 %-over tree as OVER BUDGET for a reason that has
+        // nothing to do with the change — the exact "I could not look" /
+        // "I looked and it grew" conflation the enforcing refusal spells out
+        // in its own message. So it reports and does not gate.
+        //
+        // This is not a hole: the CI step passes `--require-base`, where an
+        // unestablished ceiling REFUSES. It was invisible until the stored
+        // ceiling was deleted, because that number was the fallback.
+        ok:
+            bounds.ok &&
+            ceiling.ok &&
+            catalogue.findings.length === 0 &&
+            (ceiling.verified ? verdict.withinBudget : true),
     };
 }
 
@@ -897,6 +897,19 @@ export function main(argv: string[] = process.argv.slice(2)): number {
                 decision.bounds.violations.map((v) => `      · ${v}\n`).join(''),
         );
         return 1;
+    }
+
+    // An advisory run that never established a ceiling reports the number and
+    // stops. Saying "over budget" against a bound nobody read would send the
+    // reader to shrink a rule over a fetch problem — the same misdiagnosis the
+    // `--require-base` refusal is worded to prevent, one layer up.
+    if (!decision.ceiling.verified) {
+        process.stdout.write(
+            '⚠️  size comparison SKIPPED — the ceiling was not established in this run, so there is\n' +
+                '    nothing to compare the measurement against. This is NOT a pass on the payload: pass\n' +
+                '    --require-base (as CI does) to make an unestablished ceiling a refusal instead.\n',
+        );
+        return 0;
     }
 
     if (!verdict.withinBudget) {

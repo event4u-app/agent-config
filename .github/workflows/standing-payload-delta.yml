@@ -24,21 +24,22 @@ name: Standing Payload Delta
 #
 #     max(design_ceiling, payload at the base ref + active grants)
 #
-# plus, while stage 1 lasts, the retained stored allowance. HEAD is 28.4 % over
-# the design number, so blocking at that alone would fail every PR from the
-# moment it lands and nobody can shed 30,767 tokens inside the arming PR. The
-# base-measured term gives ZERO NET GROWTH instead: today's tree passes, growth
-# beyond it reds, and every merged reduction lowers the ceiling automatically —
-# which the stored number never did, because it stayed where it was put until a
-# human lowered it, letting removed payload be added back into the space it
-# freed. AI council 2/2 convergent, 2026-09-10, under a written owner delegation.
+# and nothing else. HEAD is 28.4 % over the design number, so blocking at that
+# alone would fail every PR from the moment it lands and nobody can shed 30,767
+# tokens inside the arming PR. The base-measured term gives ZERO NET GROWTH
+# instead: today's tree passes, growth beyond it reds, and every merged reduction
+# lowers the ceiling automatically — which the stored number never did, because
+# it stayed where it was put until a human lowered it, letting removed payload be
+# added back into the space it freed. AI council 2/2 convergent, 2026-09-10,
+# under a written owner delegation.
 #
-# STAGE 1 OF TWO, and the reason is structural. Under the base-ref pinning below
-# the gate runs as it exists at the BASE ref, so the new gate cannot validate its
-# own introduction — at the base ref the measuring code is still the old one. A
-# second council round (2/2, 2026-09-11) therefore refused to remove the stored
-# ceiling or make this check required in the same change. Stage 2 does both, from
-# a base that already carries this code.
+# BOTH STAGES HAVE LANDED. Stage 1 shipped the mechanism with the stored ceiling
+# retained, because under the base-ref pinning below the gate runs as it exists
+# at the BASE ref and could not validate its own introduction — at the base ref
+# the measuring code was still the old one. Stage 2 (2026-09-11) removed the
+# stored ceiling from a base that carries this code, verified by running the
+# base-ref copy of the gate against the head tree first, and made this job a
+# REQUIRED status check with the repo admin as a bypass actor. ADR-275, ADR-276.
 #
 # The stored allowance no longer expires and never did: `grace_end_date` was read
 # once, into an echo, and the gate carried no date logic, so the design ceiling
@@ -61,13 +62,11 @@ name: Standing Payload Delta
 # the only ref that answers "what did THIS branch change".
 
 # NO `paths:` ON THE pull_request TRIGGER, DELIBERATELY, AND IT MAY NOT COME BACK.
-# This job is SLATED to become a required check in stage 2 and is NOT one today.
-# CORRECTED 2026-09-11: this line read "This job is a REQUIRED check" as a
-# statement of fact, and `gh api repos/:owner/:repo/rulesets` says otherwise —
-# `required_status_checks` carries exactly one context, "Sync + Generate Tools
-# Consistency". The prohibition below is unchanged and is the reason the line
-# stays: it describes what a path filter would do once the job IS required, and
-# adding one now would arm the trap for whoever flips that switch.
+# This job IS a required check, as of 2026-09-11 — verified, not asserted:
+# `gh api repos/:owner/:repo/rulesets` lists "Standing payload delta + budget
+# gate" in required_status_checks on ruleset "main protection". Earlier in the
+# same day this line claimed the same thing while the ruleset carried only one
+# context, which is why the claim now names the command that refutes it.
 # A required check whose trigger carries a path
 # filter blocks every pull request that touches no filtered path — permanently,
 # with no failing check to fix, because GitHub reads "skipped" as "has not
@@ -354,7 +353,7 @@ jobs:
       #
       # `--ceiling` is GONE. The ceiling is measured per run as
       # max(design_ceiling, payload at the base ref + active grants) plus, while
-      # stage 1 lasts, the retained stored allowance. There is no number to pass.
+      # and nothing else. There is no stored number left anywhere to pass.
       #
       # `--require-base` makes the base reading FAIL rather than skip when it
       # cannot be established. An AI council (2/2, 2026-09-10) made that blocking

@@ -1,7 +1,7 @@
 /**
  * The standing-payload ceiling, MEASURED at the base ref rather than stored.
  *
- *     ceiling = max(design_ceiling, effective_base + active grant, stored_ceiling?)
+ *     ceiling = max(design_ceiling, effective_base + active grant)
  *
  * WHY MEASURED
  * ------------
@@ -21,24 +21,24 @@
  * design, and the design ceiling once it is at or below. 96.8 % of the last
  * 250 merged pull requests already move this payload by zero or less.
  *
- * WHY `stored_ceiling` IS STILL IN THE FORMULA — STAGE 1 OF TWO
- * -------------------------------------------------------------
- * A second council round (2/2, 2026-09-11) refused to let the stored ceiling
- * be removed in the change that introduces the measured one, and the reason is
- * structural rather than cautious. Under prerequisite 3 the gate runs AS IT
+ * THE STORED TERM IS GONE — STAGE 2 LANDED 2026-09-11
+ * ----------------------------------------------------
+ * A second council round (2/2, 2026-09-11) refused to let the stored ceiling be
+ * removed in the change that INTRODUCED the measured one, on a structural
+ * ground rather than a cautious one. Under prerequisite 3 the gate runs AS IT
  * EXISTS AT THE BASE REF, so — openai, verbatim — *"the new gate cannot safely
  * validate its own introduction: while the implementation PR runs, the
  * authoritative measuring code at the base ref is still the old
- * implementation."* Removing the stored ceiling and making the check required
- * before the base contains working recovery-aware code makes step N block step
- * N+1.
+ * implementation."*
  *
- * So stage 1 lands the whole mechanism with the stored ceiling retained as an
- * ADDITIONAL allowance: nothing binds more tightly than it did yesterday, the
- * measured number is computed and reported on every run, and stage 2 is the
- * removal of one term from a base that already carries this code. The stored
- * ceiling only ever widens the bound here; it can never tighten it, because it
- * enters through a `max`.
+ * Stage 1 therefore landed the whole mechanism with the stored ceiling retained
+ * as an additional `max` term that could only widen the bound. Stage 2 removes
+ * it from a base that already carries this code — verified before the removal
+ * by running the base-ref copy of the gate against the head tree, which is the
+ * precondition the sequencing was about. `ci_delivery` now stores no ceiling at
+ * all, so the bound cannot be widened by editing a field. ADR-275 records the
+ * formula and its prerequisites; ADR-276 records this removal and the required
+ * status check that made it meaningful.
  *
  * THE EXCEPTION PATH, AND WHY THE WATERMARK IS THE LOAD-BEARING FIELD
  * -------------------------------------------------------------------
@@ -236,10 +236,8 @@ export interface CeilingReading {
     /** `granted_tokens` of the single active grant, else 0. */
     activeGrants: number;
     activeIds: string[];
-    /** The retained stored allowance, while stage 1 keeps one. */
-    storedCeiling: number | null;
     /** Which term set the ceiling — the one thing a reader needs at a glance. */
-    boundBy: 'design' | 'base' | 'grant' | 'stored';
+    boundBy: 'design' | 'base' | 'grant';
     /** True when the ceiling rests on a base reading that was actually taken. */
     verified: boolean;
     ok: boolean;
@@ -265,8 +263,6 @@ export interface CeilingOptions {
      * honoured only when someone with access to the platform said so.
      */
     verifiedApprovals?: readonly string[];
-    /** A retained stored allowance (stage 1). `null` once stage 2 removes it. */
-    storedCeiling?: number | null;
     /** `YYYY-MM-DD`. Injected so the expiry branch is testable. */
     today: string;
     /**
@@ -290,7 +286,6 @@ export interface CeilingOptions {
 export function computeCeiling(opts: CeilingOptions): CeilingReading {
     const exceptions = opts.exceptions ?? [];
     const verified = new Set(opts.verifiedApprovals ?? []);
-    const stored = opts.storedCeiling ?? null;
     const violations = [...(opts.exceptionErrors ?? [])];
 
     const live = exceptions.filter((e) => stateOf(e, opts.today) !== 'repaid');
@@ -351,7 +346,7 @@ export function computeCeiling(opts: CeilingOptions): CeilingReading {
 
     if (opts.basePayload === null) {
         const why = opts.baseNote ?? 'the base ref could not be measured';
-        const fallback = Math.max(opts.designCeiling, stored ?? 0);
+        const fallback = opts.designCeiling;
         if (opts.requireBase === true) {
             violations.push(
                 `the standing-payload ceiling could not be measured: ${why}. This run is ENFORCING, so an ` +
@@ -367,8 +362,7 @@ export function computeCeiling(opts: CeilingOptions): CeilingReading {
             effectiveBase: null,
             activeGrants,
             activeIds,
-            storedCeiling: stored,
-            boundBy: stored !== null && stored > opts.designCeiling ? 'stored' : 'design',
+            boundBy: 'design',
             verified: false,
             ok: violations.length === 0 && opts.requireBase !== true,
             note: `${why}, so the ceiling is NOT a base-measured reading`,
@@ -387,11 +381,10 @@ export function computeCeiling(opts: CeilingOptions): CeilingReading {
     // grant can never widen the bound it was refused for.
     const honoured = violations.length === 0 ? activeGrants : 0;
     const measuredTerm = effectiveBase + honoured;
-    const ceiling = Math.max(opts.designCeiling, measuredTerm, stored ?? 0);
+    const ceiling = Math.max(opts.designCeiling, measuredTerm);
 
     let boundBy: CeilingReading['boundBy'] = 'design';
-    if (ceiling === (stored ?? -1) && ceiling > measuredTerm && ceiling > opts.designCeiling) boundBy = 'stored';
-    else if (ceiling === measuredTerm && ceiling > opts.designCeiling) boundBy = honoured > 0 ? 'grant' : 'base';
+    if (ceiling === measuredTerm && ceiling > opts.designCeiling) boundBy = honoured > 0 ? 'grant' : 'base';
 
     return {
         ceiling,
@@ -400,7 +393,6 @@ export function computeCeiling(opts: CeilingOptions): CeilingReading {
         effectiveBase,
         activeGrants: honoured,
         activeIds,
-        storedCeiling: stored,
         boundBy,
         verified: true,
         ok: violations.length === 0,
@@ -421,13 +413,10 @@ export function renderCeiling(c: CeilingReading): string {
         const how =
             c.boundBy === 'design'
                 ? `the DESIGN ceiling — the measured base (${String(c.basePayload ?? 0)}) is at or below it`
-                : c.boundBy === 'stored'
-                  ? `the retained STORED allowance (stage 1) — measured base ${String(c.basePayload ?? 0)}, ` +
-                    `design ${String(c.designCeiling)}`
-                  : `base ${String(c.effectiveBase ?? 0)}` +
-                    (pinned ? ` (PINNED to an exception watermark; measured ${String(c.basePayload ?? 0)})` : '') +
-                    (c.activeGrants > 0 ? ` + ${String(c.activeGrants)} granted` : '') +
-                    ` — zero net growth, design ${String(c.designCeiling)}`;
+                : `base ${String(c.effectiveBase ?? 0)}` +
+                  (pinned ? ` (PINNED to an exception watermark; measured ${String(c.basePayload ?? 0)})` : '') +
+                  (c.activeGrants > 0 ? ` + ${String(c.activeGrants)} granted` : '') +
+                  ` — zero net growth, design ${String(c.designCeiling)}`;
         lines.push(`  ✅  ceiling ${String(c.ceiling)} tok = ${how}.\n`);
     }
     if (c.activeIds.length > 0) lines.push(`      active exception(s): ${c.activeIds.join(', ')}\n`);

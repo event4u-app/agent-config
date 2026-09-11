@@ -16,7 +16,7 @@ provenance:
 evidence:
   strength: E3
   basis:
-    - agents/roadmaps/road-to-delivery-for-every-host.md
+    - agents/roadmaps/archive/road-to-delivery-for-every-host.md
     - src/scripts/check_preamble_payload_budget.ts
     - src/config/preamble-payload-budget.json
     - src/scripts/_lib/lean_projection_mode.ts
@@ -102,7 +102,7 @@ Both seats proposed writing the new ceiling into
 key does not exist and no gate reads one.** Grepped at HEAD:
 `check_preamble_payload_budget.ts` contains neither `20000` nor any
 rules-bucket field, and the 20,000 figure appears only in
-`agents/roadmaps/road-to-delivery-for-every-host.md` — in the Goal and in step
+`agents/roadmaps/archive/road-to-delivery-for-every-host.md` — in the Goal and in step
 4.2's `verify:` line.
 
 Both seats flagged this risk themselves without being able to resolve it from the
@@ -155,10 +155,10 @@ record wrong was checked against the tree rather than taken from the council.**
 
 | Claim | Evidence |
 |---|---|
-| The rules bucket measures 24,166 tok under `delivery` on a clean consumer-shaped root, against 99,598 under `eager-all` | `agents/roadmaps/road-to-delivery-for-every-host.md` § Phase 4 step 4.2, measurement table of 2026-09-07 |
+| The rules bucket measures 24,166 tok under `delivery` on a clean consumer-shaped root, against 99,598 under `eager-all` | `agents/roadmaps/archive/road-to-delivery-for-every-host.md` § Phase 4 step 4.2, measurement table of 2026-09-07 |
 | The total limb passes at 39,758 ≤ 40,000 (24,166 rules + 14,846 skills + 746 CLAUDE.md) | same table |
 | `ceil(24,166 × 1.05) = 25,375` | arithmetic, stated so the number is reproducible rather than asserted |
-| **No `rules_bucket_ceiling` key exists and no gate reads one** | `grep -n "20000\|rules_bucket" src/scripts/check_preamble_payload_budget.ts` returns nothing; `grep -rn "20,000\|20000" agents/roadmaps/road-to-delivery-for-every-host.md` returns the Goal and step 4.2's verify line, and nothing else in the tree |
+| **No `rules_bucket_ceiling` key exists and no gate reads one** | `grep -n "20000\|rules_bucket" src/scripts/check_preamble_payload_budget.ts` returns nothing; `grep -rn "20,000\|20000" agents/roadmaps/archive/road-to-delivery-for-every-host.md` returns the Goal and step 4.2's verify line, and nothing else in the tree |
 | `check_preamble_payload_budget` routes by surface and never consults a rules-bucket limb | `src/scripts/check_preamble_payload_budget.ts` — the budget entry it reads is `packed`/total, with no per-bucket branch |
 | Both seats chose (a); the earlier declinations were conditional on delegation, not on substance | AI council 2026-09-09, anthropic/claude-sonnet-4-5 + openai/codex-default, subscription transport, `$0.0000`, deep depth with peer review. Run 1 concluded 1/2 (anthropic answering (a)); run 2 concluded 2/2 with openai answering (a) independently. |
 | The first run's missing seat was a transport failure, not a refusal | that run recorded the seat as `error: os_error: ENOBUFS`, `reason: unavailable`, empty text — a transport code, not a declination, which is why the retry was legitimate rather than verdict shopping |
@@ -176,6 +176,6 @@ record wrong was checked against the tree rather than taken from the council.**
 
 ## References
 
-- `agents/roadmaps/road-to-delivery-for-every-host.md` § Goal, § Phase 4 step 4.2
+- `agents/roadmaps/archive/road-to-delivery-for-every-host.md` § Goal, § Phase 4 step 4.2
 - ADR-270 — the host-aware measurement that closed 4.2's *other* half
 - ADR-264 — the standing-payload grace ceiling, untouched by this record
