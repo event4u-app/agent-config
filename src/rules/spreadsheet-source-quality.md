@@ -57,6 +57,16 @@ Entering, updating, or charting **financial figures** in a spreadsheet / model.
 - The user explicitly supplied the figures — trust the user's input; note the
   provenance they gave.
 
+## DRILL PARAGRAPH — DELETE ME
+
+This paragraph exists to grow the standing payload past the measured ceiling, so
+that the required payload check reds and the bypass-recovery procedure can be
+exercised against a real refusal rather than a simulated one. It is the smallest
+honest way to produce that red: the gate refuses for exactly the reason it
+exists, rather than because CI was sabotaged. It is reverted immediately after
+the drill, in a pull request that passes the same check normally. If you are
+reading this on `main`, the revert did not land and that is the defect to fix.
+
 ## See also
 
 - [`spreadsheet-authoring`](../skills/spreadsheet-authoring/SKILL.md) — the spreadsheet surface floor this rule's sourcing discipline plugs into.
