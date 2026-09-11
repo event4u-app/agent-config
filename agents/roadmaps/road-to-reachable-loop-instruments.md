@@ -50,7 +50,8 @@ nothing since has been able to notice.
 
 ## Phase 0 — Inventory, with no behaviour change
 
-- [ ] **0.1 Write `src/config/loop-surfaces.yaml`** <!-- ref-ignore --> listing the five verified loop surfaces —
+- [ ] **0.1 Write a new loop-surface inventory** — a `loop-surfaces.yaml` under `src/config/`,
+      which does not exist yet — listing the five verified loop surfaces —
       `run_continuation_hook`, `_self_fix`, `verify-repair-loop`, `experiment-loop`,
       `roadmap-process-loop` — each with `cap`, `no_progress`, `success_stop`, `checker`,
       `human_gate`, `terminal_vocabulary` and `production_consumers[]`. `cap` and `no_progress`
@@ -124,7 +125,8 @@ nothing since has been able to notice.
 - **Owner:** maintainer
 - **Class:** 3 — human-only
 - **Blocks:** Phase 0, and everything after it. Phase 1's axis reads the file Phase 0 writes.
-- **What to do:** decide whether the inventory is its own `src/config/loop-surfaces.yaml` <!-- ref-ignore --> or a
+- **What to do:** decide whether the inventory is its own new `loop-surfaces.yaml` under
+  `src/config/` or a
   section inside `src/scripts/hook_manifest.yaml`. The evidence for a separate file: two of the
   five surfaces are skills, not hooks, so the manifest has no row shape for them. The evidence
   against: a new config file pulls a schema, a gate-coverage row and a projection entry behind it.
