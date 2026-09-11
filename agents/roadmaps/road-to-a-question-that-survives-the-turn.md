@@ -202,16 +202,17 @@ does not, and the refusal names the block that went missing.
       is bound on `claude` alone and dropped for the `worker` role beside its
       reader.
       verify: `grep -c 'session_start.*review-baseline' src/scripts/hook_manifest.yaml` returns 2 (claude's two role rows) and no other slot names it; `grep -n 'review_baseline_hook' src/scripts/hooks/concern_registry.ts` resolves.
-- [x] **2.4 Re-emit the standing-payload census `main` left stale.**
-      Not this branch's work and carried here because this branch is where it
-      surfaced: `main` grew `src/rules/spreadsheet-source-quality.md` by 585
-      bytes without re-emitting
-      `agents/evidence/analysis/standing-payload-by-host-2026-09.md`, so
-      `generate_host_cost_table --check` refuses to publish either reading and
-      two suites go red on any branch that merges it — its own, and
-      `activation_receipt_producer`, which reads the same projection. The step
-      is recorded rather than left as an unexplained diff hunk.
-      verify: `./scripts-run src/scripts/generate_host_cost_table --check` exits 0, and `npx vitest run tests/scripts/generate_host_cost_table.test.ts tests/scripts/activation_receipt_producer.test.ts` is green.
+**Note on a census hunk this branch no longer carries.** For part of its life the
+branch re-emitted `agents/evidence/analysis/standing-payload-by-host-2026-09.md`
+and the derived host-cost table in `docs/contracts/rule-router.md`, because `main`
+had grown `src/rules/spreadsheet-source-quality.md` by 585 bytes without
+re-emitting the census — which makes `generate_host_cost_table --check` refuse to
+publish either reading and reds two suites on any branch that merges it. `main`
+then reverted that rule change (PR #2010), the census went back in sync at its
+original figure, and this branch's re-emit became stale in the opposite
+direction. Both files are restored to `origin/main`, so the branch carries no
+census diff. Recorded here rather than as a step, because there is no work left
+to do and a checkbox for a vanished condition is worse than a sentence.
 
 **Exit criteria:** a 5-line turn on a branch carrying 1,771 pre-session dirty
 lines does not fire the review nudge, and every fallback path is visible in the
