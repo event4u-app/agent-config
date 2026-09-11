@@ -89,7 +89,13 @@ inverse gate reintroduces the age rule through the back door.
       2026-09-11; the record is
       `agents/evidence/analysis/beta-window-2026-09-15-evaluation.md`, and three
       of the four carried a repairable defect that is repaired in the same
-      change. `auto-orchestration-v1.md` and `write-engine.md` are still owed.
+      change. `surface-tiers.md` was promoted to `stability: stable` on
+      2026-09-11 by owner decision, on that reading. `auto-orchestration-v1.md`
+      and `write-engine.md` were read the same day —
+      `beta-window-2026-09-23-24-evaluation.md` — and neither is promotable:
+      the first pins a telemetry example the live writer has outgrown, the
+      second is blocked on a substantive review that has never been run and
+      whose stated excuse (the missing floor check) no longer exists.
 
 ## Why this is a stub rather than active work
 
