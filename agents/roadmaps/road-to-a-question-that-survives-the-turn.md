@@ -100,7 +100,7 @@ smuggled into a step.
 
 ## Phase 0 - Fixtures and the demotion bar, before the detector
 
-- [ ] **0.1 Add two golden transcript fixtures and the test that reads them.**
+- [x] **0.1 Add two golden transcript fixtures and the test that reads them.**
       One JSONL where a single user turn is followed by two assistant entries,
       the first carrying a numbered-options block with a recommendation line and
       the second carrying none (the reported failure). One near-miss where the
@@ -109,7 +109,7 @@ smuggled into a step.
       filtering the gate already applies, so a task notification between the two
       assistant entries does not read as an answer.
       verify: `npx vitest run tests/scripts/turn_end_gate_pending_decision.test.ts` passes with the positive case refusing and the near-miss allowing.
-- [ ] **0.2 Register detector E in `docs/contracts/turn-end-detector-demotion.md`.**
+- [x] **0.2 Register detector E in `docs/contracts/turn-end-detector-demotion.md`.**
       That contract's own removal-condition section requires every blocking
       detector to carry a pre-registered demotion bar before it ships. Add the
       row to the detector table, a Q1/Q2 bar row, and the sample floor. Bar: Q1
@@ -124,7 +124,7 @@ written down before any detector code lands.
 
 ## Phase 1 - Detector E: a dropped decision refuses the turn-end
 
-- [ ] **1.1 Extend `TranscriptTail` with the assistant texts of the current user turn.**
+- [x] **1.1 Extend `TranscriptTail` with the assistant texts of the current user turn.**
       `readTranscriptTail` already walks every entry, already resets `toolCalls`
       at each genuine user prompt, and already skips sidechains and synthetic
       prompts. Add `assistantTurnTexts: string[]`, appended on every assistant
@@ -132,7 +132,7 @@ written down before any detector code lands.
       `lastAssistant` stays exactly as it is - four detectors read it and none of
       them change.
       verify: `npx vitest run tests/scripts/turn_end_gate_hook.test.ts` stays green and the new field is asserted non-empty for an assistant-bearing fixture.
-- [ ] **1.2 Add `detectDroppedDecision` and wire it as detector `pending-decision`.**
+- [x] **1.2 Add `detectDroppedDecision` and wire it as detector `pending-decision`.**
       `corrected-from-reproduction`: the supplied plan's section 9 Phase 1.1 adds
       a new `pending-decision-continuity` Stop concern. Reproduced against the
       tree - `turn-end-gate` is the suite's only refusal-capable stop concern and
@@ -147,12 +147,12 @@ written down before any detector code lands.
       `interruption_ledger_hook` and the gate would otherwise hold three separate
       readings of the same rule.
       verify: `grep -n 'find_option_blocks' src/scripts/hooks/turn_end_gate_hook.ts` resolves to an import from `check_reply_consistency.js`, and the Phase 0.1 positive fixture refuses naming `pending-decision`.
-- [ ] **1.3 Add `pending-decision` to `DETECTOR_IDS` and to the gate's `DetectorId` union.**
+- [x] **1.3 Add `pending-decision` to `DETECTOR_IDS` and to the gate's `DetectorId` union.**
       `src/scripts/_lib/turn_end_refusals.ts` reads its set off the union
       deliberately, so the counters, the per-detector refusal ledger and the
       demotion instrument pick the new id up without a second edit.
       verify: `npx vitest run tests/scripts/turn_end_refusals.test.ts` passes, and `grep -c 'pending-decision' src/scripts/_lib/turn_end_refusals.ts src/scripts/hooks/turn_end_gate_hook.ts` is non-zero for both files.
-- [ ] **1.4 Run detector E unconditionally, not behind the open-dispatch narrowing.**
+- [x] **1.4 Run detector E unconditionally, not behind the open-dispatch narrowing.**
       Detectors A and D are skipped while a subagent dispatch is open, because a
       completion claim mid-dispatch is not yet a claim. A dropped user decision is
       the opposite: an open dispatch is exactly the continuation that drops it, so
@@ -165,7 +165,7 @@ does not, and the refusal names the block that went missing.
 
 ## Phase 2 - The review nudge stops charging a session for a dirty tree
 
-- [ ] **2.1 Add a `review-baseline` `session_start` concern.**
+- [x] **2.1 Add a `review-baseline` `session_start` concern.**
       `corrected-from-reproduction`: `src/scripts/hooks/end_review_nudge_hook.ts`
       declines to fix its own measurement on the ground that no session baseline
       exists anywhere a `stop` concern can read it. Verified at
@@ -176,7 +176,7 @@ does not, and the refusal names the block that went missing.
       `deriveSessionKey` and `totalNonDocMutatedLinesWithMeasure` exported from
       the nudge itself rather than reimplementing the count.
       verify: `npx vitest run tests/scripts/review_baseline_hook.test.ts` passes, and a session_start run against a tree with N dirty non-doc lines writes `baseline_lines` equal to N.
-- [ ] **2.2 Subtract the baseline in `end_review_nudge_hook`, and fail open when it cannot.**
+- [x] **2.2 Subtract the baseline in `end_review_nudge_hook`, and fail open when it cannot.**
       The fire condition becomes measured minus `baseline_lines`, clamped at
       zero, compared against `MUTATION_LINE_THRESHOLD`. Three states where
       subtraction is invalid, each falling back to today's whole-tree reading and
@@ -186,7 +186,7 @@ does not, and the refusal names the block that went missing.
       a session that committed mid-run moved HEAD, so the baseline's own
       denominator is gone.
       verify: a fixture with `baseline_lines` 1771 and a 5-line turn does not fire; one with a moved `head_sha` fires on the unsubtracted count and its telemetry row records the fallback reason.
-- [ ] **2.3 Register the concern in the four places a concern is registered.**
+- [x] **2.3 Register the concern in the four places a concern is registered.**
       The `hook_manifest.yaml` concern block, the seven per-host `session_start`
       rows, `CONCERN_REGISTRY` in `src/scripts/hooks/concern_registry.ts`, and
       the manifest test expectations. The registry is the one that is missed,
@@ -255,20 +255,20 @@ telemetry row rather than inferred.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 - A JSONL transcript whose single user turn is followed by two
+- [x] AC-1 - A JSONL transcript whose single user turn is followed by two
       assistant entries, the first carrying a numbered-options block and the
       second carrying none, produces a turn-end refusal naming `pending-decision`.
-- [ ] AC-2 - The same shape with a genuine user prompt between the two assistant
+- [x] AC-2 - The same shape with a genuine user prompt between the two assistant
       entries produces no refusal, and neither does a shape whose second entry is
       a tool call carrying no text.
-- [ ] AC-3 - `DETECTOR_IDS` in `src/scripts/_lib/turn_end_refusals.ts` carries
+- [x] AC-3 - `DETECTOR_IDS` in `src/scripts/_lib/turn_end_refusals.ts` carries
       five ids, and `docs/contracts/turn-end-detector-demotion.md` carries a
       pre-registered Q1/Q2 bar and sample floor for the fifth.
-- [ ] AC-4 - `end_review_nudge_hook` does not fire on a 5-line turn when the
+- [x] AC-4 - `end_review_nudge_hook` does not fire on a 5-line turn when the
       session baseline recorded 1,771 pre-session non-doc lines, and does fire on
       the unsubtracted count when the baseline's `head_sha` no longer matches.
-- [ ] AC-5 - `review-baseline` resolves in `CONCERN_REGISTRY`, in the manifest's
+- [x] AC-5 - `review-baseline` resolves in `CONCERN_REGISTRY`, in the manifest's
       concern block, and in every host's `session_start` row; no host binds a
       concern the registry cannot dispatch.
-- [ ] AC-6 - The two blockers above are recorded with owners and open status
+- [x] AC-6 - The two blockers above are recorded with owners and open status
       rather than resolved inside this roadmap.
