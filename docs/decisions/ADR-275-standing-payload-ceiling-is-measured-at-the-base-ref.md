@@ -178,6 +178,34 @@ touch.
   percentile describes what got through rather than what was attempted. The
   rejection instrumentation this change ships is what uncensors it.
 
+## Evidence
+
+- `agents/evidence/analysis/git-archive-drops-a-declared-payload-surface-2026-09-11.md`
+  — the reproduction of the `export-ignore` defect: the direct and
+  archive-based bucket tables side by side, the `git archive HEAD -- CLAUDE.md`
+  empty-tarball command, the `git check-attr` confirmation, and why the first
+  (symlink) hypothesis was wrong.
+- `src/scripts/_lib/measured_payload_ceiling.ts` — the formula, the watermark
+  pin and the six ledger contract rules, each carrying the verdict clause it
+  comes from.
+- `src/scripts/_lib/base_ref_payload.ts` — the base measurement and why it does
+  not use `git archive`.
+- `src/scripts/_lib/payload_catalogue_completeness.ts` — the exhaustiveness
+  check and the on-demand classification with a mechanism per tree.
+- `src/scripts/_lib/standing_bound_ratchet.ts` — the bound set after the move,
+  including the deletion check.
+- `src/config/preamble-payload-exceptions.json` — the ledger contract as shipped.
+- `tests/scripts/measured_payload_ceiling.test.ts` — 31 cases; the watermark pin
+  proven sensitive by neutralising it (2 red) and restoring it (31 green), and
+  the base-reading equality that pins the `export-ignore` regression.
+- The live branch-protection reading behind the "not required today" limit:
+  `gh api repos/:owner/:repo/rulesets` on 2026-09-11 — one required context,
+  `bypass_actors: []`, `current_user_can_bypass: "never"`.
+- Council transcripts for both rounds are local-only and gitignored under
+  `agents/runtime/council/`, per this repository's output-path convention; the
+  operative quotations are reproduced above and in the roadmap's step 4.4 rather
+  than cited by path.
+
 ## Alternatives rejected
 
 - **Remove the stored ceiling in this change** — refused above on sequencing.
