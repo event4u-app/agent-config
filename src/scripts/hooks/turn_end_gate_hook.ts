@@ -822,7 +822,10 @@ export function detectUnverifiedEdit(toolCalls: readonly ToolCall[]): Finding | 
  * Both cost one extra line in a reply, once: the re-entrancy layers cap a turn
  * at ONE refusal, so neither can wedge a session.
  */
-export function detectDroppedDecision(assistantTurnTexts: readonly string[]): Finding | null {
+export function detectDroppedDecision(
+    assistantTurnTexts: readonly string[],
+    closingFromPayload = false,
+): Finding | null {
     if (assistantTurnTexts.length < 2) return null;
     // Masked once per text, not once per block: this runs on the stop path over
     // every assistant text of the turn, and a reply with four numbered blocks
@@ -845,7 +848,10 @@ export function detectDroppedDecision(assistantTurnTexts: readonly string[]): Fi
             // The option NUMBERS and the line span, never the option text: the
             // evidence is quoted into a refusal that reaches the transcript, and
             // an options block can carry anything the reply carried.
-            evidence: `options ${block.numbers.join('/')} at lines ${block.startLine}-${block.endLine} of an earlier reply this turn`,
+            evidence:
+                `options ${block.numbers.join('/')} at lines ${block.startLine}-${block.endLine} ` +
+                `of an earlier reply this turn (closing reply read from ` +
+                `${closingFromPayload ? 'the stop payload' : 'the transcript'})`,
             reason:
                 'an earlier reply in THIS turn put numbered options to the user ' +
                 'and no user answer followed — this closing reply carries no ' +
@@ -1249,6 +1255,24 @@ export function main(): number {
     );
     if (!lastAssistant) return EXIT_ALLOW;
 
+    // The closing reply comes from the field the host hands us when it supplies
+    // one, not only from a file the host writes asynchronously. The transcript
+    // may lag the in-memory conversation, and a tail that is one assistant entry
+    // short is silence for `detectDroppedDecision`, whose early return needs two
+    // texts — i.e. the detector goes quiet in exactly the shape it exists for.
+    // `suggestion_capture_hook.ts` reads the same field for the same reason.
+    // Appended, never substituted: `lastAssistant` and the four other detectors
+    // are untouched, and a host that supplies no such field is unchanged.
+    const payloadClosing = str(
+        (payload['last_assistant_message'] ?? payload['lastAssistantMessage']) as
+            | JsonValue
+            | undefined,
+    );
+    const closingFromPayload = payloadClosing !== '' && !assistantTurnTexts.includes(payloadClosing);
+    const turnTexts = closingFromPayload
+        ? [...assistantTurnTexts, payloadClosing]
+        : assistantTurnTexts;
+
     // Layer 2 — keyed on the turn's ORDINAL, never on the prompt's text.
     // A host that sends no `session_id` shares one bucket AND one small-integer
     // ordinal namespace, so an unrelated session whose ordinal matches a stored
@@ -1307,7 +1331,7 @@ export function main(): number {
         // that produced the measured failure — IS the continuation that drops
         // the decision, so narrowing E the same way would silence it in exactly
         // the case it exists for.
-        detectDroppedDecision(assistantTurnTexts),
+        detectDroppedDecision(turnTexts, closingFromPayload),
     ]) {
         if (f) findings.push(f);
     }

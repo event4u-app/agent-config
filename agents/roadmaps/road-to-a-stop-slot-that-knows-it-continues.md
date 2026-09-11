@@ -117,7 +117,7 @@ asserts a control-flow property this tree has not established.
 
 ## Phase 2 — The gate reads the message the host hands it
 
-- [ ] **2.1 Prefer `last_assistant_message` for the closing reply.**
+- [x] **2.1 Prefer `last_assistant_message` for the closing reply.**
       `src/scripts/hooks/turn_end_gate_hook.ts:1232` takes `transcript_path` and
       `:1246` reads the tail; `grep -n last_assistant_message` over that file
       returns zero. `src/scripts/hooks/suggestion_capture_hook.ts:19-21` already
@@ -128,12 +128,18 @@ asserts a control-flow property this tree has not established.
       `last_assistant_message` when the payload carries it, and append it to
       `assistantTurnTexts` if the transcript tail does not already end with it;
       fall back to the transcript unchanged when the field is absent, and record
-      which source was used in the existing telemetry row rather than silently.
+      which source was used rather than leaving it silent.
+      `corrected-from-reproduction`: this step first said "record it in the
+      existing telemetry row". Reproduced — `turn_end_gate_hook.ts` has no
+      telemetry sink of any kind (`grep -nE 'telemetry|journal|record\('` returns
+      nothing); it is the one stop concern that speaks only through its refusal.
+      The source is recorded in the refusal's own evidence string instead, which
+      is what reaches a reader.
       **This is a read-source change only.** `detectDroppedDecision`
       (`:825`) is untouched, and so are detectors A–D, which keep reading
       `lastAssistant` exactly as they do today.
       verify: `grep -n 'last_assistant_message' src/scripts/hooks/turn_end_gate_hook.ts` resolves, and `npx vitest run tests/scripts/turn_end_gate_hook.test.ts tests/scripts/turn_end_gate_pending_decision.test.ts` stays green.
-- [ ] **2.2 Add the lagging-transcript fixture.**
+- [x] **2.2 Add the lagging-transcript fixture.**
       One case where the transcript tail holds only the FIRST assistant text of
       the turn (the one carrying the options block) and the payload's
       `last_assistant_message` holds the second (carrying none) — today
