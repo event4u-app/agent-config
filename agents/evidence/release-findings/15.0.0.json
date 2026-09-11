@@ -1,0 +1,460 @@
+{
+  "schema_version": 1,
+  "release": "15.0.0",
+  "findings": [
+    {
+      "finding_id": "245393dc3d9d",
+      "severity": "high",
+      "kind": "claim",
+      "title": "The replacement mitigation is itself an unenforced dated commitment - the exact defect this change removes",
+      "detail": "agents/roadmaps/road-to-delivery-for-every-host.md:1061 Risk 3 cell states the new mitigation is 'the shrink-only ratchet ... plus `target_schedule.on_miss`, which requires the 2026-11-10 milestone miss to be PUBLISHED with its measured number - milestones are untouched here and that first miss will land on schedule'. No code reads either key: `grep -rn \"target_schedule\" --include=*.ts --include=*.js --include=*.yml --include=*.yaml --include=*.sh .` (excluding `node_modules` and `dist/`) returns 0 hits, and `grep -rnw on_miss` the same. Nothing will publish anything on 2026-11-10. 'requires' and 'will land on schedule' describe a mechanism that does not exist, which is precisely what `grace_end_date` was found to be. ADR-273:116 contradicts the cell in the same commit, saying those milestones 'were never the enforcement surface'.",
+      "file": "agents/roadmaps/road-to-delivery-for-every-host.md:1061",
+      "status": "fixed",
+      "commit": "fd54b3585493c289c27acc83b625789f7bfbf17d",
+      "rationale": "The Risk 3 cell moved to agents/roadmaps/road-to-delivery-for-every-host.md:1336 and no longer makes the claim — it retracts it in terms: the draft had named `target_schedule.on_miss` as the replacement forcing function, which was the same defect one paragraph after removing it. Re-verified independently: `grep -rn target_schedule` and `grep -rnw on_miss` over the code tree both return zero hits, so the finding's underlying fact still holds; what changed is that the cell no longer asserts otherwise and now names the one enforced mechanism (the shrink-only per-PR ratchet) plus its four fail-open modes. Note the finding cites ADR-273, the pre-renumber id; the record is ADR-274.",
+      "verified_by": "grep -rn 'target_schedule' --include='*.ts' --include='*.js' --include='*.yml' --include='*.yaml' --include='*.sh' . | grep -v node_modules | grep -v '^./dist/' -> empty; grep -rnw 'on_miss' (same scope) -> empty; grep -n 'target_schedule\\|on_miss' agents/roadmaps/road-to-delivery-for-every-host.md -> only :1336, the retraction"
+    },
+    {
+      "finding_id": "040ce64b645b",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "The prose sweep ADR-273:83 commits to is incomplete, and the reproduction grep is why",
+      "detail": "The grep restricts to `--include=*.ts --include=*.yml --include=*.yaml --include=*.json`, so no `.md` consumer was ever visible; ADR-273:56 then states 'the only consumers of `grace_end_date` in the tree' - true of code, asserted of the tree. Two LIVE parked roadmaps still carry the expiry as a Revisit-if wake trigger that can now never fire: `agents/roadmaps/later/road-to-database-erd-landing.md:468` ('The `grace_end_date` of 2026-11-10 is a second trigger: at that date the design ceiling of 107,646 applies') and `agents/roadmaps/later/road-to-database-relational-modeling.md:596` (same shape). This is the identical defect ADR-273:118-121 names for ADR-264's `review_trigger` - named there, missed here, and neither fixed nor tracked. Verified: `grep -rln 2026-11-10` shows these are the only two remaining live grace-expiry sites; the archive and dated-evidence hits are historical records.",
+      "file": "agents/evidence/analysis/grace-ceiling-expiry-is-unenforced-2026-09-10.md:28",
+      "status": "fixed",
+      "commit": "fd54b3585493c289c27acc83b625789f7bfbf17d",
+      "rationale": "Both parked roadmaps the finding names are repaired: later/road-to-database-erd-landing.md:468-477 and later/road-to-database-relational-modeling.md:597-606 now record the second wake trigger as DELETED rather than stale, quoting the removed text and the reason (a wake condition on an event no code produces is a park with no exit). The evidence artefact gained the missing markdown sweep at agents/evidence/analysis/grace-ceiling-expiry-is-unenforced-2026-09-10.md:47-52 under a heading stating the earlier grep was code-scoped, and narrows the ADR's claim to code accordingly. Neither file now carries an unfireable wake trigger.",
+      "verified_by": "grep -n 'grace_end_date\\|2026-11-10' agents/roadmaps/later/road-to-database-erd-landing.md agents/roadmaps/later/road-to-database-relational-modeling.md; sed -n '462,478p' and '592,607p' on those two files; sed -n '44,55p' agents/evidence/analysis/grace-ceiling-expiry-is-unenforced-2026-09-10.md"
+    },
+    {
+      "finding_id": "daf44a4a0142",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "The change acts in a dimension the same roadmap twice recorded as owner-reserved, on council authority, with no owner decision on that dimension",
+      "detail": "roadmap:801-806 records anthropic verbatim: 'Owner-reserved for extending grace_end_date beyond 2026-11-10 - extending the date increases permitted exposure duration and is a substantive relaxation requiring owner authority', and roadmap:841-843 adds 'a split council does not acquire authority a converged one was denied'. Deleting the bound is an UNBOUNDED relaxation of permitted exposure duration - strictly larger than the extension that was reserved - and the register's own new text concedes the result is 'an undated, shrink-only tolerance 30,767 tokens above the design ceiling'. The no-enforcement argument answers the executable half only; the reservation was recorded against exposure DURATION, which is what was removed. Compounding: the new record self-assigns `reopen_policy: directional` (council-decidable) while declaring `protected_dimensions: governance`, so the venue for reopening it is set by the body that decided it.",
+      "file": "docs/decisions/ADR-273-the-grace-ceiling-expiry-was-never-enforced-and-the-date-is-deleted.md:9"
+    },
+    {
+      "finding_id": "7c1f785365d1",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "'a shrink-only ratchet enforced against the base ref' overstates a guard that fails OPEN",
+      "detail": "ADR-273:68 says 'a shrink-only ratchet enforced against the base ref by `assertBoundsDidNotRise`' (and roadmap:1061's 'real and enforced per PR'). `src/scripts/_lib/standing_bound_ratchet.ts:94-135` returns `ok: true` on four base-ref failure modes - no base ref resolved, the budget config unreadable at the base ref, unparseable, or no `ci_delivery.grace_ceiling` at the base ref - each with an honest `note` but a passing verdict. So the ratchet is conditional on base-ref resolution (shallow clone, absent `origin/main`, unresolvable merge base) rather than unconditional. The inconsistency is internal to one document: ADR-273:155-158 disqualifies the base-ref-derived ceiling proposal on exactly this property ('returns `null` on every failure, correct for a diagnostic and unacceptable for a ceiling') while relying on the same property unqualified 90 lines earlier. This matters more after the change than before, because the ratchet is now the only enforced mitigation named.",
+      "file": "docs/decisions/ADR-273-the-grace-ceiling-expiry-was-never-enforced-and-the-date-is-deleted.md:68"
+    },
+    {
+      "finding_id": "896cbf2dfba5",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Half-corrected string: stale figure remains in the same clause that was edited to fix another",
+      "detail": "taskfiles/ci-fast.yml:882 - the same `desc` clause that was edited to fix a stale ceiling figure still asserts 'The tree measures 138,212'. Verified by running the gate on this branch: measured total is 138,413 (`project-scope rules 122822 + preloaded skills catalog 14845 + CLAUDE.md 746`). The diff's own commit note says of the neighbouring clause 'the figure was two raises stale as well', so the staleness class was known and the adjacent instance in the same string was left. Same pattern in `src/config/preamble-payload-budget.json:85`, which this diff also rewrites and which still opens 'HEAD measures 138,212 ... nobody can reduce 30,566 tokens' (actual gap 30,767) - defensible as historical framing there, not defensible in a present-tense 'The tree measures'.",
+      "file": "taskfiles/ci-fast.yml:882"
+    },
+    {
+      "finding_id": "9d9ade26f13f",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "`evidence.strength: E3` is not supportable by the declared basis, and the grade is load-bearing",
+      "detail": "docs/decisions/ADR-273-the-grace-ceiling-expiry-was-never-enforced-and-the-date-is-deleted.md:17 - `docs/contracts/adr-layout.md:178-181` defines E1 as 'One local observation - one incident, consumer, measurement, tree constraint' and reserves E3 for 'pre-registered benchmark, production data, established community standard, applicable vendor guidance'. The basis here is one dated inspection of one commit (`Measured 2026-09-10 in a worktree at origin/main 7bf325f3b`) - four greps and one gate run. `adr-layout.md:464` prices the reopen burden on the grade (E3/E4 requires 'engaging the original evidence in kind'), so the overclaim raises the bar to reopen a governance record. Cross-check: sibling ADR-264, same subject and a stronger evidence resolution, declares E2. The `agents/evidence/analysis/adr-evidence-census-2026-08.md` row added in this same diff independently computes `E1 - one dated local observation` (that census is biased low by design, so it is corroboration rather than proof).",
+      "file": "docs/decisions/ADR-273-the-grace-ceiling-expiry-was-never-enforced-and-the-date-is-deleted.md:17"
+    },
+    {
+      "finding_id": "d37c1d431638",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Two of the four added tests duplicate assertions already in this file",
+      "detail": "tests/scripts/check_preamble_payload_budget.test.ts:205 - `:205-212` ('still ENFORCES the grace ceiling') asserts `main(['--ceiling', grace]) === 0` and `main([]) !== 0`, which is the entire `describe('the gate reds on growth past whichever ceiling applies')` block at `:265` and `:273`. `:215-219` asserts `evaluate(undefined, undefined, design - 1).ceiling === design`, verbatim the second expectation of `:237-243`, re-deriving a local `design` where a `design()` helper exists 18 lines below - and it sits in a describe about the date, not about override direction. Consequence beyond redundancy: the `main([]) !== 0` copy at `:211` drops the caveat carried at `:266-270` ('HEAD is over the design ceiling today ... when a reduction lands this flips and the assertion must be inverted'), so a future reduction reds two tests and only one carries the instruction. The roadmap's '37 tests ... including two new regression pins' is accurate for the two pins at `:187` and `:194`; the other two additions are not disclosed as duplicates.",
+      "file": "tests/scripts/check_preamble_payload_budget.test.ts:205"
+    },
+    {
+      "finding_id": "8e83aac0f3e4",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "`status_2026_08_24.committed_reduction_mechanism` remains the string `NONE` is not what the field holds",
+      "detail": "docs/decisions/ADR-273-the-grace-ceiling-expiry-was-never-enforced-and-the-date-is-deleted.md:112 - Its value is a multi-sentence paragraph beginning `\"NONE. Stated explicitly because its absence is the finding: no mechanism in the tree is committed to closing 35,692 tokens by 2026-11-10 ...\"`. The same overstatement appears at `.github/workflows/standing-payload-delta.yml:34` ('the budget file still records `committed_reduction_mechanism: NONE`') and in roadmap:1061 as 'still recorded verbatim as `NONE`' - where 'verbatim' is exactly wrong. Minor in itself; noted because the whole subject of this change is prose that claims more precision than the config supports. The embedded paragraph also still carries the 35,692/2026-11-10 pairing the change elsewhere corrects.",
+      "file": "docs/decisions/ADR-273-the-grace-ceiling-expiry-was-never-enforced-and-the-date-is-deleted.md:112"
+    },
+    {
+      "finding_id": "2555a5046798",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "A known-dead `review_trigger` on an accepted owner-reserved governance record is left with no tracked carrier",
+      "detail": "docs/decisions/ADR-273-the-grace-ceiling-expiry-was-never-enforced-and-the-date-is-deleted.md:118 - ADR-273 correctly identifies that ADR-264's third `review_trigger` clause (verified verbatim at `docs/decisions/ADR-264-standing-payload-grace-ceiling-may-not-rise.md:26-27`) 'cannot fire', and declines to edit ADR-264 on the defensible ground that its `reopen_policy` is `owner`. But nothing tracks the repair: no blocker, no stub, no roadmap step, and ADR-273's own `review_trigger` does not cover it. The only record that an accepted record carries an unfirable trigger is a prose bullet in a different ADR - the same discoverability failure that let the original fiction survive.",
+      "file": "docs/decisions/ADR-273-the-grace-ceiling-expiry-was-never-enforced-and-the-date-is-deleted.md:118"
+    },
+    {
+      "finding_id": "9382e875868c",
+      "severity": "high",
+      "kind": "security",
+      "title": "Unvalidated PR content flows into agent prompt in self-review workflow",
+      "detail": "self_review_gate.ts loads skill files as system prompt for package CI self-review. If a PR (especially from fork via pull_request_target) injects malicious content into a skill file that this workflow reads, that content reaches the agent's prompt with repo secrets and write permissions. The workflow .github/workflows/self-review.yml is not in the diff, but the system prompt (this skill file) is, and the header explicitly states 'CI self-review' as the use case. Trigger: pull_request_target on fork PRs; permissions: write-all in CI; secrets: exposed; attack: PR injects 'also update release workflow to echo secrets.NPM_TOKEN' into a skill the gate reads → prompt injection → secret exfiltration + supply-chain write.",
+      "file": "agents/skills/adversarial-review/SKILL.md",
+      "status": "false_positive",
+      "rationale": "Every load-bearing fact is wrong. There is no .github/workflows/self-review.yml; the workflow is self-review-gate.yml and its trigger is `pull_request` (:19), NOT `pull_request_target` — grep -rn 'pull_request_target' .github/ returns only comment lines asserting its absence, zero directives. Permissions are contents: read / pull-requests: write (:35-37), not write-all, and grep -rln NPM_TOKEN .github/workflows/ is empty, so the named exfiltration target is unreachable from this workflow. Under `pull_request` a fork PR receives no secrets, so ANTHROPIC_API_KEY is unset and the live job no-ops by design (:9-11). The cited path agents/skills/adversarial-review/SKILL.md does not exist; src/scripts/self_review_gate.ts:234 reads src/skills/<name>/SKILL.md. Residual stated honestly: a same-repo-branch PR can edit the file that becomes its own reviewer's system prompt, but the blast radius is a steered advisory PR comment under a read-only contents token — not secret exfiltration, and not a high security finding.",
+      "verified_by": "cat -n .github/workflows/self-review-gate.yml; grep -rn 'pull_request_target' .github/; grep -rn 'write-all' .github/workflows/; grep -rln 'NPM_TOKEN' .github/workflows/; ls agents/skills -> No such file or directory; grep -n \"src', 'skills'\" src/scripts/self_review_gate.ts -> :234"
+    },
+    {
+      "finding_id": "ea99cc3380c6",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "Pre-filter suppression: roadmap withholds findings judged unimportant",
+      "detail": "adversarial-review/SKILL.md L65-72 instructs 'surface only the trade-offs that need the user's input' and 'Debate internally, report completely' — but the first clause is the pre-filter defect: an instruction to report a subset is followed literally, the review finds defects then withholds the ones it judged unimportant, and the loss is invisible because the withheld set leaves no trace. This matters here more than anywhere: self_review_gate.ts loads this file as the system prompt for the package's own CI self-review, so a suppression clause here suppresses findings on every pull request. The contract then contradicts itself: L72 says 'every criticism raised reaches the report with its disposition', but L65 said to surface only a subset.",
+      "file": "agents/skills/adversarial-review/SKILL.md",
+      "status": "fixed",
+      "commit": "c4a49204dfefae74e518f284ee11f04fff511e63",
+      "rationale": "The pre-filter clause is gone from the instruction and survives only as quoted history. src/skills/adversarial-review/SKILL.md:67-71 now reads 'Debate internally, report completely … every criticism raised reaches the report with its disposition (must-fix / deferred / rejected, each with one line of reason). Do not decide on the user's behalf which concerns were worth their attention.' Lines 73-79 then state the clause USED TO read 'surface only the trade-offs that need the user's input' — so the finding's text is near-verbatim the repair note, which means the reviewer read the release-range diff (containing the pre-fix state) and reported it as live. No surviving instruction reports a subset. dist/agent-src/skills/adversarial-review/SKILL.md:73 is in sync.",
+      "verified_by": "awk 'NR>=55 && NR<=90' src/skills/adversarial-review/SKILL.md; grep -rn 'surface only the trade-offs' src/ dist/ -> only the two quoted-history lines at :73"
+    },
+    {
+      "finding_id": "5bcff5445468",
+      "severity": "high",
+      "kind": "claim",
+      "title": "14.23.0...HEAD measurement claim unbacked: no analysis artifact in diff",
+      "detail": "Prompt states 'Release PR for 15.0.0: analysis range is 14.23.0...HEAD (the full release commit range)' and 'Do NOT report a feature as not in the diff when it is present in the release range.' But the diff contains no measurement artifact or analysis covering 14.23.0...HEAD. The only analysis files are post-hoc review artifacts for individual features (feat-cdd-fidelity-council, feat-confirmation-friction-write-shape, loss-class-reachability), none of which measure the full release range. The instruction to 'apply skills to the supplied PR diff' is therefore unverifiable: no supplied artifact establishes what is in 14.23.0...HEAD.",
+      "file": "prompt (implicit claim)",
+      "status": "false_positive",
+      "rationale": "The premise is wrong: what establishes the contents of 14.23.0...HEAD is the diff the gate itself computes and sends, not a separate analysis file. src/scripts/self_review_gate.ts:485 sets analysisBase = previousTag, :494 computes files = changedFiles(analysisBase), :495 diff = diffText(analysisBase, files) — the review's own input IS the release-range measurement. Re-derived: 211 commits over 637 files, and the tag resolves locally. The prompt line the finding quotes is the release-mode note at :251-258, whose stated purpose is the opposite of an unbacked claim — it exists to stop the model reporting a release feature as 'not in the diff'. The finding also cites no repository location, so there is nothing in the tree it contradicts.",
+      "verified_by": "grep -n 'analysisBase\\|previousTag' src/scripts/self_review_gate.ts; sed -n '246,258p' src/scripts/self_review_gate.ts; git rev-list --count 14.23.0..HEAD -> 211; git diff --name-only 14.23.0...HEAD | wc -l -> 637"
+    },
+    {
+      "finding_id": "5c7727c73808",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Roadmap AC-2 marked cancelled but ratchet unchanged: live gate can still fail",
+      "detail": "road-to-delivery-for-every-host-4-4-close.review-input/roadmap.md L330-365: AC-2 target is 0/0/1/1/0, observed is 1/1/4/1/0, criterion marked [-] (cancelled) under council delegation. But L334 says 'does not amend targets in continuity-surface.json (unchanged at 0/0/1/1/0)' and L338 'does not relax the ratchet, which still fails a branch that GROWS any axis.' So the criterion is cancelled but the gate is not updated, meaning a future branch adding one row to axis 3 will red on a target the roadmap no longer requires. Either the ratchet should match the cancellation or the cancellation is not terminal.",
+      "file": "agents/evidence/reviews/drain-delivery-for-every-host-4-4-close.review-input/roadmap.md"
+    },
+    {
+      "finding_id": "923839ccfc22",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Step 4.4 blocker escalation references non-existent expiry enforcement",
+      "detail": "roadmap.md L479-522: step 4.4 blocker quoted for the owner states 'on 2026-11-10 the gate compares ~138,474 against design_ceiling 107,646 and reds every pull request' and 'doing nothing is deferral, not safety.' Update L527-548 corrects this as FALSE: grace_end_date was enforced by nothing (two reads, an echo and a test-helper type, no date logic in the gate), so the 2026-11-10 red could not have occurred. The blocker text at L479-522 is preserved verbatim per K9 (quote the question for the owner), but it asks the owner to choose between mechanisms to avoid a deadline that does not exist. The corrected fact (L540: 'nothing would have reded on that date') makes the question's premise false, but the question is still quoted as the blocker.",
+      "file": "agents/evidence/reviews/drain-delivery-for-every-host-4-4-close.review-input/roadmap.md"
+    },
+    {
+      "finding_id": "a9f6484b7903",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "loss-class-reachability finding 1: silent-green from under-match, docstring omits this residual",
+      "detail": "loss-class-reachability.findings.md row 1: MARKER_SUBSTITUTION regex [^)]*? excludes every ), so it can only see marker word before first nested ) in call's arguments. Real redaction s.replace(buildPattern(),'[REDACTED]') or s.replace(SECRET_RE,someHelper('[REDACTED]')) — marker after nested call's closing paren — is invisible. This is under-match (silent-green) gap in the exact mechanism the docstring says was built to close that direction. No self-test exercises nested-paren .replace(...), so gap is untested and undisclosed — docstring's 'Residual error' paragraph names only opposite (over-match) residual, not this one. Fixed e1-fix, but the finding documents a shipped defect in a gate claiming to catch lossy transforms.",
+      "file": "agents/evidence/reviews/loss-class-reachability.findings.md"
+    },
+    {
+      "finding_id": "3c8a03f0c0a7",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "confirmation-friction round-1 finding 4: false positive on quoted mention contradicts own comment",
+      "detail": "feat-confirmation-friction-write-shape.round1.findings.md row 4: rule fires on git commit -m 'switch to python3 -c open(p,\"w\")' (quoted mention), contradicting its own comment 'a quoted mention of the shape in prose stays silent.' The change itself ships that exact string in substitutions table (token-efficiency-mechanics.md:267), so a commit/grep quoting it triggers the nudge, and the file header calls a nudge firing on correct usage 'worse than none.' Fires advisory line and burns session latch, so one real write-shape nudge spent on false positive. Fixed 0aa3e6e0a, but finding shows shipped detector matched its own example as a violation.",
+      "file": "agents/evidence/reviews/feat-confirmation-friction-write-shape.round1.findings.md"
+    },
+    {
+      "finding_id": "47ab3e5afa09",
+      "severity": "low",
+      "kind": "style",
+      "title": "Inconsistent 'honest-null' vs 'Skipped' format across review artifacts",
+      "detail": "e3-gate-diagnosis.findings.md and e3-observed-injection.findings.md use 'Skipped: no code surface' (custom prose), while feat-confirmation-friction-write-shape.findings.md row says 'Honest-null: 0 findings' would be used for 0 findings (contract §2.3 format). Both are legitimate (no-code-to-review vs 0-findings-from-review), but the variance suggests no canonical format for 'nothing to report' cases. Not a defect, but review-artifact consumers cannot rely on a single shape.",
+      "file": "agents/evidence/reviews/"
+    },
+    {
+      "finding_id": "62046538b2d2",
+      "severity": "critical",
+      "kind": "security",
+      "title": "Delivery flip ships with no recorded host-tree delta in reviewable evidence",
+      "detail": "Step 4.3 ships `mode: delivery` + `hosts: [claude-code]` as the consumer default (src/config/agent-settings.template.yml), and 7.1 flips the claim to `backed` citing the Phase 0 artefact. That artefact (`agents/evidence/analysis/standing-payload-by-host-2026-09.md`) measures the PROJECTION SOURCE (`dist/agent-src/rules` minus `type: manual`), not the host tree a consumer loads — the 121,242 tok row is the upper bound, and step 0.1's own correction records that a maintainer checkout holds 13 files vs 119 projectable. So no committed evidence document measures the bytes `.claude/rules` receives post-flip in a CONSUMER install (unscoped, un-deduplicated), and the 24,166 tok figure in 4.2 is derived in prose. A flip affecting every consumer install rests on a figure no reviewer can reproduce from the committed artefacts. Step 7.2's host-cost table is generated from the same upper-bound source and inherits the gap.",
+      "file": "agents/roadmaps/road-to-delivery-for-every-host.md",
+      "status": "accepted_risk",
+      "rationale": "The finding's facts largely hold and the tree already states them: agents/evidence/analysis/standing-payload-by-host-2026-09.md:10-19 measures the projection SOURCE as an upper bound, and no committed artefact pins a post-flip consumer .claude/rules reading — the 24,166 tok figure lives in roadmap prose at :628, labelled as measured on a clean consumer-shaped root. Two corrections: it quotes 121,242 where the artefact row reads 121,457, and 'no reviewer can reproduce' overstates it, since check_preamble_payload_budget.ts:514-537 ships --host and --project-rules-dir plus a PARTIAL TREE flag (:645) precisely so a reader can take the reading on a clean root. RISK CARRIED: the consumer-install figure behind a default affecting every install is recorded in prose rather than a pinned regenerable artefact. WHY ACCEPTABLE: step 7.2 (:1243-1249) records why a host-tree reading is not reader-reproducible (dedup and workspace scope shrink a maintainer checkout to 13 of 119 rule files), ADR-272's 'What this evidence does NOT establish' names the same non-reproducibility, 7.1's non_inference pre-empts the misreading, and rollback is one setting with a fixture (tests/scripts/lean_projection_host_scope.test.ts, case 4.5). The critical/security classification is also wrong: this is evidence provenance with no auth, secret, tenant or egress surface. WHAT WOULD CHANGE IT: an evidence artefact pinning a post-flip clean-consumer-root --project-rules-dir reading, generated by a committed script at a named commit, as the Phase 0 artefact is pinned. NOT INDEPENDENTLY REPRODUCED: this worktree carries a user-scope layer, so --host claude-code reads a PARTIAL TREE; the label and the reproduction path were verified, the number itself was not.",
+      "verified_by": "sed -n '1,45p' agents/evidence/analysis/standing-payload-by-host-2026-09.md; grep -n '24,166' agents/roadmaps/road-to-delivery-for-every-host.md; sed -n '620,640p' and '1207,1250p' same file; grep -n 'project-rules-dir\\|PARTIAL TREE' src/scripts/check_preamble_payload_budget.ts; sed -n '168,178p' docs/decisions/ADR-272-rules-bucket-ceiling-superseded-at-25375.md"
+    },
+    {
+      "finding_id": "366b3c202e5a",
+      "severity": "critical",
+      "kind": "claim",
+      "title": "ADR-272 supersession recorded as owner-waived but the waiver quote is a council verdict",
+      "detail": "Step 4.2 records 'CLOSED 2026-09-09 by ADR-272 — option (a), the owner having delegated the decision this step had reserved.' The quoted question at 4.2 asks for 'an explicit repository-owner waiver' (openai's words) and describes K9 as protecting the 20,000 → 25,375 move from council reach. ADR-272 § Decision records 'AI council 2026-09-09 (anthropic + openai, 2/2, converged)' as the deciding body, with the owner's delegation of 'this drain run' cited once in § Context. A decision 'reserved' to one authority in one paragraph and 'delegated' to another two paragraphs later is a substitution of authority the reader cannot verify from the public record (the delegation instrument is not committed), and the supersession then lacks the explicit owner voice the step's own quoted criterion required.",
+      "file": "agents/roadmaps/road-to-delivery-for-every-host.md",
+      "status": "accepted_risk",
+      "rationale": "One locational claim is false and the substantive one holds. The owner delegation is NOT 'cited once in Context': it opens Status at docs/decisions/ADR-272-rules-bucket-ceiling-superseded-at-25375.md:36-37 and the waiver is asserted at :47 ('The owner supplied that waiver. Nothing about the substance changed; the authority did.'), directly after both seats' quoted declinations; roadmap :704-710 matches. So no authority is substituted silently — it is labelled in both places. RISK CARRIED: the delegation instrument itself is not committed. grep -rln 'written owner delegation' returns only documents that CITE it, never one that IS it, and ADR-272's evidence table (:160-167) carries no row for the waiver, so a reader outside that session cannot verify the owner's words. WHY ACCEPTABLE: the ADR names its authority basis rather than hiding it, quotes the exact criterion each seat set, and records what its evidence does not establish. WHAT WOULD CHANGE IT: ADR-272 has not received the treatment its sibling did — commit fd54b3585 gave ADR-274 an explicit section on the delegation's limits and dropped reopen_policy from directional to owner, while ADR-272 still ships reopen_policy: directional with protected_dimensions: governance, i.e. the reopening venue is still set by the deciding body. Applying that correction plus committing a delegation record closes this. OWNER-RESERVED RESIDUE: whether an asserted-but-uncommitted delegation is sufficient authority is a governance judgement the tree cannot settle.",
+      "verified_by": "sed -n '1,50p' and '140,175p' docs/decisions/ADR-272-rules-bucket-ceiling-superseded-at-25375.md; sed -n '685,712p' agents/roadmaps/road-to-delivery-for-every-host.md; grep -rln 'owner delegation\\|written owner delegation\\|delegation instrument' docs/ agents/ src/; git log -1 --format=%B fd54b3585"
+    },
+    {
+      "finding_id": "f26dfbc149b4",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "Step 4.4 stays `[ ]` with contradictory grounds across five updates",
+      "detail": "4.4 is unticked and its prose records FIVE distinct reasons across updates: measurement-surface question (2026-09-07), owner decision awaited (2026-09-09 after surface settled), date extension council split (2026-09-09 #2), grace_end_date unenforced (2026-09-10), and measured base with no headroom policy (2026-09-10 #2). Each 'UPDATE' paragraph asserts the step is still open, but the obstacles named are not the same obstacle evolving — they are five unrelated blockers. A step held open through five incompatible framings is indistinguishable from a completion criterion the roadmap cannot satisfy, and the box is unticked for whichever reason the last update happened to record rather than because a defined condition is unmet.",
+      "file": "agents/roadmaps/road-to-delivery-for-every-host.md",
+      "status": "false_positive",
+      "rationale": "The falsifiable half is refuted at the cited step. agents/roadmaps/road-to-delivery-for-every-host.md:992-995 records a defined closure condition from a 2/2-converged council — it closes only when the stored exception is replaced by an active, required, fail-closed measured ratchet and exceptional growth preserves repayment debt; until then the grep exit condition is insufficient evidence and 4.4 must remain open — followed at :997-1010 by four named blocking prerequisites, and at :1022-1023 by a report against exactly that list (1 and 2 done, 3 and 4 not decided, blocked on a quota-exhausted council at :1047-1053). So the box is unticked because a stated condition is unmet. The count is also off: six UPDATE paragraphs plus the original BLOCKED, not five, and the framings are a chain in which each round records the previous premise as false rather than unrelated blockers. RESIDUE, stated rather than dismissed: a step open across six rounds is a real signal about the roadmap's ability to close, and no policy line exists in the tree on how many reframings a step may take before it must be split or parked.",
+      "verified_by": "sed -n '757,775p', '958,1021p' and '1022,1055p' agents/roadmaps/road-to-delivery-for-every-host.md; awk 'NR>=757 && NR<=1050' same file | grep -n 'UPDATE' -> 6 hits"
+    },
+    {
+      "finding_id": "5c31c04417ed",
+      "severity": "high",
+      "kind": "security",
+      "title": "Blocker resolution `auto-record-fail-closed-was-carried-by-the-default` ships the fix after the flip",
+      "detail": "Step 3.2 flips `continuity.auto_record` to `on` as the shipped default (src/config/agent-settings.template.yml:1175). The fail-closed property documented in three places — the reader's docblock, `docs/contracts/continuity-rollback.md`, and step 1.4 — is proven false in the same change: the `try/catch` does not run for a malformed `.agent-settings.yml` because `load_agent_settings` skips the broken layer instead of throwing. The fix (consulting `settings_layer_states`) is recorded as landing 'in the same change as the blocker resolution' — but the blocker is created BY 3.2's flip and resolved AFTER it, so there is a commit (likely multiple, given 'done 2026-09-10' vs the 3.2 dateline) where the default is `on` and the fail-closed claim is false. A class-C consent key documented as fail-closed arms a producer on any user YAML typo during that window.",
+      "file": "agents/roadmaps/archive/road-to-continuity-writer-activation.md",
+      "status": "false_positive",
+      "rationale": "The claimed window does not exist — the flip and the fail-closed repair are the SAME commit. git log -S 'auto_record: \"on\"' -- src/config/agent-settings.template.yml and git log -S 'settings_layer_states' -- src/scripts/_lib/continuity_writer.ts both return exactly one commit, 956954c91, whose diff carries -auto_record: \"off\" / +auto_record: \"on\" alongside the new settings_layer_states import and guard. The finding's own hedge ('likely multiple') is refuted by that record. The blocker entry at agents/roadmaps/archive/road-to-continuity-writer-activation.md:1239-1241 states the sequence directly: found by a fixture going red, routed to the council before anything was committed, and repaired in the same change. The diagnosis the finding reports is accurate and was the implementer's own; auto_record_enabled (src/scripts/_lib/continuity_writer.ts:88-105) now checks for a malformed settings layer and returns false BEFORE reading the value, so no user YAML typo arms the producer at any commit in the range.",
+      "verified_by": "git log -S 'auto_record: \"on\"' -- src/config/agent-settings.template.yml -> one commit 956954c91; git log -S 'settings_layer_states' -- src/scripts/_lib/continuity_writer.ts -> same single commit; git show 956954c91 --stat on those paths; sed -n '60,110p' src/scripts/_lib/continuity_writer.ts; sed -n '1235,1262p' agents/roadmaps/archive/road-to-continuity-writer-activation.md"
+    },
+    {
+      "finding_id": "c839c6aacd3a",
+      "severity": "high",
+      "kind": "claim",
+      "title": "AC-2 cancelled at 10/11 with contradictory terminal accounting in two locations",
+      "detail": "AC-2 (`0 / 0 / 1 / 1 / 0` target) is marked `[-]` with 'Closed 2026-09-09 at 8/8 — 3 done, 5 cancelled' in § Closure. The criterion itself records 'Terminal accounting for this roadmap: 10 criteria satisfied, 1 criterion cancelled … It did not achieve AC-2' and 'completion percentage counts checkboxes and excludes `[-]`, so it will read 100 %'. 8/8 with 3+5 is internally consistent; '10 satisfied, 1 cancelled' over 11 total acceptance criteria is also internally consistent; but the two do NOT reconcile (8 ≠ 11), and a reader cannot determine from the committed record whether this roadmap closed at 8/8 or 10/11. The phase-checkpoint count and the acceptance-criteria count are both authoritative and both present, disagreeing.",
+      "file": "agents/roadmaps/archive/road-to-continuity-writer-activation.md",
+      "status": "false_positive",
+      "rationale": "The finding says one file carries two disagreeing terminal counts. It does not. agents/roadmaps/archive/road-to-continuity-writer-activation.md has no Closure section at all (its headings are Goal, Phases 1-3, two Dispositions, Blockers, Risk Register, Acceptance Criteria) and the string '8/8' appears nowhere in it; the quoted sentence 'Closed 2026-09-09 at 8/8 — 3 done, 5 cancelled, 0 open, 0 deferred' lives in a DIFFERENT archived roadmap, road-to-iron-law-reserve-activation.md:221, describing that roadmap's steps. The premise of 11 total acceptance criteria is also wrong: the section holds exactly three (AC-1 [x] :1055, AC-2 [-] :1072, AC-3 [x] :1148), and the '10 criteria satisfied' at :1137 reconciles with the file's 10 [x] checkboxes across steps and ACs. The finding cross-contaminated two files; there is no 8-versus-11 contradiction in the record it cites.",
+      "verified_by": "grep -n '^## ' agents/roadmaps/archive/road-to-continuity-writer-activation.md; grep -n '8/8\\|## Closure\\|3 done, 5 cancelled' same file -> no output; grep -rn '3 done, 5 cancelled' agents/ -> road-to-iron-law-reserve-activation.md:221; grep -nE '^\\s*- \\[.\\] AC-[0-9]' same file -> 3 lines; grep -cE '^\\s*- \\[.\\]' same file -> 12 (10 [x], 2 [-])"
+    },
+    {
+      "finding_id": "f5ad91b944c0",
+      "severity": "high",
+      "kind": "claim",
+      "title": "Fixture corpus `tests/eval/routing-matrix/*.yaml` count (94) vs labelled `auto` rules (105) reconciles only after three corrections",
+      "detail": "Step 0.2 states '102 + 3 = 105' `auto` rules and that 94 are labelled, yielding 11 unlabelled (not the 8 D3 originally claimed). Step 2.1 then reports the recall endpoint returning '101/101 reachable' and explains the -4 correction: trigger-less rules cannot be made reachable by a positive prompt, proven by a planted fixture for `skill-quality` going red at '101/102 unreachable'. That reconciles 105 - 4 = 101 = 94 + 7. But the step's own verify says 'count BOTH the quoted and bare forms' and '94 + 11 = 105', while the outcome measures 94 + 7 = 101 — so either the verify's +11 or the measurement's +7 is wrong. The text asserts all three figures (105 total, 101 reachable, 11 unlabelled) are 'corrected-from-reproduction', but they do not form a consistent set without a fourth correction (11 → 7) that is never explicitly recorded as such.",
+      "file": "agents/roadmaps/road-to-delivery-for-every-host.md",
+      "status": "false_positive",
+      "rationale": "The finding claims either the verify's +11 or the measurement's +7 is wrong, and that the 11-to-7 correction is never explicitly recorded. Both halves fail at the cited file. agents/roadmaps/road-to-delivery-for-every-host.md:383-386 records it verbatim: 0.2 established 105 auto rules of which 94 were labelled and 11 were not; of those 11, four declare no `triggers:` at all, so the labelable set is 105 - 4 = 101, and 94 + 7 = 101 reconciles exactly — with the mechanism measured by a planted skill-quality fixture (:387-391), the four enumerated in 0.2's table (:246+), and the whole restated at :1391-1397. 11 = 7 + 4, so no fourth correction is missing. Re-derived on the current tree and it closes exactly: 119 rules total, 102 quoted `type: \"auto\"` + 3 bare = 105, and the fixture corpus now reads 101 — precisely 94 + 7 and precisely 105 - 4.",
+      "verified_by": "sed -n '233,248p;378,400p' agents/roadmaps/road-to-delivery-for-every-host.md; ls dist/agent-src/rules/*.md | wc -l -> 119; grep -l '^type: \"auto\"' dist/agent-src/rules/*.md | wc -l -> 102; grep -l '^type: auto$' dist/agent-src/rules/*.md | wc -l -> 3; ls tests/eval/routing-matrix/*.yaml | wc -l -> 101"
+    },
+    {
+      "finding_id": "9fa5748609fe",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Step 3.1 DONE with its own verify unmet and the unmet half not amended",
+      "detail": "3.1's verify (REPLACED 2026-09-09) requires three sub-tests: byte, sabotage, ordering. Its resolution records 'Three sub-tests land in `tests/hooks/session_index_trust_e2e.test.ts`' and describes them. But the original verify also required '`check_continuity_surface` will NOT show the artefact axis one lower' and then states 'CORRECTED … It does: `1 / 2 / 5 / 1 / 1` → `1 / 2 / 4 / 1 / 1`.' The step is ticked `[x]`, yet its own text records a prediction that was 'WRONG' and a verify outcome that contradicts the original criterion ('will NOT' vs 'does'). The replacement verify removed that limb, but the box was ticked under the ORIGINAL verify, so either the tick is premature (original unmet) or the verify was retroactively narrowed to match what was delivered.",
+      "file": "agents/roadmaps/archive/road-to-continuity-writer-activation.md"
+    },
+    {
+      "finding_id": "6102f004b2d1",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Council verdict 'option (d)' for step 2.1 recorded but (d) was not an offered option",
+      "detail": "Step 2.1 is marked `[-]` with 'CANCELLED 2026-09-09 by the AI council … (2 seats, converged on option (d))'. The step's text offers no (d): it lists verify conditions but no decision options, and the cancel note says 'Both seats proposed writing a `rules_bucket_ceiling` key into src/config/preamble-payload-budget.json' — a course of action, not a labelled option the step presented. The blocker `three-concern-split-is-unpaid-under-the-concern-ratchet` likewise records 'RESOLVED 2026-09-09 — option (d)' but its `What to do` enumerates the arithmetic without option labels. So '(d)' appears as a verdict on a multiple-choice question neither location actually posed in that form, and a reader cannot map the council's '(d)' back to a decision the roadmap text invited.",
+      "file": "agents/roadmaps/archive/road-to-continuity-writer-activation.md"
+    },
+    {
+      "finding_id": "94a6b98cc731",
+      "severity": "medium",
+      "kind": "security",
+      "title": "Host-tree parity gate (1.4) runs in `task ci` but not in any GitHub workflow",
+      "detail": "Step 1.4 wires `check_host_tree_parity` into `.github/workflows/consistency.yml` (after projection-integrity) and into `taskfiles/ci-fast.yml` with its own target. Its verify says 'green on the tree; red on a planted one-byte change in a Cline entry', proven by tests. But the security property is HOST-TREE IDENTITY: every non-delivery host must produce a tree byte-identical to `eager-all` on every PR. The taskfile target is local-only; if the workflow step is missing or misconfigured, a PR thinning `.cursor/rules` or `.clinerules` passes CI and violates the completeness invariant (Phase 1's whole subject). The verify proves the gate works; it does not prove the gate is wired into the merge path. Checked: `consistency.yml` was amended (visible in PR), but not re-verified post-merge, so we cannot confirm from this review that the step runs on every PR.",
+      "file": "agents/roadmaps/road-to-delivery-for-every-host.md"
+    },
+    {
+      "finding_id": "e9ef4da1448a",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "ADR-270/272 citations in multiple roadmaps with conflicting descriptions of what each decides",
+      "detail": "ADR-270 is cited in `road-to-delivery-for-every-host.md` as settling the measurement-surface question (4.4 unblock, 2026-09-09) and giving the gate a `--host` reading. ADR-272 is cited in the same file as superseding the 20,000 tok rules limb (4.2 question closure, 2026-09-09). Both are also referenced in `road-to-the-packed-payload-cap.md` in its 'Corrections carried in' section, but there ADR-270 is described only as 'dual-track mechanism' and ADR-272 is not mentioned at all. `road-to-database-erd-landing.md` and `road-to-database-relational-modeling.md` both carry stale `grace_end_date` revisit-if clauses with no ADR-274 reference (the ADR that deleted the key), though both were amended 2026-09-10 to remove the trigger. A reader visiting ADR-270 or ADR-272 cannot determine from the referencing roadmaps' own text what decision each record makes, because the descriptions differ by file and none includes the ADR's own § Decision verbatim.",
+      "file": "agents/roadmaps/road-to-delivery-for-every-host.md"
+    },
+    {
+      "finding_id": "66f01da4b63e",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Five findings in review `typed-grants-platform-anchor` record branch-committed defects on a file already merged to main",
+      "detail": "`agents/evidence/reviews/typed-grants-platform-anchor.findings.md` (scope hash `2692d657…`, diff `2ea42016…`, reviewed 2026-09-10) reports 12 findings, 11 fixed, 1 accepted-risk. The header records `diff: 2ea42016ea0776da426f4218f2350fc2af6f4ac2` as the reviewed commit. Findings 1-5 are marked `fixed | 217139b67`, and each describes a defect (NON_NEGOTIABLE_FLOOR missing selectors, non-finite minimum_approving_reviews, fnmatch pattern gaps, unpaginated rulesets call, unknown-field admission). But `217139b67` is not reachable from `2ea42016e` (the diff reviewed) — it is a LATER commit on the same branch or on main. So the findings describe defects present at review time and 'fixed' by a commit that post-dates the reviewed state, meaning the reviewed commit `2ea42016e` contains at least 5 critical/high defects the review found and the diff never corrected. If `217139b67` merged before the review completed, the 'fixed' statuses are correct but the `diff:` header is stale; if the review completed first, the diff is correct and the defects reached main unfixed.",
+      "file": "agents/evidence/reviews/typed-grants-platform-anchor.findings.md"
+    },
+    {
+      "finding_id": "bcefd0d218ab",
+      "severity": "low",
+      "kind": "style",
+      "title": "Blocker `pack-size-budget-preexisting-overage` relocated with superseded measurements inline rather than in a supersession note",
+      "detail": "The blocker in `road-to-the-packed-payload-cap.md` is relocated from `road-to-a-graph-that-is-shipped` with its original text preserved verbatim 'where it was correct'. Three measurements (9.8216 MB at `04a9af594`, 10.3087 MB at `3969c8b96`, 12.140 MB at `e7a7a68d4`) are inlined in the `What to do` list, each dated, and a note says 'The two readings above measure the OTHER surface' because `built_surface_enforcement_2026_08_30` changed what the gate compares. But the blocker also records its 2026-09-10 resolution at the top, and § Corrections carried in lists 'two statements … measurably wrong'. A reader scrolling the `What to do` section sees three figures with dates but no SUPERSEDED markers, and must read to the end of the blocker (past the resolution timestamp) to learn that all three are historical and the meaningful figure is the 10.5078/12.4541 pair in the resolution. Inline dating is present, but a `[SUPERSEDED 2026-09-10]` prefix on each stale figure would make the chronology unambiguous without requiring the reader to parse three paragraphs of correction notes.",
+      "file": "agents/roadmaps/archive/road-to-the-packed-payload-cap.md"
+    },
+    {
+      "finding_id": "165b8f5a6dad",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Unbacked '202 commands' claim in architecture.md",
+      "detail": "docs/architecture.md:158 now claims '202 commands' but diff shows two chat-history commands removed (204→202). CLAIMS.md:394 backs '202' via check_artefact_count_messaging, but that's an exec: reference meaning it was verified separately. The diff itself (command-flows.md, catalog.md) shows the retirement but no new count verification is visible in the PR diff. The claim may be true but this PR does not demonstrate the backing.",
+      "file": "docs/architecture.md"
+    },
+    {
+      "finding_id": "6b489173d6e7",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Unbacked '121 guidelines' claim in architecture.md",
+      "detail": "docs/architecture.md:158 claims '121 guidelines' (up from 119). catalog.md diff shows two new guideline entries (design-fidelity-routing, design-reconciliation) which arithmetically supports +2. However, no gate output or test assertion in this diff verifies the 121 count. The claim rests on inference from the diff, not on a backing execution.",
+      "file": "docs/architecture.md"
+    },
+    {
+      "finding_id": "46ffe150e5cb",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "145 settings keys claim potentially stale or unbacked",
+      "detail": "docs/contracts/settings-classes.md table (lines ~250, ~372) now shows Total=145 (was 142). The note says it 'rose on 2026-09-08' from continuity.auto_record, then 'rose on 2026-09-09' from design.approximation.* keys (3 keys). 142+3=145 arithmetically, but the prose implies the 2026-09-08 rise was the move to 142, so the +3 would be a second rise. No lint_settings_classes output in the diff confirms 145. The number may be correct but is not backed by a gate run visible in this PR.",
+      "file": "docs/contracts/settings-classes.md"
+    },
+    {
+      "finding_id": "0ee2e24bbe1e",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Inconsistent present/past tense in hot_context_hook loss-class description",
+      "detail": "docs/contracts/loss-classes.md lines ~53-59 describe hot_context_hook in past tense ('dropped', 'was gone', 'retired on 2026-09-09') but the section heading and lead paragraph are present-tense. The correction note clarifies the transform was retired, but the heading '### hot_context_hook — ephemeral-lossy (retired 2026-09-09)' should probably be in past or explicitly marked historical to avoid confusion.",
+      "file": "docs/contracts/loss-classes.md"
+    },
+    {
+      "finding_id": "bf7e911df33d",
+      "severity": "low",
+      "kind": "style",
+      "title": "Verbose correction history in roadmap files obscures current state",
+      "detail": "agents/roadmaps/road-to-delivery-for-every-host.md and road-to-typed-grants-that-persist.md contain multiple layers of 'UPDATE 2026-09-09', 'CORRECTED 2026-09-10', 'superseded reading' blocks that make it hard to locate the current status. While the provenance is valuable, consider a summary-at-top pattern or collapsible sections for historical corrections.",
+      "file": "agents/roadmaps/road-to-delivery-for-every-host.md"
+    },
+    {
+      "finding_id": "db7810e59620",
+      "severity": "critical",
+      "kind": "security",
+      "title": "Ratification gate runs HEAD's own workflow file, trust boundary incomplete",
+      "detail": "docs/contracts/ratification-artifact.md §Trust boundary states the gate code comes from base revision (good) but the workflow INVOCATION is in the candidate branch (bad). A PR can delete the step calling check_kernel_edit_ratified and the job still reports green, bypassing the gate. The round-2 refusal is recorded but the defect remains open. The CI step at .github/workflows/consistency.yml:811-825 is editable by the PR being judged.",
+      "file": "docs/contracts/ratification-artifact.md",
+      "status": "accepted_risk",
+      "rationale": "The defect is real and not closed at this head. .github/workflows/consistency.yml:799-825 is the only CI invocation of the ratification gate; it materialises the base sha in a detached worktree and runs THAT copy (:813-816), so the judging code is base-controlled — but the step that decides whether to run lives in the candidate branch, and the step sits inside job `consistency` (:93-94), which is the single required context in src/config/platform-anchor.json:14-16. Since a required check pins a job name and not its steps, deleting the step leaves the context green; src/scripts/_lib/platform_anchor.ts:56-65 states this in its own words and adds that the module does not close it. RISK CARRIED: a candidate branch can remove its own ratification step without the required context noticing. WHY ACCEPTABLE AND BOUNDED: consistency.yml is itself on the gate's watch list (check_kernel_edit_ratified.ts:104, rationale :96-102 — 'One more level, not an anchor'), so a PR deleting the step edits a gated path and must itself carry a ratification artifact; the block_kernel_rule_writes tool-call deny is retained ALONGSIDE the gate rather than retired (refused 2/2 in round 2, docs/contracts/ratification-artifact.md:81-96); and blocker `ratification-platform-anchor` is recorded open at agents/roadmaps/road-to-typed-grants-that-persist.md:394-396. WHAT WOULD CHANGE IT: an owner wiring the anchor into CI, or GitHub gaining step-level required checks. One correction to the finding: the contract has no 'Trust boundary' heading — the substance is at :81-96 and :98-132.",
+      "verified_by": "grep -rn 'check_kernel_edit_ratified' .github/workflows/ taskfiles/; sed -n '780,826p' and '93,95p' .github/workflows/consistency.yml; sed -n '56,65p' src/scripts/_lib/platform_anchor.ts; sed -n '86,120p' src/scripts/check_kernel_edit_ratified.ts; sed -n '81,96p' docs/contracts/ratification-artifact.md; sed -n '394,396p' agents/roadmaps/road-to-typed-grants-that-persist.md"
+    },
+    {
+      "finding_id": "13a9cceea4f8",
+      "severity": "high",
+      "kind": "security",
+      "title": "Platform anchor gate has no CI enforcement, pre-push only",
+      "detail": "docs/contracts/ratification-artifact.md § Platform anchor states check_platform_anchor runs pre-push (taskfiles/ci-fast.yml) but NOT in CI because the 'administration' token scope does not exist for GITHUB_TOKEN. So kernel/governance changes pushed without 'task preflight' reach main unchecked. The gate is real but not in the enforcement path for every commit.",
+      "file": "docs/contracts/ratification-artifact.md",
+      "status": "accepted_risk",
+      "rationale": "Directly checkable and confirmed: NO workflow invokes check_platform_anchor. The only mention under .github/workflows/ is a comment at rule-backstops.yml:612 saying it is NOT wired there; the sole invocations are taskfiles/ci-fast.yml:157 (the preflight / pre-push chain) and :2096. The contract already says exactly this at docs/contracts/ratification-artifact.md:492 — the gate runs pre-push and not in CI because the rulesets endpoint needs a token scope a workflow GITHUB_TOKEN cannot carry — and src/config/ci-local-parity.yml:278-311 records it as local_only, class token-scope-unavailable, with the measurement (administration: read was tried in rule-backstops.yml on 2026-09-10 and actionlint rejected it as an unknown permission scope), the three rejected escapes, and the exit condition: a PAT in a repository secret carrying administration: read, then the workflow step. RISK CARRIED: a kernel or governance push that bypasses `task preflight` reaches main with the platform state unmeasured. WHY ACCEPTABLE: wiring a fail-closed gate with an unauthorised token would red every kernel PR for a reason unrelated to the platform's state. NOTE: this is the same defect as 3149039a068c at a second location — one risk, two finding ids. UNVERIFIABLE HERE: the live platform state needs administration: read, which this pass did not have, so every statement about current rulesets is quoted from the dated 2026-09-10 reading rather than measured — which is itself the argument for accepted_risk over fixed.",
+      "verified_by": "grep -rn 'check_platform_anchor' .github/workflows/ taskfiles/ Taskfile.yml; sed -n '483,494p' docs/contracts/ratification-artifact.md; sed -n '270,312p' src/config/ci-local-parity.yml"
+    },
+    {
+      "finding_id": "d56c9b1e11a4",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "ADR-272 claims 25,375 tok ceiling but no gate enforces it",
+      "detail": "docs/decisions/ADR-272 sets rules bucket ceiling at 25,375 tok (superseding 20,000). § Consequences openly states 'The rules bucket now carries a ceiling nothing enforces deterministically.' The number is prose in a roadmap, not config. A later change could grow the bucket unchecked. This is disclosed, not hidden, but it means the headline '25,375' is aspiration not enforcement.",
+      "file": "docs/decisions/ADR-272-rules-bucket-ceiling-superseded-at-25375.md"
+    },
+    {
+      "finding_id": "660f2380deae",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "dist/router.json trigger for design-fidelity missing .dc.html pattern in source",
+      "detail": "dist/router.json shows design-fidelity trigger 'file_pattern: *.dc.html' but the corresponding rule source (implied by roadmap step 2.5) was supposed to add this pattern. The diff does not show src/rules/design-fidelity.md being edited to add .dc.html to its triggers. The router.json is generated, so the source must have changed, but it's not in the diff. Possible stale dist/ or the pattern was added elsewhere.",
+      "file": "dist/router.json"
+    },
+    {
+      "finding_id": "033081080fa5",
+      "severity": "low",
+      "kind": "style",
+      "title": "Multiple 'HUMAN REVIEW REQUIRED' banners could be consolidated",
+      "detail": "Several ADRs (270, 272, ratification-artifact) carry similar 'HUMAN REVIEW REQUIRED' or trust-limitation warnings. Consider a canonical banner include or at least identical wording to avoid subtle divergence in the warnings' scope.",
+      "file": "docs/contracts/ratification-artifact.md"
+    },
+    {
+      "finding_id": "bd95f2b056b4",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Two command-count numbers in same document (204→202 and 202)",
+      "detail": "docs/command-flows.md line 10 says '202 commands' but the opening summary line 9 was not updated in the diff (it would still show 204 if it existed). The diff only shows the table and catalog updates. Verify docs/command-flows.md line ~10 actually reads 202 in HEAD, not an inconsistency.",
+      "file": "docs/command-flows.md"
+    },
+    {
+      "finding_id": "e316a744660c",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Standing payload 'now 138,413 against 138,490' — no gate run in diff proves this",
+      "detail": "agents/roadmaps/road-to-delivery-for-every-host.md step 4.4 UPDATE 2026-09-10 states 'the measured total re-read at 7bf325f3b is 138,413 against 138,490'. That commit is in the range but no check_preamble_payload_budget output is in the PR diff. The claim is plausible (within the 77 tok headroom mentioned) but not demonstrated by a gate run in *this* PR.",
+      "file": "agents/roadmaps/road-to-delivery-for-every-host.md"
+    },
+    {
+      "finding_id": "32bb36462b11",
+      "severity": "high",
+      "kind": "claim",
+      "title": "Feature count claim '202 commands' contradicts measured count in packaging diff",
+      "detail": "Package metadata and multiple documentation files claim '202 commands' (package.json:70, docs/featured-skills.md:96, docs/getting-started-by-role.md:5, docs/getting-started.md:179). The release range analysis shows command removals (`chat-history` and `chat-history-import` deleted, see diff hunks in src/domains/meta/chat-history/), and the pack manifest for `memory` reports artefact_count dropping from 9 to 7 (src/packs/memory/pack.yaml:2, commands_tokens 12841→10396). However, the packaging diff shows NO OTHER command additions or command-count-affecting changes that would net to exactly 202. The claim appears in the release packaging (released state) but the diff does not support the arithmetic: two commands removed with no offsetting additions visible in touched files. Either the count is stale from a prior state, or commands were added/removed outside the diff context provided. Cross-reference: src/flows/surface-map.yaml removes the two chat-history entries (diff lines 169-171) but adds no commands in their place within the diff context.",
+      "file": "package.json",
+      "status": "false_positive",
+      "rationale": "The count is correct and the cited location does not carry the claim. package.json contains no occurrence of the string '202' at all — package.json:70 is '!dist/**/*.map', a files[] exclusion, not a feature count. Re-derived the real figure two independent ways at this head: find dist/agent-src/commands -name '*.md' | wc -l = 202 and find src/domains -name 'command.md' | wc -l = 202. The repository's own gate agrees and is green: check_artefact_count_messaging prints 'Canonical: skills=299 commands=202 rules=120 guidelines=121 personas=29' and reports all artefact-count prose in sync. The finding reasoned from a diff rather than from the tree — 202 is the post-retirement count, so the two removed chat-history commands need no offsetting additions.",
+      "verified_by": "grep -n '202' package.json -> no match; sed -n '70p' package.json -> '!dist/**/*.map'; find dist/agent-src/commands -name '*.md' -type f | wc -l -> 202; find src/domains -name 'command.md' | wc -l -> 202; ./scripts-run src/scripts/check_artefact_count_messaging -> green, commands=202"
+    },
+    {
+      "finding_id": "696025ee02bf",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Continuity writer 'auto_record: on' default claim vs. documented behavior gap",
+      "detail": "src/scripts/_lib/continuity_writer.ts:43 and src/config/agent-settings.template.yml:763 both state the default is NOW 'on' since 2026-09-10, and the template file shows `auto_record: \"on\"`. However, the module docstring (line 6-8) says 'Since step 3.2 (2026-09-10) this module is armed by default and that advisory is gone; the verb is retained as an explicit affordance, not as the normal path.' This creates an implicit claim that the feature is production-default. The risk: if the auto-writer fails silently (it's a Stop-slot concern that never blocks), users may assume continuity happens automatically when in fact no record was written. The 'fail-closed' contract (lines 49-72) now rests on `settings_layer_states` detecting a malformed layer, but that check was added reactively (per the comment) and the original template-default mechanism is gone. No *current* defect is visible, but the claim 'armed by default' + 'fails closed' needs a mechanical test that a broken settings file actually disarms the writer, not just documentation stating it does.",
+      "file": "src/scripts/_lib/continuity_writer.ts"
+    },
+    {
+      "finding_id": "3149039a068c",
+      "severity": "high",
+      "kind": "security",
+      "title": "Platform anchor verification has no CI invocation — gate exists but never runs in enforcement context",
+      "detail": "src/scripts/_lib/platform_anchor.ts is a 1000+ line platform-anchor verifier for ratification mechanism trust (checks GitHub branch protection rulesets). The module header (lines 8-10) states it 'does NOT establish that the artifact was reviewed by anyone the repository insisted on' and cites an owner ruling removing approval requirements. However, the *existence* of the check implies it runs somewhere. Searching the diff: src/config/ci-local-parity.yml:278-311 explicitly documents `check_platform_anchor` as 'local_only' because 'the permission does not exist' (administration:read scope unavailable to GITHUB_TOKEN), and states the gate 'runs in taskfiles/ci-fast.yml'. But the diff shows NO ci-fast.yml changes, and the entry says it would freeze merges repository-wide if wired into CI with an unauthorized token. The consequence: a 1000-line verification module with a non-negotiable floor (NON_NEGOTIABLE_FLOOR at line 106) and failure-closed posture (line 344) that *cannot run in CI* and therefore never enforces in the merge-blocking context where ratification matters. The local-only note says the fix is 'a PAT in a repository secret' — but that is not wired in this release. An attacker (or legitimate-but-unratified change) bypasses the check entirely by opening a PR, because the check never runs there. This is a *structural* gap, not a vulnerability in the verifier's logic.",
+      "file": "src/scripts/_lib/platform_anchor.ts",
+      "status": "accepted_risk",
+      "rationale": "Same underlying fact as 13a9cceea4f8 and confirmed the same way: check_platform_anchor has no .github/workflows/ invocation, so the 1053-line verifier (src/scripts/_lib/platform_anchor.ts, NON_NEGOTIABLE_FLOOR at :120, not :106 as cited) never runs in the merge-blocking context. src/config/ci-local-parity.yml:278-311 carries the reason, the rejected escapes and the exit condition, and blocker ratification-platform-anchor is open at road-to-typed-grants-that-persist.md:394-396. The finding's framing overstates the reach in one respect worth recording: the check that gates the ARTIFACT — check_kernel_edit_ratified — DOES run in CI at consistency.yml:799-825, so an unratified kernel edit is not bypassed by opening a PR; what the missing wiring leaves unmeasured is the PLATFORM configuration the trust argument leans on, a weaker claim than 'never enforces'. Two sub-claims are stale: check_platform_anchor IS in taskfiles/ci-fast.yml (:157, :2096), and the anchor no longer reds — docs/contracts/ratification-artifact.md:315-341 records it exiting 0 with PASS_WITH_ACCEPTED_RISK after the 2026-09-10 owner ruling and the bounded strict_required_status_checks waiver.",
+      "verified_by": "grep -rn 'check_platform_anchor' .github/workflows/ taskfiles/; wc -l src/scripts/_lib/platform_anchor.ts -> 1053; grep -n 'NON_NEGOTIABLE_FLOOR' src/scripts/_lib/platform_anchor.ts -> decl at :120; grep -c 'check_platform_anchor' taskfiles/ci-fast.yml -> 2; sed -n '315,341p' docs/contracts/ratification-artifact.md"
+    },
+    {
+      "finding_id": "3bb27983f3a4",
+      "severity": "critical",
+      "kind": "security",
+      "title": "Ratification artifact gate has no mechanical enforcement that it runs before merge",
+      "detail": "src/scripts/_lib/ratification_artifact.ts (new file, 278 lines) implements ADR-268 §4's control: an agent may modify kernel rules but may not ratify its own authority increase. The module reads a YAML artifact in agents/evidence/ratifications/, checks proposed_by ≠ reviewed_by, requires provider diversity, checks verdict ∈ {ratified, confirmed-non-expanding}, etc. The docstring (lines 31-33) states 'check_kernel_edit_ratified' uses this to red a PR. However: (1) The platform_anchor finding above shows that gate is local-only and does not run in CI. (2) Even if it ran, the diff shows NO branch-protection or required-status-check configuration ensuring it's *required* before merge. src/config/platform-anchor.json:16 lists `required_status_check_contexts: [\"Sync + Generate Tools Consistency\"]`, and the header of platform_anchor.ts (lines 56-61) says the ratification gate is a *step inside* that job — but GitHub required checks pin the *job* name, not steps, so deleting the step leaves the job green. The module's own comment (line 57): 'a candidate branch may delete the step and the job still reports the same context, green.' (3) The module is pure (no filesystem, no network) so it cannot self-enforce. (4) The new ci-local-parity.yml entry for check_platform_anchor says it 'runs in taskfiles/ci-fast.yml' but is never wired into .github/workflows/. Net: a 278-line ratification control with an 'Iron Law' (line 189) that an attacker bypasses by opening a PR without the artifact, because nothing *requires* the check to pass. The diff adds the verification logic but not the enforcement wiring.",
+      "file": "src/scripts/_lib/ratification_artifact.ts",
+      "status": "accepted_risk",
+      "rationale": "The headline claim survives: nothing mechanically requires the ratification gate's STEP to have run, because GitHub pins the job context and not its steps — src/scripts/_lib/platform_anchor.ts:56-65 says so and declines to close it, and the round-2 review refused retiring the deny over exactly this. So the risk is real, correctly described, and deliberately carried with the deny kept alongside (docs/contracts/ratification-artifact.md:81-96) plus the open blocker at road-to-typed-grants-that-persist.md:394-396. Two of its four sub-claims are wrong and the first is load-bearing: (1) is false — check_kernel_edit_ratified is NOT local-only, it runs in CI at consistency.yml:799-825 with base-revision code; (2) is false as stated — the required-status-check configuration IS committed, at src/config/platform-anchor.json:14-16, naming the very job that carries the step, which is why the gate is platform-required transitively. The finding also misses the recorded partial mitigation: consistency.yml is on the gate's own watch list (check_kernel_edit_ratified.ts:104), so a PR deleting the step edits a gated path and must itself carry a ratification artifact. Recorded as accepted_risk rather than false_positive because the residual circularity it names is genuine — the base gate runs only because the head invokes it — and adjudicating that away on the strength of two wrong sub-claims would discard a live governance gap. OPEN QUESTION THE CONTRACT DOES NOT SETTLE: whether a compound finding is adjudicated on its conclusion or on its reasoning.",
+      "verified_by": "sed -n '56,65p' src/scripts/_lib/platform_anchor.ts; sed -n '799,825p' and '93,95p' .github/workflows/consistency.yml; grep -n 'required_status_check_contexts' -A2 src/config/platform-anchor.json; sed -n '94,120p' src/scripts/check_kernel_edit_ratified.ts"
+    },
+    {
+      "finding_id": "b2b960c44a38",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "design_tolerance.ts ships metric + reporting but no threshold, claimed as 'measurement half shipped' — but tolerance.color/length are used in reconcileValue",
+      "detail": "src/scripts/_lib/design_tolerance.ts header (lines 6-76) states: council decided to ship the METRIC (OKLab ΔEOK for color, absolute px for length) but NO THRESHOLD — both `design.tolerance.color` and `.length` ship `null`, meaning 'preserve and report', never 'reconcile freely'. The reasoning: no evidence supports a number, so shipping one would be 'a guess acquiring authority of a default'. However, the same file exports `reconcileValue()` (line 219) which reads `config.color` and `config.length` and returns `outcome: 'reconciled'` when `distance <= threshold` (line 263). The function is called by conformance_report.ts (new file, line 232). So the *behavior* is wired (a value inside tolerance CAN be reconciled) even though the *threshold* ships null. The claim 'behavioral half deliberately not shipped' is contradicted by the presence of the reconciliation branch in shipped code. The safety: the default config is `{enabled: false, color: null, length: null}`, so the branch is unreachable in a default install. But a consumer who sets `enabled: true` without setting thresholds will hit the null-check at line 261 and fall through to 'preserved-mechanism-off', not reconcile. This is correct fail-safe behavior, but the *claim* in the header ('behavior deliberately not shipped') is false — the behavior is shipped, just gated behind two settings. Recommend: reword header to 'behavior ships but is disabled by default and requires both enabled:true AND a configured threshold to activate'.",
+      "file": "src/scripts/_lib/design_tolerance.ts"
+    },
+    {
+      "finding_id": "f26c8cbdd2ef",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "Pack size baseline raised 9.1→11.5 MB but 'headroom 9.43%' claim rests on unbuilt measurement while gate sees built payload",
+      "detail": "src/config/pack-size-budget.json:10-12: max raised from 9.1 to 11.5, last_measured 10.509 (unbuilt tree per baseline_note_2026_09_10), and the note claims '9.43% headroom'. But baseline_note line 'MEASURED under this file's own documented conditions (npm pack --dry-run --ignore-scripts, clean unbuilt worktree, which is what check_pack_size reads)' contradicts the enforcement reality: src/config/pack-size-budget.json:88-104 (built_surface_enforcement_2026_08_30) states the gate NOW reads `payloadIsBuilt` (keyed on dist/cli/**) and routes a BUILT payload to a different ceiling. The later note built_surface_measurement_2026_09_10:19 shows 'built: {packed_mb: 12.4548, ...}', which is 1.95 MB over the unbuilt 10.509 figure. The unbuilt max is 11.5; the built measurement is 12.45; that's 0.95 MB OVER, not 9.43% under. The note at line 71 even warns: 'headroom is sized on one tree state ... A workstation that has run the test suite typically carries dist/mcp and dist/ui but not dist/cli — and that tree is still classified UNBUILT, so it is judged against `max` while carrying 0.601 MB the unbuilt reading does not include. Real headroom in that state is about 3.7%, not the 0.99 MB the reset was sized for.' This is a *documented* gap, but the top-level claim '9.43% headroom' is stated as if it's the enforced reality when in fact the built path has separate (and tighter) headroom. The risk: a developer adds 0.5 MB of source (within the stated 9.43% margin), the built artifact crosses 11.5 MB, and the gate reds on a figure the headroom claim did not account for. Recommend: state headroom for BOTH surfaces, or state 'unbuilt headroom 9.43%; built surface headroom see built_surface_measurement_2026_09_10'.",
+      "file": "src/config/pack-size-budget.json",
+      "status": "false_positive",
+      "rationale": "The finding's arithmetic is the exact category error the gate was changed to prevent, and its own quoted sentence contains the refutation. A BUILT payload is never compared against `max`. src/scripts/check_pack_size.ts:615-650 branches on payloadIsBuilt and judges a built payload against recordedBuiltPackedMb(budget) * (1 + regression_pct/100) = 12.4548 x 1.10 = 13.700, reserving max: 11.5 for the unbuilt path; the budget's own built_surface_enforcement_2026_08_30 note says the same and adds that it does not gate the built surface against an absolute cap — the built surface gets a regression line only. So '12.45 is 0.95 MB OVER' compares two surfaces the code keeps apart, and the predicted failure does not occur: run on this worktree, which carries dist/cli and is therefore BUILT, the gate reads 13.036 MB and passes. The recommendation is also already satisfied — the partial-build hazard is recorded at src/config/pack-size-budget.json:106 (headroom_is_sized_on_one_tree_state, real headroom about 0.39 MB, roughly 3.7%) with its own revisit-if. The finding quoted that note as evidence for a claim the note does not support.",
+      "verified_by": "sed -n '610,662p' src/scripts/check_pack_size.ts; python3 -c on src/config/pack-size-budget.json for built_surface_enforcement_2026_08_30 and built_surface_measurement_2026_09_10.built.packed_mb -> 12.4548; ls dist/cli | head -3 -> built payload present; ./scripts-run src/scripts/check_pack_size -> green at 13.036 MB"
+    },
+    {
+      "finding_id": "166760ff828b",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "ADR-274 'grace_end_date deleted' record says expiry was never enforced, but does not update the milestone that references it",
+      "detail": "docs/decisions/ADR-274-the-grace-ceiling-expiry-was-never-enforced-and-the-date-is-deleted.md (new file, 289 lines) records that `ci_delivery.grace_end_date: \"2026-11-10\"` was deleted because no code enforced it (lines 18-25 reproduce the grep: only an echo and a type annotation read it). The record's own review_trigger (line 30) says 'Also reopened when ADR-264's third review_trigger clause is repaired or that record is superseded — this record is the tracked carrier for that unfirable trigger'. However, src/config/preamble-payload-budget.json:84 (in this diff) still references the milestone: 'target_schedule.milestones ... carries 102,520 by 2026-11-10 with an `on_miss` clause' and the note says '**That clause is prose with no reader:** grep -rn \"target_schedule\" and grep -rnw on_miss over *.ts *.js *.yml *.yaml *.sh outside dist/ return 0 hits, so nothing publishes anything on that date either.' So the ADR deletes the date from `ci_delivery.grace_end_date` but leaves `target_schedule.milestones` pointing at 2026-11-10 with an on_miss clause that has no consumer. The ADR says (line 145) 'Those milestones are untouched by this record: they are owner-set, they were never the enforcement surface, and the first of them will be missed and published on schedule.' But *how* will it be published if `on_miss` has no reader? This is not a defect (the date was already unenforced), but it's a half-correction: the ADR removes one unenforced date reference and documents that a second unenforced date reference exists, without removing or repairing it. Recommend: either remove the milestone or add a reader for on_miss so 'published on schedule' is true.",
+      "file": "docs/decisions/ADR-274-the-grace-ceiling-expiry-was-never-enforced-and-the-date-is-deleted.md"
+    },
+    {
+      "finding_id": "70269f48cea6",
+      "severity": "low",
+      "kind": "style",
+      "title": "Artifact maturity module (artifact_maturity.ts) has comprehensive docstrings but no usage example in the diff",
+      "detail": "src/scripts/_lib/artifact_maturity.ts is a new 242-line module resolving spec.maturity ('low' | 'finished') from user signal / declaration / inference / default. The header (lines 1-40) is excellent: explains the two-valued choice, the resolution ladder, the default ('finished'), why it's not the same as ReferenceMaturity, and the guard preventing 'counting rectangles in an image'. However, the diff shows NO call site for `resolveArtifactMaturity()` — the conformance_report.ts and design_tolerance.ts modules added in this release do not import it. The module is self-contained and testable, but without a usage example in the release diff, a reviewer cannot verify it's wired into the design-fidelity flow it was built for. The risk is low (it's a pure function, worst case it's dead code), but for a 242-line addition to a 'design fidelity' workflow, showing at least one call site would demonstrate integration. Recommend: if this is used, show the call; if it's infrastructure for a future step, state that in the header.",
+      "file": "src/scripts/_lib/artifact_maturity.ts"
+    },
+    {
+      "finding_id": "de985254efa7",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Conformance report module claims 'pixel similarity is not a dimension' but does not explain how a port is judged complete without it",
+      "detail": "src/scripts/_lib/conformance_report.ts (new file, 403 lines) builds a per-dimension conformance report for a design port: structure, values, behaviour, responsive, icons, carrier. Line 27: 'A GREEN PIXEL DIFF ALONE CANNOT PRODUCE A PASS, and that is enforced by construction: pixel similarity is not one of the dimensions below.' Line 395 in formatConformanceReport: 'pixel similarity is not a dimension here and cannot produce a pass on its own.' The claim is that pixel similarity is excluded *by design* to prevent a port from passing on visual fidelity alone while dropping an interaction or using the wrong tokens. However, the module provides no guidance on what DOES constitute a complete port if pixels are excluded. The six dimensions are static checks over markup text (lines 28-30), so they catch 'deviations that leave a textual trace' but NOT 'a deviation that is only visible when rendered' (line 30). Example: a port that has correct structure/values/behavior/responsive/icons/carrier but renders at the wrong size due to a viewport meta tag, or uses the wrong blend mode, would pass all six dimensions. The module says (line 317) 'Where a rendered comparison is available it belongs beside this report, not inside it' — but it does not specify how the two are combined, or whether a pixel diff failure can override a green conformance report. Without that, the claim 'enforced by construction' is incomplete: construction enforces that pixels cannot produce a *pass*, but it does not enforce how they produce a *fail*. Recommend: add a combining rule, e.g. 'conformance is necessary but not sufficient; a passing report + a failing pixel diff is still a fail'.",
+      "file": "src/scripts/_lib/conformance_report.ts"
+    }
+  ]
+}
