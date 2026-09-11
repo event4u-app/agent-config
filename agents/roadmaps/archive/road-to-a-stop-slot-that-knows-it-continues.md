@@ -244,8 +244,24 @@ checkout's, and a fresh-worktree run says so instead of reporting a null.
 
 ### blocker: warn-continuation-on-stop
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution:** AI council 2026-09-12, 2/2 convergent (anthropic + openai, deep
+  depth, blind chairman, three rounds), on the maintainer's standing delegation
+  for this run. Verdict **(a-derived)**: the raw `stop_hook_active` byte exists
+  nowhere — `AGENT_HOOK_CAPTURE_DIR` has never been set, and Claude Code
+  transcripts do not record hook stdin — but the dispatcher drops the two
+  `skip_on_refusal_retry` concerns if and only if
+  `payload.stop_hook_active === true` (`src/scripts/hooks/dispatch_hook.ts:355-366`,
+  `src/scripts/hook_manifest.yaml:921,1126`), so a `stop` invocation missing both
+  **is** a recorded `true`. Both seats accepted the derivation on four stated
+  properties — one-to-one, deterministic, produced by code in this repository,
+  limits stated — and both required that it be reported as *derived, not
+  directly captured*. Evidence artifact:
+  `agents/evidence/analysis/stop-slot-warn-continuation-2026-09-12.md`. Contract
+  updated at `docs/contracts/hook-architecture-v1.md` § Exit-code semantics,
+  from "not established by this tree" to a measured-at-n=1 statement pinned to
+  `9a0216f4c`.
 - **Blocks:** nothing in this roadmap — Phases 1–5 ship regardless. It blocks
   only the stronger sentence Phase 1.2 declines to write, and it is the same
   measurement `road-to-a-question-that-survives-the-turn`'s open blocker
@@ -269,8 +285,19 @@ checkout's, and a fresh-worktree run says so instead of reporting a null.
 
 ### blocker: continue-false-precedence
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution:** AI council 2026-09-12, 2/2 convergent (same session as
+  `warn-continuation-on-stop`). Verdict **(b)** — recorded non-adoption, not a
+  precedence rule. Both seats reasoned that a universal precedence rule and a
+  single-emitter invariant would be speculative for a primitive the suite
+  neither emits nor has a demonstrated need for: verified at HEAD, `grep -rn
+  stopReason src/scripts/hooks/` is empty, no concern emits `continue: false`,
+  and the string appears nowhere in `docs/`. The row landed in
+  `docs/contracts/hook-architecture-v1.md` § Exit-code semantics and is dated
+  rather than principled, so a future emitter must reopen it and specify
+  precedence, emitter ownership, supported-host behaviour, and the use case
+  existing verdicts cannot express.
 - **Blocks:** nothing in this roadmap — the subtractive fix the supplied source
   proposes (end the extra turn instead of appending a reminder to it) is out of
   scope here and cannot start until this is decided.
