@@ -291,6 +291,11 @@ for wf in evaluator-umbrella consumer-matrix release-validation; do
   grep -q "workflow_dispatch" ".github/workflows/$wf.yml" \
     || { echo "stale: $wf.yml no longer accepts workflow_dispatch"; exit 1; }
 done
+# step 7 exists and still names the artifact it consumes:
+grep -q "settle_findings_ledger" src/scripts/release.ts \
+  || { echo "stale: the findings-ledger step is gone from release.ts"; exit 1; }
+grep -q "self-review-findings" .github/workflows/self-review-gate.yml \
+  || { echo "stale: step 7 has no artifact to ingest"; exit 1; }
 ```
 
 A written-steps-only **dry run** (cut a no-op release following ONLY this doc,
