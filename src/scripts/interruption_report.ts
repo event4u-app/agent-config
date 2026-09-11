@@ -495,8 +495,14 @@ export function buildReport(root: string, windowRequested: number): Report {
     const notes: string[] = [];
     if (ledger.length === 0) {
         notes.push(
-            'interruptions.jsonl is empty or absent — the contact axis has no observations yet. ' +
-                'The Phase 0 concern records on `stop`; a baseline needs sessions to have run since it landed.',
+            'interruptions.jsonl is empty or absent — the contact axis has no observations ' +
+                'IN THIS CHECKOUT. The Phase 0 concern records on `stop`; a baseline needs ' +
+                'sessions to have run since it landed. Before reading this as the instrument ' +
+                'having no data: `agents/runtime/` is gitignored and therefore per-checkout, ' +
+                'so a fresh worktree always reports zero here however full the ledger is ' +
+                'elsewhere. Re-run with `--root <path-to-a-checkout-with-runtime-state>` ' +
+                'before recording an absence — a reading taken in an empty worktree was once ' +
+                'parked as a measured null while the ledger already held three weeks of records.',
         );
     }
     if (bySession.size === 0) {

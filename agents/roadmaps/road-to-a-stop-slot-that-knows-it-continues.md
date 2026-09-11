@@ -210,7 +210,7 @@ obligation written in the rule it cites, and no roadmap in the tree describes
 
 ## Phase 5 — The measurement that was never empty
 
-- [ ] **5.1 Correct the contact-axis reading in the parked measurement roadmap.**
+- [x] **5.1 Correct the contact-axis reading in the parked measurement roadmap.**
       `agents/roadmaps/later/road-to-residual-interruption-measurement.md:39-44`
       records a 2026-09-06 run reporting `interruptions.jsonl is empty or
       absent`, `n=0` on the contact axis. `agents/runtime/` is gitignored and
@@ -223,7 +223,7 @@ obligation written in the rule it cites, and no roadmap in the tree describes
       the reading rule: this instrument is measured with `--root` at a checkout
       with live runtime state, never from a fresh worktree.
       verify: `grep -c 'worktree' agents/roadmaps/later/road-to-residual-interruption-measurement.md` returns at least 1 and the file no longer presents `n=0` as the contact-axis state.
-- [ ] **5.2 Make the report say why its ledger is empty.**
+- [x] **5.2 Make the report say why its ledger is empty.**
       `src/scripts/interruption_report` prints `interruptions.jsonl is empty or
       absent` and stops, which reads as "the instrument has no observations" and
       was recorded as exactly that. When the ledger is absent, add one line
@@ -295,27 +295,27 @@ checkout's, and a fresh-worktree run says so instead of reporting a null.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `docs/contracts/hook-architecture-v1.md` states that the
+- [x] AC-1 — `docs/contracts/hook-architecture-v1.md` states that the
       control-flow effect of an advisory `warn` on `stop` / `subagent_stop` is
       not established by this tree, and names the blocker that would establish
       it; no file in the tree asserts the opposite in either direction.
-- [ ] AC-2 — `src/scripts/hooks/end_review_nudge_hook.ts` no longer carries the
+- [x] AC-2 — `src/scripts/hooks/end_review_nudge_hook.ts` no longer carries the
       string "never blocks THE ACTUAL TURN", and its contract paragraph
       distinguishes refusing from extending.
-- [ ] AC-3 — A fixture in which the transcript tail carries only the
+- [x] AC-3 — A fixture in which the transcript tail carries only the
       block-bearing assistant text and the payload carries the block-free closing
       text produces a `pending-decision` refusal; the same shape with no payload
       field behaves exactly as it does today.
-- [ ] AC-4 — `src/rules/user-interaction.md` carries a third Iron Law stating
+- [x] AC-4 — `src/rules/user-interaction.md` carries a third Iron Law stating
       that a decision handed to the user outlives the turn, and
       `check_always_budget` is green.
-- [ ] AC-5 — No roadmap in `agents/roadmaps/` **asserts** that
+- [x] AC-5 — No roadmap in `agents/roadmaps/` **asserts** that
       `user-interaction` is a kernel rule; the only remaining occurrences of the
       phrase are in this file, each naming it as the false premise it was. And
       `road-to-a-question-that-survives-the-turn`'s
       `user-interaction-third-iron-law` blocker reads `Status: resolved`.
-- [ ] AC-6 — `agents/roadmaps/later/road-to-residual-interruption-measurement.md`
+- [x] AC-6 — `agents/roadmaps/later/road-to-residual-interruption-measurement.md`
       no longer presents `n=0` as the contact axis's state and records that the
       instrument is read with `--root` at a checkout carrying runtime state.
-- [ ] AC-7 — The stop-slot census exists under `agents/evidence/analysis/` with
+- [x] AC-7 — The stop-slot census exists under `agents/evidence/analysis/` with
       one row per bound concern and a stated source per column.
