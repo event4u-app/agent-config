@@ -23,8 +23,8 @@ estate_growth_exempt: >-
   Grows active_roadmaps by one, open_blockers by three, and concern_count by
   exactly one (`review-baseline`, session_start). The three blockers are each a
   decision the source set could not take for itself and none is actionable by an
-  agent: a kernel-rule edit that `src/scripts/hooks/block_kernel_rule_writes.ts`
-  denies at tool-call time; a change to the definition of a pre-registered claim
+  agent: a rule edit believed at authoring time to be kernel-denied (it is not -
+  see the correction under Non-goal); a change to the definition of a pre-registered claim
   in `docs/CLAIMS.md`; and a host-behaviour question only a live session can
   answer, raised by the neutral review of this branch. Recording them is the
   alternative to silently shipping a gate whose rule text, whose measurement
@@ -95,10 +95,17 @@ gate the supplied plan itself calls "an excellent Phase-0 regression gate", and
 nothing above it.
 
 It also does not touch `src/rules/user-interaction.md`. The supplied plan's
-section 5.1 adds a third Iron Law to that file; `user-interaction` is a kernel
-rule, `src/scripts/hooks/block_kernel_rule_writes.ts` denies agent writes to it
-at tool-call time, and the delta is parked as a blocker below rather than
-smuggled into a step.
+section 5.1 adds a third Iron Law to that file, and the delta is parked as a
+blocker below rather than smuggled into a step.
+
+<!-- corrected-from-reproduction 2026-09-11: the reason given here was that
+`user-interaction` is a kernel rule whose write `block_kernel_rule_writes.ts`
+denies. That is false at every HEAD - `src/scripts/_lib/kernel_rules.ts:17-27`
+lists nine ids and this is not among them, and the file is `type: auto` /
+`tier: 3`. The non-goal itself stands as written: the phases did not touch the
+rule. Iron Law 3 landed later, in the blocker-resolution pass, under a council
+decision recorded in `## Blockers`. The false reason is corrected rather than
+the non-goal rewritten, because the non-goal was honoured. -->
 
 ## Phase 0 - Fixtures and the demotion bar, before the detector
 
@@ -427,8 +434,13 @@ telemetry row rather than inferred.
       entries produces no refusal, and neither does a shape whose second entry is
       a tool call carrying no text.
 - [x] AC-3 - `DETECTOR_IDS` in `src/scripts/_lib/turn_end_refusals.ts` carries
-      five ids, and `docs/contracts/turn-end-detector-demotion.md` carries a
-      pre-registered Q1/Q2 bar and sample floor for the fifth.
+      `pending-decision`, and `docs/contracts/turn-end-detector-demotion.md`
+      carries a pre-registered Q1/Q2 bar and sample floor for it.
+      <!-- corrected-from-reproduction 2026-09-11: the criterion said "five ids"
+      and "the fifth". The list carries SIX (`turn_end_refusals.ts:67-74`) and
+      `turn-end-detector-demotion.md:32` says so. The substance held - the id is
+      registered and the bar is at `:138` - so the count was named rather than
+      the criterion re-argued. -->
 - [x] AC-4 - `end_review_nudge_hook` does not fire on a 5-line turn when the
       session baseline recorded 1,771 pre-session non-doc lines, and does fire on
       the unsubtracted count when the baseline's `head_sha` no longer matches.

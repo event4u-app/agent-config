@@ -43,10 +43,11 @@ EVERY REPLY WITH NUMBERED OPTIONS RUNS THE SELF-CHECK. NO EXCEPTIONS.
 SKIPPING IT IS A RULE VIOLATION, NOT A SLIP.
 ```
 
-Mechanical backstop:
+Mechanical backstop for Iron Laws 1 and 2:
 `./scripts-run src/scripts/check_reply_consistency --stdin < draft.md`
-(non-zero exit on any rule below). Self-scan is the primary gate;
-the script is the deterministic safety net.
+(non-zero exit on either). It takes a DRAFT, so it cannot see Iron Law 3,
+which is about a transcript. Self-scan is the primary gate; the script is
+the deterministic safety net.
 
 ## Iron Law 3 — A Pending Decision Survives the Turn
 
@@ -60,9 +61,11 @@ DROPPING AN UNANSWERED BLOCK IS A RULE VIOLATION, NOT A SLIP.
 
 Only the user's own answer discharges it. A later assistant entry in the same
 turn is not an answer, and a turn that ends with the block gone has lost a
-decision nobody took. Mechanically enforced by the `pending-decision` detector
-in `src/scripts/hooks/turn_end_gate_hook.ts`, which refuses the turn-end and
-names the dropped block's option numbers.
+decision nobody took. The `pending-decision` detector in
+`src/scripts/hooks/turn_end_gate_hook.ts` refuses such a turn-end and names the
+dropped block's option numbers — but it binds on `claude`'s `stop` slot alone,
+so everywhere else this law is model-carried and nothing catches a dropped
+block.
 
 ## Question pacing — one decision point per turn
 
@@ -83,16 +86,11 @@ gate ships for it: [`user-interaction-mechanics`](../contexts/communication/rule
 
 ## Mechanics — rationale, failure modes, format details, examples
 
-The "why take a position", position-agnostic clause, format
-specification (neutral block + bolded recommendation line + caveat),
-no-trailing-open-question rule, "what does NOT count" catalog, full
-five-step pre-send self-check, named failure-mode catalog (end-of-turn
-menu, trailing-question hedge, no-preference hedge, multi-block reply,
-…), slip-handling protocol, numbered-options rules, format examples,
-progress indicators, and summary-table patterns all live in
+The rule above is the obligation surface. Everything you look up rather than
+obey — why to take a position, the format spec, the five-step self-check, the
+named failure-mode catalog, slip handling, examples, progress indicators and
+summary patterns — is in
 [`contexts/communication/rules-auto/user-interaction-mechanics.md`](../contexts/communication/rules-auto/user-interaction-mechanics.md).
-The rule above is the obligation surface; the mechanics file is the
-lookup material.
 
 When the user pastes large tool output, logs, JSON, or API responses,
 keep the reply narrow: extract only the relevant fields with targeted

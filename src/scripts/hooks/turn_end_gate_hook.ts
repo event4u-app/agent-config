@@ -762,11 +762,14 @@ export function detectUnverifiedEdit(toolCalls: readonly ToolCall[]): Finding | 
  * produced a SECOND assistant execution with no intervening user message, and
  * that second reply handled the nudge while demoting the open question to a
  * subordinate clause — "bleibt davon unberührt und liegt bei Dir". From the
- * user's side the conversation ended without a question. No existing rule
- * catches this: `user-interaction` Iron Law 1 inspects a reply that HAS an
- * options block, `check_reply_consistency` receives a draft and not a
- * transcript, `active-remediation` governs findings rather than issued
- * decisions, and `no-cheap-questions` guards the opposite direction.
+ * user's side the conversation ended without a question. No rule stated this
+ * when the detector was written: `user-interaction` Iron Law 1 inspects a reply
+ * that HAS an options block, `check_reply_consistency` receives a draft and not
+ * a transcript, `active-remediation` governs findings rather than issued
+ * decisions, and `no-cheap-questions` guards the opposite direction. That gap
+ * is now closed from the other side — `user-interaction` Iron Law 3 states the
+ * continuity obligation, and the refusal below cites it — so this paragraph
+ * records why the detector exists, not a gap that is still open.
  *
  * WHAT IT READS. `assistantTurnTexts` — the assistant texts since the last
  * GENUINE user prompt, with synthetic prompts and sidechain entries already

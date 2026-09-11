@@ -41,6 +41,21 @@ function userEntry(text: string): Record<string, unknown> {
     return { type: 'user', message: { role: 'user', content: text } };
 }
 
+/**
+ * The ordinary Claude Code user entry: a typed prompt with a reminder block
+ * appended. Not an exotic shape — it is the most common one in the store, which
+ * is why a reader that skips it moves the turn boundary on nearly every turn.
+ */
+function userEntryWithReminder(text: string): Record<string, unknown> {
+    return {
+        type: 'user',
+        message: {
+            role: 'user',
+            content: `${text}\n<system-reminder>\nsome injected context\n</system-reminder>`,
+        },
+    };
+}
+
 function toolEntry(name: string, input: Record<string, unknown>): Record<string, unknown> {
     return {
         type: 'assistant',
@@ -173,6 +188,26 @@ describe('detector E over a corpus', () => {
         const c = measure(store, 30);
         expect(c.turns).toBe(2);
         expect(c.turns_multi_text).toBe(0);
+        expect(c.dropped_fires).toBe(0);
+    });
+
+    it('ends the turn on a prompt carrying an appended reminder block', () => {
+        // The gate nulls a user entry only when it has no text block and then
+        // filters with `isSyntheticPrompt`, which matches the marker at the
+        // START. A reader that nulls on the marker appearing ANYWHERE skips the
+        // ordinary prompt, so the turn never resets and two genuine turns merge
+        // into one — detector E then fires on an ask the user answered, while
+        // the denominator it is divided by shrinks at the same time. Both
+        // directions are asserted here, because a fire count alone would pass
+        // with the turn count wrong.
+        writeSession('a', [
+            userEntryWithReminder('what next?'),
+            replyEntry(ASKED),
+            userEntryWithReminder('2'),
+            replyEntry(DROPPED),
+        ]);
+        const c = measure(store, 30);
+        expect(c.turns).toBe(2);
         expect(c.dropped_fires).toBe(0);
     });
 

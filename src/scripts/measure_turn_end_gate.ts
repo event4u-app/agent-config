@@ -71,8 +71,8 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { classify, isSyntheticPrompt } from './language_mirror_hook.js';
-import { assistantText, scanSession, userText } from './conformance_scan.js';
-import { isSidechain } from './_lib/transcript_entry.js';
+import { assistantText, scanSession } from './conformance_scan.js';
+import { entryText, isSidechain } from './_lib/transcript_entry.js';
 import {
     detectDroppedDecision,
     detectLanguage,
@@ -345,7 +345,7 @@ export function measure(store: string, limit: number): Counts {
                 continue;
             }
 
-            const u = userText(entry);
+            const u = _userTurnText(entry);
             if (u !== null) {
                 // `isSyntheticPrompt`, the SAME filter the gate uses for the
                 // ordinal — not `isInjectedBody`. R2 round 2, finding 10: the
@@ -390,6 +390,27 @@ export function measure(store: string, limit: number): Counts {
     }
 
     return c;
+}
+
+/**
+ * The text of a user-role entry, read the way `readTranscriptTail` reads it.
+ *
+ * Deliberately NOT `conformance_scan.userText`, and the difference is the whole
+ * point: that reader also returns null when the text CONTAINS
+ * `<system-reminder>` anywhere, while the gate nulls only on a missing text
+ * block and then filters with `isSyntheticPrompt`, which matches the marker at
+ * the START. An ordinary Claude Code prompt carries an appended reminder block,
+ * so the two disagree on the most common user entry there is — and an entry
+ * this instrument skips is one where the turn never resets, merging consecutive
+ * genuine turns into one. That made detector E fire on asks the user had
+ * answered and deflated the turn denominator at the same time, which is the
+ * exact class of divergence the header promises parity on (R2 round 3,
+ * finding 1).
+ */
+function _userTurnText(entry: Record<string, unknown>): string | null {
+    if (entry['type'] !== 'user' || isSidechain(entry)) return null;
+    const text = entryText(entry);
+    return text.trim() === '' ? null : text;
 }
 
 export function renderFires(c: Counts): string {
