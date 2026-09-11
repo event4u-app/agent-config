@@ -5,16 +5,26 @@ review_by: 2026-11-11
 
 # Stub: road to a primary goal that is asked for
 
-> **Stub — not active work, and the decision it feeds is not the agent's.**
-> Created 2026-09-11 by the drain run holding
+> **Stub — not active work.** Created 2026-09-11 by the drain run holding
 > `road-to-delivery-on-hook-hosts`, which was blocked by
-> `docs/contracts/release-sizing.md` lapsing its `keep-beta-until` date. It
-> records **evidence for the owner**, not a disposition: per
-> [`road-to-fresh-beta-lapses-2026-09.md`](road-to-fresh-beta-lapses-2026-09.md),
-> all four legal actions on a beta marker — promote, extend, supersede, accept
-> the lapse — are public statements about what consumers may rely on, and
-> `decision-revisit-gate`'s reserved set puts those out of agent reach in either
-> direction.
+> `docs/contracts/release-sizing.md` lapsing its `keep-beta-until` date.
+>
+> **The disposition it fed has since been taken, and the sequence matters.**
+> This file first recorded evidence only, because per
+> [`road-to-fresh-beta-lapses-2026-09.md`](road-to-fresh-beta-lapses-2026-09.md)
+> all four legal actions on a beta marker are public statements about what
+> consumers may rely on, which `decision-revisit-gate` reserves to the owner —
+> a class on which a council had already declined twice on 2026-09-06. An AI
+> council converged on a split (2/2, 2026-09-11) and that verdict was recorded
+> as advice and **not** executed. The owner then instructed execution in the
+> same session, and the split landed: `release-sizing.md` promoted to
+> `stability: stable` for its enforced half,
+> [`release-primary-goal.md`](../../../docs/contracts/release-primary-goal.md)
+> created in beta for the declaration half. Council agreement did not convert
+> the reserved transition; the owner's instruction did.
+>
+> **What stays open is this stub's own subject:** the mechanism that would make
+> the new window measure anything.
 
 ## What was measured, and it is new
 
@@ -70,16 +80,19 @@ the value answer and would retire the obligation; openai read it as an invalid
 test, *"because nothing surfaced or enforced the required declaration"*, and
 would run one instrumented window.
 
-**That is advice, and it is recorded as advice.** The council cannot take the
-decision: this is the same reserved class on which a council already declined
-twice on 2026-09-06
+**That was advice when it was given, and the owner turned it into the
+disposition.** The council could not take it: the same reserved class had
+already seen a council decline twice on 2026-09-06
 (`agents/evidence/analysis/rdp-beta-window-lapse-accepted-2026-09-06.md`), and
 agreement between seats does not convert an owner-reserved transition into a
-council-decidable one.
+council-decidable one. The owner instructed execution, so the split is in the
+tree and the window it opened runs to 2026-11-11.
 
-## What would close the mechanism question
+## What closes the mechanism question — the open part
 
-If the owner chooses the instrumented window, two pieces close it:
+The new window measures nothing until the mechanism exists, and its contract
+says so: **if this stub has not landed by 2026-11-11, the disposition is
+`supersede`, not another extension.** Two pieces close it:
 
 1. **A release PR template field** carrying the `Primary-Goal:` line, so the
    obligation is visible while cutting rather than only in a contract.
@@ -93,14 +106,19 @@ rejection stands. This is not that. Checking that one declared line is present
 carries no file→subsystem map and is no proxy for scope; it asserts only that
 the judgment the contract already asks for was written down.
 
-## Current state — the lapse is live and blocks every PR
+## Current state — cleared, and the next four are four days out
 
-`check_beta_review_markers` reports the lapse as **FRESH**, so it is not in the
-frozen baseline and the baseline may not grow to absorb it. The check is
-required, which means it blocks unrelated PRs across the repository until the
-owner acts. That cost is stated here because it is the part that does not wait:
+The lapse was **FRESH**, so the frozen 2026-08-25 baseline could not absorb it,
+and the check is required — it reds every PR in the repository, not only the one
+that found it. `check_beta_review_markers` now exits **0** on the split.
+
+That clears today and not the week. Four more contracts go fresh on **2026-09-15**
+— `harness-expectations`, `install-layout`, `install-scopes`, `surface-tiers` —
+and each will red the same required check on its date, under the same
+owner-reserved rule. They are named here rather than acted on, because naming a
+dated blocker four days ahead is the whole point of the horizon report:
 
 ```bash
-./scripts-run src/scripts/check_beta_review_markers --horizon 14 | tail -8
+./scripts-run src/scripts/check_beta_review_markers --horizon 21 | tail -14
 ./scripts-run src/scripts/check_beta_review_markers > /dev/null; echo "exit=$?"
 ```

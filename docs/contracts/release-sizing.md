@@ -1,47 +1,31 @@
 ---
-stability: beta
-keep-beta-until: 2026-09-10
+stability: stable
 ---
 
 # Release Sizing
 
-> **Status:** active · v0 / beta · 2026-07-10. Governs how much a
-> minor release may carry and what every shipped subsystem owes the
-> reader: one primary goal, a disable path, and a named rollback.
-> No version numbers appear here as commitments — this contract
-> shapes releases, it does not schedule them.
-
-## One primary product goal per minor release
-
-Every minor release names **exactly one primary product goal** — the
-one-sentence answer to "why does this release exist?". Secondary
-changes may ride along, but the release notes lead with the primary
-goal, and a release that cannot name one is not ready to cut.
-Scope discipline, not a ratio: what qualifies is a judgment call the
-maintainer makes when labeling the release PR
-([`release-pr-gating.md`](release-pr-gating.md)).
-
-### Primary goal declaration
-
-Every release PR body carries one literal line:
-
-```
-Primary-Goal: <one sentence>
-```
-
-A release bundling multiple major themes anyway annotates the
-**exception + reason** in the release notes ("this release bundles N
-themes because <reason>; future releases return to one primary goal").
-The declaration keeps the norm visible and the exception deliberate.
-
-Explicitly REJECTED (council, anthropic/claude-sonnet-4-5 +
-openai/gpt-4o, 2026-07-10): a mechanical subsystem-count lint on the
-release PR. A file→subsystem map is its own maintenance burden, and
-changed-file counts are a bad proxy for scope (a one-line kernel change
-has a larger blast radius than 50 lines in a niche skill). Sizing stays
-a norm enforced by declaration + human judgment; if the maintainer
-wrote a nine-theme release, the maintainer already judged it — the
-header makes that judgment explicit, not automatic.
+> **Status:** active · **stable** since 2026-09-11 · written 2026-07-10.
+> Governs what every shipped subsystem owes the reader: a disable path, a
+> named rollback, and the consumer-matrix floor. No version numbers appear
+> here as commitments — this contract shapes releases, it does not schedule
+> them.
+>
+> **Promoted on evidence, and only for the half that had any.** Its beta
+> window lapsed 2026-09-10 carrying two obligations whose records point in
+> opposite directions: the `Rollback:` line below is mechanically enforced by
+> `lint_changelog_rollback.ts` and was verified green at promotion time, while
+> the one-primary-goal declaration was honoured in **0 of 6** release PRs
+> across the whole window. Promoting both would have stamped `stable` on an
+> obligation nobody has ever met. The declaration half therefore split out to
+> [`release-primary-goal.md`](release-primary-goal.md), which keeps a window,
+> a falsifier and a required mechanism; the halves cross-reference so release
+> scope and release safety stay one subject.
+>
+> **Authority.** A beta marker is a public statement about what consumers may
+> rely on, which `decision-revisit-gate` reserves to the owner. An AI council
+> converged on this split on 2026-09-11 (2/2, blind peer review, subscription
+> transport, $0.0000 billed) and its verdict was recorded as advice and not
+> executed; the owner instructed execution in the same session.
 
 ## Major subsystems are independently disableable where feasible
 
@@ -97,6 +81,10 @@ re-opening it requires new evidence per the decision-revisit gate.
 
 ## Cross-references
 
+- [`release-primary-goal.md`](release-primary-goal.md) — the beta half split
+  out of this contract on 2026-09-11: the one-primary-goal norm and the
+  `Primary-Goal:` declaration, with the 0-of-6 measurement that separated
+  them and the falsifier its next window must answer.
 - [`CHANGELOG-conventions.md`](CHANGELOG-conventions.md) — entry
   shape the `Rollback:` line extends.
 - [`release-pr-gating.md`](release-pr-gating.md) — release-PR shape
