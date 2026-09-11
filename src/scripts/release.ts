@@ -105,6 +105,7 @@
  */
 
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -128,6 +129,17 @@ import {
 } from './_lib/release_highlights.js';
 import { canPrompt, promptLine } from './_lib/tty_prompt.js';
 import { preflightPosition } from './_lib/release_position.js';
+import {
+    FINDINGS_ARTIFACT,
+    FINDINGS_WORKFLOW,
+    type WorkflowRun,
+    downloadArgv,
+    ledgerRelPath,
+    planIngest,
+    runLookupArgv,
+    undispositionedMessage,
+} from './_lib/release_findings_ingest.js';
+import { isBlocking, parse_ledger } from './check_finding_dispositions.js';
 import {
     RELEASE_HEAD_DEFAULT,
     extract_changelog_section,
@@ -978,6 +990,105 @@ function _step(n: number, total: number, msg: string): void {
     process.stdout.write(`[${n}/${total}] ${msg}\n`);
 }
 
+/**
+ * Make the release carry its own findings ledger, or stop.
+ *
+ * Three outcomes and no fourth: the ledger is already on the branch and the
+ * step is a no-op; there is no finished review run to ingest from, which is
+ * reported and does not stop the release because a release with no review
+ * artifact is a different problem from one with an unadjudicated review; or an
+ * artifact exists, is ingested, committed, pushed, and the release stops until
+ * a human dispositions what it found.
+ *
+ * Stopping is the point. `--ingest` deliberately writes empty dispositions,
+ * and filling them states what the release ships and who verified it. Before
+ * this step existed the demand was real but arrived after the tag, on an
+ * unrelated pull request, which is how six releases in a row got their ledger
+ * from whoever was unlucky rather than from the release that produced it.
+ */
+function settle_findings_ledger(version: string, branch: string): void {
+    const rel = ledgerRelPath(version);
+    const abs = path.join(REPO_ROOT, rel);
+
+    const listed = gh(runLookupArgv(branch), { check: false });
+    let runs: WorkflowRun[] = [];
+    if (listed.returncode === 0 && listed.stdout.trim()) {
+        try {
+            runs = JSON.parse(listed.stdout) as WorkflowRun[];
+        } catch {
+            runs = [];
+        }
+    }
+
+    const plan = planIngest(fs.existsSync(abs), runs, branch);
+    if (plan.kind === 'present') {
+        process.stdout.write(`    ledger already on the branch: ${rel}\n`);
+    } else if (plan.kind === 'no-run') {
+        process.stdout.write(
+            `    ⚠️  no finished ${FINDINGS_WORKFLOW} run on ${plan.branch} carries a ` +
+                `${FINDINGS_ARTIFACT} artifact — no ledger written. If the review did run, ` +
+                'ingest it by hand before the tag; an absent ledger becomes a repo-wide ' +
+                'failure the moment the tag exists.\n',
+        );
+        return;
+    } else {
+        const dest = fs.mkdtempSync(path.join(os.tmpdir(), 'release-findings-'));
+        run(['gh', ...downloadArgv(plan.runId, dest)], { capture: true });
+        const artifact = path.join(dest, `${FINDINGS_ARTIFACT}.json`);
+        if (!fs.existsSync(artifact)) {
+            die(`downloaded run ${plan.runId} but ${FINDINGS_ARTIFACT}.json is not in ${dest}`);
+        }
+        run(
+            [
+                './scripts-run',
+                'src/scripts/check_finding_dispositions',
+                '--ingest',
+                artifact,
+                '--release',
+                version,
+            ],
+            { capture: false },
+        );
+        git(['add', rel]);
+        if (git(['status', '--porcelain', '--', rel], { capture: true })) {
+            git(['commit', '-m', `chore(release): ingest self-review findings for ${version}`]);
+            push_release_branch(branch);
+        }
+    }
+
+    // Always re-check, including on the already-present path: a ledger committed
+    // by an earlier attempt may still be undispositioned, and skipping the check
+    // because the file exists is how the file came to exist without deciding
+    // anything.
+    const verdict = run(
+        ['./scripts-run', 'src/scripts/check_finding_dispositions', '--release', version],
+        { check: false, capture: true },
+    );
+    if (verdict.returncode !== 0) {
+        process.stdout.write(`${(verdict.stdout || verdict.stderr).trim()}\n`);
+        die(
+            undispositionedMessage(
+                version,
+                _blocking_without_disposition(abs),
+                `task release -- --resume --yes`,
+            ),
+        );
+    }
+}
+
+/** How many blocking findings in `ledgerAbs` still carry no status. */
+function _blocking_without_disposition(ledgerAbs: string): number {
+    if (!fs.existsSync(ledgerAbs)) {
+        return 0;
+    }
+    try {
+        const ledger = parse_ledger(fs.readFileSync(ledgerAbs, 'utf-8'), ledgerAbs);
+        return ledger.findings.filter((f) => isBlocking(f) && !f.status).length;
+    } catch {
+        return 0;
+    }
+}
+
 function execute(
     plan: Plan,
     opts: { wait_for_checks: boolean; dry_run: boolean; resume?: boolean; ci?: boolean },
@@ -988,7 +1099,7 @@ function execute(
     const ci = opts.ci ?? false;
 
     const branch = `release/${plan.target}`;
-    const total = 10;
+    const total = 11;
 
     if (dry_run) {
         process.stdout.write('(dry-run) no git/gh mutations will be performed.\n');
@@ -1157,15 +1268,28 @@ function execute(
         _step(6, total, 'Skip waiting for checks (--no-wait)');
     }
 
-    // ─── 7. merge ───────────────────────────────────────────────────────────
+    // Step 7 — findings ledger
+    // Before the merge, not before the tag. The tag is what turns an absent
+    // ledger from a normal in-flight state into a repo-wide failure, so "just
+    // before the tag" reads as the natural seam — but the ledger is read off
+    // the release BRANCH, and step 8 deletes it. This is the last moment the
+    // branch that has to carry the file still exists.
     if (pr_merged) {
-        _step(7, total, `PR #${pr_info!['number']} already merged — skip`);
+        _step(7, total, 'PR already merged — findings ledger cannot land on the branch, skip');
     } else {
-        _step(7, total, 'Merge pull request (merge commit) and delete branch');
+        _step(7, total, 'Settle the self-review findings ledger');
+        settle_findings_ledger(plan.target, branch);
+    }
+
+    // Step 8 — merge
+    if (pr_merged) {
+        _step(8, total, `PR #${pr_info!['number']} already merged — skip`);
+    } else {
+        _step(8, total, 'Merge pull request (merge commit) and delete branch');
         merge_release_pr(branch, wait_for_checks);
     }
 
-    // ─── 8. tag main + push tag ─────────────────────────────────────────────
+    // Step 9 — tag main + push tag
     // Always idempotent — even outside resume mode this prevents a mid-flight
     // crash on step 9 from leaving a half-tagged release that subsequent
     // `task release` invocations can't recover from without `--resume`.
@@ -1176,9 +1300,9 @@ function execute(
 
     if (_tag_exists_local(plan.target)) {
         if (_tag_exists_remote(plan.target)) {
-            _step(8, total, `Tag ${plan.target} already on ${REMOTE} — skip`);
+            _step(9, total, `Tag ${plan.target} already on ${REMOTE} — skip`);
         } else {
-            _step(8, total, `Tag ${plan.target} exists locally — push only`);
+            _step(9, total, `Tag ${plan.target} exists locally — push only`);
             guard_publication(plan.target, 'tag push (resumed)');
             _push_tag(plan.target);
         }
@@ -1189,13 +1313,13 @@ function execute(
         // merge would read a section that does not exist yet. The annotated
         // tag replaces the previous lightweight one so tag metadata is a
         // fourth surface carrying the same single-source content.
-        _step(8, total, `Tag merge commit (annotated, from merged CHANGELOG) and push ${plan.target}`);
+        _step(9, total, `Tag merge commit (annotated, from merged CHANGELOG) and push ${plan.target}`);
         create_and_push_annotated_tag(plan.target);
     }
 
-    // ─── 9. GitHub Release ──────────────────────────────────────────────────
+    // Step 10 — GitHub Release
     if (_release_exists(plan.target)) {
-        _step(9, total, `GitHub Release ${plan.target} already exists — skip`);
+        _step(10, total, `GitHub Release ${plan.target} already exists — skip`);
     } else {
         _step(
             9,
@@ -1234,7 +1358,7 @@ function execute(
         // branch above), so a --resume re-run never re-dispatches a
         // publish that already happened.
         if (ci) {
-            _step(9, total, 'Dispatch release-guard.yml + publish-npm.yml + cloud-release.yml for the tag');
+            _step(10, total, 'Dispatch release-guard.yml + publish-npm.yml + cloud-release.yml for the tag');
             // NON-FATAL by design. By this point the release is already complete
             // — the tag is pushed and the GitHub Release is created above, and
             // npm publish runs asynchronously. These explicit dispatches are a
@@ -1262,13 +1386,13 @@ function execute(
         }
     }
 
-    // ─── 10. delete the merged release branch (local + remote) ───────────────
+    // Step 11 — delete the merged release branch (local + remote)
     // Branch hygiene: a merged-but-undeleted release/X.Y.Z is what made
     // `--resume` mis-detect an old version. Delete it now so it can never
     // accumulate. Idempotent — skips whatever is already gone. Never touches
     // `main` or any tag.
     if (dry_run) {
-        _step(10, total, `Would delete merged branch ${branch} (local + remote)`);
+        _step(11, total, `Would delete merged branch ${branch} (local + remote)`);
     } else {
         const deleted: string[] = [];
         if (
@@ -1283,7 +1407,7 @@ function execute(
             deleted.push('remote');
         }
         const where = deleted.length > 0 ? deleted.join(' + ') : 'already gone';
-        _step(10, total, `Delete merged branch ${branch} (${where})`);
+        _step(11, total, `Delete merged branch ${branch} (${where})`);
     }
 
     process.stdout.write('\n');
