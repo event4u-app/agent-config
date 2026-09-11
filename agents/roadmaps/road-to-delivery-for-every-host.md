@@ -1402,7 +1402,7 @@ Defects this roadmap repairs:
   routing an owner-reserved question to a council.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-10 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-09-11 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |---|---|---|---|---|---|
