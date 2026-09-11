@@ -18,28 +18,50 @@
  * bucket has no local source at all — the census reports that one as an explicit
  * residual rather than pretending to measure it.
  *
- * THE BOUND IS SHRINK-ONLY, AND NOW CHECKED
- * ------------------------------------------
- * `ci_delivery.why_a_grace_ceiling` says of the grace ceiling *"It may never
- * move UP"*, and `grace_ceiling_history` in the same file records it moving up
- * twice. ADR-264 resolved that against the practice — the sentence stands — and
- * left the sentence unenforced, which is exactly the state that produced both
- * raises. `_lib/standing_bound_ratchet.ts` is the enforcement: the effective
- * ceiling is compared against the one at the base ref and a rise refuses the run,
- * whether it arrived by editing the config or by passing a bigger `--ceiling`.
+ * THE CEILING IS MEASURED AT THE BASE REF, NOT STORED
+ * ----------------------------------------------------
+ * It used to be a stored `ci_delivery.grace_ceiling`, whose own text said *"It
+ * may never move UP"* while `grace_ceiling_history` recorded it moving up
+ * twice. ADR-264 resolved that against the practice and left the sentence
+ * unenforced; `_lib/standing_bound_ratchet.ts` became the enforcement.
  *
- * It is also ALL that `road-to-a-standing-budget-with-headroom` step 1.3 ships.
- * That step designed a 128-token Iron Law reserve; an AI council refused to
- * activate it 2/2 on 2026-09-08 because the verifier is inside the change under
- * review, so a protected approval record grants nothing. ADR-265 carries the
- * verdict and the activation prerequisites.
+ * `road-to-delivery-for-every-host` 4.4 retires the stored number entirely. An
+ * AI council (2/2, 2026-09-10, under a written owner delegation) converged on
  *
- * Exit codes: 0 within budget · 1 over budget or the bound rose · 2 misuse /
- * unreadable budget.
+ *     ceiling = max(design_ceiling, payload_at_base_ref + active grants)
+ *
+ * for one reason: a measured ceiling captures every merged reduction
+ * automatically, where a stored one stays at its last hand-written number — so
+ * payload a merge removed can be added straight back into the space it freed.
+ * The ordinary path is therefore ZERO NET GROWTH while the tree is over design,
+ * and the design ceiling once it is at or below. No per-PR headroom: both seats
+ * refused one because a percentage or a fixed allowance against a moving base
+ * authorises cumulative growth (138,413 × 1.05^10 ≈ 225,000).
+ *
+ * Three prerequisites came with the verdict and all three are in the pipeline
+ * below. The base measurement FAILS CLOSED under `--require-base`, because a
+ * base that cannot be read would otherwise grant an unbounded budget. The
+ * shrink-only ratchet moved with the ceiling: `design_ceiling` and every
+ * existing exception grant and watermark are now the bounded numbers. And the
+ * catalogue exhaustiveness audit refuses payload sitting outside every measured
+ * bucket, which defeats a stored ceiling exactly as it would defeat this one.
+ *
+ * A change whose offsetting reduction is genuinely unsafe takes a recorded,
+ * human-approved, dated grant in `src/config/preamble-payload-exceptions.json`.
+ * 96.8 % of the last 250 merged pull requests moved this payload by zero or
+ * less, so the ordinary path stays autonomous and only the tail reaches a
+ * person. `_lib/measured_payload_ceiling.ts` carries the mechanism and the
+ * reasoning, including why no numeric cap is enforced.
+ *
+ * ADR-265 still holds for what this does NOT do: the 128-token Iron Law reserve
+ * stays unshipped, because a mechanism that GRANTS budget cannot rest on a
+ * verifier the change under review can edit.
+ *
+ * Exit codes: 0 within budget · 1 over budget, a bound rose, the ceiling could
+ * not be measured under `--require-base`, or payload sits outside the catalogue
+ * · 2 misuse / unreadable budget.
  */
-import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
-import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
@@ -48,30 +70,55 @@ import { PREFIX_STABLE_SURFACES, prefixStableRoots } from './_lib/prefix_stable_
 import { HOST_SURFACES } from './_lib/host_projection_reach.js';
 import { attributeGrowth, buildLedger, renderAttribution } from './_lib/asset_delivery_ledger.js';
 import { resolveBaseRef } from './_lib/ratchet_base_ref.js';
+import { extractSurfacesAtRef, measurePayloadAtRef } from './_lib/base_ref_payload.js';
+import {
+    type CeilingReading,
+    computeCeiling,
+    EXCEPTIONS_CONFIG_PATH,
+    readExceptions,
+    renderCeiling,
+} from './_lib/measured_payload_ceiling.js';
+import { auditCatalogue, type CatalogueAudit } from './_lib/payload_catalogue_completeness.js';
 import {
     assertBoundsDidNotRise,
     type BoundsRatchetVerdict,
+    boundsFrom,
     type GitRunner,
     realGit,
 } from './_lib/standing_bound_ratchet.js';
 
 const HERE = path.dirname(new URL(import.meta.url).pathname);
+/**
+ * Where this SCRIPT lives — the default tree to measure, and nothing more.
+ *
+ * Under prerequisite 3 of the measured-ceiling verdict, CI runs this file as it
+ * exists at the BASE ref against the HEAD tree, so that a pull request cannot
+ * edit the code that measures it. There the two diverge and `--repo-root`
+ * carries the tree; everywhere else they are the same directory.
+ */
 const REPO_ROOT = path.resolve(HERE, '..', '..');
-const BUDGET_FILE = path.join(REPO_ROOT, 'src', 'config', 'preamble-payload-budget.json');
+
+/** The budget config inside a given tree. */
+function budgetFileIn(repoRoot: string): string {
+    return path.join(repoRoot, 'src', 'config', 'preamble-payload-budget.json');
+}
+const BUDGET_FILE = budgetFileIn(REPO_ROOT);
 
 interface Budget {
     baseline_tokens: number;
     headroom_pct: number;
     target_tokens: { median: number; p95: number };
     /**
-     * `ci_delivery.grace_ceiling`, or `null` when the file carries none.
+     * `ci_delivery.grace_ceiling`, the RETAINED stored allowance — stage 1.
      *
-     * Read here only so the shrink-only ratchet has a head-side value on a local
-     * run that passes no `--ceiling`. The number the payload is COMPARED against
-     * still arrives through the flag, so this does not become a second home for
-     * the ceiling.
+     * It enters the ceiling through a `max`, so it can only ever widen the
+     * bound and never tighten it. It is retained rather than deleted in the
+     * change that introduces the measured ceiling because the gate runs at the
+     * base ref and cannot validate its own introduction; stage 2 removes this
+     * term from a base that already carries the measured code. `null` once it
+     * is gone, and the formula then has one term fewer.
      */
-    grace_ceiling: number | null;
+    stored_ceiling: number | null;
 }
 
 export interface BudgetVerdict {
@@ -95,13 +142,19 @@ export function readBudget(file: string = BUDGET_FILE): Budget {
     }
     const target = (raw['target_tokens'] ?? {}) as Record<string, unknown>;
     const delivery = (raw['ci_delivery'] ?? {}) as Record<string, unknown>;
-    const grace = Number(delivery['grace_ceiling']);
+    const stored = Number(delivery['grace_ceiling']);
     return {
         baseline_tokens: baseline,
         headroom_pct: headroom,
         target_tokens: { median: Number(target['median']), p95: Number(target['p95']) },
-        grace_ceiling: Number.isFinite(grace) ? grace : null,
+        stored_ceiling: Number.isFinite(stored) ? stored : null,
     };
+}
+
+/** The raw budget JSON, for the bound derivation that must see head and base
+ *  through the SAME function. `readBudget` narrows; this does not. */
+function readBudgetRaw(file: string): unknown {
+    return JSON.parse(fs.readFileSync(file, 'utf-8'));
 }
 
 /** Look one surface root up by id. Throws on an unknown id — a renamed surface
@@ -358,105 +411,178 @@ export function evaluate(repoRoot?: string, budgetFile?: string, overrideCeiling
 export interface Decision {
     verdict: BudgetVerdict;
     bounds: BoundsRatchetVerdict;
-    /** False when the payload is over the ceiling, or the ceiling itself rose. */
+    /** How the ceiling was arrived at, and whether it may be trusted. */
+    ceiling: CeilingReading;
+    /** Payload the census does not enumerate. Empty findings = complete. */
+    catalogue: CatalogueAudit;
+    /** False when the payload is over the ceiling, a bound rose, the ceiling
+     *  could not be measured under `--require-base`, or payload escaped the
+     *  catalogue. */
     ok: boolean;
 }
 
 export interface DecideOptions {
     repoRoot?: string;
     budgetFile?: string;
-    overrideCeiling?: number;
     env?: NodeJS.ProcessEnv;
     git?: GitRunner;
     /** Test seam: pin the base ref instead of resolving it. `null` = none resolved. */
     baseRef?: string | null;
-    /** Refuse instead of skipping when the shrink-only bound cannot be verified. */
+    /** Refuse instead of skipping when the base ref cannot be read. */
     requireBase?: boolean;
+    /** Test seam: pin today's date for the exception-expiry branch. */
+    today?: string;
+    /** Test seam: supply the base payload instead of measuring the ref. */
+    basePayload?: number | null;
+    /**
+     * Exception ids whose approval event was VERIFIED against the platform.
+     *
+     * Empty by default, which is the safe reading: a grant nobody confirmed is
+     * a grant the diff asserted about itself. Only a caller with platform
+     * access can populate this, which is why it is not read from the tree.
+     */
+    verifiedApprovals?: readonly string[];
 }
 
+/**
+ * The measurement, the ceiling it is compared against, and everything that can
+ * refuse independently of the size question.
+ *
+ * `evaluate` above answers "how big is the tree" and touches no ref; this
+ * answers "may this tree ship" and needs the base one. They stay separate
+ * because a census that silently depended on a remote ref would behave
+ * differently in a shallow clone, and the census is the half other callers use.
+ *
+ * ORDER MATTERS ONLY IN ONE PLACE: the ceiling is established BEFORE the size
+ * comparison, because a run that could not measure its ceiling has no
+ * business reporting a tree as within one.
+ */
 export function decide(opts: DecideOptions = {}): Decision {
     const repoRoot = opts.repoRoot ?? REPO_ROOT;
     const git = opts.git ?? realGit;
-    const budget = readBudget(opts.budgetFile);
-    const verdict = evaluate(repoRoot, opts.budgetFile, opts.overrideCeiling);
+    const budgetFile = opts.budgetFile ?? budgetFileIn(repoRoot);
+    const budget = readBudget(budgetFile);
+    const design = Math.round(budget.baseline_tokens * (1 + budget.headroom_pct / 100));
+
     const baseRef =
         opts.baseRef !== undefined ? opts.baseRef : resolveBaseRef(repoRoot, opts.env ?? process.env, git);
+
+    // The base payload goes through THIS file's own census, so base and head
+    // cannot be measured by two different definitions — the property that keeps
+    // a measured ceiling from drifting against the number it bounds.
+    const sumPayload = (root: string): number =>
+        measureDeterministicPayload(root).reduce((n, b) => n + b.tokens, 0);
+    let basePayload: number | null;
+    let baseNote: string | null;
+    if (opts.basePayload !== undefined) {
+        basePayload = opts.basePayload;
+        baseNote = basePayload === null ? 'the base payload was pinned to null by the caller' : null;
+    } else if (baseRef === null || baseRef.trim() === '') {
+        basePayload = null;
+        baseNote = 'no base ref resolved';
+    } else {
+        const reading = measurePayloadAtRef({ repoRoot, ref: baseRef, measure: sumPayload });
+        basePayload = reading.tokens;
+        baseNote = reading.note;
+    }
+
+    const exceptionsFile = path.join(repoRoot, EXCEPTIONS_CONFIG_PATH);
+    const ex = readExceptions(exceptionsFile);
+    const ceiling = computeCeiling({
+        designCeiling: design,
+        basePayload,
+        baseNote,
+        headPayload: sumPayload(repoRoot),
+        exceptions: ex.exceptions,
+        exceptionErrors: ex.errors,
+        verifiedApprovals: opts.verifiedApprovals ?? [],
+        storedCeiling: budget.stored_ceiling,
+        today: opts.today ?? new Date().toISOString().slice(0, 10),
+        requireBase: opts.requireBase === true,
+    });
+
+    const verdict = evaluate(repoRoot, budgetFile, ceiling.ceiling);
+
+    // The head-side bounds go through `boundsFrom` exactly as the base-side
+    // ones do, from the raw configs rather than the narrowed ones — one
+    // derivation for both sides, which is what the grace ceiling never had.
+    let headBounds: Record<string, number> = { design_ceiling: design };
+    try {
+        const raw = readBudgetRaw(budgetFile);
+        let rawEx: unknown = null;
+        try {
+            rawEx = JSON.parse(fs.readFileSync(exceptionsFile, 'utf-8'));
+        } catch {
+            /* absent ledger contributes no bounds */
+        }
+        headBounds = boundsFrom(raw, rawEx) ?? headBounds;
+    } catch {
+        /* readBudget above already threw on an unusable file */
+    }
     const bounds = assertBoundsDidNotRise({
         repoRoot,
         baseRef,
         git,
-        headGraceCeiling: opts.overrideCeiling ?? budget.grace_ceiling ?? 0,
+        headBounds,
         requireBase: opts.requireBase === true,
     });
-    return { verdict, bounds, ok: bounds.ok && verdict.withinBudget };
+
+    const catalogue = auditCatalogue(repoRoot);
+
+    return {
+        verdict,
+        bounds,
+        ceiling,
+        catalogue,
+        ok: bounds.ok && ceiling.ok && catalogue.findings.length === 0 && verdict.withinBudget,
+    };
 }
 
 /**
- * Per-asset attribution for a refusal, against the merge-base tree.
+ * Per-asset attribution for a refusal, against the base tree.
  *
- * Reads the base tree through `git worktree`-free plumbing: the ledger is built
- * over a temporary checkout of `git merge-base HEAD origin/main`. Every failure
- * mode returns an empty list — the caller treats attribution as an explanation,
- * never as a precondition for refusing.
+ * Every failure mode returns `null` — the caller treats attribution as an
+ * explanation, never as a precondition for refusing. A gate that failed to
+ * refuse because it could not explain itself would be strictly worse than one
+ * that refuses without the explanation.
+ *
+ * It reads the base tree through `_lib/base_ref_payload`, the same
+ * materialisation the ceiling uses. It used to shell `git archive` directly,
+ * which silently drops `export-ignore` paths — harmless for the two roots this
+ * ledger reads, and a live 746-token defect for the ceiling. Both now go
+ * through the one reader rather than through two that differ in a way nobody
+ * would notice until the numbers disagreed.
  */
-function attributeGrowthAgainstBase(): string[] | null {
+function attributeGrowthAgainstBase(repoRoot: string, baseRef: string | null): string[] | null {
+    if (baseRef === null || baseRef.trim() === '') return null;
+    const t = extractSurfacesAtRef({ repoRoot, ref: baseRef });
+    if (t.tree === null) return null;
     try {
-        const base = execFileSync('git', ['merge-base', 'HEAD', 'origin/main'], {
-            cwd: REPO_ROOT,
-            encoding: 'utf-8',
-            stdio: ['ignore', 'pipe', 'ignore'],
-        }).trim();
-        if (base.length === 0) return null;
-
-        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'payload-base-'));
-        try {
-            for (const rel of prefixStableRoots()) {
-                // `git archive` of one subtree, extracted into the scratch root.
-                // A root absent at the base ref simply yields nothing.
-                try {
-                    const tar = execFileSync('git', ['archive', base, '--', rel], {
-                        cwd: REPO_ROOT,
-                        maxBuffer: 256 * 1024 * 1024,
-                        stdio: ['ignore', 'pipe', 'ignore'],
-                    });
-                    // `-f -` is not optional: without it BSD tar reads its
-                    // default device rather than stdin, and the extraction
-                    // silently produces nothing — which reads downstream as
-                    // "the base tree was unavailable" rather than as a bug.
-                    execFileSync('tar', ['-x', '-f', '-', '-C', tmp], {
-                        input: tar,
-                        stdio: ['pipe', 'ignore', 'ignore'],
-                    });
-                } catch {
-                    /* root absent at base — nothing to extract */
-                }
-            }
-            const [rulesRel, skillsRel] = prefixStableRoots();
-            const before = buildLedger(
-                path.join(tmp, rulesRel ?? ''),
-                path.join(tmp, skillsRel ?? ''),
-                tmp,
-            );
-            const after = buildLedger(
-                path.join(REPO_ROOT, rulesRel ?? ''),
-                path.join(REPO_ROOT, skillsRel ?? ''),
-                REPO_ROOT,
-            );
-            if (before.rows.length === 0) return null;
-            return renderAttribution(attributeGrowth(before.rows, after.rows));
-        } finally {
-            fs.rmSync(tmp, { recursive: true, force: true });
-        }
+        const [rulesRel, skillsRel] = prefixStableRoots();
+        const before = buildLedger(
+            path.join(t.tree, rulesRel ?? ''),
+            path.join(t.tree, skillsRel ?? ''),
+            t.tree,
+        );
+        const after = buildLedger(
+            path.join(repoRoot, rulesRel ?? ''),
+            path.join(repoRoot, skillsRel ?? ''),
+            repoRoot,
+        );
+        if (before.rows.length === 0) return null;
+        return renderAttribution(attributeGrowth(before.rows, after.rows));
     } catch {
         return null;
+    } finally {
+        t.dispose();
     }
 }
 
 /** The stderr header for a refused bound. Exported so both refusals are testable. */
 export function boundsRefusalHeader(b: BoundsRatchetVerdict): string {
     return b.verified
-        ? '❌  the standing-payload ceiling rose in this change:\n'
-        : '❌  the standing-payload ceiling could not be VERIFIED, and this run requires it:\n';
+        ? '❌  a shrink-only standing-payload bound rose in this change:\n'
+        : '❌  the standing-payload bounds could not be VERIFIED, and this run requires it:\n';
 }
 
 /**
@@ -475,41 +601,95 @@ export function boundsRefusalHeader(b: BoundsRatchetVerdict): string {
  * reserved for the ADVISORY skip, where nothing was refused at all.
  */
 export function renderBounds(b: BoundsRatchetVerdict): string {
+    const label = 'shrink-only bound ratchet';
     if (b.note !== null && b.ok) {
-        return `  ${'grace ceiling ratchet'.padEnd(38)} ${'SKIPPED'.padStart(8)} — ${b.note}\n`;
+        return `  ${label.padEnd(38)} ${'SKIPPED'.padStart(8)} — ${b.note}\n`;
     }
     if (!b.verified) {
         return (
-            `  ${'grace ceiling ratchet'.padEnd(38)} ${'UNVERIFIED'.padStart(8)} — ` +
-            `${b.note ?? 'the bound could not be read'} (this run requires it)\n`
+            `  ${label.padEnd(38)} ${'UNVERIFIED'.padStart(8)} — ` +
+            `${b.note ?? 'the bounds could not be read'} (this run requires it)\n`
         );
     }
-    const base = b.baseGraceCeiling === null ? 'n/a' : String(b.baseGraceCeiling);
+    const n = b.baseBounds === null ? 0 : Object.keys(b.baseBounds).length;
     const state = b.ok ? 'ok' : 'ROSE';
     return (
-        `  ${'grace ceiling ratchet'.padEnd(38)} ${state.padStart(8)} — ` +
-        `${base} at ${b.baseRef ?? 'n/a'}, shrink-only (ADR-264)\n`
+        `  ${label.padEnd(38)} ${state.padStart(8)} — ` +
+        `${String(n)} bound(s) at ${b.baseRef ?? 'n/a'}, shrink-only (ADR-264)\n`
     );
 }
 
 export function main(argv: string[] = process.argv.slice(2)): number {
     const json = argv.includes('--format=json') || argv.includes('--json');
-    // `--ceiling <n>`: the grace ceiling the CI step reads out of
-    // `ci_delivery.grace_ceiling`. Read from the budget file there, never written
-    // in the workflow, so the number has exactly one home. A non-numeric or
-    // tighter-than-design value is IGNORED rather than honoured — see `evaluate`.
-    const ci = argv.indexOf('--ceiling');
-    const override = ci !== -1 && argv[ci + 1] !== undefined ? Number(argv[ci + 1]) : undefined;
 
-    // `--require-base`: refuse instead of skipping when the shrink-only bound
-    // cannot be verified. An AI council (2/2, 2026-09-10) made this blocking
-    // before the ceiling may be measured at the base ref rather than stored,
-    // because an unreadable base costs a comparison today and would grant an
-    // unbounded budget there. Opt-in rather than the default, and rather than
-    // derived from `GITHUB_ACTIONS`: a shallow clone, a first commit and a
-    // detached build all legitimately have no base, and a gate that reds on a
-    // developer's machine gets switched off.
+    // `--ceiling <n>` is GONE. It existed to hand the gate the stored grace
+    // ceiling, and the ceiling is measured now. Refusing loudly rather than
+    // ignoring it is the point: a caller still passing a number believes it is
+    // setting the bound, and silently measuring something else would be the
+    // most expensive kind of no-op. The replacement for a deliberate, bounded
+    // widening is an approved entry in the exceptions ledger.
+    if (argv.includes('--ceiling')) {
+        process.stderr.write(
+            '❌  preamble-payload budget: --ceiling was removed. The ceiling is now MEASURED as\n' +
+                '    max(design_ceiling, payload at the base ref + active grants), so a caller-supplied\n' +
+                `    number cannot set it. To widen it deliberately, record an approved grant in\n` +
+                `    ${EXCEPTIONS_CONFIG_PATH} — it carries an approver, a reason, a watermark and an\n` +
+                '    expiry, which a flag never did.\n',
+        );
+        return 2;
+    }
+
+    // `--require-base`: refuse instead of skipping when the base ref cannot be
+    // read. An AI council (2/2, 2026-09-10) made this blocking for the move to
+    // a base-measured ceiling, because an unreadable base costs a comparison
+    // under a stored ceiling and grants an unbounded budget under a measured
+    // one. Opt-in rather than the default, and rather than derived from
+    // `GITHUB_ACTIONS`: a shallow clone, a first commit and a detached build
+    // all legitimately have no base, and a gate that reds on a developer's
+    // machine gets switched off.
     const requireBase = argv.includes('--require-base');
+
+    // `--approved <id>` (repeatable): this caller VERIFIED that exception's
+    // approval event against the platform. Nothing in the tree can establish
+    // that — an `approved_by` field in the diff requesting the grant is
+    // self-asserted data, which was the 2026-09-11 council's hardest pushback
+    // in both seats. So the fact arrives from outside, from a caller that
+    // queried the platform, and a grant nobody confirmed contributes zero
+    // tokens and refuses the run.
+    const verifiedApprovals: string[] = [];
+    for (let i = 0; i < argv.length; i += 1) {
+        if (argv[i] !== '--approved') continue;
+        const id = argv[i + 1];
+        if (id === undefined || id.startsWith('--')) {
+            process.stderr.write('❌  preamble-payload budget: --approved needs an exception id.\n');
+            return 2;
+        }
+        verifiedApprovals.push(id);
+    }
+
+    // `--repo-root <path>`: measure THIS tree, rather than the one this script
+    // happens to sit in. Prerequisite 3 of the measured-ceiling verdict — CI
+    // runs the gate as it exists at the BASE ref against the HEAD tree, so a
+    // pull request cannot edit the code that measures it. Both seats chose this
+    // over code-owner review on the gate, which would put the sole maintainer
+    // in the path of every gate-editing pull request. Its honest limit,
+    // anthropic's words: "the mechanism does not prevent the exploit; it makes
+    // the exploit auditable" — a weakening merged first and exploited second is
+    // visible in `git log` and is not blocked.
+    const ri = argv.indexOf('--repo-root');
+    const repoRootArg = ri !== -1 ? argv[ri + 1] : undefined;
+    if (ri !== -1 && (repoRootArg === undefined || repoRootArg.startsWith('--'))) {
+        process.stderr.write('❌  preamble-payload budget: --repo-root needs a path.\n');
+        return 2;
+    }
+    const repoRoot = repoRootArg === undefined ? REPO_ROOT : path.resolve(repoRootArg);
+    if (!fs.existsSync(budgetFileIn(repoRoot))) {
+        process.stderr.write(
+            `❌  preamble-payload budget: ${repoRoot} carries no ${'src/config/preamble-payload-budget.json'} — ` +
+                'that is not a tree this gate can measure.\n',
+        );
+        return 2;
+    }
 
     // `--host <id>` / `--project-rules-dir <path>`: the additive host reading
     // (AI council 2026-09-09, option 1A). Mutually exclusive on purpose — a call
@@ -541,7 +721,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     if (hostArg !== undefined || rulesDirArg !== undefined) {
         try {
             host = measureHostPayload(
-                REPO_ROOT,
+                repoRoot,
                 hostArg !== undefined
                     ? { host: hostArg }
                     : { rulesDirOverride: rulesDirArg as string },
@@ -554,10 +734,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
 
     let decision: Decision;
     try {
-        decision = decide({
-            ...(override === undefined ? {} : { overrideCeiling: override }),
-            requireBase,
-        });
+        decision = decide({ repoRoot, requireBase, verifiedApprovals });
     } catch (err) {
         process.stderr.write(`❌  preamble-payload budget: ${(err as Error).message}\n`);
         return 2;
@@ -602,10 +779,28 @@ export function main(argv: string[] = process.argv.slice(2)): number {
                     },
                     host_payload: host,
                     ok: decision.ok,
+                    measured_ceiling: {
+                        ceiling: decision.ceiling.ceiling,
+                        design_ceiling: decision.ceiling.designCeiling,
+                        base_payload: decision.ceiling.basePayload,
+                        effective_base: decision.ceiling.effectiveBase,
+                        active_grants: decision.ceiling.activeGrants,
+                        active_exception_ids: decision.ceiling.activeIds,
+                        verified: decision.ceiling.verified,
+                        ok: decision.ceiling.ok,
+                        note: decision.ceiling.note,
+                        violations: decision.ceiling.violations,
+                    },
+                    catalogue_completeness: {
+                        ok: decision.catalogue.findings.length === 0,
+                        trees_seen: decision.catalogue.treesSeen,
+                        files_scanned: decision.catalogue.filesScanned,
+                        findings: decision.catalogue.findings,
+                    },
                     bound_ratchet: {
                         ok: decision.bounds.ok,
                         base_ref: decision.bounds.baseRef,
-                        base_grace_ceiling: decision.bounds.baseGraceCeiling,
+                        base_bounds: decision.bounds.baseBounds,
                         note: decision.bounds.note,
                         violations: decision.bounds.violations,
                     },
@@ -626,7 +821,14 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         `  ${'measured total'.padEnd(38)} ${String(verdict.measured).padStart(8)} tok ` +
             `(baseline ${verdict.baseline}, ${sign}${delta}; ceiling ${verdict.ceiling})\n`,
     );
+    process.stdout.write(renderCeiling(decision.ceiling));
     process.stdout.write(renderBounds(decision.bounds));
+    process.stdout.write(
+        `  ${'catalogue completeness'.padEnd(38)} ` +
+            `${(decision.catalogue.findings.length === 0 ? 'ok' : 'GAPS').padStart(8)} — ` +
+            `${String(decision.catalogue.treesSeen)} projected tree(s), ` +
+            `${String(decision.catalogue.filesScanned)} file(s) scanned for stray rule payload\n`,
+    );
 
     // The host reading prints AFTER the source verdict and never touches the
     // exit code below. The label says which surface each number describes,
@@ -651,6 +853,30 @@ export function main(argv: string[] = process.argv.slice(2)): number {
                     '    --project-rules-dir <path> to get the number a consumer would load.\n',
             );
         }
+    }
+
+    // THE CEILING IS ESTABLISHED BEFORE THE SIZE QUESTION. A run that could not
+    // measure its own ceiling has no business reporting a tree as within one,
+    // and an expired grant is a refusal whatever the payload does.
+    if (!decision.ceiling.ok) {
+        process.stderr.write(
+            (decision.ceiling.verified
+                ? '❌  the standing-payload exception ledger refuses this run:\n'
+                : '❌  the standing-payload ceiling could not be MEASURED, and this run requires it:\n') +
+                decision.ceiling.violations.map((v) => `      · ${v}\n`).join(''),
+        );
+        return 1;
+    }
+
+    // Payload the census cannot see is payload no ceiling bounds. Refused
+    // BEFORE the size comparison for the same reason: a green "within budget"
+    // over an incomplete catalogue is a measurement of the wrong set.
+    if (decision.catalogue.findings.length > 0) {
+        process.stderr.write(
+            '❌  standing payload sits outside every measured bucket:\n' +
+                decision.catalogue.findings.map((v) => `      · ${v}\n`).join(''),
+        );
+        return 1;
     }
 
     // The bound is checked BEFORE the size question and independently of it. A
@@ -680,13 +906,46 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         // build or a first commit legitimately has none. A gate that failed to
         // refuse because it could not explain itself would be strictly worse
         // than one that refuses without the explanation.
-        const attribution = attributeGrowthAgainstBase();
+        const attribution = attributeGrowthAgainstBase(repoRoot, decision.bounds.baseRef);
+
+        // REJECTION INSTRUMENTATION — prerequisite 4a's converged floor.
+        //
+        // Both council seats refused to derive an exception cap from the 250-PR
+        // delta distribution, for one reason: the sample is CENSORED by the very
+        // ratchet a cap would relax, so every percentile describes what got
+        // through rather than what was attempted. The thing that uncensors it is
+        // recording the deltas that were BLOCKED, which nothing did.
+        //
+        // This line is that record, and its limits are worth stating rather than
+        // implying: it is a log line in a CI job, not a database. It captures
+        // attempts that reached this gate and failed; it cannot see a change
+        // nobody pushed. It is deliberately machine-greppable from a workflow
+        // log so the distribution can be rebuilt later without a schema anybody
+        // has to maintain today.
+        process.stdout.write(
+            'payload-rejection: ' +
+                JSON.stringify({
+                    measured: verdict.measured,
+                    ceiling: verdict.ceiling,
+                    attempted_delta: decision.ceiling.effectiveBase === null
+                        ? null
+                        : verdict.measured - decision.ceiling.effectiveBase,
+                    design_ceiling: decision.ceiling.designCeiling,
+                    base_payload: decision.ceiling.basePayload,
+                    base_ref: decision.bounds.baseRef,
+                    active_grants: decision.ceiling.activeGrants,
+                    buckets: verdict.buckets.map((b) => ({ name: b.name, tokens: b.tokens })),
+                }) +
+                '\n',
+        );
+
         process.stderr.write(
             `❌  per-spawn preamble payload grew past the ratchet: ${verdict.measured} > ${verdict.ceiling} tok.\n` +
                 `    Every rule and skill description here is re-written on EVERY subagent spawn, so growth\n` +
                 `    is paid per spawn, not once. Shrink the addition, or migrate the prose out of the\n` +
-                `    standing rule. The grace ceiling may NOT be raised to fit it: ADR-264, enforced by\n` +
-                `    the shrink-only ratchet above.\n`,
+                `    standing rule. The ceiling may NOT be widened to fit it — it is MEASURED at the base\n` +
+                `    ref, so there is no number to edit. A change whose offsetting reduction is genuinely\n` +
+                `    unsafe takes an approved, dated grant in ${EXCEPTIONS_CONFIG_PATH}.\n`,
         );
         // Three distinct states, and conflating the last two is a diagnostic
         // defect rather than a cosmetic one: "I could not look" and "I looked
