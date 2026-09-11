@@ -25,10 +25,11 @@ NEVER A DEMOTION. FRICTION ALONE NEVER DEMOTES A DETECTOR.
 A BAR SET ON AN UNMEASURABLE QUANTITY IS INERT AND SAYS SO.
 ```
 
-## The four detectors
+## The five detectors
 
 Read off `DetectorId` in `src/scripts/hooks/turn_end_gate_hook.ts`, never off
-prose — the roadmap that opened this question named three, and the tree has four.
+prose — the roadmap that opened this question named three, the tree had four, and
+`pending-decision` made it five.
 
 | Id | Fires when | Protects | Runs |
 |---|---|---|---|
@@ -36,8 +37,16 @@ prose — the roadmap that opened this question named three, and the tree has fo
 | B `language` | the reply language differs from that turn's fresh pin | the user-facing contract | every turn-end |
 | C `verification` | the turn changed a file and ran no verify-shaped command | engineering safety | every turn-end |
 | D `completion` | a completion claim carries no fresh evidence | the truthfulness of "done" | only when no dispatch is open |
+| E `pending-decision` | an earlier assistant turn in the SAME user turn put numbered options to the user and the closing one carries none | the liveness of an issued decision | every turn-end |
 
-**Two of the four are conditional, and the fourth column is load-bearing.**
+**Why E runs on every turn-end rather than joining A and D.** The conditional
+pair is excused by an open dispatch because a completion claim mid-dispatch is
+not yet a claim. A dropped decision is the mirror image: the continuation that
+drops it is frequently a dispatch or a hook nudge, so narrowing E the same way
+would silence it in exactly the case it exists for. It is grouped with B and C,
+which also read turn structure rather than the truthfulness of a claim.
+
+**Two of the five are conditional, and the fourth column is load-bearing.**
 `main()` runs A and D only when `dispatchOpen` is false — an open subagent
 dispatch excuses a promissory closing and an unsettled completion claim, and
 excuses nothing about B or C. So there are **three** allow paths, not two: the two
@@ -115,6 +124,7 @@ elsewhere. Q2 is measurable today from `RefusalRecord.counts`
 | B `language` | ≥ 20 % | ≥ 2 |
 | C `verification` | ≥ 40 % | ≥ 3 |
 | D `completion` | ≥ 40 % | ≥ 3 |
+| E `pending-decision` | ≥ 40 % | ≥ 3 |
 
 **These are policy choices, not findings, and they differ on purpose.**
 
@@ -141,6 +151,13 @@ calls its own numbers policy choices to be argued.
   against its benefit, and a bar set low would demote a detector on a
   distribution nobody has seen. It ties C by coincidence of caution, not because
   it does comparable work.
+- **E at 40 % / 3, for D's reason and not C's.** E is new and has never fired, so
+  like D there is no measured cost to weigh and a low bar would demote it on a
+  distribution nobody has seen. It is placed with the cautious pair rather than
+  with B for a second reason of its own: a false positive on E costs one
+  additional line in a reply, while a false negative loses a decision the user
+  was already owed and never learns was dropped. The asymmetry is the argument,
+  and it points the opposite way from B's.
 
 The supporting measurement behind A and D is the *general* one — advisory carriers
 reached no measurable effect where blocking carriers reached zero violations — not
@@ -150,20 +167,20 @@ borrowed as if it had been measured on these two detectors specifically.
 **The counter-argument, kept on the record rather than answered away:**
 differentiated bars encode four unmeasured judgements about relative harm, and a
 single shared bar would be methodologically cleaner on sparse data. It is
-rejected because pretending the four protected harms are interchangeable would
+rejected because pretending the five protected harms are interchangeable would
 hide those judgements rather than remove them.
 
 ***Revisit-if*, split so that the reachable half can actually fire.** Drafted as
 one conjunctive clause over both quantities, it was unfalsifiable by
 construction — it required Q1 shares, which this file declares unmeasurable until
-an instrument that does not ship here lands, so the only escape from four bars
+an instrument that does not ship here lands, so the only escape from five bars
 to one could never open.
 
 - **On Q2 alone, and it stands today:** two or more detectors reach their floors
   and their Q2 medians sit within ±1 of each other → the architectural argument is
   refuted *for those detectors* and their bars merge. It does not need all four,
   and it does not need D, whose floor is currently unreachable.
-- **On Q1, contingent:** once instrument 1 lands and Q1 becomes readable, all four
+- **On Q1, contingent:** once instrument 1 lands and Q1 becomes readable, all five
   shares within ±10 points collapses the bars to one.
 
 Either half fires alone. Naming the contingency is the point: a revisit condition
@@ -188,7 +205,7 @@ A detector's bar may not be read until **all four** hold for that detector:
    **Carve-out, or condition 4 eats its own enabler:** a change that only ADDS a
    field or a counter, leaving every existing count and every allow path
    untouched, does not reset. Without this, shipping instrument 1 would reset all
-   four windows — it writes `would_refuse_again` onto the session record, which is
+   five windows — it writes `would_refuse_again` onto the session record, which is
    the refusal instrumentation — and no window accumulated before it lands would
    ever be readable. That would contradict this file's own claim that Q2 is
    measurable today.
@@ -212,11 +229,12 @@ The refusal state carries a **90-day TTL** (`pruneAgedRefusalState`, run at
 corpus reachable by counting records is never more than 90 days deep, and
 condition 1 asks for 100 eligible refusals **per detector**.
 
-The arithmetic decides it, and it decides against two detectors. On this
+The arithmetic decides it, and it decides against three detectors. On this
 branch's own published reading — promissory 5 refusals over a 5-day window, about
 1/day — detector A needs roughly 100 days to reach 100 and is pruned at 90.
-Dormant D needs unbounded time. Only C, at 22 over the same window, clears 100
-inside the retention window at all.
+Dormant D needs unbounded time, and E is dormant by construction on the day it
+ships. Only C, at 22 over the same window, clears 100 inside the retention window
+at all.
 
 Left there, this file would have reintroduced exactly the failure it rejects for
 Q2's denominator: a bar that cannot fire, arrived at through retention instead of
@@ -228,8 +246,8 @@ discovered:
   Counting live records is not an implementation of condition 1, it is a
   different and smaller question.
 - **Until that aggregate exists, condition 1 is satisfiable only by a detector
-  firing ≥ 100 times within 90 days** — which is C, and no other. A and D are not
-  merely far from their floors; they cannot reach them. The file says so here
+  firing ≥ 100 times within 90 days** — which is C, and no other. A, D and E are
+  not merely far from their floors; they cannot reach them. The file says so here
   rather than letting a future reader conclude the bars were simply never
   crossed.
 - The aggregate is a count, never a copy of the pruned record: retention exists
@@ -383,6 +401,6 @@ reason.
 
 - [`concern-activation-policy`](concern-activation-policy.md) — the ladder, the generic reverse triggers, and the `would_fire` shadow mechanism instrument 1 applies.
 - [`hook-architecture-v1`](hook-architecture-v1.md) — the dispatcher contract, and which hosts carry a `stop` slot at all.
-- `src/scripts/hooks/turn_end_gate_hook.ts` — the gate, its four detectors, and the two re-entrancy layers Q1 dies on.
+- `src/scripts/hooks/turn_end_gate_hook.ts` — the gate, its five detectors, and the two re-entrancy layers Q1 dies on.
 - `src/scripts/_lib/turn_end_refusals.ts` — `DETECTOR_IDS`, `RefusalRecord`, and the counts Q2 is read from.
 - [`condensation-default-kill-criterion`](condensation-default-kill-criterion.md) — the sibling shape: one feature's kill criterion, pre-registered with its decision table.
