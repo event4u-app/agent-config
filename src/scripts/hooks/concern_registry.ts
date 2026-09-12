@@ -74,6 +74,7 @@ import { main as turnEndGateMain } from './turn_end_gate_hook.js';
 import { main as editShapeMain } from './edit_shape_hook.js';
 import { main as commentDisciplineMain } from './comment_discipline_hook.js';
 import { main as rereadGuardMain } from './reread_guard_hook.js';
+import { main as memoryRecallMain } from './memory_recall_hook.js';
 import { main as sessionEolMain } from './session_eol_hook.js';
 import { main as subagentLedgerMain } from './subagent_ledger_hook.js';
 import { main as toolResultBytesMain } from './tool_result_bytes_hook.js';
@@ -138,6 +139,7 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
     'src/scripts/hooks/edit_shape_hook.ts': editShapeMain as ConcernMain,
     'src/scripts/hooks/comment_discipline_hook.ts': commentDisciplineMain as ConcernMain,
     'src/scripts/hooks/reread_guard_hook.ts': rereadGuardMain as ConcernMain,
+    'src/scripts/hooks/memory_recall_hook.ts': memoryRecallMain as ConcernMain,
     'src/scripts/hooks/session_eol_hook.ts': sessionEolMain as ConcernMain,
     'src/scripts/hooks/subagent_ledger_hook.ts': subagentLedgerMain as ConcernMain,
     'src/scripts/hooks/tool_result_bytes_hook.ts': toolResultBytesMain as ConcernMain,

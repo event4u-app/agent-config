@@ -88,6 +88,13 @@ const TTL_CONFIG: ReadonlyArray<{
         reviewBy: '2026-11-10',
     },
     {
+        dir: 'agents/runtime/state/memory-recall',
+        ttlDays: 7,
+        description: 'Per-session memory-recall latch (one flag per delivered memory slug)',
+        owner: 'maintainer',
+        reviewBy: '2026-11-10',
+    },
+    {
         dir: 'agents/runtime/state/end-review-nudge',
         ttlDays: 7,
         description: 'Per-session end-review latch',

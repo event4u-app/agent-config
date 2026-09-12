@@ -26,6 +26,8 @@
   "edit-shape_reason": "one advisory line naming the cheaper edit primitive (roadmap 5.2: budget row from day one - the economy nudge must not itself become an economy problem)",
   "reread-guard": 1024,
   "reread-guard_reason": "one advisory line naming the earlier read / ranged alternative (roadmap 6.1)",
+  "memory-recall": 768,
+  "memory-recall_reason": "ONE memory pointer per fire: the slug, one authored why-now clause, the absolute path, and the memory's OWN frontmatter description, truncated so the emission is provably under this number (`CAP_BYTES` in hooks/memory_recall_hook.ts is the same constant, enforced at emission by buildEmission rather than left to the bench to notice). Registered BELOW the 1024 default deliberately, for the reason `skill-route` gives for its 512: this row is the ceiling that keeps the concern a POINTER. A memory file in this store runs 1.5-6 kB, so a later change that starts injecting bodies fails the build instead of quietly multiplying the hottest slot in the manifest by ten. Measured emission over the four seeded rules on the real store: 356-768 B, one of the four hitting the cap and truncating its description (`hook-latency-gate-has-runner-variance`, whose own description is 517 B).",
   "session-eol": 1024,
   "session-eol_reason": "one recycle-advisory line, once per session past the committed threshold (road-to-token-economy-recycling 3.2); recording itself emits nothing",
   "skill-route": 512,
