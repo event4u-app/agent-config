@@ -5,13 +5,19 @@ review_by: 2026-12-27
 
 # Road to a runtime orchestration substrate — stub
 
-> **Arrivals:** 10 (at least) - latest `inbox-2026-09-y` (2026-09-11). Counted as
+> **Arrivals:** 11 (at least) - latest `inbox-2026-09-aa` (2026-09-12), a round of
+> fourteen independent external reviews of which two reach this subject: one names a
+> shared runtime-state substrate as P0.2 over five named state owners (review baseline,
+> refusal state, continuity, session index, code-graph), the other reads this stub
+> directly and recommends option 3 - promote a named track - rather than a new roadmap.
+> Neither supplies a measurement any track is gated on, so the posed question below is
+> unchanged. Counted as
 > distinct prior round directories under the consumed-inbox tree, which is gitignored -
 > so the count is machine-local and the ordering is the finding, not the exact figure.
 > Read `(at least)` strictly: a broad keyword sweep returns a larger set that includes
 > incidental mentions, so this is the subject-matched floor.
 
-> **The posed owner question — 10 arrivals, no recommended answer.** Every track
+> **The posed owner question — 11 arrivals, no recommended answer.** Every track
 > in the table below is gated on `road-to-runtime-governance-flip.md` Phase 1's
 > ADR, which does not exist, so no track here can start and none has been
 > adopted. Exactly one of:
@@ -25,7 +31,7 @@ review_by: 2026-12-27
 > 4. Close the stub and record the tracks as not adopted, which is the reading
 >    § What this stub does NOT claim leaves open in both directions.
 >
-> The count sets the venue, not the verdict: ten arrivals say the source set keeps
+> The count sets the venue, not the verdict: eleven arrivals say the source set keeps
 > returning, not that any track should be built.
 
 > **Source:** `agents/tmp.old/inbox-2026-08-h/` — landed by `/analyze:inbox` on
