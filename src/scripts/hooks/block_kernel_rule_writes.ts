@@ -26,8 +26,18 @@
  * exported pure functions, and reports via the same stderr-block-message +
  * exit-code shape (0 allow · 1 block). `fail_closed: true` in the manifest —
  * ADR-127 permits more than one blocking hook; this is the second (after
- * block-no-verify). No agent-accessible override: the sole legitimate bypass
- * is the human-owned exception registry the deny message points to.
+ * block-no-verify).
+ *
+ * Coverage, stated as what it actually parses: an edit-tool envelope whose
+ * target path is a kernel rule, and a Bash command whose LITERAL argument
+ * text names one in the narrow write shapes listed at `check_envelope`. It
+ * is a shell-argument parser, so a write that never puts the path in an
+ * argument is not seen — an interpreter body (`python3 -c`, `node -e`), a
+ * heredoc, a script file invoked by name, or a path assembled from a shell
+ * variable all reach the file with this guard silent. The human-owned
+ * exception registry the deny message points to is the only LEGITIMATE
+ * bypass; it is not the only reachable one, and saying otherwise would sell
+ * an argument parser as a sandbox.
  *
  * Exit codes (docs/contracts/hook-architecture-v1.md):
  *   0 — allow
