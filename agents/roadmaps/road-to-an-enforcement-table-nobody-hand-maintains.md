@@ -85,36 +85,82 @@ that hedge about it, which is why each of them re-derives the caveat in prose.
 
 ## Phase 2 — Generate the matrix, keep the prose
 
-- [ ] **2.1 Generate the matrix from the lowering configuration** under a marker that says it is
+- [x] **2.1 Generate the matrix from the lowering configuration** under a marker that says it is
       generated, and add a check that fails when the committed matrix differs from what the
       configuration produces.
       verify: editing the configuration and not regenerating reddens the check; regenerating
       greens it.
-- [ ] **2.2 Leave the explanatory prose hand-written.** The paragraphs saying why a host cannot
+      `src/scripts/check_enforcement_matrix.ts`, generator and gate in one. Marker style matches
+      the tree's only existing begin/end convention (`lint_adapter_tier` over
+      `docs/contracts/provider-lifecycle.md`) rather than a new one.
+      **Both readings taken, and taken twice.** The subagent edited the configuration without
+      regenerating and got exit 1; `--write` returned it to exit 0. Verified independently from the
+      other direction — hand-flipping one generated cell (`claude`/`stop` from `refusal` to
+      `warning`) exits **1**, restoring the file exits **0**. Worth recording how that second check
+      nearly went wrong: piping the run into `tail` made `$?` report `tail`'s status, printing ❌
+      beside `EXIT=0`. The gate was fine; the probe was not, and a probe that reads a red as green
+      is the failure this roadmap is about.
+- [x] **2.2 Leave the explanatory prose hand-written.** The paragraphs saying why a host cannot
       block are authored and stay above the generated block.
       verify: the generated region is delimited and the diff of a regeneration touches only inside
       it.
+      Region is lines 189–231; the `Loop primitive` section sits at 313, outside it, and the
+      boundary comment names that explicitly so a later reader does not have to infer it. A
+      regeneration after a one-field configuration change touched exactly two lines, both inside
+      the region — the summary and the one row.
 
 ## Phase 3 — Slot granularity, not host granularity
 
-- [ ] **3.1 Emit one row per host and bound slot.** The three honouring slots and the six
+- [x] **3.1 Emit one row per host and bound slot.** The three honouring slots and the six
       non-honouring ones of the one blocking host are each visible.
       verify: the table has a row per bound slot, and the row for the slot carrying the content
       scanner reads non-blocking.
-- [ ] **3.2 Keep a generated one-line summary above the table** so a reader who needs the short
+      32 rows, long form — `Host | Slot | Configured outcome | Backing`. The `claude` block shows
+      `refusal` on `stop`, `user_prompt_submit` and `pre_tool_use`, and `warning` on
+      `post_tool_use`, which is the slot the content scanner binds to.
+      **The layout was measured rather than assumed, and the first argument for it was withdrawn.**
+      Both shapes were built. The 9x6 matrix is genuinely more compact — 11 lines against 41 — and
+      the document says so instead of pretending otherwise. It was rejected because a one-cell
+      change rewrites a six-value row whose host must be recovered by counting columns, because
+      there is no room for the `Backing` column so no cell is checkable against the YAML without
+      trusting the derivation, and because it needs a fifth glyph for "not bound here" which puts a
+      value outside the closed set into the same visual column as the four real ones. The initial
+      claim that long form reads better on a phone was walked back — its rows are no narrower in
+      characters — and the document now names the diff as the decisive argument instead.
+      Grouped per-host subsections were not built: headings inside a generated region would make
+      the document's own structure build output, against the council's condition 2.
+- [x] **3.2 Keep a generated one-line summary above the table** so a reader who needs the short
       answer gets one that is derived rather than remembered.
       verify: the summary line is inside the generated region and is regenerated with the matrix.
+      Inside the region, and it moved under the regeneration probe — `4 of 32` back to `3 of 32`
+      when the sabotaged field was restored, which is the proof it is derived rather than written
+      once.
 
 ## Phase 4 — A closed vocabulary, backed by data
 
-- [ ] **4.1 Give every cell a value from a closed set** covering refusal, halt-by-state, warning,
+- [x] **4.1 Give every cell a value from a closed set** covering refusal, halt-by-state, warning,
       and unenforced.
       verify: a value with no backing line in the lowering configuration is rejected by the check
       from Phase 2.1.
-- [ ] **4.2 Do not let the vocabulary outrun the data.** The halt-by-state value has zero prior
+      All 32 cells carry one of the four. `--self-test` runs 5 cases, 4 of them rejecting: a value
+      outside the vocabulary, a hand-flipped outcome, a deleted row, the `halt-by-state` fixture
+      below — and the regenerated region accepting.
+- [x] **4.2 Do not let the vocabulary outrun the data.** The halt-by-state value has zero prior
       occurrences in this tree; it may appear in the table only when the configuration carries it.
       verify: the check's fixture includes a cell claiming a value the configuration does not have,
       and the check reds on it.
+      **The fixture found a real defect before this shipped, which is the whole argument for
+      demanding it.** The first `--write` guard computed its backing set from *the generator's own
+      output*, so sabotaging `outcomeFor` to return `halt-by-state` for every propagating slot
+      wrote the phantom value through and exited **0** — precisely the scenario the dissenting
+      council seat described. `backedOutcomes` now reads the raw configuration fields instead, and
+      the same sabotage exits 1 with 19 findings. Recorded in the gate's docstring and its
+      `no_canary_reason` rather than only here.
+      That also settles the recorded dissent empirically. The seat that wanted the value removed
+      from the vocabulary entirely was worried about a generator bug emitting a phantom; the seat
+      that wanted it defined-but-unused was worried about an unexplained category meeting a
+      reader. Both concerns were real, and the fixture addresses the first without giving up the
+      second.
 
 ## Blockers
 
@@ -179,13 +225,45 @@ that hedge about it, which is why each of them re-derives the caveat in prose.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A read-only reporter prints host by slot by blocking value against the published
+- [x] AC-1 — A read-only reporter prints host by slot by blocking value against the published
       claim, writes nothing, and its output is recorded with a date.
-- [ ] AC-2 — The published matrix is generated from the lowering configuration, and a check reds
+      `report_enforcement_drift.ts`; the write-grep returns nothing and a test pins the property
+      over a wider set. Recorded at
+      `agents/evidence/analysis/enforcement-table-slot-drift-2026-09-12.md`, pinned to `9e85c0bf3`,
+      with the comparison rule stated ahead of the count. Result: 1 mismatch of 8 comparable hosts.
+      The artefact now carries a dated addendum recording that its subject — the `Deny honoured`
+      column — was deleted by this roadmap, so a later reader is not left measuring a column that
+      no longer exists.
+- [x] AC-2 — The published matrix is generated from the lowering configuration, and a check reds
       when the two differ.
-- [ ] AC-3 — The explanatory prose is outside the generated region and is unchanged by a
+      `check_enforcement_matrix`, 32 rows, registered in `Taskfile.yml`, `taskfiles/ci-fast.yml`,
+      `.github/workflows/consistency.yml` and `src/config/gate-coverage.yml` — CI-run rather than
+      local-only. Red and green both observed, twice, from both directions.
+- [x] AC-3 — The explanatory prose is outside the generated region and is unchanged by a
       regeneration.
-- [ ] AC-4 — The table carries one row per host and bound slot, and the row for the slot carrying
+      Region 189–231; taxonomy, the `Loop primitive` section (313) and the
+      *What a generated table here can and cannot prove* subsection are all outside it, and a
+      regeneration's diff touched only the two lines inside.
+- [x] AC-4 — The table carries one row per host and bound slot, and the row for the slot carrying
       the content scanner reads non-blocking.
-- [ ] AC-5 — Every cell carries a value from the closed set, and a cell claiming a value the
+      `claude`/`post_tool_use` reads `warning`, and `injection-scan` binds only to `post_tool_use`.
+      That single row is the thing the old host-level column could not say.
+- [x] AC-5 — Every cell carries a value from the closed set, and a cell claiming a value the
       configuration does not carry reds the check.
+      Met, and the fixture proving it caught a real hole in the first implementation of the guard
+      it tests.
+
+**One acceptance criterion the roadmap did not write, delivered because the council made it
+binding:** the generated region is titled **configured** behaviour, not **enforced** behaviour, and
+opens "A cell says what this package has written down about a host, never what the host does." A
+drift check establishes agreement with the YAML and nothing more — a mistaken lowering rule yields
+a synchronised, false document the gate stays green over. A hand-written subsection states that
+limit, names what would close it (a runtime conformance test, which this tree has for no host), and
+names the specific mistake: reading a generated table as stronger evidence than the hand-written one
+it replaced. A test asserts the region says `configured behavior, not observed behavior` and does
+not match `/enforced behaviour/i`.
+
+**The `Deny honoured` column was deleted, not corrected.** It published "the only host that refuses
+on a deny" — the one claim Phase 1 measured as wrong, and wrong in the direction that matters. A
+column that can only be right or wrong at host granularity cannot express a host that refuses on
+three of nine slots, so the per-slot table replaces it rather than restating it more carefully.
