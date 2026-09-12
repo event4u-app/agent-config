@@ -272,8 +272,9 @@ Ask (in the user's language) exactly one numbered-options question:
 
 > How should this roadmap be executed later?
 >
-> 1. Fully autonomous — one run-start contract confirmation, then no
->    interruptions except the safety floors
+> 1. Fully autonomous — one run-start contract confirmation, then the
+>    only halts are the safety floors, a quality-red, and a step that
+>    reveals out-of-roadmap work
 > 2. Checkpoint at phase boundaries — compact status + continue prompt
 >    per phase
 > 3. Interactive — every gate fires as today

@@ -26,8 +26,18 @@
  * exported pure functions, and reports via the same stderr-block-message +
  * exit-code shape (0 allow · 1 block). `fail_closed: true` in the manifest —
  * ADR-127 permits more than one blocking hook; this is the second (after
- * block-no-verify). No agent-accessible override: the sole legitimate bypass
- * is the human-owned exception registry the deny message points to.
+ * block-no-verify).
+ *
+ * Coverage is limited to edit-tool envelopes whose explicit target is a
+ * kernel rule, and to the literal shell-argument write shapes recognized by
+ * `check_envelope`. Indirect or dynamically resolved writes may not be
+ * detected; this guard is not a sandbox and does not provide complete write
+ * mediation. The human-owned exception registry named in the denial message
+ * is the only LEGITIMATE bypass; it is not the only reachable one.
+ *
+ * The boundary is stated as an abstraction, without an inventory of concrete
+ * evasion families. `check_envelope` is the authoritative inspection point
+ * for exact behaviour.
  *
  * Exit codes (docs/contracts/hook-architecture-v1.md):
  *   0 — allow

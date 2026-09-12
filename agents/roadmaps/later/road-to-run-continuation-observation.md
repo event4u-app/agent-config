@@ -46,6 +46,46 @@ estate_offset_exempt: >-
 > justification is now **partly stale** and the roadmap is a candidate for
 > re-activation, not that it stays parked on the old grounds.
 
+> **Kill criterion — dated 2026-09-12. Deadline 2026-10-11.** The pre-registered
+> disposition was withdrawal rather than improvement, and it shipped without a date,
+> which made it the pending state it was written to end. It now has one: **if no run
+> satisfying the resume trigger above is recorded by the end of 2026-10-11, the
+> continuation hook is withdrawn** — its concern and its manifest binding removed from
+> the shipped tree, its decision history and observation record retained. Withdrawal is
+> automatic on that date and needs no further decision on the merits.
+>
+> **What failure would and would not mean.** Recorded before the window opens, so it
+> cannot be reinterpreted after. Failing to obtain a qualifying run establishes
+> *insufficient real-world engagement to justify retaining 1,529 lines of unvalidated
+> machinery*. It does **not** establish that the hook malfunctions. Those are different
+> claims and only the first one is being tested.
+>
+> **The trigger is not relaxed, and that is a measurement rather than a preference.**
+> One council seat proposed dropping the `execution.mode: autonomous` clause on the
+> evidence that it has never fired; the other refused, on the grounds that a
+> `phase-checkpoints` run is an invalid proxy that cannot exercise the mechanism. The
+> manifest settles it: the concern is a "no-op unless this session claimed a roadmap
+> (`sessions:claim`) whose frontmatter says `execution.mode: autonomous`"
+> (`src/scripts/hook_manifest.yaml:1066-1068`). A relaxed trigger would therefore count
+> an observation that provably cannot test the hook. No relaxation during this window;
+> any successor after withdrawal needs a new forward decision with a trigger derived
+> from the roadmap modes that actually occur.
+>
+> **Two facts the council did not have, both recorded because they cut in opposite
+> directions.** First, an engagement outside a test *already exists*: 2026-08-19T14:24:20Z,
+> run `12653f90d7cb4243821392afd5d8c4db`, iteration 1 of 25, an `engage` rung
+> (commit `d9e040b`). It is a real engagement and it is one iteration — it is evidence
+> the mechanism fires, not evidence it was exercised, so it does not close step 0.1 and
+> does not pre-empt the deadline. Second, the trigger is currently **unsatisfiable from
+> the active estate**: measured 2026-09-12, *zero* of the 15 active roadmaps carry
+> `execution.mode: autonomous` — every occurrence in `agents/roadmaps/` is under
+> `archive/`. Waiting for the trigger is waiting for something the estate cannot
+> presently produce, which is an argument for the deadline rather than against it.
+>
+> **Venue:** council, 2 seats, 2 rounds, blind chairman, quorum concluded. Both seats
+> converged on 2026-10-11 with automatic withdrawal; they split only on relaxing the
+> trigger, and that split is resolved above by measurement rather than by vote.
+
 > **Source:** the sole deferred acceptance criterion of
 > `road-to-long-horizon-execution`, carried here under the preservation
 > test in `roadmap-progress-sync § Who resolves it` rather than dropped

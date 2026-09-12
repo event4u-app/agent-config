@@ -7,6 +7,14 @@ supersedes: —
 superseded_by: —
 phase: loop-engineering
 type: structural
+review_trigger: >-
+  Reopen when a continuation or re-engagement mechanism becomes directly
+  consumer-invocable, is promoted to supported package behaviour in a
+  consumer-facing surface, or has a termination cap removed or materially
+  raised without this record being re-read. Added 2026-09-12 with the
+  amendment in § 3; before that date this ADR carried no reopen condition
+  at all, which `adr_cite_check` reports as a defect in the record rather
+  than as strength of the lock.
 ---
 
 # ADR-118 — Loop-engineering boundaries: one closure, four rejections, three deferrals, zero new loop surfaces
@@ -117,6 +125,58 @@ existing vocabulary). **No new loop surfaces**: no run-until-condition goal
 command, no fresh-context re-loop mode for roadmap processing (bounded-scope
 by design), no separate nightly self-check workflow (folded into the existing
 weekly canary).
+
+#### Amendment — 2026-09-12: what "no new loop surfaces" governs
+
+*The rejection paragraph above is unchanged. This note narrows its scope; it
+grants nothing.*
+
+**The contradiction being recorded.** `src/scripts/hooks/run_continuation_hook.ts`
+shipped after this ADR was accepted — 1,529 lines of a run-until-condition
+mechanism with its own caps and ladder, delivered under
+`road-to-long-horizon-execution` Phase 1 (H-1), bound at
+`src/scripts/hook_manifest.yaml:1078`. Read against the sentence above it looks
+like a straight violation, and nothing reconciled the two for two months. A
+reader of either surface alone got a confident and wrong answer.
+
+**The narrowing, in three clauses.** The boundary governs **surfaces this package
+exposes to consumers**. An internal mechanism bound to a hook slot, reachable
+through no skill, command, or setting, is not such a surface. And a **host-native**
+loop primitive is a lowering target — something an existing bounded behaviour may
+be lowered onto — not a new surface this package invents.
+
+**The clauses were verified before being written, not asserted.** Both council
+seats made ratification conditional on demonstrating "internal" rather than
+claiming it, and all three checks came back empty at HEAD:
+
+| Check | Result |
+|---|---|
+| Consumer-invocable — any skill or command reaching it | none. `grep -rn 'run_continuation' src/skills/ src/agent-src/commands/` returns nothing |
+| Configurable as supported behaviour | none. No settings key; the only control is the env kill switch `AGENT_CONFIG_NO_RUN_CONTINUATION=1`, which disables and cannot enable or tune |
+| Documented as supported consumer behaviour | none. The one live mention is `docs/contracts/hook-architecture-v1.md:720`, a maintainer architecture contract, and `docs/` is not projected into a consumer install. Every other hit is an archived changelog entry |
+
+**What this note does not do.** It does not authorise a new loop surface, and it
+is not a precedent for reading a shipped violation back into compliance. The
+mechanism it covers is enforced on exactly one host — `claude`, tier 1 — and is
+advisory everywhere else (`docs/contracts/hook-architecture-v1.md:712-722`). Its
+unproven status is tracked separately and carries a dated kill criterion; see
+`agents/roadmaps/later/road-to-run-continuation-observation.md`.
+
+**Revisit this amendment if** a continuation or lowering-target mechanism becomes
+directly consumer-invocable, configurable as supported package behaviour, relied
+on as part of the public contract, or capable of continuing outside its
+documented termination caps. That condition is about whether the
+internal/consumer-facing distinction stays *truthful*; it is deliberately not the
+`>2 h/month` threshold in Revisit-if below, which governs the different question
+of whether to expose a rejected capability at all.
+
+**Venue and provenance.** Council, 2 seats (anthropic/claude-sonnet-4-5,
+openai/codex-default), 2 rounds, blind chairman, quorum concluded — the venue
+question was put to the council explicitly and both seats held that it follows
+the proposed transition rather than the record's original author: the narrowing
+lowers no security, privacy, safety, or data-handling floor and is reversible
+inside the authorised envelope. `reopen_policy` on this record is `unclassified`,
+under which council investigation and reversible transitions are permitted.
 
 ### 4. The one closure — periodic live trigger-eval pass rate
 
