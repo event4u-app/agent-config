@@ -1043,6 +1043,41 @@ concerns:
     # Provable from the hook's own source: READ_TOOLS ∪ WRITE_TOOLS.
     tools: [Read, Edit, Write]
     needs_payload_bodies: [input]
+  # Memory recall — delivers a memory the store ALREADY holds, at the moment
+  # the tool call it is about would run. The finding: in one long autonomous
+  # run the agent walked into four traps that each had a memory file written
+  # weeks earlier, and the store's own index records "of eleven error classes
+  # in one session, nine had a file here already and all nine were read AFTER
+  # the failure". `memory_lookup` is a CLI nothing calls automatically, so
+  # recall is model-carried and fails exactly when the agent is busy.
+  #
+  # A COMMITTED TRIGGER TABLE, never a similarity score: `RECALL_RULES` maps
+  # one precisely-decidable payload condition to one memory slug, so the floor
+  # is a predicate rather than a threshold and every row is replayed against a
+  # real payload in tests. A fuzzy match over 467 memory files would fire on
+  # most calls and be tuned out within a day.
+  #
+  # ADVISORY ONLY — binds on the blocking slot and never returns exit 1 on any
+  # path; a stale trigger row must never deny work. Delivery mirrors
+  # `reread-guard` (exit-2 warn, host-facing exit 0 on the verified `claude`
+  # platform). ONE memory per fire, pointer + the memory's own description,
+  # hard-capped at 768 bytes (registered BELOW the 1024 default in
+  # hook-token-budget.json so a later change that injects memory BODIES fails
+  # the build). Per-session per-slug latch under
+  # agents/runtime/state/memory-recall/ — slug keys and timestamps only, no
+  # field able to hold a path or a command. The silent path does zero fs work.
+  # An unresolvable store emits the pointer anyway plus a stderr diagnostic:
+  # an absent store and a store with no match are different answers.
+  # fail_closed: false.
+  memory-recall:
+    script: src/scripts/hooks/memory_recall_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
+    # Provable from the hook's own source: the union of the `tools` sets on
+    # RECALL_RULES — COMMAND_TOOLS (rules 1 and 4) ∪ EDIT_TOOLS (rules 2, 3).
+    tools: [Bash, Edit, Write, MultiEdit, str-replace-editor, save-file, launch-process]
+    needs_payload_bodies: [input]
   # road-to-token-economy-recycling Phases 1.1 / 3.2 / 4.2 — session
   # end-of-life instrument + recycle advisory. Every Stop, incrementally
   # folds the transcript's newly appended lines (payload `transcript_path`,
@@ -1315,7 +1350,7 @@ platforms:
     session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
     session_end:      [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush]
     stop:             [chat-history, verify-before-complete, self-repair, session-register, roadmap-progress, design-pass-stop]
-    pre_tool_use:     [block-no-verify, evidence-independence, block-kernel-rule-writes, block-config-weakening, block-speaking-inbox-dir, rtk-wrap, design-slop, ui-route-nudge, code-graph-context, chain-nudge, ship-diff-volume, reread-guard]
+    pre_tool_use:     [block-no-verify, evidence-independence, block-kernel-rule-writes, block-config-weakening, block-speaking-inbox-dir, rtk-wrap, design-slop, ui-route-nudge, code-graph-context, chain-nudge, ship-diff-volume, reread-guard, memory-recall]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape, comment-discipline, design-pass]
 
   claude:
@@ -1346,7 +1381,7 @@ platforms:
     # (+16,329 GPT tok, +69 % on the thin rule layer) are in
     # `project_thin_rules.path_only_ids`; the receiver is
     # `agents/roadmaps/stubs/road-to-a-path-route-under-delivery.md`.
-    pre_tool_use:     [block-no-verify, evidence-independence, block-kernel-rule-writes, block-config-weakening, block-speaking-inbox-dir, one-question-per-ask, rtk-wrap, design-slop, ui-route-nudge, code-graph-context, chain-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow, source-first-gate]
+    pre_tool_use:     [block-no-verify, evidence-independence, block-kernel-rule-writes, block-config-weakening, block-speaking-inbox-dir, one-question-per-ask, rtk-wrap, design-slop, ui-route-nudge, code-graph-context, chain-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow, source-first-gate, memory-recall]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape, comment-discipline, language-mirror, design-pass, journal-record]
     # `language-mirror` — round-5 § 6.1. `pre_compact` sets a pin-lost marker;
     # the `post_tool_use` entry above re-emits the pin exactly once while that
@@ -1392,7 +1427,7 @@ platforms:
     # still costs the dispatch, and its entire output is thrown away.
     stop:             [chat-history, verify-before-complete, self-repair, session-register, roadmap-progress, design-pass-stop]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
-    pre_tool_use:     [block-no-verify, evidence-independence, block-kernel-rule-writes, block-config-weakening, block-speaking-inbox-dir, rtk-wrap, design-slop, ui-route-nudge, code-graph-context, chain-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow, source-first-gate]
+    pre_tool_use:     [block-no-verify, evidence-independence, block-kernel-rule-writes, block-config-weakening, block-speaking-inbox-dir, rtk-wrap, design-slop, ui-route-nudge, code-graph-context, chain-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow, source-first-gate, memory-recall]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape, comment-discipline, design-pass]
     # subagent-ledger IS bound here, unlike the two nudges above, and the
     # difference is the delivery channel rather than the platform: the nudges
