@@ -137,3 +137,27 @@ became `null`.
 ./scripts-run src/scripts/report_enforcement_drift
 ./scripts-run src/scripts/report_enforcement_drift --rule lenient
 ```
+
+## What happened to the subject, 2026-09-12
+
+The column this measured no longer exists. Phases 2 to 4 of
+`road-to-an-enforcement-table-nobody-hand-maintains` removed the `Deny honoured`
+column from `docs/enforcement-by-host.md` rather than correcting the one
+mismatched cell, on the finding above: a binary host-level cell has to summarise
+a column of slot values, and no binary value is faithful when the column
+disagrees with itself. `✅` would have overclaimed six of claude's slots and
+`❌` would have denied three. The enforcement claim is now a generated region in
+that same file, one row per host and bound slot, projected from the lowering
+file by `check_enforcement_matrix` and drift-checked on every CI run.
+
+**The commands above still run and they no longer find a matrix header**, which
+is not a parse failure: the reporter detects the generated region and says so.
+Its projection logic (`readSlots`) is the projection the generator imports, so
+the count this artifact reports and the table the document publishes are read
+off the same walk of the same file.
+
+**The count in this artifact stands as of its own date and is not re-derivable
+against the current document**, because its subject was deleted. The finding it
+records — 1 mismatch of 8 comparable hosts, on the row carrying the enforcement
+claim — is what motivated the deletion and is the reason it is recorded here
+rather than only in a commit message.

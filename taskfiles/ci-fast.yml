@@ -659,6 +659,17 @@ tasks:
       publish an "## Auto-trigger keywords" section.
     cmd: ./scripts-run src/scripts/lint_skill_trigger_contradiction {{.QUIET_FLAG}}
 
+  check-enforcement-matrix:
+    silent: true
+    desc: |
+      The per-slot enforcement table in docs/enforcement-by-host.md must match
+      what src/scripts/hooks/host_lowering.yaml produces, and every cell must
+      carry a vocabulary value some line in that file actually backs. Regenerate
+      with `--write`; corrections belong in the YAML or the generator, never in
+      the table. The region is titled CONFIGURED behaviour: this gate proves
+      agreement with the configuration and nothing about any host's runtime.
+    cmd: ./scripts-run src/scripts/check_enforcement_matrix {{.QUIET_FLAG}}
+
   check-mcp-doc-drift:
     silent: true
     desc: |

@@ -78,6 +78,7 @@ import { splitMarkdownRow } from './_lib/md_table.js';
 import {
     DEFAULT_SURFACE,
     type HostLowering,
+    type SurfaceRow,
     isVerifiedNow,
     parseHostLowering,
 } from './hooks/host_lowering.js';
@@ -98,6 +99,16 @@ export const DEFAULT_DOC = path.join('docs', 'enforcement-by-host.md');
  */
 const MATRIX_HEADER = ['Host', 'Compile-time rules', 'Lifecycle slots bound', 'Deny honoured'];
 
+/**
+ * The opening marker of the generated per-slot region.
+ *
+ * Held as a literal rather than imported, because the module that owns it —
+ * `check_enforcement_matrix` — imports this one, and an import back would be a
+ * cycle. `tests/scripts/check_enforcement_matrix.test.ts` asserts the two
+ * spellings are equal, so the duplication cannot drift silently.
+ */
+const GENERATED_REGION_MARKER = '<!-- BEGIN GENERATED: enforcement-configured-by-slot -->';
+
 /** What the published cell asserts. */
 export type ClaimedDeny = 'honoured' | 'not-honoured' | 'not-applicable' | 'unparsed';
 
@@ -112,6 +123,16 @@ export interface SlotReading {
     literal: number | null;
     /** The literal after the row's verification currency is applied. */
     effective: number | null;
+}
+
+/** What {@link readSlots} establishes about one host. */
+export interface HostReading {
+    /** The host's `any` surface row, or null when the configuration has none. */
+    row: SurfaceRow | null;
+    /** The row exists and its `verified` block has not expired. */
+    verifiedNow: boolean;
+    /** Lowerable slots, in the configuration file's own order. */
+    slots: SlotReading[];
 }
 
 export interface PublishedRow {
@@ -145,6 +166,16 @@ export interface DriftReport {
     loweringPath: string;
     docPath: string;
     rule: ComparisonRule;
+    /**
+     * The document carries the generated per-slot region.
+     *
+     * Distinguishes the two reasons this report can find no host-level matrix:
+     * the header moved (a parse failure), or the hand-maintained column this
+     * report was written against was replaced by a generated one (the fix
+     * landing). Reporting both as "header not found" would make a repaired
+     * document read like a broken one.
+     */
+    generatedRegionPresent: boolean;
     rows: HostComparison[];
     /** Rows under the chosen rule. */
     mismatches: HostComparison[];
@@ -218,6 +249,39 @@ export function parsePublishedMatrix(markdown: string): PublishedRow[] {
     return out;
 }
 
+/**
+ * One host's slot column, with verification currency already applied.
+ *
+ * THE PROJECTION, AND THE ONE PLACE IT LIVES. Everything downstream of this
+ * file that needs "what does the configuration say about (host, slot)" calls
+ * this rather than re-walking the parsed table. `check_enforcement_matrix`
+ * generates the published per-slot table from exactly this return value, so the
+ * generator and this reporter cannot drift into two readings of the same YAML —
+ * which is the failure the document they both describe already suffered once,
+ * at a different layer.
+ *
+ * `effective` applies the row's `verified` currency: a row whose block has
+ * expired cannot carry a blocking binding whatever its slot literals say.
+ * `literal` is returned beside it so an expiry that silently disarmed a host is
+ * visible as a difference between two columns rather than as a value that
+ * quietly turned into `null`.
+ */
+export function readSlots(lowering: HostLowering, host: string): HostReading {
+    const row = lowering.get(host)?.get(DEFAULT_SURFACE) ?? null;
+    const verifiedNow = isVerifiedNow(row);
+    const slots: SlotReading[] = [];
+    if (row) {
+        for (const [slot, sr] of row.slots) {
+            slots.push({
+                slot,
+                literal: sr.block_exit,
+                effective: verifiedNow ? sr.block_exit : null,
+            });
+        }
+    }
+    return { row, verifiedNow, slots };
+}
+
 /** Fold a host's slot column into the vocabulary a host-level cell can carry. */
 export function deriveDeny(slots: SlotReading[], present: boolean): DerivedDeny {
     if (!present) return 'unmodelled';
@@ -257,19 +321,7 @@ export function compareEnforcement(
 ): DriftReport {
     const rows: HostComparison[] = [];
     for (const published of parsePublishedMatrix(markdown)) {
-        const surfaces = lowering.get(published.host);
-        const row = surfaces?.get(DEFAULT_SURFACE) ?? null;
-        const verifiedNow = isVerifiedNow(row);
-        const slots: SlotReading[] = [];
-        if (row) {
-            for (const [slot, sr] of row.slots) {
-                slots.push({
-                    slot,
-                    literal: sr.block_exit,
-                    effective: verifiedNow ? sr.block_exit : null,
-                });
-            }
-        }
+        const { row, verifiedNow, slots } = readSlots(lowering, published.host);
         const derived = deriveDeny(slots, row !== null);
         rows.push({
             ...published,
@@ -290,6 +342,7 @@ export function compareEnforcement(
         loweringPath,
         docPath,
         rule,
+        generatedRegionPresent: markdown.includes(GENERATED_REGION_MARKER),
         rows,
         mismatches: rule === 'strict' ? mismatchesStrict : mismatchesLenient,
         mismatchesStrict,
@@ -320,6 +373,20 @@ export function render(d: DriftReport): string {
     lines.push(`  document: ${d.docPath}`);
     lines.push(`  rule:     ${d.rule}`);
     lines.push('');
+
+    if (d.rows.length === 0 && d.generatedRegionPresent) {
+        lines.push('  There is no hand-maintained host-level enforcement column left to drift.');
+        lines.push('  The document carries the generated per-slot region instead, and the check');
+        lines.push('  that keeps it current is `check_enforcement_matrix`, which runs in CI.');
+        lines.push('');
+        lines.push('  This report measured the column that preceded it, and that measurement is');
+        lines.push('  what the generated region replaced: a binary host-level cell has to');
+        lines.push('  summarise a column of slot values, and no binary value is faithful when the');
+        lines.push('  column disagrees with itself. Nothing here is a parse failure: a document');
+        lines.push('  whose header had genuinely moved, with no generated region to replace it,');
+        lines.push('  says so instead and names the header it looked for.');
+        return lines.join('\n');
+    }
 
     if (d.rows.length === 0) {
         lines.push('  The enforcement matrix header was not found in the document. Nothing was');
