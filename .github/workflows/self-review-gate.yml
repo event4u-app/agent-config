@@ -76,11 +76,50 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
+      # THE RELEASE REVIEW RUNS ONCE, AT THE CUT — and this step is what makes
+      # that true. A `release/*` branch cannot carry reviewable code:
+      # `check_release_pr_shape` admits only the version-bump allowlist plus the
+      # ledger below, so a second review there re-reads an unchanged diff. What
+      # it returns is not new defects but new OPINIONS, and `ingest` appends
+      # them. Dispositions can only be recorded by a commit, and a commit is a
+      # push, and a push starts another review — a loop with no exit state.
+      #
+      # MEASURED on `release/16.0.0`, 2026-09-12. `e0b3cf114` (the cut's own
+      # ingest) carried 39 findings; nine blocking ones were adjudicated and
+      # pushed as `860fb819d`, which turned the gate green; that push triggered
+      # a second review and `51df554ba` landed the same ledger at 74 findings
+      # with 13 fresh blockers. One adjudication cycle, +35 findings, no
+      # convergence.
+      #
+      # `workflow_dispatch` deliberately BYPASSES this: a maintainer asking for
+      # a re-review by hand is asking on purpose and gets one.
+      - name: Has this release already been reviewed?
+        id: ledger
+        if: github.event_name == 'pull_request'
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          set -euo pipefail
+          reviewed=false
+          case "$HEAD_REF" in
+            release/*)
+              ledger="agents/evidence/release-findings/${HEAD_REF#release/}.json"
+              if [ -f "$ledger" ] && python3 -c 'import json,sys; sys.exit(0 if json.load(open(sys.argv[1])).get("findings") else 1)' "$ledger"; then
+                reviewed=true
+                echo "::notice::$ledger already carries findings — the release review ran at the cut. Not re-reviewing an unchanged diff; use workflow_dispatch to force one."
+              fi
+              ;;
+          esac
+          echo "reviewed=$reviewed" >> "$GITHUB_OUTPUT"
+
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        if: steps.ledger.outputs.reviewed != 'true'
         with:
           node-version: '20'
       - run: npm ci --no-audit --no-fund --prefer-offline
+        if: steps.ledger.outputs.reviewed != 'true'
       - name: Dogfooded self-review (advisory; skips if ANTHROPIC_API_KEY absent)
+        if: steps.ledger.outputs.reviewed != 'true'
         run: ./node_modules/.bin/tsx src/scripts/self_review_gate.ts --base "origin/${{ github.base_ref }}" --findings-out /tmp/self-review-findings.json
 
       # Release-truth Phase 3: findings carry stable ids and a durable ingestion
