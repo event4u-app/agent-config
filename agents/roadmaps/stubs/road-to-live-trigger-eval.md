@@ -11,6 +11,28 @@ review_by: 2026-09-25
 > Read `(at least)` strictly: a broad keyword sweep returns a larger set that includes
 > incidental mentions, so this is the subject-matched floor.
 
+> **The posed owner question — 10 arrivals, no recommended answer.** All four
+> re-entry preconditions below read FAIL, and the one that gates the others is
+> P3: the pre-registration asks for at least 100 requests across at least 3
+> shapes, and the fixture corpus holds 34 across 2 of 3 kinds, so a sitting run
+> today fails criterion (iii) by construction (§ Re-entry producer and detection
+> probes; § Blockers carried across in full, blocker 2). Exactly one of:
+>
+> 1. Grow the fixture corpus to the pre-registered size as a reviewed maintainer
+>    decision, with the parent's rank-2 risk — tuning the fixtures instead of the
+>    descriptions — stated and bounded in the same record.
+> 2. Amend the pre-registration: replace criterion (iii) with a bar the present
+>    corpus can meet, and record that the original bar was not the one measured
+>    against.
+> 3. Run the sitting against the corpus as it stands, accepting that criterion
+>    (iii) fails by construction and that the run is spent producing a recorded
+>    miss.
+> 4. Close the question unmeasured, which blocker 3 already names as an
+>    admissible outcome, and discharge both parent blockers against that record.
+>
+> The count sets the venue, not the verdict: ten arrivals say the gap has stayed
+> open, not that any of the four is the right answer.
+
 > **Stub — not active work.** One evidence gap under two names, transferred out
 > of **two** parent roadmaps on 2026-08-20 by the drain-run disposition
 > framework

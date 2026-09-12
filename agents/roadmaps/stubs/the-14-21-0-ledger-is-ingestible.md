@@ -15,6 +15,26 @@ review_by: 2026-10-07
 > `**Arrivals:** 5` line further down is the arrival-5 record, kept as written,
 > and is not the current count.
 
+> **The posed owner question — 6 arrivals, no recommended answer.** The mechanism
+> half landed on 2026-09-11 (the `ingest-release-ledger` job, plus `release.ts`
+> step 7). What is open is the 15.0.0 instance: 50 findings, 17 of them blocking,
+> each needing a status, a rationale and a `verified_by` that no automation may
+> write — and step 7 stops the next release rather than producing a ledger for one
+> that has already shipped. Exactly one of:
+>
+> 1. Adjudicate the whole 15.0.0 finding set now — all 50, the 17 blocking ones
+>    included — and close both the instance and this stub.
+> 2. Adjudicate the 17 blocking findings only, leave the rest undispositioned, and
+>    record the partial disposition as the closure.
+> 3. Leave the instance deliberately unadjudicated, record 15.0.0 as the last
+>    release the mechanism did not cover, and close this stub on its mechanism
+>    half.
+> 4. Keep the stub open unchanged until whoever next settles a release adjudicates
+>    the instance, which is how arrivals 1 to 5 were closed.
+>
+> The count sets the venue, not the verdict: six arrivals say five instance fixes
+> did not change the arrival rate, not that any of the four is the right close.
+
 > **THE TITLE IS NOW FALSE, AND THAT IS THE POINT — 2026-09-11, owner decision
 > after arrival 6.** Something runs the ingest: the `ingest-release-ledger` job
 > in `self-review-gate.yml` commits the ledger to the release branch as soon as
