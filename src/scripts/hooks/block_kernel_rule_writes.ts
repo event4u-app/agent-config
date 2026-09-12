@@ -28,16 +28,16 @@
  * ADR-127 permits more than one blocking hook; this is the second (after
  * block-no-verify).
  *
- * Coverage, stated as what it actually parses: an edit-tool envelope whose
- * target path is a kernel rule, and a Bash command whose LITERAL argument
- * text names one in the narrow write shapes listed at `check_envelope`. It
- * is a shell-argument parser, so a write that never puts the path in an
- * argument is not seen — an interpreter body (`python3 -c`, `node -e`), a
- * heredoc, a script file invoked by name, or a path assembled from a shell
- * variable all reach the file with this guard silent. The human-owned
- * exception registry the deny message points to is the only LEGITIMATE
- * bypass; it is not the only reachable one, and saying otherwise would sell
- * an argument parser as a sandbox.
+ * Coverage is limited to edit-tool envelopes whose explicit target is a
+ * kernel rule, and to the literal shell-argument write shapes recognized by
+ * `check_envelope`. Indirect or dynamically resolved writes may not be
+ * detected; this guard is not a sandbox and does not provide complete write
+ * mediation. The human-owned exception registry named in the denial message
+ * is the only LEGITIMATE bypass; it is not the only reachable one.
+ *
+ * The boundary is stated as an abstraction, without an inventory of concrete
+ * evasion families. `check_envelope` is the authoritative inspection point
+ * for exact behaviour.
  *
  * Exit codes (docs/contracts/hook-architecture-v1.md):
  *   0 — allow
