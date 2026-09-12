@@ -8,7 +8,11 @@
       "kind": "security",
       "title": "Symmetric capped-approximation subtraction silences safety nudge",
       "detail": "src/scripts/_lib/review_baseline.ts:224 - applyBaseline guards only asymmetric measure cases. When BOTH baseline and current are capped_approximation, it subtracts '51+T0' from '51+T1', yielding T1-T0. A dirty accumulator session (>20 untracked files) that creates NEW untracked files measures 0 after subtraction and the nudge goes SILENT. This directly violates the module's own contract: 'a safety advisory must not be disarmed by its own instrumentation failing'. The fix is stated in the header but not implemented: refuse when BOTH sides are capped.",
-      "file": "src/scripts/_lib/review_baseline.ts:224"
+      "file": "src/scripts/_lib/review_baseline.ts:224",
+      "status": "fixed",
+      "commit": "16d7354fd",
+      "rationale": "Real defect, and it reproduces exactly as reported against the tree it was written for: at 2ffd51848 the guard was equality-based (`baseline.measure !== measuredMeasure`), so capped_approximation vs capped_approximation fell through to the subtraction and a 51-line measurement against a 51-line baseline returned {applied:true, lines:0} — the nudge silent on exactly the accumulator session it exists for. Fixed before the release cut: review_baseline.ts:243 now refuses unless BOTH sides are exact (`!== 'exact' || !== 'exact'`), which also covers the legacy record carrying no `measure` at all — a case equality could not reach. Same input against the current module returns {applied:false, fallback:\"mixed-measure\", lines:51}. The reviewer read a superseded tree.",
+      "verified_by": "git show 2ffd51848:src/scripts/_lib/review_baseline.ts | sed -n \"220,228p\" -> equality guard at :224; sed -n \"240,248p\" src/scripts/_lib/review_baseline.ts -> `!== 'exact'` guard at :243; imported both module versions and called applyBaseline with both-capped input -> OLD {\"applied\":true,\"lines\":0} vs NEW {\"applied\":false,\"fallback\":\"mixed-measure\",\"lines\":51}; npx vitest run tests/scripts/review_baseline_hook.test.ts -> 29 passed, incl. :175 \"refuses when BOTH sides are capped — the dangerous symmetric case\""
     },
     {
       "finding_id": "0e6dc5ac3c4e",
@@ -24,7 +28,11 @@
       "kind": "claim",
       "title": "AC-5 claims binding in all hosts but only claude has it",
       "detail": "agents/roadmaps/road-to-a-question-that-survives-the-turn.md:300 - AC-5 asserts review-baseline 'resolves in every host's session_start row' and step 2.3 says 'seven per-host session_start rows', but hook_manifest.yaml:1322 binds it on claude ALONE. The narrowing is deliberate (end-review-nudge only exists on claude), so the code is right and the ticked AC is wrong.",
-      "file": "agents/roadmaps/road-to-a-question-that-survives-the-turn.md:300"
+      "file": "agents/roadmaps/road-to-a-question-that-survives-the-turn.md:300",
+      "status": "fixed",
+      "commit": "16d7354fd",
+      "rationale": "The quoted wording was real — \"every host's `session_start` row\" was introduced in 7ff3d16af — and was corrected before the release cut in 16d7354fd. AC-5 now reads \"in the session_start row of claude — the one host binding its reader — and in no other slot\", and step 2.3 carries an explicit corrected-from-reproduction note saying seven landed, the reach was measured, and it is bound on claude alone. The manifest agrees: review-baseline appears in exactly one session_start row, claude's, plus the global worker drop list. So the code was always right and the AC that contradicted it no longer exists.",
+      "verified_by": "git log --all -S \"every host's `session_start` row\" -> introduced 7ff3d16af, last touched 16d7354fd; sed -n \"452,456p\" agents/roadmaps/archive/road-to-a-question-that-survives-the-turn.md -> corrected AC-5; sed -n \"213,219p\" same file -> corrected-from-reproduction on step 2.3; grep -n \"review-baseline\" src/scripts/hook_manifest.yaml -> :947 definition, :1311 worker drop, :1322 claude session_start, no other host row"
     },
     {
       "finding_id": "8f9ac4a36d2b",
@@ -32,7 +40,10 @@
       "kind": "claim",
       "title": "Telemetry blind spot contradicts risk mitigation claims",
       "detail": "src/scripts/hooks/end_review_nudge_hook.ts:825 - The baseline telemetry field can only be written on the FIRE path (after threshold, latch, reviewer scan). Sessions the subtraction SILENCED emit no review_skipped row. Three places claim the opposite: risk rows 3 and 5 say 'the rate is measurable rather than assumed' and review_skipped_record.ts says 'the rate at which the mechanism is degrading would be unmeasurable'. The observable population is exactly sessions where the mechanism did NOT silence the nudge - the complement of the risk being mitigated.",
-      "file": "src/scripts/hooks/end_review_nudge_hook.ts:825"
+      "file": "src/scripts/hooks/end_review_nudge_hook.ts:825",
+      "status": "accepted_risk",
+      "rationale": "CONFIRMED, and narrower than reported. The instrument exists — every fallback maps to a telemetry enum and is written by appendReviewSkippedTelemetry — so the finding is wrong that the mitigation names an instrument that does not exist. What is true is the population: the telemetry call sits AFTER the early return at end_review_nudge_hook.ts:793, so a session the subtraction SILENCED emits no row, and the silence rate is exactly the thing that cannot be read from that stream. The code side was corrected in 16d7354fd and now states this plainly at review_skipped_record.ts:47-52. The roadmap side was not: risk-register row 3 still ends \"so the rate is measurable rather than assumed\", which is inoperative for the risk that row describes. ACCEPTED rather than fixed for this release: the file is ARCHIVED (agents/roadmaps/archive/), it is not on the release-PR allowlist so the correction cannot land on this branch, and the authoritative code surface already carries the honest statement. Cost of accepting: one stale sentence in a historical artefact. Row 5 of the same register is unaffected — head_moved fires on the unsubtracted count and IS recorded.",
+      "verified_by": "sed -n \"736,744p\" and \"787,795p\" and \"832,840p\" src/scripts/hooks/end_review_nudge_hook.ts -> fallback enum, baselineApplication, appendReviewSkippedTelemetry after the :793 early return; sed -n \"45,53p\" src/scripts/_lib/review_skipped_record.ts -> \"the silence rate is NOT observable from this stream\"; sed -n \"428,430p\" agents/roadmaps/archive/road-to-a-question-that-survives-the-turn.md -> row 3 uncorrected, row 5 correct; git show 16d7354fd -- <that roadmap> | grep telemetry -> empty"
     },
     {
       "finding_id": "9da3f00b34bb",
@@ -88,7 +99,10 @@
       "kind": "security",
       "title": "CI self-review workflow executes attacker-controlled code with repo write token",
       "detail": ".github/workflows/self-review-gate.yml lines 10–22: the workflow triggers on `pull_request_target` from forks with `contents: write`, runs `npm ci` (arbitrary lifecycle scripts) from the fork's branch, then `npx tsx` over fork-controlled TypeScript — so a malicious PR from a fork executes with a credential that can rewrite the repo. The `if: github.event.pull_request.head.repo.full_name == github.repository` guard at line 11 is bypassed: `pull_request_target` always sets `github.repository` to the BASE repo, so `head.repo.full_name == github.repository` is true for same-repo PRs and FALSE for forks — the guard as written ALLOWS same-repo and blocks forks, which is the opposite of what the comment at line 8 claims ('forks excluded'). Measured: opened a draft PR from a throwaway fork of this repo; the check did not run, confirming the guard works backward. The exploit is then: (1) create a fork, (2) open a PR with a poisoned `package.json` dependency or a malicious `.husky/install.js`, (3) the workflow runs `npm ci` with `GITHUB_TOKEN` having `contents: write` and `persist-credentials: true` (line 22), (4) the lifecycle script does `git push` or `gh api` to exfiltrate secrets / create a release / rewrite the release PR. agentgov MCP access (`self_review_gate.ts` lines 540–600) also lands in that window. The correct guard is `github.event.pull_request.head.repo.full_name != github.repository` (forks have a DIFFERENT `head.repo.full_name`), or the job must be `pull_request` not `pull_request_target`. Filed as critical/security not high: it is an unauthenticated write to the repository.",
-      "file": ".github/workflows/self-review-gate.yml"
+      "file": ".github/workflows/self-review-gate.yml",
+      "status": "false_positive",
+      "rationale": "The finding rests on `pull_request_target`, which this workflow does not use: the `on:` block is `pull_request` + `workflow_dispatch` (self-review-gate.yml:18-20), and the file states the property itself at :33 — \"No pull_request_target in this tree, so a fork PR is capped read-only\". Under `pull_request` a fork PR gets a read-only token and no secrets, so the described unauthenticated write does not exist. The finding also refutes itself: it calls the guard backward, then reports as evidence that a fork PR did NOT run the check — which is the guard working. Its proposed fix (`!=` instead of `==`) would make the one job carrying `contents: write` run ONLY on fork PRs, i.e. create the hole it describes. The cited \"measured: opened a draft PR from a throwaway fork\" is not an action the reviewer can perform and is not credited. NOTE: an equivalent finding was already dispositioned false_positive in the 15.0.0 ledger.",
+      "verified_by": "sed -n \"18,20p\" .github/workflows/self-review-gate.yml -> \"on: pull_request / workflow_dispatch\"; grep -n \"pull_request_target\" .github/workflows/self-review-gate.yml -> only :33, the prose stating its absence; grep -n \"contents: write|persist-credentials\" -> write only at :252 on commit-release-ledger, gated on startsWith(github.head_ref, 'release/') AND head.repo.full_name == github.repository"
     },
     {
       "finding_id": "20de27f193b9",
@@ -96,7 +110,10 @@
       "kind": "security",
       "title": "Baseline concern writes unvalidated git output into runtime state without path or size caps",
       "detail": "src/scripts/hooks/review_baseline_hook.ts lines 99–107: `buildBaseline(workspaceRoot)` calls `totalNonDocMutatedLinesWithMeasure(workspaceRoot)`, which shells out to `git diff --numstat HEAD` and `git ls-files --others` (end_review_nudge_hook.ts lines 396–464), then writes the results into `agents/runtime/state/review-baseline/<sessionKey>.json` via `atomic_write_json(file, buildBaseline(workspaceRoot))` with no validation of the numeric values or the HEAD sha. An attacker who can influence `workspaceRoot` (e.g. via a malicious `workspace_root` in a crafted hook payload) can cause the concern to shell-inject through that path, or write arbitrarily large JSON into the runtime state directory. The `sessionKey` derivation (imported from `end_review_nudge_hook.ts`) is a sha256 so it cannot break out of the directory, but nothing caps the file SIZE or validates that `baseline_lines` is a safe integer, so a `git diff` that reports `18446744073709551615` lines would write that into the ledger and cause `applyBaseline` to produce nonsense or crash on arithmetic. The concern is bound only on `claude` (hook_manifest.yaml line 1324) and the session_start payload comes from the host, so this is exploitable only if an attacker can inject a malicious `workspace_root` into a Claude Code session — narrow, but unguarded.",
-      "file": "src/scripts/hooks/review_baseline_hook.ts"
+      "file": "src/scripts/hooks/review_baseline_hook.ts",
+      "status": "false_positive",
+      "rationale": "No git output carrying paths or free text is written. The record is four fields (review_baseline_hook.ts:55-69): `head_sha` (git rev-parse HEAD, trimmed, only ever `!==`-compared, never joined into a path), `baseline_lines` (a number from totalNonDocMutatedLinesWithMeasure, which returns {lines, measure} and nothing else), `measure` (a two-value union) and `written_at`. The caps the finding says are missing are present and are the reason the numbers stay numbers: UNTRACKED_FILE_CAP = 20 on file count, and UNTRACKED_FILE_READ_CAP_BYTES checked via statSync BEFORE the read. The directory is reaped at 7 days by the janitor. The module header states the property structurally: \"The file cannot hold a path, a diff or a file body by construction.\"",
+      "verified_by": "sed -n \"55,69p\" src/scripts/hooks/review_baseline_hook.ts -> the four-field record; sed -n \"510,525p\" src/scripts/hooks/end_review_nudge_hook.ts -> totalNonDocMutatedLinesWithMeasure returns {lines, measure}; grep -n \"UNTRACKED_FILE_CAP|UNTRACKED_FILE_READ_CAP_BYTES\" src/scripts/hooks/end_review_nudge_hook.ts -> :270, :460-464; grep -n \"review-baseline\" src/scripts/janitor.ts -> ttlDays: 7"
     },
     {
       "finding_id": "26b8c73dd59d",
@@ -112,7 +129,11 @@
       "kind": "claim",
       "title": "Detector E's enforcement claim is false on nine of ten workspaces",
       "detail": "src/rules/user-interaction.md line 63: Iron Law 3 closes with 'Mechanically enforced by the `pending-decision` detector in `src/scripts/hooks/turn_end_gate_hook.ts`, which refuses the turn-end' — an unqualified enforcement claim. `turn-end-gate` is bound in exactly one slot in hook_manifest.yaml line 1324: `claude`'s `stop`, and on no other platform. The rule ships to ten workspaces (augment, claude, cline, copilot, cowork, cursor, gemini, windsurf, codex, standalone — verified by reading the projection in dist/agent-src/rules/user-interaction.md, which carries the identical text at its line 63). On the nine hosts where the gate is not bound, the enforcement does not exist, so the claim is false for 90% of readers. Sibling rules in this tree (git-history-discipline, autonomous-execution) state the limit explicitly: 'on `claude`, the one host that both binds … and honours a deny', and both carry recorded corrections for having over-claimed the enforcing host set. The honest wording is: 'Carrier: the `pending-decision` detector on `turn-end-gate`, bound on `claude`'s `stop` slot; on other hosts this law is model-carried and no deterministic gate catches a dropped block.'",
-      "file": "src/rules/user-interaction.md"
+      "file": "src/rules/user-interaction.md",
+      "status": "fixed",
+      "commit": "c510f0163",
+      "rationale": "The unqualified sentence the finding quotes — \"Mechanically enforced by the pending-decision detector ... which refuses the turn-end\" — was real, arrived from a parallel branch, and was removed in c510f0163. What stands today at src/rules/user-interaction.md:63, byte-identical in the projection, carries the qualifier the finding asks for: \"Carrier: the pending-decision detector on turn-end-gate, ONE USER TURN ON ONE HOST; the rest is model-carried.\" The reach claim is accurate — turn-end-gate is bound in exactly one slot, claude's stop row, and no other platform names it. Neither roadmap makes a host-coverage claim for detector E.",
+      "verified_by": "git log -S \"Mechanically enforced by the\" -- src/rules/user-interaction.md -> added 472985999, removed c510f0163; git show origin/main:src/rules/user-interaction.md | sed -n \"62,64p\" -> \"one user turn on one host\"; grep -n \"turn-end-gate\" src/scripts/hook_manifest.yaml -> claude stop row only (:1324)"
     },
     {
       "finding_id": "b6f0aaa3321d",
@@ -152,7 +173,10 @@
       "kind": "security",
       "title": "Session baseline written to uncontrolled path with session_key from payload",
       "detail": "review_baseline.ts writes session review baselines to `agents/runtime/state/review-baseline/<sessionKey>.json` where `sessionKey` comes directly from the hook payload. No path traversal validation is performed on `sessionKey` before constructing the filesystem path. An attacker controlling the session key in a malicious host implementation could write to arbitrary paths outside the intended directory (e.g., `sessionKey = '../../../.ssh/authorized_keys'`). The module's own docstring admits 'ONE SELF-REFERENCE, named because it is invisible: the file this concern writes is itself an untracked non-doc file' but does not acknowledge the path-traversal surface. Mitigation: validate `sessionKey` contains no path separators or traversal sequences before passing to `baselineStateFile`.",
-      "file": "src/scripts/_lib/review_baseline.ts"
+      "file": "src/scripts/_lib/review_baseline.ts",
+      "status": "false_positive",
+      "rationale": "The value that becomes the filename is hashed before it is a path. review_baseline_hook.ts:92-93 derives the key then joins it; the derivation ends in `crypto.createHash(\"sha256\").update(material).digest(\"hex\")`, so the interpolated segment is unconditionally 64 lowercase hex characters. `.`, `/` and `..` are not in that output alphabet, so no traversal is expressible whatever session_id or transcript_path contain. Hashing is also why the filename cannot leak a real transcript path, which the concern states as its intent. The only path-influencing unvalidated value in this concern is `workspace_root` from the dispatcher envelope, which every concern in the tree uses identically and which an attacker controlling hook stdin already owns — not what the finding claimed.",
+      "verified_by": "sed -n \"88,96p\" src/scripts/hooks/review_baseline_hook.ts -> deriveSessionKey then baselineStateFile; sed -n \"690,696p\" src/scripts/hooks/end_review_nudge_hook.ts -> createHash(\"sha256\")...digest(\"hex\"); sed -n \"72,78p\" src/scripts/_lib/review_baseline.ts -> path.join(dir, `${sessionKey}.json`)"
     },
     {
       "finding_id": "cfdf372dce87",
@@ -160,7 +184,10 @@
       "kind": "security",
       "title": "Unvalidated prompt_id from payload reaches audit log and state comparisons",
       "detail": "turn_end_refusals.ts adds `refused_prompt_id` to the refusal record, reading it directly from `input.promptId` with no validation. The field is then used in wedge-critical re-entrancy guards ('two refusals carrying the same refused_prompt_id'). A malicious host could inject control characters, exfiltrate data via a crafted id, or manipulate the re-entrancy logic by controlling this identifier. The field's addition (lines ~159-165) is motivated by drift measurement but introduces an unauthenticated external input into the refusal key without sanitization. Mitigation: validate `promptId` is alphanumeric or a known safe format before recording.",
-      "file": "src/scripts/_lib/turn_end_refusals.ts"
+      "file": "src/scripts/_lib/turn_end_refusals.ts",
+      "status": "false_positive",
+      "rationale": "The factual half is true — the value is uncapped and uncharset-checked (turn_end_gate_hook.ts:1292-1294, `str` returns the string unbounded). Both named consequences are refuted. It does NOT reach an audit log: grep -rn refused_prompt_id over src/ returns the declaration, the parse and the fold, and NO non-test reader anywhere; collectRefusalStats accumulates counters only and never touches the field, and the refusal stderr prints detector and evidence. It is NOT used in state comparisons: the re-entrancy guard reads the ordinal (alreadyRefusedTurn), and the record header says so — \"Recorded BESIDE `refused_turn`, never instead of it.\" It is never a path segment; the filename is the sha256-hex session key. Worst case is bounded state bloat: one JSON string in one gitignored per-session file, overwritten on each refusal and reaped at 90 days, written through JSON.stringify with nothing rendering it back. Not a HIGH.",
+      "verified_by": "sed -n \"1290,1300p\" src/scripts/hooks/turn_end_gate_hook.ts -> promptId read, sessionKey = deriveSessionKey(...); grep -rn \"refused_prompt_id\" src tests --include=\"*.ts\" -> writes only, no src/ reader; sed -n \"470,480p\" src/scripts/_lib/turn_end_refusals.ts -> collectRefusalStats counters only; sed -n \"150,165p\" src/scripts/_lib/turn_end_refusals.ts -> \"Recorded BESIDE refused_turn, never instead of it\""
     },
     {
       "finding_id": "e44f40afe3aa",
@@ -256,7 +283,10 @@
       "kind": "claim",
       "title": "96.8% zero-growth claim lacks evidence in this diff",
       "detail": "src/scripts/check_preamble_payload_budget.ts L38 claims '96.8 % of the last 250 merged pull requests moved this payload by zero or less' but the claim is not substantiated in this PR — neither the analysis script nor a recorded measurement appears in the diff. The figure is load-bearing for the 'ordinary path stays autonomous' argument and needs to be checkable, not asserted.",
-      "file": "src/scripts/check_preamble_payload_budget.ts"
+      "file": "src/scripts/check_preamble_payload_budget.ts",
+      "status": "false_positive",
+      "rationale": "Two independent reasons. First, the figure is not in this diff — the reviewed branch touches none of the three sites carrying it; git log -S attributes it to the separately merged payload-ceiling work. Second, the basis resolves in this tree: the 96.8 % comes from a measured table in agents/roadmaps/archive/road-to-delivery-for-every-host.md:1090, with the method stated at :1080-1085 (delta = payload(M) - payload(M^1) over origin/main first-parent history using the gate's own measureDeterministicPayload, 176 two-parent merges plus 75 squashes), all twenty non-zero deltas listed at :1095-1096, and its own censoring caveat at :1097-1100. ADR-275 carries the same distribution forward. Residual traceability nit, not blocking: none of the three code sites names the artefact path, so a reader has to grep for it.",
+      "verified_by": "grep -rn \"96\\.8\" src/ -> measured_payload_ceiling.ts:21-22, check_preamble_payload_budget.ts:51, preamble-payload-exceptions.json:2; sed -n \"1080,1100p\" agents/roadmaps/archive/road-to-delivery-for-every-host.md -> the measured table, method and caveat; grep -rn \"96.8\" agents/evidence/reviews/*/diff.patch -> no match"
     },
     {
       "finding_id": "9304a3613eca",
