@@ -5,6 +5,16 @@ review_by: 2026-10-07
 
 # Stub: nothing runs the ingest step, so the ledger goes missing once per release
 
+> **Arrivals:** 6 — latest 2026-09-11 (release 15.0.0); the same subject was
+> raised again by round `inbox-2026-09-w` (2026-09-08). Counted as distinct
+> release cycles in which the ledger went missing, one arrival block per cycle
+> below — not as distinct consumed-inbox round directories, which is the
+> denominator every sibling counter in this tree uses, so the two figures are
+> not comparable. The earlier five carry no round codename because they are not
+> round arrivals; each is named by its release in the block that records it. The
+> `**Arrivals:** 5` line further down is the arrival-5 record, kept as written,
+> and is not the current count.
+
 > **THE TITLE IS NOW FALSE, AND THAT IS THE POINT — 2026-09-11, owner decision
 > after arrival 6.** Something runs the ingest: the `ingest-release-ledger` job
 > in `self-review-gate.yml` commits the ledger to the release branch as soon as
