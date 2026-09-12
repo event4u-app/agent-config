@@ -49,12 +49,19 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import {
-    loadRouter,
-    matchTierRules,
-    pathOnlyRuleIds,
-    selectForInjection,
-} from './_lib/rule_injection.js';
+    corpusShapeProblems,
+    slotFireSizes as sampleSlotFireSizes,
+    type SlotFireSizes,
+} from './_lib/activation_payload.js';
+import { loadRouter, pathOnlyRuleIds } from './_lib/rule_injection.js';
 import { CAP_BYTES } from './hooks/rule_inject_hook.js';
+
+// Re-exported rather than redefined: this module was their only home until the
+// payload gate needed the same sample, and two copies is how two numbers start
+// disagreeing. `corpusShapeProblems` and `SlotFireSizes` are imported above
+// because this module's own code uses them; these two it only passes through.
+export { percentile, readCorpusPositives } from './_lib/activation_payload.js';
+export { corpusShapeProblems, type SlotFireSizes };
 
 const _HERE = fileURLToPath(import.meta.url);
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -431,155 +438,17 @@ export function renderArtifact(root: string, pin: string): string {
     return L.join('\n');
 }
 
-/** One positive prompt of the frozen corpus, with the open files it declares. */
-interface CorpusPrompt {
-    prompt: string;
-    openFiles: string[] | null;
-}
-
 /**
- * Every YAML shape inside `positives:` this hand parser cannot read (R2 finding 10).
+ * The activation-charge sample at the concern's own cap.
  *
- * `readCorpusPositives` accepts only `- prompt: "…"` with a double-quoted
- * same-line scalar and an inline `open_files: [...]`. Any other legal shape —
- * single quotes, an unquoted scalar, a folded block, a block sequence for
- * `open_files` — was SILENTLY SKIPPED, which drops fires out of the
- * distribution the 16,384-byte `user_prompt_submit` row is derived from. A
- * measurement that governs a budget must fail loudly on a shape it cannot read
- * rather than under-count, so the CLI refuses on a non-empty result here.
- *
- * Reported as a shape problem rather than fixed by widening the parser: this
- * script must not grow a second YAML implementation, and the corpus is frozen,
- * so the honest answer to an unreadable shape is to say which file carries it.
- */
-export function corpusShapeProblems(root: string): string[] {
-    const dir = path.join(root, 'tests', 'eval', 'routing-matrix');
-    const problems: string[] = [];
-    if (!fs.existsSync(dir)) return problems;
-    for (const f of fs.readdirSync(dir).filter((n) => n.endsWith('.yaml')).sort()) {
-        let inPositives = false;
-        let lineNo = 0;
-        for (const raw of fs.readFileSync(path.join(dir, f), 'utf-8').split('\n')) {
-            lineNo += 1;
-            if (/^positives:/u.test(raw)) { inPositives = true; continue; }
-            if (/^near_misses:/u.test(raw)) { inPositives = false; continue; }
-            if (!inPositives) continue;
-            if (/^\s*-\s*prompt:/u.test(raw) && !/^\s*-\s*prompt:\s*"(.*)"\s*$/u.test(raw)) {
-                problems.push(
-                    `${f}:${String(lineNo)}: a \`- prompt:\` this parser cannot read — only a ` +
-                        `double-quoted same-line scalar is accepted: ${JSON.stringify(raw.trim())}`,
-                );
-                continue;
-            }
-            if (/^\s*-\s*/u.test(raw) && !/^\s*-\s*(prompt|command|open_files):/u.test(raw)
-                && raw.trim() !== '-' && raw.trim() !== '') {
-                // A bare sequence item under `positives:` is a shape with no
-                // `prompt:` key on its first line — folded or nested.
-                if (!/^\s{4,}/u.test(raw)) {
-                    problems.push(
-                        `${f}:${String(lineNo)}: a positives entry whose first line carries no ` +
-                            `\`prompt:\` key: ${JSON.stringify(raw.trim())}`,
-                    );
-                }
-            }
-            if (/^\s*open_files:\s*$/u.test(raw)) {
-                problems.push(
-                    `${f}:${String(lineNo)}: a BLOCK-sequence \`open_files:\` — only the inline ` +
-                        '`[...]` form is read, so this entry\'s files would be dropped',
-                );
-            }
-        }
-    }
-    return problems;
-}
-
-/** Every positive prompt in the frozen routing-matrix corpus. Near-misses are not fires. */
-export function readCorpusPositives(root: string): CorpusPrompt[] {
-    const dir = path.join(root, 'tests', 'eval', 'routing-matrix');
-    const out: CorpusPrompt[] = [];
-    if (!fs.existsSync(dir)) return out;
-    for (const f of fs.readdirSync(dir).filter((n) => n.endsWith('.yaml')).sort()) {
-        let inPositives = false;
-        let cur: CorpusPrompt | null = null;
-        for (const raw of fs.readFileSync(path.join(dir, f), 'utf-8').split('\n')) {
-            if (/^positives:/u.test(raw)) { inPositives = true; continue; }
-            if (/^near_misses:/u.test(raw)) { inPositives = false; continue; }
-            if (!inPositives) continue;
-            const p = /^\s*-\s*prompt:\s*"(.*)"\s*$/u.exec(raw);
-            if (p !== null) {
-                cur = { prompt: p[1] as string, openFiles: null };
-                out.push(cur);
-                continue;
-            }
-            const of = /^\s*open_files:\s*\[(.*)\]\s*$/u.exec(raw);
-            if (of !== null && cur !== null) {
-                cur.openFiles = (of[1] as string)
-                    .split(',')
-                    .map((x) => x.trim().replace(/^["']|["']$/gu, ''))
-                    .filter((x) => x !== '');
-            }
-        }
-    }
-    return out;
-}
-
-/** Nearest-rank percentile over an unsorted sample. Empty sample → 0. */
-export function percentile(xs: readonly number[], q: number): number {
-    if (xs.length === 0) return 0;
-    const s = [...xs].sort((a, b) => a - b);
-    return s[Math.min(s.length - 1, Math.floor(q * (s.length - 1)))] as number;
-}
-
-export interface SlotFireSizes {
-    readonly slot: string;
-    readonly fires: number;
-    readonly p50: number;
-    readonly p90: number;
-    readonly max: number;
-}
-
-/**
- * Gate-open per-fire emission sizes for the delivery concern, per slot
- * (road-to-delivery-for-every-host 3.1).
- *
- * Measured through the SAME selection the runtime concern uses —
- * `matchTierRules` + `selectForInjection` at the concern's own `CAP_BYTES` —
- * rather than through a second model of it. An offline figure computed by a
- * different matcher would price a set the concern does not deliver.
- *
- * `pre_compact` is 0 by construction rather than by measurement: that branch of
- * `rule_inject_hook` clears the seen-set and returns allow without writing to
- * stdout, so there is no emission to sample.
+ * The sampling itself moved to `_lib/activation_payload.ts` when the payload
+ * gate needed the same figure (`road-to-the-delivery-flip-that-tells-the-truth`
+ * 3.1). This wrapper supplies `CAP_BYTES` so the report's own callers keep the
+ * one-argument form, and the helpers below are re-exported so there is still
+ * exactly one implementation of each.
  */
 export function slotFireSizes(root: string): SlotFireSizes[] {
-    const router = loadRouter(root);
-    const prompts = readCorpusPositives(root);
-    const sample = (mode: 'prompt' | 'file'): number[] => {
-        const out: number[] = [];
-        for (const r of prompts) {
-            if (mode === 'file' && (r.openFiles === null || r.openFiles.length === 0)) continue;
-            const matches =
-                mode === 'prompt'
-                    ? matchTierRules(router, r.prompt, null, null)
-                    : matchTierRules(router, '', r.openFiles, null);
-            if (matches.length === 0) continue;
-            const sel = selectForInjection(root, matches, CAP_BYTES);
-            if (sel.selected.length > 0) out.push(sel.bytes);
-        }
-        return out;
-    };
-    const row = (slot: string, xs: number[]): SlotFireSizes => ({
-        slot,
-        fires: xs.length,
-        p50: percentile(xs, 0.5),
-        p90: percentile(xs, 0.9),
-        max: xs.length === 0 ? 0 : Math.max(...xs),
-    });
-    return [
-        row('user_prompt_submit', sample('prompt')),
-        row('pre_tool_use', sample('file')),
-        row('pre_compact', []),
-    ];
+    return sampleSlotFireSizes(root, CAP_BYTES);
 }
 
 function headSha(root: string): string {

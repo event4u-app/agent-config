@@ -64,8 +64,10 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { type ActivationPayload, measureActivationPayload } from './_lib/activation_payload.js';
 import { asOf } from './_lib/as_of.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+import { CAP_BYTES } from './hooks/rule_inject_hook.js';
 import { censusClaudeMdHierarchy, censusRuleDir, censusSkillsCatalog } from './preamble_byte_census.js';
 import { PREFIX_STABLE_SURFACES, prefixStableRoots } from './_lib/prefix_stable_surfaces.js';
 import { HOST_SURFACES } from './_lib/host_projection_reach.js';
@@ -624,6 +626,49 @@ export function renderBounds(b: BoundsRatchetVerdict): string {
     );
 }
 
+/**
+ * The activation reading, rendered with a label nothing else in this gate uses.
+ *
+ * Third of the three quantities this report keeps structurally apart
+ * (`road-to-the-delivery-flip-that-tells-the-truth` 3.1). The first two are
+ * ADR-270's `source_corpus` and `host_payload`; this one is per FIRE and in
+ * BYTES, while both of those are per SESSION and in chars/4 tokens. Two units
+ * and two denominators is precisely why it carries its own label rather than
+ * being folded into either total — and why no line below adds it to one.
+ *
+ * INFORMATIONAL, like the host reading beside it. It never reaches the exit
+ * code: this phase adds reporting and registers no second gate. The activation
+ * charge already HAS a registered ceiling in
+ * `src/config/hook-token-budget.json` (`per_slot_sum_caps_bytes.user_prompt_submit`
+ * and the `rule-inject` concern row); enforcing it a second time here would put
+ * one obligation behind two gates that can disagree.
+ */
+export function renderActivation(a: ActivationPayload): string {
+    const out = ['\n  activation payload — per trigger-match fire, BYTES (informational, not gated)\n'];
+    if (!a.measured) {
+        out.push(
+            `  ${'· UNMEASURED'.padEnd(38)} ${a.unmeasured_reason ?? 'reason not recorded'}\n` +
+                '    Reported as unmeasured rather than estimated: a fabricated distribution\n' +
+                '    published beside a standing saving is the defect this number exists to stop.\n',
+        );
+        return out.join('');
+    }
+    for (const s of a.slots) {
+        const label = `· ${s.slot}`;
+        out.push(
+            `  ${label.padEnd(38)} ${String(s.fires).padStart(5)} fires  ` +
+                `p50 ${String(s.p50).padStart(6)} B  p90 ${String(s.p90).padStart(6)} B  ` +
+                `max ${String(s.max).padStart(6)} B\n`,
+        );
+    }
+    out.push(
+        `  ${'· sampled at cap'.padEnd(38)} ${String(a.cap_bytes).padStart(5)} B over ${a.corpus}\n` +
+            '    Not summed into either total above: this is bytes per fire, those are chars/4\n' +
+            '    tokens per session. `pre_compact` is 0 by construction, not by measurement.\n',
+    );
+    return out.join('');
+}
+
 export function main(argv: string[] = process.argv.slice(2)): number {
     const json = argv.includes('--format=json') || argv.includes('--json');
 
@@ -737,6 +782,13 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         }
     }
 
+    // The third labelled number. Taken unconditionally and behind no flag: a
+    // cost that has to be asked for is a cost that stays unpublished, which is
+    // the failure mode `road-to-the-delivery-flip-that-tells-the-truth` names.
+    // `measureActivationPayload` never throws and never estimates, so this
+    // cannot change any verdict below — only what the report says.
+    const activation = measureActivationPayload(repoRoot, CAP_BYTES);
+
     let decision: Decision;
     try {
         decision = decide({ repoRoot, requireBase, verifiedApprovals });
@@ -775,7 +827,15 @@ export function main(argv: string[] = process.argv.slice(2)): number {
                     // for exactly that: until the two are named apart, every
                     // ceiling discussion risks comparing unlike quantities. The
                     // legacy top-level fields stay so no existing reader breaks.
-                    measurement_scope: host === null ? 'source-corpus' : 'source-corpus+host-payload',
+                    // Three parts now, joined from what was actually taken
+                    // rather than from a fixed pair: the activation reading is
+                    // the third quantity and it is absent on a tree with no
+                    // frozen corpus, so a hardcoded label would over-claim.
+                    measurement_scope: [
+                        'source-corpus',
+                        ...(host === null ? [] : ['host-payload']),
+                        ...(activation.measured ? ['activation-payload'] : []),
+                    ].join('+'),
                     source_corpus: {
                         measured: verdict.measured,
                         baseline: verdict.baseline,
@@ -783,6 +843,9 @@ export function main(argv: string[] = process.argv.slice(2)): number {
                         buckets: verdict.buckets,
                     },
                     host_payload: host,
+                    // Per FIRE and in BYTES — never added to either total
+                    // above, which are per session and in chars/4 tokens.
+                    activation_payload: activation,
                     ok: decision.ok,
                     measured_ceiling: {
                         ceiling: decision.ceiling.ceiling,
@@ -817,6 +880,11 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         return decision.ok ? 0 : 1;
     }
 
+    // The label goes above the buckets so the gated number cannot be read as
+    // either of the two beneath it. This is the source tree's own size — what
+    // it COULD deliver — and after a per-host projection flip that is no longer
+    // what any one host receives.
+    process.stdout.write('  source corpus — what the source tree could deliver (GATED)\n');
     for (const b of verdict.buckets) {
         process.stdout.write(`  ${b.name.padEnd(38)} ${String(b.tokens).padStart(8)} tok\n`);
     }
@@ -841,7 +909,10 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     // sharing one name.
     if (host !== null) {
         const label = host.host === null ? host.rules_path : host.host;
-        process.stdout.write(`\n  host payload — ${label} (informational, not gated)\n`);
+        process.stdout.write(
+            `\n  host payload — ${label}, what this host actually receives at rest ` +
+                '(informational, not gated)\n',
+        );
         for (const b of host.buckets) {
             process.stdout.write(`  ${('· ' + b.name).padEnd(38)} ${String(b.tokens).padStart(8)} tok\n`);
         }
@@ -859,6 +930,8 @@ export function main(argv: string[] = process.argv.slice(2)): number {
             );
         }
     }
+
+    process.stdout.write(renderActivation(activation));
 
     // THE CEILING IS ESTABLISHED BEFORE THE SIZE QUESTION. A run that could not
     // measure its own ceiling has no business reporting a tree as within one,

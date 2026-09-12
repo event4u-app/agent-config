@@ -120,17 +120,40 @@ is how a saving gets published without its cost.
 
 ## Phase 3 — Split the payload metric into the three things it measures
 
-- [ ] **3.1 Report three labelled numbers** instead of one: source payload, delivered standing
+- [x] **3.1 Report three labelled numbers** instead of one: source payload, delivered standing
       payload per host, and runtime activation payload.
       verify: the payload census prints all three with distinct labels, and no caller reads one as
       if it were another.
-- [ ] **3.2 Leave the existing grace ceiling untouched.** It is the estate-growth ratchet and may
+      `source_corpus` 138,360 tok/session · `host_payload` 24,537 tok/session on a thinned host
+      (rules bucket 122,769 → 24,537, −80.0 %, like-for-like over the same 119 files) ·
+      `activation_payload` p50 6,728 B / p90 14,016 B / max 16,297 B **per fire**.
+      **Nothing is unmeasured, and the two denominators are never summed** — bytes-per-fire and
+      tokens-per-session are different units, which is the conflation the step exists to end.
+      Extended the existing census rather than starting a second one; ADR-270 had already given it
+      two of the three as structurally separate fields and the third was simply missing. The
+      sampler was *moved* into `_lib/activation_payload.ts`, not copied, so one implementation
+      remains.
+      Two bounds recorded rather than smoothed: `pre_compact` is 0 **by construction, not by
+      measurement**, and `pre_tool_use` is measured but **not bound**, so its row prices a
+      mechanism the shipped configuration does not fire.
+- [x] **3.2 Leave the existing grace ceiling untouched.** It is the estate-growth ratchet and may
       only walk down; this phase adds reporting, never a second gate.
       verify: `git diff src/config/preamble-payload-budget.json` is empty.
-- [ ] **3.3 Publish the activation charge beside any published saving.** One line giving p50, p90
+      Both `git diff` and `git status --porcelain` return empty on that path. No gate was
+      registered either: the activation reading never reaches an exit code, and a test pins that
+      the gated total equals the source reading alone, so folding the fire distribution into it
+      turns that test red. Its ceiling already lives in `hook-token-budget.json`; a second gate
+      here would put one obligation behind two that can disagree.
+- [x] **3.3 Publish the activation charge beside any published saving.** One line giving p50, p90
       and max per-fire payload against the standing reduction.
       verify: no saving figure appears in the settings reference without its activation charge in
       the same table.
+      Published at `docs/settings-reference.md:182`, generated from the schema rather than
+      hand-written. A pre-existing exact-BPE figure in the same file was tagged as such so it is
+      not compared against the chars/4 pair. Of the two other rows publishing a saving, one gained
+      an activation note whose per-fire distribution is **stated as unmeasured rather than
+      estimated**; the other was left alone with its reason given — it fires nothing, and its
+      saving is a third-party output-token claim rather than a standing-payload reduction.
 
 ## Blockers
 
@@ -190,13 +213,50 @@ is how a saving gets published without its cost.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — No statement in the tree calls the parser fallback the shipped default, and the
+- [x] AC-1 — No statement in the tree calls the parser fallback the shipped default, and the
       template default and the fallback are described separately.
-- [ ] AC-2 — Every rule carrying both a path trigger and a prompt-shaped trigger has exactly one
+      `grep -rn "eager-all is the shipped default" src/` returns nothing. Ten sites reconciled,
+      not the three the roadmap named. The distinction itself comes from ADR-267 decision 4, which
+      predates this roadmap by two months — the docstring never followed the ADR that authorised
+      the flip.
+- [x] AC-2 — Every rule carrying both a path trigger and a prompt-shaped trigger has exactly one
       named disposition, and none is blank.
-- [ ] AC-3 — No rule remains whose only trigger is path-shaped while its body has been thinned.
-- [ ] AC-4 — The payload census reports source, per-host delivered, and runtime activation as
+      18 rules, 7 / 9 / 2, none blank. The population was read three independent ways that agree;
+      a fourth source, `check_host_tree_parity`, reports 17 because one rule is absent from the
+      maintainer-scoped tree it walks — recorded as a finding about that gate.
+- [x] AC-3 — No rule remains whose only trigger is path-shaped while its body has been thinned.
+      Population 3, zero thinned. Both properties checked separately from sources the projector
+      does not share, rather than trusting the parity gate's own "kept full-bodied" message.
+      **Bounded honestly: this is a measurement at this HEAD, not an invariant** — one added
+      keyword moves a rule into the mixed class and thins it correctly.
+- [x] AC-4 — The payload census reports source, per-host delivered, and runtime activation as
       three labelled numbers.
-- [ ] AC-5 — The existing payload grace ceiling is unchanged by this roadmap.
-- [ ] AC-6 — No published saving figure stands without its activation charge in the same table.
-- [ ] AC-7 — Phase 1 changed no executable line.
+      138,360 tok/session · 24,537 tok/session · p50 6,728 / p90 14,016 / max 16,297 B per fire.
+      One census, extended; the sampler moved rather than copied so one implementation remains.
+- [x] AC-5 — The existing payload grace ceiling is unchanged by this roadmap.
+      `git diff` and `git status --porcelain` both empty on that path, and no new gate registered.
+- [x] AC-6 — No published saving figure stands without its activation charge in the same table.
+      Met at `docs/settings-reference.md:182`, generated from the schema. One further row's
+      activation charge is published as **unmeasured**, stated rather than estimated; one row was
+      deliberately left out with its reason.
+- [x] AC-7 — Phase 1 changed no executable line.
+      Verified by filtering the three `.ts` diffs: zero non-comment lines over 156 changed lines.
+      **The constraint bit, and the refusal is recorded rather than quietly waived** —
+      `value_ladder.ts:477` emits a now-false parenthetical into a generated doc, sits on an
+      executable line, and was left for a change permitted to touch code. Phase 3 re-confirmed it
+      independently and also left it.
+
+**A number this roadmap carried forward was itself stale, and Phase 3 caught it.** The deferral
+condition written in Phase 2 quoted a p90 of 16,188 B from `hook-token-budget.json:40`. That is the
+pre-lowering figure, measured when the cap was 20,480 — its own recorded `max` of 20,406 B gives it
+away — and the cap moved to 16,384 on 2026-09-08. Re-measured: **p90 14,016 B, max 16,297 B**; the
+verdict is unchanged at 6.8× rather than 7.9×. The figure was wrong because it was copied forward
+from a registered note instead of re-derived, which is the exact failure this roadmap was written
+to correct. Corrected in the evidence table rather than left standing on the grounds that the
+conclusion survived it.
+
+**A third figure exists and disagrees with both, and is deliberately not edited.** The `rule-inject`
+budget row records p90 14,507 / max 16,348 over **330** fires "with the command path included" —
+a different denominator rather than a wrong number, which is the same conflation this roadmap
+addresses, one layer down. It is a registered budget derivation with an owner, so it is reported
+here and left to that owner.

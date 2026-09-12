@@ -228,8 +228,18 @@ false:
   below the `pre_tool_use` cap in `src/config/hook-token-budget.json`, **or** that cap has
   been raised by the owner to cover the measured value. **False on 2026-09-12**: the cap is
   2,048 B (`hook-token-budget.json:41`) and the concern's whole-corpus p90 gate-open fire
-  is 16,188 B (`:40`), 7.9x the cap — and `pre_tool_use` fires once per tool call, so the
+  is **14,016 B**, 6.8x the cap — and `pre_tool_use` fires once per tool call, so the
   per-turn multiple is ten by that file's own `tool_calls` definition.
+
+  **Corrected 2026-09-12 during Phase 3.** This line first read 16,188 B / 7.9x, taken from
+  `hook-token-budget.json:40`. That figure is the **pre-lowering** p90: it was measured when
+  `CAP_BYTES` was 20,480, which its own recorded `max` of 20,406 B gives away, and the cap
+  moved to 16,384 on 2026-09-08. Re-measured over the same corpus and the same 318 gate-open
+  fires: p90 14,016 B, max 16,297 B. The verdict is unchanged — P2 is still false by a wide
+  margin — but the number was wrong, and it was wrong because it was copied forward from a
+  registered budget note instead of re-derived. A stale figure quoted from a file that records
+  when it was taken is the same defect this roadmap exists to correct, so it is corrected here
+  rather than left standing because the conclusion happened to survive it.
 
 P2 is the substantive one. P1 without P2 would bind a concern that the dispatcher's
 `src/scripts/hooks/injection_budget.ts` drops first, being `severity: advisory` — which is
