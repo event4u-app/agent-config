@@ -11,6 +11,24 @@ review_by: 2026-12-24
 > Read `(at least)` strictly: a broad keyword sweep returns a larger set that includes
 > incidental mentions, so this is the subject-matched floor.
 
+> **The posed owner question — 24 arrivals, no recommended answer.** The
+> promotion probe below has never returned true: `no_message` is 0 of 1,751
+> post-split stops, `ok` is 0 over the same window, and nothing writes the disk
+> envelope the fallback would read. Exactly one of:
+>
+> 1. Keep the stub on its probe unchanged — it promotes on a reproducible
+>    `no_message`, or another precisely defined verdict, and not before.
+> 2. Close the stub and record that the branch it keys on has not fired over the
+>    measured window, naming the three facts below as that record.
+> 3. Build precondition 1 first — a functioning `ok` path — and re-read the probe
+>    once a primary channel exists for a fallback to fall back from.
+> 4. Re-scope the probe onto a verdict that has fired, and record that
+>    `no_message` was not the branch to key on.
+>
+> The count sets the venue, not the verdict: twenty-four arrivals say the subject
+> keeps returning, not that the gate should be built. The measured facts below
+> are the evidence, and the count does not change them.
+
 > **Stub — not active work.** Drain-run transfer, 2026-08-22, from
 > [`road-to-subagent-lifecycle-integrity.md`](../archive/road-to-subagent-lifecycle-integrity.md)
 > Phase 2 Steps 2 and 3. Council disposition 2/2 convergent, recorded in

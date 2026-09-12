@@ -18,6 +18,44 @@ review_trigger: >-
 
 # ADR-134 — Launch decision: dated, falsifiable defer (no third undated draft)
 
+> **Arrival history — process metadata:** 27 occurrences; latest:
+> `inbox-2026-09-y` (2026-09-11); earlier, most recent first: `inbox-2026-09-r`,
+> `inbox-2026-09-q`, `inbox-2026-09-i`, `inbox-2026-09-g`, `inbox-2026-09-e`,
+> `inbox-2026-09-c`, `inbox-2026-09-b`, `inbox-2026-09-a`, `inbox-2026-08-g`,
+> then fourteen release-feedback rounds each named by the release it read, and
+> three further rounds — `hard-feedback-1`, `release-4.10.0`, `ac-compare-1`.
+> Counted as distinct top-level round entries under the consumed-inbox tree that
+> raise this record's subject, the deferral of the public launch decision:
+> detected by an explicit reference to this ADR, to its `decision` slug, or to
+> `road-to-adoption-without-narrative-debt.md`, then read one by one to drop
+> incidental mentions such as path lists, ADR index dumps and frontmatter
+> cross-references (8 of 35 matches dropped that way). The tree is gitignored and
+> machine-local, so the count cannot be reproduced from a clone and the ordering
+> is the finding rather than the exact figure. It is a floor, strictly: a round
+> that raises the subject without naming any of the three is not counted. This
+> history triggers review of whether the holding disposition remains effective;
+> it does not determine the review outcome. On resolution it is frozen as closed
+> provenance rather than erased; on a superseding deferral it is carried forward.
+
+> **The posed owner question — no recommended answer.** The expiry is
+> 2026-09-15. This record's own Decision section and
+> `agents/roadmaps/stubs/road-to-adr-134-expiry.md` name three outcomes, and
+> `agents/evidence/analysis/adr-134-expiry-compliance-finding.md` records that
+> none of them has been taken. Exactly one of:
+>
+> 1. Post the launch decision this record defers, executed under
+>    `road-to-adoption-without-narrative-debt.md`; the posting itself stays
+>    Hard-Floor-gated at the moment of posting.
+> 2. Commit a superseding deferral record with a signed reason and a new expiry
+>    at most 90 days out.
+> 3. Let the expiry lapse deliberately and record the lapse as this record
+>    prescribes — an open compliance finding for the next review cycle, not a
+>    silent extension.
+>
+> None of the three is agent-decidable: each is an owner-reserved public
+> commitment under `decision-revisit-gate`'s reserved set, unanimously so per the
+> council record of 2026-09-06 cited in the compliance finding above.
+
 ## Status
 
 Accepted (2026-07-28). Ends the drafted-not-posted pattern (two announcements,

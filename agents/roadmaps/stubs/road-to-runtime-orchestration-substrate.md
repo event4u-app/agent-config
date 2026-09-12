@@ -11,6 +11,23 @@ review_by: 2026-12-27
 > Read `(at least)` strictly: a broad keyword sweep returns a larger set that includes
 > incidental mentions, so this is the subject-matched floor.
 
+> **The posed owner question — 10 arrivals, no recommended answer.** Every track
+> in the table below is gated on `road-to-runtime-governance-flip.md` Phase 1's
+> ADR, which does not exist, so no track here can start and none has been
+> adopted. Exactly one of:
+>
+> 1. Keep the stub as it is — tracks findable, gates named; the first track whose
+>    gate opens and carries a measurement becomes a roadmap then.
+> 2. Route the gate rather than wait on it: put the Class-B resident-process
+>    question to a decision now, since every track depends on that one answer.
+> 3. Promote one named track on its own terms and leave the rest stubbed,
+>    accepting that its gate is still shut.
+> 4. Close the stub and record the tracks as not adopted, which is the reading
+>    § What this stub does NOT claim leaves open in both directions.
+>
+> The count sets the venue, not the verdict: ten arrivals say the source set keeps
+> returning, not that any track should be built.
+
 > **Source:** `agents/tmp.old/inbox-2026-08-h/` — landed by `/analyze:inbox` on
 > 2026-08-27. Drafted against `f2ed85e`, which **is** `origin/main` at
 > authoring time, so nothing here is stale-by-window.
