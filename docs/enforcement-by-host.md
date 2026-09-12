@@ -158,6 +158,96 @@ survives on `session_start` only, where it restores the memory session index and
 writes no state. `session-eol` is not in either row — it binds `stop`, on claude
 only (`:1190`).
 
+## Loop primitive — can this host be told to keep going, and by what
+
+The enforcement columns above answer *can this host stop me*. This one answers
+the opposite question — **can this host be told to keep going** — and until this
+section existed the tree had nowhere to write the answer. It matters because
+exactly one re-engagement authority exists today, and adopting a host's own loop
+verb would silently create a second one. A row per host is where that becomes
+visible before it happens.
+
+### The closed value set, and why it has five members rather than four
+
+`none` · `in-session` · `subagent` · `durable` · `unknown`.
+
+The roadmap step that commissioned this table (`road-to-loop-governance-truth`
+2.1) names four values and omits `unknown`; its next step (2.2) then requires
+that an unverified host read `unknown` and never `none`. Both are right and the
+reconciliation is stated here rather than left for a reader to discover as a
+contradiction: the four are the **answers**, `unknown` is the **absence of one**,
+and the effective closed set is therefore five.
+
+| value | meaning |
+|---|---|
+| `none` | The host exposes no loop primitive. Requires a cited observation, exactly like a `false` in the capability registry — see the note below the table. |
+| `in-session` | The host can be told to continue the turn or session it is already in. The loop has no wall between iterations. |
+| `subagent` | The loop is driven by spawning child agents; each iteration is a fresh child, the parent is the driver. |
+| `durable` | The loop survives the session — a scheduled, cron-shaped, or otherwise out-of-session wake that starts work nobody is sitting in front of. |
+| `unknown` | **Not researched.** Never "absent". |
+
+**`unknown` is the honest default and this table is expected to be mostly
+`unknown`.** It is the same discipline
+`src/scripts/_lib/host_capability.ts` already applies to its registry: seven of
+the eight platform keys have **no row at all**, so every field resolves to the
+safe default and `describeHostCapabilities` reports its source as `default` —
+"never looked", recorded as a silence rather than as a table of negatives. A
+row here written `none` on no evidence would convert an unasked question into a
+measured absence, which is the single failure this section exists to prevent.
+
+**The value names the strongest kind this tree has an observation for**, not the
+result of an exhaustive audit. A host reading `in-session` has not been
+researched for `durable`; the row says so by not claiming it.
+
+### The table
+
+| Host | Loop primitive | Host's own verb | Verified | Cited observation |
+|---|---|---|---|---|
+| Claude Code (plugin) | `in-session` | the `Stop` hook's exit-2 continuation channel, marked on the next payload by `stop_hook_active` — no user-facing verb name is recorded in this tree | 2026-09-12 | `agents/evidence/analysis/stop-slot-warn-continuation-2026-09-12.md` — one measured case: a warn-only `stop` fire returning exit 2 is followed by three dispatcher invocations with no `user_prompt_submit` among them. The turn continued. Tier 1 in [`hook-architecture-v1.md`](contracts/hook-architecture-v1.md) § Stop-event capability tiers. **n=1**, one host version, one date — the artifact states four things it does not establish. |
+| Cowork | `unknown` | none recorded | 2026-09-12 | — |
+| Augment | `unknown` | none recorded | 2026-09-12 | — |
+| Cursor | `unknown` | none recorded | 2026-09-12 | — |
+| Cline | `unknown` | none recorded | 2026-09-12 | — |
+| Gemini | `unknown` | none recorded | 2026-09-12 | — |
+| Windsurf | `unknown` | none recorded | 2026-09-12 | — |
+| Copilot | `unknown` | none recorded | 2026-09-12 | — |
+| Codex | `unknown` | none recorded | 2026-09-12 | — |
+
+The nine hosts are the nine rows of the enforcement table at the top of this
+file. The `2026-09-12` dates on the eight `unknown` rows are the date the tree
+was searched and no observation was found — they are verification dates for the
+search, not for a capability.
+
+### Eight `unknown` rows, and one thing they are not
+
+**No host reads `none`, and that is the finding rather than a gap.** `none`
+would assert that a host has no loop primitive, and no such observation exists
+for any host in this tree. Producing one requires reaching the host — the same
+limit `src/scripts/_lib/host_capability.ts` records for the seven platforms it
+calls not reachable from the session that wrote the registry.
+
+**What is NOT evidence for a `none`, stated because it looks like it is.** The
+stop-slot capability tiers in
+[`hook-architecture-v1.md`](contracts/hook-architecture-v1.md) place `augment`
+and `cowork` on tier 2 — their trampolines discard the dispatcher's verdict and
+`exit 0`, so the turn ends. That is a fact about **this package's** reach on
+those hosts, derived from code in this repository. It says nothing about whether
+the host has a loop verb of its own, and reading it as a `none` would be exactly
+the inference this section forbids.
+
+**The one `/loop` reference in the tree names no host.**
+`src/domains/engineering-base/fix/pr-comments-loop/command.md:60-63` instructs
+the agent to drive iterations via "the host's `/loop` mechanism" in self-paced
+mode "when available", and to iterate inline "on hosts without `/loop`". It is
+written host-agnostically on purpose, so it cannot fill a cell here. A verb
+column stays empty until some host's verb is observed, not until one is
+plausible.
+
+**Drift is a documentation defect, not a breakage.** No code reads this table.
+The value set is closed and every row carries its date, so a host that renames
+or re-scopes a loop verb makes a row stale and nothing else. Re-derive a row
+from its cited observation rather than trusting the cell.
+
 ## Vocabulary — the enforcement ladder (glossary, not a migration)
 
 An external "enforcement-first" architecture proposal (reviewed by AI
