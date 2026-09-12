@@ -20,6 +20,24 @@ status: later
 > construction. **Resume when** the maintainer blockers are resolved and
 > Phase 1's exit gate (≥ 30 shadow capsules from real dispatches) has data.
 
+> **The posed owner question — 4 arrivals, no recommended answer.** The parking
+> condition above has held across four arrivals: the maintainer blockers are open,
+> and Phase 1's exit gate has no data because only real usage produces it.
+> Exactly one of:
+>
+> 1. Keep the parking unchanged — resume when the blockers resolve and the gate
+>    fills, whenever that is.
+> 2. Produce the sample deliberately — run long tasks to generate the shadow
+>    capsules, making the exit gate a scheduled task rather than a by-product of
+>    real usage, and record that the sample was manufactured.
+> 3. Lower the exit gate's sample floor to what real usage has actually produced,
+>    and record the confidence that buys and the confidence it costs.
+> 4. Close the roadmap as an unmeasured null under Phase 3.3's pre-authorised
+>    cheap null, leaving the Phase 0-1 schema and instrument standing.
+>
+> The count sets the venue, not the verdict: four arrivals say the parking
+> condition has not resolved itself, not that any of the four options is right.
+
 > Today a worker that reaches its tier budget is killed by stop-loss and its
 > partial work returns as an envelope the orchestrator has to re-brief from.
 > There is no handoff. This roadmap adds one: a structured `CHECKPOINT` capsule

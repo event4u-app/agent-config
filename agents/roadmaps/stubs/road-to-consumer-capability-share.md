@@ -25,9 +25,9 @@ probe: none
 > round meets a number instead of a fresh argument.
 >
 > **What the seventh round will meet if nothing changes.** The mix was 62:13 at
-> release 14.23.0 and 76:10 at 15.0.0 — the ratio moved the wrong way after five
-> readings asked for the opposite. The three options below are unchanged and
-> still unanswered; the count sets the venue, never the verdict.
+> release 14.23.0 and 76:10 at 15.0.0 — the ratio moved further from the
+> direction five earlier readings asked for. The three options below are
+> unchanged and still unanswered; the count sets the venue, never the verdict.
 
 ## The measured state at `99d14b2e7`
 
@@ -40,7 +40,8 @@ probe: none
 
 ## The owner question, posed rather than parked
 
-Which of these is the intent for the next two cycles?
+Six arrivals so far, and no answer is recommended here. Which of these is the
+intent for the next two cycles?
 
 1. **Deliberately consumer-heavy** — the next release heads are expected to
    invert the mix, and a head that does not says why. No threshold, no gate.
@@ -51,7 +52,7 @@ Which of these is the intent for the next two cycles?
    five releases so a single governance-heavy cycle is not read as a trend.
 
 None of the three is agent-decidable. Recording the answer here closes the
-recurrence; recording nothing has produced three arrivals so far.
+recurrence; recording nothing has produced six arrivals so far.
 
 ## What this stub is NOT
 
