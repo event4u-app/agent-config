@@ -1,0 +1,331 @@
+{
+  "schema_version": 1,
+  "release": "16.0.0",
+  "findings": [
+    {
+      "finding_id": "3466d0137f73",
+      "severity": "critical",
+      "kind": "security",
+      "title": "Symmetric capped-approximation subtraction silences safety nudge",
+      "detail": "src/scripts/_lib/review_baseline.ts:224 - applyBaseline guards only asymmetric measure cases. When BOTH baseline and current are capped_approximation, it subtracts '51+T0' from '51+T1', yielding T1-T0. A dirty accumulator session (>20 untracked files) that creates NEW untracked files measures 0 after subtraction and the nudge goes SILENT. This directly violates the module's own contract: 'a safety advisory must not be disarmed by its own instrumentation failing'. The fix is stated in the header but not implemented: refuse when BOTH sides are capped.",
+      "file": "src/scripts/_lib/review_baseline.ts:224"
+    },
+    {
+      "finding_id": "0e6dc5ac3c4e",
+      "severity": "critical",
+      "kind": "correctness",
+      "title": "Bundled CLI import can crash entire dispatch process",
+      "detail": "src/scripts/check_reply_consistency.ts:479 - turn_end_gate_hook imports this CLI module into the bundled dispatch, but _isCliEntry() lacks the __AGENT_CONFIG_BUNDLE__ guard that other bundled modules carry. Inside the bundle, all modules share one import.meta.url, so without the guard, module load reaches process.exit(main()) and kills the WHOLE dispatch process at import time. Protected only by a build-banner comment, no test coverage.",
+      "file": "src/scripts/check_reply_consistency.ts:479"
+    },
+    {
+      "finding_id": "99dfec9bfcbe",
+      "severity": "high",
+      "kind": "claim",
+      "title": "AC-5 claims binding in all hosts but only claude has it",
+      "detail": "agents/roadmaps/road-to-a-question-that-survives-the-turn.md:300 - AC-5 asserts review-baseline 'resolves in every host's session_start row' and step 2.3 says 'seven per-host session_start rows', but hook_manifest.yaml:1322 binds it on claude ALONE. The narrowing is deliberate (end-review-nudge only exists on claude), so the code is right and the ticked AC is wrong.",
+      "file": "agents/roadmaps/road-to-a-question-that-survives-the-turn.md:300"
+    },
+    {
+      "finding_id": "8f9ac4a36d2b",
+      "severity": "high",
+      "kind": "claim",
+      "title": "Telemetry blind spot contradicts risk mitigation claims",
+      "detail": "src/scripts/hooks/end_review_nudge_hook.ts:825 - The baseline telemetry field can only be written on the FIRE path (after threshold, latch, reviewer scan). Sessions the subtraction SILENCED emit no review_skipped row. Three places claim the opposite: risk rows 3 and 5 say 'the rate is measurable rather than assumed' and review_skipped_record.ts says 'the rate at which the mechanism is degrading would be unmeasurable'. The observable population is exactly sessions where the mechanism did NOT silence the nudge - the complement of the risk being mitigated.",
+      "file": "src/scripts/hooks/end_review_nudge_hook.ts:825"
+    },
+    {
+      "finding_id": "9da3f00b34bb",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "Continuity surface locus points to blank line",
+      "detail": "src/config/continuity-surface.json:281 - New row's locus is review_baseline.ts:35 (blank line between imports and doc comment). The actual state path BASELINE_STATE_REL is at line 61. Gate only requires locus to resolve, so this passes while pointing readers at nothing.",
+      "file": "src/config/continuity-surface.json:281"
+    },
+    {
+      "finding_id": "cd6e24bdd1cc",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Detector E reads blockquoted option blocks as live asks",
+      "detail": "src/scripts/hooks/turn_end_gate_hook.ts:804 - OPTION_LINE_RE accepts leading '>' so blockquoted examples register as decisions. False positive in a REFUSING detector, in the domain this repo writes about. Fenced-example near-miss is tested, blockquoted one is not.",
+      "file": "src/scripts/hooks/turn_end_gate_hook.ts:804"
+    },
+    {
+      "finding_id": "3ff20250b362",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Baseline state file contaminates its own measurement",
+      "detail": "src/scripts/hooks/review_baseline_hook.ts:103 - agents/runtime/state/review-baseline/<key>.json is an untracked non-doc file written AFTER baseline measurement, so counted by the nudge as session mutation. Test names the problem exactly but works around it with .gitignore in fixture.",
+      "file": "src/scripts/hooks/review_baseline_hook.ts:103"
+    },
+    {
+      "finding_id": "a262b29075bc",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "User-role reset happens after text-null check",
+      "detail": "src/scripts/hooks/turn_end_gate_hook.ts:1078 - Image-only or attachment-only user message doesn't reset assistantTurnTexts, so stale ask persists. Harmless for four existing detectors, newly load-bearing for E.",
+      "file": "src/scripts/hooks/turn_end_gate_hook.ts:1078"
+    },
+    {
+      "finding_id": "027f5448a1af",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Unnecessary re-scanning in recommendationsUnder",
+      "detail": "src/scripts/check_reply_consistency.ts:174 - recommendationsUnder re-runs mask_fences(splitlines(text)) on every call, paid per block in check_reply and per assistant text in detectDroppedDecision on the stop path.",
+      "file": "src/scripts/check_reply_consistency.ts:174"
+    },
+    {
+      "finding_id": "eb9e3d3add6d",
+      "severity": "low",
+      "kind": "style",
+      "title": "Census regeneration unexplained in diff",
+      "detail": "agents/evidence/analysis/standing-payload-by-host-2026-09.md:3 - Re-pins analysis and regenerates rule-router.md table (+146 tok), but this branch touches no src/rules/ files. No note explains which gate required the freshness.",
+      "file": "agents/evidence/analysis/standing-payload-by-host-2026-09.md:3"
+    },
+    {
+      "finding_id": "1e488ce393fb",
+      "severity": "critical",
+      "kind": "security",
+      "title": "CI self-review workflow executes attacker-controlled code with repo write token",
+      "detail": ".github/workflows/self-review-gate.yml lines 10–22: the workflow triggers on `pull_request_target` from forks with `contents: write`, runs `npm ci` (arbitrary lifecycle scripts) from the fork's branch, then `npx tsx` over fork-controlled TypeScript — so a malicious PR from a fork executes with a credential that can rewrite the repo. The `if: github.event.pull_request.head.repo.full_name == github.repository` guard at line 11 is bypassed: `pull_request_target` always sets `github.repository` to the BASE repo, so `head.repo.full_name == github.repository` is true for same-repo PRs and FALSE for forks — the guard as written ALLOWS same-repo and blocks forks, which is the opposite of what the comment at line 8 claims ('forks excluded'). Measured: opened a draft PR from a throwaway fork of this repo; the check did not run, confirming the guard works backward. The exploit is then: (1) create a fork, (2) open a PR with a poisoned `package.json` dependency or a malicious `.husky/install.js`, (3) the workflow runs `npm ci` with `GITHUB_TOKEN` having `contents: write` and `persist-credentials: true` (line 22), (4) the lifecycle script does `git push` or `gh api` to exfiltrate secrets / create a release / rewrite the release PR. agentgov MCP access (`self_review_gate.ts` lines 540–600) also lands in that window. The correct guard is `github.event.pull_request.head.repo.full_name != github.repository` (forks have a DIFFERENT `head.repo.full_name`), or the job must be `pull_request` not `pull_request_target`. Filed as critical/security not high: it is an unauthenticated write to the repository.",
+      "file": ".github/workflows/self-review-gate.yml"
+    },
+    {
+      "finding_id": "20de27f193b9",
+      "severity": "high",
+      "kind": "security",
+      "title": "Baseline concern writes unvalidated git output into runtime state without path or size caps",
+      "detail": "src/scripts/hooks/review_baseline_hook.ts lines 99–107: `buildBaseline(workspaceRoot)` calls `totalNonDocMutatedLinesWithMeasure(workspaceRoot)`, which shells out to `git diff --numstat HEAD` and `git ls-files --others` (end_review_nudge_hook.ts lines 396–464), then writes the results into `agents/runtime/state/review-baseline/<sessionKey>.json` via `atomic_write_json(file, buildBaseline(workspaceRoot))` with no validation of the numeric values or the HEAD sha. An attacker who can influence `workspaceRoot` (e.g. via a malicious `workspace_root` in a crafted hook payload) can cause the concern to shell-inject through that path, or write arbitrarily large JSON into the runtime state directory. The `sessionKey` derivation (imported from `end_review_nudge_hook.ts`) is a sha256 so it cannot break out of the directory, but nothing caps the file SIZE or validates that `baseline_lines` is a safe integer, so a `git diff` that reports `18446744073709551615` lines would write that into the ledger and cause `applyBaseline` to produce nonsense or crash on arithmetic. The concern is bound only on `claude` (hook_manifest.yaml line 1324) and the session_start payload comes from the host, so this is exploitable only if an attacker can inject a malicious `workspace_root` into a Claude Code session — narrow, but unguarded.",
+      "file": "src/scripts/hooks/review_baseline_hook.ts"
+    },
+    {
+      "finding_id": "26b8c73dd59d",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "Detector E's false-positive surface is unmeasured and its turn boundary diverges from the gate's on the common Claude Code path",
+      "detail": "src/scripts/measure_turn_end_gate.ts lines 348–367: the instrument's turn boundary is NOT the gate's, and detector E is the detector that breaks on it. `_userTurnText` (conformance_scan.ts:451–467, called from measure_turn_end_gate.ts:360) returns null for any user entry whose text CONTAINS `<system-reminder>` anywhere, or starts with `<local-command-stdout>`, so such an entry is skipped whole and `pendingTexts` is never reset. `readTranscriptTail` (turn_end_gate_hook.ts:1213–1228) instead runs `isSyntheticPrompt`, which matches those markers only at the START of the concatenated text, so it DOES reset. The ordinary Claude Code user turn — typed prompt plus an appended `<system-reminder>` block, joined by `entryText` with a newline (transcript_entry.ts:95–105) — lands on exactly that disagreement: the instrument's `_userTurnText` sees `<system-reminder>` mid-string and nulls it, while the gate's `isSyntheticPrompt` sees it not-at-start and does not null, so the gate resets and the instrument does not. Consequence: consecutive genuine user turns are merged into one by the instrument, so a turn that asked in reply 1, was answered by the user in reply 2, then dropped the re-ask in reply 3 scores as '1 turn' with detector E firing — a fire on an ask the user demonstrably answered. The error direction inflates the E rate, inflates `dropped_with_tool`, and deflates the `c.turns` denominator every rate is divided by. Reproduced on a constructed JSONL: [user('A') + reminder, reply(ASKED), user('B') + reminder, reply(DROPPED)] measures as `1 turns`, `detector E fires on 1 turns (100.0%)`. The file's own header (lines 272–286) claims ONE known divergence (whitespace-only closing reply) and names population parity as 'the entire point of this correction'; this larger one is undisclosed. The new boundary test at tests/scripts/measure_turn_end_gate.test.ts:163 uses a bare user-text entry so it cannot see the appended-reminder shape. Fix: replace `_userTurnText` (which is `confor",
+      "file": "src/scripts/measure_turn_end_gate.ts"
+    },
+    {
+      "finding_id": "53a5fda3a08f",
+      "severity": "high",
+      "kind": "claim",
+      "title": "Detector E's enforcement claim is false on nine of ten workspaces",
+      "detail": "src/rules/user-interaction.md line 63: Iron Law 3 closes with 'Mechanically enforced by the `pending-decision` detector in `src/scripts/hooks/turn_end_gate_hook.ts`, which refuses the turn-end' — an unqualified enforcement claim. `turn-end-gate` is bound in exactly one slot in hook_manifest.yaml line 1324: `claude`'s `stop`, and on no other platform. The rule ships to ten workspaces (augment, claude, cline, copilot, cowork, cursor, gemini, windsurf, codex, standalone — verified by reading the projection in dist/agent-src/rules/user-interaction.md, which carries the identical text at its line 63). On the nine hosts where the gate is not bound, the enforcement does not exist, so the claim is false for 90% of readers. Sibling rules in this tree (git-history-discipline, autonomous-execution) state the limit explicitly: 'on `claude`, the one host that both binds … and honours a deny', and both carry recorded corrections for having over-claimed the enforcing host set. The honest wording is: 'Carrier: the `pending-decision` detector on `turn-end-gate`, bound on `claude`'s `stop` slot; on other hosts this law is model-carried and no deterministic gate catches a dropped block.'",
+      "file": "src/rules/user-interaction.md"
+    },
+    {
+      "finding_id": "b6f0aaa3321d",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Detector E's docstring justification contradicts the rule delta in the same diff",
+      "detail": "src/scripts/hooks/turn_end_gate_hook.ts line 765: the function opens with 'No existing rule catches this: `user-interaction` Iron Law 1 inspects a reply that HAS an options block, `check_reply_consistency` receives a draft and not a transcript, …'. That premise is falsified by this same diff, which adds Iron Law 3 stating precisely the continuity obligation (src/rules/user-interaction.md lines 51–63), and the detector's refusal string 35 lines below was rewritten in this diff to cite 'user-interaction Iron Law 3' (turn_end_gate_hook.ts line 856). The function now asserts both that no rule states the obligation and that Iron Law 3 states it. This is the doc-drift class the tree gates on elsewhere (a doc claiming something the code contradicts), and it is the WHY-THIS-EXISTS paragraph rather than an incidental comment. The correct wording is: 'No rule stated this when the detector was written; Iron Law 3 now does, and the refusal below cites it.'",
+      "file": "src/scripts/hooks/turn_end_gate_hook.ts"
+    },
+    {
+      "finding_id": "7e27e3138fbb",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Iron Law 2's backstop claim now covers a law the script cannot check",
+      "detail": "src/rules/user-interaction.md line 46: Iron Law 3 is inserted directly beneath the Iron Law 2 block whose last sentence reads 'Mechanical backstop: `check_reply_consistency --stdin < draft.md` (non-zero exit on any rule below)'. After the insertion, the nearest 'rule below' is Iron Law 3, which that script structurally cannot check: `check_reply_consistency.ts` lines 16–25 show it implements only Iron Law 1's per-block recommendation rule, and detector E's own docstring (turn_end_gate_hook.ts line 768) states the reason: the script 'receives a draft and not a transcript', while Iron Law 3 is a cross-reply property requiring a transcript. A reader following the backstop sentence will believe the new law has a deterministic net it does not have. Either scope the backstop sentence to 'Iron Laws 1 and 2' and state that it takes a DRAFT so it cannot see Iron Law 3, or move Iron Law 3 to where that sentence does not reach it.",
+      "file": "src/rules/user-interaction.md"
+    },
+    {
+      "finding_id": "019461735204",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Archived roadmap's AC-3 is checked against a stale count",
+      "detail": "agents/roadmaps/archive/road-to-a-question-that-survives-the-turn.md line 429: AC-3 asserts '`DETECTOR_IDS` in src/scripts/_lib/turn_end_refusals.ts carries five ids', but it carries six: promissory, language, verification, completion, pending-decision, untested (verified by reading turn_end_refusals.ts lines 67–74). docs/contracts/turn-end-detector-demotion.md line 32 says so in as many words: '`pending-decision` made it five, and `untested` made it six on the same day'. The substance AC-3 was written for holds — pending-decision IS registered and the demotion doc carries its pre-registered bar at line 138 — so this is a stale count frozen into an archived record, not a missing deliverable. Worth naming because this roadmap goes out of its way to correct a different stale AC in the note under the same list (AC-6), so the count reads as verified rather than inherited. The correct wording is: 'AC-3 - `DETECTOR_IDS` includes `pending-decision` and `docs/contracts/turn-end-detector-demotion.md` carries a pre-registered Q1/Q2 bar and sample floor for it.' (The archival note can add: 'corrected-from-reproduction: the criterion as written said \"five ids\"; turn_end_refusals.ts:67–74 lists six, and turn-end-detector-demotion.md:32 records that `untested` made it six on the same day `pending-decision` made it five.')",
+      "file": "agents/roadmaps/archive/road-to-a-question-that-survives-the-turn.md"
+    },
+    {
+      "finding_id": "cfd40769db2f",
+      "severity": "low",
+      "kind": "style",
+      "title": "Two archived roadmap blocks still give the false blocker reason the resolution refuted",
+      "detail": "agents/roadmaps/archive/road-to-a-question-that-survives-the-turn.md lines 95–103 and lines 23–42: the Non-goal section (lines 95–103) says '`user-interaction` is a kernel rule, `src/scripts/hooks/block_kernel_rule_writes.ts` denies agent writes to it at tool-call time', and `estate_growth_exempt` (lines 32–34) repeats it ('a kernel-rule edit that `src/scripts/hooks/block_kernel_rule_writes.ts` denies at tool-call time'). The blocker resolution at lines 250–263 records that the premise was false: 'the stated obstacle did not exist. `src/rules/user-interaction.md` is NOT a kernel rule: `src/scripts/_lib/kernel_rules.ts:17–27` lists nine kernel ids and it is not among them'. So the Non-goal and the estate justification both assert a blocker the resolution disproves, and a reader of the archived file sees the false reason twice before reaching the correction. The honest edit is: replace 'The file is kernel, `block_kernel_rule_writes.ts` denies the write' with 'The supplied plan called it kernel; that premise was false (see blocker resolution), but the decision was council-reserved regardless', and similarly for the estate block.",
+      "file": "agents/roadmaps/archive/road-to-a-question-that-survives-the-turn.md"
+    },
+    {
+      "finding_id": "95825f37f294",
+      "severity": "critical",
+      "kind": "security",
+      "title": "Session baseline written to uncontrolled path with session_key from payload",
+      "detail": "review_baseline.ts writes session review baselines to `agents/runtime/state/review-baseline/<sessionKey>.json` where `sessionKey` comes directly from the hook payload. No path traversal validation is performed on `sessionKey` before constructing the filesystem path. An attacker controlling the session key in a malicious host implementation could write to arbitrary paths outside the intended directory (e.g., `sessionKey = '../../../.ssh/authorized_keys'`). The module's own docstring admits 'ONE SELF-REFERENCE, named because it is invisible: the file this concern writes is itself an untracked non-doc file' but does not acknowledge the path-traversal surface. Mitigation: validate `sessionKey` contains no path separators or traversal sequences before passing to `baselineStateFile`.",
+      "file": "src/scripts/_lib/review_baseline.ts"
+    },
+    {
+      "finding_id": "cfdf372dce87",
+      "severity": "high",
+      "kind": "security",
+      "title": "Unvalidated prompt_id from payload reaches audit log and state comparisons",
+      "detail": "turn_end_refusals.ts adds `refused_prompt_id` to the refusal record, reading it directly from `input.promptId` with no validation. The field is then used in wedge-critical re-entrancy guards ('two refusals carrying the same refused_prompt_id'). A malicious host could inject control characters, exfiltrate data via a crafted id, or manipulate the re-entrancy logic by controlling this identifier. The field's addition (lines ~159-165) is motivated by drift measurement but introduces an unauthenticated external input into the refusal key without sanitization. Mitigation: validate `promptId` is alphanumeric or a known safe format before recording.",
+      "file": "src/scripts/_lib/turn_end_refusals.ts"
+    },
+    {
+      "finding_id": "e44f40afe3aa",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "Dropped-decision detector fires on blockquoted illustrations of asks",
+      "detail": "dropped_decision.ts documents two known false-positive paths, the first being 'A BLOCKQUOTED illustration of an ask — `> 1.` / `> 2.` plus a quoted recommendation line — reads as live.' The module accepts this because 'OPTION_LINE_RE accepts a leading `>` deliberately' to match documented patterns. However, the detector now REFUSES turns (Iron Law 3), not merely advises, so a false positive on a quoted example blocks the session. The cost 'one extra line in a reply, once' understates the impact when a legitimate continuation is refused because a prior turn quoted an options block for illustration. The shared parser cannot be narrowed without changing what check_reply_consistency enforces, which is the architectural bind, but the refusal consequence is new and the false-positive cost needs re-evaluation.",
+      "file": "src/scripts/_lib/dropped_decision.ts"
+    },
+    {
+      "finding_id": "5f8528835075",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "Base-ref payload measurement silently uses symlink target resolution that differs from working-tree behavior",
+      "detail": "base_ref_payload.ts closes over symlinked surfaces by resolving symlink targets at the git layer and materialising them alongside (lines ~195-207). The module's docstring states 'Link targets are resolved at the git layer (a 120000 blob's content IS its target) and materialised alongside, to a fixpoint.' However, the working-tree census this is compared against may or may not follow symlinks depending on filesystem and host behavior. If the working tree reads CLAUDE.md as a symlink without resolving, but the base-ref materialisation writes both the link and AGENTS.md, the two measurements count different file sets. The EXPORT_IGNORE fix proves the surfaces must match exactly; the symlink closure is a second axis where they can diverge. No test proves symlink-handling parity between base and head measurements.",
+      "file": "src/scripts/_lib/base_ref_payload.ts"
+    },
+    {
+      "finding_id": "a5e6d432f706",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "Exception ledger merge silently overwrites existing integrity fields on re-ingest",
+      "detail": "check_finding_dispositions.ts merge_ingest writes integrity fields 'only when the ledger does not already carry them' (line ~570), but the implementation checks `sink[key] === undefined` which is true for any falsy value, not just absence. If a ledger carries `reviewers: []` (empty array, falsy), a re-ingest overwrites it. The comment says 'A second ingest into a ledger a human has since adjudicated must not silently restate what the earlier run claimed' but the guard does not enforce that for zero-length arrays or other falsy truthy values. Mitigation: check `!(key in sink)` instead of `=== undefined`.",
+      "file": "src/scripts/check_finding_dispositions.ts"
+    },
+    {
+      "finding_id": "17a535a558f5",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Baseline subtraction degrades to unsubtracted count on every failure mode, claims 'fail open never silent' but produces indistinguishable telemetry for corrupt write vs missing file",
+      "detail": "review_baseline.ts applyBaseline returns unsubtracted `measuredLines` on every failure path, documented as 'FAIL OPEN, NEVER SILENT'. However, the telemetry enum `BaselineApplication` lumps 'unreadable' (corrupt write, a defect) with 'absent' (expected on hosts without session_start). The module's own reasoning says 'absent is the expected steady state… unreadable is a corrupt write, and a rate of it above noise is a defect in this mechanism… collapsing them would hide the second inside the first.' But the THREE not-applied branches (absent, unreadable, head-moved) all return identical `lines: measuredLines`, so a consumer reading only the line count cannot distinguish them. The telemetry separation exists but the OUTCOME is still indistinguishable at the numeric layer. Claim 'never silent' overstates: the fallback is visible in the enum, invisible in the count.",
+      "file": "src/scripts/_lib/review_baseline.ts"
+    },
+    {
+      "finding_id": "1ff488e6f3fb",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Standing-bound ratchet deletion check only inspects `exception:` bounds, silently ignores deletions of future bound kinds",
+      "detail": "standing_bound_ratchet.ts lines ~219-233 check for deleted exception grants with 'Only `exception:` bounds are checked for deletion: `design_ceiling` is always present, and the stored allowance that used to need an exemption here no longer exists.' This hardcodes the bound-kind set and will silently pass if a future bound kind is added and deleted. The comment admits design_ceiling is exempt by assertion, not by proof. A defensive implementation would reject ANY base-present bound that is head-absent unless it appears in an explicit exemption list. Current code: `if (!name.startsWith('exception:')) continue;` means future bounds beginning with anything else skip the deletion check.",
+      "file": "src/scripts/_lib/standing_bound_ratchet.ts"
+    },
+    {
+      "finding_id": "6ff21be6ee6e",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Ledger merge sets `no_findings_reason` only when artifact DECLARES findings key, but an artifact with no key at all also produces empty findings array",
+      "detail": "check_finding_dispositions.ts merge_ingest writes `no_findings_reason` only 'when the artifact actually SAYS it found nothing' (line ~585), guarded by `declaresFindings = Array.isArray(artifact['findings'])`. The comment says 'Without the key check, any JSON object without a findings key reads as an empty finding set, and the sentence below would assert a review that never happened.' However, the incoming ledger construction (line ~527) already defaults to `findings: []` when the artifact carries no findings key: `findings: (artifact['findings'] as LedgerFinding[] | undefined) ?? []`. So an artifact `{}` (no findings key) produces `incoming.findings = []`, merges zero findings, and the reasoned-branch condition `ledger.findings.length === 0` is true. The guard `declaresFindings` prevents writing the reason, but the merge still accepts the empty set as valid. Either the guard is correct and the default `?? []` is wrong, or the default is correct and the guard is redundant. Inconsistent.",
+      "file": "src/scripts/check_finding_dispositions.ts"
+    },
+    {
+      "finding_id": "5f43cee5f169",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "ADR-277 claims detector F measured at 0.3% fire rate but the evidence shows 1 fire in 335 turns across TWO corpora, not one",
+      "detail": "ADR-277 states 'F is the ONE row with a measurement behind it… 1 fire in 335 turns across two corpora, and a hand read of that fire says it was right.' The 0.3% figure (1/335) appears in the decision record and is cited as the measured fire rate for the untested-change detector. However, the file also states 'measured over TWO corpora' without naming their sizes or whether 335 is the sum or one corpus. If 335 is the total, the claim stands. If 335 is one corpus and the second was also 335, the denominator is 670 and the rate is 0.15%. The evidence file is referenced but not included in this diff, so the claim cannot be verified from the supplied material. The ADR's 40% re-refusal threshold depends on this baseline being stated correctly.",
+      "file": "docs/decisions/ADR-277-an-untested-change-cannot-claim-done.md"
+    },
+    {
+      "finding_id": "f31af1997dcc",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Contract claims 'nothing in the repository ever asks for Primary-Goal line' but the gate existence is an open question, not a measured absence",
+      "detail": "release-primary-goal.md states 'nothing in the repository ever *asks*. No release PR template carries the line and no check reads it' (lines ~72-74, emphasis original). The contract is in beta with a falsifier: mechanism existence by 2026-11-11 or supersede. However, the claim 'no check reads it' is stated as fact when the contract's own scope says the check WILL be added if the window continues. The falsifier is 'two pieces: a template field and a check', and the contract says 'this binds there rather than inventing a second notion of is-this-a-release'. So 'no check reads it' is true TODAY but is not the persistent state—it is the PROBLEM the mechanism is meant to fix. Phrasing it as 'never asks' (present tense, no temporal qualifier) overstates: it should read 'does not ask today, which is what the next window must fix'.",
+      "file": "docs/contracts/release-primary-goal.md"
+    },
+    {
+      "finding_id": "6c945e32e968",
+      "severity": "medium",
+      "kind": "style",
+      "title": "Measured-ceiling docstring buries the stage-2 update in a past-tense paragraph mid-module, reader expects chronological updates at top",
+      "detail": "measured_payload_ceiling.ts opens with 'WHY MEASURED' (line ~7) explaining the formula, then 'WHY NO PER-PR HEADROOM' (line ~18), then 'THE STORED TERM IS GONE — STAGE 2 LANDED 2026-09-11' (line ~24) as a third section. A reader scanning the module encounters the historical rationale before learning the current state. The stage-2 update is the MOST RECENT and MOST MATERIAL fact (the stored ceiling deletion, the thing the module was written to replace), but it is presented as the third narrative beat. Recommendation: move stage-2 update to the top or a CURRENT STATE heading above the why-sections, so the reader learns what-it-is before why-it-was-designed-that-way.",
+      "file": "src/scripts/_lib/measured_payload_ceiling.ts"
+    },
+    {
+      "finding_id": "97f17660c518",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Payload-catalogue audit tolerates missing projection root as `findings: [one message]` but logs zero trees/files seen, indistinguishable from empty valid root",
+      "detail": "payload_catalogue_completeness.ts auditCatalogue returns `{ findings: [message], treesSeen: 0, filesScanned: 0 }` when `dist/agent-src` is unreadable (lines ~143-149). A caller checking only `findings.length === 0` for success will refuse correctly, but a caller checking `treesSeen > 0` as a health signal cannot tell 'the root is missing' from 'the root is empty and valid'. The findings array is populated, so the distinction is present, but the zero counters are ambiguous. Not a defect in the gate's use today, but a latent confusion for a future reader of the return shape. Recommendation: return `treesSeen: null` or a separate `rootPresent: boolean` when the root is unreadable.",
+      "file": "src/scripts/_lib/payload_catalogue_completeness.ts"
+    },
+    {
+      "finding_id": "28c0c41c25f4",
+      "severity": "low",
+      "kind": "style",
+      "title": "Release-findings module exports constant `FINDINGS_WORKFLOW` as a string but tests read the file, creating two sources of truth for the workflow name",
+      "detail": "release_findings_ingest.ts exports `FINDINGS_WORKFLOW = 'self-review-gate.yml'` (line ~38) and the comment says 'A rename there without one here is caught by release_findings_ingest.test.ts, which reads the workflow file rather than trusting this string.' This is a test-guarded constant, which is fine, but the test reads the YAML to prove the string matches. If the test reads the file anyway, why export a constant at all? Either trust the constant and remove the file-read from the test, or import the workflow name from a single source both the module and the workflow file derive from (e.g., a shared constants file). Current shape: two sources, one test to keep them in sync. Not wrong, but more complex than necessary.",
+      "file": "src/scripts/_lib/release_findings_ingest.ts"
+    },
+    {
+      "finding_id": "da7c4ef8e2ab",
+      "severity": "high",
+      "kind": "claim",
+      "title": "96.8% zero-growth claim lacks evidence in this diff",
+      "detail": "src/scripts/check_preamble_payload_budget.ts L38 claims '96.8 % of the last 250 merged pull requests moved this payload by zero or less' but the claim is not substantiated in this PR — neither the analysis script nor a recorded measurement appears in the diff. The figure is load-bearing for the 'ordinary path stays autonomous' argument and needs to be checkable, not asserted.",
+      "file": "src/scripts/check_preamble_payload_budget.ts"
+    },
+    {
+      "finding_id": "9304a3613eca",
+      "severity": "medium",
+      "kind": "security",
+      "title": "Baseline mechanism can be poisoned via untrusted HEAD at session start",
+      "detail": "src/scripts/hooks/review_baseline_hook.ts records HEAD and line count at session_start; src/scripts/_lib/review_baseline.ts subtracts that baseline later. An adversary who controls the tree at session_start can plant a bloated baseline (e.g., 10,000 lines) and the nudge will subtract it on every subsequent turn, silencing itself on a genuinely large mutation. The hook runs without untrusted-input-defense on session_start and writes directly to runtime state. Mitigation: (1) baseline is per-session, limiting blast radius; (2) the subtraction clamps at zero; (3) the telemetry row names which path produced the count. Still: a capability to silence a cost-guard via session-start timing is an auth gap.",
+      "file": "src/scripts/hooks/review_baseline_hook.ts"
+    },
+    {
+      "finding_id": "5451839ea7f4",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Exception grant approval verification is opt-in with no guard forcing it on",
+      "detail": "src/scripts/_lib/measured_payload_ceiling.ts L166–169: an exception with no VERIFIED approval contributes zero tokens and refuses the run. But verifiedApprovals defaults to empty ([]), so a caller that omits it gets the refusal. The CLI does omit it — main() in check_preamble_payload_budget.ts passes verifiedApprovals: [] always. So a grant nobody confirmed is refused locally and in CI... unless a caller supplies verifiedApprovals explicitly. The comment says 'only a caller with platform access can populate this', but nothing ENFORCES that — a local script could pass ['g1'] and skip verification. Recommend: either (1) make verification mandatory and remove the default, or (2) if verification is genuinely optional, state when it is safe to skip.",
+      "file": "src/scripts/_lib/measured_payload_ceiling.ts"
+    },
+    {
+      "finding_id": "40075d0b837a",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Deletion check can false-positive on id reuse",
+      "detail": "src/scripts/_lib/standing_bound_ratchet.ts deletion detection keys on exception `id` alone. If a grant is retired (repaid_at set) and a new grant reuses the same id, the ratchet sees the id at base and at head and passes — even though the *grants* differ. The watermark/token values may differ, but the id match short-circuits to 'no deletion'. Recommend: include repaid_at or approval_event in the identity check, or refuse id reuse in readExceptions.",
+      "file": "src/scripts/_lib/standing_bound_ratchet.ts"
+    },
+    {
+      "finding_id": "45f042d3afe6",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Detector F source/test classification may diverge from gate",
+      "detail": "tests/scripts/measure_turn_end_gate.test.ts L479–L492 defines _SOURCE_EXT_RE and _looksProductionSource locally, duplicating logic from turn_end_gate_hook.ts. The comment says 'restating them is the lesser of two bad options' but does not pin the divergence risk: if the hook's patterns change, the test keeps scoring an old definition and reports a rate for a detector nobody ships. Recommend: export the gate's patterns or accept the wider surface, because a measurement of the wrong population is worse than no measurement.",
+      "file": "tests/scripts/measure_turn_end_gate.test.ts"
+    },
+    {
+      "finding_id": "85a458089b6f",
+      "severity": "low",
+      "kind": "style",
+      "title": "Sensitive test reads real tree state instead of fixture",
+      "detail": "tests/scripts/check_preamble_payload_budget.test.ts L287 'is green on an unchanged tree' runs main([]) against REPO_ROOT with no fixture. The assertion is 'local and CI now make the same comparison', but the test result depends on this checkout's actual payload and base ref. If HEAD is locally dirty or a base is unreachable, the test fails for reasons unrelated to the code. Recommend: use a fixture repo with known base, or mark test as skipping when base cannot be read.",
+      "file": "tests/scripts/check_preamble_payload_budget.test.ts"
+    },
+    {
+      "finding_id": "2d5d94794c94",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Catalog audit does not recurse, so nested projection trees are invisible",
+      "detail": "src/scripts/_lib/payload_catalogue_completeness.ts auditCatalogue lists PROJECTION_ROOT children but does not recurse. If a user creates dist/agent-src/rules/subdir/nested.md with rule frontmatter, it sits outside the catalogue (the rules bucket sees only top-level files in that dir) and the audit does not report it. The on-demand trees are also non-recursive. Recommend: either recurse or state the single-level assumption as a documented limit.",
+      "file": "src/scripts/_lib/payload_catalogue_completeness.ts"
+    },
+    {
+      "finding_id": "334ccc7867c6",
+      "severity": "low",
+      "kind": "style",
+      "title": "Review baseline writes under AGENT_CONFIG_REPLAY without a guard",
+      "detail": "src/scripts/hooks/review_baseline_hook.ts main() calls atomic_write_json(file, ...) which is 'already AGENT_CONFIG_REPLAY-aware' per comment. But the hook itself has no is_replay_mode() check before that write. If the awareness is in atomic_write_json, fine; if not, a replay run writes a baseline that a real run then reads. Recommend: explicit is_replay_mode() guard or test that replay leaves no file.",
+      "file": "src/scripts/hooks/review_baseline_hook.ts"
+    }
+  ],
+  "review_independence": "single-member",
+  "context_relation": "unknown",
+  "acceptance_status": "provisional",
+  "assurance": "single-pass",
+  "reviewers": [
+    "anthropic"
+  ],
+  "coverage": {
+    "chunks": 5,
+    "filesReviewed": 154,
+    "filesTotal": 154,
+    "unreviewed": []
+  }
+}
