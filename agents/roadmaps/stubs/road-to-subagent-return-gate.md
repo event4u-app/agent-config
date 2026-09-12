@@ -5,13 +5,18 @@ review_by: 2026-12-24
 
 # Stub: road to a subagent return gate
 
-> **Arrivals:** 24 (at least) - latest `inbox-2026-09-y` (2026-09-11). Counted as
+> **Arrivals:** 25 (at least) - latest `inbox-2026-09-aa` (2026-09-12), a round of
+> fourteen independent external reviews of which two reach this subject - and both
+> answer the posed question the same way: keep the parking, because the promotion
+> preconditions are still absent. One states it as "not on 24 arrivals = build it, but
+> on the promotion probe". That is option 1 below, arriving as an argument rather than
+> as a new demand. Counted as
 > distinct prior round directories under the consumed-inbox tree, which is gitignored -
 > so the count is machine-local and the ordering is the finding, not the exact figure.
 > Read `(at least)` strictly: a broad keyword sweep returns a larger set that includes
 > incidental mentions, so this is the subject-matched floor.
 
-> **The posed owner question — 24 arrivals, no recommended answer.** The
+> **The posed owner question — 25 arrivals, no recommended answer.** The
 > promotion probe below has never returned true: `no_message` is 0 of 1,751
 > post-split stops, `ok` is 0 over the same window, and nothing writes the disk
 > envelope the fallback would read. Exactly one of:
@@ -25,7 +30,7 @@ review_by: 2026-12-24
 > 4. Re-scope the probe onto a verdict that has fired, and record that
 >    `no_message` was not the branch to key on.
 >
-> The count sets the venue, not the verdict: twenty-four arrivals say the subject
+> The count sets the venue, not the verdict: twenty-five arrivals say the subject
 > keeps returning, not that the gate should be built. The measured facts below
 > are the evidence, and the count does not change them.
 
