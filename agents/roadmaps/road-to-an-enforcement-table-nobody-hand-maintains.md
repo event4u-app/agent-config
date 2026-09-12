@@ -45,13 +45,43 @@ that hedge about it, which is why each of them re-derives the caveat in prose.
 
 ## Phase 1 — Measure the drift that exists today
 
-- [ ] **1.1 Write a read-only reporter** that prints host by slot by blocking value beside the
+- [x] **1.1 Write a read-only reporter** that prints host by slot by blocking value beside the
       published table's current claim, listing mismatches.
       verify: the reporter writes nothing — `grep -nE 'writeFile|mkdir|appendFile'` finds nothing —
       and it runs offline.
-- [ ] **1.2 Report an empty mismatch list as a real answer.** If the table is already accurate at
+      `src/scripts/report_enforcement_drift.ts`. The grep returns nothing, and a test asserts the
+      same over a wider set (`rmSync` included) so the property cannot come back silently. Reads
+      two files, opens no socket.
+      **The comparison rule is stated before the count, because the count is a consequence of it.**
+      A published cell is host-level and binary; the configuration is per slot, so a cell
+      summarises a column. **Strict** — the headline — calls a published "deny honoured" accurate
+      only when *every* lowerable slot under that host blocks. **Lenient** needs only one. Strict,
+      because an unqualified "the only host that refuses on a deny" is read as *a guard bound here
+      is honoured*, and the lenient rule scores one-of-nine identically to nine-of-nine, which
+      would make the drift invisible by construction rather than absent. Both counts print on every
+      run and `--rule` re-derives the other.
+- [x] **1.2 Report an empty mismatch list as a real answer.** If the table is already accurate at
       slot granularity, that is the finding and the rest of this roadmap is cheaper, not moot.
       verify: the run's output is recorded in the evidence tree with its date, whichever it says.
+      `agents/evidence/analysis/enforcement-table-slot-drift-2026-09-12.md`, pinned to
+      `9e85c0bf3`. **The list is not empty, and it is also not large: 1 mismatch of 8 comparable
+      hosts.** The honest shape of the finding is that *the table is accurate on 7 of 8 comparable
+      hosts, and the single inaccuracy is the row that carries the enforcement claim* — the
+      `claude` row publishes "honoured" while 3 of 9 lowerable slots block. Under the lenient rule
+      the count is 0, and the two rules disagree on exactly that one row, which is the empirical
+      form of the argument for strict rather than a separate assertion.
+      Two things are deliberately **not** counted as mismatches and are printed as labelled blocks
+      instead: a host with no row in the lowering file (silence, not contradiction) and the
+      slot-count column (published counts *declared* bindings, the lowering file records what an
+      install can *emit* — two senses the document itself keeps apart).
+      **The roadmap's own premise was verified rather than inherited, and holds in all three
+      parts:** exactly three non-null blocking values (`host_lowering.yaml:66,67,68`), all under
+      `claude:` (block opens `:45`), and the content scanner is `injection-scan`, bound only on
+      `post_tool_use`, whose claude value is `block_exit: null` (`:69`).
+      One fact the roadmap did not state: effective blocking is gated on verification currency —
+      claude's block expires 2027-09-06 (`:62`), so literal and effective coincide today. The
+      reporter prints both side by side so a future expiry surfaces as a visible difference rather
+      than a value that quietly became null.
 
 ## Phase 2 — Generate the matrix, keep the prose
 
@@ -89,7 +119,7 @@ that hedge about it, which is why each of them re-derives the caveat in prose.
 ## Blockers
 
 ### blocker: generating-a-hand-written-doc-is-a-docs-policy-call
-- **Status:** open
+- **Status:** resolved 2026-09-12 by council — generate it, under five conditions
 - **Owner:** maintainer
 - **Class:** 3 — human-only
 - **Blocks:** Phase 2 onward. Phase 1 proceeds without it and is the half that produces the
@@ -108,6 +138,34 @@ that hedge about it, which is why each of them re-derives the caveat in prose.
   correction to make by hand once.
 - **Resolved when:** the document carries a generated region with a drift check, or this roadmap
   records the refusal and Phase 1's list is applied manually.
+- **Resolution:** **generate it.** Council, 2 seats, quorum concluded, converged 2/2 on option (a)
+  — and both seats independently held that an **empty** mismatch list would not have changed the
+  answer: it would show the table happens to be right today, not that hand maintenance is
+  reliable. Phase 1 then measured 1 of 8, so the question did not arise.
+  Five conditions, all adopted:
+  1. **Title it for what it proves.** A drift check establishes agreement with the YAML, never
+     agreement with reality — a mistaken lowering rule yields perfectly synchronised and false
+     documentation. Absent a runtime conformance test, the generated region is titled
+     **configured** behaviour, not **enforced** behaviour. This changes the deliverable and is the
+     sharpest thing the council said.
+  2. **Generate only the mechanical projection.** The taxonomy and every explanation of *why* a
+     host cannot refuse stay hand-written, above the region.
+  3. **Mark the boundary unmistakably** — source file, regeneration command, and visual separation
+     from the adjacent hand-written `loop primitive` table, which stays outside the region.
+  4. **The measurement is the generator's test.** Phase 1's projection logic and the generator's
+     are the same logic; writing it twice invites them to disagree.
+  5. **A drift failure prints the regeneration command** and says corrections belong in the YAML
+     or the generator, because the correction path is otherwise strictly worse than editing a cell.
+- **Recorded dissent, and how it was resolved.** The seats split on `halt-by-state`, the
+  vocabulary value with zero occurrences in this tree. One held it should not exist in the
+  vocabulary at all until something emits it, since a generator bug could emit a phantom value.
+  The other held it should be defined in the hand-written taxonomy and marked *currently unused*,
+  so that a reader who later meets it does not meet an unexplained category. The second is adopted
+  because it is what Phase 4 already specifies — the value is in the closed set, and 4.2 requires
+  a fixture proving the check reds on a cell claiming a value the configuration does not carry.
+  The first seat's concern is answered by that same fixture rather than dismissed.
+- **Note:** owner-classified Class 3, routed to the council under this run's standing delegation
+  and recorded rather than silently reclassified.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-11 | reviewer: claude/host -->
