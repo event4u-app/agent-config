@@ -867,11 +867,18 @@ concerns:
   # pointer-shaped rule delivery is the 36.2 %-against-48 % run at
   # docs/CLAIMS.md:188-189.
   #
-  # DEFAULT OFF, and off means ZERO bytes: the concern returns before reading
-  # `dist/router.json` unless `lean_projection.mode: delivery`. Under every
-  # shipped default it emits nothing, so its `hook-token-budget.json` row is
-  # registered against the derived per-prompt cap rather than a measured
-  # emission — there is no measured emission yet, and saying so is the point.
+  # SHIPPED ON FOR CLAUDE CODE SINCE ADR-267 — corrected 2026-09-12, because
+  # this comment still read "DEFAULT OFF … under every shipped default it emits
+  # nothing … there is no measured emission yet" after its twin in
+  # `hooks/rule_inject_hook.ts` had already been corrected. The shipped template
+  # carries `lean_projection.mode: delivery` with `hosts: [claude-code]`, and
+  # the emission IS measured: p50 6,674 B, p90 16,188 B, max 20,406 B over 318
+  # gate-open fires on the frozen corpus, which is the distribution the
+  # `user_prompt_submit` raise in `hook-token-budget.json` is derived from.
+  #
+  # OFF STILL MEANS ZERO BYTES: the concern returns before reading
+  # `dist/router.json` unless the resolved (mode, hosts) pair thins THIS host —
+  # so on any other host, and on a `mode: eager-all` rollback, it emits nothing.
   #
   # DELIBERATELY NOT nudge-class: it carries no `nudge_rank`. A rule body is not
   # a hint the model may ignore, so the one-ranked-nudge-per-slot exclusivity
