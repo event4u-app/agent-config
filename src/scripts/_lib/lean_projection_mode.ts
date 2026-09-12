@@ -11,11 +11,22 @@
  *
  * So each side supplies the raw string from its own reader and this module
  * decides what it means. Anything unrecognised — absent key, typo, `null`,
- * a non-string — is `eager-all`, today's shipped behaviour: a mode nobody can
- * spell must never silently thin the standing corpus.
+ * a non-string — is `eager-all`: the parser fallback, which is NOT the value
+ * the template ships (see the type below), because a mode nobody can spell
+ * must never silently thin the standing corpus.
  */
 
-/** The three projection shapes. `eager-all` is the shipped default. */
+/**
+ * The three projection shapes, and the two different defaults they answer to.
+ *
+ * The TEMPLATE default — what a consumer is given — is `delivery` with
+ * `hosts: [claude-code]`, shipped in `src/config/agent-settings.template.yml`
+ * since ADR-267, so on that one host a normal read resolves to `delivery`.
+ * The PARSER FALLBACK — what applies when no value resolves from any layer —
+ * is `eager-all` (`DEFAULT_LEAN_PROJECTION_MODE` below), deliberately not
+ * flipped with the template per ADR-267 decision 4: the template says what was
+ * chosen, the constant says what happens when nothing could be read.
+ */
 export type LeanProjectionMode = 'eager-all' | 'thin' | 'delivery';
 
 export const DEFAULT_LEAN_PROJECTION_MODE: LeanProjectionMode = 'eager-all';
