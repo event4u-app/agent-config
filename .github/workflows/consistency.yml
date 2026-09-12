@@ -193,6 +193,12 @@ jobs:
       - name: Verify the documented MCP snippets match the installer entry
         run: ./scripts-run src/scripts/check_mcp_doc_drift --quiet
 
+      # Registered here as well as in `task ci` for the reason the comment above
+      # gives: no workflow invokes `task ci`, so a gate registered only there
+      # cannot fail a pull request.
+      - name: Verify the per-slot enforcement table matches host_lowering.yaml
+        run: ./scripts-run src/scripts/check_enforcement_matrix --quiet
+
       - name: Verify README size, word and time-to-first-command budgets
         run: ./scripts-run src/scripts/lint_readme_size --quiet
 

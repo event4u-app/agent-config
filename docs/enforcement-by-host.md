@@ -15,17 +15,37 @@ depends on what that host exposes. We say so plainly rather than imply
   **deterministically block** a call (e.g. `block_no_verify`). This is a
   superset on top of the compile-time layer, not a replacement.
 
-| Host | Compile-time rules | Lifecycle slots bound | Deny honoured |
-|---|---|---|---|
-| Claude Code (plugin) | ✅ | 9 | ✅ the only host that refuses on a deny |
-| Cowork | ✅ | 8 | ❌ trampoline discards dispatcher output, `exit 0` |
-| Augment | ✅ native rules | 5 | ❌ bound, verdict not honoured |
-| Cursor | ✅ `.cursorrules` | 5 | ❌ no `pre_tool_use` binding |
-| Cline | ✅ `.clinerules` | 5 | ❌ no `pre_tool_use` binding |
-| Gemini | ✅ `GEMINI.md` | 5 | ❌ no `pre_tool_use` binding |
-| Windsurf | ✅ `.windsurfrules` | 3 | ❌ no tool-lifecycle surface at all |
-| Copilot | ✅ `copilot-instructions.md` | 0 | — `fallback_only`, nothing bound |
-| Codex | ✅ skill bundle to `~/.codex/` | 0 | — no platform key in `hook_manifest.yaml` |
+| Host | Compile-time rules | Lifecycle slots bound |
+|---|---|---|
+| Claude Code (plugin) | ✅ | 9 |
+| Cowork | ✅ | 8 |
+| Augment | ✅ native rules | 5 |
+| Cursor | ✅ `.cursorrules` | 5 |
+| Cline | ✅ `.clinerules` | 5 |
+| Gemini | ✅ `GEMINI.md` | 5 |
+| Windsurf | ✅ `.windsurfrules` | 3 |
+| Copilot | ✅ `copilot-instructions.md` | 0 |
+| Codex | ✅ skill bundle to `~/.codex/` | 0 |
+
+**This table used to carry a fourth column, and it was removed on 2026-09-12
+rather than corrected.** The column read `Deny honoured` and answered per HOST,
+with one binary cell each — `✅ the only host that refuses on a deny` against
+Claude Code, `❌` against the rest. It was measured against
+`src/scripts/hooks/host_lowering.yaml`, the file the runtime resolver actually
+reads, and the measurement is
+[`enforcement-table-slot-drift-2026-09-12.md`](../agents/evidence/analysis/enforcement-table-slot-drift-2026-09-12.md):
+1 mismatch of 8 comparable hosts, and the mismatched row was the one carrying
+the enforcement claim. `claude` configures a refusal on 3 of its 9 lowerable
+slots, not on 9.
+
+No binary value would have fixed that cell. `✅` overclaims six slots and `❌`
+denies three, because a host-level cell has to summarise a column of slot
+values and no summary is faithful when the column disagrees with itself. So the
+question moved to where its data lives — one row per host and bound slot, in
+the generated region below — and the two columns that remain here stay
+hand-written because neither is in the lowering file: compile-time projection
+is a fact about `condense.ts`'s output, and the slot count is a fact about
+declared bindings in `src/scripts/hook_manifest.yaml`.
 
 **This table was wrong until 2026-09-07 and the correction is worth naming**,
 because the old shape is the one a reader reconstructs from memory. It said
@@ -40,14 +60,14 @@ platform in the manifest (`:1231-1256`), in the architecture contract, and in
 **Static-only was never the right axis.** A host can bind many slots and honour
 no refusal — which is exactly what `cowork` and `augment` do — so "does it have
 hooks" and "can it stop me" are two questions, and the old single column
-answered neither reliably. The last column is the one that carries the
-enforcement claim.
+answered neither reliably. The enforcement claim is the generated region below;
+the slot count above is only how many slots exist to ask the question of.
 
 **Codex, stated from the manifest rather than by analogy.** The installer
 detects Codex (`src/install/toolDetection.ts`) and deploys the same
 Anthropic-shaped rule/skill/command bundle to `~/.codex/`
 (`src/install/wizard-plan.ts`), so the compile-time layer reaches it exactly as
-it reaches the rows above. The two runtime columns are a different fact, read
+it reaches the rows above. Its slot count is a different fact, read
 off `src/scripts/hook_manifest.yaml`: its `platforms:` block declares eight
 keys — `augment`, `claude`, `cowork`, `cursor`, `cline`, `windsurf`, `gemini`,
 `copilot` — and Codex is not among them. No slot is bound, so no guard runs,
@@ -57,8 +77,8 @@ unsupported rather than as unlisted; the row says which of the two it is.
 
 **Why we lead with compile-time, not hooks.** Runtime hooks reach only a
 minority of supported hosts. Building the governance story on hooks would make
-it a two-tier experience — a deny is honoured on Claude and nowhere else,
-and Copilot binds nothing at all.
+it a two-tier experience — a refusal is configured on three slots of one host
+and nowhere else, and Copilot binds nothing at all.
 So the universal lever is the compile-time layer; runtime hooks are an opt-in
 **bonus** on the hosts that can run them, never the floor.
 
@@ -77,6 +97,138 @@ authoritatively, per artifact type, in
 [`capability-matrix.md`](capability-matrix.md) (derived from the projection
 dispatcher, drift-checked in CI) — we do not restate per-host surface facts here,
 to avoid drift between two hand-maintained tables.
+
+## Configured enforcement, per host and slot
+
+Everything from here to the end marker below is a projection of
+`src/scripts/hooks/host_lowering.yaml` — the file the runtime resolver reads.
+The prose in this section is authored; the region after it is build output.
+
+### What a generated table here can and cannot prove
+
+**It proves agreement with the configuration. It proves nothing about a host.**
+A drift check compares two artifacts in this repository. If a lowering rule is
+wrong — if `claude` does not in fact act on exit 2 at `pre_tool_use` — the table
+and the YAML stay in perfect agreement and are both false, and the check stays
+green over it. That is why the region is titled **configured** behavior and
+every cell is worded as a configuration fact, in a file whose own name says
+`enforcement`. Reading a generated table as stronger evidence than the
+hand-written one it replaced is the specific mistake available here, and the
+wording is what is guarding against it.
+
+What would establish the other half is a runtime conformance test: drive the
+dispatcher on a real host, return the block exit, record whether the call was
+refused. This tree has no such test for any host. The one adjacent measurement
+it does have covers continuation rather than refusal and is `n=1` — see the
+`Loop primitive` section's cited observation.
+
+### The closed vocabulary
+
+A cell carries exactly one of four values, and no cell may carry a value the
+configuration cannot produce.
+
+| Value | Means | Read off |
+|---|---|---|
+| `refusal` | This package has established an exit code the host honours as a refusal on this slot. A bound guard's deny is expected to stop the call. | a non-null `block_exit`, with the row's `verified` block unexpired |
+| `halt-by-state` | The host halts because the dispatcher changed a state the host then reads — not because of an exit code, and not because of output. | **nothing. Currently unused — see below.** |
+| `warning` | The dispatcher's verdict reaches the host and the run continues. A guard bound here can report; it cannot stop anything. | `block_exit: null` under `fail_policy: propagate` |
+| `unenforced` | The trampoline exits 0 regardless, so the verdict reaches nothing. A guard bound here runs and is discarded. | `block_exit: null` under `fail_policy: discard` |
+
+**`halt-by-state` is defined and unused, deliberately.** No field in the
+lowering configuration expresses it, so nothing in this tree can produce it and
+no cell below carries it. It is defined anyway, so that a reader who meets the
+value later — when some host's lowering is written in those terms — meets a
+category with a definition rather than an unexplained word. The risk that comes
+with defining a value nothing emits is that a generator bug prints it into a
+table that looks authoritative, so the gate rejects any cell carrying an
+outcome no line in the configuration produces, before the write and again on
+the committed file. Its self-test carries that case by name
+(`./scripts-run src/scripts/check_enforcement_matrix --self-test`).
+
+The guard's reach is narrow and worth stating: it catches a value the
+derivation can never return. It cannot catch a value that is reachable but
+wrong for its row — that is what the drift comparison covers, and behind that,
+the configured-not-enforced caveat above.
+
+### Why one row per pair, and not a matrix
+
+Two shapes were built from the same data before this one was chosen.
+
+A **host-by-slot matrix** — nine slot rows across six host columns, plus the
+label column — was built first, and it is the more compact of the two: eleven
+lines against forty-one. It was rejected on three counts. A one-cell change
+rewrites a row of six values whose host must be recovered by counting columns,
+which is the review surface where a wrong cell hides. There is no room for the
+backing column, so no cell is checkable against the YAML without trusting the
+derivation. And it needs a fifth glyph for "this host does not bind this slot",
+sitting in the same visual column as the four real values — a layout that has
+to invent a value outside the closed set in order to render is fighting the
+vocabulary rather than carrying it.
+
+The **long form** below is four times as long and its rows are no narrower in
+characters, so the honest claim for a phone is not that it fits where the
+matrix does not: it is that four columns degrade better than seven when a
+viewport forces a wrap, because each row stays one readable fact. Its diff is
+the stronger argument, and the decisive one: one fact per line, each line
+naming its own host and slot, so a configuration change moves exactly the lines
+it changed and a reviewer reads the change rather than reconstructing it.
+
+**No row for Codex, and that is the third kind of absence.** `cowork` and
+`copilot` are modelled with an empty `slots:` map, which the region names
+below. Codex has no entry in the lowering file at all, because it has no
+`platforms:` key in `src/scripts/hook_manifest.yaml` either — the fact is
+stated above, in the Codex paragraph, and is not the lowering file's to record.
+
+<!-- DO NOT EDIT BY HAND — generated by `./scripts-run src/scripts/check_enforcement_matrix --write`
+     from `src/scripts/hooks/host_lowering.yaml`. Verified on every CI run by
+     `check_enforcement_matrix`; a cell edited here is overwritten by the next
+     regeneration and reported by that gate in between. Corrections belong in the
+     YAML or in the generator. Everything OUTSIDE these two markers — including the
+     `Loop primitive` section further down — is hand-written and untouched by a
+     regeneration. -->
+<!-- BEGIN GENERATED: enforcement-configured-by-slot -->
+Projected from `src/scripts/hooks/host_lowering.yaml` — **configured behavior, not observed behavior.**
+A cell says what this package has written down about a host, never what the host does.
+
+**Configured: 3 of 32 host-slot pairs configure a refusal — `claude` on 3 of its 9 (`stop`, `user_prompt_submit`, `pre_tool_use`). 19 are `warning`, 10 are `unenforced`, 0 are `halt-by-state`. 1 of 8 modelled hosts configures a refusal on any slot; 0 configure one on every slot it binds.**
+
+| Host | Slot | Configured outcome | Backing |
+|---|---|---|---|
+| `claude` | `session_start` | `warning` | `block_exit: null` · `fail_policy: propagate` |
+| `claude` | `session_end` | `warning` | `block_exit: null` · `fail_policy: propagate` |
+| `claude` | `stop` | `refusal` | `block_exit: 2` · `fail_policy: propagate` |
+| `claude` | `user_prompt_submit` | `refusal` | `block_exit: 2` · `fail_policy: propagate` |
+| `claude` | `pre_tool_use` | `refusal` | `block_exit: 2` · `fail_policy: propagate` |
+| `claude` | `post_tool_use` | `warning` | `block_exit: null` · `fail_policy: propagate` |
+| `claude` | `pre_compact` | `warning` | `block_exit: null` · `fail_policy: propagate` |
+| `claude` | `subagent_start` | `warning` | `block_exit: null` · `fail_policy: propagate` |
+| `claude` | `subagent_stop` | `warning` | `block_exit: null` · `fail_policy: propagate` |
+| `augment` | `session_start` | `unenforced` | `block_exit: null` · `fail_policy: discard` |
+| `augment` | `session_end` | `unenforced` | `block_exit: null` · `fail_policy: discard` |
+| `augment` | `stop` | `unenforced` | `block_exit: null` · `fail_policy: discard` |
+| `augment` | `pre_tool_use` | `unenforced` | `block_exit: null` · `fail_policy: discard` |
+| `augment` | `post_tool_use` | `unenforced` | `block_exit: null` · `fail_policy: discard` |
+| `cursor` | `session_start` | `warning` | `block_exit: null` · `fail_policy: propagate` |
+| `cursor` | `session_end` | `warning` | `block_exit: null` · `fail_policy: propagate` |
+| `cursor` | `stop` | `warning` | `block_exit: null` · `fail_policy: propagate` |
+| `cursor` | `user_prompt_submit` | `warning` | `block_exit: null` · `fail_policy: propagate` |
+| `cursor` | `post_tool_use` | `warning` | `block_exit: null` · `fail_policy: propagate` |
+| `cline` | `session_start` | `unenforced` | `block_exit: null` · `fail_policy: discard` |
+| `cline` | `session_end` | `unenforced` | `block_exit: null` · `fail_policy: discard` |
+| `cline` | `stop` | `unenforced` | `block_exit: null` · `fail_policy: discard` |
+| `cline` | `user_prompt_submit` | `unenforced` | `block_exit: null` · `fail_policy: discard` |
+| `cline` | `post_tool_use` | `unenforced` | `block_exit: null` · `fail_policy: discard` |
+| `windsurf` | `session_start` | `warning` | `block_exit: null` · `fail_policy: propagate` |
+| `windsurf` | `user_prompt_submit` | `warning` | `block_exit: null` · `fail_policy: propagate` |
+| `windsurf` | `stop` | `warning` | `block_exit: null` · `fail_policy: propagate` |
+| `gemini` | `session_start` | `warning` | `block_exit: null` · `fail_policy: propagate` |
+| `gemini` | `session_end` | `warning` | `block_exit: null` · `fail_policy: propagate` |
+| `gemini` | `stop` | `warning` | `block_exit: null` · `fail_policy: propagate` |
+| `gemini` | `user_prompt_submit` | `warning` | `block_exit: null` · `fail_policy: propagate` |
+| `gemini` | `post_tool_use` | `warning` | `block_exit: null` · `fail_policy: propagate` |
+
+**No row above for `cowork`, `copilot`** — modelled in the configuration with an empty `slots:` map, so there is no host-slot pair to carry an outcome. That is an absence of bindings, not an outcome of `unenforced`.
+<!-- END GENERATED: enforcement-configured-by-slot -->
 
 ## Lifecycle slots — three different truths, kept apart
 
