@@ -745,8 +745,59 @@ export function guard_release_curation(version: string, prMerged = false): void 
     );
 }
 
+/**
+ * What `REMOTE/<branch>` holds relative to HEAD, before anything is pushed.
+ *
+ * `push_release_branch` used to issue the push and learn the remote's position
+ * only from the rejection that came back. That reading is unavailable in two
+ * measured states, both on 16.0.0 (2026-09-12): the local pre-push gate refuses
+ * a diverged branch before git can print `[rejected]`, and a remote already AT
+ * head produces no rejection at all — git runs the pre-push hook before it
+ * discovers there is nothing to send, so the hook refuses over CI still pending
+ * on the head this run had already pushed. Asking first is the only place both
+ * are visible.
+ */
+type RemoteBranchState = 'absent' | 'in-sync' | 'remote-ahead' | 'local-ahead';
+
+function _remote_branch_state(branch: string): RemoteBranchState {
+    // `--exit-code` so a never-pushed branch reads as a clean non-zero rather
+    // than an empty success the count below would then run against a missing
+    // ref — the exit-128 masking this file already carries a test for.
+    const exists = run(['git', 'ls-remote', '--exit-code', '--heads', REMOTE, branch], {
+        check: false,
+        capture: true,
+    });
+    if (exists.returncode !== 0) return 'absent';
+    run(['git', 'fetch', REMOTE, branch], { check: false, capture: true });
+    const counts = run(['git', 'rev-list', '--left-right', '--count', `HEAD...${REMOTE}/${branch}`], {
+        check: false,
+        capture: true,
+    });
+    // Unreadable → push and let git judge, which is the pre-2026-09-12 behaviour.
+    if (counts.returncode !== 0) return 'local-ahead';
+    const [ahead = '0', behind = '0'] = counts.stdout.trim().split(/\s+/);
+    if (Number(behind) > 0) return 'remote-ahead';
+    return Number(ahead) > 0 ? 'local-ahead' : 'in-sync';
+}
+
 function push_release_branch(branch: string): void {
+    let state = _remote_branch_state(branch);
+    if (state === 'remote-ahead') {
+        process.stdout.write(`↻  ${REMOTE}/${branch} moved under us — merging it in before the push\n`);
+        run(['git', 'merge', '--no-edit', `${REMOTE}/${branch}`]);
+        // Re-read: a fast-forward merge lands HEAD exactly on the remote, and
+        // the push that followed would then be the no-op case below.
+        state = _remote_branch_state(branch);
+    }
+
     guard_release_branch_push(branch);
+
+    // Ahead of the skip on purpose: the guard validates the release content,
+    // which has to be right whether or not this run is the one that sends it.
+    if (state === 'in-sync') {
+        process.stdout.write(`✅  ${REMOTE}/${branch} already carries this commit — nothing to push\n`);
+        return;
+    }
     const first = run(['git', 'push', '-u', REMOTE, branch], { check: false, capture: true });
     if (first.returncode === 0) {
         process.stdout.write(first.stdout);

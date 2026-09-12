@@ -127,8 +127,8 @@ So the record carries **two** SHAs per PR and they mean different things:
 Before every merge, re-read the PR and refuse when the live head is **neither**
 the snapshot head **nor** the head this run last pushed. That is the
 force-push-after-authorization case, and it is the only one the check exists
-for. A PR that appeared after the snapshot is not in scope for this run — § 6
-says what happens to it.
+for. A PR that appeared after the snapshot is never merged by this run — § 6
+says what happens to it instead.
 
 ## 2. Sync with the base
 
@@ -258,10 +258,18 @@ a PR its own predecessor invalidated, because it has no predecessor that
 landed. The cutoff below bounds both forms.
 
 **Cutoff.** When the manifest is exhausted, recompute the open-PR list
-**exactly once**. PRs that appeared during the run are drained as ONE final
+**exactly once**. PRs that appeared during the run are **prepared** as ONE final
 straggler batch. After that batch the run ends unconditionally; anything
 arriving during or after it is recorded as `arrived-after-cutoff` and is not
 processed.
+
+**The straggler batch is prepared and never merged — in both forms.** It is not
+in § 1's manifest, so the invocation does not reach it (the Iron Law above § 1,
+and § 7's first rule). "Drained" is therefore preparation here: each straggler
+is synced, classified, greened and reported, ends at mergeable-and-open exactly
+as under `--no-merge`, and is recorded `unauthorized` with the go-ahead it needs.
+Reading "drained" as "merged" is the one way `all` could merge a PR the owner
+never named, which is why the word is pinned rather than left to context.
 
 ```
 THE CUTOFF IS THE TERMINATION PROOF.
@@ -314,6 +322,11 @@ follow, and they are stricter than the ones they replace:
 Write the summary as-is with an `unauthorized` disposition per unprocessed PR
 and name the exact authorization needed. Then STOP and wait — do not end the
 run, and do not proceed to the next PR.
+
+That is the same `unauthorized` row § 6's straggler batch carries, and
+deliberately one token rather than two: both mean *prepared by this run, not
+authorized for it to merge*, and a reader of the summary needs the distinction
+between merged and not-merged, not between two reasons for the same outcome.
 
 ## 8. Kill switches, and what happens after a merge
 
@@ -369,7 +382,14 @@ conflict classes hit, CI iterations used, disposition, and any edits dropped in
 conflict resolution. The disposition set is closed:
 
 `merged <sha>` · `superseded-closed` · `blocked-external` · `twice-exhausted` ·
-`window-expired` · `arrived-after-cutoff`
+`unauthorized` · `arrived-after-cutoff`
+
+`unauthorized` replaces `window-expired`, and the swap is one-for-one on
+purpose. `window-expired` named a clock ADR-254 removed on 2026-09-04, so no run
+can produce that row any more, and a closed set holding an unproducible member
+is a set nobody can check a run against. `unauthorized` names what actually
+happens in its place — § 7's pause and § 6's straggler batch, the two ways a PR
+ends this run prepared and unmerged.
 
 ## Rules
 
