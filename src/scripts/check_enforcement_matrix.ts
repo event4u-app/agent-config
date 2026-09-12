@@ -391,8 +391,26 @@ function _read(root: string, rel: string): string | null {
     return fs.existsSync(abs) ? fs.readFileSync(abs, 'utf-8') : null;
 }
 
+/** Flags this gate understands. `--root` is the only one taking a value. */
+const KNOWN_FLAGS: ReadonlySet<string> = new Set(['--self-test', '--root', '--write', '--quiet']);
+
 export function main(argv?: readonly string[]): number {
     const args = argv ?? process.argv.slice(2);
+    // An unrecognised flag is refused rather than ignored. Both ratification
+    // seats named the silent-ignore form a fail-open interface defect: this
+    // gate is registered in a required CI job, and a mistyped flag that still
+    // exits 0 hands back a green nobody earned. Refusing costs a typo its own
+    // error message instead of a false pass.
+    const unknown = args.filter(
+        (a, i) => a.startsWith('-') && !KNOWN_FLAGS.has(a) && args[i - 1] !== '--root',
+    );
+    if (unknown.length > 0) {
+        process.stderr.write(
+            `${GATE}: unrecognised flag(s): ${unknown.join(', ')}\n` +
+                `    known: ${[...KNOWN_FLAGS].join(', ')}\n`,
+        );
+        return 2;
+    }
     if (args.includes('--self-test')) return selfTest();
     const rootIdx = args.indexOf('--root');
     const root = rootIdx === -1 ? ROOT : (args[rootIdx + 1] ?? ROOT);
