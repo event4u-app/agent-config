@@ -12,6 +12,14 @@ estate_growth_exempt: >-
   all nine were read after the failure. `memory_lookup` shipped as a CLI that nothing ever called,
   so recall was entirely model-carried. A concern that costs 768 B on the hottest slot is the price
   of closing that; a fifth memory file would have cost nothing and changed nothing.
+estate_offset_exempt: >-
+  Nothing in the active estate is a trade for this. The eight active roadmaps are mechanism work on
+  unrelated surfaces — a conformance check, a component contract, an obligation ledger, a substrate
+  stub — and archiving one to buy the slot would dispose of open work to pay for a concern that
+  exists because the estate's own recall failed. The one roadmap that would have been the natural
+  offset, `road-to-per-turn-hook-economy`, is already gone from the active set, which is part of
+  why this concern's per-event cost had to be argued from scratch in its admission row rather than
+  read off an owner.
 ---
 # Road to recall and regeneration followups
 
