@@ -41,33 +41,82 @@ is how a saving gets published without its cost.
 
 ## Phase 1 — The comment that contradicts the config
 
-- [ ] **1.1 Rewrite the projection-mode docstring** so it distinguishes the template default —
+- [x] **1.1 Rewrite the projection-mode docstring** so it distinguishes the template default —
       `delivery`, for the one host the template names — from the parser fallback, `eager-all`,
       which applies when no value resolves. Two sentences, one for each.
       verify: `grep -rn "eager-all is the shipped default" src/` returns nothing, and the
       docstring names both meanings separately.
-- [ ] **1.2 Reconcile every sibling assertion** elsewhere in the tree that names a shipped
+      All three premises verified with `file:line` rather than inherited, and all three hold.
+      **The distinction was not invented here — ADR-267 decision 4 already states it in as many
+      words** ("the template is what a consumer is given, the constant is what happens when the
+      value cannot be read"). The docstring simply never followed the ADR that authorised the flip,
+      which makes this a two-month-old documentation lag rather than a design question.
+- [x] **1.2 Reconcile every sibling assertion** elsewhere in the tree that names a shipped
       projection default.
       verify: `grep -rn "shipped default" src/ docs/ | grep -i projection` returns only
       statements consistent with the template.
-- [ ] **1.3 Touch comments only in this phase.** A behaviour change here is the rollback trigger.
+      **Ten sites, not the three the roadmap named.** The false claim had propagated well past the
+      docstring: `rule-router.md` carried it three times, including in its own *Read this first*
+      section; `hook_manifest.yaml:870-874` was the stale twin of a paragraph already corrected in
+      `rule_inject_hook.ts`; `check_rule_projection_integrity.ts` rested part of its stated
+      rationale on it; and `settings-classes.md:477` listed the wrong value in a column that
+      carries template values elsewhere. One further site — `rule-router.md:49-56` — claimed "there
+      is no measured emission yet", refuted by the hook's own header, and now carries the measured
+      distribution.
+      Sites that were already correct (`schemas/agent-settings.schema.json`, `server/schemas/
+      settings.ts`, `docs/settings-reference.md`) were left untouched.
+- [x] **1.3 Touch comments only in this phase.** A behaviour change here is the rollback trigger.
       verify: the phase's diff contains no executable line — `git diff` shows comment and
       documentation hunks only.
+      Verified independently: filtering the three `.ts` diffs to lines that are neither blank nor
+      comment-opening returns **zero**. 156 changed lines inspected across six files.
+      **One correction was refused on exactly this constraint and is reported instead.**
+      `src/scripts/_lib/value_ladder.ts:477` emits "(default `eager-all` — hence NOT in the default
+      NET)" into the generated `docs/value.md`. The statement is now false, but it sits on an
+      **executable** template-literal line, so fixing it here would have broken 1.3. Left for a
+      change that is allowed to touch code.
 
 ## Phase 2 — The path-trigger gap, enumerated and dispositioned
 
-- [ ] **2.1 Enumerate every rule carrying both a path trigger and a prompt-shaped trigger**
+- [x] **2.1 Enumerate every rule carrying both a path trigger and a prompt-shaped trigger**
       (keyword, phrase, or command). Under a delivery-mode projection the path side fires through
       a slot the flipped host may not carry, while the prompt side still fires.
       verify: the enumeration is a table in `agents/evidence/analysis/`, with one row per rule and
       its trigger kinds named.
-- [ ] **2.2 Give each row one of three named dispositions** — keep it full-bodied with its byte
+      `agents/evidence/analysis/path-trigger-disposition-table.md`. **Population 18**, read three
+      independent ways that agree exactly: rule frontmatter (120 files), `dist/router.json` (105
+      entries), and the projector's own output.
+      **The fourth angle disagreed, and the disagreement is a finding about the tool rather than
+      about the population.** `check_host_tree_parity` lists 17: `roadmap-progress-sync` is absent
+      from the maintainer-scoped `.claude/rules/` tree it walks. Anyone using that gate's output as
+      the enumeration would have been one rule short — which is exactly how a path-only rule goes
+      unnoticed.
+- [x] **2.2 Give each row one of three named dispositions** — keep it full-bodied with its byte
       cost stated, rebind the path side onto a slot that carries rule injection, or record that
       the prompt side is sufficient with a one-line reason.
       verify: every row carries exactly one disposition and none is blank.
-- [ ] **2.3 No rule is left thinned with a path-only trigger.** A rule whose only trigger is
+      **7 / 9 / 2, none blank.** `keep full-bodied` totals **9,751 B measured**, not estimated —
+      15.3 % of the 63,692 B of restorable bodies. The token share was deliberately *not* derived
+      from the byte share.
+      Every one of the 9 `prompt side sufficient` rows carries its own specific reason, and two
+      lean on a deterministic CI backstop rather than on the prompt triggers alone
+      (`lint_framework_leakage`, `lint_roadmap_ci_steps`). One names its residual out loud: a
+      fourth adoption track would match no trigger. **No row proposes a trigger extension** — the
+      council's condition 5 forbids converting a path trigger into a keyword, and every reason is
+      a statement about triggers already written.
+- [x] **2.3 No rule is left thinned with a path-only trigger.** A rule whose only trigger is
       path-shaped and whose body was reduced is unreachable on the flipped host.
       verify: the table has zero such rows, or each is named with its remediation.
+      **Population 3, zero of them thinned — and both properties were checked separately rather
+      than trusting the parity gate's own "kept full-bodied" message.** Path-only was established
+      twice from sources the projector does not share; not-thinned by calling `build_thin` at full
+      scope and testing with the projector's own `is_thin_entry` (10,689 / 3,752 / 9,075 B, all
+      full). Structurally visible at `project_thin_rules.ts:352` — `full = kernel || noTrigger ||
+      pathOnly` — so it is not a side effect of the diagnostic.
+      Full run: 119 entries, 103 thinned, 16 full (9 kernel, 4 trigger-less, 3 path-only).
+      **An honest bound on that zero:** it holds for the projector at this HEAD. Adding a single
+      keyword to `ui-audit-gate` moves it into the mixed class and thins it correctly — so this is
+      a measurement, not an invariant.
 
 ## Phase 3 — Split the payload metric into the three things it measures
 
@@ -86,7 +135,7 @@ is how a saving gets published without its cost.
 ## Blockers
 
 ### blocker: path-trigger-slot-rebind
-- **Status:** open
+- **Status:** resolved 2026-09-12 by council — rebind allowed, but only per verified tuple
 - **Owner:** maintainer
 - **Class:** 3 — human-only
 - **Blocks:** the rebind disposition in Phase 2.2 only. Enumerating and dispositioning proceed
@@ -102,6 +151,32 @@ is how a saving gets published without its cost.
   prompt-sufficient, and the rebind rows stay named and open. That is a usable outcome.
 - **Resolved when:** either the carriage evidence exists and the rebind is authorised, or the
   table records the rebind rows as deferred with a pointer to the roadmap that owns the evidence.
+- **Resolution:** **authorised, conditionally** — and the council rejected *both* options this
+  blocker offered. Two seats, quorum concluded, converged 2/2 on a third: rebind is permitted, but
+  only for a verified tuple of `host × tier/version × install mode × target slot × required
+  semantics`. Everything else is deferred or takes a safe fallback.
+  Five conditions, all binding on Phase 2.2:
+  1. **`hooks:status` is NOT sufficient evidence.** It proves a slot is *bound*, never that
+     anything is injected or honoured. This repository already carries the failure it would miss —
+     a concern that dispatches on a host which discards the verdict.
+  2. **Negative controls are required**, not only a positive test: a sentinel observable through
+     the target slot during a real host invocation, *absent* when the binding is disabled, and —
+     where enforcement is claimed — a rejecting sentinel that actually blocks.
+  3. **Context carriage and verdict enforcement are separate capabilities.** An advisory rule needs
+     proven injection; a hard gate additionally needs the host to honour the result. Conflating
+     them is how "appears delivered" happens.
+  4. **A deferred row carries a falsifiable revisit condition**, never a roadmap pointer. Both
+     seats independently noted that "deferred with a pointer" has already become the indefinite
+     state in this estate.
+  5. **Prompt-conversion is not a general substitute.** One seat proposed it as the preferred fix;
+     the other's rebuttal held and is adopted — touching a migration file without naming it would
+     not activate the rule, and the keyword over-activates on unrelated discussion. That is trigger
+     expansion, not carriage-independent preservation.
+  Both seats also held that the enumeration must come first, because a disposition cannot be
+  chosen before the population is known. Phase 2.1 is that enumeration and was unblocked anyway.
+- **Note:** owner-classified Class 3, routed to the council under this run's standing delegation
+  and recorded rather than silently reclassified. The blocker's own recommendation — hold the
+  rebind entirely — was considered and rejected as the weaker of the two it offered.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-11 | reviewer: claude/host -->
