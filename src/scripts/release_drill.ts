@@ -127,6 +127,33 @@ interface WorldConfig {
      */
     branch_behind_main?: number;
     /**
+     * Commits `origin/<release-branch>` carries that this checkout does not.
+     *
+     * Sibling of `branch_behind_main`, one ref over: that one fakes `git
+     * rev-list --count HEAD..origin/main`, this one the distance to the
+     * release branch's OWN remote — the divergence a GitHub *Update branch*
+     * press or a concurrent resume run produces.
+     */
+    branch_behind_remote?: number;
+    /**
+     * Commits this checkout carries that `origin/<release-branch>` does not.
+     *
+     * Defaults to 1 so every pre-existing scenario keeps the local-ahead shape
+     * it was written against. Set to 0 together with `branch_behind_remote: 0`
+     * to reach the state where the remote is already AT head and the push must
+     * therefore not be issued at all.
+     */
+    branch_ahead_remote?: number;
+    /**
+     * Whether `origin/<release-branch>` exists at the start of the run.
+     *
+     * Internal state until 2026-09-12 — a scenario could only reach `false`
+     * indirectly, by having the run delete the branch. The remote-position
+     * probe added with `_remote_branch_state` has a never-pushed arm that no
+     * scenario could otherwise enter, so the knob is now declared.
+     */
+    branch_exists_remote?: boolean;
+    /**
      * Whether `execute()` is invoked with `--resume`. Defaults to TRUE so every
      * pre-existing scenario keeps the shape it was written against.
      *
@@ -319,6 +346,8 @@ class FakeWorld {
     private push_rejections: number;
     private behind_probes: number;
     private branch_behind_main: number;
+    private branch_behind_remote: number;
+    private readonly branch_ahead_remote: number;
     private merge_races_once: boolean;
     private merge_fails_hard: boolean;
     private checks_fail: boolean;
@@ -341,6 +370,9 @@ class FakeWorld {
         this.tag_remote = cfg.tag_already_remote ?? false;
         this.behind_probes = cfg.behind_probes ?? 0;
         this.branch_behind_main = cfg.branch_behind_main ?? 0;
+        this.branch_exists_remote = cfg.branch_exists_remote ?? true;
+        this.branch_behind_remote = cfg.branch_behind_remote ?? 0;
+        this.branch_ahead_remote = cfg.branch_ahead_remote ?? 1;
         this.merge_races_once = cfg.merge_races_once ?? false;
         this.merge_fails_hard = cfg.merge_fails_hard ?? false;
         this.checks_fail = cfg.checks_fail ?? false;
@@ -373,6 +405,18 @@ class FakeWorld {
             // A real merge closes the gap, so a second probe reads 0. Without
             // this the scenario could not tell one merge from a loop.
             this.branch_behind_main = 0;
+            return OK;
+        }
+        if (cmd === `git rev-list --left-right --count HEAD...origin/${this.branch}`) {
+            return {
+                ...OK,
+                stdout: `${String(this.branch_ahead_remote)}\t${String(this.branch_behind_remote)}\n`,
+            };
+        }
+        if (cmd === `git merge --no-edit origin/${this.branch}`) {
+            // A real merge closes the gap, so the re-read sees 0 — the same
+            // reason the origin/main handler above zeroes its own counter.
+            this.branch_behind_remote = 0;
             return OK;
         }
         if (cmd === `git rev-parse --verify --quiet refs/heads/${this.branch}`) {
@@ -747,6 +791,81 @@ const SCENARIOS: Record<string, Scenario> = {
             _expect(
                 _count(w, 'git merge origin/main --no-edit') === 1,
                 'merged main more than once — the probe is not being re-read after the merge',
+                f,
+            );
+            return f;
+        },
+    },
+    'remote-branch-moved-merges-before-push': {
+        summary:
+            'step 4: a release branch that diverged on the remote is merged in BEFORE the push — not after a rejection the local preflight never lets git produce',
+        // Measured 2026-09-12 on 16.0.0. `origin/release/16.0.0` carried five
+        // commits this checkout did not have. `push_release_branch` has a
+        // merge-and-retry for exactly that, keyed on git's rejection wording —
+        // but the local pre-push preflight refused first, with
+        // `check_pr_ci_current`'s own message naming the divergence. git never
+        // printed `[rejected]`, `_is_non_fast_forward` correctly answered
+        // "not the fetch-and-retry case" on the text it was given, and the
+        // recovery was unreachable from the state it was written for.
+        config: { branch_behind_remote: 5 },
+        expect_success: true,
+        verify: (w) => {
+            const f: string[] = [];
+            const merge = w.calls.indexOf(`git merge --no-edit origin/${w.branch}`);
+            const push = w.calls.indexOf(`git push -u origin ${w.branch}`);
+            _expect(merge >= 0, 'the diverged remote branch was never merged in', f);
+            _expect(push >= 0, 'the branch was never pushed', f);
+            // Ordering is the whole point: a merge only AFTER the push means
+            // the reactive path ran, and that path is what the gate pre-empts.
+            _expect(
+                merge >= 0 && push >= 0 && merge < push,
+                'the remote branch was merged after the push, not before it',
+                f,
+            );
+            _expect(
+                _count(w, `git merge --no-edit origin/${w.branch}`) === 1,
+                'merged the remote branch more than once — the probe is not re-read after the merge',
+                f,
+            );
+            return f;
+        },
+    },
+    'remote-already-at-head-skips-the-push': {
+        summary:
+            'step 4: a remote already carrying this commit is not pushed to again — the no-op push still runs the pre-push hook, and the hook refuses',
+        // The second half of the same 16.0.0 failure, and the one no rejection
+        // text can reach. The push had succeeded; a resumed run re-entered
+        // step 4 and pushed again. `git push -u` is idempotent on the network
+        // side, but git runs the pre-push hook BEFORE discovering there is
+        // nothing to send — so the preflight was handed the head this run had
+        // just pushed, found its CI still pending, and killed the release.
+        config: { branch_ahead_remote: 0, branch_behind_remote: 0 },
+        expect_success: true,
+        verify: (w) => {
+            const f: string[] = [];
+            _expect(
+                !w.calls.includes(`git push -u origin ${w.branch}`),
+                'pushed a branch the remote already carries — that push runs the pre-push hook for nothing',
+                f,
+            );
+            return f;
+        },
+    },
+    'unpushed-branch-still-pushes': {
+        summary:
+            'step 4: a branch that was never pushed is pushed, and no distance is probed against a remote ref that does not exist',
+        // The near-miss for the direction the new probe opens: `git rev-list
+        // HEAD...origin/<branch>` against a missing ref is the 9.26.0 shape all
+        // over again — an exit from the recovery masking the real state.
+        // `--exit-code` on the ls-remote probe is what keeps it closed.
+        config: { branch_exists_remote: false },
+        expect_success: true,
+        verify: (w) => {
+            const f: string[] = [];
+            _expect(w.calls.includes(`git push -u origin ${w.branch}`), 'the branch was never pushed', f);
+            _expect(
+                !w.calls.includes(`git rev-list --left-right --count HEAD...origin/${w.branch}`),
+                'probed the distance to a remote ref that does not exist',
                 f,
             );
             return f;
