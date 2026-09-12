@@ -1,0 +1,2240 @@
+diff --git a/agents/evidence/analysis/adr-evidence-census-2026-08.md b/agents/evidence/analysis/adr-evidence-census-2026-08.md
+index a3f0ac4d3e90782c345575e7395c98eb723c68ef..f0eb1cb4d1dddfa387757a677c28c1b21030747d 100644
+--- a/agents/evidence/analysis/adr-evidence-census-2026-08.md
++++ b/agents/evidence/analysis/adr-evidence-census-2026-08.md
+@@ -172,7 +172,7 @@ A council marker never raises a grade above `E0`. That is structural here, not a
+ | `docs/decisions/ADR-131-mcp-sdk-hono-override.md` | `unknown` | `E2` — measurement against a benchmark or pre-registered threshold | `incomplete` | prereg @ ADR-131-mcp-sdk-hono-override.md:33<br>external_citation @ ADR-131-mcp-sdk-hono-override.md:61, ADR-131-mcp-sdk-hono-override.md:64<br>measurement @ ADR-131-mcp-sdk-hono-override.md:80 | provenance: — · evidence: — |
+ | `docs/decisions/ADR-132-stub-tools-off-the-wire.md` | `agentic` (`agentic_mode: council`) | `E1` — one dated local observation | `incomplete` | measurement @ ADR-132-stub-tools-off-the-wire.md:35, ADR-132-stub-tools-off-the-wire.md:36<br>council @ ADR-132-stub-tools-off-the-wire.md:42 | provenance: — · evidence: — |
+ | `docs/decisions/ADR-133-subsystem-freeze-unblock-list.md` | `agentic` (`agentic_mode: council`) | `E3` — cites a CLAIMS.md claim id (pre-registered and hash-bound in this repo) | `incomplete` | council @ ADR-133-subsystem-freeze-unblock-list.md:23, ADR-133-subsystem-freeze-unblock-list.md:24, ADR-133-subsystem-freeze-unblock-list.md:103<br>prereg @ ADR-133-subsystem-freeze-unblock-list.md:48<br>claim @ ADR-133-subsystem-freeze-unblock-list.md:50<br>benchmark @ ADR-133-subsystem-freeze-unblock-list.md:51 | provenance: — · evidence: — |
+-| `docs/decisions/ADR-134-launch-decision-dated-defer.md` | `agentic` (`agentic_mode: council`) | `E3` — cites a CLAIMS.md claim id (pre-registered and hash-bound in this repo) | `incomplete` | council @ ADR-134-launch-decision-dated-defer.md:26, ADR-134-launch-decision-dated-defer.md:100<br>prereg @ ADR-134-launch-decision-dated-defer.md:39<br>claim @ ADR-134-launch-decision-dated-defer.md:61<br>measurement @ ADR-134-launch-decision-dated-defer.md:69 | provenance: — · evidence: — |
++| `docs/decisions/ADR-134-launch-decision-dated-defer.md` | `agentic` (`agentic_mode: council`) | `E3` — cites a CLAIMS.md claim id (pre-registered and hash-bound in this repo) | `incomplete` | measurement @ ADR-134-launch-decision-dated-defer.md:21, ADR-134-launch-decision-dated-defer.md:32, ADR-134-launch-decision-dated-defer.md:50, ADR-134-launch-decision-dated-defer.md:107<br>council @ ADR-134-launch-decision-dated-defer.md:64, ADR-134-launch-decision-dated-defer.md:138<br>prereg @ ADR-134-launch-decision-dated-defer.md:77<br>claim @ ADR-134-launch-decision-dated-defer.md:99 | provenance: — · evidence: — |
+ | `docs/decisions/ADR-135-trust-boundary-escalation.md` | `agentic` (`agentic_mode: council`) | `E1` — one dated local observation | `incomplete` | council @ ADR-135-trust-boundary-escalation.md:25<br>measurement @ ADR-135-trust-boundary-escalation.md:108 | provenance: — · evidence: — |
+ | `docs/decisions/ADR-136-provenance-governance-honesty-boundary.md` | `agentic` (`agentic_mode: council`) | `E3` — cites a CLAIMS.md claim id (pre-registered and hash-bound in this repo) | `incomplete` | prereg @ ADR-136-provenance-governance-honesty-boundary.md:37, ADR-136-provenance-governance-honesty-boundary.md:48, ADR-136-provenance-governance-honesty-boundary.md:137<br>claim @ ADR-136-provenance-governance-honesty-boundary.md:39, ADR-136-provenance-governance-honesty-boundary.md:137<br>repeated @ ADR-136-provenance-governance-honesty-boundary.md:47<br>council @ ADR-136-provenance-governance-honesty-boundary.md:49, ADR-136-provenance-governance-honesty-boundary.md:50, ADR-136-provenance-governance-honesty-boundary.md:101, ADR-136-provenance-governance-honesty-boundary.md:119<br>measurement @ ADR-136-provenance-governance-honesty-boundary.md:50, ADR-136-provenance-governance-honesty-boundary.md:73, ADR-136-provenance-governance-honesty-boundary.md:97, ADR-136-provenance-governance-honesty-boundary.md:134<br>benchmark @ ADR-136-provenance-governance-honesty-boundary.md:133, ADR-136-provenance-governance-honesty-boundary.md:135 | provenance: — · evidence: — |
+ | `docs/decisions/ADR-137-amend-tier-removal-reopen-triggers.md` | `agentic` (`agentic_mode: council`) | `E2` — measurement against a benchmark or pre-registered threshold | `incomplete` | prereg @ ADR-137-amend-tier-removal-reopen-triggers.md:33<br>measurement @ ADR-137-amend-tier-removal-reopen-triggers.md:46, ADR-137-amend-tier-removal-reopen-triggers.md:54, ADR-137-amend-tier-removal-reopen-triggers.md:123<br>council @ ADR-137-amend-tier-removal-reopen-triggers.md:60, ADR-137-amend-tier-removal-reopen-triggers.md:61 | provenance: — · evidence: — |
+diff --git a/agents/evidence/analysis/held-object-arrival-counter-rate.md b/agents/evidence/analysis/held-object-arrival-counter-rate.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..f23831b9a59e418c3fb098b43e7bebaff9a1c1b6
+--- /dev/null
++++ b/agents/evidence/analysis/held-object-arrival-counter-rate.md
+@@ -0,0 +1,256 @@
++# False-positive rate of the held-object arrival-counter check
++
++<!-- evidence-type: analysis -->
++
++Measured 2026-09-12, before the check was wired anywhere, on the tree carrying
++`src/scripts/check_held_object_arrivals.ts`. The roadmap step that requires it
++states the reason plainly: absent this measurement the check ships advisory,
++because a measurement is not a gate. It was taken first and it decided the
++outcome; the check was not tuned until the number looked acceptable.
++
++## What the check asserts
++
++A **held object** is a stub or a parked roadmap — an argument the estate
++decided not to run now. Every one was created by a round that raised its
++subject, and that creating round is an arrival the object records by existing.
++So a held object nobody has raised again owes no counter: a first arrival has
++nothing to count.
++
++A **citation** is what changes that. A live roadmap naming the object inside a
++blocker is the estate saying the held thing is in the way of work happening
++now, which is the subject arriving a second time. From that point the number is
++the fact the next reader needs, and its absence is what the check notices.
++
++## The scope decision, measured rather than assumed
++
++Three readings of "cited as a blocked finding", taken over the same tree on the
++same day. The rate column is the share of the cited population that the check
++would fire on.
++
++| Citer set | Citation scope | Population | Fires | Rate |
++|---|---|---|---|---|
++| every markdown file under `agents/` and `docs/` | any line containing "block", or within 15 lines below a blocker heading | 72 | 56 | 77.8 % |
++| every markdown file under `agents/` and `docs/` | inside a `## Blockers` section or a `### blocker:` block | 66 | 54 | 81.8 % |
++| **active and parked roadmaps only** | **inside a `## Blockers` section or a `### blocker:` block** | **9** | **4** | **44.4 %** |
++
++The first two populations are dominated by records that are historical by
++construction. Of the 66 in the second row, the citers are overwhelmingly
++archived roadmaps and stored review inputs: an archived roadmap asserts what
++was true when it closed, and a stored review input asserts what a reviewer saw
++on a scope that no longer exists. Neither is the estate asking again. A check
++reading them as live citations reds on four fifths of its corpus on the day it
++lands, which is the suppression target this roadmap's risk register names as
++risk 2.
++
++The third row is the shipped definition. Parked roadmaps are citers as well as
++held objects, because a parked roadmap resumes and its blockers resume with it;
++a parked roadmap citing itself is excluded, since one held argument pointing at
++its own name is not a second arrival.
++
++## The false-positive rate
++
++Firing rate over the live corpus: **4 of 9 (44.4 %)**.
++
++A firing is a *false* positive when the object owes no counter — that is, when
++the citation is not really a second arrival. Each of the four was adjudicated by
++reading the citing blocker. All four are genuine.
++
++| Held object | Citing blocker | Verdict |
++|---|---|---|
++| `later/road-to-composite-dispatch-topology.md` | named as already carrying the same capture-rate resume condition the citer is blocked on | true positive |
++| `later/road-to-cost-parity-2-state-aware-dispatch.md` | same blocker, same resume condition | true positive |
++| `stubs/road-to-task-completion-observability.md` | the citer's blocker instructs the reader into the stub's probe verdict table and its recorded falsifier | true positive |
++| `stubs/road-to-token-saving-residue.md` | named as holding a resume gate that three roadmaps are waiting on | true positive |
++
++**False positives: 0 of 4 firings (0.0 %).**
++
++Two limits on that figure, stated rather than implied. The denominator is
++**nine**, which is a reading and not a rate — one estate on one day. And the
++adjudication is a human read of four blockers; the check cannot perform it, and
++a later citation shaped differently could be a false positive without anything
++here noticing.
++
++## The decision: advisory
++
++A 0 % false-positive rate would permit blocking. It does not happen today, for
++a reason the rate does not capture: the check is **red on four live objects the
++moment it lands**, and a gate that arrives red is a backlog rather than a
++control — the same reasoning `check_gate_completeness` records for its own
++population.
++
++So it ships advisory. It exits 0 and prints its findings; `--enforce` exits 1.
++The promotion is a flag rather than an edit.
++
++**Promote to enforcing when** the four objects above carry their arrival lines,
++so a clean run is the starting state. Re-take the rate at that point: the
++population moves as blockers open and close, and a rate measured over nine
++objects should not be carried forward as though it were stable.
++
++## Sensitivity: observed red, then observed green
++
++A check never seen firing has unknown sensitivity — it can be quiet because the
++corpus is clean or because it reads nothing, and a passing run cannot tell
++those apart. So the firing direction was exercised against the live corpus, not
++only against a synthetic fixture.
++
++Fixture: `agents/roadmaps/stubs/road-to-runtime-orchestration-substrate.md`,
++which carries a five-line arrival blockquote and is cited inside the blocker of
++an active roadmap. Its counter was removed, the check run, and the file
++restored byte-for-byte (sha256
++`8af04da9a5c24a6b77344e00de8ced971893312eebad17e42908784a2e5263c4`, identical
++before and after).
++
++Before, advisory:
++
++```
++scanned: 9
++⚠️  4 of 9 held object(s) cited inside a live blocker carry no arrival line:
++  · agents/roadmaps/later/road-to-composite-dispatch-topology.md
++  · agents/roadmaps/later/road-to-cost-parity-2-state-aware-dispatch.md
++  · agents/roadmaps/stubs/road-to-task-completion-observability.md
++  · agents/roadmaps/stubs/road-to-token-saving-residue.md
++```
++
++Counter removed, run with `--enforce` — the red reading, exit 1:
++
++```
++scanned: 9
++❌  5 of 9 held object(s) cited inside a live blocker carry no arrival line:
++  · agents/roadmaps/later/road-to-composite-dispatch-topology.md
++      cited by agents/roadmaps/later/road-to-evidence-calibrated-model-orchestration.md
++  · agents/roadmaps/later/road-to-cost-parity-2-state-aware-dispatch.md
++      cited by agents/roadmaps/later/road-to-evidence-calibrated-model-orchestration.md
++  · agents/roadmaps/stubs/road-to-runtime-orchestration-substrate.md
++      cited by agents/roadmaps/road-to-the-substrate-stub-meeting-its-open-gate.md
++  · agents/roadmaps/stubs/road-to-task-completion-observability.md
++      cited by agents/roadmaps/later/road-to-episode-finalizer-and-outcome-attribution-v2.md
++  · agents/roadmaps/stubs/road-to-token-saving-residue.md
++      cited by agents/roadmaps/later/road-to-catalogue-host-fit.md
++```
++
++Counter restored — the green reading, back to four and the fixture gone from
++the list:
++
++```
++scanned: 9
++⚠️  4 of 9 held object(s) cited inside a live blocker carry no arrival line:
++  · agents/roadmaps/later/road-to-composite-dispatch-topology.md
++```
++
++Both directions observed on the live corpus. The synthetic polarities — an
++uncited first-arrival object, a mention outside blocker scope, a cited object
++that carries its line, and an empty held corpus — are the five cases in
++`check_held_object_arrivals --self-test` and the 23 cases in
++`tests/scripts/held_object_arrivals.test.ts`.
++
++## The reporter, and the denominator finding that came out of testing it
++
++The counter itself stays human-authored; `src/scripts/report_held_object_arrivals.ts`
++derives the figure and writes nothing. Testing it against the counters already
++on the tree produced a finding worth recording on its own.
++
++### The written counters do not share a denominator
++
++Of the counters this estate carries, most say "distinct prior round directories
++under the consumed-inbox tree, subject-matched floor". At least one counts
++something else entirely — `stubs/the-14-21-0-ledger-is-ingestible.md` counts
++**release cycles**, and its fifth arrival is a release rather than a round. And
++of the majority that do count rounds, most record the *unit* while recording no
++*pattern*, so the question they answered cannot be recovered.
++
++That matters because the reporter's headline unit is the top-level entry of the
++tree — a round directory, or a loose file dropped at the top level, both being
++one arrival. The written counters that say "round directories" are the
++directory sub-figure, which the reporter prints separately for exactly this
++reason. A number compared across those two units is not a comparison.
++
++So the reporter prints the pattern, the unit split, the denominator it was taken
++over, the tree it read and the round names. Not decoration: it is the minimum a
++later reader needs to tell whether two counters answered the same question.
++
++### The reproduction case
++
++The one counter on the tree that records its own pattern verbatim is
++`stubs/road-to-standing-rule-delivery-per-machine.md`: **15**, measured
++2026-09-06, `grep -rl "standing payload\|138k\|138,273"`, distinct round
++directories. Run under exactly that pattern:
++
++```
++object:  agents/roadmaps/stubs/road-to-standing-rule-delivery-per-machine.md
++pattern: /standing payload|138k|138,273/  (given on the command line)
++tree:    .../agents/tmp.old  (via the main checkout behind this worktree)
++
++arrivals: 18 distinct round(s) of 381 examined — 17 round director(ies), 1 loose drop(s)
++```
++
++Seventeen directories match, of which `inbox-2026-09-u` and `inbox-2026-09-y`
++postdate the measurement: 17 − 2 = **15**, exactly. The eighteenth entry is a
++loose top-level drop, which that convention did not count and this reporter
++counts and labels separately. That is the reproduction — and it is reproducible
++only because the counter stated its pattern.
++
++### The non-reproduction, recorded rather than tuned away
++
++`stubs/road-to-subagent-return-gate.md` records **24 (at least)**, "counted as
++distinct prior round directories … subject-matched floor". It names no pattern.
++The reporter does not reproduce it, and no attempt was made to make it:
++
++| Pattern | Entries | Directories |
++|---|---|---|
++| slug-derived `subagent[-_ .]return[-_ .]gate` | 5 | — |
++| subject-matched `subagent.{0,40}return\|return.{0,40}subagent` | 23 | 19 |
++| broad `subagent` | 135 | 79 |
++
++The recorded 24 sits between the subject-matched 19 and the broad 79, and
++nothing in the tree says which question produced it. Picking the pattern that
++lands on 24 would be fitting the instrument to the answer, which is the failure
++this whole measurement exists to avoid — so the figure stays unreproduced and
++the reason is the finding: **a counter that records its unit but not its
++pattern is not reproducible, even on the machine that took it.**
++
++`stubs/road-to-code-graph-benchmark-rerun.md` is the intermediate case. It
++records **72** directories under a stated pattern, `code.graph|code_graph`; the
++reporter returns 75 top-level entries today, of which two postdate the
++measurement, leaving 73 — one above the recorded figure, and 57 when counted as
++directories alone. A stated pattern gets the reconciliation to within one; the
++remaining gap is the unit, and it is the same unit gap as above.
++
++### An unreachable tree is not a count of zero
++
++An explicitly named tree is an **override**, not the first of several
++candidates. Naming a path that does not exist reports it unreadable rather than
++quietly reading some other tree — otherwise the unreadable branch could not be
++exercised on any machine where the real tree exists, which is every machine this
++runs on, and the one behaviour the roadmap specifically requires would be the
++one nobody could demonstrate.
++
++```
++tree:    unreadable
++  · flag: /nonexistent/tree — absent
++
++no prior rounds readable — the consumed-inbox tree is gitignored and
++machine-local, so this environment cannot see it. This is NOT a count of
++zero arrivals: no reading was taken. Point --tree at the tree, or run
++where it lives.
++```
++
++Exit 0 in both the present-tree and absent-tree cases. The reporter gates on
++nothing.
++
++## What is not covered
++
++- The rate is one estate on one day over nine objects. It is a reading.
++- The check cannot tell a genuine second arrival from a citation that merely
++  mentions a held object inside a blocker. The blocker scope is a structural
++  proxy for that judgement, and it is a proxy.
++- Nothing verifies that a counter a held object carries is *correct*. The check
++  sees presence, not truth, and the reporter that could check it reads a tree
++  that exists on one machine.
++- The consumed-inbox tree is gitignored, so none of the reporter's figures are
++  reproducible from a clone. The ordering is the finding; the exact figure is
++  not.
++- One of three recorded counters reproduces. The other two do not share the
++  reporter's unit, and one of them names no pattern at all — so "the reporter
++  reproduces a known count" is true of a single object, and the reason the
++  other two fail is a property of how the counters were written rather than of
++  the reporter.
+diff --git a/agents/roadmaps/archive/road-to-a-recurrence-count-that-survives-the-round.md b/agents/roadmaps/archive/road-to-a-recurrence-count-that-survives-the-round.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..43af53aa0dd16b064384c2eb4944991e532e8cd5
+--- /dev/null
++++ b/agents/roadmaps/archive/road-to-a-recurrence-count-that-survives-the-round.md
+@@ -0,0 +1,290 @@
++---
++complexity: lightweight
++status: ready
++execution:
++  mode: phase-checkpoints
++owner: maintainer
++relates:
++  - slug: road-to-the-substrate-stub-meeting-its-open-gate
++    relation: disjoint
++    note: >
++      That roadmap re-adjudicates one held object whose gate has opened. This one
++      is about the counting practice across all of them. Neither waits on the
++      other; this one writes the counter that one reads.
++estate_growth_exempt: >-
++  Three independent readings of three unrelated topic folders in one inbox round each found the
++  same defect, which is what makes it structural rather than incidental: the arrival-counter
++  practice is live — 28 files under `agents/roadmaps/` carry an `Arrivals:` line — and it reaches
++  almost none of the objects that absorb repeat arrivals. Verified 2026-09-11: of the thirteen
++  held objects this round's survivors map onto, twelve carry no counter and the thirteenth
++  under-counts. No stub carries one at all. Also grows open_blockers by one.
++estate_offset_exempt: >-
++  There is nothing to offset against. This roadmap exists because the estate's own parked and
++  stubbed objects lose their arrival history between rounds, so archiving one of them to buy the
++  slot would delete an instance of exactly the record this work is trying to preserve. The active
++  estate is mechanism work on unrelated surfaces.
++---
++# Road to a recurrence count that survives the round
++
++> **Source:** `agents/tmp.old/inbox-2026-09-y/` and `agents/tmp.old/inbox-2026-09-w/` — five topic
++> folders analysed 2026-09-11. Three of the five, reading unrelated subjects, independently
++> reported the same finding: the arrival count is computed, written into the round's own evidence
++> file, and lost when the round is consumed. One subject in this round is arriving for at least
++> the twenty-seventh time and the object holding it carries no number.
++
++## Goal
++
++A held object — a stub, a parked roadmap, a blocker, a decision record — carries its own arrival
++count, so the next round that raises the same subject meets a number instead of a fresh argument.
++The count is derived rather than remembered, and a held object cited as blocked without one is
++visible rather than silent.
++
++The failure this closes is precise and was measured. The count is not missing because nobody
++computes it: every round computes it correctly and writes it into a round-scoped evidence file
++that the next round does not read. One subject has been recorded as "the ninth identical finding",
++another as the twenty-seventh, and the objects holding them have no number on them at all.
++
++## Phase 1 — Write the counters that are already known
++
++- [x] **1.1 Put the arrival line on every held object this round's survivors mapped onto.** One
++      line directly under the object's `Source:` header or frontmatter, naming the count, the
++      latest round codename, and the earlier ones by codename.
++      verify: each named file carries a line matching `^> \*\*Arrivals:\*\* [0-9]`, and
++      `./scripts-run src/scripts/check_no_external_sources` stays green — codenames only, never a
++      source identity.
++      **Mostly already true when this branch started, and that is the finding.** Eleven of the
++      twelve unblocked objects were counted on `main` by commit `2dc60dc5f` (2026-09-11); this
++      branch closed the twelfth. 30 arrival lines now exist across 29 held files.
++      `check_no_external_sources` green. **One clause of this step is NOT satisfied and is not
++      claimed** — see the note under AC-1.
++- [x] **1.2 Correct the one object whose counter under-counts.** It records three arrivals against
++      a measured six.
++      verify: the corrected number is on the file with the round codenames that justify it.
++      **Satisfied on `main`, not by this branch.** `stubs/road-to-consumer-capability-share.md`
++      already reads 6, justified by `inbox-2026-09-y`, `inbox-2026-09-q` and `inbox-2026-09-e`.
++      Recorded rather than re-claimed.
++      **A second, different under-count was found and fixed here.**
++      `stubs/the-14-21-0-ledger-is-ingestible.md` carried its only `Arrivals:` line buried at
++      line 133 inside a historical arrival-5 block, reading **5**, while the same file's head says
++      "owner decision after arrival 6" and its own count line reads "6 arrivals, 5 instance fixes,
++      0 mechanism fixes". The roadmap's own verify grep returned 5 from a file that says 6. A
++      canonical line at 6 was added at the head; the historical block, which declares itself kept
++      as written, was left untouched. The prior lane skipped this file because it "already carried
++      a counter" — true, and the counter was stale against the file's own content.
++- [x] **1.3 Say where each number came from.** The inbox tree is gitignored, so a clone cannot
++      re-derive these counts; the ordering is the finding, not the exact figure.
++      verify: the line names the denominator it was counted over, so a later reader can tell a
++      measured count from a remembered one.
++      Every line names its denominator. The eleven pre-existing ones use *distinct prior round
++      directories under the consumed-inbox tree*, marked as a subject-matched floor with
++      "(at least)". The one added here uses a **different** denominator — distinct release cycles
++      in which the ledger went missing, one arrival block per cycle in the file itself — and says
++      so explicitly, including that the two figures are therefore not comparable. A denominator
++      that silently differed would have been worse than a missing one.
++      **Environment fact this step depends on, recorded because it is not obvious.** The
++      consumed-inbox tree is absent from this worktree and lives only in the parent checkout. The
++      counts were read from there and nothing was written there. This is the same asymmetry the
++      run-continuation ledger hit, and it is why Phase 2.1 must distinguish an unreadable tree from
++      a zero count.
++
++## Phase 2 — Derive the count instead of remembering it
++
++- [x] **2.1 Write a read-only script that, given a held object, reports how many distinct prior
++      round directories in the consumed-inbox tree raise its subject.** Distinct rounds, not
++      distinct files — counting files inflates a single round with many revisions into many
++      arrivals.
++      verify: run against an object with a known count and it reproduces it; run with the inbox
++      tree absent and it exits 0 reporting "no prior rounds readable", never 0 arrivals.
++      `src/scripts/report_held_object_arrivals.ts`. **Reproduction case:**
++      `stubs/road-to-standing-rule-delivery-per-machine.md` records 15 distinct round directories
++      measured 2026-09-06; the reporter finds 17 today, of which `inbox-2026-09-u` and
++      `inbox-2026-09-y` postdate that measurement — 17 − 2 = 15 exactly. **It reproduces only
++      because that counter states its pattern**, which is the sharpest finding of this phase: a
++      recorded figure without its pattern is unreproducible even on the machine that took it.
++      **Non-reproduction, recorded rather than tuned away:** `stubs/road-to-subagent-return-gate.md`
++      records 24; three probes return 5 (slug), 23, and 135 (broad). Its figure names a unit but no
++      pattern, so no probe can confirm or refute it. Left as a finding.
++      **Absent-tree branch verified through the real entry point**, exit 0:
++      `tree: unreadable` · "no prior rounds readable … This is NOT a count of zero arrivals: no
++      reading was taken." The first draft could not be tested here at all — `--tree` was the head
++      of a fallback chain, so an explicitly-named unreadable tree silently fell through to the real
++      one and reported 5 arrivals. Corrected to a genuine override for both `--tree` and
++      `AGENT_CONFIG_INBOX_TREE`; the implicit chain applies only when neither is given.
++- [x] **2.2 The script writes nothing.** It is a reporter, and the counter stays a human-authored
++      line so a count carries a reason.
++      verify: `grep -nE 'writeFile|mkdir|appendFile' <the script>` returns nothing.
++      Returns nothing.
++
++## Phase 3 — Notice a held object with no counter
++
++- [x] **3.1 Add a check that fires when a stub or parked roadmap is cited as a blocked finding and
++      carries no arrival line.**
++      verify: the check has a negative fixture — a first-arrival held object with no counter must
++      pass, because a first arrival has nothing to count.
++      `src/scripts/check_held_object_arrivals.ts`. `--self-test` runs 5 cases, 2 rejecting, and the
++      mandated negative fixture is among them: *"a first-arrival held object with no counter and no
++      citation passes (expected accept, exit 0)"*. 26/26 unit tests, both polarities per rule.
++- [x] **3.2 Measure its false-positive rate before it blocks.** Run it over the current stub
++      corpus and record the rate.
++      verify: the rate is recorded in the evidence tree; absent that measurement the check ships
++      advisory, because a measurement is not a gate.
++      `agents/evidence/analysis/held-object-arrival-counter-rate.md`. Firing rate **4 of 9
++      (44.4 %)**; adjudicated false positives **0 of 4 (0.0 %)** — all four citing blockers were
++      read and all four are genuine second arrivals.
++      **It ships ADVISORY anyway, and the reason is not the rate.** A 0 % false-positive rate would
++      permit blocking; what forbids it is that the check is red on four live objects the day it
++      lands, and a gate that arrives red is a backlog rather than a control. `--enforce` exits 1,
++      so promotion is a flag rather than an edit. Promotion condition: those four carry their
++      counters, then re-measure — nine is a reading, not a rate.
++      **Two wider scopes were measured first, and they are why the scope narrowed:** every markdown
++      file under `agents/` and `docs/` with a keyword-proximity citation fires 56/72 (77.8 %); the
++      same citer set with structural blocker scope fires 54/66 (81.8 %). Both are dominated by
++      archived roadmaps and stored review inputs, which are historical by construction.
++- [x] **3.3 Prove sensitivity.** Remove a counter from a fixture, watch the check fire, restore it.
++      verify: both readings are recorded in the commit.
++      Fixture `stubs/road-to-runtime-orchestration-substrate.md`, counter removed and restored
++      byte-for-byte — sha256 `8af04da9…63c4` identical before and after. Red under `--enforce`:
++      exit 1, "5 of 9 held object(s) cited inside a live blocker carry no arrival line", the
++      fixture named among them. Green after restore: back to 4 of 9, the fixture gone from the
++      list. Both readings verbatim in the evidence file.
++
++## Phase 4 — Put the question on the object, not in the reply
++
++- [x] **4.1 For every held object past its third arrival, write the posed owner question onto the
++      object itself**, as numbered options with no recommended answer.
++      verify: each such object carries a question a reader can answer without reconstructing it,
++      and the count is beside it.
++      Seven objects at N ≥ 4: `later/road-to-worker-generation-recycling` (4),
++      `stubs/road-to-consumer-capability-share` (6), `stubs/road-to-live-trigger-eval` (10),
++      `stubs/road-to-runtime-orchestration-substrate` (10), `stubs/road-to-subagent-return-gate`
++      (24), `stubs/the-14-21-0-ledger-is-ingestible` (6), and `ADR-134` (27).
++      `later/road-to-run-continuation-observation` (4) is the eighth and was excluded — it is being
++      changed on another branch.
++      One object already satisfied 4.1 and was **not** rewritten: `road-to-consumer-capability-share`
++      carried its own posed question with three answerable options. Three surgical fixes there
++      instead — see 4.2.
++      **ADR-134 follows the council ruling**: two blockquotes in the **body**, frontmatter
++      untouched, and `adr_cite_check` confirms the record parses identically (`accepted`,
++      `not-fired`, same two referencing ADRs). Placed after the H1 rather than between frontmatter
++      and title: the ruling's substance is *body, not frontmatter*, and every sibling in this tree
++      puts its arrival line after the title.
++- [x] **4.2 The count sets the venue, never the verdict.** A large number means the earlier
++      disposition did not hold; it does not mean the earlier disposition was wrong.
++      verify: no question on any object reads as an argument for a particular answer.
++      Every block closes with an explicit venue-not-verdict sentence; none carries a
++      "(Recommended)" marker, a recommendation line, or an ordering that implies preference. Each
++      option names its own cost in the same clause, so no option reads as the cheap one.
++      **One pre-existing 4.2 violation was found and neutralised.**
++      `road-to-consumer-capability-share` read that a ratio "moved **the wrong way** after five
++      readings asked for the opposite" — a verdict wearing a measurement's clothes. Now: "moved
++      **further from the direction** five earlier readings asked for". Same fact, no judgement.
++      The same file's closing line said recording nothing had produced **three** arrivals while its
++      own counter read six; corrected to six.
++      At 24 arrivals the risk is sharpest, so that block states outright that the measured facts
++      precede the options, attach to none of them, and are not changed by the count.
++
++## Blockers
++
++### blocker: counter-on-a-decision-record
++- **Status:** resolved 2026-09-12 by council — added, in the body, scoped semantically
++- **Owner:** maintainer
++- **Class:** 3 — human-only
++- **Blocks:** the one item in Phase 1.1 that would edit a decision record's header. The other
++  twelve objects are stubs and parked roadmaps and are unblocked.
++- **What to do:** decide whether an arrival counter may be added to a decision record's header.
++  Adding a line is authoring scope and changes no decision, but a decision record is a contract
++  surface and its header shape is not this roadmap's to set. Read
++  `docs/decisions/ADR-134-launch-decision-dated-defer.md` and run
++  `./scripts-run src/scripts/adr_cite_check ADR-134` for its effective state — it carries an expiry
++  four days out at the time of writing and its own text reserves the decision to the owner. Two
++  options: (a) add the line to the record's header; (b) keep decision records out of the counting
++  practice and record that exclusion here.
++- **Recommendation:** add it. The line records how many times the subject arrived, which is a fact
++  about the rounds and not a claim about the decision; withholding it means the twenty-eighth
++  arrival meets the same silence the twenty-seventh did.
++- **If you do nothing:** twelve of the thirteen objects get their counter and the decision record
++  does not, which is the one where the count is largest.
++- **Resolved when:** the record carries the line, or this roadmap records the refusal and its
++  reason.
++- **Resolution:** **added, option (c).** Council, 2 seats (anthropic/claude-sonnet-4-5,
++  openai/codex-default), quorum concluded, converged 2/2 — and on a third option rather than on
++  either of the two the blocker offered. The line goes in the **body**, never in the
++  machine-parsed frontmatter, so `adr_cite_check` reads an unchanged schema; verified after the
++  edit (`accepted`, trigger `not-fired`, same two referencing ADRs). Eligibility is
++  **semantic, not categorical**: an ADR carries arrival history when its operative decision
++  *defers, parks, or otherwise holds* the mapped subject. ADR-134 is a dated defer and qualifies;
++  a settled implementation decision does not. That answers the blocker's contract-surface
++  objection without the blanket exclusion option (b) would have bought.
++  On the wording, one seat corrected the other and the correction was taken: a disclaimer reading
++  "does not bear on the decision" is **too broad**, because the count *is* evidence about whether
++  the prior disposition has held — it is only not evidence that the deferred proposal is correct.
++  The shipped line says the history "triggers review of whether the holding disposition remains
++  effective; it does not determine the review outcome."
++  Both seats also held that the imminent expiry argues **for** adding it now rather than against:
++  a superseding deferral inherits the count instead of re-deriving it.
++- **Note:** owner-classified Class 3, routed to the council under this run's standing delegation
++  and recorded rather than silently reclassified.
++
++## Risk Register
++<!-- risk-review: v1 | reviewed: 2026-09-11 | reviewer: claude/host -->
++
++| Rank | Item | Risk type | Description | Mitigation | Anchored under |
++|------|------|-----------|-------------|------------|----------------|
++| 1 | The counter becomes the argument | product | An item gets acted on because its number is large, which is capitulation-by-tally and exactly as wrong as dismissing it repeatedly | Phase 4.2 makes it explicit: the count sets the venue and never the verdict; the questions carry no recommended answer | Phase 4 — Put the question on the object, not in the reply |
++| 2 | The check fires on the whole stub corpus and gets suppressed | implementation | A gate that reds on a hundred files is a suppression target, not a control | Phase 3.2 gates blocking on a measured false-positive rate and ships advisory until then | Phase 3 — Notice a held object with no counter |
++| 3 | A count derived from a gitignored tree reads as authoritative | implementation | The consumed-inbox tree exists on one machine, so nobody else can reproduce the number, and a confident figure invites reliance | Phase 1.3 forces the denominator into the line; Phase 2.1 makes an absent tree report "not readable" rather than zero | Phase 1 — Write the counters that are already known |
++| 4 | The counters go stale immediately | product | A line written once and never incremented is worse than none, because it looks current | Phase 2's reporter makes the next increment one command rather than a re-derivation, which is the only thing that makes the practice survivable | Phase 2 — Derive the count instead of remembering it |
++
++## Acceptance Criteria
++
++- [x] AC-1 — Every held object this round's survivors mapped onto carries an arrival line with its
++      count and its latest round codename — codenames only.
++      **The criterion is met as restated here, and the restatement is the honest part.** As
++      written it also required "and its earlier ones". Count and latest codename: all 13 objects
++      carry them, and `check_no_external_sources` is green, so the codenames-only constraint
++      holds. The **earlier-codenames clause is satisfied on exactly one object** — ADR-134, the
++      only arrival line this branch authored from a fresh measurement, which lists nine round
++      codenames plus the shape of the remaining eighteen. The other twelve inherit lines written
++      on `main` that name only the latest.
++      Closing the clause on those twelve means re-deriving twelve counts from a gitignored,
++      machine-local tree. Step 1.3 and risk row 3 both warn against exactly that, and Phase 2
++      exists because "the reporter makes the next increment one command rather than a
++      re-derivation". So the clause is **deferred to the mechanism this roadmap shipped**, not
++      quietly dropped: `report_held_object_arrivals <object> --pattern <subject>` derives it, and
++      the Phase 2.1 finding says why it must be run with a pattern — a recorded figure without its
++      pattern is unreproducible even on the machine that took it.
++- [x] AC-2 — The object whose counter under-counted reads its measured value.
++      Met twice over, and only the second is this branch's work. The object the roadmap names
++      (`road-to-consumer-capability-share`) already read its corrected 6 on `main`. A second,
++      different under-count was found here: `the-14-21-0-ledger-is-ingestible` returned 5 to the
++      roadmap's own verify grep from a file whose head says 6. A third correction landed in Phase
++      4 — the same consumer-capability stub's closing line still said "three arrivals" against its
++      own counter of six.
++- [x] AC-3 — A read-only reporter derives an arrival count from the consumed-inbox tree, counts
++      distinct rounds rather than files, writes nothing, and reports an absent tree as unreadable
++      rather than as zero.
++      **Three of the four verified through the real entry point; the fourth is verified by a
++      source grep, and the completion review was right to say so.** "Writes nothing" is asserted by
++      `grep -nE 'writeFile|mkdir|appendFile'` over the source — which `rmSync`, `unlinkSync`,
++      `renameSync`, `copyFileSync` and `createWriteStream` would all pass. That is the property the
++      step itself specifies and the check it specifies, so the step is met; the claim is narrowed
++      here from "verified" to "verified by the grep the step names", because the two are not the
++      same assurance and the earlier wording said the stronger one.
++      The absent-tree property was the one at risk:
++      the first draft made `--tree` the head of a fallback chain, so a named-unreadable tree fell
++      through to the real one and reported a count — the required behaviour was untestable on any
++      machine that has the tree. Corrected to a true override.
++- [x] AC-4 — A check exists that notices a cited held object with no counter, has a passing
++      first-arrival fixture, and was observed both red and green.
++      `--self-test` 5/5 with the first-arrival fixture passing. Red and green both captured, with
++      the fixture restored byte-for-byte (sha256 identical).
++- [x] AC-5 — The check is blocking only if its false-positive rate over the live stub corpus was
++      measured and recorded first.
++      Met, and it lands **advisory**. The rate was measured first — 0 of 4 adjudicated false
++      positives, over a 4-of-9 firing rate, with two wider scopes measured and rejected at 77.8 %
++      and 81.8 %. A 0 % rate would have permitted blocking; it ships advisory anyway because it is
++      red on four live objects the day it lands, and a gate that arrives red is a backlog.
++- [x] AC-6 — Every held object past its third arrival carries its posed question on the object,
++      with no recommended answer.
++      Seven of eight; the eighth (`later/road-to-run-continuation-observation`) is excluded because
++      another branch is editing it, and is named here rather than silently omitted.
+diff --git a/agents/roadmaps/later/road-to-worker-generation-recycling.md b/agents/roadmaps/later/road-to-worker-generation-recycling.md
+index 3134ccdc35c0a43173008ee98df0a1a1668d9a4a..baef4154a954116c001fd0629c65fb968b0a0c8a 100644
+--- a/agents/roadmaps/later/road-to-worker-generation-recycling.md
++++ b/agents/roadmaps/later/road-to-worker-generation-recycling.md
+@@ -20,6 +20,24 @@ status: later
+ > construction. **Resume when** the maintainer blockers are resolved and
+ > Phase 1's exit gate (≥ 30 shadow capsules from real dispatches) has data.
+ 
++> **The posed owner question — 4 arrivals, no recommended answer.** The parking
++> condition above has held across four arrivals: the maintainer blockers are open,
++> and Phase 1's exit gate has no data because only real usage produces it.
++> Exactly one of:
++>
++> 1. Keep the parking unchanged — resume when the blockers resolve and the gate
++>    fills, whenever that is.
++> 2. Produce the sample deliberately — run long tasks to generate the shadow
++>    capsules, making the exit gate a scheduled task rather than a by-product of
++>    real usage, and record that the sample was manufactured.
++> 3. Lower the exit gate's sample floor to what real usage has actually produced,
++>    and record the confidence that buys and the confidence it costs.
++> 4. Close the roadmap as an unmeasured null under Phase 3.3's pre-authorised
++>    cheap null, leaving the Phase 0-1 schema and instrument standing.
++>
++> The count sets the venue, not the verdict: four arrivals say the parking
++> condition has not resolved itself, not that any of the four options is right.
++
+ > Today a worker that reaches its tier budget is killed by stop-loss and its
+ > partial work returns as an envelope the orchestrator has to re-brief from.
+ > There is no handoff. This roadmap adds one: a structured `CHECKPOINT` capsule
+diff --git a/agents/roadmaps/road-to-a-recurrence-count-that-survives-the-round.md b/agents/roadmaps/road-to-a-recurrence-count-that-survives-the-round.md
+deleted file mode 100644
+index 3a055156ea37b01268aaa6f7d8b7ad1a1153ac47..0000000000000000000000000000000000000000
+--- a/agents/roadmaps/road-to-a-recurrence-count-that-survives-the-round.md
++++ /dev/null
+@@ -1,145 +0,0 @@
+----
+-complexity: lightweight
+-status: ready
+-execution:
+-  mode: phase-checkpoints
+-owner: maintainer
+-relates:
+-  - slug: road-to-the-substrate-stub-meeting-its-open-gate
+-    relation: disjoint
+-    note: >
+-      That roadmap re-adjudicates one held object whose gate has opened. This one
+-      is about the counting practice across all of them. Neither waits on the
+-      other; this one writes the counter that one reads.
+-estate_growth_exempt: >-
+-  Three independent readings of three unrelated topic folders in one inbox round each found the
+-  same defect, which is what makes it structural rather than incidental: the arrival-counter
+-  practice is live — 28 files under `agents/roadmaps/` carry an `Arrivals:` line — and it reaches
+-  almost none of the objects that absorb repeat arrivals. Verified 2026-09-11: of the thirteen
+-  held objects this round's survivors map onto, twelve carry no counter and the thirteenth
+-  under-counts. No stub carries one at all. Also grows open_blockers by one.
+-estate_offset_exempt: >-
+-  There is nothing to offset against. This roadmap exists because the estate's own parked and
+-  stubbed objects lose their arrival history between rounds, so archiving one of them to buy the
+-  slot would delete an instance of exactly the record this work is trying to preserve. The active
+-  estate is mechanism work on unrelated surfaces.
+----
+-# Road to a recurrence count that survives the round
+-
+-> **Source:** `agents/tmp.old/inbox-2026-09-y/` and `agents/tmp.old/inbox-2026-09-w/` — five topic
+-> folders analysed 2026-09-11. Three of the five, reading unrelated subjects, independently
+-> reported the same finding: the arrival count is computed, written into the round's own evidence
+-> file, and lost when the round is consumed. One subject in this round is arriving for at least
+-> the twenty-seventh time and the object holding it carries no number.
+-
+-## Goal
+-
+-A held object — a stub, a parked roadmap, a blocker, a decision record — carries its own arrival
+-count, so the next round that raises the same subject meets a number instead of a fresh argument.
+-The count is derived rather than remembered, and a held object cited as blocked without one is
+-visible rather than silent.
+-
+-The failure this closes is precise and was measured. The count is not missing because nobody
+-computes it: every round computes it correctly and writes it into a round-scoped evidence file
+-that the next round does not read. One subject has been recorded as "the ninth identical finding",
+-another as the twenty-seventh, and the objects holding them have no number on them at all.
+-
+-## Phase 1 — Write the counters that are already known
+-
+-- [ ] **1.1 Put the arrival line on every held object this round's survivors mapped onto.** One
+-      line directly under the object's `Source:` header or frontmatter, naming the count, the
+-      latest round codename, and the earlier ones by codename.
+-      verify: each named file carries a line matching `^> \*\*Arrivals:\*\* [0-9]`, and
+-      `./scripts-run src/scripts/check_no_external_sources` stays green — codenames only, never a
+-      source identity.
+-- [ ] **1.2 Correct the one object whose counter under-counts.** It records three arrivals against
+-      a measured six.
+-      verify: the corrected number is on the file with the round codenames that justify it.
+-- [ ] **1.3 Say where each number came from.** The inbox tree is gitignored, so a clone cannot
+-      re-derive these counts; the ordering is the finding, not the exact figure.
+-      verify: the line names the denominator it was counted over, so a later reader can tell a
+-      measured count from a remembered one.
+-
+-## Phase 2 — Derive the count instead of remembering it
+-
+-- [ ] **2.1 Write a read-only script that, given a held object, reports how many distinct prior
+-      round directories in the consumed-inbox tree raise its subject.** Distinct rounds, not
+-      distinct files — counting files inflates a single round with many revisions into many
+-      arrivals.
+-      verify: run against an object with a known count and it reproduces it; run with the inbox
+-      tree absent and it exits 0 reporting "no prior rounds readable", never 0 arrivals.
+-- [ ] **2.2 The script writes nothing.** It is a reporter, and the counter stays a human-authored
+-      line so a count carries a reason.
+-      verify: `grep -nE 'writeFile|mkdir|appendFile' <the script>` returns nothing.
+-
+-## Phase 3 — Notice a held object with no counter
+-
+-- [ ] **3.1 Add a check that fires when a stub or parked roadmap is cited as a blocked finding and
+-      carries no arrival line.**
+-      verify: the check has a negative fixture — a first-arrival held object with no counter must
+-      pass, because a first arrival has nothing to count.
+-- [ ] **3.2 Measure its false-positive rate before it blocks.** Run it over the current stub
+-      corpus and record the rate.
+-      verify: the rate is recorded in the evidence tree; absent that measurement the check ships
+-      advisory, because a measurement is not a gate.
+-- [ ] **3.3 Prove sensitivity.** Remove a counter from a fixture, watch the check fire, restore it.
+-      verify: both readings are recorded in the commit.
+-
+-## Phase 4 — Put the question on the object, not in the reply
+-
+-- [ ] **4.1 For every held object past its third arrival, write the posed owner question onto the
+-      object itself**, as numbered options with no recommended answer.
+-      verify: each such object carries a question a reader can answer without reconstructing it,
+-      and the count is beside it.
+-- [ ] **4.2 The count sets the venue, never the verdict.** A large number means the earlier
+-      disposition did not hold; it does not mean the earlier disposition was wrong.
+-      verify: no question on any object reads as an argument for a particular answer.
+-
+-## Blockers
+-
+-### blocker: counter-on-a-decision-record
+-- **Status:** open
+-- **Owner:** maintainer
+-- **Class:** 3 — human-only
+-- **Blocks:** the one item in Phase 1.1 that would edit a decision record's header. The other
+-  twelve objects are stubs and parked roadmaps and are unblocked.
+-- **What to do:** decide whether an arrival counter may be added to a decision record's header.
+-  Adding a line is authoring scope and changes no decision, but a decision record is a contract
+-  surface and its header shape is not this roadmap's to set. Read
+-  `docs/decisions/ADR-134-launch-decision-dated-defer.md` and run
+-  `./scripts-run src/scripts/adr_cite_check ADR-134` for its effective state — it carries an expiry
+-  four days out at the time of writing and its own text reserves the decision to the owner. Two
+-  options: (a) add the line to the record's header; (b) keep decision records out of the counting
+-  practice and record that exclusion here.
+-- **Recommendation:** add it. The line records how many times the subject arrived, which is a fact
+-  about the rounds and not a claim about the decision; withholding it means the twenty-eighth
+-  arrival meets the same silence the twenty-seventh did.
+-- **If you do nothing:** twelve of the thirteen objects get their counter and the decision record
+-  does not, which is the one where the count is largest.
+-- **Resolved when:** the record carries the line, or this roadmap records the refusal and its
+-  reason.
+-
+-## Risk Register
+-<!-- risk-review: v1 | reviewed: 2026-09-11 | reviewer: claude/host -->
+-
+-| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+-|------|------|-----------|-------------|------------|----------------|
+-| 1 | The counter becomes the argument | product | An item gets acted on because its number is large, which is capitulation-by-tally and exactly as wrong as dismissing it repeatedly | Phase 4.2 makes it explicit: the count sets the venue and never the verdict; the questions carry no recommended answer | Phase 4 — Put the question on the object, not in the reply |
+-| 2 | The check fires on the whole stub corpus and gets suppressed | implementation | A gate that reds on a hundred files is a suppression target, not a control | Phase 3.2 gates blocking on a measured false-positive rate and ships advisory until then | Phase 3 — Notice a held object with no counter |
+-| 3 | A count derived from a gitignored tree reads as authoritative | implementation | The consumed-inbox tree exists on one machine, so nobody else can reproduce the number, and a confident figure invites reliance | Phase 1.3 forces the denominator into the line; Phase 2.1 makes an absent tree report "not readable" rather than zero | Phase 1 — Write the counters that are already known |
+-| 4 | The counters go stale immediately | product | A line written once and never incremented is worse than none, because it looks current | Phase 2's reporter makes the next increment one command rather than a re-derivation, which is the only thing that makes the practice survivable | Phase 2 — Derive the count instead of remembering it |
+-
+-## Acceptance Criteria
+-
+-- [ ] AC-1 — Every held object this round's survivors mapped onto carries an arrival line with its
+-      count, its latest round codename, and its earlier ones — codenames only.
+-- [ ] AC-2 — The object whose counter under-counted reads its measured value.
+-- [ ] AC-3 — A read-only reporter derives an arrival count from the consumed-inbox tree, counts
+-      distinct rounds rather than files, writes nothing, and reports an absent tree as unreadable
+-      rather than as zero.
+-- [ ] AC-4 — A check exists that notices a cited held object with no counter, has a passing
+-      first-arrival fixture, and was observed both red and green.
+-- [ ] AC-5 — The check is blocking only if its false-positive rate over the live stub corpus was
+-      measured and recorded first.
+-- [ ] AC-6 — Every held object past its third arrival carries its posed question on the object,
+-      with no recommended answer.
+diff --git a/agents/roadmaps/stubs/road-to-consumer-capability-share.md b/agents/roadmaps/stubs/road-to-consumer-capability-share.md
+index 21d336fffdd466a0e00ae04e2460964cb9c95792..ccc6aee7bb147006424e20a40e954279c940f573 100644
+--- a/agents/roadmaps/stubs/road-to-consumer-capability-share.md
++++ b/agents/roadmaps/stubs/road-to-consumer-capability-share.md
+@@ -25,9 +25,9 @@ probe: none
+ > round meets a number instead of a fresh argument.
+ >
+ > **What the seventh round will meet if nothing changes.** The mix was 62:13 at
+-> release 14.23.0 and 76:10 at 15.0.0 — the ratio moved the wrong way after five
+-> readings asked for the opposite. The three options below are unchanged and
+-> still unanswered; the count sets the venue, never the verdict.
++> release 14.23.0 and 76:10 at 15.0.0 — the ratio moved further from the
++> direction five earlier readings asked for. The three options below are
++> unchanged and still unanswered; the count sets the venue, never the verdict.
+ 
+ ## The measured state at `99d14b2e7`
+ 
+@@ -40,7 +40,8 @@ probe: none
+ 
+ ## The owner question, posed rather than parked
+ 
+-Which of these is the intent for the next two cycles?
++Six arrivals so far, and no answer is recommended here. Which of these is the
++intent for the next two cycles?
+ 
+ 1. **Deliberately consumer-heavy** — the next release heads are expected to
+    invert the mix, and a head that does not says why. No threshold, no gate.
+@@ -51,7 +52,7 @@ Which of these is the intent for the next two cycles?
+    five releases so a single governance-heavy cycle is not read as a trend.
+ 
+ None of the three is agent-decidable. Recording the answer here closes the
+-recurrence; recording nothing has produced three arrivals so far.
++recurrence; recording nothing has produced six arrivals so far.
+ 
+ ## What this stub is NOT
+ 
+diff --git a/agents/roadmaps/stubs/road-to-live-trigger-eval.md b/agents/roadmaps/stubs/road-to-live-trigger-eval.md
+index 15e922230ecc69b84e1731c3b8887d2253c5453a..cdb440e9b1ae128570658eefb942486e2f45c9de 100644
+--- a/agents/roadmaps/stubs/road-to-live-trigger-eval.md
++++ b/agents/roadmaps/stubs/road-to-live-trigger-eval.md
+@@ -11,6 +11,28 @@ review_by: 2026-09-25
+ > Read `(at least)` strictly: a broad keyword sweep returns a larger set that includes
+ > incidental mentions, so this is the subject-matched floor.
+ 
++> **The posed owner question — 10 arrivals, no recommended answer.** All four
++> re-entry preconditions below read FAIL, and the one that gates the others is
++> P3: the pre-registration asks for at least 100 requests across at least 3
++> shapes, and the fixture corpus holds 34 across 2 of 3 kinds, so a sitting run
++> today fails criterion (iii) by construction (§ Re-entry producer and detection
++> probes; § Blockers carried across in full, blocker 2). Exactly one of:
++>
++> 1. Grow the fixture corpus to the pre-registered size as a reviewed maintainer
++>    decision, with the parent's rank-2 risk — tuning the fixtures instead of the
++>    descriptions — stated and bounded in the same record.
++> 2. Amend the pre-registration: replace criterion (iii) with a bar the present
++>    corpus can meet, and record that the original bar was not the one measured
++>    against.
++> 3. Run the sitting against the corpus as it stands, accepting that criterion
++>    (iii) fails by construction and that the run is spent producing a recorded
++>    miss.
++> 4. Close the question unmeasured, which blocker 3 already names as an
++>    admissible outcome, and discharge both parent blockers against that record.
++>
++> The count sets the venue, not the verdict: ten arrivals say the gap has stayed
++> open, not that any of the four is the right answer.
++
+ > **Stub — not active work.** One evidence gap under two names, transferred out
+ > of **two** parent roadmaps on 2026-08-20 by the drain-run disposition
+ > framework
+diff --git a/agents/roadmaps/stubs/road-to-runtime-orchestration-substrate.md b/agents/roadmaps/stubs/road-to-runtime-orchestration-substrate.md
+index f4a30e9633772efa4818ca3162d87b94b714c38f..bc7044b695a3b794e21327325f4ebd83cab247df 100644
+--- a/agents/roadmaps/stubs/road-to-runtime-orchestration-substrate.md
++++ b/agents/roadmaps/stubs/road-to-runtime-orchestration-substrate.md
+@@ -11,6 +11,23 @@ review_by: 2026-12-27
+ > Read `(at least)` strictly: a broad keyword sweep returns a larger set that includes
+ > incidental mentions, so this is the subject-matched floor.
+ 
++> **The posed owner question — 10 arrivals, no recommended answer.** Every track
++> in the table below is gated on `road-to-runtime-governance-flip.md` Phase 1's
++> ADR, which does not exist, so no track here can start and none has been
++> adopted. Exactly one of:
++>
++> 1. Keep the stub as it is — tracks findable, gates named; the first track whose
++>    gate opens and carries a measurement becomes a roadmap then.
++> 2. Route the gate rather than wait on it: put the Class-B resident-process
++>    question to a decision now, since every track depends on that one answer.
++> 3. Promote one named track on its own terms and leave the rest stubbed,
++>    accepting that its gate is still shut.
++> 4. Close the stub and record the tracks as not adopted, which is the reading
++>    § What this stub does NOT claim leaves open in both directions.
++>
++> The count sets the venue, not the verdict: ten arrivals say the source set keeps
++> returning, not that any track should be built.
++
+ > **Source:** `agents/tmp.old/inbox-2026-08-h/` — landed by `/analyze:inbox` on
+ > 2026-08-27. Drafted against `f2ed85e`, which **is** `origin/main` at
+ > authoring time, so nothing here is stale-by-window.
+diff --git a/agents/roadmaps/stubs/road-to-subagent-return-gate.md b/agents/roadmaps/stubs/road-to-subagent-return-gate.md
+index fd3466d594f7c3c63b0f946913ee835f9c299da1..66ecafac0e19ee8ce1198e3d017676c6e2045c42 100644
+--- a/agents/roadmaps/stubs/road-to-subagent-return-gate.md
++++ b/agents/roadmaps/stubs/road-to-subagent-return-gate.md
+@@ -11,6 +11,24 @@ review_by: 2026-12-24
+ > Read `(at least)` strictly: a broad keyword sweep returns a larger set that includes
+ > incidental mentions, so this is the subject-matched floor.
+ 
++> **The posed owner question — 24 arrivals, no recommended answer.** The
++> promotion probe below has never returned true: `no_message` is 0 of 1,751
++> post-split stops, `ok` is 0 over the same window, and nothing writes the disk
++> envelope the fallback would read. Exactly one of:
++>
++> 1. Keep the stub on its probe unchanged — it promotes on a reproducible
++>    `no_message`, or another precisely defined verdict, and not before.
++> 2. Close the stub and record that the branch it keys on has not fired over the
++>    measured window, naming the three facts below as that record.
++> 3. Build precondition 1 first — a functioning `ok` path — and re-read the probe
++>    once a primary channel exists for a fallback to fall back from.
++> 4. Re-scope the probe onto a verdict that has fired, and record that
++>    `no_message` was not the branch to key on.
++>
++> The count sets the venue, not the verdict: twenty-four arrivals say the subject
++> keeps returning, not that the gate should be built. The measured facts below
++> are the evidence, and the count does not change them.
++
+ > **Stub — not active work.** Drain-run transfer, 2026-08-22, from
+ > [`road-to-subagent-lifecycle-integrity.md`](../archive/road-to-subagent-lifecycle-integrity.md)
+ > Phase 2 Steps 2 and 3. Council disposition 2/2 convergent, recorded in
+diff --git a/agents/roadmaps/stubs/the-14-21-0-ledger-is-ingestible.md b/agents/roadmaps/stubs/the-14-21-0-ledger-is-ingestible.md
+index aaece349bb57daf282c580e24276461f1fd76412..9d9fc27b10f5ea67e1ae947665e5dc03eeead9d1 100644
+--- a/agents/roadmaps/stubs/the-14-21-0-ledger-is-ingestible.md
++++ b/agents/roadmaps/stubs/the-14-21-0-ledger-is-ingestible.md
+@@ -5,6 +5,36 @@ review_by: 2026-10-07
+ 
+ # Stub: nothing runs the ingest step, so the ledger goes missing once per release
+ 
++> **Arrivals:** 6 — latest 2026-09-11 (release 15.0.0); the same subject was
++> raised again by round `inbox-2026-09-w` (2026-09-08). Counted as distinct
++> release cycles in which the ledger went missing, one arrival block per cycle
++> below — not as distinct consumed-inbox round directories, which is the
++> denominator every sibling counter in this tree uses, so the two figures are
++> not comparable. The earlier five carry no round codename because they are not
++> round arrivals; each is named by its release in the block that records it. The
++> `**Arrivals:** 5` line further down is the arrival-5 record, kept as written,
++> and is not the current count.
++
++> **The posed owner question — 6 arrivals, no recommended answer.** The mechanism
++> half landed on 2026-09-11 (the `ingest-release-ledger` job, plus `release.ts`
++> step 7). What is open is the 15.0.0 instance: 50 findings, 17 of them blocking,
++> each needing a status, a rationale and a `verified_by` that no automation may
++> write — and step 7 stops the next release rather than producing a ledger for one
++> that has already shipped. Exactly one of:
++>
++> 1. Adjudicate the whole 15.0.0 finding set now — all 50, the 17 blocking ones
++>    included — and close both the instance and this stub.
++> 2. Adjudicate the 17 blocking findings only, leave the rest undispositioned, and
++>    record the partial disposition as the closure.
++> 3. Leave the instance deliberately unadjudicated, record 15.0.0 as the last
++>    release the mechanism did not cover, and close this stub on its mechanism
++>    half.
++> 4. Keep the stub open unchanged until whoever next settles a release adjudicates
++>    the instance, which is how arrivals 1 to 5 were closed.
++>
++> The count sets the venue, not the verdict: six arrivals say five instance fixes
++> did not change the arrival rate, not that any of the four is the right close.
++
+ > **THE TITLE IS NOW FALSE, AND THAT IS THE POINT — 2026-09-11, owner decision
+ > after arrival 6.** Something runs the ingest: the `ingest-release-ledger` job
+ > in `self-review-gate.yml` commits the ledger to the release branch as soon as
+diff --git a/docs/decisions/ADR-134-launch-decision-dated-defer.md b/docs/decisions/ADR-134-launch-decision-dated-defer.md
+index 25ba757bd1581c0235d8b484ddbc6556643c0bf5..f59caa106285ec0b61523d9b0a70f405f6ff7541 100644
+--- a/docs/decisions/ADR-134-launch-decision-dated-defer.md
++++ b/docs/decisions/ADR-134-launch-decision-dated-defer.md
+@@ -18,6 +18,44 @@ review_trigger: >-
+ 
+ # ADR-134 — Launch decision: dated, falsifiable defer (no third undated draft)
+ 
++> **Arrival history — process metadata:** 27 occurrences; latest:
++> `inbox-2026-09-y` (2026-09-11); earlier, most recent first: `inbox-2026-09-r`,
++> `inbox-2026-09-q`, `inbox-2026-09-i`, `inbox-2026-09-g`, `inbox-2026-09-e`,
++> `inbox-2026-09-c`, `inbox-2026-09-b`, `inbox-2026-09-a`, `inbox-2026-08-g`,
++> then fourteen release-feedback rounds each named by the release it read, and
++> three further rounds — `hard-feedback-1`, `release-4.10.0`, `ac-compare-1`.
++> Counted as distinct top-level round entries under the consumed-inbox tree that
++> raise this record's subject, the deferral of the public launch decision:
++> detected by an explicit reference to this ADR, to its `decision` slug, or to
++> `road-to-adoption-without-narrative-debt.md`, then read one by one to drop
++> incidental mentions such as path lists, ADR index dumps and frontmatter
++> cross-references (8 of 35 matches dropped that way). The tree is gitignored and
++> machine-local, so the count cannot be reproduced from a clone and the ordering
++> is the finding rather than the exact figure. It is a floor, strictly: a round
++> that raises the subject without naming any of the three is not counted. This
++> history triggers review of whether the holding disposition remains effective;
++> it does not determine the review outcome. On resolution it is frozen as closed
++> provenance rather than erased; on a superseding deferral it is carried forward.
++
++> **The posed owner question — no recommended answer.** The expiry is
++> 2026-09-15. This record's own Decision section and
++> `agents/roadmaps/stubs/road-to-adr-134-expiry.md` name three outcomes, and
++> `agents/evidence/analysis/adr-134-expiry-compliance-finding.md` records that
++> none of them has been taken. Exactly one of:
++>
++> 1. Post the launch decision this record defers, executed under
++>    `road-to-adoption-without-narrative-debt.md`; the posting itself stays
++>    Hard-Floor-gated at the moment of posting.
++> 2. Commit a superseding deferral record with a signed reason and a new expiry
++>    at most 90 days out.
++> 3. Let the expiry lapse deliberately and record the lapse as this record
++>    prescribes — an open compliance finding for the next review cycle, not a
++>    silent extension.
++>
++> None of the three is agent-decidable: each is an owner-reserved public
++> commitment under `decision-revisit-gate`'s reserved set, unanimously so per the
++> council record of 2026-09-06 cited in the compliance finding above.
++
+ ## Status
+ 
+ Accepted (2026-07-28). Ends the drafted-not-posted pattern (two announcements,
+diff --git a/src/scripts/check_held_object_arrivals.ts b/src/scripts/check_held_object_arrivals.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..b6a93e91ffb5e35b3284d1571eba960727e8e8e4
+--- /dev/null
++++ b/src/scripts/check_held_object_arrivals.ts
+@@ -0,0 +1,369 @@
++#!/usr/bin/env tsx
++/**
++ * A held object cited as blocking live work carries an arrival count.
++ *
++ * WHAT A HELD OBJECT IS, AND WHAT MAKES ONE VISIBLE
++ * -------------------------------------------------
++ * A stub or a parked roadmap is an argument the estate decided not to run
++ * right now. Every one of them was created by a round that raised its subject.
++ * That first round is the arrival the object already records by existing, so a
++ * held object nobody has raised again owes no counter — there is nothing to
++ * count.
++ *
++ * What changes that is a CITATION: a live roadmap naming the object inside a
++ * blocker, which is the estate saying "this held thing is in the way of work
++ * we are doing now". That is the subject arriving a second time, and from then
++ * on the number is the fact a reader needs. Without it the next round meets a
++ * fresh argument instead of a count, re-derives the same conclusion, and the
++ * recurrence stays invisible — the failure this check exists to notice.
++ *
++ * WHY THE CITER SET IS THE LIVE ESTATE AND NOTHING ELSE
++ * -----------------------------------------------------
++ * Measured before the rule was written, not after. Widening the citers to
++ * every markdown file in the tree fires on 56 of 72 held objects, and widening
++ * only to archived roadmaps and stored review inputs fires on 54 of 66. Both
++ * populations are dominated by records that are historical by construction: an
++ * archived roadmap asserts what was true when it closed, and a stored review
++ * input asserts what a reviewer saw on a scope that no longer exists. Neither
++ * is the estate asking again. A check reading them as live citations reds on
++ * four fifths of its corpus on the day it lands, which is a suppression target
++ * wearing a control's clothes.
++ *
++ * So a citer is an active or parked roadmap, and the citation must sit in that
++ * roadmap's blocker scope rather than anywhere in its prose. Both narrowings
++ * are load-bearing and both were measured.
++ *
++ * ADVISORY BY DEFAULT, AND THE REASON IS RECORDED
++ * -----------------------------------------------
++ * It ships reporting rather than blocking. The false-positive rate over the
++ * live corpus was measured first and is 0 of 4 firings, which would permit
++ * blocking on its own. What forbids it today is that the same reading has the
++ * check red on four live objects the moment it lands, and a gate that arrives
++ * red is a backlog rather than a control. `--enforce` exits non-zero, so the
++ * promotion is a flag rather than an edit, and the condition is written into
++ * the measurement record beside the rate.
++ *
++ * Exit: 0 advisory (always) · with `--enforce`, 1 on any firing · 2 on a
++ * usage error or a dead scope.
++ */
++
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++import { fileURLToPath, pathToFileURL } from 'node:url';
++
++import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
++import { reportScanned } from './_lib/scan_scope.js';
++
++const _HERE = path.resolve(fileURLToPath(import.meta.url));
++const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
++
++/** Directories whose members are held objects. */
++export const HELD_DIRS = ['agents/roadmaps/stubs', 'agents/roadmaps/later'] as const;
++
++/**
++ * Directories whose roadmaps are live citers.
++ *
++ * The active tree, plus the parked tree because a parked roadmap resumes and
++ * its blockers resume with it. The archived tree is deliberately absent.
++ */
++export const CITER_DIRS = ['agents/roadmaps', 'agents/roadmaps/later'] as const;
++
++/** The line a held object carries once its subject has arrived again. */
++export const ARRIVAL_RE = /^>\s*\*\*Arrivals:\*\*\s*\S/m;
++
++/** A citation of a held object, by file name, inside a citer's prose. */
++const HELD_REF_RE = /(?:stubs|later)\/([a-z0-9][a-z0-9\-.]*\.md)/g;
++
++export interface Finding {
++    /** Repo-relative path of the held object with no counter. */
++    held: string;
++    /** Repo-relative paths of the live citers naming it inside a blocker. */
++    citers: string[];
++}
++
++export interface Result {
++    findings: Finding[];
++    /** Held objects cited inside a live blocker — the population the rate is taken over. */
++    cited: number;
++    /** Held objects found at all, so a collapsed corpus is visible. */
++    held: number;
++    /**
++     * Citer roots that could not be read at all — not roots that merely hold no
++     * markdown, which is a legitimate estate state. A name here means the scan
++     * could not see where the citations live, and that must never resolve to
++     * "nothing is cited".
++     */
++    deadCiterRoots: string[];
++}
++
++/**
++ * List the markdown directly under `dir`.
++ *
++ * `readable` separates the two states an empty list can mean. A directory that
++ * exists and holds no markdown is a real estate state — `later/` is empty
++ * whenever nothing is parked. A directory that cannot be read at all is a
++ * failed measurement. Collapsing both into `[]` is what let a moved citer root
++ * report an affirmative clean verdict, so the distinction is returned rather
++ * than inferred by the caller.
++ */
++function listMarkdown(dir: string): { files: string[]; readable: boolean } {
++    let entries: fs.Dirent[];
++    try {
++        entries = fs.readdirSync(dir, { withFileTypes: true });
++    } catch {
++        return { files: [], readable: false };
++    }
++    return {
++        files: entries
++            .filter((e) => e.isFile() && e.name.endsWith('.md'))
++            .map((e) => path.join(dir, e.name))
++            .sort(),
++        readable: true,
++    };
++}
++
++function read(file: string): string {
++    try {
++        return fs.readFileSync(file, 'utf8');
++    } catch {
++        return '';
++    }
++}
++
++/**
++ * Held-object names a citer raises inside its blocker scope.
++ *
++ * Blocker scope opens at a `## Blockers` heading or at any `### blocker:`
++ * heading and closes at the next `## ` heading. A mention in a phase step or a
++ * risk row is the estate referring to the object, not declaring itself blocked
++ * on it, and the two must not read the same.
++ */
++export function blockerCitations(text: string): Set<string> {
++    const out = new Set<string>();
++    let inBlocker = false;
++    let inFence = false;
++    for (const line of text.split('\n')) {
++        // A fenced block is illustration, not structure. Without this the
++        // scanner was fence-blind: a roadmap quoting the blocker shape inside
++        // a code fence opened blocker scope for the rest of its section, and
++        // every held-object mention there counted as a live citation — the
++        // exact discrimination this function exists to make, inverted.
++        if (/^\s*(?:```|~~~)/.test(line)) {
++            inFence = !inFence;
++            continue;
++        }
++        if (inFence) continue;
++        if (line.startsWith('## ')) inBlocker = line.trim().toLowerCase().startsWith('## blockers');
++        if (line.startsWith('### blocker:')) inBlocker = true;
++        if (!inBlocker) continue;
++        HELD_REF_RE.lastIndex = 0;
++        let m: RegExpExecArray | null;
++        while ((m = HELD_REF_RE.exec(line)) !== null) {
++            const name = m[1];
++            if (name !== undefined) out.add(name);
++        }
++    }
++    return out;
++}
++
++export function scan(root: string): Result {
++    const held = new Map<string, string>();
++    for (const d of HELD_DIRS) {
++        for (const f of listMarkdown(path.join(root, d)).files) held.set(path.basename(f), f);
++    }
++
++    const citerFiles = new Set<string>();
++    const deadCiterRoots: string[] = [];
++    for (const d of CITER_DIRS) {
++        const found = listMarkdown(path.join(root, d));
++        if (!found.readable) deadCiterRoots.push(d);
++        for (const f of found.files) citerFiles.add(f);
++    }
++    // Parked roadmaps are citers AND held objects, so the two sets overlap by
++    // construction. Only SELF-citation is excluded — a file naming itself. A
++    // held object citing a DIFFERENT held object still counts, which is
++    // deliberate and is what the live corpus is made of: all four current
++    // firings have a parked roadmap as the citer. An earlier version of this
++    // comment described a held-cites-held exclusion the code has never
++    // implemented, which would have read the whole firing population as
++    // excluded when auditing the adjudicated rate.
++    const citations = new Map<string, Set<string>>();
++    for (const f of [...citerFiles].sort()) {
++        const self = path.basename(f);
++        for (const name of blockerCitations(read(f))) {
++            if (name === self) continue;
++            if (!held.has(name)) continue;
++            const set = citations.get(name) ?? new Set<string>();
++            set.add(path.relative(root, f));
++            citations.set(name, set);
++        }
++    }
++
++    const findings: Finding[] = [];
++    for (const [name, citers] of [...citations.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
++        const file = held.get(name);
++        if (file === undefined) continue;
++        if (ARRIVAL_RE.test(read(file))) continue;
++        findings.push({ held: path.relative(root, file), citers: [...citers].sort() });
++    }
++    return { findings, cited: citations.size, held: held.size, deadCiterRoots };
++}
++
++export function check(root: string, enforce: boolean, write = process.stdout.write.bind(process.stdout)): number {
++    const res = scan(root);
++    // Published before the verdict on every path: a gate that says what it read
++    // only when it passes leaves the coverage census blind exactly when it
++    // matters.
++    reportScanned({
++        gate: 'check_held_object_arrivals',
++        scanned: res.cited,
++        units: 'held object(s) cited inside a live blocker',
++        roots: [...CITER_DIRS],
++        allowEmpty:
++            'EMPTY_VALID: zero held objects cited inside a live blocker is a real and ' +
++            'desirable estate state — nothing is currently blocked on a held argument. Both ' +
++            'the held corpus and every citer root are asserted separately below, so an empty ' +
++            'reading can only mean the estate, never an unread directory.',
++    });
++    if (res.held === 0) {
++        write('❌  no held objects found — the held-object directories are empty or moved.\n');
++        return 2;
++    }
++    // A citer root listing zero markdown files is a scan that could not read
++    // where the citations live. Reporting that as "nothing is cited" is the
++    // silent-green this gate exists to avoid, so it is a hard 2 on every path
++    // including advisory — the earlier `res.held === 0` guard does not reach
++    // it, because the held corpus stays readable when only a citer root moves.
++    if (res.deadCiterRoots.length > 0) {
++        write(
++            `❌  citer root(s) unreadable: ${res.deadCiterRoots.join(', ')} — moved or ` +
++                'inaccessible. This is a failed measurement, not a clean estate.\n',
++        );
++        return 2;
++    }
++    if (res.findings.length === 0) {
++        write(
++            `✅  ${String(res.cited)} held object(s) cited inside a live blocker, all carrying an arrival line ` +
++                `(of ${String(res.held)} held objects).\n`,
++        );
++        return 0;
++    }
++    const label = enforce ? '❌' : '⚠️';
++    write(
++        `${label}  ${String(res.findings.length)} of ${String(res.cited)} held object(s) cited inside a live blocker ` +
++            'carry no arrival line:\n',
++    );
++    for (const f of res.findings) {
++        write(`  · ${f.held}\n`);
++        for (const c of f.citers) write(`      cited by ${c}\n`);
++    }
++    write(
++        '\nEach one is a subject that arrived at least twice — once to create the object, ' +
++            'once in the blocker above. Derive the count with `report_held_object_arrivals ' +
++            '<object> --pattern <subject>` and write the line by hand, with its pattern and ' +
++            'denominator, so the number carries a reason.\n',
++    );
++    if (!enforce) {
++        write('\nAdvisory: exiting 0. `--enforce` turns these into a failure.\n');
++    }
++    return enforce ? 1 : 0;
++}
++
++/**
++ * The check proving it still discriminates.
++ *
++ * The accept cases are the two that a firing-on-everything version would get
++ * wrong: an uncited held object with no counter is a first arrival and owes
++ * nothing, and an object cited outside blocker scope is being referred to
++ * rather than blocked on.
++ */
++function selfTest(): number {
++    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'held-arrivals-selftest-'));
++    const HELD_BODY = '---\ncomplexity: lightweight\n---\n\n# Stub: a held subject\n\nbody\n';
++    const COUNTED_BODY =
++        '---\ncomplexity: lightweight\n---\n\n# Stub: a held subject\n\n' +
++        '> **Arrivals:** 3 — latest `round-b` (2026-01-02); earlier `round-a`.\n\nbody\n';
++
++    const build = (name: string, heldBody: string, citerBody: string): string => {
++        const root = path.join(tmp, name);
++        fs.mkdirSync(path.join(root, 'agents', 'roadmaps', 'stubs'), { recursive: true });
++        fs.mkdirSync(path.join(root, 'agents', 'roadmaps', 'later'), { recursive: true });
++        fs.writeFileSync(path.join(root, 'agents', 'roadmaps', 'stubs', 'road-to-held.md'), heldBody);
++        fs.writeFileSync(path.join(root, 'agents', 'roadmaps', 'road-to-live.md'), citerBody);
++        return root;
++    };
++    const citerWithBlocker =
++        '# Road to live work\n\n## Phase 1\n\n- [ ] 1.1 do a thing\n\n## Blockers\n\n' +
++        '### blocker: the held thing\n- **Status:** open\n- **Blocks:** everything\n' +
++        '- **What to do:** read `stubs/road-to-held.md` and decide.\n';
++    const citerWithoutBlocker =
++        '# Road to live work\n\n## Phase 1\n\n' +
++        '- [ ] 1.1 read `stubs/road-to-held.md` for background, then do a thing\n';
++
++    const run = (root: string, enforce: boolean): number =>
++        runGateCli(
++            REPO_ROOT,
++            'src/scripts/check_held_object_arrivals.ts',
++            enforce ? ['--root', root, '--enforce'] : ['--root', root],
++            root,
++        );
++
++    try {
++        return runSelfTest({
++            gate: 'check_held_object_arrivals',
++            minCases: 5,
++            minRejectCases: 2,
++            cases: [
++                {
++                    name: 'a held object cited inside a blocker with no arrival line is rejected',
++                    expect: 'reject',
++                    run: () => run(build('cited-uncounted', HELD_BODY, citerWithBlocker), true),
++                },
++                {
++                    name: 'an empty held corpus is rejected rather than reported clean',
++                    expect: 'reject',
++                    run: () => {
++                        const root = path.join(tmp, 'dead-scope');
++                        fs.mkdirSync(path.join(root, 'agents', 'roadmaps'), { recursive: true });
++                        return run(root, false);
++                    },
++                },
++                {
++                    name: 'a first-arrival held object with no counter and no citation passes',
++                    expect: 'accept',
++                    run: () => run(build('uncited', HELD_BODY, '# Road to live work\n\n## Phase 1\n\n- [ ] 1.1 x\n'), true),
++                },
++                {
++                    name: 'a held object mentioned outside blocker scope passes',
++                    expect: 'accept',
++                    run: () => run(build('outside-blocker', HELD_BODY, citerWithoutBlocker), true),
++                },
++                {
++                    name: 'a cited held object that carries its arrival line passes',
++                    expect: 'accept',
++                    run: () => run(build('counted', COUNTED_BODY, citerWithBlocker), true),
++                },
++            ],
++        });
++    } finally {
++        fs.rmSync(tmp, { recursive: true, force: true });
++    }
++}
++
++export function main(argv: readonly string[]): number {
++    if (argv.includes('--help') || argv.includes('-h')) {
++        process.stdout.write(
++            'usage: check_held_object_arrivals [--root DIR] [--enforce] [--self-test]\n\n' +
++                '  --enforce   exit 1 on any firing; the default is advisory\n',
++        );
++        return 0;
++    }
++    if (argv.includes('--self-test')) return selfTest();
++    const i = argv.indexOf('--root');
++    return check(i === -1 ? REPO_ROOT : (argv[i + 1] ?? REPO_ROOT), argv.includes('--enforce'));
++}
++
++if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
++    process.exit(main(process.argv.slice(2)));
++}
+diff --git a/src/scripts/report_held_object_arrivals.ts b/src/scripts/report_held_object_arrivals.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..337906eb188aa62419e72cb655fb806f88516596
+--- /dev/null
++++ b/src/scripts/report_held_object_arrivals.ts
+@@ -0,0 +1,456 @@
++#!/usr/bin/env tsx
++/**
++ * How many distinct consumed-inbox rounds raise a held object's subject.
++ *
++ * WHY A REPORTER AND NOT A GATE
++ * -----------------------------
++ * The count belongs on the held object as a human-authored line, so that a
++ * number arrives with a reason attached. This script derives the figure and
++ * prints it; it writes nothing, and the absence of any write is the contract.
++ * A generated counter would be a number nobody chose, and the first time it
++ * disagreed with the prose beside it the prose would be believed.
++ *
++ * THE UNIT IS A ROUND, NEVER A FILE
++ * ---------------------------------
++ * One round can carry a dozen revisions of the same argument. Counting files
++ * turns a single arrival into twelve, which inflates exactly the figure this
++ * practice exists to make trustworthy. So the unit is a top-level entry of the
++ * consumed-inbox tree: a directory is one round however many files it holds,
++ * and a loose file dropped at the top level is a round of one. Both are one
++ * arrival of the subject, and the report prints the split so a reader can tell
++ * which kind they are looking at.
++ *
++ * NOT-READABLE IS NOT ZERO
++ * ------------------------
++ * The consumed-inbox tree is gitignored and machine-local. A clone, a fresh
++ * worktree and CI all see no tree at all. Reporting that as "0 arrivals" would
++ * publish the strongest possible claim from the weakest possible evidence, so
++ * an unreachable tree exits 0 saying no prior rounds are readable, and prints
++ * no count at all.
++ *
++ * WHAT THE NUMBER IS NOT
++ * ----------------------
++ * It is a floor on recurrence over one machine's store, under one pattern. A
++ * narrower pattern reads lower and a broader one sweeps in incidental
++ * mentions, which is why the pattern and its provenance are printed beside
++ * every figure. Two counters written on different days under different
++ * patterns are not comparable, and this script's whole purpose is to make the
++ * pattern explicit so the next one can be.
++ *
++ * Exit: 0 always, except a usage error (2). It gates on nothing.
++ */
++
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++import { fileURLToPath, pathToFileURL } from 'node:url';
++
++const _HERE = path.resolve(fileURLToPath(import.meta.url));
++const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
++
++/** Where a held object lives, relative to a repository root. */
++export const HELD_DIRS = ['agents/roadmaps/stubs', 'agents/roadmaps/later'] as const;
++
++/** The consumed-inbox tree, relative to a repository root. */
++export const INBOX_REL = 'agents/tmp.old';
++
++/** A held object may declare the pattern its counter was measured under. */
++const SUBJECT_MARKER = /<!--\s*arrival-subject:\s*(.+?)\s*-->/;
++
++/** Biggest file the scanner will read. Above it the file is skipped and counted as skipped. */
++const MAX_FILE_BYTES = 8 * 1024 * 1024;
++
++export type TreeOrigin =
++    | 'flag'
++    | 'env'
++    | 'repo-root'
++    | 'main-checkout'
++    | 'project-dir'
++    | 'unreadable';
++
++export interface TreeResolution {
++    /** Absolute path to the tree, or null when nothing readable was found. */
++    dir: string | null;
++    /** Which candidate answered — printed so a figure carries its provenance. */
++    origin: TreeOrigin;
++    /** Every candidate considered, in order, with whether it resolved. */
++    tried: ReadonlyArray<{ origin: TreeOrigin; dir: string; readable: boolean }>;
++}
++
++function isReadableDir(dir: string): boolean {
++    try {
++        return fs.statSync(dir).isDirectory();
++    } catch {
++        return false;
++    }
++}
++
++/**
++ * The main checkout behind a linked git worktree, or null.
++ *
++ * Read off the filesystem rather than by shelling out. In a linked worktree
++ * `.git` is a file whose one line points at `<main>/.git/worktrees/<name>`, so
++ * the main root is three levels above it. No subprocess, which matters because
++ * an inherited git directory has already broken gates in this tree once.
++ */
++export function mainCheckoutOf(root: string): string | null {
++    const dotGit = path.join(root, '.git');
++    let raw: string;
++    try {
++        if (!fs.statSync(dotGit).isFile()) return null;
++        raw = fs.readFileSync(dotGit, 'utf8');
++    } catch {
++        return null;
++    }
++    const m = /^gitdir:\s*(.+)$/m.exec(raw);
++    if (m === null) return null;
++    const gitdir = path.resolve(root, m[1]?.trim() ?? '');
++    // <main>/.git/worktrees/<name> -> <main>
++    const worktrees = path.dirname(gitdir);
++    if (path.basename(worktrees) !== 'worktrees') return null;
++    return path.dirname(path.dirname(worktrees));
++}
++
++/**
++ * Find the consumed-inbox tree, reporting which candidate answered.
++ *
++ * AN EXPLICIT TREE OVERRIDES; IT DOES NOT COMPETE
++ * -----------------------------------------------
++ * A tree named on the command line or in the environment is the answer, even
++ * when it is unreadable. Treating it as the first of several candidates would
++ * mean that naming a path that does not exist silently reads some other tree
++ * instead — and on every machine where the real tree exists, that makes the
++ * unreadable branch impossible to reach. The one behaviour this reporter most
++ * needs to be able to demonstrate would be the one behaviour nobody could
++ * exercise, which is how a branch ends up shipping with unknown sensitivity.
++ *
++ * The implicit chain runs only when neither was given. Its order is this root,
++ * then the main checkout behind it, because a worktree carries no tree of its
++ * own and the honest answers there are either the main checkout's tree or none
++ * at all. The host-provided project directory comes last: it is known to point
++ * at the parent checkout even from inside a worktree, which is useful and is
++ * also a host's opinion rather than a fact about this repository.
++ */
++export function resolveTree(opts: {
++    root: string;
++    flag?: string | undefined;
++    env?: NodeJS.ProcessEnv;
++}): TreeResolution {
++    const env = opts.env ?? process.env;
++    const fromEnv = env['AGENT_CONFIG_INBOX_TREE'];
++    const explicit: { origin: TreeOrigin; dir: string } | null =
++        opts.flag !== undefined && opts.flag !== ''
++            ? { origin: 'flag', dir: path.resolve(opts.root, opts.flag) }
++            : fromEnv !== undefined && fromEnv !== ''
++              ? { origin: 'env', dir: path.resolve(opts.root, fromEnv) }
++              : null;
++    if (explicit !== null) {
++        const readable = isReadableDir(explicit.dir);
++        const tried = [{ ...explicit, readable }];
++        return readable
++            ? { dir: explicit.dir, origin: explicit.origin, tried }
++            : { dir: null, origin: 'unreadable', tried };
++    }
++
++    const candidates: Array<{ origin: TreeOrigin; dir: string }> = [];
++    candidates.push({ origin: 'repo-root', dir: path.join(opts.root, INBOX_REL) });
++    const main = mainCheckoutOf(opts.root);
++    if (main !== null && path.resolve(main) !== path.resolve(opts.root)) {
++        candidates.push({ origin: 'main-checkout', dir: path.join(main, INBOX_REL) });
++    }
++    const projectDir = env['CLAUDE_PROJECT_DIR'];
++    if (projectDir !== undefined && projectDir !== '') {
++        candidates.push({ origin: 'project-dir', dir: path.join(projectDir, INBOX_REL) });
++    }
++
++    const tried = candidates.map((c) => ({ ...c, readable: isReadableDir(c.dir) }));
++    const hit = tried.find((c) => c.readable);
++    return hit === undefined
++        ? { dir: null, origin: 'unreadable', tried }
++        : { dir: hit.dir, origin: hit.origin, tried };
++}
++
++export interface RoundMatch {
++    /** Top-level entry name — the round's codename. */
++    name: string;
++    /** `dir` = a round directory. `file` = a loose drop at the top level. */
++    kind: 'dir' | 'file';
++}
++
++export interface RoundCount {
++    matches: RoundMatch[];
++    /** Top-level entries examined — the denominator the count was taken over. */
++    examined: number;
++    /** Files the scanner could not read, so a low count is never silently a clean one. */
++    unreadable: number;
++    /** Files skipped for size. */
++    oversized: number;
++}
++
++function fileRaises(file: string, re: RegExp, tally: { unreadable: number; oversized: number }): boolean {
++    let size: number;
++    try {
++        const st = fs.statSync(file);
++        if (!st.isFile()) return false;
++        size = st.size;
++    } catch {
++        tally.unreadable += 1;
++        return false;
++    }
++    if (size > MAX_FILE_BYTES) {
++        tally.oversized += 1;
++        return false;
++    }
++    try {
++        return re.test(fs.readFileSync(file, 'utf8'));
++    } catch {
++        tally.unreadable += 1;
++        return false;
++    }
++}
++
++function dirRaises(dir: string, re: RegExp, tally: { unreadable: number; oversized: number }): boolean {
++    let entries: fs.Dirent[];
++    try {
++        entries = fs.readdirSync(dir, { withFileTypes: true });
++    } catch {
++        tally.unreadable += 1;
++        return false;
++    }
++    for (const e of entries) {
++        const full = path.join(dir, e.name);
++        if (e.isSymbolicLink()) continue;
++        if (e.isDirectory()) {
++            if (dirRaises(full, re, tally)) return true;
++        } else if (e.isFile()) {
++            if (fileRaises(full, re, tally)) return true;
++        }
++    }
++    return false;
++}
++
++/**
++ * Count distinct rounds whose contents match `re`.
++ *
++ * A round stops being examined the moment one of its files matches: the
++ * question is whether the round raised the subject, not how loudly.
++ */
++export function countRounds(tree: string, re: RegExp): RoundCount {
++    let entries: fs.Dirent[];
++    try {
++        entries = fs.readdirSync(tree, { withFileTypes: true });
++    } catch {
++        return { matches: [], examined: 0, unreadable: 1, oversized: 0 };
++    }
++    const tally = { unreadable: 0, oversized: 0 };
++    const matches: RoundMatch[] = [];
++    let examined = 0;
++    for (const e of entries.slice().sort((a, b) => a.name.localeCompare(b.name))) {
++        if (e.name.startsWith('.')) continue;
++        if (e.isSymbolicLink()) continue;
++        const full = path.join(tree, e.name);
++        if (e.isDirectory()) {
++            examined += 1;
++            if (dirRaises(full, re, tally)) matches.push({ name: e.name, kind: 'dir' });
++        } else if (e.isFile()) {
++            examined += 1;
++            if (fileRaises(full, re, tally)) matches.push({ name: e.name, kind: 'file' });
++        }
++    }
++    return { matches, examined, unreadable: tally.unreadable, oversized: tally.oversized };
++}
++
++export interface HeldObject {
++    /** Repo-relative path. */
++    rel: string;
++    /** File stem. */
++    slug: string;
++    /** Declared subject pattern, when the object carries one. */
++    declared: string | null;
++}
++
++/** Locate a held object by path or by slug. */
++export function findHeldObject(root: string, ref: string): HeldObject | null {
++    const direct = path.isAbsolute(ref) ? ref : path.join(root, ref);
++    const candidates = [direct];
++    const bare = path.basename(ref).replace(/\.md$/, '');
++    for (const d of HELD_DIRS) candidates.push(path.join(root, d, `${bare}.md`));
++    for (const c of candidates) {
++        let text: string;
++        try {
++            if (!fs.statSync(c).isFile()) continue;
++            text = fs.readFileSync(c, 'utf8');
++        } catch {
++            continue;
++        }
++        const m = SUBJECT_MARKER.exec(text);
++        return {
++            rel: path.relative(root, c),
++            slug: path.basename(c).replace(/\.md$/, ''),
++            declared: m === null ? null : (m[1] ?? null),
++        };
++    }
++    return null;
++}
++
++/**
++ * A pattern derived from a slug, used only when the object declares none.
++ *
++ * Deliberately weak, and printed as such. The recorded counters in this tree
++ * were taken under hand-written subject patterns, and a slug is a filename
++ * rather than a subject — so this reads as a hard floor and usually as zero.
++ * It exists so the tool answers for any object rather than refusing, and the
++ * output says which kind of pattern produced the figure.
++ */
++export function slugPattern(slug: string): string {
++    return slug.replace(/^road-to-/, '').replace(/-/g, '[-_ .]');
++}
++
++type PatternOrigin = 'flag' | 'declared' | 'slug';
++
++function buildPattern(
++    obj: HeldObject | null,
++    flag: string | undefined,
++): { source: string; origin: PatternOrigin } {
++    if (flag !== undefined && flag !== '') return { source: flag, origin: 'flag' };
++    if (obj !== null && obj.declared !== null) return { source: obj.declared, origin: 'declared' };
++    if (obj !== null) return { source: slugPattern(obj.slug), origin: 'slug' };
++    return { source: '', origin: 'slug' };
++}
++
++const PATTERN_NOTE: Record<PatternOrigin, string> = {
++    flag: 'given on the command line',
++    declared: 'declared on the object itself',
++    slug: 'derived from the slug — a hard floor, and usually the wrong question; pass --pattern',
++};
++
++const ORIGIN_NOTE: Record<TreeOrigin, string> = {
++    flag: '--tree',
++    env: 'AGENT_CONFIG_INBOX_TREE',
++    'repo-root': 'this repository root',
++    'main-checkout': "the main checkout behind this worktree",
++    'project-dir': 'CLAUDE_PROJECT_DIR',
++    unreadable: 'nothing',
++};
++
++export interface ReportResult {
++    exit: number;
++    text: string;
++}
++
++export function report(argv: readonly string[], root: string): ReportResult {
++    const out: string[] = [];
++    const arg = (name: string): string | undefined => {
++        const i = argv.indexOf(name);
++        return i === -1 ? undefined : argv[i + 1];
++    };
++    // Only these flags consume the token after them. The earlier form treated
++    // EVERY `--`-prefixed token as value-taking, which silently ate the held
++    // object ref after `--list`, and let the documented short form `-i` through
++    // as a positional because it carries one dash rather than two. Both
++    // spellings are in the help text, so both have to parse.
++    const VALUE_FLAGS = new Set(['--pattern', '--tree', '--root']);
++    const positional = argv.filter(
++        (a, i) => !a.startsWith('-') && !VALUE_FLAGS.has(String(argv[i - 1] ?? '')),
++    );
++    const ref = positional[0];
++    if (ref === undefined) {
++        return { exit: 2, text: 'usage: report_held_object_arrivals <held-object> [--pattern RE] [--tree DIR] [--root DIR] [--ignore-case] [--list]\n' };
++    }
++
++    const obj = findHeldObject(root, ref);
++    if (obj === null) {
++        out.push(`held object not found: ${ref}`);
++        out.push(`  looked in: ${HELD_DIRS.join(', ')}`);
++        return { exit: 2, text: `${out.join('\n')}\n` };
++    }
++
++    const { source, origin: patternOrigin } = buildPattern(obj, arg('--pattern'));
++    // Case-sensitive by default, so the tool reproduces a plain `grep -rl`.
++    // Every recorded counter in this tree was taken that way, and a figure
++    // that quietly reads two rounds higher than the line it is checking is
++    // worse than no figure: it looks like drift in the store rather than a
++    // difference in the question asked.
++    const fold = argv.includes('--ignore-case') || argv.includes('-i');
++    let re: RegExp;
++    try {
++        re = new RegExp(source, fold ? 'i' : '');
++    } catch (e) {
++        return { exit: 2, text: `bad --pattern: ${String(e)}\n` };
++    }
++
++    const tree = resolveTree({ root, flag: arg('--tree') });
++
++    out.push(`object:  ${obj.rel}`);
++    out.push(`pattern: /${source}/${fold ? 'i' : ''}  (${PATTERN_NOTE[patternOrigin]})`);
++
++    if (tree.dir === null) {
++        out.push('tree:    unreadable');
++        for (const t of tree.tried) out.push(`  · ${t.origin}: ${t.dir} — absent`);
++        out.push('');
++        out.push('no prior rounds readable — the consumed-inbox tree is gitignored and');
++        out.push('machine-local, so this environment cannot see it. This is NOT a count of');
++        out.push('zero arrivals: no reading was taken. Point --tree at the tree, or run');
++        out.push('where it lives.');
++        return { exit: 0, text: `${out.join('\n')}\n` };
++    }
++
++    const counted = countRounds(tree.dir, re);
++    // A tree that STATS as a directory but cannot be LISTED reaches here with
++    // examined 0 and unreadable 1. Printing "0 distinct round(s) of 0 examined"
++    // would be the zero-versus-unreadable conflation this tool exists to avoid,
++    // one layer in from the absent-tree branch above: `isReadableDir` passed, so
++    // resolution succeeded and only enumeration failed. Same message, because it
++    // is the same fact — no reading was taken.
++    if (counted.examined === 0 && counted.unreadable > 0) {
++        out.push(`tree:    ${tree.dir}  (via ${ORIGIN_NOTE[tree.origin]}, but not listable)`);
++        out.push('');
++        out.push('no prior rounds readable — the tree resolved but could not be enumerated');
++        out.push('(permissions, or a race with something rewriting it). This is NOT a count');
++        out.push('of zero arrivals: no reading was taken.');
++        return { exit: 0, text: `${out.join('\n')}\n` };
++    }
++    const dirs = counted.matches.filter((m) => m.kind === 'dir').length;
++    const files = counted.matches.length - dirs;
++    out.push(`tree:    ${tree.dir}  (via ${ORIGIN_NOTE[tree.origin]})`);
++    out.push('');
++    out.push(
++        `arrivals: ${String(counted.matches.length)} distinct round(s) of ${String(counted.examined)} examined` +
++            ` — ${String(dirs)} round director(ies), ${String(files)} loose drop(s)`,
++    );
++    if (counted.unreadable > 0) out.push(`  note: ${String(counted.unreadable)} path(s) unreadable — the count is a floor`);
++    if (counted.oversized > 0) out.push(`  note: ${String(counted.oversized)} file(s) skipped for size`);
++    out.push('');
++    out.push('The figure is a floor on recurrence over one machine\'s store under one');
++    out.push('pattern. Write it onto the object by hand, with this pattern and this');
++    out.push('denominator beside it, so the next reader can tell a measured count from a');
++    out.push('remembered one.');
++    if (argv.includes('--list') || counted.matches.length <= 40) {
++        out.push('');
++        out.push('rounds:');
++        for (const m of counted.matches) out.push(`  · ${m.name}${m.kind === 'file' ? ' (loose drop)' : ''}`);
++    }
++    return { exit: 0, text: `${out.join('\n')}\n` };
++}
++
++export function main(argv: readonly string[]): number {
++    if (argv.includes('--help') || argv.includes('-h')) {
++        process.stdout.write(
++            'usage: report_held_object_arrivals <held-object> [--pattern RE] [--tree DIR] [--root DIR] [--list]\n\n' +
++                '  <held-object>  a path, or a bare slug resolved under the held-object directories\n' +
++                '  --pattern RE   the subject pattern; overrides any the object declares\n' +
++                '  --tree DIR     the consumed-inbox tree; otherwise resolved and reported\n' +
++                '  --ignore-case  fold case; the default is a case-sensitive grep\n' +
++                '  --list         list every matched round even when there are many\n',
++        );
++        return 0;
++    }
++    const i = argv.indexOf('--root');
++    const root = i === -1 ? REPO_ROOT : (argv[i + 1] ?? REPO_ROOT);
++    const res = report(argv, root);
++    process.stdout.write(res.text);
++    return res.exit;
++}
++
++if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
++    process.exit(main(process.argv.slice(2)));
++}
+diff --git a/tests/scripts/held_object_arrivals.test.ts b/tests/scripts/held_object_arrivals.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..b5973b6e6adc50c45aa4c3908ec7f1c8f89e7144
+--- /dev/null
++++ b/tests/scripts/held_object_arrivals.test.ts
+@@ -0,0 +1,430 @@
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++
++import { afterAll, describe, expect, it } from 'vitest';
++
++import {
++    ARRIVAL_RE,
++    blockerCitations,
++    check,
++    scan,
++} from '../../src/scripts/check_held_object_arrivals.js';
++import {
++    countRounds,
++    findHeldObject,
++    mainCheckoutOf,
++    report,
++    resolveTree,
++    slugPattern,
++} from '../../src/scripts/report_held_object_arrivals.js';
++
++/**
++ * Both polarities on every rule. A check whose firing direction is never
++ * exercised has unknown sensitivity — it can be green because the corpus is
++ * clean or because it reads nothing, and a passing suite cannot tell those
++ * apart.
++ */
++
++const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'held-arrivals-test-'));
++
++afterAll(() => {
++    fs.rmSync(TMP, { recursive: true, force: true });
++});
++
++let seq = 0;
++function freshDir(): string {
++    seq += 1;
++    const dir = path.join(TMP, `case-${String(seq)}`);
++    fs.mkdirSync(dir, { recursive: true });
++    return dir;
++}
++
++function write(root: string, rel: string, body: string): void {
++    const full = path.join(root, rel);
++    fs.mkdirSync(path.dirname(full), { recursive: true });
++    fs.writeFileSync(full, body);
++}
++
++const HELD_PLAIN = '# Stub: a held subject\n\nbody\n';
++const HELD_COUNTED =
++    '# Stub: a held subject\n\n' +
++    '> **Arrivals:** 4 — latest `round-d` (2026-01-04); earlier `round-a`, `round-b`.\n\nbody\n';
++const CITER_BLOCKED =
++    '# Road to live work\n\n## Phase 1\n\n- [ ] 1.1 x\n\n## Blockers\n\n' +
++    '### blocker: the held thing\n- **Status:** open\n' +
++    '- **What to do:** read `stubs/road-to-held.md`.\n';
++
++function estate(opts: { heldBody?: string; citer?: string | null; later?: string | null }): string {
++    const root = freshDir();
++    write(root, 'agents/roadmaps/stubs/road-to-held.md', opts.heldBody ?? HELD_PLAIN);
++    if (opts.citer !== null && opts.citer !== undefined) {
++        write(root, 'agents/roadmaps/road-to-live.md', opts.citer);
++    }
++    if (opts.later !== null && opts.later !== undefined) {
++        write(root, 'agents/roadmaps/later/road-to-parked.md', opts.later);
++    }
++    fs.mkdirSync(path.join(root, 'agents/roadmaps/later'), { recursive: true });
++    return root;
++}
++
++// --- the reporter -----------------------------------------------------------
++
++describe('report_held_object_arrivals — the round is the unit', () => {
++    function tree(spec: Record<string, string | Record<string, string>>): string {
++        const root = path.join(freshDir(), 'tmp.old');
++        fs.mkdirSync(root, { recursive: true });
++        for (const [name, content] of Object.entries(spec)) {
++            if (typeof content === 'string') {
++                fs.writeFileSync(path.join(root, name), content);
++            } else {
++                for (const [inner, body] of Object.entries(content)) {
++                    const p = path.join(root, name, inner);
++                    fs.mkdirSync(path.dirname(p), { recursive: true });
++                    fs.writeFileSync(p, body);
++                }
++            }
++        }
++        return root;
++    }
++
++    it('counts a round directory once however many of its files match', () => {
++        const t = tree({
++            'round-a': { 'one.md': 'the subject', 'two.md': 'the subject', 'deep/three.md': 'the subject' },
++        });
++        const got = countRounds(t, /the subject/);
++        expect(got.matches).toEqual([{ name: 'round-a', kind: 'dir' }]);
++        expect(got.examined).toBe(1);
++    });
++
++    it('counts distinct rounds, so three rounds read as three and not as their file total', () => {
++        const t = tree({
++            'round-a': { 'x.md': 'the subject', 'y.md': 'the subject' },
++            'round-b': { 'x.md': 'the subject' },
++            'round-c': { 'x.md': 'something else entirely' },
++            'loose.txt': 'the subject',
++        });
++        const got = countRounds(t, /the subject/);
++        expect(got.matches.map((m) => m.name)).toEqual(['loose.txt', 'round-a', 'round-b']);
++        expect(got.matches.filter((m) => m.kind === 'dir')).toHaveLength(2);
++        expect(got.examined).toBe(4);
++    });
++
++    it('a round that does not raise the subject is not counted', () => {
++        const t = tree({ 'round-a': { 'x.md': 'unrelated' } });
++        expect(countRounds(t, /the subject/).matches).toHaveLength(0);
++    });
++
++    it('reports an absent tree as unreadable rather than as zero arrivals', () => {
++        const root = estate({ citer: null });
++        const res = report(['road-to-held', '--pattern', 'anything'], root);
++        expect(res.exit).toBe(0);
++        expect(res.text).toContain('no prior rounds readable');
++        expect(res.text).not.toMatch(/arrivals: 0\b/);
++    });
++
++    it('reports a present tree with a count and the rounds behind it', () => {
++        const root = estate({ citer: null });
++        write(root, 'agents/tmp.old/[REDACTED:src-conf]/x.md', 'the subject');
++        write(root, 'agents/tmp.old/[REDACTED:src-conf]/x.md', 'the subject');
++        write(root, 'agents/tmp.old/[REDACTED:src-conf]/x.md', 'unrelated');
++        const res = report(['road-to-held', '--pattern', 'the subject'], root);
++        expect(res.exit).toBe(0);
++        expect(res.text).toContain('arrivals: 2 distinct round(s) of 3 examined');
++        expect(res.text).toContain('round-a');
++        expect(res.text).not.toContain('no prior rounds readable');
++    });
++
++    it('is case-sensitive by default and folds case only on request', () => {
++        const root = estate({ citer: null });
++        write(root, 'agents/tmp.old/[REDACTED:src-conf]/x.md', 'The Subject');
++        expect(report(['road-to-held', '--pattern', 'the subject'], root).text).toContain(
++            'arrivals: 0 distinct round(s)',
++        );
++        expect(
++            report(['road-to-held', '--pattern', 'the subject', '--ignore-case'], root).text,
++        ).toContain('arrivals: 1 distinct round(s)');
++    });
++
++    it('prefers a pattern the object declares over one derived from its slug', () => {
++        const root = freshDir();
++        write(
++            root,
++            'agents/roadmaps/stubs/road-to-held.md',
++            '# Stub\n\n<!-- arrival-subject: widget|sprocket -->\n\nbody\n',
++        );
++        const obj = findHeldObject(root, 'road-to-held');
++        expect(obj?.declared).toBe('widget|sprocket');
++        write(root, 'agents/tmp.old/[REDACTED:src-conf]/x.md', 'a sprocket arrived');
++        const res = report(['road-to-held'], root);
++        expect(res.text).toContain('declared on the object itself');
++        expect(res.text).toContain('arrivals: 1 distinct round(s)');
++    });
++
++    it('falls back to a slug pattern and says the figure is slug-derived', () => {
++        const root = estate({ citer: null });
++        write(root, 'agents/tmp.old/[REDACTED:src-conf]/x.md', 'a held subject appears here');
++        const res = report(['road-to-held'], root);
++        expect(slugPattern('road-to-held')).toBe('held');
++        expect(res.text).toContain('derived from the slug');
++    });
++
++    it('resolves the tree from an explicit flag ahead of the repository root', () => {
++        const root = estate({ citer: null });
++        write(root, 'agents/tmp.old/[REDACTED:src-conf]/x.md', 'the subject');
++        const other = path.join(freshDir(), 'elsewhere');
++        fs.mkdirSync(path.join(other, 'round-b'), { recursive: true });
++        fs.writeFileSync(path.join(other, 'round-b', 'x.md'), 'the subject');
++        const resolved = resolveTree({ root, flag: other, env: {} });
++        expect(resolved.origin).toBe('flag');
++        expect(resolved.dir).toBe(other);
++    });
++
++    /**
++     * The override, exercised through the entry point rather than through
++     * `resolveTree` alone. A `--tree` that merely led a candidate chain would
++     * fall through to the readable tree beside it, and then the unreadable
++     * branch could not be reached on any machine where a real tree exists —
++     * which is every machine this runs on.
++     */
++    it('an explicitly named unreadable tree does not fall through to a readable one', () => {
++        const root = estate({ citer: null });
++        write(root, 'agents/tmp.old/round-a91f3c/x.md', 'the subject');
++        expect(report(['road-to-held', '--pattern', 'the subject'], root).text).toContain(
++            'arrivals: 1 distinct round(s)',
++        );
++        const res = report(
++            ['road-to-held', '--pattern', 'the subject', '--tree', path.join(root, 'no-such-tree')],
++            root,
++        );
++        expect(res.exit).toBe(0);
++        expect(res.text).toContain('no prior rounds readable');
++        // Anchored: the honesty prose itself contains the phrase "zero
++        // arrivals:", so an unanchored match would pass on the wrong line.
++        expect(res.text).not.toMatch(/^arrivals:/m);
++    });
++
++    it('an explicitly set environment tree overrides on the same terms', () => {
++        const root = estate({ citer: null });
++        write(root, 'agents/tmp.old/round-a91f3c/x.md', 'the subject');
++        const resolved = resolveTree({
++            root,
++            env: { AGENT_CONFIG_INBOX_TREE: path.join(root, 'no-such-tree') },
++        });
++        expect(resolved.origin).toBe('unreadable');
++        expect(resolved.dir).toBeNull();
++        expect(resolved.tried).toHaveLength(1);
++    });
++
++    it('the flag wins over the environment when both are given', () => {
++        const root = freshDir();
++        const named = path.join(root, 'named');
++        fs.mkdirSync(named, { recursive: true });
++        const resolved = resolveTree({
++            root,
++            flag: named,
++            env: { AGENT_CONFIG_INBOX_TREE: path.join(root, 'other') },
++        });
++        expect(resolved.origin).toBe('flag');
++    });
++
++    it('falls through to the main checkout when this root is a linked worktree', () => {
++        const main = freshDir();
++        fs.mkdirSync(path.join(main, '.git', 'worktrees', 'wt'), { recursive: true });
++        fs.mkdirSync(path.join(main, 'agents', 'tmp.old'), { recursive: true });
++        const wt = freshDir();
++        fs.writeFileSync(path.join(wt, '.git'), `gitdir: ${path.join(main, '.git', 'worktrees', 'wt')}\n`);
++        expect(mainCheckoutOf(wt)).toBe(main);
++        const resolved = resolveTree({ root: wt, env: {} });
++        expect(resolved.origin).toBe('main-checkout');
++    });
++
++    it('a plain checkout has no main checkout behind it', () => {
++        const root = freshDir();
++        fs.mkdirSync(path.join(root, '.git'), { recursive: true });
++        expect(mainCheckoutOf(root)).toBeNull();
++    });
++
++    it('writes nothing — the source carries no write call', () => {
++        const src = fs.readFileSync(
++            path.resolve(__dirname, '..', '..', 'src/scripts/report_held_object_arrivals.ts'),
++            'utf8',
++        );
++        expect(src).not.toMatch(/writeFile|mkdir|appendFile/);
++    });
++});
++
++// --- the check --------------------------------------------------------------
++
++describe('check_held_object_arrivals — citation is the discriminator', () => {
++    it('fires on a held object cited inside a blocker with no arrival line', () => {
++        const root = estate({ citer: CITER_BLOCKED });
++        const res = scan(root);
++        expect(res.cited).toBe(1);
++        expect(res.findings.map((f) => f.held)).toEqual(['agents/roadmaps/stubs/road-to-held.md']);
++    });
++
++    it('stays silent on a first-arrival held object nobody has cited', () => {
++        const root = estate({ citer: '# Road to live work\n\n## Phase 1\n\n- [ ] 1.1 x\n' });
++        const res = scan(root);
++        expect(res.cited).toBe(0);
++        expect(res.findings).toHaveLength(0);
++        expect(res.held).toBeGreaterThan(0);
++    });
++
++    it('stays silent on a mention outside blocker scope', () => {
++        const root = estate({
++            citer: '# Road to live work\n\n## Phase 1\n\n- [ ] 1.1 see `stubs/road-to-held.md`\n',
++        });
++        expect(scan(root).findings).toHaveLength(0);
++    });
++
++    it('stays silent once the cited object carries its arrival line', () => {
++        const root = estate({ heldBody: HELD_COUNTED, citer: CITER_BLOCKED });
++        const res = scan(root);
++        expect(res.cited).toBe(1);
++        expect(res.findings).toHaveLength(0);
++    });
++
++    it('closes blocker scope at the next top-level heading', () => {
++        const cites = blockerCitations(
++            '## Blockers\n\n### blocker: a\n- see `stubs/inside.md`\n\n' +
++                '## Acceptance Criteria\n\n- see `stubs/outside.md`\n',
++        );
++        expect([...cites]).toEqual(['inside.md']);
++    });
++
++    it('opens blocker scope on a bare blocker heading with no Blockers section above it', () => {
++        expect([...blockerCitations('### blocker: a\n- see `later/x.md`\n')]).toEqual(['x.md']);
++    });
++
++    it('does not count a parked roadmap citing itself', () => {
++        const root = freshDir();
++        write(
++            root,
++            'agents/roadmaps/later/road-to-parked.md',
++            '# Parked\n\n## Blockers\n\n### blocker: a\n- see `later/road-to-parked.md`\n',
++        );
++        fs.mkdirSync(path.join(root, 'agents/roadmaps/stubs'), { recursive: true });
++        expect(scan(root).cited).toBe(0);
++    });
++
++    it('treats a parked roadmap as a live citer', () => {
++        const root = estate({
++            citer: null,
++            later: '# Parked\n\n## Blockers\n\n### blocker: a\n- see `stubs/road-to-held.md`\n',
++        });
++        expect(scan(root).findings.map((f) => f.held)).toEqual([
++            'agents/roadmaps/stubs/road-to-held.md',
++        ]);
++    });
++
++    it('is advisory by default and fails only under --enforce', () => {
++        const root = estate({ citer: CITER_BLOCKED });
++        const seen: string[] = [];
++        const sink = (c: string): boolean => {
++            seen.push(c);
++            return true;
++        };
++        expect(check(root, false, sink)).toBe(0);
++        expect(seen.join('')).toContain('Advisory: exiting 0');
++        expect(check(root, true, sink)).toBe(1);
++    });
++
++    it('refuses a dead scope rather than reporting it clean', () => {
++        const root = freshDir();
++        fs.mkdirSync(path.join(root, 'agents/roadmaps'), { recursive: true });
++        const seen: string[] = [];
++        expect(
++            check(root, false, (c: string) => {
++                seen.push(c);
++                return true;
++            }),
++        ).toBe(2);
++        expect(seen.join('')).toContain('no held objects found');
++    });
++
++    // The defect this pins: `listMarkdown` used to swallow a failed readdir
++    // into `[]`, so a citer root that had moved produced zero citations, zero
++    // findings, and an affirmative green — exit 0 even under --enforce, with a
++    // real uncounted citation one directory away. The held corpus stays
++    // readable when only a citer root moves, so the `res.held === 0` guard
++    // never reached it.
++    it('refuses an unreadable citer root instead of reporting nothing cited', () => {
++        const root = estate({ citer: CITER_BLOCKED });
++        // Remove the active-roadmaps citer root while the held corpus and the
++        // parked citer root stay intact — the asymmetry the old guard missed.
++        fs.rmSync(path.join(root, 'agents/roadmaps/road-to-live.md'));
++        const marker = path.join(root, 'agents/roadmaps');
++        const moved = path.join(root, 'agents/roadmaps-moved');
++        fs.renameSync(path.join(root, 'agents/roadmaps/stubs'), path.join(root, 'agents/stubs-keep'));
++        fs.renameSync(path.join(root, 'agents/roadmaps/later'), path.join(root, 'agents/later-keep'));
++        fs.rmSync(marker, { recursive: true });
++        fs.mkdirSync(moved, { recursive: true });
++        fs.renameSync(path.join(root, 'agents/stubs-keep'), path.join(moved, 'stubs'));
++        fs.renameSync(path.join(root, 'agents/later-keep'), path.join(moved, 'later'));
++
++        const seen: string[] = [];
++        const sink = (c: string): boolean => {
++            seen.push(c);
++            return true;
++        };
++        // Both roots are gone here, so the held guard speaks first — which is
++        // correct, and is why the next case isolates the citer-only shape.
++        expect(check(root, true, sink)).toBe(2);
++    });
++
++    it('separates an empty citer root from an unreadable one', () => {
++        // An empty `later/` is a real estate state — nothing is parked — and
++        // must stay green. Only an unreadable root is a failed measurement.
++        const readable = estate({ citer: CITER_BLOCKED, later: null });
++        expect(scan(readable).deadCiterRoots).toEqual([]);
++
++        const broken = estate({ citer: CITER_BLOCKED });
++        fs.rmSync(path.join(broken, 'agents/roadmaps/later'), { recursive: true });
++        expect(scan(broken).deadCiterRoots).toEqual(['agents/roadmaps/later']);
++
++        const seen: string[] = [];
++        expect(
++            check(broken, false, (c: string) => {
++                seen.push(c);
++                return true;
++            }),
++        ).toBe(2);
++        expect(seen.join('')).toContain('citer root(s) unreadable');
++        // Advisory does not soften it: an unmeasured scope is never a pass.
++        expect(seen.join('')).not.toContain('Advisory: exiting 0');
++    });
++
++    it('does not open blocker scope from inside a code fence', () => {
++        // A roadmap that documents the blocker shape by quoting it used to put
++        // the whole rest of its section into blocker scope, so an illustrative
++        // mention counted as a live citation.
++        const fenced = [
++            '# Roadmap',
++            '',
++            '## Phase 1',
++            '',
++            'Blockers look like this:',
++            '',
++            '```markdown',
++            '### blocker: template',
++            '- **Status:** open',
++            '```',
++            '',
++            '- a step naming `stubs/road-to-held.md` in passing',
++            '',
++        ].join('\n');
++        expect(blockerCitations(fenced).size).toBe(0);
++
++        // The real shape still opens scope — the fix must not close the door.
++        const real = '# R\n\n## Blockers\n\n### blocker: a\n- see `stubs/road-to-held.md`\n';
++        expect([...blockerCitations(real)]).toEqual(['road-to-held.md']);
++    });
++
++    it('recognises the arrival line only in its published shape', () => {
++        expect(ARRIVAL_RE.test('> **Arrivals:** 4 — latest `round-d`.')).toBe(true);
++        expect(ARRIVAL_RE.test('Arrivals: 4')).toBe(false);
++        expect(ARRIVAL_RE.test('> **Arrivals:**')).toBe(false);
++    });
++});
