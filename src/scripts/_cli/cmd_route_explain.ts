@@ -78,7 +78,14 @@ function _trigger_label(trigger: Trigger): string {
     return `trigger: ${JSON.stringify(trigger)}`;
 }
 
-/** Projection mode from settings; the shipped default is eager-all. */
+/**
+ * Projection mode from settings.
+ *
+ * The shipped template carries `delivery` for `claude-code` (ADR-267), so on a
+ * readable settings file that is what comes back. The `eager-all` below is the
+ * parser fallback for an absent or unreadable value, matching
+ * `DEFAULT_LEAN_PROJECTION_MODE` — it is not what the template ships.
+ */
 export function _projection_mode(): string {
     try {
         const settings = load_agent_settings({ cwd: REPO_ROOT }) as Record<string, unknown>;
@@ -90,7 +97,7 @@ export function _projection_mode(): string {
             }
         }
     } catch {
-        // settings unreadable → shipped default
+        // settings unreadable → parser fallback, not the template value
     }
     return 'eager-all';
 }

@@ -6,22 +6,32 @@
  * WHY THIS GATE EXISTS (road-to-conformance-round5 Phase 1, measured 2026-08-07)
  * ---------------------------------------------------------------------------
  * `docs/contracts/rule-router.md` (§ "The router earns its place as a
- * **compile-time** artifact") states that under every shipped default nothing
- * loads `dist/router.json` at runtime, so **projection is the only reach
- * mechanism there is**:
+ * **compile-time** artifact") used to state that under every shipped default
+ * nothing loads `dist/router.json` at runtime, so **projection is the only
+ * reach mechanism there is**. Both halves of that have since been corrected,
+ * and the gate outlived both:
  *
  * CORRECTED 2026-08-26. This docblock used to cite that section's "measured:
  * zero consumers under `src/scripts/hooks/`", and that measurement is stale: the
  * `rule-inject` concern reads the router via `_lib/rule_injection.ts:76-79` and
- * is bound on three slots. The gate's rationale survives the correction because
- * the concern is DEFAULT-OFF and returns before reading the router unless
- * `lean_projection.mode: delivery` is set — so on a shipped default, projection
- * IS still the only reach mechanism. What no longer holds is the stronger claim
- * that no such mechanism exists. Stated here rather than quietly re-worded,
- * because a gate whose stated reason rests on a refuted premise is exactly the
- * decoration ADR-127 rejects: a non-kernel rule activates by the model's judgment over text
- * already in context, and the per-tool rule tree is what puts it there. That
- * makes the state of the projection load-bearing, and it was broken:
+ * is bound on three slots. What no longer holds is the stronger claim that no
+ * such mechanism exists.
+ *
+ * CORRECTED AGAIN 2026-09-12. The 2026-08-26 note rescued the rationale with
+ * "the concern is DEFAULT-OFF … so on a shipped default, projection IS still
+ * the only reach mechanism". That rescue is now false and the clause is gone:
+ * since ADR-267 the shipped template carries `lean_projection.mode: delivery`
+ * with `hosts: [claude-code]`, so on the shipped default that one host does
+ * reach rule bodies at runtime. The gate never depended on the rescue — its two
+ * assertions below are about the emit plan and the entry mtimes, and a thinned
+ * tree of stubs is exactly as load-bearing as a tree of bodies: a missing entry
+ * is a rule the model neither reads nor has a pointer to, in either mode.
+ *
+ * Both are stated rather than quietly re-worded, because a gate whose stated
+ * reason rests on a refuted premise is exactly the decoration ADR-127 rejects:
+ * a non-kernel rule activates by the model's judgment over text already in
+ * context, and the per-tool rule tree is what puts it there. That makes the
+ * state of the projection load-bearing, and it was broken:
  *
  *   - `.claude/rules/` in the working checkout held **92** entries. A
  *     regeneration in a clean worktree produces **108**. The tree was last

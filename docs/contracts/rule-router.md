@@ -41,20 +41,35 @@ slot injects trigger-matched rule bodies."* Both clauses are now false. The
 (`src/scripts/hook_manifest.yaml:1067,1068,1086`). Injecting trigger-matched
 rule bodies is that concern's entire purpose.
 
-**What is still true, and it is the load-bearing half:** the concern is
-**DEFAULT-OFF and off means zero bytes.** It returns before reading the router
-unless `lean_projection.mode: delivery` is set, and the shipped default is
-`eager-all` (`src/scripts/_lib/lean_projection_mode.ts:21`, with anything
-unrecognised normalising to it). So under every shipped default nothing loads
-`dist/router.json` at runtime — but that is now a **statement about a setting**,
-not about the absence of a mechanism, and the two are not interchangeable.
+**Corrected again 2026-09-12 — the default is no longer off.** This paragraph
+read *"the concern is DEFAULT-OFF and off means zero bytes … so under every
+shipped default nothing loads `dist/router.json` at runtime"*, and that rescue
+died with ADR-267. Two defaults have to be told apart, and this page collapsed
+them into one:
 
-**Unmeasured, stated because the correction invites the question:** the
-concern's own header records that its budget row *"is registered against the
-per-prompt cap rather than a measured emission: there is no measured emission to
-register yet."* Built, bound, default-off, unmeasured. Describing a lookup nobody performs is the posture
-ADR-127 rejects: a promised check that does not run is decoration, and a
-documented mechanism that does not exist is the same defect one layer up.
+- The **template default** — what a consumer is given — is `delivery` with
+  `hosts: [claude-code]` (`src/config/agent-settings.template.yml`). On that one
+  host the concern's gate is open, so it does load `dist/router.json` at runtime
+  and does deliver trigger-matched bodies.
+- The **parser fallback** — what applies when no value resolves from any layer —
+  is `eager-all` (`src/scripts/_lib/lean_projection_mode.ts`, with anything
+  unrecognised normalising to it), deliberately not flipped with the template
+  per ADR-267 decision 4.
+
+**Off still means zero bytes, and that half is unchanged:** on any host outside
+`lean_projection.hosts`, and on a `mode: eager-all` rollback, the concern
+returns before reading the router.
+
+**Measured, because the correction invites the question:** this paragraph used
+to quote the concern's own header for *"there is no measured emission to
+register yet"* and call it built, bound, default-off, unmeasured. Three of those
+four are now false. The emission is measured — p50 6,674 B, p90 16,188 B, max
+20,406 B over 318 gate-open fires on the frozen corpus, which is what the
+`user_prompt_submit` raise in `src/config/hook-token-budget.json` is derived
+from (`src/scripts/hooks/rule_inject_hook.ts`). Describing a lookup nobody
+performs is the posture ADR-127 rejects: a promised check that does not run is
+decoration, and a documented mechanism that does not exist is the same defect
+one layer up.
 
 The router earns its place as a **compile-time** artifact: it is what the
 per-host emitters and the lint / eval / telemetry surfaces read. Activation
@@ -288,13 +303,16 @@ Legacy `rule_loading_tier: balanced` values map to `essential`.
 
 ## Activation semantics
 
-**Read this first: under every shipped default, nothing loads
-`dist/router.json` at runtime.** Corrected 2026-08-26 — this line read
-*"nothing loads `dist/router.json` at runtime"* without the qualifier, and a
-default-off runtime consumer now exists (see the correction above). The
-qualifier is the whole difference: no mechanism versus a mechanism nobody has
-turned on. This section
-used to describe a per-turn loader — "the host agent reads `dist/router.json`
+**Read this first: on the shipped template default, `dist/router.json` IS
+loaded at runtime — on `claude-code`, and there only.** This line has been
+corrected twice. It first read *"nothing loads `dist/router.json` at runtime"*
+(corrected 2026-08-26, when a default-off runtime consumer appeared), then
+*"under every shipped default, nothing loads it"* (corrected 2026-09-12, when
+ADR-267 made `delivery` the template value for `claude-code`). What remains
+true is narrower and worth stating exactly: everywhere outside
+`lean_projection.hosts`, and on an `eager-all` rollback, nothing loads it.
+
+This section used to describe a per-turn loader — "the host agent reads `dist/router.json`
 once per session … active rules are loaded inline" — while § Schema v2 thirty
 lines above said, correctly, *"per ADR-040 the filtering happens at projection
 time; there is no runtime resolver."* Both could not be true. Reconciled
@@ -464,16 +482,23 @@ full-eager projection:
 # .agent-settings.yml
 lean_projection:
   # thin     = kernel full-bodied + non-kernel rules as router pointers (Phase 3)
-  # eager-all = every rule body inlined into every projection (today's behaviour)
-  mode: eager-all   # DEFAULT until Phase 3.1 ships + its benchmark gate is green
+  # eager-all = every rule body inlined into every projection (the rollback)
+  mode: eager-all   # the ROLLBACK value, not the shipped one — see the note below
 ```
 
 Revert procedure (one flip, no code change): set `lean_projection.mode:
 eager-all`, run `task generate-tools` (regenerates `.claude/`, `.cursor/`,
 `.clinerules/`, `.windsurfrules`) + `task sync` (`dist/agent-src/`, `.augment/`).
 The thin projector (Phase 3.1) MUST honour this key; with it absent or
-`eager-all` the projector behaves exactly as today. Default stays
-`eager-all` so the migration is opt-in and reversible by one line.
+`eager-all` the projector behaves as it did before the migration.
+
+**Superseded 2026-09-12.** This section was written while the default was
+`eager-all` and said so ("Default stays `eager-all` so the migration is opt-in
+and reversible by one line"). Since ADR-267 the shipped template carries
+`mode: delivery` with `hosts: [claude-code]`, so the migration is no longer
+opt-in on that host. What survives unchanged is the kill-switch itself: setting
+`mode: eager-all` and regenerating restores the full-eager projection, and the
+parser fallback is still `eager-all` for a value that cannot be read.
 
 ### Staleness guard — `src → dist`
 
