@@ -88,6 +88,46 @@ describe('report_held_object_arrivals — the round is the unit', () => {
         return root;
     }
 
+    // Round 2 mutation-tested the five review fixes and found two with no test
+    // at all, in a commit whose message foregrounded proven sensitivity. These
+    // are those two.
+    it('reports a present-but-unlistable tree as unread, never as zero', () => {
+        const root = freshDir();
+        write(root, 'agents/roadmaps/stubs/road-to-held.md', HELD_PLAIN);
+        const blocked = path.join(root, 'blocked-tree');
+        fs.mkdirSync(blocked, { recursive: true });
+        fs.chmodSync(blocked, 0o300); // stats as a directory, cannot be listed
+        try {
+            const r = report(['road-to-held', '--tree', blocked], root);
+            expect(r.exit).toBe(0);
+            expect(r.text).toContain('no prior rounds readable');
+            expect(r.text).toContain('not listable');
+            // The defect: a measured-looking zero from a reading never taken.
+            expect(r.text).not.toContain('arrivals: 0 distinct round(s)');
+        } finally {
+            fs.chmodSync(blocked, 0o755);
+        }
+    });
+
+    it('parses the documented valueless flags without eating the object ref', () => {
+        const root = freshDir();
+        write(root, 'agents/roadmaps/stubs/road-to-held.md', HELD_PLAIN);
+        const absent = path.join(root, 'no-such-tree');
+
+        // `--list` takes no value, so the token after it is the object ref.
+        const listed = report(['--list', 'road-to-held', '--tree', absent], root);
+        expect(listed.exit).toBe(0);
+        expect(listed.text).toContain('road-to-held.md');
+        expect(listed.text).not.toContain('held object not found');
+
+        // `-i` is the documented short form and carries ONE dash, so a `--`
+        // test cannot reject it — the leading-dash test is what has to.
+        const folded = report(['-i', 'road-to-held', '--tree', absent], root);
+        expect(folded.exit).toBe(0);
+        expect(folded.text).toContain('road-to-held.md');
+        expect(folded.text).toMatch(/pattern: \/[^/]+\/i/);
+    });
+
     it('counts a round directory once however many of its files match', () => {
         const t = tree({
             'round-a': { 'one.md': 'the subject', 'two.md': 'the subject', 'deep/three.md': 'the subject' },
@@ -350,50 +390,46 @@ describe('check_held_object_arrivals — citation is the discriminator', () => {
     // real uncounted citation one directory away. The held corpus stays
     // readable when only a citer root moves, so the `res.held === 0` guard
     // never reached it.
-    it('refuses an unreadable citer root instead of reporting nothing cited', () => {
-        const root = estate({ citer: CITER_BLOCKED });
-        // Remove the active-roadmaps citer root while the held corpus and the
-        // parked citer root stay intact — the asymmetry the old guard missed.
-        fs.rmSync(path.join(root, 'agents/roadmaps/road-to-live.md'));
-        const marker = path.join(root, 'agents/roadmaps');
-        const moved = path.join(root, 'agents/roadmaps-moved');
-        fs.renameSync(path.join(root, 'agents/roadmaps/stubs'), path.join(root, 'agents/stubs-keep'));
-        fs.renameSync(path.join(root, 'agents/roadmaps/later'), path.join(root, 'agents/later-keep'));
-        fs.rmSync(marker, { recursive: true });
-        fs.mkdirSync(moved, { recursive: true });
-        fs.renameSync(path.join(root, 'agents/stubs-keep'), path.join(moved, 'stubs'));
-        fs.renameSync(path.join(root, 'agents/later-keep'), path.join(moved, 'later'));
+    // Round 2 of the review found the first version of this test was a
+    // tautology: it removed BOTH roots, so its exit 2 came from the
+    // pre-existing held-corpus guard, and it stayed green when the fix under
+    // test was mutated away. Replaced with the citer-only shape, which is the
+    // only shape that isolates this guard.
+    it('separates empty, absent and unreadable citer roots', () => {
+        // 1. EMPTY and present — nothing parked. A real state; stays clean.
+        const empty = estate({ citer: CITER_BLOCKED, later: null });
+        expect(scan(empty).deadCiterRoots).toEqual([]);
 
-        const seen: string[] = [];
-        const sink = (c: string): boolean => {
-            seen.push(c);
-            return true;
-        };
-        // Both roots are gone here, so the held guard speaks first — which is
-        // correct, and is why the next case isolates the citer-only shape.
-        expect(check(root, true, sink)).toBe(2);
-    });
+        // 2. ABSENT — also a real state, and the one the first repair broke.
+        // Git cannot track an empty directory, so a fresh clone with nothing
+        // parked has no `later/` at all. It must not read as a failure.
+        const absent = estate({ citer: CITER_BLOCKED, later: null });
+        fs.rmSync(path.join(absent, 'agents/roadmaps/later'), { recursive: true });
+        expect(fs.existsSync(path.join(absent, 'agents/roadmaps/later'))).toBe(false);
+        expect(scan(absent).deadCiterRoots).toEqual([]);
 
-    it('separates an empty citer root from an unreadable one', () => {
-        // An empty `later/` is a real estate state — nothing is parked — and
-        // must stay green. Only an unreadable root is a failed measurement.
-        const readable = estate({ citer: CITER_BLOCKED, later: null });
-        expect(scan(readable).deadCiterRoots).toEqual([]);
-
+        // 3. PRESENT BUT UNREADABLE — the failed measurement, and the only one
+        // that may block. The held corpus stays intact, so the held guard does
+        // not reach it and this guard is the only thing between a broken citer
+        // root and an affirmative green.
         const broken = estate({ citer: CITER_BLOCKED });
-        fs.rmSync(path.join(broken, 'agents/roadmaps/later'), { recursive: true });
-        expect(scan(broken).deadCiterRoots).toEqual(['agents/roadmaps/later']);
-
-        const seen: string[] = [];
-        expect(
-            check(broken, false, (c: string) => {
-                seen.push(c);
-                return true;
-            }),
-        ).toBe(2);
-        expect(seen.join('')).toContain('citer root(s) unreadable');
-        // Advisory does not soften it: an unmeasured scope is never a pass.
-        expect(seen.join('')).not.toContain('Advisory: exiting 0');
+        const parked = path.join(broken, 'agents/roadmaps/later');
+        fs.chmodSync(parked, 0o000);
+        try {
+            expect(scan(broken).deadCiterRoots).toEqual(['agents/roadmaps/later']);
+            const seen: string[] = [];
+            expect(
+                check(broken, false, (c: string) => {
+                    seen.push(c);
+                    return true;
+                }),
+            ).toBe(2);
+            expect(seen.join('')).toContain('present but unreadable');
+            // Advisory does not soften it: an unmeasured scope is never a pass.
+            expect(seen.join('')).not.toContain('Advisory: exiting 0');
+        } finally {
+            fs.chmodSync(parked, 0o755);
+        }
     });
 
     it('does not open blocker scope from inside a code fence', () => {

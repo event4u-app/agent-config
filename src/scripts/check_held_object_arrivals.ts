@@ -89,10 +89,10 @@ export interface Result {
     /** Held objects found at all, so a collapsed corpus is visible. */
     held: number;
     /**
-     * Citer roots that could not be read at all — not roots that merely hold no
-     * markdown, which is a legitimate estate state. A name here means the scan
-     * could not see where the citations live, and that must never resolve to
-     * "nothing is cited".
+     * Citer roots that EXIST and could not be read. Neither an empty root nor
+     * an absent one qualifies — both are real estate states. A name here means
+     * the scan could not see where the citations live, and that must never
+     * resolve to "nothing is cited".
      */
     deadCiterRoots: string[];
 }
@@ -100,19 +100,28 @@ export interface Result {
 /**
  * List the markdown directly under `dir`.
  *
- * `readable` separates the two states an empty list can mean. A directory that
- * exists and holds no markdown is a real estate state — `later/` is empty
- * whenever nothing is parked. A directory that cannot be read at all is a
- * failed measurement. Collapsing both into `[]` is what let a moved citer root
- * report an affirmative clean verdict, so the distinction is returned rather
- * than inferred by the caller.
+ * `readable` separates the THREE states an empty list can mean, not two.
+ *
+ * A directory that exists and holds no markdown is a real estate state. So is a
+ * directory that does not exist at all: git cannot track an empty directory, so
+ * "nothing is parked" IS an absent `later/` in a fresh clone. Both are
+ * `readable` — there is nothing to read and that is the answer.
+ *
+ * A directory that exists and cannot be read is the failed measurement, and the
+ * only one that may block. An earlier form of this function collapsed all three
+ * into `[]`, which let a moved citer root report an affirmative clean verdict;
+ * the first repair then over-corrected and folded ABSENT in with unreadable,
+ * turning a fresh clone with nothing parked into a hard exit 2.
  */
 function listMarkdown(dir: string): { files: string[]; readable: boolean } {
     let entries: fs.Dirent[];
     try {
         entries = fs.readdirSync(dir, { withFileTypes: true });
-    } catch {
-        return { files: [], readable: false };
+    } catch (e) {
+        const code = (e as NodeJS.ErrnoException).code;
+        // ENOENT/ENOTDIR: nothing is there to read, which is a real state.
+        // Anything else (EACCES, EMFILE, EIO): it is there and we failed.
+        return { files: [], readable: code === 'ENOENT' || code === 'ENOTDIR' };
     }
     return {
         files: entries
@@ -230,15 +239,18 @@ export function check(root: string, enforce: boolean, write = process.stdout.wri
         write('❌  no held objects found — the held-object directories are empty or moved.\n');
         return 2;
     }
-    // A citer root listing zero markdown files is a scan that could not read
+    // A citer root that EXISTS and cannot be read is a scan that could not see
     // where the citations live. Reporting that as "nothing is cited" is the
     // silent-green this gate exists to avoid, so it is a hard 2 on every path
-    // including advisory — the earlier `res.held === 0` guard does not reach
-    // it, because the held corpus stays readable when only a citer root moves.
+    // including advisory — the `res.held === 0` guard above does not reach it,
+    // because the held corpus stays readable when only a citer root breaks.
+    // An ABSENT root is not this case and does not reach here: `listMarkdown`
+    // reports ENOENT as readable, because git cannot track an empty directory
+    // and a fresh clone with nothing parked has no `later/` at all.
     if (res.deadCiterRoots.length > 0) {
         write(
-            `❌  citer root(s) unreadable: ${res.deadCiterRoots.join(', ')} — moved or ` +
-                'inaccessible. This is a failed measurement, not a clean estate.\n',
+            `❌  citer root(s) present but unreadable: ${res.deadCiterRoots.join(', ')}. ` +
+                'This is a failed measurement, not a clean estate.\n',
         );
         return 2;
     }
