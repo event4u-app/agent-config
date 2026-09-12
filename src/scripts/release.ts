@@ -1109,9 +1109,9 @@ function execute(
     if (pr_merged) {
         _step(4, total, 'PR already merged — skip push');
     } else {
-        // `git push -u` is naturally idempotent — it prints "Everything
-        // up-to-date" when remote already matches. push_release_branch
-        // additionally absorbs a remote that moved under us.
+        // push_release_branch reads the remote FIRST — it skips the push when
+        // the remote is already at head (a no-op push still runs the pre-push
+        // hook, which then refuses over pending CI) and merges one that moved.
         // Not a `_step`: a second `[4/11]` makes the cited evidence anchors ambiguous.
         process.stdout.write('        · verifying release gates locally (`task release:verify -- --cheap`)\n');
         run(local_release_gate_argv());
