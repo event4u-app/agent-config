@@ -263,7 +263,14 @@ another as the twenty-seventh, and the objects holding them have no number on th
 - [x] AC-3 — A read-only reporter derives an arrival count from the consumed-inbox tree, counts
       distinct rounds rather than files, writes nothing, and reports an absent tree as unreadable
       rather than as zero.
-      All four properties verified through the real entry point. The fourth was the one at risk:
+      **Three of the four verified through the real entry point; the fourth is verified by a
+      source grep, and the completion review was right to say so.** "Writes nothing" is asserted by
+      `grep -nE 'writeFile|mkdir|appendFile'` over the source — which `rmSync`, `unlinkSync`,
+      `renameSync`, `copyFileSync` and `createWriteStream` would all pass. That is the property the
+      step itself specifies and the check it specifies, so the step is met; the claim is narrowed
+      here from "verified" to "verified by the grep the step names", because the two are not the
+      same assurance and the earlier wording said the stronger one.
+      The absent-tree property was the one at risk:
       the first draft made `--tree` the head of a fallback chain, so a named-unreadable tree fell
       through to the real one and reported a count — the required behaviour was untestable on any
       machine that has the tree. Corrected to a true override.

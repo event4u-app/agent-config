@@ -88,19 +88,39 @@ export interface Result {
     cited: number;
     /** Held objects found at all, so a collapsed corpus is visible. */
     held: number;
+    /**
+     * Citer roots that could not be read at all — not roots that merely hold no
+     * markdown, which is a legitimate estate state. A name here means the scan
+     * could not see where the citations live, and that must never resolve to
+     * "nothing is cited".
+     */
+    deadCiterRoots: string[];
 }
 
-function listMarkdown(dir: string): string[] {
+/**
+ * List the markdown directly under `dir`.
+ *
+ * `readable` separates the two states an empty list can mean. A directory that
+ * exists and holds no markdown is a real estate state — `later/` is empty
+ * whenever nothing is parked. A directory that cannot be read at all is a
+ * failed measurement. Collapsing both into `[]` is what let a moved citer root
+ * report an affirmative clean verdict, so the distinction is returned rather
+ * than inferred by the caller.
+ */
+function listMarkdown(dir: string): { files: string[]; readable: boolean } {
     let entries: fs.Dirent[];
     try {
         entries = fs.readdirSync(dir, { withFileTypes: true });
     } catch {
-        return [];
+        return { files: [], readable: false };
     }
-    return entries
-        .filter((e) => e.isFile() && e.name.endsWith('.md'))
-        .map((e) => path.join(dir, e.name))
-        .sort();
+    return {
+        files: entries
+            .filter((e) => e.isFile() && e.name.endsWith('.md'))
+            .map((e) => path.join(dir, e.name))
+            .sort(),
+        readable: true,
+    };
 }
 
 function read(file: string): string {
@@ -122,7 +142,18 @@ function read(file: string): string {
 export function blockerCitations(text: string): Set<string> {
     const out = new Set<string>();
     let inBlocker = false;
+    let inFence = false;
     for (const line of text.split('\n')) {
+        // A fenced block is illustration, not structure. Without this the
+        // scanner was fence-blind: a roadmap quoting the blocker shape inside
+        // a code fence opened blocker scope for the rest of its section, and
+        // every held-object mention there counted as a live citation — the
+        // exact discrimination this function exists to make, inverted.
+        if (/^\s*(?:```|~~~)/.test(line)) {
+            inFence = !inFence;
+            continue;
+        }
+        if (inFence) continue;
         if (line.startsWith('## ')) inBlocker = line.trim().toLowerCase().startsWith('## blockers');
         if (line.startsWith('### blocker:')) inBlocker = true;
         if (!inBlocker) continue;
@@ -139,15 +170,24 @@ export function blockerCitations(text: string): Set<string> {
 export function scan(root: string): Result {
     const held = new Map<string, string>();
     for (const d of HELD_DIRS) {
-        for (const f of listMarkdown(path.join(root, d))) held.set(path.basename(f), f);
+        for (const f of listMarkdown(path.join(root, d)).files) held.set(path.basename(f), f);
     }
 
     const citerFiles = new Set<string>();
-    for (const d of CITER_DIRS) for (const f of listMarkdown(path.join(root, d))) citerFiles.add(f);
-    // A held object citing another held object is not the estate asking again;
-    // it is one parked argument pointing at its neighbour. Parked roadmaps are
-    // citers, and a parked roadmap is also a held object, so the two sets
-    // overlap by construction and a self-citation must not count.
+    const deadCiterRoots: string[] = [];
+    for (const d of CITER_DIRS) {
+        const found = listMarkdown(path.join(root, d));
+        if (!found.readable) deadCiterRoots.push(d);
+        for (const f of found.files) citerFiles.add(f);
+    }
+    // Parked roadmaps are citers AND held objects, so the two sets overlap by
+    // construction. Only SELF-citation is excluded — a file naming itself. A
+    // held object citing a DIFFERENT held object still counts, which is
+    // deliberate and is what the live corpus is made of: all four current
+    // firings have a parked roadmap as the citer. An earlier version of this
+    // comment described a held-cites-held exclusion the code has never
+    // implemented, which would have read the whole firing population as
+    // excluded when auditing the adjudicated rate.
     const citations = new Map<string, Set<string>>();
     for (const f of [...citerFiles].sort()) {
         const self = path.basename(f);
@@ -167,7 +207,7 @@ export function scan(root: string): Result {
         if (ARRIVAL_RE.test(read(file))) continue;
         findings.push({ held: path.relative(root, file), citers: [...citers].sort() });
     }
-    return { findings, cited: citations.size, held: held.size };
+    return { findings, cited: citations.size, held: held.size, deadCiterRoots };
 }
 
 export function check(root: string, enforce: boolean, write = process.stdout.write.bind(process.stdout)): number {
@@ -182,12 +222,24 @@ export function check(root: string, enforce: boolean, write = process.stdout.wri
         roots: [...CITER_DIRS],
         allowEmpty:
             'EMPTY_VALID: zero held objects cited inside a live blocker is a real and ' +
-            'desirable estate state — nothing is currently blocked on a held argument. The ' +
-            'held-object corpus itself is asserted separately below, so a moved root is ' +
-            'still caught.',
+            'desirable estate state — nothing is currently blocked on a held argument. Both ' +
+            'the held corpus and every citer root are asserted separately below, so an empty ' +
+            'reading can only mean the estate, never an unread directory.',
     });
     if (res.held === 0) {
         write('❌  no held objects found — the held-object directories are empty or moved.\n');
+        return 2;
+    }
+    // A citer root listing zero markdown files is a scan that could not read
+    // where the citations live. Reporting that as "nothing is cited" is the
+    // silent-green this gate exists to avoid, so it is a hard 2 on every path
+    // including advisory — the earlier `res.held === 0` guard does not reach
+    // it, because the held corpus stays readable when only a citer root moves.
+    if (res.deadCiterRoots.length > 0) {
+        write(
+            `❌  citer root(s) unreadable: ${res.deadCiterRoots.join(', ')} — moved or ` +
+                'inaccessible. This is a failed measurement, not a clean estate.\n',
+        );
         return 2;
     }
     if (res.findings.length === 0) {

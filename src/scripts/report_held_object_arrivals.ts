@@ -343,7 +343,15 @@ export function report(argv: readonly string[], root: string): ReportResult {
         const i = argv.indexOf(name);
         return i === -1 ? undefined : argv[i + 1];
     };
-    const positional = argv.filter((a, i) => !a.startsWith('--') && !String(argv[i - 1] ?? '').startsWith('--'));
+    // Only these flags consume the token after them. The earlier form treated
+    // EVERY `--`-prefixed token as value-taking, which silently ate the held
+    // object ref after `--list`, and let the documented short form `-i` through
+    // as a positional because it carries one dash rather than two. Both
+    // spellings are in the help text, so both have to parse.
+    const VALUE_FLAGS = new Set(['--pattern', '--tree', '--root']);
+    const positional = argv.filter(
+        (a, i) => !a.startsWith('-') && !VALUE_FLAGS.has(String(argv[i - 1] ?? '')),
+    );
     const ref = positional[0];
     if (ref === undefined) {
         return { exit: 2, text: 'usage: report_held_object_arrivals <held-object> [--pattern RE] [--tree DIR] [--root DIR] [--ignore-case] [--list]\n' };
@@ -387,6 +395,20 @@ export function report(argv: readonly string[], root: string): ReportResult {
     }
 
     const counted = countRounds(tree.dir, re);
+    // A tree that STATS as a directory but cannot be LISTED reaches here with
+    // examined 0 and unreadable 1. Printing "0 distinct round(s) of 0 examined"
+    // would be the zero-versus-unreadable conflation this tool exists to avoid,
+    // one layer in from the absent-tree branch above: `isReadableDir` passed, so
+    // resolution succeeded and only enumeration failed. Same message, because it
+    // is the same fact — no reading was taken.
+    if (counted.examined === 0 && counted.unreadable > 0) {
+        out.push(`tree:    ${tree.dir}  (via ${ORIGIN_NOTE[tree.origin]}, but not listable)`);
+        out.push('');
+        out.push('no prior rounds readable — the tree resolved but could not be enumerated');
+        out.push('(permissions, or a race with something rewriting it). This is NOT a count');
+        out.push('of zero arrivals: no reading was taken.');
+        return { exit: 0, text: `${out.join('\n')}\n` };
+    }
     const dirs = counted.matches.filter((m) => m.kind === 'dir').length;
     const files = counted.matches.length - dirs;
     out.push(`tree:    ${tree.dir}  (via ${ORIGIN_NOTE[tree.origin]})`);

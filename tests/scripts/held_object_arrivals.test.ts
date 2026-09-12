@@ -344,6 +344,84 @@ describe('check_held_object_arrivals — citation is the discriminator', () => {
         expect(seen.join('')).toContain('no held objects found');
     });
 
+    // The defect this pins: `listMarkdown` used to swallow a failed readdir
+    // into `[]`, so a citer root that had moved produced zero citations, zero
+    // findings, and an affirmative green — exit 0 even under --enforce, with a
+    // real uncounted citation one directory away. The held corpus stays
+    // readable when only a citer root moves, so the `res.held === 0` guard
+    // never reached it.
+    it('refuses an unreadable citer root instead of reporting nothing cited', () => {
+        const root = estate({ citer: CITER_BLOCKED });
+        // Remove the active-roadmaps citer root while the held corpus and the
+        // parked citer root stay intact — the asymmetry the old guard missed.
+        fs.rmSync(path.join(root, 'agents/roadmaps/road-to-live.md'));
+        const marker = path.join(root, 'agents/roadmaps');
+        const moved = path.join(root, 'agents/roadmaps-moved');
+        fs.renameSync(path.join(root, 'agents/roadmaps/stubs'), path.join(root, 'agents/stubs-keep'));
+        fs.renameSync(path.join(root, 'agents/roadmaps/later'), path.join(root, 'agents/later-keep'));
+        fs.rmSync(marker, { recursive: true });
+        fs.mkdirSync(moved, { recursive: true });
+        fs.renameSync(path.join(root, 'agents/stubs-keep'), path.join(moved, 'stubs'));
+        fs.renameSync(path.join(root, 'agents/later-keep'), path.join(moved, 'later'));
+
+        const seen: string[] = [];
+        const sink = (c: string): boolean => {
+            seen.push(c);
+            return true;
+        };
+        // Both roots are gone here, so the held guard speaks first — which is
+        // correct, and is why the next case isolates the citer-only shape.
+        expect(check(root, true, sink)).toBe(2);
+    });
+
+    it('separates an empty citer root from an unreadable one', () => {
+        // An empty `later/` is a real estate state — nothing is parked — and
+        // must stay green. Only an unreadable root is a failed measurement.
+        const readable = estate({ citer: CITER_BLOCKED, later: null });
+        expect(scan(readable).deadCiterRoots).toEqual([]);
+
+        const broken = estate({ citer: CITER_BLOCKED });
+        fs.rmSync(path.join(broken, 'agents/roadmaps/later'), { recursive: true });
+        expect(scan(broken).deadCiterRoots).toEqual(['agents/roadmaps/later']);
+
+        const seen: string[] = [];
+        expect(
+            check(broken, false, (c: string) => {
+                seen.push(c);
+                return true;
+            }),
+        ).toBe(2);
+        expect(seen.join('')).toContain('citer root(s) unreadable');
+        // Advisory does not soften it: an unmeasured scope is never a pass.
+        expect(seen.join('')).not.toContain('Advisory: exiting 0');
+    });
+
+    it('does not open blocker scope from inside a code fence', () => {
+        // A roadmap that documents the blocker shape by quoting it used to put
+        // the whole rest of its section into blocker scope, so an illustrative
+        // mention counted as a live citation.
+        const fenced = [
+            '# Roadmap',
+            '',
+            '## Phase 1',
+            '',
+            'Blockers look like this:',
+            '',
+            '```markdown',
+            '### blocker: template',
+            '- **Status:** open',
+            '```',
+            '',
+            '- a step naming `stubs/road-to-held.md` in passing',
+            '',
+        ].join('\n');
+        expect(blockerCitations(fenced).size).toBe(0);
+
+        // The real shape still opens scope — the fix must not close the door.
+        const real = '# R\n\n## Blockers\n\n### blocker: a\n- see `stubs/road-to-held.md`\n';
+        expect([...blockerCitations(real)]).toEqual(['road-to-held.md']);
+    });
+
     it('recognises the arrival line only in its published shape', () => {
         expect(ARRIVAL_RE.test('> **Arrivals:** 4 — latest `round-d`.')).toBe(true);
         expect(ARRIVAL_RE.test('Arrivals: 4')).toBe(false);
