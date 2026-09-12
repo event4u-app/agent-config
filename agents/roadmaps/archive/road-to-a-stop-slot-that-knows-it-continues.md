@@ -196,7 +196,7 @@ the marker it already writes, and nothing about when it refuses has changed.
       from two laws to three.
       verify: `grep -c 'Iron Law 3' src/rules/user-interaction.md` returns at least 1, `./scripts-run src/scripts/check_always_budget` stays green, and `./scripts-run src/scripts/lint_rule_tiers` passes.
 - [x] **4.2 Correct the false premise and close the blocker it parked.**
-      `agents/roadmaps/road-to-a-question-that-survives-the-turn.md:97-99` and its
+      `agents/roadmaps/archive/road-to-a-question-that-survives-the-turn.md:97-99` and its
       `### blocker: user-interaction-third-iron-law` both state that
       `user-interaction` is a kernel rule whose writes
       `src/scripts/hooks/block_kernel_rule_writes.ts` denies at tool-call time.
@@ -208,7 +208,7 @@ the marker it already writes, and nothing about when it refuses has changed.
       what is true, and flip that blocker to `Status: resolved` naming the commit
       from 4.1, since its own resolution condition is a commit adding the third
       Iron Law.
-      verify: `grep -c 'is a kernel rule' agents/roadmaps/road-to-a-question-that-survives-the-turn.md` returns 0, the blocker's `- **Status:**` line reads `resolved`, and `lint_roadmap_blockers` stays green. The three remaining tree-wide hits for that phrase are in THIS file, each naming the premise as false rather than asserting it.
+      verify: `grep -c 'is a kernel rule' agents/roadmaps/archive/road-to-a-question-that-survives-the-turn.md` returns 0 (the file archived on 2026-09-12 when that roadmap closed; the verify command follows it rather than breaking), the blocker's `- **Status:**` line reads `resolved`, and `lint_roadmap_blockers` stays green. The three remaining tree-wide hits for that phrase are in THIS file, each naming the premise as false rather than asserting it.
 
 **Exit criteria:** a reader who meets the `pending-decision` refusal finds the
 obligation written in the rule it cites, and no roadmap in the tree describes
@@ -244,8 +244,24 @@ checkout's, and a fresh-worktree run says so instead of reporting a null.
 
 ### blocker: warn-continuation-on-stop
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution:** AI council 2026-09-12, 2/2 convergent (anthropic + openai, deep
+  depth, blind chairman, three rounds), on the maintainer's standing delegation
+  for this run. Verdict **(a-derived)**: the raw `stop_hook_active` byte exists
+  nowhere — `AGENT_HOOK_CAPTURE_DIR` has never been set, and Claude Code
+  transcripts do not record hook stdin — but the dispatcher drops the two
+  `skip_on_refusal_retry` concerns if and only if
+  `payload.stop_hook_active === true` (`src/scripts/hooks/dispatch_hook.ts:355-366`,
+  `src/scripts/hook_manifest.yaml:921,1126`), so a `stop` invocation missing both
+  **is** a recorded `true`. Both seats accepted the derivation on four stated
+  properties — one-to-one, deterministic, produced by code in this repository,
+  limits stated — and both required that it be reported as *derived, not
+  directly captured*. Evidence artifact:
+  `agents/evidence/analysis/stop-slot-warn-continuation-2026-09-12.md`. Contract
+  updated at `docs/contracts/hook-architecture-v1.md` § Exit-code semantics,
+  from "not established by this tree" to a measured-at-n=1 statement pinned to
+  `9a0216f4c`.
 - **Blocks:** nothing in this roadmap — Phases 1–5 ship regardless. It blocks
   only the stronger sentence Phase 1.2 declines to write, and it is the same
   measurement `road-to-a-question-that-survives-the-turn`'s open blocker
@@ -269,8 +285,19 @@ checkout's, and a fresh-worktree run says so instead of reporting a null.
 
 ### blocker: continue-false-precedence
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution:** AI council 2026-09-12, 2/2 convergent (same session as
+  `warn-continuation-on-stop`). Verdict **(b)** — recorded non-adoption, not a
+  precedence rule. Both seats reasoned that a universal precedence rule and a
+  single-emitter invariant would be speculative for a primitive the suite
+  neither emits nor has a demonstrated need for: verified at HEAD, `grep -rn
+  stopReason src/scripts/hooks/` is empty, no concern emits `continue: false`,
+  and the string appears nowhere in `docs/`. The row landed in
+  `docs/contracts/hook-architecture-v1.md` § Exit-code semantics and is dated
+  rather than principled, so a future emitter must reopen it and specify
+  precedence, emitter ownership, supported-host behaviour, and the use case
+  existing verdicts cannot express.
 - **Blocks:** nothing in this roadmap — the subtractive fix the supplied source
   proposes (end the extra turn instead of appending a reminder to it) is out of
   scope here and cannot start until this is decided.

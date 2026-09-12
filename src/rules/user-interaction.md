@@ -44,9 +44,10 @@ EVERY REPLY WITH NUMBERED OPTIONS RUNS THE SELF-CHECK. NO EXCEPTIONS.
 SKIPPING IT IS A RULE VIOLATION, NOT A SLIP.
 ```
 
-Mechanical backstop (non-zero exit on any rule below), a safety net under the
-self-scan rather than a replacement for it:
+Mechanical backstop for Iron Laws 1 and 2 (non-zero exit on either), a safety
+net under the self-scan rather than a replacement for it:
 `./scripts-run src/scripts/check_reply_consistency --stdin < draft.md`
+It takes a DRAFT, so it cannot see Iron Law 3, which is about a transcript.
 
 ## Iron Law 3 — A Decision Outlives the Turn
 
@@ -84,16 +85,11 @@ numbered-option blocks, and every measured failure had none. Detail: mechanics.
 
 ## Mechanics — rationale, failure modes, format details, examples
 
-The "why take a position", position-agnostic clause, format
-specification (neutral block + bolded recommendation line + caveat),
-no-trailing-open-question rule, "what does NOT count" catalog, full
-five-step pre-send self-check, named failure-mode catalog (end-of-turn
-menu, trailing-question hedge, no-preference hedge, multi-block reply,
-…), slip-handling protocol, numbered-options rules, format examples,
-progress indicators, and summary-table patterns all live in
+The rule above is the obligation surface. Everything you look up rather than
+obey — why to take a position, the format spec, the five-step self-check, the
+named failure-mode catalog, slip handling, examples, progress indicators and
+summary patterns — is in
 [`contexts/communication/rules-auto/user-interaction-mechanics.md`](../contexts/communication/rules-auto/user-interaction-mechanics.md).
-The rule above is the obligation surface; the mechanics file is the
-lookup material.
 
 When the user pastes large tool output, logs, JSON, or API responses,
 keep the reply narrow: extract only the relevant fields with targeted

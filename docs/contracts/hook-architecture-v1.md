@@ -123,23 +123,33 @@ under the concurrency rules below.
 | `1` | block | dispatcher exits 1, surfaces `reason` to platform's deny channel |
 | `2` | warn | dispatcher exits 0, logs `reason` to stderr, sets `additionalContext` if platform supports it |
 | `≥ 3` | error | dispatcher logs full traceback, exits 0 (fail-open) unless `concerns.<name>.fail_closed: true` in settings |
+| `continue: false` (field) | **not adopted as of 2026-09-12** | this suite does not emit this primitive and defines no precedence for it. Any proposal to emit it must reopen this decision and specify precedence, emitter ownership, supported-host behavior, and the use case that existing verdicts cannot express |
 
 **The `warn` row above says what the dispatcher does, and nothing about whether
 the turn ends.** Read as a complete account it invites the conclusion that an
 advisory verdict is free, which is how a slot carrying twelve advisory concerns
 came to be treated as inert (`agents/evidence/analysis/stop-slot-continuation-census-2026-09-11.md`).
-Stated plainly: whether `additionalContext` delivered on `stop` /
-`subagent_stop` causes the host to run the agent again is
-**not established by this tree**.
-Nothing here measures it. What would: one recorded live session in which an
-advisory `stop` concern fires, capturing whether the turn continues and whether
-the following `Stop` payload carries `stop_hook_active: true`. The open blocker
-carrying that measurement is `warn-continuation-on-stop` — `grep -rn
-'warn-continuation-on-stop' agents/roadmaps/` finds wherever it currently
-lives. Until it is answered, an advisory verdict on those two
-events is not known to be free, and a concern header that argues only about its
-exit code has proved that it never **refuses** — never that it does not
-**extend**.
+**Measured once on Claude Code — 2026-09-07, at commit
+`9a0216f4c7b1655af72d4e7c03b0fdc30a9b03b3`.** After a warn-only
+`end-review-nudge` result on `stop`, agent activity continued through three
+further dispatcher invocations with no intervening `user_prompt_submit`. The
+following `Stop` carried `stop_hook_active: true` — **derived, not directly
+captured**, from the dispatcher's concern-drop signature, which at this revision
+occurs only when `payload.stop_hook_active === true`
+(`src/scripts/hooks/dispatch_hook.ts:355-366`, with the
+`skip_on_refusal_retry` entries at `src/scripts/hook_manifest.yaml:921,1126`).
+
+This is n=1. It establishes behavior for the measured session, host and
+revision, and for nothing else: **not** that warn-only stops always continue,
+not that any other host behaves this way, and not that a future Claude Code
+version will. The continuation is observed; the payload value is a deterministic
+inference. Working, event-level record, the 0-of-36 negative control and the
+four limits:
+`agents/evidence/analysis/stop-slot-warn-continuation-2026-09-12.md`.
+
+So an advisory verdict on those two events is **not free** in the one case that
+was measured, and a concern header that argues only about its exit code has
+proved that it never **refuses** — never that it does not **extend**.
 
 ## What a concern may block on — severity follows the INPUT TYPE
 

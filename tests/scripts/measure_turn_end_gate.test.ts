@@ -1,5 +1,5 @@
 /**
- * `measure_turn_end_gate` scoring detectors C and F over a transcript corpus.
+ * `measure_turn_end_gate` scoring detectors C, E and F over a transcript corpus.
  *
  * ADR-277 ships detector F with its false-positive rate unmeasured and names
  * that as an open limit. These cases assert the instrument that closes it reads
@@ -9,6 +9,14 @@
  * The load-bearing case is the last pair: detector C silent while F fires. That
  * is the corpus form of the argument ADR-277 makes from a single unit test, so
  * if the two detectors ever converge, this is where it shows.
+ *
+ * Detector E arrived here on 2026-09-11, having been scored by nothing until
+ * then. Its cases carry one extra weight the others do not: E reads the turn's
+ * assistant TEXTS, an accumulation no other detector needs, so the turn boundary
+ * has to be asserted on the array itself rather than inherited from the tool-call
+ * reset that already has coverage. The case that matters is the tool-only entry —
+ * the ordinary shape of every working turn, and the one that would make E fire
+ * across the corpus if a text-free entry ever entered the array.
  */
 
 import fs from 'node:fs';
@@ -31,6 +39,21 @@ afterEach(() => {
 
 function userEntry(text: string): Record<string, unknown> {
     return { type: 'user', message: { role: 'user', content: text } };
+}
+
+/**
+ * The ordinary Claude Code user entry: a typed prompt with a reminder block
+ * appended. Not an exotic shape — it is the most common one in the store, which
+ * is why a reader that skips it moves the turn boundary on nearly every turn.
+ */
+function userEntryWithReminder(text: string): Record<string, unknown> {
+    return {
+        type: 'user',
+        message: {
+            role: 'user',
+            content: `${text}\n<system-reminder>\nsome injected context\n</system-reminder>`,
+        },
+    };
 }
 
 function toolEntry(name: string, input: Record<string, unknown>): Record<string, unknown> {
@@ -114,6 +137,125 @@ describe('detector F over a corpus', () => {
             replyEntry('Done.'),
         ]);
         expect(measure(store, 30).untested_fires).toBe(0);
+    });
+});
+
+describe('detector E over a corpus', () => {
+    /** An ask: a numbered block plus the single recommendation line Iron Law 1 requires. */
+    const ASKED = ['1. ship it', '2. measure first', '', 'Recommendation: 2'].join('\n');
+    /** The closing reply that drops it — the measured failure, not an invented shape. */
+    const DROPPED = 'The reviewer is through, no findings.';
+
+    it('counts a turn that asked in one reply and closed without the ask', () => {
+        writeSession('a', [userEntry('what next?'), replyEntry(ASKED), replyEntry(DROPPED)]);
+        const c = measure(store, 30);
+        expect(c.turns).toBe(1);
+        expect(c.turns_multi_text).toBe(1);
+        expect(c.dropped_fires).toBe(1);
+    });
+
+    it('is silent when the closing reply carries the ask forward', () => {
+        writeSession('a', [userEntry('what next?'), replyEntry(ASKED), replyEntry(ASKED)]);
+        expect(measure(store, 30).dropped_fires).toBe(0);
+    });
+
+    it('does not let a tool-only entry become a second assistant text', () => {
+        // E's entire false-positive surface. A working turn is prose, tool call,
+        // prose; if a text-free entry entered the array, every turn that asked
+        // and then ran a command would read as a dropped ask. `assistantText`
+        // returns null for it, exactly as the gate's `_messageText` does — this
+        // asserts that rather than trusting the reading.
+        writeSession('a', [
+            userEntry('what next?'),
+            replyEntry(ASKED),
+            toolEntry('Bash', { command: 'npx vitest run' }),
+        ]);
+        const c = measure(store, 30);
+        expect(c.turns_multi_text).toBe(0);
+        expect(c.dropped_fires).toBe(0);
+    });
+
+    it('scopes the ask to its own turn, so a user answer ends it', () => {
+        // The reset that makes "in the SAME user turn" true of the array rather
+        // than merely intended. Without it the ask outlives the answer and every
+        // later reply in the session reads as having dropped it.
+        writeSession('a', [
+            userEntry('what next?'),
+            replyEntry(ASKED),
+            userEntry('2'),
+            replyEntry(DROPPED),
+        ]);
+        const c = measure(store, 30);
+        expect(c.turns).toBe(2);
+        expect(c.turns_multi_text).toBe(0);
+        expect(c.dropped_fires).toBe(0);
+    });
+
+    it('ends the turn on a prompt carrying an appended reminder block', () => {
+        // The gate nulls a user entry only when it has no text block and then
+        // filters with `isSyntheticPrompt`, which matches the marker at the
+        // START. A reader that nulls on the marker appearing ANYWHERE skips the
+        // ordinary prompt, so the turn never resets and two genuine turns merge
+        // into one — detector E then fires on an ask the user answered, while
+        // the denominator it is divided by shrinks at the same time. Both
+        // directions are asserted here, because a fire count alone would pass
+        // with the turn count wrong.
+        writeSession('a', [
+            userEntryWithReminder('what next?'),
+            replyEntry(ASKED),
+            userEntryWithReminder('2'),
+            replyEntry(DROPPED),
+        ]);
+        const c = measure(store, 30);
+        expect(c.turns).toBe(2);
+        expect(c.dropped_fires).toBe(0);
+    });
+
+    it('separates a fire inside a tool-bearing turn from one outside it', () => {
+        // E was designed from a stop-hook nudge producing a second assistant
+        // execution mid-turn, which is a tool-bearing shape. The split is the
+        // only thing that says whether a corpus fire is the designed-for case or
+        // a shape nothing predicted, so a single total would hide the question.
+        writeSession('aaaaaaaa-1111', [
+            userEntry('what next?'),
+            replyEntry(ASKED),
+            toolEntry('Bash', { command: 'npx eslint src' }),
+            replyEntry(DROPPED),
+        ]);
+        writeSession('bbbbbbbb-2222', [userEntry('what next?'), replyEntry(ASKED), replyEntry(DROPPED)]);
+        const c = measure(store, 30);
+        expect(c.dropped_fires).toBe(2);
+        expect(c.dropped_with_tool).toBe(1);
+    });
+
+    it('points at the fire with a per-session ordinal and a text-free evidence span', () => {
+        // Same pointer contract F's sites carry: the option NUMBERS and the span,
+        // never the option text, because the evidence is quoted into a refusal
+        // that reaches the transcript.
+        writeSession('cccccccc-3333', [
+            userEntry('one'),
+            replyEntry('Nothing to see.'),
+            userEntry('what next?'),
+            replyEntry(ASKED),
+            replyEntry(DROPPED),
+        ]);
+        const c = measure(store, 30);
+        expect(c.dropped_sites).toHaveLength(1);
+        expect(c.dropped_sites[0]!.session).toBe('cccccccc');
+        expect(c.dropped_sites[0]!.turn).toBe(2);
+        expect(c.dropped_sites[0]!.evidence).toContain('1/2');
+        expect(c.dropped_sites[0]!.evidence).not.toContain('measure first');
+    });
+
+    it('ignores a subagent’s own asks', () => {
+        // A sidechain reply happened in another context, so an ask inside it was
+        // never put to this user — the same exclusion the tool-call path makes.
+        writeSession('a', [
+            userEntry('what next?'),
+            { ...replyEntry(ASKED), isSidechain: true },
+            replyEntry(DROPPED),
+        ]);
+        expect(measure(store, 30).dropped_fires).toBe(0);
     });
 });
 

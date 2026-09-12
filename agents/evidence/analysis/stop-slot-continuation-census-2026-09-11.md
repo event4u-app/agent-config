@@ -96,7 +96,9 @@ pending decision can disappear is the one turn with no detectors and no ledger
 line. Narrowing that guard is governed by
 `docs/contracts/turn-end-detector-demotion.md` and stays with its owner, as
 blocker `detector-e-under-stop-hook-active` in
-`agents/roadmaps/road-to-a-question-that-survives-the-turn.md`.
+`agents/roadmaps/road-to-a-question-that-survives-the-turn.md` — archived to
+`agents/roadmaps/archive/` on 2026-09-12 when that roadmap closed and the blocker
+was resolved. The path above is left as it read when this census was taken.
 
 ## Reach
 

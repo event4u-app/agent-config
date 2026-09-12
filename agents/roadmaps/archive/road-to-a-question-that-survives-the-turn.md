@@ -236,6 +236,17 @@ telemetry row rather than inferred.
 
 ## Blockers
 
+> **Merge note, 2026-09-12.** Two branches reached this file independently and
+> both found the same thing about blocker A: the premise that parked it — that
+> `user-interaction` is a kernel rule whose write the guard denies — is false at
+> every HEAD. `road-to-a-stop-slot-that-knows-it-continues` landed first and its
+> resolution is the one recorded below. This branch's resolution said the same
+> and is not duplicated here; what it adds is the resolution of the other two
+> blockers, which that branch left open. Independent concurrence on the false
+> premise is worth more than either record alone, which is why this note exists
+> rather than one record silently replacing the other.
+
+
 ### blocker: user-interaction-third-iron-law
 
 - **Status:** resolved
@@ -264,7 +275,7 @@ telemetry row rather than inferred.
 
 ### blocker: detector-e-under-stop-hook-active
 
-- **Status:** open
+- **Status:** resolved 2026-09-11 — premise-invalidated, criterion superseded
 - **Owner:** maintainer
 - **Blocks:** nothing in this roadmap — the detector ships; this names an
   unverified assumption a neutral review surfaced rather than leaving it to be
@@ -287,10 +298,64 @@ telemetry row rather than inferred.
 - **Recommendation:** none; this is the owner's call — narrowing a re-entrancy
   layer on an unmeasured assumption is the wedge risk that layer exists to
   prevent, and the measurement costs one live session.
+- **Resolution:** premise invalidated. The layer-1 allow is real and
+  unconditional — `src/scripts/hooks/turn_end_gate_hook.ts:1305-1306` is the
+  first statement after `unwrap()` and short-circuits all six detectors with no
+  allowlist or setting narrowing it. What fails is the causal chain. The host
+  ties the flag to a stop-hook BLOCK, not to a continuation in general: the
+  installed `claude` binary carries the string "For Stop/SubagentStop hooks,
+  check stop_hook_active in the input and return success while it's true. Set
+  CLAUDE_CODE_STOP_HOOK_BLOCK_CAP to raise this limit", and this tree's own
+  reading agrees (`src/scripts/hooks/dispatch_hook.ts:346-365`). That string is
+  evidence of the intended host contract, not an observed runtime value, and is
+  recorded as such. The founding case never blocks:
+  `src/scripts/hooks/end_review_nudge_hook.ts:181-190` with
+  `src/scripts/hooks/host_semantics.ts:254-258` show the warn branch returning
+  exit 0 unconditionally, and the concern's own contract at
+  `end_review_nudge_hook.ts:219-221` states it "never blocks THE ACTUAL TURN" —
+  no block, therefore no flag. And detector E's trigger is structural rather
+  than stop-hook-shaped: `detectDroppedDecision` reads only the assistant-text
+  array, which resets solely at a genuine non-synthetic user prompt
+  (`turn_end_gate_hook.ts:1213-1228`), so the ordinary `prose → tool call →
+  prose` shape accumulates two texts in one turn with no stop hook involved.
+  Detector E was scored by no instrument at all, which is why this question could
+  only be argued rather than measured; `src/scripts/measure_turn_end_gate.ts` now
+  scores it alongside detectors C and F, with its own per-turn text accumulation
+  mirroring `readTranscriptTail`'s reset boundaries, and
+  `tests/scripts/measure_turn_end_gate.test.ts` covers the three mechanisms that
+  make the accumulation correct — each assertion verified red by neutralising the
+  mechanism it guards. Over the real session store (1,442 top-level session files;
+  the 1,151 files under `*/subagents/` are excluded because the sidechain rule
+  removes them from a main-thread population by construction): 2,622 user turns,
+  1,369 of them carrying two or more assistant texts, **51 fires (1.9%)**, and
+  51 of 51 inside a turn that also made a tool call. An earlier ad-hoc run over a
+  500-file selection of the same store produced the same 51 fires against a 2,118
+  denominator; the identical fire count across two selections of ONE store is not
+  independent replication and is not evidence of a stable rate. What it does
+  establish is the shape: every observed fire is an intra-turn multi-entry
+  sequence that never reaches layer 1. Detector E is not inert.
+- **Residual accepted:** E stays silenced on the one retry that follows an actual
+  blocking concern (`turn-end-gate` or `run-continuation`). The council accepted
+  this as correct rather than as a defect: the turn has already been refused once
+  and `alreadyRefusedTurn` (`turn_end_gate_hook.ts:1018-1034`, marker written at
+  `:1435`, keyed on a turn ordinal that does not move during a continuation)
+  already makes a second refusal structurally impossible, so re-running E there
+  would be redundant. Narrowing layer 1 was considered and declined for the same
+  reason, and because `markRefusedTurn` swallows a state-write failure by design
+  (`:1084-1087`) on a cost estimate that assumes layer 1 is still present.
+- **Criterion disposition:** not satisfied, superseded. No live session was run
+  and no observed VALUE of `stop_hook_active` was obtained — the blocker's own
+  words, "a transcript cannot answer it", are correct: transcripts record the
+  conversation, never hook stdin, and a whole-store grep over 1,438 `.jsonl`
+  files in 109 project directories returned 22 hits, all of them this repo's own
+  source read back as tool output, and zero occurrences carrying a value. The
+  question was answered by two routes the criterion did not anticipate. Authority
+  for the supersession: AI council, 2 of 2 seats present, converged
+  (`agents/runtime/council/responses/blockers-bc-disposition.md`).
 
 ### blocker: interruption-baseline-contamination
 
-- **Status:** open
+- **Status:** resolved 2026-09-11 — premise-invalidated, criterion unreachable
 - **Owner:** maintainer
 - **Blocks:** nothing in this roadmap - Phase 1 ships regardless; this names a
   measurement interaction so it is not discovered later.
@@ -309,6 +374,49 @@ telemetry row rather than inferred.
   small and one-directional, which is exactly why it would go unnoticed.
 - **Recommendation:** none; this is the owner's call - it changes the definition
   of a pre-registered claim.
+- **Resolution:** premise invalidated. The contamination cannot occur.
+  Deduplication already exists at two independent layers, on a key stronger than
+  the block identity the blocker proposed: `alreadyRecorded` refuses a second
+  write for the same `(run_id, turn)` pair
+  (`src/scripts/hooks/interruption_ledger_hook.ts:143-162`, called at `:206`),
+  and `skip_on_refusal_retry: true` drops the whole concern on a refusal retry
+  (`src/scripts/hook_manifest.yaml:1126`, honoured at
+  `src/scripts/hooks/dispatch_hook.ts:419-421`). The manifest states the argument
+  at `hook_manifest.yaml:1116-1122`: a refusal retry is the same turn by
+  construction, so the ledger writes nothing on it. Block identity would be the
+  weaker key — the detector's evidence carries option numbers and a line span,
+  never the option text (`turn_end_gate_hook.ts:843-846`), and line spans move on
+  re-presentation, whereas the turn ordinal is stable. The code-level invariant
+  is the decisive evidence; the ledger confirms it, with 0 duplicate
+  `(run_id, turn)` pairs across 323 rows and 148 distinct runs spanning
+  2026-08-17 to 2026-09-11.
+- **Direction correction:** the hypothesised bias runs the other way. The single
+  row recorded for such a turn is classified from the DROPPED closing reply,
+  which by detector E's own precondition carries no options block, so it records
+  `none`. The mechanism would bias the measured contact count DOWNWARD, not
+  inflate it.
+- **Criterion disposition:** unreachable as written. `check_claims` cannot report
+  an individual claim as backed — `src/scripts/check_claims.ts:15` treats
+  `status: unbacked` ledger entries as inventory that does not fail, the command
+  has no per-claim filter, and its output is a tally. Only a maintainer editing
+  `status:` in `docs/CLAIMS.md` moves it. Recording an unsatisfiable criterion
+  was itself a defect in the blocker, and it is named here rather than left
+  standing. Two of the blocker's factual premises were also misattributed: the
+  "19 of 20" figure belongs to the sibling claim `roadmap-wall-clock-baseline`
+  (`docs/CLAIMS.md:814`), not to `user-out-of-loop-baseline`
+  (`docs/CLAIMS.md:804-809`), whose counting rule reads "a CONTACT is a turn
+  whose closing paragraph either ends in a question (`ask`) or yields the
+  decision without one (`handback`)".
+- **What stays open elsewhere:** `user-out-of-loop-baseline` remains `unbacked`,
+  and deliberately. The ≥20-run floor was cleared on 2026-08-20 and the live
+  reading is n=148 with a median of 0 contacts per run, but
+  `agents/roadmaps/archive/road-to-user-out-of-the-loop.md:34-37` records that
+  those runs post-date the mechanisms they would judge, so the pre-change
+  comparison is no longer obtainable, and `:44-46` reserves flipping a
+  pre-registered claim to the maintainer. That is separate evidence debt owned by
+  that archived record, not by this blocker. Authority for closing this one: AI
+  council, 2 of 2 seats present, converged
+  (`agents/runtime/council/responses/blockers-bc-disposition.md`).
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-11 | reviewer: claude/host -->
@@ -331,8 +439,13 @@ telemetry row rather than inferred.
       entries produces no refusal, and neither does a shape whose second entry is
       a tool call carrying no text.
 - [x] AC-3 - `DETECTOR_IDS` in `src/scripts/_lib/turn_end_refusals.ts` carries
-      five ids, and `docs/contracts/turn-end-detector-demotion.md` carries a
-      pre-registered Q1/Q2 bar and sample floor for the fifth.
+      `pending-decision`, and `docs/contracts/turn-end-detector-demotion.md`
+      carries a pre-registered Q1/Q2 bar and sample floor for it.
+      <!-- corrected-from-reproduction 2026-09-11: the criterion said "five ids"
+      and "the fifth". The list carries SIX (`turn_end_refusals.ts:67-74`) and
+      `turn-end-detector-demotion.md:32` says so. The substance held - the id is
+      registered and the bar is at `:138` - so the count was named rather than
+      the criterion re-argued. -->
 - [x] AC-4 - `end_review_nudge_hook` does not fire on a 5-line turn when the
       session baseline recorded 1,771 pre-session non-doc lines, and does fire on
       the unsubtracted count when the baseline's `head_sha` no longer matches.
@@ -343,3 +456,13 @@ telemetry row rather than inferred.
       `end-review-nudge`.
 - [x] AC-6 - The two blockers above are recorded with owners and open status
       rather than resolved inside this roadmap.
+
+AC-6 held for the phases, and is left as it was written rather than reworded to
+match a later state. The three blockers (not two - the count was wrong when the
+criterion was authored, and a third was added by the neutral review) were
+recorded open and none was resolved by the work the phases did. They were closed
+afterwards, in a separate pass that produced the evidence each one asked for, and
+the closure records sit in `## Blockers` above with the authority for each
+disposition named. Two closed `premise-invalidated` and one on its own criterion;
+none closed by a phase quietly deciding its own blocker, which is the failure AC-6
+exists to prevent.
