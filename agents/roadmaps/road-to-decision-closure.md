@@ -156,7 +156,7 @@ owner-owned residue remains, closure completes with zero owner interaction.
       `build_linear_digest` build script, and no roadmap-producing command. The eight that
       exist all carry the key and all end in closure; the ninth was a miscount at authoring
       time, not a producer this step failed to reach.
-- [ ] **1.3 Keep the bypass, and count it.** An explicit *just write it* still drops closure,
+- [x] **1.3 Keep the bypass, and count it.** An explicit *just write it* still drops closure,
       is recorded, and is never inferred from a mission grant.
       verify: the ask census reports bypasses as their own axis rather than as absent closures.
 

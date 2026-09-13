@@ -15,16 +15,23 @@
  * A **region** is one contiguous stretch of an authored file. Every region
  * falls into exactly one of four classes, decided in this precedence order:
  *
- *   1. `count-only`   — a line that renders a NUMBER where a question belongs:
+ *   1. `bypass`      — a line recording an EXPLICIT user bypass of a gate
+ *                       ("just write it", "skip closure", "einfach machen").
+ *                       Its own axis, and that is the whole point: a bypass is
+ *                       a decision the user took, and counting it as an absent
+ *                       closure would read as a surface that forgot to close
+ *                       rather than one the user told to stop. It is also never
+ *                       inferred — only an explicit phrasing matches.
+ *   2. `count-only`   — a line that renders a NUMBER where a question belongs:
  *                       it mentions `question(s)` and carries a `{count}`
  *                       placeholder. This is the shape that prints how many
  *                       decisions are outstanding instead of putting one.
- *   2. `file-parked`  — an `Open questions` SECTION heading whose body carries
+ *   3. `file-parked`  — an `Open questions` SECTION heading whose body carries
  *                       no ask obligation. The section is then a parking lot:
  *                       a place a question is written down instead of asked.
- *   3. `batch`        — a run of non-blank lines carrying TWO OR MORE question
+ *   4. `batch`        — a run of non-blank lines carrying TWO OR MORE question
  *                       lines: one hand-back, several decisions.
- *   4. `single`       — the same run carrying exactly one.
+ *   5. `single`       — the same run carrying exactly one.
  *
  * A **question line** is a non-blank line that either ends in `?` (after
  * trailing backticks, emphasis and whitespace are stripped) or is a list item
@@ -77,7 +84,7 @@ const _HERE = fileURLToPath(import.meta.url);
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 
 /** The census classes, in precedence order. */
-export const ASK_CLASSES = ['single', 'batch', 'count-only', 'file-parked'] as const;
+export const ASK_CLASSES = ['single', 'batch', 'count-only', 'file-parked', 'bypass'] as const;
 export type AskClass = (typeof ASK_CLASSES)[number];
 
 /** Default scan roots. `src/domains` is narrowed to `command.md` — the ask surface. */
@@ -86,6 +93,16 @@ export const DEFAULT_ROOTS: readonly string[] = [
     'src/skills',
     'src/agent-src/contexts',
 ];
+
+/**
+ * An EXPLICIT user bypass of a gate. Every alternative is a phrasing the user
+ * types; none of them is a state the agent can infer. A mission grant, an
+ * autonomy setting and momentum are deliberately absent from this list — an
+ * inferred bypass is the failure this axis exists to make visible, not a
+ * second way to match.
+ */
+export const BYPASS_RE =
+    /\b(?:just write it|just do it|skip (?:the )?(?:closure|protocol|validation)|einfach machen|mach einfach|skip closure)\b/i;
 
 /** A line printing a question COUNT where a question belongs. */
 export const COUNT_ONLY_RE = /\bquestions?\b/i;
@@ -143,6 +160,11 @@ export function scanFile(text: string): Region[] {
 
     for (let i = 0; i < lines.length; i += 1) {
         const line = lines[i] as string;
+        if (BYPASS_RE.test(line)) {
+            out.push({ cls: 'bypass', line: i + 1, questions: 0 });
+            consumed.add(i);
+            continue;
+        }
         if (COUNT_ONLY_RE.test(line) && COUNT_PLACEHOLDER_RE.test(line)) {
             out.push({ cls: 'count-only', line: i + 1, questions: 0 });
             consumed.add(i);
@@ -249,7 +271,7 @@ export interface Census {
 }
 
 function zero(): Record<AskClass, number> {
-    return { single: 0, batch: 0, 'count-only': 0, 'file-parked': 0 };
+    return { single: 0, batch: 0, 'count-only': 0, 'file-parked': 0, bypass: 0 };
 }
 
 export function census(roots: readonly string[], only: string | null): Census {
@@ -347,12 +369,14 @@ export function render(c: Census, native: NativeRate | null): string {
     lines.push('');
     lines.push('## Per file');
     lines.push('');
-    lines.push('| file | single | batch | count-only | file-parked |');
-    lines.push('|---|---|---|---|---|');
+    // Derived from ASK_CLASSES rather than written out: a hand-written header
+    // and a derived Totals block drift the moment a class is added, and the
+    // drift is silent because both tables still render.
+    lines.push(`| file | ${ASK_CLASSES.join(' | ')} |`);
+    lines.push(`|${'---|'.repeat(ASK_CLASSES.length + 1)}`);
     for (const f of c.files) {
         lines.push(
-            `| \`${f.file}\` | ${String(f.counts.single)} | ${String(f.counts.batch)} | ` +
-                `${String(f.counts['count-only'])} | ${String(f.counts['file-parked'])} |`,
+            `| \`${f.file}\` | ${ASK_CLASSES.map((cls) => String(f.counts[cls])).join(' | ')} |`,
         );
     }
     lines.push('');
@@ -366,6 +390,30 @@ export function selfTest(): number {
             'OPEN QUESTIONS: {count}\n',
             'count-only',
             1,
+        ],
+        [
+            'an explicit user bypass is its own axis',
+            'An explicit *just write it* drops the closure pass.\n',
+            'bypass',
+            1,
+        ],
+        [
+            'a bypass line is not also counted as a question',
+            'Did the user say just write it?\n',
+            'single',
+            0,
+        ],
+        [
+            'a mission grant is NOT a bypass — an inferred one never matches',
+            'The mission grant authorises the run end to end.\n',
+            'bypass',
+            0,
+        ],
+        [
+            'an autonomy setting is NOT a bypass either',
+            'With personal.autonomy on, trivial questions are suppressed.\n',
+            'bypass',
+            0,
         ],
         [
             'a bare Open questions section with no obligation is file-parked',
