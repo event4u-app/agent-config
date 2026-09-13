@@ -52,6 +52,42 @@ single prop's effect because every value is co-present. Split it, one axis per s
 Stories render under the **same semantic tokens** as the app and the `.dark` class; a
 hardcoded preview theme makes the workshop lie about what the component looks like in place.
 
+### The five behavioural stories — assert a value, never an image
+
+`Hover`, `Focus`, `Active`, `Keyboard` and `ReducedMotion` join the set above, and they
+carry one extra rule: **each asserts a resolved computed style or a handler effect, never a
+screenshot.** A component that owes a state checklist and proves it with a pixel diff has
+not proved it — a screenshot is a resting frame, and none of these five is a resting frame.
+
+| Story | Drive | Assert |
+|---|---|---|
+| `Hover` | `userEvent.hover(el)` | the resolved property the hover rule is supposed to change actually changed |
+| `Focus` | focus the element | the `:focus` styles resolve as intended |
+| `Keyboard` | `userEvent.tab()` until the element is active | a visible `:focus-visible` indicator resolves — programmatic focus does **not** set it in Chromium, so a `.focus()` call reports a real focus ring as absent |
+| `Active` | press and hold | what pressing adds **on top of hover** — a pointer cannot press without hovering, so asserting against the resting style makes one removed hover rule fail two stories |
+| `ReducedMotion` | emulate `prefers-reduced-motion: reduce` | what the surface presents *instead of* the motion, per [`accessibility-auditor`](../accessibility-auditor/SKILL.md) § 2 — not that the media block exists |
+
+The `Active` and `Keyboard` rows are not style advice. Both are measured failure modes from
+building the probe that backs this set, recorded here so the next author does not rediscover
+them: the first produced a duplicate finding for a single defect, the second reports a focus
+ring that is present as missing.
+
+### Responsive rows — one row per declared breakpoint
+
+Beside the state stories, each responsive component owes a row per declared breakpoint
+(1440 / 768 / 375 / 320) asserting **the layout property that is supposed to change there** —
+`flex-direction`, `grid-template-columns`, `display`. One row per breakpoint, not one per
+property: a single media rule usually moves several properties at once, and one finding each
+counts one defect several times.
+
+**Where a workshop is absent, this set is still assertable.** These stories are a contract
+about what is asserted, not about a particular runner — `src/scripts/ui_conformance_probe.ts`
+exercises the same five states and the same breakpoint rows against a file URL. Its
+sensitivity fixture (`tests/design-artifacts/fixtures/ui-conformance/`, in the package
+repository — not shipped to consumers, so this is a pointer rather than a link) is the
+evidence: removing one hover rule turns exactly the hover assertion red and nothing else,
+and removing one media rule turns exactly the matching breakpoint row red.
+
 ## JSDoc `@summary` is required, and the reason is mechanical
 
 The manifest an agent reads **truncates descriptions**. A component whose summary is a

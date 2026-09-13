@@ -96,11 +96,11 @@ is not that the states are unnamed; it is that nothing can test them.
 
 ## Phase 3 — Contract states in the story set
 
-- [ ] **3.1 Extend the workshop story set** with `Hover`, `Focus`, `Active`, `Keyboard` and
+- [x] **3.1 Extend the workshop story set** with `Hover`, `Focus`, `Active`, `Keyboard` and
       `ReducedMotion`, each asserting a computed style or a handler call rather than an image.
       verify: removing one hover rule from the fixture turns exactly the hover story red and
       nothing else.
-- [ ] **3.2 Add responsive rows** asserting the layout property that changes at each declared
+- [x] **3.2 Add responsive rows** asserting the layout property that changes at each declared
       breakpoint.
       verify: removing one media rule turns exactly the matching breakpoint row red.
 
