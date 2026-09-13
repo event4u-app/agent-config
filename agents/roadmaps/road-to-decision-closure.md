@@ -106,7 +106,7 @@ owner-owned residue remains, closure completes with zero owner interaction.
 
 ## Phase 0 — Ownership replaces impact
 
-- [ ] **0.1 Rewrite `decision_resolution`'s axis.** The classes gain content and the axis
+- [x] **0.1 Rewrite `decision_resolution`'s axis.** The classes gain content and the axis
       changes from impact to ownership:
 
       | Class | Examples | Resolver |

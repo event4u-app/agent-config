@@ -1045,6 +1045,70 @@ reasoning is a log line pretending to be a decision record. It gates
 nothing: the memo is what makes an autonomous resolution reviewable
 afterwards, which is the condition under which it is legitimate at all.
 
+### Decision resolution by ownership (ADR-268 § 10)
+
+```
+A TECHNICAL DECISION DOES NOT BECOME OWNER-OWNED BECAUSE IT IS HARD OR HIGH-IMPACT.
+```
+
+The axis above is **impact**, and impact is the wrong question. ADR-268 § 10
+replaces it with **ownership**: who the decision belongs to, not how much it
+costs to get wrong. The eight ownership classes are loaded by the same
+`decision_resolution.classes` block and validated by the same loader.
+
+| Class | Examples | Resolver | Default `mode` |
+|---|---|---|---|
+| `deterministic` | naming from convention, file placement, generated artefacts, commit split | agent | `agent` |
+| `reversible-technical` | a pattern inside the stated convention, refactor shape, test organisation | agent | `agent` |
+| `contested-technical` | two valid architectures, a dependency trade-off, migration design | independent agent → council, CLI-first → team | `council` |
+| `critical-technical` | security-sensitive design, authority implementation, compatibility risk | provider-diverse council; owner only where a typed op or an owner-reserved dimension is touched | `council` |
+| `product-owned` | two valid user-visible semantics, UX with no source of truth | owner, native ask, carrying the council's proposal | `user` (**LOCKED**) |
+| `business-owned` | a deadline, a policy, a taste only the owner holds | owner | `user` (**LOCKED**) |
+| `destructive-owned` | ADR-260's eleven-op typed vocabulary | owner, naming the exact object | `user` (**LOCKED**) |
+| `spend-exhaustion` | a required API fallback over the configured ceiling | pause and report, never a question | `agent` (**never `user`**) |
+
+**Iron Law (ownership axis).** Exactly three classes are locked to `user`:
+`product-owned`, `business-owned`, `destructive-owned`. The loader rejects any
+other `mode` on them, and rejects a `dispatch` or `second_model` key there for
+the same reason it does on the impact axis — a silently dropped key reads to
+its author as configured.
+
+**`critical-technical` is deliberately NOT locked.** Locking it is the break
+ADR-268 § 0 names by hand ("routing a technical decision to the owner because
+it is hard or high-impact"), so the absence is load-bearing rather than an
+oversight. Where only one provider is configured, the class cannot be
+provider-diverse; `agent-config council:status` reports the member count, and
+the class degrades to owner-confirm of the agent's proposal rather than
+pretending one model reviewing itself is a council.
+
+**`spend-exhaustion` is never owner-routed.** `mode: user` on it is a hard
+schema error. An exhausted quota or a crossed ceiling **pauses and reports**
+(ADR-268 § 8) — what needed the council, why the CLI was unavailable, the
+estimated spend, the mission state, and what can still proceed. A count is
+never a question (§ 7).
+
+**Both vocabularies load.** The five impact names stay accepted for one minor
+so no installed `.ai-council.yml` fails to load, and they keep their own
+(impact-axis) Iron Law. New configuration uses the eight names above.
+
+```yaml
+decision_resolution:
+  classes:
+    critical-technical:
+      mode: council          # legal — the class is not owner-locked
+    product-owned:
+      mode: user             # LOCKED — anything else is a schema error
+    spend-exhaustion:
+      mode: agent            # `user` here is a schema error
+```
+
+**Where the ownership routing is enforced.** Two places, both deterministic,
+and neither of them a runtime dispatcher: the schema loader above
+(`src/scripts/ai_council/config.ts`), and `lint_decision_classes`, which
+accepts only these eight names in the `ownership` column of a roadmap's
+`## Decisions` table. The routing itself stays agent-carried — the same honest
+statement the impact axis carries, for the same reason.
+
 ### Prior negative result in the wild — and what would falsify OUR design
 
 An unaffiliated agent project publicly DELETED its 6-judge LLM content

@@ -1047,6 +1047,110 @@ describe('config — fallback.api_on_quota', () => {
     });
 });
 
+// === the ownership axis (ADR-268 s 10 · road-to-decision-closure 0.1) =======
+//
+// `decision_resolution`'s axis changes from impact to OWNERSHIP. The point of
+// the change is which classes the owner keeps, and which one he demonstrably
+// loses: `critical-technical` is a technical class and does NOT route to the
+// owner just because it is hard. These are the loader's own tests for AC-4.
+describe('config — decision_resolution ownership axis', () => {
+    const withClass = (cls: string, body: string[]): string =>
+        [MINIMAL_VALID, 'decision_resolution:', '  classes:', `    ${cls}:`, ...body, ''].join(
+            '\n',
+        );
+
+    it('the eight ownership classes load with their table defaults', () => {
+        const tmp = make_tmp();
+        const c = cfg.load_council_config(write_yaml(tmp, MINIMAL_VALID));
+        const expected: Record<string, string> = {
+            deterministic: 'agent',
+            'reversible-technical': 'agent',
+            'contested-technical': 'council',
+            'critical-technical': 'council',
+            'product-owned': 'user',
+            'business-owned': 'user',
+            'destructive-owned': 'user',
+            'spend-exhaustion': 'agent',
+        };
+        for (const [cls, mode] of Object.entries(expected)) {
+            expect(c.decision_resolution.classes.get(cls)?.mode).toBe(mode);
+        }
+    });
+
+    it('the five impact names still load — accepted for one minor', () => {
+        const tmp = make_tmp();
+        const c = cfg.load_council_config(write_yaml(tmp, MINIMAL_VALID));
+        for (const cls of ['trivial', 'low_impact', 'medium_impact', 'high_impact', 'user_required']) {
+            expect(c.decision_resolution.classes.get(cls)).toBeDefined();
+        }
+    });
+
+    it.each(['product-owned', 'business-owned', 'destructive-owned'])(
+        '%s is LOCKED to user — the three owner-owned classes',
+        (cls) => {
+            const tmp = make_tmp();
+            expect(() =>
+                cfg.load_council_config(write_yaml(tmp, withClass(cls, ['      mode: council']))),
+            ).toThrow(/LOCKED/);
+        },
+    );
+
+    it('critical-technical is NOT owner-locked — AC-4, first half', () => {
+        // The whole ruling in one assertion: a security-sensitive design
+        // decision routes to a council, and configuring it that way is legal.
+        const tmp = make_tmp();
+        const c = cfg.load_council_config(
+            write_yaml(tmp, withClass('critical-technical', ['      mode: council'])),
+        );
+        expect(c.decision_resolution.classes.get('critical-technical')?.mode).toBe('council');
+    });
+
+    it('critical-technical may even be set to agent — the lock does not exist', () => {
+        const tmp = make_tmp();
+        const c = cfg.load_council_config(
+            write_yaml(tmp, withClass('critical-technical', ['      mode: agent'])),
+        );
+        expect(c.decision_resolution.classes.get('critical-technical')?.mode).toBe('agent');
+    });
+
+    it('spend-exhaustion is not owner-routed — AC-4, second half', () => {
+        const tmp = make_tmp();
+        expect(() =>
+            cfg.load_council_config(
+                write_yaml(tmp, withClass('spend-exhaustion', ['      mode: user'])),
+            ),
+        ).toThrow(/never owner-routed/);
+    });
+
+    it('an owner-owned class refuses a second_model rung', () => {
+        const tmp = make_tmp();
+        expect(() =>
+            cfg.load_council_config(
+                write_yaml(tmp, withClass('product-owned', ['      second_model: anthropic'])),
+            ),
+        ).toThrow(/LOCKED/);
+    });
+
+    it('an owner-owned class refuses a dispatch key', () => {
+        const tmp = make_tmp();
+        expect(() =>
+            cfg.load_council_config(
+                write_yaml(tmp, withClass('destructive-owned', ['      dispatch: single'])),
+            ),
+        ).toThrow(/dispatch is not/);
+    });
+
+    it('contested-technical accepts a second_model rung — it is not locked', () => {
+        const tmp = make_tmp();
+        const c = cfg.load_council_config(
+            write_yaml(tmp, withClass('contested-technical', ['      second_model: gemini'])),
+        );
+        expect(c.decision_resolution.classes.get('contested-technical')?.second_model).toBe(
+            'gemini',
+        );
+    });
+});
+
 // === the second-model rung (UOTL Phase 4.1) =================================
 //
 // The council was the only rung between the agent and a halt, so a question

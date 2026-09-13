@@ -1182,12 +1182,70 @@ const _LOCKED_IMPACT_CLASSES: ReadonlySet<string> = new Set([
     'user_required',
 ]);
 
+/**
+ * The ownership vocabulary (ADR-268 section 10, road-to-decision-closure
+ * Phase 0.1).
+ *
+ * The axis of `decision_resolution` changes from IMPACT to OWNERSHIP. A
+ * technical decision does not become owner-owned because it is hard or
+ * high-impact: `critical-technical` routes to a provider-diverse council and
+ * reaches the owner only where a typed op or an owner-reserved dimension is
+ * touched.
+ *
+ * The five impact names above stay accepted for one minor so no installed
+ * `.ai-council.yml` fails to load; they keep their own (impact-axis) Iron Law.
+ * New configuration uses the eight names below.
+ */
+const _OWNERSHIP_CLASSES: readonly string[] = [
+    'deterministic',
+    'reversible-technical',
+    'contested-technical',
+    'critical-technical',
+    'product-owned',
+    'business-owned',
+    'destructive-owned',
+    'spend-exhaustion',
+];
+
+/**
+ * Iron Law, ownership axis: ONLY the three owner-owned classes are locked to
+ * `user`. `critical-technical` is deliberately absent -- locking it would be
+ * the section-0 break ADR-268 names by hand ("routing a technical decision to
+ * the owner because it is hard or high-impact").
+ */
+const _OWNER_LOCKED_CLASSES: ReadonlySet<string> = new Set([
+    'product-owned',
+    'business-owned',
+    'destructive-owned',
+]);
+
+/**
+ * Iron Law, ownership axis: `spend-exhaustion` PAUSES AND REPORTS (ADR-268
+ * section 8). It is never routed to the owner as a question, so `mode: user`
+ * on it is a hard schema error rather than an unusual-but-legal setting.
+ */
+const _NEVER_OWNER_CLASSES: ReadonlySet<string> = new Set(['spend-exhaustion']);
+
+/** Every class that may never resolve on a model -- both axes, one set. */
+const _ALL_OWNER_LOCKED: ReadonlySet<string> = new Set<string>([
+    ..._LOCKED_IMPACT_CLASSES,
+    ..._OWNER_LOCKED_CLASSES,
+]);
+
 const _DEFAULT_RESOLUTION_MODES: Readonly<Record<string, string>> = {
     trivial: 'agent',
     low_impact: 'agent',
     medium_impact: 'council',
     high_impact: 'user',
     user_required: 'user',
+    deterministic: 'agent',
+    'reversible-technical': 'agent',
+    'contested-technical': 'council',
+    'critical-technical': 'council',
+    'product-owned': 'user',
+    'business-owned': 'user',
+    'destructive-owned': 'user',
+    'spend-exhaustion': 'agent',
 };
 
 function _build_decision_resolution(d: Dict): DecisionResolutionConfig {
@@ -1207,7 +1265,7 @@ function _build_decision_resolution(d: Dict): DecisionResolutionConfig {
         );
     }
     const classes = new Map<string, DecisionResolutionEntry>();
-    for (const cls of _IMPACT_CLASSES) {
+    for (const cls of [..._IMPACT_CLASSES, ..._OWNERSHIP_CLASSES]) {
         const entry_raw = _orEmpty(classes_raw[cls] ?? null);
         if (!_isDict(entry_raw)) {
             throw new CouncilConfigError(
@@ -1230,10 +1288,34 @@ function _build_decision_resolution(d: Dict): DecisionResolutionConfig {
                     `the user.`,
             );
         }
+        // Iron Law, ownership axis: the three owner-owned classes are locked
+        // to `user`. `critical-technical` is NOT in this set, by ADR-268 s 10.
+        if (_OWNER_LOCKED_CLASSES.has(cls) && mode !== 'user') {
+            throw new CouncilConfigError(
+                `decision_resolution.classes.${cls}.mode=${_pyRepr(mode)}: ` +
+                    `class \`${cls}\` is LOCKED to \`user\` (Iron Law) — ` +
+                    `product, business and destructive decisions are ` +
+                    `owner-owned and never resolve on a model.`,
+            );
+        }
+        // Iron Law, ownership axis: `spend-exhaustion` pauses and reports
+        // (ADR-268 s 8). A count, a ceiling or an exhausted quota is never a
+        // question, so routing this class to the owner is a schema error.
+        if (_NEVER_OWNER_CLASSES.has(cls) && mode === 'user') {
+            throw new CouncilConfigError(
+                `decision_resolution.classes.${cls}.mode=${_pyRepr(mode)}: ` +
+                    `class \`${cls}\` is never owner-routed (Iron Law) — ` +
+                    `spend exhaustion pauses and reports, it does not ask.`,
+            );
+        }
         // Iron Law: `dispatch` is not configurable for locked classes
         // (step-9 P8/P11 · U3). Any nested `dispatch` key — including
         // smuggled-in YAML anchor merges — is a hard schema error.
-        if (_LOCKED_IMPACT_CLASSES.has(cls) && 'dispatch' in entry_raw) {
+        if (
+            (_LOCKED_IMPACT_CLASSES.has(cls) ||
+                _OWNER_LOCKED_CLASSES.has(cls)) &&
+            'dispatch' in entry_raw
+        ) {
             throw new CouncilConfigError(
                 `decision_resolution.classes.${cls}.dispatch=` +
                     `${_pyRepr(entry_raw.dispatch)}: dispatch is not ` +
@@ -1251,7 +1333,11 @@ function _build_decision_resolution(d: Dict): DecisionResolutionConfig {
         // UOTL Phase 4.1 — the optional local rung, REFUSED on a locked
         // class rather than ignored: a dropped key reads as configured.
             const second_model = buildSecondModel(
-            entry_raw as Record<string, unknown>, cls, _LOCKED_IMPACT_CLASSES, _FALLBACK_DEPS);
+            entry_raw as Record<string, unknown>,
+            cls,
+            _ALL_OWNER_LOCKED,
+            _FALLBACK_DEPS,
+        );
         classes.set(cls, { mode, confidence_threshold: threshold, second_model });
     }
     const fast_path_raw = _getOr(d, 'fast_path', {});
