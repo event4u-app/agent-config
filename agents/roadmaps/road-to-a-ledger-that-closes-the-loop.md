@@ -113,15 +113,15 @@ may choose to pay.
 
 ## Phase 3 — The ledger, write side only
 
-- [ ] **3.1 Add `src/scripts/_lib/obligations.ts`** with a session-addressed state path resolved
+- [x] **3.1 Add `src/scripts/_lib/obligations.ts`** with a session-addressed state path resolved
       through the existing helper rather than a path literal, and an atomic write.
       verify: the path helper is imported, not reimplemented — `grep -n 'statePathFor' src/scripts`
       shows one definition shape shared with the existing consumer.
-- [ ] **3.2 The rule-injection concern appends one delivered row per delivered rule**, carrying the
+- [x] **3.2 The rule-injection concern appends one delivered row per delivered rule**, carrying the
       enforcement class from frontmatter and `none` when the rule declares none.
       verify: a run over the frozen routing corpus produces rows for its **318** gate-open fires,
       and the class distribution is recorded.
-- [ ] **3.3 The hook doctor gains two lines** — ledger writable, rows this session. **No reader is
+- [x] **3.3 The hook doctor gains two lines** — ledger writable, rows this session. **No reader is
       added in this phase.**
       verify: `agent-config hooks:doctor` prints both, and
       `./scripts-run src/scripts/check_estate_count` shows `concern_count` unchanged, because this

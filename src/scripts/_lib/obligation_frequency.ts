@@ -177,6 +177,76 @@ export function enforcement_class_of(declared: string): EnforcementClass | null 
  * when the rule declares none, and a rule with no declaration has made no
  * claim this could contradict.
  */
+/**
+ * The class declared by a rule's frontmatter, read straight off the body text.
+ *
+ * Lives here rather than in the ledger that calls it, so every piece of
+ * reasoning about the class vocabulary sits in one module — the roadmap's
+ * second-ranked risk is this set drifting from the census that ratchets it,
+ * and two readers in two files is the first step of that drift.
+ *
+ * Deliberately NOT a general YAML parser and deliberately not the census's
+ * `read_frontmatter`: this runs inside a hook on the prompt path, where the
+ * cost of importing the coverage module's whole wiring corpus is paid on every
+ * fire, and the only key it needs is one list. The accepted shapes are exactly
+ * the two the rule schema permits — inline `enforced_by: [a, b]` and a block
+ * of `- ` items.
+ *
+ * A rule that declares nothing is `none`, which is the honest reading: it has
+ * made no claim, so there is none to contradict.
+ */
+export function enforcement_class_from_frontmatter(text: string): EnforcementClass {
+    if (!text.startsWith('---\n')) return 'none';
+    const end = text.indexOf('\n---\n', 4);
+    if (end === -1) return 'none';
+    const lines = text.slice(4, end).split('\n');
+
+    const entries: string[] = [];
+    let collecting = false;
+    for (const line of lines) {
+        if (collecting) {
+            const item = /^\s+-\s*(.+?)\s*$/.exec(line);
+            if (item !== null) {
+                entries.push(unquote(item[1] as string));
+                continue;
+            }
+            // Any non-item line ends the block. Checked before anything else so
+            // a following key can never be read as a carrier declaration.
+            if (/^\S/.test(line)) collecting = false;
+            if (!collecting && /^\s*$/.test(line)) continue;
+            if (!collecting) break;
+            continue;
+        }
+        const m = /^enforced_by:\s*(.*)$/.exec(line);
+        if (m === null) continue;
+        const rest = (m[1] ?? '').trim();
+        if (rest === '') {
+            collecting = true;
+            continue;
+        }
+        const inline = /^\[(.*)\]$/.exec(rest);
+        if (inline !== null) {
+            for (const part of (inline[1] as string).split(',')) {
+                const v = unquote(part.trim());
+                if (v !== '') entries.push(v);
+            }
+        } else {
+            entries.push(unquote(rest));
+        }
+        break;
+    }
+    return enforcement_class_for(entries);
+}
+
+/** Strip one layer of matching quotes, which the schema permits on any entry. */
+function unquote(raw: string): string {
+    const s = raw.trim();
+    if (s.length >= 2 && ((s[0] === '"' && s.endsWith('"')) || (s[0] === "'" && s.endsWith("'")))) {
+        return s.slice(1, -1);
+    }
+    return s;
+}
+
 export function enforcement_class_for(declared: readonly string[]): EnforcementClass {
     let best: EnforcementClass = 'none';
     let bestRank = ENFORCEMENT_CLASSES.length;

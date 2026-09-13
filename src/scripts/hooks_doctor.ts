@@ -45,6 +45,7 @@ import {
   type InstallBoundary,
   type RefusalStats,
 } from "./_lib/turn_end_refusals.js";
+import { ledgerWritable, readDelivered } from "./_lib/obligations.js";
 
 // src/scripts/hooks_doctor.ts → parents[2] (../../..) is the repo root,
 // mirroring the Python `Path(__file__).resolve().parents[2]`.
@@ -191,8 +192,33 @@ export interface DoctorPayload {
    * concern's health is already read, so this is where the number belongs.
    */
   turn_end_refusals: RefusalStats;
+  /**
+   * The obligation ledger's two readiness figures.
+   *
+   * Reported here and nowhere else, because the doctor is where a concern's
+   * health is already read and the ledger's failure mode is silence: it never
+   * throws, never refuses and never fails a turn, so an unwritable ledger
+   * looks exactly like a session that triggered no rules. These two lines are
+   * the difference between those, and they are the ONLY consumer the ledger
+   * has — reporting a count is not acting on the rows.
+   */
+  obligation_ledger: ObligationLedgerStats;
   /** The machine's install stamp, for reading the version split below it. */
   install_boundary: InstallBoundary;
+}
+
+/** What the doctor can say about the ledger without interpreting a single row. */
+export interface ObligationLedgerStats {
+  /** Probed by writing and removing a sentinel, not by reading mode bits. */
+  writable: boolean;
+  /**
+   * Rows for THIS session, or `null` when no session id was resolvable.
+   *
+   * `null` and `0` are different answers and are rendered differently: `0`
+   * means this session was delivered no rule, `null` means the doctor could
+   * not tell which session it is in and so has nothing to count.
+   */
+  rows_this_session: number | null;
 }
 
 /** Build the doctor payload — JSON-serialisable. */
@@ -288,8 +314,65 @@ export function collect(
     trampolines,
     dispatch_issues: issues,
     turn_end_refusals,
+    obligation_ledger: collectLedgerStats(project_root),
     install_boundary: readInstallBoundary(),
   };
+}
+
+/**
+ * The ledger's two figures, never throwing.
+ *
+ * The session id comes from the host's own environment variable, which is the
+ * same source the concerns key their state on. Absent means the doctor is
+ * being run outside a session — by a human at a shell, most often — and the
+ * honest answer is `null` rather than 0, because there is no session whose
+ * rows could be counted.
+ */
+export function collectLedgerStats(project_root: string): ObligationLedgerStats {
+  let writable = false;
+  try {
+    writable = ledgerWritable(project_root);
+  } catch {
+    writable = false;
+  }
+  const session = (process.env["CLAUDE_CODE_SESSION_ID"] ?? "").trim();
+  if (session === "") return { writable, rows_this_session: null };
+  try {
+    return { writable, rows_this_session: readDelivered(project_root, session).length };
+  } catch {
+    return { writable, rows_this_session: null };
+  }
+}
+
+/**
+ * The ledger section.
+ *
+ * Deliberately states what a row is NOT. The council lock this ledger sits
+ * under says installation proves availability and not exposure, so a reader
+ * who sees a healthy row count and concludes the rules were followed has made
+ * the one claim these records may never support. The line is cheap; the
+ * misreading it prevents is the whole reason the ledger needed a non-goal.
+ */
+export function _render_ledger(payload: DoctorPayload): string[] {
+  const s = payload.obligation_ledger;
+  const lines: string[] = [];
+  lines.push("Obligation ledger");
+  lines.push("-".repeat(60));
+  lines.push(
+    `${s.writable ? "✅ " : "❌ "}writable  ${
+      s.writable ? "agents/runtime/state/obligations/" : "cannot write agents/runtime/state/obligations/"
+    }`,
+  );
+  if (s.rows_this_session === null) {
+    lines.push("·  rows this session: no session id resolved — nothing to count");
+  } else {
+    lines.push(`·  rows this session: ${s.rows_this_session}`);
+  }
+  lines.push(
+    "   Rows record that an emitter ran. They are not evidence that a rule",
+  );
+  lines.push("   reached the model, and may not be read as compliance.");
+  return lines;
 }
 
 function _strVal(v: JsonValue | undefined): string {
@@ -415,6 +498,8 @@ export function _render_table(payload: DoctorPayload): string {
   }
   lines.push("");
   lines.push(..._render_refusals(payload));
+  lines.push("");
+  lines.push(..._render_ledger(payload));
   // Dispatch-issues detail — last 20 grouped by concern.
   if (payload.dispatch_issues.length > 0) {
     lines.push("");

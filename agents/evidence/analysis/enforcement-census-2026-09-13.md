@@ -117,6 +117,43 @@ whether the declared carrier is reachable rather than about what the author mean
 
 The census reports `"unwired": 0, "missing": 0` — every declared value resolves.
 
+## The delivered-row class distribution over the frozen corpus
+
+Phase 3.2 asks for a run over the frozen routing corpus producing rows for its
+gate-open fires, with the class distribution recorded. Recorded here rather than in
+a new metrics file, because Phase 2.2 forbids a second producer and this is a
+reading, not a producer.
+
+The probe drives the real selection path — `loadRouter`, `matchTierRules`,
+`selectForInjection` at the concern's own `CAP_BYTES` of 16,384 — over
+`tests/eval/routing-matrix`, then writes real rows through `recordDelivered`
+and reads them back with `readDelivered`. Measured 2026-09-13:
+
+| Figure | Value |
+|---|---|
+| gate-open fires | **318** |
+| fires producing at least one row | **318** |
+| distinct rules delivered | 97 |
+
+| Declared class | Rules |
+|---|---|
+| `none` | 69 |
+| `instruction-only` | 11 |
+| `validator` | 9 |
+| `hook` | 8 |
+
+The 318 matches the independently produced figure in § 3 above, which is the
+point of quoting both: the ledger's fire count and the payload budget's fire
+count come from different call sites over the same corpus, and a divergence
+between them would mean one of the two is measuring something other than what
+it claims.
+
+The distribution's shape is worth stating plainly because it is the case for the
+later phases rather than a detail of them: **69 of 97 delivered rules declare no
+carrier at all.** A discharge detector that refused on class `none` would refuse
+on the large majority of what gets delivered, which is why the phases that follow
+gate refusal on class and start in shadow.
+
 ## AC-2: no concern count in this tree is grep-derived
 
 Checked, and the answer is zero sites:

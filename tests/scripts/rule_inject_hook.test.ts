@@ -20,8 +20,10 @@ import {
     gateOpen,
     main,
     readSeen,
+    recordDelivered,
     statePath,
 } from '../../src/scripts/hooks/rule_inject_hook.js';
+import { readDelivered } from '../../src/scripts/_lib/obligations.js';
 
 const ROUTER = {
     kernel: ['kernel-rule'],
@@ -383,5 +385,80 @@ describe('the runtime cap and the registered budget rows are ONE number (R2 find
         expect(CAP_BYTES).toBeLessThanOrEqual(
             budget.per_slot_sum_caps_bytes['user_prompt_submit'] as number,
         );
+    });
+});
+
+describe('recordDelivered writes the ledger row for each delivered rule', () => {
+    /** A tree whose bodies carry real frontmatter, so a class can be read off one. */
+    function rootWithClasses(): string {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'rule-inject-ledger-'));
+        const dir = path.join(root, 'dist', 'agent-src', 'rules');
+        fs.mkdirSync(dir, { recursive: true });
+        const write = (id: string, fm: string): void => {
+            fs.writeFileSync(path.join(dir, `${id}.md`), `---\n${fm}---\n\nBODY\n`, 'utf-8');
+        };
+        write('hooked', 'enforced_by:\n  - "hook:design-pass"\n');
+        write('validated', 'enforced_by:\n  - "validator:src/scripts/lint_x.ts"\n');
+        write('observed', 'enforced_by:\n  - "observer:maintainer-review"\n');
+        write('honest', 'enforced_by:\n  - "instruction-only: no gate reads prose"\n');
+        write('silent', 'type: "auto"\n');
+        write('inline', 'enforced_by: ["test:tests/x.test.ts"]\n');
+        write('multi', 'enforced_by:\n  - "observer:x"\n  - "validator:y"\n');
+        return root;
+    }
+
+    it('carries the class each rule declares in its frontmatter', () => {
+        const root = rootWithClasses();
+        recordDelivered(root, 's1', ['hooked', 'validated', 'observed', 'honest', 'inline']);
+        const byRule = Object.fromEntries(
+            readDelivered(root, 's1').map((r) => [r.rule, r.cls]),
+        );
+        expect(byRule).toEqual({
+            hooked: 'hook',
+            validated: 'validator',
+            observed: 'observer',
+            honest: 'instruction-only',
+            inline: 'test',
+        });
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('carries `none` when the rule declares none', () => {
+        const root = rootWithClasses();
+        recordDelivered(root, 's1', ['silent']);
+        expect(readDelivered(root, 's1')[0]?.cls).toBe('none');
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('takes the strongest declaration when a rule names several carriers', () => {
+        const root = rootWithClasses();
+        recordDelivered(root, 's1', ['multi']);
+        expect(readDelivered(root, 's1')[0]?.cls).toBe('validator');
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('records `none` for a rule with no projected body rather than dropping it', () => {
+        // A delivered rule whose body cannot be read still happened. Dropping
+        // the row would under-count deliveries; guessing a class would invent one.
+        const root = rootWithClasses();
+        expect(recordDelivered(root, 's1', ['nonexistent'])).toBe(1);
+        expect(readDelivered(root, 's1')[0]?.cls).toBe('none');
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('is idempotent across fires in one session', () => {
+        const root = rootWithClasses();
+        expect(recordDelivered(root, 's1', ['hooked'])).toBe(1);
+        expect(recordDelivered(root, 's1', ['hooked'])).toBe(0);
+        expect(readDelivered(root, 's1')).toHaveLength(1);
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('never throws, whatever the tree looks like', () => {
+        const wall = fs.mkdtempSync(path.join(os.tmpdir(), 'rule-inject-wall-'));
+        const blocked = path.join(wall, 'not-a-dir');
+        fs.writeFileSync(blocked, 'x');
+        expect(() => recordDelivered(blocked, 's1', ['anything'])).not.toThrow();
+        fs.rmSync(wall, { recursive: true, force: true });
     });
 });

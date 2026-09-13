@@ -149,6 +149,61 @@ describe('hooks_doctor — main / strict', () => {
     });
 });
 
+describe('obligation ledger section', () => {
+    const render = (stats: doctor.ObligationLedgerStats): string =>
+        doctor._render_ledger({ obligation_ledger: stats } as doctor.DoctorPayload).join('\n');
+
+    it('prints both lines — writable, and rows this session', () => {
+        const out = render({ writable: true, rows_this_session: 7 });
+        expect(out).toContain('writable');
+        expect(out).toContain('rows this session: 7');
+    });
+
+    it('distinguishes zero rows from an unresolvable session', () => {
+        // Different answers: 0 means "delivered nothing", null means "cannot
+        // tell which session this is". Collapsing them would report a healthy
+        // empty ledger for a doctor run that simply had no session to read.
+        expect(render({ writable: true, rows_this_session: 0 })).toContain(
+            'rows this session: 0',
+        );
+        const noSession = render({ writable: true, rows_this_session: null });
+        expect(noSession).toContain('no session id resolved');
+        expect(noSession).not.toContain('rows this session: 0');
+    });
+
+    it('marks an unwritable ledger with the failure marker, not the success one', () => {
+        const out = render({ writable: false, rows_this_session: null });
+        expect(out).toContain('❌ ');
+        expect(out).not.toContain('✅ ');
+    });
+
+    it('always states that a row is not compliance evidence', () => {
+        // The council lock this ledger sits under forbids exactly that reading,
+        // so the disclaimer is not decoration — it is the section's contract.
+        for (const stats of [
+            { writable: true, rows_this_session: 12 },
+            { writable: false, rows_this_session: null },
+        ]) {
+            expect(render(stats)).toContain('not evidence that a rule');
+        }
+    });
+
+    it('reports an unwritable root as unwritable without throwing', () => {
+        const wall = path.join(tmp, 'wall');
+        fs.writeFileSync(wall, 'not a directory');
+        expect(() => doctor.collectLedgerStats(wall)).not.toThrow();
+        expect(doctor.collectLedgerStats(wall).writable).toBe(false);
+    });
+
+    it('reports a usable root as writable and leaves no probe behind', () => {
+        const stats = doctor.collectLedgerStats(tmp);
+        expect(stats.writable).toBe(true);
+        const dir = path.join(tmp, 'agents', 'runtime', 'state', 'obligations');
+        const left = fs.existsSync(dir) ? fs.readdirSync(dir) : [];
+        expect(left.filter((f) => f.includes('writable-probe'))).toEqual([]);
+    });
+});
+
 interface RunResult {
     status: number | null;
     stdout: string;
