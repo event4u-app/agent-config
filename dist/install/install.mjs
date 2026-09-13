@@ -10510,6 +10510,44 @@ function carveOutKeys() {
   return SETTINGS_CARVE_OUT.map((c) => c.key);
 }
 
+// src/scripts/_lib/settings_renamed_keys.ts
+var RENAMED_KEYS = /* @__PURE__ */ new Map([
+  ["planning.challenge_on_create", "planning.closure_pass"]
+]);
+var _warned = /* @__PURE__ */ new Set();
+function _read(tree, dotted) {
+  let cur = tree;
+  for (const part of dotted.split(".")) {
+    if (cur === null || typeof cur !== "object" || Array.isArray(cur)) return void 0;
+    cur = cur[part];
+  }
+  return cur;
+}
+function _write(tree, dotted, value) {
+  const parts = dotted.split(".");
+  let cur = tree;
+  for (const part of parts.slice(0, -1)) {
+    const next = cur[part];
+    if (next === null || typeof next !== "object" || Array.isArray(next)) cur[part] = {};
+    cur = cur[part];
+  }
+  cur[parts[parts.length - 1]] = value;
+}
+function applyRenamedKeys(layer) {
+  for (const [oldKey, newKey] of RENAMED_KEYS) {
+    const oldValue = _read(layer, oldKey);
+    if (oldValue === void 0) continue;
+    if (_read(layer, newKey) === void 0) _write(layer, newKey, oldValue);
+    if (_warned.has(oldKey)) continue;
+    _warned.add(oldKey);
+    process.stderr.write(
+      `\u26A0\uFE0F  settings: \`${oldKey}\` was renamed to \`${newKey}\`. The old key still works for one minor; rename it in your .agent-settings.yml.
+`
+    );
+  }
+  return layer;
+}
+
 // src/scripts/_lib/agent_settings.ts
 var _require2 = createRequire2(import.meta.url);
 var Logger = class {
@@ -10870,52 +10908,15 @@ function load_agent_settings(options = {}) {
   }
   const cascade = _resolve_cascade_paths(cwd, project_path);
   const merged = template_defaults(template_path ?? void 0);
-  _apply_renamed_keys(user_global_filtered);
-  _deep_merge(merged, user_global_filtered);
+  _deep_merge(merged, applyRenamedKeys(user_global_filtered));
   for (const p of cascade) {
-    const layer = _read_yaml(p) ?? {};
+    const layer = applyRenamedKeys(_read_yaml(p) ?? {});
     if (Object.keys(layer).length > 0) {
-      _apply_renamed_keys(layer);
       _deep_merge(merged, layer);
     }
   }
   _warn_removed_always_on_keys(merged);
   return merged;
-}
-var RENAMED_KEYS = /* @__PURE__ */ new Map([
-  ["planning.challenge_on_create", "planning.closure_pass"]
-]);
-var _warnedRenamedKeys = /* @__PURE__ */ new Set();
-function _apply_renamed_keys(merged) {
-  for (const [oldKey, newKey] of RENAMED_KEYS) {
-    const oldValue = _readDottedSettingsPath(merged, oldKey);
-    if (oldValue === void 0) {
-      continue;
-    }
-    if (_readDottedSettingsPath(merged, newKey) === void 0) {
-      _writeDottedSettingsPath(merged, newKey, oldValue);
-    }
-    if (_warnedRenamedKeys.has(oldKey)) {
-      continue;
-    }
-    _warnedRenamedKeys.add(oldKey);
-    process.stderr.write(
-      `\u26A0\uFE0F  settings: \`${oldKey}\` was renamed to \`${newKey}\`. The old key still works for one minor; rename it in your .agent-settings.yml.
-`
-    );
-  }
-}
-function _writeDottedSettingsPath(tree, dotted, value) {
-  const parts = dotted.split(".");
-  let cur = tree;
-  for (const part of parts.slice(0, -1)) {
-    const next = cur[part];
-    if (next === null || typeof next !== "object" || Array.isArray(next)) {
-      cur[part] = {};
-    }
-    cur = cur[part];
-  }
-  cur[parts[parts.length - 1]] = value;
 }
 var REMOVED_KEYS = /* @__PURE__ */ new Map([
   ["subagents.enabled", "always-on orchestration"],

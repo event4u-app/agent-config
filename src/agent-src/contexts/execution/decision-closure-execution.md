@@ -14,7 +14,7 @@ NEVER BECAUSE A CONTEXT RESET LOST IT, AND NEVER BECAUSE THE ANSWER LOOKS ODD.
 If the roadmap carries a `## Decisions` section, read it whole and cache it for
 the run alongside the cadences (§ 4). Each row is `ID | ownership | resolved by
 | decision | evidence | revisit if`, and the contract that governs it is
-[`roadmaps` rule 27](../../templates/roadmaps.md).
+rule 27 of [the roadmap template](../../templates/roadmaps.md).
 
 Three consequences during the run:
 

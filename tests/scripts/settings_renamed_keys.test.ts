@@ -4,11 +4,8 @@ import * as path from 'node:path';
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import {
-    REMOVED_KEYS,
-    RENAMED_KEYS,
-    load_agent_settings,
-} from '../../src/scripts/_lib/agent_settings.js';
+import { REMOVED_KEYS, load_agent_settings } from '../../src/scripts/_lib/agent_settings.js';
+import { RENAMED_KEYS } from '../../src/scripts/_lib/settings_renamed_keys.js';
 
 function tmpProject(yaml: string): string {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'renamed-keys-'));
