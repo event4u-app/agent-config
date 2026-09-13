@@ -166,16 +166,43 @@ nothing since has been able to notice.
 
 ## Phase 3 — Give the terminal vocabulary its consumers
 
-- [ ] **3.1 `_self_fix` writes a `run_terminal` value beside `PARTIAL`.** The vocabulary already
+- [x] **3.1 `_self_fix` writes a `run_terminal` value beside `PARTIAL`.** The vocabulary already
       exists at `src/scripts/_lib/outcome_vocabularies.ts:104-127` and carries the states this
       needs.
       verify: `grep -n "RunTerminalState\|run_terminal"` finds a write in
       `src/agent-src/templates/scripts/work_engine/directives/backend/_self_fix.ts`.
-- [ ] **3.2 `verify-repair-loop` and `experiment-loop` write a terminal state at loop end.**
+      <!-- `RUN_TERMINAL_BY_KIND` maps exhausted → `exhausted` and no_progress → `stagnated`;
+           `record_run_terminal` stamps it onto `state.self_fix[lane]`, which the module already
+           owns and the dispatcher already persists. NOT onto `StepResult` — that class carries
+           outcome/questions/message and is shared by every directive in the engine, so widening
+           it for one loop's stop reason would change all of them. A `retry` decision writes
+           nothing: a terminal stamped mid-loop would be read as one.
+           The two literals are written out rather than imported because this is a TEMPLATE tree
+           that ships into consumers with no `src/scripts/_lib` to import from. A test asserts
+           every value is a member of the registry, so the two-member projection cannot drift
+           into a second vocabulary.
+           WIRING PROVEN, not assumed. `partial_exit` takes `state` optionally, so a call site
+           that drops it makes the whole feature a silent no-op — this roadmap's own defect class.
+           Neutralised the `state,` argument in test.ts: 1 failed / 38 passed, and the failure is
+           the test-lane assertion. Restored, re-neutralised in verify.ts: 1 failed / 38 passed,
+           the verify-lane assertion. Both restored from byte-exact backups; 39/39 green. -->
+      <!-- verify: npx vitest run tests/scripts/work_engine/directives_backend_self_fix.test.ts -->
+- [x] **3.2 `verify-repair-loop` and `experiment-loop` write a terminal state at loop end.**
       verify: both skills name the field and its value set; `grep -n RunTerminalState` finds them.
-- [ ] **3.3 Do not touch `RUN_TERMINAL_STATES` itself.** The value set is complete for this work.
+      <!-- Both Output-format sections gain a `run_terminal` field, the full seven-member value
+           set, a pointer to the single declaration, and a mapping table from the skill's OWN exit
+           vocabulary onto it — verify-repair-loop per stop reason
+           (threshold/cap/plateau/regression/reject), experiment-loop per exit condition. Each
+           skill's local enum is kept as the human-facing line; `run_terminal` is the aggregatable
+           one. Both spell out why `exhausted` and `stagnated` stay distinct: they call for
+           opposite responses, and collapsing them discards the only actionable part of a stop. -->
+- [x] **3.3 Do not touch `RUN_TERMINAL_STATES` itself.** The value set is complete for this work.
       verify: `git diff src/scripts/_lib/outcome_vocabularies.ts` is empty across the whole
       roadmap.
+      <!-- Held. `git diff origin/main -- src/scripts/_lib/outcome_vocabularies.ts` is empty at
+           every commit on this branch. Every new mapping consumes the registry and none extends
+           it; the `_self_fix` projection is guarded by a membership test. -->
+      <!-- verify: git diff origin/main --stat -- src/scripts/_lib/outcome_vocabularies.ts -->
 
 ## Blockers
 

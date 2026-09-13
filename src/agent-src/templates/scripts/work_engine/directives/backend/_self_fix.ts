@@ -78,6 +78,41 @@ export const VOLATILE_KEYS: ReadonlyArray<string> = [
 /** Why the loop stopped, or that it has budget left. */
 export type SelfFixKind = 'retry' | 'exhausted' | 'no_progress';
 
+/**
+ * `SelfFixKind` in the vocabulary a reader can aggregate across surfaces.
+ *
+ * `Outcome.PARTIAL` says the loop stopped without a green; it cannot say
+ * whether the budget ran out or the target stopped moving, and those want
+ * different responses — a bigger budget against the first, a different
+ * approach against the second. Until now the distinction left this module only
+ * inside a free-text `message`, so the continuation hook's stops were
+ * countable and this loop's were not.
+ *
+ * The two values are members of `RunTerminalState`, whose authoritative
+ * declaration is `src/scripts/_lib/outcome_vocabularies.ts:RUN_TERMINAL_STATES`
+ * and whose prose home is `contexts/execution/terminal-states.md`. They are
+ * written as literals rather than imported because this file is a TEMPLATE:
+ * it ships into consumer projects that have no `src/scripts/_lib` to import
+ * from, and reaching across that boundary would break every install. It is a
+ * two-member projection across a packaging boundary, not a second vocabulary —
+ * nothing here may add a member the registry does not have.
+ */
+export const RUN_TERMINAL_BY_KIND: Readonly<Record<Exclude<SelfFixKind, 'retry'>, string>> = {
+    exhausted: 'exhausted',
+    no_progress: 'stagnated',
+};
+
+/**
+ * The run-terminal value for a decision, or `null` while the loop is still live.
+ *
+ * `retry` has no terminal by construction — the loop has not stopped — and the
+ * null is returned rather than defaulted so a caller cannot accidentally stamp
+ * a terminal value onto a run that is still going.
+ */
+export function run_terminal_for(kind: SelfFixKind): string | null {
+    return kind === 'retry' ? null : RUN_TERMINAL_BY_KIND[kind];
+}
+
 /** Verdict of {@link decide} — pure, so the caller owns every mutation. */
 export interface SelfFixDecision {
     kind: SelfFixKind;
@@ -147,6 +182,27 @@ export function record_attempt(state: DeliveryState, lane: string, signature: st
     state.self_fix = container;
 }
 
+/**
+ * Stamp the lane's run-terminal value onto `state.self_fix`.
+ *
+ * Written into the state the module already owns and the dispatcher already
+ * persists, rather than onto `StepResult` — `StepResult` carries `outcome`,
+ * `questions` and `message` and is shared by every directive in the engine, so
+ * widening it for one loop's stop reason would be a change to all of them.
+ *
+ * A `retry` decision writes nothing: the loop has not stopped, and a terminal
+ * value recorded mid-loop would be read as one by anything aggregating the
+ * field.
+ */
+export function record_run_terminal(state: DeliveryState, lane: string, decision: SelfFixDecision): void {
+    const run_terminal = run_terminal_for(decision.kind);
+    if (run_terminal === null) return;
+    const container = _pyTruthy(state.self_fix) ? (state.self_fix as Record<string, Any>) : {};
+    const lane_state = _lane_state(state, lane);
+    container[lane] = { ...lane_state, run_terminal };
+    state.self_fix = container;
+}
+
 /** DoD entries the agent has not recorded as proven. Never inferred. */
 export function unmet_dod(state: DeliveryState): Array<Record<string, Any>> {
     const dod = (state.ticket ?? {})['dod'];
@@ -213,8 +269,11 @@ export function partial_exit(args: {
     decision: SelfFixDecision;
     unmet: Array<Record<string, Any>>;
     rerun_directive: string;
+    /** Written the run-terminal value onto, when the caller has the state in hand. */
+    state?: DeliveryState;
 }): StepResult {
-    const { lane, ticket_id, verdict, decision, unmet, rerun_directive } = args;
+    const { lane, ticket_id, verdict, decision, unmet, rerun_directive, state } = args;
+    if (state !== undefined) record_run_terminal(state, lane, decision);
     const reason =
         decision.kind === 'no_progress'
             ? `two consecutive attempts produced an identical \`${lane}\` verdict, ` +
@@ -244,7 +303,8 @@ export function partial_exit(args: {
         ],
         message:
             `Ticket ${ticket_id} ${lane} verdict is \`${String(verdict)}\` after ` +
-            `${decision.attempts} self-fix attempt(s) (${decision.kind}); exiting PARTIAL.`,
+            `${decision.attempts} self-fix attempt(s) (${decision.kind}); exiting PARTIAL ` +
+            `(run_terminal: ${String(run_terminal_for(decision.kind))}).`,
     });
 }
 

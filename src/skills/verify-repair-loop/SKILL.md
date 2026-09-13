@@ -183,6 +183,7 @@ verify-repair-loop
 Contract:   <one-line requirement> · threshold <X> · allow_regressions false
 Attempts:   <k>/<max>  scores: [s1, s2, …]   stop: threshold|plateau|cap|regression|reject
 Verdict:    DONE | DONE_WITH_CONCERNS | BLOCKED
+run_terminal: success | blocked | exhausted | stagnated
 Judge:      <judge skill> → apply|revise|reject
 Evidence:   <green/total> · regressions: none | <named checks>
 ```
@@ -193,9 +194,34 @@ Required fields (ordered):
 2. **Attempts** — `k/max`, the score history, and the exact stop reason
    (`threshold` / `plateau` / `cap` / `regression` / `reject`).
 3. **Verdict** — `DONE`, `DONE_WITH_CONCERNS`, or `BLOCKED`.
-4. **Judge** — the dispatched judge skill and its `apply` / `revise` /
+4. **run_terminal** — this loop's stop in the vocabulary every other loop in
+   this tree reports in. The verdict above is local to this skill; this field is
+   the one a reader can aggregate across the continuation hook, the self-fix
+   lanes and this loop without a per-surface translation table.
+
+   | stop reason | `run_terminal` | why |
+   |---|---|---|
+   | `threshold` (judge `apply`) | `success` | the contract is met |
+   | `cap` | `exhausted` | the attempt budget ran out — a bigger budget might help |
+   | `plateau` | `stagnated` | scores stopped moving — a bigger budget will not help |
+   | `regression` | `blocked` | a baseline-green check broke; the loop must not proceed |
+   | `reject` | `blocked` | the judge refused the work |
+
+   The value set is `RunTerminalState`, whose members are `success`,
+   `clean-no-op`, `blocked`, `approval-required`, `exhausted`, `stagnated` and
+   `premise-invalidated`. It is declared once, at
+   `src/scripts/_lib/outcome_vocabularies.ts` (`RUN_TERMINAL_STATES`), and
+   described in [`terminal-states`](../../agent-src/contexts/execution/terminal-states.md).
+   Never emit a value outside that set: a sixth stop reason maps onto an
+   existing member or it is not a terminal state.
+
+   `exhausted` and `stagnated` are deliberately distinct. Both mean "stopped
+   without a green", and they call for opposite responses — raise the budget
+   against the first, change approach against the second. Collapsing them loses
+   the only part of the stop a reader can act on.
+5. **Judge** — the dispatched judge skill and its `apply` / `revise` /
    `reject` verdict (omit only when the loop stopped before escalation).
-5. **Evidence** — final `green/total` and any regressed checks by name.
+6. **Evidence** — final `green/total` and any regressed checks by name.
 
 ## Examples
 

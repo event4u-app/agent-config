@@ -62,12 +62,7 @@ surfaces:
       none inside the module — the caller supplies the recorded verdict, which
       verdict_signature reduces to a comparable string.
     human_gate: src/agent-src/templates/scripts/work_engine/directives/backend/_self_fix.ts:partial_exit
-    terminal_vocabulary: >-
-      none. It emits delivery_state.ts:Outcome (SUCCESS | BLOCKED | PARTIAL)
-      and its private SelfFixKind union never crosses to RunTerminalState, even
-      though `exhausted` and `stagnated` are exact members of it. A reader
-      aggregating run outcomes can count the continuation hook's stops and
-      cannot count this loop's.
+    terminal_vocabulary: src/agent-src/templates/scripts/work_engine/directives/backend/_self_fix.ts:RUN_TERMINAL_BY_KIND
     production_consumers:
       - src/agent-src/templates/scripts/work_engine/directives/backend/test.ts
       - src/agent-src/templates/scripts/work_engine/directives/backend/verify.ts
@@ -88,10 +83,10 @@ surfaces:
       hand-back only. Every terminus stops and hands the envelope to the user;
       a mid-loop user instruction changes the fingerprint and aborts.
     terminal_vocabulary: >-
-      a LOCAL one — DONE | DONE_WITH_CONCERNS | BLOCKED, plus a stop-reason
-      enum (threshold | plateau | cap | regression | reject). The skill names
-      neither terminal-states.md nor RunTerminalState, so `BLOCKED` collides in
-      spelling with the registry's `blocked` and in nothing else.
+      RunTerminalState, named in the skill's Output format with its full value
+      set and a per-stop-reason mapping. Its local verdict
+      (DONE | DONE_WITH_CONCERNS | BLOCKED) is kept as the human-facing line;
+      `run_terminal` is the aggregatable one.
     production_consumers:
       - src/domains/engineering-base/review/changes/command.md
       - src/domains/engineering-base/mission/upgrade/command.md
@@ -111,9 +106,9 @@ surfaces:
       none. The pivot ladder's terminal rung publishes a null rather than
       escalating to a person.
     terminal_vocabulary: >-
-      a LOCAL decision enum — pending | keep | revert with its own reason set.
-      The exit conditions are named descriptively rather than as terminal-state
-      tokens, and the registry is never referenced.
+      RunTerminalState, named in the skill's Output format with its full value
+      set and a per-exit-condition mapping. The register's own decision enum
+      (pending | keep | revert) is per-iteration and stays local.
     production_consumers:
       - src/domains/meta/README.md
 
