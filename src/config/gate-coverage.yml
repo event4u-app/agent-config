@@ -52,21 +52,21 @@
 #                of them.
 #   canary       optional mutation recipe (Phase 7) — see CANARY below
 #
-# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-09-08)
+# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-09-12)
 # ----------------------------------------------------------
-# 322 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 328 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
-# re-run on the tree carrying these rows. Re-measured 2026-09-08 from the 306
-# recorded on 2026-08-28: the tree had drifted to 321 without the header moving,
-# which is 15 — exactly the drift tolerance in
-# `check_gate_coverage.test.ts` § states an honest denominator — so the next
-# single addition was always going to red it. `check_candidate_lines` from
-# `road-to-candidate-moves-floor` was that addition. The number is re-measured
-# rather than the tolerance widened: a stated population that nobody re-measures
-# is the un-asserted count this whole manifest exists to refuse.)
-# **79 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and 76 of those 79 are listed below.** The manifest is
-# complete for every gate that can carry a floor, covering ~25 % of the population.
+# re-run on the tree carrying these rows. Re-measured 2026-09-12 on the change
+# that adds `check_enforcement_matrix`: six scripts had arrived since the 322
+# recorded on 2026-09-08, which itself replaced the 306 of 2026-08-28 after the
+# tree drifted to 321 unnoticed — 15, exactly the drift tolerance in
+# `check_gate_coverage.test.ts` § states an honest denominator, so the next
+# single addition was always going to red it. Recomputed on this tree rather
+# than incremented: a stated population that nobody re-measures is the
+# un-asserted count this whole manifest exists to refuse.)
+# **95 rows are listed below**, so the manifest covers 95/328 = 29.0 % of the
+# population, and is complete for every gate that can carry a floor. The row
+# count is `grep -c '^  - id:'`, recomputed here rather than incremented.
 #
 # RECOUNTED 2026-09-07, on the change that adds `lint_agent_security` — the
 # security umbrella, which until this change was the one gate in the tree whose
@@ -2800,3 +2800,26 @@ gates:
 
         A projected rule routing to a guideline body the projection does not
         contain. The gate must fail on this and pass once it is removed.
+
+  - id: check_enforcement_matrix
+    argv: ["--quiet"]
+    ci_invocation: .github/workflows/consistency.yml
+    min_scanned: 20
+    corpus: "host-slot pairs in src/scripts/hooks/host_lowering.yaml (32 at baseline, across the 6 hosts that carry a non-empty `slots:` map)"
+    status: enforced
+    no_canary_reason: >-
+      the corpus is the slot map of ONE configuration file at a fixed path, and
+      the canary contract is create-only. A planted second `host_lowering.yaml`
+      would have to overwrite the real one to land in scope, and every violation
+      this gate can have is a MODIFICATION — a cell hand-edited in the generated
+      region, a `block_exit` changed without a regeneration, a cell claiming a
+      vocabulary value no line in the configuration produces. Discrimination is
+      proven by `--self-test` instead (5 cases, 4 rejecting: the phantom
+      `halt-by-state` value, a value outside the closed set, a hand-flipped
+      outcome, a deleted row), and end to end by hand on 2026-09-12: flipping
+      `claude/post_tool_use`'s `block_exit` from null to 2 without regenerating
+      exits 1, and `--write` then exits 0. The `--write` guard was itself
+      measured rather than assumed — an earlier version computed its backing set
+      from the generator's own output, so a sabotaged mapping was self-backing
+      and the phantom value wrote through; the backing set now reads the raw
+      configuration fields and the same sabotage exits 1.

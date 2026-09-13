@@ -423,6 +423,7 @@ tasks:
       - task: lint-reasoning-fixtures  # tests/reasoning-layer-eval/ corpus shape
       - task: lint-skill-trigger-contradiction
       - task: check-mcp-doc-drift
+      - task: check-enforcement-matrix
       - task: lint-readme-size
       - task: lint-readme-jargon
       - task: lint-readme-serial-comma
