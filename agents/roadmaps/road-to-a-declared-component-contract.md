@@ -50,16 +50,42 @@ exists to prevent.
 
 ## Phase 1 — Land the guard the earlier decision promised
 
-- [ ] **1.1 Write the fixture the archived granularity roadmap specified and never shipped.** Its
+- [x] **1.1 Write the fixture the archived granularity roadmap specified and never shipped.** Its
       own risk register predicted this exact re-arrival — that a three-tier vocabulary would be
       read as a first step and the next contributor would complete it — and its mitigation was a
       fixture that fails if a five-level name appears in the emitted vocabulary. The fixture does
       not exist.
       verify: the fixture is red against a planted five-level name and green without one, and both
       readings are recorded.
-- [ ] **1.2 Do this before the reversal, not after.** A guard written after the decision it guards
+
+      **DONE, and the premise was verified before it was acted on.** The archived roadmap records
+      its 0.3 first half as DONE, claiming *"no five-level name can enter the emitted vocabulary
+      without turning that test red"*. Measured 2026-09-13 at `origin/main`: the claim is **false**.
+      The test it rests on (`tests/cli/uiAudit_design_system.test.ts` § *the audit kind enum has ONE
+      definition*) compares `AUDIT_KINDS` to the skill's `kind:` line and forbids exactly two dead
+      values, `partial` and `layout`. Planting `organism` into **both** surfaces — which is what
+      "completing" a taxonomy looks like — left all 36 tests **green**. So this roadmap's premise
+      stands: the guard does not exist, and the archived DONE note over-claims what its test covers.
+
+      Landed as a fourth `describe` block in the same file, asserting the archived step's own named
+      set — `atom`, `molecule`, `organism`, `template` — against `AUDIT_KINDS` and against the
+      skill's declared list **independently**, so a coordinated edit turns both red. `page` is
+      deliberately excluded from the forbidden set: it is Frost's fifth level and a value this
+      repository emits on its own Blade/Next evidence, predating the harvest.
+
+      **Both readings, recorded:**
+      - RED with `organism` planted in `src/cli/commands/uiAudit.ts` and
+        `src/skills/existing-ui-audit/SKILL.md`: `2 failed | 37 passed (39)` — one failure per
+        surface.
+      - GREEN with the plant removed: `39 passed (39)`.
+      - Control reading, same plant against the pre-existing tests only: `36 passed (36)`.
+- [x] **1.2 Do this before the reversal, not after.** A guard written after the decision it guards
       has been reversed records nothing.
       verify: the fixture lands in its own commit, ahead of Phase 2.
+
+      **MET.** The fixture lands in its own commit and Phase 2 has not run — it is held by
+      `taxonomy-reversal-is-a-second-arrival`, which is owner-reserved. The ordering the step asks
+      for is therefore satisfied by construction rather than by sequencing.
 
 ## Phase 2 — Record the reversal, or stop here
 
@@ -207,8 +233,10 @@ exists to prevent.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The fixture the archived granularity roadmap specified exists, was observed red
+- [x] AC-1 — The fixture the archived granularity roadmap specified exists, was observed red
       against a planted five-level name, and landed before any reversal.
+      **Met** — readings recorded under step 1.1. Landed before any reversal because no reversal
+      has been decided: Phase 2 is held by an owner-reserved blocker.
 - [ ] AC-2 — A decision record exists naming which of the three readings was taken, or this
       roadmap records the refusal and the archived roadmap carries the arrival count.
 - [ ] AC-3 — No component level is ever derived from props, depth, path or file length, and an
