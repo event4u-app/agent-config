@@ -83,6 +83,53 @@ describe('conflict — resolveFileConflict', () => {
         expect(r).toBe('skip');
     });
 
+    it('treats a recorded-modified file as ours with an empty knownPaths set', () => {
+        // The write outcome is deliberately identical to the membership
+        // answer — Phase 5.1 moves no writes. What changes is that
+        // computeConflicts can now name this file; see its own describe block.
+        const r = resolveFileConflict({
+            targetPath: '/x/a',
+            idempotent: false,
+            exists: true,
+            policy: policy(),
+            ownership: 'recorded-modified',
+        });
+        expect(r).toBe('skip');
+    });
+
+    it('treats a recorded-unchanged file as ours with an empty knownPaths set', () => {
+        const r = resolveFileConflict({
+            targetPath: '/x/a',
+            idempotent: false,
+            exists: true,
+            policy: policy(),
+            ownership: 'recorded-unchanged',
+        });
+        expect(r).toBe('skip');
+    });
+
+    it('does not over-fire: unknown ownership still surfaces a foreign path', () => {
+        const r = resolveFileConflict({
+            targetPath: '/x/a',
+            idempotent: false,
+            exists: true,
+            policy: policy(),
+            ownership: 'unknown',
+        });
+        expect(r).toBe('surface');
+    });
+
+    it('does not over-fire: force still overwrites a recorded-modified file', () => {
+        const r = resolveFileConflict({
+            targetPath: '/x/a',
+            idempotent: false,
+            exists: true,
+            policy: policy({ force: true }),
+            ownership: 'recorded-modified',
+        });
+        expect(r).toBe('write');
+    });
+
     it('returns write when known path collides with force', () => {
         const r = resolveFileConflict({
             targetPath: '/x/a',
@@ -253,6 +300,52 @@ describe('conflict — computeConflicts', () => {
             plannedSha256: hex('planned'),
             existingSha256: hex('on-disk'),
             mergeable: false,
+            ownership: 'unknown',
+        });
+    });
+
+    // Phase 5.1 — three-state ownership instead of path membership.
+    describe('recorded ownership', () => {
+        it('drops a recorded-unchanged file even when the plan carries new bytes', () => {
+            // A package upgrade: the planned bytes differ from the bytes we
+            // recorded, and the file on disk still matches what we recorded.
+            // Path membership could not see that; a digest can.
+            const e = entry('a.md', 'planned-v2');
+            writeFileSync(e.path, 'installed-v1');
+            const p = plan({ claude: [e] });
+            const recorded = new Map([[e.path, hex('installed-v1')]]);
+            expect(computeConflicts(p, recorded)).toEqual([]);
+        });
+
+        it('REPORTS a managed file the user edited, which membership dropped', () => {
+            const e = entry('a.md', 'planned');
+            writeFileSync(e.path, 'user-edited');
+            const p = plan({ claude: [e] }, { knownPaths: new Set([e.path]) });
+            // Pre-hash answer for exactly this tree: silence.
+            expect(computeConflicts(p, new Map())).toEqual([]);
+            const recorded = new Map([[e.path, hex('installed-v1')]]);
+            const conflicts = computeConflicts(p, recorded);
+            expect(conflicts).toHaveLength(1);
+            expect(conflicts[0]?.ownership).toBe('recorded-modified');
+            expect(conflicts[0]?.existingSha256).toBe(hex('user-edited'));
+        });
+
+        it('does not over-fire: no recorded digest reproduces the membership answer', () => {
+            const e = entry('a.md', 'planned');
+            writeFileSync(e.path, 'on-disk');
+            const known = plan({ claude: [e] }, { knownPaths: new Set([e.path]) });
+            expect(computeConflicts(known, new Map())).toEqual([]);
+            const foreign = plan({ claude: [e] });
+            expect(computeConflicts(foreign, new Map())).toHaveLength(1);
+            expect(computeConflicts(foreign, new Map())[0]?.ownership).toBe('unknown');
+        });
+
+        it('does not over-fire: a bridge-shaped null digest stays unknown, not modified', () => {
+            const e = entry('a.md', 'planned');
+            writeFileSync(e.path, 'on-disk');
+            const p = plan({ claude: [e] }, { knownPaths: new Set([e.path]) });
+            const recorded = new Map<string, string | null>([[e.path, null]]);
+            expect(computeConflicts(p, recorded)).toEqual([]);
         });
     });
 

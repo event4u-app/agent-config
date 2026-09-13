@@ -155,8 +155,14 @@ export function checkConflicts(inputs: PlanInputs): PreflightFinding[] {
         id: 'conflicts' as const,
         severity: 'warning' as const,
         path: c.path,
-        message: `existing file conflicts with planned ${c.kind} content`,
-        remedy: 'resolve interactively, or pass --force to overwrite',
+        message:
+            c.ownership === 'recorded-modified'
+                ? `managed ${c.kind} file has been edited since we wrote it`
+                : `existing file conflicts with planned ${c.kind} content`,
+        remedy:
+            c.ownership === 'recorded-modified'
+                ? 'a default install leaves it alone; --force overwrites your edit'
+                : 'resolve interactively, or pass --force to overwrite',
     }));
 }
 

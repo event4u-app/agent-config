@@ -100,11 +100,11 @@ not scheduled here; the blocker below records it as the open half.
 
 ## Phase 5 — Three-state ownership instead of path membership
 
-- [ ] **5.1 Distinguish recorded-unchanged, recorded-modified and unknown** in the install conflict
+- [x] **5.1 Distinguish recorded-unchanged, recorded-modified and unknown** in the install conflict
       matrix, fed by a real hash comparison rather than by path-set membership.
       verify: a user-modified managed file survives a refresh and appears in the report; the matrix
       carries a recorded-unchanged column whose value comes from a hash.
-- [ ] **5.2 Land the hash plumbing separately from the matrix change.**
+- [x] **5.2 Land the hash plumbing separately from the matrix change.**
       verify: two commits, and the matrix commit's diff contains no hash computation.
 
 ## Blockers
@@ -165,5 +165,5 @@ not scheduled here; the blocker below records it as the open half.
       entry shape.
 - [ ] AC-4 — The existing sabotage fixture reddens the check after a headless install.
 - [x] AC-5 — The absent-log fixture was observed red before the fix, and the reading is recorded.
-- [ ] AC-6 — A user-modified managed file survives a refresh and is named in the report.
-- [ ] AC-7 — The hash plumbing and the matrix change are separate commits.
+- [x] AC-6 — A user-modified managed file survives a refresh and is named in the report.
+- [x] AC-7 — The hash plumbing and the matrix change are separate commits.

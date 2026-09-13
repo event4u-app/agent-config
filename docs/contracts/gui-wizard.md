@@ -138,9 +138,27 @@ Versioned under `/api/v1/`. Selected routes:
 | POST   | `/api/v1/shutdown`            | Browser-close shutdown beacon (`navigator.sendBeacon` target; real-serve only) |
 | POST   | `/api/v1/wizard/apply`        | **Single real-apply route.** `dry_run:true` → buffered plan preview; otherwise SSE-streams `src/scripts/install.ts --apply-payload` |
 | GET    | `/api/v1/install/detect`      | Scope + project shape + tool presence                                   |
-| POST   | `/api/v1/install/plan`        | Plan preview (per-tool file counts + conflicts) for the Review step     |
+| POST   | `/api/v1/install/plan`        | Plan preview (per-tool file counts + conflicts) for the Review step — each conflict carries `ownership` (see below) |
 | GET    | `/api/v1/install/recovery`    | Interrupted-run recovery state                                          |
 | GET    | `/api/v1/install/legacy-v3`   | v3-install detection (backup screen)                                    |
+
+### Conflict ownership — three states, from a digest
+
+Each entry in the `/api/v1/install/plan` `conflicts[]` array carries an
+`ownership` field, read from the per-file SHA-256 the installed-tools manifest
+records rather than from path-set membership:
+
+| `ownership` | Means | Screen should say |
+|---|---|---|
+| `recorded-unchanged` | we wrote it and the bytes still match | never surfaced — nothing to resolve |
+| `recorded-modified` | we wrote it and the user has since edited it | "your edit"; a default install leaves it alone |
+| `unknown` | no digest recorded (no manifest, an unreadable one, a bridge) | the pre-hash answer: a foreign collision |
+
+The field defaults to `unknown` on the wire, so a client that omits it on an
+apply round-trip parses and behaves exactly as before. `recorded-modified`
+changes no write: such a file already survived a default refresh and now it is
+also named in the report. What `--force-overwrite` does to it is unchanged and
+is an install-behaviour decision this contract does not take.
 
 The TypeScript apply engine and its `POST /api/v1/install/apply` SSE route
 were removed (road-to-single-install-source-of-truth § Phase 3). All real

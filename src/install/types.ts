@@ -16,6 +16,9 @@
  *   - v2 manifest `files_by_tool` → {@link InstallPlan.filesByTool}
  */
 
+// Type-only — erased at compile time, so this module stays runtime-free.
+import type { RecordedOwnership } from './recordedOwnership.js';
+
 /**
  * Where the install lands.
  *
@@ -145,6 +148,15 @@ export interface ConflictEntry {
     readonly plannedSha256: string | null;
     readonly existingSha256: string | null;
     readonly mergeable: boolean;
+    /**
+     * Three-state ownership from the manifest's recorded digest — the column
+     * path-set membership could not produce (Phase 5.1 of
+     * road-to-a-conformance-check-that-can-fail). `recorded-modified` is the
+     * row that matters: a file we wrote that someone has since edited.
+     * `unknown` reproduces the pre-hash answer and is what every tree without
+     * a readable manifest reports.
+     */
+    readonly ownership: RecordedOwnership;
 }
 
 /**

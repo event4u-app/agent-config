@@ -18,6 +18,12 @@
 import { existsSync } from 'node:fs';
 
 import { sha256File } from './plan.js';
+import {
+    classifyOwnership,
+    recordedHashesForRoot,
+    type RecordedHashes,
+    type RecordedOwnership,
+} from './recordedOwnership.js';
 import type {
     ConflictEntry,
     ConflictPolicy,
@@ -39,6 +45,13 @@ export interface ResolveInputs {
     readonly exists: boolean;
     /** Active install policy. */
     readonly policy: ConflictPolicy;
+    /**
+     * Three-state ownership from the manifest's recorded digest, when the
+     * caller has one. Omitted (or `unknown`) falls back to `policy.knownPaths`
+     * membership, which is what every tree without a readable manifest gets —
+     * so the outcome table below is unchanged wherever no digest is recorded.
+     */
+    readonly ownership?: RecordedOwnership;
 }
 
 /**
@@ -47,7 +60,7 @@ export interface ResolveInputs {
  * Decision matrix (mirrors the Python legacy with the 3-option prompt
  * collapsed into `surface`):
  *
- * | Exists? | Idempotent? | Known? | Force? | → Outcome  |
+ * | Exists? | Idempotent? | Ours?  | Force? | → Outcome  |
  * |---------|-------------|--------|--------|------------|
  * | no      | —           | —      | —      | `write`    |
  * | yes     | yes         | —      | —      | `skip`     |
@@ -56,17 +69,31 @@ export interface ResolveInputs {
  * | yes     | no          | no     | yes    | `write`    |
  * | yes     | no          | no     | no     | `surface`  |
  *
+ * "Ours?" used to mean nothing but `policy.knownPaths.has(targetPath)`. It
+ * now reads the recorded digest first when the caller supplies one:
+ * `recorded-unchanged` and `recorded-modified` are both ours, `unknown`
+ * falls back to path membership. **The outcomes are unchanged** — this
+ * commit does not move a single write. What it buys is that
+ * {@link computeConflicts} can now name a user-modified managed file in the
+ * report instead of dropping it, which is the half that was missing: such a
+ * file already survived a default refresh (`skip`) and nobody was told it
+ * existed. Changing what `--force-overwrite` does to it is an install-
+ * behaviour decision and is deliberately not taken here.
+ *
  * Headless callers (B1 CLI) collapse `surface` to `skip` automatically
  * because there is no UI to defer to; the apply layer records the entry
  * under {@link ApplyResult.conflicts} so the wizard can pick it up next.
  */
 export function resolveFileConflict(inputs: ResolveInputs): ConflictOutcome {
-    const { targetPath, idempotent, exists, policy } = inputs;
+    const { targetPath, idempotent, exists, policy, ownership } = inputs;
     if (!exists) return 'write';
     if (idempotent) return 'skip';
 
-    const isKnown = policy.knownPaths.has(targetPath);
-    if (isKnown) {
+    const isOurs =
+        ownership === 'recorded-unchanged' ||
+        ownership === 'recorded-modified' ||
+        policy.knownPaths.has(targetPath);
+    if (isOurs) {
         return policy.force ? 'write' : 'skip';
     }
     if (policy.force) return 'write';
@@ -155,12 +182,30 @@ export const CONFLICT_BATCH_THRESHOLD = 5;
  *
  * Pure-ish — reads from the filesystem only to compute idempotency
  * (`existsSync` + `sha256File`). Skips bridges (`sha256 === null`) since
- * bridge writers own a separate idempotency model. Skips entries whose
- * `path` is in `policy.knownPaths`, and skips entries that are
- * byte-equal to the planned content. Returns an empty array when
+ * bridge writers own a separate idempotency model, and skips entries that
+ * are byte-equal to the planned content. Returns an empty array when
  * `policy.force` is true — overwrite mode silences the screen.
+ *
+ * Ownership (Phase 5.1) replaces the blanket `policy.knownPaths` skip:
+ *
+ * - `recorded-unchanged` — ours and untouched. Skipped, as before, and now
+ *   for a reason that survives a package upgrade: the planned bytes differing
+ *   from the recorded bytes is an upgrade, not a collision.
+ * - `recorded-modified`  — ours and edited since. **Reported**, where before
+ *   it was silently dropped whenever the path sat in `knownPaths`. This is
+ *   the user-modified managed file the acceptance criterion asks for: it
+ *   still survives a default refresh, and now it is named.
+ * - `unknown`            — no digest recorded (no manifest, an unreadable
+ *   one, or a bridge entry). Falls back to `policy.knownPaths`, so a tree
+ *   with no manifest reports exactly what it reported before.
+ *
+ * `recorded` is injectable for tests; by default it is read from the
+ * manifest at `plan.root`.
  */
-export function computeConflicts(plan: InstallPlan): readonly ConflictEntry[] {
+export function computeConflicts(
+    plan: InstallPlan,
+    recorded: RecordedHashes = recordedHashesForRoot(plan.root),
+): readonly ConflictEntry[] {
     if (plan.policy.force) return [];
     const out: ConflictEntry[] = [];
     for (const entries of Object.values(plan.filesByTool)) {
@@ -175,7 +220,9 @@ export function computeConflicts(plan: InstallPlan): readonly ConflictEntry[] {
             // road-to-a-conformance-check-that-can-fail keeps hash computation
             // in this commit so the matrix commit carries none.
             const onDisk = sha256File(entry.path);
-            if (plan.policy.knownPaths.has(entry.path)) continue;
+            const ownership = classifyOwnership(recorded.get(entry.path), onDisk);
+            if (ownership === 'recorded-unchanged') continue;
+            if (ownership === 'unknown' && plan.policy.knownPaths.has(entry.path)) continue;
             if (onDisk === entry.sha256) continue;
             out.push({
                 path: entry.path,
@@ -183,6 +230,7 @@ export function computeConflicts(plan: InstallPlan): readonly ConflictEntry[] {
                 plannedSha256: entry.sha256,
                 existingSha256: onDisk,
                 mergeable: isJsonTarget(entry),
+                ownership,
             });
         }
     }

@@ -25,7 +25,7 @@
  */
 
 import { existsSync, readFileSync } from 'node:fs';
-import { isAbsolute, resolve } from 'node:path';
+import { isAbsolute, join, resolve } from 'node:path';
 
 import * as YAML from 'yaml';
 
@@ -103,4 +103,12 @@ export function readRecordedHashes(manifestPath: string, projectRoot: string): R
         }
     }
     return out;
+}
+
+/** Manifest location relative to a tree root (mirrors `installed_tools`). */
+export const MANIFEST_RELATIVE = join('agents', 'installed-tools.lock');
+
+/** {@link readRecordedHashes} for a tree root, resolving the manifest itself. */
+export function recordedHashesForRoot(root: string): RecordedHashes {
+    return readRecordedHashes(join(root, MANIFEST_RELATIVE), root);
 }
