@@ -855,12 +855,6 @@ const STATUS_SYMBOLS: Record<string, string> = {
     warn: '⚠️ ',
     fail: '❌',
     skipped: '⏭️ ',
-    // `unknown` — the check ran and could not answer. Distinct from
-    // `skipped` ("not applicable here") and from `ok` ("answered, green").
-    // Emitted by conformance's txlog check when an installed tree carries
-    // no transaction log. Never folded into the exit code, which keys off
-    // `fail` alone.
-    unknown: '❔',
 };
 
 /** Minimum Python interpreter the CLI targets (parity constant). */

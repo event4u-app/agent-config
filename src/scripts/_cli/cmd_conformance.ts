@@ -77,6 +77,21 @@ export const CONFORMANCE_CHECK_IDS = [
 /** Marker emitted by `project_thin_rules.thin_entry()` — the thin-stub signature. */
 export const THIN_STUB_MARKER = 'Routed rule — load the body on trigger-match';
 
+/**
+ * Rendering symbols for this verb's rows — doctor's table plus `unknown`.
+ *
+ * `unknown` is a conformance concept: the check ran and could not answer.
+ * Distinct from `skipped` ("not applicable here") and from `ok` ("answered,
+ * green"), and never folded into the exit code, which keys off `fail` alone.
+ * It lives here rather than in `cmd_doctor`'s table because doctor emits no
+ * such row — and because `cmd_doctor.ts` is already over the source-size
+ * ceiling, so a line added there is a ratchet violation.
+ */
+const CONFORMANCE_STATUS_SYMBOLS: Record<string, string> = {
+    ...STATUS_SYMBOLS,
+    unknown: '❔',
+};
+
 function print(s = ''): void {
     process.stdout.write(`${s}\n`);
 }
@@ -705,7 +720,7 @@ function main(argv: string[] | null = null): number {
         print(`  📍  project_root: ${project_root}`);
         print('conformance:');
         for (const c of allChecks) {
-            const sym = STATUS_SYMBOLS[c['status'] as string] ?? '?';
+            const sym = CONFORMANCE_STATUS_SYMBOLS[c['status'] as string] ?? '?';
             print(`  ${sym} ${c['id']}: ${c['message']}`);
             if (c['status'] !== 'ok' && c['remedy']) {
                 print(`      fix: ${c['remedy']}`);

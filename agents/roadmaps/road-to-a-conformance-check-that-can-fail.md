@@ -125,6 +125,13 @@ not scheduled here; the blocker below records it as the open half.
   surface from promising a recovery it cannot perform. That is a smaller but honest outcome.
 - **Resolved when:** the headless path writes an entry, or this roadmap records the refusal and
   Phase 1's unknown becomes the permanent answer.
+- **State (2026-09-13):** neither. The "if you do nothing" arm has shipped —
+  Phase 1 makes the gap an explicit `unknown` and Phase 2 stopped the surface
+  promising a recovery the tree cannot perform — and the decision itself is
+  untaken, so this stays open. Phase 3 (3.1, 3.2) is unstarted for that reason,
+  and so is AC-3 / AC-4. Nothing here forecloses either arm: `unknown` becomes
+  `ok` for a headless install the moment that path writes an entry, and becomes
+  the permanent answer if the refusal is recorded.
 
 ### blocker: the-remedy-string-is-a-published-claim
 - **Status:** resolved
