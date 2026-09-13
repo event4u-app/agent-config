@@ -167,6 +167,22 @@ the gating decision and it was refused.
 
 ## Admin-controlled prerequisites — the whole of what blocks the chain
 
+> **SUPERSEDED 2026-09-13 — none of the three is still wanted, and this section is
+> kept as the dated record of what run 23 believed.** Items 1 and 2 were applied on
+> 2026-09-10, made the repository unmergeable, were reverted, and were then ruled
+> **out of the trust model entirely** by the owner: one active maintainer, four
+> rarely-available write accounts, and no self-approval on GitHub, so a mandatory
+> approving review is a stop rather than a control. Both dimensions left
+> `src/config/platform-anchor.json` and `NON_NEGOTIABLE_FLOOR`. **Do not act on
+> items 1 and 2** — doing so re-creates the 2026-09-10 lockout. Item 3 is done
+> (`bypass_actors: []`, `current_user_can_bypass: never`, re-measured 2026-09-13),
+> with its own residual recorded: removing the escape hatch is also removing the
+> recovery path, which is the untested lockout procedure in
+> `docs/contracts/branch-protection-policy.md`. `check_platform_anchor` reports
+> `PASS_WITH_ACCEPTED_RISK` and exits 0, so "the whole of what blocks the chain" is
+> no longer this section — what blocks it is the kernel-write deny's own refused
+> retirement.
+
 Three settings changes on `event4u-app/agent-config`, all in ruleset `17749383`:
 
 1. `required_approving_review_count` **0 → ≥ 1**

@@ -216,3 +216,57 @@ describe('the audit kind enum has ONE definition', () => {
         expect(AUDIT_KINDS).toContain('view');
     });
 });
+
+// The five-level guard `road-to-component-granularity-vocabulary` specified and
+// never shipped.
+//
+// That roadmap's risk 1 predicted this exact arrival — "a three-tier vocabulary
+// landing out of an atomic-design harvest will be read as a first step toward
+// atoms and molecules, and the next contributor will complete it" — and its step
+// 0.3 named the mitigation verbatim: "a fixture asserts the emitted vocabulary
+// contains none of `atom`, `molecule`, `organism`, `template`". It then recorded
+// that half as DONE on the strength of the enum-identity test above, claiming
+// "no five-level name can enter the emitted vocabulary without turning that test
+// red".
+//
+// Measured 2026-09-13, and the claim is false. Planting `organism` into BOTH
+// `AUDIT_KINDS` and the skill's `kind:` line leaves all 36 tests in this file
+// green: the identity test compares the two surfaces to each other, so a
+// contributor who updates both — which is what "completing" a taxonomy looks
+// like — passes it. Only the two dead values `partial` and `layout` were ever
+// named, and neither is a five-level name.
+//
+// So the guard is the named set, asserted against each surface independently.
+// `page` is deliberately NOT in the set: it is Frost's fifth level AND a value
+// this repository emits on its own evidence, predating the harvest. Forbidding
+// it would delete a live classification to win an argument about vocabulary.
+describe('the emitted vocabulary carries no five-level taxonomy name', () => {
+    const SKILL = 'src/skills/existing-ui-audit/SKILL.md';
+    const FIVE_LEVEL = ['atom', 'molecule', 'organism', 'template'] as const;
+
+    it('AUDIT_KINDS names none of them', () => {
+        for (const level of FIVE_LEVEL) {
+            expect(
+                AUDIT_KINDS as readonly string[],
+                `\`${level}\` entered the emitted vocabulary. The five-level taxonomy was rejected on a measurement — that the level is not computable from props, depth, path or file length — and reversing that rejection is a recorded decision, not an enum edit.`,
+            ).not.toContain(level);
+        }
+    });
+
+    it('the skill declares none of them', () => {
+        const text = fs.readFileSync(SKILL, 'utf8');
+        const m = text.match(/kind:\s*([a-z|]+)\s*,/);
+        expect(m, `${SKILL} must declare a \`kind: a|b|c\` list`).not.toBeNull();
+        const declared = (m as RegExpMatchArray)[1]!.split('|');
+        for (const level of FIVE_LEVEL) {
+            expect(
+                declared,
+                `${SKILL} declares \`${level}\`. Updating both surfaces together is exactly the coordinated edit the enum-identity test cannot see.`,
+            ).not.toContain(level);
+        }
+    });
+
+    it('`page` stays legal — it is emitted on this repository\'s own evidence, not imported', () => {
+        expect(AUDIT_KINDS).toContain('page');
+    });
+});

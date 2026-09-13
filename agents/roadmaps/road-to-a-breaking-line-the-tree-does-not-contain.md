@@ -62,7 +62,7 @@ a table frozen at 9, and the roadmap carries the verified version.
 
 ## Phase 1 — Say which line won
 
-- [ ] **1.1 Reconcile the 15.0.0 head.** One in-place correction naming that
+- [x] **1.1 Reconcile the 15.0.0 head.** One in-place correction naming that
       the retirement was implemented and reverted before the cut, that the deny
       and the soak both stand, and why — the reasoning already exists verbatim
       in the `03e4eb7d` merge body and needs quoting, not re-deriving.
@@ -70,7 +70,7 @@ a table frozen at 9, and the roadmap carries the verified version.
       returns a line that no longer reads as an unqualified removal, and the
       corrected text names `03e4eb7d`.
 
-- [ ] **1.2 Check the threat-model entry the retirement wrote.** The retirement
+- [x] **1.2 Check the threat-model entry the retirement wrote.** The retirement
       commit recorded an `HONEST LOSS` in `docs/threat-model.md` for a state
       that was then reverted; a reviewer flagged it as a probable stale claim
       and their own grep came back empty.
@@ -78,17 +78,24 @@ a table frozen at 9, and the roadmap carries the verified version.
       expected answer and is recorded as such, not left unstated. Read 2026-09-12:
       empty, and `:36` names the guard as registered. If a later read differs,
       the entry goes.
+      **Answered 2026-09-13.** `grep -n 'HONEST LOSS' docs/threat-model.md` is
+      empty at this branch's base; `docs/threat-model.md` § "Kernel immutability
+      — the three-layer stack" still names `block_kernel_rule_writes.ts` as
+      layer 1, "registered `fail_closed: true`, red/green-tested". The revert
+      `03e4eb7d` therefore removed the stale claim with the rest of the prose
+      it reverted, and nothing is left to delete. Recorded here rather than
+      left implicit: AC-4's first limb is the one that holds.
 
 ## Phase 2 — Give the two majors a migration map
 
-- [ ] **2.1 Add the 15.0.0 section.** What a consumer must do about the two
+- [x] **2.1 Add the 15.0.0 section.** What a consumer must do about the two
       retired commands (`/chat-history`, `/chat-history import`), and — stated
       plainly — that the announced kernel-deny retirement did **not** ship, so
       there is nothing to migrate for it.
       verify: `grep -n '^## ' docs/MIGRATION.md` lists a 15.0.0 section, and it
       names both retired commands by path.
 
-- [ ] **2.2 Add the 16.0.0 section.** What the deleted stored
+- [x] **2.2 Add the 16.0.0 section.** What the deleted stored
       standing-payload ceiling means for a consumer holding one, and what
       replaces it.
       verify: `grep -n '^## ' docs/MIGRATION.md` lists a 16.0.0 section that
@@ -96,7 +103,7 @@ a table frozen at 9, and the roadmap carries the verified version.
 
 ## Phase 3 — Stop the next major arriving without one
 
-- [ ] **3.1 Refuse a cut whose BREAKING section has no migration entry.** The
+- [x] **3.1 Refuse a cut whose BREAKING section has no migration entry.** The
       release pre-flight already sends the releaser to `docs/MIGRATION.md` for
       the scheduled-deprecations table; the missing half is the backward one —
       a major carrying BREAKING CHANGES and no matching section.
@@ -115,12 +122,12 @@ a table frozen at 9, and the roadmap carries the verified version.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The 15.0.0 head no longer announces an unqualified retirement of
+- [x] AC-1 — The 15.0.0 head no longer announces an unqualified retirement of
       the kernel-rule tool-call deny, and names the revert that decided it.
-- [ ] AC-2 — `docs/MIGRATION.md` carries a section for 15.0.0 and one for
+- [x] AC-2 — `docs/MIGRATION.md` carries a section for 15.0.0 and one for
       16.0.0, each naming what its BREAKING entries ask of a consumer.
-- [ ] AC-3 — A major whose BREAKING section has no corresponding MIGRATION
+- [x] AC-3 — A major whose BREAKING section has no corresponding MIGRATION
       heading is refused at the cut, and the refusal names the version.
-- [ ] AC-4 — The `HONEST LOSS` threat-model question is answered in the tree
+- [x] AC-4 — The `HONEST LOSS` threat-model question is answered in the tree
       rather than left open — either the entry is gone and that is recorded, or
       it exists and is removed.

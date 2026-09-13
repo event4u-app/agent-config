@@ -101,8 +101,13 @@ status: draft
 ---
 ```
 
-Other frontmatter keys (`status:`, `owner:`, `target_release:`) are
-permitted alongside but not required by this contract.
+Other frontmatter keys (`status:`, `owner:`, `target_release:`,
+`execution:`, `delivery:`) are permitted alongside but not required by this
+contract. `delivery:` carries the owner's pull-request plan — today only
+`pr_topology: single | stacked` — and is documented in
+[`templates/roadmaps.md`](../../src/agent-src/templates/roadmaps.md) rule 18.
+This contract does not validate it: nothing rejects an unknown roadmap
+frontmatter key, so "permitted" here means unpoliced rather than checked.
 
 ## Linter contract
 

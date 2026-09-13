@@ -423,6 +423,47 @@ github:
   # auto                  = detect on first use and update this setting
   pr_reply_method: create_review_comment
 
+# --- Delivery: what a run does with the branch it produced ---
+#
+# ADR-268 section 3 resolves ADR-239 section 3's "undecided, not rejected" on merge
+# authority in the affirmative, and these keys are where that decision is
+# configured rather than inferred. All three are Class C in
+# docs/contracts/settings-classes.md: every agent write path refuses them, so
+# a run can read its delivery policy and can never widen it.
+#
+# NAMING IS DELIBERATE. check_no_automerge_key.ts is a namespace ratchet on the
+# three key names autoMerge / auto_merge / mergePolicy, and its own text reserves
+# its deletion to the owner. `delivery.merge` grants the same capability under a
+# name outside that closed set, so the ratchet stays green and stays standing --
+# the boundary it protects is a name, and the decision it points at was taken by
+# an ADR rather than by a key.
+delivery:
+  # Whether a run may merge the pull request it produced.
+  #   off      = default. The run ends at mergeable-green-and-open and says so.
+  #   on-green = merge is permitted, and ONLY when an object-bound grant covering
+  #              {op: prod_merge, target: <base>} exists AND the final head is
+  #              required-check-green, target-current and tamper-checked. This
+  #              key is a precondition, never the authorisation by itself.
+  # Forge auto-merge is the mechanism, so branch protection stays the gate.
+  # Required protections are never bypassed -- an invariant, not a default.
+  merge: "off"
+
+  # Whether the run stays alive until the required checks settle.
+  #   true  = default. The run drives CI and reports the settled verdict.
+  #   false = the run ends once the branch is pushed and the PR is open,
+  #           leaving the checks to be read later.
+  # Independent of `merge`: a run may wait for CI without being allowed to
+  # merge, which is the shape every drain run uses today.
+  wait_for_ci: true
+
+  # How a mission's work is shaped into pull requests.
+  #   single  = default. One branch, one pull request.
+  #   stacked = a dependent series.
+  # `stacked` is NEVER chosen by the agent and is never asked about at roadmap
+  # creation. The owner plans it in roadmap frontmatter or it does not happen;
+  # that is why this key is Class C rather than a preference.
+  pr_topology: single
+
 # --- Augment Code projection (.augment/) ---
 #
 # Controls how rule files are written into .augment/rules/ during
@@ -533,9 +574,23 @@ roadmap:
   # pattern: which asks are batched into the run-start execution
   # contract and where checkpoint prompts fire. It overrides NONE of
   # the keys below — `skip_pre_run_gate`, `quality_cadence`, and
-  # `dashboard_regen_cadence` keep their global meaning in every mode,
-  # and no mode lifts a safety floor. See
-  # contexts/execution/roadmap-execution-contract.md.
+  # `dashboard_regen_cadence` keep their global meaning in every mode.
+  #
+  # WHAT NO MODE LIFTS, NAMED. This sentence used to read "no mode lifts a
+  # safety floor", which is unfalsifiable: it never says which floor or how
+  # far it reaches. What no `execution.mode` value lifts is ADR-260 section 2's
+  # closed eleven-op vocabulary -- force_push, prod_merge, tag_push, release,
+  # publish, branch_protection_change, repo_delete, prod_data_delete,
+  # secret_write, payment, external_send. Each of those needs its own
+  # object-bound grant, and no interaction pattern substitutes for one.
+  #
+  # The Hard Floor in `non-destructive-by-default` is today WIDER than that
+  # vocabulary -- it also covers every `git push` and every non-prod merge --
+  # and that wider reach is what is in force right now. ADR-260 decision 11
+  # narrows it to the eleven ops and ADR-268 accepted that, but the narrowing
+  # has not landed, so read the rule's own trigger table as the authority on
+  # reach and this comment as the authority on what a MODE can change: nothing.
+  # See contexts/execution/roadmap-execution-contract.md.
 
   # Skip the /roadmap:process-* pre-run confirmation gate (true, false).
   #   true  = default. The command name names the scope; a discoverable

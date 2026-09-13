@@ -247,17 +247,21 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 26 |
 | B — consent | 3 |
-| C — guarded | 119 |
-| **Total** | **148** |
+| C — guarded | 122 |
+| **Total** | **151** |
 
-It rose to 148 on 2026-09-13 when `road-to-adversarial-verification-and-long-runs`
+It rose again on 2026-09-13 when `road-to-adversarial-verification-and-long-runs`
 Phase 0 added three C keys: `quality.local_auto_run_in_mission` (`consent` — it
 decides whether local verification runs at all inside a mission, which is the
 same decision `quality.local_auto_run` carries for chat) and the two
 `execution:` leaves, `fix_loop_max` and `escalation` (both `policy` — they bound
 and route an autonomous run's own recovery, and an agent that could widen its own
 bound has no bound). None is `derivable`: each states something no other surface
-computes, so the anti-regrowth ratchet on that disposition is untouched.
+computes, so the anti-regrowth ratchet on that disposition is untouched. Two
+branches added keys on the same day, so the totals in both tables are re-derived
+from the class table on the MERGED tree rather than by adding either side's
+delta — which is the arithmetic `lint_settings_classes` checks, and picking a
+side is how a stated count comes to describe a tree that no longer exists.
 
 It rose to 142 on 2026-09-08 from two independent additions that landed in the same
 day and are counted together here: `lean_projection.hosts` (one C, `policy`, from
@@ -378,9 +382,9 @@ the template, which is the drift this contract exists to prevent.
 |---|---|
 | derivable | 83 |
 | un-inferrable | 9 |
-| consent | 45 |
-| policy | 11 |
-| **Total** | **148** |
+| consent | 47 |
+| policy | 12 |
+| **Total** | **151** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -515,6 +519,9 @@ Rows follow template order, so a diff against the template reads straight down.
 | `project.improvement_pr_branch_prefix` | A | `improve/agent-` | branch-name cosmetics | derivable — the repo's own branch-naming convention, observable from `git branch -r` |
 | `project.audience` | C | `public` | C-test 4 — it governs the agent's own reasoning discipline: `self` makes the § 8-pre demand gate inert. Who a project is built for is a fact only its maintainer knows, so the agent never infers it and never asks; hand-edit or the GUI write route. The default is today's behaviour, so an install that never sets it is unchanged | policy |
 | `github.pr_reply_method` | A | `create_review_comment` | picks between two endpoints of one operation | derivable — the `auto` value already in the enum: the routing detects the working endpoint on first use and writes it back |
+| `delivery.merge` | C | `off` | C-test 1 — it is the configuration half of merge authority, resolved by ADR-268 section 3. An agent that could write it could grant itself the capability the key gates, which is the exact shape the C fence exists to refuse. `off` is today's behavior, so an install that never sets it is unchanged | consent |
+| `delivery.wait_for_ci` | C | `true` | C-test 1 — it authorises the run to keep spending time and tokens driving CI to a verdict rather than ending at push. A standing authorisation over the agent's own consumption is not a preference | consent |
+| `delivery.pr_topology` | C | `single` | C-test 4 — `stacked` is a plan the owner makes, never one the agent picks, and the roadmap surface that consumes it is written before execution. An agent-writable value here would let a run choose its own delivery shape mid-mission | policy |
 | `augment.rules_use_symlinks` | A | `false` | reversible install mechanics | derivable — dev-mode detection at install time plus a symlink-capability probe on the target filesystem |
 | `eloquent.access_style` | A | `getters_setters` | code convention | derivable — the convention the project's existing models already use; `standards-from-config` reads it off the tree |
 | `chat_history.enabled` | C | `true` | kill-switch over a path that writes conversation content to disk | consent |

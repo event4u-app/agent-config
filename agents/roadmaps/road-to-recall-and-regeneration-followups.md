@@ -39,14 +39,14 @@ registry seeded from known incidents, and it is worth closing rather than explai
 
 ## Phase 1 — The triple the registry missed
 
-- [ ] **1.1 Add the `hook_manifest.yaml` → `hook_manifest.json` triple** to
+- [x] **1.1 Add the `hook_manifest.yaml` → `hook_manifest.json` triple** to
       `check_generator_sync`. The compiled manifest is generated from the YAML by
       `compile_hook_manifest`, and a comment-only YAML edit on 2026-09-12 left the committed JSON
       on the previous fingerprint until CI caught it.
       verify: edit a comment in `src/scripts/hook_manifest.yaml` without recompiling, run
       `./scripts-run src/scripts/check_generator_sync` and read exit 1 naming the triple;
       recompile and read exit 0.
-- [ ] **1.2 Record why a green local test did not catch it.** Running
+- [x] **1.2 Record why a green local test did not catch it.** Running
       `hook_manifest_compiled.test.ts` locally passed, because an earlier `compile_hook_manifest`
       had already fixed the **working tree** while the defect was that the fix was never committed.
       verify: the note names the discriminator — read the committed blob
@@ -54,11 +54,11 @@ registry seeded from known incidents, and it is worth closing rather than explai
 
 ## Phase 2 — Two records that stopped being true
 
-- [ ] **2.1 Correct the hook-concern downstream-surface memory.** Its recipe for regenerating
+- [x] **2.1 Correct the hook-concern downstream-surface memory.** Its recipe for regenerating
       `hook_manifest.json` produces a file that reds `hook_manifest_compiled.test.ts`; the compiled
       shape is now `{manifest, fingerprint}`.
       verify: following the recipe as written produces a file the test accepts.
-- [ ] **2.2 Reconcile the gate-coverage header population count.** It claims 322 against an actual
+- [x] **2.2 Reconcile the gate-coverage header population count.** It claims 322 against an actual
       328, and 329 once `check_generator_sync` is counted — a delta of 7 against a tested tolerance
       of 15, so it is drift rather than breakage and is worth fixing before it reaches the
       tolerance.
@@ -77,9 +77,9 @@ registry seeded from known incidents, and it is worth closing rather than explai
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `check_generator_sync` carries the manifest triple, proven red before regeneration and
+- [x] AC-1 — `check_generator_sync` carries the manifest triple, proven red before regeneration and
       green after.
-- [ ] AC-2 — The committed-blob-versus-worktree discriminator is recorded where a reader
+- [x] AC-2 — The committed-blob-versus-worktree discriminator is recorded where a reader
       diagnosing a stale generated artefact will meet it.
-- [ ] AC-3 — The hook-concern downstream-surface recipe produces a file its own test accepts.
-- [ ] AC-4 — The gate-coverage header count equals the measured row count.
+- [x] AC-3 — The hook-concern downstream-surface recipe produces a file its own test accepts.
+- [x] AC-4 — The gate-coverage header count equals the measured row count.

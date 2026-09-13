@@ -1209,6 +1209,29 @@ tasks:
       a hard stop no amount of habituation survives.
     cmd: ./scripts-run src/scripts/lint_scheduled_deprecations {{.QUIET_FLAG}}
 
+  lint-major-migration-sections:
+    silent: true
+    desc: |
+      The BACKWARD half of the MIGRATION.md obligation the task above covers
+      forward. That one checks commitments due at a FUTURE major; this one
+      checks that a major which already SHIPPED a breaking change told a
+      consumer what to do about it.
+
+      The requirement is a stated answer, never a procedure: a section saying
+      the change asks nothing of a consumer satisfies it, and is the right
+      answer when it is true. Not every breaking change asks something, and a
+      gate that could not express that would turn into a ritual heading with no
+      content -- which is worse than no gate, because the heading is believed.
+
+      Majors below the floor constant in the gate are forgiven on the record.
+      A cutoff derived from the shipped version instead -- the shape the
+      rollback linter uses -- would have left this gate comparing ZERO majors
+      on the day it landed, which is the gate-that-scans-nothing green.
+
+      The same predicate refuses at the cut: release.ts calls the gate's
+      pendingMajorFinding on the rendered entry, before anything is written.
+    cmd: ./scripts-run src/scripts/lint_major_migration_sections {{.QUIET_FLAG}}
+
   check-gate-completeness:
     silent: true
     desc: |
@@ -2113,13 +2136,20 @@ tasks:
     silent: true
     desc: >-
       The platform half of the ratification mechanism. The artifact records who
-      reviewed a kernel or governance edit; this checks the forge actually
-      required anyone to — an active branch ruleset over the default branch, at
-      least one approving review, last-push approval, deletion and force-push
-      blocked, strict required checks carrying the context the ratification gate
-      runs in, and no unconditional bypass actor. Fails closed: a platform state
-      it cannot read is UNVERIFIABLE, which is a failure and not a pass. Fires
-      only on a diff that already requires ratification.
+      reviewed a kernel or governance edit; this compares the committed
+      expectation against the live ruleset — an active branch ruleset over the
+      default branch, review-thread resolution, deletion and force-push blocked,
+      at least one required status check context, and no unconditional bypass
+      actor. A baseline dimension may deviate under a dated, owner-authorised
+      waiver, which is reported as an accepted risk rather than hidden. Fails
+      closed: a platform state it cannot read is UNVERIFIABLE, which is a
+      failure and not a pass. Fires only on a diff that already requires
+      ratification. It is a LOCAL control an administrator may skip and both
+      sides of whose comparison an administrator may edit, so it does not
+      establish repository-wide enforcement — see `enforcement_boundary_note` in
+      `src/config/platform-anchor.json`. Corrected 2026-09-13: this text named
+      "at least one approving review, last-push approval", dimensions the owner
+      ruling of 2026-09-10 removed from the trust model entirely.
     cmd: ./scripts-run src/scripts/check_platform_anchor {{.QUIET_FLAG}}
 
   check-test-delta:

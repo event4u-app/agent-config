@@ -278,11 +278,24 @@ local_only:
   - id: check_platform_anchor
     class: token-scope-unavailable
     reason: >
-      Reads `repos/{owner}/{repo}/rulesets` to check that the forge actually
-      requires what the ratification mechanism claims it does — an active branch
-      ruleset over the default branch, an approving review, last-push approval,
-      deletion and force-push blocked, strict required checks, and no
-      unconditional bypass actor.
+      Reads `repos/{owner}/{repo}/rulesets` to compare the committed expectation
+      against the live ruleset — an active branch ruleset over the default
+      branch, review-thread resolution, deletion and force-push blocked, at
+      least one required status check context, and no unconditional bypass
+      actor. `strict_required_status_checks` is a baseline expectation currently
+      covered by the recorded waiver `arr-2026-09-10-strict-status-checks`
+      (owner, expires 2026-12-09), so a deviation there is reported as an
+      accepted risk rather than a finding.
+
+      Corrected 2026-09-13. This text used to name "an approving review,
+      last-push approval" among what is checked; both dimensions were removed
+      from the trust model by owner ruling on 2026-09-10 and are now reported as
+      observed evidence, never as a requirement. It also said the gate checks
+      that the forge "actually requires what the ratification mechanism claims
+      it does" — which overstates a voluntarily invoked local control, per the
+      reviewing council of 2026-09-13, and `check_platform_anchor` must not be
+      described as enforcing repository-wide compliance. See
+      `enforcement_boundary_note` in `src/config/platform-anchor.json`.
 
       Local-only because the permission does not exist, not because remote
       enforcement is unwanted — which is the opposite of the usual reason on this

@@ -196,6 +196,9 @@ tasks:
       # src/scripts/lint_scheduled_deprecations — the MIGRATION.md scheduled-
       # deprecations table, checked by arithmetic against the shipped major.
       - task: lint-scheduled-deprecations
+      # src/scripts/lint_major_migration_sections — the backward half: a major
+      # that shipped BREAKING CHANGES owes docs/MIGRATION.md a section.
+      - task: lint-major-migration-sections
       - task: check-gate-completeness
       - task: check-suppression-hygiene
       - task: check-review-dispositions

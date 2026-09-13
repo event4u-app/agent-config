@@ -52,30 +52,54 @@
 #                of them.
 #   canary       optional mutation recipe (Phase 7) — see CANARY below
 #
-# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-09-12)
+# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-09-13)
 # ----------------------------------------------------------
-# 328 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 330 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
-# re-run on the tree carrying these rows. Re-measured 2026-09-12 on the change
-# that adds `check_enforcement_matrix`: six scripts had arrived since the 322
-# recorded on 2026-09-08, which itself replaced the 306 of 2026-08-28 after the
-# tree drifted to 321 unnoticed — 15, exactly the drift tolerance in
-# `check_gate_coverage.test.ts` § states an honest denominator, so the next
-# single addition was always going to red it. Recomputed on this tree rather
-# than incremented: a stated population that nobody re-measures is the
-# un-asserted count this whole manifest exists to refuse.)
-# **97 rows are listed below**, so the manifest covers 97/330 = 29.4 % of the
+# re-run on the tree carrying these rows.)
+# **97 rows are listed below**, so the manifest covers 97/332 = 29.2 % of the
 # population, and is complete for every gate that can carry a floor. The row
 # count is `grep -c '^  - id:'`, recomputed here rather than incremented.
 #
-# RECOUNTED 2026-09-13, on the change that adds `check_test_delta` and
-# `check_test_weakening` (road-to-adversarial-verification-and-long-runs 2.4).
-# Both arrive WITH their rows rather than joining the uncovered remainder, which
-# is what the "complete for every gate that can carry a floor" clause above
-# obliges — a gate landing without a row would move the percentage by shrinking
-# the numerator's share, silently. Both carry a `--self-test` as well, so neither
-# adds to the `gate-self-test:registered-non-adopters` ratchet: that count is
-# shrink-only from here and a NEW registered gate must adopt or exempt.
+# RECOUNTED 2026-09-13, on a change that adds NO gate script — and that is the
+# point of this block rather than an aside. Every recount below was triggered by
+# someone adding a row and noticing the header was stale on the way past, which
+# makes the figure a function of who happened to look rather than of the tree.
+# Two scripts had arrived since the 2026-09-12 block below without one: 328 → 330.
+# The drift was 2 against the tolerance of 15 in `check_gate_coverage.test.ts`
+# § states an honest denominator, so nothing was red and nothing would have been
+# for another thirteen arrivals. Corrected here deliberately, while it is cheap,
+# because the 2026-09-08 block records what the other end of that tolerance costs:
+# the tree drifted to 321 against a stated 306 — 15 exactly — and the next single
+# addition was always going to red it.
+#
+# The honest limit of this correction: it is another hand recount, so it goes
+# stale the same way the moment the next script lands. The block below already
+# said as much on 2026-09-12 and it was true again within a day. What would
+# actually close it is deriving the figure at read time instead of asserting it —
+# `count_gate_scripts()` is already the function that answers, and the test
+# already calls it. Deliberately not done here: that is a change to what this
+# file IS (a hand-maintained manifest with a prose header) rather than a
+# correction of a number in it.
+#
+# RE-MEASURED 2026-09-12, on the change that adds `check_enforcement_matrix`:
+# `count_gate_scripts()` returned **328**. Six scripts had arrived since the 322
+# recorded on 2026-09-08, which itself replaced the 306 of 2026-08-28 after the
+# tree drifted to 321 unnoticed. Recomputed on that tree rather than incremented:
+# a stated population that nobody re-measures is the un-asserted count this whole
+# manifest exists to refuse.
+#
+# RECOUNTED AGAIN ON THE MERGE, 2026-09-13. Two branches recounted this header on
+# the same day and neither number survives: the block above measured 330 scripts
+# against 95 rows on a tree without `check_test_delta` / `check_test_weakening`,
+# and this branch measured 97 rows against a tree without the two scripts that
+# block counted. Re-derived on the MERGED tree rather than by adding either
+# side's delta — which is the same resolution `.secret-allow` prescribes for its
+# own pin, and for the same reason: picking a side is how a stated figure comes
+# to describe a tree that no longer exists. Both new gates arrive WITH their
+# rows, so the manifest stays complete for every gate that can carry a floor,
+# and both carry a `--self-test`, so neither adds to the
+# `gate-self-test:registered-non-adopters` ratchet.
 #
 # RECOUNTED 2026-09-07, on the change that adds `lint_agent_security` — the
 # security umbrella, which until this change was the one gate in the tree whose
