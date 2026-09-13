@@ -168,8 +168,14 @@ export function computeConflicts(plan: InstallPlan): readonly ConflictEntry[] {
             if (entry.kind === 'bridge') continue;
             if (entry.sha256 === null) continue;
             if (!existsSync(entry.path)) continue;
-            if (plan.policy.knownPaths.has(entry.path)) continue;
+            // The on-disk digest is computed BEFORE the ownership decision so
+            // that decision can consume it. Behaviour-identical to computing it
+            // after the `knownPaths` test — the remaining guards are unchanged —
+            // at the cost of one extra digest per recorded path. Phase 5.2 of
+            // road-to-a-conformance-check-that-can-fail keeps hash computation
+            // in this commit so the matrix commit carries none.
             const onDisk = sha256File(entry.path);
+            if (plan.policy.knownPaths.has(entry.path)) continue;
             if (onDisk === entry.sha256) continue;
             out.push({
                 path: entry.path,
