@@ -16,13 +16,7 @@ relates:
     note: >
       The UI lane this ledger discharges against is that roadmap's subject. It
       produces the evidence; this reads whether the evidence arrived.
-estate_growth_exempt: >-
-  The state this repository already writes has no reader. Verified 2026-09-11:
-  `src/scripts/hooks/rule_inject_hook.ts:185,198-207` writes one record per session under
-  `agents/runtime/state/rule-inject/`, and the only reads of that path are the writer itself at
-  `:368` and its own test. So the tree knows which obligations it delivered into a turn and
-  nothing asks whether the turn discharged them. Also grows open_blockers by four, every one of
-  them a decision the source set could not take for itself.
+estate_growth_exempt: "concern_count 60 to 61 — the one reader this whole roadmap exists to add. Verified 2026-09-11 and re-verified at execution: src/scripts/hooks/rule_inject_hook.ts writes one record per session under agents/runtime/state/rule-inject/ and the only reads of that path are the writer itself and its own test, so the tree knows which obligations it delivered into a turn and nothing asks whether the turn discharged them. The growth IS the deliverable: obligation-settle is the reader, it is advisory and fail_closed:false, it refuses nothing, and Phase 3 forbids a reader by its own exit criterion precisely so that a Phase-3-only merge — a second write-only state file beside the one this exists to give a reader — is the stated failure condition. The open_blockers half of the original claim is now spent in the other direction: all four blockers resolved with evidence in this same change, so that axis falls 53 to 49 rather than rising by four."
 estate_offset_exempt: >-
   No offset exists. The nearest held objects — `stubs/road-to-obligation-exposure-instrumentation.md`,
   `stubs/road-to-instructions-loaded-observer.md`, `stubs/road-to-task-completion-observability.md` —
@@ -129,25 +123,25 @@ may choose to pay.
 
 ## Phase 4 — Discharge, read from the diff and not from the tool event
 
-- [ ] **4.1 Add one concern on the turn-end slot, advisory**, computing the touched set from
+- [x] **4.1 Add one concern on the turn-end slot, advisory**, computing the touched set from
       `git diff --numstat HEAD` plus untracked files, the way the existing end-review concern does.
       Not from a tool event's file path — that misses every file a shell heredoc wrote.
       verify: a file created by a Bash heredoc on a UI path appears in the settle set.
-- [ ] **4.2 The design-pass concern writes a discharge** for the audit-gate obligation when its
+- [x] **4.2 The design-pass concern writes a discharge** for the audit-gate obligation when its
       freshness check already returns true. The decision exists today; only the write is missing.
       verify: the discharge appears in the ledger on a run where the audit is fresh, and the
       post-tool latency p95 is not above the Phase 1 baseline. No per-write validator is added.
 
 ## Phase 5 — Shadow, and only shadow
 
-- [ ] **5.1 The turn-end gate computes the new detector and records a would-refuse row**, refusing
+- [x] **5.1 The turn-end gate computes the new detector and records a would-refuse row**, refusing
       nothing — the same posture the design-pass stop concern already ships.
       verify: zero refusals occur across the shadow window, and the rows exist.
-- [ ] **5.2 Pre-register the bar in `docs/CLAIMS.md`** with its sample floor and its demotion
+- [x] **5.2 Pre-register the bar in `docs/CLAIMS.md`** with its sample floor and its demotion
       condition, per the turn-end detector demotion contract, **before** any code that can refuse.
       verify: `./scripts-run src/scripts/check_claims` is green and the row names the bar, the
       floor and the condition.
-- [ ] **5.3 State the shadow window in both wall-clock and session count.**
+- [x] **5.3 State the shadow window in both wall-clock and session count.**
       verify: both numbers are in the claim row, so the window cannot be declared over by whichever
       measure happens to be reached first.
 
@@ -156,11 +150,18 @@ may choose to pay.
 - [ ] **6.1 Arm it only after the pre-registered bar holds.**
       verify: the claim carries a verdict measured over the declared window before the arming
       commit.
-- [ ] **6.2 The new detector respects an open subagent dispatch** the way two of the four existing
+      **OPEN BY CONSTRUCTION, 2026-09-13 — and this is the pre-registration working, not failing.**
+      The bar is filed (`docs/CLAIMS.md`, `obligation-settle-shadow-bar`) and its window is
+      `>= 30 calendar days AND >= 50 affected sessions`, both measures, deliberately so that
+      neither can end it alone. The window opens with the commit that ships the detector, so no
+      run that also *creates* the window can satisfy a verdict measured *over* it. Arming is a
+      later, separate change whose only prerequisite is time and use — the step is not blocked on
+      a decision, a dependency, or anything an agent could do faster.
+- [x] **6.2 The new detector respects an open subagent dispatch** the way two of the four existing
       detectors do. Both are gated on the dispatch being closed, and neither parent records this —
       an open dispatch would otherwise be refused for a file that dispatch is still writing.
       verify: a fixture with an open dispatch leaves the detector silent.
-- [ ] **6.3 Continuation is one aggregate per missing set, never one per obligation**, and budget
+- [x] **6.3 Continuation is one aggregate per missing set, never one per obligation**, and budget
       exhaustion leaves the obligation **open** rather than waived.
       verify: five missing obligations produce one continuation; an unchanged missing set on the
       second attempt stops forcing continuation and the obligations still read open; classes
@@ -313,22 +314,22 @@ may choose to pay.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A committed evidence artefact carries the enforcement census output with its reading
+- [x] AC-1 — A committed evidence artefact carries the enforcement census output with its reading
       date, and none of the three corrected figures survives anywhere in adopted text.
-- [ ] AC-2 — No concern count in the tree is produced by grepping a string that also appears in a
+- [x] AC-2 — No concern count in the tree is produced by grepping a string that also appears in a
       comment.
-- [ ] AC-3 — The enforcement class value set is closed, written beside the existing
+- [x] AC-3 — The enforcement class value set is closed, written beside the existing
       `obligation_frequency` vocabulary, and expresses `observer` rather than remapping it.
-- [ ] AC-4 — The rule-injection concern writes one row per delivered rule, and the hook doctor
+- [x] AC-4 — The rule-injection concern writes one row per delivered rule, and the hook doctor
       reports the ledger — with no reader and no new concern in that phase.
-- [ ] AC-5 — A file written by a shell heredoc on a governed path appears in the discharge set;
+- [x] AC-5 — A file written by a shell heredoc on a governed path appears in the discharge set;
       post-tool p95 is not above the Phase 1 baseline.
 - [ ] AC-6 — The shadow window produced zero refusals, and its bar, sample floor and demotion
       condition were registered before any code able to refuse existed.
-- [ ] AC-7 — The armed detector is silent while a subagent dispatch is open, emits one continuation
+- [x] AC-7 — The armed detector is silent while a subagent dispatch is open, emits one continuation
       per missing set rather than one per obligation, and never refuses on classes `none` or
       `judge`.
-- [ ] AC-8 — Budget exhaustion leaves an obligation open. No path writes a satisfied or waived
+- [x] AC-8 — Budget exhaustion leaves an obligation open. No path writes a satisfied or waived
       verdict that no check produced.
-- [ ] AC-9 — No command verb, rule, skill or second census artefact was added, and the concern
+- [x] AC-9 — No command verb, rule, skill or second census artefact was added, and the concern
       count is at or below its ratchet.

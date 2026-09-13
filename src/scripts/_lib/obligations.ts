@@ -77,11 +77,47 @@ export interface DeliveredRow {
     readonly at: string;
 }
 
+/**
+ * One obligation discharged this session.
+ *
+ * Written by the concern that ALREADY made the decision — the design-pass
+ * concern knows the UI audit is fresh, so it is the only thing that can say so
+ * without re-deriving a verdict it does not own. A discharge nobody observed
+ * is never inferred: absence of a row means nothing was recorded, not that
+ * nothing happened, and the shadow rows below are labelled accordingly.
+ */
+export interface DischargeRow {
+    /** Rule id whose obligation this discharges. */
+    readonly rule: string;
+    /** What observed it — a concern name, so a reader can go and check. */
+    readonly by: string;
+    readonly at: string;
+}
+
+/**
+ * One turn-end reading that WOULD have refused, had anything been armed.
+ *
+ * The whole point of the shadow phase: the detector runs, the verdict is
+ * recorded, and nothing is refused. A row here is evidence about the
+ * detector's behaviour, never about the turn's compliance.
+ */
+export interface ShadowRow {
+    readonly at: string;
+    /** The missing SET, as one row. Never one row per obligation — see `appendShadow`. */
+    readonly missing: readonly string[];
+    /** 1 for the first reading of a given missing set, incrementing after. */
+    readonly attempt: number;
+    /** Always true today: a row is only written when the detector would refuse. */
+    readonly would_refuse: boolean;
+}
+
 /** The on-disk shape of one session's ledger. */
 export interface ObligationLedger {
     /** Cheap integrity check against a copied or hand-edited file. */
     readonly session_id: string;
     readonly delivered: readonly DeliveredRow[];
+    readonly discharged: readonly DischargeRow[];
+    readonly shadow: readonly ShadowRow[];
 }
 
 /** The JSON spelling of a row — `class` on disk, `cls` in TypeScript. */
@@ -158,26 +194,168 @@ export function appendDelivered(
     const target = path.join(root, statePathFor(session_id));
     let added = 0;
     try {
-        update_json_under_lock<{ session_id: string; delivered: SerialisedRow[] }>(
-            target,
-            (loaded) => {
-                const existing = parseRows(loaded);
-                const seen = new Set(existing.map((r) => r.rule));
-                const merged = existing.map(serialise);
-                for (const row of rows) {
-                    if (seen.has(row.rule)) continue;
-                    seen.add(row.rule);
-                    merged.push(serialise(row));
-                    added += 1;
-                }
-                if (added === 0) return null; // deliberate no-write
-                return { session_id, delivered: merged };
-            },
-        );
+        update_json_under_lock<LedgerFile>(target, (loaded) => {
+            const existing = parseRows(loaded);
+            const seen = new Set(existing.map((r) => r.rule));
+            const merged = existing.map(serialise);
+            for (const row of rows) {
+                if (seen.has(row.rule)) continue;
+                seen.add(row.rule);
+                merged.push(serialise(row));
+                added += 1;
+            }
+            if (added === 0) return null; // deliberate no-write
+            return { ...carryOver(loaded), session_id, delivered: merged };
+        });
     } catch {
         return 0;
     }
     return added;
+}
+
+/** The on-disk file, as the lock's mutator sees it. */
+interface LedgerFile {
+    session_id: string;
+    delivered: SerialisedRow[];
+    discharged: DischargeRow[];
+    shadow: ShadowRow[];
+}
+
+/**
+ * The arrays this write is not touching, preserved verbatim.
+ *
+ * Three writers share one file and each owns one array. Without this, the
+ * last writer of a turn silently truncates the other two — the kind of loss
+ * that shows up as a detector reporting a clean turn because the discharges
+ * it was meant to read were dropped by the delivery write that followed them.
+ */
+function carryOver(loaded: Partial<LedgerFile>): Pick<LedgerFile, 'discharged' | 'shadow'> {
+    return {
+        discharged: Array.isArray(loaded.discharged) ? loaded.discharged : [],
+        shadow: Array.isArray(loaded.shadow) ? loaded.shadow : [],
+    };
+}
+
+/**
+ * Record that one concern observed an obligation discharged.
+ *
+ * Idempotent per (rule, by): the design-pass concern may fire many times in a
+ * turn and the ledger wants the fact, not the frequency.
+ */
+export function appendDischarge(
+    root: string,
+    session_id: string,
+    rows: readonly DischargeRow[],
+): number {
+    if (rows.length === 0) return 0;
+    if (is_replay_mode()) return 0;
+    if (session_id.trim() === '') return 0;
+
+    const target = path.join(root, statePathFor(session_id));
+    let added = 0;
+    try {
+        update_json_under_lock<LedgerFile>(target, (loaded) => {
+            const existing = Array.isArray(loaded.discharged) ? loaded.discharged : [];
+            const key = (r: DischargeRow): string => `${r.rule} ${r.by}`;
+            const seen = new Set(existing.map(key));
+            const merged = [...existing];
+            for (const row of rows) {
+                if (seen.has(key(row))) continue;
+                seen.add(key(row));
+                merged.push(row);
+                added += 1;
+            }
+            if (added === 0) return null;
+            return {
+                session_id,
+                delivered: parseRows(loaded).map(serialise),
+                discharged: merged,
+                shadow: Array.isArray(loaded.shadow) ? loaded.shadow : [],
+            };
+        });
+    } catch {
+        return 0;
+    }
+    return added;
+}
+
+/** Rules discharged this session, by rule id. */
+export function readDischarged(root: string, session_id: string): DischargeRow[] {
+    const file = readLedgerFile(root, session_id);
+    if (file === null) return [];
+    return Array.isArray(file.discharged) ? file.discharged : [];
+}
+
+/** Shadow readings recorded this session. */
+export function readShadow(root: string, session_id: string): ShadowRow[] {
+    const file = readLedgerFile(root, session_id);
+    if (file === null) return [];
+    return Array.isArray(file.shadow) ? file.shadow : [];
+}
+
+/**
+ * Record one would-refuse reading — ONE ROW PER MISSING SET, never per obligation.
+ *
+ * The aggregation is the contract, not an optimisation. Five missing
+ * obligations are one reading of one turn, and emitting five rows would let a
+ * later count of "refusals" read five times the truth while every one of them
+ * described the same moment.
+ *
+ * `attempt` increments when the SAME missing set is seen again. An unchanged
+ * set on a second reading is the signal that nothing moved — the caller uses
+ * it to stop forcing continuation, and it is recorded here so that decision is
+ * auditable rather than re-derived.
+ *
+ * Returns the attempt number written, or 0 when nothing was written.
+ */
+export function appendShadow(
+    root: string,
+    session_id: string,
+    missing: readonly string[],
+    now: string = stamp(),
+): number {
+    if (missing.length === 0) return 0;
+    if (is_replay_mode()) return 0;
+    if (session_id.trim() === '') return 0;
+
+    const fingerprint = [...missing].sort().join(' ');
+    const target = path.join(root, statePathFor(session_id));
+    let attempt = 0;
+    try {
+        update_json_under_lock<LedgerFile>(target, (loaded) => {
+            const existing = Array.isArray(loaded.shadow) ? loaded.shadow : [];
+            const prior = existing.filter(
+                (r) => [...(r.missing ?? [])].sort().join(' ') === fingerprint,
+            );
+            attempt = prior.length + 1;
+            return {
+                session_id,
+                delivered: parseRows(loaded).map(serialise),
+                discharged: Array.isArray(loaded.discharged) ? loaded.discharged : [],
+                shadow: [
+                    ...existing,
+                    { at: now, missing: [...missing], attempt, would_refuse: true },
+                ],
+            };
+        });
+    } catch {
+        return 0;
+    }
+    return attempt;
+}
+
+/** The whole file for one session, or `null` when it is absent or not ours. */
+function readLedgerFile(root: string, session_id: string): Partial<LedgerFile> | null {
+    if (session_id.trim() === '') return null;
+    const target = path.join(root, statePathFor(session_id));
+    try {
+        const decoded: unknown = JSON.parse(fs.readFileSync(target, 'utf-8'));
+        if (typeof decoded !== 'object' || decoded === null) return null;
+        if ((decoded as { session_id?: unknown }).session_id !== session_id) return null;
+        return decoded as Partial<LedgerFile>;
+    } catch {
+        return null;
+    }
 }
 
 /**

@@ -178,6 +178,41 @@ export function enforcement_class_of(declared: string): EnforcementClass | null 
  * claim this could contradict.
  */
 /**
+ * Classes whose discharge a machine could, in principle, observe.
+ *
+ * The discriminator is not severity — it is whether a mechanical discharge
+ * EXISTS to look for. `hook`, `validator` and `test` name a carrier that runs
+ * and leaves a trace. `observer`, `instruction-only` and `none` name,
+ * respectively, an instrument that cannot block, an honestly model-carried
+ * obligation, and no carrier at all — none of the three produces an artefact a
+ * detector could read, so a detector refusing on one would be demanding
+ * evidence nobody can produce.
+ *
+ * Measured 2026-09-13 over the frozen routing corpus: 69 of 97 delivered rules
+ * are class `none`. A detector without this filter would fire on the large
+ * majority of every turn, which is the "one false block and the operator
+ * disables the carrier for good" failure the risk register ranks first.
+ *
+ * The source set's proposed taxonomy also named a `judge` class that never
+ * refuses. It has no representation here because it is not in the declared
+ * vocabulary the schema admits, and adding a value to make a sentence
+ * transcribe literally would be inventing the second taxonomy this work exists
+ * to avoid. Its INTENT — a class whose discharge is a human judgement and so
+ * must never be refused on — is carried by `observer` and `instruction-only`,
+ * both excluded below.
+ */
+export const REFUSABLE_CLASSES: ReadonlySet<EnforcementClass> = new Set<EnforcementClass>([
+    'hook',
+    'validator',
+    'test',
+]);
+
+/** Whether a detector may ever refuse on this class. */
+export function may_refuse_on(cls: EnforcementClass): boolean {
+    return REFUSABLE_CLASSES.has(cls);
+}
+
+/**
  * The class declared by a rule's frontmatter, read straight off the body text.
  *
  * Lives here rather than in the ledger that calls it, so every piece of

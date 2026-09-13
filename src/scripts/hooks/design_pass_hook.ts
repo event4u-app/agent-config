@@ -56,6 +56,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { appendDischarge, stamp } from '../_lib/obligations.js';
 import { isUiPath, isUiTreePath } from '../_lib/ui_surface.js';
 import { loadDesignContext, scanFile } from '../lint_design_slop.js';
 import { readHookStdin } from './hook_stdin.js';
@@ -135,6 +136,43 @@ export const isUiSurface = (p: string): boolean => isUiPath(p) || isUiTreePath(p
  * because it looks like evidence. An artefact older than the file it is
  * supposed to describe has not seen the change.
  */
+/**
+ * Record that the UI-audit obligation was discharged, when it was.
+ *
+ * This concern is the only thing in the tree that knows. It already decides
+ * audit freshness for its own advisory line; until now that decision was spent
+ * on one message and thrown away, so a turn-end reader asking "was the audit
+ * done?" had to re-derive a verdict it does not own. The decision existed —
+ * only the write was missing.
+ *
+ * Discharged means: at least one target was touched AND every one of them has
+ * a fresh audit. A partial pass records nothing, because `ui-audit-gate`'s
+ * obligation is about the surfaces this turn wrote, not about a quorum of them.
+ *
+ * NO PER-WRITE VALIDATOR IS ADDED. The write is one small append behind the
+ * same lock the ledger already uses, on a path that has an mtime comparison in
+ * front of it — deliberately, because this concern sits on `post_tool_use`,
+ * the hottest slot it binds, and a validation pass per write is exactly the
+ * cost the phase forbids.
+ */
+export function recordAuditDischarge(
+    root: string,
+    targets: readonly string[],
+    auditMissing: readonly string[],
+): void {
+    if (targets.length === 0 || auditMissing.length > 0) return;
+    const session = (process.env["CLAUDE_CODE_SESSION_ID"] ?? "").trim();
+    if (session === "") return;
+    try {
+        appendDischarge(root, session, [
+            { rule: "ui-audit-gate", by: "design-pass", at: stamp() },
+        ]);
+    } catch {
+        // A discharge that cannot be recorded is a missing reading, never a
+        // reason to fail the write that prompted it.
+    }
+}
+
 export function auditIsFresh(root: string, target: string): boolean {
     try {
         const a = fs.statSync(path.join(root, AUDIT_REL)).mtimeMs;
@@ -329,6 +367,7 @@ function main(): number {
     }
 
     const auditMissing = targets.filter((t) => !auditIsFresh(root, t));
+    recordAuditDischarge(root, targets, auditMissing);
     let result = decide(slot, findings, auditMissing, new Set(state.surfaced), renderAvailable(root));
     if (scanFailed) {
         result = { ...result, verification: 'unverified', degradation_reason: `detector unavailable: ${scanFailed}` };

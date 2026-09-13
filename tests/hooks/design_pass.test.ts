@@ -8,15 +8,21 @@
  */
 import { describe, expect, it } from 'vitest';
 
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
 import {
     P0_FLOOR_IDS,
     decide,
     isUiSurface,
     isUiTrivial,
+    recordAuditDischarge,
     render,
     targetPath,
     type Finding,
 } from '../../src/scripts/hooks/design_pass_hook.js';
+import { readDischarged } from '../../src/scripts/_lib/obligations.js';
 
 const f = (severity: Finding['severity'], catalogId = 'Q1', line = 1, file = 'components/A.tsx'): Finding => ({
     file,
@@ -158,5 +164,79 @@ describe('payload extraction tolerates host key variance', () => {
     it('returns null when no path key is present', () => {
         expect(targetPath({ tool_input: { content: 'x' } })).toBeNull();
         expect(targetPath(null)).toBeNull();
+    });
+});
+
+describe('the audit discharge — the decision existed, only the write was missing', () => {
+    const withSession = (id: string | null, fn: () => void): void => {
+        const prev = process.env['CLAUDE_CODE_SESSION_ID'];
+        if (id === null) delete process.env['CLAUDE_CODE_SESSION_ID'];
+        else process.env['CLAUDE_CODE_SESSION_ID'] = id;
+        try {
+            fn();
+        } finally {
+            if (prev === undefined) delete process.env['CLAUDE_CODE_SESSION_ID'];
+            else process.env['CLAUDE_CODE_SESSION_ID'] = prev;
+        }
+    };
+
+    let root = '';
+    const fresh = (): string => fs.mkdtempSync(path.join(os.tmpdir(), 'discharge-'));
+
+    it('records a discharge when every touched target has a fresh audit', () => {
+        root = fresh();
+        withSession('s1', () => recordAuditDischarge(root, ['components/A.tsx'], []));
+        expect(readDischarged(root, 's1').map((r) => r.rule)).toEqual(['ui-audit-gate']);
+        expect(readDischarged(root, 's1')[0]?.by).toBe('design-pass');
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('records NOTHING on a partial pass', () => {
+        // The obligation is about the surfaces this turn wrote, not a quorum
+        // of them — one stale target means the audit was not done.
+        root = fresh();
+        withSession('s1', () =>
+            recordAuditDischarge(root, ['components/A.tsx', 'components/B.tsx'], [
+                'components/B.tsx',
+            ]),
+        );
+        expect(readDischarged(root, 's1')).toEqual([]);
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('records nothing when no target was touched at all', () => {
+        root = fresh();
+        withSession('s1', () => recordAuditDischarge(root, [], []));
+        expect(readDischarged(root, 's1')).toEqual([]);
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('records nothing, and does not throw, with no session id', () => {
+        root = fresh();
+        withSession(null, () =>
+            expect(() => recordAuditDischarge(root, ['components/A.tsx'], [])).not.toThrow(),
+        );
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('is idempotent across repeated fires in one turn', () => {
+        root = fresh();
+        withSession('s1', () => {
+            recordAuditDischarge(root, ['components/A.tsx'], []);
+            recordAuditDischarge(root, ['components/A.tsx'], []);
+            recordAuditDischarge(root, ['components/A.tsx'], []);
+        });
+        expect(readDischarged(root, 's1')).toHaveLength(1);
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('never throws when the ledger cannot be written', () => {
+        root = fresh();
+        const wall = path.join(root, 'wall');
+        fs.writeFileSync(wall, 'not a directory');
+        withSession('s1', () =>
+            expect(() => recordAuditDischarge(wall, ['components/A.tsx'], [])).not.toThrow(),
+        );
+        fs.rmSync(root, { recursive: true, force: true });
     });
 });

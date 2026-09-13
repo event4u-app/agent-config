@@ -83,6 +83,7 @@ import { main as sourceFirstGateMain } from './source_first_gate_hook.js';
 import { main as interruptionLedgerMain } from './interruption_ledger_hook.js';
 import { main as runContinuationMain } from './run_continuation_hook.js';
 import { main as journalRecordMain } from './journal_record_hook.js';
+import { main as obligationSettleMain } from './obligation_settle_hook.js';
 
 /** A concern `main` — argv-taking or not; both shapes exist. */
 export type ConcernMain = (argv?: string[]) => number | undefined | void;
@@ -134,6 +135,7 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
     'src/scripts/hooks/skill_route_hook.ts': skillRouteMain as ConcernMain,
     'src/scripts/hooks/rule_inject_hook.ts': ruleInjectMain as ConcernMain,
     'src/scripts/hooks/end_review_nudge_hook.ts': endReviewNudgeMain as ConcernMain,
+    'src/scripts/hooks/obligation_settle_hook.ts': obligationSettleMain as ConcernMain,
     'src/scripts/hooks/review_baseline_hook.ts': reviewBaselineMain as ConcernMain,
     'src/scripts/hooks/turn_end_gate_hook.ts': turnEndGateMain as ConcernMain,
     'src/scripts/hooks/edit_shape_hook.ts': editShapeMain as ConcernMain,
