@@ -139,7 +139,7 @@ proposed as a replacement, `check_kernel_edit_ratified`, landed **alongside**
 the deny — that context file calls it "an ADDITION to this soak, never a
 replacement".
 
-**There is nothing to do.** No behaviour was removed, so no migration exists for
+**There is nothing to do.** No behavior was removed, so no migration exists for
 it. If you already acted on the published line — dropped the hook binding from a
 local override, or relaxed a kernel-edit workflow on the strength of it — put it
 back. The correction is recorded at the head itself, in
