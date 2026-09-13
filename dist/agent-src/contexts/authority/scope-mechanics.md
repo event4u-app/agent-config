@@ -127,20 +127,6 @@ User decides. Default: **3** when the current branch's name and scope match the 
 
 User decides. Never silently `gh pr create` on a branch that is behind its base.
 
-## Scope growth — enumerated by ownership, not by size
-
-```
-SCOPE GROWTH DISCOVERED MID-MISSION IS ROUTED BY WHO OWNS IT, NOT BY HOW BIG
-IT LOOKS. THE THREE LISTS ARE CLOSED. AGENT-OWNED GROWTH IS DONE AND RECORDED
-AS A SCOPE DELTA — NEVER ASKED ABOUT. GROWTH MATCHING NEITHER OF THE FIRST TWO
-LISTS IS NOT SCOPE GROWTH AT ALL: IT IS A FOLLOW-UP ARTIFACT.
-```
-
-The three closed lists — six agent-owned kinds, four council-owned, two
-owner-owned — plus the follow-up rule and the scope-delta record:
-[`scope-growth-ownership`](scope-growth-ownership.md). One item classifies
-deterministically with `./scripts-run src/scripts/scope_growth "<description>"`.
-
 ## Decline = silence — context
 
 The right moment to ask is **before** the work starts (writing the
