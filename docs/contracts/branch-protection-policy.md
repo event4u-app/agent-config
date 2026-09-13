@@ -52,14 +52,22 @@ tooling pointed at it reads "unprotected" for a protected branch.
 | Stale reviews dismissed on push | yes |
 | Allowed merge methods | merge · squash · rebase |
 | Branch must be up to date | **no** (`strict_required_status_checks_policy: false`) — this row read `true` until 2026-09-10, when it was checked against the live ruleset while reasoning about a different question. The table's own "Read it" row is the authority; a hand-written value drifts silently because nothing compares them. |
-| **Required status checks** | **exactly one — `Sync + Generate Tools Consistency`** |
-| Bypass | repository-admin role, `always` |
+| **Required status checks** | **two, since 2026-09-11 — `Sync + Generate Tools Consistency` and `Standing payload delta + budget gate`.** Read `exactly one — Sync + Generate Tools Consistency` from 2026-08-02 until then; the second was added by the ruleset edit ADR-276 records. Re-measured 2026-09-13. |
+| Bypass | **none, since 2026-09-10 — `bypass_actors: []`, `current_user_can_bypass: never`.** Re-measured 2026-09-13. Read `repository-admin role, always` until 2026-09-10, when `bypass_actors` was emptied. An `OrganizationAdmin` bypass with `bypass_mode: always` was re-added on 2026-09-11 (version `49393554`) and removed again on 2026-09-12 (version `49500777`), so a record describing that bypass in the present tense describes a one-day state. |
 
 Everything else in CI is **advisory at the branch-protection layer**: the
-checks run, a red one is visible on the PR, but only
-`Sync + Generate Tools Consistency` mechanically blocks the merge button.
-The practical gate is therefore maintainer review of the checks tab, plus
-the admin bypass being deliberately not used.
+checks run, a red one is visible on the PR, but only the two required contexts
+above mechanically block the merge button.
+
+The practical gate is therefore maintainer review of the checks tab. **Corrected
+2026-09-13:** this sentence used to end "plus the admin bypass being deliberately
+not used", which described a bypass actor that no longer exists — since
+2026-09-10 the ruleset carries none, so there is nothing to deliberately not use,
+and the protection is structural rather than a matter of restraint. What replaces
+that reassurance is the opposite concern, and it is recorded rather than
+implied: with `bypass_actors: []` there is no escape hatch, so a ruleset mistake
+locks the sole maintainer out of the PR path entirely. That is what the recovery
+procedure below is for.
 
 ## What actually runs on a feature PR
 
@@ -186,6 +194,82 @@ Sharded and OS-matrixed checks (`Node Tests (… shard N/4)`, the
 required list: their names encode shard counts and runner labels, so any
 matrix change silently breaks a pinned required-check name — the same class
 of drift this reconciliation just removed.
+
+## Administrator recovery from a lockout — written, NOT yet rehearsed
+
+```
+WITH `bypass_actors: []` THERE IS NO ESCAPE HATCH. A RULESET MISTAKE LOCKS
+THE SOLE MAINTAINER OUT OF THE PR PATH, AND THE REPAIR CANNOT TRAVEL THROUGH
+THE PR PATH IT BROKE. THE RECOVERY IS AN ADMIN API WRITE, AND IT IS A
+HARD-FLOOR ACTION LIKE THE ONE ABOVE.
+```
+
+This happened once already. On 2026-09-10 at 12:51 a ruleset edit left the
+repository in a state where the only maintainer could not merge, and the escape
+that had made such a mistake survivable — the repository-admin bypass actor — was
+removed in the same edit. `admin: true` on the acting account (measured
+2026-09-13) is a **capability claim, not a rehearsed procedure**, and the
+difference is the whole reason this section exists.
+
+**Step 1 — confirm it is a ruleset lockout and not a red check.** A lockout
+reports `mergeStateStatus: BLOCKED` with every required context green:
+
+```bash
+gh pr view <N> --json mergeStateStatus,reviewDecision,statusCheckRollup
+gh api repos/event4u-app/agent-config/rulesets/17749383 --jq '{enforcement, current_user_can_bypass}'
+```
+
+**Step 2 — capture the broken state before changing it.** This is the evidence
+artifact; without it the repair cannot be reviewed afterwards.
+
+```bash
+gh api repos/event4u-app/agent-config/rulesets/17749383 > ruleset-locked.json
+gh api repos/event4u-app/agent-config/rulesets/17749383/history --jq '.[] | "\(.version_id) \(.updated_at)"'
+```
+
+**Step 3 — identify the last good version and read it.** The history payload
+nests the ruleset under `.state`; a top-level `.bypass_actors` jq reads empty on
+every version and will mislead you:
+
+```bash
+gh api repos/event4u-app/agent-config/rulesets/17749383/history/<VERSION_ID> --jq '.state'
+```
+
+**Step 4 — restore.** Two routes, in order of preference:
+
+```bash
+# (a) narrowest: disable enforcement, land the repair PR, re-enable.
+gh api -X PUT repos/event4u-app/agent-config/rulesets/17749383 \
+  -f enforcement=evaluate
+
+# (b) full restore of a known-good version captured in step 3.
+gh api -X PUT repos/event4u-app/agent-config/rulesets/17749383 --input ruleset-good.json
+```
+
+Route (a) is preferred because `evaluate` keeps the ruleset and its history
+intact while suspending the block, so the repair is one field in each direction
+and the ruleset id never changes. Deleting the ruleset is **not** a route: it
+loses the version history that step 3 depends on next time.
+
+**Step 5 — re-enable and verify, in the same session.** Leaving the trunk in
+`evaluate` is a worse state than the lockout, because it is silent:
+
+```bash
+gh api -X PUT repos/event4u-app/agent-config/rulesets/17749383 -f enforcement=active
+gh api repos/event4u-app/agent-config/rulesets/17749383 --jq '{enforcement, bypass_actors, current_user_can_bypass}'
+./scripts-run src/scripts/check_platform_anchor --files src/config/platform-anchor.json
+```
+
+**What this procedure does NOT yet have, stated plainly rather than implied
+away: a rehearsal.** Step 0.2 of `road-to-bounded-approval-floor-waiver.md`
+requires it to have been executed once against a non-default-branch ruleset
+before it may be called tested, and that has not been done. Every step above is
+an admin API **write on repository protection settings** — a Hard-Floor action
+under `non-destructive-by-default`, reserved for the maintainer with explicit
+this-turn confirmation, exactly like the Enforce half above. An agent may write
+this procedure; an agent may not rehearse it. Until a maintainer does, treat it
+as a documented hypothesis: the commands are the right ones, and nobody has
+watched them work.
 
 ## The path-filter trap on a required check
 

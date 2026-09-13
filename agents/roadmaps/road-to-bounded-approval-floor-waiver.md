@@ -8,9 +8,12 @@ estate_offset_exempt: >-
   slot would be exactly the gate-gaming this key exists to make visible instead. The count half
   is already neutral because this file is a draft — the key is here because one_in_one_out
   counts the added file separately, and check_estate_count refused the change without it.
-  Blocking rather than cosmetic: check_platform_anchor runs in taskfiles/ci-fast.yml, so while
-  the drift stands every kernel-rule, governance-hook and anchor-path change is refused at
-  pre-push.
+  Blocking rather than cosmetic WHEN THIS WAS WRITTEN, and no longer true — corrected
+  2026-09-13 rather than left standing, because it is the sentence that justified the file's
+  priority. check_platform_anchor runs in taskfiles/ci-fast.yml, so while the drift stood every
+  kernel-rule, governance-hook and anchor-path change was refused at pre-push. The waiver
+  mechanism then landed: measured 2026-09-13, the gate reports PASS_WITH_ACCEPTED_RISK and
+  exits 0, so nothing is refused. What remained was record work, which is what closed this file.
 execution:
   mode: phase-checkpoints
 relates:
@@ -73,14 +76,28 @@ in `threat_model_note`. Both are tracked as the second half of the
 
 `src/config/platform-anchor.json` describes the live ruleset truthfully again,
 and it does so without pretending the approval floor still protects anything.
-A reader can tell from the file alone that the two approval checks are
-suspended, on what stated ground, and what makes the suspension stop being
-valid — and `check_platform_anchor` refuses a suspension that is missing,
-malformed, stale, or scoped to any field beyond those two.
+
+**Restated 2026-09-13, because the original goal below names a mechanism the
+owner ruling replaced.** As shipped: the two approval checks are *removed* from
+the expectation and from the floor rather than suspended, and the thing a reader
+can tell from the file alone is which dimension is knowingly waived
+(`strict_required_status_checks`), on what stated ground, by whose authority, and
+when the waiver expires — with `check_platform_anchor` refusing a waiver that is
+missing a required field, stale, past `expires`, authored by a non-owner
+authority, or scoped to any `NEVER_WAIVABLE` dimension.
+
+*Original text, true until the owner ruling of 2026-09-10:* a reader can tell
+from the file alone that the two approval checks are suspended, on what stated
+ground, and what makes the suspension stop being valid — and
+`check_platform_anchor` refuses a suspension that is missing, malformed, stale,
+or scoped to any field beyond those two.
 
 ## What is measured, so the plan is not built on prose
 
-Every row re-read on 2026-09-10 afternoon.
+Every row re-read on 2026-09-10 afternoon. **Rows M1, M6 and M12 were re-measured
+on 2026-09-13 and had moved; each carries its own correction below rather than
+being rewritten in place, so the reasoning that was built on the old reading
+stays legible. M14-M16 are new on 2026-09-13.**
 
 | ID | Fact | Where |
 |---|---|---|
@@ -89,14 +106,18 @@ Every row re-read on 2026-09-10 afternoon.
 | M3 | PR #1988 merged at `2026-09-10T13:17:09Z` = **15:17:09 local** — after the 15:16 edit and one minute *before* the 15:18 version exists. The 15:18 edit is not part of what unblocked it | `gh pr view 1988 --json mergedAt` |
 | M4 | 16:04 restored `strict` to `true` and 16:06 returned it to `false`. The restoration was made on the assumption that 15:18 had been a side effect; the owner then stated the intent | `/history/49276909`, `/history/49277135` |
 | M5 | `check_platform_anchor` runs in `taskfiles/ci-fast.yml` — in `preflight` and as its own target — and in no workflow. The rulesets endpoint needs the repository `administration` permission, which does not exist as a workflow `GITHUB_TOKEN` scope | `taskfiles/ci-fast.yml`; `.github/workflows/rule-backstops.yml`; `src/config/ci-local-parity.yml` (`local_only`, `token-scope-unavailable`) |
-| M6 | `NON_NEGOTIABLE_FLOOR` carries `minimum_approving_reviews: 1`, `require_last_push_approval: true`, `strict_required_status_checks: true` | `src/scripts/_lib/platform_anchor.ts` |
+| M6 | *As of 2026-09-10:* `NON_NEGOTIABLE_FLOOR` carries `minimum_approving_reviews: 1`, `require_last_push_approval: true`, `strict_required_status_checks: true`. **Corrected 2026-09-13: none of the three is in the floor today.** The two approval keys were removed by the owner ruling; `strict_required_status_checks` left the floor because a floored dimension is unwaivable by construction, and it is now a baseline expectation under waiver `arr-2026-09-10-strict-status-checks` | `src/scripts/_lib/platform_anchor.ts` |
 | M7 | `enforceFloor` is called from **inside** `readAnchorPolicy`, against the narrowed 11-field `AnchorPolicy` struct. It never sees a top-level sibling of `required`, and it has no clock | `src/scripts/_lib/platform_anchor.ts` |
 | M8 | A waiver placed inside `required` is refused as `policy-unknown-field`; placed as a sibling it is ignored and the floor still refuses `0`/`false`. Both measured by running `readAnchorPolicy` on the two candidate files | `readAnchorPolicy` |
 | M9 | `tests/scripts/platform_anchor.test.ts:170-175` asserts `minimum_approving_reviews: 0` → `policy-below-floor`. `:218-220` asserts `1.5` and `10_000` rejected and `2` accepted — it concerns neither approval field, and `:220` is a positive assertion | the test file |
 | M10 | **No test anywhere asserts that `require_last_push_approval: false` is refused by the floor.** Both council seats stated `:218-220` proves it; it does not | `grep` over the test file |
 | M11 | `required_status_check_contexts: []` is already refused (`platform_anchor.test.ts:180`, backed by the `minimum_required_contexts` branch), and `platform-anchor.json` already carries `required_status_check_contexts_note` | test file; anchor JSON |
-| M12 | `SUPPORTED_ANCHOR_SCHEMA = 1`, and `checkAnchorIdentity` hard-rejects any other value | `src/scripts/_lib/platform_anchor.ts` |
+| M12 | *As of 2026-09-10:* `SUPPORTED_ANCHOR_SCHEMA = 1`, and `checkAnchorIdentity` hard-rejects any other value. **Corrected 2026-09-13: it is `2`.** The version moved with the field set — see 1.5 | `src/scripts/_lib/platform_anchor.ts` |
 | M13 | The acting account has `admin: true` on the repository, so ruleset administration is possible independently of the PR merge path | `gh api repos/event4u-app/agent-config --jq .permissions` |
+| M14 | **Eight ruleset versions exist on 2026-09-13, not six** — M1 counted only through 16:06. Two more landed: `49393554` 2026-09-11 12:32 and `49500777` 2026-09-12 15:05 | `/rulesets/17749383/history` |
+| M15 | The 2026-09-11 version added an `OrganizationAdmin` bypass actor with `bypass_mode: always`, **and the 2026-09-12 version removed it again**. Live on 2026-09-13: `bypass_actors: []`, `current_user_can_bypass: never`. So `ADR-276`'s present-tense record of that bypass describes a state reverted the next day | `/history/49393554` and `/history/49500777`, read via `.state.bypass_actors` — the history payload nests the ruleset under `state`, and a top-level `.bypass_actors` jq reads empty on every version, which is a trap worth naming |
+| M16 | The live ruleset now requires **two** contexts, not one: `Sync + Generate Tools Consistency` and `Standing payload delta + budget gate`. The expectation names only the first, and that is not a finding — `minimum_required_contexts` is a floor, so a forge requiring more than the expectation satisfies it | `gh api …/rulesets/17749383`; `check_platform_anchor` output |
+| M17 | **The gate passes today.** `check_platform_anchor --files src/config/platform-anchor.json` reports `PASS_WITH_ACCEPTED_RISK`, ledger `planned 3 · completed 1 · failed 0`, exit 0. The frontmatter's "blocking drift" premise is therefore spent | run 2026-09-13 |
 
 ## What the council actually said
 
@@ -146,18 +167,111 @@ obscures a deliberate single-operator model. The proposed reason is therefore
 than a constraint. **An earlier draft of this roadmap used the
 "unsatisfiable" framing throughout; that was the framing anthropic rejects.**
 
-## Open design question 1 — fail-measurable or fail-explicit
+## Open design question 1 — fail-measurable or fail-explicit — ANSWERED 2026-09-13
 
-Not answerable from the record: the two seats disagree, and openai attached a
-`refused` vote to the shape it rejects. Both agree on the object; they disagree
-on what invalidates it. Options are openai's measured-eligibility invalidation,
-anthropic's `invalidate_on_next_edit` plus human `revisit_if`, or a hybrid where
-the measurement is *specified* as a manual review trigger and automated only if
-the API ever supports it — which is anthropic's own compromise ("specified but
-not automated"). This must be put back to the council before Phase 1.
+```
+ANSWERED. FAIL-EXPLICIT IS SUFFICIENT, AND THE REASON IS ARCHITECTURAL
+RATHER THAN DIMENSIONAL: THE GATE IS A LOCAL CONTROL A HUMAN RUNS (M5),
+AND A HUMAN CAN READ PROSE. NO TRIGGER NEEDS MECHANISING.
+IF ENFORCEMENT EVER MOVES TO CI, THE ANSWER CHANGES WITH IT.
+```
 
-## Open design question 2 — the third floor field
+**How it was answered.** The question as posed concerned an exemption over
+approver eligibility, which the owner ruling deleted. It was put back to the
+council reframed onto the dimension that *did* receive a waiver
+(`strict_required_status_checks`), with the reframing itself offered for
+challenge. Council 2026-09-13, `anthropic/claude-sonnet-4-5` +
+`openai/codex-default`, 2 rounds, blind peer review, subscription transport,
+$0.0000, **2/2 present and convergent**. Quorum honesty, in the same terms this
+file used for the 2026-09-10 run: the record carries `threshold: 1`, so it is a
+degraded-quorum run by configuration, and its `absent_members` names both seats
+from a pre-run liveness probe that had no prior exchange recorded for either —
+while the same object counts two present and two answered. Both texts are real;
+2/2 is the record's own figure, not a claim that the run required two.
 
+- **1a — sufficient.** Both seats: yes. anthropic made M5 load-bearing rather
+  than contextual: *"Prose is sufficient because the executor is literate…
+  The answer to 1a is 'yes' specifically because of M5. If the enforcement
+  architecture changed, the answer would too."* openai: the waiver *"accepts a
+  known configuration state rather than relying on an unverifiable claim"* —
+  which is the distinction that separates it from the approver-eligibility case.
+- **1b — nothing is mechanised.** Both seats. openai priced it: a 30-day median
+  collector needs *"workflow-data ingestion, population definitions, storage, and
+  local-gate coupling"*, and crossing ten minutes *"does not itself prove strict
+  checks are operationally acceptable; it merely prompts a policy reassessment"*.
+- **1c — openai answers its own condition: yes.** The recorded `refused` vote
+  was conditional on *indefinite* + *self-asserted* + *no invalidation*. The
+  landed shape inverts all three — hard `expires` against an injected clock,
+  `authority: owner` constrained by `WAIVER_AUTHORITIES`, and an expired waiver
+  exiting 1 with `waiver-expired`. openai: *"The original demand for measurable
+  approver availability should not be transferred to a waiver whose objectively
+  known deviation is already bounded by a hard date."*
+
+**The three caveats both seats attached, recorded rather than dropped** — this is
+the part of the answer that is not a ratification:
+
+1. **The enforcement boundary is local and administrator-bypassable.** openai's
+   sharpest point, and it is a correction to how this file and its siblings
+   describe the gate: *"a voluntarily invoked local check is advisory control,
+   especially when the acting account is an administrator"*, and *"an
+   administrator may merge without ever invoking it and can modify both sides of
+   the comparison"*. Its stated verdict: **do not describe
+   `check_platform_anchor` as enforcing repository-wide compliance.** Discharged
+   in 2.4.
+2. **Prose triggers buy no early warning.** Adequate for correctness, not a
+   monitoring signal. Accepted as-is.
+3. **The 90-day window was never validated against the triggers it must outlive.**
+   anthropic: one trigger is a 30-day rolling median, so the waiver must cover
+   30 days of observation plus time to act. 90 days is *probably* enough and
+   nobody checked. Recorded as a condition on the next renewal, not fixed here —
+   renewal is a fresh decision by contract.
+
+**OVERALL, both seats: RATIFY AS IT STANDS.** anthropic with the three caveats
+above; openai *"RATIFY AS IT STANDS; document the local, administrator-bypassable
+enforcement boundary explicitly."*
+
+## Open design question 2 — the third floor field — ANSWERED 2026-09-13
+
+```
+ANSWERED BY EVENT, AND CONFIRMED BY THE COUNCIL RATHER THAN DECIDED BY IT.
+A FOURTH SHAPE SHIPPED THAT WAS NOT ON THE LIST OF THREE, AND BOTH SEATS
+RATIFIED IT AS THE ONLY COHERENT ONE. NOTHING HERE REMAINS TO DECIDE.
+```
+
+**What shipped, and why it is not one of the three options below.**
+`strict_required_status_checks` left `NON_NEGOTIABLE_FLOOR` — necessarily, since
+a floored dimension is unwaivable by construction — *stayed* in the expectation,
+and became the single `accepted_risk_reductions` entry
+`arr-2026-09-10-strict-status-checks`. So the dimension is neither exempted
+alongside the approval fields (option 1), nor given a second scoped exemption
+(option 2), nor dropped from both floor and expectation (option 3).
+
+- **2a — ratify.** anthropic: the fourth shape is *"not just cleaner than the
+  three original proposals — it's the only logically coherent option"*, because
+  keeping it in the expectation signals *"this is a real requirement we're
+  accepting bounded risk on"* rather than *"we don't care about this
+  dimension."* It also checked the boundary neither round-1 seat had:
+  `strict_required_status_checks` is correctly **absent** from `NEVER_WAIVABLE`,
+  which is what makes the waiver reachable at all. openai: the floor should hold
+  invariants, the expectation the desired posture, and
+  `accepted_risk_reductions` the temporary difference; the three earlier options
+  *"incorrectly treat removed approval requirements and waivable strictness as
+  one exemption problem."*
+- **2b — record it as answered by event.** Both seats. The policy half closed by
+  owner ruling, the mechanism half by the shipped representation plus the schema
+  bump; this session confirms the shape rather than choosing it. openai adds the
+  one thing that must be recorded rather than left open: the residual limitation
+  that *"an administrator can change both policy and forge state while
+  enforcement depends on manually running a local control"* — 2.4.
+
+**One correction to the framing below, which the shipped answer makes obsolete.**
+The paragraph's premise is that the live state *"sits under the floor in a field
+the exemption may not touch, and the gate would report a finding nobody intends
+to fix."* Measured 2026-09-13 (M17), the gate reports no finding at all: the
+field is no longer in the floor, and the waiver turns the deviation into
+`PASS_WITH_ACCEPTED_RISK`. The original text follows for the record.
+
+*Original text, true until the waiver shipped:*
 `strict_required_status_checks` is `true` in `NON_NEGOTIABLE_FLOOR` (M6) and
 `false` live, by a separate owner decision on measured cost: several branches
 are commonly green at once here, and requiring each to be brought up to date
@@ -180,13 +294,25 @@ cost argument is a given rather than a proposal.
 
 ## Phase 0 — answer the two questions, then sequence
 
-- [ ] **0.1 Put both open design questions to the council in one session.**
+- [x] **0.1 Put both open design questions to the council in one session.**
       Question 1 is invalidation (fail-measurable vs fail-explicit), question 2
       is the third field. Supply M1-M13 as measured facts, the owner's cost
       argument as settled, and anthropic's `single-operator-model-by-design`
       framing as the proposed reason. Record the answer in this file.
       verify: a council response exists with both seats present, and this
       section names the chosen shape for each question.
+      **DONE 2026-09-13.** One session, both questions, 2 rounds with blind peer
+      review, 2/2 present and convergent, $0.0000 (subscription transport). Both
+      answers are recorded above under the two question headings, each naming the
+      chosen shape. Two departures from the step as written, both deliberate:
+      the questions were **reframed** onto the dimension that survived the owner
+      ruling, with the reframing itself put to the seats for challenge (openai
+      accepted it for the policy dimensions and challenged the word "gate", which
+      is caveat 1); and `single-operator-model-by-design` was **not** offered as
+      the proposed reason, because it is the reason for an approval exemption that
+      no longer exists — the shipped waiver's ground is the measured re-run cost.
+      Session files are gitignored and pruned after the retention window, so the
+      findings are restated above in full rather than cited by path.
 
 - [ ] **0.2 Establish the administrator recovery path, tested.**
       Both seats raised it and neither proposed one; the earlier draft of this
@@ -197,8 +323,25 @@ cost argument is a given rather than a proposal.
       verify: a written procedure exists naming the exact command that restores
       a merge path from a locked-out state, and it has been executed once
       against a non-default branch ruleset to prove it works.
+      **HALF DONE 2026-09-13, AND THE BOX STAYS OPEN ON PURPOSE.** The written
+      half is discharged: `docs/contracts/branch-protection-policy.md`
+      § Administrator recovery from a lockout carries a five-step procedure with
+      the exact commands, the `enforcement=evaluate` route preferred over a full
+      restore, and the `.state` nesting trap that makes a naive history read
+      return empty. The **rehearsal** half is not, and cannot be done by an
+      agent: every step is an admin API write on repository protection settings,
+      which is a Hard-Floor action under `non-destructive-by-default` reserved
+      for the maintainer with explicit this-turn confirmation — the same
+      reservation `branch-protection-policy.md` § Enforce half already records
+      for the sibling write. An agent may write the procedure; an agent may not
+      rehearse it. The procedure says so in its own last paragraph rather than
+      reading as tested. This is the roadmap's one genuinely externally
+      impossible step, it is the only box left open, and it is also tracked as
+      the second half of the `ratification-platform-anchor` blocker on
+      `road-to-typed-grants-that-persist.md` — so closing this file does not
+      drop it.
 
-- [ ] **0.3 Record that the council's safe sequence was already violated, and
+- [x] **0.3 Record that the council's safe sequence was already violated, and
       what follows from that.** The sequence is ratify → deploy reader → test →
       rollback → evidence → expectation. The rollback happened first, on
       2026-09-10 at 15:14 and 15:16. The window the seats warned about is
@@ -208,6 +351,22 @@ cost argument is a given rather than a proposal.
       precondition that has passed.
       verify: this file names the violated step and the reason the window is
       survivable.
+      **DONE 2026-09-13, and the outcome is now measured rather than predicted.**
+      The violated step is **step 4 of 6, "apply the platform rollback"**, which
+      ran first — 2026-09-10 at 15:14 (`required_approving_review_count` 1 → 0)
+      and 15:16 (`require_last_push_approval` true → false), before the schema
+      was ratified, before an exemption-aware reader existed, and before either
+      state had been tested. The window the seats warned about therefore opened
+      on 2026-09-10 and is **now closed**, and it was survivable for the reason
+      M5 gives: the gate is a pre-push control in `taskfiles/ci-fast.yml`, never
+      a workflow, so it blocks the *class of change* that needs ratification and
+      never the repair PR itself. The repair could always travel. What the
+      window actually cost is one thing and it is worth naming: between 15:14
+      and the waiver landing, any kernel-rule, governance-hook or anchor-path
+      change was refused at pre-push — which is the drift this file's own
+      frontmatter called blocking. Measured 2026-09-13 (M17) the gate exits 0,
+      so the cost stopped accruing. The sequence was not re-planned around a
+      precondition that had passed, and this entry is that statement.
 
 ## Phase 1 — the exemption, fail-closed
 
