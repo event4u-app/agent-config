@@ -245,15 +245,22 @@ rounds since have re-derived the architecture instead of reading the file.
   pending with the date it was requested.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-11 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-09-13 | reviewer: claude/host -->
+
+Re-reviewed 2026-09-13 after Phases 1 to 4 landed. Ranks 3 and 5 are **discharged** by
+the change that closed them and say so in place rather than being deleted — a risk removed
+from the table is indistinguishable from one nobody thought of. Ranks 1, 2 and 4 stay live
+because their subject is Phase 5, which is not landed. Rank 6 is **new**, and it is the risk
+this run created rather than one it inherited.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | The gate reads open while its conditions are unmet per track | product | The record is accepted, which is not the same as its conditions being satisfied for a resident process, and conflating the two would unblock eight tracks on a technicality | Phase 1.1 enumerates all four conditions with their states before any track moves, and the second blocker reserves the ruling | Phase 1 — Read the gate and say whether it is open |
-| 2 | Promotion reds the estate ratchet | implementation | The active count is measured against the base ref and a promotion adds to it without an offset | Phase 5.2 measures before promoting and Phase 5.1 permits "none qualifies" as a complete outcome | Phase 5 — Promote at most one track, or none |
-| 3 | The track rows dereference into a deleted tree | implementation | The stub's rows point into a consumed inbox directory no clone carries, so a reader who follows them finds nothing | Phase 4.2 rewrites each row to stand alone before anything relies on the pointers | Phase 4 — Re-cut the eight tracks against the open gate |
-| 4 | The arrival count becomes the argument | product | A large count invites acting on the subject because it keeps coming back, which is capitulation rather than adjudication | The count is recorded and the decision cites evidence; a repeat opens the question and never answers it | Phase 2 — Write the arrival count onto the object |
-| 5 | Phase 4 produces eight dispositions nobody revisits | product | A table of dispositions written once ages exactly like the prose it replaced | Each disposition names its gate, so a later reader checks a named condition rather than re-reading the argument | Phase 4 — Re-cut the eight tracks against the open gate |
+| 1 | The gate reads open while its conditions are unmet per track | product | The record is accepted, which is not the same as its conditions being satisfied for a resident process, and conflating the two would unblock eight tracks on a technicality | **Holding, and tested once.** Phase 1.1 enumerated all four conditions with their states before any track moved; the stub's new gate line states in its own text that the common gate is retired and the per-track condition is reserved; the second blocker reserves the ruling. The temptation was live and real — "the ADR exists" reads as "the tracks are unblocked", and the evidence artefact § 2 keeps the two readings apart on purpose | Phase 1 — Read the gate and say whether it is open |
+| 2 | Promotion reds the estate ratchet | implementation | The active count is measured against the base ref and a promotion adds to it without an offset | **Live — Phase 5 is not landed.** 5.2's measurement is run and recorded at this revision (`open_blockers 53`, floor 53, `+0 active`) so the promoting change starts from a known floor instead of discovering it | Phase 5 — Promote at most one track, or none |
+| 3 | The track rows dereference into a deleted tree | implementation | The stub's rows point into a consumed inbox directory no clone carries, so a reader who follows them finds nothing | **Discharged 2026-09-13.** The `Source section` column is removed, not relabelled; every remaining pointer in the table resolves in a clone | Phase 4 — Re-cut the eight tracks against the open gate |
+| 4 | The arrival count becomes the argument | product | A large count invites acting on the subject because it keeps coming back, which is capitulation rather than adjudication | **Live, and the pressure was felt.** One of the eleventh round's two reviews recommends promoting a named track; this change promotes none and cites conditions instead. The count sets the venue, never the verdict | Phase 2 — Write the arrival count onto the object |
+| 5 | Phase 4 produces eight dispositions nobody revisits | product | A table of dispositions written once ages exactly like the prose it replaced | **Discharged as far as authoring can.** Every gate cell names a file, a command or a cancelled step a later reader checks directly. What authoring cannot do is make anyone look, which is what rank 6 now carries | Phase 4 — Re-cut the eight tracks against the open gate |
+| 6 | The re-cut table ages the way the sentence it replaced did | product | This roadmap exists because one header line stopped being true and no surface noticed for fifteen days. Eight per-track gates are eight more sentences that can go stale the same way — and two of them cite the state of *other* roadmaps, which move | The stub is now inside `stubs:due`: `reviewed_at`, `blocker_class` and `blocker_opened` are set, and its blocker counts as an owner decision, so a lapse surfaces in the dashboard header instead of waiting for the next arrival. That is a reader, not a guarantee — the honest residual is that nothing re-checks the eight gate conditions themselves | Phase 3 — Give the stub the two fields tooling reads |
 
 ## Acceptance Criteria
 
