@@ -124,6 +124,7 @@ import {
     type MixObligation,
     collect_span_commits,
     derive_category_hits,
+    make_span_file_reader,
     render_derived_head_values,
 } from './_lib/release_highlights.js';
 import { canPrompt, promptLine } from './_lib/tty_prompt.js';
@@ -305,7 +306,15 @@ export { RELEASE_HEAD_CAP_LINES } from './_lib/release_material.js';
 function _derive_head_prefill(prev: string | null): Record<string, string> {
     try {
         const span = collect_span_commits(prev, 'HEAD', REPO_ROOT);
-        return render_derived_head_values(derive_category_hits(span));
+        // `Known limitations` is the one label that needs file content, and the
+        // ref it reads is HEAD — the same tip this span ends at, so the prose a
+        // commit brought in is read as the release ships it rather than as some
+        // later branch left it.
+        return render_derived_head_values(
+            derive_category_hits(span, {
+                readTouchedFile: make_span_file_reader('HEAD', REPO_ROOT),
+            }),
+        );
     } catch (err) {
         process.stderr.write(
             `warning: could not derive release-head highlights (${(err as Error).message}); ` +
