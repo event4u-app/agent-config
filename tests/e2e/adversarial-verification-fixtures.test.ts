@@ -317,9 +317,17 @@ describe('G8 / G9 — the two test gates and the same-session flag', () => {
         for (const id of ['check_test_delta', 'check_test_weakening']) {
             expect(ledger).toMatch(new RegExp(`- id: ${id}\\n\\s+argv: \\["--quiet"\\]`));
         }
-        // The same argv must appear in the workflow, or the row describes a
+        // The same argv must appear in the workflow, or the row describes an
         // invocation CI does not make.
-        const wf = read('.github/workflows/consistency.yml');
+        //
+        // `tests.yml`, not `consistency.yml`, and the reason is a real
+        // constraint rather than a preference: `consistency.yml` is the
+        // ratification mechanism's own carrier (`check_kernel_edit_ratified`
+        // WORKFLOW_PATH), so any edit to it needs an independently reviewed
+        // ratification artefact — ADR-268 § 4, an agent may not ratify its own
+        // increase in power. The `static-checks` job is the conventional home
+        // for repository-hygiene gates and is a required check either way.
+        const wf = read('.github/workflows/tests.yml');
         expect(wf).toContain('./scripts-run src/scripts/check_test_delta --quiet');
         expect(wf).toContain('./scripts-run src/scripts/check_test_weakening --quiet');
     });

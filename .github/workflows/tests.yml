@@ -291,6 +291,23 @@ jobs:
         # or an un-regenerated registry change both fail this gate red.
         run: ./scripts-run src/scripts/build_mcp_catalog --strict
 
+      - name: Test delta on a code change
+        # A diff that touches production code and touches no test at all. It
+        # cannot see whether the test came first or tests the thing that changed
+        # — both are judgements a diff does not carry — so it proves an ABSENCE,
+        # which is the half that is mechanically decidable. The escape is the
+        # `test-delta-acknowledged` PR label, an owner action outside the diff
+        # under review rather than a file an agent can widen inside it.
+        run: ./scripts-run src/scripts/check_test_delta --quiet
+
+      - name: No silent test weakening
+        # A test file that asserts less after the diff than before, or gains a
+        # skip, with no independent-verdict artefact in the same diff. Counts are
+        # NET: editing an assertion removes one line and adds another, and a gate
+        # that reds every legitimate test edit gets its exemption widened until it
+        # finds nothing.
+        run: ./scripts-run src/scripts/check_test_weakening --quiet
+
       - name: CLI registry ↔ evaluator budget sync
         # A registry entry added without moving cli_help_command_count (budget +
         # committed record) only WARNS on main and BLOCKS the next release —
