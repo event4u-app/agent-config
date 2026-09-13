@@ -101,6 +101,23 @@ const ASSERTION = /\b(expect|assert|assertThat|self\.assert|should\.|\.toBe|\.to
 const SUPPRESSION =
     /(\b(it|test|describe|context)\s*\.\s*(skip|todo|failing)\b|\bxit\b|\bxdescribe\b|@pytest\.mark\.(skip|xfail)|\bt\.Skip\(|->markTestSkipped\(|@group\s+skip)/;
 
+/**
+ * A line whose match is DATA, not code — a diff line held inside a string.
+ *
+ * Found by this gate reporting its own test file: a suite that tests a
+ * suppression detector necessarily contains suppression-shaped strings as
+ * fixtures (`'+@pytest.mark.skip\n'`), and counting those made the gate report
+ * the one file whose job is to prove it works. Generalised rather than
+ * special-cased to that path — every gate that reads diffs will have a test
+ * suite shaped exactly this way, and "the gate exempts its own tests" is the
+ * carve-out that makes a detector unfalsifiable.
+ *
+ * The discriminator is a quote immediately followed by a diff marker: a string
+ * literal whose content begins `+` or `-`. Real test code does not open a string
+ * with a diff marker; a diff fixture does nothing else.
+ */
+const DIFF_LINE_AS_DATA = /['"`][+-]/;
+
 /** Counted evidence about one test file's diff. */
 export interface WeakeningSignal {
     readonly path: string;
@@ -121,7 +138,7 @@ export interface WeakeningSignal {
  */
 export function weakeningSignal(file: FileDiff): WeakeningSignal {
     const count = (lines: readonly string[], re: RegExp): number =>
-        lines.filter((l) => re.test(l)).length;
+        lines.filter((l) => re.test(l) && !DIFF_LINE_AS_DATA.test(l)).length;
     return {
         path: file.path,
         assertionsLost: count(file.removed, ASSERTION) - count(file.added, ASSERTION),

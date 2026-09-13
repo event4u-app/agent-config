@@ -94,7 +94,12 @@ describe('Phase 1.1 — the test-first rule', () => {
 });
 
 describe('T3 — ten failed fixes produce strategy changes, never an owner ask', () => {
-    const MECHANICS = 'src/agent-src/contexts/execution/autonomy-mechanics.md';
+    // The bands, the five bound outcomes and the read-the-red discipline live in
+    // their own context file: `autonomy-mechanics.md` sat at its 16,000-char depth
+    // ceiling, so adding ~5,600 chars of ladder there tripped a shrink-only
+    // ratchet. Splitting a distinct subject out is the repair that ratchet asks
+    // for; raising its baseline would have been the defect it names.
+    const MECHANICS = 'src/agent-src/contexts/execution/fix-loop-ladder.md';
     const RULE = 'src/rules/autonomous-execution.md';
 
     it('no rule under src/rules still states the N=3 cap — except the kernel one', () => {
@@ -391,7 +396,7 @@ describe('Phase 4.2 — read the red before diagnosing it', () => {
     });
 
     it("the ladder's own text names ci_settle and the --log-failed read", () => {
-        const body = flat('src/agent-src/contexts/execution/autonomy-mechanics.md');
+        const body = flat('src/agent-src/contexts/execution/fix-loop-ladder.md');
         expect(body).toMatch(/`ci_settle`/);
         expect(body).toMatch(/--log-failed/);
         // The two traps that make the naive read wrong, not just the tool name.

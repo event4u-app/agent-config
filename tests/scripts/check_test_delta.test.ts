@@ -135,6 +135,20 @@ describe('check_test_weakening — NET counts, which is the whole gate', () => {
         }
     });
 
+    it('a diff line held as STRING DATA is not a suppression — the gate found this itself', () => {
+        // A suite that tests a suppression detector necessarily contains
+        // suppression-shaped fixtures. Counting them made this gate report the
+        // one file whose job is to prove it works, which is the shape that makes
+        // a detector unfalsifiable. Generalised rather than path-exempted.
+        const asData = d('tests/gate.test.ts', "+            '+@pytest.mark.skip\\n',\n");
+        expect(analyse(asData, []).signals).toHaveLength(0);
+        // The same construct written as CODE still reds — the guard narrows the
+        // detector, it does not disable it.
+        expect(analyse(d('tests/gate.test.ts', '+@pytest.mark.skip\n'), []).signals).toHaveLength(
+            1,
+        );
+    });
+
     it('production code is out of scope — a gate for tests, not for every removal', () => {
         expect(analyse(d('src/a.ts', '-expect(x).toBe(1);\n'), []).signals).toHaveLength(0);
     });

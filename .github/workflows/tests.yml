@@ -269,6 +269,14 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
+          # The two test gates below are DIFF-SCOPED — they resolve a base ref
+          # and diff against it. At the default depth 1 no parent is fetched,
+          # `git diff` fails, and the gate exits 2 rather than reporting a
+          # verdict. Depth 0 the way `consistency.yml`'s gate job does it, and
+          # set here rather than fetched inside a step for the same reason that
+          # workflow records: a fetch inside the steps re-introduces the
+          # auth-extraheader race.
+          fetch-depth: 0
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
         with:

@@ -257,6 +257,20 @@ function selfTest(): number {
                 run: () => withDiff(header('tests/a.test.ts') + "-    it.skip('x', () => {});\n"),
             },
             {
+                name: 'a DIFF FIXTURE held as string data is not a suppression',
+                expect: 'accept',
+                run: () =>
+                    withDiff(
+                        header('tests/gate.test.ts') +
+                            '+            \'+@pytest.mark.skip\\n\',\n',
+                    ),
+            },
+            {
+                name: '…and the same construct written as CODE still reds',
+                expect: 'reject',
+                run: () => withDiff(header('tests/gate.test.ts') + '+@pytest.mark.skip\n'),
+            },
+            {
                 name: 'a committed verdict artefact discharges a real weakening',
                 expect: 'accept',
                 run: () =>
