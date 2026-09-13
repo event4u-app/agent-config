@@ -370,7 +370,17 @@ cost argument is a given rather than a proposal.
 
 ## Phase 1 — the exemption, fail-closed
 
-- [ ] **1.1 Teach `readAnchorPolicy` to parse and validate the exemption.**
+```
+READ THIS BEFORE THE FIVE STEPS BELOW. PHASE 1 PLANNED AN EXEMPTION OVER
+THE TWO APPROVAL DIMENSIONS. THOSE DIMENSIONS WERE REMOVED, NOT EXEMPTED,
+SO NO STEP HERE WAS BUILT AS WRITTEN. EACH IS CLOSED AGAINST WHAT ACTUALLY
+SHIPPED — THE `accepted_risk_reductions` WAIVER OVER ONE DIFFERENT DIMENSION
+— AND EACH SAYS WHICH OF ITS OBLIGATIONS SURVIVED THE CHANGE OF SUBJECT
+AND WHICH BECAME MOOT. A STEP CLOSED AS MOOT IS NOT A STEP DONE, AND THE
+DIFFERENCE IS STATED PER STEP RATHER THAN AVERAGED AWAY.
+```
+
+- [x] **1.1 Teach `readAnchorPolicy` to parse and validate the exemption.**
       This step comes first, and the earlier draft had it second — which was
       unbuildable. `enforceFloor` is called from inside `readAnchorPolicy`
       against an 11-field struct with no exemption member (M7), so the reader is
@@ -383,8 +393,49 @@ cost argument is a given rather than a proposal.
       verify: `readAnchorPolicy` on a file carrying a valid exemption returns a
       policy rather than `null`; on a malformed one it returns `null` with a
       named finding.
+      **CLOSED 2026-09-13 — built, over a different dimension, and the step's
+      diagnosis was right.** The step's core claim was that the *reader* is the
+      missing piece, and that is exactly how it shipped: `readWaivers` in
+      `src/scripts/_lib/platform_anchor.ts` parses and validates the object, and
+      the verdict layer consumes it. What survived the change of subject is the
+      whole validation contract — every field required, unknown authority
+      refused, duplicate `id` refused, unparseable date refused, a waiver over a
+      `NEVER_WAIVABLE` dimension refused — and it is stricter than the step asked
+      for in one direction that matters: **a refused waiver REDS the verdict**
+      rather than merely failing to help, which is the defect the round-2 review
+      caught in the first implementation (findings were printed and never
+      reached the exit code, so a malformed waiver was strictly *better* than a
+      well-formed one). What became moot is the specific field list the step
+      named — `reason` vocabulary, `eligible_independent_approvers`,
+      `evidence_observed_at`, `revisit_if` — because those describe approver
+      eligibility. The shipped equivalents are `failure_mode`, `cost_avoided`,
+      `frequency_assumption`, `detection_and_repair`, `residual_protection`,
+      `authority`, `decided`, `expires`, `review_triggers`.
+      Verified: `npx vitest run tests/scripts/platform_anchor.test.ts` — 57/57
+      green, 2026-09-13.
 
-- [ ] **1.2 Suspend exactly the two approval checks, nothing else.**
+- [x] **1.2 Suspend exactly the two approval checks, nothing else.**
+      **CLOSED 2026-09-13 AS SUPERSEDED — and this is the step the whole
+      supersession is about, so it is worth being exact.** Nothing was
+      suspended. Both approval dimensions were *removed* from
+      `src/config/platform-anchor.json` and from `NON_NEGOTIABLE_FLOOR` by owner
+      ruling, and a dimension outside the trust model is not a waived rule. The
+      instruction below to keep `1`/`true` in the floor is therefore **reversed,
+      not merely stale**: acting on it today would re-add exactly what the owner
+      deliberately removed. It is kept rather than deleted because the sentence
+      that must not be followed is more useful visible than absent, and AC-2 is
+      corrected in the same change for the same reason.
+      **What survived the change of subject is the scope discipline**, and it
+      shipped verbatim: a waiver may not excuse a selector (`enforcement`,
+      `target`, `covers_default_branch`), `allow_unconditional_bypass`,
+      deletion or force-push — those six are `NEVER_WAIVABLE`, refused by
+      construction. **What the shipped shape adds that this step did not ask
+      for** is the inverse guarantee the council later made load-bearing: the
+      eligible set is bounded by a *committed list*, not by the quality of a
+      waiver's prose. Proven sensitive 2026-09-13 by neutralising
+      `NEVER_WAIVABLE` — 2 tests go red, including "an unconditional bypass
+      stays a failure even with a waiver written for it".
+      *Original step text follows; the first sentence is the reversed one.*
       `NON_NEGOTIABLE_FLOOR` keeps `1`/`true` — suspended, never lowered. The
       exemption may not excuse a selector (`enforcement`, `target`,
       `covers_default_branch`), any other threshold, `minimum_required_contexts`,
@@ -395,7 +446,7 @@ cost argument is a given rather than a proposal.
       verify: `npx vitest run tests/scripts/platform_anchor.test.ts` green,
       including 1.4.
 
-- [ ] **1.3 Decide and record the invalidation mechanism from 0.1, and build it
+- [x] **1.3 Decide and record the invalidation mechanism from 0.1, and build it
       where it can be built.** If `invalidate_on_next_edit` is chosen, note that
       `enforceFloor` has no clock (M7) — any time- or edit-dependence needs a
       source injected, which makes a pure function impure and touches its three
@@ -403,8 +454,27 @@ cost argument is a given rather than a proposal.
       `enforceFloor`"; that is not implementable as the function stands.
       verify: the mechanism exists in code with a test, or this file records why
       it is manual and what the human checks.
+      **CLOSED 2026-09-13 — the mechanism exists in code with a test, AND the
+      manual half is recorded, because the shipped answer is both.** Decided in
+      0.1: **fail-explicit**, with nothing mechanised, 2/2 convergent.
+      *In code:* `expires` is hard-enforced — an expired waiver is refused with
+      `waiver-expired` and reds the verdict. *Manual:* the `review_triggers`
+      array is prose a human reads when running the gate, and what the human
+      checks is the four recorded triggers — first attributable stale-base
+      conflict, median required-check duration under 10 minutes over 30 days,
+      merge-queue tooling removing the re-runs, and the 2026-12-09 expiry.
+      **The step's own warning about the clock was correct and was resolved the
+      way it predicted.** `enforceFloor` has no clock (M7), so a time-dependent
+      check could not live there; the waiver reader takes `now` as an explicit
+      injected argument instead, which is what keeps the verdict reproducible and
+      is why the gate warns `as-of: unpinned run` when nobody pins it. The
+      earlier draft's assertion that expiry "is enforced in `enforceFloor`" was
+      wrong, and it is still wrong — expiry is enforced in `readWaivers`.
+      Proven sensitive 2026-09-13 by neutralising the expiry comparison: 3 tests
+      go red, including "refuses an expired waiver and an unparseable expiry" and
+      "a refused waiver REDS the verdict".
 
-- [ ] **1.4 Write the test matrix, including the one that does not exist yet.**
+- [x] **1.4 Write the test matrix, including the one that does not exist yet.**
       Per M10 a test refusing `require_last_push_approval: false` has to be
       **written**, not preserved. Then: a valid exemption permits exactly `0`
       and `false`; `1`/`true` stays valid with no exemption; a stale or
@@ -416,14 +486,74 @@ cost argument is a given rather than a proposal.
       anthropic.
       verify: each assertion exists as a named test and has been seen red once
       by neutralising the mechanism it covers.
+      **CLOSED 2026-09-13. The matrix exists — 57 tests, green — and three of
+      its mechanisms were seen red TODAY rather than on the word of whoever
+      wrote them.** The neutralise-and-observe runs, each restored afterwards
+      and the suite re-confirmed at 57/57:
 
-- [ ] **1.5 Decide the schema version.** The exemption is a new structural
+      | Mechanism neutralised | Tests that went red |
+      |---|---|
+      | the `expires` comparison | 3 — "refuses an expired waiver and an unparseable expiry", "a refused waiver REDS the verdict, it does not merely fail to help", "carries the refusal into the unverifiable verdict too" |
+      | the `NEVER_WAIVABLE` membership check | 2 — "refuses a waiver over any never-waivable dimension", "an unconditional bypass stays a failure even with a waiver written for it" |
+      | the `WAIVER_AUTHORITIES` value check | 1 — "refuses an authority that is not the owner" |
+
+      **The one assertion this step demanded that CANNOT be written, and why
+      that is a closure rather than a gap.** Per M10 no test refused
+      `require_last_push_approval: false`, and the step required one to be
+      written. It cannot be: the field is no longer in `NON_NEGOTIABLE_FLOOR`,
+      so there is no floor for it to fall below and a test asserting a refusal
+      would assert a behaviour the owner ruling deliberately removed. The
+      obligation behind it — *the floor must not silently stop covering a
+      dimension* — is met by a different and stronger test that does exist,
+      `has no approval field left for a policy to lower`, which pins the absence
+      as intentional so a future re-add is a visible test failure rather than a
+      quiet drift. AC-4 is corrected in the same change to say this.
+      The remaining named cases map onto tests that exist — names quoted from
+      `tests/scripts/platform_anchor.test.ts` rather than paraphrased, so the
+      mapping is checkable:
+
+      - *a valid waiver permits exactly the waived dimension* → `turns a
+        violated dimension into an accepted risk rather than a finding` (:603),
+        with its own control `without the waiver the same forge is a plain
+        failure` (:612).
+      - *a missing waiver is the normal green path* → `treats an absent or
+        malformed waiver list as no waivers, never as a pass` (:737).
+      - *a stale waiver restores the dimension* → `reports a stale waiver rather
+        than passing a platform that outgrew it` (:776) and `reports a waiver the
+        forge has made unnecessary` (:672).
+      - *malformed / typo / duplicate / bad date rejected* → `refuses a waiver
+        that waives nothing, a typo, a duplicate and a bad date` (:722).
+      - *the committed waiver is itself in scope* → `the committed waiver is
+        well-formed and covers only a waivable dimension` (:748), which is the
+        one that would catch a future over-broad edit to the shipped file.
+
+      The topology case is moot with approver eligibility out of the trust model.
+
+- [x] **1.5 Decide the schema version.** The exemption is a new structural
       top-level field while `SUPPORTED_ANCHOR_SCHEMA = 1` and
       `checkAnchorIdentity` rejects any other value (M12). Unknown-field
       rejection is scoped to `required`, so it happens to pass — but "happens to
       pass" is an unmade decision, and the code comment says a bump lands with
       the reader that understands it.
       verify: this file states bump-or-not and why.
+      **CLOSED 2026-09-13: BUMPED, 1 → 2, and the step's reasoning is why.**
+      `SUPPORTED_ANCHOR_SCHEMA = 2` (M12, corrected). The step's objection was
+      that unknown-field rejection is scoped to `required`, so a new top-level
+      field "happens to pass" — and that "happens to pass" is an unmade decision.
+      That is precisely the argument the bump settles, and it was not the only
+      reason to bump: the field set **changed in both directions** in one edit —
+      two approval keys left `required` and `accepted_risk_reductions` arrived —
+      so a reader pinned to schema 1 would have been handed a differently-shaped
+      object under an unchanged version number. The anchor file's own
+      `$comment` records this in those terms: the version moved with the field
+      set "rather than leaving a reader to discover the shape had changed under
+      a constant number". `checkAnchorIdentity` still hard-rejects any other
+      value, so the bump is enforced rather than advisory — verified by the test
+      `refuses a schema version its reader does not support` (:288).
+      Council 2026-09-13, anthropic, unprompted: the bump is *"semantically
+      correct … field-set change = breaking change"*, while noting that
+      "it shipped" is not the same as "the version signal is correct" — which is
+      what this entry now records.
 
 ## Phase 2 — the record
 
