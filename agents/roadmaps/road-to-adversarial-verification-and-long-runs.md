@@ -334,12 +334,29 @@ before the record is signed.
       the 30-session corpus.
       verify: the daemon's first shipped mode writes observations and takes no action, and the
       false-positive measurement exists as an artefact before the enforcing mode is enabled.
-- [ ] **7.2 A per-host destructive column, measured.** `docs/enforcement-by-host.md` gains
+- [x] **7.2 A per-host destructive column, measured.** `docs/enforcement-by-host.md` gains
       `destructive:` with values hook, daemon or manual-only, measured per host rather than
       asserted; `non-destructive-by-default`'s `enforced_by:` names the live layer on the
       current host.
       verify: `agent-config hooks:status` and the doc agree for the host the run is on, and no
       row is filled from the registry's all-false default without saying so.
+      <!-- landed 2026-09-13, measured from `host_lowering.yaml` — the file the runtime
+      resolver actually reads — and every row carries the reading it came from, so a
+      hand-filled cell reds the fixture. Result: ONE host is `hook` (`claude`, the only
+      `pre_tool_use` with `block_exit: 2`) and seven are `manual-only`. `daemon` is in the
+      vocabulary and describes nothing — 7.1's daemon ships observation-only and its
+      enforcing mode is blocked on `daemon-host-kill-switch` — which is said in the doc
+      rather than left as an unreachable value a reader would take for a live option.
+      The four distinct states inside the seven are kept in the Measured-from column
+      (augment binds and discards · cursor/cline/gemini are unbound-not-unbindable, since
+      `native_event_aliases` already maps their native events · windsurf/copilot have no
+      alias row), because collapsing them is what produced the binary cell this document
+      deleted in 2026-09-12.
+      **The second clause is OWED, not delivered.** `non-destructive-by-default`'s
+      `enforced_by:` still reads `none`: it is a kernel rule and
+      `block_kernel_rule_writes` refused the edit at tool-call time — reproduced, not
+      assumed. Lifting it is a human action outside an agent session. -->
+      <!-- verify: ./scripts-run src/scripts/check_enforcement_matrix --quiet -->
 - [ ] **7.3 The council may veto a typed op, never grant one.** Under a mission: a council
       check that the op belongs to the mission → a native ask naming the object → execute. Per
       ADR-257 an unpaid route may propose and score, never decide.

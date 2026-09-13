@@ -230,6 +230,56 @@ A cell says what this package has written down about a host, never what the host
 **No row above for `cowork`, `copilot`** — modelled in the configuration with an empty `slots:` map, so there is no host-slot pair to carry an outcome. That is an absence of bindings, not an outcome of `unenforced`.
 <!-- END GENERATED: enforcement-configured-by-slot -->
 
+## `destructive:` — which layer guards a typed op, per host
+
+`road-to-adversarial-verification-and-long-runs` 7.2. The eleven typed ops need a
+layer that can refuse one. Three values, and the column says which layer a host
+actually has rather than asserting a floor it does not:
+
+- **`hook`** — a `pre_tool_use` binding whose configured outcome is a refusal. A
+  guard can deny the call.
+- **`daemon`** — no such binding, but a guardrail daemon watches the host. **No
+  host is `daemon` today**: 7.1's daemon ships observation-only and its enforcing
+  mode is blocked on `daemon-host-kill-switch`, so the value exists in the
+  vocabulary and describes nothing yet. Stated rather than omitted, because a
+  column with no unreachable value reads as a complete taxonomy.
+- **`manual-only`** — neither. The typed op is guarded by the model and by the
+  human, and the package says so instead of implying a mechanism.
+
+**Measured, not asserted**, from `src/scripts/hooks/host_lowering.yaml` — the file
+the runtime resolver reads — on 2026-09-13:
+
+| Host | `destructive:` | Measured from |
+|---|---|---|
+| `claude` | `hook` | `pre_tool_use` bound with `block_exit: 2` — a configured refusal |
+| `augment` | `manual-only` | `pre_tool_use` bound, `block_exit: null` — it runs and is ignored |
+| `cursor` | `manual-only` | no `pre_tool_use` slot (5 other slots bound) |
+| `cline` | `manual-only` | no `pre_tool_use` slot (5 other slots bound) |
+| `gemini` | `manual-only` | no `pre_tool_use` slot (5 other slots bound) |
+| `windsurf` | `manual-only` | no `pre_tool_use` slot (3 other slots bound) |
+| `cowork` | `manual-only` | empty `slots:` map — no bindings at all |
+| `copilot` | `manual-only` | empty `slots:` map — no bindings at all |
+
+**Seven of eight are `manual-only`, and the distinction inside that seven is worth
+keeping.** `augment` binds the slot and discards the result; `cursor`, `cline` and
+`gemini` do not bind it although `native_event_aliases` already maps their native
+pre-tool events onto it — **unbound, not unbindable**; `windsurf` and `copilot`
+have no alias row at all. Four states, one value, because what the column answers
+is *can a typed op be refused here*, and for all four the answer is no.
+
+**What this column is NOT.** It is not a measurement of whether a host's pre-tool
+event can deny — nothing in this tree records that for an unbound host. It reads
+this package's own configuration, which is the same honesty boundary the generated
+region above states for itself: a cell says what has been written down about a
+host, never what the host does.
+
+`non-destructive-by-default`'s `enforced_by:` should name the live layer on the
+current host. **It still reads `none` and this change did not move it**: that rule
+is one of the nine kernel rules, and `block_kernel_rule_writes` refuses every agent
+write to it — the denial was reproduced, not assumed. Lifting it is a human action
+outside an agent session, so 7.2's second clause is recorded here as owed rather
+than delivered.
+
 ## Lifecycle slots — three different truths, kept apart
 
 A host×slot cell can be true in three independent senses, and collapsing them is

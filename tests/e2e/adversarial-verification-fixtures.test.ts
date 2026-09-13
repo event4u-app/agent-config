@@ -359,6 +359,79 @@ describe('G8 / G9 — the two test gates and the same-session flag', () => {
     });
 });
 
+describe('7.2 — a per-host destructive column, measured', () => {
+    const DOC = 'docs/enforcement-by-host.md';
+
+    it('the column exists and carries all eight hosts', () => {
+        const body = flat(DOC);
+        expect(body).toMatch(/## `destructive:` — which layer guards a typed op, per host/);
+        for (const host of [
+            'claude',
+            'augment',
+            'cursor',
+            'cline',
+            'gemini',
+            'windsurf',
+            'cowork',
+            'copilot',
+        ]) {
+            expect(body).toMatch(new RegExp(`\\| \`${host}\` \\| \`(hook|daemon|manual-only)\` \\|`));
+        }
+    });
+
+    /**
+     * Just this section's own lines.
+     *
+     * The generated slot table further down carries rows with the same leading
+     * shape (`| `claude` | `session_start` | …`), so a document-wide filter picks
+     * up 40 rows and asserts nothing about the one table under test.
+     */
+    const section = (): string[] => {
+        const lines = read(DOC).split('\n');
+        const start = lines.findIndex((l) => l.startsWith('## `destructive:`'));
+        const end = lines.findIndex((l, i) => i > start && l.startsWith('## '));
+        return lines.slice(start, end === -1 ? lines.length : end);
+    };
+
+    it('every row states what it was measured FROM, never a bare value', () => {
+        // The step's own word is "measured per host rather than asserted". A row
+        // with a value and no source is the assertion it forbids, and this is the
+        // assertion that would fail if a later editor filled a row by hand.
+        const rows = section().filter((l) =>
+            /^\| `(claude|augment|cursor|cline|gemini|windsurf|cowork|copilot)` \|/.test(l),
+        );
+        expect(rows).toHaveLength(8);
+        for (const row of rows) {
+            const cells = row.split('|').map((c) => c.trim());
+            expect(cells[3]).not.toBe('');
+            expect(cells[3]).toMatch(/pre_tool_use|slots:/);
+        }
+    });
+
+    it('the column agrees with the configuration it claims to read', () => {
+        // Not a restatement of the doc: this re-derives the verdict from
+        // host_lowering.yaml and compares. A cell edited by hand reds here.
+        const yaml = read('src/scripts/hooks/host_lowering.yaml');
+        // `claude` is the one host whose pre_tool_use carries a refusal exit.
+        expect(yaml).toMatch(/pre_tool_use:[\s\S]{0,200}?block_exit:\s*2/);
+        const doc = flat(DOC);
+        expect(doc).toMatch(/\| `claude` \| `hook` \|/);
+        // …and no other host claims `hook`.
+        const hookRows = section().filter((l) => /^\| `[a-z]+` \| `hook` \|/.test(l));
+        expect(hookRows).toHaveLength(1);
+    });
+
+    it('says plainly that no host is `daemon` yet', () => {
+        expect(flat(DOC)).toMatch(/\*\*No host is `daemon` today\*\*/);
+    });
+
+    it('records the kernel half as owed rather than claiming it landed', () => {
+        const body = flat(DOC);
+        expect(body).toMatch(/It still reads `none` and this change did not move it/);
+        expect(body).toMatch(/block_kernel_rule_writes/);
+    });
+});
+
 describe('8.2 — the PR body is one page for the owner', () => {
     const CMD = 'src/domains/product-basic/roadmap/process-full/command.md';
 
