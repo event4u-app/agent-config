@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
+
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import {
     OWNERSHIP_CLASSES,
+    decisionRowIds,
     checkFile,
     checkOwnershipColumn,
     checkUnresolvedMarkers,
@@ -158,5 +164,35 @@ describe('lint_decision_classes — parsing helpers', () => {
     it('checkUnresolvedMarkers reports a 1-based line number', () => {
         const v = checkUnresolvedMarkers('r.md', ['ok', 'TBD']);
         expect(v[0]?.line).toBe(2);
+    });
+});
+
+const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const FIXTURES = path.join(REPO, 'tests', 'fixtures', 'decision-closure');
+
+function readFixture(name: string): string {
+    return fs.readFileSync(path.join(FIXTURES, name), 'utf-8');
+}
+
+describe('lint_decision_classes — the ready/resolved fixture pair', () => {
+    it('R1: a ready roadmap with an unresolved marker is RED', () => {
+        const v = checkFile('R1.md', readFixture('R1-ready-unresolved.md'));
+        expect(v).toHaveLength(1);
+        expect(v[0]?.reason).toMatch(/unresolved decision marker/);
+    });
+
+    it('R2: the same marker resolved into `## Decisions` is GREEN', () => {
+        expect(checkFile('R2.md', readFixture('R2-ready-resolved.md'))).toEqual([]);
+    });
+
+    it('a marker naming a row that does not exist is still RED', () => {
+        // Otherwise the cheapest repair is a dangling reference, which reads
+        // as closed and records nothing.
+        expect(checkFile('x.md', 'Pick it: TBD — closed as D9.\n')).toHaveLength(1);
+    });
+
+    it('decisionRowIds reads the first column of the table only', () => {
+        const lines = readFixture('R2-ready-resolved.md').split('\n');
+        expect([...decisionRowIds(lines)]).toEqual(['D1']);
     });
 });

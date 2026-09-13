@@ -232,6 +232,35 @@ export function dischargeRanges(lines: readonly string[]): [number, number][] {
 }
 
 /**
+ * The IDs recorded in the `## Decisions` table.
+ *
+ * A marker that NAMES its row is discharged by the record, not by deletion.
+ * Without this, the cheapest way to clear a finding is to delete the word
+ * "TBD" from the step — which loses the fact that a decision was ever open and
+ * teaches exactly the wrong repair.
+ */
+export function decisionRowIds(lines: readonly string[]): Set<string> {
+    const out = new Set<string>();
+    const sec = findDecisionsSection(lines);
+    if (sec.headingIdx < 0) return out;
+    let headerSeen = false;
+    for (let i = sec.start; i < sec.end; i += 1) {
+        const cells = tableCells(lines[i] as string);
+        if (cells.length === 0 || isSeparatorRow(cells)) continue;
+        if (!headerSeen) {
+            headerSeen = true;
+            continue;
+        }
+        const id = (cells[0] ?? '').replace(/`/g, '').trim();
+        if (id) out.add(id);
+    }
+    return out;
+}
+
+/** A marker line pointing at its own closure record: `closed as D1`, `see D1`. */
+const DISCHARGE_REF_RE = /(?:closed as|resolved as|see|per)\s+`?([A-Za-z]+\d+)`?/i;
+
+/**
  * Check family B — an unresolved marker outside the `## Decisions` section.
  *
  * Fenced code, HTML comments and the roadmap's own prose ABOUT the gate would
@@ -242,6 +271,7 @@ export function dischargeRanges(lines: readonly string[]): [number, number][] {
 export function checkUnresolvedMarkers(rel: string, lines: readonly string[]): Violation[] {
     const out: Violation[] = [];
     const discharge = dischargeRanges(lines);
+    const rowIds = decisionRowIds(lines);
     let inFence = false;
     for (let i = 0; i < lines.length; i += 1) {
         const line = lines[i] as string;
@@ -252,6 +282,8 @@ export function checkUnresolvedMarkers(rel: string, lines: readonly string[]): V
         if (inFence) continue;
         if (discharge.some(([a, b]) => i >= a && i < b)) continue;
         if (/<!--\s*decision-marker:\s*ignore\s*-->/.test(line)) continue;
+        const ref = DISCHARGE_REF_RE.exec(line);
+        if (ref && rowIds.has(ref[1] as string)) continue;
         for (const { re, label } of UNRESOLVED_PATTERNS) {
             if (re.test(line)) {
                 out.push({
@@ -392,6 +424,23 @@ function _selfTest(): number {
     if (checkFile('good.md', good).length !== 0) failures.push('a valid ownership row red');
     if (checkFile('m.md', 'status: ready\n\nPick the codec: TBD\n').length === 0) {
         failures.push('an unresolved marker did not red');
+    }
+    const resolved = [
+        'Pick the codec: TBD — closed as D1 below.',
+        '',
+        '## Decisions',
+        '',
+        '| ID | ownership | resolved by | decision | evidence | revisit if |',
+        '|---|---|---|---|---|---|',
+        '| D1 | contested-technical | agent | opus | bench | the bench changes |',
+        '',
+    ].join('\n');
+    if (checkFile('m2.md', resolved).length !== 0) {
+        failures.push('a marker naming its own closure row red');
+    }
+    const dangling = 'Pick the codec: TBD — closed as D9.\n';
+    if (checkFile('m3.md', dangling).length === 0) {
+        failures.push('a marker naming a row that does not exist did not red');
     }
     if (failures.length) {
         for (const f of failures) process.stderr.write(`❌  ${_PROG} --self-test: ${f}\n`);

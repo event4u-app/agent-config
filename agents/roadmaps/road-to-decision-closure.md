@@ -162,7 +162,7 @@ owner-owned residue remains, closure completes with zero owner interaction.
 
 ## Phase 2 — The roadmap decisions contract
 
-- [ ] **2.1 A `## Decisions` section, mandatory at `status: ready`.** Columns: ID, ownership,
+- [x] **2.1 A `## Decisions` section, mandatory at `status: ready`.** Columns: ID, ownership,
       resolved by, decision, evidence, revisit if. `resolved_by` is one of `evidence`, `agent`,
       `independent:<session or model>`, `council:<record>`, `team:<record>`, `owner`. Execution
       reads it before any step, and a closed decision is re-asked only when its `revisit_if`

@@ -143,6 +143,39 @@ does not fire.
 
 ## 3. Pre-scan — execution contract or commit-step ask
 
+### 3-0. Read `## Decisions` — before any step, once per run
+
+```
+THE `## Decisions` TABLE IS READ BEFORE THE FIRST STEP, NOT WHEN A STEP TRIPS OVER IT.
+A ROW IN IT IS A CLOSED DECISION. NEVER RE-DERIVE ONE. NEVER RE-ASK ONE.
+A CLOSED DECISION REOPENS ONLY WHEN ITS `revisit if` CONDITION BECAME TRUE —
+NEVER BECAUSE A CONTEXT RESET LOST IT, AND NEVER BECAUSE THE ANSWER LOOKS ODD.
+```
+
+If the roadmap carries a `## Decisions` section, read it whole and cache it for
+the run alongside the cadences (§ 4). Each row is `ID | ownership | resolved by
+| decision | evidence | revisit if`, and the contract that governs it is
+[`roadmaps` rule 27](../../templates/roadmaps.md).
+
+Three consequences during the run:
+
+1. **A step whose question is already a row executes on that row's answer.**
+   The decision was closed in planning; re-deriving it is the repeat the ask
+   census counts as a defect, and re-asking it is worse.
+2. **A `revisit if` condition that became true reopens exactly that row** —
+   resolve it again through the ownership ladder, append the new answer, and
+   say which condition fired. One reopen per row per run.
+3. **A decision NOT in the table is mid-run residue**, handled by § 5's residue
+   rule: technical residue resolves inline through the agent, an independent
+   session, the council or the team and is appended to `## Decisions` with the
+   step id; owner-owned residue is asked only when the step cannot progress,
+   and otherwise the step is parked while independent phases continue.
+
+No `## Decisions` section is not an error: a plan that closed everything inline
+carries none. It is a finding only when the plan ALSO carries an unresolved
+marker, which `lint_decision_classes` reds at authoring time rather than here.
+
+
 ### 3a. Mode derivation ladder — first source wins
 
 ```
