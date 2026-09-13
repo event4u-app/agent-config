@@ -207,11 +207,16 @@ owner-owned residue remains, closure completes with zero owner interaction.
       kernel rule file, in `src/rules/` and in every projection, and its only legitimate
       bypass is a human-owned exception registry. `--no-verify` and a `core.hooksPath`
       override are separately denied by `block-no-verify` and are not bypasses.
-      **What DID land, in this PR:** the `user-interaction.md` half — the ask uses the host's
-      native primitive where one exists, the numbered text block is the named fallback, the
-      recommendation becomes the native default option and stays single-source, each option
-      carries what changes by answering it, and the answer is recorded before the next step
-      runs. Mechanics in `user-interaction-mechanics.md`. The `ask: native | text` manifest
+      **What DID land, in this PR:** the non-kernel half of the contract — the ask uses the
+      host's native primitive where one exists, the numbered text block is the named
+      fallback, the recommendation becomes the native default option and stays single-source,
+      each option carries what changes by answering it, and the answer is recorded before the
+      next step runs. It lives in `user-interaction-mechanics.md`, the context
+      `user-interaction.md` already loads, and **not** as prose in the rule: that rule is
+      re-written into the preamble on every subagent spawn, and
+      `check_preamble_payload_budget` rejected the four-line version at +219 tok/spawn. The
+      rule needed no new obligation — Iron Law 1 governs the recommendation identically on
+      both ask shapes — only a contract to point at, which its § Mechanics already does. The `ask: native | text` manifest
       row 3.2 landed is what that contract reads. Fixture `F2` ships and is asserted:
       `tests/fixtures/decision-closure/F2-product-semantics.md` produces exactly one
       owner question, against F1's zero for twelve technical ambiguities.
