@@ -196,18 +196,18 @@ is not that the states are unnamed; it is that nothing can test them.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A fixture exists with four planted behavioural defects and one declared deviation,
+- [x] AC-1 — A fixture exists with four planted behavioural defects and one declared deviation,
       and the screenshot arm's expected catch rate was written down before the probe existed.
-- [ ] AC-2 — The probe finds four of four planted defects and raises nothing for the declared
+- [x] AC-2 — The probe finds four of four planted defects and raises nothing for the declared
       deviation.
-- [ ] AC-3 — A renamed element stops the probe at structure with zero style findings.
-- [ ] AC-4 — On a host that cannot run a dimension the artefact says so with a reason; no
+- [x] AC-3 — A renamed element stops the probe at structure with zero style findings.
+- [x] AC-4 — On a host that cannot run a dimension the artefact says so with a reason; no
       dimension ever reads zero findings because it did not run.
-- [ ] AC-5 — The probe emits no scalar score and no coverage percentage.
+- [x] AC-5 — The probe emits no scalar score and no coverage percentage.
 - [ ] AC-6 — The regex over the real screenshot sentence shapes returns nothing in the review
       skill, and that regex matched two lines before the work.
-- [ ] AC-7 — Removing one hover rule turns exactly one story red; removing one media rule turns
+- [x] AC-7 — Removing one hover rule turns exactly one story red; removing one media rule turns
       exactly one breakpoint row red.
-- [ ] AC-8 — The hook's block path is unchanged, and a run without the lane completes cleanly.
-- [ ] AC-9 — The probe's claim carries a verdict measured over the frozen fixture, and a null
+- [x] AC-8 — The hook's block path is unchanged, and a run without the lane completes cleanly.
+- [x] AC-9 — The probe's claim carries a verdict measured over the frozen fixture, and a null
       verdict is recorded as an outcome rather than as a failure.
