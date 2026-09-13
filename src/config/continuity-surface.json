@@ -268,6 +268,13 @@
             "reason": "Per-file re-read guard stamps, scoped to one session and never restored into another."
         },
         {
+            "id": "memory-recall",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/hooks/memory_recall_hook.ts:429",
+            "reason": "Per-session once-per-slug latch for the memory-recall advisory, so a delivered memory is not re-injected on the next matching tool call. Slug keys and timestamps only, scoped to one session and never restored into another — a successor session SHOULD be told again."
+        },
+        {
             "id": "review-axis",
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",

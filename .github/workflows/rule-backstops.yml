@@ -43,6 +43,16 @@ on:
       # gate is path-filtered into the same silence it just came out of.
       - "dist/agent-src/rules/**"
       - "dist/router.json"
+      # check_generator_sync compares a committed generated artefact against a
+      # fresh run of its generator, so BOTH sides have to trigger this workflow.
+      # `src/server/**` holds the settings schema the install bundle is built
+      # from and is under no other root here; `dist/install/**` is the bundle
+      # itself. Without these two lines the exact diff of the 2026-09-12
+      # install-bundle incident — a description string in
+      # src/server/schemas/settings.ts and nothing else — would be path-filtered
+      # into the same silence the dist/agent-src line above was added to end.
+      - "src/server/**"
+      - "dist/install/**"
       - "internal/bench/reports/kernel-prefix.json"
       - ".github/workflows/rule-backstops.yml"
   push:
@@ -69,6 +79,16 @@ on:
       # gate is path-filtered into the same silence it just came out of.
       - "dist/agent-src/rules/**"
       - "dist/router.json"
+      # check_generator_sync compares a committed generated artefact against a
+      # fresh run of its generator, so BOTH sides have to trigger this workflow.
+      # `src/server/**` holds the settings schema the install bundle is built
+      # from and is under no other root here; `dist/install/**` is the bundle
+      # itself. Without these two lines the exact diff of the 2026-09-12
+      # install-bundle incident — a description string in
+      # src/server/schemas/settings.ts and nothing else — would be path-filtered
+      # into the same silence the dist/agent-src line above was added to end.
+      - "src/server/**"
+      - "dist/install/**"
       - "internal/bench/reports/kernel-prefix.json"
       - ".github/workflows/rule-backstops.yml"
 
@@ -454,6 +474,26 @@ jobs:
             exit 1
           fi
           echo "✅  adr-evidence-census: committed artifact matches a fresh run"
+
+      # The generalisation of the step above, and the reason that step no longer
+      # stands alone. Three incidents in one drain run on 2026-09-12 shared a
+      # single class — an edit to the SOURCE of a generated artefact without a
+      # re-run of its generator — and the census was two of them. The third was
+      # a settings-schema description rewrite that left the committed install
+      # bundle stale and took four CI jobs red on the one cause.
+      #
+      # The step above and the install-bundle freshness step in `tests.yml` each
+      # answer this question for ONE artefact, remotely. This gate answers it for
+      # a registry, and its real home is `preflight` — it exists to move the
+      # question before the push, where the fix costs an edit instead of a red
+      # run plus a fixup commit. It is wired here as well so the registry grows
+      # with remote enforcement attached rather than pre-push-only: a triple
+      # added next month is covered on both sides the day it lands.
+      #
+      # Diff-scoped, so on a PR touching neither an ADR nor a bundled installer
+      # module it resolves its registry, finds nothing in scope, and says so.
+      - name: Generated artefacts in sync with their sources
+        run: ./scripts-run src/scripts/check_generator_sync
 
       # AC-5's first clause, which had no mechanism until this step existed.
       # `check_adr_frontmatter.check_descriptive_axes` validates the SHAPE of an

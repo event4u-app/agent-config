@@ -139,6 +139,24 @@ tasks:
       - ./scripts-run src/scripts/check_host_loadability --reach --root .
       - ./scripts-run src/scripts/check_bundle_path_leakage
       - ./scripts-run src/scripts/check_installer_import_purity
+      # Directly after the two bundle gates above, and about the same artefact
+      # from the third angle: those two ask whether the COMMITTED bundle is
+      # clean and importable, this one whether it still matches the sources it
+      # is built from. Registry-driven, so the ADR evidence census rides along.
+      #
+      # Measured 2026-09-12: three separate incidents in ONE drain run — two ADR
+      # body edits that left the committed census stale, and a settings-schema
+      # description rewrite that left dist/install/install.mjs stale and took
+      # four CI jobs red. Every one of them already had a gate, and every one of
+      # those gates ran only in CI, so each cost a red run plus a fixup push.
+      # This is the same question asked before the push.
+      #
+      # DIFF-SCOPED, which is what makes it affordable here: it regenerates only
+      # a triple whose SOURCE this branch touched. 0.37s measured in the common
+      # case (nothing in scope, two triples skipped); the esbuild rebuild costs
+      # ~0.3s more and the census ~4s, and neither runs unless the branch
+      # actually edited that artefact's source.
+      - ./scripts-run src/scripts/check_generator_sync --quiet
       - ./scripts-run src/scripts/check_backstop_debt
       - ./scripts-run src/scripts/lint_topics_yaml
       - ./scripts-run src/scripts/build_mcp_catalog --strict

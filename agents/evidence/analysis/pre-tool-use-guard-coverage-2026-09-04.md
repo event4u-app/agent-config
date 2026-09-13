@@ -27,7 +27,7 @@ tested.
 The measure is entry-point imports rather than "the guard's name appears
 somewhere in `tests/`" because the looser form hides exactly the gap below.
 
-## The roster — 16 guards, 15 covered, 1 uncovered
+## The roster — 17 guards, 16 covered, 1 uncovered
 
 | guard | concern script | verdict | driving tests |
 |---|---|---|---|
@@ -40,6 +40,7 @@ somewhere in `tests/`" because the looser form hides exactly the gap below.
 | `code-graph-context` | `src/scripts/hooks/code_graph_context_hook.ts` | covered | 1 |
 | `design-slop` | `src/scripts/hooks/design_slop_hook.ts` | **UNCOVERED** | 0 — see below |
 | `evidence-independence` | `src/scripts/hooks/evidence_independence.ts` | covered | 2 |
+| `memory-recall` | `src/scripts/hooks/memory_recall_hook.ts` | covered | 1 |
 | `one-question-per-ask` | `src/scripts/hooks/one_question_per_ask_hook.ts` | covered | 1 |
 | `reread-guard` | `src/scripts/hooks/reread_guard_hook.ts` | covered | 1 |
 | `rtk-wrap` | `src/scripts/hooks/rtk_wrap_hook.ts` | covered | 1 |
