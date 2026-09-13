@@ -83,53 +83,6 @@ describe('conflict — resolveFileConflict', () => {
         expect(r).toBe('skip');
     });
 
-    it('treats a recorded-modified file as ours with an empty knownPaths set', () => {
-        // The write outcome is deliberately identical to the membership
-        // answer — Phase 5.1 moves no writes. What changes is that
-        // computeConflicts can now name this file; see its own describe block.
-        const r = resolveFileConflict({
-            targetPath: '/x/a',
-            idempotent: false,
-            exists: true,
-            policy: policy(),
-            ownership: 'recorded-modified',
-        });
-        expect(r).toBe('skip');
-    });
-
-    it('treats a recorded-unchanged file as ours with an empty knownPaths set', () => {
-        const r = resolveFileConflict({
-            targetPath: '/x/a',
-            idempotent: false,
-            exists: true,
-            policy: policy(),
-            ownership: 'recorded-unchanged',
-        });
-        expect(r).toBe('skip');
-    });
-
-    it('does not over-fire: unknown ownership still surfaces a foreign path', () => {
-        const r = resolveFileConflict({
-            targetPath: '/x/a',
-            idempotent: false,
-            exists: true,
-            policy: policy(),
-            ownership: 'unknown',
-        });
-        expect(r).toBe('surface');
-    });
-
-    it('does not over-fire: force still overwrites a recorded-modified file', () => {
-        const r = resolveFileConflict({
-            targetPath: '/x/a',
-            idempotent: false,
-            exists: true,
-            policy: policy({ force: true }),
-            ownership: 'recorded-modified',
-        });
-        expect(r).toBe('write');
-    });
-
     it('returns write when known path collides with force', () => {
         const r = resolveFileConflict({
             targetPath: '/x/a',

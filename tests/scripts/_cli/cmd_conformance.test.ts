@@ -28,13 +28,26 @@ import { findCommand } from '../../../src/cli/registry.js';
 
 let tmp: string;
 
+let priorManifestEnv: string | undefined;
+
 beforeEach(() => {
     tmp = mkdtempSync(join(tmpdir(), 'conformance-'));
+    // `_installLogExpected` resolves through `installed_tools.manifest_path`,
+    // which returns the override for ANY root when this is set — so an
+    // ambient value inverts the never-installed cases below. Neutralised
+    // rather than assumed absent.
+    priorManifestEnv = process.env['AGENT_CONFIG_INSTALLED_TOOLS'];
+    delete process.env['AGENT_CONFIG_INSTALLED_TOOLS'];
 });
 
 afterEach(() => {
     rmSync(tmp, { recursive: true, force: true });
     delete process.env['AGENT_CONFIG_CONFORMANCE_LOG'];
+    if (priorManifestEnv === undefined) {
+        delete process.env['AGENT_CONFIG_INSTALLED_TOOLS'];
+    } else {
+        process.env['AGENT_CONFIG_INSTALLED_TOOLS'] = priorManifestEnv;
+    }
 });
 
 describe('registry', () => {
@@ -67,6 +80,26 @@ describe('_check_txlog_clean', () => {
         expect(_check_txlog_clean(log)['status']).toBe('ok');
     });
 
+    it('SABOTAGE: an installed tree whose log is empty is not green either', () => {
+        // The absent-log door and the empty-log door reach the same tree;
+        // splitting them let a zero-byte log return `ok` where an absent one
+        // returned `unknown`.
+        mkdirSync(join(tmp, 'agents'), { recursive: true });
+        writeFileSync(join(tmp, 'agents', 'installed-tools.lock'), 'schema_version: 2\ntools: []\n');
+        const empty = join(tmp, 'empty.jsonl');
+        writeFileSync(empty, '');
+        expect(_check_txlog_clean(empty, tmp)['status']).toBe('unknown');
+        const corrupt = join(tmp, 'corrupt.jsonl');
+        writeFileSync(corrupt, 'not json at all\n{"half":\n');
+        expect(_check_txlog_clean(corrupt, tmp)['status']).toBe('unknown');
+    });
+
+    it('does not over-fire: an empty log on a never-installed tree stays green', () => {
+        const empty = join(tmp, 'empty.jsonl');
+        writeFileSync(empty, '');
+        expect(_check_txlog_clean(empty, tmp)['status']).toBe('ok');
+    });
+
     it('SABOTAGE: an installed tree with no transaction log is not green', () => {
         // Phase 4.1 negative fixture for the branch that was always green:
         // a tree carrying an install manifest but no log did not record one,
@@ -75,7 +108,7 @@ describe('_check_txlog_clean', () => {
         writeFileSync(join(tmp, 'agents', 'installed-tools.lock'), 'schema_version: 2\ntools: []\n');
         const res = _check_txlog_clean(join(tmp, 'absent.jsonl'), tmp);
         expect(res['status']).toBe('unknown');
-        expect(String(res['message'])).toContain('no install transaction log');
+        expect(String(res['message'])).toContain('no usable install transaction log');
         expect(res['status']).not.toBe('fail');
     });
 
@@ -149,7 +182,7 @@ describe('the txlog remedy resolves to real behaviour', () => {
                 expect(findCommand(m[1] as string), `unregistered verb: ${m[1]}`).toBeDefined();
             }
         }
-        expect(seen).toBeGreaterThanOrEqual(3);
+        expect(seen).toBeGreaterThanOrEqual(2);
     });
 
     it('claims no recovery this tree cannot perform', () => {

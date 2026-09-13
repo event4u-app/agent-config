@@ -157,6 +157,12 @@ records rather than from path-set membership:
 The field defaults to `unknown` on the wire, so a client that omits it on an
 apply round-trip parses and behaves exactly as before.
 
+**No component reads this field yet.** `src/ui/wizard/state.ts` is the only
+file under `src/ui/` that mentions `conflicts`, and it carries types and
+signals rather than a conflict screen. The column below is therefore a
+requirement on the screen when one is built, not a description of one that
+renders today.
+
 **What `recorded-modified` does NOT mean.** It is a statement about the plan,
 not a promise about the file. The single writer is
 [`src/scripts/install.ts`](../../src/scripts/install.ts), whose

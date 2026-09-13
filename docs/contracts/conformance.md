@@ -42,17 +42,25 @@ passed"; `unknown` means the check ran and could not answer.
 
 ### `txlog-clean` — what an absent log means
 
-The install transaction log is written by the browser install route only. A
-command-line install therefore produces none, and for as long as an absent
-log returned `ok` this check could not go red on the path most consumers
-take. It now distinguishes:
+**No install path writes this log.** `appendTxLog` has exactly one call site
+in the tree — the recovery-dismiss handler in `src/server/routes/install.ts`,
+which appends a `rollback` marker with an empty path and a null hash. The
+TypeScript apply route it once sat beside was removed
+(road-to-single-install-source-of-truth Phase 3), and `src/scripts/install.ts`,
+the surviving writer, does not call it. For as long as an absent log returned
+`ok`, this check therefore passed everywhere by having nothing to read. It now
+distinguishes:
 
 | Tree | Row |
 |---|---|
-| no log, no install manifest — nothing was installed here | `ok` |
-| no log, install manifest present — an install recorded no log | `unknown` |
-| log present, tail is `write` / `skip` / `rollback` | `ok` |
-| log present, tail is `abort` | `fail` |
+| nothing usable in the log, no install manifest — nothing was installed here | `ok` |
+| nothing usable in the log, install manifest present — an install recorded nothing | `unknown` |
+| usable entries, tail is `write` / `skip` / `rollback` | `ok` |
+| usable entries, tail is `abort` | `fail` |
+
+"Nothing usable" covers absent, empty and unparseable alike — `readRecentEntries`
+drops malformed lines silently, so a file existing is not evidence that
+anything recorded anything.
 
 `unknown` is not a failure and does not change the exit code: an install that
 predates the log is an unanswered question, not a broken install. Two
@@ -64,15 +72,19 @@ consequences follow and neither is hidden here:
   an `unknown` row renders `4/5 ok; fails: none`. That is not a silent failure;
   it is a row that answered neither way.
 
-**How far this reaches.** The log is one file per machine
-(`~/.event4u/agent-config/install-log.jsonl`) while the manifest is per
-project. So a machine that has run the browser installer once, anywhere, has a
-log with a clean tail and returns `ok` for every headless install in every
-other project on it. `unknown` catches the machine that has only ever installed
-headlessly. Closing the rest needs the headless path to write the log — the
+**How far this reaches — corrected 2026-09-13.** An earlier draft of this
+section said a machine that had run the browser installer once would answer
+`ok` everywhere else, and that `unknown` caught a narrow class. Both were
+wrong, for the reason above: no install path writes the log at all. So
+`unknown` is the row **every installed tree** gets, and the `fail` arm is
+currently unreachable because nothing writes an `abort`. The exit code and the
+verdict banner stay green, and the report line moves to `4/5 ok` broadly.
+
+What that leaves is a check that can now say "I cannot confirm this" instead of
+"green", which is the honest floor rather than the goal. The goal — a check
+that goes red on the path most consumers take — needs a writer. That is the
 blocker `headless-log-write-is-a-consumer-visible-default` on
-`road-to-a-conformance-check-that-can-fail`, which is an owner decision and is
-open.
+`road-to-a-conformance-check-that-can-fail`: an owner decision, and open.
 
 ### What the failure remedy may claim
 

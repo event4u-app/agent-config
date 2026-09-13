@@ -22,12 +22,21 @@ import {
 
 let tmp: string;
 
+let priorManifestEnv: string | undefined;
+
 beforeEach(() => {
     tmp = mkdtempSync(join(tmpdir(), 'recorded-ownership-'));
+    priorManifestEnv = process.env['AGENT_CONFIG_INSTALLED_TOOLS'];
+    delete process.env['AGENT_CONFIG_INSTALLED_TOOLS'];
 });
 
 afterEach(() => {
     rmSync(tmp, { recursive: true, force: true });
+    if (priorManifestEnv === undefined) {
+        delete process.env['AGENT_CONFIG_INSTALLED_TOOLS'];
+    } else {
+        process.env['AGENT_CONFIG_INSTALLED_TOOLS'] = priorManifestEnv;
+    }
 });
 
 function writeManifest(body: string): string {

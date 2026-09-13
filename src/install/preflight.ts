@@ -163,11 +163,15 @@ export function checkConflicts(inputs: PlanInputs): PreflightFinding[] {
         // probe reports on a plan; the writer is `src/scripts/install.ts`,
         // which overwrites every deployed file unconditionally and documents
         // `--force` as an accepted no-op. Telling an operator their edit is
-        // safe from a default run would be false.
+        // safe from a default run would be false — and so was the other arm's
+        // pre-existing "resolve interactively, or pass --force to overwrite",
+        // which named an interactive resolution that path never reaches and a
+        // flag that changes nothing there. Both arms now say only what the
+        // operator can act on.
         remedy:
             c.ownership === 'recorded-modified'
                 ? 'back up your edit — installing refreshes every managed file with package content'
-                : 'resolve interactively, or pass --force to overwrite',
+                : 'back up this file — installing writes the planned content over it',
     }));
 }
 

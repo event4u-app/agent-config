@@ -138,16 +138,14 @@ export function _installLogExpected(projectRoot: string): boolean {
 /**
  * Check (a) — the install transaction log tail carries no abandoned run.
  *
- * An absent log is two answers, not one (road-to-a-conformance-check-that-can-fail
- * Phase 1). Until this split the branch returned `ok` unconditionally, and
- * since the log's only writer is the browser install route
- * (`src/server/routes/install.ts`), every command-line install satisfied the
- * check by having produced nothing — a green that could not go red on the
- * path most consumers take.
+ * A log with nothing usable in it is two answers, not one
+ * (road-to-a-conformance-check-that-can-fail Phase 1). Until this split the
+ * branch returned `ok` unconditionally, so every install satisfied the check
+ * by having produced nothing.
  *
- * - no log, no manifest  → `ok`      (nothing was installed here)
- * - no log, manifest     → `unknown` (an install happened and recorded no log)
- * - log present          → `ok` / `fail` on the tail, as before
+ * - nothing usable, no manifest  → `ok`      (nothing was installed here)
+ * - nothing usable, manifest     → `unknown` (an install recorded nothing)
+ * - usable entries               → `ok` / `fail` on the tail, as before
  *
  * `unknown` is deliberately NOT `fail`: an install that predates the log, or
  * one written by a path that does not log, is an unanswered question rather
@@ -156,42 +154,43 @@ export function _installLogExpected(projectRoot: string): boolean {
  * only, so `unknown` leaves exit codes untouched — including the verdict
  * banner, where the per-row symbol is the only signal.
  *
- * Reach, stated rather than implied: the log is one file per machine and the
- * manifest is per project, so a machine that ran the browser installer once
- * anywhere still answers `ok` for every headless install everywhere else.
- * `unknown` catches the machine that has only ever installed headlessly.
- * Closing the rest is Phase 3, behind an open owner blocker.
+ * Reach, stated rather than implied, and stated after a review corrected it:
+ * NO install path writes this log — browser included. `appendTxLog` has one
+ * call site repository-wide (`src/server/routes/install.ts`, the
+ * recovery-dismiss handler), and it appends a `rollback` marker with an empty
+ * path and a null hash; the TypeScript apply route it once sat beside was
+ * removed. So `unknown` is the answer for every installed tree, not for a
+ * narrow class, and `fail` is currently unreachable because nothing writes an
+ * `abort`. That is the honest state of the check, and closing it is Phase 3,
+ * behind an open owner blocker.
  */
 export function _check_txlog_clean(
     logPath: string = installLogPath(),
     projectRoot: string | null = null,
 ): Dict {
-    if (!fs.existsSync(logPath)) {
+    const entries = fs.existsSync(logPath) ? readRecentEntries(logPath) : [];
+    if (entries.length === 0) {
+        // One branch for all three no-usable-entries shapes — absent, empty,
+        // and unreadable. Splitting them let a zero-byte or fully-corrupt log
+        // reach `ok` on a tree the absent-log branch would have called
+        // `unknown`: `readRecentEntries` drops malformed lines silently, so
+        // "the file exists" is not evidence that anything recorded anything.
         if (projectRoot !== null && _installLogExpected(projectRoot)) {
             return {
                 id: 'txlog-clean',
                 status: 'unknown',
                 message:
-                    'install manifest present but no install transaction log — ' +
-                    'this install recorded none, so the last run cannot be confirmed complete',
+                    'install manifest present, no usable install transaction log — ' +
+                    'nothing recorded this install, so the last run cannot be confirmed complete',
                 remedy:
-                    'only the browser install route (`agent-config setup`) writes the log today; ' +
+                    'no install path writes this log today; ' +
                     'run `agent-config doctor` for the drift answer this check cannot give',
             };
         }
         return {
             id: 'txlog-clean',
             status: 'ok',
-            message: 'no install transaction log and no install manifest — nothing was installed here',
-            remedy: '',
-        };
-    }
-    const entries = readRecentEntries(logPath);
-    if (entries.length === 0) {
-        return {
-            id: 'txlog-clean',
-            status: 'ok',
-            message: 'install transaction log is empty',
+            message: 'no usable install transaction log and no install manifest — nothing was installed here',
             remedy: '',
         };
     }

@@ -32,35 +32,26 @@ import { classifyOwnership, recordedHashesForRoot, } from './recordedOwnership.j
  * | yes     | no          | no     | yes    | `write`    |
  * | yes     | no          | no     | no     | `surface`  |
  *
- * "Known?" used to mean nothing but `policy.knownPaths.has(targetPath)`. It
- * now reads the recorded digest first when the caller supplies one:
- * `recorded-unchanged` and `recorded-modified` are both known, `unknown`
- * falls back to path membership. The outcomes are unchanged — this commit
- * does not move a single write. What it buys is that
- * {@link computeConflicts} can now name a user-modified managed file in the
- * report instead of dropping it.
+ * Deliberately NOT extended with the recorded-digest ownership that
+ * {@link computeConflicts} consumes. This function has no caller in `src/` —
+ * the only references are its own definition and the `{@link}` above — so an
+ * `ownership` input would be a parameter nobody supplies, on a decision
+ * nobody reads. The ownership split lives where it is live: in the report.
  *
- * What this resolver decides is NOT what the installer does. The single
- * writer is `src/scripts/install.ts`, whose `_resolve_file_conflict` returns
- * `write` unconditionally for deployed files and which reads nothing from
- * this module; `skip` here means "the planner would not touch it", never
- * "your edit is safe". Making the writer consult this matrix is an
- * install-behaviour change and is deliberately not taken here.
- *
- * Headless callers (B1 CLI) collapse `surface` to `skip` automatically
- * because there is no UI to defer to; the apply layer records the entry
- * under {@link ApplyResult.conflicts} so the wizard can pick it up next.
+ * What this resolver decides is in any case NOT what the installer does. The
+ * single writer is `src/scripts/install.ts`, whose `_resolve_file_conflict`
+ * returns `write` unconditionally for deployed files and which reads nothing
+ * from this module; `skip` here means "the planner would not touch it", never
+ * "your edit is safe".
  */
 export function resolveFileConflict(inputs) {
-    const { targetPath, idempotent, exists, policy, ownership } = inputs;
+    const { targetPath, idempotent, exists, policy } = inputs;
     if (!exists)
         return 'write';
     if (idempotent)
         return 'skip';
-    const isOurs = ownership === 'recorded-unchanged' ||
-        ownership === 'recorded-modified' ||
-        policy.knownPaths.has(targetPath);
-    if (isOurs) {
+    const isKnown = policy.knownPaths.has(targetPath);
+    if (isKnown) {
         return policy.force ? 'write' : 'skip';
     }
     if (policy.force)
@@ -164,9 +155,13 @@ export const CONFLICT_BATCH_THRESHOLD = 5;
  * `recorded` is injectable for tests; by default it is read from the
  * manifest at `plan.root`.
  */
-export function computeConflicts(plan, recorded = recordedHashesForRoot(plan.root)) {
+export function computeConflicts(plan, recordedOverride) {
+    // Force returns before the manifest is read. As a default parameter the
+    // map was built at call entry and discarded on the next line, so every
+    // force-mode plan paid a read and a YAML parse for nothing.
     if (plan.policy.force)
         return [];
+    const recorded = recordedOverride ?? recordedHashesForRoot(plan.root);
     const out = [];
     for (const entries of Object.values(plan.filesByTool)) {
         for (const entry of entries) {
@@ -178,10 +173,11 @@ export function computeConflicts(plan, recorded = recordedHashesForRoot(plan.roo
                 continue;
             // The on-disk digest is computed BEFORE the ownership decision so
             // that decision can consume it. Behaviour-identical to computing it
-            // after the `knownPaths` test — the remaining guards are unchanged —
-            // at the cost of one extra digest per recorded path. Phase 5.2 of
-            // road-to-a-conformance-check-that-can-fail keeps hash computation
-            // in this commit so the matrix commit carries none.
+            // after the `knownPaths` test — the remaining guards are unchanged.
+            // The added cost is one digest per EXISTING path in
+            // `policy.knownPaths`, the set the removed short-circuit used to
+            // skip; everything else was already being hashed. That set is empty
+            // for `cmd_preflight` and caller-supplied for the plan route.
             const onDisk = sha256File(entry.path);
             const ownership = classifyOwnership(recorded.get(entry.path), onDisk);
             if (ownership === 'recorded-unchanged')
