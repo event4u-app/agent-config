@@ -118,7 +118,7 @@ files otherwise — and only then decide whether anything needs writing.
 1. **Inspect the existing story set before authoring anything.** Read what the library
    already has — via the MCP channel below when it is available, otherwise by reading the
    story files — and check the component against it by name and by shape.
-   - **Source of truth:** the story files, or `list-all-documentation` over a running Storybook.
+   - **Source of truth:** the story files, or `docs-list` over a running Storybook.
    - **Verify:** the component you are about to write does not already exist under another name.
 2. **One story per concept**, named from the state set above.
    - **Verify:** no story name joins two axes with `And`.
@@ -179,10 +179,12 @@ up yet"*, so its presence is not evidence the channel works.
 
 When the project has `@storybook/addon-mcp` **and** a running Storybook,
 [`existing-ui-audit`](../existing-ui-audit/SKILL.md) prefers the live tools —
-`list-all-documentation`, then `get-documentation` for the components that matter — over the
+`docs-list`, then `docs-show` for the components that matter — over the
 hand-read inventory. **The live read wins; the file read is the fallback**, and the fallback
 is never removed: an agent that cannot reach a running Storybook must still be able to
-inventory the library.
+inventory the library. The tool names are version-bound and were re-derived from a throwaway
+installation on 2026-09-13 — [`existing-ui-audit`](../existing-ui-audit/SKILL.md) § 4b carries
+the derivation and the version boundary; do not restate it here.
 
 **React-only while in preview.** Storybook's own MCP FAQ (docs 10.5) states the documentation
 toolset supports React only during preview, so Vue, Angular, and Web Components take the
