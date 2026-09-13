@@ -49,17 +49,17 @@ is not that the states are unnamed; it is that nothing can test them.
 
 ## Phase 0 — The sensitivity fixture, before anything is changed
 
-- [ ] **0.1 Build a reference and a deliberately divergent implementation** under a new fixture
+- [x] **0.1 Build a reference and a deliberately divergent implementation** under a new fixture
       directory: one HTML/CSS/JS pair with four planted defects — a missing hover colour, a
       missing narrow-width media rule, a dead click handler, a missing element — plus one
       deviation marked as declared.
       verify: the fixture directory exists and each planted defect is named in a comment beside it,
       so a later reader can tell a defect from a bug in the fixture.
-- [ ] **0.2 Pre-register the screenshot arm's honest null.** Record, before the probe exists, how
+- [x] **0.2 Pre-register the screenshot arm's honest null.** Record, before the probe exists, how
       many of the four a pixel comparison is expected to catch.
       verify: the number is written in the fixture's README before Phase 2 starts, so the
       comparison is a prediction rather than a retrofit.
-- [ ] **0.3 Add a fifth variant that renames an element** without changing its styling.
+- [x] **0.3 Add a fifth variant that renames an element** without changing its styling.
       verify: the variant exists; it is the case the structure gate in Phase 2 must stop at.
 
 ## Phase 1 — Name the new verification primitives
