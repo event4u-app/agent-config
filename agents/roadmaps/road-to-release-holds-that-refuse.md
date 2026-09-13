@@ -46,6 +46,13 @@ when 15.0.0 shipped — and nothing can express it, let alone refuse on it.
 
 ## Phase 0 — Measure first, and record the honest null up front
 
+> **Closed 2026-09-13, all four steps.** Evidence:
+> `agents/evidence/analysis/release-holds-phase-0-2026-09-13.md`. One correction to the
+> frontmatter's `estate_growth_exempt` note, which says both blockers close inside Phases 1
+> and 0: `zero-live-subjects` did NOT close here. Its evidentiary half is closed — the check
+> ran and its result is recorded — but its `Resolved when` asks for an *accepted* plan, and
+> acceptance is an owner act. See its `Evidence (2026-09-13)` field below.
+
 - [x] **0.1 Count release-coupling prose across all four roadmap folders.** Write the count, the
       search terms and the per-file hits to `agents/evidence/analysis/`.
       verify: the file records that the **active** corpus holds zero release-coupling sentences
@@ -102,24 +109,56 @@ when 15.0.0 shipped — and nothing can express it, let alone refuse on it.
       clearance.
       verify: `git diff` shows the prohibition sentences unchanged character for character, and
       `./scripts-run src/scripts/lint_roadmap_complexity` is green on every active roadmap.
+      PREPARED 2026-09-13, NOT APPLIED — the split is a contract-layer change and its approval is
+      the `rule-13-amendment` blocker, which is the owner's to clear. The complete change is
+      `agents/evidence/analysis/release-holds-rule-13-split-proposal.md` with the patch beside it; the template is
+      untouched. The verify condition is already provable against the prepared patch and is
+      STRONGER than character-for-character: the patch carries ZERO deletion lines, so nothing
+      anywhere in the file is removed or changed, and the prohibition block hashes to
+      `5827d0e4…` identically at HEAD, at `9d3e40ab0` (where this roadmap landed) and after the
+      patch applies. `lint_roadmap_complexity` was measured green at HEAD. Stays `[ ]` because
+      the template does not carry the split, and an agent may not approve a contract rule.
 - [ ] **1.2 Add template rule 27** — marker grammar, entry shape, the state table, the channel
       vocabulary, per-folder lifecycle, and the authoring order `re-sequence → guard → hold` with
       a mandatory `Why not a guard:` field. Rule 27 states as its own non-goal that roadmap
       *incompleteness* is never a release condition.
       verify: the template's numbered rules run 1–27 (`grep -cE '^[0-9]+\. \*\*'` reads 27, up
       from 26) and rule 27 carries the non-goal sentence verbatim.
+      PREPARED 2026-09-13, NOT APPLIED — same patch as 1.1 and the same single decision, because
+      rule 27 without the rule 13 split mandates a marker rule 13 forbids by its own letter, which
+      is what the blocker says. Both halves of this verify reproduce against the prepared patch:
+      the grep reads 26 at HEAD and 27 with the patch applied, and the non-goal sentence is
+      present as a literal substring. Rule 27 as drafted carries all six required elements plus a
+      closing sentence restating rule 13's version prohibition inside a hold entry, which answers
+      this file's own risk rank 7. Blocked on the same approval as 1.1.
 - [ ] **1.3 Rule 20 gains one sentence** distinguishing the two mechanisms: a blocker stops
       execution, a hold stops publication.
       verify: `./scripts-run src/scripts/lint_roadmap_blockers` stays green on every active
       roadmap — the pre-change baseline was measured green on 2026-09-11.
+      PREPARED 2026-09-13, NOT APPLIED — same patch, same decision. The sentence as drafted reads
+      *a blocker stops execution; a hold stops publication*, with the four lines that make the
+      distinction operational. `lint_roadmap_blockers` re-measured green at HEAD on 2026-09-13
+      (14 roadmaps, blocker-contract-clean), so the baseline this verify compares against still
+      holds. Blocked on the same approval as 1.1.
 - [ ] **1.4 `new_roadmap.ts` emits the `## Release holds` block as a comment**, and the authoring
       self-check lands in `roadmap-writing/SKILL.md` and `/roadmap:create`, logging every
       `gated → re-sequenced` outcome so Phase 6 has a numerator.
       verify: `./scripts-run src/scripts/new_roadmap probe --stdout` shows the commented block,
       and `evals/triggers.json` gains one positive case whose expected output is a re-sequenced
       phase rather than a hold.
+      NOT STARTED, and deliberately not prepared — this step is DOWNSTREAM of the 1.1 approval
+      rather than beside it. The block it emits is written in rule 27's grammar, so emitting it
+      before rule 27 exists would put a rule-13 violation into every newly created roadmap, which
+      is the exact failure the `rule-13-amendment` blocker names. The authoring self-check has the
+      same dependency. Open with a named reason, not deferred.
 
 ## Phase 2 — The evaluator, and the glob nobody has paid for yet
+
+> **Not started — blocked by `rule-13-amendment`.** Every step here parses or
+> evaluates a marker the template does not yet permit a roadmap to carry, so there is no
+> grammar to write a parser against. 2.3's glob measurement is the one step that could in
+> principle run early; it is left with the phase because a p95 budget measured for a
+> declaration format that may change during review would have to be re-taken.
 
 - [ ] **2.1 Write `src/scripts/_lib/release_holds.ts`** — parse and evaluate. Reuse
       `check_roadmap_trackable`'s checkbox and fence parser and `lint_roadmap_blockers`' marker
@@ -141,6 +180,9 @@ when 15.0.0 shipped — and nothing can express it, let alone refuse on it.
 
 ## Phase 3 — Lifecycle integrity
 
+> **Not started — blocked by `rule-13-amendment`.** The archival, skip and
+> `later/` paths would have to refuse on a window that cannot exist yet.
+
 - [ ] **3.1 The archival and skip paths refuse to move a file with an open window**, and a
       `later/` move requires the window named in `entry_condition.what`.
       verify: a fixture move to `archive/` or `skipped/` with an open window is refused naming
@@ -152,6 +194,13 @@ when 15.0.0 shipped — and nothing can express it, let alone refuse on it.
       it is solved.
 
 ## Phase 4 — Wire all four boundaries to one refusal
+
+> **Not started — blocked by `rule-13-amendment` for the phase itself, and by
+> `zero-live-subjects` for its migration value.** The two are different blocks and only the
+> first is structural. The four wiring points are already enumerated with file and line in
+> the Phase 0 evidence file, § 0.3, so this phase starts from a table rather than a search.
+> Step 4.2's figure is stale and the correction is recorded rather than applied: the registry
+> carries 9 jobs at HEAD, not 8; the "4 carrying local commands" half reproduces exactly.
 
 - [ ] **4.1 `release.ts` pre-flight before step 1.** The refusal names the roadmap, the hold, its
       opener, its closer and the closer's `verify:` command, plus the three ways out: finish the
@@ -175,6 +224,9 @@ when 15.0.0 shipped — and nothing can express it, let alone refuse on it.
 
 ## Phase 5 — Adversarial proof, each case with a known-red arm
 
+> **Not started — blocked by `rule-13-amendment`.** There is no guard to
+> neutralise and no refusal message to assert against.
+
 - [ ] **5.1 Write the sabotage set**, one assertion per case, no case shared: delete a clear
       marker after opening · flip a clear `[x]` back to `[~]` · `[x] → [-]` with and without a
       `Closed by:` field · duplicate hold id · move to `later/`, `archive/`, `skipped/` · a marker
@@ -190,6 +242,11 @@ when 15.0.0 shipped — and nothing can express it, let alone refuse on it.
       verify: both negative cases are in the same test file and are green.
 
 ## Phase 6 — Evaluate the claim after 30 tags, and accept the null if it comes
+
+> **Not started — blocked by `rule-13-amendment`, and by its own denominator.**
+> The claim is pre-registered (0.4) and its 30-tag window cannot begin until Phase 4 lands a
+> wired refusal. The null branch is already recorded as the predicted outcome, so this phase
+> reads a result rather than deciding what the result would mean.
 
 - [ ] **6.1 Read the refusal log, the re-sequence log and a re-taken Phase 0 prose count**, then
       flip `release-hold-refuses-declared-state` to `backed` or `honest-null`.
@@ -219,6 +276,30 @@ when 15.0.0 shipped — and nothing can express it, let alone refuse on it.
 - **Resolved when:** `src/agent-src/templates/roadmaps.md` carries rule 27 and rule 13's
   prohibition sentences are byte-identical to `git show HEAD:src/agent-src/templates/roadmaps.md`
   at the commit this roadmap landed.
+- **Evidence (2026-09-13):** the change is PREPARED AND VERIFIED, and not applied. It is one
+  patch covering steps 1.1, 1.2 and 1.3, because this blocker's own `Resolved when` spans two of
+  them — rule 27 present AND rule 13 byte-identical is one condition, so it is one decision.
+  - The change: `agents/evidence/analysis/release-holds-rule-13-split.patch`, applying cleanly to
+    the template at HEAD. Read it, or read the brief at
+    `agents/evidence/analysis/release-holds-rule-13-split-proposal.md`.
+  - Check it: `bash agents/evidence/analysis/release-holds-rule-13-split-verify.sh` — exit 0,
+    six checks, nothing written to the working tree.
+  - The byte-identity guarantee is STRONGER than the one this blocker asks for. The patch carries
+    **zero deletion lines**, so nothing anywhere in the file is removed or changed. The
+    prohibition block hashes to `5827d0e4b5a1c88e7d646e7157fed36564890a5aaa5f2e33c0007ad77b9ed407`
+    at HEAD `7182f5d07`, at `9d3e40ab0` where this roadmap landed, and on a scratch copy with the
+    patch applied — the same value at all three, which removes the ambiguity in "at the commit
+    this roadmap landed".
+  - The checks were observed RED before being trusted: against a tampered copy rewriting one
+    prohibition word, the additive check and the after-hash both fail and the script exits 1. The
+    apply check stays green, which is the finding — a tampered patch is still a valid patch.
+  - `src/agent-src/templates/roadmaps.md` IS UNCHANGED on this branch. Applying the patch is the
+    approval, and an agent may not approve a contract-layer rule on its own authority. That half
+    is untouched and stays with the owner.
+  - To approve: `git apply agents/evidence/analysis/release-holds-rule-13-split.patch`, then
+    `./scripts-run src/scripts/lint_roadmap_complexity` and
+    `./scripts-run src/scripts/lint_roadmap_blockers` (both measured green at HEAD), then
+    `task sync` and `task generate-tools`, then flip 1.1/1.2/1.3 and this blocker to `resolved`.
 
 ### blocker: zero-live-subjects
 - **Status:** open
@@ -229,8 +310,11 @@ when 15.0.0 shipped — and nothing can express it, let alone refuse on it.
   carries zero release-coupling prose at HEAD.
 - **What to do:** decide whether the mechanism ships against a latent need. Run
   `grep -rniE 'same release|release condition|ship together|must land in the same' agents/roadmaps/*.md`
-  — it returns nothing today. Then read the exposure row from Phase 0.2: four of seven active
-  roadmaps were mid-flight when 15.0.0 shipped, which is the population this would have protected.
+  — it returns two self-matches from this file and no substantive declaration (the wording below
+  said "nothing today"; it was true when written and the grep now matches the sentences this
+  roadmap itself added). Then read the exposure row from Phase 0.2: **three** of seven active
+  roadmaps were mid-flight when 15.0.0 shipped — this entry said four, and the measured figure is
+  three — which is the population this would have protected.
 - **Recommendation:** ship it, and say so in the Phase 0.4 falsifier rather than discovering it at
   Phase 6. A constraint the owner stated once is not weakened by the absence of a current
   violation, but a claim that pretends there was one is.
@@ -238,6 +322,35 @@ when 15.0.0 shipped — and nothing can express it, let alone refuse on it.
   surprise instead of as the outcome the claim already predicted.
 - **Resolved when:** either a live subject is named with a `file:line` in the Phase 0 evidence
   file, or that file records the honest-null branch as the accepted plan.
+- **Evidence (2026-09-13):** the CHECK THIS ENTRY NAMES HAS BEEN RUN, at `7182f5d07`, and its
+  result is recorded in `agents/evidence/analysis/release-holds-phase-0-2026-09-13.md`. What it
+  returned, and what that does and does not settle:
+  - **The grep returns no live subject.** Two hits in the active corpus, both self-references
+    inside this file — the rule 27 non-goal sentence at `:85` and this blocker's own quoted
+    command. Zero substantive release-coupling declarations in `agents/roadmaps/`, and zero in
+    `later/`, `skipped/` and `stubs/`. A wider eleven-term set was run as a sensitivity check and
+    does not change the zero.
+  - **The archived migration candidate is closed, verified line by line.**
+    `agents/roadmaps/archive/road-to-a-graph-that-is-shipped.md:960` and `:961` carry the two
+    coupling risks; they read MITIGATED at `:973` and DISCHARGED at `:978`. All four line numbers
+    reproduce exactly at HEAD.
+  - **The exposure population is smaller than this entry claimed: three of seven, not four.**
+    Measured at tag `15.0.0` (`c86131ad7`) with
+    `bash agents/evidence/analysis/release-holds-exposure-row.sh 15.0.0`. The three are
+    `road-to-delivery-for-every-host.md` (28 done / 2 open), `road-to-delivery-on-hook-hosts.md`
+    (11 / 5) and `road-to-typed-grants-that-persist.md` (2 / 29). At HEAD the figure is **1 of
+    14**, and **0 of the 7 `status: ready`** — every ready roadmap is at 0% done.
+  - **None of those three declared a coupling either**, so even the historical population is one
+    of *exposure*, never of *violations*. That is the sharpest honest statement the evidence
+    supports and it is weaker than a live subject.
+  - **The honest-null branch is recorded as the evidenced and recommended plan**, in the Phase 0
+    file and in the `release-hold-refuses-declared-state` claim pre-registered at 0.4, where the
+    null is named as the PREDICTED outcome rather than a Phase 6 surprise.
+  **Status stays open, and the reason is precise.** The `Resolved when` says "the accepted plan",
+  and acceptance is the owner's act. The evidentiary half of this decision is now closed — there
+  is nothing left to look up. What remains is a cost judgement: whether to spend Phases 2 through
+  5 building a mechanism with no exercised path. No measurement answers that, and none was
+  claimed to.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-11 | reviewer: claude/host -->
