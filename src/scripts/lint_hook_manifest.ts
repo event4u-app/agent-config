@@ -424,6 +424,14 @@ function _check_guard_payload_bodies(
   }
 }
 
+/**
+ * Platform-block keys that are NOT event bindings.
+ *
+ * Without this set every metadata key reads as an unknown event, which is how
+ * a descriptive row becomes a schema error the first time one is added.
+ */
+const PLATFORM_METADATA_KEYS: ReadonlySet<string> = new Set(["ask", "fallback_only"]);
+
 function _check_platforms(
   manifest: YamlObject,
   concernNames: Set<string>,
@@ -452,10 +460,20 @@ function _check_platforms(
       errors.push(`platforms.${plat}: must be mapping or null`);
       continue;
     }
+    const askShape = block["ask"];
+    if (askShape !== undefined && askShape !== "native" && askShape !== "text") {
+      errors.push(
+        `platforms.${plat}.ask: must be 'native' or 'text' ` +
+          `(got ${JSON.stringify(askShape)})`,
+      );
+    }
     if (block["fallback_only"]) {
       continue; // Copilot — intentional, no event surface
     }
     for (const [event, names] of Object.entries(block)) {
+      if (PLATFORM_METADATA_KEYS.has(event)) {
+        continue;
+      }
       if (!EVENT_VOCABULARY.has(event)) {
         errors.push(
           `platforms.${plat}.${event}: unknown event ` +

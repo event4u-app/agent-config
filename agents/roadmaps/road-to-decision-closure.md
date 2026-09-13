@@ -200,7 +200,7 @@ owner-owned residue remains, closure completes with zero owner interaction.
       `## Decisions` immediately.
       verify: fixture `F2` — on Claude Code, exactly one native ask is emitted for two valid
       product semantics, and its answer appears in `## Decisions` before the next step runs.
-- [ ] **3.2 The host manifest records which shape each host has.** `hook_manifest.yaml` host
+- [x] **3.2 The host manifest records which shape each host has.** `hook_manifest.yaml` host
       rows gain `ask: native | text`, and `hooks:status` prints it.
       verify: `agent-config hooks:status` prints the ask shape for the current host.
 - [ ] **3.3 Residue is asked now, not filed.** A closure that ends with owner-owned residue
