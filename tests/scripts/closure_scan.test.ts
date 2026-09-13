@@ -53,6 +53,28 @@ describe('closure_scan — fixture F1, the twelve seeded ambiguities', () => {
     });
 });
 
+describe('closure_scan — fixture F2, the owner-question mirror', () => {
+    const findings = scan(fixture('F2-product-semantics.md'));
+
+    it('emits exactly one owner question', () => {
+        // F1 and F2 together are the discrimination: zero owner questions for
+        // twelve technical ambiguities, exactly one for a single product fork.
+        // A detector scoring zero on both is inert; one scoring owner questions
+        // on both puts a technical decision in front of a person.
+        expect(ownerQuestionCount(findings)).toBe(1);
+    });
+
+    it('the question is the product fork, and it is product-owned', () => {
+        expect(findings).toHaveLength(1);
+        expect(findings[0]?.kind).toBe('product-semantics');
+        expect(findings[0]?.ownership).toBe('product-owned');
+    });
+
+    it('the fork is found on the STEP, not on the prose that describes it', () => {
+        expect(findings[0]?.excerpt).toContain('2.1 Partial sync result');
+    });
+});
+
 describe('closure_scan — fixture F0, the other direction', () => {
     it('reports zero open decisions on an already-closed plan', () => {
         // Without this, a detector weakened until it finds nothing passes F1's

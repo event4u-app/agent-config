@@ -200,10 +200,27 @@ owner-owned residue remains, closure completes with zero owner interaction.
       `## Decisions` immediately.
       verify: fixture `F2` — on Claude Code, exactly one native ask is emitted for two valid
       product semantics, and its answer appears in `## Decisions` before the next step runs.
+      **NOT LANDED — externally impossible for an agent, 2026-09-13. Kernel guard.**
+      The step requires an edit to `src/rules/ask-when-uncertain.md`, which is one of the nine
+      kernel rules (`src/scripts/_lib/kernel_rules.ts` `KERNEL_RULE_IDS`). The
+      `block-kernel-rule-writes` PreToolUse guard denies every Write/Edit whose target is a
+      kernel rule file, in `src/rules/` and in every projection, and its only legitimate
+      bypass is a human-owned exception registry. `--no-verify` and a `core.hooksPath`
+      override are separately denied by `block-no-verify` and are not bypasses.
+      **What DID land, in this PR:** the `user-interaction.md` half — the ask uses the host's
+      native primitive where one exists, the numbered text block is the named fallback, the
+      recommendation becomes the native default option and stays single-source, each option
+      carries what changes by answering it, and the answer is recorded before the next step
+      runs. Mechanics in `user-interaction-mechanics.md`. The `ask: native | text` manifest
+      row 3.2 landed is what that contract reads. Fixture `F2` ships and is asserted:
+      `tests/fixtures/decision-closure/F2-product-semantics.md` produces exactly one
+      owner question, against F1's zero for twelve technical ambiguities.
+      **What remains:** one paragraph in `ask-when-uncertain.md` naming the native tool per
+      host alongside its Iron Law, which a maintainer must write.
 - [x] **3.2 The host manifest records which shape each host has.** `hook_manifest.yaml` host
       rows gain `ask: native | text`, and `hooks:status` prints it.
       verify: `agent-config hooks:status` prints the ask shape for the current host.
-- [ ] **3.3 Residue is asked now, not filed.** A closure that ends with owner-owned residue
+- [x] **3.3 Residue is asked now, not filed.** A closure that ends with owner-owned residue
       asks immediately, one question per turn, and records the answer. Never *the four
       questions are in file X*.
       verify: no closure run produces a roadmap whose open questions exist only as prose.

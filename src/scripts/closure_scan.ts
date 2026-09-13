@@ -179,7 +179,11 @@ export function units(lines: readonly string[]): Unit[] {
             const block = lines.slice(i, j);
             out.push({
                 line: i + 1,
-                text: block.join(' '),
+                // Whitespace-normalised: a wrapped step joined with a single
+                // space still carries the next line's indent, so a pattern
+                // written with single spaces stops matching across the wrap —
+                // which is the case this unit exists to catch.
+                text: block.join(' ').replace(/\s+/g, ' '),
                 inAcceptance,
                 isOpenStep: OPEN_STEP_RE.test(line),
                 hasVerify: /(?:^|\s)verify:/m.test(block.join('\n')),

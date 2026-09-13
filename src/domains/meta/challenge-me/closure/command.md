@@ -115,11 +115,36 @@ closed decision is re-asked only when that condition became true.
 
 ## Step 5 — Residue is asked now, never filed
 
-If anything genuinely owner-owned remains, ask it **now**, one question per
-turn, using the host's own ask primitive where one exists (see
-`user-interaction`), and write the answer into `## Decisions` before the next
-question. Never hand back *"the four open questions are in file X"* — a filed
-question is an unclosed one wearing a record's clothes.
+```
+OWNER-OWNED RESIDUE IS ASKED THIS TURN. ONE QUESTION PER TURN.
+THE ANSWER IS WRITTEN INTO `## Decisions` BEFORE THE NEXT QUESTION IS PUT.
+NEVER HAND BACK "THE FOUR OPEN QUESTIONS ARE IN FILE X" — A FILED QUESTION IS
+AN UNCLOSED ONE WEARING A RECORD'S CLOTHES, AND THE FILE IS WHERE IT DIES.
+NEVER HAND BACK A COUNT — "3 QUESTIONS OUTSTANDING" IS A NUMBER RENDERED WHERE
+A DECISION BELONGS.
+```
+
+Ask using the host's own primitive where one exists — `agent-config
+hooks:status` prints the shape, and the numbered text block is the named
+fallback (see `user-interaction`). Each option carries what changes by
+answering it, and the recommendation has exactly one source.
+
+Two mechanical consequences, both already enforced:
+
+- `ask_block_census` classifies a question written into a section instead of
+  asked as `file-parked`, and a count rendered where a question belongs as
+  `count-only`. Both are their own axes; neither is an ask.
+- `lint_decision_classes` reds a `ready` roadmap carrying an unresolved marker
+  outside `## Decisions`. A question that exists only as prose in the plan is
+  exactly that marker, so the prose form cannot survive to `ready`.
+
+**Where the residue genuinely cannot be asked** — the run is non-interactive,
+or the answer needs something the owner has not got yet — the step is parked
+and independent phases continue (§ 4 of the process loop), and the plan records
+a structured `## Blockers` entry naming one of the three owner-owned classes.
+That is the one legal file-shaped home, and it is legal because a five-field
+blocker is decidable: recommendation, cost of the non-decision, what to do, and
+what resolves it. A bare sentence in `## Notes` is none of those.
 
 ## Bypass
 
@@ -130,11 +155,21 @@ an autonomy setting or momentum. Only the owner's words this turn are a bypass.
 
 ## Fixtures
 
-`tests/fixtures/decision-closure/F1-technical-ambiguities.md` seeds twelve
-technical ambiguities: a correct pass finds twelve and asks the owner none.
-`F0-closed-plan.md` is the other direction — a plan already closed, on which a
-detector that fires on ordinary prose would produce findings. Both are
-required; neither alone is evidence.
+Under `tests/fixtures/decision-closure/`:
+
+| Fixture | What it must produce |
+|---|---|
+| `F1-technical-ambiguities.md` | twelve findings, **zero** owner questions |
+| `F2-product-semantics.md` | **exactly one** owner question, `product-owned` |
+| `F0-closed-plan.md` | nothing — a plan already closed |
+| `R1-ready-unresolved.md` / `R2-ready-resolved.md` | red, then green on the same plan once the marker is recorded |
+| `F3a-conclusive-technical.md` / `F3b-non-convergent-product.md` | no options block, then a proposal |
+
+Each pair is required and neither half alone is evidence: a detector weakened
+until it finds nothing passes F0 and fails F1, and one that fires on ordinary
+prose does the reverse. F1 against F2 is the ownership discrimination — twelve
+technical ambiguities cost the owner nothing, one product fork costs exactly
+one question.
 
 ## See also
 
