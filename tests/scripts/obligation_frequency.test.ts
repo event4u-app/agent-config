@@ -7,18 +7,28 @@
  * value set is a forest rather than a chain, so a regression that flattens it
  * shows up as a failing name rather than as a quietly shrinking finding count.
  */
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { describe, expect, it } from 'vitest';
 
 import {
+    ENFORCEMENT_CLASSES,
     carrier_frequency_by_platform,
     covers,
     covers_any,
+    enforcement_class_for,
+    enforcement_class_of,
+    is_enforcement_class,
     is_frequency,
     parse_hook_platforms,
     root_of,
     slot_frequency,
     type Frequency,
 } from '../../src/scripts/_lib/obligation_frequency.js';
+
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 const point = (frequency: Frequency) => ({ frequency, mode: 'point' as const });
 const sweep = { frequency: 'per-commit' as Frequency, mode: 'sweep' as const };
@@ -208,5 +218,114 @@ describe('is_frequency guards the frontmatter read', () => {
         expect(is_frequency('per-hour')).toBe(false);
         expect(is_frequency(undefined)).toBe(false);
         expect(is_frequency(['per-turn'])).toBe(false);
+    });
+});
+
+describe('the declared enforcement-class vocabulary is closed', () => {
+    it('accepts exactly the six declared classes', () => {
+        for (const cls of ENFORCEMENT_CLASSES) expect(is_enforcement_class(cls)).toBe(true);
+        expect(ENFORCEMENT_CLASSES).toHaveLength(6);
+    });
+
+    it('DENIES the four resolver-only values an author can never declare', () => {
+        // The declared/resolved split: these are findings about wiring that
+        // check_enforcement_coverage produces. Frontmatter claiming one would
+        // be asserting a fact about itself it cannot know.
+        for (const resolverOnly of ['validator-local', 'unwired', 'missing', 'judge']) {
+            expect(is_enforcement_class(resolverOnly)).toBe(false);
+            expect(enforcement_class_of(`${resolverOnly}:whatever`)).toBeNull();
+        }
+    });
+
+    it('parses each class off a declared entry', () => {
+        expect(enforcement_class_of('hook:design-pass')).toBe('hook');
+        expect(enforcement_class_of('validator:src/scripts/lint_x.ts')).toBe('validator');
+        expect(enforcement_class_of('test:tests/x.test.ts')).toBe('test');
+        expect(enforcement_class_of('observer:maintainer-review')).toBe('observer');
+        expect(enforcement_class_of('instruction-only: no gate reads prose')).toBe(
+            'instruction-only',
+        );
+        expect(enforcement_class_of('none')).toBe('none');
+    });
+
+    it('DENIES a prefix with an empty payload rather than reading it as a class', () => {
+        // A schema violation must not become a legitimate-looking record.
+        expect(enforcement_class_of('hook:')).toBeNull();
+        expect(enforcement_class_of('validator:   ')).toBeNull();
+        expect(enforcement_class_of('instruction-only:')).toBeNull();
+    });
+
+    it('DENIES `none:` — bare `none` is the only legal spelling', () => {
+        expect(enforcement_class_of('none:something')).toBeNull();
+        expect(enforcement_class_of(':none')).toBeNull();
+        expect(enforcement_class_of('')).toBeNull();
+    });
+
+    it('never degrades an unparseable entry to `none`', () => {
+        // `none` is itself a meaningful declaration — a recorded gap. Returning
+        // it for junk would convert a schema violation into an honest-looking
+        // record.
+        expect(enforcement_class_of('garbage')).toBeNull();
+        expect(enforcement_class_of('HOOK:design-pass')).toBeNull();
+    });
+});
+
+describe('enforcement_class_for picks the strongest declaration', () => {
+    it('takes the strongest by vocabulary order, matching the census RANK direction', () => {
+        expect(enforcement_class_for(['observer:x', 'validator:y'])).toBe('validator');
+        expect(enforcement_class_for(['instruction-only: x', 'hook:y'])).toBe('hook');
+        expect(enforcement_class_for(['test:a', 'observer:b'])).toBe('test');
+    });
+
+    it('is `none` for a rule that declares nothing', () => {
+        expect(enforcement_class_for([])).toBe('none');
+    });
+
+    it('is `none` when every entry is unparseable, never a guess', () => {
+        expect(enforcement_class_for(['garbage', 'hook:'])).toBe('none');
+    });
+
+    it('keeps a real `none` declaration as `none`', () => {
+        expect(enforcement_class_for(['none'])).toBe('none');
+    });
+});
+
+describe('the TS vocabulary and the JSON Schema pattern are the same set', () => {
+    // Written twice by necessity — once where JSON Schema checks authored
+    // frontmatter, once where TypeScript checks code. This is the pin that
+    // stops the pair drifting, which is the only failure mode a two-site
+    // definition has.
+    const schema = JSON.parse(
+        fs.readFileSync(path.join(REPO_ROOT, 'src/scripts/schemas/rule.schema.json'), 'utf8'),
+    ) as { properties: { enforced_by: { items: { pattern: string } } } };
+    const rawPattern = schema.properties.enforced_by.items.pattern;
+
+    it('every class the TS set admits is accepted by the schema pattern', () => {
+        const pattern = new RegExp(rawPattern);
+        const sample: Record<string, string> = {
+            hook: 'hook:design-pass',
+            validator: 'validator:src/scripts/lint_x.ts',
+            test: 'test:tests/x.test.ts',
+            observer: 'observer:maintainer-review',
+            'instruction-only': 'instruction-only: no gate reads prose',
+            none: 'none',
+        };
+        for (const cls of ENFORCEMENT_CLASSES) {
+            const entry = sample[cls] as string;
+            expect(pattern.test(entry), `${cls} rejected by the schema pattern`).toBe(true);
+            expect(enforcement_class_of(entry)).toBe(cls);
+        }
+    });
+
+    it('the schema pattern admits no class the TS set lacks', () => {
+        // Enumerated from the pattern's own alternation, so adding a branch to
+        // the schema without adding it here fails this test rather than
+        // silently widening the declared vocabulary.
+        const branches = rawPattern
+            .replace(/^\^\(/, '')
+            .replace(/\)\$$/, '')
+            .split('|')
+            .map((b) => (b.includes(':') ? b.slice(0, b.indexOf(':')) : b));
+        expect(new Set(branches)).toEqual(new Set(ENFORCEMENT_CLASSES));
     });
 });

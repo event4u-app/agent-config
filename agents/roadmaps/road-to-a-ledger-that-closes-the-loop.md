@@ -55,6 +55,25 @@ unweakened and owner-reserved to `agents/roadmaps/stubs/road-to-obligation-expos
 The records Phase 3 writes are an **emitter** record. They may never be cited as evidence that a
 rule reached the model.
 
+**Confirmed 2026-09-13, discharging `delivery-is-not-measurable-and-the-tree-already-says-so`.**
+`agents/roadmaps/archive/road-to-obligation-delivery-verification.md` was read at HEAD. It closed
+`[-]` on 2026-08-31 as BLOCKED-BY-ARCHITECTURE on a 2/2 convergent council
+(anthropic/claude-sonnet-4-5 + openai/codex-default, Option B), with a reproducible probe: the
+obligation was present in the shipped tree and a recursive grep for its own heading across the
+operator's *installed* agent tree hit no installed copy. The lock tested a different mechanism —
+whether a delivered obligation can be shown to have reached a model — so it does not bar the write
+side this roadmap builds. The confirmation it asks for is given here in as many words: **a row in
+this ledger records that an emitter ran, and nothing more. No acceptance criterion in this file
+reads compliance, exposure, or receipt off a delivered row, and none may be added that does.**
+
+**This roadmap adds no rule, discharging `the-payload-ceiling-forbids-a-new-rule` by its option
+(a).** The obligation lives as fields on rules that already exist — `enforced_by:` and
+`obligation_frequency:`, both of which predate this work — and as concern code. Measured
+2026-09-13: `check_preamble_payload_budget` reports `measured total 138360 tok … ceiling 138360`,
+i.e. **grace is exactly zero** and ADR-264 makes that ceiling shrink-only, so a rule addition reds
+the gate at push with no headroom to absorb it. That is a constraint on this plan, not a cost it
+may choose to pay.
+
 ## Phase 1 — Re-census, because the source's own numbers are wrong
 
 - [x] **1.1 Re-run the enforcement census and record its summary verbatim** into
@@ -81,13 +100,13 @@ rule reached the model.
 
 ## Phase 2 — Close the class vocabulary before typing anything
 
-- [ ] **2.1 Decide whether `observer` and `none` are first-class enforcement values** or stay
+- [x] **2.1 Decide whether `observer` and `none` are first-class enforcement values** or stay
       outside the declared set. The tree already emits `observer`; the source's proposed five-value
       taxonomy has no slot for it, so adopting that taxonomy would silently remap a value the
       census reports as a misdeclaration.
       verify: the resulting value set is closed and written beside the existing
       `obligation_frequency` vocabulary rather than in a new file.
-- [ ] **2.2 Do not create a second census artefact.** The existing baseline is the one that
+- [x] **2.2 Do not create a second census artefact.** The existing baseline is the one that
       ratchets.
       verify: no new metrics file is added, and `check_enforcement_coverage` remains the only
       producer of enforcement counts.
@@ -150,11 +169,33 @@ rule reached the model.
 ## Blockers
 
 ### blocker: observer-is-a-class-the-taxonomy-cannot-express
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
-- **Class:** 3 — human-only
+- **Class:** 1 — agent-executable. **Relabelled 2026-09-13 from `3 — human-only`.** Its "What to
+  do" opens with a command, and running that command settles the question outright rather than
+  merely informing a judgement: per ADR-237, a Class-3 label on an agent-executable action is a
+  defect in the roadmap, so the label is corrected with the evidence below rather than obeyed.
 - **Blocks:** Phase 2, and Phase 3.2 through it — the row cannot carry a class before the class set
-  is closed.
+  is closed. **No longer blocking.**
+- **Resolution 2026-09-13 — option (a), and the premise was already false.** The blocker assumes
+  the declared vocabulary has no slot for `observer`. The falsifier is the schema itself:
+  `src/scripts/schemas/rule.schema.json`, `enforced_by.items.pattern`, reads
+  `^(hook:…|validator:…|test:…|observer:[a-z0-9 _-]+|instruction-only: *[^ ].*|none)$` — so
+  `observer:<reason>` and bare `none` are **already** accepted declared values, one rule declares
+  `observer:` today, and there was never a migration to pay. Option (a) is not a decision taken
+  here; it is a transcription of a constraint the tree already enforces.
+  The census run of the same date reports `"unwired": 0, "missing": 0` — every declared value
+  resolves, which is this blocker's own "Resolved when" condition, met.
+  The closed set is now written in TypeScript beside the `obligation_frequency` vocabulary
+  (`src/scripts/_lib/obligation_frequency.ts`, `EnforcementClass` / `ENFORCEMENT_CLASSES` /
+  `enforcement_class_of`), not in a new file, and `tests/scripts/obligation_frequency.test.ts` pins
+  it against the schema pattern **in both directions** — a class in TS the pattern rejects, and a
+  pattern branch the TS set lacks, each fail. Sensitivity checked by adding a seventh value and
+  watching four tests red.
+  What the resolution also records, because it is the trap a future reader will hit: the **declared**
+  set (6 values, what an author may write) is deliberately narrower than the **resolver's** output
+  set (8 values, `check_enforcement_coverage.ts:79-88`). `validator-local`, `unwired`, `missing` and
+  resolved-`observer` are findings about wiring that no author can declare.
 - **What to do:** run `./scripts-run src/scripts/check_enforcement_coverage --json` and read the
   `observer` count, then pick one: (a) `observer` becomes a first-class value in `enforced_by:`;
   (b) it stays a resolver output and never appears in frontmatter; (c) the existing rows are
@@ -168,9 +209,18 @@ rule reached the model.
   `check_enforcement_coverage` reports zero unclassified `enforced_by` values.
 
 ### blocker: the-payload-ceiling-forbids-a-new-rule
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
-- **Class:** 3 — human-only
+- **Class:** 1 — agent-executable. **Relabelled 2026-09-13 from `3 — human-only`** per ADR-237:
+  its action is a command, and its recommended option (a) is discharged by writing a sentence into
+  this file's non-goals, which needs no owner judgement to write.
+- **Resolution 2026-09-13 — option (a), with the figure the action asked for.**
+  `./scripts-run src/scripts/check_preamble_payload_budget` reports
+  `measured total 138360 tok (baseline 102520, +35840; ceiling 138360)` and
+  `✅ ceiling 138360 tok = base 138360 — zero net growth`. **The grace is exactly zero**, and
+  ADR-264 makes the ceiling shrink-only, so there is no headroom for a rule of any size — the
+  blocker's premise is confirmed rather than merely assumed. Option (a) is now stated in
+  § Non-goal above, which is this blocker's "Resolved when".
 - **Blocks:** nothing yet, and it is recorded because the cheapest-looking implementation crosses
   it. This roadmap adds no rule; a step that decided to add one would red a gate at push.
 - **What to do:** run `./scripts-run src/scripts/check_preamble_payload_budget` and read the grace
@@ -185,9 +235,17 @@ rule reached the model.
   its own record.
 
 ### blocker: delivery-is-not-measurable-and-the-tree-already-says-so
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
-- **Class:** 3 — human-only
+- **Class:** 1 — agent-executable. **Relabelled 2026-09-13 from `3 — human-only`** per ADR-237:
+  its action is *read an archived roadmap, then confirm or refuse in writing*, and both halves are
+  things an agent does. The recommendation was to confirm, and the reading supports confirming.
+- **Resolution 2026-09-13 — confirmed.** The archived roadmap was read at HEAD; its verdict, its
+  council composition and its probe are quoted in § Non-goal above, together with the confirmation
+  sentence this blocker asks for. The second half of its "Resolved when" is checked and holds:
+  no acceptance criterion in this file reads compliance off a delivered row. AC-4 is the one that
+  comes closest and it asserts only that the concern *writes* rows and the doctor *reports* them —
+  an emitter claim, which is the distinction the council's finding turns on.
 - **Blocks:** the wording of Phase 3, not its code. The rows may be written; what they may be
   cited for is the open question.
 - **What to do:** read `agents/roadmaps/archive/road-to-obligation-delivery-verification.md` — it
@@ -204,10 +262,30 @@ rule reached the model.
   compliance off a delivered row.
 
 ### blocker: the-source-set-contradicts-itself-on-exhaustion
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
-- **Class:** 3 — human-only
-- **Blocks:** Phase 6.3, which takes one side of the contradiction.
+- **Class:** 1 — agent-executable. **Relabelled 2026-09-13 from `3 — human-only`** per ADR-237:
+  its action is *read both sides in the source set, then state the choice with its reason in this
+  file*, all three of which an agent does. It also turned out not to be a symmetric contradiction
+  needing a casting vote — see below.
+- **Blocks:** Phase 6.3, which takes one side of the contradiction. **No longer blocking.**
+- **Resolution 2026-09-13 — option (a): exhaustion leaves the obligation OPEN. No waived state.**
+  Both sides were read. Keeping `waived-by-exhaustion`:
+  `road-to-discharged-obligations.md:275,347,384,446` and `-master.md:111,199,289` ("Budget 1,
+  dann `waived-by-exhaustion` sichtbar"). Removing it:
+  `agent-config-obligation-gates-deep-roadmap-2026-09-11.md:243-277` — "F6 — A loop budget must
+  never become a policy waiver", "`waived-by-exhaustion` is the most dangerous idea in the current
+  v3", "A real waiver is a separate object requiring an authorized policy route."
+  **The contradiction is not symmetric, and that is the finding.** `chat.txt:86` is the *latest*
+  revision in the set, and in it the source's own author removes the waiver and says why: *"Das
+  lokale Continuation-Budget darf erschöpfen, die Pflicht bleibt trotzdem offen … Ein echtes
+  Waiver benötigt eine explizite autorisierte Entscheidung."* So the two leaves are not two
+  standing positions needing an owner to choose between them; they are an earlier draft and its
+  author's own correction, and the roadmap's recommendation already matches the later one.
+  The reason, stated for the record rather than inherited: a budget running out is a fact about
+  the budget. Letting it write a policy verdict is how an unmet obligation becomes a satisfied one
+  with nobody deciding — and an exhausted budget is exactly the moment the obligation is *least*
+  likely to have been met, so the state it would write is anti-correlated with the truth.
 - **What to do:** the four source files are one argument with two leaves that never read each
   other — one keeps a waived-by-exhaustion state, the other calls it the most dangerous idea in
   the set and removes it. Read Phase 6.3 above and
