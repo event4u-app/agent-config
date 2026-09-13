@@ -59,8 +59,6 @@ export type LinePhase = 'refine' | 'memory' | 'analyze' | 'plan' | 'implement' |
  * table can be checked against it (`road-to-experience-loop-broadening` 1.3).
  */
 export type LineOutcome = PhaseOutcome;
-/** Which capsule-emission trigger arm fired first (Phase 1 shadow comparison). */
-export type TriggerArm = 'watermark' | 'saturation' | 'tie';
 /** The orchestration form the form-gate selected (road-to-opt-subagent-harvest P2). */
 export type DispatchModeId =
     | 'do-and-judge'
@@ -225,12 +223,16 @@ export interface RecordInput {
     capsule_emitted?: boolean | undefined;
     /** Total entries across the capsule's arrays — a size proxy, never content. */
     capsule_entries?: number | null | undefined;
-    /** 1-based step at which the token-watermark arm fired (null = never). */
-    watermark_step?: number | null | undefined;
-    /** 1-based step at which the novelty-saturation arm fired (null = never). */
-    saturation_step?: number | null | undefined;
-    /** Which arm fired first on this dispatch — the paired-comparison datum. */
-    trigger_arm_earlier?: TriggerArm | null | undefined;
+    // The three trigger-comparison fields that used to sit here —
+    // `watermark_step`, `saturation_step`, `trigger_arm_earlier` — were removed
+    // on 2026-09-13. They were accepted by the CLI and no caller could ever
+    // compute them: `capsule_trigger.compareTriggers` needs per-step token
+    // counts AND per-step surfaced terms, and no payload this tree has observed
+    // carries either. `subagent_ledger_hook.ts` names that gap and refuses to
+    // invent a proxy, citing this exact module. A flag nothing can fill is the
+    // same built-and-unreachable class the rest of this change detects, so it
+    // goes rather than waiting behind a label. Re-adding them is one commit
+    // once an observation source exists.
     // Audit-log envelope (sensible defaults for a dispatch record)
     phase?: LinePhase | undefined;
     outcome?: LineOutcome | undefined;
@@ -258,7 +260,6 @@ const BANDS: readonly Band[] = ['low', 'medium', 'high'];
 const PHASES: readonly LinePhase[] = ['refine', 'memory', 'analyze', 'plan', 'implement', 'test', 'verify', 'report'];
 const LOOKUP_CLASSES: readonly LookupClass[] = ['definition', 'references', 'string-existence', 'report-run'];
 const ROUTES_TAKEN: readonly RouteTaken[] = ['primitive', 'subagent', 'ask'];
-const TRIGGER_ARMS: readonly TriggerArm[] = ['watermark', 'saturation', 'tie'];
 /** Hex-only payload hash — a hash can never smuggle content (privacy by construction). */
 const PAYLOAD_HASH_RE = /^[a-f0-9]{8,64}$/i;
 /** Id-shaped origin tag — enum-ish, never free-form prose. */
@@ -549,15 +550,8 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
     if (input.capsule_emitted !== undefined && typeof input.capsule_emitted !== 'boolean') {
         errors.push('capsule_emitted must be a boolean or omitted');
     }
-    for (const [key, v] of [
-        ['capsule_entries', input.capsule_entries],
-        ['watermark_step', input.watermark_step],
-        ['saturation_step', input.saturation_step],
-    ] as const) {
+    for (const [key, v] of [['capsule_entries', input.capsule_entries]] as const) {
         if (v != null && (!isInt(v) || v < 0)) errors.push(`${key} must be a non-negative integer count`);
-    }
-    if (input.trigger_arm_earlier != null && !TRIGGER_ARMS.includes(input.trigger_arm_earlier)) {
-        errors.push(`trigger_arm_earlier must be one of ${TRIGGER_ARMS.join(' | ')} (or omitted / null when neither arm fired)`);
     }
 
     for (const [key, v] of [
@@ -619,9 +613,6 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
         // capsule shadow-measurement — readers ignore unknowns per audit-log-v1
         capsule_emitted: input.capsule_emitted ?? null,
         capsule_entries: input.capsule_entries ?? null,
-        watermark_step: input.watermark_step ?? null,
-        saturation_step: input.saturation_step ?? null,
-        trigger_arm_earlier: input.trigger_arm_earlier ?? null,
     };
 
     const line: Record<string, unknown> = {

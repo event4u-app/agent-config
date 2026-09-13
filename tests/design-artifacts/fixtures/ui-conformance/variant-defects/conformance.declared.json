@@ -1,0 +1,10 @@
+{
+  "declared": [
+    {
+      "probe_id": "body",
+      "dimension": "computed_style",
+      "property": "line-height",
+      "reason": "Reading measure widened to 28px for this surface; approved 2026-09-11. Present so the fixture carries a false-positive control and not only defects."
+    }
+  ]
+}

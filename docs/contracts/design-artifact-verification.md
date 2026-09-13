@@ -53,7 +53,27 @@ Each design-verification gate needs one of these host primitives:
 | `deck_export` | A slide deck exports to the target format | deck tool export path |
 | `doc_export` | A document exports (DOCX/MD/PDF) + re-reads | office/markdown export + readback |
 | `image_decode` | An image decodes to real dimensions/format | image lib / the host's image reader |
+| `computed_style` | A node's **resolved** style matches the intent — after the cascade, tokens and fallbacks, not as authored | read `getComputedStyle` in a live engine |
+| `interaction` | A state the resting frame cannot contain — hover, focus, active, keyboard, a handler that fires | drive the state, then read the resolved style or the DOM effect |
+| `viewport_matrix` | The layout property that is supposed to change at a breakpoint actually changes | resize, then read the resolved property at each declared width |
+| `media_emulation` | A media-preference branch is honoured — `prefers-reduced-motion`, `prefers-color-scheme` | emulate the preference, then read the resolved style |
 | `static_inspect` | Source/markup read without rendering | file read + parse (always available) |
+
+**Why these four are separate primitives and not `screenshot` used harder.** A
+screenshot proves what a frame looked like. Hover, focus, keyboard, a breakpoint
+crossing and a media-preference branch are not properties of a frame — they are
+properties of a *transition into a state*, and the resting capture that a review
+actually takes contains none of them. The distinction is measurable rather than
+theoretical: over
+[`tests/design-artifacts/fixtures/ui-conformance/`](../../tests/design-artifacts/fixtures/ui-conformance/README.md),
+two of four planted behavioral defects are invisible to any resting capture at
+any viewport, and a pixel comparison additionally has no channel through which a
+deviation can be *declared*, so it reports an approved change as a difference.
+Both figures are pre-registered in that fixture's README.
+
+All four resolve to `❌` wherever `playwright` does — they are that primitive's
+dependants, never a second capability. A host that has `playwright` has these;
+a host that does not cannot fake them from markup.
 
 ## Host-class capability table
 
@@ -72,10 +92,24 @@ unsure, take the lower capability. Classes, not brand promises:
 | `deck_export` | ⚠️ if the deck tool is present | ❌ | ⚠️ if the tool is installed |
 | `doc_export` | ⚠️ if the office/md tool is present | ❌ | ⚠️ if the tool is installed |
 | `image_decode` | ✅ (image lib / host image reader) | ⚠️ if the host renders images | ✅ (image lib) |
+| `computed_style` | ⚠️ via Playwright | ❌ | ⚠️ only where the browser binaries are installed |
+| `interaction` | ⚠️ via Playwright | ❌ | ⚠️ only where the browser binaries are installed |
+| `viewport_matrix` | ⚠️ via Playwright | ❌ | ⚠️ only where the browser binaries are installed |
+| `media_emulation` | ⚠️ via Playwright | ❌ | ⚠️ only where the browser binaries are installed |
 | `static_inspect` | ✅ | ✅ | ✅ |
 
 Legend: ✅ available · ⚠️ available **only if** the named dependency is present
 (probe first, never assume) · ❌ not available → degrade.
+
+**The four behavioral rows are `⚠️` in class C where `playwright` is `✅`, and
+the difference is deliberate.** A CI runner having the Playwright *package* is
+not the same fact as it having the *browser binaries*, and these four cannot
+degrade to anything — there is no static reading of a hover transition. This
+repository is its own worked example: `@playwright/test` is a devDependency, no
+workflow runs `playwright install`, so every one of these four resolves `❌` in
+this package's own CI and the probe that consumes them reports not-applicable
+rows there rather than a clean pass. Read the row as a claim about binaries,
+never about `package.json`.
 
 **Resolution rule.** Before a design-verification gate runs, confirm the
 primitive is actually present (e.g. `npx playwright --version`, a renderer on
@@ -95,6 +129,32 @@ When the needed primitive is `❌` (or a `⚠️` probe fails):
 4. **Never emit a fabricated verification claim** ("renders correctly", "no
    console errors") for a check that did not run — that is an invented fact
    ([`direct-answers`](../../src/rules/direct-answers.md) Iron Law 2).
+
+**The four behavioral primitives degrade by exactly these four steps — no
+second vocabulary.** They are named here only because their failure mode has a
+shape the earlier primitives do not: each one's honest degrade is a *missing
+count*, and a missing count is easy to render as a zero.
+
+- `computed_style` → *"Resolved styles not read on this host (no `playwright`
+  binaries); the stylesheet was static-inspected, which cannot see the cascade,
+  token resolution or a font fallback."*
+- `interaction` → *"Hover, focus, active and keyboard states not exercised; a
+  handler's presence in the source is not evidence that it fires."*
+- `viewport_matrix` → *"Breakpoints not crossed; the media query was read, not
+  applied."*
+- `media_emulation` → *"`prefers-reduced-motion` / `prefers-color-scheme` not
+  emulated; the block's presence says nothing about what it presents."*
+
+```
+A DIMENSION THAT DID NOT RUN HAS NO FINDING COUNT. IT REPORTS NOT-APPLICABLE
+AND THE REASON. NEVER ZERO — A ZERO READS AS "RAN AND FOUND NOTHING", WHICH IS
+THE FABRICATED GREEN THIS CONTRACT EXISTS TO PREVENT.
+```
+
+Machine-checked, not only asserted: the artifact these primitives feed carries
+`findings: null` on a not-applicable row and a required non-empty `reason`, and
+[`tests/scripts/ui_conformance_probe.test.ts`](../../tests/scripts/ui_conformance_probe.test.ts)
+fails if a zero ever appears in that position.
 
 ## Verification checklist
 

@@ -1,6 +1,9 @@
 ---
 complexity: structural
 review_by: 2026-12-27
+reviewed_at: 2026-09-13
+blocker_class: product
+blocker_opened: 2026-08-27
 ---
 
 # Road to a runtime orchestration substrate — stub
@@ -17,17 +20,20 @@ review_by: 2026-12-27
 > Read `(at least)` strictly: a broad keyword sweep returns a larger set that includes
 > incidental mentions, so this is the subject-matched floor.
 
-> **The posed owner question — 11 arrivals, no recommended answer.** Every track
-> in the table below is gated on `road-to-runtime-governance-flip.md` Phase 1's
-> ADR, which does not exist, so no track here can start and none has been
-> adopted. Exactly one of:
+> **The posed owner question — 11 arrivals, no recommended answer.** None of the eight
+> tracks below has been adopted. **Re-cut 2026-09-13:** the common gate this block used
+> to cite — "Phase 1's ADR, which does not exist" — closed on 2026-08-27 when ADR-249
+> was accepted, so option 2 below is answered and is struck rather than deleted. What
+> remains gating each track is now named per row. Exactly one of:
 >
-> 1. Keep the stub as it is — tracks findable, gates named; the first track whose
->    gate opens and carries a measurement becomes a roadmap then.
-> 2. Route the gate rather than wait on it: put the Class-B resident-process
->    question to a decision now, since every track depends on that one answer.
-> 3. Promote one named track on its own terms and leave the rest stubbed,
->    accepting that its gate is still shut.
+> 1. Keep the stub as it is — tracks findable, per-track gates named; the first track
+>    whose gate opens and carries a measurement becomes a roadmap then.
+> 2. ~~Route the gate rather than wait on it: put the Class-B resident-process question
+>    to a decision now, since every track depends on that one answer.~~ **Answered
+>    2026-08-27 by ADR-249.** Kept struck so a reader of an older citation finds where
+>    it went; it is no longer one of the choices.
+> 3. Promote one named track on its own terms and leave the rest stubbed, accepting
+>    that its own per-track gate is still shut.
 > 4. Close the stub and record the tracks as not adopted, which is the reading
 >    § What this stub does NOT claim leaves open in both directions.
 >
@@ -38,10 +44,28 @@ review_by: 2026-12-27
 > 2026-08-27. Drafted against `f2ed85e`, which **is** `origin/main` at
 > authoring time, so nothing here is stale-by-window.
 
-> **Class:** decision-gated successor of
-> `road-to-runtime-governance-flip.md`. Every track below is unbuildable
-> until that roadmap's Phase 1 ADR exists, because each one is a Class-B
-> resident process under `ADR-124:111` as it currently stands. This is a
+> **Gate: OPEN since 2026-08-27. Checked 2026-09-13 against
+> `docs/decisions/ADR-249-supervised-resident-process-permitted-under-governance.md`.**
+>
+> This stub was written on 2026-08-27 saying every track below is unbuildable until
+> `road-to-runtime-governance-flip.md` Phase 1's ADR exists. **That ADR was accepted on
+> 2026-08-27** — the same day — and the roadmap that produced it is in
+> `agents/roadmaps/archive/`. ADR-249 scopes its supersession to `ADR-124:111` and
+> `ADR-109:28`, which is exactly the Class-B blanket prohibition the original sentence
+> rested on. A supervised resident process is now **permitted in core**, and one has
+> shipped under the record.
+>
+> **What is still shut, and it is not the same gate.** ADR-249 permits a P1 process only
+> when all four of its governance conditions hold *for that process*. None of the eight
+> tracks below has a process, so none of them can satisfy or fail those conditions today:
+> the common gate is retired and replaced by a **per-track** condition, named in each row.
+> Declaring a governance condition met for a resident process is a supervision judgement
+> reserved to the owner — see § Blockers.
+>
+> The condition-by-condition read, with a state per condition and a file per state, is
+> `agents/evidence/analysis/substrate-stub-gate-conditions-2026-09-13.md`.
+>
+> **Class:** decision-gated successor of `road-to-runtime-governance-flip.md`. This is a
 > stub rather than seven roadmaps on purpose — see § Why one stub.
 
 ## What the source set wanted, and what it costs
@@ -55,25 +79,31 @@ as `road-to-runtime-governance-flip.md` and
 `road-to-executable-specification-layer.md`. What remains is listed here so
 it is findable, not planned.
 
-**Provenance warning, and it is load-bearing.** The § references below point into
-`agents/tmp.old/`, which is a **disposable** inbox archive — the operator may
-delete it at any time, and it is gitignored, so it is not in a clone. The table's
-"Source section" column will then dereference into nothing. Before this stub is
-acted on, whoever acts on it either re-obtains the master or accepts that the
-column is a historical note rather than a pointer. The table's own content — the
-track and its gate — is written to stand alone precisely because of this; the
-section numbers are a convenience, not the record.
+**Provenance warning, and it is load-bearing — discharged 2026-09-13.** The table used to
+carry a "Source section" column of § numbers pointing into `agents/tmp.old/`, a **disposable**
+inbox archive: gitignored, absent from every clone, and deletable by the operator at any
+moment. That column was a pointer that dereferenced into nothing for anyone but its author,
+and it has been **removed** rather than carried as a decorative historical note. Each row
+below now states its own subject and its own gate in full, which is what the original note
+said the rows were written to do. Whoever wants the source master re-obtains it; nothing in
+this table depends on that happening.
 
-| Track | Gate that must open first | Source section |
+**Disposition vocabulary.** Exactly one per row: **promoted** (a roadmap exists), **gated**
+(with the specific condition named, checkable without re-reading this file), or **killed**
+(with a reason). No row is prose. Re-cut 2026-09-13 against the open gate — the previous
+common gate, "governance-flip Phase 1's ADR", is retired for all eight because that ADR
+landed on 2026-08-27.
+
+| Track | Disposition | The gate that is actually shut, named |
 |---|---|---|
-| One authoritative control store (SQLite/WAL for runs, tasks, leases, events) | governance-flip Phase 1; then a second question — whether a transactional store is a "state store" under the successor contract's own class table | § 3.2 |
-| Supervisor + reconciler over worker processes | governance-flip Phase 5.2 must first establish what "supervised" is proven to mean | § 3.1, § 3.4 |
-| Workspace lease manager | needs the store above; this repo already has worktree tooling that a lease manager would either use or duplicate | § 5 |
-| Handoff as a durable task transition | needs the store; explicitly **not** a second authoritative handoff model (source kill K14) | § 6 |
-| Risk-routed concern DAG | needs the specification layer's routing decision to exist first, or the DAG has nothing to route on | § 7 |
-| Resident code intelligence (symbol/reference/dependency graph kept warm) | this repo already has a code-graph engine under ADR-124 Class A; the delta is residency, which is exactly the Class-B question | § 10 |
-| Confidence ladder C0–C5 and independence classes | needs the assurance registry to carry evidence-backed states rather than `unknown`, i.e. specification-layer Phase 3.3 | § 13, § 14 |
-| Evidence graph, replay, multi-repo pilot | last, and only if the earlier tracks produced something worth replaying | § 12, § 17, Phase 20 |
+| **One authoritative control store** — SQLite/WAL holding runs, tasks, leases and events across invocations | **gated** | **ADR-124 § 6 state-store test**, which ADR-249 § Not reopened leaves standing: if deleting the artifact changes *what* the tool can answer rather than only *how fast*, it is a P3 cross-session state store and prohibited. Runs, tasks and leases are answers that would not survive deletion. Opens if and only if a design passes that test on its own terms, or a separate record reopens P3 |
+| **Supervisor + reconciler over worker processes** | **gated** | **A second resident process exists to supervise.** The supervision pattern itself is no longer the question — `docs/contracts/collector-operations.md` names a supervisor per platform and `./scripts-run src/scripts/run_lifecycle_suite` exercises start/stop against real processes. One P1 process needs no reconciler. Opens when a second one ships |
+| **Workspace lease manager** — arbitrating concurrent claims on a worktree | **gated** | **The existing worktree tooling is measured insufficient.** `src/skills/worktree-lifecycle` and the roadmap-claim mechanism already arbitrate claims; a lease manager would use or duplicate them. Opens on a recorded contention failure that the current tooling did not prevent — not on a preference for the shape |
+| **Handoff as a durable task transition** — a handoff that survives process death | **gated** | **The control store above.** Inherits that row's P3 gate in full and cannot open before it. Independently constrained: the source's own kill register (K14) forbids a *second* authoritative handoff model, so this may only ever replace `/agent-handoff`, never sit beside it |
+| **Risk-routed concern DAG** — routing review concerns by measured risk rather than fixed order | **gated** | **A risk signal exists to route on.** The specification layer's routing decision landed (`agents/roadmaps/archive/road-to-executable-specification-layer.md` Phase 1, discharged) and it routes on whether a change owes a behaviour contract — not on risk. No measured per-change risk score exists in this tree. Opens when one does |
+| **Resident code intelligence** — symbol/reference/dependency graph kept warm across commands | **gated** | **A measurement that residency beats the shipped per-command engine.** The engine exists and is ADR-124 Class A; the delta is residency alone, and ADR-249 now permits it under four conditions. Opens on a measured latency or capability delta plus a per-track ruling on those conditions — this is the track whose gate ADR-249 moved furthest |
+| **Confidence ladder C0–C5 and independence classes** | **gated** | **A precondition whose owner is gone.** It needs the assurance registry to carry evidence-backed states instead of `unknown`; that was specification-layer Phase 3.3, which is `[-]` **cancelled** in the archived roadmap. No active roadmap owns the registry's states. Opens only if something re-adopts that work — the narrowest gate of the eight, and the strongest candidate for a *killed* ruling |
+| **Evidence graph, replay, multi-repo pilot** | **gated** | **Something worth replaying exists.** Last by construction: it consumes the artefacts the earlier seven tracks would produce, and none of them has produced any. Opens after at least one other row is promoted and has shipped |
 
 ## Why one stub
 
@@ -107,3 +137,31 @@ authority for the runtime *decision* is the owner transcript, and its authority
 for everything else is its own reasoning — which this repository has not
 verified beyond the two increments that were split out. Nothing here is
 adopted.
+
+## Blockers
+
+### blocker: per-track-governance-ruling-unmade
+- **Status:** open
+- **Owner:** maintainer
+- **Class:** 3 — human-only
+- **Blocks:** promotion of any track in the table above. It does **not** block reading the
+  stub, counting its arrivals, or the per-track gates being named — all of which are done.
+- **What to do:** for a track you are considering, rule whether ADR-249's four governance
+  conditions are met for the process that track would create. The reading is already done:
+  `agents/evidence/analysis/substrate-stub-gate-conditions-2026-09-13.md` carries a state and
+  a file per condition, and `./scripts-run src/scripts/adr_cite_check ADR-249` reports the
+  record's effective state. Then pick one of the four options in the posed-question block
+  above, or rule a single row **killed** — the Confidence-ladder row is the one whose gate is
+  shut by a cancelled precondition rather than by an open question. Before promoting anything,
+  `./scripts-run src/scripts/check_estate_count` shows the floor a new roadmap is measured
+  against.
+- **Recommendation:** rule nothing yet and keep the stub. The expensive half was the reading,
+  it is now done and cited, and every row states a condition a later reader can check in one
+  command. Promotion is a separate decision that is cheaper once a row's named gate actually
+  opens — and today none has.
+- **If you do nothing:** the stub stays readable, parseable and counted, and the next arrival
+  of this subject meets eight named per-track conditions instead of one sentence that had
+  already stopped being true. That is strictly better than the state this blocker was written
+  in and loses nothing.
+- **Resolved when:** one track carries a **promoted** or **killed** disposition in the table
+  above with its ruling recorded, or the stub records that the whole set stays gated and why.

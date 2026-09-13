@@ -185,6 +185,17 @@ jobs:
       - name: rule-migration ledger (what the migration kept, folded, and lost)
         run: ./scripts-run src/scripts/lint_rule_migration_ledger --quiet
 
+      # The backward half of the MIGRATION.md obligation. `task ci` runs it too,
+      # and no workflow invokes `task ci` — so without this step the gate could
+      # not fail a pull request, which is the exact shape of the defect it
+      # exists to catch: 15.0.0 and 16.0.0 both shipped BREAKING CHANGES with
+      # no migration section and nothing remote said so. It is registered HERE
+      # rather than in consistency.yml because that file is on
+      # check_kernel_edit_ratified's self-watch list, and an unrelated gate
+      # registration has no business demanding a ratification artifact.
+      - name: breaking majors carry a MIGRATION.md section
+        run: ./scripts-run src/scripts/lint_major_migration_sections --quiet
+
       # An example is the part a reader copies. Every other gate reads the prose
       # an artifact teaches; none read the code it shows. Strict on day one
       # because the classification pass came back zero hits over all 503 files.

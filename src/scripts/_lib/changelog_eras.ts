@@ -231,8 +231,13 @@ export function archive_file_header(boundary: string): string {
         '> `tests/test_changelog_eras.py`.\n' +
         '>\n' +
         '> **Read-only.** New entries land in `CHANGELOG.md`. Entries\n' +
-        '> here are not amended — git tags remain the canonical source\n' +
-        '> for what shipped.\n' +
+        '> here are not rewritten — git tags remain the canonical source\n' +
+        '> for what shipped. The one amendment an archive permits is a\n' +
+        '> **correction that adds**: where a published entry says something\n' +
+        '> the shipped tree contradicts, the correction is appended beside\n' +
+        '> it and names the commit that decided the matter. Nothing is\n' +
+        '> deleted, so both the original claim and its correction stay\n' +
+        '> readable.\n' +
         '>\n' +
         '> Entry shape follows\n' +
         '> [`../contracts/CHANGELOG-conventions.md`](../contracts/CHANGELOG-conventions.md).\n' +

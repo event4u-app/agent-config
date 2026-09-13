@@ -82,6 +82,22 @@ measured gate.
    it. That is the owner's autonomy constraint read backwards. After the edit,
    `current_user_can_bypass` reports `always`.
 
+   **The bypass half of this paragraph describes 2026-09-11 and no longer
+   describes the forge — dated 2026-09-13 rather than silently corrected,
+   because the decision was taken on the state as it then was.** The
+   `OrganizationAdmin` bypass actor existed for one day: added by this edit
+   (ruleset version `49393554`, 2026-09-11 12:32) and removed again by version
+   `49500777` on 2026-09-12 15:05. Live on 2026-09-13: `bypass_actors: []`,
+   `current_user_can_bypass: never`. The **required-check half is unaffected and
+   still live** — `Standing payload delta + budget gate` remains one of the two
+   required contexts. So option (b) as decided here is only half in force: the
+   check is required, and the escape hatch the decision paired it with is gone.
+   That combination is exactly the unbypassable-infrastructure-red risk the
+   paragraph above argues against, and whoever removed the actor should either
+   restore it or record why the risk is now acceptable. Tracked as a live
+   concern rather than resolved here; the sibling half is the untested lockout
+   recovery in `docs/contracts/branch-protection-policy.md`.
+
    **The bypass contract, and it is part of the decision rather than advice:**
    permitted only for an infrastructure failure or a demonstrated gate defect;
    never for disagreement with the payload policy, and never for ordinary

@@ -65,6 +65,20 @@ the **workflow_dispatch** on `release.yml` (inputs: `bump`, `version`,
       and has no comparand. So read the notice column here; the removal column
       is checked for you, and the judgement behind it — remove, or revise the
       commitment — always was and remains yours.
+- [ ] **On a `release:major` only** — the BACKWARD half of the same file.
+      Every major that ships a `BREAKING CHANGES` section owes
+      [`MIGRATION.md`](MIGRATION.md) a `## ` section naming that version.
+      `src/scripts/lint_major_migration_sections` checks it on every branch,
+      and `release.ts` **refuses** a major cut whose rendered entry carries
+      BREAKING CHANGES with no matching section — measured against the entry
+      being cut, not against the file, because at that moment the section is
+      not prepended yet.
+      **The requirement is a stated answer, never a procedure.** A section
+      saying the change asks nothing of a consumer satisfies it, and is the
+      right answer when it is true — 16.0.0's section says exactly that. What
+      the gate refuses is silence. The line exists because it was silence
+      twice: 15.0.0 and 16.0.0 both shipped BREAKING CHANGES with no section,
+      and 15.0.0's announced a removal the tree did not contain.
 - [ ] The release satisfies [`release-sizing.md`](contracts/release-sizing.md) —
       a `Rollback:` line for every new / substantially reworked subsystem
       (gate: `src/scripts/lint_changelog_rollback.ts`), a disable path where

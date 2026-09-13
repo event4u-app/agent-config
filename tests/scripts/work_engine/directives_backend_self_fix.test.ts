@@ -14,11 +14,14 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+    RUN_TERMINAL_BY_KIND,
     SELF_FIX_CEILING,
     VOLATILE_KEYS,
     decide,
     partial_exit,
     record_attempt,
+    record_run_terminal,
+    run_terminal_for,
     unmet_dod,
     verdict_signature,
 } from '../../../src/agent-src/templates/scripts/work_engine/directives/backend/_self_fix.js';
@@ -307,5 +310,114 @@ describe('state — self_fix survives the wire round-trip', () => {
 
     it('accepts a spent budget rather than crashing on it', () => {
         expect(() => to_dict(work({ test: { attempts: 99, signatures: [] } }))).not.toThrow();
+    });
+});
+
+// The run-terminal stamp (road-to-reachable-loop-instruments 3.1).
+//
+// `Outcome.PARTIAL` says the loop stopped without a green. It cannot say
+// whether the budget ran out or the target stopped moving, and those want
+// opposite responses -- a bigger budget against the first, a different approach
+// against the second. Before this the distinction left the module only inside a
+// free-text `message`, so the continuation hook's stops were countable and this
+// loop's were not.
+//
+// The wiring assertions are the load-bearing ones. `partial_exit` takes `state`
+// optionally, so a caller that forgets to pass it turns the whole feature into
+// a silent no-op -- precisely the built-and-unreachable class this roadmap
+// exists to detect. The two lane tests below go through the REAL `test_run` /
+// `verify_run` entry points rather than calling `partial_exit` directly, so
+// they fail if either call site drops the argument.
+describe('run_terminal — the loop says WHY it stopped, in the shared vocabulary', () => {
+    function red_verify_lane(): DeliveryState {
+        return new DeliveryState({
+            ticket: { id: 'SF-7' },
+            outcomes: { implement: Outcome.SUCCESS, test: Outcome.SUCCESS },
+            verify: { verdict: 'blocked', findings: 2 },
+        });
+    }
+
+    it('maps the two stop kinds onto RunTerminalState members', () => {
+        expect(RUN_TERMINAL_BY_KIND.exhausted).toBe('exhausted');
+        expect(RUN_TERMINAL_BY_KIND.no_progress).toBe('stagnated');
+    });
+
+    it('declares no member the registry does not have', () => {
+        // The template cannot import outcome_vocabularies.ts across the
+        // packaging boundary, so this is the guard against the two-member
+        // projection drifting into a second vocabulary.
+        const REGISTRY = [
+            'success',
+            'clean-no-op',
+            'blocked',
+            'approval-required',
+            'exhausted',
+            'stagnated',
+            'premise-invalidated',
+        ];
+        for (const v of Object.values(RUN_TERMINAL_BY_KIND)) expect(REGISTRY).toContain(v);
+    });
+
+    it('has no terminal while the loop is still live', () => {
+        expect(run_terminal_for('retry')).toBeNull();
+    });
+
+    it('writes nothing onto state for a retry decision', () => {
+        const state = red_test_state();
+        record_run_terminal(state, 'test', {
+            kind: 'retry',
+            attempts: 0,
+            next_attempt: 1,
+            ceiling: SELF_FIX_CEILING,
+            signature: 's',
+        });
+        expect(state.self_fix).toBeFalsy();
+    });
+
+    it('stamps the lane without clobbering its counter', () => {
+        const state = red_test_state();
+        record_attempt(state, 'test', 'sig-a');
+        record_run_terminal(state, 'test', {
+            kind: 'exhausted',
+            attempts: 3,
+            next_attempt: 4,
+            ceiling: SELF_FIX_CEILING,
+            signature: 'sig-a',
+        });
+        const lane = (state.self_fix as Dict)['test'] as Dict;
+        expect(lane['run_terminal']).toBe('exhausted');
+        expect(lane['attempts']).toBe(1);
+        expect(lane['signatures']).toEqual(['sig-a']);
+    });
+
+    it('is actually written by the test lane on an exhausted exit', () => {
+        const state = red_test_state();
+        state.self_fix = { test: { attempts: SELF_FIX_CEILING, signatures: ['x'] } };
+        const result = test_run(state);
+        expect(result.outcome).toBe(Outcome.PARTIAL);
+        expect(((state.self_fix as Dict)['test'] as Dict)['run_terminal']).toBe('exhausted');
+        expect(result.message).toContain('run_terminal: exhausted');
+    });
+
+    it('is actually written by the verify lane, and says stagnated on a repeat', () => {
+        const state = red_verify_lane();
+        const signature = verdict_signature('verify', state.verify);
+        state.self_fix = { verify: { attempts: 1, signatures: [signature] } };
+        const result = verify_run(state);
+        expect(result.outcome).toBe(Outcome.PARTIAL);
+        expect(((state.self_fix as Dict)['verify'] as Dict)['run_terminal']).toBe('stagnated');
+    });
+
+    it('survives the wire round-trip, so a reader can aggregate it', () => {
+        const payload = to_dict(
+            new WorkState({
+                input: new Input('ticket', { id: 'SF-9' }),
+                self_fix: { test: { attempts: 3, run_terminal: 'exhausted' } },
+            }),
+        );
+        expect((from_dict(payload).self_fix as Dict)['test']).toEqual({
+            attempts: 3,
+            run_terminal: 'exhausted',
+        });
     });
 });

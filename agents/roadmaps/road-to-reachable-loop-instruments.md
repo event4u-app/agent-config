@@ -50,7 +50,7 @@ nothing since has been able to notice.
 
 ## Phase 0 — Inventory, with no behaviour change
 
-- [ ] **0.1 Write a new loop-surface inventory** — a `loop-surfaces.yaml` under `src/config/`,
+- [x] **0.1 Write a new loop-surface inventory** — a `loop-surfaces.yaml` under `src/config/`,
       which does not exist yet — listing the five verified loop surfaces —
       `run_continuation_hook`, `_self_fix`, `verify-repair-loop`, `experiment-loop`,
       `roadmap-process-loop` — each with `cap`, `no_progress`, `success_stop`, `checker`,
@@ -58,40 +58,83 @@ nothing since has been able to notice.
       point at `file:symbol`, never at prose.
       verify: every one of the five carries every field, and each `cap` / `no_progress` value
       resolves to a symbol that exists — `grep -n "<symbol>" <file>` returns a definition line.
-- [ ] **0.2 Mark which entries are instruments.** An entry is an `instrument` when it is an
+      <!-- corrected 2026-09-13, from reproduction: "never at prose" is unsatisfiable for two of
+           the five and a category error for both. `verify-repair-loop` and `experiment-loop` are
+           SKILLS; their bound is a documented knob, and `grep -rn max_attempts src/` returns hits
+           only inside the skill's own directory. `roadmap-process-loop` states no iteration cap of
+           its own at all — its real cap is `continuation_ladder.ts:MAX_ITERATIONS`, in a file the
+           document never cites by number. The property the step wanted is kept exactly: a bound
+           must resolve to something that EXISTS. A `.ts` target must be a defined symbol; a `.md`
+           target must be a token the file carries AND the row must declare `bound_kind: prose`, so
+           a prose bound is recorded rather than inferred and is reported as its own set. -->
+- [x] **0.2 Mark which entries are instruments.** An entry is an `instrument` when it is an
       exported helper meant to be called by a surface rather than a surface itself.
       verify: the file distinguishes the two, and the instrument list contains at least
       `rejectedTacticRepeat` and `compareTriggers`, the two open instances.
 
 ## Phase 1 — One new axis in the reachability family, not a new gate
 
-- [ ] **1.1 Extend `src/scripts/check_gate_reachability.ts` with a `_lib-export-reach` axis.**
+- [x] **1.1 Extend `src/scripts/check_gate_reachability.ts` with a `_lib-export-reach` axis.**
       Every export named as an `instrument` in `loop-surfaces.yaml` needs at least one non-test
       importer.
       verify: the axis reads `loop-surfaces.yaml` and scopes itself to the instrument list — it
       does not walk every `_lib` export, because that is the noise the next step measures.
-- [ ] **1.2 Count a declaration's own file as a caller.** `corrected-from-reproduction` — a naive
+      <!-- "Extend" is taken to include making the axis FAIL something: its findings are part of
+           `gateVerdict`, its declared-instrument count is part of `scanned:`, and `--gate` returns
+           non-zero on a shape or reach finding. An axis that only prints would be the same
+           unreachable-instrument class one layer up. -->
+      <!-- verify: ./scripts-run src/scripts/check_gate_reachability --gate -->
+      <!-- verify: ./scripts-run src/scripts/check_gate_reachability --self-test -->
+- [x] **1.2 Count a declaration's own file as a caller.** `corrected-from-reproduction` — a naive
       axis over `src/scripts/_lib/loop_guards.ts` reports nine hits of which four are false
       positives: `matchesWholeLine`, `detectUnavailableDependency`, `DEPENDENCY_SCAN_BYTES` and
       `StallSignal` all have file-internal callers and are reachable. The criterion is: an export
       is dead when it appears in `src/` exactly once **including its own file**.
       verify: the axis reports the `rejectedTacticRepeat` cluster as dead and reports the four
       file-internal exports as live, on the same run.
-- [ ] **1.3 An exception carries an expiry.** `status: experimental` in the inventory exempts an
+      <!-- corrected 2026-09-13, from reproduction: the CRITERION is right and is implemented
+           verbatim, but the example list is wrong on one of its four members. Measured with
+           `grep -rho '\bmatchesWholeLine\b' src/ | wc -l` → 1: it appears in `src/` exactly ONCE,
+           its own declaration at loop_guards.ts:63, with callers only in
+           tests/lib/loop_guards.test.ts. It has no file-internal caller and is DEAD by this very
+           step's rule — it is a third instance of the class, not a false positive.
+           Exactly THREE exports of loop_guards.ts are file-internal and live:
+           `DEPENDENCY_SCAN_BYTES`, `detectUnavailableDependency`, `StallSignal` (2× each).
+           Four more sit at 2× — SUPPRESSION_WINDOW, SUPPRESSION_REPEATS, TacticAttempt,
+           RepetitionSignal — but only because `rejectedTacticRepeat` itself names them, so they
+           are the dead cluster, not evidence against over-firing.
+           `matchesWholeLine` is deliberately NOT declared an instrument: it is a string helper,
+           not a loop instrument, and 1.1's scoping is precisely what keeps it out of the gate's
+           mouth. Recorded here rather than silently dropped — it is a real finding. -->
+- [x] **1.3 An exception carries an expiry.** `status: experimental` in the inventory exempts an
       instrument; a missing or past `expires:` reds the gate.
       verify: `--selftest` plants a surface with no `cap`, an instrument with no consumer, and an
       expired exception, and the gate reds on all three.
-- [ ] **1.4 Prove the axis is sensitive.** Neutralise it, watch AC-2 and AC-3 go green, restore it.
+      <!-- landed on the existing `--self-test` flag rather than a second spelling. 10/10 cases
+           behave, 6 rejecting; the three planted failures are cases 6, 7 and 8, plus a fourth
+           (`experimental` with no `expires:`) the step's own rule implies. -->
+- [x] **1.4 Prove the axis is sensitive.** Neutralise it, watch AC-2 and AC-3 go green, restore it.
       verify: the commit records the red and green readings per case. A test never seen red has
       unknown sensitivity.
+      <!-- Readings taken 2026-09-13 against this tree, by stripping the three `status:
+           experimental` / `expires:` pairs from the inventory and restoring them from a backup
+           (never `git checkout`, which would have discarded the file).
+           RED  — reach: rejectedTacticRepeat 1x, compareTriggers 1x, earlierArm 1x, all "dead".
+           SAME RUN — live: DEPENDENCY_SCAN_BYTES, StallSignal, detectUnavailableDependency
+           (the AC-3 does-not-over-fire evidence), plus stallSignal and terminalStateFor.
+           GREEN — after restore: reach [] and the same five live. `git diff` against the written
+           file is empty, so the restore is byte-exact. -->
 
 ## Phase 2 — Dispose of the two open instances
 
-- [ ] **2.1 `rejectedTacticRepeat` gets a consumer, an expiry-bearing exception, or a deletion
+- [x] **2.1 `rejectedTacticRepeat` gets a consumer, an expiry-bearing exception, or a deletion
       proposal.** It sits at `src/scripts/_lib/loop_guards.ts:274` with test-only callers.
       verify: `grep -c rejectedTacticRepeat src/scripts` is greater than 1, or the inventory
       entry carries `status: experimental` with a future `expires:`.
-- [ ] **2.2 `compareTriggers` / `earlierArm` likewise.** `corrected-from-reproduction` — the
+      <!-- Path taken: the expiry-bearing exception, `expires: 2026-12-12` in
+           src/config/loop-surfaces.yaml. This DEFERS the disposition with a date; it does not
+           settle it. See the blocker note below for what that does and does not decide. -->
+- [x] **2.2 `compareTriggers` / `earlierArm` likewise.** `corrected-from-reproduction` — the
       source's own step said to *evaluate* this shadow comparison, and the newest plan revision
       cites it as evidence that a measurement is already running. It is not running: there is no
       production importer, and the only mention in `src/` is a prose comment in
@@ -99,7 +142,23 @@ nothing since has been able to notice.
       verify: the three flags `--watermark-step`, `--saturation-step` and `--trigger-arm-earlier`
       in `src/scripts/orchestration_record.ts:177-179` either have a caller that computes their
       values, or are removed.
-- [ ] **2.3 Correct the step status that claims otherwise.**
+      <!-- REMOVED, and "wire it before evaluating it" was tested first and found closed.
+           `compareTriggers` needs `StepObservation[]` — per-step token counts AND per-step
+           surfaced terms. No payload this tree has observed carries either, and
+           subagent_ledger_hook.ts:519 records the tree's own refusal to invent a proxy, citing
+           this exact module: "inventing a proxy is the move capsule_trigger.ts refuses".
+           So the only honest branch of the verify line was removal. Gone from
+           src/scripts/orchestration_record.ts (3 flags + the now-orphaned TriggerArm import + the
+           usage docstring) and src/scripts/_lib/orchestration_record.ts (the TriggerArm type, the
+           three RecordInput fields, TRIGGER_ARMS, the two validation branches, the three emit
+           defaults). Blast radius measured first: zero readers in src/, no test asserts on the
+           three fields, and tests/fixtures/audit-log/skills-applied-real-emission.jsonl is a
+           2026-08-30 RECORDING asserted only on schema_version / skills_applied / privacy_class —
+           left untouched, because editing a record of what was emitted then would falsify it.
+           53/53 tests green across _lib_orchestration_record and _lib_capsule_trigger.
+           The instrument itself is not deleted — it is tested, correct, and waiting on an input
+           source — so it is declared `status: experimental` with `expires: 2026-12-12`. -->
+- [x] **2.3 Correct the step status that claims otherwise.**
       `agents/roadmaps/later/road-to-worker-generation-recycling.md` marks its trigger-comparison
       step `[x]` while the comparison has no consumer.
       verify: that step reads its true state and carries a dated correction line naming what was
@@ -107,23 +166,70 @@ nothing since has been able to notice.
 
 ## Phase 3 — Give the terminal vocabulary its consumers
 
-- [ ] **3.1 `_self_fix` writes a `run_terminal` value beside `PARTIAL`.** The vocabulary already
+- [x] **3.1 `_self_fix` writes a `run_terminal` value beside `PARTIAL`.** The vocabulary already
       exists at `src/scripts/_lib/outcome_vocabularies.ts:104-127` and carries the states this
       needs.
       verify: `grep -n "RunTerminalState\|run_terminal"` finds a write in
       `src/agent-src/templates/scripts/work_engine/directives/backend/_self_fix.ts`.
-- [ ] **3.2 `verify-repair-loop` and `experiment-loop` write a terminal state at loop end.**
+      <!-- `RUN_TERMINAL_BY_KIND` maps exhausted → `exhausted` and no_progress → `stagnated`;
+           `record_run_terminal` stamps it onto `state.self_fix[lane]`, which the module already
+           owns and the dispatcher already persists. NOT onto `StepResult` — that class carries
+           outcome/questions/message and is shared by every directive in the engine, so widening
+           it for one loop's stop reason would change all of them. A `retry` decision writes
+           nothing: a terminal stamped mid-loop would be read as one.
+           The two literals are written out rather than imported because this is a TEMPLATE tree
+           that ships into consumers with no `src/scripts/_lib` to import from. A test asserts
+           every value is a member of the registry, so the two-member projection cannot drift
+           into a second vocabulary.
+           WIRING PROVEN, not assumed. `partial_exit` takes `state` optionally, so a call site
+           that drops it makes the whole feature a silent no-op — this roadmap's own defect class.
+           Neutralised the `state,` argument in test.ts: 1 failed / 38 passed, and the failure is
+           the test-lane assertion. Restored, re-neutralised in verify.ts: 1 failed / 38 passed,
+           the verify-lane assertion. Both restored from byte-exact backups; 39/39 green. -->
+      <!-- verify: npx vitest run tests/scripts/work_engine/directives_backend_self_fix.test.ts -->
+- [x] **3.2 `verify-repair-loop` and `experiment-loop` write a terminal state at loop end.**
       verify: both skills name the field and its value set; `grep -n RunTerminalState` finds them.
-- [ ] **3.3 Do not touch `RUN_TERMINAL_STATES` itself.** The value set is complete for this work.
+      <!-- Both Output-format sections gain a `run_terminal` field, the full seven-member value
+           set, a pointer to the single declaration, and a mapping table from the skill's OWN exit
+           vocabulary onto it — verify-repair-loop per stop reason
+           (threshold/cap/plateau/regression/reject), experiment-loop per exit condition. Each
+           skill's local enum is kept as the human-facing line; `run_terminal` is the aggregatable
+           one. Both spell out why `exhausted` and `stagnated` stay distinct: they call for
+           opposite responses, and collapsing them discards the only actionable part of a stop. -->
+- [x] **3.3 Do not touch `RUN_TERMINAL_STATES` itself.** The value set is complete for this work.
       verify: `git diff src/scripts/_lib/outcome_vocabularies.ts` is empty across the whole
       roadmap.
+      <!-- Held. `git diff origin/main -- src/scripts/_lib/outcome_vocabularies.ts` is empty at
+           every commit on this branch. Every new mapping consumes the registry and none extends
+           it; the `_self_fix` projection is guarded by a membership test. -->
+      <!-- verify: git diff origin/main --stat -- src/scripts/_lib/outcome_vocabularies.ts -->
 
 ## Blockers
 
 ### blocker: loop-surface-inventory-owner
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
-- **Class:** 3 — human-only
+- **Class:** 2 — agent-decidable (corrected 2026-09-13 from `3 — human-only`)
+- **Class correction, with the evidence.** Per ADR-237 § 2 a `Class: 3` label on an action the
+  agent could have performed is a defect in the roadmap, and this was one: the decision is where a
+  new reader-only config file lives, which is reversible inside the envelope, weakens no safety
+  floor, changes no purpose and creates no external commitment. Four readings settle it, and all
+  four were taken before the file was written:
+  1. `src/config/` already exists and holds ~50 gate-read config files, 15 of them `.yml`. The step
+     text's "which does not exist yet" is true of the FILE, not the directory.
+  2. `check_gate_reachability.ts` — the very gate Phase 1 extends — already reads a dedicated file
+     from `src/config/`: `EXEMPTIONS_REL = 'src/config/gate-reachability-exemptions.json'` at
+     line 226. "Adding a second source to the family" is the family's own established pattern.
+  3. The manifest cannot hold these rows. `hook_manifest.yaml`'s top-level keys are
+     `schema_version`, `concerns`, `roles`, `platforms`, `native_event_aliases`; every `concerns:`
+     row carries `script` / `args` / `fail_closed` / `severity` and binds a lifecycle slot. THREE
+     of the five surfaces have no slot — two skills and one execution context — not the two the
+     blocker estimated.
+  4. Two of the three stated costs are not costs here. `src/config/` is NOT projected: `dist/`
+     `agent-src/` carries no `config` directory. And most `src/config/*.yml` files carry no JSON
+     schema, so "a new config file pulls a schema" is not a convention of this tree.
+  The blocker's own **Recommendation** already named a separate file; the tree corroborates it.
+  What remained was a location choice with a documented answer, not a judgement only an owner holds.
 - **Blocks:** Phase 0, and everything after it. Phase 1's axis reads the file Phase 0 writes.
 - **What to do:** decide whether the inventory is its own new `loop-surfaces.yaml` under
   `src/config/` or a
@@ -141,9 +247,28 @@ nothing since has been able to notice.
   `./scripts-run src/scripts/check_gate_reachability` reads it.
 
 ### blocker: dead-instrument-disposition
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
-- **Class:** 3 — human-only
+- **Class:** 3 — human-only (label KEPT; see below — it was not tested and found wanting)
+- **What was and was not decided, 2026-09-13.** Its own **Resolved when** is "AC-4 is satisfied on
+  any one of the three paths", and AC-4 is now satisfied on the middle path: `rejectedTacticRepeat`
+  carries `status: experimental` with `expires: 2026-12-12` in `src/config/loop-surfaces.yaml`.
+  That is the blocker's own **Recommendation**, and it is the only one of the three options that is
+  agent-takeable on this tree's own rules. The other two are not, and the asymmetry is the reason
+  the `Class: 3` label survives here while the Phase-0 one did not:
+  - **Wiring** would give the continuation hook a new refusal rung before that hook has
+    demonstrably engaged more than once — a behaviour change to a blocking surface, made on
+    absent evidence. Risk 2 of this roadmap argues against it in its own words.
+  - **Removal** is destructive, and the instrument is tested, correct, and waiting on an input
+    source rather than wrong.
+  - **An expiry-dated exemption** changes no behaviour, deletes nothing, and is reversible by
+    editing one YAML row.
+  So this is a DEFERRAL WITH A DATE, not a disposition. The owner's question is unchanged and
+  comes back on 2026-12-12, when `check_gate_reachability --gate` reds on the lapsed exemption —
+  which is precisely what the `expires:` field was built for in Phase 1.3. The evidence it is
+  waiting on is parked at `agents/roadmaps/later/road-to-run-continuation-observation.md`; if that
+  observation is still unresumed at the expiry, moving the date with a stated reason in `note:` is
+  a legitimate answer and dropping the deadline is not.
 - **Blocks:** Phase 2.1 only. Phases 0, 1 and 3 proceed without it.
 - **What to do:** decide whether `rejectedTacticRepeat` is wired, declared experimental with an
   expiry, or removed. Read `sed -n '232,299p' src/scripts/_lib/loop_guards.ts` against
@@ -158,7 +283,18 @@ nothing since has been able to notice.
 - **Resolved when:** AC-4 is satisfied on any one of the three paths.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-11 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-09-13 | reviewer: claude/host -->
+
+Re-reviewed 2026-09-13 against what actually landed. All five held; two are now
+measured rather than argued, and one never had to be run.
+
+| Rank | Outcome at execution |
+|------|----------------------|
+| 1 | **Held, and now measured.** The axis is scoped to the declared instrument list, and the nine-of-fourteen figure was reproduced on `loop_guards.ts`. The mitigation's second half changed shape: the criterion is right, but its example list was wrong on one member — see the correction under 1.2. |
+| 2 | **Never arose.** Nothing was wired. `rejectedTacticRepeat` took the expiry-dated exemption, so the continuation hook's refusal surface is unchanged. The risk returns on 2026-12-12 if the disposition is then answered by wiring. |
+| 3 | **Held.** `loop-surfaces.yaml` has exactly one reader, `check_gate_reachability` via `_lib/loop_surfaces.ts`. Nothing dispatches from it and no surface changed behaviour because of it. |
+| 4 | **Held, and enforced rather than intended.** `expires:` is required under `status: experimental`, a past date reds, and both an expired date and a missing one are planted self-test cases that reject. |
+| 5 | **Held.** All three instances known today are disposed — one declared, two removed with their flags — so the axis ships against an empty backlog and reds on nothing at the moment it becomes blocking. |
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -170,16 +306,40 @@ nothing since has been able to notice.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A reachability axis exists that reds when a declared loop instrument has no
+- [x] AC-1 — A reachability axis exists that reds when a declared loop instrument has no
       production consumer, and it lives inside the existing gate family rather than as a new gate.
-- [ ] AC-2 — The axis was observed red with the `rejectedTacticRepeat` cluster unconsumed and
+      <!-- `_lib-export-reach`, inside `check_gate_reachability.ts`: its findings are part of
+           `gateVerdict`, its declared-instrument count is part of `scanned:`, and `--gate` returns
+           non-zero on a shape or reach finding. No new gate, no new coverage row. -->
+- [x] AC-2 — The axis was observed red with the `rejectedTacticRepeat` cluster unconsumed and
       green after its disposition, and the red reading is recorded.
-- [ ] AC-3 — The axis reports the four file-internal exports in `loop_guards.ts` as live, proving
+      <!-- Red / green readings recorded verbatim under step 1.4. -->
+- [x] AC-3 — The axis reports the four file-internal exports in `loop_guards.ts` as live, proving
       it does not over-fire.
-- [ ] AC-4 — `rejectedTacticRepeat` is wired, declared experimental with a future expiry, or gone.
-- [ ] AC-5 — Either something computes the three `orchestration_record` trigger-comparison flags,
+      <!-- SATISFIED ON SUBSTANCE, WITH THE COUNT CORRECTED — read this before quoting "four".
+           The does-not-over-fire property is proven: on the SAME run that reports all three open
+           instances dead, the axis reports `DEPENDENCY_SCAN_BYTES`, `StallSignal` and
+           `detectUnavailableDependency` live — exports with no importer at all, reached only from
+           inside their own file, which a naive importer-counting axis would have accused.
+           But there are THREE such exports, not four. This AC inherited 1.2's wrong example list:
+           `matchesWholeLine` occurs in `src/` exactly once and is DEAD by the criterion, not a
+           false positive. The correction and its measurement are under 1.2.
+           Four further exports sit at 2x — SUPPRESSION_WINDOW, SUPPRESSION_REPEATS, TacticAttempt,
+           RepetitionSignal — but only because `rejectedTacticRepeat` names them. They are the dead
+           cluster's own satellites and are not evidence of anything about over-firing. -->
+- [x] AC-4 — `rejectedTacticRepeat` is wired, declared experimental with a future expiry, or gone.
+      <!-- Declared, `expires: 2026-12-12`. A dated deferral, not a settled disposition — the
+           blocker note says which and why the other two paths were not agent-takeable. -->
+- [x] AC-5 — Either something computes the three `orchestration_record` trigger-comparison flags,
       or those flags no longer exist.
-- [ ] AC-6 — `road-to-worker-generation-recycling`'s trigger-comparison step reads its true state
+      <!-- Gone. Nothing could compute them without a proxy the tree records its own refusal to
+           invent; see 2.2 for the removal's measured blast radius. -->
+- [x] AC-6 — `road-to-worker-generation-recycling`'s trigger-comparison step reads its true state
       and carries a dated correction.
-- [ ] AC-7 — All three loop consumers write a run-terminal value, and
+      <!-- Step 1.3 `[x]` → `[ ]` with a dated correction carrying the reproduced grep counts, and
+           the Phase 3 note no longer lists the three fields as live on the orchestration line. -->
+- [x] AC-7 — All three loop consumers write a run-terminal value, and
       `src/scripts/_lib/outcome_vocabularies.ts` is unchanged by this roadmap.
+      <!-- `_self_fix` writes it onto state and into its exit message; both skills name the field,
+           its full value set and a mapping from their own exit vocabulary. The registry file is
+           byte-identical to origin/main at every commit on this branch. -->

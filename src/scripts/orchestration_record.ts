@@ -18,7 +18,6 @@
  *     [--rules-carried 32] [--rules-used 5] \
  *     [--work-tokens 41000] [--floor-provenance measured|estimated] \
  *     [--capsule-emitted true|false] [--capsule-entries 9] \
- *     [--watermark-step 8] [--saturation-step 4] [--trigger-arm-earlier watermark|saturation|tie] \
  *     [--dir <audit-dir>] [--dry-run]
  *
  * Read by `src/scripts/orchestration_savings_report.ts`.
@@ -42,7 +41,6 @@ import {
     type LineOutcome,
     type RecordInput,
     type RouteTaken,
-    type TriggerArm,
 } from './_lib/orchestration_record.js';
 
 // Exported so other writers of the same audit-log-v1 orchestration line
@@ -174,9 +172,6 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         floor_provenance: str(flags, 'floor-provenance') as Provenance | undefined,
         capsule_emitted: bool(flags, 'capsule-emitted'),
         capsule_entries: int(flags, 'capsule-entries'),
-        watermark_step: int(flags, 'watermark-step'),
-        saturation_step: int(flags, 'saturation-step'),
-        trigger_arm_earlier: str(flags, 'trigger-arm-earlier') as TriggerArm | undefined,
         phase: str(flags, 'phase') as LinePhase | undefined,
         outcome: str(flags, 'outcome') as LineOutcome | undefined,
         confidence_band: str(flags, 'confidence-band') as Band | undefined,
