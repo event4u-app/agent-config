@@ -234,12 +234,19 @@ owner-owned residue remains, closure completes with zero owner interaction.
       `BLOCKED` only per ADR-268 § 7.
       verify: fixture `F4` — a mid-run architecture choice resolves without an ask; fixture
       `F5` — an interrupt leaves the grant and every closed decision intact.
-- [ ] **4.2 The ask census gains four axes.** `phase` (planning, execution, delivery),
+- [x] **4.2 The ask census gains four axes.** `phase` (planning, execution, delivery),
       `ownership`, `avoidable`, `resolver_attempted`. Targets: zero technical owner asks in
       execution; zero commit, push, CI or conflict asks; zero repeats of an already-answered
       question.
-      verify: `ask_block_census` over the 30-session corpus reports all three targets met, or
-      names the rows that miss them.
+      verify: `ask_block_census` reports the targets met, or names the rows that miss them.
+      **Corrected on landing, 2026-09-13: two of the three targets are measurable here, and
+      the third is not.** This census reads AUTHORED surfaces, not transcripts — a *repeat of
+      an already-answered question* is a property of a transcript, so it is reported
+      `NOT MEASURED` rather than as zero, on exactly the ground the native-ask rate is carried
+      in through `--native-asks` rather than computed. Measured on this tree: zero technical
+      owner asks in execution (MET), zero commit / push / CI / conflict asks (MET). Both
+      targets are shown to be able to MISS by their own sensitivity tests — a target that
+      cannot miss is not a measurement.
 
 ## Phase 5 — Interrupts
 
