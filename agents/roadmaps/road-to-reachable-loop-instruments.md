@@ -74,25 +74,56 @@ nothing since has been able to notice.
 
 ## Phase 1 — One new axis in the reachability family, not a new gate
 
-- [ ] **1.1 Extend `src/scripts/check_gate_reachability.ts` with a `_lib-export-reach` axis.**
+- [x] **1.1 Extend `src/scripts/check_gate_reachability.ts` with a `_lib-export-reach` axis.**
       Every export named as an `instrument` in `loop-surfaces.yaml` needs at least one non-test
       importer.
       verify: the axis reads `loop-surfaces.yaml` and scopes itself to the instrument list — it
       does not walk every `_lib` export, because that is the noise the next step measures.
-- [ ] **1.2 Count a declaration's own file as a caller.** `corrected-from-reproduction` — a naive
+      <!-- "Extend" is taken to include making the axis FAIL something: its findings are part of
+           `gateVerdict`, its declared-instrument count is part of `scanned:`, and `--gate` returns
+           non-zero on a shape or reach finding. An axis that only prints would be the same
+           unreachable-instrument class one layer up. -->
+      <!-- verify: ./scripts-run src/scripts/check_gate_reachability --gate -->
+      <!-- verify: ./scripts-run src/scripts/check_gate_reachability --self-test -->
+- [x] **1.2 Count a declaration's own file as a caller.** `corrected-from-reproduction` — a naive
       axis over `src/scripts/_lib/loop_guards.ts` reports nine hits of which four are false
       positives: `matchesWholeLine`, `detectUnavailableDependency`, `DEPENDENCY_SCAN_BYTES` and
       `StallSignal` all have file-internal callers and are reachable. The criterion is: an export
       is dead when it appears in `src/` exactly once **including its own file**.
       verify: the axis reports the `rejectedTacticRepeat` cluster as dead and reports the four
       file-internal exports as live, on the same run.
-- [ ] **1.3 An exception carries an expiry.** `status: experimental` in the inventory exempts an
+      <!-- corrected 2026-09-13, from reproduction: the CRITERION is right and is implemented
+           verbatim, but the example list is wrong on one of its four members. Measured with
+           `grep -rho '\bmatchesWholeLine\b' src/ | wc -l` → 1: it appears in `src/` exactly ONCE,
+           its own declaration at loop_guards.ts:63, with callers only in
+           tests/lib/loop_guards.test.ts. It has no file-internal caller and is DEAD by this very
+           step's rule — it is a third instance of the class, not a false positive.
+           Exactly THREE exports of loop_guards.ts are file-internal and live:
+           `DEPENDENCY_SCAN_BYTES`, `detectUnavailableDependency`, `StallSignal` (2× each).
+           Four more sit at 2× — SUPPRESSION_WINDOW, SUPPRESSION_REPEATS, TacticAttempt,
+           RepetitionSignal — but only because `rejectedTacticRepeat` itself names them, so they
+           are the dead cluster, not evidence against over-firing.
+           `matchesWholeLine` is deliberately NOT declared an instrument: it is a string helper,
+           not a loop instrument, and 1.1's scoping is precisely what keeps it out of the gate's
+           mouth. Recorded here rather than silently dropped — it is a real finding. -->
+- [x] **1.3 An exception carries an expiry.** `status: experimental` in the inventory exempts an
       instrument; a missing or past `expires:` reds the gate.
       verify: `--selftest` plants a surface with no `cap`, an instrument with no consumer, and an
       expired exception, and the gate reds on all three.
-- [ ] **1.4 Prove the axis is sensitive.** Neutralise it, watch AC-2 and AC-3 go green, restore it.
+      <!-- landed on the existing `--self-test` flag rather than a second spelling. 10/10 cases
+           behave, 6 rejecting; the three planted failures are cases 6, 7 and 8, plus a fourth
+           (`experimental` with no `expires:`) the step's own rule implies. -->
+- [x] **1.4 Prove the axis is sensitive.** Neutralise it, watch AC-2 and AC-3 go green, restore it.
       verify: the commit records the red and green readings per case. A test never seen red has
       unknown sensitivity.
+      <!-- Readings taken 2026-09-13 against this tree, by stripping the three `status:
+           experimental` / `expires:` pairs from the inventory and restoring them from a backup
+           (never `git checkout`, which would have discarded the file).
+           RED  — reach: rejectedTacticRepeat 1x, compareTriggers 1x, earlierArm 1x, all "dead".
+           SAME RUN — live: DEPENDENCY_SCAN_BYTES, StallSignal, detectUnavailableDependency
+           (the AC-3 does-not-over-fire evidence), plus stallSignal and terminalStateFor.
+           GREEN — after restore: reach [] and the same five live. `git diff` against the written
+           file is empty, so the restore is byte-exact. -->
 
 ## Phase 2 — Dispose of the two open instances
 
