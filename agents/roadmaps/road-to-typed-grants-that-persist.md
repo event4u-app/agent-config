@@ -310,6 +310,13 @@ item. Phases 1-6 may run once 0.2 is chosen.
       landing than it looked: the missing anchor is not merely unverified, it is missing. Built
       to the specification of an AI council (2/2 convergent, 2 rounds, blind peer review) under
       a written owner delegation — its decision is transcribed in the blocker.
+      **UPDATE 2026-09-13 — it no longer reds, and that is a smaller change than it sounds.**
+      The gate now exits 0 with `PASS_WITH_ACCEPTED_RISK`: two of the three gaps named above
+      were removed from the trust model by owner ruling rather than fixed, and the third is
+      covered by a dated owner waiver. So the anchor is present and green — but what it
+      anchors is weaker than the round-2 refusal assumed, and the refusal itself stands
+      undisturbed. See the `ratification-platform-anchor` blocker's `Blocks:` field for why a
+      green anchor is not the retirement precondition the seats had in mind.
       **NOT wired as a blocking CI step in this change, deliberately, and this is the one place
       the two seats differed.** anthropic proposed adding it to CI in the same change behind a
       `# BOOTSTRAP EXCEPTION` marker that lets this PR pass; openai warned in the same round
