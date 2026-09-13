@@ -574,9 +574,23 @@ roadmap:
   # pattern: which asks are batched into the run-start execution
   # contract and where checkpoint prompts fire. It overrides NONE of
   # the keys below — `skip_pre_run_gate`, `quality_cadence`, and
-  # `dashboard_regen_cadence` keep their global meaning in every mode,
-  # and no mode lifts a safety floor. See
-  # contexts/execution/roadmap-execution-contract.md.
+  # `dashboard_regen_cadence` keep their global meaning in every mode.
+  #
+  # WHAT NO MODE LIFTS, NAMED. This sentence used to read "no mode lifts a
+  # safety floor", which is unfalsifiable: it never says which floor or how
+  # far it reaches. What no `execution.mode` value lifts is ADR-260 section 2's
+  # closed eleven-op vocabulary -- force_push, prod_merge, tag_push, release,
+  # publish, branch_protection_change, repo_delete, prod_data_delete,
+  # secret_write, payment, external_send. Each of those needs its own
+  # object-bound grant, and no interaction pattern substitutes for one.
+  #
+  # The Hard Floor in `non-destructive-by-default` is today WIDER than that
+  # vocabulary -- it also covers every `git push` and every non-prod merge --
+  # and that wider reach is what is in force right now. ADR-260 decision 11
+  # narrows it to the eleven ops and ADR-268 accepted that, but the narrowing
+  # has not landed, so read the rule's own trigger table as the authority on
+  # reach and this comment as the authority on what a MODE can change: nothing.
+  # See contexts/execution/roadmap-execution-contract.md.
 
   # Skip the /roadmap:process-* pre-run confirmation gate (true, false).
   #   true  = default. The command name names the scope; a discoverable

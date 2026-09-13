@@ -214,10 +214,25 @@ item. Phases 1-6 may run once 0.2 is chosen.
       a `## PR plan` section required if and only if `pr_topology: stacked`.
       verify: a fixture roadmap declaring `stacked` without `## PR plan` is rejected by the
       roadmap frontmatter lint, and one declaring `single` is accepted without it.
-- [ ] **2.3 Correct the template's absolute sentence.** *No mode lifts a safety floor* is true
+- [x] **2.3 Correct the template's absolute sentence.** *No mode lifts a safety floor* is true
       for the eleven typed ops and false for pushes and non-prod merges; the sentence is
       rewritten to say which.
       verify: the sentence names the vocabulary rather than "a safety floor" in the abstract.
+      **Done 2026-09-13** in `src/config/agent-settings.template.yml`, in the `roadmap:` block's
+      per-roadmap override note. The replacement names all eleven ops of ADR-260 section 2
+      verbatim — `force_push`, `prod_merge`, `tag_push`, `release`, `publish`,
+      `branch_protection_change`, `repo_delete`, `prod_data_delete`, `secret_write`, `payment`,
+      `external_send` — and states the claim the old sentence was making without saying so:
+      what an `execution.mode` value cannot lift is that vocabulary, and no interaction pattern
+      substitutes for an object-bound grant.
+      **What it deliberately does NOT assert.** The step's premise is that the sentence is
+      *false* for pushes and non-prod merges. That becomes true when Phase 1.1 narrows the Hard
+      Floor's trigger table, and 1.1 is held by `kernel-guard-first-crossing`. So the comment
+      says the floor is today WIDER than the vocabulary, names the two rows that make it wider,
+      and points at the rule's own trigger table as the authority on reach — rather than
+      announcing a narrowing that has not landed. Writing it the other way would have put the
+      template in contradiction with a kernel rule this run cannot edit, which is Risk 1 of this
+      roadmap's own register arriving through a side door.
 
 ## Phase 3 — Persistence, interrupts, and WARN-op evidence
 
