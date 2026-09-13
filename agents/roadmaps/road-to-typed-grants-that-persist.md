@@ -638,6 +638,34 @@ item. Phases 1-6 may run once 0.2 is chosen.
   independent approval, so a decision to rely on it would rely on nothing. openai:
   *"Option (b) would therefore turn a known failed invariant into a green result."*
 
+- **Re-measured 2026-09-13 against the live forge, reading the changed criterion rather than
+  the superseded one.** Every figure below was executed in this run; none is copied forward.
+  - **Limb 1 — still met.** `./scripts-run src/scripts/check_platform_anchor --files
+    src/rules/commit-policy.md` exits **0**, reporting `PASS_WITH_ACCEPTED_RISK for
+    event4u-app/agent-config` over applicable active ruleset `17749383`. The two approval
+    dimensions print as *"observed, not required here (see NON_NEGOTIABLE_FLOOR)"* — which is
+    the shape the 2026-09-10 owner ruling asked for and NOT a finding, so a reader must not
+    re-derive the three-gap reading the superseded paragraphs above record. The one waived
+    dimension is `strict_required_status_checks` under `arr-2026-09-10-strict-status-checks`,
+    whose expiry is **2026-12-09** — 87 days out at this reading, so the waiver is live and the
+    verdict is not a lapsed pass.
+  - **Limb 2 — still half-met, and the missing half is still the PAT.**
+    `grep -c check_platform_anchor taskfiles/ci-fast.yml` returns **2**, so the pre-push half
+    holds. `grep -rc check_platform_anchor .github/workflows/*.yml | grep -v ':0'` returns
+    exactly one line, `rule-backstops.yml:1`, and that hit is the comment recording the
+    `administration: read` scope refusal — not a step. So the gate still runs pre-push and
+    never in CI, which is what limb 2 requires and what only a human-created repository secret
+    can change.
+  - **Item 2 — the unrehearsed recovery path — is unchanged and still open.** Measured, not
+    inferred: `gh api repos/event4u-app/agent-config/rulesets/17749383` reports
+    `bypass_actors: []`, `current_user_can_bypass: "never"`, `enforcement: "active"`. That is
+    the same state both 2026-09-10 council seats declined to close, and nothing in this run
+    establishes a rehearsed administrator recovery procedure — measuring the absence of a
+    bypass is not the same as testing the way back from a lockout.
+  **Net for this blocker: no limb moved between 2026-09-10 and 2026-09-13.** Both remaining
+  items are human actions on the forge, so an agent run can re-measure them and cannot advance
+  them, which is what this re-measurement did.
+
 ### blocker: kernel-guard-first-crossing
 - **Status:** open
 - **Owner:** maintainer
@@ -675,6 +703,20 @@ item. Phases 1-6 may run once 0.2 is chosen.
   Verify with `ls src/scripts/hooks/block_kernel_rule_writes.ts` (must fail) and
   `grep -c block-kernel-rule-writes src/scripts/hook_manifest.yaml` (must return 0) — the
   file-existence half is what the 2026-09-09 reading skipped.
+- **Re-verified 2026-09-13 against `origin/main` `7182f5d07`, the base of the drain run that
+  wrote this line. The reopen stands and nothing has moved toward either resolution.** Both
+  limbs of the `Resolved when` clause were executed rather than read: `ls
+  src/scripts/hooks/block_kernel_rule_writes.ts` **succeeds** (the clause requires it to fail)
+  and the file is **13,577 bytes** — larger than the 13,075 the 2026-09-10 entry measured, so
+  this is a fresh read and not a figure copied forward; `grep -c block-kernel-rule-writes
+  src/scripts/hook_manifest.yaml` returns **5** where the clause requires 0. Four of the five
+  are load-bearing: the concern definition at `:183` and three `pre_tool_use` binding lists at
+  `:1360`, `:1391` and `:1437`; the fifth (`:466`) is a comment naming the blocking trio. The
+  line numbers have drifted from the `:1265`, `:1296`, `:1342` recorded on 2026-09-10, which is
+  further evidence the manifest moved while the binding did not.
+  `src/scripts/hooks/concern_registry.ts:119` still registers the concern. The alternative limb
+  is unmet too: no maintainer-authored kernel commit exists on this run's branch, and an agent
+  cannot author one — that is the deny's design, not a gap in it.
 
 ## Fixtures
 
