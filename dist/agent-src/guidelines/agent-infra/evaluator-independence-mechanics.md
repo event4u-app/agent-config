@@ -101,12 +101,11 @@ Measured, once, at maximum cost (conformance audit 2026-08-06):
 > unsteered pass over the same delta later found 5 findings, one of them
 > critical, already live on the trunk.
 
-The agent's own retro named it exactly — *DE: "Die Fabrikation lag nicht im
-Weglassen des Reviews — sie lag in meinem Prompt. Ich habe die Antwort vorgeladen
-und dann als Evidenz verbucht." · EN: "The fabrication was not in skipping the
-review — it was in my prompt. I pre-loaded the answer and then booked it as
-evidence."* The review ran. The process was followed. The evidence was
-manufactured anyway.
+The agent's own retro named it exactly, in the maintainer's own words:
+
+*DE: "Die Fabrikation lag nicht im Weglassen des Reviews — sie lag in meinem Prompt. Ich habe die Antwort vorgeladen und dann als Evidenz verbucht." · EN: "The fabrication was not in skipping the review — it was in my prompt. I pre-loaded the answer and then booked it as evidence."*
+
+The review ran. The process was followed. The evidence was manufactured anyway.
 
 ## The softer form — why the phrase list cannot see it
 
