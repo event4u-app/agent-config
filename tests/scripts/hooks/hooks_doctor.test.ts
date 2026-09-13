@@ -9,14 +9,7 @@ import * as doctor from '../../../src/scripts/hooks_doctor.js';
 import { _load_yaml } from '../../../src/scripts/hooks/dispatch_hook.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'hooks_doctor.ts');
 const MANIFEST = path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
 function loadManifest() {
     return _load_yaml(MANIFEST);
@@ -203,8 +196,3 @@ describe('obligation ledger section', () => {
         expect(left.filter((f) => f.includes('writable-probe'))).toEqual([]);
     });
 });
-
-interface RunResult {
-    status: number | null;
-    stdout: string;
-}
