@@ -102,6 +102,42 @@ used.
 expected to come out — including a reassurance that no particular outcome is expected,
 which is itself an expectation stated in the negative.
 
+## Tests are evaluators
+
+```
+A TEST IS AN EVALUATOR, AND AN IMPLEMENTER WHO WROTE IT HAS AUTHORED ITS VERDICT.
+THE ACCEPTANCE BEHAVIOUR IS NAMED, THE TEST IS WRITTEN INDEPENDENTLY, IT IS SHOWN
+RED, THEN IT IS IMPLEMENTED AGAINST, THEN AN INDEPENDENT INSTANCE VALIDATES GREEN.
+THE IMPLEMENTER NEVER SILENTLY WEAKENS AN ASSERTION, DELETES, SKIPS OR XFAILS A
+FAILING TEST, LOWERS A THRESHOLD, OR CHANGES FIXTURE SEMANTICS TO FIT THE CODE.
+WHERE THE TEST LOOKS WRONG: EVIDENCE → INDEPENDENT TEST REVIEW → COUNCIL OR TEAM
+→ CHANGE ONLY AFTER AN INDEPENDENT VERDICT. THE OWNER IS NOT THE ARBITER.
+```
+
+The rest of this rule covers reviews and judges. A test is the same object with a
+different surface — it renders a verdict on the author's own work — and the gap
+was that nothing said so, which is D4 of
+`road-to-adversarial-verification-and-long-runs`.
+
+**Five independence levels.** L0 the same agent — **fallback only** · L1 another
+session on the same model · L2 another model · L3 another provider · L4 a
+multi-provider council or team. Critical behaviour — security, authority, data
+loss, merge control — targets **L3 or L4 wherever two providers are configured**,
+and the level is read from `agent-config council:status`'s actual provider count,
+never assumed. L1 is the one to watch: with a single provider configured,
+*another session* is the same model reviewing its own work, which is the exact
+property the level exists to deny, wearing the label that says it does not.
+
+**Test-quality validation is a separate question from test authorship**, and it
+is answered before delivery: would these tests fail under plausible wrong
+implementations? Tautologies, algorithm duplication, snapshot overuse, missing
+boundary and error cases, over-mocking, expectations changed to fit the code, and
+a test never shown red are what the validator looks for. Its identity and
+provider go into the evidence — an unattributed validation is not one.
+
+Levels, the workflow, the weakening ladder and the validator's checklist:
+[`evaluator-independence-mechanics § Tests are evaluators`](../guidelines/agent-infra/evaluator-independence-mechanics.md).
+
 ## When it does NOT fire
 
 - **Ordinary parallel fan-out.** Dispatching many subagents to read, map,

@@ -86,6 +86,73 @@ point: this rule exists because a process that *looked* followed produced
 fabricated evidence, and claiming coverage it does not have would repeat that.
 
 
+## Tests are evaluators — levels, workflow, and the weakening ladder
+
+`road-to-adversarial-verification-and-long-runs` Phase 2. The rule states the
+obligation; this section carries the detail it points at.
+
+### The five levels
+
+| Level | Author | What it actually buys |
+|---|---|---|
+| **L0** | the same agent, same session | nothing against self-confirmation. **Fallback only** — permitted when no other route exists, and then said out loud. |
+| **L1** | another session, same model | a fresh context. **Not** a different judgement: with one provider configured this is the same model reviewing its own work, holding a label that says otherwise. |
+| **L2** | another model | different training, different blind spots. The first level that buys a genuinely second opinion. |
+| **L3** | another provider | independent training data, independent failure modes, independent incentives. |
+| **L4** | a multi-provider council or team | L3 plus disagreement that is visible rather than averaged away. |
+
+**Critical behaviour — security, authority, data loss, merge control — targets
+L3 or L4 wherever two providers are configured.** Wherever, not always: with one
+provider the honest ceiling is L2, and the level is read from `agent-config
+council:status`'s actual provider count rather than assumed from a config file
+that may describe an intention.
+
+### The workflow
+
+```
+acceptance behaviour → INDEPENDENT AUTHOR → RED evidence → implementer → GREEN
+→ INDEPENDENT VALIDATOR
+```
+
+Five arrows, and the two capitalised roles are the ones that may not be the
+implementer. **RED evidence** is not ceremony: a test never shown red has unknown
+sensitivity, so a suite that was green from the first run has proven nothing
+about the code and everything about the assertions being vacuous.
+
+### What an implementer may never do silently
+
+Weaken an assertion · delete a failing test · skip or `xfail` it · loosen a
+threshold · change fixture semantics to fit the code.
+
+Each of these is a legitimate change *sometimes*, which is exactly why the
+prohibition is on doing it **silently** rather than on doing it. Where the test
+genuinely looks wrong, the ladder is: **evidence** (what the test asserts, what
+the code does, why they disagree) → **independent test review** → **council or
+team** → change only after an independent verdict.
+
+**The owner is not the arbiter.** Routing this to the owner converts a technical
+disagreement the tree can settle into an interrupt only the owner can clear, and
+it is the same count-to-an-ask move the recovery ladder removes.
+
+### Test-quality validation — one question, before delivery
+
+*Would these tests fail under plausible wrong implementations?* An independent
+instance answers it, looking for: tautologies · algorithm duplication (the test
+re-implements the thing it is testing, so both are wrong together) · snapshot
+overuse · missing boundary and error cases · over-mocking (the mock, not the
+code, is what passes) · expectations changed to fit the code · a test never shown
+red.
+
+The validator's **identity and provider go into the evidence**. An unattributed
+validation is not one — it cannot be checked for the independence it claims, and
+`evaluator-independence`'s own recorded failure is exactly a verdict nobody could
+trace back to the prompt that produced it.
+
+This is deliberately **not** mutation-testing infrastructure (K3 of that
+roadmap). Mutation testing is the industrial form of the same question; one
+independent instance asking it in prose is the cheap first form, and shipping the
+cheap form now beats deferring the question until the infrastructure exists.
+
 ## See also
 
 - [`evaluator-independence`](../../../src/rules/evaluator-independence.md) — the rule this page carries the argument for.

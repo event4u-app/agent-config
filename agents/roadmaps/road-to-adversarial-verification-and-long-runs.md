@@ -176,7 +176,7 @@ before the record is signed.
 
 ## Phase 2 — Tests by someone else
 
-- [ ] **2.1 Independence levels for test authorship.** `evaluator-independence` gains a
+- [x] **2.1 Independence levels for test authorship.** `evaluator-independence` gains a
       *tests are evaluators* section: L0 the same agent, fallback only; L1 another session on
       the same model; L2 another model; L3 another provider; L4 a multi-provider council or
       team. Critical behaviour — security, authority, data loss, merge control — targets L3 or
@@ -184,20 +184,20 @@ before the record is signed.
       independent author → RED evidence → implementer → GREEN → independent validator.
       verify: `agent-config council:status` reports the provider count the chosen level
       assumes, and a fixture whose author and implementer share a session id is rejected.
-- [ ] **2.2 What an implementer may never do silently.** Weaken an assertion, delete a failing
+- [x] **2.2 What an implementer may never do silently.** Weaken an assertion, delete a failing
       test, skip or xfail it, loosen a threshold, or change fixture semantics to fit the code.
       Where the test appears wrong: evidence → independent test review → council or team →
       change only after an independent verdict. The owner is not the arbiter.
       verify: fixture `T2` — an assertion weakened without an independent verdict artefact is
       red.
-- [ ] **2.3 Test-quality validation before delivery.** An independent instance answers one
+- [x] **2.3 Test-quality validation before delivery.** An independent instance answers one
       question: would these tests fail under plausible wrong implementations? It looks for
       tautologies, algorithm duplication, snapshot overuse, missing boundary and error cases,
       over-mocking, expectations changed to fit code, and a test never shown red. The
       validator's identity and provider go into the evidence.
       verify: a fixture test suite that passes against a deliberately broken implementation is
       reported by the validator rather than by a later incident.
-- [ ] **2.4 Two CI gates and one hook flag.** `check_test_delta.ts` reds a code change with no
+- [x] **2.4 Two CI gates and one hook flag.** `check_test_delta.ts` reds a code change with no
       credible test delta unless the owner set a reason; `check_test_weakening.ts` reds a
       removed or loosened assertion, a skipped test or a lowered threshold with no independent
       verdict artefact; the evidence-independence hook flags a commit touching both `tests/**`
@@ -205,6 +205,24 @@ before the record is signed.
       pin.
       verify: fixture `G8` code-without-test is red; `G9` test-first across two sessions is
       green; `T2` weakening is red.
+      <!-- landed 2026-09-13. Both gates carry all six surfaces: the script, a Taskfile target,
+      a `consistency.yml` step, a `gate-coverage.yml` row with a floor and CI-identical argv, a
+      `--self-test` (8 cases each, 3 rejecting), and a `gate_ledger` adoption so neither adds
+      to the completeness ratchet.
+      **`check_test_weakening` counts NET, and that is the whole gate.** Editing an assertion
+      removes one line and adds another, so a gate counting raw removals reds every legitimate
+      test edit — and a gate that reds every PR gets its exemption widened until it finds
+      nothing, which is this file's own Risk 4. Three of its eight self-test cases are ACCEPTS
+      for exactly that reason: editing an assertion, adding assertions, and removing a skip.
+      **`check_test_delta`'s escape is a PR LABEL, not a file.** A file-based exemption inside
+      the diff under review is one an agent can widen; a label is an owner action outside the
+      diff. Same shape as `check_kernel_rule_bundle`'s existing label.
+      **What neither gate claims.** Whether the test came FIRST, and whether it tests the thing
+      that changed. Both are judgements a diff does not carry, and claiming them would be the
+      coverage inflation `evaluator-independence` exists over. The hook flag is WARN-only for a
+      stated reason too: L0 is a permitted fallback, so refusing it would forbid a legal state,
+      and the session boundary it reads is an approximation rather than an identity. -->
+      <!-- verify: ./scripts-run src/scripts/check_test_delta --self-test -->
 
 ## Phase 3 — The forge and CI own correctness
 

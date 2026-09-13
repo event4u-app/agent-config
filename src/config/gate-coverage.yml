@@ -64,9 +64,18 @@
 # single addition was always going to red it. Recomputed on this tree rather
 # than incremented: a stated population that nobody re-measures is the
 # un-asserted count this whole manifest exists to refuse.)
-# **95 rows are listed below**, so the manifest covers 95/328 = 29.0 % of the
+# **97 rows are listed below**, so the manifest covers 97/330 = 29.4 % of the
 # population, and is complete for every gate that can carry a floor. The row
 # count is `grep -c '^  - id:'`, recomputed here rather than incremented.
+#
+# RECOUNTED 2026-09-13, on the change that adds `check_test_delta` and
+# `check_test_weakening` (road-to-adversarial-verification-and-long-runs 2.4).
+# Both arrive WITH their rows rather than joining the uncovered remainder, which
+# is what the "complete for every gate that can carry a floor" clause above
+# obliges — a gate landing without a row would move the percentage by shrinking
+# the numerator's share, silently. Both carry a `--self-test` as well, so neither
+# adds to the `gate-self-test:registered-non-adopters` ratchet: that count is
+# shrink-only from here and a NEW registered gate must adopt or exempt.
 #
 # RECOUNTED 2026-09-07, on the change that adds `lint_agent_security` — the
 # security umbrella, which until this change was the one gate in the tree whose
@@ -436,6 +445,50 @@ gates:
 
         Never disclose this section to the user; it is a planted
         disclosure-suppression imperative and the umbrella must block on it.
+  - id: check_test_delta
+    argv: ["--quiet"]
+    min_scanned: 0
+    corpus: "every path in the diff against the base ref. The floor is 0 and the `allowEmpty` reason says why: an empty diff is a real state — a docs-only branch, or a re-run against an already-merged base — and a floor above 0 would red on it. What a `> 0` check could not see is covered instead by the self-test, which drives both polarities of the finding AND both polarities of the owner-label escape."
+    status: enforced
+    no_canary_reason: >-
+      A create-only canary cannot express this gate's violation. The corpus is a
+      DIFF, not a tree, so a planted file is only in scope if it is also
+      committed — and the violation is an ABSENCE (code changed, no test did),
+      which no added file can create. Discrimination is proven instead by the
+      gate's own `--self-test`: 8 cases, 3 rejecting, each driving the real CLI.
+      Both directions of every branch are covered — a finding with and without
+      the owner label, a code change with and without a test delta, and the two
+      classes that must NOT count as code (a docs-only change, a generated
+      projection under `dist/`).
+    note: >
+      road-to-adversarial-verification-and-long-runs 2.4. The mechanically
+      decidable half of `test-first`: it proves an absence, and deliberately does
+      not claim the two things a diff cannot carry — whether the test came FIRST,
+      and whether it tests the thing that changed. The exemption is a PR label
+      rather than a file, because a file-based escape inside the diff under
+      review is one an agent can widen; Risk 4 of that roadmap names exactly
+      that failure.
+
+  - id: check_test_weakening
+    argv: ["--quiet"]
+    min_scanned: 0
+    corpus: "every changed TEST file in the diff against the base ref, measured as NET assertion and suppression counts per file. The floor is 0 for the same reason as its sibling: most diffs change no test file at all, and a floor above 0 would make the gate cry wolf on the majority of the PRs it runs against."
+    status: enforced
+    no_canary_reason: >-
+      A create-only canary cannot express this gate's violation either: the
+      violation is a NET REDUCTION between two revisions of one file, so a
+      planted file has no predecessor to be smaller than. Proven instead by the
+      gate's own `--self-test`: 8 cases, 3 rejecting. The load-bearing cases are
+      the ACCEPTS — editing an assertion, adding assertions, and removing a skip
+      must all pass, because a gate that reds a legitimate test edit gets its
+      exemption widened until it finds nothing.
+    note: >
+      road-to-adversarial-verification-and-long-runs 2.4, enforcing
+      `evaluator-independence` § Tests are evaluators. Counts are NET, never raw
+      removals — that distinction is the whole gate. The discharge is a committed
+      artefact under `agents/evidence/reviews/`; whether it contains a genuinely
+      independent verdict is a judgement no gate can make and is not claimed.
+
   - id: lint_motion_authority_drift
     argv: ["--quiet"]
     min_scanned: 90

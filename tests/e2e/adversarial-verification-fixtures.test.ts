@@ -33,6 +33,11 @@ import {
     ladder,
     type LadderState,
 } from '../../src/scripts/_lib/continuation_ladder.js';
+import { classify, findingFor } from '../../src/scripts/check_test_delta.js';
+import {
+    sameSessionTestFlag,
+    touchesTestAndCode,
+} from '../../src/scripts/hooks/evidence_independence.js';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const read = (rel: string): string => fs.readFileSync(path.join(REPO, rel), 'utf8');
@@ -224,6 +229,116 @@ describe('T7 / T8 — a run cannot end with red CI while its checkboxes read com
         expect(
             ladder(base({ halted: 'halt-stall' }), 0, Date.now(), 0, undefined, null, false, 'ci-red'),
         ).toBe('halt-stall');
+    });
+});
+
+describe('T2 / Phase 2 — tests are evaluators', () => {
+    const RULE = 'src/rules/evaluator-independence.md';
+    const MECH = 'docs/guidelines/agent-infra/evaluator-independence-mechanics.md';
+
+    it('the rule carries a tests-are-evaluators section — D4 is closed', () => {
+        expect(flat(RULE)).toMatch(/## Tests are evaluators/);
+        expect(flat(RULE)).toMatch(/A TEST IS AN EVALUATOR/);
+    });
+
+    it('all five levels exist, L0 is fallback-only and L1 carries its warning', () => {
+        const body = flat(RULE);
+        for (const level of ['L0', 'L1', 'L2', 'L3', 'L4']) expect(body).toContain(level);
+        expect(body).toMatch(/L0 the same agent — \*\*fallback only\*\*/);
+        // Risk 2 of the roadmap: L1 degrading to self-review while keeping the name.
+        expect(body).toMatch(/the same model reviewing its own work/);
+    });
+
+    it('the level is read from the live provider count, not assumed', () => {
+        expect(flat(RULE)).toMatch(/`agent-config council:status`'s actual provider count/);
+        expect(flat(RULE)).toMatch(/L3 or L4 wherever two providers are configured/);
+    });
+
+    it('T2 — every silent-weakening move is named, and the ladder does not end at the owner', () => {
+        const body = flat(RULE);
+        for (const move of [
+            'WEAKENS AN ASSERTION',
+            'DELETES, SKIPS OR XFAILS A',
+            'LOWERS A THRESHOLD',
+            'CHANGES FIXTURE SEMANTICS TO FIT THE CODE',
+        ]) {
+            expect(body).toContain(move);
+        }
+        expect(body).toMatch(
+            /EVIDENCE → INDEPENDENT TEST REVIEW → COUNCIL OR TEAM → CHANGE ONLY AFTER AN INDEPENDENT VERDICT/,
+        );
+        expect(body).toMatch(/THE OWNER IS NOT THE ARBITER/);
+    });
+
+    it('the workflow keeps RED evidence between the author and the implementer', () => {
+        expect(flat(MECH)).toMatch(
+            /acceptance behaviour → INDEPENDENT AUTHOR → RED evidence → implementer → GREEN → INDEPENDENT VALIDATOR/,
+        );
+        expect(flat(MECH)).toMatch(/a test never shown red has unknown sensitivity/);
+    });
+
+    it('2.3 — the validator asks one question and is attributable', () => {
+        const body = flat(MECH);
+        expect(body).toMatch(/Would these tests fail under plausible wrong implementations\?/);
+        for (const smell of [
+            'tautologies',
+            'algorithm duplication',
+            'snapshot overuse',
+            'missing boundary and error cases',
+            'over-mocking',
+            'expectations changed to fit the code',
+            'a test never shown red',
+        ]) {
+            expect(body).toContain(smell);
+        }
+        expect(body).toMatch(/identity and provider go into the evidence/);
+        // K3 — the cheap form ships; mutation infrastructure is not a prerequisite.
+        expect(body).toMatch(/not\*\* mutation-testing infrastructure/);
+    });
+});
+
+describe('G8 / G9 — the two test gates and the same-session flag', () => {
+    it('G8 — a code change with no test delta is RED', () => {
+        expect(findingFor(classify(['src/scripts/thing.ts']))).not.toBeNull();
+    });
+
+    it('G9 — test-first across two sessions is GREEN', () => {
+        // The gate cannot see the session boundary; what it can see is that a
+        // test arrived with the code, which is the mechanically decidable half.
+        expect(findingFor(classify(['tests/a.test.ts', 'src/a.ts']))).toBeNull();
+    });
+
+    it('both gates are registered with CI-identical argv and a floor', () => {
+        const ledger = read('src/config/gate-coverage.yml');
+        for (const id of ['check_test_delta', 'check_test_weakening']) {
+            expect(ledger).toMatch(new RegExp(`- id: ${id}\\n\\s+argv: \\["--quiet"\\]`));
+        }
+        // The same argv must appear in the workflow, or the row describes a
+        // invocation CI does not make.
+        const wf = read('.github/workflows/consistency.yml');
+        expect(wf).toContain('./scripts-run src/scripts/check_test_delta --quiet');
+        expect(wf).toContain('./scripts-run src/scripts/check_test_weakening --quiet');
+    });
+
+    it('the same-session flag fires on a commit and on nothing else', () => {
+        expect(sameSessionTestFlag('git commit -m "x"')).not.toBeNull();
+        expect(sameSessionTestFlag('git -C /x commit -am "y"')).not.toBeNull();
+        expect(sameSessionTestFlag('git status')).toBeNull();
+        expect(sameSessionTestFlag('npm test')).toBeNull();
+        expect(sameSessionTestFlag(null)).toBeNull();
+    });
+
+    it('the flag names L0 as a permitted fallback rather than forbidding it', () => {
+        const text = sameSessionTestFlag('git commit -m "x"') ?? '';
+        expect(text).toMatch(/L0 is a permitted FALLBACK, not the default/);
+        expect(text).toMatch(/evaluator-independence/);
+    });
+
+    it('it takes BOTH a test and a code path to flag — either alone is not L0', () => {
+        expect(touchesTestAndCode(['tests/a.test.ts', 'src/a.ts'])).toBe(true);
+        expect(touchesTestAndCode(['tests/a.test.ts'])).toBe(false);
+        expect(touchesTestAndCode(['src/a.ts'])).toBe(false);
+        expect(touchesTestAndCode([])).toBe(false);
     });
 });
 

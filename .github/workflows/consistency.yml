@@ -418,6 +418,12 @@ jobs:
       - name: CI ↔ local gate parity
         run: ./scripts-run src/scripts/check_ci_local_parity --quiet
 
+      - name: Test delta on a code change
+        run: ./scripts-run src/scripts/check_test_delta --quiet
+
+      - name: No silent test weakening
+        run: ./scripts-run src/scripts/check_test_weakening --quiet
+
       - name: Gate coverage floors
         run: ./scripts-run src/scripts/check_gate_coverage
 
