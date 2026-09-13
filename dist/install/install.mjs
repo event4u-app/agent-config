@@ -15753,9 +15753,20 @@ var settingsSchema = external_exports.object({
       "Gate R2 \u2014 completion review at 100% roadmap completion / pre-PR. true (default) = a findings-before-fixes review by a fresh reviewer context must exist for the current diff hash (or an exact honest-null / skip declaration) before fix commits and PR creation, enforced by check_completion_review at pre-push + CI (CI authoritative; a crashed validator warns and allows). false = escape hatch, the validator skips."
     )
   }).default({}),
+  execution: external_exports.object({
+    fix_loop_max: external_exports.number().int().min(1).default(10).describe(
+      "Consecutive failed fix attempts against one validation target before the escalation ladder reaches its terminal rung. Reaching the bound triggers a strategy change, never a question. Overridable globally, per project and per prompt."
+    ),
+    escalation: external_exports.array(external_exports.string()).default(["independent", "council", "team", "owner_owned_check"]).describe(
+      "The escalation rungs, in order, walked when the fix-loop bound is reached: independent (another session or a provider-diverse reviewer), council, team, then owner_owned_check \u2014 which asks whether the residue is owner-owned, not whether to ask the owner now."
+    )
+  }).default({}),
   quality: external_exports.object({
     local_auto_run: external_exports.boolean().default(false).describe(
-      "Run quality tools (linters, type-checks, formatters) and the local test suite autonomously after edits. Off by default \u2014 the agent never runs quality tools proactively and does not ask; the user runs them manually (e.g. /quality-fix) and remote CI is the authoritative gate. The agent only runs a quality tool on an explicit ask, a concrete CI failure, or the new-gate carve-out. Turn on to restore autonomous pipeline runs."
+      "Run quality tools (linters, type-checks, formatters) and the local test suite autonomously after edits, IN CHAT. Off by default \u2014 in a chat turn a human is present and remote CI is the authoritative gate, so a local full-pipeline run duplicates it at wall-clock cost. The agent only runs a quality tool on an explicit ask, a concrete CI failure, or the new-gate carve-out. A mission is governed by local_auto_run_in_mission instead."
+    ),
+    local_auto_run_in_mission: external_exports.boolean().default(true).describe(
+      "Run quality tools autonomously inside a mission \u2014 an autonomous roadmap run with a claimed contract. On by default: nobody is waiting, the next action belongs to the agent itself, and a red found twenty steps later costs more than the run that would have caught it at step one. Inert outside a mission, and a mission never lowers local_auto_run: true."
     )
   }),
   design: external_exports.object({
