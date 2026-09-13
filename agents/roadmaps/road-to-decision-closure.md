@@ -185,7 +185,7 @@ owner-owned residue remains, closure completes with zero owner interaction.
       artefact the decision serves, with date and members — citing the scratch path from a
       stable artefact is forbidden by `no-roadmap-references`. Team records now follow exactly
       that, which is what "where council records already live" was reaching for.
-- [ ] **2.3 Retire `blocked-by:` for judgement calls.** `BLOCKED` is reached only per ADR-268
+- [x] **2.3 Retire `blocked-by:` for judgement calls.** `BLOCKED` is reached only per ADR-268
       § 7; a judgement call routes back through closure instead of parking in a file.
       verify: `grep -rc 'blocked-by:' agents/roadmaps/*.md` shows no marker whose body is a
       judgement call rather than a human ACTION.

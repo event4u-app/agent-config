@@ -28,6 +28,19 @@
  *      contract above makes. `later/` and `archive/` are outside this gate's
  *      glob and are untouched by it.
  *
+ *   5. An entry that declares `- **Ownership:**` declares one of the three
+ *      OWNER-OWNED classes (`product-owned`, `business-owned`,
+ *      `destructive-owned`). A technical class there is a judgement call
+ *      parked in a file instead of closed, which is the shape ADR-268 § 10
+ *      retires: a technical decision does not become owner-owned because it is
+ *      hard, so it routes back through the closure pass rather than into
+ *      `## Blockers`.
+ *
+ *      HARD rather than ratcheted, on the same "no backlog to grandfather"
+ *      argument the `Class:` contract makes: `Ownership:` is a new opt-in
+ *      field, so on the day it ships no entry in the tree declares one and the
+ *      rule fires on nothing.
+ *
  * Fenced code blocks are stripped before scanning so a roadmap that shows
  * the `## Blockers` shape as a documentation example is not flagged.
  *
@@ -106,6 +119,29 @@ const RUN_FIELD_RE = /^-[ \t]*\*\*Run:\*\*[ \t]*(\S.*)$/im;
 const KNOWN_CLASSES: ReadonlySet<string> = new Set(['0', '1', '2', '3']);
 /** The classes whose whole claim is that an agent can execute them. */
 const RUNNABLE_CLASSES: ReadonlySet<string> = new Set(['0', '1']);
+
+/**
+ * The ownership axis, as a blocker may declare it.
+ *
+ * Only the three owner-owned classes are legal here. A blocker IS the record
+ * of a decision the agent correctly did not own; a technical class in that
+ * field says the opposite — that something the ownership ladder can close was
+ * filed instead. The remaining five ownership classes are deliberately absent
+ * rather than listed as "also accepted".
+ */
+const OWNERSHIP_FIELD_RE = /^-[ \t]*\*\*Ownership:\*\*[ \t]*`?([a-z-]+)`?/im;
+const OWNER_OWNED_CLASSES: ReadonlySet<string> = new Set([
+    'product-owned',
+    'business-owned',
+    'destructive-owned',
+]);
+const TECHNICAL_CLASSES: ReadonlySet<string> = new Set([
+    'deterministic',
+    'reversible-technical',
+    'contested-technical',
+    'critical-technical',
+    'spend-exhaustion',
+]);
 
 /**
  * The authored class, or `''` when the entry declares none.
@@ -245,6 +281,28 @@ function _scanBoth(rawText: string): ScanResult {
                                 `blocker '${cur.id}' is class ${cls} but declares no ` +
                                 '**Run:** command — a gate that claims to be runnable ' +
                                 'must say how',
+                        });
+                    }
+                }
+                const ownership = OWNERSHIP_FIELD_RE.exec(body);
+                if (ownership !== null) {
+                    const declared = ownership[1] as string;
+                    if (TECHNICAL_CLASSES.has(declared)) {
+                        violations.push({
+                            line: _lineAt(text, sectionStart + cur.start),
+                            message:
+                                `blocker '${cur.id}' declares ownership '${declared}', which is ` +
+                                'a technical class — a technical decision does not become ' +
+                                'owner-owned because it is hard (ADR-268 § 10). Route it back ' +
+                                'through the closure pass and record the answer as a ' +
+                                '`## Decisions` row instead of parking it here',
+                        });
+                    } else if (!OWNER_OWNED_CLASSES.has(declared)) {
+                        violations.push({
+                            line: _lineAt(text, sectionStart + cur.start),
+                            message:
+                                `blocker '${cur.id}' declares unknown ownership '${declared}' ` +
+                                '(expected product-owned, business-owned or destructive-owned)',
                         });
                     }
                 }
@@ -632,6 +690,8 @@ export {
     DECIDABILITY_FIELDS,
     KNOWN_CLASSES,
     RUNNABLE_CLASSES,
+    OWNER_OWNED_CLASSES,
+    TECHNICAL_CLASSES,
     _blockerClass,
     _hasExecutableSubstance,
     _scan,

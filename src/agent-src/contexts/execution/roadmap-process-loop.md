@@ -917,16 +917,38 @@ BEFORE REPORTING IT, ASK PER REMAINING STEP: CAN I DO THIS AT ALL?
 ONE STEP THE AGENT COULD HAVE EXECUTED REJECTS THE CLAIM.
 ```
 
-**Externally impossible — the whole list.** A required credential that does not
-exist and the agent cannot create · a purchase beyond the delegated budget ·
-physical hardware access · another person or organisation must act · a wait that
-is factually mandatory and cannot be simulated or verified.
+**Externally impossible — the whole list**, aligned with ADR-268 § 7. A missing
+**owner-owned** decision — `product-owned`, `business-owned` or
+`destructive-owned`, and nothing else · a missing permission, secret or access ·
+a required credential that does not exist and the agent cannot create · a
+purchase beyond the delegated budget · physical hardware access · another person
+or organisation must act · a wait that is factually mandatory and cannot be
+simulated or verified · contradictory requirements · technical impossibility
+under the stated constraints · a needed crossing of a real authority boundary.
 
 **Not externally impossible — every one of these is work.** An unprotected
 branch · a branch to create · a push · a PR to open · a repository or branch
 setting the agent can change · a workflow to start · CI to re-run · a merge base
 to update · conflicts · failing tests · local configuration · a paid call under
-the ceiling · "this could be risky" · "a maintainer should do this".
+the ceiling · a failed first approach · dependency trouble · "this could be
+risky" · "a maintainer should do this".
+
+```
+A SOLVABLE ARCHITECTURAL AMBIGUITY IS NOT `BLOCKED`. IT IS A DECISION.
+A TECHNICAL JUDGEMENT CALL IS NEVER PARKED IN A FILE — IT ROUTES BACK THROUGH
+CLOSURE AND IS RESOLVED AT THE LOWEST RUNG THAT OWNS IT: EVIDENCE, CONVENTION,
+THE AGENT, AN INDEPENDENT SESSION, THE COUNCIL, THE TEAM.
+A COUNT IS NEVER A QUESTION — A BOUNDED LOOP'S BOUND TRIGGERS A STRATEGY CHANGE
+AND THE ESCALATION LADDER, NEVER AN OWNER QUESTION (ADR-268 § 7).
+```
+
+This is what retires `blocked-by:` as a home for judgement calls. The marker
+stays — it is how `run-continuation` reads blockedness — but what it may point
+at narrows: a blocker entry is the record of a decision the agent **correctly
+did not own**, and an entry that declares `- **Ownership:**` must name one of
+the three owner-owned classes. A technical class there says a decision the
+ownership ladder could have closed was filed instead, and
+`lint_roadmap_blockers` reds it.
 
 The `[~]` prohibition is load-bearing and was the one point the council split on.
 Deferring a blocked step to `[~]` would let the run reach `count_open == 0` and

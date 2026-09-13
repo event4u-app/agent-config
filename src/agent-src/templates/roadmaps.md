@@ -400,6 +400,22 @@ that was never a judgement call.
     on nothing until an author declares a class and there is no backlog
     to grandfather.
 
+    **A judgement call is never parked here.** A blocker records a decision
+    the agent **correctly did not own**. A technical judgement call — two
+    valid architectures, a dependency trade-off, an unclear boundary with no
+    new product semantics — is not one of those: it routes back through the
+    closure pass and is resolved at the lowest rung that owns it (evidence,
+    convention, the agent, an independent session, the council, the team),
+    then recorded as a `## Decisions` row per rule 27. A technical decision
+    does not become owner-owned because it is hard (ADR-268 § 10).
+
+    An entry MAY declare `- **Ownership:** <class>`, and when it does the
+    class must be one of the three owner-owned ones — `product-owned`,
+    `business-owned`, `destructive-owned`. A technical class there is the
+    parked judgement call this retires, and `lint_roadmap_blockers` reds it.
+    The field is optional and HARD rather than ratcheted, on the same
+    no-backlog-to-grandfather ground as `Class:`.
+
     **Legacy fallback.** A body-level `> Blocked until <condition>`
     note (the follow-up-roadmap convention from rule 17) is parsed by
     the dashboard generator as one implicit roadmap-level blocker
