@@ -214,6 +214,27 @@ item. Phases 1-6 may run once 0.2 is chosen.
       a `## PR plan` section required if and only if `pr_topology: stacked`.
       verify: a fixture roadmap declaring `stacked` without `## PR plan` is rejected by the
       roadmap frontmatter lint, and one declaring `single` is accepted without it.
+      **HALF LANDED 2026-09-13, and the other half turned out to rest on a mechanism that does
+      not exist.** *Landed:* `src/agent-src/templates/roadmaps.md` rule 18 now documents the
+      optional `delivery:` frontmatter block beside `execution:` and `relates:`, stating the
+      `stacked` ⇒ `## PR plan` obligation and why `pr_topology` is the owner's to write;
+      `docs/contracts/roadmap-complexity-standard.md` adds `execution:` and `delivery:` to its
+      permitted-keys sentence. The projection regenerated through `task sync`.
+      *Not landed, deliberately, and the reason is a finding rather than a deferral:* **this
+      step's verify names "the roadmap frontmatter lint", and there is no such thing.** No
+      script rejects an unknown roadmap frontmatter key — `lint_provenance_vocabulary.ts:465`
+      says so in as many words: *"It was usable — nothing rejects an unknown frontmatter key —
+      and that is exactly what made it wrong."* What exists is six single-key readers
+      (`lint_roadmap_complexity`, `lint_roadmap_blockers`, `lint_roadmap_ci_steps`,
+      `lint_roadmap_family_cap`, `lint_roadmap_later_disposition`, `check_roadmap_trackable`),
+      none of which is an allowlist and none of which is a natural host —
+      `lint_roadmap_complexity`'s own docstring pins it to a ported Python CLI contract with
+      *"No behaviour changes"*. So satisfying the verify means authoring a NEW gate.
+      That was not done, for a reason worth stating rather than hiding in a deferral: **the
+      key it would police is read by no code.** The fifth cascade layer is 2.1's residual (b),
+      and a gate that demands a `## PR plan` section for a frontmatter value nothing consumes
+      enforces ceremony, not a contract. The right order is consumer first, gate second, and a
+      later run should build both together rather than inheriting a validator with no subject.
 - [x] **2.3 Correct the template's absolute sentence.** *No mode lifts a safety floor* is true
       for the eleven typed ops and false for pushes and non-prod merges; the sentence is
       rewritten to say which.
