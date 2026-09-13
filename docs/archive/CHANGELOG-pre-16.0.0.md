@@ -21,7 +21,7 @@
 - **Default changes + migration:** arm the automatic record by default, retire the recycle advisory (956954c).
 - **Security and correctness:** make the settings writers idempotent, and repair what the old one broke (#2000) (a063516); repair a file the old writer already corrupted, or say why not (7f3a8c3); ask whether a key is present, never infer it from the write (aea618a); name the payload job what it does, before the name is pinned (#1999) (5d58896); make the payload check report on every PR, so it can be required (#1998) (97466af); tell an unverifiable bound apart from a risen one (#1994) (f01f85f); +28 more.
 - **Honest nulls:** the drain-run summary, as the last commit of the run (ef06ab8).
-- **Known limitations:** _none_
+- **Known limitations:** the obligation-frequency forest rule this span reworked does not cover the `per-event` root from a session-scoped carrier — a CI gate firing three times inside one session is not covered by a `session_start` check, yet a chain with `per-event` at the bottom would accept the session-scoped carrier as dominating it and report green (`src/scripts/_lib/obligation_frequency.ts:34`, 6b08a37).
 
 > **Governance mix:** governance-only 76 vs consumer-only 10 (taxonomy 1.1.0).
 
