@@ -178,6 +178,38 @@ item. Phases 1-6 may run once 0.2 is chosen.
       happen.
       verify: `agent-config settings:get delivery.merge` reports `off` and the file it came
       from; `./scripts-run src/scripts/check_no_automerge_key` stays green against the new key.
+      **PARTIALLY LANDED 2026-09-13 — the block exists and is fenced; two of the three
+      resolution layers do not, and the box stays open for exactly that reason.**
+      *Landed:* the `delivery:` block in `src/config/agent-settings.template.yml` with all
+      three keys and the specified defaults; the zod register in
+      `src/server/schemas/settings.ts` (without which `tests/server/schemas/parity.test.ts`
+      reds — it is the hard template-vs-schema completeness gate and this step did not name
+      it); the JSON schema block; three rows in `docs/contracts/settings-classes.md` with both
+      Counts tables moved 145 → 148; `docs/settings-reference.md` regenerated rather than
+      hand-edited. All three keys are **Class C**, so `settings:set` refuses them — verified by
+      running it: *"settings:set refused — `delivery.merge` is class C (guarded)"*. Both verify
+      clauses pass: `settings:get delivery.merge` reports `default "off"` and `class C`, and
+      `check_no_automerge_key` is green over 346 keys, because `merge` is outside its closed
+      `autoMerge`/`auto_merge`/`mergePolicy` set.
+      **One defect caught by the schema and worth recording, because it would have shipped
+      silently.** `merge: off` unquoted is parsed by YAML as the boolean `false`, not the
+      string `"off"` — `validate_agent_settings` reds with *"delivery.merge: False is not of
+      type 'string'"*. The template convention already quotes these (`rich_skills: "on"`,
+      `cross_source: "on"`); the key ships as `merge: "off"`. Any later enum key in this block
+      whose value is `off`/`on`/`no`/`yes` needs the same quoting.
+      *NOT landed, and neither is a detail of the same work:*
+      (a) **user-global resolution.** `MERGEABLE_KEYS` in `src/scripts/_lib/agent_settings.ts`
+      is an exact-dotted-path whitelist and its own docstring reads *"Adding a key requires an
+      ADR."* Every precedent entry cites one (ADR-100, ADR-219, ADR-271). Until such a record
+      exists a `delivery.*` value in the user-global file is **silently dropped**, so the
+      step's *"resolvable user-global"* clause is unmet. A second copy of the list lives at
+      `src/agent-src/templates/scripts/work_engine/_lib/agent_settings.ts` with no parity gate
+      between them, so the ADR's change is two edits.
+      (b) **roadmap-frontmatter override.** There is no mechanism today by which roadmap
+      frontmatter overrides the settings cascade — `load_agent_settings` has four layers
+      (`docs/guidelines/agent-infra/layered-settings.md`) and none of them is a roadmap. This
+      clause is new construction, not configuration, and it is what Phase 2.2 has to build
+      before this box can close.
 - [ ] **2.2 Roadmap template accepts the block.** An optional `delivery:` frontmatter block;
       a `## PR plan` section required if and only if `pr_topology: stacked`.
       verify: a fixture roadmap declaring `stacked` without `## PR plan` is rejected by the
