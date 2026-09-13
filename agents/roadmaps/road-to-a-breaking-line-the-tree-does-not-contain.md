@@ -103,7 +103,7 @@ a table frozen at 9, and the roadmap carries the verified version.
 
 ## Phase 3 — Stop the next major arriving without one
 
-- [ ] **3.1 Refuse a cut whose BREAKING section has no migration entry.** The
+- [x] **3.1 Refuse a cut whose BREAKING section has no migration entry.** The
       release pre-flight already sends the releaser to `docs/MIGRATION.md` for
       the scheduled-deprecations table; the missing half is the backward one —
       a major carrying BREAKING CHANGES and no matching section.
@@ -126,7 +126,7 @@ a table frozen at 9, and the roadmap carries the verified version.
       the kernel-rule tool-call deny, and names the revert that decided it.
 - [x] AC-2 — `docs/MIGRATION.md` carries a section for 15.0.0 and one for
       16.0.0, each naming what its BREAKING entries ask of a consumer.
-- [ ] AC-3 — A major whose BREAKING section has no corresponding MIGRATION
+- [x] AC-3 — A major whose BREAKING section has no corresponding MIGRATION
       heading is refused at the cut, and the refusal names the version.
 - [x] AC-4 — The `HONEST LOSS` threat-model question is answered in the tree
       rather than left open — either the entry is gone and that is recorded, or

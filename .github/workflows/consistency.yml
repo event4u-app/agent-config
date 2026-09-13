@@ -202,6 +202,13 @@ jobs:
       - name: Verify README size, word and time-to-first-command budgets
         run: ./scripts-run src/scripts/lint_readme_size --quiet
 
+      # Registered here as well as in `task ci` for the reason the comments
+      # above give: no workflow invokes `task ci`, so a gate registered only
+      # there cannot fail a pull request -- and this one exists precisely
+      # because a missing migration section survived two majors unnoticed.
+      - name: Verify every breaking major has a MIGRATION.md section
+        run: ./scripts-run src/scripts/lint_major_migration_sections --quiet
+
       # The source-confidentiality gate ran in `task ci` and NOWHERE ELSE, and
       # no workflow invokes `task ci` — so the check that exists to keep harvest
       # sources out of the tracked tree could not fail a pull request. Same

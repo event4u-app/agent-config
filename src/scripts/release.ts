@@ -137,6 +137,10 @@ import {
     release_notes_from_section,
     render_mix_response,
 } from './_lib/release_material.js';
+import {
+    MIGRATION_PATH as MAJOR_MIGRATION_PATH,
+    pendingMajorFinding,
+} from './lint_major_migration_sections.js';
 
 // `__doc__.splitlines()[0]` in `_parse_args` — the argparse description. Kept
 // as a referenceable constant so the first docstring line is preserved exactly.
@@ -783,6 +787,59 @@ export function assert_scheduled_deprecations_clear(
             "it — perform the removal in its own change, or revise the row's commitment and " +
             'record why the surface stays — then re-run.',
     );
+}
+
+/**
+ * Refuse a MAJOR cut whose BREAKING section has no `docs/MIGRATION.md` entry.
+ *
+ * The BACKWARD half of the pre-flight MIGRATION.md obligation.
+ * {@link assert_scheduled_deprecations_clear} above is the forward half —
+ * commitments due at a future major — and it is the half that already had a
+ * gate. Nothing checked that a major SHIPPING a breaking change told a consumer
+ * what to do about it, and 15.0.0 and 16.0.0 both shipped without a section.
+ *
+ * It runs at the call site rather than inside `preflight()` because the
+ * comparand does not exist yet at pre-flight time: the section is rendered
+ * later and is not prepended to `CHANGELOG.md` until `execute()`. Reading the
+ * file in pre-flight would compare against the PREVIOUS release.
+ *
+ * Preview semantics match the sibling exactly — `--dry-run` prints what the
+ * real run will refuse and returns, because `--dry-run exits 0` is a contract
+ * this file's own tests assert.
+ *
+ * @param migrationReader Seam for the file read, so a test can drive the
+ * refusal without mutating a tracked file.
+ */
+export function assert_major_migration_section(
+    target: string,
+    changelog_entry: string,
+    opts: { previewOnly?: boolean } = {},
+    migrationReader: () => string = () =>
+        fs.readFileSync(path.join(REPO_ROOT, MAJOR_MIGRATION_PATH), 'utf-8'),
+): void {
+    let migration: string;
+    try {
+        migration = migrationReader();
+    } catch (exc) {
+        die(
+            `refusing the ${target} cut: cannot read ${MAJOR_MIGRATION_PATH} ` +
+                `(${exc instanceof Error ? exc.message : String(exc)}). That is an environment ` +
+                'failure, not a finding — fix the checkout, then re-run.',
+        );
+    }
+    const finding = pendingMajorFinding(target, changelog_entry, migration);
+    if (finding === null) {
+        return;
+    }
+    process.stderr.write(`\n${finding}\n`);
+    if (opts.previewOnly === true) {
+        process.stderr.write(
+            `\n(dry-run) the ${target} cut WOULD BE REFUSED for the reason above. ` +
+                'Previewing only; exit code unchanged.\n',
+        );
+        return;
+    }
+    die(`refusing the ${target} cut: ${MAJOR_MIGRATION_PATH} has no section for ${target}.`);
 }
 
 // ─── preflight ────────────────────────────────────────────────────────────────
@@ -1673,6 +1730,10 @@ function main(argv: readonly string[] | null = null): number {
         head: _derive_head_prefill(prev),
         mix: measure_mix_obligation(target, prev),
     });
+
+    // Earliest point the rendered section exists, and still before anything
+    // is written — so the refusal costs a re-run rather than a rollback.
+    assert_major_migration_section(target, full, { previewOnly: args.dry_run });
 
     // Era-split planning — gate on the POST-release view (2026-07-07 fix).
     // The drift test measures the era AFTER this release's section is
