@@ -1,6 +1,7 @@
 ---
 model_tier: inherit
 name: roadmap-create
+produces_roadmap: true
 pack: product-basic
 visibility: internal
 cluster: roadmap
@@ -23,7 +24,7 @@ packs:
 
 Before anything else, run the plan-confidence gate per
 [`plan-confidence-gate`](../../contexts/execution/plan-confidence-gate.md):
-read `planning.challenge_on_create` (missing = `true`), do the codebase
+read `planning.closure_pass` (missing = `true`), do the codebase
 lookup, and assess the four 95%-conditions against the seed.
 
 - **Confident** (all four hold) → emit the single marker line and continue
@@ -387,3 +388,29 @@ Failure modes covered by this hard stop:
 - Follow the roadmap template from `.augment/templates/roadmaps.md`; write in English (project convention).
 - Keep the file focused: 500–1000 lines max. If larger, suggest splitting.
 - **Never overwrite an existing roadmap.** Step 6 scans `active/`, `archive/`, `skipped/` (+ subdirs); on collision → STOP, present rename / open / abort. Auto-suffix requires explicit pick.
+
+## Closure — the last step, always
+
+```
+THIS COMMAND PRODUCES A ROADMAP, SO IT ENDS IN CLOSURE.
+NEVER HAND BACK A PLAN CARRYING A DECISION PLANNING COULD HAVE CLOSED.
+```
+
+Declared by `produces_roadmap: true` in the frontmatter and enforced by
+`lint_roadmap_producers`: a producer that does not end here reds CI.
+
+Read `planning.closure_pass` (missing = `true`). When active, run
+[`/challenge-me closure`](../../../meta/challenge-me/closure/command.md) on the
+roadmap this command just produced, before handing back:
+
+```bash
+./scripts-run src/scripts/closure_scan <roadmap-path>
+```
+
+Every detected decision is resolved at the lowest rung that owns it and written
+into the roadmap's `## Decisions` table. Owner-owned residue is asked **now**,
+one question per turn, and its answer recorded — never handed back as *"the
+open questions are in the file"*.
+
+An explicit *just write it* drops the pass and is recorded as a **bypass** on
+its own axis, never as an absent closure. A mission grant is not a bypass.

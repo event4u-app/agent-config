@@ -142,14 +142,20 @@ owner-owned residue remains, closure completes with zero owner interaction.
       session → council → team → owner, only if owner-owned.
       verify: fixture `F1` — twelve seeded technical ambiguities produce zero owner questions
       and twelve rows in `## Decisions`.
-- [ ] **1.2 `produces_roadmap: true` replaces the hard-coded entrance list.** The key is added
+- [x] **1.2 `produces_roadmap: true` replaces the hard-coded entrance list.** The key is added
       to `roadmap/create`, `feature/plan`, `feature/roadmap`, `roadmap/materialize`,
       `implement-ticket`, `jira-ticket`, the Linear derivation, `analyze/inbox` and
       `analyze/roadmap-repos`. A new `lint_roadmap_producers` reds a producer that does not end
       in closure. `planning.challenge_on_create` becomes `planning.closure_pass`, default
       `true`, with the old key accepted for one minor.
-      verify: `grep -rl 'produces_roadmap: true' src/domains | wc -l` returns 9, and removing
-      the closure step from any one of them reds the new lint.
+      verify: `grep -rl 'produces_roadmap: true' src/domains | wc -l` returns **8**, and
+      removing the closure step from any one of them reds the new lint.
+      **Corrected on landing, 2026-09-13: the count is 8, not 9.** "The Linear derivation"
+      names no command in this tree — `grep -rn -i linear src/domains` returns ticket-system
+      vocabulary in `refine-ticket`, `estimate-ticket` and `roadmap/materialize`, plus the
+      `build_linear_digest` build script, and no roadmap-producing command. The eight that
+      exist all carry the key and all end in closure; the ninth was a miscount at authoring
+      time, not a producer this step failed to reach.
 - [ ] **1.3 Keep the bypass, and count it.** An explicit *just write it* still drops closure,
       is recorded, and is never inferred from a mission grant.
       verify: the ask census reports bypasses as their own axis rather than as absent closures.

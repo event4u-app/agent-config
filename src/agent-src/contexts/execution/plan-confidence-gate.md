@@ -12,7 +12,9 @@ this context carries the agent-side procedure.
 
 ## Activation
 
-Read `planning.challenge_on_create` from `.agent-settings.yml` once per task
+Read `planning.closure_pass` from `.agent-settings.yml` once per task
+(`planning.challenge_on_create` is the deprecated alias, accepted for one
+minor)
 and cache it. `true` or **missing key** → the gate is active. `false` → the
 gate is inert: proceed with the surface's normal flow, no marker line, no
 interview.
@@ -61,7 +63,7 @@ All four hold → emit **exactly one** marker line, then proceed with the
 surface's normal flow:
 
 ```
-> Confidence ≥ 95% — creating directly (planning.challenge_on_create)
+> Confidence ≥ 95% — creating directly (planning.closure_pass)
 ```
 
 No second marker, no summary of the assessment — one line, then the work.

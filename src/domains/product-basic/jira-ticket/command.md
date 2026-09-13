@@ -1,6 +1,7 @@
 ---
 model_tier: inherit
 name: jira-ticket
+produces_roadmap: true
 pack: product-basic
 intent: "Read a Jira ticket from the branch and implement the feature or fix the bug"
 routes_to: [jira-integration, feature-planning]
@@ -82,3 +83,29 @@ packs:
 ## See also
 
 - [`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md#developer) — Developer mode output contract (Goal / Plan / Changes / Tests / Open questions)
+
+## Closure — the last step, always
+
+```
+THIS COMMAND PRODUCES A ROADMAP, SO IT ENDS IN CLOSURE.
+NEVER HAND BACK A PLAN CARRYING A DECISION PLANNING COULD HAVE CLOSED.
+```
+
+Declared by `produces_roadmap: true` in the frontmatter and enforced by
+`lint_roadmap_producers`: a producer that does not end here reds CI.
+
+Read `planning.closure_pass` (missing = `true`). When active, run
+[`/challenge-me closure`](../../meta/challenge-me/closure/command.md) on the
+roadmap this command just produced, before handing back:
+
+```bash
+./scripts-run src/scripts/closure_scan <roadmap-path>
+```
+
+Every detected decision is resolved at the lowest rung that owns it and written
+into the roadmap's `## Decisions` table. Owner-owned residue is asked **now**,
+one question per turn, and its answer recorded — never handed back as *"the
+open questions are in the file"*.
+
+An explicit *just write it* drops the pass and is recorded as a **bypass** on
+its own axis, never as an absent closure. A mission grant is not a bypass.
