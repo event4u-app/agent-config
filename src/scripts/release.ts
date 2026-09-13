@@ -173,7 +173,6 @@ import {
     _rstrip,
     _splitlines,
 } from './release_env.js';
-import type { RunResult } from './release_publication.js';
 // Re-export surface for the names tests import from `release.js` and that moved
 // into the publication unit — eleven since the test-count-trend unit followed. `export ... from` rather than a bare import,
 // because these are not USED here — an unused import would be dropped and the
