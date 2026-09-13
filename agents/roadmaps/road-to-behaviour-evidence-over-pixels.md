@@ -120,11 +120,11 @@ is not that the states are unnamed; it is that nothing can test them.
 
 ## Phase 5 — Mount it, in shadow only
 
-- [ ] **5.1 Add the review skill to the review flow** and have the design-pass hook read
+- [x] **5.1 Add the review skill to the review flow** and have the design-pass hook read
       `ui-conformance.json`, emitting a verdict without blocking.
       verify: `./scripts-run src/scripts/lint_flows` stays green, and a fixture run with a planted
       defect produces the verdict in the shadow log.
-- [ ] **5.2 The block path stays unreachable.** This roadmap adds evidence, not enforcement.
+- [x] **5.2 The block path stays unreachable.** This roadmap adds evidence, not enforcement.
       verify: the hook's block branch is unchanged in the diff, and a run without the lane present
       completes with no error.
 

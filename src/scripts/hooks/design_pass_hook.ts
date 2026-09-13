@@ -65,6 +65,7 @@ const EXIT_WARN = 2;
 const SETTINGS_FILE = '.agent-settings.yml';
 const STATE_REL = path.join('agents', 'runtime', 'state', 'design-pass-hook.json');
 const AUDIT_REL = path.join('agents', 'runtime', 'state', 'ui-audit.json');
+const CONFORMANCE_REL = path.join('agents', 'runtime', 'state', 'ui-conformance.json');
 
 /**
  * The P0 set — objective floors only, and the list is closed on purpose.
@@ -127,6 +128,77 @@ export function enabled(root: string, key = 'design_pass'): boolean {
 }
 
 export const isUiSurface = (p: string): boolean => isUiPath(p) || isUiTreePath(p);
+
+/**
+ * The shadow read of `ui-conformance.json` — Phase 5 of
+ * `road-to-behaviour-evidence-over-pixels`.
+ *
+ * SHADOW MEANS SHADOW. This produces a line in the reported verdict and
+ * touches nothing else: it is not consulted by `decide`, never reaches
+ * `blocked`, and cannot change an exit code. The roadmap adds evidence, not
+ * enforcement, and the block path is deliberately untouched by this change.
+ *
+ * An ABSENT artefact is reported as absent, never as clean — the same rule the
+ * probe applies to its own dimensions. A malformed one is reported as
+ * unreadable for the same reason.
+ */
+export interface ConformanceVerdict {
+    /**
+     * Whether this verdict is worth surfacing on its own. An ABSENT artefact is
+     * not: most repositories never run the probe, and a line on every clean UI
+     * write is the noise that gets a carrier switched off — Risk 1 of the parent
+     * roadmap. Absent is still reported honestly whenever the pass speaks for
+     * another reason.
+     */
+    noteworthy: boolean;
+    line: string;
+}
+
+export function conformanceVerdict(root: string): ConformanceVerdict {
+    let raw: string;
+    try {
+        raw = fs.readFileSync(path.join(root, CONFORMANCE_REL), 'utf-8');
+    } catch {
+        return {
+            noteworthy: false,
+            line: 'ui-conformance: absent — no probe artefact for this change (run `ui_conformance_probe --target <file> --reference <file>`). Absent is not clean.',
+        };
+    }
+    try {
+        const a = JSON.parse(raw) as {
+            structure_gate?: string;
+            dimensions?: { dimension: string; status: string; findings: number | null; reason?: string }[];
+            findings?: unknown[];
+        };
+        const rows = a.dimensions ?? [];
+        const exercised = rows.filter((r) => r.status === 'exercised');
+        const notApplicable = rows.filter((r) => r.status !== 'exercised');
+        const counts = exercised.map((r) => `${r.dimension}=${r.findings}`).join(' ');
+        const parts = [
+            `ui-conformance: ${(a.findings ?? []).length} behavioural finding(s) — ${counts || 'no dimension exercised'}`,
+        ];
+        if (notApplicable.length) {
+            parts.push(
+                `  · not applicable: ${notApplicable
+                    .map((r) => `${r.dimension} (${r.reason ?? 'no reason given'})`)
+                    .join('; ')}`,
+            );
+        }
+        if (a.structure_gate === 'stopped') {
+            parts.push('  · structure gate stopped on at least one node — style comparison was skipped for it');
+        }
+        parts.push('  (shadow verdict: reported, never enforced — this pass does not block on it)');
+        return {
+            noteworthy: (a.findings ?? []).length > 0 || a.structure_gate === 'stopped' || notApplicable.length > 0,
+            line: parts.join('\n'),
+        };
+    } catch {
+        return {
+            noteworthy: true,
+            line: 'ui-conformance: unreadable — the artefact exists but did not parse. Reported rather than ignored.',
+        };
+    }
+}
 
 /**
  * E2.2 — is the audit artefact newer than the target?
@@ -252,7 +324,7 @@ export function targetPath(payload: unknown): string | null {
     return null;
 }
 
-export function render(result: PassResult): string {
+export function render(result: PassResult, conformance?: string): string {
     const lines: string[] = [];
     if (result.blocked.length) {
         lines.push(
@@ -272,6 +344,9 @@ export function render(result: PassResult): string {
         lines.push(`  · no ui-audit.json newer than ${m} — run \`agent-config ui:audit <path>\``);
     lines.push(`verification: ${result.verification}`);
     if (result.degradation_reason) lines.push(`degradation_reason: ${result.degradation_reason}`);
+    // Appended last and never consulted above: the conformance verdict is a
+    // report, not an input to any decision this pass makes.
+    if (conformance) lines.push(conformance);
     return lines.join('\n');
 }
 
@@ -338,11 +413,22 @@ function main(): number {
     if (slot === 'stop') state.touched = [];
     writeState(root, state);
 
-    if (!result.findings.length && !result.audit_missing.length && result.verification === 'verified') {
+    // Shadow mount. The verdict can make the pass SPEAK when it would otherwise
+    // be silent — a behavioural finding is exactly the thing no static scan can
+    // see — but it cannot make it refuse. `result.blocked` above is computed
+    // without it and the exit code below is unchanged.
+    const conformance = conformanceVerdict(root);
+
+    if (
+        !result.findings.length &&
+        !result.audit_missing.length &&
+        result.verification === 'verified' &&
+        !conformance.noteworthy
+    ) {
         return EXIT_ALLOW;
     }
 
-    process.stdout.write(`${JSON.stringify({ reason: render(result) })}\n`);
+    process.stdout.write(`${JSON.stringify({ reason: render(result, conformance.line) })}\n`);
     // Deliberately EXIT_WARN even with a P0 verdict. EXIT_BLOCK is unreachable
     // for an advisory concern (the dispatcher downgrades it), so returning it
     // would claim a refusal the transport discards.
