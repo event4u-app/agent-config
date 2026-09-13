@@ -234,7 +234,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified:
 
 ### claim: published-artifact-counts
-- claim: Every artifact count this package publishes about itself — the six badge integers for skills, rules, commands, guidelines, personas and advisors — is re-derived from the tree by one canonical counter rather than hand-typed, and a drift of even one fails CI. Measured 2026-08-26 via that counter: skills 299, rules 120, commands 202 (recursive; 61 top-level), guidelines 114, personas 29 (README excluded), advisors 5. The counting BASIS differs per noun and is not inferable from the directory the badge links to — `commands` counts recursively while the linked directory holds 61 top-level files, and `rules` counts the 120 source rules while the linked projection holds 119 because one dormant rule is not projected. Both bases are stated next to the badge block, because an undeclared basis is not a wrong number but an unreadable one.
+- claim: Every artifact count this package publishes about itself — the six badge integers for skills, rules, commands, guidelines, personas and advisors — is re-derived from the tree by one canonical counter rather than hand-typed, and a drift of even one fails CI. Measured 2026-09-13 via that counter: skills 299, rules 121, commands 202 (recursive; 61 top-level), guidelines 121, personas 29 (README excluded), advisors 5. The counting BASIS differs per noun and is not inferable from the directory the badge links to — `commands` counts recursively while the linked directory holds 61 top-level files, and `rules` counts the 121 source rules while the linked projection holds 120 because one dormant rule is not projected. Both bases are stated next to the badge block, because an undeclared basis is not a wrong number but an unreadable one.
 - kind: quant
 - evidence: exec:update_counts --check -> 0
 - non_inference: These six integers count FILES AND DIRECTORIES, and license nothing about quality, activation, or reach. A skill in the 299 may never have been loaded by any session; the activation rate is separately measured and is near zero — the measurement is `skill-activation-census-zero` below, which reads it at exactly zero over the store it scans rather than near it. `commands 202` counts every command file recursively, including deprecation shims where any exist, and is NOT a count of distinct user-facing verbs — the top-level figure for that is 61. `rules 120` counts source rules, of which one is dormant and reaches no consumer, so it is not a count of rules in force. `personas 29` counts lens files, not lenses ever used in a review. None of the six is a measure of coverage, correctness, or adoption, and a rise in any of them is a rise in artifact count only.
@@ -398,7 +398,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified: 2026-07-08
 
 ### claim: rule-count
-- claim: 120 governed rules.
+- claim: 121 governed rules.
 - kind: quant
 - evidence: exec:check_artefact_count_messaging -> 0
 - status: backed

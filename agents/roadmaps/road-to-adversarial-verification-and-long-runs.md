@@ -145,7 +145,7 @@ before the record is signed.
 
 ## Phase 1 — Test-first, thin
 
-- [ ] **1.1 A thin always-loaded rule over the existing skill.** `src/rules/test-first.md`,
+- [x] **1.1 A thin always-loaded rule over the existing skill.** `src/rules/test-first.md`,
       under 40 lines, activating `test-driven-development`. Obligations: a behaviour change
       gets a failing test first where a test is meaningful; a bug gets a reproducing regression
       test first; uncertain legacy gets a characterisation test; the test must fail for the
@@ -157,6 +157,22 @@ before the record is signed.
       `./scripts-run src/scripts/check_always_budget` is green; and the rule carries no
       carve-out excluding AC on the ground that the edited artefact is markdown when its
       routing or lint behaviour is testable.
+      <!-- landed 2026-09-13 at exactly 40 lines. **Delivered on every turn, and NOT via
+      `type: always` — a measurement, not a preference.** `check_always_budget` reads the
+      `type: always` set, which is the locked nine-rule kernel (`_lib/kernel_rules.ts`), and
+      its extended dimension stood at 60,195 / 60,254 chars — 59 chars of headroom on a
+      ratchet whose own output says it may only move DOWN. A tenth always-rule of any useful
+      size is therefore arithmetically impossible without either a kernel-membership decision
+      no agent takes or a ratchet raise the gate forbids.
+      The rule ships as a TRIGGER-LESS `auto` rule instead, which `project_thin_rules.ts`
+      keeps full-bodied and never thins (its D3 branch) — so it is delivered in full on every
+      host, every turn, and is counted by `check_standing_rule_delivery` (the budget for
+      prose that is actually delivered) rather than being invisible to both. That the D3
+      branch fires for it is not inferred: `generate-tools` names the file in its own output.
+      One trap worth recording — a rule ABSENT from `dist/router.json` is thinned regardless
+      of its triggers, so `compile_router` must run before `generate-tools` or the first
+      projection is a two-line stub. -->
+      <!-- verify: npm run test:ts -- tests/e2e/adversarial-verification-fixtures.test.ts -->
 
 ## Phase 2 — Tests by someone else
 
