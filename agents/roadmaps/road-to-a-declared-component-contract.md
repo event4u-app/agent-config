@@ -199,7 +199,7 @@ exists to prevent.
   named, or the axis change is refused.
 
 ### blocker: workshop-tool-names-are-unverified
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Class:** 3 — human-only
 - **Blocks:** the "immediately mergeable" tool-name correction the source proposes, wherever it
@@ -218,6 +218,38 @@ exists to prevent.
   quo and is visible rather than silently wrong.
 - **Resolved when:** the names are confirmed against a real installation, or the skills say the
   names are unverified as of a date.
+- **Resolution (2026-09-13) — option (a), re-derived from a throwaway installation.** Not from
+  the inbox file and not from the source's replacements, neither of which was adopted. Three
+  `npm install` runs into a scratch directory, and the names read off the registration site in
+  the installed code:
+
+  | Installed | Docs tool names | Where they come from |
+  |---|---|---|
+  | `@storybook/addon-mcp@0.7.0` + `@storybook/mcp@0.8.0` | `list-all-documentation`, `get-documentation`, `get-documentation-for-story` | string literals, `@storybook/mcp/dist/index.js:891,1045,963` |
+  | `@storybook/addon-mcp@10.6.0` + `storybook@10.6.0` (current `latest`) | `docs-list`, `docs-show`, `docs-show-story` | `createDocsToolset` method ids `docs.list` / `docs.show` / `docs.showStory`, rendered by `toMcpToolName` from `storybook/open-service` |
+
+  So the staleness claim is **confirmed**, and the mechanism is a rename of the registration
+  path rather than of a literal: at 10.6.0 the old names survive only as the tools'
+  human-readable titles (`List All Documentation`, `Get Documentation`) and in the addon's
+  CHANGELOG. `toMcpToolName` was executed against the installed module rather than
+  reimplemented — `docs.list -> docs-list`, `docs.show -> docs-show`,
+  `docs.showStory -> docs-show-story`.
+
+  **Version boundary, which the source did not carry:** `@storybook/addon-mcp` has no 10.5.x
+  release at all — `npm view` lists `… 0.6.0, 0.7.0, 10.6.0-alpha.4 … 10.6.0`. The
+  `tests/fixtures/stack/storybook-current/` scaffold pins the addon at `latest`, so a project on
+  the current scaffold resolves 10.6.0 and gets the `docs-*` names. There is no supported
+  version in between for the skills to straddle.
+
+  **Landed:** three occurrences corrected across `src/skills/existing-ui-audit/SKILL.md` and
+  `src/skills/storybook-workshop/SKILL.md`, with the derivation, its date and the version
+  boundary recorded at the audit skill's § 4b and cross-referenced rather than duplicated. The
+  paragraph states that a live `tools/list` wins over it, so the next reader re-derives instead
+  of trusting a date.
+
+  **What this does NOT resolve:** the React-only-in-preview statement and the `docs 10.5` FAQ
+  citation next to it were not re-derived and are untouched. They are a separate claim about the
+  same external system; correcting the tool names does not license adopting them.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-11 | reviewer: claude/host -->
