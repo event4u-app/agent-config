@@ -127,11 +127,14 @@ nothing since has been able to notice.
 
 ## Phase 2 — Dispose of the two open instances
 
-- [ ] **2.1 `rejectedTacticRepeat` gets a consumer, an expiry-bearing exception, or a deletion
+- [x] **2.1 `rejectedTacticRepeat` gets a consumer, an expiry-bearing exception, or a deletion
       proposal.** It sits at `src/scripts/_lib/loop_guards.ts:274` with test-only callers.
       verify: `grep -c rejectedTacticRepeat src/scripts` is greater than 1, or the inventory
       entry carries `status: experimental` with a future `expires:`.
-- [ ] **2.2 `compareTriggers` / `earlierArm` likewise.** `corrected-from-reproduction` — the
+      <!-- Path taken: the expiry-bearing exception, `expires: 2026-12-12` in
+           src/config/loop-surfaces.yaml. This DEFERS the disposition with a date; it does not
+           settle it. See the blocker note below for what that does and does not decide. -->
+- [x] **2.2 `compareTriggers` / `earlierArm` likewise.** `corrected-from-reproduction` — the
       source's own step said to *evaluate* this shadow comparison, and the newest plan revision
       cites it as evidence that a measurement is already running. It is not running: there is no
       production importer, and the only mention in `src/` is a prose comment in
@@ -139,7 +142,23 @@ nothing since has been able to notice.
       verify: the three flags `--watermark-step`, `--saturation-step` and `--trigger-arm-earlier`
       in `src/scripts/orchestration_record.ts:177-179` either have a caller that computes their
       values, or are removed.
-- [ ] **2.3 Correct the step status that claims otherwise.**
+      <!-- REMOVED, and "wire it before evaluating it" was tested first and found closed.
+           `compareTriggers` needs `StepObservation[]` — per-step token counts AND per-step
+           surfaced terms. No payload this tree has observed carries either, and
+           subagent_ledger_hook.ts:519 records the tree's own refusal to invent a proxy, citing
+           this exact module: "inventing a proxy is the move capsule_trigger.ts refuses".
+           So the only honest branch of the verify line was removal. Gone from
+           src/scripts/orchestration_record.ts (3 flags + the now-orphaned TriggerArm import + the
+           usage docstring) and src/scripts/_lib/orchestration_record.ts (the TriggerArm type, the
+           three RecordInput fields, TRIGGER_ARMS, the two validation branches, the three emit
+           defaults). Blast radius measured first: zero readers in src/, no test asserts on the
+           three fields, and tests/fixtures/audit-log/skills-applied-real-emission.jsonl is a
+           2026-08-30 RECORDING asserted only on schema_version / skills_applied / privacy_class —
+           left untouched, because editing a record of what was emitted then would falsify it.
+           53/53 tests green across _lib_orchestration_record and _lib_capsule_trigger.
+           The instrument itself is not deleted — it is tested, correct, and waiting on an input
+           source — so it is declared `status: experimental` with `expires: 2026-12-12`. -->
+- [x] **2.3 Correct the step status that claims otherwise.**
       `agents/roadmaps/later/road-to-worker-generation-recycling.md` marks its trigger-comparison
       step `[x]` while the comparison has no consumer.
       verify: that step reads its true state and carries a dated correction line naming what was
@@ -201,9 +220,28 @@ nothing since has been able to notice.
   `./scripts-run src/scripts/check_gate_reachability` reads it.
 
 ### blocker: dead-instrument-disposition
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
-- **Class:** 3 — human-only
+- **Class:** 3 — human-only (label KEPT; see below — it was not tested and found wanting)
+- **What was and was not decided, 2026-09-13.** Its own **Resolved when** is "AC-4 is satisfied on
+  any one of the three paths", and AC-4 is now satisfied on the middle path: `rejectedTacticRepeat`
+  carries `status: experimental` with `expires: 2026-12-12` in `src/config/loop-surfaces.yaml`.
+  That is the blocker's own **Recommendation**, and it is the only one of the three options that is
+  agent-takeable on this tree's own rules. The other two are not, and the asymmetry is the reason
+  the `Class: 3` label survives here while the Phase-0 one did not:
+  - **Wiring** would give the continuation hook a new refusal rung before that hook has
+    demonstrably engaged more than once — a behaviour change to a blocking surface, made on
+    absent evidence. Risk 2 of this roadmap argues against it in its own words.
+  - **Removal** is destructive, and the instrument is tested, correct, and waiting on an input
+    source rather than wrong.
+  - **An expiry-dated exemption** changes no behaviour, deletes nothing, and is reversible by
+    editing one YAML row.
+  So this is a DEFERRAL WITH A DATE, not a disposition. The owner's question is unchanged and
+  comes back on 2026-12-12, when `check_gate_reachability --gate` reds on the lapsed exemption —
+  which is precisely what the `expires:` field was built for in Phase 1.3. The evidence it is
+  waiting on is parked at `agents/roadmaps/later/road-to-run-continuation-observation.md`; if that
+  observation is still unresumed at the expiry, moving the date with a stated reason in `note:` is
+  a legitimate answer and dropping the deadline is not.
 - **Blocks:** Phase 2.1 only. Phases 0, 1 and 3 proceed without it.
 - **What to do:** decide whether `rejectedTacticRepeat` is wired, declared experimental with an
   expiry, or removed. Read `sed -n '232,299p' src/scripts/_lib/loop_guards.ts` against

@@ -146,14 +146,35 @@ with an honest-null exit.
 - [x] 1.2 Shadow only — the capsule is logged, the worker still runs to
       stop-loss. No behaviour change, so the measurement is not confounded by
       the mechanism it is measuring.
-      <!-- orchestration_record: capsule_emitted, capsule_entries,
-           watermark_step, saturation_step, trigger_arm_earlier — counts and
-           enums only, a capsule's content never reaches telemetry. -->
-- [x] 1.3 Second trigger arm, same instrument: novelty-per-step saturation
+      <!-- orchestration_record: capsule_emitted, capsule_entries — counts and
+           enums only, a capsule's content never reaches telemetry.
+           The three trigger-comparison fields this comment used to list were
+           removed on 2026-09-13; see the correction under 1.3. -->
+- [ ] 1.3 Second trigger arm, same instrument: novelty-per-step saturation
       (term-frequency, no embeddings). Log the step at which each trigger WOULD
       have fired. The hypothesis is that a worker near budget should have
       stopped earlier, not summarised harder.
       <!-- verify: npx vitest run tests/scripts/_lib_capsule_trigger.test.ts -->
+      <!-- CORRECTED 2026-09-13 from [x] to [ ], by road-to-reachable-loop-instruments 2.3.
+           The arm is BUILT and TESTED; it is not LOGGING, and this step asks for the log.
+           Found on 2026-09-11 and reproduced on 2026-09-13:
+             grep -rho '\bcompareTriggers\b' src/ | wc -l  →  1
+             grep -rho '\bearlierArm\b'      src/ | wc -l  →  1
+           Each appears in `src/` exactly once — its own declaration in
+           `_lib/capsule_trigger.ts` — with callers only in
+           tests/scripts/_lib_capsule_trigger.test.ts. There is no production importer, and
+           the only other mention anywhere in `src/` is a prose comment at
+           subagent_ledger_hook.ts:519.
+           It is not wireable today, and that is the substantive finding rather than an
+           oversight: `compareTriggers` needs `StepObservation[]` — per-step token counts AND
+           per-step surfaced terms — and no payload this tree has observed carries either.
+           The ledger hook says so in as many words, citing this very module: "inventing a
+           proxy is the move capsule_trigger.ts refuses".
+           The instrument is now declared `status: experimental` with `expires: 2026-12-12`
+           in src/config/loop-surfaces.yaml, so it is a dated deferral rather than dead code
+           wearing a label, and `check_gate_reachability --gate` reds on it once that date
+           passes. Step 1.2's three telemetry fields were removed in the same change: a flag
+           nothing can compute is not a measurement. -->
 - [x] 1.4 Pre-register in `docs/CLAIMS.md` BEFORE any capsule is read: capsule
       quality is scored on a fixed rubric; the 80 %-trigger and the saturation
       trigger are compared on paired samples; a trigger that does not beat the
@@ -203,9 +224,19 @@ first capsule was read, which is the part that had to happen first.
 > **Open on sample size (2026-08-09).** 3.1 asks for ≥ 20 real recycling lines,
 > and there is no recycling yet — Phase 2 is gated. The instrument it will read
 > is in place: `worker-capsule-trigger-arm` is registered with its rubric,
-> margin, and pre-authorised null, and the telemetry fields
-> (`capsule_emitted`, `capsule_entries`, `watermark_step`, `saturation_step`,
-> `trigger_arm_earlier`) are live on the `orchestration_record` line.
+> margin, and pre-authorised null, and the telemetry fields `capsule_emitted`
+> and `capsule_entries` are live on the `orchestration_record` line.
+>
+> **Corrected 2026-09-13** (road-to-reachable-loop-instruments 2.3). This
+> paragraph also listed `watermark_step`, `saturation_step` and
+> `trigger_arm_earlier` as live. They were not: the CLI accepted the three
+> flags and nothing anywhere computed a value for them, so every line ever
+> written carried `null`. "Live" was true of the *field*, never of the
+> *measurement*, and the gap is not closeable from here — the arm needs
+> per-step token counts and per-step surfaced terms, which no payload this tree
+> has observed carries. The three fields were removed rather than left as an
+> unfillable surface; re-adding them is one commit once an observation source
+> exists. `capsule_emitted` / `capsule_entries` are unaffected.
 
 - [ ] 3.1 Accumulate ≥ 20 real recycling lines. Only real use produces them —
       the same sample-size constraint every orchestration claim in this repo
