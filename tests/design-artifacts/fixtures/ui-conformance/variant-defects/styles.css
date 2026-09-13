@@ -1,0 +1,30 @@
+/* Divergent stylesheet. Three of the four planted defects live here or in
+   app.js; each is named in a comment at the point of removal. */
+:root { --brand: rgb(21, 94, 117); --ink: rgb(15, 23, 42); }
+body { margin: 0; font-family: system-ui, sans-serif; color: var(--ink); }
+.card { padding: 24px; max-width: 640px; }
+.toolbar { display: flex; flex-direction: row; align-items: center; gap: 12px; }
+.title { font-size: 20px; margin: 0; }
+.badge { background-color: var(--brand); color: rgb(255, 255, 255); padding: 2px 8px; }
+
+/* DECLARED DEVIATION (not a defect): line-height 24px in the reference, 28px
+   here, recorded in conformance.declared.json. The probe must raise nothing for
+   this one — it is the false-positive control, and a run that reports it has
+   failed the fixture just as surely as one that misses a defect. */
+.body { line-height: 28px; }
+
+.action { background-color: var(--brand); color: rgb(255, 255, 255); border: 0; padding: 8px 16px; }
+
+/* D1 (missing hover colour): the reference carries
+   `.action:hover { background-color: rgb(8, 51, 68); }` here. Deliberately
+   absent — the resting state is unchanged, so no resting screenshot can see it. */
+
+.action:focus-visible { outline: rgb(234, 88, 12) solid 3px; outline-offset: 2px; }
+
+/* D2 (missing narrow-width media rule): the reference carries
+   `@media (max-width: 480px) { .toolbar { flex-direction: column; ... } }` here.
+   Deliberately absent — the toolbar stays in a row below 480px. */
+
+@media (prefers-reduced-motion: reduce) {
+  .action { transition-duration: 0s; }
+}

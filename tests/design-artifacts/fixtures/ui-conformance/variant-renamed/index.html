@@ -1,0 +1,24 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>UI conformance fixture — renamed element</title>
+<link rel="stylesheet" href="styles.css">
+<main class="card" data-probe-id="card">
+  <header class="toolbar" data-probe-id="toolbar">
+    <h1 class="title" data-probe-id="title">Conformance reference</h1>
+    <!-- D5 (renamed element, Phase 0.3): identity only. The reference calls this
+         node `status-badge`; here it is `status-chip`. The class stays `.badge`
+         and the stylesheet is byte-identical to the reference, so the node's
+         computed style is unchanged in every property. This is the case the
+         structure gate must stop at: the probe has no matching node to compare,
+         and inferring one from position would produce style findings against the
+         wrong node. -->
+    <span class="badge" data-probe-id="status-chip">ready</span>
+  </header>
+  <p class="body" data-probe-id="body">
+    The reference implementation. Every planted defect in a sibling variant is a
+    deliberate removal from this file or its stylesheet.
+  </p>
+  <button class="action" data-probe-id="toggle" aria-expanded="false">Toggle details</button>
+  <section class="panel" data-probe-id="panel" hidden>Details panel content.</section>
+</main>
+<script src="app.js"></script>
