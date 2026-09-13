@@ -92,6 +92,25 @@ Each item is quoted exactly as it stands in the parent (where it carries `[-]`).
   `required_approving_review_count >= 1`, and a `required_status_checks` set
   strictly larger than the single consistency gate (i.e. it also contains the
   `Self-review gate` check).
+- **Probe condition 2 is CONDITIONAL on a world that does not exist yet —
+  qualified 2026-09-13, not withdrawn.** An owner ruling of 2026-09-10 removed
+  `minimum_approving_reviews` and `require_last_push_approval` from the platform
+  anchor's expectation and from `NON_NEGOTIABLE_FLOOR`, on the ground that this
+  repository has one active maintainer and a PR author cannot approve their own
+  PR — so a mandatory approving review is a stop rather than a control. Read
+  flatly, `required_approving_review_count >= 1` is now a probe for a state the
+  owner deliberately reversed, and satisfying it today would re-create the
+  2026-09-10 lockout. It is kept because **this stub's subject is precisely the
+  bus-factor world in which that ruling's premise fails**: a second reliably
+  available human is exactly what would make the probe meaningful again. So it
+  stands as an acceptance condition for *this* work, not as a standing
+  recommendation, and it must not be lifted out of this file and acted on. If
+  the single-operator model ends, re-open the ruling before re-adding the
+  setting. Third clause updated on the same reading: the required set is now two
+  contexts (`Standing payload delta + budget gate` joined 2026-09-11), so
+  "strictly larger than the single consistency gate" is satisfied by a context
+  that is not `Self-review gate` — the parenthetical, not the comparison, is
+  what the probe actually means.
 - **Baseline 2026-08-20** (read-only `gh api repos/event4u-app/agent-config/rulesets/17749383`):
   ruleset active, `updated_at` 2026-06-16, applying to `~DEFAULT_BRANCH`;
   `require_code_owner_review: false`; `required_approving_review_count: 0`;

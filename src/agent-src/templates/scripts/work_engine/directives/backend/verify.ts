@@ -201,6 +201,7 @@ function _blocked_on_bad_verdict(state: DeliveryState, verdict: Any): StepResult
         decision,
         unmet: unmet_dod(state),
         rerun_directive: 'review-changes',
+        state,
     });
 }
 

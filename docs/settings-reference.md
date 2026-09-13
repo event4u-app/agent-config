@@ -112,6 +112,14 @@ explanation lives now that the file no longer carries it as comments.
 | `decision_engine.require_memory_hits` | C | boolean | `false` |  | During Phase=Refine, require at least one relevant memory hit (skill, ADR, past decision) before the agent proceeds. Off by default; turn on for highly conventional codebases where memory should always inform decisions. |
 | `decision_engine.surface_traces` | C | boolean | `false` |  | Emit DecisionTraceHook events that surface why the agent picked one option over another. Useful when debugging unexpected choices; off by default to keep chat noise low. |
 
+## delivery
+
+| Key | Class | Type | Default | Allowed values | What it does |
+|---|---|---|---|---|---|
+| `delivery.merge` | C | string | `"off"` | `off` · `on-green` | Whether a run may merge the pull request it produced. off (default) = the run ends at mergeable-green-and-open and says so. on-green = merge is permitted, and only when an object-bound grant covering {op: prod_merge, target: <base>} exists and the final head is required-check-green, target-current and tamper-checked. This key is a precondition, never the authorisation by itself; forge auto-merge is the mechanism, so branch protection stays the gate. |
+| `delivery.pr_topology` | C | string | `"single"` | `single` · `stacked` | How a mission's work is shaped into pull requests. single (default) = one branch, one pull request. stacked = a dependent series. stacked is never chosen by the agent and never asked about at roadmap creation — the owner plans it or it does not happen. |
+| `delivery.wait_for_ci` | C | boolean | `true` |  | Whether the run stays alive until the required checks settle. true (default) = the run drives CI and reports the settled verdict. false = the run ends once the branch is pushed and the PR is open, leaving the checks to be read later. Independent of merge: a run may wait for CI without being allowed to merge. |
+
 ## design
 
 | Key | Class | Type | Default | Allowed values | What it does |

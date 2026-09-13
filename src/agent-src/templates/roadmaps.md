@@ -231,6 +231,32 @@ that was never a judgement call.
     edge source stays the single one already defined above; `relates:` never
     becomes a second dependency source.
 
+    **Sibling block, same frontmatter — `delivery:`.** Optional, and unlike
+    `execution:` it describes what happens to the BRANCH rather than to the
+    run's interaction pattern:
+
+    ```yaml
+    delivery:
+      pr_topology: stacked      # single (default) | stacked
+    ```
+
+    `pr_topology: stacked` declares a dependent series of pull requests. It is
+    a plan the owner writes before execution and is **never** chosen by the
+    agent and never asked about at roadmap creation — see the `delivery:` block
+    in `agent-settings.template.yml`, where all three keys are Class C for that
+    reason. A roadmap declaring `stacked` owes a `## PR plan` section naming
+    the series and the order; `single` owes nothing, which is why it is the
+    default.
+
+    **Not yet a live override, and this is the honest state rather than an
+    omission.** `load_agent_settings` has four layers and none of them is a
+    roadmap, so a `delivery:` block here is read by no code today. It is
+    documented now because the key it mirrors is Class C — the owner has to
+    have a place to write the plan that is not an agent-writable setting — and
+    the cascade layer that would read it is scheduled by ADR-268, not yet
+    built. Until it is, treat a `delivery:` block here as a note to the next
+    human reader rather than as configuration.
+
     An explicit `relates: []` is a complete answer and the common one, but only
     when it carries the probe's `scanned:` line as its justification:
 

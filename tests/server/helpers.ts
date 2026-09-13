@@ -105,7 +105,7 @@ export function fixtureSettings(overlay: Record<string, unknown> = {}): Record<s
         // every diff shows a to-less removal entry for it.
         discipline_profile: 'essential',
         cost: { budgets: {}, enforcement: 'advisory' },
-        personal: {}, project: {}, github: {}, augment: {}, eloquent: {},
+        personal: {}, project: {}, github: {}, delivery: {}, augment: {}, eloquent: {},
         chat_history: { text_limits: {} }, pipelines: {}, roadmap: {},
         quality: {}, subagents: {}, worktrees: {}, onboarding: {},
         commands: { suggestion: {}, create_pr: {} }, continuity: {}, memory: {},

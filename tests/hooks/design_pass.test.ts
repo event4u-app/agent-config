@@ -7,9 +7,13 @@
  * So "P1-P3 never block" is tested on both slots, in both directions.
  */
 import { describe, expect, it } from 'vitest';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 
 import {
     P0_FLOOR_IDS,
+    conformanceVerdict,
     decide,
     isUiSurface,
     isUiTrivial,
@@ -158,5 +162,83 @@ describe('payload extraction tolerates host key variance', () => {
     it('returns null when no path key is present', () => {
         expect(targetPath({ tool_input: { content: 'x' } })).toBeNull();
         expect(targetPath(null)).toBeNull();
+    });
+});
+
+describe('the ui-conformance shadow mount', () => {
+    const emptyRoot = (): string => fs.mkdtempSync(path.join(os.tmpdir(), 'design-pass-'));
+    const withArtefact = (body: unknown): string => {
+        const dir = emptyRoot();
+        const state = path.join(dir, 'agents', 'runtime', 'state');
+        fs.mkdirSync(state, { recursive: true });
+        fs.writeFileSync(
+            path.join(state, 'ui-conformance.json'),
+            typeof body === 'string' ? body : JSON.stringify(body),
+        );
+        return dir;
+    };
+
+    it('reports an absent artefact as absent, and does not speak up on its own', () => {
+        // 5.2, second half: a run without the lane present completes with no error.
+        const v = conformanceVerdict(emptyRoot());
+        expect(v.line).toMatch(/absent/);
+        expect(v.line).toMatch(/Absent is not clean/);
+        // Risk 1: a line on every clean UI write in a repository that never runs
+        // the probe is the noise that gets a carrier switched off for good.
+        expect(v.noteworthy).toBe(false);
+    });
+
+    it('surfaces behavioural findings the static pass cannot see', () => {
+        const v = conformanceVerdict(
+            withArtefact({
+                structure_gate: 'passed',
+                findings: [{ dimension: 'interaction' }, { dimension: 'viewport_matrix' }],
+                dimensions: [
+                    { dimension: 'interaction', status: 'exercised', findings: 1 },
+                    { dimension: 'viewport_matrix', status: 'exercised', findings: 1 },
+                ],
+            }),
+        );
+        expect(v.noteworthy).toBe(true);
+        expect(v.line).toMatch(/2 behavioural finding/);
+        expect(v.line).toMatch(/never enforced/);
+    });
+
+    it('carries a not-applicable row with its reason rather than a zero', () => {
+        const v = conformanceVerdict(
+            withArtefact({
+                structure_gate: 'passed',
+                findings: [],
+                dimensions: [
+                    {
+                        dimension: 'interaction',
+                        status: 'not_applicable',
+                        findings: null,
+                        reason: 'no browser binary',
+                    },
+                ],
+            }),
+        );
+        expect(v.line).toMatch(/not applicable: interaction \(no browser binary\)/);
+        expect(v.line).not.toMatch(/interaction=0/);
+    });
+
+    it('reports an unreadable artefact rather than ignoring it', () => {
+        const v = conformanceVerdict(withArtefact('{ not json'));
+        expect(v.noteworthy).toBe(true);
+        expect(v.line).toMatch(/unreadable/);
+    });
+
+    it('appends the verdict to the render without reaching any decision', () => {
+        // 5.2, first half: the block path stays unreachable. The verdict renders
+        // alongside a P0 stop verdict and changes neither `blocked` nor anything
+        // the severity contract is written against.
+        const result = decide('stop', [f('P0')], [], none, true);
+        const text = render(result, 'ui-conformance: 3 behavioural finding(s)');
+        expect(text).toMatch(/ui-conformance: 3 behavioural finding/);
+        expect(result.blocked).toHaveLength(1);
+        expect(text.indexOf('ui-conformance')).toBeGreaterThan(text.indexOf('verification:'));
+        // And it is strictly opt-in at the call site: no verdict, no line.
+        expect(render(result).includes('ui-conformance')).toBe(false);
     });
 });

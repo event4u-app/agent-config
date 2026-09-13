@@ -397,6 +397,17 @@ before the record is signed.
   and both seats corrected it. openai: *"Adding it here without an explicit council re-scope
   silently changes the gate."* So: read them together, resolve them separately.
 
+  **UPDATE 2026-09-13 — both named criteria are gone, and the separation this bullet argues
+  for survives it.** Independent approval is no longer one of the anchor's criteria at all:
+  an owner ruling of 2026-09-10 removed `minimum_approving_reviews` and
+  `require_last_push_approval` from the expectation and from `NON_NEGOTIABLE_FLOOR`. The
+  unconditional `RepositoryRole` bypass was removed the same day (`bypass_actors: []`,
+  `current_user_can_bypass: never`, re-measured 2026-09-13). `check_platform_anchor` now
+  reports `PASS_WITH_ACCEPTED_RISK` and exits 0, so the "one admin session would move both"
+  premise is spent — there is no anchor settings change left to make. The conclusion is
+  unchanged and now easier to honour: these are still different gates, and this one's five
+  `forge_protection` rows are unaffected by any of the above.
+
 ### blocker: daemon-host-kill-switch
 - **Status:** open
 - **Owner:** maintainer

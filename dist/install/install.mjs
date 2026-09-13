@@ -15604,6 +15604,8 @@ var leanProjectionHost = external_exports.enum(["claude-code", "cursor", "cline"
 var projectionMode = external_exports.enum(["legacy-all", "scoped"]);
 var memoryCadence = external_exports.enum(["auto", "always", "never"]);
 var projectAudience = external_exports.enum(["self", "internal", "client", "public"]);
+var deliveryMerge = external_exports.enum(["off", "on-green"]);
+var prTopology = external_exports.enum(["single", "stacked"]);
 var settingsSchema = external_exports.object({
   agent_config_version: external_exports.string().default("").describe(
     'Pin the package to an exact semver (e.g. "1.4.2") so all teammates load the same skill / rule set. Leave empty to track whatever is installed locally \u2014 useful for the maintainers of this package, risky for production projects.'
@@ -15719,6 +15721,17 @@ var settingsSchema = external_exports.object({
   github: external_exports.object({
     pr_reply_method: replyMethod.default("create_review_comment").describe(
       "How the agent replies to PR review comments. create_review_comment = post a new review comment (works on every GitHub plan). replies_endpoint = thread the reply under the original comment (needs the newer REST endpoint). auto = detect at runtime, prefer threaded replies when available."
+    )
+  }),
+  delivery: external_exports.object({
+    merge: deliveryMerge.default("off").describe(
+      "Whether a run may merge the pull request it produced. off (default) = the run ends at mergeable-green-and-open and says so. on-green = merge is permitted, and only when an object-bound grant covering {op: prod_merge, target: <base>} exists and the final head is required-check-green, target-current and tamper-checked. This key is a precondition, never the authorisation by itself; forge auto-merge is the mechanism, so branch protection stays the gate."
+    ),
+    wait_for_ci: external_exports.boolean().default(true).describe(
+      "Whether the run stays alive until the required checks settle. true (default) = the run drives CI and reports the settled verdict. false = the run ends once the branch is pushed and the PR is open, leaving the checks to be read later. Independent of merge: a run may wait for CI without being allowed to merge."
+    ),
+    pr_topology: prTopology.default("single").describe(
+      "How a mission's work is shaped into pull requests. single (default) = one branch, one pull request. stacked = a dependent series. stacked is never chosen by the agent and never asked about at roadmap creation \u2014 the owner plans it or it does not happen."
     )
   }),
   augment: external_exports.object({

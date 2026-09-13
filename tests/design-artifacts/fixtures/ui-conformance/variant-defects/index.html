@@ -1,0 +1,20 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>UI conformance fixture — four planted defects</title>
+<link rel="stylesheet" href="styles.css">
+<main class="card" data-probe-id="card">
+  <header class="toolbar" data-probe-id="toolbar">
+    <h1 class="title" data-probe-id="title">Conformance reference</h1>
+    <!-- D4 (missing element): the reference carries
+         <span class="badge" data-probe-id="status-badge">ready</span> here. It is
+         deliberately absent. This is the one planted defect a pixel comparison
+         is pre-registered to catch on the resting state. -->
+  </header>
+  <p class="body" data-probe-id="body">
+    The reference implementation. Every planted defect in a sibling variant is a
+    deliberate removal from this file or its stylesheet.
+  </p>
+  <button class="action" data-probe-id="toggle" aria-expanded="false">Toggle details</button>
+  <section class="panel" data-probe-id="panel" hidden>Details panel content.</section>
+</main>
+<script src="app.js"></script>

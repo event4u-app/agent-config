@@ -36,6 +36,8 @@ const leanProjectionHost = z.enum(['claude-code', 'cursor', 'cline']);
 const projectionMode = z.enum(['legacy-all', 'scoped']);
 const memoryCadence = z.enum(['auto', 'always', 'never']);
 const projectAudience = z.enum(['self', 'internal', 'client', 'public']);
+const deliveryMerge = z.enum(['off', 'on-green']);
+const prTopology = z.enum(['single', 'stacked']);
 
 export const settingsSchema = z.object({
     agent_config_version: z.string().default('').describe(
@@ -159,6 +161,17 @@ export const settingsSchema = z.object({
     github: z.object({
         pr_reply_method: replyMethod.default('create_review_comment').describe(
             'How the agent replies to PR review comments. create_review_comment = post a new review comment (works on every GitHub plan). replies_endpoint = thread the reply under the original comment (needs the newer REST endpoint). auto = detect at runtime, prefer threaded replies when available.',
+        ),
+    }),
+    delivery: z.object({
+        merge: deliveryMerge.default('off').describe(
+            'Whether a run may merge the pull request it produced. off (default) = the run ends at mergeable-green-and-open and says so. on-green = merge is permitted, and only when an object-bound grant covering {op: prod_merge, target: <base>} exists and the final head is required-check-green, target-current and tamper-checked. This key is a precondition, never the authorisation by itself; forge auto-merge is the mechanism, so branch protection stays the gate.',
+        ),
+        wait_for_ci: z.boolean().default(true).describe(
+            'Whether the run stays alive until the required checks settle. true (default) = the run drives CI and reports the settled verdict. false = the run ends once the branch is pushed and the PR is open, leaving the checks to be read later. Independent of merge: a run may wait for CI without being allowed to merge.',
+        ),
+        pr_topology: prTopology.default('single').describe(
+            'How a mission\'s work is shaped into pull requests. single (default) = one branch, one pull request. stacked = a dependent series. stacked is never chosen by the agent and never asked about at roadmap creation — the owner plans it or it does not happen.',
         ),
     }),
     augment: z.object({
