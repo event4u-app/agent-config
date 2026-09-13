@@ -415,6 +415,13 @@
             "reason": "UI audit output. Analysis result."
         },
         {
+            "id": "ui-conformance.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/hooks/design_pass_hook.ts:68",
+            "reason": "Behavioural-conformance probe output. Analysis result, on the same footing as its `ui-audit.json` neighbour: keyed on a target path rather than a session, consumed by the design pass as a shadow verdict, and never read by a successor session to resume anything."
+        },
+        {
             "id": "ui-route-nudge.json",
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",
