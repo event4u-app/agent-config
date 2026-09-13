@@ -114,6 +114,10 @@ import {
     resolve_project_root,
     type TraceRecord,
 } from '../_lib/agent_settings.js';
+import {
+    executionPostureFromOverrides,
+    resolveExecutionPosture,
+} from '../../shared/missionExecution.js';
 import * as ai_council_clients from '../ai_council/clients.js';
 import * as ai_council_config from '../ai_council/config.js';
 import {
@@ -3058,6 +3062,35 @@ function _run_no_manifest(
     return bridge_present ? 0 : 2;
 }
 
+/**
+ * The `execution` block of `doctor --json` — the loop bound and its ladder.
+ *
+ * `owner_owned_check` appears here as the ladder's last rung rather than as a
+ * separate field, because it is not a separate switch: it is the rung that
+ * decides whether the residue is owner-owned at all, and lifting it out would
+ * suggest it can be toggled independently of the order it sits in.
+ *
+ * A settings read that throws yields the defaults rather than propagating — a
+ * diagnostic that cannot report because its own input is malformed is the one
+ * shape `doctor` must never take.
+ */
+function _execution_json(project_root: string): Dict {
+    let posture;
+    try {
+        posture = executionPostureFromOverrides(
+            iter_setting_overrides({ cwd: project_root }) as Iterable<
+                readonly [string, unknown, string]
+            >,
+        );
+    } catch {
+        posture = resolveExecutionPosture({});
+    }
+    return {
+        fix_loop_max: posture.fix_loop_max,
+        escalation: [...posture.escalation],
+    };
+}
+
 function _emit_json(
     project_root: string,
     missing: Dict[],
@@ -3077,6 +3110,14 @@ function _emit_json(
     if (origin !== null) {
         payload['project_root_origin'] = origin;
     }
+    // `road-to-adversarial-verification-and-long-runs` 0.3. The fix-loop bound
+    // and its escalation ladder ride along UNCONDITIONALLY — not behind
+    // `checks !== null` like `detection` — because they are the answer to "how
+    // long will this run keep trying, and what does it do when it stops", which
+    // a reader needs on the no-manifest path exactly as much as on the manifest
+    // one. Resolved through the shared reader rather than read here, so the
+    // doctor payload and the ladder itself cannot disagree about the default.
+    payload['execution'] = _execution_json(project_root);
     if (checks !== null) {
         payload['checks'] = checks;
         const drift = missing.length + modified.length + foreign.length + tag_drift.length;

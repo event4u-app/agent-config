@@ -112,21 +112,33 @@ saying so rather than pretending.
 
 ## Phase 0 — Quality defaults (may land alone, and first)
 
-- [ ] **0.1 Quality runs under a mission.** `quality.local_auto_run` resolves `true` inside a
+- [x] **0.1 Quality runs under a mission.** `quality.local_auto_run` resolves `true` inside a
       mission and stays `false` for chat without one. The template sentence that justifies the
       current default is rewritten to say which of the two it describes.
       verify: `agent-config settings:get quality.local_auto_run` reports the mission value and
       the file it came from, and `roadmap-ci-steps-policy`'s gate still fires for a full
       pipeline step outside a mission.
-- [ ] **0.2 The quality cadence becomes per-phase.** The template's own *lets errors compound*
+      <!-- landed 2026-09-13: `quality.local_auto_run_in_mission` (C, consent) + the pure
+      resolver in `src/shared/missionExecution.ts`; the mission resolution is a runtime
+      condition, never a settings layer, so `settings:get` reports it as its own line and
+      still names the file for the layered value. The Posture note now says which of the two
+      it describes. `lint_roadmap_ci_steps` reads the unchanged key and still fires. -->
+- [x] **0.2 The quality cadence becomes per-phase.** The template's own *lets errors compound*
       sentence is the argument.
       verify: `agent-config settings:get roadmap.quality_cadence` reports `per_phase`.
-- [ ] **0.3 An `execution:` block for the loop bound and its ladder.** `fix_loop_max`, default
+- [x] **0.3 An `execution:` block for the loop bound and its ladder.** `fix_loop_max`, default
       10, overridable globally, per project and per prompt; `escalation` listing
       `independent`, `council`, `team`, `owner_owned_check` in order. `owner_owned_check` is
       not *ask now* — it asks whether the residue is owner-owned per the ownership table, and
       continues under a new strategy epoch if it is not.
       verify: all three appear in `agent-config doctor --json`.
+      <!-- landed 2026-09-13: `doctor --json` carries `execution.fix_loop_max` and
+      `execution.escalation` unconditionally — not behind the `checks` guard `detection`
+      uses — because the bound is as much a fact on the no-manifest path as on the manifest
+      one. `owner_owned_check` is the ladder's last rung rather than a separate field: it is
+      not an independent switch. -->
+      <!-- verify: ./agent-config doctor --json | grep -A 8 '"execution"' -->
+
 
 **Exit:** Phase 0 is independent of ADR-268 and unblocks every run. It may land as its own PR
 before the record is signed.

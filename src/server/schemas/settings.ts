@@ -238,9 +238,20 @@ export const settingsSchema = z.object({
         // test whose fixture predates the section. With the default, an absent
         // section materialises as the three `true` leaves the contract promises.
         .default({}),
+    execution: z.object({
+        fix_loop_max: z.number().int().min(1).default(10).describe(
+            'Consecutive failed fix attempts against one validation target before the escalation ladder reaches its terminal rung. Reaching the bound triggers a strategy change, never a question. Overridable globally, per project and per prompt.',
+        ),
+        escalation: z.array(z.string()).default(['independent', 'council', 'team', 'owner_owned_check']).describe(
+            'The escalation rungs, in order, walked when the fix-loop bound is reached: independent (another session or a provider-diverse reviewer), council, team, then owner_owned_check — which asks whether the residue is owner-owned, not whether to ask the owner now.',
+        ),
+    }).default({}),
     quality: z.object({
         local_auto_run: z.boolean().default(false).describe(
-            'Run quality tools (linters, type-checks, formatters) and the local test suite autonomously after edits. Off by default — the agent never runs quality tools proactively and does not ask; the user runs them manually (e.g. /quality-fix) and remote CI is the authoritative gate. The agent only runs a quality tool on an explicit ask, a concrete CI failure, or the new-gate carve-out. Turn on to restore autonomous pipeline runs.',
+            'Run quality tools (linters, type-checks, formatters) and the local test suite autonomously after edits, IN CHAT. Off by default — in a chat turn a human is present and remote CI is the authoritative gate, so a local full-pipeline run duplicates it at wall-clock cost. The agent only runs a quality tool on an explicit ask, a concrete CI failure, or the new-gate carve-out. A mission is governed by local_auto_run_in_mission instead.',
+        ),
+        local_auto_run_in_mission: z.boolean().default(true).describe(
+            'Run quality tools autonomously inside a mission — an autonomous roadmap run with a claimed contract. On by default: nobody is waiting, the next action belongs to the agent itself, and a red found twenty steps later costs more than the run that would have caught it at step one. Inert outside a mission, and a mission never lowers local_auto_run: true.',
         ),
     }),
     design: z.object({
