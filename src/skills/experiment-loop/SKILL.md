@@ -91,7 +91,37 @@ twice, leaving the branch one iteration ahead of its own record.
 1. **The register path**, and the iteration count actually run against the bound.
 2. **A metric line**: baseline → final, and the number of keeps versus reverts.
 3. **The exit condition that fired**, named — bound reached, or exit signal.
-4. **Every reverted iteration listed** with its reason. A revert is a result the
+4. **A `run_terminal` value** — the exit in the vocabulary every other loop in
+   this tree reports in, so a reader can count this run's stop alongside the
+   continuation hook's and the self-fix lanes' without a per-surface
+   translation table.
+
+   | exit condition | `run_terminal` |
+   |---|---|
+   | `score >= target` — the run had a destination and reached it | `success` |
+   | `iterations_run >= max_iterations` — the declared bound | `exhausted` |
+   | `consecutive_reverts >= N` — the exit signal fired | `stagnated` |
+   | the evaluator was red on the unchanged tree, so no iteration ran | `clean-no-op` |
+   | the run stopped on a missing precondition (metric unreadable, verifier absent) | `blocked` |
+
+   The value set is `RunTerminalState` — `success`, `clean-no-op`, `blocked`,
+   `approval-required`, `exhausted`, `stagnated`, `premise-invalidated` —
+   declared once at `src/scripts/_lib/outcome_vocabularies.ts`
+   (`RUN_TERMINAL_STATES`) and described in
+   [`terminal-states`](../../agent-src/contexts/execution/terminal-states.md).
+   A new exit condition maps onto an existing member or it is not a terminal
+   state; never invent a value here.
+
+   `exhausted` and `stagnated` stay distinct on purpose. This skill's own pivot
+   ladder already treats them differently — a spent bound may deserve a larger
+   one, while consecutive reverts mean the hypothesis class is done and route to
+   the ladder instead. Reporting both as "stopped" throws away the part that
+   decides what happens next.
+
+   Reaching the bound is a normal exit, not a failure, and `exhausted` does not
+   say otherwise — it says where the run stopped, never whether it was worth
+   running. A published null is still a result.
+5. **Every reverted iteration listed** with its reason. A revert is a result the
    next run needs, not noise to summarise away.
 
 ## Gotcha

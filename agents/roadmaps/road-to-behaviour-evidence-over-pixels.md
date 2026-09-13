@@ -49,58 +49,58 @@ is not that the states are unnamed; it is that nothing can test them.
 
 ## Phase 0 — The sensitivity fixture, before anything is changed
 
-- [ ] **0.1 Build a reference and a deliberately divergent implementation** under a new fixture
+- [x] **0.1 Build a reference and a deliberately divergent implementation** under a new fixture
       directory: one HTML/CSS/JS pair with four planted defects — a missing hover colour, a
       missing narrow-width media rule, a dead click handler, a missing element — plus one
       deviation marked as declared.
       verify: the fixture directory exists and each planted defect is named in a comment beside it,
       so a later reader can tell a defect from a bug in the fixture.
-- [ ] **0.2 Pre-register the screenshot arm's honest null.** Record, before the probe exists, how
+- [x] **0.2 Pre-register the screenshot arm's honest null.** Record, before the probe exists, how
       many of the four a pixel comparison is expected to catch.
       verify: the number is written in the fixture's README before Phase 2 starts, so the
       comparison is a prediction rather than a retrofit.
-- [ ] **0.3 Add a fifth variant that renames an element** without changing its styling.
+- [x] **0.3 Add a fifth variant that renames an element** without changing its styling.
       verify: the variant exists; it is the case the structure gate in Phase 2 must stop at.
 
 ## Phase 1 — Name the new verification primitives
 
-- [ ] **1.1 Add `computed_style`, `interaction`, `viewport_matrix` and `media_emulation` to the
+- [x] **1.1 Add `computed_style`, `interaction`, `viewport_matrix` and `media_emulation` to the
       verification-primitive contract**, each with its host-class row.
       verify: `docs/contracts/design-artifact-verification.md` carries one row per new primitive
       and the class that cannot run it is marked unavailable rather than silently absent.
-- [ ] **1.2 Reuse the existing honest-degrade vocabulary.** A host that cannot run a primitive
+- [x] **1.2 Reuse the existing honest-degrade vocabulary.** A host that cannot run a primitive
       reports that it could not, never zero findings.
       verify: the contract's degrade section covers the four new primitives without introducing a
       second evidence vocabulary.
 
 ## Phase 2 — The probe
 
-- [ ] **2.1 Write `src/scripts/ui_conformance_probe.ts`** as a Playwright consumer with `--target`
+- [x] **2.1 Write `src/scripts/ui_conformance_probe.ts`** as a Playwright consumer with `--target`
       and an optional `--reference`. Structure is gated before style: an unmatched element stops
       the comparison rather than producing style findings against the wrong node.
       verify: run against the Phase 0.3 rename variant and it stops at structure with zero style
       findings.
-- [ ] **2.2 Emit `ui-conformance.json`** with deterministic per-dimension counters, the resolved
+- [x] **2.2 Emit `ui-conformance.json`** with deterministic per-dimension counters, the resolved
       host class, and a mandatory not-applicable row with its reason for every dimension the host
       could not exercise.
       verify: on a host without browser binaries the artefact carries not-applicable rows with
       reasons, and no dimension reads zero findings.
-- [ ] **2.3 No scalar score anywhere in the output.** Counters per dimension, never a percentage
+- [x] **2.3 No scalar score anywhere in the output.** Counters per dimension, never a percentage
       or a fidelity number.
       verify: `grep -nE 'score|percent|%' src/scripts/ui_conformance_probe.ts` finds no emitted
       aggregate.
-- [ ] **2.4 Pass the Phase 0 fixture.** Four of four planted defects found; zero findings raised
+- [x] **2.4 Pass the Phase 0 fixture.** Four of four planted defects found; zero findings raised
       for the declared deviation.
       verify: the fixture test asserts exactly that, and the pre-registered screenshot-arm number
       from 0.2 is recorded beside it.
 
 ## Phase 3 — Contract states in the story set
 
-- [ ] **3.1 Extend the workshop story set** with `Hover`, `Focus`, `Active`, `Keyboard` and
+- [x] **3.1 Extend the workshop story set** with `Hover`, `Focus`, `Active`, `Keyboard` and
       `ReducedMotion`, each asserting a computed style or a handler call rather than an image.
       verify: removing one hover rule from the fixture turns exactly the hover story red and
       nothing else.
-- [ ] **3.2 Add responsive rows** asserting the layout property that changes at each declared
+- [x] **3.2 Add responsive rows** asserting the layout property that changes at each declared
       breakpoint.
       verify: removing one media rule turns exactly the matching breakpoint row red.
 
@@ -120,21 +120,21 @@ is not that the states are unnamed; it is that nothing can test them.
 
 ## Phase 5 — Mount it, in shadow only
 
-- [ ] **5.1 Add the review skill to the review flow** and have the design-pass hook read
+- [x] **5.1 Add the review skill to the review flow** and have the design-pass hook read
       `ui-conformance.json`, emitting a verdict without blocking.
       verify: `./scripts-run src/scripts/lint_flows` stays green, and a fixture run with a planted
       defect produces the verdict in the shadow log.
-- [ ] **5.2 The block path stays unreachable.** This roadmap adds evidence, not enforcement.
+- [x] **5.2 The block path stays unreachable.** This roadmap adds evidence, not enforcement.
       verify: the hook's block branch is unchanged in the diff, and a run without the lane present
       completes with no error.
 
 ## Phase 6 — Measure before promoting anything
 
-- [ ] **6.1 Register the claim** that the probe catches behavioural drift, over the frozen Phase 0
+- [x] **6.1 Register the claim** that the probe catches behavioural drift, over the frozen Phase 0
       fixture, with its false-positive reading.
       verify: `./scripts-run src/scripts/check_claims` is green and the claim row names its
       denominator.
-- [ ] **6.2 Record a null as a first-class outcome.** If the probe's false-positive rate is worse
+- [x] **6.2 Record a null as a first-class outcome.** If the probe's false-positive rate is worse
       than the screenshot arm's miss rate, that is the finding.
       verify: the claim carries a verdict either way, and neither outcome is described as a failure
       of the roadmap.
@@ -196,18 +196,18 @@ is not that the states are unnamed; it is that nothing can test them.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A fixture exists with four planted behavioural defects and one declared deviation,
+- [x] AC-1 — A fixture exists with four planted behavioural defects and one declared deviation,
       and the screenshot arm's expected catch rate was written down before the probe existed.
-- [ ] AC-2 — The probe finds four of four planted defects and raises nothing for the declared
+- [x] AC-2 — The probe finds four of four planted defects and raises nothing for the declared
       deviation.
-- [ ] AC-3 — A renamed element stops the probe at structure with zero style findings.
-- [ ] AC-4 — On a host that cannot run a dimension the artefact says so with a reason; no
+- [x] AC-3 — A renamed element stops the probe at structure with zero style findings.
+- [x] AC-4 — On a host that cannot run a dimension the artefact says so with a reason; no
       dimension ever reads zero findings because it did not run.
-- [ ] AC-5 — The probe emits no scalar score and no coverage percentage.
+- [x] AC-5 — The probe emits no scalar score and no coverage percentage.
 - [ ] AC-6 — The regex over the real screenshot sentence shapes returns nothing in the review
       skill, and that regex matched two lines before the work.
-- [ ] AC-7 — Removing one hover rule turns exactly one story red; removing one media rule turns
+- [x] AC-7 — Removing one hover rule turns exactly one story red; removing one media rule turns
       exactly one breakpoint row red.
-- [ ] AC-8 — The hook's block path is unchanged, and a run without the lane completes cleanly.
-- [ ] AC-9 — The probe's claim carries a verdict measured over the frozen fixture, and a null
+- [x] AC-8 — The hook's block path is unchanged, and a run without the lane completes cleanly.
+- [x] AC-9 — The probe's claim carries a verdict measured over the frozen fixture, and a null
       verdict is recorded as an outcome rather than as a failure.

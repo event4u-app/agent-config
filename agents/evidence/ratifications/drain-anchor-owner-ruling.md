@@ -146,7 +146,86 @@ authorising event is a human merge rather than this file.
   `kernel-guard-first-crossing` may not cite this one.
 - **Nothing on the live forge was touched.** openai's constraint, honoured:
   approval of a trust-model change is not authorization to mutate the platform
-  ruleset. `strict_required_status_checks` is still off on the forge, is still
+  ruleset. `strict_required_status_checks` is still off on the forge.
+
+  **Corrected 2026-09-13 — the rest of this bullet contradicted the amendment
+  above and has been rewritten rather than left standing.** It read: *"is still
   enforced by the gate, and is therefore the single dimension the anchor now
   reds on — a control pointing at a real gap rather than at a policy the
-  repository has chosen against.
+  repository has chosen against."* That was true in the window between the owner
+  ruling and the waiver landing, and false the moment the waiver this record
+  itself ratifies took effect. Measured 2026-09-13, `check_platform_anchor`
+  reports **PASS_WITH_ACCEPTED_RISK and exits 0**; the dimension is covered by
+  `arr-2026-09-10-strict-status-checks` and the anchor reds on nothing. A
+  ratification artifact asserting a red that its own subject removed is the
+  worst place in the tree for that sentence to sit, which is why it is corrected
+  here and not merely somewhere downstream.
+
+## Amended 2026-09-13 — the waiver mechanism reviewed a second time, and confirmed
+
+The amendment above ratified the waiver mechanism on the strength of the council
+that designed it. It has since been put back to the same two seats as a *review*
+of what shipped, which is the weaker and more useful question.
+
+Council 2026-09-13, `anthropic/claude-sonnet-4-5` + `openai/codex-default`, two
+rounds, blind peer review, subscription transport, $0.0000, 2/2 present and
+convergent. **Both returned RATIFY AS IT STANDS.** The questions put were the
+two this repository had recorded as open — whether fail-explicit invalidation
+suffices, and whether the shape that shipped for the third floor field is the
+right one. Quorum honesty on the same terms this tree uses elsewhere: the record
+carries `threshold: 1`, so it is a degraded-quorum run by configuration, and its
+`absent_members` names both seats from a pre-run liveness probe while the same
+object counts two present and two answered.
+
+- **Invalidation.** Sufficient as built. anthropic made the reason architectural
+  rather than dimensional: the gate is a local control a human runs, *"prose is
+  sufficient because the executor is literate"*, and *"if the enforcement
+  architecture changed, the answer would too."* openai, answering its own
+  recorded `refused` condition: **yes**, the landed shape avoids it — neither
+  indefinite nor authority-free, and expiry produces a rejecting verdict.
+- **Shape.** anthropic: the shipped arrangement — out of the floor, kept in the
+  expectation, bridged by `accepted_risk_reductions` — is *"the only logically
+  coherent option"*, because a floored dimension is unwaivable by construction
+  and keeping it in the expectation is what distinguishes *"a real requirement
+  we're accepting bounded risk on"* from *"we don't care about this dimension."*
+- **Nothing was mechanised, deliberately.** openai priced the alternative and
+  rejected it: crossing ten minutes *"does not itself prove strict checks are
+  operationally acceptable; it merely prompts a policy reassessment."*
+
+**What this second review adds that the first did not, and it is a limit rather
+than an endorsement.** openai: *"a voluntarily invoked local check is advisory
+control, especially when the acting account is an administrator"* — an
+administrator *"may merge without ever invoking it and can modify both sides of
+the comparison."* Its stated verdict: **do not describe `check_platform_anchor`
+as enforcing repository-wide compliance.** That boundary is now written into
+`src/config/platform-anchor.json`'s own `enforcement_boundary_note`, into
+`src/config/ci-local-parity.yml` and into `taskfiles/ci-fast.yml`, and it is the
+single most load-bearing correction this review produced.
+
+anthropic added one condition on the *next* renewal rather than on this waiver:
+the 90-day window was never validated against the 30-day rolling median one of
+its own triggers depends on. Recorded, not fixed here — renewal is a fresh
+decision by contract.
+
+## Also ratified by this record — the 2026-09-13 record corrections
+
+Two prose fields of `src/config/platform-anchor.json` were corrected against
+re-measured forge state. Both are prose; neither changes an evaluated value, and
+the gate's verdict is unchanged (`PASS_WITH_ACCEPTED_RISK`, exit 0, before and
+after). They are listed because the file is on `ANCHOR_PATHS`, so every edit to
+it — including one that only fixes a false sentence — needs a ratification to
+point at, and silently amending the record a gate protects is the failure that
+list exists to prevent.
+
+- `threat_model_note` claimed the emptying of `bypass_actors` *"held"*. It did
+  not hold continuously: an `OrganizationAdmin` actor with `bypass_mode: always`
+  was re-added 2026-09-11 (ruleset version `49393554`, the edit `ADR-276`
+  records) and removed again 2026-09-12 (version `49500777`). Live 2026-09-13:
+  `bypass_actors: []`, `current_user_can_bypass: never`. The half stands today
+  and stood for all but one day; the note now says so, and says the dimension
+  has a re-entry history worth re-measuring.
+- `required_status_check_contexts_note` called the containing job *"the
+  ruleset's one required context"*. It is one of two since 2026-09-11. The
+  jobs-versus-steps argument the note exists to make is untouched, and the
+  expectation naming a single context is still satisfied because
+  `minimum_required_contexts` is a floor, not an equality.

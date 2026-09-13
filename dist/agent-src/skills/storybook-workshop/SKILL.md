@@ -52,6 +52,43 @@ single prop's effect because every value is co-present. Split it, one axis per s
 Stories render under the **same semantic tokens** as the app and the `.dark` class; a
 hardcoded preview theme makes the workshop lie about what the component looks like in place.
 
+### The five behavioral stories — assert a value, never an image
+
+`Hover`, `Focus`, `Active`, `Keyboard` and `ReducedMotion` join the set above, and they
+carry one extra rule: **each asserts a resolved computed style or a handler effect, never a
+screenshot.** A component that owes a state checklist and proves it with a pixel diff has
+not proved it — a screenshot is a resting frame, and none of these five is a resting frame.
+
+| Story | Drive | Assert |
+|---|---|---|
+| `Hover` | `userEvent.hover(el)` | the resolved property the hover rule is supposed to change actually changed |
+| `Focus` | focus the element | the `:focus` styles resolve as intended |
+| `Keyboard` | `userEvent.tab()` until the element is active | a visible `:focus-visible` indicator resolves — programmatic focus does **not** set it in Chromium, so a `.focus()` call reports a real focus ring as absent |
+| `Active` | press and hold | what pressing adds **on top of hover** — a pointer cannot press without hovering, so asserting against the resting style makes one removed hover rule fail two stories |
+| `ReducedMotion` | emulate `prefers-reduced-motion: reduce` | what the surface presents *instead of* the motion, per [`accessibility-auditor`](../accessibility-auditor/SKILL.md) § 2 — not that the media block exists |
+
+The `Active` and `Keyboard` rows are not style advice. Both are measured failure modes from
+building the probe that backs this set, recorded here so the next author does not rediscover
+them: the first produced a duplicate finding for a single defect, the second reports a focus
+ring that is present as missing.
+
+### Responsive rows — one row per declared breakpoint
+
+Beside the state stories, each responsive component owes a row per declared breakpoint
+(1440 / 768 / 375 / 320) asserting **the layout property that is supposed to change there** —
+`flex-direction`, `grid-template-columns`, `display`. One row per breakpoint, not one per
+property: a single media rule usually moves several properties at once, and one finding each
+counts one defect several times.
+
+**Where a workshop is absent, this set is still assertable.** These stories are a contract
+about what is asserted, not about a particular runner — the `ui_conformance_probe` script
+exercises the same five states and the same breakpoint rows against a file URL. It and its
+sensitivity fixture live in the package repository and are **not** shipped to consumers,
+which is why both are named rather than linked: a path to either resolves nowhere in an
+install. The fixture is the evidence for the two sensitivity claims above — removing one
+hover rule turns exactly the hover assertion red and nothing else, and removing one media
+rule turns exactly the matching breakpoint row red.
+
 ## JSDoc `@summary` is required, and the reason is mechanical
 
 The manifest an agent reads **truncates descriptions**. A component whose summary is a
@@ -81,7 +118,7 @@ files otherwise — and only then decide whether anything needs writing.
 1. **Inspect the existing story set before authoring anything.** Read what the library
    already has — via the MCP channel below when it is available, otherwise by reading the
    story files — and check the component against it by name and by shape.
-   - **Source of truth:** the story files, or `list-all-documentation` over a running Storybook.
+   - **Source of truth:** the story files, or `docs-list` over a running Storybook.
    - **Verify:** the component you are about to write does not already exist under another name.
 2. **One story per concept**, named from the state set above.
    - **Verify:** no story name joins two axes with `And`.
@@ -142,10 +179,12 @@ up yet"*, so its presence is not evidence the channel works.
 
 When the project has `@storybook/addon-mcp` **and** a running Storybook,
 [`existing-ui-audit`](../existing-ui-audit/SKILL.md) prefers the live tools —
-`list-all-documentation`, then `get-documentation` for the components that matter — over the
+`docs-list`, then `docs-show` for the components that matter — over the
 hand-read inventory. **The live read wins; the file read is the fallback**, and the fallback
 is never removed: an agent that cannot reach a running Storybook must still be able to
-inventory the library.
+inventory the library. The tool names are version-bound and were re-derived from a throwaway
+installation on 2026-09-13 — [`existing-ui-audit`](../existing-ui-audit/SKILL.md) § 4b carries
+the derivation and the version boundary; do not restate it here.
 
 **React-only while in preview.** Storybook's own MCP FAQ (docs 10.5) states the documentation
 toolset supports React only during preview, so Vue, Angular, and Web Components take the
