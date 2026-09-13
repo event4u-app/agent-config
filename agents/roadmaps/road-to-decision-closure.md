@@ -132,7 +132,7 @@ owner-owned residue remains, closure completes with zero owner interaction.
 
 ## Phase 1 — Closure at every producer, mechanically
 
-- [ ] **1.1 A `/challenge-me closure` sub-command.** Input is a roadmap path. The detector is
+- [x] **1.1 A `/challenge-me closure` sub-command.** Input is a roadmap path. The detector is
       `lint_roadmap_complexity`'s prose checks plus a scan for `TBD`, *decide later*, unpicked
       alternatives, unchecked assumptions, missing verify lines, ambiguous acceptance criteria,
       a missing target branch, contradictory requirements, product semantics with several

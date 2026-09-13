@@ -3,8 +3,8 @@ model_tier: medium
 name: challenge-me
 pack: product-reasoning
 visibility: internal
-description: Challenge-me orchestrator — routes to vision, with-docs
-argument-hint: "[vision|with-docs] [flags] [seed]"
+description: Challenge-me orchestrator — routes to vision, with-docs, closure
+argument-hint: "[vision|with-docs|closure] [flags] [seed]"
 cluster: challenge-me
 type: orchestrator
 suggestion:
@@ -32,12 +32,17 @@ enough to emit a copyable Markdown pitch.
 |---|---|---|
 | `/challenge-me vision` | `commands/challenge-me/vision.md` | Standard variant — interrogate a fuzzy plan / idea / ticket draft to 95% confidence, emit a vision pitch |
 | `/challenge-me with-docs` | `commands/challenge-me/with-docs.md` | Doc-aware variant — same flow plus session glossary against `CONTEXT.md`, load-bearing claim-vs-code verification, optional `CONTEXT.md` patch + ADR candidates in the pitch |
+| `/challenge-me closure` | `commands/challenge-me/closure.md` | Plan-closure variant — take a roadmap about to enter execution, detect every open decision, resolve each at the lowest rung that owns it, and write the answers into a `## Decisions` table |
 
 ## When to pick which
 
 - **`vision`** — greenfield idea, fresh ticket draft, or a plan with no
   existing project glossary / domain docs. Default for "challenge me on
   this plan".
+- **`closure`** — the input is a **roadmap path**, not a fuzzy idea, and the
+  goal is an execution contract rather than a pitch. Pick it when a plan is
+  about to be executed: it closes the decisions a twelve-hour run would
+  otherwise meet mid-flight.
 - **`with-docs`** — the project has `CONTEXT.md`, an ADR directory
   (`docs/adr/`, `docs/decisions/`, `agents/decisions/`), or the user
   uses domain terms that may already be defined. The variant catches
@@ -54,6 +59,8 @@ enough to emit a copyable Markdown pitch.
    > 1. vision — standard 95%-confidence interview, emits a copyable pitch
    > 2. with-docs — same flow, but checks the seed against `CONTEXT.md` /
    >    ADRs and emits an optional doc patch in the pitch
+   > 3. closure — take a roadmap path and close every open decision in it
+   >    before execution, recording the answers in `## Decisions`
 
 ## In-interview triggers (both sub-commands)
 
