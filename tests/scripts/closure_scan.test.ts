@@ -48,8 +48,17 @@ describe('closure_scan — fixture F1, the twelve seeded ambiguities', () => {
     it('finds an ambiguity that straddles a line wrap', () => {
         // Step 1.1's "either … or" spans two physical lines. A per-line
         // detector misses exactly this shape, which is the one an author is
-        // least likely to notice.
-        expect(findings.some((f) => f.line === 19 && f.kind === 'unpicked-alternative')).toBe(true);
+        // least likely to notice. Both halves are asserted — that the fixture
+        // really does wrap, and that the finding is there anyway — because a
+        // line NUMBER would pin a coordinate the fixture is free to move.
+        const raw = fixture('F1-technical-ambiguities.md').split('\n');
+        const eitherLine = raw.findIndex((l) => /\beither\b/.test(l));
+        expect(eitherLine).toBeGreaterThan(-1);
+        expect(/\bor a single array\b/.test(raw[eitherLine] as string)).toBe(false);
+        expect(/\bor a single array\b/.test(raw[eitherLine + 1] as string)).toBe(true);
+
+        const step11 = findings.find((f) => f.excerpt.includes('1.1 Pick the on-disk format'));
+        expect(step11?.kind).toBe('unpicked-alternative');
     });
 });
 

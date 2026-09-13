@@ -8,7 +8,30 @@ resolution, commit-step pre-scan, halt conditions, and archival check.
 The three command files are thin wrappers that bind only the **scope
 delta**.
 
-**Size budget:** ≤ 57,000 chars — restated from the original 4,000.
+**Size budget:** ≤ 62,000 chars — restated from 57,000, which the file had
+already outgrown before this edit.
+
+**Restated 2026-09-13, with the reason, because the contract below demands
+one.** The line read 57,000 and the file measured **57,906** on `origin/main`:
+the budget was already false, so the first honest act is to say so rather than
+to inherit it. What this change then added is halt-list CONTENT — the
+`BLOCKED` list aligned row-for-row with ADR-268 § 7, which gained a missing
+owner-owned-decision row, contradictory requirements, technical impossibility
+under the stated constraints and an authority crossing, and moved a failed
+first approach and dependency trouble to the not-blocked side. That list is
+read at the moment a run decides whether it may stop; behind a pointer it
+would be read later or not at all, which is the one place in this file where
+depth is the point.
+
+Everything about the change that is EXPLANATORY rather than decisive was moved
+out instead, to [`decision-closure-execution`](decision-closure-execution.md):
+the `## Decisions` row shape and reopen rule, the per-class mid-run residue
+table, and what `blocked-by:` may point at after the retirement. The file grew
+by 2.4k where a naive edit would have grown it by 7.6k.
+
+**Still a ratchet, and still enforced by nothing.** The next edit inherits
+62,000, not a license to keep restating. Splitting the halt list out is the
+real repair and it is a change of its own.
 
 The old figure described nothing: the file measured 47,115 bytes against it, a
 factor of 11.8, so it was a dead budget rather than a typo. Restated at the
@@ -152,29 +175,10 @@ A CLOSED DECISION REOPENS ONLY WHEN ITS `revisit if` CONDITION BECAME TRUE —
 NEVER BECAUSE A CONTEXT RESET LOST IT, AND NEVER BECAUSE THE ANSWER LOOKS ODD.
 ```
 
-If the roadmap carries a `## Decisions` section, read it whole and cache it for
-the run alongside the cadences (§ 4). Each row is `ID | ownership | resolved by
-| decision | evidence | revisit if`, and the contract that governs it is
-[`roadmaps` rule 27](../../templates/roadmaps.md).
-
-Three consequences during the run:
-
-1. **A step whose question is already a row executes on that row's answer.**
-   The decision was closed in planning; re-deriving it is the repeat the ask
-   census counts as a defect, and re-asking it is worse.
-2. **A `revisit if` condition that became true reopens exactly that row** —
-   resolve it again through the ownership ladder, append the new answer, and
-   say which condition fired. One reopen per row per run.
-3. **A decision NOT in the table is mid-run residue**, handled by § 5's residue
-   rule: technical residue resolves inline through the agent, an independent
-   session, the council or the team and is appended to `## Decisions` with the
-   step id; owner-owned residue is asked only when the step cannot progress,
-   and otherwise the step is parked while independent phases continue.
-
-No `## Decisions` section is not an error: a plan that closed everything inline
-carries none. It is a finding only when the plan ALSO carries an unresolved
-marker, which `lint_decision_classes` reds at authoring time rather than here.
-
+Read it whole and cache it for the run alongside the cadences (§ 4). No section
+is not an error — a plan that closed everything inline carries none. Row shape,
+the three consequences during a run, and the reopen rule:
+[`decision-closure-execution`](decision-closure-execution.md).
 
 ### 3a. Mode derivation ladder — first source wins
 
@@ -692,36 +696,10 @@ PLAN. TECHNICAL RESIDUE RESOLVES INLINE AND IS APPENDED TO `## Decisions` WITH
 THE STEP ID. IT NEVER BECOMES A QUESTION, AND IT NEVER BECOMES A HALT.
 OWNER-OWNED RESIDUE ASKS **ONLY IF THE STEP CANNOT PROGRESS**. OTHERWISE THE
 STEP IS PARKED, INDEPENDENT PHASES CONTINUE, AND THE RUN COMES BACK TO IT.
-MISSION-LEVEL `BLOCKED` ONLY PER THE TERMINAL-OUTCOMES LIST BELOW.
 ```
 
-Planning closed what it could foresee (§ 3-0). What is left is residue, and it
-is routed identically:
-
-| Residue | What happens |
-|---|---|
-| `deterministic`, `reversible-technical` | the agent decides and says why |
-| `contested-technical` | an independent session, then the council, then the team |
-| `critical-technical` | a provider-diverse council; the owner only where a typed op or an owner-reserved dimension is touched |
-| `spend-exhaustion` | pause and report — never a question |
-| `product-owned`, `business-owned`, `destructive-owned` | the step's progress decides: **blocked on it** → ask now, one question, record the answer · **not blocked** → park the step, continue elsewhere, return |
-
-Every resolution is appended to `## Decisions` **with the step id in the
-evidence column**, so a later reader can tell a decision planning closed from
-one the run met. `./scripts-run src/scripts/lint_decision_classes` validates
-the row.
-
-**Parking is not deferring.** A parked step keeps its `[ ]`, keeps its place in
-the count, and is returned to in the same run once the answer lands. It does
-**not** take `[~]`, which is a deferral by decision and would let the run reach
-`count_open == 0` on work nobody did.
-
-**Scope discovered mid-step is the other table** — agent-owned growth is done
-and recorded as a scope delta, council-owned growth routes through the ladder,
-and a larger unrelated opportunity becomes a follow-up artefact rather than
-expanding the mission. Both lists, closed:
-[`scope-mechanics`](../authority/scope-mechanics.md) section Scope growth, with
-`./scripts-run src/scripts/scope_growth "<description>"` for a single item.
+Per-class routing, why parking is not deferring, and the scope-growth pointer:
+[`decision-closure-execution`](decision-closure-execution.md).
 
 ### 5b. Flip-guard — deterministic
 
@@ -981,13 +959,10 @@ A COUNT IS NEVER A QUESTION — A BOUNDED LOOP'S BOUND TRIGGERS A STRATEGY CHANG
 AND THE ESCALATION LADDER, NEVER AN OWNER QUESTION (ADR-268 § 7).
 ```
 
-This is what retires `blocked-by:` as a home for judgement calls. The marker
-stays — it is how `run-continuation` reads blockedness — but what it may point
-at narrows: a blocker entry is the record of a decision the agent **correctly
-did not own**, and an entry that declares `- **Ownership:**` must name one of
-the three owner-owned classes. A technical class there says a decision the
-ownership ladder could have closed was filed instead, and
-`lint_roadmap_blockers` reds it.
+`blocked-by:` stays — it is how `run-continuation` reads blockedness — but a
+blocker entry is the record of a decision the agent **correctly did not own**;
+what it may point at narrows accordingly
+([`decision-closure-execution`](decision-closure-execution.md)).
 
 The `[~]` prohibition is load-bearing and was the one point the council split on.
 Deferring a blocked step to `[~]` would let the run reach `count_open == 0` and

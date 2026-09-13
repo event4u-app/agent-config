@@ -281,7 +281,7 @@ fallback structure defined in `/create-pr:description-only`. NEVER invent a cust
 ```
 AGENT-OWNED SCOPE GROWTH IS RECORDED IN THE PR BODY. ONE LINE PER ITEM.
 GROWTH DONE AND NOT RECORDED IS INDISTINGUISHABLE FROM SCOPE CREEP.
-A FOLLOW-UP ARTEFACT IS NAMED HERE TOO — IT IS WHAT THE MISSION DID NOT ABSORB.
+A FOLLOW-UP ARTIFACT IS NAMED HERE TOO — IT IS WHAT THE MISSION DID NOT ABSORB.
 ```
 
 Where the run did work beyond the literal task, add a `## Scope delta` section
@@ -300,7 +300,7 @@ nothing classifies is growth nobody decided, and it does not silently become
 agent work.
 
 A larger unrelated opportunity is **not** a scope delta. It is a follow-up
-artefact, named in the same section under *Not absorbed* with its roadmap path,
+artifact, named in the same section under *Not absorbed* with its roadmap path,
 because a mission delivering everything it met would deliver none of it.
 
 Omit the section entirely when the diff is the task and nothing grew.

@@ -294,7 +294,7 @@ form is preferred rather than merely available:
    answer that lives only in the transcript is re-derived after the next
    context reset, which is the repeat the ask census counts as a defect.
 
-**What the native shape does NOT change.** It is not a licence to ask more: the
+**What the native shape does NOT change.** It is not a license to ask more: the
 one-question-per-turn floor, the no-cheap-questions floor and the ownership
 routing all run first, and a question that should not have been asked is not
 improved by a better widget. Nor does it change who may be asked — a technical

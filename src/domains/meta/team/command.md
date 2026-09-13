@@ -139,9 +139,9 @@ THE OPTIONS BLOCK IS CONDITIONAL ON OWNERSHIP HERE TOO.
 
 A team run produces the same seven fields a council record carries — question,
 evidence, member positions, convergence, verdict, confidence, revisit
-condition — and lives in the same place: the dev-time artefact under
+condition — and lives in the same place: the dev-time artifact under
 `agents/runtime/` (gitignored, pruned on the configured retention window), and
-the **durable** record inlined into the artefact the decision serves, with date
+the **durable** record inlined into the artifact the decision serves, with date
 and members. Never a link to the scratch file; it is not in a clone.
 
 Where the decision closes a roadmap question, the durable record is one

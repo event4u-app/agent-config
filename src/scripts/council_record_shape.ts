@@ -24,7 +24,7 @@
  *
  * This is an evaluator over a record, not a gate over the tree — the tree's
  * council records are gitignored and pruned (they are dev-time scratch; the
- * durable record is the convergence inlined into the artefact). It exists so
+ * durable record is the convergence inlined into the artifact). It exists so
  * the contract is checkable against a fixture rather than asserted in prose.
  *
  * Exit codes: 0 conforming · 1 findings · 2 bad argv.

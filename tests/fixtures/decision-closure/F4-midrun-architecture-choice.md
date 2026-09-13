@@ -1,9 +1,11 @@
 ---
-complexity: lightweight
 status: draft
 execution:
   mode: autonomous
 ---
+<!-- A detector FIXTURE, not a plan. It carries `## Phase` headings and
+     checkbox steps because the detector reads step blocks, and it carries no
+     `complexity:` tier because it is not a roadmap and has no work to size. -->
 # F4 — a mid-run architecture choice
 
 The residue fixture. Planning closed what it could foresee; step 2.1 then meets

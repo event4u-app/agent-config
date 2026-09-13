@@ -27,6 +27,7 @@
  * `--strict` upgrades warnings to errors.
  */
 import fs from "node:fs";
+import { PLATFORM_METADATA_KEYS } from "./_lib/hook_platform_keys.js";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parse as parseYaml } from "yaml";
@@ -423,14 +424,6 @@ function _check_guard_payload_bodies(
     }
   }
 }
-
-/**
- * Platform-block keys that are NOT event bindings.
- *
- * Without this set every metadata key reads as an unknown event, which is how
- * a descriptive row becomes a schema error the first time one is added.
- */
-const PLATFORM_METADATA_KEYS: ReadonlySet<string> = new Set(["ask", "fallback_only"]);
 
 function _check_platforms(
   manifest: YamlObject,

@@ -1058,7 +1058,7 @@ costs to get wrong. The eight ownership classes are loaded by the same
 
 | Class | Examples | Resolver | Default `mode` |
 |---|---|---|---|
-| `deterministic` | naming from convention, file placement, generated artefacts, commit split | agent | `agent` |
+| `deterministic` | naming from convention, file placement, generated artifacts, commit split | agent | `agent` |
 | `reversible-technical` | a pattern inside the stated convention, refactor shape, test organisation | agent | `agent` |
 | `contested-technical` | two valid architectures, a dependency trade-off, migration design | independent agent → council, CLI-first → team | `council` |
 | `critical-technical` | security-sensitive design, authority implementation, compatibility risk | provider-diverse council; owner only where a typed op or an owner-reserved dimension is touched | `council` |

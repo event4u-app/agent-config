@@ -296,7 +296,7 @@ NOT SAY WHETHER ITS MEMBERS CONVERGED IS ITSELF THE FINDING.
 A conclusive technical verdict still produces the full record — question,
 evidence, member positions, convergence, verdict, confidence, revisit
 condition — and the run continues on it. The resolution is written into the
-consuming artefact's `## Decisions` table with `resolved by: council:<record>`.
+consuming artifact's `## Decisions` table with `resolved by: council:<record>`.
 
 `./scripts-run src/scripts/council_record_shape <record.md>` checks a record
 against this contract in both directions.

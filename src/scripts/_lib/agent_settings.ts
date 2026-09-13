@@ -956,15 +956,83 @@ export function load_agent_settings(
     // precedence here is the inverse of the server family's, so the order of
     // these three statements is the whole contract.
     const merged: SettingsDict = template_defaults(template_path ?? undefined);
+    // The rename runs per LAYER, before the merge, and that ordering is the
+    // whole contract: the template already carries the new key, so a rename
+    // applied to the merged tree would always find the target "already set"
+    // and drop the user's value on the floor. Per layer, the old key becomes
+    // the new key inside the layer that wrote it, and ordinary precedence
+    // then does the rest.
+    _apply_renamed_keys(user_global_filtered);
     _deep_merge(merged, user_global_filtered);
     for (const p of cascade) {
         const layer = _read_yaml(p) ?? {};
         if (Object.keys(layer).length > 0) {
+            _apply_renamed_keys(layer);
             _deep_merge(merged, layer);
         }
     }
     _warn_removed_always_on_keys(merged);
     return merged;
+}
+
+/**
+ * Settings keys this package has RENAMED, old path -> new path.
+ *
+ * Distinct from {@link REMOVED_KEYS} in the one way that matters to a user:
+ * a removed key's value is DISCARDED, and a renamed key's value is CARRIED.
+ * Putting a rename in the removed map would silently return an installed
+ * `false` to the shipped default, which is the opposite of accepting the old
+ * key — so the two maps stay separate even though both warn once.
+ *
+ * An entry is dropped one minor after it lands. The new key always wins when
+ * a file carries both: a reader who has already migrated is not overridden by
+ * a stale line they forgot to delete.
+ */
+export const RENAMED_KEYS: ReadonlyMap<string, string> = new Map([
+    ['planning.challenge_on_create', 'planning.closure_pass'],
+]);
+
+/** Keys already warned about in THIS process — the "once per run" dedupe. */
+const _warnedRenamedKeys = new Set<string>();
+
+/**
+ * Carry a renamed key's value onto its new path, once, unless the new path is
+ * already set. Mutates `merged` and never throws: a settings tree that cannot
+ * be walked is a tree with nothing to migrate.
+ */
+function _apply_renamed_keys(merged: SettingsDict): void {
+    for (const [oldKey, newKey] of RENAMED_KEYS) {
+        const oldValue = _readDottedSettingsPath(merged, oldKey);
+        if (oldValue === undefined) {
+            continue;
+        }
+        if (_readDottedSettingsPath(merged, newKey) === undefined) {
+            _writeDottedSettingsPath(merged, newKey, oldValue);
+        }
+        if (_warnedRenamedKeys.has(oldKey)) {
+            continue;
+        }
+        _warnedRenamedKeys.add(oldKey);
+        process.stderr.write(
+            `⚠️  settings: \`${oldKey}\` was renamed to \`${newKey}\`. ` +
+                `The old key still works for one minor; rename it in your ` +
+                `.agent-settings.yml.\n`,
+        );
+    }
+}
+
+/** Write a dotted path into a settings tree, creating the intermediate maps. */
+function _writeDottedSettingsPath(tree: SettingsDict, dotted: string, value: unknown): void {
+    const parts = dotted.split('.');
+    let cur: SettingsDict = tree;
+    for (const part of parts.slice(0, -1)) {
+        const next = cur[part];
+        if (next === null || typeof next !== 'object' || Array.isArray(next)) {
+            cur[part] = {};
+        }
+        cur = cur[part] as SettingsDict;
+    }
+    cur[parts[parts.length - 1] as string] = value as SettingsDict[string];
 }
 
 /**

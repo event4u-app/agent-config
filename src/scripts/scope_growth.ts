@@ -19,7 +19,7 @@
  *   `owner`      the work changes what the product or the business does, or it
  *                needs a typed op for which no grant exists. Two rows, closed.
  *   `follow-up`  not scope growth at all. A larger unrelated opportunity
- *                becomes its own artefact and the mission does not expand to
+ *                becomes its own artifact and the mission does not expand to
  *                hold it — the failure that looks like diligence is a mission
  *                that absorbs every good idea it meets and delivers none.
  *

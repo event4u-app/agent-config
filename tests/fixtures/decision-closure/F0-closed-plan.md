@@ -1,9 +1,11 @@
 ---
-complexity: lightweight
 status: draft
 execution:
   mode: autonomous
 ---
+<!-- A detector FIXTURE, not a plan. It carries `## Phase` headings and
+     checkbox steps because the detector reads step blocks, and it carries no
+     `complexity:` tier because it is not a roadmap and has no work to size. -->
 # F0 — a plan that is already closed
 
 The negative direction of the closure detector. Every step names a picked
