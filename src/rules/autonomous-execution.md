@@ -47,18 +47,25 @@ Litmus: does the directive name a single concrete deliverable? Yes → task-scop
 
 A new instruction from the user mid-flight is **not** a continuation — see [`user-interrupt-priority`](user-interrupt-priority.md) for the mandatory STOP → run new task → ASK before resume protocol. Autonomy never authorizes silent-resume of the prior task.
 
-## Validation-loop budget — hard cap N=3 per target
+## Validation-loop budget — `execution.fix_loop_max`, default 10, and a ladder
 
 **Validation target** = a single identifiable artefact (file path, lint rule ID, test name, CI sub-task name) — natural-language clusters ("the linter stuff") don't count.
 
 ```
-3 CONSECUTIVE FAILED ATTEMPTS ON THE SAME VALIDATION TARGET → STOP.
-SURFACE THE 3 ATTEMPTS + BLOCKING ISSUE. ASK USER FOR GUIDANCE.
-DO NOT ITERATE BEYOND N=3 WITHOUT EXPLICIT USER APPROVAL.
-COUNTER RESETS ONLY ON A DIFFERENT TARGET OR USER-APPROVED CONTINUATION.
+THE BOUND TRIGGERS A STRATEGY CHANGE, NEVER A QUESTION.
+ATTEMPTS 1-3 — ROOT-CAUSE PLUS A TARGETED FIX.
+ATTEMPTS 4-6 — A MANDATORY STRATEGY SHIFT. REPEATING THE APPROACH IS NOT AN ATTEMPT,
+IT IS THE SAME ATTEMPT AGAIN.
+ATTEMPTS 7-10 — ESCALATE INDEPENDENTLY: A SECOND SESSION, A PROVIDER-DIVERSE
+REVIEWER, THE COUNCIL, THE TEAM, OR A ROLLBACK OF THE SLICE.
+AT THE BOUND, IN ORDER: A NEW STRATEGY FROM THE ESCALATION → A NEW EPOCH ·
+AN INDEPENDENT PHASE AVAILABLE → CONTINUE IT · THE RESIDUE OWNER-OWNED →
+ONE NATIVE ASK · AN EXTERNAL PREREQUISITE OBJECTIVELY MISSING → `BLOCKED`
+WITH EVIDENCE · OTHERWISE → A NEW EPOCH.
+NO RUNG MAPS A COUNT TO AN OWNER ASK. A COUNT IS NOT A REASON TO ASK.
 ```
 
-Failed attempt = an iteration that did not move the target red → green; tuning the tool around the target counts as an attempt.
+Failed attempt = an iteration that did not move the target red → green; tuning the tool around the target counts as an attempt. Council and team verdicts reached on the way append to the run's `## Decisions`, so the next epoch starts from a record rather than from memory. The bound is `execution.fix_loop_max` (default 10, overridable globally, per project and per prompt); the allowlist-growth counter below stays a **separate** mechanism with its own threshold.
 
 ### Antipattern — allowlist-growth as silent budget bypass
 
@@ -67,9 +74,9 @@ ALLOWLIST > 20 ENTRIES IN ONE SESSION = THE LINTER IS WRONG.
 STOP. PROPOSE LINTER REDESIGN OR REMOVAL. DO NOT EXPAND THE ALLOWLIST FURTHER.
 ```
 
-Crossing 20 entries counts as the 3rd validation-target failure — fix the tool shape, not the list. Enforced at tool-call time by the `block-config-weakening` PreToolUse guard (`src/scripts/hooks/block_config_weakening.ts`) **on `claude`, the one host that both binds `pre_tool_use` and honours a deny**: it counts allowlist entries added per session, warns from 5, and blocks past 20. It is *bound* on augment and cowork as well, and ignored there — `host_semantics.ts` verifies claude alone, and both trampolines discard dispatcher output and `exit 0` unconditionally. Everywhere else the cap is model-carried and "enforced at tool-call time" is not a claim this rule can make. **Corrected 2026-08-17 in both directions:** this sentence used to certify augment, claude and cowork as the enforcing set (an over-claim of two hosts) and to explain the rest with "the guard has nowhere to bind" (false for cursor, cline and gemini, whose native pre-tool events `native_event_aliases` already maps onto `pre_tool_use` — unbound, not unbindable; only windsurf and copilot have no alias row). The four states are tabulated once in [`hook-architecture-v1 § Which hosts carry pre_tool_use`](../../docs/contracts/hook-architecture-v1.md). Run `agent-config hooks:status` to see which slots are bound on the host you are actually on — the sibling rules `git-history-discipline` and `evaluator-independence` qualify the identical slot, and an unqualified claim here would read as a guarantee the manifest does not give. Baselines and budget thresholds warn only — a rising count there may be a legitimate ratchet reset, which the edit alone cannot distinguish. Verify with the narrowest tool that proves the target green (a single `curl` / Playwright spec for HTTP/UI, the test runner with a `--filter`, an `xdebug` step-through) — never a meta-pipeline as per-iteration probe. Failed-attempt detail, suppression-sweep equivalents, probe-efficiency detail, and adaptive effort & stop (RDP): [`autonomy-mechanics § Validation-loop budget`](../contexts/execution/autonomy-mechanics.md).
+Crossing 20 entries spends the whole fix-loop bound for that target at once — fix the tool shape, not the list. Enforced at tool-call time by the `block-config-weakening` PreToolUse guard (`src/scripts/hooks/block_config_weakening.ts`) **on `claude`, the one host that both binds `pre_tool_use` and honours a deny**: it counts allowlist entries added per session, warns from 5, and blocks past 20. It is *bound* on augment and cowork as well, and ignored there — `host_semantics.ts` verifies claude alone, and both trampolines discard dispatcher output and `exit 0` unconditionally. Everywhere else the cap is model-carried and "enforced at tool-call time" is not a claim this rule can make. **Corrected 2026-08-17 in both directions:** this sentence used to certify augment, claude and cowork as the enforcing set (an over-claim of two hosts) and to explain the rest with "the guard has nowhere to bind" (false for cursor, cline and gemini, whose native pre-tool events `native_event_aliases` already maps onto `pre_tool_use` — unbound, not unbindable; only windsurf and copilot have no alias row). The four states are tabulated once in [`hook-architecture-v1 § Which hosts carry pre_tool_use`](../../docs/contracts/hook-architecture-v1.md). Run `agent-config hooks:status` to see which slots are bound on the host you are actually on — the sibling rules `git-history-discipline` and `evaluator-independence` qualify the identical slot, and an unqualified claim here would read as a guarantee the manifest does not give. Baselines and budget thresholds warn only — a rising count there may be a legitimate ratchet reset, which the edit alone cannot distinguish. Verify with the narrowest tool that proves the target green (a single `curl` / Playwright spec for HTTP/UI, the test runner with a `--filter`, an `xdebug` step-through) — never a meta-pipeline as per-iteration probe. Failed-attempt detail, suppression-sweep equivalents, probe-efficiency detail, and adaptive effort & stop (RDP): [`autonomy-mechanics § Validation-loop budget`](../contexts/execution/autonomy-mechanics.md).
 
-Body migrated to `contexts/execution/autonomy-mechanics.md` (per P4 of `road-to-kernel-and-router.md`) — opt-in detection summary, task-scope shapes table, N=3 mechanics, allowlist-antipattern detail, probe efficiency, adaptive effort (RDP).
+Body migrated to `contexts/execution/autonomy-mechanics.md` (per P4 of `road-to-kernel-and-router.md`) — opt-in detection summary, task-scope shapes table, fix-loop bound and epoch mechanics, allowlist-antipattern detail, probe efficiency, adaptive effort (RDP).
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
 
 ## See also

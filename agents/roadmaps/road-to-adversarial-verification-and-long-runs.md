@@ -225,7 +225,7 @@ before the record is signed.
 
 ## Phase 4 — A recovery ladder with strategy epochs
 
-- [ ] **4.1 The bound triggers a strategy change, never a question.** Attempts 1-3 are
+- [x] **4.1 The bound triggers a strategy change, never a question.** Attempts 1-3 are
       root-cause plus a targeted fix; 4-6 require a mandatory strategy shift — re-examine
       assumptions, read history, build a minimal reproduction, find the last known good state,
       check upstream docs and issues, try an alternative implementation; 7-10 escalate
@@ -237,12 +237,32 @@ before the record is signed.
       `## Decisions`. The allowlist-growth counter stays a separate mechanism.
       verify: `grep -rn 'N=3' src/rules` returns 0; fixture `T3` — ten failed fixes produce
       strategy changes and escalations and no owner ask attributable to the count.
-- [ ] **4.2 Read the red before diagnosing it, with the narrowest probe.** A CI red is read
+      <!-- landed 2026-09-13. `autonomous-execution` now carries three bands
+      (1-3 root-cause · 4-6 mandatory strategy shift · 7-10 independent escalation) and the
+      five bound outcomes in order, with the owner rung reached by the OWNERSHIP test and
+      never by the count. The old remedy — *STOP. SURFACE. ASK USER FOR GUIDANCE.* — is gone
+      rather than appended beside, and `T3` asserts its ABSENCE so a revert cannot hide under
+      new prose. The bound is `execution.fix_loop_max` from Phase 0.
+      **`grep -rn 'N=3' src/rules` returns 1, not 0, and the one is externally impossible.**
+      `verify-before-complete.md` is a kernel rule; `block_kernel_rule_writes` refused the
+      edit at tool-call time (message: *"kernel rule verify-before-complete is immutable —
+      tighten-only via the override exception registry"*), which is a human action outside an
+      agent session. `T3` therefore asserts the offender set is EXACTLY that one file — which
+      still reds the moment any non-kernel rule reintroduces the cap, and does not red on a
+      change no agent can make. AC-4's own `returns 0` inherits this and cannot be met until
+      a maintainer makes that edit. -->
+- [x] **4.2 Read the red before diagnosing it, with the narrowest probe.** A CI red is read
       with `gh run view --job <id> --log-failed` filtered, never the whole log and never
       `--watch`'s exit code; a local red with the runner filtered to the failing name. The CI
       waiter is `ci_settle`, one waiter per condition.
       verify: `grep -c 'gh pr checks --watch' src/domains/product-basic/roadmap/process-full/command.md`
       returns 0, and the ladder's own text names `ci_settle`.
+      <!-- landed 2026-09-13 in `autonomy-mechanics` § Read the red before diagnosing it. It
+      names the two traps rather than only the tools: `gh pr checks --watch` exits 0 on a
+      failure AND 1 when no checks exist — two different wrong answers from one number — and
+      `ci_settle`'s verdict is its LAST OUTPUT LINE, because a run that reaches no verdict can
+      still exit 0. One waiter per condition, per `context-hygiene`. -->
+      <!-- verify: npm run test:ts -- tests/e2e/adversarial-verification-fixtures.test.ts -->
 
 ## Phase 5 — Target sync and conflict recovery
 

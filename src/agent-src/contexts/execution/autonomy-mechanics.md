@@ -141,11 +141,75 @@ When the user later issues a **new** request — different ticket, different roa
 
 In doubt whether the new request inherits or needs fresh confirmation → fresh confirmation. The Hard Floor and [`scope-control`](../../rules/scope-control.md) gates apply to every task regardless.
 
-## Validation-loop budget — mechanics (N=3)
+## Validation-loop budget — mechanics (`execution.fix_loop_max`, default 10)
 
 Autonomous flows must not iterate indefinitely on the same validation target. **Validation target** = a single identifiable artefact: a file path, a lint rule ID, a test name, a CI sub-task name. Natural-language clustering ("the linter stuff") does **not** count as a target — agents will rename their way out of the budget.
 
 A "failed attempt" is an iteration that did not move the target from red to green. Tuning the tool around the target (e.g. growing an allowlist, loosening a threshold, suppressing a check) counts as an attempt — and is usually a sign the **tool**, not the content, is wrong.
+
+### The three bands, and what makes a band a band
+
+The bound was a hard cap of 3 whose remedy was *STOP. SURFACE. ASK USER FOR
+GUIDANCE.* It is now `execution.fix_loop_max` — default 10 — divided into three
+bands, and the division is the substance: a larger number alone would only buy
+more of the same attempt.
+
+| Attempts | What is required | What is NOT an attempt |
+|---|---|---|
+| 1-3 | root-cause, then a targeted fix | — |
+| 4-6 | a **mandatory strategy shift**: re-examine the assumptions, read the history, build a minimal reproduction, find the last known good state, check upstream docs and issues, or try an alternative implementation | repeating the previous approach with a smaller edit. That is the same attempt again, and it does not advance the band |
+| 7-10 | **independent escalation**: a second session, a provider-diverse reviewer, the council, the team with repository access, or a rollback of the slice | anything the same session can decide alone |
+
+### At the bound — five outcomes, in order, and none of them is a count
+
+```
+A COUNT IS NOT A REASON TO ASK. THE BOUND ENDS A STRATEGY, NEVER THE RUN.
+```
+
+1. **The escalation yielded a new strategy** → open a **new epoch**: the attempt
+   counter resets against the new strategy, because the thing the budget was
+   bounding is gone.
+2. **An independent phase can proceed** → continue it. A blocked target is not a
+   blocked run, and the run's other work does not wait on this one.
+3. **The residue is owner-owned** per the ownership table → **one** native ask,
+   naming the residue. This rung is reached by the OWNERSHIP test, never by the
+   count that got here.
+4. **An external prerequisite is objectively missing** — an absent credential, an
+   unreachable service, a decision only the forge can carry → `BLOCKED`, with the
+   evidence that establishes the absence.
+5. **Otherwise** → a new epoch. Running out of ideas is not one of the four above,
+   and converting it into an owner ask is the failure this ladder replaces.
+
+Council and team verdicts reached during band 3 append to the run's
+`## Decisions` — so the next epoch starts from a record rather than from the
+previous epoch's memory of it.
+
+**The allowlist-growth counter is a separate mechanism** with its own threshold
+and its own remedy (fix the tool's shape). It is not a band of this ladder, and
+crossing it does not advance the attempt count — it spends the whole bound for
+that target at once, which is a different statement.
+
+### Read the red before diagnosing it, with the narrowest probe
+
+An attempt that begins from a guess about the failure is not a band-1 attempt; it
+is the first of three that will be spent learning what band 1 was supposed to
+start from. So, before the fix:
+
+- **A CI red** is read with `gh run view --job <id> --log-failed`, filtered
+  (`| grep -E '×|FAIL|Error'`) — never the whole log into context, and **never**
+  `gh pr checks --watch`'s exit code, which is 0 on a failure and 1 when no
+  checks exist at all. Two different wrong answers from one number.
+- **The CI waiter is `ci_settle`**, and it is ONE waiter for the condition: its
+  LAST OUTPUT LINE is the verdict, and a run that reaches no verdict can still
+  exit 0. A hand-written poll loop beside it is the fleet
+  [`context-hygiene`](../../rules/context-hygiene.md) § Waiting is one waiter
+  forbids.
+- **A local red** is read with the runner filtered to the failing name — not the
+  suite, and not a meta-pipeline. Match the probe to the surface: `curl` or a
+  Playwright spec for an HTTP or UI red, the debugger for a runtime frame, the
+  test runner with a filter for a behaviour.
+- **Reproduce before believing the diagnosis.** An environment-dependent red
+  reproduces under its condition, not on the machine's defaults.
 
 ### Allowlist-growth antipattern — detail
 
@@ -161,7 +225,7 @@ Concrete tool mapping — verify with the narrowest tool that proves the target 
 
 Where the objective is **countable** — findings closed, tests passing,
 occurrences remaining — the primary stop signal is **no progress** or a **new
-minimum**, and the N=3 iteration cap is the **backstop**. A counter alone cannot
+minimum**, and the fix-loop bound is the **backstop**. A counter alone cannot
 tell three attempts that each closed a finding from three that changed nothing.
 
 **Do not remove the cap.** A no-progress signal is only as good as the metric
@@ -175,13 +239,13 @@ firing is `exhausted`, a repeating failure signature with budget left is
 [`terminal-states`](terminal-states.md). Collapsing them invites the wrong
 remedy, because raising a budget helps the first and never the second.
 
-Where the objective is NOT countable, the cap is the only signal and the N=3
-budget above applies unchanged.
+Where the objective is NOT countable, the cap is the only signal and the
+fix-loop bound above applies unchanged.
 
 ## Adaptive effort & stop (RDP)
 
 Scale effort to task difficulty, and stop when marginal evidence drops — coupled
-to the N=3 budget above, never replacing it. On a host with a native effort knob
+to the fix-loop bound above, never replacing it. On a host with a native effort knob
 (e.g. an `effort` parameter), the right move is to **set it high** for hard tasks
 rather than scaffold; the scaffold here is for a standard host **without** such a
 knob. The per-dimension uncertainty score (see
@@ -211,13 +275,17 @@ ladder on the same failing target**, not competing budgets:
    attempts, switch approach when the same signature repeats
    ([`context-hygiene`](../../rules/context-hygiene.md) "same failure
    signature twice → pivot").
-2. **The 3rd consecutive failed attempt on the target trips N=3**
-   (this file, above): 2 retries + the initial attempt ARE the three
-   attempts N=3 counts. Terminal action: STOP, surface the attempts,
-   ask the user.
-3. **Repeated N=3 cycles on the same task** escalate to
+2. **The 3rd consecutive failed attempt on the target closes band 1**
+   (this file, above): 2 retries + the initial attempt ARE those three.
+   Terminal action for the BAND, not the run — band 2 begins and a strategy
+   shift is now mandatory. This rung used to read *STOP, surface the attempts,
+   ask the user*, and that sentence was the whole defect: three failures is
+   evidence about an approach, and an approach is the agent's to change.
+3. **Repeated EPOCHS on the same task** — not repeated attempts — escalate to
    [`context-hygiene`](../../rules/context-hygiene.md)'s 3-Failure Rule:
-   state dump + recommend a fresh session.
+   state dump + recommend a fresh session. An epoch is a strategy; three
+   strategies that each failed is evidence about the TASK, which is the first
+   thing here a fresh session can actually change.
 
 No artifact may mint a fourth budget or a stricter one-strike cap for the
 same subject; per-tool loop caps (`token-efficiency` >2 same-tool calls)
@@ -228,7 +296,7 @@ otherwise fuzzy; operationalize it so it is checkable, not vibes: when **two
 consecutive investigative probes** (a read, a grep, a query) yield **no new
 load-bearing information** — nothing that changes the plan or the hypothesis —
 stop gathering and act on what you have (or ask). This is the diminishing-returns
-twin of the N=3 hard cap: N=3 stops fruitless *fixing*, this stops fruitless
+twin of the fix-loop bound: that bound stops fruitless *fixing*, this stops fruitless
 *searching*. It never overrides the read-loop abort in
 [`context-hygiene`](../../rules/context-hygiene.md) — that is the hard ceiling;
 this is the earlier soft signal.
@@ -240,6 +308,6 @@ plan, an open question the context already answers, or a promise of
 unexecuted work ("I'll…", "next I will…"), do that work now with tool
 calls instead of ending the turn — this is what "the turn isn't done
 until it's done" means in practice. This checkpoint operates inside the
-existing bounds: the N=3 validation-loop budget and the Hard Floor
+existing bounds: the fix-loop validation budget and the Hard Floor
 still apply unchanged; the checkpoint closes out work already in scope,
 it never licenses continuing past either limit.

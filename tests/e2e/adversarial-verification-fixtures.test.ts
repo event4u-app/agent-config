@@ -78,3 +78,79 @@ describe('Phase 1.1 — the test-first rule', () => {
         expect(flat(RULE)).toMatch(/independent \*review\*, never a fake test/);
     });
 });
+
+describe('T3 — ten failed fixes produce strategy changes, never an owner ask', () => {
+    const MECHANICS = 'src/agent-src/contexts/execution/autonomy-mechanics.md';
+    const RULE = 'src/rules/autonomous-execution.md';
+
+    it('no rule under src/rules still states the N=3 cap — except the kernel one', () => {
+        // The step's literal criterion is `grep -rn 'N=3' src/rules` returning 0.
+        // It returns ONE, and the one is `verify-before-complete.md`, which
+        // `block_kernel_rule_writes` refuses every agent write to. Asserting zero
+        // would make this fixture red on a change no agent can make; asserting
+        // "only the kernel file" keeps the obligation and names why it stops there
+        // — and it still fails the moment a NON-kernel rule reintroduces the cap.
+        const dir = path.join(REPO, 'src', 'rules');
+        const offenders = fs
+            .readdirSync(dir)
+            .filter((f) => f.endsWith('.md'))
+            .filter((f) => read(path.join('src', 'rules', f)).includes('N=3'));
+        expect(offenders).toEqual(['verify-before-complete.md']);
+    });
+
+    it('the bound is a setting with a default of 10, not a literal 3', () => {
+        const body = flat(RULE);
+        expect(body).toMatch(/execution\.fix_loop_max/);
+        expect(body).toMatch(/default 10/);
+    });
+
+    it('names all three bands with their required behaviour', () => {
+        const body = flat(RULE);
+        expect(body).toMatch(/ATTEMPTS 1-3 — ROOT-CAUSE/);
+        expect(body).toMatch(/ATTEMPTS 4-6 — A MANDATORY STRATEGY SHIFT/);
+        expect(body).toMatch(/ATTEMPTS 7-10 — ESCALATE INDEPENDENTLY/);
+    });
+
+    it('maps no rung from a count to an owner ask', () => {
+        const body = flat(RULE);
+        expect(body).toMatch(/THE BOUND TRIGGERS A STRATEGY CHANGE, NEVER A QUESTION/);
+        expect(body).toMatch(/A COUNT IS NOT A REASON TO ASK/);
+        // The old remedy, gone. This is the assertion that would fail if the
+        // section were reverted while the new prose was merely appended beside it.
+        expect(body).not.toMatch(/ASK USER FOR GUIDANCE/);
+        expect(body).not.toMatch(/DO NOT ITERATE BEYOND/);
+    });
+
+    it('the mechanics file carries all five bound outcomes, owner-ask third', () => {
+        const body = flat(MECHANICS);
+        expect(body).toMatch(/new epoch/);
+        expect(body).toMatch(/An independent phase can proceed/);
+        expect(body).toMatch(/The residue is owner-owned/);
+        expect(body).toMatch(/An external prerequisite is objectively missing/);
+        // The owner rung is reached by the OWNERSHIP test, never by the count.
+        expect(body).toMatch(/reached by the OWNERSHIP test, never by the count/);
+    });
+
+    it('keeps the allowlist-growth counter a separate mechanism', () => {
+        expect(flat(MECHANICS)).toMatch(
+            /allowlist-growth counter is a separate mechanism/,
+        );
+        expect(flat(RULE)).toMatch(/stays a \*\*separate\*\* mechanism/);
+    });
+});
+
+describe('Phase 4.2 — read the red before diagnosing it', () => {
+    it('process-full never reaches for `gh pr checks --watch`', () => {
+        const cmd = read('src/domains/product-basic/roadmap/process-full/command.md');
+        expect(cmd.split('gh pr checks --watch').length - 1).toBe(0);
+    });
+
+    it("the ladder's own text names ci_settle and the --log-failed read", () => {
+        const body = flat('src/agent-src/contexts/execution/autonomy-mechanics.md');
+        expect(body).toMatch(/`ci_settle`/);
+        expect(body).toMatch(/--log-failed/);
+        // The two traps that make the naive read wrong, not just the tool name.
+        expect(body).toMatch(/LAST OUTPUT LINE is the verdict/);
+        expect(body).toMatch(/exit code, which is 0 on a failure/);
+    });
+});
