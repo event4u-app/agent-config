@@ -163,9 +163,24 @@ describe('check_test_weakening — NET counts, which is the whole gate', () => {
         expect(r.signals).toHaveLength(1);
     });
 
-    it('a deleted file contributes nothing — /dev/null is not a path', () => {
+    it('DELETING a test file is the maximal weakening, not zero signal', () => {
+        // This asserted the opposite until an independent review pointed out that
+        // removing the file was the cheapest way past both new gates: the parser
+        // dropped it on `+++ /dev/null`, and the deletion still counted as a
+        // `tests/` path for the delta gate. The rule this enforces names deleting
+        // a failing test in the same breath as weakening one.
         const diff =
             'diff --git a/tests/a.test.ts b/tests/a.test.ts\n--- a/tests/a.test.ts\n+++ /dev/null\n@@\n-expect(x).toBe(1);\n';
+        const r = analyse(diff, []);
+        expect(r.signals).toHaveLength(1);
+        expect(r.signals[0]?.path).toBe('tests/a.test.ts');
+        expect(r.signals[0]?.assertionsLost).toBe(1);
+    });
+
+    it('a NEW file is attributed to its own path, not to /dev/null', () => {
+        const diff =
+            'diff --git a/tests/n.test.ts b/tests/n.test.ts\n--- /dev/null\n+++ b/tests/n.test.ts\n@@\n+expect(x).toBe(1);\n';
+        expect(parseUnifiedDiff(diff)[0]?.path).toBe('tests/n.test.ts');
         expect(analyse(diff, []).signals).toHaveLength(0);
     });
 

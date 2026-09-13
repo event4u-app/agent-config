@@ -478,10 +478,14 @@ gates:
       A create-only canary cannot express this gate's violation either: the
       violation is a NET REDUCTION between two revisions of one file, so a
       planted file has no predecessor to be smaller than. Proven instead by the
-      gate's own `--self-test`: 8 cases, 3 rejecting. The load-bearing cases are
+      gate's own `--self-test`: 11 cases, 5 rejecting. The load-bearing cases are
       the ACCEPTS — editing an assertion, adding assertions, and removing a skip
       must all pass, because a gate that reds a legitimate test edit gets its
-      exemption widened until it finds nothing.
+      exemption widened until it finds nothing. Two cases exist because an
+      independent review found the gate blind to them: deleting a whole test file
+      (the maximal weakening, and `git rm` was the cheapest way past both gates),
+      and a diff line held as string data inside a suite that tests this very
+      detector.
     note: >
       road-to-adversarial-verification-and-long-runs 2.4, enforcing
       `evaluator-independence` § Tests are evaluators. Counts are NET, never raw

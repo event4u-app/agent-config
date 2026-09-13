@@ -327,21 +327,26 @@ export function decide(
 }
 
 /**
- * The same-session test-authorship flag —
+ * The one-commit test-authorship flag —
  * `road-to-adversarial-verification-and-long-runs` 2.4, third clause.
  *
- * A commit that carries BOTH a test and the code it covers, authored in one
- * session, is L0 on the independence scale: the implementer wrote the evaluator.
- * That is permitted as a fallback and it is the one case nobody sees, because
- * the diff looks exactly like a well-tested change.
+ * A commit staging BOTH a test and code it could cover is the shape of L0 on the
+ * independence scale — the implementer wrote the evaluator — and it is the one
+ * case nobody sees, because the diff looks exactly like a well-tested change.
  *
- * **WARN, never block, and the reason is not timidity.** L0 is explicitly
- * allowed as a fallback, so refusing it would forbid a legal state; and the
- * session boundary this reads is the same `detected_at` approximation the
- * verdict-shopping counter already uses, which is an approximation and not an
- * identity. A guard built on an approximation may surface, never refuse.
+ * **It reads the STAGED SET and the command, and nothing else.** It does NOT
+ * read a session id, an author or a timestamp, so it cannot distinguish an
+ * implementer who wrote both from one committing a test another session authored
+ * — an independent review of this function caught an earlier docstring here
+ * claiming a session boundary the code never reads, which is exactly the
+ * over-claim `evaluator-independence` exists over. The honest reading is: this
+ * is the shape L0 takes in a diff, surfaced so the level is stated rather than
+ * inferred.
  *
- * Returns `null` when nothing is worth saying — no commit, or no overlap.
+ * **WARN, never block.** L0 is explicitly permitted as a fallback, so refusing it
+ * would forbid a legal state; and a signal this coarse may surface, never refuse.
+ *
+ * Returns `null` when nothing is worth saying — i.e. this is not a commit.
  */
 export function sameSessionTestFlag(command: string | null): string | null {
   if (command === null || !/\bgit\b[^|;&]*\bcommit\b/.test(command)) return null;
@@ -349,13 +354,14 @@ export function sameSessionTestFlag(command: string | null): string | null {
 }
 
 const SAME_SESSION_TEXT =
-  "This commit may carry both a test and the code it covers, written in one " +
-  "session — L0 on the independence scale, where the implementer authored the " +
-  "evaluator. L0 is a permitted FALLBACK, not the default: where a second " +
-  "session, a second model or a second provider was available, the test should " +
-  "have come from one of them. If L0 was the only route, say so in the commit " +
-  "or the PR body rather than leaving the level to be inferred from a diff that " +
-  "looks identical either way. See evaluator-independence § Tests are evaluators.";
+  "This commit stages both a test and code it could cover — the shape L0 takes " +
+  "in a diff, where the implementer authored the evaluator. This check reads the " +
+  "staged set only: it cannot tell who wrote the test, so it is a prompt to STATE " +
+  "the level, not a finding that you are at L0. L0 is a permitted FALLBACK, not " +
+  "the default: where a second session, a second model or a second provider was " +
+  "available, the test should have come from one of them. Say which in the commit " +
+  "or the PR body — a diff looks identical either way. See evaluator-independence " +
+  "§ Tests are evaluators.";
 
 /** Both a test path and a production path in one changed set. */
 export function touchesTestAndCode(paths: readonly string[]): boolean {
@@ -425,15 +431,21 @@ export function run(stdin_text: string, options: { consumer_root: string }): num
 
   const [tool, prompt] = extractDispatch(envelope);
 
-  // 2.4 — the same-session test-authorship flag, checked BEFORE the dispatch
+  // 2.4 — the one-commit test-authorship flag, checked BEFORE the dispatch
   // branch and returning early. A commit envelope carries no evaluation prompt,
   // so `decide` would classify it as not-an-evaluation and allow it silently;
   // running both would mean the commit path fell through to a counter that is
   // about evaluation dispatches and would be wrong to advance here.
-  const staged = _stagedPaths(options.consumer_root);
-  if (staged !== null && touchesTestAndCode(staged)) {
-    const flag = sameSessionTestFlag(_commandOf(envelope));
-    if (flag !== null) {
+  //
+  // CHEAP TEST FIRST, and that ordering is the finding rather than a style
+  // preference: `_stagedPaths` spawns `git diff --cached`, and this concern is
+  // bound on `pre_tool_use`, so reading the index before the regex made every
+  // Read, Edit, Grep and Task dispatch in every session pay a subprocess. The
+  // regex answers "is this even a commit" for free.
+  const flag = sameSessionTestFlag(_commandOf(envelope));
+  if (flag !== null) {
+    const staged = _stagedPaths(options.consumer_root);
+    if (staged !== null && touchesTestAndCode(staged)) {
       process.stdout.write(`${JSON.stringify({ decision: "warn", reason: flag })}\n`);
       return EXIT_ALLOW;
     }

@@ -247,6 +247,16 @@ function selfTest(): number {
                     ),
             },
             {
+                name: 'DELETING a whole test file is the maximal weakening, and REDS',
+                expect: 'reject',
+                run: () =>
+                    withDiff(
+                        'diff --git a/tests/a.test.ts b/tests/a.test.ts\n' +
+                            '--- a/tests/a.test.ts\n+++ /dev/null\n@@\n' +
+                            '-expect(x).toBe(1);\n',
+                    ),
+            },
+            {
                 name: 'a removed assertion in PRODUCTION code is out of scope',
                 expect: 'accept',
                 run: () => withDiff(header('src/a.ts') + '-    expect(x).toBe(1);\n'),

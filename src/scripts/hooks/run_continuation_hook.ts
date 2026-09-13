@@ -656,6 +656,14 @@ function readState(file: string): RunState | null {
         if (o['inert_reported'] === true) {
             rec.inert_reported = true;
         }
+        // Round-tripped for the same reason `history_source` is, and found the
+        // same way: without this branch the field is read at the ladder call and
+        // never survives a write, so `deliveryBlocksCompletion` sees `undefined`
+        // forever and the 8.1 hold is dead code that reads as shipped.
+        const deliveryRead = parseDeliveryState(o['delivery']);
+        if (deliveryRead !== undefined) {
+            rec.delivery = deliveryRead;
+        }
         // Round-tripped for the same reason `history_source` is: dropped, the
         // premise would be re-recorded every fire from the newest observation, so
         // the two sides could never differ and the rung would be dead code.

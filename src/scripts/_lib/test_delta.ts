@@ -60,6 +60,7 @@ export interface FileDiff {
 export function parseUnifiedDiff(diff: string): FileDiff[] {
     const out: FileDiff[] = [];
     let path: string | null = null;
+    let oldPath: string | null = null;
     let added: string[] = [];
     let removed: string[] = [];
     const flush = (): void => {
@@ -71,14 +72,27 @@ export function parseUnifiedDiff(diff: string): FileDiff[] {
         if (line.startsWith('diff --git ')) {
             flush();
             path = null;
+            oldPath = null;
+            continue;
+        }
+        if (line.startsWith('--- ')) {
+            const p = line.slice(4).trim();
+            oldPath = p === '/dev/null' ? null : p.replace(/^a\//, '');
             continue;
         }
         if (line.startsWith('+++ ')) {
             const p = line.slice(4).trim();
-            path = p === '/dev/null' ? null : p.replace(/^b\//, '');
+            // A DELETION (`+++ /dev/null`) keeps the OLD path rather than
+            // dropping the file. Reported by an independent review of the change
+            // that introduced this parser: deleting a test file is the maximal
+            // form of the weakening this gate exists to see, and `git rm
+            // tests/x.test.ts` was the cheapest way past it — the deletion even
+            // counted as a `tests/` path for the sibling delta gate. A file whose
+            // every assertion is removed at once is not zero signal.
+            path = p === '/dev/null' ? oldPath : p.replace(/^b\//, '');
             continue;
         }
-        if (line.startsWith('--- ') || line.startsWith('@@')) continue;
+        if (line.startsWith('@@')) continue;
         if (path === null) continue;
         if (line.startsWith('+')) added.push(line.slice(1));
         else if (line.startsWith('-')) removed.push(line.slice(1));

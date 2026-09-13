@@ -335,6 +335,20 @@ skipped, because during delivery the open-step count it measures cannot move and
 a metric that cannot move is not a stall signal. A run that recorded no position
 decides exactly as it did before.
 
+```
+THE CONSUMER IS LIVE. NO PRODUCER SHIPS YET — NOTHING WRITES `delivery` INTO
+THE RUN-STATE FILE, SO ON EVERY RUN TODAY THE POSITION IS ABSENT AND THE HOLD
+DOES NOT FIRE. READ THE PARAGRAPH ABOVE AS THE CONTRACT, NOT AS BEHAVIOUR YOU
+WILL OBSERVE.
+```
+
+Said in a fence because the surrounding prose reads as a description of live
+behaviour and an independent review of the change that introduced it read it
+exactly that way. The ladder, the round-trip and the ledger field are built,
+tested and correct for any recorded value; what is missing is the step that
+records one, and a run that wants the hold must write the position itself until
+that lands.
+
 **`open-green` is a success, not a shortfall.** A run with no merge grant is not
 supposed to merge; what it owes is an open PR whose CI is green **on the head CI
 actually observed**, and a report that says so.
