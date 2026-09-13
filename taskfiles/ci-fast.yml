@@ -1209,6 +1209,29 @@ tasks:
       a hard stop no amount of habituation survives.
     cmd: ./scripts-run src/scripts/lint_scheduled_deprecations {{.QUIET_FLAG}}
 
+  lint-major-migration-sections:
+    silent: true
+    desc: |
+      The BACKWARD half of the MIGRATION.md obligation the task above covers
+      forward. That one checks commitments due at a FUTURE major; this one
+      checks that a major which already SHIPPED a breaking change told a
+      consumer what to do about it.
+
+      The requirement is a stated answer, never a procedure: a section saying
+      the change asks nothing of a consumer satisfies it, and is the right
+      answer when it is true. Not every breaking change asks something, and a
+      gate that could not express that would turn into a ritual heading with no
+      content -- which is worse than no gate, because the heading is believed.
+
+      Majors below the floor constant in the gate are forgiven on the record.
+      A cutoff derived from the shipped version instead -- the shape the
+      rollback linter uses -- would have left this gate comparing ZERO majors
+      on the day it landed, which is the gate-that-scans-nothing green.
+
+      The same predicate refuses at the cut: release.ts calls the gate's
+      pendingMajorFinding on the rendered entry, before anything is written.
+    cmd: ./scripts-run src/scripts/lint_major_migration_sections {{.QUIET_FLAG}}
+
   check-gate-completeness:
     silent: true
     desc: |

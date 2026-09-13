@@ -51,6 +51,7 @@ import {
     _failed_checks_report,
     Commit,
     SystemExitError,
+    assert_major_migration_section,
     assert_scheduled_deprecations_clear,
     CONVENTIONAL_RE,
     SEMVER_RE,
@@ -1126,6 +1127,84 @@ describe('watch_pr_checks — failing-check summary (the scrolled-away-failure f
 
     it('an empty name list yields an empty report — raw watch output stands alone', () => {
         expect(_failed_checks_report([])).toBe('');
+    });
+});
+
+describe('assert_major_migration_section', () => {
+    const breaking = (version: string): string =>
+        [
+            `## [${version}](https://example.invalid/c) (2026-01-01)`,
+            '',
+            '### BREAKING CHANGES',
+            '',
+            '* **x:** drop y',
+            '',
+        ].join('\n');
+
+    it('refuses a major cut whose entry has BREAKING and no section, naming the version', () => {
+        // The naming IS the acceptance criterion, and `die` carries only an
+        // exit code — so the version has to be read off stderr, not off the
+        // thrown error, or the assertion would hold for a refusal that told
+        // the releaser nothing.
+        const written: string[] = [];
+        const original = process.stderr.write.bind(process.stderr);
+        process.stderr.write = ((chunk: string) => {
+            written.push(String(chunk));
+            return true;
+        }) as typeof process.stderr.write;
+        try {
+            expect(() =>
+                assert_major_migration_section(
+                    '17.0.0',
+                    breaking('17.0.0'),
+                    {},
+                    () => '# Migration\n',
+                ),
+            ).toThrow(SystemExitError);
+        } finally {
+            process.stderr.write = original;
+        }
+        expect(written.join('')).toContain('17.0.0');
+    });
+
+    it('lets the same cut through once the section exists', () => {
+        expect(() =>
+            assert_major_migration_section(
+                '17.0.0',
+                breaking('17.0.0'),
+                {},
+                () => '# Migration\n\n## 17.0.0 — what to do\n',
+            ),
+        ).not.toThrow();
+    });
+
+    it('does not fire on a minor or patch target', () => {
+        // A BREAKING-carrying entry on a minor is not this gate's business:
+        // the obligation is stated per major, which is the boundary a consumer
+        // plans an upgrade around.
+        expect(() =>
+            assert_major_migration_section('17.1.0', breaking('17.1.0'), {}, () => '# M\n'),
+        ).not.toThrow();
+    });
+
+    it('previews the refusal under --dry-run instead of dying', () => {
+        // `--dry-run exits 0` is a contract this file asserts elsewhere; a
+        // preview that dies would trade a documented exit code for a message.
+        expect(() =>
+            assert_major_migration_section(
+                '17.0.0',
+                breaking('17.0.0'),
+                { previewOnly: true },
+                () => '# Migration\n',
+            ),
+        ).not.toThrow();
+    });
+
+    it('the real tree clears its own current major', () => {
+        const migration = fs.readFileSync(path.join(REPO_ROOT, 'docs', 'MIGRATION.md'), 'utf8');
+        expect(() =>
+            assert_major_migration_section('16.0.0', breaking('16.0.0'), {}, () => migration),
+        ).not.toThrow();
     });
 });
 
