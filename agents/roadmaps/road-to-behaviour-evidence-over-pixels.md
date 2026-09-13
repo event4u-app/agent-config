@@ -64,11 +64,11 @@ is not that the states are unnamed; it is that nothing can test them.
 
 ## Phase 1 — Name the new verification primitives
 
-- [ ] **1.1 Add `computed_style`, `interaction`, `viewport_matrix` and `media_emulation` to the
+- [x] **1.1 Add `computed_style`, `interaction`, `viewport_matrix` and `media_emulation` to the
       verification-primitive contract**, each with its host-class row.
       verify: `docs/contracts/design-artifact-verification.md` carries one row per new primitive
       and the class that cannot run it is marked unavailable rather than silently absent.
-- [ ] **1.2 Reuse the existing honest-degrade vocabulary.** A host that cannot run a primitive
+- [x] **1.2 Reuse the existing honest-degrade vocabulary.** A host that cannot run a primitive
       reports that it could not, never zero findings.
       verify: the contract's degrade section covers the four new primitives without introducing a
       second evidence vocabulary.
