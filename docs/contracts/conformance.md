@@ -36,8 +36,37 @@ Two legs, one exit code:
 | `lean-projection` | `lean_projection.mode` matches reality | projected non-kernel rules contradict the configured mode |
 | `host-manifest` | a leftover `subagents.host_capabilities` override is flagged deprecated | never fails — the key is inert (always-on orchestration resolves capability from a probe/registry only) |
 
-Every check returns `ok` / `warn` / `fail` / `skipped` with a one-line
-remedy. `skipped` means "not applicable here", never "silently passed".
+Every check returns `ok` / `warn` / `unknown` / `fail` / `skipped` with a
+one-line remedy. `skipped` means "not applicable here", never "silently
+passed"; `unknown` means the check ran and could not answer.
+
+### `txlog-clean` — the three absent-log cases
+
+The install transaction log is written by the browser install route only. A
+command-line install therefore produces none, and for as long as an absent
+log returned `ok` this check could not go red on the path most consumers
+take. It now distinguishes:
+
+| Tree | Row |
+|---|---|
+| no log, no install manifest — nothing was installed here | `ok` |
+| no log, install manifest present — an install recorded no log | `unknown` |
+| log present, tail is `write` / `skip` / `rollback` | `ok` |
+| log present, tail is `abort` | `fail` |
+
+`unknown` is not a failure and does not change the exit code: an install
+that predates the log is an unanswered question, not a broken install.
+
+### What the failure remedy may claim
+
+Nothing in this tree reverses an aborted install. The only rollback-shaped
+entry any writer emits is the wizard's dismiss marker (empty path, null
+hash), which clears the recovery banner and un-writes nothing. The
+`txlog-clean` failure remedy therefore names what re-running `init` actually
+does — re-apply the plan over the partial tail — and a test in
+`tests/scripts/_cli/cmd_conformance.test.ts` asserts both that the verb it
+names is one the dispatcher registers and that no remedy this check emits
+promises a recovery the tree cannot perform.
 
 ## § 2 — Exit-code contract
 

@@ -164,7 +164,8 @@ export type ConflictResolution = 'skip' | 'overwrite' | 'merge';
  * Result of applying an {@link InstallPlan}.
  *
  * Surfaced to the wizard's progress bar (Phase B1) and recorded in the
- * transaction log (Phase A4) so recovery can reverse-apply on crash.
+ * transaction log (Phase A4) so a crashed run's tail can be surfaced to
+ * the wizard's recovery screen.
  */
 export interface ApplyResult {
     readonly target: InstallTarget;

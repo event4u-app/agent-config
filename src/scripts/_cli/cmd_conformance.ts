@@ -6,7 +6,9 @@
  * consumer-facing checks that answer ONE question deterministically:
  * "is agent-config installed AND firing in this repo?"
  *
- *   (a) txlog-clean          — install log tail carries no abandoned run
+ *   (a) txlog-clean          — install log tail carries no abandoned run;
+ *                              an absent log on an installed tree is `unknown`,
+ *                              not green (see `_check_txlog_clean`)
  *   (b) router-pointers      — dist/router.json ids + routes_to resolve on disk
  *   (c) hook-dispatcher      — dispatcher answers synthetic session_start/stop
  *   (d) lean-projection      — lean_projection.mode matches projected artifacts
@@ -105,12 +107,60 @@ export function installLogPath(): string {
 // Check (a) — txlog tail clean.
 // ---------------------------------------------------------------------------
 
-export function _check_txlog_clean(logPath: string = installLogPath()): Dict {
+/**
+ * True when this tree carries an install manifest — i.e. something was
+ * installed here, so an install transaction log was expected.
+ *
+ * The discriminator for the two absent-log cases below. A tree with no
+ * manifest was never installed and has genuinely nothing to recover; a
+ * tree WITH a manifest recorded an install and no log for it, which is
+ * not the same answer and must not be reported as the same colour.
+ */
+export function _installLogExpected(projectRoot: string): boolean {
+    return fs.existsSync(installed_tools.manifest_path(projectRoot));
+}
+
+/**
+ * Check (a) — the install transaction log tail carries no abandoned run.
+ *
+ * Three absent-log outcomes, not one (road-to-a-conformance-check-that-can-fail
+ * Phase 1). Until this split the branch returned `ok` unconditionally, and
+ * since the log's only writer is the browser install route
+ * (`src/server/routes/install.ts`), every command-line install satisfied the
+ * check by having produced nothing — a green that could not go red on the
+ * path most consumers take.
+ *
+ * - no log, no manifest  → `ok`      (nothing was installed here)
+ * - no log, manifest     → `unknown` (an install happened and recorded no log)
+ * - log present          → `ok` / `fail` on the tail, as before
+ *
+ * `unknown` is deliberately NOT `fail`: an install that predates the log, or
+ * one written by a path that does not log, is an unanswered question rather
+ * than a broken install, and reddening every such consumer at upgrade is the
+ * risk this phase's shape exists to avoid. The exit contract keys off `fail`
+ * only, so `unknown` leaves exit codes untouched.
+ */
+export function _check_txlog_clean(
+    logPath: string = installLogPath(),
+    projectRoot: string | null = null,
+): Dict {
     if (!fs.existsSync(logPath)) {
+        if (projectRoot !== null && _installLogExpected(projectRoot)) {
+            return {
+                id: 'txlog-clean',
+                status: 'unknown',
+                message:
+                    'install manifest present but no install transaction log — ' +
+                    'this install recorded none, so the last run cannot be confirmed complete',
+                remedy:
+                    'only the browser install route (`agent-config setup`) writes the log today; ' +
+                    'run `agent-config doctor` for the drift answer this check cannot give',
+            };
+        }
         return {
             id: 'txlog-clean',
             status: 'ok',
-            message: 'no install transaction log — nothing to recover',
+            message: 'no install transaction log and no install manifest — nothing was installed here',
             remedy: '',
         };
     }
@@ -131,7 +181,9 @@ export function _check_txlog_clean(logPath: string = installLogPath()): Dict {
             message:
                 `install log tail is an abandoned run (abort at ${last.ts}` +
                 `${last.note ? `: ${last.note}` : ''})`,
-            remedy: 're-run `agent-config init` (recovery reverse-applies the aborted tail)',
+            remedy:
+                're-run `agent-config init` — it re-applies the plan over the partial tail; ' +
+                "the aborted run's writes stay on disk and are replaced only where the plan covers them",
         };
     }
     return {
@@ -492,7 +544,7 @@ export function runConformanceChecks(opts: ConformanceRunOptions = {}): Dict[] {
     const projectRoot = opts.projectRoot ?? process.cwd();
     const packageRoot = opts.packageRoot ?? PACKAGE_ROOT;
     const checks: Dict[] = [];
-    checks.push(_check_txlog_clean());
+    checks.push(_check_txlog_clean(installLogPath(), projectRoot));
     checks.push(_check_router_pointers(packageRoot));
     if (opts.skipDispatcher === true) {
         checks.push({

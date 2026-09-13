@@ -18,11 +18,13 @@ import {
     _check_lean_projection,
     _check_router_pointers,
     _check_txlog_clean,
+    _installLogExpected,
     appendConformanceReport,
     conformanceLogPath,
     detectSmokePlatform,
     routeTargetPaths,
 } from '../../../src/scripts/_cli/cmd_conformance.js';
+import { findCommand } from '../../../src/cli/registry.js';
 
 let tmp: string;
 
@@ -65,6 +67,34 @@ describe('_check_txlog_clean', () => {
         expect(_check_txlog_clean(log)['status']).toBe('ok');
     });
 
+    it('SABOTAGE: an installed tree with no transaction log is not green', () => {
+        // Phase 4.1 negative fixture for the branch that was always green:
+        // a tree carrying an install manifest but no log did not record one,
+        // and reporting that as `ok` is the false green this roadmap opened.
+        mkdirSync(join(tmp, 'agents'), { recursive: true });
+        writeFileSync(join(tmp, 'agents', 'installed-tools.lock'), 'schema_version: 2\ntools: []\n');
+        const res = _check_txlog_clean(join(tmp, 'absent.jsonl'), tmp);
+        expect(res['status']).toBe('unknown');
+        expect(String(res['message'])).toContain('no install transaction log');
+        expect(res['status']).not.toBe('fail');
+    });
+
+    it('does not over-fire: a never-installed tree stays green', () => {
+        const res = _check_txlog_clean(join(tmp, 'absent.jsonl'), tmp);
+        expect(res['status']).toBe('ok');
+    });
+
+    it('does not over-fire: an installed tree with a clean log stays green', () => {
+        mkdirSync(join(tmp, 'agents'), { recursive: true });
+        writeFileSync(join(tmp, 'agents', 'installed-tools.lock'), 'schema_version: 2\ntools: []\n');
+        const log = join(tmp, 'log.jsonl');
+        writeFileSync(
+            log,
+            JSON.stringify({ ts: '2026-07-07T00:00:00Z', kind: 'write', path: '/x', sha256: 'a' }) + '\n',
+        );
+        expect(_check_txlog_clean(log, tmp)['status']).toBe('ok');
+    });
+
     it('SABOTAGE: fails when the tail is an abandoned abort', () => {
         const log = join(tmp, 'log.jsonl');
         writeFileSync(
@@ -83,6 +113,67 @@ describe('_check_txlog_clean', () => {
         const res = _check_txlog_clean(log);
         expect(res['status']).toBe('fail');
         expect(String(res['message'])).toContain('abandoned');
+    });
+});
+
+describe('the txlog remedy resolves to real behaviour', () => {
+    function abortLog(): string {
+        const log = join(tmp, 'log.jsonl');
+        writeFileSync(
+            log,
+            JSON.stringify({
+                ts: '2026-07-07T00:00:01Z',
+                kind: 'abort',
+                path: '/y',
+                sha256: null,
+                note: 'client disconnect',
+            }) + '\n',
+        );
+        return log;
+    }
+
+    it('names a verb the dispatcher actually registers', () => {
+        const remedy = String(_check_txlog_clean(abortLog())['remedy']);
+        const verb = /`agent-config ([a-z][a-z0-9:-]*)`/.exec(remedy)?.[1];
+        expect(verb).toBeDefined();
+        expect(findCommand(verb as string)).toBeDefined();
+    });
+
+    it('claims no recovery this tree cannot perform', () => {
+        // The only rollback-shaped writer in the tree is the wizard's
+        // dismiss marker (empty path, null hash) — nothing un-writes a
+        // partial run, so no remedy may promise that it does.
+        for (const res of [
+            _check_txlog_clean(abortLog()),
+            _check_txlog_clean(join(tmp, 'absent.jsonl')),
+            _check_txlog_clean(join(tmp, 'absent.jsonl'), tmp),
+        ]) {
+            expect(String(res['remedy'])).not.toMatch(/revers/i);
+            expect(String(res['remedy'])).not.toMatch(/undo|roll\s?back/i);
+        }
+    });
+
+    it('the source tree publishes no un-backed recovery claim', () => {
+        for (const rel of [
+            '../../../src/install/txlog.ts',
+            '../../../src/install/types.ts',
+            '../../../src/scripts/_cli/cmd_conformance.ts',
+        ]) {
+            const text = readFileSync(new URL(rel, import.meta.url), 'utf8');
+            expect(text).not.toMatch(/reverse-appl/i);
+        }
+    });
+});
+
+describe('_installLogExpected', () => {
+    it('is false for a tree with no install manifest', () => {
+        expect(_installLogExpected(tmp)).toBe(false);
+    });
+
+    it('is true once an install manifest exists', () => {
+        mkdirSync(join(tmp, 'agents'), { recursive: true });
+        writeFileSync(join(tmp, 'agents', 'installed-tools.lock'), 'schema_version: 2\ntools: []\n');
+        expect(_installLogExpected(tmp)).toBe(true);
     });
 });
 

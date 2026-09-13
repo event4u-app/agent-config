@@ -42,23 +42,43 @@ the tree is a dismiss marker with an empty path and a null hash.
 
 ## Phase 1 — Make the false green visible, without breaking anyone
 
-- [ ] **1.1 Return a distinct non-green status when the log is absent** on a path where a log was
+- [x] **1.1 Return a distinct non-green status when the log is absent** on a path where a log was
       expected. Not a failure yet — an explicit unknown.
       verify: a fixture root with no transaction log yields a non-`ok` row for that check and the
       conformance run names it; the row is not `fail`.
-- [ ] **1.2 Keep the genuinely-nothing-to-do case green.** A tree that was never installed is not
+- [x] **1.2 Keep the genuinely-nothing-to-do case green.** A tree that was never installed is not
       a degraded install.
       verify: the two cases are distinguishable in the output and a test asserts each.
 
 ## Phase 2 — Ground the remedy or remove it
 
-- [ ] **2.1 Make the failure remedy name an action this tree performs.** Either implement the
+- [x] **2.1 Make the failure remedy name an action this tree performs.** Either implement the
       reverse-apply, or say what re-running init actually does.
       verify: `grep -rn 'reverse-appl' src/` names nothing the tree cannot do, and a test asserts
       the remedy string resolves to real behaviour.
-- [ ] **2.2 Do not widen the scope to make the sentence true.** Implementing a reverse-apply and
+- [x] **2.2 Do not widen the scope to make the sentence true.** Implementing a reverse-apply and
       correcting the wording are different-sized changes and the choice is the blocker's.
       verify: whichever is chosen, the other is recorded as declined with its reason.
+
+### Phase 2 decision — 2026-09-13
+
+**Chosen:** correct the wording. The `txlog-clean` failure remedy now names what
+re-running `agent-config init` actually does (re-apply the plan over the partial
+tail), and the two source-tree claims that said otherwise
+(`src/install/txlog.ts`, `src/install/types.ts`) were corrected with it.
+`grep -rn 'reverse-appl' src/` now returns nothing, and
+`tests/scripts/_cli/cmd_conformance.test.ts` asserts both halves: the verb the
+remedy names resolves through `src/cli/registry.ts`, and no remedy this check
+emits promises a recovery the tree cannot perform.
+
+**Declined:** implementing the reverse-apply. Reason — un-writing a partial
+install is a new consumer-visible mechanism, not a correction of an existing
+one: it needs a durable record of pre-write file state that no writer emits
+today (the only rollback-shaped entry in the tree is the wizard's dismiss
+marker, carrying an empty path and a null hash), and it is a data-destroying
+operation on the user's tree. That is an owner decision about install behaviour,
+which this phase's own 2.2 exists to keep separate from the wording fix. It is
+not scheduled here; the blocker below records it as the open half.
 
 ## Phase 3 — Write the log from the path that does the install
 
@@ -71,10 +91,10 @@ the tree is a dismiss marker with an empty path and a null hash.
 
 ## Phase 4 — The negative fixture for the branch that was always green
 
-- [ ] **4.1 Write the absent-log fixture and observe it red before the fix.**
+- [x] **4.1 Write the absent-log fixture and observe it red before the fix.**
       verify: the red reading is recorded in the commit or the change description; a test never
       seen red has unknown sensitivity.
-- [ ] **4.2 Prove it does not over-fire.** A never-installed tree and a clean installed tree both
+- [x] **4.2 Prove it does not over-fire.** A never-installed tree and a clean installed tree both
       pass.
       verify: both negative cases are in the same test file and green.
 
@@ -107,7 +127,7 @@ the tree is a dismiss marker with an empty path and a null hash.
   Phase 1's unknown becomes the permanent answer.
 
 ### blocker: the-remedy-string-is-a-published-claim
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Class:** 3 — human-only
 - **Blocks:** Phase 2 only.
@@ -119,6 +139,11 @@ the tree is a dismiss marker with an empty path and a null hash.
 - **If you do nothing:** the surface keeps telling operators that a recovery will happen, and it
   will not.
 - **Resolved when:** the remedy string names an action a test can resolve to real code.
+- **Resolution (2026-09-13):** the wording was corrected and the reverse-apply
+  declined — see § Phase 2 decision above. The remedy now names `agent-config
+  init` and describes re-application, not recovery; three tests in
+  `tests/scripts/_cli/cmd_conformance.test.ts` resolve it to real code. The
+  reverse-apply remains unbuilt and unscheduled.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-11 | reviewer: claude/host -->
@@ -132,13 +157,13 @@ the tree is a dismiss marker with an empty path and a null hash.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — An absent transaction log on a path where one was expected yields an explicit unknown,
+- [x] AC-1 — An absent transaction log on a path where one was expected yields an explicit unknown,
       never green, and a never-installed tree still passes.
-- [ ] AC-2 — The failure remedy names an action the tree performs, proven by a test that resolves
+- [x] AC-2 — The failure remedy names an action the tree performs, proven by a test that resolves
       it to real code.
 - [ ] AC-3 — A headless install produces at least one log entry, and both writers emit an identical
       entry shape.
 - [ ] AC-4 — The existing sabotage fixture reddens the check after a headless install.
-- [ ] AC-5 — The absent-log fixture was observed red before the fix, and the reading is recorded.
+- [x] AC-5 — The absent-log fixture was observed red before the fix, and the reading is recorded.
 - [ ] AC-6 — A user-modified managed file survives a refresh and is named in the report.
 - [ ] AC-7 — The hash plumbing and the matrix change are separate commits.
