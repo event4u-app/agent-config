@@ -15743,8 +15743,11 @@ var settingsSchema = external_exports.object({
     }).default({ max_cost_per_run_usd: 5, max_cost_per_rolling_7d_usd: 25 })
   }),
   planning: external_exports.object({
-    challenge_on_create: external_exports.boolean().default(true).describe(
-      "Gate C \u2014 plan-confidence gate before authoring. true (default) = a plan-artifact ask (/roadmap:create, roadmap-writing, /feature:plan, /feature:roadmap) first checks the four 95%-confidence conditions from /challenge-me vision; any gap routes into the interview (or the inline degrade protocol) before authoring, and a confident pass emits exactly one marker line. false = inert, plan asks author directly. An explicit user bypass always wins for that turn and is counted."
+    closure_pass: external_exports.boolean().default(true).describe(
+      `Gate C \u2014 plan-closure pass. true (default) = a plan-artifact ask (/roadmap:create, roadmap-writing, /feature:plan, /feature:roadmap, /roadmap:materialize, /implement-ticket, /jira-ticket, /analyze:inbox, /analyze:roadmap-repos) ends in a closure pass (/challenge-me closure): every foreseeable decision is closed at the lowest rung that owns it and written into the roadmap's "## Decisions" table, so a long run never meets a question planning could have closed. false = inert, plan asks author directly. An explicit user bypass always wins for that turn and is counted as a bypass rather than as an absent closure.`
+    ),
+    challenge_on_create: external_exports.boolean().optional().describe(
+      "DEPRECATED alias of planning.closure_pass, accepted for one minor so an installed settings file keeps loading. The gate it named fired at the START of planning as a seed-confidence check; the pass it now names runs at the END as a plan-closure check. A file setting only the old key resolves it as closure_pass; a file setting both takes closure_pass."
     ),
     risk_review: external_exports.boolean().default(true).describe(
       'Gate R1 \u2014 plan-risk review. true (default) = every ready (non-draft) plan must carry a schema-valid "## Risk Register" section (ranked risks, mitigation + anchor per row, freshness marker, exact honest-null grammar), enforced by lint_plan_risk_register at pre-push + CI. false = escape hatch, the validator skips.'
