@@ -153,6 +153,28 @@ item. Phases 1-6 may run once 0.2 is chosen.
       The N=3 block becomes a pointer to `execution.fix_loop_max`, owned by stem 3.
       verify: `grep -m1 'autonomy:' src/config/agent-settings.template.yml` reads `on`;
       `./scripts-run src/scripts/lint_no_dead_context` is green after the context deletions.
+      **NOT attempted 2026-09-13, and the reason is not the kernel guard.** The
+      `kernel-guard-first-crossing` blocker lists this step as reachable, and as a statement
+      about the FILE that is correct — `autonomous-execution.md` is not a kernel member, the
+      deny does not fire on it, and the contexts this step deletes
+      (`contexts/execution/autonomy-detection.md`, `autonomy-mechanics.md`,
+      `autonomy-examples.md`) are referenced by no kernel rule; measured, the five kernel rules
+      that mention autonomy all say only that it never lifts a floor, which stays true after the
+      flip. Two other things stop it.
+      (a) **The box cannot close.** The N=3 half points at `execution.fix_loop_max`, a key this
+      step says is owned by stem 3. It does not exist in the template today, so the pointer has
+      no target and the step is partly waiting on a different roadmap.
+      (b) **The flip is authority-expanding and this run carries no ratification artifact.**
+      Moving `personal.autonomy` from `auto` — which resolves to off-until-opted-in — to `on`
+      widens the agent's own default authority, and ADR-268 section 4 makes an
+      authority-expanding edit inert until a ratification artifact exists. A run cannot both
+      gain the authority and certify the edit that grants it; that is the Iron Law 5.1 encodes
+      by rejecting `reviewed_by == implemented_by`.
+      **A gap worth recording while it is visible:** `check_kernel_edit_ratified` scopes to
+      kernel rules, `src/scripts/hooks/block_*.ts` and its own three files. This edit is
+      authority-expanding and lands in NONE of them, so nothing would have stopped it. The
+      restraint here is model-carried, not enforced — which is the honest description and an
+      argument for widening that gate's scope rather than for trusting the next run.
 - [ ] **1.5 `ask-when-uncertain.md`: the philosophy line yields to ownership.** *One question
       too many beats one wrong assumption* is replaced by a pointer to the ownership routing
       table, and the nine vague-request triggers are scoped to chat without a mission.
@@ -167,6 +189,16 @@ item. Phases 1-6 may run once 0.2 is chosen.
       wildcard tool grant is a finding only where the wildcard can reach a typed op.
       verify: the three wildcard-grant findings in `src/scripts/lint_skill_frontmatter_safety.ts`
       demote to advisory for grants that reach no typed op, and stay blocking for grants that do.
+      **NOT attempted 2026-09-13 — halted on the security-sensitive surface, deliberately.**
+      The file is reachable (`tool-safety` is not a kernel member) and the change is well
+      specified, but its whole content is *demoting existing security findings*, which is a
+      security-sensitive edit under `security-sensitive-stop` and therefore one of the six halt
+      conditions this run executes under. The prerequisite is also missing: "reaches no typed
+      op" is only decidable once the eleven-op vocabulary exists as code, and it does not —
+      Phase 4.3's `check_typed_op_grant.ts` is unwritten and there is no grant ledger in the
+      tree for it to read. Demoting the findings first and deriving reachability from prose
+      would be the narrowed-floor-without-a-replacement shape this roadmap's own Risk 1 names.
+      Order: 4.3 first, then this step.
 
 ## Phase 2 — Settings and the roadmap carry the grant
 
@@ -300,6 +332,17 @@ item. Phases 1-6 may run once 0.2 is chosen.
       Superseded evidence files gain a one-line supersession note rather than an edit.
       verify: `grep -c 'NEVER MERGES' src/domains/product-basic/roadmap/process-full/command.md`
       returns 0, and the archived drain-run evidence carries the note.
+      **NOT attempted 2026-09-13, on ordering and on independence.** The edit is a doc change
+      and ADR-268 section 3 is the ruling it needs, so it is authorised — but 4.1 is not built,
+      so deleting the banner would leave `process-full` silent about merging while no mechanism
+      gates a merge. That is strictly worse than either end state: today the command says it
+      never merges and never does; after 4.1 it says when it may and is gated. Between them it
+      would say nothing and be gated by nothing.
+      There is a second reason and it is the one that would hold even if the ordering were
+      fine: the run that would delete the banner is a `process-full` run, executing under the
+      banner, whose own instruction reads *"You NEVER merge."* An agent removing the sentence
+      that constrains it, in the same session it is constrained by it, is the shape
+      `evaluator-independence` exists to refuse. This belongs in the PR that lands 4.1.
 - [ ] **4.3 A gate that reads the ledger, not a prompt.** `check_typed_op_grant.ts` reads the
       ledger and the diff; a typed op — a tag push, a release-workflow edit, a protection
       change, a secret-file write — without a matching object-bound grant is red. This is the
