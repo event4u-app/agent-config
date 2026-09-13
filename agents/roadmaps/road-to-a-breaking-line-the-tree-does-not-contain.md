@@ -88,14 +88,14 @@ a table frozen at 9, and the roadmap carries the verified version.
 
 ## Phase 2 — Give the two majors a migration map
 
-- [ ] **2.1 Add the 15.0.0 section.** What a consumer must do about the two
+- [x] **2.1 Add the 15.0.0 section.** What a consumer must do about the two
       retired commands (`/chat-history`, `/chat-history import`), and — stated
       plainly — that the announced kernel-deny retirement did **not** ship, so
       there is nothing to migrate for it.
       verify: `grep -n '^## ' docs/MIGRATION.md` lists a 15.0.0 section, and it
       names both retired commands by path.
 
-- [ ] **2.2 Add the 16.0.0 section.** What the deleted stored
+- [x] **2.2 Add the 16.0.0 section.** What the deleted stored
       standing-payload ceiling means for a consumer holding one, and what
       replaces it.
       verify: `grep -n '^## ' docs/MIGRATION.md` lists a 16.0.0 section that
@@ -124,7 +124,7 @@ a table frozen at 9, and the roadmap carries the verified version.
 
 - [x] AC-1 — The 15.0.0 head no longer announces an unqualified retirement of
       the kernel-rule tool-call deny, and names the revert that decided it.
-- [ ] AC-2 — `docs/MIGRATION.md` carries a section for 15.0.0 and one for
+- [x] AC-2 — `docs/MIGRATION.md` carries a section for 15.0.0 and one for
       16.0.0, each naming what its BREAKING entries ask of a consumer.
 - [ ] AC-3 — A major whose BREAKING section has no corresponding MIGRATION
       heading is refused at the cut, and the refusal names the version.
