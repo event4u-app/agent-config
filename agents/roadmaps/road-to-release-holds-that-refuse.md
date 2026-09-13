@@ -46,7 +46,7 @@ when 15.0.0 shipped — and nothing can express it, let alone refuse on it.
 
 ## Phase 0 — Measure first, and record the honest null up front
 
-- [ ] **0.1 Count release-coupling prose across all four roadmap folders.** Write the count, the
+- [x] **0.1 Count release-coupling prose across all four roadmap folders.** Write the count, the
       search terms and the per-file hits to `agents/evidence/analysis/`.
       verify: the file records that the **active** corpus holds zero release-coupling sentences
       at HEAD, and that the last known instance closed in
@@ -54,17 +54,32 @@ when 15.0.0 shipped — and nothing can express it, let alone refuse on it.
       risks read MITIGATED (`:973`) and DISCHARGED (`:978`). Zero is the recorded finding, not a
       failure of the sweep. `corrected-from-reproduction` — the source step pointed at
       `:569-570` of an active file; the file is archived and the line numbers moved.
-- [ ] **0.2 Record the HEAD exposure row.** For each active roadmap, the count of `[x]` and `[ ]`
+      LANDED 2026-09-13 at `7182f5d07` — `agents/evidence/analysis/release-holds-phase-0-2026-09-13.md`
+      § 0.1. All four cited archive line numbers reproduce exactly. The active corpus returns two
+      hits, both self-references inside this file, and zero substantive declarations.
+- [x] **0.2 Record the HEAD exposure row.** For each active roadmap, the count of `[x]` and `[ ]`
       steps; a file with both is mid-flight and is what this mechanism is for.
-      verify: the row is in the same evidence file and names four of the seven active roadmaps as
-      mid-flight, with their counts. `corrected-from-reproduction` — the source asked for a
-      30-tag historical sweep; that needs 30 `_lib/base_tree` materialisations, so cost it before
-      scheduling and state the HEAD row separately, since it is the only row a reader can act on.
-- [ ] **0.3 Enumerate the four release entry points against their consumer.** `release.ts`
+      verify: the row is in the same evidence file, with per-file counts, and states the HEAD row
+      separately from the historical one. `corrected-from-reproduction` — the source asked for a
+      30-tag historical sweep; state the HEAD row separately, since it is the only row a reader can
+      act on.
+      TWO CORRECTIONS, LANDED 2026-09-13, both measured rather than argued
+      (`agents/evidence/analysis/release-holds-phase-0-2026-09-13.md` § 0.2, reproducible with
+      `bash agents/evidence/analysis/release-holds-exposure-row.sh <ref>`):
+      (a) the mid-flight count at tag `15.0.0` is **three** of seven, not four — this verify line
+      and the `zero-live-subjects` blocker both said four; seven active is correct.
+      (b) the sweep needs no `_lib/base_tree` materialisation at all. Reading the object directly at
+      a ref is enough; `export-ignore` only affects archive export. One ref cost under a second, so
+      a 30-tag sweep is cheap — it was never the expensive row, only the un-actionable one.
+      HEAD row: 14 files (7 `ready`, 7 `draft`), **1 mid-flight** and **0 of the 7 `ready`**.
+- [x] **0.3 Enumerate the four release entry points against their consumer.** `release.ts`
       pre-flight, `src/config/release-gate-locality.yml`, `release-validation.yml` / `ci-strict`,
       `release-guard.yml` on the pushed tag.
       verify: the table has four rows and each names the file and line its refusal would be
       wired into.
+      LANDED 2026-09-13 — `agents/evidence/analysis/release-holds-phase-0-2026-09-13.md` § 0.3.
+      Row 3 records that `ci-strict` needs no edit of its own: it delegates to `ci` at
+      `Taskfile.yml:462`, the by-construction superset `check_ci_strict_superset` asserts.
 - [ ] **0.4 Pre-register the claim as unbacked, with its falsifier and denominator.**
       `release-hold-refuses-declared-state` in `docs/CLAIMS.md`: *after 30 tags past Phase 4, at
       least one refusal logged OR at least one gated draft re-sequenced to continuous at
