@@ -265,13 +265,13 @@ owner-owned residue remains, closure completes with zero owner interaction.
 
 ## Phase 6 — Scope-growth ownership
 
-- [ ] **6.1 Agent-owned growth, enumerated.** A necessary internal refactor, a missing test, a
+- [x] **6.1 Agent-owned growth, enumerated.** A necessary internal refactor, a missing test, a
       regression on a touched path, a small dependency adjustment, a local API change inside
       defined semantics, and a Boy-Scout cleanup that is small, local, low blast radius,
       testable and carries no new product decision. Recorded as a scope delta in the PR body.
       verify: a fixture run that adds a missing test on a touched path records a scope delta
       and asks nothing.
-- [ ] **6.2 Council-owned and owner-owned growth, enumerated.** Council: a larger internal
+- [x] **6.2 Council-owned and owner-owned growth, enumerated.** Council: a larger internal
       re-cut, two equal technical strategies, a risky compatibility design, an unclear boundary
       with no new product semantics. Owner: only where the work changes what the product or
       business does, or needs a typed op. Larger unrelated opportunities become a follow-up
