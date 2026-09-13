@@ -130,11 +130,11 @@ is not that the states are unnamed; it is that nothing can test them.
 
 ## Phase 6 — Measure before promoting anything
 
-- [ ] **6.1 Register the claim** that the probe catches behavioural drift, over the frozen Phase 0
+- [x] **6.1 Register the claim** that the probe catches behavioural drift, over the frozen Phase 0
       fixture, with its false-positive reading.
       verify: `./scripts-run src/scripts/check_claims` is green and the claim row names its
       denominator.
-- [ ] **6.2 Record a null as a first-class outcome.** If the probe's false-positive rate is worse
+- [x] **6.2 Record a null as a first-class outcome.** If the probe's false-positive rate is worse
       than the screenshot arm's miss rate, that is the finding.
       verify: the claim carries a verdict either way, and neither outcome is described as a failure
       of the roadmap.
