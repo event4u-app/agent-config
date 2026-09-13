@@ -735,6 +735,31 @@ export function make_span_file_reader(
     };
 }
 
+/**
+ * The whole span → curated-head prefill, in one call.
+ *
+ * The composition lives here rather than at the call site because the span's
+ * end ref and the file reader's ref MUST be the same one: `Known limitations`
+ * reads file CONTENT at a ref, so a caller that collected the span at `to`
+ * while reading blobs at some other ref would derive a head describing two
+ * different trees. Pairing them in one function makes that mismatch
+ * unexpressible rather than merely discouraged.
+ *
+ * Throws whatever `collect_span_commits` throws. Whether a git failure is
+ * fatal or degrades to the `_none_` skeleton is the caller's decision, and it
+ * stays the caller's — the generator catches, the gate does not.
+ */
+export function derive_head_prefill(
+    from: string | null,
+    to: string,
+    cwd: string,
+): Record<string, string> {
+    const span = collect_span_commits(from, to, cwd);
+    return render_derived_head_values(
+        derive_category_hits(span, { readTouchedFile: make_span_file_reader(to, cwd) }),
+    );
+}
+
 /** Latest reachable release tag before `ref`, or null when there is none. */
 export function previous_release_tag(ref: string, cwd: string): string | null {
     const r = spawnSync(
