@@ -40,6 +40,18 @@ capability_gap: none
 > a forge administrator can make. The measurement and the gate landed on PR #1984; the
 > settings did not, because they cannot be a diff.
 >
+> **UPDATE 2026-09-13 — the anchor half of that dependency is discharged, and the blocker is
+> NOT.** None of the three settings changes is still wanted: two were removed from the trust
+> model by owner ruling and the third is covered by a dated owner waiver, so
+> `check_platform_anchor` already reads `PASS_WITH_ACCEPTED_RISK` and exits 0. What remains
+> between this file and execution is therefore smaller and differently shaped than the
+> paragraph above: the kernel-write deny is still in force, its retirement was refused 2/2 in
+> a round-2 review over the head-controlled enforcement path and needs its own council
+> decision, and the reviewing council of 2026-09-13 added a reason not to lean on the anchor
+> for it — a locally invoked control an administrator may skip, and both sides of whose
+> comparison an administrator may edit, is not evidence of enforced compliance. Do not read
+> "the anchor is green" as "the deny may retire".
+>
 > **This file's own local blocker is NOT the obstacle.** `adr-266-acceptance-closure` reads
 > `resolved` and its condition re-verifies: `grep -m1 '^status:' docs/decisions/ADR-268-*.md`
 > reads `accepted`. The dependency is the whole of it.

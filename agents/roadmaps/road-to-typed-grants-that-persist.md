@@ -310,6 +310,13 @@ item. Phases 1-6 may run once 0.2 is chosen.
       landing than it looked: the missing anchor is not merely unverified, it is missing. Built
       to the specification of an AI council (2/2 convergent, 2 rounds, blind peer review) under
       a written owner delegation — its decision is transcribed in the blocker.
+      **UPDATE 2026-09-13 — it no longer reds, and that is a smaller change than it sounds.**
+      The gate now exits 0 with `PASS_WITH_ACCEPTED_RISK`: two of the three gaps named above
+      were removed from the trust model by owner ruling rather than fixed, and the third is
+      covered by a dated owner waiver. So the anchor is present and green — but what it
+      anchors is weaker than the round-2 refusal assumed, and the refusal itself stands
+      undisturbed. See the `ratification-platform-anchor` blocker's `Blocks:` field for why a
+      green anchor is not the retirement precondition the seats had in mind.
       **NOT wired as a blocking CI step in this change, deliberately, and this is the one place
       the two seats differed.** anthropic proposed adding it to CI in the same change behind a
       `# BOOTSTRAP EXCEPTION` marker that lets this PR pass; openai warned in the same round
@@ -490,6 +497,29 @@ item. Phases 1-6 may run once 0.2 is chosen.
   local, after 15:16 and before 15:18 exists, so the 15:18 edit is not part of what
   unblocked it. `bypass_actors: []` and `current_user_can_bypass: never` still hold.
 
+  **UPDATE 2026-09-13 — limb 1 IS met, the three findings are gone, and the route named
+  below was not the one taken.** Measured today: `check_platform_anchor` reports
+  `PASS_WITH_ACCEPTED_RISK` and exits 0. No exemption over the approval dimensions was ever
+  built; the owner ruled instead that a mandatory approving review is not wanted on this
+  repository at all, so `minimum_approving_reviews` and `require_last_push_approval` left
+  `src/config/platform-anchor.json` AND `NON_NEGOTIABLE_FLOOR` entirely — a dimension outside
+  the trust model is not a waived rule. The third finding,
+  `strict_required_status_checks`, is covered by the dated owner waiver
+  `arr-2026-09-10-strict-status-checks` (expires 2026-12-09), which is the
+  `accepted_risk_reductions` mechanism `road-to-bounded-approval-floor-waiver.md` designed
+  and which a council reviewed and ratified 2/2 on 2026-09-13. **That roadmap is superseded
+  for the approval half and closed**; do not read the sentence below as an open dependency
+  on it.
+
+  Two further corrections from the same re-measurement. `bypass_actors: []` and
+  `current_user_can_bypass: never` hold **today** and held on every day but one — an
+  `OrganizationAdmin` actor with `bypass_mode: always` was re-added 2026-09-11 (version
+  `49393554`) and removed again 2026-09-12 (`49500777`), so "still hold" above is true of
+  now and not of the whole interval. And **eight** ruleset versions exist as of 2026-09-13,
+  not six; the paragraph above counts only through 16:06 on 2026-09-10 and is correct for
+  that date.
+
+  *Original text, true between the 15:16 edit and the waiver landing:*
   So limb 1 is **not met** and the gate reports three findings again — all three intended.
   What it now waits on is the in-repository half: a structured, evidence-carrying exemption
   rather than a lowered floor, per
@@ -508,6 +538,20 @@ item. Phases 1-6 may run once 0.2 is chosen.
   a capability and not a rehearsed procedure. The removal satisfies
   `allow_unconditional_bypass: false`; the recovery path is Phase 0.2 of the waiver roadmap
   and is open.
+
+  **UPDATE 2026-09-13 — the written half landed, the rehearsal did not, and this blocker now
+  carries the remainder.** `docs/contracts/branch-protection-policy.md` § Administrator
+  recovery from a lockout gives the five-step procedure with exact commands: confirm it is a
+  ruleset lockout and not a red check, capture the broken state, read the last good version
+  (via `.state`, which the history payload nests and a naive `.bypass_actors` jq misses),
+  restore by preferring `enforcement=evaluate` over a full object PUT, then re-enable and
+  verify in the same session. What is still missing is the one thing 0.2 required to call it
+  tested: **an execution against a non-default-branch ruleset.** That is an admin API write
+  on repository protection settings — Hard-Floor under `non-destructive-by-default`, reserved
+  for the maintainer with explicit this-turn confirmation — so no agent can discharge it, and
+  the waiver roadmap closed with that box deliberately open. Until a maintainer rehearses it,
+  the procedure is a documented hypothesis: the commands are the right ones and nobody has
+  watched them work.
 - **Owner:** maintainer
 - **Class:** 3 — human-only
 - **Blocks:** the deny retirement (5.2's second half) and therefore Phase 1's five kernel
@@ -516,11 +560,20 @@ item. Phases 1-6 may run once 0.2 is chosen.
   refused the retirement over the head-controlled enforcement path, and both 2026-09-10 council
   seats tied the retirement to this anchor reading compliant. So the dependency edge runs
   through here, and recording it as harmless would understate what is waiting on it.
-  **One qualification added 2026-09-10 afternoon:** "reading compliant" was written when
-  compliance meant the approval floor satisfied. Under the planned exemption it will mean
-  compliant-with-approvals-suspended, which is a weaker precondition than the seats had in
-  mind when they attached it. Whether that still satisfies the condition they set is part of
-  the retirement's own council decision, not something this entry may settle.
+  **One qualification added 2026-09-10 afternoon, and RESTATED 2026-09-13 because the
+  exemption it anticipated was never built.** "Reading compliant" was written when compliance
+  meant the approval floor satisfied. It does not mean that now, and the actual weakening is
+  larger than the qualification predicted: not compliant-with-approvals-suspended, but
+  compliant **with the two approval dimensions removed from the trust model altogether**,
+  plus `strict_required_status_checks` deviating under a dated owner waiver. So the anchor
+  today reads `PASS_WITH_ACCEPTED_RISK` while proving nothing whatever about independent
+  human review — which is a materially weaker precondition than the seats had in mind when
+  they attached the retirement to it. Whether it still satisfies the condition they set is
+  part of the retirement's own council decision, and this entry settles it even less than
+  before. The reviewing council of 2026-09-13 sharpened the same point from the other side:
+  `check_platform_anchor` is a locally invoked control an administrator may skip and both
+  sides of whose comparison an administrator may edit, so it must not be cited as evidence of
+  enforced repository-wide compliance in any retirement argument.
 - **What to do:** **THE DECISION IS MADE AND THE GATE IS BUILT, 2026-09-10. What is left is a
   repository-settings change only a human with admin rights can perform, which is why this
   entry stays open.** An AI council (anthropic/claude-sonnet-4-5 + openai/codex-default,
