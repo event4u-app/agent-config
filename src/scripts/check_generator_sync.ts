@@ -3,7 +3,10 @@
  * Refuse a push whose diff edits the SOURCE of a tracked generated artefact
  * without re-running that artefact's generator.
  *
- * WHY THIS EXISTS — three incidents, one day, one class.
+ * WHY THIS EXISTS — three incidents, one day, one class. A FOURTH followed the
+ * same day, after this gate was written and while its registry still carried
+ * only two triples; it has its own section below because it turned out to be
+ * about a different thing — which local green means.
  *
  * On 2026-09-12, in a single autonomous drain run, the same defect shipped
  * three times:

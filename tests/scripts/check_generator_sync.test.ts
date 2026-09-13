@@ -360,8 +360,8 @@ describe('argv', () => {
 });
 
 describe('the shipped registry still describes this repository', () => {
-    it('names two triples with distinct ids', () => {
-        expect(REGISTRY.length).toBeGreaterThanOrEqual(2);
+    it('names at least three triples with distinct ids', () => {
+        expect(REGISTRY.length).toBeGreaterThanOrEqual(3);
         expect(new Set(REGISTRY.map((t) => t.id)).size).toBe(REGISTRY.length);
     });
 
@@ -395,6 +395,38 @@ describe('the shipped registry still describes this repository', () => {
         // unmeasurable, so it has to be reachable rather than theoretical.
         expect(bundledInstallSources('const x = 1;\n// not a module comment\n')).toEqual([]);
     });
+
+    it('watches the hook manifest YAML, and its generator reproduces the committed JSON', () => {
+        // The triple the registry missed on 2026-09-12: a comment-only YAML
+        // edit moved the content-derived fingerprint and left the committed
+        // JSON behind, and no `task` target regenerates that file.
+        //
+        // Two halves, and the second is the load-bearing one. Asserting the
+        // source matcher alone would still pass if `compile_hook_manifest`
+        // moved or changed its output shape — the triple would then be
+        // permanently UNMEASURABLE or permanently red with nothing to say why.
+        // Running the real generator into a temp dir and demanding byte
+        // equality with the committed artefact proves the triple is live.
+        const triple = REGISTRY.find((t) => t.id === 'hook-manifest-compiled');
+        expect(triple).toBeDefined();
+        const t = triple as Triple;
+        expect(t.output).toBe('src/scripts/hook_manifest.json');
+        expect(t.remedy).toBe('./scripts-run src/scripts/compile_hook_manifest');
+
+        const s = t.sourcesOf(REPO_ROOT);
+        expect(s.ok).toBe(true);
+        if (s.ok) {
+            expect(s.sources.map((x) => x.value)).toEqual(['src/scripts/hook_manifest.yaml']);
+        }
+
+        const work = mkdtempSync(join(realpathSync(tmpdir()), 'gensync-manifest-'));
+        made.push(work);
+        const fresh = t.regenerate(REPO_ROOT, work);
+        expect(fresh.ok, fresh.ok ? '' : fresh.reason).toBe(true);
+        if (fresh.ok) {
+            expect(fresh.text).toBe(readFileSync(join(REPO_ROOT, t.output), 'utf8'));
+        }
+    }, 30_000);
 
     it('watches the ADR directories the census actually reads', () => {
         const census = REGISTRY.find((t) => t.id === 'adr-evidence-census');
