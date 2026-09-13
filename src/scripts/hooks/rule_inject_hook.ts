@@ -11,7 +11,14 @@
  * the 36.2 %-against-48 % run at `docs/CLAIMS.md:188-189`. Whatever that
  * instrument's flaws — and ADR-202 closed it — it points one way.
  *
- * SHIPPED ON FOR CLAUDE CODE SINCE ADR-265 — corrected 2026-09-08 (R2 finding
+ * SHIPPED ON FOR CLAUDE CODE SINCE ADR-267 — the delivery-default record, and
+ * the citation is corrected here (2026-09-13) from ADR-265, which decides
+ * something else entirely: whether the iron-law reserve is activated, answered
+ * no, with the verifier kept inside the change. Nothing in it ships a
+ * projection mode. ADR-267 `delivery-default-for-claude-code` is the record
+ * that turns this concern on for this host, and it is the one whose
+ * `review_trigger` fires if a rule stops arriving. Previously corrected
+ * 2026-09-08 (R2 finding
  * 4), because this paragraph read "DEFAULT OFF, AND OFF MEANS ZERO BYTES …
  * under every shipped default it emits nothing … there is no measured emission
  * to register yet" and all four clauses became false in the same change that

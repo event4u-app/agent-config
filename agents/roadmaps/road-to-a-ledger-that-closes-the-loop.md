@@ -57,11 +57,11 @@ rule reached the model.
 
 ## Phase 1 — Re-census, because the source's own numbers are wrong
 
-- [ ] **1.1 Re-run the enforcement census and record its summary verbatim** into
+- [x] **1.1 Re-run the enforcement census and record its summary verbatim** into
       `agents/evidence/analysis/`.
       verify: `./scripts-run src/scripts/check_enforcement_coverage --json` and the committed
       artefact carry the same figures, with the date of the reading.
-- [ ] **1.2 Correct three figures wherever any of this material is adopted.**
+- [x] **1.2 Correct three figures wherever any of this material is adopted.**
       `corrected-from-reproduction` — measured 2026-09-11: blocking concerns are **8, not 9**
       (`grep -c 'severity: blocking'` returns 9 because `src/scripts/hook_manifest.yaml:608` is a
       comment containing the string; parse the YAML); the `enforced_by:` split is
@@ -69,14 +69,14 @@ rule reached the model.
       corpus is **318** gate-open fires, not 330, per `src/config/hook-token-budget.json`.
       verify: no adopted text carries any of the three old figures, and no concern count in the
       tree is derived by grepping the string rather than parsing the file.
-- [ ] **1.3 Record what the source set did not know it had.**
+- [x] **1.3 Record what the source set did not know it had.**
       `corrected-from-reproduction` — the plans assert that no field says what enforces a rule.
       **111 of 120 rules carry `obligation_frequency:`** with a closed seven-value vocabulary, and
       `src/scripts/check_enforcement_coverage.ts` already joins it against per-platform carrier
       frequency. Neither parent mentions the key once.
       verify: `grep -lE '^obligation_frequency:' src/rules/*.md | wc -l` reads 111 against 120
       rules, and the evidence artefact names the key as the existing taxonomy this work extends.
-- [ ] **1.4 Fix the stale decision pointer** at `src/scripts/hooks/rule_inject_hook.ts:14`.
+- [x] **1.4 Fix the stale decision pointer** at `src/scripts/hooks/rule_inject_hook.ts:14`.
       verify: the cited record is the delivery-default one rather than the iron-law-reserve one.
 
 ## Phase 2 — Close the class vocabulary before typing anything
