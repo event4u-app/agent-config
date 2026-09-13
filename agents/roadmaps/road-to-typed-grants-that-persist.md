@@ -153,6 +153,28 @@ item. Phases 1-6 may run once 0.2 is chosen.
       The N=3 block becomes a pointer to `execution.fix_loop_max`, owned by stem 3.
       verify: `grep -m1 'autonomy:' src/config/agent-settings.template.yml` reads `on`;
       `./scripts-run src/scripts/lint_no_dead_context` is green after the context deletions.
+      **NOT attempted 2026-09-13, and the reason is not the kernel guard.** The
+      `kernel-guard-first-crossing` blocker lists this step as reachable, and as a statement
+      about the FILE that is correct — `autonomous-execution.md` is not a kernel member, the
+      deny does not fire on it, and the contexts this step deletes
+      (`contexts/execution/autonomy-detection.md`, `autonomy-mechanics.md`,
+      `autonomy-examples.md`) are referenced by no kernel rule; measured, the five kernel rules
+      that mention autonomy all say only that it never lifts a floor, which stays true after the
+      flip. Two other things stop it.
+      (a) **The box cannot close.** The N=3 half points at `execution.fix_loop_max`, a key this
+      step says is owned by stem 3. It does not exist in the template today, so the pointer has
+      no target and the step is partly waiting on a different roadmap.
+      (b) **The flip is authority-expanding and this run carries no ratification artifact.**
+      Moving `personal.autonomy` from `auto` — which resolves to off-until-opted-in — to `on`
+      widens the agent's own default authority, and ADR-268 section 4 makes an
+      authority-expanding edit inert until a ratification artifact exists. A run cannot both
+      gain the authority and certify the edit that grants it; that is the Iron Law 5.1 encodes
+      by rejecting `reviewed_by == implemented_by`.
+      **A gap worth recording while it is visible:** `check_kernel_edit_ratified` scopes to
+      kernel rules, `src/scripts/hooks/block_*.ts` and its own three files. This edit is
+      authority-expanding and lands in NONE of them, so nothing would have stopped it. The
+      restraint here is model-carried, not enforced — which is the honest description and an
+      argument for widening that gate's scope rather than for trusting the next run.
 - [ ] **1.5 `ask-when-uncertain.md`: the philosophy line yields to ownership.** *One question
       too many beats one wrong assumption* is replaced by a pointer to the ownership routing
       table, and the nine vague-request triggers are scoped to chat without a mission.
@@ -167,6 +189,16 @@ item. Phases 1-6 may run once 0.2 is chosen.
       wildcard tool grant is a finding only where the wildcard can reach a typed op.
       verify: the three wildcard-grant findings in `src/scripts/lint_skill_frontmatter_safety.ts`
       demote to advisory for grants that reach no typed op, and stay blocking for grants that do.
+      **NOT attempted 2026-09-13 — halted on the security-sensitive surface, deliberately.**
+      The file is reachable (`tool-safety` is not a kernel member) and the change is well
+      specified, but its whole content is *demoting existing security findings*, which is a
+      security-sensitive edit under `security-sensitive-stop` and therefore one of the six halt
+      conditions this run executes under. The prerequisite is also missing: "reaches no typed
+      op" is only decidable once the eleven-op vocabulary exists as code, and it does not —
+      Phase 4.3's `check_typed_op_grant.ts` is unwritten and there is no grant ledger in the
+      tree for it to read. Demoting the findings first and deriving reachability from prose
+      would be the narrowed-floor-without-a-replacement shape this roadmap's own Risk 1 names.
+      Order: 4.3 first, then this step.
 
 ## Phase 2 — Settings and the roadmap carry the grant
 
@@ -178,14 +210,82 @@ item. Phases 1-6 may run once 0.2 is chosen.
       happen.
       verify: `agent-config settings:get delivery.merge` reports `off` and the file it came
       from; `./scripts-run src/scripts/check_no_automerge_key` stays green against the new key.
+      **PARTIALLY LANDED 2026-09-13 — the block exists and is fenced; two of the three
+      resolution layers do not, and the box stays open for exactly that reason.**
+      *Landed:* the `delivery:` block in `src/config/agent-settings.template.yml` with all
+      three keys and the specified defaults; the zod register in
+      `src/server/schemas/settings.ts` (without which `tests/server/schemas/parity.test.ts`
+      reds — it is the hard template-vs-schema completeness gate and this step did not name
+      it); the JSON schema block; three rows in `docs/contracts/settings-classes.md` with both
+      Counts tables moved 145 → 148; `docs/settings-reference.md` regenerated rather than
+      hand-edited. All three keys are **Class C**, so `settings:set` refuses them — verified by
+      running it: *"settings:set refused — `delivery.merge` is class C (guarded)"*. Both verify
+      clauses pass: `settings:get delivery.merge` reports `default "off"` and `class C`, and
+      `check_no_automerge_key` is green over 346 keys, because `merge` is outside its closed
+      `autoMerge`/`auto_merge`/`mergePolicy` set.
+      **One defect caught by the schema and worth recording, because it would have shipped
+      silently.** `merge: off` unquoted is parsed by YAML as the boolean `false`, not the
+      string `"off"` — `validate_agent_settings` reds with *"delivery.merge: False is not of
+      type 'string'"*. The template convention already quotes these (`rich_skills: "on"`,
+      `cross_source: "on"`); the key ships as `merge: "off"`. Any later enum key in this block
+      whose value is `off`/`on`/`no`/`yes` needs the same quoting.
+      *NOT landed, and neither is a detail of the same work:*
+      (a) **user-global resolution.** `MERGEABLE_KEYS` in `src/scripts/_lib/agent_settings.ts`
+      is an exact-dotted-path whitelist and its own docstring reads *"Adding a key requires an
+      ADR."* Every precedent entry cites one (ADR-100, ADR-219, ADR-271). Until such a record
+      exists a `delivery.*` value in the user-global file is **silently dropped**, so the
+      step's *"resolvable user-global"* clause is unmet. A second copy of the list lives at
+      `src/agent-src/templates/scripts/work_engine/_lib/agent_settings.ts` with no parity gate
+      between them, so the ADR's change is two edits.
+      (b) **roadmap-frontmatter override.** There is no mechanism today by which roadmap
+      frontmatter overrides the settings cascade — `load_agent_settings` has four layers
+      (`docs/guidelines/agent-infra/layered-settings.md`) and none of them is a roadmap. This
+      clause is new construction, not configuration, and it is what Phase 2.2 has to build
+      before this box can close.
 - [ ] **2.2 Roadmap template accepts the block.** An optional `delivery:` frontmatter block;
       a `## PR plan` section required if and only if `pr_topology: stacked`.
       verify: a fixture roadmap declaring `stacked` without `## PR plan` is rejected by the
       roadmap frontmatter lint, and one declaring `single` is accepted without it.
-- [ ] **2.3 Correct the template's absolute sentence.** *No mode lifts a safety floor* is true
+      **HALF LANDED 2026-09-13, and the other half turned out to rest on a mechanism that does
+      not exist.** *Landed:* `src/agent-src/templates/roadmaps.md` rule 18 now documents the
+      optional `delivery:` frontmatter block beside `execution:` and `relates:`, stating the
+      `stacked` ⇒ `## PR plan` obligation and why `pr_topology` is the owner's to write;
+      `docs/contracts/roadmap-complexity-standard.md` adds `execution:` and `delivery:` to its
+      permitted-keys sentence. The projection regenerated through `task sync`.
+      *Not landed, deliberately, and the reason is a finding rather than a deferral:* **this
+      step's verify names "the roadmap frontmatter lint", and there is no such thing.** No
+      script rejects an unknown roadmap frontmatter key — `lint_provenance_vocabulary.ts:465`
+      says so in as many words: *"It was usable — nothing rejects an unknown frontmatter key —
+      and that is exactly what made it wrong."* What exists is six single-key readers
+      (`lint_roadmap_complexity`, `lint_roadmap_blockers`, `lint_roadmap_ci_steps`,
+      `lint_roadmap_family_cap`, `lint_roadmap_later_disposition`, `check_roadmap_trackable`),
+      none of which is an allowlist and none of which is a natural host —
+      `lint_roadmap_complexity`'s own docstring pins it to a ported Python CLI contract with
+      *"No behaviour changes"*. So satisfying the verify means authoring a NEW gate.
+      That was not done, for a reason worth stating rather than hiding in a deferral: **the
+      key it would police is read by no code.** The fifth cascade layer is 2.1's residual (b),
+      and a gate that demands a `## PR plan` section for a frontmatter value nothing consumes
+      enforces ceremony, not a contract. The right order is consumer first, gate second, and a
+      later run should build both together rather than inheriting a validator with no subject.
+- [x] **2.3 Correct the template's absolute sentence.** *No mode lifts a safety floor* is true
       for the eleven typed ops and false for pushes and non-prod merges; the sentence is
       rewritten to say which.
       verify: the sentence names the vocabulary rather than "a safety floor" in the abstract.
+      **Done 2026-09-13** in `src/config/agent-settings.template.yml`, in the `roadmap:` block's
+      per-roadmap override note. The replacement names all eleven ops of ADR-260 section 2
+      verbatim — `force_push`, `prod_merge`, `tag_push`, `release`, `publish`,
+      `branch_protection_change`, `repo_delete`, `prod_data_delete`, `secret_write`, `payment`,
+      `external_send` — and states the claim the old sentence was making without saying so:
+      what an `execution.mode` value cannot lift is that vocabulary, and no interaction pattern
+      substitutes for an object-bound grant.
+      **What it deliberately does NOT assert.** The step's premise is that the sentence is
+      *false* for pushes and non-prod merges. That becomes true when Phase 1.1 narrows the Hard
+      Floor's trigger table, and 1.1 is held by `kernel-guard-first-crossing`. So the comment
+      says the floor is today WIDER than the vocabulary, names the two rows that make it wider,
+      and points at the rule's own trigger table as the authority on reach — rather than
+      announcing a narrowing that has not landed. Writing it the other way would have put the
+      template in contradiction with a kernel rule this run cannot edit, which is Risk 1 of this
+      roadmap's own register arriving through a side door.
 
 ## Phase 3 — Persistence, interrupts, and WARN-op evidence
 
@@ -232,16 +332,49 @@ item. Phases 1-6 may run once 0.2 is chosen.
       Superseded evidence files gain a one-line supersession note rather than an edit.
       verify: `grep -c 'NEVER MERGES' src/domains/product-basic/roadmap/process-full/command.md`
       returns 0, and the archived drain-run evidence carries the note.
+      **NOT attempted 2026-09-13, on ordering and on independence.** The edit is a doc change
+      and ADR-268 section 3 is the ruling it needs, so it is authorised — but 4.1 is not built,
+      so deleting the banner would leave `process-full` silent about merging while no mechanism
+      gates a merge. That is strictly worse than either end state: today the command says it
+      never merges and never does; after 4.1 it says when it may and is gated. Between them it
+      would say nothing and be gated by nothing.
+      There is a second reason and it is the one that would hold even if the ordering were
+      fine: the run that would delete the banner is a `process-full` run, executing under the
+      banner, whose own instruction reads *"You NEVER merge."* An agent removing the sentence
+      that constrains it, in the same session it is constrained by it, is the shape
+      `evaluator-independence` exists to refuse. This belongs in the PR that lands 4.1.
 - [ ] **4.3 A gate that reads the ledger, not a prompt.** `check_typed_op_grant.ts` reads the
       ledger and the diff; a typed op — a tag push, a release-workflow edit, a protection
       change, a secret-file write — without a matching object-bound grant is red. This is the
       `enforced_by` line Phase 1.1 promised.
       verify: a fixture diff pushing a tag without a grant reds the gate; the same diff with a
       matching grant object passes.
-- [ ] **4.4 Dispose of `check_no_automerge_key.ts`.** Delete it deliberately, per its own
+- [x] **4.4 Dispose of `check_no_automerge_key.ts`.** Delete it deliberately, per its own
       text, or leave it and record why. It matches `delivery.merge` either way, so this is a
       hygiene decision and not a blocker.
       verify: whichever is chosen is stated in the PR body with the gate's own sentence quoted.
+      **Decided 2026-09-13: KEEP IT, and the reason is that its deletion is not this run's to
+      take.** The gate's own sentence, quoted: *"It is a REVERSIBLE architectural boundary, not
+      a permanent prohibition. If the owner later wants one of these exact names, the owner
+      deletes this gate."* Three things follow, and the third is the one that decides it.
+      (1) **The premise the gate was built on is unchanged by ADR-268.** The ratchet is not
+      about whether merge authority exists — it is about whether it arrives *by key name*
+      rather than by decision. ADR-268 section 3 grants the authority by decision and adopts
+      none of `autoMerge` / `auto_merge` / `mergePolicy`, so the boundary it protects is
+      exactly as intact after the ruling as before it.
+      (2) **Keeping it costs nothing, measured rather than assumed.** With the new block in the
+      tree the gate is green over 346 keys across its two corpus files, because `delivery.merge`
+      sits outside the closed three-name set. The step's own *"it matches either way"* is
+      therefore confirmed on this tree and not inherited from the step's author.
+      (3) **The sentence names the owner as the party who deletes it, and that is a routing
+      instruction, not a figure of speech.** Deleting a recorded architectural boundary is
+      owner-reserved under `decision-revisit-gate`'s own table — it removes a floor and it is
+      governance self-amendment — so an agent run that deleted the gate on the strength of an
+      ADR that never asked for its deletion would be doing the thing this roadmap's Phase 5
+      exists to make impossible without ratification. The hygiene argument for deleting it
+      (one fewer gate) does not reach that bar.
+      **What would change the decision:** an owner sentence naming the gate, or a later record
+      that actually adopts one of the three names. Neither exists.
 
 ## Phase 5 — Kernel amendment under ratification
 
@@ -691,6 +824,34 @@ item. Phases 1-6 may run once 0.2 is chosen.
   independent approval, so a decision to rely on it would rely on nothing. openai:
   *"Option (b) would therefore turn a known failed invariant into a green result."*
 
+- **Re-measured 2026-09-13 against the live forge, reading the changed criterion rather than
+  the superseded one.** Every figure below was executed in this run; none is copied forward.
+  - **Limb 1 — still met.** `./scripts-run src/scripts/check_platform_anchor --files
+    src/rules/commit-policy.md` exits **0**, reporting `PASS_WITH_ACCEPTED_RISK for
+    event4u-app/agent-config` over applicable active ruleset `17749383`. The two approval
+    dimensions print as *"observed, not required here (see NON_NEGOTIABLE_FLOOR)"* — which is
+    the shape the 2026-09-10 owner ruling asked for and NOT a finding, so a reader must not
+    re-derive the three-gap reading the superseded paragraphs above record. The one waived
+    dimension is `strict_required_status_checks` under `arr-2026-09-10-strict-status-checks`,
+    whose expiry is **2026-12-09** — 87 days out at this reading, so the waiver is live and the
+    verdict is not a lapsed pass.
+  - **Limb 2 — still half-met, and the missing half is still the PAT.**
+    `grep -c check_platform_anchor taskfiles/ci-fast.yml` returns **2**, so the pre-push half
+    holds. `grep -rc check_platform_anchor .github/workflows/*.yml | grep -v ':0'` returns
+    exactly one line, `rule-backstops.yml:1`, and that hit is the comment recording the
+    `administration: read` scope refusal — not a step. So the gate still runs pre-push and
+    never in CI, which is what limb 2 requires and what only a human-created repository secret
+    can change.
+  - **Item 2 — the unrehearsed recovery path — is unchanged and still open.** Measured, not
+    inferred: `gh api repos/event4u-app/agent-config/rulesets/17749383` reports
+    `bypass_actors: []`, `current_user_can_bypass: "never"`, `enforcement: "active"`. That is
+    the same state both 2026-09-10 council seats declined to close, and nothing in this run
+    establishes a rehearsed administrator recovery procedure — measuring the absence of a
+    bypass is not the same as testing the way back from a lockout.
+  **Net for this blocker: no limb moved between 2026-09-10 and 2026-09-13.** Both remaining
+  items are human actions on the forge, so an agent run can re-measure them and cannot advance
+  them, which is what this re-measurement did.
+
 ### blocker: kernel-guard-first-crossing
 - **Status:** open
 - **Owner:** maintainer
@@ -728,6 +889,20 @@ item. Phases 1-6 may run once 0.2 is chosen.
   Verify with `ls src/scripts/hooks/block_kernel_rule_writes.ts` (must fail) and
   `grep -c block-kernel-rule-writes src/scripts/hook_manifest.yaml` (must return 0) — the
   file-existence half is what the 2026-09-09 reading skipped.
+- **Re-verified 2026-09-13 against `origin/main` `7182f5d07`, the base of the drain run that
+  wrote this line. The reopen stands and nothing has moved toward either resolution.** Both
+  limbs of the `Resolved when` clause were executed rather than read: `ls
+  src/scripts/hooks/block_kernel_rule_writes.ts` **succeeds** (the clause requires it to fail)
+  and the file is **13,577 bytes** — larger than the 13,075 the 2026-09-10 entry measured, so
+  this is a fresh read and not a figure copied forward; `grep -c block-kernel-rule-writes
+  src/scripts/hook_manifest.yaml` returns **5** where the clause requires 0. Four of the five
+  are load-bearing: the concern definition at `:183` and three `pre_tool_use` binding lists at
+  `:1360`, `:1391` and `:1437`; the fifth (`:466`) is a comment naming the blocking trio. The
+  line numbers have drifted from the `:1265`, `:1296`, `:1342` recorded on 2026-09-10, which is
+  further evidence the manifest moved while the binding did not.
+  `src/scripts/hooks/concern_registry.ts:119` still registers the concern. The alternative limb
+  is unmet too: no maintainer-authored kernel commit exists on this run's branch, and an agent
+  cannot author one — that is the deny's design, not a gap in it.
 
 ## Fixtures
 
