@@ -313,9 +313,50 @@ branch setting, push, open a PR, re-run CI, update a merge base, fix a failing
 test, authorise spend inside a budget — is machine-executable by the agent, and
 is therefore remediation work rather than a blocker.
 
+### `complete` requires DELIVERY, not only checkboxes
+
+```
+A RUN WHOSE CHECKBOXES READ COMPLETE AND WHOSE PR SITS ON RED CI OR ON A
+MOVED TARGET HAS NOT COMPLETED. CHECKBOXES ARE ONE COMPLETION; DELIVERY IS
+THE OTHER, AND ONLY TWO POSITIONS END A RUN: `merged` AND `open-green`.
+```
+
+`road-to-adversarial-verification-and-long-runs` 8.1. The delivery machine is
+`working → local-green → pushed → pr-open → ci-pending → (red → the recovery
+ladder → pushed | green) → target-sync-check → (moved → sync → tests → pushed |
+current) → delivery-ready → (grant → merged | no grant → open-green)`.
+
+`run_continuation_hook` reads the position the run RECORDED — it does not probe
+the forge, because a `gh` call on the stop path is the cost the premise rung
+already declined — and any position that is not an ending keeps the run engaged
+at zero open steps. Two bounds survive that hold, and one is deliberately lifted:
+the iteration and wall-clock caps still end it, while the **stall** rung is
+skipped, because during delivery the open-step count it measures cannot move and
+a metric that cannot move is not a stall signal. A run that recorded no position
+decides exactly as it did before.
+
+**`open-green` is a success, not a shortfall.** A run with no merge grant is not
+supposed to merge; what it owes is an open PR whose CI is green **on the head CI
+actually observed**, and a report that says so.
+
+### The PR body is one page for the owner's review
+
+8.2. The end-of-run PR body carries these six, each as its own named section:
+
+1. **Delivery target reached** — `merged` or `open-green`, and the head SHA CI observed.
+2. **Decisions taken, and by whom** — agent, council, team or owner, per decision.
+3. **Open owner-owned residue** — what is left that only the owner can settle, or *none*.
+4. **Scope delta** — what the run added to or dropped from the roadmap's stated scope.
+5. **Spend** — actual against the authorised ceiling.
+6. **Fix-loop epochs** — how many strategies were opened, and what ended each.
+
+Six sections because each answers a different question the owner would otherwise
+have to ask, and a run that omits one has moved that question back into the
+conversation this roadmap exists to end.
+
 | Outcome | When | Success? | terminal state |
 |---|---|---|---|
-| `complete` | `count_open == 0` and the PR is open | yes — archival check runs | `success` |
+| `complete` | `count_open == 0`, the PR is open, and delivery reached an ending | yes — archival check runs | `success` |
 | `blocked` | every remaining open step is **externally impossible** for the agent | **no** — partial progress, labelled as such | `blocked`, or `approval-required` where the work is finished and waiting on a human |
 | a halt | one of the five conditions fired | **no** — the halt is reported | `exhausted` when a declared budget ran out; `stagnated` when the same failure signature repeated with budget left |
 

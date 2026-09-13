@@ -316,7 +316,7 @@ before the record is signed.
 
 ## Phase 8 — A delivery state machine
 
-- [ ] **8.1 States, and one forbidden ending.** `working → local-green → pushed → pr-open →
+- [x] **8.1 States, and one forbidden ending.** `working → local-green → pushed → pr-open →
       ci-pending → (red → ladder → pushed | green) → target-sync-check → (moved → sync → tests
       → pushed | current) → delivery-ready → (grant → merged | no grant → open-green)`.
       `run_continuation_hook.ts` treats a PR below its delivery target as work remaining, so a
@@ -325,10 +325,29 @@ before the record is signed.
       step meanwhile.
       verify: fixture `T7` — a run whose checkboxes are complete but whose CI is red does not
       end; `T8` — the same run without a grant ends open-green and says so.
-- [ ] **8.2 One page for the owner's review.** The end-of-run PR body carries: the delivery
+      <!-- landed 2026-09-13 in `_lib/continuation_ladder.ts` (`DELIVERY_STATES`,
+      `DELIVERY_ENDINGS`, `deliveryBlocksCompletion`) plus `RunState.delivery` and the ledger
+      field in `run_continuation_hook`. Three decisions worth a reader's time:
+      (a) the hold falls THROUGH to the budget rungs rather than returning `engage` — an early
+      return would put a delivery hold outside every bound in the function, which is the
+      unbounded loop the ladder exists against; (b) the STALL rung alone is exempted, because
+      during delivery the open-step count it measures is definitionally zero and a metric that
+      cannot move is not a stall signal — the mechanics file's own "the measurement broke"
+      case; (c) an unrecorded position is NOT incomplete. The ladder decides on the stop path,
+      where a `gh` probe is the cost the premise rung already declined, so the position is
+      read from what the run wrote; inventing incompleteness from absence would hang every run
+      that never adopted the field.
+      Sensitivity proven rather than assumed: with `deliveryBlocksCompletion` neutralised to
+      `return false`, 3 of the 23 fixtures go red; restored, 23/23 green. The 110 pre-existing
+      run-continuation tests are unchanged. -->
+- [x] **8.2 One page for the owner's review.** The end-of-run PR body carries: the delivery
       target reached, decisions taken and by whom, open owner-owned residue, the scope delta,
       the spend, and the fix-loop epochs.
       verify: a fixture run's PR body contains all six sections and the grant it spent.
+      <!-- landed 2026-09-13 in `process-full/command.md` § The PR body is one page for the
+      owner's review — six named sections, each answering a question the owner would otherwise
+      have to ask. -->
+      <!-- verify: npm run test:ts -- tests/e2e/adversarial-verification-fixtures.test.ts -->
 
 ## Phase 9 — Long-run continuity
 

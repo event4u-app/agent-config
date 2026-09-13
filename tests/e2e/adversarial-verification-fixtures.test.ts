@@ -25,6 +25,15 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
+import {
+    DELIVERY_ENDINGS,
+    MAX_ITERATIONS,
+    WALL_CLOCK_CAP_MS,
+    deliveryBlocksCompletion,
+    ladder,
+    type LadderState,
+} from '../../src/scripts/_lib/continuation_ladder.js';
+
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const read = (rel: string): string => fs.readFileSync(path.join(REPO, rel), 'utf8');
 /**
@@ -136,6 +145,115 @@ describe('T3 — ten failed fixes produce strategy changes, never an owner ask',
             /allowlist-growth counter is a separate mechanism/,
         );
         expect(flat(RULE)).toMatch(/stays a \*\*separate\*\* mechanism/);
+    });
+});
+
+describe('T7 / T8 — a run cannot end with red CI while its checkboxes read complete', () => {
+    const base = (over: Partial<LadderState> = {}): LadderState => ({
+        iterations: 1,
+        started_at: new Date().toISOString(),
+        history: [],
+        ...over,
+    });
+
+    it('T7 — zero open, delivery not reached: the run does NOT end', () => {
+        for (const pos of ['pushed', 'pr-open', 'ci-pending', 'ci-red', 'target-moved'] as const) {
+            expect(ladder(base(), 0, Date.now(), 0, undefined, null, false, pos)).toBe('engage');
+        }
+    });
+
+    it('T8 — no grant, PR open and green: the run ENDS, and open-green is the ending', () => {
+        expect(ladder(base(), 0, Date.now(), 0, undefined, null, false, 'open-green')).toBe(
+            'complete',
+        );
+        expect(ladder(base(), 0, Date.now(), 0, undefined, null, false, 'merged')).toBe(
+            'complete',
+        );
+        expect(DELIVERY_ENDINGS).toEqual(['merged', 'open-green']);
+    });
+
+    it('an unrecorded delivery position decides exactly as before — fail-open', () => {
+        // The ladder runs on the Stop path where a `gh` probe is unaffordable, so
+        // an absent position means "this run does not report delivery", never
+        // "delivery is incomplete". Inventing the latter would hang every run
+        // that never adopted the field.
+        expect(deliveryBlocksCompletion(null)).toBe(false);
+        expect(deliveryBlocksCompletion(undefined)).toBe(false);
+        expect(ladder(base(), 0, Date.now(), 0)).toBe('complete');
+        expect(ladder(base(), 0, Date.now(), 0, undefined, null, false, null)).toBe('complete');
+    });
+
+    it('delivery never overrides `blocked` — blocked work is not undelivered work', () => {
+        expect(ladder(base(), 0, Date.now(), 2, undefined, null, false, 'ci-red')).toBe(
+            'blocked',
+        );
+    });
+
+    it('a delivery hold is still BOUNDED — iterations and the wall clock apply', () => {
+        expect(
+            ladder(
+                base({ iterations: MAX_ITERATIONS }),
+                0,
+                Date.now(),
+                0,
+                undefined,
+                null,
+                false,
+                'ci-red',
+            ),
+        ).toBe('halt-max-iterations');
+        const old = new Date(Date.now() - WALL_CLOCK_CAP_MS - 1000).toISOString();
+        expect(
+            ladder(base({ started_at: old }), 0, Date.now(), 0, undefined, null, false, 'ci-red'),
+        ).toBe('halt-wall-clock');
+    });
+
+    it('the stall rung is exempt during delivery — zero open cannot move', () => {
+        // Three consecutive zero-open readings is what a healthy CI-fix loop looks
+        // like. Tripping halt-stall on it is a stall manufactured by the stall
+        // detector; the caps above are what bound this loop instead.
+        const stalled = base({ iterations: 4, history: [0, 0, 0] });
+        expect(ladder(stalled, 0, Date.now(), 0, undefined, null, false, 'ci-red')).toBe('engage');
+        // …and the rung is NOT disabled generally: with steps still open, it fires.
+        expect(
+            ladder(base({ iterations: 4, history: [3, 3, 3] }), 3, Date.now(), 0),
+        ).toBe('halt-stall');
+    });
+
+    it('a halt already stamped still wins over a delivery hold', () => {
+        expect(
+            ladder(base({ halted: 'halt-stall' }), 0, Date.now(), 0, undefined, null, false, 'ci-red'),
+        ).toBe('halt-stall');
+    });
+});
+
+describe('8.2 — the PR body is one page for the owner', () => {
+    const CMD = 'src/domains/product-basic/roadmap/process-full/command.md';
+
+    it('names all six sections the end-of-run body must carry', () => {
+        const body = flat(CMD);
+        for (const section of [
+            'Delivery target reached',
+            'Decisions taken, and by whom',
+            'Open owner-owned residue',
+            'Scope delta',
+            'Spend',
+            'Fix-loop epochs',
+        ]) {
+            expect(body).toContain(section);
+        }
+    });
+
+    it('states the delivery machine and both of its endings', () => {
+        const body = flat(CMD);
+        expect(body).toMatch(/delivery-ready → \(grant → merged \| no grant → open-green\)/);
+        expect(body).toMatch(/`open-green` is a success, not a shortfall/);
+    });
+
+    it('ties `complete` to delivery, not to the checkbox count alone', () => {
+        expect(flat(CMD)).toMatch(
+            /`count_open == 0`, the PR is open, and delivery reached an ending/,
+        );
     });
 });
 
