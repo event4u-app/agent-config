@@ -75,21 +75,21 @@ is not that the states are unnamed; it is that nothing can test them.
 
 ## Phase 2 — The probe
 
-- [ ] **2.1 Write `src/scripts/ui_conformance_probe.ts`** as a Playwright consumer with `--target`
+- [x] **2.1 Write `src/scripts/ui_conformance_probe.ts`** as a Playwright consumer with `--target`
       and an optional `--reference`. Structure is gated before style: an unmatched element stops
       the comparison rather than producing style findings against the wrong node.
       verify: run against the Phase 0.3 rename variant and it stops at structure with zero style
       findings.
-- [ ] **2.2 Emit `ui-conformance.json`** with deterministic per-dimension counters, the resolved
+- [x] **2.2 Emit `ui-conformance.json`** with deterministic per-dimension counters, the resolved
       host class, and a mandatory not-applicable row with its reason for every dimension the host
       could not exercise.
       verify: on a host without browser binaries the artefact carries not-applicable rows with
       reasons, and no dimension reads zero findings.
-- [ ] **2.3 No scalar score anywhere in the output.** Counters per dimension, never a percentage
+- [x] **2.3 No scalar score anywhere in the output.** Counters per dimension, never a percentage
       or a fidelity number.
       verify: `grep -nE 'score|percent|%' src/scripts/ui_conformance_probe.ts` finds no emitted
       aggregate.
-- [ ] **2.4 Pass the Phase 0 fixture.** Four of four planted defects found; zero findings raised
+- [x] **2.4 Pass the Phase 0 fixture.** Four of four planted defects found; zero findings raised
       for the declared deviation.
       verify: the fixture test asserts exactly that, and the pre-registered screenshot-arm number
       from 0.2 is recorded beside it.
