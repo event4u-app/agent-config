@@ -80,11 +80,19 @@ when 15.0.0 shipped — and nothing can express it, let alone refuse on it.
       LANDED 2026-09-13 — `agents/evidence/analysis/release-holds-phase-0-2026-09-13.md` § 0.3.
       Row 3 records that `ci-strict` needs no edit of its own: it delegates to `ci` at
       `Taskfile.yml:462`, the by-construction superset `check_ci_strict_superset` asserts.
-- [ ] **0.4 Pre-register the claim as unbacked, with its falsifier and denominator.**
+- [x] **0.4 Pre-register the claim as unbacked, with its falsifier and denominator.**
       `release-hold-refuses-declared-state` in `docs/CLAIMS.md`: *after 30 tags past Phase 4, at
       least one refusal logged OR at least one gated draft re-sequenced to continuous at
       authoring time — else honest null.*
       verify: `./scripts-run src/scripts/check_claims` passes and the row carries the denominator.
+      LANDED 2026-09-13 — ledger 100 entries (60 backed, 32 unbacked), green. The denominator is
+      30 consecutive tags cut after Phase 4, counted from the first tag whose tree carries a wired
+      refusal; tags rather than calendar time, because a refusal can only fire at a cut. BOTH arms
+      of the numerator are named, and arm (b) is the load-bearing one: a roadmap re-sequenced to a
+      continuous shape at authoring time counts, because a hold that was never needed is the
+      mechanism working and counting only refusals would score that outcome as a failure. The
+      honest null is recorded as the PREDICTED outcome, per the `zero-live-subjects` evidence
+      below. `docs/proof.md` regenerated in the same change.
 
 ## Phase 1 — The contract, before any file carries a marker
 
