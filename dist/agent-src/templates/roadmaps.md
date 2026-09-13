@@ -253,8 +253,9 @@ that was never a judgement call.
     roadmap, so a `delivery:` block here is read by no code today. It is
     documented now because the key it mirrors is Class C — the owner has to
     have a place to write the plan that is not an agent-writable setting — and
-    the fifth cascade layer is Phase 2.2 of
-    `agents/roadmaps/road-to-typed-grants-that-persist.md`.
+    the cascade layer that would read it is scheduled by ADR-268, not yet
+    built. Until it is, treat a `delivery:` block here as a note to the next
+    human reader rather than as configuration.
 
     An explicit `relates: []` is a complete answer and the common one, but only
     when it carries the probe's `scanned:` line as its justification:
