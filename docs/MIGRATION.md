@@ -42,6 +42,109 @@ reason, which no arithmetic can.
 or that promises a future breaking removal, gets a row here in the same commit
 that makes the promise. A promise with no row is not tracked and will be missed.
 
+## 16.0.0 — the stored standing-payload ceiling is deleted
+
+💡 advisory · 🔄 automatic — **no consumer action.**
+
+16.0.0 carries one BREAKING entry: `feat(payload)!: delete the stored
+standing-payload ceiling` ([`0b20000`](https://github.com/event4u-app/agent-config/commit/0b20000d48801fe4e0661660da610e1372642f7d)).
+
+### What went
+
+Three keys left `ci_delivery` in
+[`src/config/preamble-payload-budget.json`](../src/config/preamble-payload-budget.json):
+`grace_ceiling`, `grace_measured_at`, and the raise-history key. `stored_ceiling`
+left the bound set, the ceiling formula, the `boundBy` union and the `Budget`
+type.
+
+### What replaces it
+
+The bound is **computed per run** instead of stored:
+
+```
+ceiling = max(design_ceiling, min(base, watermark) + active grant)
+```
+
+`base` is the standing payload measured **at the base ref** of the pull request;
+`watermark` pins that anchor for as long as an exception grant is live, so an
+exceptional measurement never becomes the next base. The mechanism and its six
+contract rules are in
+[`src/scripts/_lib/measured_payload_ceiling.ts`](../src/scripts/_lib/measured_payload_ceiling.ts);
+the decisions are ADR-275 (the formula) and ADR-276 (this deletion).
+
+### Who this asks something of — and it is not a consumer
+
+**If you install `@event4u/agent-config`, there is nothing to migrate.** The
+deleted keys are repository-governance configuration for this package's own CI;
+no consumer holds a stored standing-payload ceiling, and no installed surface,
+CLI verb, setting or projected artifact changed. The entry is BREAKING because
+the config schema lost keys, not because a consumer contract did.
+
+**If you contribute to this package**, two things follow. A ceiling can no
+longer be widened by editing a field — there is no field — so a pull request
+that grows the standing payload is refused unless it carries a recorded grant in
+[`src/config/preamble-payload-exceptions.json`](../src/config/preamble-payload-exceptions.json).
+And because the tree measures at its own design ceiling, the ordinary path is
+**zero net growth per pull request**: payload added needs payload removed in the
+same change.
+
+## 15.0.0 — two retired commands, and one retirement that did not happen
+
+✋ manual — **one thing to do, and one thing explicitly not to do.**
+
+15.0.0 carries two BREAKING entries. Only the first asks anything.
+
+### ✋ `/chat-history` and `/chat-history import` are gone
+
+[`8b5226a`](https://github.com/event4u-app/agent-config/commit/8b5226aff24d93f8a5fecfa7525b9419d58524af)
+removed both command files:
+
+- `src/domains/meta/chat-history/command.md` → projected `/chat-history`
+- `src/domains/meta/chat-history/import/command.md` → projected
+  `/chat-history import`
+
+Invoking either now does nothing — the command is not in the projection, so the
+host has no file to route to. If a script, a runbook or your own AGENTS.md names
+either verb, remove the reference; it will not fail loudly.
+
+**What is NOT gone**, and this is the part worth reading before you replace
+anything: the runtime writer is untouched. `src/scripts/chat_history.ts`, the
+`chat-history` hook concern, the `chat-history:hook` / `chat-history:checkpoint`
+verbs and all six host dispatchers still run, and the `.agent-chat-history`
+runtime file is still written. What was retired is the affordance that *read*
+it back into a session.
+
+**What replaces it: a manual reconstruction, not a restore.** Use
+[`/agent-handoff`](../src/domains/meta/agent-handoff/command.md), which claims recording
+and manual reconstruction and nothing more. The council that authorized this
+removal was explicit that the two are not the same capability — recording,
+locating a record, interpreting it, injecting it into a new session and
+restoring usable context are separate, and only the first is demonstrated. It is
+recorded as an **authorized capability loss**, so plan for reading a record
+yourself rather than for an automatic resume.
+
+### 💡 The announced kernel-deny retirement did not ship — nothing to migrate
+
+The second BREAKING entry reads
+`retire the kernel-rule tool-call deny and the 24h soak`
+([`288190b`](https://github.com/event4u-app/agent-config/commit/288190b1a5a09a964cf4cc29fa356791bbfb8069)).
+**It was reverted inside the same release** by
+[`03e4eb7d`](https://github.com/event4u-app/agent-config/commit/03e4eb7de6b8c637cf41bbe60acb489b3a6658af),
+after a two-round independent ratification review refused the replacement 2/2.
+
+So 15.0.0 shipped with both intact: `block_kernel_rule_writes.ts` is registered
+`fail_closed: true` on `pre_tool_use`, and the 24-hour soak in
+`contexts/authority/kernel-rule-edits.md` is unchanged. The CI gate that was
+proposed as a replacement, `check_kernel_edit_ratified`, landed **alongside**
+the deny — that context file calls it "an ADDITION to this soak, never a
+replacement".
+
+**There is nothing to do.** No behavior was removed, so no migration exists for
+it. If you already acted on the published line — dropped the hook binding from a
+local override, or relaxed a kernel-edit workflow on the strength of it — put it
+back. The correction is recorded at the head itself, in
+[`archive/CHANGELOG-pre-16.0.0.md`](archive/CHANGELOG-pre-16.0.0.md) § 15.0.0.
+
 ## 14.22.x — the code-graph engine gets readers, and the MCP install hint changes
 
 💡 advisory · 🔄 automatic — **one exception, below.**

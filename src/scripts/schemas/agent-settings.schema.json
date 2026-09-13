@@ -101,6 +101,29 @@
         }
       }
     },
+    "delivery": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "merge": {
+          "type": "string",
+          "enum": ["off", "on-green"],
+          "default": "off",
+          "description": "Whether a run may merge the pull request it produced. off (default) = the run ends at mergeable-green-and-open and says so. on-green = merge is permitted, and only when an object-bound grant covering {op: prod_merge, target: <base>} exists and the final head is required-check-green, target-current and tamper-checked (ADR-268 section 3). A precondition, never the authorisation by itself; forge auto-merge is the mechanism, so branch protection stays the gate."
+        },
+        "wait_for_ci": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether the run stays alive until the required checks settle. true (default) = the run drives CI and reports the settled verdict. false = the run ends once the branch is pushed and the PR is open. Independent of merge: a run may wait for CI without being allowed to merge."
+        },
+        "pr_topology": {
+          "type": "string",
+          "enum": ["single", "stacked"],
+          "default": "single",
+          "description": "How a mission's work is shaped into pull requests. single (default) = one branch, one pull request. stacked = a dependent series. stacked is never chosen by the agent and never asked about at roadmap creation — the owner plans it in roadmap frontmatter or it does not happen."
+        }
+      }
+    },
     "screenshots": {
       "type": "object",
       "additionalProperties": true,

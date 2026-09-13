@@ -35,6 +35,7 @@ import {
   _load_yaml,
   _manifest_fingerprint,
 } from "../../src/scripts/hooks/dispatch_hook.js";
+import { main as compileMain } from "../../src/scripts/compile_hook_manifest.js";
 
 const REPO_ROOT = path.resolve(__dirname, "..", "..");
 const YAML_PATH = path.join(REPO_ROOT, "src", "scripts", "hook_manifest.yaml");
@@ -134,6 +135,36 @@ describe("precompiled hook manifest", () => {
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }
+  });
+});
+
+describe("compile_hook_manifest --out", () => {
+  // `check_generator_sync` regenerates this artefact to compare against the
+  // committed one, and its contract is that a regeneration never writes into
+  // the tree. A gate that repaired the file it measures would turn every
+  // staleness into a green plus an unexplained dirty file.
+  it("writes the compiled bytes elsewhere and leaves the committed JSON alone", () => {
+    const before = fs.readFileSync(JSON_PATH, "utf-8");
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ac-compile-out-"));
+    try {
+      const out = path.join(dir, "m.json");
+      expect(compileMain(["--out", out])).toBe(0);
+      expect(fs.readFileSync(out, "utf-8")).toBe(before);
+      expect(fs.readFileSync(JSON_PATH, "utf-8")).toBe(before);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("refuses a bare --out and an unknown flag rather than writing the tree", () => {
+    // Silently ignoring a mistyped flag would write `hook_manifest.json` when
+    // the caller asked for a copy — the one side effect this flag exists to
+    // avoid.
+    const before = fs.readFileSync(JSON_PATH, "utf-8");
+    expect(compileMain(["--out"])).toBe(2);
+    expect(compileMain(["--out", "--quiet"])).toBe(2);
+    expect(compileMain(["--nope"])).toBe(2);
+    expect(fs.readFileSync(JSON_PATH, "utf-8")).toBe(before);
   });
 });
 

@@ -24,6 +24,10 @@ skills:                # skills the flow composes end-to-end
   - quality-tools
   - threat-modeling
   - receiving-code-review
+  # design-review joins the flow so a UI change is reviewed as a UI change, not
+  # only as a diff. Its behavioural half reads the ui-conformance artefact; the
+  # design-pass hook reports that verdict in shadow and never blocks on it.
+  - design-review
 commands:              # seed from worksheet ·_flow:review_ tags
   - review/changes
   - judge

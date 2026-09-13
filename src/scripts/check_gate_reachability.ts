@@ -36,6 +36,12 @@ import * as os from 'node:os';
 
 import { reportScanned } from './_lib/scan_scope.js';
 import { runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
+import {
+    INVENTORY_REL,
+    inventoryVerdict,
+    resetSourceCache,
+    type InventoryVerdict,
+} from './_lib/loop_surfaces.js';
 
 const REPO_ROOT = process.cwd();
 const TASKFILES_DIR = 'taskfiles';
@@ -238,6 +244,23 @@ export interface GateVerdict {
     unreasoned: string[];
     /** Recorded exemptions that are no longer unreachable — stale rows. */
     stale: string[];
+    /**
+     * The `_lib-export-reach` axis: a declared loop instrument nothing calls.
+     *
+     * A second axis in this one script rather than a second gate, because it
+     * asks the same question one layer down. The first axis asks whether CI
+     * reaches a gate TARGET; this asks whether production code reaches a
+     * declared INSTRUMENT. A separate gate would need its own registration,
+     * its own coverage row and its own wiring — and would then be the thing
+     * this family exists to detect if any of that were missed.
+     *
+     * Deliberately scoped to the instruments named in `loop-surfaces.yaml`
+     * rather than to every `_lib` export. Measured on `loop_guards.ts`, the
+     * unscoped version reports nine of fourteen exports dead; a gate whose
+     * signal is a minority of its own output gets allowlisted rather than
+     * answered.
+     */
+    inventory: InventoryVerdict;
 }
 
 /**
@@ -255,25 +278,51 @@ export function gateVerdict(root = REPO_ROOT): GateVerdict {
     return {
         unreasoned: r.unreachable.filter((n) => !exempt.has(n)).sort(),
         stale: [...exempt.keys()].filter((n) => !unreachable.has(n)).sort(),
+        inventory: inventoryVerdict(root),
     };
+}
+
+/** The `_lib-export-reach` half of the verdict, written to stderr. */
+function reportInventory(inv: InventoryVerdict): void {
+    for (const f of inv.shape) {
+        process.stderr.write(
+            `❌  ${INVENTORY_REL}: surface \`${f.id}\` — ${f.detail} (${f.reason}). Every surface ` +
+                'carries every field, and a bound resolves to something that exists.\n',
+        );
+    }
+    for (const f of inv.reach) {
+        const fix =
+            f.reason === 'dead'
+                ? 'Give it a production consumer, declare it `status: experimental` with a future ' +
+                  '`expires:`, or delete it. A built instrument nothing calls is not built.'
+                : 'An exemption is a dated deferral, not a label. Decide it, or move the date and ' +
+                  'say why in `note:`.';
+        process.stderr.write(`❌  ${f.id} (${f.file}) — ${f.detail}. ${fix}\n`);
+    }
 }
 
 function runGate(root: string): number {
     const v = gateVerdict(root);
     const exempt = readExemptions(root);
+    const inv = v.inventory;
+    const declared = inv.live.length + inv.exempt.length + inv.reach.length;
     reportScanned({
         gate: 'check_gate_reachability',
-        scanned: exempt.size + analyse(root).unreachable.length,
-        units: 'exemption row(s) + unreachable target(s)',
-        roots: [EXEMPTIONS_REL, ROOT_TASKFILE, TASKFILES_DIR],
+        scanned: exempt.size + analyse(root).unreachable.length + declared,
+        units: 'exemption row(s) + unreachable target(s) + declared loop instrument(s)',
+        roots: [EXEMPTIONS_REL, INVENTORY_REL, ROOT_TASKFILE, TASKFILES_DIR],
     });
-    if (v.unreasoned.length === 0 && v.stale.length === 0) {
+    const inventoryClean = inv.shape.length === 0 && inv.reach.length === 0;
+    if (v.unreasoned.length === 0 && v.stale.length === 0 && inventoryClean) {
         process.stdout.write(
             `✅  check_gate_reachability: every unreachable gate target carries a recorded reason ` +
-                `(${String(exempt.size)} exempt).\n`,
+                `(${String(exempt.size)} exempt); every declared loop instrument is called or ` +
+                `dated (${String(inv.live.length)} live, ${String(inv.exempt.length)} experimental` +
+                `${inv.proseBound.length > 0 ? `, ${String(inv.proseBound.length)} prose-bound surface(s)` : ''}).\n`,
         );
         return 0;
     }
+    reportInventory(inv);
     for (const n of v.unreasoned) {
         process.stderr.write(
             `❌  ${n} is gate-shaped, unreachable from \`task ci\` and every workflow, and carries ` +
@@ -320,6 +369,58 @@ function selfTest(): number {
         return v.unreasoned.length === 0 && v.stale.length === 0 ? 0 : 1;
     };
 
+    /**
+     * A throwaway tree for the `_lib-export-reach` axis.
+     *
+     * `surface` and `instrument` are written verbatim into the inventory, so a
+     * case can plant a malformed row without the builder silently repairing
+     * it — which is the whole point of a planted failure.
+     */
+    const inventoryFixture = (opts: { surface: string; instrument: string; calls: boolean }): number => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gr-inv-'));
+        roots.push(dir);
+        fs.mkdirSync(path.join(dir, 'src', 'config'), { recursive: true });
+        fs.mkdirSync(path.join(dir, 'src', 'lib'), { recursive: true });
+        fs.writeFileSync(
+            path.join(dir, 'src', 'lib', 'thing.ts'),
+            [
+                'export const CEILING = 3;',
+                'export function stalled(): boolean { return false; }',
+                'export function helper(): number { return CEILING; }',
+                ...(opts.calls ? ['export const used = helper();'] : []),
+            ].join('\n'),
+            'utf-8',
+        );
+        fs.writeFileSync(
+            path.join(dir, 'src', 'config', 'loop-surfaces.yaml'),
+            `surfaces:\n${opts.surface}\ninstruments:\n${opts.instrument}\n`,
+            'utf-8',
+        );
+        resetSourceCache();
+        const v = inventoryVerdict(dir);
+        resetSourceCache();
+        return v.shape.length === 0 && v.reach.length === 0 ? 0 : 1;
+    };
+
+    const wholeSurface = [
+        '  s:',
+        '    kind: code',
+        '    bound_kind: code',
+        '    cap: src/lib/thing.ts:CEILING',
+        '    no_progress: src/lib/thing.ts:stalled',
+        '    success_stop: a stated stop',
+        '    checker: a stated checker',
+        '    human_gate: none',
+        '    terminal_vocabulary: none',
+        '    production_consumers: [src/lib/thing.ts]',
+    ].join('\n');
+    // Identical but for the one missing field — so a red can only be the cap.
+    const cappedSurface = wholeSurface
+        .split('\n')
+        .filter((l) => !l.includes('cap:'))
+        .join('\n');
+    const plainInstrument = ['  helper:', '    file: src/lib/thing.ts', '    role: a stated role'].join('\n');
+
     const cases: SelfTestCase[] = [
         {
             name: 'a wired gate target → accept',
@@ -343,9 +444,63 @@ function selfTest(): number {
             expect: 'reject',
             run: () => fixture({ target: 'check-x', wired: true, exempt: { 'check-x': 'stale' } }),
         },
+        // The `_lib-export-reach` axis. The accept case comes first so a
+        // builder that reds on everything is caught before the three planted
+        // failures can be read as the axis working.
+        {
+            name: 'a whole surface and a called instrument → accept',
+            expect: 'accept',
+            run: () =>
+                inventoryFixture({ surface: wholeSurface, instrument: plainInstrument, calls: true }),
+        },
+        {
+            name: 'a surface with no `cap` → reject',
+            expect: 'reject',
+            run: () =>
+                inventoryFixture({ surface: cappedSurface, instrument: plainInstrument, calls: true }),
+        },
+        {
+            name: 'an instrument with no consumer → reject',
+            expect: 'reject',
+            run: () =>
+                inventoryFixture({ surface: wholeSurface, instrument: plainInstrument, calls: false }),
+        },
+        {
+            // The reason `expires:` is a required field rather than a nicety:
+            // a declared-inactive instrument with no deadline is the same dead
+            // code wearing a label.
+            name: 'an exception whose `expires:` has passed → reject',
+            expect: 'reject',
+            run: () =>
+                inventoryFixture({
+                    surface: wholeSurface,
+                    instrument: `${plainInstrument}\n    status: experimental\n    expires: '2020-01-01'`,
+                    calls: false,
+                }),
+        },
+        {
+            name: 'an `experimental` exception with no `expires:` → reject',
+            expect: 'reject',
+            run: () =>
+                inventoryFixture({
+                    surface: wholeSurface,
+                    instrument: `${plainInstrument}\n    status: experimental`,
+                    calls: false,
+                }),
+        },
+        {
+            name: 'an unexpired `experimental` exception on a dead instrument → accept',
+            expect: 'accept',
+            run: () =>
+                inventoryFixture({
+                    surface: wholeSurface,
+                    instrument: `${plainInstrument}\n    status: experimental\n    expires: '2099-01-01'`,
+                    calls: false,
+                }),
+        },
     ];
     try {
-        return runSelfTest({ gate: 'check_gate_reachability', cases, minCases: 4, minRejectCases: 2 });
+        return runSelfTest({ gate: 'check_gate_reachability', cases, minCases: 10, minRejectCases: 6 });
     } finally {
         for (const d of roots) fs.rmSync(d, { recursive: true, force: true });
     }
@@ -355,18 +510,20 @@ export function main(argv: string[] = process.argv.slice(2), root = REPO_ROOT): 
     if (argv.includes('--self-test')) return selfTest();
     if (argv.includes('--gate')) return runGate(root);
     const r = analyse(root);
+    const inv = inventoryVerdict(root);
     if (argv.includes('--json')) {
-        process.stdout.write(`${JSON.stringify(r, null, 2)}\n`);
+        process.stdout.write(`${JSON.stringify({ ...r, inventory: inv }, null, 2)}\n`);
         return 0;
     }
     // Emitted on the DEFAULT invocation too, not only under `--gate`: the
     // coverage gate reads a bare run, and a gate that reports what it inspected
     // only in one mode is a gate that reports nothing in the other.
+    const declared = inv.live.length + inv.exempt.length + inv.reach.length;
     reportScanned({
         gate: 'check_gate_reachability',
-        scanned: readExemptions(root).size + r.unreachable.length,
-        units: 'exemption row(s) + unreachable target(s)',
-        roots: [EXEMPTIONS_REL, ROOT_TASKFILE, TASKFILES_DIR],
+        scanned: readExemptions(root).size + r.unreachable.length + declared,
+        units: 'exemption row(s) + unreachable target(s) + declared loop instrument(s)',
+        roots: [EXEMPTIONS_REL, INVENTORY_REL, ROOT_TASKFILE, TASKFILES_DIR],
     });
     const total = r.reachable.length + r.scriptInWorkflow.length + r.unreachable.length;
     process.stdout.write(
@@ -375,6 +532,12 @@ export function main(argv: string[] = process.argv.slice(2), root = REPO_ROOT): 
             `UNREACHABLE ${String(r.unreachable.length)}\n`,
     );
     for (const n of r.unreachable) process.stdout.write(`  · ${n}\n`);
+    process.stdout.write(
+        `declared loop instruments: ${String(declared)} · live ${String(inv.live.length)} · ` +
+            `experimental ${String(inv.exempt.length)} · DEAD ${String(inv.reach.length)} · ` +
+            `prose-bound surfaces ${String(inv.proseBound.length)}\n`,
+    );
+    for (const f of inv.reach) process.stdout.write(`  · ${f.id} — ${f.detail}\n`);
     return 0;
 }
 

@@ -143,11 +143,19 @@ maintainer approves the run once per release.
 
 ## Verified facts (not assumed)
 
-- Branch protection ruleset `main protection` (id `17749383`):
-  `required_approving_review_count: 0`; required check =
-  `Sync + Generate Tools Consistency`; `bypass_actors` includes a
+- Branch protection ruleset `main protection` (id `17749383`), **as verified
+  when this ADR was written**: `required_approving_review_count: 0`; required
+  check = `Sync + Generate Tools Consistency`; `bypass_actors` includes a
   repository-role bypass. No human-review gate blocks a bot merge once
   checks are green.
+  *Re-measured 2026-09-13 — two of the three clauses moved, and the conclusion
+  they support did not.* `required_approving_review_count` is still `0` (now a
+  recorded owner ruling rather than an unexamined default). There are now **two**
+  required checks: `Standing payload delta + budget gate` joined on 2026-09-11.
+  And `bypass_actors` is `[]` with `current_user_can_bypass: never` — the
+  repository-role bypass was removed on 2026-09-10. The load-bearing sentence,
+  that no human-review gate blocks a bot merge once checks are green, is
+  **unchanged and still true**; the bot must now clear one more check.
 - `consistency.yml` triggers on `pull_request` with path filters that
   match every file a release PR touches (`package.json`,
   `.claude-plugin/marketplace.json`, `CHANGELOG.md`, `dist/agent-src/**`,

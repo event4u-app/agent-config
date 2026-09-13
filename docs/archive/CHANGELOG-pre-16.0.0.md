@@ -7,8 +7,13 @@
 > `tests/test_changelog_eras.py`.
 >
 > **Read-only.** New entries land in `CHANGELOG.md`. Entries
-> here are not amended — git tags remain the canonical source
-> for what shipped.
+> here are not rewritten — git tags remain the canonical source
+> for what shipped. The one amendment this file permits is a
+> **correction that adds**: where a published entry says something
+> the shipped tree contradicts, the correction is appended beside
+> it and names the commit that decided the matter. Nothing is
+> deleted, so both the original claim and its correction stay
+> readable. This file carries one, under 15.0.0.
 >
 > Entry shape follows
 > [`../contracts/CHANGELOG-conventions.md`](../contracts/CHANGELOG-conventions.md).
@@ -17,7 +22,7 @@
 
 ### Release highlights
 
-- **Behaviour changes:** retire /chat-history and /chat-history import (removes src/domains/meta/chat-history/command.md, src/domains/meta/chat-history/import/command.md) (8b5226a); the deny stays — the replacement was refused 2/2 (03e4eb7); stop asserting a mechanism that no longer exists (9c3f86b); retire the kernel-rule tool-call deny and the 24h soak (288190b); the reuse qualification, condensed then paid for (db46568); four red jobs, all four consequences of projecting docs/guidelines (c4d9ef2); +4 more.
+- **Behaviour changes:** retire /chat-history and /chat-history import (removes src/domains/meta/chat-history/command.md, src/domains/meta/chat-history/import/command.md) (8b5226a); the deny stays — the replacement was refused 2/2 (03e4eb7); stop asserting a mechanism that no longer exists (9c3f86b); retire the kernel-rule tool-call deny and the 24h soak (288190b) — reverted before this cut by 03e4eb7d, so the deny and the soak both stand; the reuse qualification, condensed then paid for (db46568); four red jobs, all four consequences of projecting docs/guidelines (c4d9ef2); +4 more.
 - **Default changes + migration:** arm the automatic record by default, retire the recycle advisory (956954c).
 - **Security and correctness:** make the settings writers idempotent, and repair what the old one broke (#2000) (a063516); repair a file the old writer already corrupted, or say why not (7f3a8c3); ask whether a key is present, never infer it from the write (aea618a); name the payload job what it does, before the name is pinned (#1999) (5d58896); make the payload check report on every PR, so it can be required (#1998) (97466af); tell an unverifiable bound apart from a risen one (#1994) (f01f85f); +28 more.
 - **Honest nulls:** the drain-run summary, as the last commit of the run (ef06ab8).
@@ -28,7 +33,35 @@
 ### BREAKING CHANGES
 
 * **commands:** retire /chat-history and /chat-history import ([8b5226a](https://github.com/event4u-app/agent-config/commit/8b5226aff24d93f8a5fecfa7525b9419d58524af))
-* **governance:** retire the kernel-rule tool-call deny and the 24h soak ([288190b](https://github.com/event4u-app/agent-config/commit/288190b1a5a09a964cf4cc29fa356791bbfb8069))
+* **governance:** retire the kernel-rule tool-call deny and the 24h soak ([288190b](https://github.com/event4u-app/agent-config/commit/288190b1a5a09a964cf4cc29fa356791bbfb8069)) — **this did not ship. It was reverted before the cut** by [`03e4eb7d`](https://github.com/event4u-app/agent-config/commit/03e4eb7de6b8c637cf41bbe60acb489b3a6658af); see the correction below.
+
+> **Correction — the kernel-rule deny and the 24 h soak both stand.**
+>
+> `288190b` deleted `block_kernel_rule_writes.ts`, its three `pre_tool_use`
+> bindings, its test and the 24-hour soak. `03e4eb7d` restored all of it
+> **inside the same release**, so 15.0.0 shipped with the deny and the soak
+> intact. Both commits stay listed here: the retirement is what the release
+> contains as a commit, and this note is what the release contains as
+> BEHAVIOUR. The highlights line above says the same thing in its
+> "the deny stays" entry, which is why the two read as a contradiction
+> without this note.
+>
+> **Why the revert won**, quoted from `03e4eb7d` rather than re-derived:
+> "An independent two-round ratification review under ADR-268 § 4 refused
+> retiring `block_kernel_rule_writes.ts`." Round 2 refused 2/2 on a defect
+> the round-1 fixes do not reach — "the workflow file that decides WHETHER
+> the gate runs lives in the candidate branch, so the enforcement path is
+> head-controlled even when the gate's code is not." The replacement
+> (`check_kernel_edit_ratified`) landed **alongside** the deny, not instead
+> of it: `src/agent-src/contexts/authority/kernel-rule-edits.md` calls it
+> "an ADDITION to this soak, never a replacement".
+>
+> **What a consumer must do about it: nothing.** There is no migration for
+> a removal that was never shipped — see
+> [`../MIGRATION.md`](../MIGRATION.md) § 15.0.0.
+>
+> This note corrects the release record only. The decision itself stands as
+> the ratification review made it; nothing here reopens it.
 
 ### Features
 

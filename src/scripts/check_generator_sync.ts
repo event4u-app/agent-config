@@ -3,7 +3,10 @@
  * Refuse a push whose diff edits the SOURCE of a tracked generated artefact
  * without re-running that artefact's generator.
  *
- * WHY THIS EXISTS — three incidents, one day, one class.
+ * WHY THIS EXISTS — three incidents, one day, one class. A FOURTH followed the
+ * same day, after this gate was written and while its registry still carried
+ * only two triples; it has its own section below because it turned out to be
+ * about a different thing — which local green means.
  *
  * On 2026-09-12, in a single autonomous drain run, the same defect shipped
  * three times:
@@ -68,6 +71,40 @@
  * bundle is never rewritten, and an ascent inside it stays a finding for
  * `check_bundle_path_leakage`, which owns that invariant and runs in the same
  * preflight chain.
+ *
+ * THE DISCRIMINATOR — WHEN A GENERATED ARTEFACT IS THE SUSPECT, READ THE
+ * COMMITTED BLOB, NEVER THE WORKING TREE.
+ *
+ * A fourth occurrence, same day, and it is the one that says why the local
+ * test suite is not a substitute for this gate. A comment-only edit to
+ * `hook_manifest.yaml` left the committed `hook_manifest.json` on the previous
+ * fingerprint. `tests/hooks/hook_manifest_compiled.test.ts` — the gate that
+ * owns exactly this invariant — was run locally and PASSED, because an earlier
+ * `compile_hook_manifest` had already repaired the WORKING TREE. The defect was
+ * never that the file was wrong on disk; it was that the repair was never
+ * committed. CI checks out the commit, so CI read the stale blob and redded.
+ *
+ * A local suite reads the working tree. A remote one reads what you pushed.
+ * Every generated artefact is therefore two files, and a green local run says
+ * nothing about the one the reviewer and CI will see. The command that tells
+ * them apart:
+ *
+ *     git show HEAD:<path> | diff - <path>      # committed vs working tree
+ *     git status --porcelain -- <path>          # the same question, shorter
+ *
+ * Non-empty output means the regeneration is real and uncommitted, which is
+ * indistinguishable from a green local test and is caught by neither.
+ *
+ * AND NOT BY THIS GATE EITHER, WHICH IS WORTH SAYING PLAINLY RATHER THAN
+ * LEAVING FOR SOMEONE TO DISCOVER. `changedPaths` reads the working tree, the
+ * index and the base diff, so an uncommitted SOURCE edit puts a triple in
+ * scope — but the comparison then reads the OUTPUT off disk, so an uncommitted
+ * repair of the output satisfies it exactly as it satisfies the local test.
+ * This gate closes the forgot-to-regenerate case; it does not close the
+ * regenerated-but-did-not-commit case. Nothing in this repository does. Until
+ * something does, the two commands above are the whole instrument, and the
+ * habit they encode — when a generated artefact is the suspect, ask git what
+ * you committed, never what you have — is the transferable part.
  *
  * Usage:
  *     tsx src/scripts/check_generator_sync.ts
@@ -373,7 +410,77 @@ const CENSUS_TRIPLE: Triple = {
     },
 };
 
-export const REGISTRY: readonly Triple[] = [CENSUS_TRIPLE, INSTALL_BUNDLE_TRIPLE];
+const HOOK_MANIFEST_YAML = 'src/scripts/hook_manifest.yaml';
+const HOOK_MANIFEST_JSON = 'src/scripts/hook_manifest.json';
+
+/**
+ * The triple the registry missed, added the day it was missed.
+ *
+ * `hook_manifest.json` is a compiled projection of `hook_manifest.yaml` carrying
+ * a CONTENT-DERIVED fingerprint, which makes it the one output here that a
+ * COMMENT-ONLY source edit invalidates: the fingerprint hashes the YAML text, so
+ * a reworded comment moves it while every field in the parsed manifest stays
+ * byte-identical. That is exactly what happened on 2026-09-12 — a comment edit
+ * left the committed JSON on the previous fingerprint, no regeneration task
+ * covers this file (`task sync` and `task generate-tools` both report no drift),
+ * and CI caught it after the push.
+ */
+const HOOK_MANIFEST_TRIPLE: Triple = {
+    id: 'hook-manifest-compiled',
+    output: HOOK_MANIFEST_JSON,
+    remedy: './scripts-run src/scripts/compile_hook_manifest',
+    why:
+        'the compiled manifest carries a fingerprint hashed over the YAML TEXT, so even a ' +
+        'comment-only edit to the source invalidates it — and no `task` target regenerates it',
+    sourcesOf() {
+        return { ok: true, sources: [{ kind: 'file', value: HOOK_MANIFEST_YAML }] };
+    },
+    regenerate(root, workDir) {
+        const outFile = path.join(workDir, 'hook_manifest.json');
+        const tsx = path.join(
+            root,
+            'node_modules',
+            '.bin',
+            process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
+        );
+        if (!fs.existsSync(tsx)) {
+            return {
+                ok: false,
+                reason: `no tsx at ${path.relative(root, tsx)} — run \`npm ci\` before this gate`,
+            };
+        }
+        // `--out` exists so this runs the SHIPPED generator without writing into
+        // the tree. Compiling inline here instead would test this gate's copy of
+        // the rule rather than the rule itself, which is how a gate drifts green.
+        const res = spawnSync(
+            tsx,
+            [path.join(root, 'src', 'scripts', 'compile_hook_manifest.ts'), '--out', outFile],
+            { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 },
+        );
+        if (res.status !== 0) {
+            return {
+                ok: false,
+                reason:
+                    `compile_hook_manifest exited ${String(res.status)}: ` +
+                    `${(res.stderr ?? '').trim()}`,
+            };
+        }
+        try {
+            return { ok: true, text: fs.readFileSync(outFile, 'utf8') };
+        } catch (e) {
+            return {
+                ok: false,
+                reason: `compile_hook_manifest reported success but wrote no readable file (${String(e)})`,
+            };
+        }
+    },
+};
+
+export const REGISTRY: readonly Triple[] = [
+    CENSUS_TRIPLE,
+    INSTALL_BUNDLE_TRIPLE,
+    HOOK_MANIFEST_TRIPLE,
+];
 
 // ---------------------------------------------------------------------------
 // Run
