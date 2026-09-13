@@ -70,7 +70,7 @@ the count, and is returned to in the same run once the answer lands. It does
 and recorded as a scope delta, council-owned growth routes through the ladder,
 and a larger unrelated opportunity becomes a follow-up artifact rather than
 expanding the mission. Both lists, closed:
-[`scope-mechanics`](../authority/scope-mechanics.md) section Scope growth, with
+[`scope-growth-ownership`](../authority/scope-growth-ownership.md), with
 `./scripts-run src/scripts/scope_growth "<description>"` for a single item.
 
 
