@@ -256,7 +256,7 @@ export function appendDischarge(
     try {
         update_json_under_lock<LedgerFile>(target, (loaded) => {
             const existing = Array.isArray(loaded.discharged) ? loaded.discharged : [];
-            const key = (r: DischargeRow): string => `${r.rule} ${r.by}`;
+            const key = (r: DischargeRow): string => `${r.rule}::${r.by}`;
             const seen = new Set(existing.map(key));
             const merged = [...existing];
             for (const row of rows) {
@@ -318,14 +318,14 @@ export function appendShadow(
     if (is_replay_mode()) return 0;
     if (session_id.trim() === '') return 0;
 
-    const fingerprint = [...missing].sort().join(' ');
+    const fingerprint = [...missing].sort().join('::');
     const target = path.join(root, statePathFor(session_id));
     let attempt = 0;
     try {
         update_json_under_lock<LedgerFile>(target, (loaded) => {
             const existing = Array.isArray(loaded.shadow) ? loaded.shadow : [];
             const prior = existing.filter(
-                (r) => [...(r.missing ?? [])].sort().join(' ') === fingerprint,
+                (r) => [...(r.missing ?? [])].sort().join('::') === fingerprint,
             );
             attempt = prior.length + 1;
             return {
