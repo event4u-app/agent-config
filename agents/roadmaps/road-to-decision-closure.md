@@ -169,7 +169,7 @@ owner-owned residue remains, closure completes with zero owner interaction.
       condition became true.
       verify: a `ready` fixture roadmap with an unresolved technical marker is red; the same
       roadmap with the marker resolved into `## Decisions` is green.
-- [ ] **2.2 Council and team records live where council records already live.** Under
+- [x] **2.2 Council and team records live where council records already live.** Under
       `agents/evidence/analysis/`, in the existing shape — question, evidence, member
       positions, convergence, verdict, confidence, revisit condition. The council output
       contract loses any mandatory owner-facing options block after a conclusive technical
@@ -177,6 +177,14 @@ owner-owned residue remains, closure completes with zero owner interaction.
       verify: fixture `F3` — a conclusive technical verdict produces a record with no
       owner-facing options block, and a non-convergent one still produces the proposal the
       owner confirms.
+      **Corrected on landing, 2026-09-13: council records do NOT live under
+      `agents/evidence/analysis/`.** They are written to `agents/runtime/council/{questions,
+      responses,sessions}/`, which is gitignored and auto-pruned after
+      `ai_council.session_retention_days`; `agents/evidence/analysis/` is the INPUT side that
+      `/council analysis` reads. The durable record is the convergence inlined into the
+      artefact the decision serves, with date and members — citing the scratch path from a
+      stable artefact is forbidden by `no-roadmap-references`. Team records now follow exactly
+      that, which is what "where council records already live" was reaching for.
 - [ ] **2.3 Retire `blocked-by:` for judgement calls.** `BLOCKED` is reached only per ADR-268
       § 7; a judgement call routes back through closure instead of parking in a file.
       verify: `grep -rc 'blocked-by:' agents/roadmaps/*.md` shows no marker whose body is a

@@ -279,12 +279,32 @@ The host is the convener **and** the skeptic — never paraphrase
 council output as host reasoning, and never auto-promote convergence
 to correctness.
 
-### 5b. Translate verdicts into user options
+### 5b. Translate verdicts into user options — when the verdict is owed to the owner
 
-End with a numbered-options block carrying the host verdict per
-finding (e.g. `1. [accept] Apply finding 1 — <patch summary>`,
-`2. [reject] Skip finding 2 — <reason>` — user can override). Always
-include "discard council input" as an option.
+```
+THE OPTIONS BLOCK IS CONDITIONAL, AND THE CONDITION IS OWNERSHIP.
+A CONCLUSIVE **TECHNICAL** VERDICT EMITS NO OWNER-FACING OPTIONS BLOCK —
+IT IS A RESOLUTION, AND HANDING IT OVER AS OPTIONS ROUTES A TECHNICAL
+DECISION TO A PERSON BECAUSE IT WAS HARD (ADR-268 § 10).
+THE BLOCK IS OWED WHEN THE VERDICT IS OWNER-OWNED — `product-owned`,
+`business-owned`, `destructive-owned` — OR WHEN THE COUNCIL DID NOT
+CONVERGE. THEN IT CARRIES THE COUNCIL'S PROPOSAL FOR THE OWNER TO CONFIRM.
+CONVERGENCE IS READ FROM THE RECORD, NEVER INFERRED: A RECORD THAT DOES
+NOT SAY WHETHER ITS MEMBERS CONVERGED IS ITSELF THE FINDING.
+```
+
+A conclusive technical verdict still produces the full record — question,
+evidence, member positions, convergence, verdict, confidence, revisit
+condition — and the run continues on it. The resolution is written into the
+consuming artefact's `## Decisions` table with `resolved by: council:<record>`.
+
+`./scripts-run src/scripts/council_record_shape <record.md>` checks a record
+against this contract in both directions.
+
+When the block IS owed, it is a numbered-options block carrying the host
+verdict per finding (e.g. `1. [accept] Apply finding 1 — <patch summary>`,
+`2. [reject] Skip finding 2 — <reason>` — user can override), with "discard
+council input" always present as an option.
 
 ### 6. Hard floor — text only
 
