@@ -338,12 +338,12 @@ decides exactly as it did before.
 ```
 THE CONSUMER IS LIVE. NO PRODUCER SHIPS YET — NOTHING WRITES `delivery` INTO
 THE RUN-STATE FILE, SO ON EVERY RUN TODAY THE POSITION IS ABSENT AND THE HOLD
-DOES NOT FIRE. READ THE PARAGRAPH ABOVE AS THE CONTRACT, NOT AS BEHAVIOUR YOU
+DOES NOT FIRE. READ THE PARAGRAPH ABOVE AS THE CONTRACT, NOT AS BEHAVIOR YOU
 WILL OBSERVE.
 ```
 
 Said in a fence because the surrounding prose reads as a description of live
-behaviour and an independent review of the change that introduced it read it
+behavior and an independent review of the change that introduced it read it
 exactly that way. The ladder, the round-trip and the ledger field are built,
 tested and correct for any recorded value; what is missing is the step that
 records one, and a run that wants the hold must write the position itself until

@@ -185,15 +185,13 @@ import { premiseMoved, readContextObservation } from '../_lib/context_observatio
 import { RUN_TERMINAL_VOCABULARY_VERSION } from '../_lib/outcome_vocabularies.js';
 import {
     HALT_ACTIONS,
-    buildLedgerEvent,
+    buildLedgerEvent, parseDeliveryState, type DeliveryState,
     ladder,
     MAX_ITERATIONS,
-    parseDeliveryState,
     parseHaltStamp,
     STALL_WINDOW,
     terminalStateFor,
     WALL_CLOCK_CAP_MS,
-    type DeliveryState,
     type LadderAction,
 } from '../_lib/continuation_ladder.js';
 
@@ -656,14 +654,10 @@ function readState(file: string): RunState | null {
         if (o['inert_reported'] === true) {
             rec.inert_reported = true;
         }
-        // Round-tripped for the same reason `history_source` is, and found the
-        // same way: without this branch the field is read at the ladder call and
-        // never survives a write, so `deliveryBlocksCompletion` sees `undefined`
-        // forever and the 8.1 hold is dead code that reads as shipped.
-        const deliveryRead = parseDeliveryState(o['delivery']);
-        if (deliveryRead !== undefined) {
-            rec.delivery = deliveryRead;
-        }
+        // Round-tripped for the same reason `history_source` is: without this the
+        // 8.1 hold is dead code that reads as shipped.
+        const dlv = parseDeliveryState(o['delivery']);
+        if (dlv !== undefined) rec.delivery = dlv;
         // Round-tripped for the same reason `history_source` is: dropped, the
         // premise would be re-recorded every fire from the newest observation, so
         // the two sides could never differ and the rung would be dead code.
@@ -1399,9 +1393,7 @@ export function main(): number {
 
     const delivery = parseDeliveryState(state.delivery) ?? null;
     const action = ladder(
-        state,
-        scan.open,
-        Date.now(),
+        state, scan.open, Date.now(),
         scan.blocked,
         undefined,
         unavailable,
