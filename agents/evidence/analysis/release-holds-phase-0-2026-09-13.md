@@ -212,3 +212,47 @@ direction that can fail:
 **What this does not settle.** Whether to spend the Phase 2-5 build against a latent need is
 a judgement about cost, not about evidence, and it stays with the owner. This file removes
 the evidentiary question from that decision; it does not answer the decision.
+
+---
+
+## Addendum, 2026-09-14 — the exposure row moved; the finding did not
+
+Added, never substituted. Every figure above stays pinned to `7182f5d07` and to tag `15.0.0`,
+because a measurement that names the commit it was taken at is the only kind a later reader can
+reproduce. This section records a second reading at a later head, taken after eight sibling PRs
+merged and `main` advanced to `b4019fa12`.
+
+**The 0.1 finding is unchanged.** The narrow grep still returns exactly two hits in the active
+corpus, both self-references inside this mechanism's own roadmap. Zero substantive
+release-coupling declarations, same as at `7182f5d07`.
+
+**The 0.2 exposure row moved sharply**
+(`bash agents/evidence/analysis/release-holds-exposure-row.sh HEAD`):
+
+| Reading | Active files | Mid-flight | Of the `ready` subset |
+|---|---:|---:|---|
+| `7182f5d07`, 2026-09-13 | 14 | 1 | **0 of 7** |
+| merged head, 2026-09-14 | 14 | **6** | **4 of 7** |
+
+The six are `road-to-a-declared-component-contract.md` (3 done / 20 open),
+`road-to-behaviour-evidence-over-pixels.md` (23 / 3), `road-to-bounded-approval-floor-waiver.md`
+(17 / 2), `road-to-release-holds-that-refuse.md` (4 / 27 — this file),
+`road-to-the-substrate-stub-meeting-its-open-gate.md` (14 / 4) and
+`road-to-typed-grants-that-persist.md` (4 / 27).
+
+**What this changes, and what it does not.** The *exposure* population is no longer the
+near-empty set the 2026-09-13 reading found: within one day it went from one file to six, and
+from none of the ready roadmaps to four of seven. A tree where most active work is mid-flight at
+any moment is the condition this mechanism was written for, and the 2026-09-13 reading understated
+how normal that condition is — it was a quiet day, not a quiet tree.
+
+It does **not** produce a live subject, and the `zero-live-subjects` decision does not turn on
+the exposure count. It turns on whether any roadmap *declares* that its intermediate state must
+not ship, and that count is still zero on both readings. Exposure is the population a mechanism
+could protect; a declaration is an instance of it being needed. Reading the jump from 1 to 6 as
+evidence that the mechanism is now justified would be exactly the substitution the honest-null
+branch exists to prevent.
+
+What it does do is strengthen the *prior* the owner is deciding against: the latent need is
+larger and more routine than one day's snapshot suggested, which is an argument about cost and
+frequency rather than about evidence.

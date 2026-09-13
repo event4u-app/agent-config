@@ -346,6 +346,13 @@ when 15.0.0 shipped — and nothing can express it, let alone refuse on it.
   - **The honest-null branch is recorded as the evidenced and recommended plan**, in the Phase 0
     file and in the `release-hold-refuses-declared-state` claim pre-registered at 0.4, where the
     null is named as the PREDICTED outcome rather than a Phase 6 surprise.
+  **Second reading, 2026-09-14, after eight sibling PRs merged.** Recorded as an addendum to
+  the Phase 0 file rather than as an edit to its pinned figures. The declaration count is
+  UNCHANGED at zero, so no live subject appeared. The EXPOSURE row moved sharply: 6 of 14 active
+  roadmaps mid-flight, and 4 of the 7 `ready` ones, against 1 and 0 the day before. That makes
+  the latent need larger and more routine than one snapshot suggested — but exposure is the
+  population a mechanism could protect, not an instance of it being needed, and this decision
+  turns on the latter. The jump must not be read as the live subject it is not.
   **Status stays open, and the reason is precise.** The `Resolved when` says "the accepted plan",
   and acceptance is the owner's act. The evidentiary half of this decision is now closed — there
   is nothing left to look up. What remains is a cost judgement: whether to spend Phases 2 through
