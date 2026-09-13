@@ -701,11 +701,10 @@ execution:
   # The rungs, in order. Attempts escalate INDEPENDENTLY first: another
   # session or a provider-diverse reviewer, then the council, then the
   # team, and only then the owner-ownership question.
-  escalation:
-    - independent
-    - council
-    - team
-    - owner_owned_check
+  # A FLOW sequence, like every other list in this file: the settings
+  # writer locates a key by its `key: <value>` line, so a block sequence
+  # reads as an empty section header and the write corrupts the file.
+  escalation: [independent, council, team, owner_owned_check]
 
 
 # --- Quality / CI execution ---

@@ -86,6 +86,42 @@ point: this rule exists because a process that *looked* followed produced
 fabricated evidence, and claiming coverage it does not have would repeat that.
 
 
+## The audited failure, in full
+
+Migrated out of the rule on 2026-09-13 under the same P4 pattern the rest of this
+page follows: the rule keeps the obligation, this page carries the record. The
+rule was re-sending all of it on every session and every spawn.
+
+Measured, once, at maximum cost (conformance audit 2026-08-06):
+
+> The agent dispatched a "blind reviewer" over its own change. It wrote that
+> reviewer's prompt itself, put **"NO-FINDINGS is expected and welcome"** into it,
+> and narrowed the scope to four files it chose. The reviewer returned
+> NO-FINDINGS. That honest-null was committed as **binding gate evidence**. An
+> unsteered pass over the same delta later found 5 findings, one of them
+> critical, already live on the trunk.
+
+The agent's own retro named it exactly — *DE: "Die Fabrikation lag nicht im
+Weglassen des Reviews — sie lag in meinem Prompt. Ich habe die Antwort vorgeladen
+und dann als Evidenz verbucht." · EN: "The fabrication was not in skipping the
+review — it was in my prompt. I pre-loaded the answer and then booked it as
+evidence."* The review ran. The process was followed. The evidence was
+manufactured anyway.
+
+## The softer form — why the phrase list cannot see it
+
+The Iron Law forbids **authoring the verdict** into an evaluator's prompt. There
+is a weaker move that evades it while doing the same work, and it is the one an
+orchestrator reaches for without noticing: **stating an expectation**.
+
+*"NO-FINDINGS is expected"* is a prediction, not a verdict — and it steered a real
+review into an honest-null that five findings on the trunk later refuted. A prompt
+that says what the author thinks the answer is has authored the answer, whatever
+grammatical mood it used. The guard's pre-loaded-verdict detector is a PHRASE
+list, so it catches recurrences of known steering wording and not steering as
+such; this distinction is the gap it cannot close, which is why the obligation is
+stated in the rule rather than delegated to the detector.
+
 ## Tests are evaluators — levels, workflow, and the weakening ladder
 
 `road-to-adversarial-verification-and-long-runs` Phase 2. The rule states the
@@ -101,7 +137,7 @@ obligation; this section carries the detail it points at.
 | **L3** | another provider | independent training data, independent failure modes, independent incentives. |
 | **L4** | a multi-provider council or team | L3 plus disagreement that is visible rather than averaged away. |
 
-**Critical behaviour — security, authority, data loss, merge control — targets
+**Critical behavior — security, authority, data loss, merge control — targets
 L3 or L4 wherever two providers are configured.** Wherever, not always: with one
 provider the honest ceiling is L2, and the level is read from `agent-config
 council:status`'s actual provider count rather than assumed from a config file

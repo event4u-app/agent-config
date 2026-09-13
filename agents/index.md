@@ -423,7 +423,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`spreadsheet-source-quality`](../src/rules/spreadsheet-source-quality.md) | auto | Spreadsheet financial data uses official sources (IR, regulatory filings); aggregator/news/social figures need permission + cell-level unofficial mark |
 | rule | [`strategy-safety-floor`](../src/rules/strategy-safety-floor.md) | auto | Founder-strategy output (vision, positioning, moats, OKRs) — never a final call; human owns the decision |
 | rule | [`symfony-routing`](../src/rules/symfony-routing.md) | auto | Symfony work (DI, bundles, Doctrine, Messenger, voters, console) — route to symfony-workflow |
-| rule | [`test-first`](../src/rules/test-first.md) | auto | A behaviour change gets a failing test first — and the test must fail for the intended reason before any implementation is written |
+| rule | [`test-first`](../src/rules/test-first.md) | auto | A behavior change gets a failing test first — and the test must fail for the intended reason before any implementation is written |
 | rule | [`think-before-action`](../src/rules/think-before-action.md) | auto | Before coding/modifying/debugging — analyze first, verify with real tools, never guess or trial-and-error |
 | rule | [`token-budget-discipline`](../src/rules/token-budget-discipline.md) | auto | rich-class skills are exempt from telegraph + thin-projector trims; enforce the 15% cap + justification |
 | rule | [`token-efficiency`](../src/rules/token-efficiency.md) | auto | CLI runs, log fetches, replies — redirect verbose output, minimize tool calls, stay concise |

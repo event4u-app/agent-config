@@ -43,8 +43,16 @@ rows:
     reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
   - heading: "Validation-loop budget — hard cap N=3 per target"
     disposition: carried
-    target: "src/rules/autonomous-execution.md#Validation-loop budget — hard cap N=3 per target"
-    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+    target: "src/rules/autonomous-execution.md#Validation-loop budget — `execution.fix_loop_max`, default 10, and a ladder"
+    reason: >-
+      the section stayed in the rule; the migration moved the depth beneath it, not this
+      heading. RENAMED 2026-09-13 by road-to-adversarial-verification-and-long-runs 4.1,
+      which replaced the hard cap of 3 with a configurable bound and a three-band ladder.
+      The `heading` field keeps the HISTORICAL text — it records what this ledger row was
+      written about — while `target` follows the rename, which is the split this file's two
+      fields exist for. Restating the old name as the target would make the anchor resolve
+      to nothing, and rewriting the historical heading would erase the fact that the section
+      was ever called that.
   - heading: "Antipattern — allowlist-growth as silent budget bypass"
     disposition: carried
     target: "src/rules/autonomous-execution.md#Antipattern — allowlist-growth as silent budget bypass"

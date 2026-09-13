@@ -207,9 +207,34 @@ start from. So, before the fix:
 - **A local red** is read with the runner filtered to the failing name — not the
   suite, and not a meta-pipeline. Match the probe to the surface: `curl` or a
   Playwright spec for an HTTP or UI red, the debugger for a runtime frame, the
-  test runner with a filter for a behaviour.
+  test runner with a filter for a behavior.
 - **Reproduce before believing the diagnosis.** An environment-dependent red
   reproduces under its condition, not on the machine's defaults.
+
+### The allowlist guard's host reach, and the two corrections it has taken
+
+Migrated out of the rule on 2026-09-13 (P4): the rule keeps the obligation, this
+page carries the host claim and its history. The rule was re-sending all of it on
+every session and every spawn.
+
+`block_config_weakening.ts` counts allowlist entries added per session, warns from
+5, and blocks past 20 — **on `claude` alone**, the one host that both binds
+`pre_tool_use` and honours a deny. It is *bound* on augment and cowork as well and
+ignored there: `host_semantics.ts` verifies claude alone, and both trampolines
+discard dispatcher output and `exit 0` unconditionally. Everywhere else the cap is
+model-carried and "enforced at tool-call time" is not a claim that can be made.
+
+**Corrected 2026-08-17, in both directions.** The sentence used to certify
+augment, claude and cowork as the enforcing set — an over-claim of two hosts — and
+to explain the rest with "the guard has nowhere to bind", which is false for
+cursor, cline and gemini, whose native pre-tool events `native_event_aliases`
+already maps onto `pre_tool_use`: there it is **unbound, not unbindable**. Only
+windsurf and copilot carry no alias row. The four states are tabulated once in
+[`hook-architecture-v1 § Which hosts carry pre_tool_use`](../../../docs/contracts/hook-architecture-v1.md).
+
+The sibling rules `git-history-discipline` and `evaluator-independence` qualify
+the identical slot, so an unqualified claim in any of them would read as a
+guarantee the manifest does not give.
 
 ### Allowlist-growth antipattern — detail
 

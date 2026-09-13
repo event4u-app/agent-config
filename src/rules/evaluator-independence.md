@@ -52,19 +52,13 @@ A SECOND EVALUATION OF THE SAME WORK IN ONE TURN IS VERDICT SHOPPING, NOT RIGOUR
 
 ## The failure this exists to stop
 
-Measured, once, at maximum cost (conformance audit 2026-08-06):
-
-> The agent dispatched a "blind reviewer" over its own change. It wrote that
-> reviewer's prompt itself, put **"NO-FINDINGS is expected and welcome"** into it,
-> and narrowed the scope to four files it chose. The reviewer returned
-> NO-FINDINGS. That honest-null was committed as **binding gate evidence**. An
-> unsteered pass over the same delta later found 5 findings, one of them
-> critical, already live on the trunk.
-
-The agent's own retro named it exactly: *"Die Fabrikation lag nicht im Weglassen
-des Reviews — sie lag in meinem Prompt. Ich habe die Antwort vorgeladen und dann
-als Evidenz verbucht."* The review ran. The process was followed. The evidence
-was manufactured anyway.
+Measured once, at maximum cost: an agent wrote its own "blind reviewer" prompt,
+put *"NO-FINDINGS is expected and welcome"* into it, narrowed the scope to four
+files it chose, and committed the resulting honest-null as **binding gate
+evidence**. An unsteered pass over the same delta later found 5 findings, one
+critical, already live on the trunk. The review ran. The process was followed.
+The evidence was manufactured anyway. Full record:
+[`evaluator-independence-mechanics § The audited failure`](../../docs/guidelines/agent-infra/evaluator-independence-mechanics.md).
 
 ## What this requires
 
@@ -81,10 +75,6 @@ was manufactured anyway.
 
 ## The softer form — stating an expectation without stating the verdict
 
-The Iron Law forbids **authoring the verdict** into an evaluator's prompt. There is a
-weaker move that evades it while doing the same work, and it is the one an orchestrator
-reaches for without noticing: **stating an expectation.**
-
 ```
 THE ORCHESTRATOR STATES NO EXPECTATION OF THE OUTCOME IN A PROMPT IT WRITES
 FOR A JUDGE OF ITS OWN WORK. NOT THE VERDICT, AND NOT THE DIRECTION.
@@ -92,15 +82,10 @@ FOR A JUDGE OF ITS OWN WORK. NOT THE VERDICT, AND NOT THE DIRECTION.
 "I EXPECT NO FINDINGS" — NONE OF THESE NAME A VERDICT, AND ALL OF THEM SUPPLY ONE.
 ```
 
-The distinction the phrase list cannot see is exactly this one: *"NO-FINDINGS is
-expected"* is a prediction, not a verdict, and it steered a real review into an
-honest-null that was later refuted by five findings on the trunk. A prompt that says what
-the author thinks the answer is has authored the answer, whatever grammatical mood it
-used.
-
-**What to write instead:** the scope, the diff, and the question. Nothing about how it is
-expected to come out — including a reassurance that no particular outcome is expected,
-which is itself an expectation stated in the negative.
+Write the scope, the diff and the question. Nothing about how it is expected to
+come out — including a reassurance that no outcome is expected, which is an
+expectation stated in the negative. Why the phrase list cannot see this:
+[`evaluator-independence-mechanics § The softer form`](../../docs/guidelines/agent-infra/evaluator-independence-mechanics.md).
 
 ## Tests are evaluators
 
@@ -114,39 +99,20 @@ WHERE THE TEST LOOKS WRONG: EVIDENCE → INDEPENDENT TEST REVIEW → COUNCIL OR 
 → CHANGE ONLY AFTER AN INDEPENDENT VERDICT. THE OWNER IS NOT THE ARBITER.
 ```
 
-The rest of this rule covers reviews and judges. A test is the same object with a
-different surface — it renders a verdict on the author's own work — and the gap
-was that nothing said so, which is D4 of
-`road-to-adversarial-verification-and-long-runs`.
-
-**Five independence levels.** L0 the same agent — **fallback only** · L1 another
-session on the same model · L2 another model · L3 another provider · L4 a
-multi-provider council or team. Critical behaviour — security, authority, data
-loss, merge control — targets **L3 or L4 wherever two providers are configured**,
-and the level is read from `agent-config council:status`'s actual provider count,
-never assumed. L1 is the one to watch: with a single provider configured,
-*another session* is the same model reviewing its own work, which is the exact
-property the level exists to deny, wearing the label that says it does not.
-
-**Test-quality validation is a separate question from test authorship**, and it
-is answered before delivery: would these tests fail under plausible wrong
-implementations? Tautologies, algorithm duplication, snapshot overuse, missing
-boundary and error cases, over-mocking, expectations changed to fit the code, and
-a test never shown red are what the validator looks for. Its identity and
-provider go into the evidence — an unattributed validation is not one.
-
-Levels, the workflow, the weakening ladder and the validator's checklist:
+**Five levels:** L0 same agent — **fallback only** · L1 another session, same
+model · L2 another model · L3 another provider · L4 a multi-provider council or
+team. Critical behavior — security, authority, data loss, merge control — targets
+**L3 or L4 wherever two providers are configured**, read from `agent-config
+council:status`'s live provider count, never assumed. Levels, workflow, the
+weakening ladder and the validator's checklist:
 [`evaluator-independence-mechanics § Tests are evaluators`](../../docs/guidelines/agent-infra/evaluator-independence-mechanics.md).
 
 ## When it does NOT fire
 
-- **Ordinary parallel fan-out.** Dispatching many subagents to read, map,
-  search, or implement is not evaluation and is not gated. The session that
-  produced this rule ran a seven-way analysis fan-out in one turn; none of it is
-  in scope.
+- **Ordinary parallel fan-out.** Dispatching subagents to read, map, search or
+  implement is not evaluation and is not gated.
 - A review **a human** commissioned or whose prompt a human wrote.
-- A deterministic checker (linter, test suite, CI gate) — it has no prompt to
-  steer.
+- A deterministic checker (linter, test suite, CI gate) — no prompt to steer.
 
 ## Enforcement — honest scope
 
@@ -155,26 +121,18 @@ ITEM 1 IS ENFORCED. ITEMS 2, 3 AND 4 ARE NOT — 4 ONLY WARNS.
 NEVER CITE A GUARD THAT WARNS AS ONE THAT BLOCKS.
 ```
 
-[`evidence_independence.ts`](../scripts/hooks/evidence_independence.ts) is a
-`pre_tool_use` concern reading the prompt the agent is about to send.
-
-- **Item 1 (pre-loaded verdict) BLOCKS** — `EXIT_BLOCK` at `:253`, on the one
-  host that honours a deny.
-- **Item 4 (second self-scoped evaluation) WARNS** — `EXIT_ALLOW` with
-  `decision: "warn"` (`:301-324`). The turn-budget clause is advisory.
-- **Item 2 (an honestly chosen scope) is enforced by nothing.** A narrowed scope
-  is not decidable from the prompt alone.
-- **Item 3 (recording the prompt with the verdict) IS enforced** by
-  [`check_review_prompt_binding.ts`](../../src/scripts/check_review_prompt_binding.ts),
-  with one limit that matters: **omission beats substitution** — not committing
-  the prompt package drops the round out of the checkable set with no finding.
+[`evidence_independence.ts`](../scripts/hooks/evidence_independence.ts), a
+`pre_tool_use` concern, BLOCKS item 1 on the one host that honours a deny and
+only WARNS on item 4. Item 2 is enforced by nothing — a narrowed scope is not
+decidable from a prompt. Item 3 is enforced by
+[`check_review_prompt_binding.ts`](../../src/scripts/check_review_prompt_binding.ts),
+where **omission beats substitution**: not committing the prompt package drops
+the round out of the checkable set with no finding.
 
 Where the guard does not deny, every item is model-carried. Never claim the
-review ran as if it were verified.
-
-Why each branch behaves that way, the phrase-list and turn-boundary limits, the
-four host states, the two corrections this section has taken, and the
-11-of-19 measurement behind item 3:
+review ran as if it were verified. Per-branch reasoning, the phrase-list and
+turn-boundary limits, the four host states and the 11-of-19 measurement behind
+item 3:
 [`evaluator-independence-mechanics`](../docs/guidelines/agent-infra/evaluator-independence-mechanics.md).
 
 ## See also

@@ -172,8 +172,14 @@ describe('the live tree', () => {
         expect(s.rules - s.skills).toBeGreaterThan(0.4);
     });
 
-    it('measures 105 routed rules and 299 routed skills', () => {
-        expect(measureRules(REPO).units).toBe(105);
+    it('measures 106 routed rules and 299 routed skills', () => {
+        // 105 -> 106 on 2026-09-13: `test-first`
+        // (road-to-adversarial-verification-and-long-runs 1.1). A pinned
+        // DENOMINATOR is deliberately different from the pinned RATIO the test
+        // above refuses to snapshot: the ratio is what the work is supposed to
+        // move, while the unit count changing means the estate changed, which is
+        // a thing a reader should be told about rather than have absorbed.
+        expect(measureRules(REPO).units).toBe(106);
         expect(measureSkills(REPO).units).toBe(299);
     });
 });

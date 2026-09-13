@@ -157,21 +157,35 @@ before the record is signed.
       `./scripts-run src/scripts/check_always_budget` is green; and the rule carries no
       carve-out excluding AC on the ground that the edited artefact is markdown when its
       routing or lint behaviour is testable.
-      <!-- landed 2026-09-13 at exactly 40 lines. **Delivered on every turn, and NOT via
-      `type: always` — a measurement, not a preference.** `check_always_budget` reads the
-      `type: always` set, which is the locked nine-rule kernel (`_lib/kernel_rules.ts`), and
-      its extended dimension stood at 60,195 / 60,254 chars — 59 chars of headroom on a
-      ratchet whose own output says it may only move DOWN. A tenth always-rule of any useful
-      size is therefore arithmetically impossible without either a kernel-membership decision
-      no agent takes or a ratchet raise the gate forbids.
-      The rule ships as a TRIGGER-LESS `auto` rule instead, which `project_thin_rules.ts`
-      keeps full-bodied and never thins (its D3 branch) — so it is delivered in full on every
-      host, every turn, and is counted by `check_standing_rule_delivery` (the budget for
-      prose that is actually delivered) rather than being invisible to both. That the D3
-      branch fires for it is not inferred: `generate-tools` names the file in its own output.
+      <!-- landed 2026-09-13 at 41 lines (the 40 the step named, plus one: the trigger block
+      the payload finding below forced). **NOT always-loaded, and the shortfall is a
+      measurement rather than a choice — this is the honest half of the step.**
+      Three budgets were tried, in this order, and each refused it:
+      1. `type: always` is the locked nine-rule kernel (`_lib/kernel_rules.ts`), and
+         `check_always_budget`'s extended dimension stood at 60,195 / 60,254 chars — 59 chars
+         of headroom on a ratchet its own output says may only move DOWN. A tenth always-rule
+         of any useful size is arithmetically impossible without a kernel-membership decision
+         no agent takes.
+      2. A TRIGGER-LESS `auto` rule, which `project_thin_rules` keeps full-bodied (its D3
+         branch) and so delivers on every turn, was built and measured. It cleared
+         `check_always_budget` trivially but pushed `check_standing_rule_delivery` and — the
+         binding one — `check_preamble_payload_budget`, a per-SPAWN ratchet measured at the
+         base ref with no number to edit.
+      3. Giving it triggers thins the host projection to a two-line stub, which helps the
+         standing-delivery budget and does NOT help the payload one: that gate measures
+         `dist/agent-src/rules`, the condensed body, so a rule costs its full size there
+         whatever its triggers. Measured, not assumed — the projection went to 2 lines and
+         the payload figure did not move.
+      So the rule ships ROUTED (5 triggers, tier 1) and its +446 tok was paid for by
+      migrating argument prose out of three standing rules into their context files under
+      the established P4 pattern — nothing deleted, every word preserved one layer out.
+      **What is therefore NOT delivered:** the obligation does not reach a turn whose prompt
+      never says "test". The canonical miss is *"add a discount calculation"*. Closing it
+      needs an owner decision on one of the two ratchets, or a `pre_tool_use` carrier keyed on
+      a code edit rather than on prompt wording. Recorded here rather than left to be
+      discovered from a green checkbox.
       One trap worth recording — a rule ABSENT from `dist/router.json` is thinned regardless
-      of its triggers, so `compile_router` must run before `generate-tools` or the first
-      projection is a two-line stub. -->
+      of its triggers, so `compile_router` must run before `generate-tools`. -->
       <!-- verify: npm run test:ts -- tests/e2e/adversarial-verification-fixtures.test.ts -->
 
 ## Phase 2 — Tests by someone else

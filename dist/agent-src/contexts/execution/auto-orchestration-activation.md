@@ -62,11 +62,52 @@ choice.
 ## Safety floors are never lifted
 
 Auto-dispatch never bypasses a floor. The cross-model judge Iron Law
-(`subagent-orchestration`), `verify-before-complete`, the N=3 autonomous
-budget, `scope-control`, and `non-destructive-by-default` all apply to
-auto-delegated work exactly as they do to in-session work.
+(`subagent-orchestration`), `verify-before-complete`, the fix-loop bound of
+`autonomous-execution`, `scope-control`, and `non-destructive-by-default` all
+apply to auto-delegated work exactly as they do to in-session work.
 `emergency.orchestration_halt: true` disables the layer for the duration of an
 incident; it never disables a floor.
+
+## Carriers — how the delegation obligation reaches a session
+
+Migrated out of `delegation-policy` on 2026-09-13 under the P4 pattern: the rule
+keeps the obligation, this page carries how it travels and what stays
+model-carried. The rule was re-sending all of it on every session and every
+spawn, and the standing-payload ceiling is measured per spawn.
+
+No host runs the tier-2 rule router, so that rule's triggers alone never load it.
+The obligation travels on three carriers instead:
+
+1. the always-loaded **AGENTS.md line** (delegate-by-default + end-review);
+2. the **`delegation-nudge`** concern on `user_prompt_submit` — runs
+   `classifyTask` on cheap prompt signals and injects a one-line verdict ONLY
+   when the classifier says `do-in-parallel` / `do-in-steps`, silence otherwise.
+   Delivery on `user_prompt_submit` is end-to-end verified;
+3. the **`end-review-nudge`** concern on `stop` — ONE `review_skipped` telemetry
+   line per mutating no-review session, verified. Its advisory line reaches the
+   dispatcher output, but host-side forwarding of stop-slot context to the model
+   is unverified, so the model-facing end-review carrier is the AGENTS.md line
+   plus this telemetry.
+
+The capability gate itself resolves from the committed host registry merged with
+a live environment probe in `src/scripts/_lib/host_capability.ts`
+(`probeHostCapabilities`) — capability is a fact about the host, never a settings
+override.
+
+**Never read a `false` capability as a host limitation without checking where it
+came from.** The registry holds one row, so on every other host all six fields are
+the all-false safe default — which records that *nobody answered*, not that the
+host cannot spawn. `agent-config routing:doctor [--platform <host>]` prints the
+value **and** its provenance per field (`registry` = a committed observation this
+repo made once · `live-probe` = established in this process · `default` = no
+answer). Run it before concluding delegation is unavailable here; the same-shaped
+wrong guess about the council is the incident
+[`council-availability`](../../rules/council-availability.md) exists for.
+
+What stays model-carried, honestly: the decomposition itself, the per-return
+verification, and every dispatch on hosts without hook slots. The nudges are
+advisory by design — whether they change behavior is measured by the telemetry,
+not assumed.
 
 ## Related
 
