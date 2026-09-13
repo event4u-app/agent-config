@@ -4,11 +4,11 @@ tier: "1"
 description: "A behaviour change gets a failing test first — and the test must fail for the intended reason before any implementation is written"
 alwaysApply: false
 self_contained: false
-routes_to:
-  - "skill:test-driven-development"
-enforced_by:
-  - "instruction-only: no gate sees which was written first; the test-delta and test-weakening gates catch an absence, never an order."
+routes_to: ["skill:test-driven-development"]
+enforced_by: ["instruction-only: no gate sees which was written first; the test-delta and test-weakening gates catch an absence, never an order."]
 obligation_frequency: "per-edit"
+workspaces: [agent-config-maintainer, engineering]
+packs: [engineering-base]
 ---
 
 # Test First
