@@ -283,7 +283,18 @@ nothing since has been able to notice.
 - **Resolved when:** AC-4 is satisfied on any one of the three paths.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-11 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-09-13 | reviewer: claude/host -->
+
+Re-reviewed 2026-09-13 against what actually landed. All five held; two are now
+measured rather than argued, and one never had to be run.
+
+| Rank | Outcome at execution |
+|------|----------------------|
+| 1 | **Held, and now measured.** The axis is scoped to the declared instrument list, and the nine-of-fourteen figure was reproduced on `loop_guards.ts`. The mitigation's second half changed shape: the criterion is right, but its example list was wrong on one member — see the correction under 1.2. |
+| 2 | **Never arose.** Nothing was wired. `rejectedTacticRepeat` took the expiry-dated exemption, so the continuation hook's refusal surface is unchanged. The risk returns on 2026-12-12 if the disposition is then answered by wiring. |
+| 3 | **Held.** `loop-surfaces.yaml` has exactly one reader, `check_gate_reachability` via `_lib/loop_surfaces.ts`. Nothing dispatches from it and no surface changed behaviour because of it. |
+| 4 | **Held, and enforced rather than intended.** `expires:` is required under `status: experimental`, a past date reds, and both an expired date and a missing one are planted self-test cases that reject. |
+| 5 | **Held.** All three instances known today are disposed — one declared, two removed with their flags — so the axis ships against an empty backlog and reds on nothing at the moment it becomes blocking. |
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
