@@ -110,6 +110,72 @@ export function deliveryBlocksCompletion(state: DeliveryState | null | undefined
     return !DELIVERY_ENDINGS.includes(state);
 }
 
+/** The facts one terminal ledger line records about a run. */
+export interface LedgerEventInput {
+    readonly action: LadderAction;
+    readonly runId: string;
+    readonly slug: string;
+    readonly turn: number;
+    readonly iterations: number;
+    readonly open: number;
+    readonly blocked: number;
+    readonly delivery: DeliveryState | null;
+}
+
+/**
+ * Build the terminal ledger line for a run.
+ *
+ * Extracted from `hooks/run_continuation_hook.ts` by
+ * `road-to-adversarial-verification-and-long-runs` 8.1, for the reason this
+ * module's own header gives: the hook sits past `check_source_size_budget`'s
+ * 1,500-line cap, where every added line is an added violation, so a phase pays
+ * for its additions by moving the code it is editing to a file under the cap.
+ * The `delivery` field is that addition.
+ *
+ * A ledger line is a persisted shape carrying a `RunTerminalState`, so it names
+ * the vocabulary version it was written against: a reader meeting an unknown
+ * value can then tell a newer writer from a corrupt row. `delivery` is OMITTED
+ * when the run reported no position rather than written as a null — `complete`
+ * alone cannot tell a merged run from an open-green one, and a null would read
+ * as "neither" rather than "unreported".
+ */
+export function buildLedgerEvent(
+    input: LedgerEventInput,
+    vocabularyVersion: number,
+    now: Date,
+): Record<string, unknown> {
+    return {
+        event: input.action,
+        run_id: input.runId,
+        roadmap: input.slug,
+        turn: input.turn,
+        iterations: input.iterations,
+        open: input.open,
+        blocked: input.blocked,
+        terminal_state: terminalStateFor(input.action),
+        terminal_vocabulary_version: vocabularyVersion,
+        ...(input.delivery !== null ? { delivery: input.delivery } : {}),
+        at: now.toISOString(),
+    };
+}
+
+/**
+ * Read a persisted delivery position tolerantly — `undefined` for anything this
+ * build does not recognise.
+ *
+ * Same forward-compatibility shape as {@link parseHaltStamp}, and the opposite
+ * fail direction on purpose: an unknown HALT is preserved, because dropping it
+ * re-engages a deliberately ended run; an unknown DELIVERY position is dropped,
+ * because preserving it would hold a run open on a state this build cannot
+ * evaluate. Both choose the branch that cannot manufacture a stall.
+ */
+export function parseDeliveryState(raw: unknown): DeliveryState | undefined {
+    if (typeof raw !== 'string') return undefined;
+    return (DELIVERY_STATES as readonly string[]).includes(raw)
+        ? (raw as DeliveryState)
+        : undefined;
+}
+
 /**
  * The subset of a run's state this decision reads. The hook's `RunState`
  * satisfies it structurally; nothing here may widen beyond what the rungs use.

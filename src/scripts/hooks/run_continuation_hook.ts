@@ -184,12 +184,11 @@ import {
 import { premiseMoved, readContextObservation } from '../_lib/context_observation.js';
 import { RUN_TERMINAL_VOCABULARY_VERSION } from '../_lib/outcome_vocabularies.js';
 import {
-    DELIVERY_ENDINGS,
-    DELIVERY_STATES,
     HALT_ACTIONS,
-    deliveryBlocksCompletion,
+    buildLedgerEvent,
     ladder,
     MAX_ITERATIONS,
+    parseDeliveryState,
     parseHaltStamp,
     STALL_WINDOW,
     terminalStateFor,
@@ -204,36 +203,15 @@ import {
  * move happened (`road-to-wired-instruments` Phase 2).
  */
 export {
-    DELIVERY_ENDINGS,
-    DELIVERY_STATES,
     HALT_ACTIONS,
-    deliveryBlocksCompletion,
     ladder,
     MAX_ITERATIONS,
     parseHaltStamp,
     STALL_WINDOW,
     terminalStateFor,
     WALL_CLOCK_CAP_MS,
-    type DeliveryState,
     type LadderAction,
 };
-
-/**
- * Read a persisted delivery position tolerantly — `undefined` for anything this
- * build does not recognise.
- *
- * Same forward-compatibility shape as `parseHaltStamp`, and the opposite fail
- * direction on purpose: an unknown HALT is preserved, because dropping it
- * re-engages a deliberately ended run; an unknown DELIVERY position is dropped,
- * because preserving it would hold a run open on a state this build cannot
- * evaluate. Both choose the branch that cannot manufacture a stall.
- */
-export function parseDeliveryState(raw: unknown): DeliveryState | undefined {
-    if (typeof raw !== 'string') return undefined;
-    return (DELIVERY_STATES as readonly string[]).includes(raw)
-        ? (raw as DeliveryState)
-        : undefined;
-}
 
 /** Re-exported so a test can assert the IDENTITY, not two matching literals. */
 export { TRANSCRIPT_READ_MAX_BYTES };
@@ -347,21 +325,7 @@ export interface RunState {
      * observed one, which is never a disagreement (`premiseMoved`).
      */
     context_fingerprint?: string;
-    /**
-     * Where this run stands in the DELIVERY state machine
-     * (`road-to-adversarial-verification-and-long-runs` 8.1).
-     *
-     * Written by the run, never probed here: the ladder decides on the `stop`
-     * path, where a `gh` call is exactly the cost the premise rung already
-     * declined to pay. Absent therefore means *this run does not report
-     * delivery*, and the ladder reads that as no hold at all — a run that never
-     * adopted the field decides precisely as it did before.
-     *
-     * A recorded position that is not an ENDING (`merged`, `open-green`) keeps
-     * the run engaged even at zero open steps, which is the whole point: a PR on
-     * red CI or on a target that moved is work remaining, whatever the checkboxes
-     * read.
-     */
+    /** DELIVERY position (8.1), written by the run; absent is no hold. */
     delivery?: DeliveryState;
 }
 
@@ -1425,12 +1389,7 @@ export function main(): number {
     const observed = readContextObservation(workspaceRoot)?.fingerprint ?? null;
     const premiseInvalidated = premiseMoved(state.context_fingerprint, observed);
 
-    // 8.1 — the delivery position the run RECORDED, carried forward from the
-    // previous state. No probe: a `gh` call on the stop path is the cost the
-    // premise rung two blocks up already declined, and this decision is not more
-    // urgent than that one. Absent is no hold.
     const delivery = parseDeliveryState(state.delivery) ?? null;
-
     const action = ladder(
         state,
         scan.open,
@@ -1456,30 +1415,13 @@ export function main(): number {
         const alreadyBlocked =
             action === 'blocked' && eventAlreadyLogged(workspaceRoot, runId, slug, 'blocked');
         if (!alreadyStamped && !alreadyBlocked) {
-            appendEvent(workspaceRoot, {
-                event: action,
-                run_id: runId,
-                roadmap: slug,
-                turn: turnOrdinal,
-                iterations: state.iterations,
-                open: scan.open,
-                blocked: scan.blocked,
-                // A ledger line is a persisted shape carrying a `RunTerminalState`,
-                // so it names the vocabulary version it was written against: a
-                // reader meeting an unknown value can then tell a newer writer
-                // from a corrupt row.
-                terminal_state: terminalStateFor(action),
-                terminal_vocabulary_version: RUN_TERMINAL_VOCABULARY_VERSION,
-                // 8.1 — which ENDING a completion reached, where the run recorded
-                // one. `complete` alone cannot distinguish a merged run from one
-                // that ended open-green without a grant, and those are different
-                // outcomes for the reader of this ledger even though both are
-                // successes. Omitted entirely when the run reported no position,
-                // rather than written as a null that would read as "neither".
-                ...(delivery !== null ? { delivery } : {}),
-                at: new Date().toISOString(),
-                ...roots,
-            });
+            const line = buildLedgerEvent(
+                { action, runId, slug, turn: turnOrdinal, iterations: state.iterations,
+                  open: scan.open, blocked: scan.blocked, delivery },
+                RUN_TERMINAL_VOCABULARY_VERSION,
+                new Date(),
+            );
+            appendEvent(workspaceRoot, { ...line, ...roots } as JsonObject);
         }
         if (action === 'complete') {
             // Only a COMPLETION clears the state, so a later run on the same

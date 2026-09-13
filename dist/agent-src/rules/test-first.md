@@ -7,6 +7,7 @@ triggers:
   - keyword: "test-first"
   - keyword: "failing test"
   - keyword: "regression test"
+  - keyword: "characterization test"
 routes_to:
   - "skill:test-driven-development"
 enforced_by:
@@ -35,7 +36,6 @@ discriminator: a rule whose triggers decide what loads, a projection a gate read
 
 **Where there is genuinely no executable contract** — a paragraph stating a
 reason — the obligation is an independent *review*, never a fake test: an
-assertion over prose written to satisfy this rule manufactures the evidence it
-exists to require.
+assertion over prose written to satisfy this rule manufactures the evidence it exists to require.
 
 **Does NOT fire on** a rename, typo, formatting or comment-only edit · a change the user fenced this turn · a spike deleted before it lands.

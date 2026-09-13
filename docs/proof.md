@@ -343,7 +343,7 @@ resolution (`check_enforcement_coverage`) and the claims ledger
 | `source-confidentiality` | validator | `validator:src/scripts/check_no_external_sources.ts` |
 | `source-of-truth` | validator | `validator:src/scripts/check_condensation.ts` |
 | `telegraph-speak` | observer | `observer:maintainer-review` |
-| `test-first` | none | `instruction-only: no gate sees which was written first; the test-delta and test-weakening gates catch an absence, never an order.` |
+| `test-first` | none | `instruction-only: no gate sees which was written first; check_test_delta and check_test_weakening catch an absence, never an order.` |
 | `token-optimizer-maintenance` | validator | `validator:src/scripts/check_token_optimizer_freshness.ts` |
 | `tool-safety` | validator | `validator:src/scripts/lint_agent_security.ts` |
 | `ui-audit-gate` | observer | `hook:design-pass` |
