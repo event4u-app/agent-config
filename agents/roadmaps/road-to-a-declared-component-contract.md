@@ -284,7 +284,22 @@ exists to prevent.
   same external system; correcting the tool names does not license adopting them.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-11 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-09-13 | reviewer: claude/host -->
+
+**Re-reviewed 2026-09-13, after Phase 1 landed.** All six rows stand as written; two have had
+their mitigation move from planned to real, and one row's premise was strengthened by a
+measurement rather than weakened.
+
+- **Rows 1 and 6 are now partly discharged.** Their shared mitigation — the fixture — exists and
+  was observed red against a planted five-level name. Row 1's second half (2.2 amends the fixture
+  under the record) is untouched and stays a live risk, because the record does not exist.
+- **Row 6's premise got sharper, not softer.** It reads *"a rejection recorded in prose was
+  already missed once by a round that re-argued it from scratch"*. Measured while landing 1.1:
+  the rejection was ALSO carried by a test that did not actually carry it — the archived
+  over-claim — so the subject survived both a sentence and a guard-shaped claim about a guard.
+  That raises the row's likelihood rather than lowering it, and the fixture is what answers it.
+- **Rows 2 through 5 are unchanged and unexercised.** Their phases did not run.
+- **No row was added.** Nothing in this pass surfaced a risk the six do not already name.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
