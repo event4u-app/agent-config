@@ -58,7 +58,7 @@ registry seeded from known incidents, and it is worth closing rather than explai
       `hook_manifest.json` produces a file that reds `hook_manifest_compiled.test.ts`; the compiled
       shape is now `{manifest, fingerprint}`.
       verify: following the recipe as written produces a file the test accepts.
-- [ ] **2.2 Reconcile the gate-coverage header population count.** It claims 322 against an actual
+- [x] **2.2 Reconcile the gate-coverage header population count.** It claims 322 against an actual
       328, and 329 once `check_generator_sync` is counted — a delta of 7 against a tested tolerance
       of 15, so it is drift rather than breakage and is worth fixing before it reaches the
       tolerance.
@@ -82,4 +82,4 @@ registry seeded from known incidents, and it is worth closing rather than explai
 - [x] AC-2 — The committed-blob-versus-worktree discriminator is recorded where a reader
       diagnosing a stale generated artefact will meet it.
 - [x] AC-3 — The hook-concern downstream-surface recipe produces a file its own test accepts.
-- [ ] AC-4 — The gate-coverage header count equals the measured row count.
+- [x] AC-4 — The gate-coverage header count equals the measured row count.
