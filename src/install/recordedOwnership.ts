@@ -21,12 +21,26 @@
  * intentional). It therefore cannot supply a recorded hash at all. Reading
  * the same file with the `yaml` package — already a runtime dependency — is
  * additive and leaves that reader's byte-exact golden tests untouched.
+ *
+ * `src/scripts/_lib/install_drift.ts` reads the same field of the same file
+ * for the same reason, and this module is a second reader rather than a
+ * caller of it because `collect_drift` computes the digests itself and
+ * returns only the entries that drifted. The conflict matrix needs the
+ * opposite: every recorded digest, and no hashing, because the digest it
+ * compares against is one the caller already has. What this module does NOT
+ * duplicate is that module's stated invariant — `manifest_path()` stays the
+ * one place that decides where the manifest is, so the
+ * `AGENT_CONFIG_INSTALLED_TOOLS` override and `~` expansion behave
+ * identically in both.
  */
 
 import { existsSync, readFileSync } from 'node:fs';
+import { homedir } from 'node:os';
 import { isAbsolute, join, resolve } from 'node:path';
 
 import * as YAML from 'yaml';
+
+import { manifest_path, type EnvMap } from '../scripts/_lib/installed_tools.js';
 
 /**
  * How the install matrix owns a target on disk.
@@ -68,11 +82,13 @@ export function classifyOwnership(
  * Read `tools[].files[]` out of an installed-tools manifest into a
  * path → digest map.
  *
- * Relative paths resolve against `projectRoot` (the manifest stores
- * user-scope entries absolute and project-scope entries relative, mirroring
- * `cmd_doctor._collect_manifest_entries`). A missing, unreadable or
- * malformed manifest yields the empty map rather than throwing — an install
- * plan must never fail because a lockfile is corrupt.
+ * Relative paths resolve against `projectRoot` and a leading `~` expands
+ * first — the manifest stores user-scope entries absolute or `~`-rooted and
+ * project-scope entries relative, and both existing readers
+ * (`install_drift.resolve_entry_path`, `cmd_doctor._resolve_path`) resolve
+ * them that way. A missing, unreadable or malformed manifest yields the
+ * empty map rather than throwing — an install plan must never fail because a
+ * lockfile is corrupt.
  */
 export function readRecordedHashes(manifestPath: string, projectRoot: string): RecordedHashes {
     if (!existsSync(manifestPath)) return NO_RECORDED_HASHES;
@@ -97,17 +113,37 @@ export function readRecordedHashes(manifestPath: string, projectRoot: string): R
             const raw = rec['path'];
             if (typeof raw !== 'string' || raw.length === 0) continue;
             const sha = rec['sha256'];
-            const target = isAbsolute(raw) ? resolve(raw) : resolve(projectRoot, raw);
+            const expanded = expanduser(raw);
+            const target = isAbsolute(expanded)
+                ? resolve(expanded)
+                : resolve(projectRoot, expanded);
             out.set(target, typeof sha === 'string' && sha.length > 0 ? sha : null);
         }
     }
     return out;
 }
 
-/** Manifest location relative to a tree root (mirrors `installed_tools`). */
-export const MANIFEST_RELATIVE = join('agents', 'installed-tools.lock');
+/** Expand a leading `~`, matching `installed_tools.expanduser`. */
+function expanduser(p: string): string {
+    if (p === '~') return homedir();
+    if (p.startsWith('~/') || (process.platform === 'win32' && p.startsWith('~\\'))) {
+        return join(homedir(), p.slice(2));
+    }
+    return p;
+}
 
-/** {@link readRecordedHashes} for a tree root, resolving the manifest itself. */
-export function recordedHashesForRoot(root: string): RecordedHashes {
-    return readRecordedHashes(join(root, MANIFEST_RELATIVE), root);
+/**
+ * {@link readRecordedHashes} for a PROJECT root, via `installed_tools`.
+ *
+ * `manifest_path` carries the `AGENT_CONFIG_INSTALLED_TOOLS` override, so an
+ * install running against a relocated manifest classifies ownership instead
+ * of degrading every file to `unknown`.
+ *
+ * The argument must be a project root. An {@link InstallPlan.root} for a
+ * `global` target is the install anchor (`~/.event4u/agent-config/`), which
+ * holds no manifest — such a plan gets the empty map and therefore the
+ * pre-hash answer, which is correct but is a floor rather than a feature.
+ */
+export function recordedHashesForRoot(root: string, env?: EnvMap | null): RecordedHashes {
+    return readRecordedHashes(manifest_path(root, env), root);
 }

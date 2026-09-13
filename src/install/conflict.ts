@@ -72,13 +72,17 @@ export interface ResolveInputs {
  * "Known?" used to mean nothing but `policy.knownPaths.has(targetPath)`. It
  * now reads the recorded digest first when the caller supplies one:
  * `recorded-unchanged` and `recorded-modified` are both known, `unknown`
- * falls back to path membership. The outcomes are unchanged — this
- * commit does not move a single write. What it buys is that
+ * falls back to path membership. The outcomes are unchanged — this commit
+ * does not move a single write. What it buys is that
  * {@link computeConflicts} can now name a user-modified managed file in the
- * report instead of dropping it, which is the half that was missing: such a
- * file already survived a default refresh (`skip`) and nobody was told it
- * existed. Changing what `--force-overwrite` does to it is an install-
- * behaviour decision and is deliberately not taken here.
+ * report instead of dropping it.
+ *
+ * What this resolver decides is NOT what the installer does. The single
+ * writer is `src/scripts/install.ts`, whose `_resolve_file_conflict` returns
+ * `write` unconditionally for deployed files and which reads nothing from
+ * this module; `skip` here means "the planner would not touch it", never
+ * "your edit is safe". Making the writer consult this matrix is an
+ * install-behaviour change and is deliberately not taken here.
  *
  * Headless callers (B1 CLI) collapse `surface` to `skip` automatically
  * because there is no UI to defer to; the apply layer records the entry
@@ -188,16 +192,21 @@ export const CONFLICT_BATCH_THRESHOLD = 5;
  *
  * Ownership (Phase 5.1) replaces the blanket `policy.knownPaths` skip:
  *
- * - `recorded-unchanged` — ours and untouched. Skipped, as before, and now
- *   for a reason that survives a package upgrade: the planned bytes differing
- *   from the recorded bytes is an upgrade, not a collision.
+ * - `recorded-unchanged` — ours and untouched. Skipped, and now for a reason
+ *   that survives a package upgrade: the planned bytes differing from the
+ *   recorded bytes is an upgrade, not a collision. This is a REDUCTION in
+ *   what a manifest-carrying tree reports — `cmd_preflight` builds an empty
+ *   `knownPaths`, so every such file used to be a finding — and it is the
+ *   intended direction: a routine upgrade is not a conflict.
  * - `recorded-modified`  — ours and edited since. **Reported**, where before
- *   it was silently dropped whenever the path sat in `knownPaths`. This is
- *   the user-modified managed file the acceptance criterion asks for: it
- *   still survives a default refresh, and now it is named.
+ *   it was silently dropped whenever the path sat in `knownPaths`. Reported
+ *   is all it is: the installer does not consult this matrix, so being named
+ *   here is not protection from the next deploy.
  * - `unknown`            — no digest recorded (no manifest, an unreadable
  *   one, or a bridge entry). Falls back to `policy.knownPaths`, so a tree
- *   with no manifest reports exactly what it reported before.
+ *   with no manifest reports exactly what it reported before. A tree WITH a
+ *   manifest reports differently in both directions, by design: it gains the
+ *   modified rows above and loses the unchanged ones below.
  *
  * `recorded` is injectable for tests; by default it is read from the
  * manifest at `plan.root`.

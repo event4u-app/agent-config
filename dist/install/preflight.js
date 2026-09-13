@@ -126,8 +126,13 @@ export function checkConflicts(inputs) {
         message: c.ownership === 'recorded-modified'
             ? `managed ${c.kind} file has been edited since we wrote it`
             : `existing file conflicts with planned ${c.kind} content`,
+        // No remedy here may describe what an install does to the file. This
+        // probe reports on a plan; the writer is `src/scripts/install.ts`,
+        // which overwrites every deployed file unconditionally and documents
+        // `--force` as an accepted no-op. Telling an operator their edit is
+        // safe from a default run would be false.
         remedy: c.ownership === 'recorded-modified'
-            ? 'a default install leaves it alone; --force overwrites your edit'
+            ? 'back up your edit — installing refreshes every managed file with package content'
             : 'resolve interactively, or pass --force to overwrite',
     }));
 }

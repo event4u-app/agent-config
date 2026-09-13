@@ -100,14 +100,60 @@ not scheduled here; the blocker below records it as the open half.
 
 ## Phase 5 — Three-state ownership instead of path membership
 
-- [x] **5.1 Distinguish recorded-unchanged, recorded-modified and unknown** in the install conflict
+- [ ] **5.1 Distinguish recorded-unchanged, recorded-modified and unknown** in the install conflict
       matrix, fed by a real hash comparison rather than by path-set membership.
       verify: a user-modified managed file survives a refresh and appears in the report; the matrix
       carries a recorded-unchanged column whose value comes from a hash.
 - [x] **5.2 Land the hash plumbing separately from the matrix change.**
       verify: two commits, and the matrix commit's diff contains no hash computation.
 
+### Phase 5 state — 2026-09-13
+
+**Landed:** the recorded-unchanged / recorded-modified / unknown split, fed by
+the per-file SHA-256 the manifest records, in two commits with the hash
+plumbing separate from the matrix change (5.2, AC-7). A user-modified managed
+file is now **named in the report**, where path-set membership dropped it.
+
+**5.1 and AC-6 stay open, and were un-flipped after a completion review**
+(`agents/evidence/reviews/drain-conformance-check.findings.md`, findings 1-2).
+Their first half — *a user-modified managed file survives a refresh* — is not
+delivered and was never true. `src/install/conflict.ts` is the PLANNER; the
+single writer is `src/scripts/install.ts`, whose `_resolve_file_conflict`
+returns `write` unconditionally for deployed files, whose header records that
+a run refreshes every deployed file with package content, and which reads
+neither `conflicts` nor `ConflictResolution`. The branch briefly published the
+opposite in a preflight remedy, a contract page and two docstrings — the same
+unbacked-claim class this roadmap exists to remove — and those are corrected,
+with a sensitivity-checked guard test against the class returning.
+
+**What closing 5.1 would take:** the writer consulting the matrix, i.e. a
+change to what `agent-config init` does to a file the user edited. That is an
+install-behaviour decision of the same shape as the headless-log blocker, so
+it is recorded as one below rather than taken here.
+
 ## Blockers
+
+### blocker: the-installer-does-not-consult-the-conflict-matrix
+- **Status:** open
+- **Owner:** maintainer
+- **Class:** 3 — human-only
+- **Blocks:** the first half of 5.1 and of AC-6 (*survives a refresh*). The
+  reporting half is landed.
+- **What to do:** decide whether `agent-config init` may stop overwriting a
+  managed file the user has edited. Read `src/scripts/install.ts:556` —
+  `_resolve_file_conflict` returns `write` unconditionally for deployed files,
+  and the module header at line 23 records `--force` as an accepted no-op
+  because installs always overwrite. Nothing in that writer reads the
+  `ConflictEntry` list the planner produces.
+- **Recommendation:** none offered. The current behaviour is documented and
+  deliberate ("a run always refreshes every deployed file with the current
+  package content"), and changing it trades a data-loss surface for a
+  staleness surface. That trade is the owner's.
+- **If you do nothing:** the report names the edited file and the next install
+  replaces it, which is at least honest — the surfaces now say so, where a
+  week ago they said the opposite.
+- **Resolved when:** the writer consults the matrix, or this roadmap records
+  the refusal and the reporting half becomes the whole of 5.1.
 
 ### blocker: headless-log-write-is-a-consumer-visible-default
 - **Status:** open
@@ -172,5 +218,5 @@ not scheduled here; the blocker below records it as the open half.
       entry shape.
 - [ ] AC-4 — The existing sabotage fixture reddens the check after a headless install.
 - [x] AC-5 — The absent-log fixture was observed red before the fix, and the reading is recorded.
-- [x] AC-6 — A user-modified managed file survives a refresh and is named in the report.
+- [ ] AC-6 — A user-modified managed file survives a refresh and is named in the report.
 - [x] AC-7 — The hash plumbing and the matrix change are separate commits.

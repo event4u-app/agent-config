@@ -138,7 +138,7 @@ export function _installLogExpected(projectRoot: string): boolean {
 /**
  * Check (a) — the install transaction log tail carries no abandoned run.
  *
- * Three absent-log outcomes, not one (road-to-a-conformance-check-that-can-fail
+ * An absent log is two answers, not one (road-to-a-conformance-check-that-can-fail
  * Phase 1). Until this split the branch returned `ok` unconditionally, and
  * since the log's only writer is the browser install route
  * (`src/server/routes/install.ts`), every command-line install satisfied the
@@ -153,7 +153,14 @@ export function _installLogExpected(projectRoot: string): boolean {
  * one written by a path that does not log, is an unanswered question rather
  * than a broken install, and reddening every such consumer at upgrade is the
  * risk this phase's shape exists to avoid. The exit contract keys off `fail`
- * only, so `unknown` leaves exit codes untouched.
+ * only, so `unknown` leaves exit codes untouched — including the verdict
+ * banner, where the per-row symbol is the only signal.
+ *
+ * Reach, stated rather than implied: the log is one file per machine and the
+ * manifest is per project, so a machine that ran the browser installer once
+ * anywhere still answers `ok` for every headless install everywhere else.
+ * `unknown` catches the machine that has only ever installed headlessly.
+ * Closing the rest is Phase 3, behind an open owner blocker.
  */
 export function _check_txlog_clean(
     logPath: string = installLogPath(),

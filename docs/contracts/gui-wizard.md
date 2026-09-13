@@ -151,14 +151,23 @@ records rather than from path-set membership:
 | `ownership` | Means | Screen should say |
 |---|---|---|
 | `recorded-unchanged` | we wrote it and the bytes still match | never surfaced — nothing to resolve |
-| `recorded-modified` | we wrote it and the user has since edited it | "your edit"; a default install leaves it alone |
+| `recorded-modified` | we wrote it and the user has since edited it | "your edit" — say the edit will be replaced |
 | `unknown` | no digest recorded (no manifest, an unreadable one, a bridge) | the pre-hash answer: a foreign collision |
 
 The field defaults to `unknown` on the wire, so a client that omits it on an
-apply round-trip parses and behaves exactly as before. `recorded-modified`
-changes no write: such a file already survived a default refresh and now it is
-also named in the report. What `--force-overwrite` does to it is unchanged and
-is an install-behavior decision this contract does not take.
+apply round-trip parses and behaves exactly as before.
+
+**What `recorded-modified` does NOT mean.** It is a statement about the plan,
+not a promise about the file. The single writer is
+[`src/scripts/install.ts`](../../src/scripts/install.ts), whose
+`_resolve_file_conflict` returns `write` unconditionally for deployed files —
+its own header records that a run refreshes every deployed file with the
+current package content and that `--force` is an accepted no-op. Nothing in
+that writer reads `conflicts` or `ConflictResolution`. So a screen rendering
+this field must tell the user their edit will be replaced, and must not offer
+"leave it alone" as an outcome this install path can deliver. Making the
+writer consult the matrix is an install-behavior change that no part of this
+contract takes.
 
 The TypeScript apply engine and its `POST /api/v1/install/apply` SSE route
 were removed (road-to-single-install-source-of-truth § Phase 3). All real

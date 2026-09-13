@@ -133,9 +133,11 @@ export interface InstallPlan {
  * Phase B3 — surfaced by the `/api/v1/install/plan` route so the wizard's
  * conflict screen can render single-pick / batch-resolution UI **before**
  * the apply phase opens the transaction log. A `ConflictEntry` means the
- * target exists, its bytes do not match the planned SHA, it is not in
- * `policy.knownPaths`, and `policy.force` is false — i.e. the policy
- * would surface this file to the UI during apply.
+ * target exists, its bytes do not match the planned SHA, `policy.force` is
+ * false, and the planner does not hold it as ours-and-unchanged — i.e. the
+ * policy would surface this file to the UI. Since `ownership` landed it is
+ * NO LONGER equivalent to "not in `policy.knownPaths`": a `recorded-modified`
+ * entry is emitted precisely when the path IS in that set.
  *
  * `mergeable` is `true` only for `.json` deployed files; the wizard
  * shows the per-row `merge` button only on those. `existingSha256` is

@@ -132,11 +132,24 @@ describe('the txlog remedy resolves to real behaviour', () => {
         return log;
     }
 
-    it('names a verb the dispatcher actually registers', () => {
-        const remedy = String(_check_txlog_clean(abortLog())['remedy']);
-        const verb = /`agent-config ([a-z][a-z0-9:-]*)`/.exec(remedy)?.[1];
-        expect(verb).toBeDefined();
-        expect(findCommand(verb as string)).toBeDefined();
+    it('names only verbs the dispatcher actually registers', () => {
+        // EVERY remedy this check can emit, and EVERY verb in each — the
+        // first-match version of this test resolved the abort remedy's one
+        // verb and left the unknown remedy's two unchecked.
+        mkdirSync(join(tmp, 'agents'), { recursive: true });
+        writeFileSync(join(tmp, 'agents', 'installed-tools.lock'), 'schema_version: 2\ntools: []\n');
+        const remedies = [
+            String(_check_txlog_clean(abortLog())['remedy']),
+            String(_check_txlog_clean(join(tmp, 'absent.jsonl'), tmp)['remedy']),
+        ];
+        let seen = 0;
+        for (const remedy of remedies) {
+            for (const m of remedy.matchAll(/`agent-config ([a-z][a-z0-9:-]*)`/g)) {
+                seen += 1;
+                expect(findCommand(m[1] as string), `unregistered verb: ${m[1]}`).toBeDefined();
+            }
+        }
+        expect(seen).toBeGreaterThanOrEqual(3);
     });
 
     it('claims no recovery this tree cannot perform', () => {

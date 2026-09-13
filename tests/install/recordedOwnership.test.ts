@@ -9,7 +9,7 @@
  */
 
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -17,6 +17,7 @@ import {
     NO_RECORDED_HASHES,
     classifyOwnership,
     readRecordedHashes,
+    recordedHashesForRoot,
 } from '../../src/install/recordedOwnership.js';
 
 let tmp: string;
@@ -115,5 +116,39 @@ describe('readRecordedHashes', () => {
     it('SABOTAGE: a manifest whose tools is not a list yields the empty map', () => {
         const p = writeManifest('schema_version: 2\ntools: "nope"\n');
         expect(readRecordedHashes(p, tmp).size).toBe(0);
+    });
+
+    it('expands a leading ~ the way both existing readers do', () => {
+        const p = writeManifest(
+            'tools:\n  - name: t\n    files:\n      - path: "~/x.md"\n        kind: deployed\n        sha256: "yyy"\n',
+        );
+        const hashes = readRecordedHashes(p, tmp);
+        expect(hashes.get(join(homedir(), 'x.md'))).toBe('yyy');
+        expect(hashes.has(resolve(tmp, '~/x.md'))).toBe(false);
+    });
+});
+
+describe('recordedHashesForRoot', () => {
+    it('honours the AGENT_CONFIG_INSTALLED_TOOLS override', () => {
+        const elsewhere = join(tmp, 'relocated.lock');
+        writeFileSync(elsewhere, MANIFEST);
+        try {
+            process.env['AGENT_CONFIG_INSTALLED_TOOLS'] = elsewhere;
+            // Nothing sits at the conventional location — without the
+            // override this is the empty map and every file degrades to
+            // `unknown` with no signal.
+            expect(recordedHashesForRoot(tmp).get(resolve(tmp, '.claude/rules/a.md'))).toBe('aaa');
+        } finally {
+            delete process.env['AGENT_CONFIG_INSTALLED_TOOLS'];
+        }
+    });
+
+    it('reads the conventional location when no override is set', () => {
+        writeManifest(MANIFEST);
+        expect(recordedHashesForRoot(tmp).get(resolve(tmp, '.claude/rules/a.md'))).toBe('aaa');
+    });
+
+    it('is empty for a root that holds no manifest', () => {
+        expect(recordedHashesForRoot(join(tmp, 'nowhere')).size).toBe(0);
     });
 });

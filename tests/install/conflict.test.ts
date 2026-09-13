@@ -340,6 +340,21 @@ describe('conflict — computeConflicts', () => {
             expect(computeConflicts(foreign, new Map())[0]?.ownership).toBe('unknown');
         });
 
+        it('drops an unchanged file from an EMPTY-knownPaths caller — the live shape', () => {
+            // `cmd_preflight` builds `knownPaths: new Set()`, so before the
+            // digest every managed file whose planned bytes differed was a
+            // finding, including a routine package upgrade. This is a
+            // deliberate REDUCTION for a manifest-carrying tree; the
+            // docstring's "reports exactly what it reported before" holds
+            // only where no digest is recorded, and this pins both halves.
+            const e = entry('a.md', 'planned-v2');
+            writeFileSync(e.path, 'installed-v1');
+            const p = plan({ claude: [e] });
+            expect(computeConflicts(p, new Map())).toHaveLength(1);
+            const recorded = new Map([[e.path, hex('installed-v1')]]);
+            expect(computeConflicts(p, recorded)).toEqual([]);
+        });
+
         it('does not over-fire: a bridge-shaped null digest stays unknown, not modified', () => {
             const e = entry('a.md', 'planned');
             writeFileSync(e.path, 'on-disk');
@@ -377,6 +392,7 @@ describe('conflict — expandBatchChoice', () => {
             plannedSha256: 'p',
             existingSha256: 'e',
             mergeable,
+            ownership: 'unknown',
         };
     }
 

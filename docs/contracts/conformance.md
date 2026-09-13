@@ -30,7 +30,7 @@ Two legs, one exit code:
 
 | id | proves | red when |
 |---|---|---|
-| `txlog-clean` | the last install completed | the install-log tail is an abandoned `abort` |
+| `txlog-clean` | the last install completed, **where a log exists to say so** (see below — a headless install writes none) | the install-log tail is an abandoned `abort` |
 | `router-pointers` | the installed rule index is intact | any rule id or `routes_to` target does not resolve on disk |
 | `hook-dispatcher` | hooks actually fire on this host | the dispatcher errors on a synthetic `session_start` / `stop` envelope |
 | `lean-projection` | `lean_projection.mode` matches reality | projected non-kernel rules contradict the configured mode |
@@ -40,7 +40,7 @@ Every check returns `ok` / `warn` / `unknown` / `fail` / `skipped` with a
 one-line remedy. `skipped` means "not applicable here", never "silently
 passed"; `unknown` means the check ran and could not answer.
 
-### `txlog-clean` — the three absent-log cases
+### `txlog-clean` — what an absent log means
 
 The install transaction log is written by the browser install route only. A
 command-line install therefore produces none, and for as long as an absent
@@ -54,8 +54,25 @@ take. It now distinguishes:
 | log present, tail is `write` / `skip` / `rollback` | `ok` |
 | log present, tail is `abort` | `fail` |
 
-`unknown` is not a failure and does not change the exit code: an install
-that predates the log is an unanswered question, not a broken install.
+`unknown` is not a failure and does not change the exit code: an install that
+predates the log is an unanswered question, not a broken install. Two
+consequences follow and neither is hidden here:
+
+- **The verdict banner still reads green.** `failed` keys off `fail` alone, so
+  the per-row `❔` is the only signal — the same treatment `warn` already gets.
+- **The report line counts it as neither.** `note` counts `ok` and `fail`, so
+  an `unknown` row renders `4/5 ok; fails: none`. That is not a silent failure;
+  it is a row that answered neither way.
+
+**How far this reaches.** The log is one file per machine
+(`~/.event4u/agent-config/install-log.jsonl`) while the manifest is per
+project. So a machine that has run the browser installer once, anywhere, has a
+log with a clean tail and returns `ok` for every headless install in every
+other project on it. `unknown` catches the machine that has only ever installed
+headlessly. Closing the rest needs the headless path to write the log — the
+blocker `headless-log-write-is-a-consumer-visible-default` on
+`road-to-a-conformance-check-that-can-fail`, which is an owner decision and is
+open.
 
 ### What the failure remedy may claim
 
@@ -72,7 +89,7 @@ promises a recovery the tree cannot perform.
 
 | Exit | Meaning |
 |---|---|
-| `0` | Green — no check failed, no drift. Warnings allowed. |
+| `0` | Green — no check failed, no drift. `warn` and `unknown` rows allowed. |
 | `1` | Red — at least one check failed, or manifest drift present. |
 | `2` | Environment unresolvable (no project root, corrupt setup). |
 
@@ -85,7 +102,7 @@ entry shape — to `~/.event4u/agent-config/conformance-log.jsonl`
 (override: `AGENT_CONFIG_CONFORMANCE_LOG`):
 
 ```json
-{"ts":"2026-07-07T10:00:00.000Z","kind":"conformance","path":"/repo","sha256":null,"note":"5/5 ok; fails: none"}
+{"ts":"2026-07-07T10:00:00.000Z","kind":"conformance","path":"/repo","sha256":null,"note":"4/5 ok; fails: none"}
 ```
 
 Fleet installs (`--fleet`) aggregate these lines into their per-repo
