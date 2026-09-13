@@ -83,6 +83,31 @@ describe('closure_scan — fixture F0, the other direction', () => {
     });
 });
 
+describe('closure_scan — fixture F4, mid-run residue', () => {
+    const findings = scan(fixture('F4-midrun-architecture-choice.md'));
+
+    it('the mid-run architecture choice resolves without an owner question', () => {
+        expect(findings).toHaveLength(1);
+        expect(findings[0]?.ownership).toBe('contested-technical');
+        expect(ownerQuestionCount(findings)).toBe(0);
+    });
+
+    it('the decision planning already closed is not re-found', () => {
+        // `## Decisions` is a discharge section: a row in it is closed, and
+        // re-finding it would be the re-derivation the process loop forbids.
+        expect(findings.every((f) => f.line > 30)).toBe(false);
+        expect(findings.map((f) => f.excerpt).join(' ')).not.toContain('newline-delimited JSON on disk');
+    });
+
+    it('"two equal strategies" is an unpicked alternative', () => {
+        // The phrasing an author reaches for when the choice is genuinely open:
+        // no `either`, no `or`, no `option A`, and previously undetected.
+        expect(scan('- [ ] **X** Two equal approaches exist.\n      verify: t\n')[0]?.kind).toBe(
+            'unpicked-alternative',
+        );
+    });
+});
+
 describe('closure_scan — ownership classification', () => {
     it('routes product semantics to the owner', () => {
         const f = scan('- [ ] **X** Two valid product semantics here.\n      verify: t\n');

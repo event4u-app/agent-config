@@ -100,6 +100,10 @@ const LINE_PATTERNS: readonly Pattern[] = [
     { kind: 'unpicked-alternative', re: /\beither\b[^.]{3,80}\bor\b/i },
     { kind: 'unpicked-alternative', re: /\boption A\b[^.]{0,120}\boption B\b/i },
     { kind: 'unpicked-alternative', re: /\bwe could (?:either )?\w+[^.]{0,80}\bor\b/i },
+    // "two equal technical strategies" is the canonical unpicked alternative,
+    // and the phrasing an author reaches for when the choice is genuinely open
+    // — it carries no `either`, no `or` and no `option A`.
+    { kind: 'unpicked-alternative', re: /\btwo (?:equal|competing)\b[^.]{0,60}\b(?:strateg|approach|design|option)/i },
     { kind: 'unchecked-assumption', re: /\bassuming\b/i },
     { kind: 'unchecked-assumption', re: /\bpresumably\b/i },
     { kind: 'unchecked-assumption', re: /\bprobably (?:fine|works|ok)\b/i },

@@ -276,6 +276,35 @@ fallback structure defined in `/create-pr:description-only`. NEVER invent a cust
   title and body as copyable blocks and ask for adjustments before
   proceeding. The user reviews and adjusts the content in that step.
 
+### 2a. Scope delta — what grew, and why it was the agent's
+
+```
+AGENT-OWNED SCOPE GROWTH IS RECORDED IN THE PR BODY. ONE LINE PER ITEM.
+GROWTH DONE AND NOT RECORDED IS INDISTINGUISHABLE FROM SCOPE CREEP.
+A FOLLOW-UP ARTEFACT IS NAMED HERE TOO — IT IS WHAT THE MISSION DID NOT ABSORB.
+```
+
+Where the run did work beyond the literal task, add a `## Scope delta` section
+to the body — one line per item, naming what grew and which row of the
+agent-owned list it matched (a necessary internal refactor · a missing test on
+a touched path · a regression on a touched path · a small dependency
+adjustment · a local API change inside defined semantics · a Boy-Scout cleanup
+that is small, local, low blast radius, testable and carries no new product
+decision). Full enumeration and the council / owner rows:
+[`scope-mechanics`](../../../../agent-src/contexts/authority/scope-mechanics.md)
+section Scope growth.
+
+`./scripts-run src/scripts/scope_growth "<one-line description>"` classifies a
+single item when the row is not obvious. `unknown` is a real verdict: growth
+nothing classifies is growth nobody decided, and it does not silently become
+agent work.
+
+A larger unrelated opportunity is **not** a scope delta. It is a follow-up
+artefact, named in the same section under *Not absorbed* with its roadmap path,
+because a mission delivering everything it met would deliver none of it.
+
+Omit the section entirely when the diff is the task and nothing grew.
+
 ### 2b. Council review — explicitly excluded
 
 `/create-pr` does **not** prompt for council review, even when

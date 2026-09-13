@@ -239,6 +239,19 @@ owner-owned residue remains, closure completes with zero owner interaction.
       `BLOCKED` only per ADR-268 § 7.
       verify: fixture `F4` — a mid-run architecture choice resolves without an ask; fixture
       `F5` — an interrupt leaves the grant and every closed decision intact.
+      **NOT LANDED — half of it is the sibling roadmap's, 2026-09-13.** `F4` ships and is
+      asserted (`tests/fixtures/decision-closure/F4-midrun-architecture-choice.md`: one
+      finding, `contested-technical`, zero owner questions), and the mid-run ownership table
+      landed in `roadmap-process-loop.md` § 5a-residue — technical residue resolves inline and
+      is appended to `## Decisions` with the step id, owner-owned residue asks only when the
+      step cannot progress and otherwise parks while independent phases continue, and `[~]` is
+      forbidden for a parked step.
+      `F5` cannot be written here. It asserts *the grant* survives an interrupt, and the grant
+      object is `road-to-typed-grants-that-persist`'s — ADR-260's
+      `{op, target, scope, granted_by, span, expires}`, built by that roadmap's Phase 2 and
+      given `expires` / `revoked_by` by its 3.1. Neither exists in the tree. Writing `F5`
+      against an object that does not exist would assert nothing; writing the object here
+      would be implementing the sibling roadmap.
 - [x] **4.2 The ask census gains four axes.** `phase` (planning, execution, delivery),
       `ownership`, `avoidable`, `resolver_attempted`. Targets: zero technical owner asks in
       execution; zero commit, push, CI or conflict asks; zero repeats of an already-answered
@@ -262,6 +275,17 @@ owner-owned residue remains, closure completes with zero owner interaction.
       *nicht weiter*, *stattdessen*, *ersetze die Roadmap*. <!-- md-language-check: ignore -->
       verify: fixture `F5` again — the side task completes, the mission resumes, and no
       *continue?* question is emitted.
+      **NOT LANDED — this step IS the sibling roadmap's step 3.2, 2026-09-13.** That step
+      reads: *"`user-interrupt-priority.md` gains three interrupt classes. A clarification is
+      incorporated and the run continues; a side task pauses the mission and the mission
+      auto-resumes; only stop, replace or revoke changes mission state. An interrupt never
+      revokes a grant, a delivery target or a closed decision."* — the same rule file, the
+      same three classes, the same fixture. Landing it here would be implementing
+      `road-to-typed-grants-that-persist`, and doing it in both places would leave two owners
+      for one rule. The half this roadmap genuinely owns — that a **closed decision** survives
+      an interrupt — landed in `roadmap-process-loop.md` § 3-0: the table is read before the
+      first step and a row reopens only when its `revisit if` condition became true, never
+      because a context reset lost it. The mission id and the grant are the sibling's.
 
 ## Phase 6 — Scope-growth ownership
 
