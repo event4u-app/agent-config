@@ -295,16 +295,40 @@ nothing since has been able to notice.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A reachability axis exists that reds when a declared loop instrument has no
+- [x] AC-1 — A reachability axis exists that reds when a declared loop instrument has no
       production consumer, and it lives inside the existing gate family rather than as a new gate.
-- [ ] AC-2 — The axis was observed red with the `rejectedTacticRepeat` cluster unconsumed and
+      <!-- `_lib-export-reach`, inside `check_gate_reachability.ts`: its findings are part of
+           `gateVerdict`, its declared-instrument count is part of `scanned:`, and `--gate` returns
+           non-zero on a shape or reach finding. No new gate, no new coverage row. -->
+- [x] AC-2 — The axis was observed red with the `rejectedTacticRepeat` cluster unconsumed and
       green after its disposition, and the red reading is recorded.
-- [ ] AC-3 — The axis reports the four file-internal exports in `loop_guards.ts` as live, proving
+      <!-- Red / green readings recorded verbatim under step 1.4. -->
+- [x] AC-3 — The axis reports the four file-internal exports in `loop_guards.ts` as live, proving
       it does not over-fire.
-- [ ] AC-4 — `rejectedTacticRepeat` is wired, declared experimental with a future expiry, or gone.
-- [ ] AC-5 — Either something computes the three `orchestration_record` trigger-comparison flags,
+      <!-- SATISFIED ON SUBSTANCE, WITH THE COUNT CORRECTED — read this before quoting "four".
+           The does-not-over-fire property is proven: on the SAME run that reports all three open
+           instances dead, the axis reports `DEPENDENCY_SCAN_BYTES`, `StallSignal` and
+           `detectUnavailableDependency` live — exports with no importer at all, reached only from
+           inside their own file, which a naive importer-counting axis would have accused.
+           But there are THREE such exports, not four. This AC inherited 1.2's wrong example list:
+           `matchesWholeLine` occurs in `src/` exactly once and is DEAD by the criterion, not a
+           false positive. The correction and its measurement are under 1.2.
+           Four further exports sit at 2x — SUPPRESSION_WINDOW, SUPPRESSION_REPEATS, TacticAttempt,
+           RepetitionSignal — but only because `rejectedTacticRepeat` names them. They are the dead
+           cluster's own satellites and are not evidence of anything about over-firing. -->
+- [x] AC-4 — `rejectedTacticRepeat` is wired, declared experimental with a future expiry, or gone.
+      <!-- Declared, `expires: 2026-12-12`. A dated deferral, not a settled disposition — the
+           blocker note says which and why the other two paths were not agent-takeable. -->
+- [x] AC-5 — Either something computes the three `orchestration_record` trigger-comparison flags,
       or those flags no longer exist.
-- [ ] AC-6 — `road-to-worker-generation-recycling`'s trigger-comparison step reads its true state
+      <!-- Gone. Nothing could compute them without a proxy the tree records its own refusal to
+           invent; see 2.2 for the removal's measured blast radius. -->
+- [x] AC-6 — `road-to-worker-generation-recycling`'s trigger-comparison step reads its true state
       and carries a dated correction.
-- [ ] AC-7 — All three loop consumers write a run-terminal value, and
+      <!-- Step 1.3 `[x]` → `[ ]` with a dated correction carrying the reproduced grep counts, and
+           the Phase 3 note no longer lists the three fields as live on the orchestration line. -->
+- [x] AC-7 — All three loop consumers write a run-terminal value, and
       `src/scripts/_lib/outcome_vocabularies.ts` is unchanged by this roadmap.
+      <!-- `_self_fix` writes it onto state and into its exit message; both skills name the field,
+           its full value set and a mapping from their own exit vocabulary. The registry file is
+           byte-identical to origin/main at every commit on this branch. -->
