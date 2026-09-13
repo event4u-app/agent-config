@@ -1,0 +1,220 @@
+# Loop surfaces and the instruments they are meant to call.
+#
+# Read by `src/scripts/check_gate_reachability.ts` (the `_lib-export-reach`
+# axis) via `src/scripts/_lib/loop_surfaces.ts`. NOTHING ELSE READS IT AND
+# NOTHING EXECUTES FROM IT. The file is reader input: it adds no behaviour to
+# any surface listed here, and the moment something dispatches off it, it has
+# become the loop engine a recorded decision forbids.
+#
+# Why a separate file rather than a section in `hook_manifest.yaml`: that
+# manifest is keyed on hook slots — every `concerns:` row carries `script`,
+# `args`, `fail_closed`, `severity` and binds to a lifecycle event. Three of
+# the five surfaces below have no hook slot at all (two skills and one
+# execution context), so folding them in would mean inventing a row shape for
+# a thing the manifest does not model. `src/config/` is where this tree
+# already keeps gate-read configuration, and `check_gate_reachability.ts`
+# already reads one of its files (`gate-reachability-exemptions.json`).
+#
+# ---------------------------------------------------------------------------
+# surfaces: a thing that iterates under a bound.
+#
+#   kind         `code` (a TypeScript module) or `prose` (a skill / context doc)
+#   bound_kind   `code` when cap + no_progress name symbols; `prose` when they
+#                name documented knobs. A prose bound is REPORTED, never red —
+#                but it may never masquerade as a code one, which is what this
+#                field exists to prevent.
+#   cap          `path:TOKEN` — the maximum-iterations bound
+#   no_progress  `path:TOKEN` — the non-advance detector
+#
+# `cap` and `no_progress` resolve or the gate reds: a `.ts` target must be a
+# DEFINED symbol, a `.md` target must be a token the file actually carries.
+# ---------------------------------------------------------------------------
+surfaces:
+  run_continuation_hook:
+    kind: code
+    bound_kind: code
+    cap: src/scripts/_lib/continuation_ladder.ts:MAX_ITERATIONS
+    no_progress: src/scripts/_lib/loop_guards.ts:stallSignal
+    success_stop: >-
+      continuation_ladder.ts:ladder returns 'complete' when openCount === 0 and
+      blockedCount === 0; run_continuation_hook.ts:main clears the run state.
+    checker: >-
+      run_continuation_hook.ts:scanOpenSteps re-scans the claimed roadmap every
+      fire. It never EXECUTES a step's verify line — it only prints it.
+    human_gate: >-
+      none. The nearest thing is printed prose in _continuationText; the
+      refusedThisTurn check defers to a quality gate, not to a person.
+    terminal_vocabulary: src/scripts/_lib/continuation_ladder.ts:TERMINAL_STATE_BY_ACTION
+    production_consumers:
+      - src/scripts/hooks/concern_registry.ts
+      - src/scripts/hook_manifest.yaml
+
+  self_fix:
+    kind: code
+    bound_kind: code
+    cap: src/agent-src/templates/scripts/work_engine/directives/backend/_self_fix.ts:SELF_FIX_CEILING
+    no_progress: src/agent-src/templates/scripts/work_engine/directives/backend/_self_fix.ts:verdict_signature
+    success_stop: >-
+      none of its own, by design — the module is entered on a red and every exit
+      it owns is BLOCKED or PARTIAL. The green exit lives in its callers,
+      directives/backend/test.ts and directives/backend/verify.ts.
+    checker: >-
+      none inside the module — the caller supplies the recorded verdict, which
+      verdict_signature reduces to a comparable string.
+    human_gate: src/agent-src/templates/scripts/work_engine/directives/backend/_self_fix.ts:partial_exit
+    terminal_vocabulary: >-
+      none. It emits delivery_state.ts:Outcome (SUCCESS | BLOCKED | PARTIAL)
+      and its private SelfFixKind union never crosses to RunTerminalState, even
+      though `exhausted` and `stagnated` are exact members of it. A reader
+      aggregating run outcomes can count the continuation hook's stops and
+      cannot count this loop's.
+    production_consumers:
+      - src/agent-src/templates/scripts/work_engine/directives/backend/test.ts
+      - src/agent-src/templates/scripts/work_engine/directives/backend/verify.ts
+
+  verify_repair_loop:
+    kind: prose
+    bound_kind: prose
+    cap: src/skills/verify-repair-loop/SKILL.md:max_attempts
+    no_progress: src/skills/verify-repair-loop/SKILL.md:plateau_window
+    success_stop: >-
+      judge verdict `apply` ends the loop DONE. The numeric threshold gate is
+      not the exit — it only decides whether another attempt is authorised.
+    checker: >-
+      the project's verdict commands per toolchain-resolver, plus the
+      deterministic src/scripts/detect_verification_tampering.ts, plus a
+      fresh-context judge subagent.
+    human_gate: >-
+      hand-back only. Every terminus stops and hands the envelope to the user;
+      a mid-loop user instruction changes the fingerprint and aborts.
+    terminal_vocabulary: >-
+      a LOCAL one — DONE | DONE_WITH_CONCERNS | BLOCKED, plus a stop-reason
+      enum (threshold | plateau | cap | regression | reject). The skill names
+      neither terminal-states.md nor RunTerminalState, so `BLOCKED` collides in
+      spelling with the registry's `blocked` and in nothing else.
+    production_consumers:
+      - src/domains/engineering-base/review/changes/command.md
+      - src/domains/engineering-base/mission/upgrade/command.md
+
+  experiment_loop:
+    kind: prose
+    bound_kind: prose
+    cap: src/skills/experiment-loop/references/protocol.md:max_iterations
+    no_progress: src/skills/experiment-loop/references/protocol.md:consecutive_reverts
+    success_stop: >-
+      none — the skill has a direction, not a destination. Exit is symmetric:
+      the declared bound is reached, or the declared exit signal fires.
+    checker: >-
+      an external evaluator emitting the evaluator-output contract JSON. `pass`
+      is sovereign; the metric never is.
+    human_gate: >-
+      none. The pivot ladder's terminal rung publishes a null rather than
+      escalating to a person.
+    terminal_vocabulary: >-
+      a LOCAL decision enum — pending | keep | revert with its own reason set.
+      The exit conditions are named descriptively rather than as terminal-state
+      tokens, and the registry is never referenced.
+    production_consumers:
+      - src/domains/meta/README.md
+
+  roadmap_process_loop:
+    kind: prose
+    bound_kind: code
+    cap: src/scripts/_lib/continuation_ladder.ts:MAX_ITERATIONS
+    no_progress: src/scripts/_lib/continuation_ladder.ts:STALL_WINDOW
+    success_stop: >-
+      count_open == 0 with the PR open. `blocked` is never presented as
+      completion and no checkbox is flipped to reach it.
+    checker: >-
+      the per-step `verify:` command when a step declares one, the
+      git-status flip guard, and the quality pipeline on the declared cadence.
+    human_gate: src/scripts/_lib/blocked_by_marker.ts:decideAsk
+    terminal_vocabulary: >-
+      reached through contexts/execution/terminal-states.md, which the document
+      names; it uses `approval-required` and `blocked` by name.
+    production_consumers:
+      - src/domains/product-basic/roadmap/process-full/command.md
+      - src/domains/product-basic/roadmap/process-phase/command.md
+      - src/domains/product-basic/roadmap/process-step/command.md
+
+# ---------------------------------------------------------------------------
+# instruments: an exported helper a surface is meant to CALL.
+#
+# The reach question applies only here. A surface is reached by being bound;
+# an instrument is reached by being called, and only the second is answerable
+# by counting occurrences of a symbol.
+#
+# An instrument is DEAD when its symbol appears in `src/` exactly once — its
+# own declaration. `tests/` is outside `src/` and therefore outside the count
+# by construction: a test-only caller is precisely the state this detects.
+#
+#   status: experimental   exempts it from the reach requirement
+#   expires: YYYY-MM-DD    REQUIRED under that status; a past date reds the
+#                          gate. An exemption without a deadline is the same
+#                          dead code wearing a label.
+# ---------------------------------------------------------------------------
+instruments:
+  # --- The two open instances this inventory was built to make findable. ---
+  rejectedTacticRepeat:
+    file: src/scripts/_lib/loop_guards.ts
+    role: >-
+      Identity-keyed repeat suppression for run_continuation_hook. Catches what
+      the numeric stall detector cannot see: the same rejected tactic retried
+      while the surrounding prose changes every time.
+    status: experimental
+    expires: '2026-12-12'
+    note: >-
+      Deliberately not wired. Its only consumer would be the continuation hook,
+      and giving that hook a new refusal rung before it has demonstrably engaged
+      more than once reverses the order the evidence supports (roadmap Risk 2).
+      The observation it is waiting on is parked in
+      agents/roadmaps/later/road-to-run-continuation-observation.md. The expiry
+      is the date that question comes back, not a date this decision is
+      considered settled.
+
+  compareTriggers:
+    file: src/scripts/_lib/capsule_trigger.ts
+    role: >-
+      Shadow comparison of two capsule-emission arms — token watermark against
+      novelty saturation — reporting where each WOULD have fired.
+    status: experimental
+    expires: '2026-12-12'
+    note: >-
+      It cannot be wired today and faking it is forbidden by the tree's own
+      recorded position. It needs StepObservation[] — per-step token counts AND
+      per-step surfaced terms — and no payload this tree has observed carries
+      either. subagent_ledger_hook.ts says so in as many words, citing this very
+      module: "inventing a proxy is the move capsule_trigger.ts refuses".
+
+  earlierArm:
+    file: src/scripts/_lib/capsule_trigger.ts
+    role: Which of the two compareTriggers arms fired first, for the paired comparison.
+    status: experimental
+    expires: '2026-12-12'
+    note: Same input gap as compareTriggers — it consumes that function's output.
+
+  # --- Live instruments, declared so the axis is shown NOT over-firing. ---
+  # All three are called only from inside their own declaring file. A predicate
+  # that counted importers alone would report every one of them dead; that is
+  # the false-positive class the occurrence criterion exists to remove.
+  detectUnavailableDependency:
+    file: src/scripts/_lib/loop_guards.ts
+    role: Scans a transcript tail for an unavailable-dependency signal.
+
+  DEPENDENCY_SCAN_BYTES:
+    file: src/scripts/_lib/loop_guards.ts
+    role: How much of a transcript tail the dependency scan reads.
+
+  StallSignal:
+    file: src/scripts/_lib/loop_guards.ts
+    role: The shape stallSignal returns — level plus the window it was read over.
+
+  # Reached across files, the ordinary case. Declared so the axis is exercised
+  # on both sides of its own boundary rather than only on the interesting one.
+  stallSignal:
+    file: src/scripts/_lib/loop_guards.ts
+    role: Numeric non-advance detector — the open-step count over a window.
+
+  terminalStateFor:
+    file: src/scripts/_lib/continuation_ladder.ts
+    role: Maps a ladder action onto its RunTerminalState.

@@ -50,7 +50,7 @@ nothing since has been able to notice.
 
 ## Phase 0 — Inventory, with no behaviour change
 
-- [ ] **0.1 Write a new loop-surface inventory** — a `loop-surfaces.yaml` under `src/config/`,
+- [x] **0.1 Write a new loop-surface inventory** — a `loop-surfaces.yaml` under `src/config/`,
       which does not exist yet — listing the five verified loop surfaces —
       `run_continuation_hook`, `_self_fix`, `verify-repair-loop`, `experiment-loop`,
       `roadmap-process-loop` — each with `cap`, `no_progress`, `success_stop`, `checker`,
@@ -58,7 +58,16 @@ nothing since has been able to notice.
       point at `file:symbol`, never at prose.
       verify: every one of the five carries every field, and each `cap` / `no_progress` value
       resolves to a symbol that exists — `grep -n "<symbol>" <file>` returns a definition line.
-- [ ] **0.2 Mark which entries are instruments.** An entry is an `instrument` when it is an
+      <!-- corrected 2026-09-13, from reproduction: "never at prose" is unsatisfiable for two of
+           the five and a category error for both. `verify-repair-loop` and `experiment-loop` are
+           SKILLS; their bound is a documented knob, and `grep -rn max_attempts src/` returns hits
+           only inside the skill's own directory. `roadmap-process-loop` states no iteration cap of
+           its own at all — its real cap is `continuation_ladder.ts:MAX_ITERATIONS`, in a file the
+           document never cites by number. The property the step wanted is kept exactly: a bound
+           must resolve to something that EXISTS. A `.ts` target must be a defined symbol; a `.md`
+           target must be a token the file carries AND the row must declare `bound_kind: prose`, so
+           a prose bound is recorded rather than inferred and is reported as its own set. -->
+- [x] **0.2 Mark which entries are instruments.** An entry is an `instrument` when it is an
       exported helper meant to be called by a surface rather than a surface itself.
       verify: the file distinguishes the two, and the instrument list contains at least
       `rejectedTacticRepeat` and `compareTriggers`, the two open instances.
@@ -121,9 +130,29 @@ nothing since has been able to notice.
 ## Blockers
 
 ### blocker: loop-surface-inventory-owner
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
-- **Class:** 3 — human-only
+- **Class:** 2 — agent-decidable (corrected 2026-09-13 from `3 — human-only`)
+- **Class correction, with the evidence.** Per ADR-237 § 2 a `Class: 3` label on an action the
+  agent could have performed is a defect in the roadmap, and this was one: the decision is where a
+  new reader-only config file lives, which is reversible inside the envelope, weakens no safety
+  floor, changes no purpose and creates no external commitment. Four readings settle it, and all
+  four were taken before the file was written:
+  1. `src/config/` already exists and holds ~50 gate-read config files, 15 of them `.yml`. The step
+     text's "which does not exist yet" is true of the FILE, not the directory.
+  2. `check_gate_reachability.ts` — the very gate Phase 1 extends — already reads a dedicated file
+     from `src/config/`: `EXEMPTIONS_REL = 'src/config/gate-reachability-exemptions.json'` at
+     line 226. "Adding a second source to the family" is the family's own established pattern.
+  3. The manifest cannot hold these rows. `hook_manifest.yaml`'s top-level keys are
+     `schema_version`, `concerns`, `roles`, `platforms`, `native_event_aliases`; every `concerns:`
+     row carries `script` / `args` / `fail_closed` / `severity` and binds a lifecycle slot. THREE
+     of the five surfaces have no slot — two skills and one execution context — not the two the
+     blocker estimated.
+  4. Two of the three stated costs are not costs here. `src/config/` is NOT projected: `dist/`
+     `agent-src/` carries no `config` directory. And most `src/config/*.yml` files carry no JSON
+     schema, so "a new config file pulls a schema" is not a convention of this tree.
+  The blocker's own **Recommendation** already named a separate file; the tree corroborates it.
+  What remained was a location choice with a documented answer, not a judgement only an owner holds.
 - **Blocks:** Phase 0, and everything after it. Phase 1's axis reads the file Phase 0 writes.
 - **What to do:** decide whether the inventory is its own new `loop-surfaces.yaml` under
   `src/config/` or a
