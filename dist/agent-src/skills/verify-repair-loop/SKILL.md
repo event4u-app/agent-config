@@ -83,7 +83,15 @@ regressions are detectable. Pick the verdict commands per the project's
 
 Each iteration is agent turns, never executing control-flow code:
 
-1. **Generate / revise** — make the smallest change toward the contract.
+1. **Read the failure, then revise** — before changing a line, inspect what the
+   previous run actually reported: which checks failed, the assertion text, and
+   whether this failure signature matches the last one. Analyze the existing
+   code path the failing check exercises rather than pattern-matching the error
+   string. A revision written without reading the failure is the blind retry
+   both the plateau rule below and
+   [`autonomous-execution`](../../rules/autonomous-execution.md) exist to stop —
+   and on attempt 1 there is no previous run, so this is the baseline green set
+   from step 1. Then make the smallest change toward the contract.
 2. **Run** — execute the verdict commands; parse the **structured** result
    (counts green/total, which checks failed). This is one tool call, read in
    context.
