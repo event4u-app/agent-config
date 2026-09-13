@@ -54,7 +54,7 @@ registry seeded from known incidents, and it is worth closing rather than explai
 
 ## Phase 2 — Two records that stopped being true
 
-- [ ] **2.1 Correct the hook-concern downstream-surface memory.** Its recipe for regenerating
+- [x] **2.1 Correct the hook-concern downstream-surface memory.** Its recipe for regenerating
       `hook_manifest.json` produces a file that reds `hook_manifest_compiled.test.ts`; the compiled
       shape is now `{manifest, fingerprint}`.
       verify: following the recipe as written produces a file the test accepts.
@@ -81,5 +81,5 @@ registry seeded from known incidents, and it is worth closing rather than explai
       green after.
 - [x] AC-2 — The committed-blob-versus-worktree discriminator is recorded where a reader
       diagnosing a stale generated artefact will meet it.
-- [ ] AC-3 — The hook-concern downstream-surface recipe produces a file its own test accepts.
+- [x] AC-3 — The hook-concern downstream-surface recipe produces a file its own test accepts.
 - [ ] AC-4 — The gate-coverage header count equals the measured row count.
