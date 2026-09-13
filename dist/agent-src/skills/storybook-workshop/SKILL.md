@@ -52,7 +52,7 @@ single prop's effect because every value is co-present. Split it, one axis per s
 Stories render under the **same semantic tokens** as the app and the `.dark` class; a
 hardcoded preview theme makes the workshop lie about what the component looks like in place.
 
-### The five behavioural stories — assert a value, never an image
+### The five behavioral stories — assert a value, never an image
 
 `Hover`, `Focus`, `Active`, `Keyboard` and `ReducedMotion` join the set above, and they
 carry one extra rule: **each asserts a resolved computed style or a handler effect, never a
@@ -81,12 +81,13 @@ property: a single media rule usually moves several properties at once, and one 
 counts one defect several times.
 
 **Where a workshop is absent, this set is still assertable.** These stories are a contract
-about what is asserted, not about a particular runner — `src/scripts/ui_conformance_probe.ts`
-exercises the same five states and the same breakpoint rows against a file URL. Its
-sensitivity fixture (`tests/design-artifacts/fixtures/ui-conformance/`, in the package
-repository — not shipped to consumers, so this is a pointer rather than a link) is the
-evidence: removing one hover rule turns exactly the hover assertion red and nothing else,
-and removing one media rule turns exactly the matching breakpoint row red.
+about what is asserted, not about a particular runner — the `ui_conformance_probe` script
+exercises the same five states and the same breakpoint rows against a file URL. It and its
+sensitivity fixture live in the package repository and are **not** shipped to consumers,
+which is why both are named rather than linked: a path to either resolves nowhere in an
+install. The fixture is the evidence for the two sensitivity claims above — removing one
+hover rule turns exactly the hover assertion red and nothing else, and removing one media
+rule turns exactly the matching breakpoint row red.
 
 ## JSDoc `@summary` is required, and the reason is mechanical
 

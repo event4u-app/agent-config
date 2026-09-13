@@ -66,7 +66,7 @@ properties of a *transition into a state*, and the resting capture that a review
 actually takes contains none of them. The distinction is measurable rather than
 theoretical: over
 [`tests/design-artifacts/fixtures/ui-conformance/`](../../tests/design-artifacts/fixtures/ui-conformance/README.md),
-two of four planted behavioural defects are invisible to any resting capture at
+two of four planted behavioral defects are invisible to any resting capture at
 any viewport, and a pixel comparison additionally has no channel through which a
 deviation can be *declared*, so it reports an approved change as a difference.
 Both figures are pre-registered in that fixture's README.
@@ -101,7 +101,7 @@ unsure, take the lower capability. Classes, not brand promises:
 Legend: ✅ available · ⚠️ available **only if** the named dependency is present
 (probe first, never assume) · ❌ not available → degrade.
 
-**The four behavioural rows are `⚠️` in class C where `playwright` is `✅`, and
+**The four behavioral rows are `⚠️` in class C where `playwright` is `✅`, and
 the difference is deliberate.** A CI runner having the Playwright *package* is
 not the same fact as it having the *browser binaries*, and these four cannot
 degrade to anything — there is no static reading of a hover transition. This
@@ -130,7 +130,7 @@ When the needed primitive is `❌` (or a `⚠️` probe fails):
    console errors") for a check that did not run — that is an invented fact
    ([`direct-answers`](../../src/rules/direct-answers.md) Iron Law 2).
 
-**The four behavioural primitives degrade by exactly these four steps — no
+**The four behavioral primitives degrade by exactly these four steps — no
 second vocabulary.** They are named here only because their failure mode has a
 shape the earlier primitives do not: each one's honest degrade is a *missing
 count*, and a missing count is easy to render as a zero.
@@ -151,7 +151,7 @@ AND THE REASON. NEVER ZERO — A ZERO READS AS "RAN AND FOUND NOTHING", WHICH IS
 THE FABRICATED GREEN THIS CONTRACT EXISTS TO PREVENT.
 ```
 
-Machine-checked, not only asserted: the artefact these primitives feed carries
+Machine-checked, not only asserted: the artifact these primitives feed carries
 `findings: null` on a not-applicable row and a required non-empty `reason`, and
 [`tests/scripts/ui_conformance_probe.test.ts`](../../tests/scripts/ui_conformance_probe.test.ts)
 fails if a zero ever appears in that position.
