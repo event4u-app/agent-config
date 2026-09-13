@@ -355,13 +355,41 @@ resumed with the grant and decisions intact · `F6` an API ceiling → pause and
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — every command carrying `produces_roadmap: true` is mechanically proven to end in
+- [x] AC-1 — every command carrying `produces_roadmap: true` is mechanically proven to end in
       closure, and removing the step from any one of them reds CI.
-- [ ] AC-2 — a `ready` roadmap cannot contain an unresolved technical marker.
-- [ ] AC-3 — the council can conclude a technical decision without emitting an owner-facing
+      Proven: `lint_roadmap_producers` reads the declaration from the frontmatter and reds a
+      producer carrying no reference to the pass. Registered in `taskfiles/ci-fast.yml`, the
+      `ci:` list and `.github/workflows/rule-backstops.yml`, so it reds CI and not only a
+      local chain. Sabotage-probed on landing: the closure section was removed from
+      `analyze/inbox` and the gate went red, then restored.
+- [x] AC-2 — a `ready` roadmap cannot contain an unresolved technical marker.
+      Proven: `lint_decision_classes`, CI-wired the same way. Fixture pair `R1` → `R2` pins
+      both directions on one plan — the loose marker is red, the same marker recorded as a
+      `## Decisions` row is green — and a reference to a row that does not exist stays red, so
+      the cheapest repair is the record rather than a dangling pointer.
+- [x] AC-3 — the council can conclude a technical decision without emitting an owner-facing
       options block.
-- [ ] AC-4 — `critical-technical` is not owner-locked and `spend-exhaustion` is not
+      Proven: the block is conditional in all three places that mandated it, and
+      `council_record_shape` checks a record in both directions. `F3a` (conclusive technical)
+      must carry none and reds when one is added; `F3b` (non-convergent product) must carry
+      the proposal and reds when it is removed.
+- [x] AC-4 — `critical-technical` is not owner-locked and `spend-exhaustion` is not
       owner-routed, both provable from the loader's own tests.
+      Proven in `tests/scripts/ai_council/config.test.ts`: `critical-technical` loads at
+      `council` AND at `agent`, so no lock exists to find; `spend-exhaustion: user` throws
+      `never owner-routed`. Sensitivity-probed on landing — adding `critical-technical` to the
+      locked set reddened the suite.
 - [ ] AC-5 — an `F1` `process-full` run records zero owner asks in the execution phase.
+      **NOT CLAIMED, 2026-09-13.** What is proven is the static half: `F1` yields twelve
+      findings and zero owner questions, and the census reports zero technical owner asks in
+      execution across the authored corpus. Neither is a RUN. The criterion asks for the
+      behaviour of an actual `process-full` execution over `F1`, which is a transcript
+      measurement, and recording it green off two static probes would be the substitution this
+      roadmap's own census axis exists to catch.
 - [ ] AC-6 — on a host with a native ask primitive, every owner ask used it; on a host without
       one, `hooks:status` says so.
+      **HALF PROVEN, 2026-09-13.** The second clause holds: `ask: native | text` is a manifest
+      row and `hooks:status` prints it per host, with absent reading `text` and a test pinning
+      that direction. The first clause depends on 3.1, whose remaining paragraph is a kernel
+      rule the write guard denies — and it is a transcript claim besides, on the same ground
+      as AC-5.
