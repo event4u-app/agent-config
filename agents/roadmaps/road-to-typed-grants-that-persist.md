@@ -285,10 +285,32 @@ item. Phases 1-6 may run once 0.2 is chosen.
       `enforced_by` line Phase 1.1 promised.
       verify: a fixture diff pushing a tag without a grant reds the gate; the same diff with a
       matching grant object passes.
-- [ ] **4.4 Dispose of `check_no_automerge_key.ts`.** Delete it deliberately, per its own
+- [x] **4.4 Dispose of `check_no_automerge_key.ts`.** Delete it deliberately, per its own
       text, or leave it and record why. It matches `delivery.merge` either way, so this is a
       hygiene decision and not a blocker.
       verify: whichever is chosen is stated in the PR body with the gate's own sentence quoted.
+      **Decided 2026-09-13: KEEP IT, and the reason is that its deletion is not this run's to
+      take.** The gate's own sentence, quoted: *"It is a REVERSIBLE architectural boundary, not
+      a permanent prohibition. If the owner later wants one of these exact names, the owner
+      deletes this gate."* Three things follow, and the third is the one that decides it.
+      (1) **The premise the gate was built on is unchanged by ADR-268.** The ratchet is not
+      about whether merge authority exists — it is about whether it arrives *by key name*
+      rather than by decision. ADR-268 section 3 grants the authority by decision and adopts
+      none of `autoMerge` / `auto_merge` / `mergePolicy`, so the boundary it protects is
+      exactly as intact after the ruling as before it.
+      (2) **Keeping it costs nothing, measured rather than assumed.** With the new block in the
+      tree the gate is green over 346 keys across its two corpus files, because `delivery.merge`
+      sits outside the closed three-name set. The step's own *"it matches either way"* is
+      therefore confirmed on this tree and not inherited from the step's author.
+      (3) **The sentence names the owner as the party who deletes it, and that is a routing
+      instruction, not a figure of speech.** Deleting a recorded architectural boundary is
+      owner-reserved under `decision-revisit-gate`'s own table — it removes a floor and it is
+      governance self-amendment — so an agent run that deleted the gate on the strength of an
+      ADR that never asked for its deletion would be doing the thing this roadmap's Phase 5
+      exists to make impossible without ratification. The hygiene argument for deleting it
+      (one fewer gate) does not reach that bar.
+      **What would change the decision:** an owner sentence naming the gate, or a later record
+      that actually adopts one of the three names. Neither exists.
 
 ## Phase 5 — Kernel amendment under ratification
 
