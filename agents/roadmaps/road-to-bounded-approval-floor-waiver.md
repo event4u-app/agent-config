@@ -557,7 +557,7 @@ DIFFERENCE IS STATED PER STEP RATHER THAN AVERAGED AWAY.
 
 ## Phase 2 — the record
 
-- [ ] **2.1 Correct the stale platform measurements in
+- [x] **2.1 Correct the stale platform measurements in
       `src/config/platform-anchor.json`'s `threat_model_note`.**
       It states `bypass_actors` carries
       `{actor_type: RepositoryRole, actor_id: 5, bypass_mode: always}` and
@@ -568,8 +568,30 @@ DIFFERENCE IS STATED PER STEP RATHER THAN AVERAGED AWAY.
       verify: `gh api repos/event4u-app/agent-config/rulesets/17749383 --jq
       '{bypass_actors, current_user_can_bypass}'` agrees with what the note
       claims for the date it claims it.
+      **DONE 2026-09-13, and it found one more defect than the step predicted.**
+      The verify command returns `{"bypass_actors":[],"current_user_can_bypass":
+      "never"}`, which agrees with the note. The step's own instruction —
+      give the retained reading an inline date — had already been carried out in
+      an earlier pass. What had NOT been caught is that the note's *preamble*
+      asserted the emptying of `bypass_actors` "held", and M15 shows it did not
+      hold continuously: an `OrganizationAdmin` actor with `bypass_mode: always`
+      was re-added 2026-09-11 and removed again 2026-09-12. "Held" was the
+      convenient reading, not the measured one, and the note now carries the
+      gap plus the fact that the dimension has a re-entry history worth
+      re-measuring. A second stale claim in the same file was corrected at the
+      same time: `required_status_check_contexts_note` called the containing job
+      "the ruleset's one required context" when it is one of two since
+      2026-09-11 (M16) — the jobs-versus-steps argument is untouched, and the
+      expectation naming a single context is still satisfied because
+      `minimum_required_contexts` is a floor, not an equality.
+      Note for the reader: `src/config/platform-anchor.json` is on
+      `ANCHOR_PATHS`, so even a prose-only correction to it reds
+      `check_kernel_edit_ratified` without a ratification to point at. Both
+      edits are listed in `drain-anchor-owner-ruling.md` § Also ratified by this
+      record for exactly that reason. Gate re-run after the edits:
+      PASS_WITH_ACCEPTED_RISK, exit 0; `platform_anchor.test.ts` 57/57.
 
-- [ ] **2.2 Write the ratification artifact with `verdict: ratified`.**
+- [x] **2.2 Write the ratification artifact with `verdict: ratified`.**
       Under `agents/evidence/ratifications/`, providers `anthropic` and
       `openai`, `effective_after: merge`. It supersedes only the
       approval-related portion of `drain-typed-grants-platform-anchor.md`. It
@@ -582,8 +604,37 @@ DIFFERENCE IS STATED PER STEP RATHER THAN AVERAGED AWAY.
       vote, not the gate's arithmetic.
       verify: `./scripts-run src/scripts/check_kernel_edit_ratified
       --base-ref origin/main` exits 0.
+      **CLOSED 2026-09-13 — the artifact exists, is AMENDED rather than newly
+      written, and the difference is deliberate.** It is
+      `agents/evidence/ratifications/drain-anchor-owner-ruling.md`:
+      `verdict: ratified`, providers `anthropic` and `openai`,
+      `effective_after: merge`. Writing a *second* artifact for the same
+      decision would have split one governance event across two records and left
+      a reader to work out which governs; the existing one already covers the
+      approval removal and the waiver mechanism, so the 2026-09-13 review and
+      the two record corrections are amendments to it.
+      What this step asked for and did NOT get, stated rather than glossed: the
+      artifact does not contain the literal sentence "supersedes only the
+      approval-related portion of `drain-typed-grants-platform-anchor.md`". It
+      carries the substance under § Not ratified by this record, and 2.3 puts
+      the supersession where a reader of the superseded document will actually
+      meet it, which is the sibling roadmap's own blocker. Recorded as a
+      deviation so the next reader does not go looking for a sentence that was
+      decided against rather than forgotten.
+      **One stale claim was found IN the artifact and fixed**: its closing bullet
+      said `strict_required_status_checks` "is still enforced by the gate, and is
+      therefore the single dimension the anchor now reds on". The waiver that
+      same artifact ratifies removed that red. A ratification asserting a red its
+      own subject deleted is the worst possible place for that sentence, so it is
+      corrected there rather than only noted here.
+      The step's own observation about the gate's arithmetic still holds and is
+      worth keeping: the gate counts distinct providers and one top-level
+      verdict, and does not require unanimity — so the reason to honour the
+      council's shape is the recorded `refused` vote, never the gate's counting.
+      Verified: `./scripts-run src/scripts/check_kernel_edit_ratified
+      --base-ref origin/main` exits 0.
 
-- [ ] **2.3 Reconcile `road-to-typed-grants-that-persist.md`.**
+- [x] **2.3 Reconcile `road-to-typed-grants-that-persist.md`.**
       Its `ratification-platform-anchor` blocker instructed a future reader to
       set the two values the owner reversed, and its retained limb-1 paragraph
       is present-tense about a 12:51 state. Both need dating. Its `Blocks:`
@@ -595,6 +646,63 @@ DIFFERENCE IS STATED PER STEP RATHER THAN AVERAGED AWAY.
       verify: no line in that blocker asks for a state the live ruleset is
       deliberately not in, and no undated present-tense sentence describes a
       superseded measurement.
+      **DONE 2026-09-13.** Four edits to the `ratification-platform-anchor`
+      blocker, one per clause the step named:
+      1. *The limb-1 verdict.* It read "limb 1 is **not met** and the gate
+         reports three findings again" in the present tense, and waited on "a
+         structured, evidence-carrying exemption". Both halves are now false:
+         the gate exits 0, and no exemption over the approval dimensions was
+         ever built. The paragraph is dated and the original kept below it.
+      2. *The `Blocks:` qualification.* It anticipated compliance becoming
+         "compliant-with-approvals-suspended". The real weakening is larger —
+         the dimensions are out of the trust model altogether — so the
+         qualification is restated to say the precondition is **materially
+         weaker** than the seats assumed, not merely differently worded, and
+         that this entry settles it even less than before.
+      3. *The recovery path.* Recorded that 0.2's written half landed in
+         `branch-protection-policy.md` and that the rehearsal is Hard-Floor and
+         therefore agent-impossible, so the remainder rides on this blocker
+         rather than being dropped when the waiver roadmap closed.
+      4. *The bypass history.* "`bypass_actors: []` … still hold" is true of
+         today and not of the interval (M15), and the "six versions" count is
+         correct for 2026-09-10 and is eight as of 2026-09-13 (M14). Both dated.
+      The two clauses the step expected to still be wrong were already correct
+      and were left alone, which is worth recording so a later reader does not
+      re-fix them: the `What to do` field already says items 1 and 2 were "ruled
+      out of the trust model entirely" and that instructing a reader to restore
+      them "would mutate the live ruleset against a recorded ruling", and the
+      `What is NOT discharged` paragraph already refuses to call the
+      `bypass_actors` item done. Verified: no line in the blocker now asks for
+      `required_approving_review_count >= 1` or `require_last_push_approval:
+      true`.
+
+- [x] **2.4 Write down the enforcement boundary the review insisted on.**
+      Not in the original plan; added 2026-09-13 because it is the one change
+      the council's answer to 0.1 *required* rather than merely permitted.
+      openai's verdict was explicit: **do not describe `check_platform_anchor`
+      as enforcing repository-wide compliance.** It is a locally invoked
+      pre-push control (M5) that an administrator may skip, and the acting
+      account holds `admin: true` (M13), so the same party can modify both the
+      committed expectation and the forge state it is compared against. Three
+      surfaces were describing it as more than that:
+      `src/config/platform-anchor.json` now carries an
+      `enforcement_boundary_note` stating what a green verdict does and does not
+      establish, and naming openai's own condition for a stronger claim —
+      mandatory execution from an independently controlled environment with
+      read-only policy inputs. `src/config/ci-local-parity.yml` said the gate
+      checks "that the forge actually requires what the ratification mechanism
+      claims it does"; `taskfiles/ci-fast.yml` said it "checks the forge
+      actually required anyone to". Both now say *compares the committed
+      expectation against the live ruleset*, and both drop the two approval
+      dimensions from the list of what is checked.
+      The new field is prose alongside the other `*_note` fields and the
+      **evaluated** field set is untouched, so `schema_version` stays 2 — the
+      1 → 2 bump was for a change in what a reader must understand, which this
+      is not. The note says so itself, so the next reader does not have to
+      re-derive why no bump accompanied a new top-level key.
+      verify: `check_platform_anchor` still PASS_WITH_ACCEPTED_RISK exit 0 with
+      the new field present; `check_ci_local_parity` exits 0. Both run
+      2026-09-13.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-10 | reviewer: claude/host -->
@@ -608,23 +716,94 @@ DIFFERENCE IS STATED PER STEP RATHER THAN AVERAGED AWAY.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `check_platform_anchor` reports no finding that nobody intends to
+```
+TWO OF THESE CRITERIA WERE WRITTEN AGAINST THE EXEMPTION AND ARE NOW
+WRONG IN THE DANGEROUS DIRECTION: AC-2 AND AC-4 ASK A READER TO ASSERT
+A FLOOR THE OWNER DELIBERATELY REMOVED. THEY ARE CORRECTED IN PLACE,
+WITH THE ORIGINAL QUOTED, BECAUSE AC-6 FORBIDS EXACTLY THE INSTRUCTION
+THEY CARRIED — AN ACCEPTANCE CRITERION IS THE LAST PLACE A REVERSED
+INSTRUCTION SHOULD BE LEFT LYING.
+```
+
+- [x] AC-1 — `check_platform_anchor` reports no finding that nobody intends to
       fix. Both open design questions are answered and their answers are in
       this file.
-- [ ] AC-2 — `NON_NEGOTIABLE_FLOOR` still carries
-      `minimum_approving_reviews: 1` and `require_last_push_approval: true`.
-      The floor was suspended by a named exemption, not lowered.
-- [ ] AC-3 — An exemption that is stale, malformed, unknown-`reason`, or scoped
-      beyond the two approval keys is refused, each case covered by a test that
-      has been seen red. A **missing** exemption is green.
-- [ ] AC-4 — A test refusing `require_last_push_approval: false` on the
-      un-exempted path exists, since none did (M10).
-- [ ] AC-5 — A ratification artifact with `verdict: ratified` and two distinct
-      providers is committed, naming which part of
-      `drain-typed-grants-platform-anchor.md` it supersedes and stating the
-      exemption's ground as an operational choice.
-- [ ] AC-6 — No undated present-tense sentence in the tree describes a
+      **Met.** The gate reports no finding at all — `PASS_WITH_ACCEPTED_RISK`,
+      exit 0, ledger `planned 3 · completed 1 · failed 0` (M17), with the one
+      deviation surfaced as a dated waiver rather than suppressed. Both
+      questions are answered above, 2/2 convergent, with the chosen shape named.
+- [x] AC-2 — **CORRECTED 2026-09-13. Reads now:** `NON_NEGOTIABLE_FLOOR` carries
+      *neither* `minimum_approving_reviews` nor `require_last_push_approval`,
+      and that absence is deliberate, recorded, and pinned by a test so a future
+      re-add is a visible failure rather than a silent drift. The floor was
+      **narrowed by an owner ruling**, not suspended by an exemption — and it
+      was narrowed rather than lowered in place, which is the distinction that
+      keeps "we do not require this" separable from "we require it and ignore
+      it". **Met:** the test `has no approval field left for a policy to lower`
+      (`platform_anchor.test.ts:248`) is the pin.
+      *Original, and it must NOT be acted on:* "`NON_NEGOTIABLE_FLOOR` still
+      carries `minimum_approving_reviews: 1` and `require_last_push_approval:
+      true`. The floor was suspended by a named exemption, not lowered."
+- [x] AC-3 — A waiver that is stale, malformed, unknown-`authority`, expired, or
+      scoped to a `NEVER_WAIVABLE` dimension is refused, each case covered by a
+      test that has been seen red. A **missing** waiver is green.
+      **Met**, with the scope re-pointed from "the two approval keys" to the
+      six `NEVER_WAIVABLE` dimensions, which is where the boundary actually
+      lives. Three mechanisms were neutralised on 2026-09-13 and observed red
+      (6 tests total, table in 1.4), each restored with the suite back at 57/57.
+      The missing-waiver-is-green half is `treats an absent or malformed waiver
+      list as no waivers, never as a pass` (:737).
+- [x] AC-4 — **CORRECTED 2026-09-13. Reads now:** a test pinning the *absence*
+      of both approval dimensions from the floor exists, since the test M10
+      asked for cannot be written.
+      **Why it cannot:** a test refusing `require_last_push_approval: false`
+      would assert a floor behaviour the owner ruling removed — it would fail
+      today, and making it pass would mean re-adding the dimension. The
+      obligation behind M10 was never "refuse this value"; it was *the floor
+      must not silently stop covering a dimension*. That is met, and met more
+      strongly, by `has no approval field left for a policy to lower` (:248),
+      which turns a future re-add into a red test.
+      *Original:* "A test refusing `require_last_push_approval: false` on the
+      un-exempted path exists, since none did (M10)."
+- [x] AC-5 — A ratification artifact with `verdict: ratified` and two distinct
+      providers is committed, stating the ground as an operational choice.
+      **Met** by `agents/evidence/ratifications/drain-anchor-owner-ruling.md`
+      (`ratified`, `anthropic` + `openai`, `effective_after: merge`), amended
+      2026-09-13 with the confirming review and the two record corrections.
+      **One clause deliberately not met, recorded in 2.2:** the artifact does
+      not carry the literal sentence naming which part of
+      `drain-typed-grants-platform-anchor.md` it supersedes. The supersession is
+      instead written into the sibling roadmap's own blocker (2.3), where a
+      reader of the superseded document meets it. `check_kernel_edit_ratified`
+      exits 0.
+- [x] AC-6 — No undated present-tense sentence in the tree describes a
       superseded platform measurement, and no blocker asks a future reader to
       restore either setting the owner reversed.
-- [ ] AC-7 — A tested administrator recovery procedure exists for a
-      lockout with `bypass_actors: []`.
+      **Met for every definitely-stale finding of a tree-wide sweep run
+      2026-09-13**, which is a stronger claim than "I fixed what I noticed" and
+      a weaker one than "the tree is clean". Corrected: the ratification
+      artifact's own closing bullet; `platform-anchor.json`'s
+      `threat_model_note` and `required_status_check_contexts_note`;
+      `branch-protection-policy.md`'s bypass row, required-context row and
+      "admin bypass deliberately not used" sentence;
+      `src/config/ci-local-parity.yml`; `taskfiles/ci-fast.yml`;
+      `ADR-113`'s verified-facts bullet; `ADR-276`'s present-tense bypass
+      paragraph; `road-to-typed-grants-that-persist.md`'s blocker;
+      `road-to-adversarial-verification-and-long-runs.md`;
+      `road-to-decision-closure.md`; `road-to-bus-factor-external-actions.md`;
+      and this file's own frontmatter, Goal, M6, M12, AC-2 and AC-4.
+      **What was deliberately NOT edited, so the limit is legible:** archived
+      roadmaps under `agents/roadmaps/archive/`, and dated historical records
+      that already carry their date or a SUPERSEDED marker — a correctly dated
+      record is correct, and re-dating it would be churn.
+- [ ] AC-7 — A **tested** administrator recovery procedure exists for a lockout
+      with `bypass_actors: []`.
+      **NOT MET, and this is the roadmap's one open item.** The procedure is
+      written (`branch-protection-policy.md` § Administrator recovery from a
+      lockout, five steps with exact commands); the word in this criterion that
+      is not satisfied is **tested**. Rehearsing it is an admin API write on
+      repository protection settings — Hard-Floor under
+      `non-destructive-by-default`, maintainer-only with explicit this-turn
+      confirmation — so no agent can close it. Tracked on beyond this file as
+      the `ratification-platform-anchor` blocker of
+      `road-to-typed-grants-that-persist.md`.
