@@ -124,7 +124,7 @@ owner-owned residue remains, closure completes with zero owner interaction.
       the owner and `critical-technical` is not.
       verify: the loader's rejection test is updated, and a new `lint_decision_classes`
       accepts only these eight names in a `## Decisions` block.
-- [ ] **0.2 Delete the council offer and its autonomy suppression.** Under a mission the
+- [x] **0.2 Delete the council offer and its autonomy suppression.** Under a mission the
       council is a step, not an offer, and the billable premise behind the suppression is
       false since the transport resolved CLI-first.
       verify: `grep -c 'suppress when personal.autonomy' src/domains/product-basic/roadmap/create/command.md`

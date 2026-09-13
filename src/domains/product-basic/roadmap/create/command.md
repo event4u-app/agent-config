@@ -234,37 +234,40 @@ Regenerate `agents/roadmaps-progress.md` so the new roadmap shows up:
 
 Mention the new overall count to the user.
 
-### 9. Offer council review (B1 hook, verbosity-gated)
+### 9. Council review — a step, not an offer
 
-Read `verbosity.offer_council_in_delivery` from `.agent-settings.yml`
-(default `false`):
+```
+UNDER A MISSION THE COUNCIL IS A STEP. NEVER AN OFFER.
+AVAILABILITY IS `agent-config council:status`. NOTHING ELSE DECIDES IT.
+```
 
-- `false` (default): skip the prompt silently. When `ai_council.enabled:
-  true` AND at least one member enabled, emit one line: `→ council
-  skipped (set verbosity.offer_council_in_delivery: true to enable, or
-  run /council roadmap:<path> directly)`. Otherwise emit nothing.
-- `true`: when `ai_council.enabled: true` **and** at least one member
-  enabled (`anthropic` or `openai`), ask (in the user's language):
+The offer that used to sit here was verbosity-gated and suppressed under
+`personal.autonomy: on`, on the stated ground that the council is billable.
+That premise is false: the transport resolves CLI-first
+(`src/scripts/ai_council/transport_resolver.ts`), so the ordinary path spends
+no metered USD, and a question asked to avoid spend that does not happen is a
+cheap question under `no-cheap-questions`. Where an API rung genuinely would
+cross the configured ceiling, the answer is `spend-exhaustion` — pause and
+report (ADR-268 § 8) — never a question either.
 
-  > 1. Run the council on this roadmap before execution? (billable)
-  > 2. Skip council review
+Run the free availability probe — no API call, no spend, any directory:
 
-  Also suppress when `personal.autonomy: on` (council is billable; see
-  `road-to-ai-council.md` Decision 3 / Q47).
+```bash
+agent-config council:status
+```
 
-If the user picks **1**:
-
-- Run `/council roadmap:<path>` with the user's original ask captured
-  in step 1 as `original_ask` (the handoff preamble carries it
-  verbatim, see `scripts/ai_council/prompts.ts`).
-- Append the council findings as a `## Council review (<UTC date>)`
-  section at the bottom of the roadmap. Include the trace path to
-  `agents/runtime/council/sessions/<timestamp>/raw-text.md` so future readers
-  can audit.
-- Do **not** rewrite the roadmap based on the findings — surface them,
-  let the user decide what to act on.
-
-If the user picks **2** → continue.
+- **CONFIGURED** → run `/council roadmap:<path>` as a step, carrying the
+  user's original ask from step 1 as `original_ask` (the handoff preamble
+  carries it verbatim, see `scripts/ai_council/prompts.ts`). Append the
+  findings as a `## Council review (<UTC date>)` section at the bottom of the
+  roadmap, inlined with date and members per the council record contract.
+  Do **not** rewrite the roadmap from the findings — surface them; a technical
+  verdict resolves per the ownership table, an owner-owned one becomes a
+  `## Decisions` row.
+- **NOT CONFIGURED** → state the resolver's own message in one line and
+  continue. Never infer this from the project tree: the config is
+  user-global (ADR-104), and the missing-file reflex is the measured failure
+  `council-availability` exists over.
 
 ### 10. Ask the execution mode — ONE question, then write frontmatter
 
