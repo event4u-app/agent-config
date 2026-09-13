@@ -177,6 +177,28 @@ exists to prevent.
   the gap the earlier decision left open and is a complete outcome on its own.
 - **Resolved when:** the decision record exists with one of the three readings, or this roadmap
   records the refusal and the archived roadmap carries the arrival.
+- **STILL OPEN, and deliberately.** Reversing a recorded rejection on its second arrival is
+  owner-reserved under [`decision-revisit-gate`](../../src/rules/decision-revisit-gate.md)
+  § owner-reserved set; an agent manufacturing that decision is the failure this blocker exists
+  to prevent. Phase 1 landed without it, as the blocker's own § Blocks permits.
+- **New evidence for whoever decides, gathered 2026-09-13 while landing Phase 1.** It changes
+  the reading of the record, not the decision:
+  - **The archived roadmap's guard claim was an over-claim.** Its step 0.3 records the
+    first half as DONE and states that *"no five-level name can enter the emitted vocabulary
+    without turning that test red"*. Measured: planting `organism` into **both**
+    `AUDIT_KINDS` and the skill's `kind:` line left all 36 tests green. The identity test it
+    rested on compares the two surfaces **to each other** and forbids exactly two dead values,
+    `partial` and `layout` — neither of which is a five-level name. A contributor "completing"
+    the taxonomy updates both surfaces and passes.
+  - **So this is the third outcome in [`recurring-criticism`](../../src/rules/recurring-criticism.md),
+    not the first.** The disposition was right, it was recorded, and the carrier that was
+    supposed to make it reachable did not carry it. That is a system failure and not evidence
+    that the rejection was wrong — the measurement it rests on (the level is not computable from
+    props, depth, path or file length) has not been re-measured by this round or the last one.
+  - **The guard now exists**, so the next arrival meets a failing test rather than a sentence,
+    which is the state the archived risk register wanted before the question was reopened. The
+    decision is therefore no longer urgent: option (c), reversing only the ordering statement,
+    costs nothing and is unaffected by any of this.
 
 ### blocker: the-detector-is-a-consumer-template
 - **Status:** open
@@ -197,6 +219,16 @@ exists to prevent.
   reduces this roadmap to the decision record and the guard.
 - **Resolved when:** the blast radius is stated in the evidence tree and the migration path is
   named, or the axis change is refused.
+- **STILL OPEN.** The blast-radius assessment is the owner's, and (b) refuse-and-drop-Phase-4 is
+  one of the two readings, so this is not a measurement an agent closes.
+- **One factual check done 2026-09-13, so the decision is not taken on a wrong pointer.** The
+  path the step's `corrected-from-reproduction` tag asserts is **correct**:
+  `src/agent-src/templates/scripts/work_engine/stack/detect.ts` exists (39 KB), and a tree-wide
+  `find` for `detect.ts` outside `dist/` returns exactly three files — that one,
+  `src/install/detect.ts` and `src/scripts/code_graph/detect.ts`. There is **no**
+  `work_engine/stack/detect.ts` anywhere outside the template tree, so the source set's
+  `work_engine/stack/detect.ts` citation resolves to a shipped consumer template and to nothing
+  else. The correction stands; the radius is still unassessed.
 
 ### blocker: workshop-tool-names-are-unverified
 - **Status:** resolved
