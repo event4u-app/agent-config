@@ -400,6 +400,22 @@ that was never a judgement call.
     on nothing until an author declares a class and there is no backlog
     to grandfather.
 
+    **A judgement call is never parked here.** A blocker records a decision
+    the agent **correctly did not own**. A technical judgement call — two
+    valid architectures, a dependency trade-off, an unclear boundary with no
+    new product semantics — is not one of those: it routes back through the
+    closure pass and is resolved at the lowest rung that owns it (evidence,
+    convention, the agent, an independent session, the council, the team),
+    then recorded as a `## Decisions` row per rule 27. A technical decision
+    does not become owner-owned because it is hard (ADR-268 § 10).
+
+    An entry MAY declare `- **Ownership:** <class>`, and when it does the
+    class must be one of the three owner-owned ones — `product-owned`,
+    `business-owned`, `destructive-owned`. A technical class there is the
+    parked judgement call this retires, and `lint_roadmap_blockers` reds it.
+    The field is optional and HARD rather than ratcheted, on the same
+    no-backlog-to-grandfather ground as `Class:`.
+
     **Legacy fallback.** A body-level `> Blocked until <condition>`
     note (the follow-up-roadmap convention from rule 17) is parsed by
     the dashboard generator as one implicit roadmap-level blocker
@@ -582,6 +598,49 @@ that was never a judgement call.
     tracked estate; blocking is earned by tracked-scope evidence, not
     assumed).
 
+27. **A ready roadmap carries no unresolved decision — it carries a
+    `## Decisions` table.** A plan enters execution as an **execution
+    contract**: every foreseeable decision closed before the first step,
+    so a long run never meets a question planning could have closed.
+
+    The section is a six-column table, and the two vocabularies in it are
+    closed sets:
+
+    ```markdown
+    ## Decisions
+
+    | ID | ownership | resolved by | decision | evidence | revisit if |
+    |---|---|---|---|---|---|
+    | D1 | contested-technical | council:2026-09-13 | NDJSON on disk | streaming read at bounded RSS | the reader stops streaming |
+    ```
+
+    `ownership` is one of the eight ownership classes — `deterministic`,
+    `reversible-technical`, `contested-technical`, `critical-technical`,
+    `product-owned`, `business-owned`, `destructive-owned`,
+    `spend-exhaustion`. The axis is **ownership, not impact**: a technical
+    decision does not become owner-owned because it is hard
+    (ADR-268 § 10). `resolved by` is one of `evidence`, `agent`,
+    `independent:<session or model>`, `council:<record>`, `team:<record>`,
+    `owner` — the prefixed forms carry their record, because a resolver
+    with no record is a claim rather than a resolution.
+
+    `revisit if` names the condition that reopens the row. Execution reads
+    the table **before any step**, and a closed decision is re-asked only
+    when its `revisit if` condition became true — not because a context
+    reset lost it, which is the repeat the ask census counts.
+
+    Enforced by `lint_decision_classes`: in a ready roadmap an unresolved
+    marker (`TBD`, *to be decided*, *decide later*, *open question*)
+    outside the section is a finding, and the same marker resolved into a
+    row is not. `## Blockers` is the other discharge — a five-field
+    structured blocker IS the record of a decision the agent correctly did
+    not own, so an open item there is not an unclosed one.
+
+    The section is owed where there is a decision to record. A plan that
+    closed everything inline carries no table and no marker, and is
+    complete; an empty table written to satisfy a template records
+    nothing, exactly as rule 25 says of a perfunctory pre-mortem.
+
 ---
 
 ## Quality Gates (remote CI by default)
@@ -671,6 +730,15 @@ complexity: lightweight
 
 - [ ] {Observable, testable criterion}
 - [ ] All quality gates pass (PHPStan, Rector, tests)
+
+<!-- ## Decisions — INCLUDE when the closure pass closed a decision this
+     plan would otherwise have met mid-run (rule 27). OMIT entirely when
+     nothing was open: an empty table records nothing.
+## Decisions
+
+| ID | ownership | resolved by | decision | evidence | revisit if |
+|---|---|---|---|---|---|
+| D1 | {ownership class} | {resolver} | {what was decided} | {file:line, record, probe} | {condition that reopens it} | -->
 
 <!-- ## Blockers — INCLUDE ONLY when a gate exists that only the user /
      a maintainer can clear (decision, external dependency, evidence

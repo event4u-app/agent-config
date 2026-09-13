@@ -1,6 +1,7 @@
 ---
 model_tier: inherit
 name: feature-roadmap
+produces_roadmap: true
 pack: engineering-base
 visibility: internal
 cluster: feature
@@ -56,7 +57,7 @@ Stop.
 
 **Confidence gate (Gate C)** — after reading the feature plan, run
 [`plan-confidence-gate`](../../contexts/execution/plan-confidence-gate.md)
-with the **feature document as seed** (`planning.challenge_on_create`,
+with the **feature document as seed** (`planning.closure_pass`,
 missing = `true`). All four 95%-conditions hold → single marker line,
 continue. A gap that would change the phases or acceptance criteria →
 `/challenge-me vision` interview (or inline degrade protocol) **before**
@@ -239,3 +240,29 @@ What's next?
 ## See also
 
 - [`role-contracts`](../../guidelines/agent-infra/role-contracts.md#planner) — Planner mode output contract (Goal / Constraints / Option set / Recommendation / Dependencies / Rollback)
+
+## Closure — the last step, always
+
+```
+THIS COMMAND PRODUCES A ROADMAP, SO IT ENDS IN CLOSURE.
+NEVER HAND BACK A PLAN CARRYING A DECISION PLANNING COULD HAVE CLOSED.
+```
+
+Declared by `produces_roadmap: true` in the frontmatter and enforced by
+`lint_roadmap_producers`: a producer that does not end here reds CI.
+
+Read `planning.closure_pass` (missing = `true`). When active, run
+[`/challenge-me closure`](../../../meta/challenge-me/closure/command.md) on the
+roadmap this command just produced, before handing back:
+
+```bash
+./scripts-run src/scripts/closure_scan <roadmap-path>
+```
+
+Every detected decision is resolved at the lowest rung that owns it and written
+into the roadmap's `## Decisions` table. Owner-owned residue is asked **now**,
+one question per turn, and its answer recorded — never handed back as *"the
+open questions are in the file"*.
+
+An explicit *just write it* drops the pass and is recorded as a **bypass** on
+its own axis, never as an absent closure. A mission grant is not a bypass.

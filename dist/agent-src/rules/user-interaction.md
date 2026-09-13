@@ -37,6 +37,22 @@ PROSE NAMING A "RECOMMENDED" PATH ABOVE OR BEFORE THE OPTIONS BLOCK = NO RECOMME
 WRONG-LANGUAGE LABEL (`Recommendation:` WHEN USER IS GERMAN, OR VICE VERSA) = NO RECOMMENDATION.
 ```
 
+## The ask uses the host's own primitive where one exists
+
+```
+A HOST WITH A NATIVE ASK PRIMITIVE USES IT. THE NUMBERED TEXT BLOCK IS THE
+FALLBACK, AND IT SAYS SO. THE RECOMMENDATION BECOMES THE NATIVE DEFAULT
+OPTION — NEVER A SECOND SOURCE BESIDE IT. EACH OPTION CARRIES WHAT CHANGES
+BY ANSWERING IT. THE ANSWER IS RECORDED BEFORE THE NEXT STEP RUNS.
+```
+
+The shape per host is a manifest row, not an assumption: `ask: native | text`
+in `hook_manifest.yaml`, printed by `agent-config hooks:status`. Absent reads
+`text` — the conservative answer. Iron Law 1 is unchanged on either shape: the
+recommendation has exactly one source, which on a native ask is the default
+option and in a text block is the line under it. Mechanics + the recording
+contract: [`user-interaction-mechanics`](../contexts/communication/rules-auto/user-interaction-mechanics.md).
+
 ## Iron Law 2 — Pre-Send Self-Check
 
 ```
