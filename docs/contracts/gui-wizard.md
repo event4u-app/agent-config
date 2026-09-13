@@ -158,7 +158,7 @@ The field defaults to `unknown` on the wire, so a client that omits it on an
 apply round-trip parses and behaves exactly as before. `recorded-modified`
 changes no write: such a file already survived a default refresh and now it is
 also named in the report. What `--force-overwrite` does to it is unchanged and
-is an install-behaviour decision this contract does not take.
+is an install-behavior decision this contract does not take.
 
 The TypeScript apply engine and its `POST /api/v1/install/apply` SSE route
 were removed (road-to-single-install-source-of-truth § Phase 3). All real

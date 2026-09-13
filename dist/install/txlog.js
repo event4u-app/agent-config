@@ -3,7 +3,8 @@
  *
  * Append-only JSONL at `getLogPath()` (`~/.event4u/agent-config/install-log.jsonl`).
  * Each successful atomic write appends one entry; recovery on crash is
- * `tail -n` + reverse-apply. No PID lockfile (per Phase-A4 decision 8).
+ * `tail -n` plus the wizard's resume / dismiss decision — nothing is
+ * un-written automatically. No PID lockfile (per Phase-A4 decision 8).
  *
  * Rotation: 10 MB OR 30 days, whichever first. Rotated copies move to
  * `install-log.<ISO>.jsonl.gz` siblings; recovery never scans them.

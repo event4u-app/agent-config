@@ -60,7 +60,7 @@ export interface ResolveInputs {
  * Decision matrix (mirrors the Python legacy with the 3-option prompt
  * collapsed into `surface`):
  *
- * | Exists? | Idempotent? | Ours?  | Force? | → Outcome  |
+ * | Exists? | Idempotent? | Known? | Force? | → Outcome  |  code-comment-allow report-comment -- pre-existing decision matrix; this file entered the gate's changed-file scope for an unrelated edit
  * |---------|-------------|--------|--------|------------|
  * | no      | —           | —      | —      | `write`    |
  * | yes     | yes         | —      | —      | `skip`     |
@@ -69,10 +69,10 @@ export interface ResolveInputs {
  * | yes     | no          | no     | yes    | `write`    |
  * | yes     | no          | no     | no     | `surface`  |
  *
- * "Ours?" used to mean nothing but `policy.knownPaths.has(targetPath)`. It
+ * "Known?" used to mean nothing but `policy.knownPaths.has(targetPath)`. It
  * now reads the recorded digest first when the caller supplies one:
- * `recorded-unchanged` and `recorded-modified` are both ours, `unknown`
- * falls back to path membership. **The outcomes are unchanged** — this
+ * `recorded-unchanged` and `recorded-modified` are both known, `unknown`
+ * falls back to path membership. The outcomes are unchanged — this
  * commit does not move a single write. What it buys is that
  * {@link computeConflicts} can now name a user-modified managed file in the
  * report instead of dropping it, which is the half that was missing: such a

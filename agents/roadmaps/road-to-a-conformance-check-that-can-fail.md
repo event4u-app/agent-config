@@ -76,7 +76,7 @@ install is a new consumer-visible mechanism, not a correction of an existing
 one: it needs a durable record of pre-write file state that no writer emits
 today (the only rollback-shaped entry in the tree is the wizard's dismiss
 marker, carrying an empty path and a null hash), and it is a data-destroying
-operation on the user's tree. That is an owner decision about install behaviour,
+operation on the user's tree. That is an owner decision about install behavior,
 which this phase's own 2.2 exists to keep separate from the wording fix. It is
 not scheduled here; the blocker below records it as the open half.
 

@@ -123,8 +123,12 @@ export function checkConflicts(inputs) {
         id: 'conflicts',
         severity: 'warning',
         path: c.path,
-        message: `existing file conflicts with planned ${c.kind} content`,
-        remedy: 'resolve interactively, or pass --force to overwrite',
+        message: c.ownership === 'recorded-modified'
+            ? `managed ${c.kind} file has been edited since we wrote it`
+            : `existing file conflicts with planned ${c.kind} content`,
+        remedy: c.ownership === 'recorded-modified'
+            ? 'a default install leaves it alone; --force overwrites your edit'
+            : 'resolve interactively, or pass --force to overwrite',
     }));
 }
 /** Probe 4 — host-detection sanity: report what the target tree looks like. */
