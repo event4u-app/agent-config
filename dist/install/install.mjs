@@ -15737,8 +15737,8 @@ var settingsSchema = external_exports.object({
     skip_pre_run_gate: external_exports.boolean().default(true).describe(
       'Skip the /roadmap:process-* pre-run confirmation gate. true (default) starts processing immediately and surfaces the resolved config inline; false shows the numbered-options gate and waits. A genuine "which roadmap?" ambiguity always prompts regardless.'
     ),
-    quality_cadence: qualityCadence.default("end_of_roadmap").describe(
-      "When the agent runs the full quality / test suite during /roadmap:process-* runs. end_of_roadmap = once, after the last step (fastest, default). per_phase = after each phase boundary. per_step = after every single step (slowest, highest confidence)."
+    quality_cadence: qualityCadence.default("per_phase").describe(
+      "When the agent runs the full quality / test suite during /roadmap:process-* runs. per_phase = after each phase boundary (default since 2026-09-13 \u2014 end_of_roadmap lets errors compound across phases, which is expensive in a multi-phase autonomous run nobody is watching). end_of_roadmap = once, after the last step (fastest). per_step = after every single step (slowest, highest confidence)."
     ),
     dashboard_regen_cadence: regenCadence.default("every_5_steps").describe(
       "How often the agent regenerates agents/roadmaps/dashboard.md during a roadmap run. every_5_steps = batch the regen (default). per_step = after every step (freshest dashboard, highest subprocess overhead). phase_boundary = only at phase edges. A rename, phase add, or archive always regenerates immediately regardless."
