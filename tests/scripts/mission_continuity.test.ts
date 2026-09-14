@@ -122,6 +122,37 @@ describe('T6 — the continuity record', () => {
         });
         expect(restore(forever, null, NOW).state).toBe('resume');
     });
+
+    it('a ledger describing a DIFFERENT grant does not resume', () => {
+        // `restore` used to read `revoked_by` and never compare the grant names,
+        // so a record under grant A resumed on grant B's silence — using the
+        // ledger as an oracle for a question it was never asked. Red before the
+        // fix, which returned `resume`.
+        const v = restore(record(), { grant: 'some-other-grant', revoked_by: null }, NOW);
+        expect(v.state).toBe('grant-mismatch');
+        expect(v.reason).toMatch(/not about the same grant/);
+    });
+
+    it('a record naming NO grant does not resume, whatever the ledger says', () => {
+        // A mission running under an unnamed grant is not running under a grant,
+        // and two empty strings comparing equal is not agreement.
+        const unnamed = record({ authority: { grant: '', expires: null, revoked_by: null } });
+        expect(restore(unnamed, { grant: '', revoked_by: null }, NOW).state).toBe('grant-mismatch');
+        expect(restore(unnamed, null, NOW).state).toBe('grant-mismatch');
+    });
+
+    it('the identity check does not weaken the one-way revoke precedence', () => {
+        // Identity runs first, so it must not swallow either revoke path when the
+        // two sides DO agree. Both directions re-asserted at the new ordering.
+        const sameGrant = { grant: 'process-full', revoked_by: 'owner' } as const;
+        expect(restore(record(), sameGrant, NOW).state).toBe('authority-withdrawn');
+        const revoked = record({
+            authority: { grant: 'process-full', expires: null, revoked_by: 'owner' },
+        });
+        expect(restore(revoked, { grant: 'process-full', revoked_by: null }, NOW).state).toBe(
+            'authority-withdrawn',
+        );
+    });
 });
 
 describe('T10 — an over-ceiling council requirement reports, never asks', () => {

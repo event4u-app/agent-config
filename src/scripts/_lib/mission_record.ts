@@ -89,7 +89,16 @@ export interface LedgerState {
     readonly revoked_by: string | null;
 }
 
-export type RestoreState = 'resume' | 'authority-withdrawn' | 'authority-expired';
+/**
+ * `grant-mismatch` covers both ways the two sides can fail to be about one
+ * grant: they name different ones, or the record names none at all — which
+ * identifies nothing for the ledger to agree with.
+ */
+export type RestoreState =
+    | 'resume'
+    | 'authority-withdrawn'
+    | 'authority-expired'
+    | 'grant-mismatch';
 
 export interface RestoreVerdict {
     readonly state: RestoreState;
@@ -105,6 +114,14 @@ export interface RestoreVerdict {
  * grant the record still shows as live, and it cannot revive one the record
  * shows as revoked. A ledger that could un-revoke would make the record the
  * weaker of two authorities and the revocation advisory.
+ *
+ * **Identity comes before precedence.** Asking which of the two wins is only
+ * meaningful once they are about the same grant. A restore that read
+ * `revoked_by` from a ledger describing a DIFFERENT grant would be using the
+ * ledger as an oracle for a question it was never asked — a mission authorised
+ * under a narrow grant would resume on a later, broader grant's silence. So the
+ * identity check runs first and refuses in both directions, which leaves the
+ * one-way revoke precedence below exactly as it was.
  */
 export function restore(
     record: MissionRecord,
@@ -113,6 +130,20 @@ export function restore(
 ): RestoreVerdict {
     const closed = record.decisions.map((d) => d.id);
 
+    if (record.authority.grant.trim().length === 0) {
+        return {
+            state: 'grant-mismatch',
+            reason: 'the snapshot names no grant, so there is nothing for the ledger to agree with',
+            closed,
+        };
+    }
+    if (ledger !== null && ledger.grant !== record.authority.grant) {
+        return {
+            state: 'grant-mismatch',
+            reason: `the snapshot runs under ${record.authority.grant} and the ledger describes ${ledger.grant}; the two are not about the same grant`,
+            closed,
+        };
+    }
     if (record.authority.revoked_by !== null) {
         return {
             state: 'authority-withdrawn',

@@ -90,7 +90,7 @@ preceded the first edit is recorded.
 
 ## Phase 3 — The ledger's grant identity
 
-- [ ] **3.1 A restore under a DIFFERENT grant is not a resume.** `restore` reads
+- [x] **3.1 A restore under a DIFFERENT grant is not a resume.** `restore` reads
       `ledger.revoked_by` and ignores `ledger.grant`, so a record carrying grant
       A and a ledger describing grant B resumes as though the two agreed. The
       one-way precedence the module already documents — the ledger may revoke,
