@@ -185,6 +185,7 @@ import { premiseMoved, readContextObservation } from '../_lib/context_observatio
 import { RUN_TERMINAL_VOCABULARY_VERSION } from '../_lib/outcome_vocabularies.js';
 import {
     HALT_ACTIONS,
+    buildLedgerEvent, parseDeliveryState, type DeliveryState,
     ladder,
     MAX_ITERATIONS,
     parseHaltStamp,
@@ -322,6 +323,8 @@ export interface RunState {
      * observed one, which is never a disagreement (`premiseMoved`).
      */
     context_fingerprint?: string;
+    /** DELIVERY position (8.1), written by the run; absent is no hold. */
+    delivery?: DeliveryState;
 }
 
 /**
@@ -651,6 +654,10 @@ function readState(file: string): RunState | null {
         if (o['inert_reported'] === true) {
             rec.inert_reported = true;
         }
+        // Round-tripped for the same reason `history_source` is: without this the
+        // 8.1 hold is dead code that reads as shipped.
+        const dlv = parseDeliveryState(o['delivery']);
+        if (dlv !== undefined) rec.delivery = dlv;
         // Round-tripped for the same reason `history_source` is: dropped, the
         // premise would be re-recorded every fire from the newest observation, so
         // the two sides could never differ and the rung would be dead code.
@@ -1384,14 +1391,14 @@ export function main(): number {
     const observed = readContextObservation(workspaceRoot)?.fingerprint ?? null;
     const premiseInvalidated = premiseMoved(state.context_fingerprint, observed);
 
+    const delivery = parseDeliveryState(state.delivery) ?? null;
     const action = ladder(
-        state,
-        scan.open,
-        Date.now(),
+        state, scan.open, Date.now(),
         scan.blocked,
         undefined,
         unavailable,
         premiseInvalidated,
+        delivery,
     );
 
     if (action !== 'engage') {
@@ -1408,23 +1415,13 @@ export function main(): number {
         const alreadyBlocked =
             action === 'blocked' && eventAlreadyLogged(workspaceRoot, runId, slug, 'blocked');
         if (!alreadyStamped && !alreadyBlocked) {
-            appendEvent(workspaceRoot, {
-                event: action,
-                run_id: runId,
-                roadmap: slug,
-                turn: turnOrdinal,
-                iterations: state.iterations,
-                open: scan.open,
-                blocked: scan.blocked,
-                // A ledger line is a persisted shape carrying a `RunTerminalState`,
-                // so it names the vocabulary version it was written against: a
-                // reader meeting an unknown value can then tell a newer writer
-                // from a corrupt row.
-                terminal_state: terminalStateFor(action),
-                terminal_vocabulary_version: RUN_TERMINAL_VOCABULARY_VERSION,
-                at: new Date().toISOString(),
-                ...roots,
-            });
+            const line = buildLedgerEvent(
+                { action, runId, slug, turn: turnOrdinal, iterations: state.iterations,
+                  open: scan.open, blocked: scan.blocked, delivery },
+                RUN_TERMINAL_VOCABULARY_VERSION,
+                new Date(),
+            );
+            appendEvent(workspaceRoot, { ...line, ...roots } as JsonObject);
         }
         if (action === 'complete') {
             // Only a COMPLETION clears the state, so a later run on the same

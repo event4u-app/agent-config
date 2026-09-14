@@ -1,0 +1,21 @@
+rule: test-first
+# The rule is ROUTED, not always-delivered — three budgets refused an
+# always-delivered form and the roadmap step records which. So the positives are
+# prompts its five triggers actually match, and the near-misses are the changes
+# its own § Does NOT fire excludes.
+#
+# The gap this corpus makes visible rather than hides: a prompt that changes
+# behaviour without saying "test" — *"add a discount calculation to the order
+# total"* — matches nothing here and is the case the obligation most wants to
+# reach. It is listed as a near-miss deliberately, so a future run reading this
+# file finds the limitation stated rather than inferring it from an absence.
+positives:
+  - prompt: "Write a failing test for the empty-cart shipping bug first."
+  - prompt: "Add a regression test that reproduces this before we fix it."
+  - prompt: "Let's do this TDD — red, then green."
+  - prompt: "Is a characterization test the right move on this legacy parser?"
+near_misses:
+  - prompt: "Rename the variable `cnt` to `count` in this file."
+  - prompt: "Reformat this file with the project formatter."
+  - prompt: "Fix the typo in this comment."
+  - prompt: "Add a discount calculation to the order total."

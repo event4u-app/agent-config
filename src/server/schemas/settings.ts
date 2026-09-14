@@ -215,8 +215,8 @@ export const settingsSchema = z.object({
         skip_pre_run_gate: z.boolean().default(true).describe(
             'Skip the /roadmap:process-* pre-run confirmation gate. true (default) starts processing immediately and surfaces the resolved config inline; false shows the numbered-options gate and waits. A genuine "which roadmap?" ambiguity always prompts regardless.',
         ),
-        quality_cadence: qualityCadence.default('end_of_roadmap').describe(
-            'When the agent runs the full quality / test suite during /roadmap:process-* runs. end_of_roadmap = once, after the last step (fastest, default). per_phase = after each phase boundary. per_step = after every single step (slowest, highest confidence).',
+        quality_cadence: qualityCadence.default('per_phase').describe(
+            'When the agent runs the full quality / test suite during /roadmap:process-* runs. per_phase = after each phase boundary (default since 2026-09-13 — end_of_roadmap lets errors compound across phases, which is expensive in a multi-phase autonomous run nobody is watching). end_of_roadmap = once, after the last step (fastest). per_step = after every single step (slowest, highest confidence).',
         ),
         dashboard_regen_cadence: regenCadence.default('every_5_steps').describe(
             'How often the agent regenerates agents/roadmaps/dashboard.md during a roadmap run. every_5_steps = batch the regen (default). per_step = after every step (freshest dashboard, highest subprocess overhead). phase_boundary = only at phase edges. A rename, phase add, or archive always regenerates immediately regardless.',
@@ -251,9 +251,20 @@ export const settingsSchema = z.object({
         // test whose fixture predates the section. With the default, an absent
         // section materialises as the three `true` leaves the contract promises.
         .default({}),
+    execution: z.object({
+        fix_loop_max: z.number().int().min(1).default(10).describe(
+            'Consecutive failed fix attempts against one validation target before the escalation ladder reaches its terminal rung. Reaching the bound triggers a strategy change, never a question. Overridable globally, per project and per prompt.',
+        ),
+        escalation: z.array(z.string()).default(['independent', 'council', 'team', 'owner_owned_check']).describe(
+            'The escalation rungs, in order, walked when the fix-loop bound is reached: independent (another session or a provider-diverse reviewer), council, team, then owner_owned_check — which asks whether the residue is owner-owned, not whether to ask the owner now.',
+        ),
+    }).default({}),
     quality: z.object({
         local_auto_run: z.boolean().default(false).describe(
-            'Run quality tools (linters, type-checks, formatters) and the local test suite autonomously after edits. Off by default — the agent never runs quality tools proactively and does not ask; the user runs them manually (e.g. /quality-fix) and remote CI is the authoritative gate. The agent only runs a quality tool on an explicit ask, a concrete CI failure, or the new-gate carve-out. Turn on to restore autonomous pipeline runs.',
+            'Run quality tools (linters, type-checks, formatters) and the local test suite autonomously after edits, IN CHAT. Off by default — in a chat turn a human is present and remote CI is the authoritative gate, so a local full-pipeline run duplicates it at wall-clock cost. The agent only runs a quality tool on an explicit ask, a concrete CI failure, or the new-gate carve-out. A mission is governed by local_auto_run_in_mission instead.',
+        ),
+        local_auto_run_in_mission: z.boolean().default(true).describe(
+            'Run quality tools autonomously inside a mission — an autonomous roadmap run with a claimed contract. On by default: nobody is waiting, the next action belongs to the agent itself, and a red found twenty steps later costs more than the run that would have caught it at step one. Inert outside a mission, and a mission never lowers local_auto_run: true.',
         ),
     }),
     design: z.object({

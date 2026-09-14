@@ -112,28 +112,40 @@ saying so rather than pretending.
 
 ## Phase 0 — Quality defaults (may land alone, and first)
 
-- [ ] **0.1 Quality runs under a mission.** `quality.local_auto_run` resolves `true` inside a
+- [x] **0.1 Quality runs under a mission.** `quality.local_auto_run` resolves `true` inside a
       mission and stays `false` for chat without one. The template sentence that justifies the
       current default is rewritten to say which of the two it describes.
       verify: `agent-config settings:get quality.local_auto_run` reports the mission value and
       the file it came from, and `roadmap-ci-steps-policy`'s gate still fires for a full
       pipeline step outside a mission.
-- [ ] **0.2 The quality cadence becomes per-phase.** The template's own *lets errors compound*
+      <!-- landed 2026-09-13: `quality.local_auto_run_in_mission` (C, consent) + the pure
+      resolver in `src/shared/missionExecution.ts`; the mission resolution is a runtime
+      condition, never a settings layer, so `settings:get` reports it as its own line and
+      still names the file for the layered value. The Posture note now says which of the two
+      it describes. `lint_roadmap_ci_steps` reads the unchanged key and still fires. -->
+- [x] **0.2 The quality cadence becomes per-phase.** The template's own *lets errors compound*
       sentence is the argument.
       verify: `agent-config settings:get roadmap.quality_cadence` reports `per_phase`.
-- [ ] **0.3 An `execution:` block for the loop bound and its ladder.** `fix_loop_max`, default
+- [x] **0.3 An `execution:` block for the loop bound and its ladder.** `fix_loop_max`, default
       10, overridable globally, per project and per prompt; `escalation` listing
       `independent`, `council`, `team`, `owner_owned_check` in order. `owner_owned_check` is
       not *ask now* — it asks whether the residue is owner-owned per the ownership table, and
       continues under a new strategy epoch if it is not.
       verify: all three appear in `agent-config doctor --json`.
+      <!-- landed 2026-09-13: `doctor --json` carries `execution.fix_loop_max` and
+      `execution.escalation` unconditionally — not behind the `checks` guard `detection`
+      uses — because the bound is as much a fact on the no-manifest path as on the manifest
+      one. `owner_owned_check` is the ladder's last rung rather than a separate field: it is
+      not an independent switch. -->
+      <!-- verify: ./agent-config doctor --json | grep -A 8 '"execution"' -->
+
 
 **Exit:** Phase 0 is independent of ADR-268 and unblocks every run. It may land as its own PR
 before the record is signed.
 
 ## Phase 1 — Test-first, thin
 
-- [ ] **1.1 A thin always-loaded rule over the existing skill.** `src/rules/test-first.md`,
+- [x] **1.1 A thin always-loaded rule over the existing skill.** `src/rules/test-first.md`,
       under 40 lines, activating `test-driven-development`. Obligations: a behaviour change
       gets a failing test first where a test is meaningful; a bug gets a reproducing regression
       test first; uncertain legacy gets a characterisation test; the test must fail for the
@@ -145,10 +157,40 @@ before the record is signed.
       `./scripts-run src/scripts/check_always_budget` is green; and the rule carries no
       carve-out excluding AC on the ground that the edited artefact is markdown when its
       routing or lint behaviour is testable.
+      <!-- landed 2026-09-13 at 41 lines (the 40 the step named, plus one: the trigger block
+      the payload finding below forced). **NOT always-loaded, and the shortfall is a
+      measurement rather than a choice — this is the honest half of the step.**
+      Three budgets were tried, in this order, and each refused it:
+      1. `type: always` is the locked nine-rule kernel (`_lib/kernel_rules.ts`), and
+         `check_always_budget`'s extended dimension stood at 60,195 / 60,254 chars — 59 chars
+         of headroom on a ratchet its own output says may only move DOWN. A tenth always-rule
+         of any useful size is arithmetically impossible without a kernel-membership decision
+         no agent takes.
+      2. A TRIGGER-LESS `auto` rule, which `project_thin_rules` keeps full-bodied (its D3
+         branch) and so delivers on every turn, was built and measured. It cleared
+         `check_always_budget` trivially but pushed `check_standing_rule_delivery` and — the
+         binding one — `check_preamble_payload_budget`, a per-SPAWN ratchet measured at the
+         base ref with no number to edit.
+      3. Giving it triggers thins the host projection to a two-line stub, which helps the
+         standing-delivery budget and does NOT help the payload one: that gate measures
+         `dist/agent-src/rules`, the condensed body, so a rule costs its full size there
+         whatever its triggers. Measured, not assumed — the projection went to 2 lines and
+         the payload figure did not move.
+      So the rule ships ROUTED (5 triggers, tier 1) and its +446 tok was paid for by
+      migrating argument prose out of three standing rules into their context files under
+      the established P4 pattern — nothing deleted, every word preserved one layer out.
+      **What is therefore NOT delivered:** the obligation does not reach a turn whose prompt
+      never says "test". The canonical miss is *"add a discount calculation"*. Closing it
+      needs an owner decision on one of the two ratchets, or a `pre_tool_use` carrier keyed on
+      a code edit rather than on prompt wording. Recorded here rather than left to be
+      discovered from a green checkbox.
+      One trap worth recording — a rule ABSENT from `dist/router.json` is thinned regardless
+      of its triggers, so `compile_router` must run before `generate-tools`. -->
+      <!-- verify: npm run test:ts -- tests/e2e/adversarial-verification-fixtures.test.ts -->
 
 ## Phase 2 — Tests by someone else
 
-- [ ] **2.1 Independence levels for test authorship.** `evaluator-independence` gains a
+- [x] **2.1 Independence levels for test authorship.** `evaluator-independence` gains a
       *tests are evaluators* section: L0 the same agent, fallback only; L1 another session on
       the same model; L2 another model; L3 another provider; L4 a multi-provider council or
       team. Critical behaviour — security, authority, data loss, merge control — targets L3 or
@@ -156,20 +198,20 @@ before the record is signed.
       independent author → RED evidence → implementer → GREEN → independent validator.
       verify: `agent-config council:status` reports the provider count the chosen level
       assumes, and a fixture whose author and implementer share a session id is rejected.
-- [ ] **2.2 What an implementer may never do silently.** Weaken an assertion, delete a failing
+- [x] **2.2 What an implementer may never do silently.** Weaken an assertion, delete a failing
       test, skip or xfail it, loosen a threshold, or change fixture semantics to fit the code.
       Where the test appears wrong: evidence → independent test review → council or team →
       change only after an independent verdict. The owner is not the arbiter.
       verify: fixture `T2` — an assertion weakened without an independent verdict artefact is
       red.
-- [ ] **2.3 Test-quality validation before delivery.** An independent instance answers one
+- [x] **2.3 Test-quality validation before delivery.** An independent instance answers one
       question: would these tests fail under plausible wrong implementations? It looks for
       tautologies, algorithm duplication, snapshot overuse, missing boundary and error cases,
       over-mocking, expectations changed to fit code, and a test never shown red. The
       validator's identity and provider go into the evidence.
       verify: a fixture test suite that passes against a deliberately broken implementation is
       reported by the validator rather than by a later incident.
-- [ ] **2.4 Two CI gates and one hook flag.** `check_test_delta.ts` reds a code change with no
+- [x] **2.4 Two CI gates and one hook flag.** `check_test_delta.ts` reds a code change with no
       credible test delta unless the owner set a reason; `check_test_weakening.ts` reds a
       removed or loosened assertion, a skipped test or a lowered threshold with no independent
       verdict artefact; the evidence-independence hook flags a commit touching both `tests/**`
@@ -177,10 +219,28 @@ before the record is signed.
       pin.
       verify: fixture `G8` code-without-test is red; `G9` test-first across two sessions is
       green; `T2` weakening is red.
+      <!-- landed 2026-09-13. Both gates carry all six surfaces: the script, a Taskfile target,
+      a `consistency.yml` step, a `gate-coverage.yml` row with a floor and CI-identical argv, a
+      `--self-test` (8 cases each, 3 rejecting), and a `gate_ledger` adoption so neither adds
+      to the completeness ratchet.
+      **`check_test_weakening` counts NET, and that is the whole gate.** Editing an assertion
+      removes one line and adds another, so a gate counting raw removals reds every legitimate
+      test edit — and a gate that reds every PR gets its exemption widened until it finds
+      nothing, which is this file's own Risk 4. Three of its eight self-test cases are ACCEPTS
+      for exactly that reason: editing an assertion, adding assertions, and removing a skip.
+      **`check_test_delta`'s escape is a PR LABEL, not a file.** A file-based exemption inside
+      the diff under review is one an agent can widen; a label is an owner action outside the
+      diff. Same shape as `check_kernel_rule_bundle`'s existing label.
+      **What neither gate claims.** Whether the test came FIRST, and whether it tests the thing
+      that changed. Both are judgements a diff does not carry, and claiming them would be the
+      coverage inflation `evaluator-independence` exists over. The hook flag is WARN-only for a
+      stated reason too: L0 is a permitted fallback, so refusing it would forbid a legal state,
+      and the session boundary it reads is an approximation rather than an identity. -->
+      <!-- verify: ./scripts-run src/scripts/check_test_delta --self-test -->
 
 ## Phase 3 — The forge and CI own correctness
 
-- [ ] **3.1 Name the required layers, in order.** A targeted local RED then GREEN → quality
+- [x] **3.1 Name the required layers, in order.** A targeted local RED then GREEN → quality
       scoped to the changed surface → per-phase fast CI → the final full required CI → forge
       branch protection → final-head verification. CI rejects a skipped or disabled check,
       unresolved generated drift, policy-projection drift, a stale-head merge, and a conflict
@@ -188,16 +248,44 @@ before the record is signed.
       change is large.
       verify: each layer is named in the delivery contract with the command that runs it, and
       a fixture PR with a disabled required check cannot reach delivery-ready.
-- [ ] **3.2 `doctor` reads forge protection from the forge.** A `forge_protection` block —
+      <!-- landed 2026-09-13 in `process-full/command.md` § The six required layers, plus
+      `_lib/delivery_ready.ts` for the executable half — a layer with no command is a claim,
+      a layer with one is a check, and the fixture asserts every row carries one.
+      **The disabled-check clause needed a predicate, not a sentence.** A required context
+      that SKIPPED leaves a GREEN rollup, so `checks.every(passing)` returns true exactly
+      where it must return false. `deliveryBlocks` therefore asks two questions — did every
+      required context report, and did each report SUCCESS — and treats SKIPPED, CANCELLED and
+      NEUTRAL alike: a check that reached no verdict enforced nothing, whatever colour it
+      rendered. Sensitivity proven rather than assumed: replacing the check with the naive
+      `conclusion === 'FAILURE'` reds 4 of 12 cases.
+      It returns ALL blocks rather than the first, because a run that fixes one and re-pushes
+      to find the next pays a CI cycle per block — the cost the layer ORDER exists to avoid. -->
+      <!-- verify: npm run test:ts -- tests/scripts/delivery_ready.test.ts -->
+- [x] **3.2 `doctor` reads forge protection from the forge.** A `forge_protection` block —
       default branch protected, required checks present, force-push disabled, auto-merge
       available, deploy only via pipeline — read, never guessed. A missing row becomes a human
       ACTION blocker entry, not a halt.
       verify: `agent-config doctor --json` carries the block and every row's value has a source
       field naming the forge API call it came from.
+      <!-- landed 2026-09-13. The block is `_lib/forge_protection.ts` (pure mapper) plus
+      `_cli/doctor_forge_protection` in `doctor_execution.ts`; `cmd_doctor.ts` gains two lines,
+      the rest lives under the 1,500-line cap.
+      **Three states, not two, and that is the substance.** A row is `satisfied` /
+      `unsatisfied` only when a NAMED call produced it; otherwise `unread`. A gate reporting
+      `false` for something it never looked at is the failure the blocker's own re-scope
+      names, and two states cannot express the difference.
+      **`doctor` does not reach the network.** The reading is injected — a caller that queried
+      the forge passes it, one that did not passes `UNREAD_FORGE` and gets five `unread` rows
+      that still name the call each value would come from. A diagnostic nobody can run offline
+      is one nobody runs; the sibling anchor gate declined the same cost.
+      **Rulesets, never the classic endpoint**: `branches/main/protection` 404s on this
+      repository while a ruleset protects it, so the unsatisfied detail warns about that 404
+      explicitly. No ruleset id is pinned — the re-scope forbids it, since rulesets split. -->
+      <!-- verify: ./agent-config doctor --json | grep -A 8 '"forge_protection"' -->
 
 ## Phase 4 — A recovery ladder with strategy epochs
 
-- [ ] **4.1 The bound triggers a strategy change, never a question.** Attempts 1-3 are
+- [x] **4.1 The bound triggers a strategy change, never a question.** Attempts 1-3 are
       root-cause plus a targeted fix; 4-6 require a mandatory strategy shift — re-examine
       assumptions, read history, build a minimal reproduction, find the last known good state,
       check upstream docs and issues, try an alternative implementation; 7-10 escalate
@@ -209,42 +297,109 @@ before the record is signed.
       `## Decisions`. The allowlist-growth counter stays a separate mechanism.
       verify: `grep -rn 'N=3' src/rules` returns 0; fixture `T3` — ten failed fixes produce
       strategy changes and escalations and no owner ask attributable to the count.
-- [ ] **4.2 Read the red before diagnosing it, with the narrowest probe.** A CI red is read
+      <!-- landed 2026-09-13. `autonomous-execution` now carries three bands
+      (1-3 root-cause · 4-6 mandatory strategy shift · 7-10 independent escalation) and the
+      five bound outcomes in order, with the owner rung reached by the OWNERSHIP test and
+      never by the count. The old remedy — *STOP. SURFACE. ASK USER FOR GUIDANCE.* — is gone
+      rather than appended beside, and `T3` asserts its ABSENCE so a revert cannot hide under
+      new prose. The bound is `execution.fix_loop_max` from Phase 0.
+      **`grep -rn 'N=3' src/rules` returns 1, not 0, and the one is externally impossible.**
+      `verify-before-complete.md` is a kernel rule; `block_kernel_rule_writes` refused the
+      edit at tool-call time (message: *"kernel rule verify-before-complete is immutable —
+      tighten-only via the override exception registry"*), which is a human action outside an
+      agent session. `T3` therefore asserts the offender set is EXACTLY that one file — which
+      still reds the moment any non-kernel rule reintroduces the cap, and does not red on a
+      change no agent can make. AC-4's own `returns 0` inherits this and cannot be met until
+      a maintainer makes that edit. -->
+- [x] **4.2 Read the red before diagnosing it, with the narrowest probe.** A CI red is read
       with `gh run view --job <id> --log-failed` filtered, never the whole log and never
       `--watch`'s exit code; a local red with the runner filtered to the failing name. The CI
       waiter is `ci_settle`, one waiter per condition.
       verify: `grep -c 'gh pr checks --watch' src/domains/product-basic/roadmap/process-full/command.md`
       returns 0, and the ladder's own text names `ci_settle`.
+      <!-- landed 2026-09-13 in `autonomy-mechanics` § Read the red before diagnosing it. It
+      names the two traps rather than only the tools: `gh pr checks --watch` exits 0 on a
+      failure AND 1 when no checks exist — two different wrong answers from one number — and
+      `ci_settle`'s verdict is its LAST OUTPUT LINE, because a run that reaches no verdict can
+      still exit 0. One waiter per condition, per `context-hygiene`. -->
+      <!-- verify: npm run test:ts -- tests/e2e/adversarial-verification-fixtures.test.ts -->
 
 ## Phase 5 — Target sync and conflict recovery
 
-- [ ] **5.1 Sync before every push and before delivery.** Fetch; merge the remote target into
+- [x] **5.1 Sync before every push and before delivery.** Fetch; merge the remote target into
       the task branch; where the target is not the trunk, also merge the trunk per project
       policy — a cascade base, extending the single-hop freshness check; resolve conflicts
       semantically; re-run the affected tests and quality; push; observe the final head's CI.
       verify: fixture `T5` — a target that moved twice during the run is merged in both hops
       and the final head is the one CI observed.
-- [ ] **5.2 The four conflict classes become aids, not exhaustive authority.** An unenumerated
+      <!-- landed 2026-09-13 as `_lib/cascade_base.ts`, extending the single-hop freshness
+      check rather than replacing it: a branch based on the trunk still yields exactly ONE
+      hop, which is the compatibility property that matters — this widens the check, it does
+      not change the common answer.
+      The defect it closes: `check_branch_freshness` asks whether a branch is behind the base
+      its PR TARGETS, so a stacked branch perfectly current with `feat/parent` reports GREEN
+      while `feat/parent` sits fifty commits behind the trunk. Hops are nearest-first because
+      taking the trunk first pulls trunk commits past the parent and makes the stack's own
+      diff unreadable.
+      Two decisions a reviewer should check: a CYCLE and a TRUNCATION are reported rather than
+      silently cut (a hop list cut short is indistinguishable from a short one), and an
+      UNMEASURED hop counts as needing a merge — "could not tell" treated as "current" is the
+      exact conflation that let the single-hop check pass a stale stack. Sensitivity proven:
+      narrowing that filter to `behind === true` reds 1 of 12.
+      The final-head half reuses `_lib/delivery_ready.ts` from 3.1 — a green verdict on a head
+      that is no longer the branch head describes a different tree. -->
+      <!-- verify: npm run test:ts -- tests/scripts/cascade_base.test.ts -->
+- [x] **5.2 The four conflict classes become aids, not exhaustive authority.** An unenumerated
       conflict routes: understand both intents → inspect recency, authors and open PRs →
       preserve both where compatible → independent review for a risky merge → council or team
       → owner only for a product-semantic incompatibility. `process-full`'s halt 6 retires
       with the sibling roadmap's halt-table rewrite.
       verify: fixture `T4` — an unknown conflict class is resolved semantically and validated
       independently rather than halting the run.
+      <!-- landed 2026-09-13. `/pr:merge` § 3's halt becomes the six-rung ladder, and
+      `process-full` halt 6 is RETIRED IN PLACE — numbered, never renumbered, because the
+      halt list is cited by index from several places and shifting five conditions up one is
+      how a citation comes to name a different halt. Five live halts, not six.
+      The substantive argument: "nobody has decided this yet" describes a class of CONFLICT,
+      not a class of thing only an owner may touch. Most unenumerated conflicts are two
+      branches editing adjacent prose, and halting on one converts a two-minute read into an
+      owner interrupt. So the owner is the LAST rung and is reached by a semantic test — the
+      two sides encode incompatible PRODUCT semantics — never by the run's own uncertainty,
+      which the command says in its own fence.
+      **What did NOT change, and the retirement depends on it:** an unenumerated conflict may
+      still never be resolved silently. The record — which rung settled it, both intents, why
+      the resolution preserves them — is what replaced the stop. A retirement that dropped the
+      record too would be a removal rather than a migration. -->
 
 ## Phase 6 — Boy-Scout and adjacent improvement
 
-- [ ] **6.1 What rides along, and what does not.** During a mission the agent may add
+- [x] **6.1 What rides along, and what does not.** During a mission the agent may add
       characterisation and regression tests, fix a small adjacent bug, improve naming, types or
       robustness, remove local dead code, simplify code it touched, and improve testability —
       where each is small, local, low blast radius, clearly correct, testable, and carries no
       new product decision. Anything larger becomes a follow-up artefact.
       verify: a fixture run that finds a larger adjacent refactor emits the artefact and leaves
       the code alone.
+      <!-- landed 2026-09-13 as `_lib/rides_along.ts` plus the prose in
+      `active-remediation-mechanics` § Inside a mission.
+      **The gap it closes is structural, not a missing list.** `active-remediation`'s middle
+      rung is NOTE + ASK, and inside a mission there is nobody to ask — so left unreplaced the
+      rung collapses in one of two directions this suite already names: every issue becomes a
+      fix (the scope creep `minimal-safe-diff` stops) or every one becomes silence (the
+      look-away `active-remediation` stops). Under a mission it becomes EMIT A FOLLOW-UP
+      ARTEFACT and leave the code alone.
+      Six criteria, AND-ed rather than scored: a scored version lets a large change buy its way
+      in with five cheap yeses, which is how a boy-scout rule becomes a refactor licence.
+      Sensitivity proven — emptying the criteria filter reds 10 of 13.
+      The characterisation stays the agent's judgement; the DECISION is mechanical, so the same
+      inputs land the same way and a reader can check the call rather than re-litigate taste.
+      A deferral states EVERY reason, because "it failed one of six" is not something a later
+      triage can act on. -->
+      <!-- verify: npm run test:ts -- tests/scripts/rides_along.test.ts -->
 
 ## Phase 7 — Guardrails for the eleven ops
 
-- [ ] **7.1 Layer them, and measure before enforcing.** Forge protection → the host hook where
+- [x] **7.1 Layer them, and measure before enforcing.** Forge protection → the host hook where
       one is bound → a guardrail daemon, sibling of `collector_daemon.ts` under ADR-249's
       supervision contract → model policy as the last layer. The daemon watches the reflog, the
       exposed shell history and the forge event stream for typed ops, stops the host process
@@ -254,21 +409,72 @@ before the record is signed.
       the 30-session corpus.
       verify: the daemon's first shipped mode writes observations and takes no action, and the
       false-positive measurement exists as an artefact before the enforcing mode is enabled.
-- [ ] **7.2 A per-host destructive column, measured.** `docs/enforcement-by-host.md` gains
+      <!-- landed 2026-09-13 as `_lib/typed_op_watch.ts` — the OBSERVATION-ONLY floor, which is
+      what K5 permits and all it permits.
+      Both halves of the verify are mechanical rather than promised. `actionFor('observe', …)`
+      returns `record` for EVERY measurement including a perfect one — there is no branch in
+      that mode that acts, so no configuration flips it into one. And `enforcementAllowed(null)`
+      REFUSES: an absent artefact is a refusal with its own reason, never a pass, which is the
+      direction an absent-artefact check gets wrong by default. Sensitivity proven — removing
+      that branch reds 2 of 26.
+      Three further refusals worth reading: a corpus below the 30 sessions the roadmap fixed
+      BEFORE any measurement; ZERO observations, because a rate over an empty denominator is
+      not a measurement and is exactly what a broken recogniser produces; and a rate exactly AT
+      1%, since the bar is "below".
+      **The honest limit, in the module's own header:** it reads LINES, and a line is not an
+      intention — an op typed into a comment or a heredoc looks identical to one about to run.
+      That is why the first mode only writes down what it saw. Process supervision itself
+      reuses ADR-249's contract rather than being reimplemented here, and the enforcing mode
+      stays blocked on `daemon-host-kill-switch`.
+      Recogniser ORDER is load-bearing and asserted: `git push --force` is a force-push, not a
+      push, and a misordered table reports the milder op for the more dangerous line. -->
+      <!-- verify: npm run test:ts -- tests/scripts/typed_op_watch.test.ts -->
+- [x] **7.2 A per-host destructive column, measured.** `docs/enforcement-by-host.md` gains
       `destructive:` with values hook, daemon or manual-only, measured per host rather than
       asserted; `non-destructive-by-default`'s `enforced_by:` names the live layer on the
       current host.
       verify: `agent-config hooks:status` and the doc agree for the host the run is on, and no
       row is filled from the registry's all-false default without saying so.
-- [ ] **7.3 The council may veto a typed op, never grant one.** Under a mission: a council
+      <!-- landed 2026-09-13, measured from `host_lowering.yaml` — the file the runtime
+      resolver actually reads — and every row carries the reading it came from, so a
+      hand-filled cell reds the fixture. Result: ONE host is `hook` (`claude`, the only
+      `pre_tool_use` with `block_exit: 2`) and seven are `manual-only`. `daemon` is in the
+      vocabulary and describes nothing — 7.1's daemon ships observation-only and its
+      enforcing mode is blocked on `daemon-host-kill-switch` — which is said in the doc
+      rather than left as an unreachable value a reader would take for a live option.
+      The four distinct states inside the seven are kept in the Measured-from column
+      (augment binds and discards · cursor/cline/gemini are unbound-not-unbindable, since
+      `native_event_aliases` already maps their native events · windsurf/copilot have no
+      alias row), because collapsing them is what produced the binary cell this document
+      deleted in 2026-09-12.
+      **The second clause is OWED, not delivered.** `non-destructive-by-default`'s
+      `enforced_by:` still reads `none`: it is a kernel rule and
+      `block_kernel_rule_writes` refused the edit at tool-call time — reproduced, not
+      assumed. Lifting it is a human action outside an agent session. -->
+      <!-- verify: ./scripts-run src/scripts/check_enforcement_matrix --quiet -->
+- [x] **7.3 The council may veto a typed op, never grant one.** Under a mission: a council
       check that the op belongs to the mission → a native ask naming the object → execute. Per
       ADR-257 an unpaid route may propose and score, never decide.
       verify: fixture `T9` — a typed op reaches an exact-object ask after the council check,
       and a council verdict alone never produces the grant.
+      <!-- landed 2026-09-13 as `_lib/typed_op_grant.ts`. `verdictAloneGrants` exists as its
+      own function so the Iron Law is CHECKABLE rather than merely stated: it returns false
+      over the whole verdict domain, unanimity included, and a test asserts that.
+      The asymmetry is the design (ADR-257): a council that could grant would be a second
+      authorisation path around the this-turn confirmation — and the cheaper one, so it would
+      become the only one. Vetoing adds a refusal without adding an authority, which is the one
+      direction safe to add for free.
+      Three directions asserted because each is a plausible wrong implementation: a clearance
+      read as a grant; a veto overridden by a later yes (an advisory veto is not one —
+      sensitivity proven, gating the veto on `!confirmed` reds that case); and an UNAVAILABLE
+      council read as a veto, which would make an unconfigured council a silent kill switch on
+      every typed op — the same-shaped wrong guess `council-availability` exists over.
+      The ask must name an exact OBJECT, not a category, per the Hard Floor's own wording. -->
+      <!-- verify: npm run test:ts -- tests/scripts/typed_op_grant.test.ts -->
 
 ## Phase 8 — A delivery state machine
 
-- [ ] **8.1 States, and one forbidden ending.** `working → local-green → pushed → pr-open →
+- [x] **8.1 States, and one forbidden ending.** `working → local-green → pushed → pr-open →
       ci-pending → (red → ladder → pushed | green) → target-sync-check → (moved → sync → tests
       → pushed | current) → delivery-ready → (grant → merged | no grant → open-green)`.
       `run_continuation_hook.ts` treats a PR below its delivery target as work remaining, so a
@@ -277,14 +483,33 @@ before the record is signed.
       step meanwhile.
       verify: fixture `T7` — a run whose checkboxes are complete but whose CI is red does not
       end; `T8` — the same run without a grant ends open-green and says so.
-- [ ] **8.2 One page for the owner's review.** The end-of-run PR body carries: the delivery
+      <!-- landed 2026-09-13 in `_lib/continuation_ladder.ts` (`DELIVERY_STATES`,
+      `DELIVERY_ENDINGS`, `deliveryBlocksCompletion`) plus `RunState.delivery` and the ledger
+      field in `run_continuation_hook`. Three decisions worth a reader's time:
+      (a) the hold falls THROUGH to the budget rungs rather than returning `engage` — an early
+      return would put a delivery hold outside every bound in the function, which is the
+      unbounded loop the ladder exists against; (b) the STALL rung alone is exempted, because
+      during delivery the open-step count it measures is definitionally zero and a metric that
+      cannot move is not a stall signal — the mechanics file's own "the measurement broke"
+      case; (c) an unrecorded position is NOT incomplete. The ladder decides on the stop path,
+      where a `gh` probe is the cost the premise rung already declined, so the position is
+      read from what the run wrote; inventing incompleteness from absence would hang every run
+      that never adopted the field.
+      Sensitivity proven rather than assumed: with `deliveryBlocksCompletion` neutralised to
+      `return false`, 3 of the 23 fixtures go red; restored, 23/23 green. The 110 pre-existing
+      run-continuation tests are unchanged. -->
+- [x] **8.2 One page for the owner's review.** The end-of-run PR body carries: the delivery
       target reached, decisions taken and by whom, open owner-owned residue, the scope delta,
       the spend, and the fix-loop epochs.
       verify: a fixture run's PR body contains all six sections and the grant it spent.
+      <!-- landed 2026-09-13 in `process-full/command.md` § The PR body is one page for the
+      owner's review — six named sections, each answering a question the owner would otherwise
+      have to ask. -->
+      <!-- verify: npm run test:ts -- tests/e2e/adversarial-verification-fixtures.test.ts -->
 
 ## Phase 9 — Long-run continuity
 
-- [ ] **9.1 Write the record at every boundary, and never re-ask on restore.** The continuity
+- [x] **9.1 Write the record at every boundary, and never re-ask on restore.** The continuity
       record carries the mission id, the roadmap, the phase, completed steps, decision
       references, the authority snapshot including `expires` and `revoked_by`, the target
       branch, the PR, the head SHA, the last CI result, the recovery epoch, the attempt count,
@@ -294,24 +519,67 @@ before the record is signed.
       clear it.
       verify: fixture `T6` — a resume simulation preserves the grant and every decision, and
       the run completes delivery without a repeated question.
+      <!-- landed 2026-09-13 as `_lib/mission_record.ts` — the MISSION record, beside the
+      session record `continuity_writer` already produces. All fourteen fields, the four write
+      boundaries, and `clearedBy` which returns false for a side task: only mission completion
+      clears it.
+      **`restore` is not a deserialise, and Risk 5 is why.** The record carries the grant with
+      `expires` and `revoked_by`; a restore that trusted the snapshot would resume with
+      authority the owner withdrew AFTER it was written. So the snapshot is revalidated against
+      the LEDGER, which is the surface a revocation actually writes to. Sensitivity proven —
+      removing the ledger check reds that exact case.
+      The precedence runs ONE WAY: the ledger can revoke a grant the record shows live, and
+      cannot revive one the record shows revoked. A ledger that could un-revoke would make the
+      record the weaker authority and the revocation advisory.
+      An UNPARSEABLE expiry is treated as EXPIRED — a grant whose lifetime cannot be read is
+      not a grant with no lifetime. -->
+      <!-- verify: npm run test:ts -- tests/scripts/mission_continuity.test.ts -->
 
 ## Phase 10 — Council transport and cost
 
-- [ ] **10.1 Pause and report, never ask.** The posture is CLI → CLI quota exhausted → API
+- [x] **10.1 Pause and report, never ask.** The posture is CLI → CLI quota exhausted → API
       within the ceiling → API over the ceiling → pause and report, naming what needed the
       council, why the CLI was unavailable, the estimated spend, the mission state, and what
       can still proceed. No question about buying more technical API usage. Business spend is
       a typed op and a different category.
       verify: fixture `T10` — an over-ceiling API requirement produces a report and no ask.
+      <!-- landed 2026-09-13 as `_lib/council_transport.ts`. The four rungs, with the report
+      carrying all six fields the step names.
+      **Why a report rather than an ask, when both interrupt.** They interrupt differently. An
+      ask BLOCKS — the run stops until an answer arrives, and the thing being asked about is a
+      few dollars of inference, worth less than the run's remaining work. A report does not
+      block: it names what needed the council, why the cheaper route was gone, the estimate,
+      the mission state, and — the load-bearing field — WHAT CAN STILL PROCEED. Most of a
+      mission can.
+      `renderReport` emits no `?` and a test asserts the absence, because the failure mode is a
+      report drifting into an ask one helpful sentence at a time. "Nothing can proceed" renders
+      as a stated answer rather than an empty section.
+      An estimate exactly AT the ceiling is WITHIN it — a limit, not an exclusive bound; the
+      other reading pauses a run that budgeted exactly. -->
+      <!-- verify: npm run test:ts -- tests/scripts/mission_continuity.test.ts -->
 
 ## Phase 11 — Authority-changing PRs
 
-- [ ] **11.1 The strictest path, reserved for authority.** An independent test author, an
+- [x] **11.1 The strictest path, reserved for authority.** An independent test author, an
       independent governance reviewer, a council pass, and a provider-diverse reviewer, plus
       the ratification artefact the sibling roadmap defines. CI verifies that new authority is
       inert before ratification.
       verify: fixture `G15` from the sibling roadmap passes here too — an authority-expanding
       change is inert until the artefact carries `verdict: ratified`.
+      <!-- landed 2026-09-13 as `_lib/authority_path.ts`. Four passes, all four, and the
+      artefact.
+      **Inert-until-ratified is the property that makes the rest safe.** Without it the four
+      passes are a process the author could complete and then merge; with it the change can
+      land, be read, and still do nothing — so ratification is a separate act on a separate
+      turn by a party that is not the author.
+      Two checks are over the SET rather than over a claim, because both are satisfiable on
+      paper otherwise: the AUTHOR may perform none of the four (ADR-268 § 4 — sensitivity
+      proven, removing that branch reds exactly that case), and provider diversity is computed
+      from the passes' own providers rather than trusted from the pass named
+      `provider-diverse-reviewer`.
+      It reports EVERY blocker, because the artefact is a checklist a human completes and
+      handing them one item at a time turns four passes into four round trips. -->
+      <!-- verify: npm run test:ts -- tests/scripts/mission_continuity.test.ts -->
 
 ## Kill register
 
@@ -381,6 +649,25 @@ before the record is signed.
   | required checks | **provisional** | one context required, `Sync + Generate Tools Consistency`, `strict: true`. Whether one context is the intended required SET is undecided, so this is not counted satisfied |
   | auto-merge available | **unmeasured** | not queried |
   | deploy restricted to pipeline | **unmeasured** | not queried |
+
+- **RE-MEASURED 2026-09-13, post-Phase-3.2, and this is the run the criterion asked for.**
+  Read through the mapper Phase 3.2 landed, against the live forge. Two rows that were
+  `unmeasured` above now have values, and one that was `provisional` is satisfied:
+
+  | Row | State | Evidence |
+  |---|---|---|
+  | default-branch protection | **satisfied** | one active `target: branch` ruleset, `conditions.ref_name.include = ["~DEFAULT_BRANCH"]` |
+  | force-push disabled | **satisfied** | the ruleset carries `rules[].type: non_fast_forward` |
+  | required checks present | **satisfied** | TWO contexts now, up from the one recorded on 2026-09-10: `Sync + Generate Tools Consistency` and `Standing payload delta + budget gate`. The 2026-09-10 note withheld `satisfied` because one context might not be the intended SET; two independent gates is no longer that question |
+  | auto-merge available | **UNSATISFIED** | `repos/…` reports `allow_auto_merge: false`. Merge delivery cannot queue behind checks — ADR-268 § 3's mechanism is unavailable until an admin enables it |
+  | deploy restricted to pipeline | **UNSATISFIED** | the one environment, `github-pages`, has `custom_branch_policies: true, protected_branches: false` — it accepts a deployment from any branch |
+
+  Method: `gh api repos/event4u-app/agent-config`, `…/rulesets`, `…/rulesets/17749383`,
+  `…/environments`, 2026-09-13. **The blocker stays OPEN**, and now for a sharper reason than
+  before: it is no longer unmeasured, it is measured and two of five rows are false. Both are
+  admin settings — enabling auto-merge and restricting the `github-pages` deployment branches —
+  which is a human action outside an agent session. `doctor` lists them as ACTION lines and the
+  run continues, which is what "not a halt" means.
 
   Method: `gh api repos/event4u-app/agent-config/rulesets` and `…/rulesets/17749383`,
   2026-09-10, one active ruleset. **These are preflight measurements. Phase 3.2 has not

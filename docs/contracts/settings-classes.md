@@ -247,8 +247,21 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 26 |
 | B — consent | 3 |
-| C — guarded | 119 |
-| **Total** | **148** |
+| C — guarded | 122 |
+| **Total** | **151** |
+
+It rose again on 2026-09-13 when `road-to-adversarial-verification-and-long-runs`
+Phase 0 added three C keys: `quality.local_auto_run_in_mission` (`consent` — it
+decides whether local verification runs at all inside a mission, which is the
+same decision `quality.local_auto_run` carries for chat) and the two
+`execution:` leaves, `fix_loop_max` and `escalation` (both `policy` — they bound
+and route an autonomous run's own recovery, and an agent that could widen its own
+bound has no bound). None is `derivable`: each states something no other surface
+computes, so the anti-regrowth ratchet on that disposition is untouched. Two
+branches added keys on the same day, so the totals in both tables are re-derived
+from the class table on the MERGED tree rather than by adding either side's
+delta — which is the arithmetic `lint_settings_classes` checks, and picking a
+side is how a stated count comes to describe a tree that no longer exists.
 
 It rose to 142 on 2026-09-08 from two independent additions that landed in the same
 day and are counted together here: `lean_projection.hosts` (one C, `policy`, from
@@ -369,9 +382,9 @@ the template, which is the drift this contract exists to prevent.
 |---|---|
 | derivable | 83 |
 | un-inferrable | 9 |
-| consent | 46 |
-| policy | 10 |
-| **Total** | **148** |
+| consent | 47 |
+| policy | 12 |
+| **Total** | **151** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -539,6 +552,9 @@ Rows follow template order, so a diff against the template reads straight down.
 | `planning.risk_review` | C | `true` | disables the risk-register validator | derivable — `lint_plan_risk_register`'s own scope predicate (ready, non-draft plans only) |
 | `planning.completion_review` | C | `true` | disables the completion-review validator | derivable — `check_completion_review`'s own scope predicate, bound to the current diff hash |
 | `quality.local_auto_run` | C | `false` | governs whether local verification runs at all | consent |
+| `quality.local_auto_run_in_mission` | C | `true` | governs whether local verification runs at all inside an autonomous mission | consent |
+| `execution.fix_loop_max` | C | `10` | bounds how long an autonomous run may keep attempting one failing target | policy |
+| `execution.escalation` | C | `['independent', 'council', 'team', 'owner_owned_check']` | names the rungs an autonomous run walks before any owner ask | policy |
 | `design.fidelity_mode` | C | `strict` | strict-mode selector, one of whose values is a Hard Floor | policy |
 | `design.approximation.enabled` | C | `false` | lets a value change without a per-value confirmation; enabling it is a consumer-facing default flip | consent |
 | `design.approximation.tolerance.color` | C | `null` | decides which colour deviations may be taken silently | policy |

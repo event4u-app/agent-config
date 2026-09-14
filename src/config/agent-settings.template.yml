@@ -604,15 +604,19 @@ roadmap:
   skip_pre_run_gate: true
 
   # When to run quality tools during /roadmap execute.
-  #   end_of_roadmap = once, before archiving the completed roadmap (default — fastest, fewest tokens)
-  #   per_phase      = once after every completed phase
+  #   end_of_roadmap = once, before archiving the completed roadmap (fastest, fewest tokens)
+  #   per_phase      = once after every completed phase (default since 2026-09-13)
   #   per_step       = after every completed step (legacy verbose; highest token cost)
-  # Trade-off: end_of_roadmap saves tokens and time but lets errors compound
-  # across phases. Pick per_phase if the work is risky or unfamiliar.
-  # `quality.local_auto_run: false` (the default) suppresses local
-  # pipeline runs at EVERY cadence — remote CI is the gate; this knob
-  # only matters when `local_auto_run` is `true`.
-  quality_cadence: end_of_roadmap
+  # The default moved from end_of_roadmap to per_phase on the strength of
+  # this block's OWN trade-off sentence: end_of_roadmap saves tokens and
+  # time but lets errors compound across phases. A multi-phase autonomous
+  # run is exactly the case where compounding is expensive and nobody is
+  # watching, so the cheaper default was the wrong one to ship. Set
+  # end_of_roadmap back if the work is routine and token cost dominates.
+  # `quality.local_auto_run` (chat) and `quality.local_auto_run_in_mission`
+  # (a mission) decide WHETHER local pipeline runs happen at all; this
+  # knob only decides WHEN, and is inert wherever both resolve false.
+  quality_cadence: per_phase
 
   # Dashboard regen cadence inside autonomous runs (process-step /
   # process-phase / process-full). Controls how often
@@ -735,6 +739,35 @@ planning:
   # false = escape hatch; the validator skips (governance default is on).
   completion_review: true
 
+# --- Execution — the fix-loop bound and its escalation ladder ---
+#
+# The bound on how long the agent keeps attempting the same failing
+# target, and what happens when it is reached. Reaching the bound is a
+# STRATEGY CHANGE, never a question: `escalation` names the rungs the
+# agent walks, in order, before any owner ask is even considered.
+#
+# `owner_owned_check` is the last rung and it is NOT "ask now" — it asks
+# whether the remaining residue is owner-owned per the ownership table.
+# Where it is not, the run continues under a new strategy epoch. Removing
+# that rung by setting is refused: it is the rung that DECIDES whether a
+# residue is owner-owned at all, so dropping it turns every residue into
+# an owner ask, which is the failure the ladder exists to end.
+execution:
+  # Consecutive failed fix attempts against one validation target before
+  # the ladder's terminal rung is reached. Overridable globally, per
+  # project, and per prompt. A non-integer or non-positive value falls
+  # back to 10 — a bound of 0 makes every first attempt terminal.
+  fix_loop_max: 10
+
+  # The rungs, in order. Attempts escalate INDEPENDENTLY first: another
+  # session or a provider-diverse reviewer, then the council, then the
+  # team, and only then the owner-ownership question.
+  # A FLOW sequence, like every other list in this file: the settings
+  # writer locates a key by its `key: <value>` line, so a block sequence
+  # reads as an empty section header and the write corrupts the file.
+  escalation: [independent, council, team, owner_owned_check]
+
+
 # --- Quality / CI execution ---
 #
 # Controls whether the agent runs the project's quality pipeline
@@ -766,15 +799,33 @@ quality:
   # MUST execute it locally to prove the gate works. Without that
   # execution the new gate is unverified evidence.
   #
-  # Posture note (feedback-8.11-2): `false` is a DELIBERATE, documented
-  # design decision, not an omission — remote CI is the single
-  # authoritative gate; local full-pipeline runs duplicate it at
-  # wall-clock + token cost. It never suppresses (a) narrow diff-scoped
+  # Posture note (feedback-8.11-2, rewritten 2026-09-13): `false` is a
+  # DELIBERATE, documented design decision — and it describes a CHAT
+  # TURN, not an autonomous mission. That is the half the old wording
+  # left implicit, and naming it is the whole point of the rewrite.
+  # In a chat turn a human is present, the next action is theirs, and a
+  # local full-pipeline run duplicates remote CI at wall-clock + token
+  # cost while they wait. In an autonomous mission nobody is waiting,
+  # the next action is the agent's own, and a red discovered twenty
+  # steps later costs more than the run that would have caught it at
+  # step one — the same "lets errors compound" argument the roadmap
+  # cadence knob above already makes about itself.
+  # So: this key governs CHAT. `local_auto_run_in_mission` below
+  # governs a mission. Neither ever suppresses (a) narrow diff-scoped
   # probes (type-check/lint/tests over the agent's OWN changed files
   # before pushing — those always run), (b) the new-gate carve-out
   # above, (c) user-invoked runs. Run-end reports must say "quality
   # gates delegated to remote CI", never claim an unrun pipeline passed.
   local_auto_run: false
+
+  # Run local quality / CI tasks autonomously INSIDE a mission — an
+  # autonomous roadmap run with a claimed contract (true, false).
+  #   true  = default. A mission resolves `local_auto_run` to true.
+  #   false = a mission behaves like chat; remote CI alone is the gate.
+  # Resolution is a runtime condition, never a settings layer: outside a
+  # mission this key is inert, and `local_auto_run: true` is never
+  # LOWERED by a mission. Resolver: src/shared/missionExecution.ts.
+  local_auto_run_in_mission: true
 
 
 # --- Design fidelity ---

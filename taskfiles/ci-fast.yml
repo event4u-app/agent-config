@@ -2162,6 +2162,25 @@ tasks:
       ruling of 2026-09-10 removed from the trust model entirely.
     cmd: ./scripts-run src/scripts/check_platform_anchor {{.QUIET_FLAG}}
 
+  check-test-delta:
+    silent: true
+    desc: >-
+      A code change with no test path in the same diff is a finding — the cheap,
+      mechanically decidable half of the test-first rule. It cannot see whether the
+      test came first or tests the thing that changed; it proves an ABSENCE. The
+      escape is a PR label an owner applies, never a file an agent can edit inside
+      the diff under review.
+    cmd: ./scripts-run src/scripts/check_test_delta {{.QUIET_FLAG}}
+
+  check-test-weakening:
+    silent: true
+    desc: >-
+      A test file that asserts less after the diff than before, or gains a skip,
+      needs an independent-verdict artefact in the same diff. Counts are NET, so
+      editing an assertion is not weakening — a gate that reds every legitimate
+      test edit gets its exemption widened until it finds nothing.
+    cmd: ./scripts-run src/scripts/check_test_weakening {{.QUIET_FLAG}}
+
   check-gate-coverage:
     silent: true
     desc: >-

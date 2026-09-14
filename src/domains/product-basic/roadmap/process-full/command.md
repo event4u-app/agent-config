@@ -153,6 +153,46 @@ waiting on that remote CI is part of the run per the Iron Law below. It is
 the whole of what this command delivers: there is no flag that carries it
 further, and § Merging below says why.
 
+### The six required layers, in order, each with the command that runs it
+
+`road-to-adversarial-verification-and-long-runs` 3.1. Correctness is owned by the
+forge and CI, not by an owner reading a diff — so the layers are named, ordered,
+and each one carries the command that produces its verdict. A layer with no
+command is a claim; a layer with one is a check.
+
+| # | Layer | Command that runs it |
+|---|---|---|
+| 1 | A targeted local RED, then GREEN | the test runner filtered to the failing name — `npm run test:ts -- <file>`, never the suite |
+| 2 | Quality scoped to the changed surface | the type-checker and linter over the diff — `npm run typecheck`, the linter on changed files |
+| 3 | Per-phase fast CI | `roadmap.quality_cadence: per_phase` (Phase 0.2) at each phase boundary |
+| 4 | The final full required CI | `./scripts-run src/scripts/ci_settle <PR> --timeout 1700` — its LAST OUTPUT LINE is the verdict |
+| 5 | Forge branch protection | `agent-config doctor --json` → `forge_protection` (Phase 3.2), read from the forge |
+| 6 | Final-head verification | `ci_settle`'s verdict line names the head; it must be the head that was pushed last |
+
+**Layer 1 before layer 2 before layer 3, and the order is the substance.** Each
+layer is cheaper and narrower than the one after it, so running them out of order
+spends the expensive verdict on a failure the cheap one would have named. A run
+that reaches layer 4 with layer 1 unrun has not saved a step; it has moved the
+same failure to where it costs a CI cycle.
+
+```
+CI REJECTS: A SKIPPED OR DISABLED REQUIRED CHECK · UNRESOLVED GENERATED DRIFT ·
+POLICY-PROJECTION DRIFT · A STALE-HEAD MERGE · A CONFLICT RESOLUTION THAT WAS
+NOT REVALIDATED.
+CI NEVER REQUIRES A HUMAN APPROVAL MERELY BECAUSE A CHANGE IS LARGE.
+```
+
+That last line is not a courtesy. Size is the one property of a diff that
+correlates with nothing a reviewer can check mechanically, and gating on it is
+how *ask the owner* re-enters through a door marked prudence — which is the loop
+ADR-268 § 0 is trying to end. Gate on the five conditions above, which are
+falsifiable, and never on how big the change looks.
+
+**A disabled required check cannot reach delivery-ready**, and that is the
+condition to test rather than assert: a PR whose required context is skipped has
+a green rollup and an unenforced gate, so a delivery-ready test that reads only
+the rollup passes exactly when it should fail.
+
 ### Merging — out of scope, cancelled rather than deferred
 
 ```
@@ -219,7 +259,7 @@ RUNNING" IS NOT A BOUNDARY, NOT A HALT, AND NOT A REPORT — THE RUN ENDS
 AT A MERGEABLE PR, NEVER AT AN OFFER TO GO CHECK ON ONE.
 ```
 
-The **six — and only six — halt conditions** (exhaustive; nothing else
+The **five — and only five — live halt conditions** (exhaustive; nothing else
 stops the run):
 
 1. **Hard-Floor** trigger ([`non-destructive-by-default`](../../rules/non-destructive-by-default.md)).
@@ -227,13 +267,21 @@ stops the run):
 3. **Security-sensitive** surface reached.
 4. **Scope-out-of-roadmap** work discovered.
 5. **Test / quality red** that cannot be cleared within the N=3 budget.
-6. **A merge conflict outside the four enumerated classes** of
-   [`/pr:merge` § 3](../../../git/pr/merge/command.md), during the delivery
-   loop. Added when delivery became unconditional: the loop runs on every
-   completed run, `--all` or not, so its stop is a stop of this command and
-   calling it "a kill switch rather than a halt reason" would not change that —
-   a run that stops has stopped. It fires only where a run reaches delivery,
-   which is the one thing that distinguishes it from the five above.
+6. **RETIRED 2026-09-13** by `road-to-adversarial-verification-and-long-runs`
+   5.2. This read *a merge conflict outside the four enumerated classes of
+   [`/pr:merge` § 3](../../../git/pr/merge/command.md)*. That section now ROUTES
+   an unenumerated conflict — understand both intents, inspect recency and
+   authorship, preserve both where compatible, independent review, council or
+   team, and the owner **only** for a product-semantic incompatibility — so
+   there is no longer a conflict class whose arrival ends a run. Numbered rather
+   than renumbered: the list is cited by index from several places, and silently
+   shifting five conditions up one is how a citation comes to name a different
+   halt. **Five live halt conditions, not six.**
+
+   What did NOT change: an unenumerated conflict may still never be resolved
+   silently. The ladder's own record — which rung settled it, both intents, why
+   the resolution preserves them — is the replacement for the stop, and the
+   reason the stop could be removed at all.
 
 **Under `--all`, which of these end the roadmap and which end the loop.** Two
 of the five are safety floors and they end the **whole run**, not the current
@@ -246,7 +294,7 @@ roadmap:
 | 2. Council-off + genuine ambiguity | Ends the roadmap; the loop records it and continues. |
 | 4. Scope-out-of-roadmap work | Ends the roadmap; the loop records it and continues. |
 | 5. Test / quality red past N=3 | Ends the roadmap; the loop records it and continues. |
-| 6. Unenumerated merge conflict in delivery | Ends the roadmap; the loop records it and continues. |
+| ~~6. Unenumerated merge conflict in delivery~~ | **RETIRED** — `/pr:merge` § 3 routes it instead of stopping. |
 
 **And the conditions that end the loop without ending a roadmap:**
 estate-queue exhaustion (always), a
@@ -257,8 +305,9 @@ authorization-window expiry — which is **unreachable in this command**,
 because it never performs a `BLOCK_OPS` operation for the window to govern. Three conditions, one of them currently inert, and this
 table is the only place the set is stated.
 
-Nothing here widens a run without `--all`: it still has exactly the six
-above, all of them ending the run because there is no loop to continue.
+Nothing here widens a run without `--all`: it still has exactly the five live
+conditions above, all of them ending the run because there is no loop to
+continue.
 
 ```
 FORBIDDEN NON-HALT REASONS — NEVER STOP THE RUN FOR ANY OF THESE:
@@ -272,12 +321,13 @@ FORBIDDEN NON-HALT REASONS — NEVER STOP THE RUN FOR ANY OF THESE:
   · "the branch is not protected" / "a branch must be created"
   · "a PR must be opened" / "a GitHub setting must change"
   · "CI must be re-run" / "the merge base needs updating" / "there are
-    conflicts" — resolving these IS the work. The one exception, and it is a
-    kill switch rather than a halt reason: a conflict **outside** the four
-    enumerated classes of [`/pr:merge` § 3](../../../git/pr/merge/command.md)
-    stops the delivery loop, because that is a case nobody has decided yet and
-    deciding it silently is how work disappears. An enumerated conflict is
-    never a stop.
+    conflicts" — resolving these IS the work, and since 2026-09-13 that holds
+    for an UNENUMERATED conflict too: [`/pr:merge` § 3](../../../git/pr/merge/command.md)
+    routes it (understand both intents → recency and authorship → preserve both
+    where compatible → independent review → council or team → the owner only for
+    a product-semantic incompatibility) instead of stopping. The prohibition that
+    survives is on resolving one SILENTLY: the rung that settled it, both
+    intents, and why the resolution preserves them are recorded.
   · "a paid service is needed" — authorised under the ceiling below
   · "a maintainer should do this" when the agent can perform the same action
   · any agent-invented caution not in the five halt conditions above.
@@ -313,9 +363,64 @@ branch setting, push, open a PR, re-run CI, update a merge base, fix a failing
 test, authorise spend inside a budget — is machine-executable by the agent, and
 is therefore remediation work rather than a blocker.
 
+### `complete` requires DELIVERY, not only checkboxes
+
+```
+A RUN WHOSE CHECKBOXES READ COMPLETE AND WHOSE PR SITS ON RED CI OR ON A
+MOVED TARGET HAS NOT COMPLETED. CHECKBOXES ARE ONE COMPLETION; DELIVERY IS
+THE OTHER, AND ONLY TWO POSITIONS END A RUN: `merged` AND `open-green`.
+```
+
+`road-to-adversarial-verification-and-long-runs` 8.1. The delivery machine is
+`working → local-green → pushed → pr-open → ci-pending → (red → the recovery
+ladder → pushed | green) → target-sync-check → (moved → sync → tests → pushed |
+current) → delivery-ready → (grant → merged | no grant → open-green)`.
+
+`run_continuation_hook` reads the position the run RECORDED — it does not probe
+the forge, because a `gh` call on the stop path is the cost the premise rung
+already declined — and any position that is not an ending keeps the run engaged
+at zero open steps. Two bounds survive that hold, and one is deliberately lifted:
+the iteration and wall-clock caps still end it, while the **stall** rung is
+skipped, because during delivery the open-step count it measures cannot move and
+a metric that cannot move is not a stall signal. A run that recorded no position
+decides exactly as it did before.
+
+```
+THE CONSUMER IS LIVE. NO PRODUCER SHIPS YET — NOTHING WRITES `delivery` INTO
+THE RUN-STATE FILE, SO ON EVERY RUN TODAY THE POSITION IS ABSENT AND THE HOLD
+DOES NOT FIRE. READ THE PARAGRAPH ABOVE AS THE CONTRACT, NOT AS BEHAVIOR YOU
+WILL OBSERVE.
+```
+
+Said in a fence because the surrounding prose reads as a description of live
+behavior and an independent review of the change that introduced it read it
+exactly that way. The ladder, the round-trip and the ledger field are built,
+tested and correct for any recorded value; what is missing is the step that
+records one, and a run that wants the hold must write the position itself until
+that lands.
+
+**`open-green` is a success, not a shortfall.** A run with no merge grant is not
+supposed to merge; what it owes is an open PR whose CI is green **on the head CI
+actually observed**, and a report that says so.
+
+### The PR body is one page for the owner's review
+
+8.2. The end-of-run PR body carries these six, each as its own named section:
+
+1. **Delivery target reached** — `merged` or `open-green`, and the head SHA CI observed.
+2. **Decisions taken, and by whom** — agent, council, team or owner, per decision.
+3. **Open owner-owned residue** — what is left that only the owner can settle, or *none*.
+4. **Scope delta** — what the run added to or dropped from the roadmap's stated scope.
+5. **Spend** — actual against the authorised ceiling.
+6. **Fix-loop epochs** — how many strategies were opened, and what ended each.
+
+Six sections because each answers a different question the owner would otherwise
+have to ask, and a run that omits one has moved that question back into the
+conversation this roadmap exists to end.
+
 | Outcome | When | Success? | terminal state |
 |---|---|---|---|
-| `complete` | `count_open == 0` and the PR is open | yes — archival check runs | `success` |
+| `complete` | `count_open == 0`, the PR is open, and delivery reached an ending | yes — archival check runs | `success` |
 | `blocked` | every remaining open step is **externally impossible** for the agent | **no** — partial progress, labelled as such | `blocked`, or `approval-required` where the work is finished and waiting on a human |
 | a halt | one of the five conditions fired | **no** — the halt is reported | `exhausted` when a declared budget ran out; `stagnated` when the same failure signature repeated with budget left |
 

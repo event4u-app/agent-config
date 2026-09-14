@@ -33,6 +33,10 @@
  * `2` usage error.
  */
 
+import {
+    resolveLocalAutoRun,
+    type AutoRunResolution,
+} from '../../shared/missionExecution.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
@@ -143,6 +147,31 @@ export function carveOutFor(key: string): CarveOutKey | undefined {
 }
 
 /**
+ * The mission-time resolution of `key`, or `null` when a mission changes nothing.
+ *
+ * Exactly one key resolves differently inside a mission today, and the function
+ * is keyed on that rather than generalised: a second mission-sensitive key would
+ * need its own argument about WHY the mission condition applies to it, and a
+ * generic table would let one land without that argument.
+ *
+ * `merged` is the already-loaded settings tree — no second cascade walk, for the
+ * same reason `layersFor` delegates rather than re-walking.
+ */
+export function missionResolutionFor(
+    key: string,
+    merged: unknown,
+): AutoRunResolution | null {
+    if (key !== 'quality.local_auto_run') return null;
+    const configured = getSettingsLeaf(merged, 'quality.local_auto_run');
+    const missionValue = getSettingsLeaf(merged, 'quality.local_auto_run_in_mission');
+    return resolveLocalAutoRun({
+        configured: configured === true,
+        missionValue: typeof missionValue === 'boolean' ? missionValue : undefined,
+        inMission: true,
+    });
+}
+
+/**
  * `true` when the key is present in the user-global file but is NOT whitelisted,
  * i.e. the loader read it and threw it away.
  *
@@ -206,6 +235,7 @@ export function runSettingsGet(opts: SettingsGetOptions): SettingsGetResult {
     const fallback = templateDefault(opts.packageRoot, opts.key);
     const carveOut = carveOutFor(opts.key);
     const drop = userGlobalDrop(opts.key);
+    const mission = missionResolutionFor(opts.key, merged);
 
     if (opts.json) {
         out.push(
@@ -223,6 +253,9 @@ export function runSettingsGet(opts: SettingsGetOptions): SettingsGetResult {
                         ? { resolves_to: carveOut.absentResolvesTo, reader: carveOut.reader }
                         : null,
                     user_global_dropped: drop.dropped ? drop.file : null,
+                    in_mission: mission === null
+                        ? null
+                        : { value: mission.value, decided_by: mission.origin },
                 },
                 null,
                 2,
@@ -260,6 +293,17 @@ export function runSettingsGet(opts: SettingsGetOptions): SettingsGetResult {
             `    A reader resolves the absent key to: ${carveOut.absentResolvesTo}`,
             `    Reader: ${carveOut.reader}`,
             '    So "not set" and "set to the default" behave differently here.',
+        );
+    }
+
+    if (mission !== null) {
+        out.push(
+            '',
+            `ℹ️  Inside a mission this key resolves to: ${JSON.stringify(mission.value)}`,
+            `    Decided by: ${mission.origin === 'mission' ? 'quality.local_auto_run_in_mission' : 'the settings layers above'}`,
+            '    A mission is an autonomous roadmap run with a claimed contract. The',
+            '    resolution is a runtime condition, never a layer, so no file above',
+            '    carries the mission value — see src/shared/missionExecution.ts.',
         );
     }
 

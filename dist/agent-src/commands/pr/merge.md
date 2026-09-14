@@ -161,13 +161,44 @@ it now means two humans edited the same policy sentence — read both sides.
 | Evidence files | `agents/evidence/**` | Append-only. Keep both sides. |
 
 ```
-A CONFLICT OUTSIDE THESE FOUR CLASSES HALTS THE RUN.
-IT IS NOT RESOLVED BY JUDGEMENT AND NOT ESCALATED TO A WARNING.
+THE FOUR CLASSES ARE AIDS, NOT EXHAUSTIVE AUTHORITY.
+AN UNENUMERATED CONFLICT IS ROUTED, NOT HALTED — AND NEVER RESOLVED SILENTLY.
+UNDERSTAND BOTH INTENTS → INSPECT RECENCY, AUTHORS AND OPEN PRs →
+PRESERVE BOTH WHERE COMPATIBLE → INDEPENDENT REVIEW FOR A RISKY MERGE →
+COUNCIL OR TEAM → THE OWNER ONLY FOR A PRODUCT-SEMANTIC INCOMPATIBILITY.
 ```
 
-The classes exist so a merge resolution is reproducible by a second reader. An
-unenumerated conflict is a case nobody has decided yet, and deciding it silently
-inside a drain loop is how work disappears.
+The classes exist so a merge resolution is reproducible by a second reader, and
+that is still their job. What changed is what happens when a conflict falls
+outside them: **`road-to-adversarial-verification-and-long-runs` 5.2** replaced
+the halt with the ladder above, because "nobody has decided this yet" describes
+a class of conflict, not a class of thing only an owner may touch. Most
+unenumerated conflicts are two branches editing adjacent prose, and halting a run
+on one converts a two-minute read into an owner interrupt.
+
+Read the ladder as ordered, and note where the owner sits. The first three rungs
+are the agent's own work — **understand what each side was trying to do**,
+**inspect recency, authorship and the open PRs** that produced them, and
+**preserve both where they are compatible**, which most textual conflicts are.
+The fourth and fifth escalate *laterally* — an independent reviewer for a merge
+whose risk the run cannot bound alone, then the council or the team. The owner is
+the **last** rung and is reached on one condition: the two sides encode
+incompatible PRODUCT semantics, where choosing is a decision about what the thing
+should do rather than about how to combine two edits.
+
+```
+A CONFLICT THE RUN CANNOT UNDERSTAND IS NOT AUTOMATICALLY OWNER-OWNED.
+"I DO NOT KNOW WHICH SIDE IS RIGHT" IS A REASON TO ESCALATE INDEPENDENTLY,
+NOT A REASON TO ASK. THE OWNER RUNG IS REACHED BY THE SEMANTIC TEST,
+NEVER BY THE RUN'S OWN UNCERTAINTY.
+```
+
+Deciding it **silently** inside a drain loop is still how work disappears, and
+that prohibition is unchanged: an unenumerated resolution is recorded — which
+rung settled it, what both intents were, and why the chosen resolution preserves
+them — so the second reader the classes exist for can still follow it.
+
+**`process-full`'s halt 6 retires with this**, per that command's own halt table.
 
 ## 4. Superseded check — before any CI is spent
 

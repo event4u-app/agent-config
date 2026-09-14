@@ -61,6 +61,122 @@ export const HALT_ACTIONS: readonly LadderAction[] = [
 ];
 
 /**
+ * The delivery state machine — `road-to-adversarial-verification-and-long-runs`
+ * Phase 8.1, in the order a run walks it.
+ *
+ * A run's checkboxes and its DELIVERY are two different completions, and until
+ * now only the first one could end a run. That is the defect: a run whose
+ * roadmap reads zero-open while its PR sits on red CI, or on a target that moved
+ * underneath it, reported `complete` — a completion claim about work whose only
+ * evidence (the CI verdict on the final head) says otherwise.
+ *
+ * Two of these are ENDINGS and the rest are not:
+ *   · `merged` — a grant existed and was spent.
+ *   · `open-green` — no grant; the PR is open, its CI is green on the head CI
+ *     actually observed, and the run says so. This is a success, not a
+ *     shortfall: a run without a merge grant is not supposed to merge.
+ * Every earlier position means work remains, whatever the checkboxes read.
+ */
+export const DELIVERY_STATES = [
+    'working',
+    'local-green',
+    'pushed',
+    'pr-open',
+    'ci-pending',
+    'ci-red',
+    'target-sync-check',
+    'target-moved',
+    'delivery-ready',
+    'merged',
+    'open-green',
+] as const;
+export type DeliveryState = (typeof DELIVERY_STATES)[number];
+
+/** The two positions at which a run has actually delivered. */
+export const DELIVERY_ENDINGS: readonly DeliveryState[] = ['merged', 'open-green'];
+
+/**
+ * True when this delivery position means work remains.
+ *
+ * `null` — nothing recorded a position — is NOT incomplete. The ladder runs on
+ * the Stop path, where a `gh` probe is not affordable, so the position is READ
+ * from what the run wrote rather than measured here. An unrecorded position
+ * therefore means *this run does not report delivery*, and inventing
+ * incompleteness from that absence would hang every run that never adopted the
+ * field. Fail-open, in the one direction that cannot manufacture a stall.
+ */
+export function deliveryBlocksCompletion(state: DeliveryState | null | undefined): boolean {
+    if (state === null || state === undefined) return false;
+    return !DELIVERY_ENDINGS.includes(state);
+}
+
+/** The facts one terminal ledger line records about a run. */
+export interface LedgerEventInput {
+    readonly action: LadderAction;
+    readonly runId: string;
+    readonly slug: string;
+    readonly turn: number;
+    readonly iterations: number;
+    readonly open: number;
+    readonly blocked: number;
+    readonly delivery: DeliveryState | null;
+}
+
+/**
+ * Build the terminal ledger line for a run.
+ *
+ * Extracted from `hooks/run_continuation_hook.ts` by
+ * `road-to-adversarial-verification-and-long-runs` 8.1, for the reason this
+ * module's own header gives: the hook sits past `check_source_size_budget`'s
+ * 1,500-line cap, where every added line is an added violation, so a phase pays
+ * for its additions by moving the code it is editing to a file under the cap.
+ * The `delivery` field is that addition.
+ *
+ * A ledger line is a persisted shape carrying a `RunTerminalState`, so it names
+ * the vocabulary version it was written against: a reader meeting an unknown
+ * value can then tell a newer writer from a corrupt row. `delivery` is OMITTED
+ * when the run reported no position rather than written as a null — `complete`
+ * alone cannot tell a merged run from an open-green one, and a null would read
+ * as "neither" rather than "unreported".
+ */
+export function buildLedgerEvent(
+    input: LedgerEventInput,
+    vocabularyVersion: number,
+    now: Date,
+): Record<string, unknown> {
+    return {
+        event: input.action,
+        run_id: input.runId,
+        roadmap: input.slug,
+        turn: input.turn,
+        iterations: input.iterations,
+        open: input.open,
+        blocked: input.blocked,
+        terminal_state: terminalStateFor(input.action),
+        terminal_vocabulary_version: vocabularyVersion,
+        ...(input.delivery !== null ? { delivery: input.delivery } : {}),
+        at: now.toISOString(),
+    };
+}
+
+/**
+ * Read a persisted delivery position tolerantly — `undefined` for anything this
+ * build does not recognise.
+ *
+ * Same forward-compatibility shape as {@link parseHaltStamp}, and the opposite
+ * fail direction on purpose: an unknown HALT is preserved, because dropping it
+ * re-engages a deliberately ended run; an unknown DELIVERY position is dropped,
+ * because preserving it would hold a run open on a state this build cannot
+ * evaluate. Both choose the branch that cannot manufacture a stall.
+ */
+export function parseDeliveryState(raw: unknown): DeliveryState | undefined {
+    if (typeof raw !== 'string') return undefined;
+    return (DELIVERY_STATES as readonly string[]).includes(raw)
+        ? (raw as DeliveryState)
+        : undefined;
+}
+
+/**
  * The subset of a run's state this decision reads. The hook's `RunState`
  * satisfies it structurally; nothing here may widen beyond what the rungs use.
  */
@@ -128,6 +244,10 @@ export function ladder(
     // `_lib/context_observation.premiseMoved`. Optional and defaulted false, so
     // a caller that cannot observe the world decides exactly as it did before.
     premiseInvalidated: boolean = false,
+    // `road-to-adversarial-verification-and-long-runs` 8.1. The delivery position
+    // the run RECORDED, or `null` where it recorded none. Optional and defaulted,
+    // so a caller that does not track delivery decides exactly as it did before.
+    delivery: DeliveryState | null = null,
 ): LadderAction {
     // A halt is terminal for this run id. Checked BEFORE `complete` so a
     // halted run whose roadmap later reads zero-open does not report a
@@ -136,7 +256,26 @@ export function ladder(
     // `scanOpenSteps` EXCLUDES `blocked-by:` steps from `openCount`, so zero-open
     // with blocked steps left is exhaustion of runnable work, not completion —
     // ADR-235's own terminal outcome, and never a sixth halt.
-    if (openCount === 0) return blockedCount > 0 ? 'blocked' : 'complete';
+    //
+    // 8.1 — delivery is checked INSIDE the zero-open branch and only against
+    // `complete`. Two boundaries, both deliberate. It does not touch `blocked`:
+    // a run whose remaining work is blocked has not failed to deliver, it has
+    // run out of deliverable work, and holding it open on a PR it cannot advance
+    // would convert a nameable blocker into a stall. And it is not checked while
+    // steps are still open, because there the run continues anyway — adding a
+    // second reason to continue would only make the ledger's `open` count lie
+    // about why.
+    const deliveringOnly =
+        openCount === 0 && blockedCount === 0 && deliveryBlocksCompletion(delivery);
+    if (openCount === 0) {
+        if (blockedCount > 0) return 'blocked';
+        if (!deliveringOnly) return 'complete';
+        // Fall THROUGH to the budget rungs rather than returning `engage` here.
+        // Returning early would put the run outside every bound in this function
+        // — an unbounded loop, which is the failure the ladder exists against —
+        // so a run held open for delivery is still capped by iterations and the
+        // wall clock. Only the STALL rung is exempted, below.
+    }
     // BEFORE the counter rungs, deliberately: a missing credential, an absent
     // binary or an exhausted quota is not closed by iterating, so spending the
     // budget on it converts a nameable blocker into an anonymous cap-out.
@@ -151,8 +290,16 @@ export function ladder(
     if (Number.isFinite(started) && nowMs - started >= caps.wallClockMs) {
         return 'halt-wall-clock';
     }
+    // The stall rung reads OPEN-STEP progress, and during delivery open-step
+    // progress is definitionally zero: the checkboxes are all flipped and the
+    // remaining work is a CI red or a moved target. Applying it here would halt
+    // a healthy delivery loop on its third turn — a stall manufactured by the
+    // stall detector, which is exactly the failure `run_continuation_hook`'s own
+    // header warns about in the abstract and the one this file's mechanics call
+    // "a metric that stops moving because the MEASUREMENT broke". The iteration
+    // and wall-clock caps above still bound the loop; only this rung is skipped.
     const tail = state.history.slice(-caps.stallWindow);
-    if (tail.length >= caps.stallWindow && tail.every((n) => n === openCount)) {
+    if (!deliveringOnly && tail.length >= caps.stallWindow && tail.every((n) => n === openCount)) {
         return 'halt-stall';
     }
     return 'engage';

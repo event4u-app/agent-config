@@ -92,6 +92,8 @@ tasks:
       # Wiring it into consistency.yml without this line would have made it
       # CI-only, i.e. a failure a contributor meets only after pushing, which is
       # the mirror image of the defect road-to-local-only-gate-reds was about.
+      - task: check-test-delta
+      - task: check-test-weakening
       - task: check-gate-coverage
       - task: check-ci-strict-superset
       - task: counts-check

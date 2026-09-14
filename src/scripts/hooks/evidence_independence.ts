@@ -43,6 +43,7 @@
  *
  * Exit codes: 0 allow · 2 block (stderr carries the reason).
  */
+import { spawnSync } from "node:child_process";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -50,6 +51,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { atomic_write_json } from "./state_io.js";
 import { readHookStdin } from "./hook_stdin.js";
+import { isCodePath, isTestPath } from "../_lib/test_delta.js";
 
 const EXIT_ALLOW = 0;
 // MUST equal dispatch_hook.EXIT_BLOCK. The dispatcher's internal ladder is
@@ -324,6 +326,79 @@ export function decide(
   };
 }
 
+/**
+ * The one-commit test-authorship flag —
+ * `road-to-adversarial-verification-and-long-runs` 2.4, third clause.
+ *
+ * A commit staging BOTH a test and code it could cover is the shape of L0 on the
+ * independence scale — the implementer wrote the evaluator — and it is the one
+ * case nobody sees, because the diff looks exactly like a well-tested change.
+ *
+ * **It reads the STAGED SET and the command, and nothing else.** It does NOT
+ * read a session id, an author or a timestamp, so it cannot distinguish an
+ * implementer who wrote both from one committing a test another session authored
+ * — an independent review of this function caught an earlier docstring here
+ * claiming a session boundary the code never reads, which is exactly the
+ * over-claim `evaluator-independence` exists over. The honest reading is: this
+ * is the shape L0 takes in a diff, surfaced so the level is stated rather than
+ * inferred.
+ *
+ * **WARN, never block.** L0 is explicitly permitted as a fallback, so refusing it
+ * would forbid a legal state; and a signal this coarse may surface, never refuse.
+ *
+ * Returns `null` when nothing is worth saying — i.e. this is not a commit.
+ */
+export function sameSessionTestFlag(command: string | null): string | null {
+  if (command === null || !/\bgit\b[^|;&]*\bcommit\b/.test(command)) return null;
+  return SAME_SESSION_TEXT;
+}
+
+const SAME_SESSION_TEXT =
+  "This commit stages both a test and code it could cover — the shape L0 takes " +
+  "in a diff, where the implementer authored the evaluator. This check reads the " +
+  "staged set only: it cannot tell who wrote the test, so it is a prompt to STATE " +
+  "the level, not a finding that you are at L0. L0 is a permitted FALLBACK, not " +
+  "the default: where a second session, a second model or a second provider was " +
+  "available, the test should have come from one of them. Say which in the commit " +
+  "or the PR body — a diff looks identical either way. See evaluator-independence " +
+  "§ Tests are evaluators.";
+
+/** Both a test path and a production path in one changed set. */
+export function touchesTestAndCode(paths: readonly string[]): boolean {
+  return paths.some(isTestPath) && paths.some(isCodePath);
+}
+
+/** The shell command this envelope is about, across the key names hosts use. */
+function _commandOf(envelope: JsonObject): string | null {
+  const payload = _isObject(envelope["payload"]) ? envelope["payload"] : envelope;
+  const input = _isObject(payload["tool_input"]) ? payload["tool_input"] : payload;
+  for (const key of ["command", "cmd", "shell_command"]) {
+    const v = input[key];
+    if (typeof v === "string" && v !== "") return v;
+  }
+  return null;
+}
+
+/**
+ * Staged paths, or `null` when git cannot answer.
+ *
+ * `null` is not "nothing staged" — it is "no reading", and the caller must not
+ * turn an unreadable index into a silent clean bill. A hook that cannot measure
+ * says nothing rather than implying a measurement.
+ */
+function _stagedPaths(consumer_root: string): string[] | null {
+  const r = spawnSync("git", ["diff", "--cached", "--name-only"], {
+    cwd: consumer_root,
+    encoding: "utf8",
+  });
+  if (r.status !== 0) return null;
+  const out = r.stdout
+    .split("\n")
+    .map((s) => s.trim())
+    .filter((s) => s !== "");
+  return out.length === 0 ? null : out;
+}
+
 export function run(stdin_text: string, options: { consumer_root: string }): number {
   let envelope: JsonObject = {};
   if (stdin_text.trim()) {
@@ -355,6 +430,27 @@ export function run(stdin_text: string, options: { consumer_root: string }): num
   }
 
   const [tool, prompt] = extractDispatch(envelope);
+
+  // 2.4 — the one-commit test-authorship flag, checked BEFORE the dispatch
+  // branch and returning early. A commit envelope carries no evaluation prompt,
+  // so `decide` would classify it as not-an-evaluation and allow it silently;
+  // running both would mean the commit path fell through to a counter that is
+  // about evaluation dispatches and would be wrong to advance here.
+  //
+  // CHEAP TEST FIRST, and that ordering is the finding rather than a style
+  // preference: `_stagedPaths` spawns `git diff --cached`, and this concern is
+  // bound on `pre_tool_use`, so reading the index before the regex made every
+  // Read, Edit, Grep and Task dispatch in every session pay a subprocess. The
+  // regex answers "is this even a commit" for free.
+  const flag = sameSessionTestFlag(_commandOf(envelope));
+  if (flag !== null) {
+    const staged = _stagedPaths(options.consumer_root);
+    if (staged !== null && touchesTestAndCode(staged)) {
+      process.stdout.write(`${JSON.stringify({ decision: "warn", reason: flag })}\n`);
+      return EXIT_ALLOW;
+    }
+  }
+
   const decision = decide(tool, prompt, state.evaluations.length);
 
   if (decision.evaluations > state.evaluations.length) {
