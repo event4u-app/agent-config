@@ -89,36 +89,54 @@ exists to prevent.
 
 ## Phase 2 — Record the reversal, or stop here
 
-- [ ] **2.1 Write one decision record** superseding three things at once: the no-prescribed-order
+> **Every step in Phases 2 through 6 now carries the inline `blocked-by:` marker, and that is a
+> fix rather than a formality.** `scanOpenSteps` in
+> `src/scripts/hooks/run_continuation_hook.ts` reads blockedness from the marker and from nothing
+> else — it never parses `## Blockers` — so a step declared blocked only in prose still counts as
+> open work to the stop-slot concern, which re-engaged an autonomous run into these owner
+> decisions on every fire. Measured on this file before the markers: `{ open: 13, blocked: 0 }`,
+> with `next` pointing at 2.1; after: `{ open: 0, blocked: 13, next: null }`. At 13 steps this was
+> the largest such exposure in the estate. No checkbox moved: the boxes stay `[ ]`, both blockers
+> stay open, the acceptance criteria stay unmet and the roadmap stays unarchivable. Only the
+> concern's read of them changes.
+>
+> **Phase 4 is gated twice and its marker names one blocker.** The grammar carries a single id, so
+> 4.1 through 4.3 point at `the-detector-is-a-consumer-template`, the blocker whose § Blocks names
+> exactly those steps. `taxonomy-reversal-is-a-second-arrival` gates them as well, per its own
+> § Blocks — clearing the detector blocker alone does not release Phase 4, and a reader stripping
+> one marker on that basis would re-open an owner decision that is still open.
+
+
+- [ ] <!-- blocked-by: taxonomy-reversal-is-a-second-arrival | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **2.1 Write one decision record** superseding three things at once: the no-prescribed-order
       statement, the five-level-name prohibition the Phase 1 fixture now enforces, and a
       lane-scoped amendment to the abstraction thresholds so a single-use component inside a
       declared lane is not a threshold violation.
       verify: the decision index is regenerated, and the abstraction-threshold gate stays green on
       non-lane fixtures while not firing on a one-use component inside a lane fixture.
-- [ ] **2.2 Amend the Phase 1 fixture under the new record** so the reversal is visible in the
+- [ ] <!-- blocked-by: taxonomy-reversal-is-a-second-arrival | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **2.2 Amend the Phase 1 fixture under the new record** so the reversal is visible in the
       guard rather than in the guard's absence.
       verify: the fixture is red against an undeclared five-level name and green against a declared
       one, and the amendment cites the record.
-- [ ] **2.3 Make no quality claim.** This is a convention, not a measured improvement.
+- [ ] <!-- blocked-by: taxonomy-reversal-is-a-second-arrival | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **2.3 Make no quality claim.** This is a convention, not a measured improvement.
       verify: `docs/CLAIMS.md` is unchanged by this roadmap and the claims gate is green.
 
 ## Phase 3 — Declared level, never inferred
 
-- [ ] **3.1 Carry the level as a title prefix and a metadata field**, from a taxonomy the project
+- [ ] <!-- blocked-by: taxonomy-reversal-is-a-second-arrival | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **3.1 Carry the level as a title prefix and a metadata field**, from a taxonomy the project
       configures, and add a level column to the owned-component list.
       verify: a lint checks that title, metadata and directory agree, and it never derives a level
       from props, depth, path or file length — the measurement that the level is not computable is
       cited in the lint's own docstring rather than re-argued.
-- [ ] **3.2 An undeclared component has no level.** Absent is absent, never guessed.
+- [ ] <!-- blocked-by: taxonomy-reversal-is-a-second-arrival | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **3.2 An undeclared component has no level.** Absent is absent, never guessed.
       verify: the lint reports an undeclared component as undeclared and does not assign it a tier.
 
 ## Phase 4 — Two axes on the stack detector, in the right file
 
-- [ ] **4.1 Add a workshop axis and a verification axis** to the stack-detection axis table and to
+- [ ] <!-- blocked-by: the-detector-is-a-consumer-template | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **4.1 Add a workshop axis and a verification axis** to the stack-detection axis table and to
       the documented stack seam, filling the workshop capabilities as booleans.
       verify: the library fixture resolves a workshop value; a project with no marker resolves none
       and its fallback path runs without error.
-- [ ] **4.2 Treat this as a consumer-template change, not an engine change.**
+- [ ] <!-- blocked-by: the-detector-is-a-consumer-template | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **4.2 Treat this as a consumer-template change, not an engine change.**
       `corrected-from-reproduction` — every revision in the source set cites the detector as
       `work_engine/stack/detect.ts`. The real path is under
       `src/agent-src/templates/scripts/work_engine/`, a template shipped into every consumer
@@ -126,29 +144,29 @@ exists to prevent.
       revision noticed.
       verify: the blast radius across installed consumers is stated in the evidence tree, and the
       migration path for a project already carrying the template is named.
-- [ ] **4.3 No provider registry file.** The axes carry what the lane needs; a registry is a second
+- [ ] <!-- blocked-by: the-detector-is-a-consumer-template | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **4.3 No provider registry file.** The axes carry what the lane needs; a registry is a second
       source of truth for twelve adapters that do not exist.
       verify: no new configuration file is added by this phase.
 
 ## Phase 5 — Contract before consumption, lane-gated and shadow-only
 
-- [ ] **5.1 Add one rule**, gated on a resolved workshop lane, enforced in shadow.
+- [ ] <!-- blocked-by: taxonomy-reversal-is-a-second-arrival | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **5.1 Add one rule**, gated on a resolved workshop lane, enforced in shadow.
       verify: the framework-neutrality gate is green — the rule names no framework, or carries a
       declared exemption.
-- [ ] **5.2 Keep the local-inline escape.** A component used once, in one place, under the stated
+- [ ] <!-- blocked-by: taxonomy-reversal-is-a-second-arrival | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **5.2 Keep the local-inline escape.** A component used once, in one place, under the stated
       conditions, stays legal.
       verify: the rule names the conditions verbatim, and a fixture exercising each one passes.
-- [ ] **5.3 It is a dependency rule, not a commit-order rule.** The contract must exist before the
+- [ ] <!-- blocked-by: taxonomy-reversal-is-a-second-arrival | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **5.3 It is a dependency rule, not a commit-order rule.** The contract must exist before the
       import resolves, not in an earlier commit.
       verify: a fixture landing both in one commit passes.
 
 ## Phase 6 — Exactly one lane beyond the reference
 
-- [ ] **6.1 Add one non-reference workshop lane**, chosen by what a real consumer project actually
+- [ ] <!-- blocked-by: taxonomy-reversal-is-a-second-arrival | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **6.1 Add one non-reference workshop lane**, chosen by what a real consumer project actually
       uses, with a minimal fixture.
       verify: the lane emits a conformance artefact whose unavailable dimensions carry
       not-applicable rows with reasons.
-- [ ] **6.2 One, not twelve.** The documented stack seam already says to defer a stack until more
+- [ ] <!-- blocked-by: taxonomy-reversal-is-a-second-arrival | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **6.2 One, not twelve.** The documented stack seam already says to defer a stack until more
       than one consumer asks.
       verify: exactly one lane is added, and the reason it was the one chosen is recorded.
 
@@ -221,6 +239,66 @@ exists to prevent.
   named, or the axis change is refused.
 - **STILL OPEN.** The blast-radius assessment is the owner's, and (b) refuse-and-drop-Phase-4 is
   one of the two readings, so this is not a measurement an agent closes.
+- **The blast radius was measured 2026-09-14, and it corrects this blocker's own premise.**
+  Stating it does not resolve the blocker — the choice between (a) and (b) stays the owner's, and
+  one material question below is still open — but "nobody has looked" is no longer true.
+
+  **This blocker says an axis change "ships into every consumer project". Measured, that is wrong
+  in two independent ways.**
+
+  1. **The live engine is never read from the consumer's tree.** `cmd_work` and
+     `cmd_implement_ticket` in `src/scripts/_dispatch.bash` both pin
+     `engine_root="$PACKAGE_ROOT/dist/agent-src/templates/scripts"`. The consumer-override
+     resolver `resolve_template_script` exists, but is called for eight flat scripts only
+     (`memory_*`, `telemetry_*`, `check_memory*`) and for **no** work_engine file. So the axis
+     change reaches a consumer through an npm upgrade, not through an installed file.
+  2. **The installer's only copy is augment-global, not per-project.** `GLOBAL_DEPLOY_SOURCES` in
+     `src/scripts/install.ts` carries `['dist/agent-src/templates', 'templates']` on the `augment`
+     row alone, landing at `~/.augment/templates/`. Consumer installs are global-only
+     (`_enforce_consumer_global_only`). That copy is inert with respect to `/work` by point 1.
+
+  **What an already-installed consumer sees: a silent overwrite, and it always did.**
+  `_resolve_file_conflict` in `src/scripts/install.ts` is three lines and returns `'write'`
+  unconditionally — its own comment reads *"deploys always overwrite our own content"* — so the
+  `skip` branch at both call sites is dead. Neither `--force` nor a local edit changes it. The
+  recorded-unchanged / recorded-modified / unknown machinery in `src/install/conflict.ts` and
+  `src/install/recordedOwnership.ts` is **not wired to the writer**, and that module's own header
+  says so: *"what this resolver decides is in any case NOT what the installer does."* **Do not
+  cite it as a safety net.** A drift report is printed immediately before the redeploy and never
+  blocks. So the migration path for a project already carrying the template is: none is needed,
+  because the copy is overwritten and was never executing.
+
+  **What an added axis actually breaks, inside this repository:** `_EMPTY_AXES` is typed
+  `StackAxes`, so a new required key is a compile error there (the one loud failure);
+  `_OVERLAY_AXES` / `_AXIS_OVERLAYS` in `directives/ui/stack_bundles.ts` silently ignore an axis
+  they do not list — `css` is already in that state, so it is an accepted shape, not a new one;
+  `_AMBIGUOUS_AXES`, the hard-coded `['view', 'reactivity']` back-fill, the 12-row `_AXIS_COMBOS`
+  matrix in `src/scripts/lint_ui_stack_bundles.ts` and `tests/scripts/work_engine/ui_lane_matrix.test.ts`
+  all enumerate axes by hand. **And two shipped skills cite the table by line number** —
+  `src/skills/existing-ui-audit/SKILL.md` and `src/skills/react-shadcn-ui/SKILL.md` both write
+  `work_engine/stack/detect.ts:521-524`. Verified: those lines are the `tailwind-v4` / `tailwind-v3`
+  rows today, so the citations are accurate **now** and any axis inserted above the `css` block
+  shifts them. No gate validates a line-number citation.
+
+- **The material question this raised, which the owner should weigh before (a): the detector may
+  have no caller at all.** `grep` for `detect_stack` across the tree, excluding `dist/` and
+  `tests/`, returns the definition, its own recursion, one doc comment in `runner.ts`, two
+  SKILL.md prose mentions and the contract doc — and **no importer of `stack/detect` anywhere in
+  the shipped template tree**. Meanwhile `work_engine/state.ts` states at its `_validate_stack`
+  docstring that *"the detector populates `state.stack` lazily — the first dispatch"*, and
+  `_validate_stack` checks only that `frontend` is a non-empty string and `mtime` is a number; it
+  never enumerates axes. The UI directives reach `stack_bundles.ts`, which reads
+  `stack_state['axes']` as an untyped record. **Not established:** any production path that calls
+  `detect_stack` and writes its result into `state.stack`. If there is none, Phase 4's radius is
+  test-and-prose rather than engine behaviour, and the phase is worth less than it looks — which
+  is an argument for (b) that did not exist when this blocker was written.
+
+- **Landed alongside this assessment:** `docs/architecture.md` claimed the engine is *"shipped to
+  consumer projects via `scripts/install.py`"*. That file does not exist anywhere in the tree, and
+  the claim is wrong on both halves per points 1 and 2 above. Corrected in the same change,
+  because a wrong answer to exactly this blocker's question is what the owner would have read
+  first.
+
 - **One factual check done 2026-09-13, so the decision is not taken on a wrong pointer.** The
   path the step's `corrected-from-reproduction` tag asserts is **correct**:
   `src/agent-src/templates/scripts/work_engine/stack/detect.ts` exists (39 KB), and a tree-wide
