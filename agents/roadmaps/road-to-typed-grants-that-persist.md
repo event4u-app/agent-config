@@ -99,7 +99,7 @@ moved, the corrected path is the one below.
       `./scripts-run src/scripts/check_adr_frontmatter` reports no errors;
       `./scripts-run src/scripts/adr/regenerate_index --dir docs/decisions` writes the index
       with no unresolved supersession. All three ran green on 2026-09-08.
-- [ ] **0.2 Cross the kernel guard once, legitimately.** **Attempted via option (b) on
+- [ ] <!-- blocked-by: ratification-platform-anchor | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question; both residual limbs are maintainer forge actions --> **0.2 Cross the kernel guard once, legitimately.** **Attempted via option (b) on
       2026-09-09 and NOT closed.** Option (b) reads "land Phase 5.2 first, so
       `check_kernel_edit_ratified` replaces the tool-call deny before Phase 1 runs". The gate
       was built and the replacement was **refused** by a two-round independent ratification
@@ -127,20 +127,51 @@ item. Phases 1-6 may run once 0.2 is chosen.
 
 ## Phase 1 — Land ADR-260 §§ 2-3 in the rule layer
 
-- [ ] **1.1 `non-destructive-by-default.md`: the trigger table becomes the eleven ops.**
+> **The five kernel steps now carry the inline `blocked-by:` marker, and that is a fix rather
+> than a formality — 2026-09-14.** `scanOpenSteps` in `run_continuation_hook.ts` reads
+> blockedness from that marker and from **nothing else**; it never parses `## Blockers`. Before
+> this change the file measured `{open: 21, blocked: 0}`, so every autonomous stop fire was
+> handed step **0.2** as its next action — a Class-3 human-only decision an agent cannot take,
+> and with 21 open steps behind a reproduced tool-call deny this file was the worst instance of
+> that defect in the estate. After: `{open: 14, blocked: 7}`.
+>
+> **Which seven, and why not more.** 0.2 and 5.2 point at `ratification-platform-anchor`, the
+> root blocker — `kernel-guard-first-crossing`'s own Recommendation routes the crossing there.
+> 1.1, 1.2, 1.3, 1.5 and 1.6 point at `kernel-guard-first-crossing`; all five edit kernel
+> members and the deny was reproduced on this tree, not assumed (see 1.1).
+> **1.4, 1.7 and 4.2 are deliberately NOT marked.** A `blocked-by:` id must resolve to a
+> declared blocker in the same file, and none of the three is held by one: 1.4 waits on a
+> ratification artifact, 1.7 is a halt condition plus an ordering dependency on 4.3, and 4.2 is
+> ordering plus reviewer independence. Inventing blocker entries for them would both grow
+> `open_blockers` past what this file's `estate_growth_exempt` describes and park judgement
+> calls in `## Blockers`, which `road-to-decision-closure` 2.3 retires. Their holds are recorded
+> in their own step bodies instead.
+
+- [ ] <!-- blocked-by: kernel-guard-first-crossing | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question; the deny was reproduced on this tree and only a maintainer can retire it --> **1.1 `non-destructive-by-default.md`: the trigger table becomes the eleven ops.**
       Delete the bare `git push` row and the "this turn" clause on the prod-merge row. Keep
       *never act while asking* and the exact-object clause verbatim — a narrowed floor is
       still a floor. `enforced_by:` names the Phase 4.3 gate.
       verify: `grep -c 'this turn' src/rules/non-destructive-by-default.md` returns 0, and
       `grep -c 'never act while asking' src/rules/non-destructive-by-default.md` still
       returns at least 1.
-- [ ] **1.2 `commit-policy.md`: the Iron Law becomes grant-shaped.** *Commit when a mission
+      **DENY REPRODUCED 2026-09-14, not assumed — this is the evidence the box stays `[ ]` on.**
+      The edit was attempted for real: the `this turn` clause at `:26` was to be replaced by
+      *"Triggers below require an object-bound grant covering the op"*. The `pre_tool_use`
+      dispatcher refused the tool call outright — *"block-kernel-rule-writes: BLOCKED — kernel
+      rule non-destructive-by-default is immutable — tighten-only via the override exception
+      registry"*, with the remediation naming a human action outside the agent session. No write
+      reached the file: `grep -c 'this turn'` still returns 1 and `git status` is clean of it.
+      So the guard is live on this tree at tool-call time, and the five kernel steps are
+      unreachable for an agent by construction rather than by policy.
+
+
+- [ ] <!-- blocked-by: kernel-guard-first-crossing | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question; the deny was reproduced on this tree and only a maintainer can retire it --> **1.2 `commit-policy.md`: the Iron Law becomes grant-shaped.** *Commit when a mission
       grant covers it, in logical chunks. Never ask about committing.* § One-shot
       authorization is retired for mission-covered operations and retained for chat without a
       mission; exception 4 becomes `granted_by: roadmap:<slug>`.
       verify: a fixture run under a mission grant produces commits with zero authorisation
       questions, and the same fixture without a mission still hits the one-shot fence.
-- [ ] **1.3 `scope-control.md`: separate mission capabilities from WARN ops.** Branch create,
+- [ ] <!-- blocked-by: kernel-guard-first-crossing | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question; the deny was reproduced on this tree and only a maintainer can retire it --> **1.3 `scope-control.md`: separate mission capabilities from WARN ops.** Branch create,
       switch and update, task-branch push, base sync and conflict resolution become mission
       capabilities. PR **close**, rebase of a pushed branch and branch **delete** become WARN
       ops carrying Phase 3.3's evidence triple. Force-push to a shared trunk stays a typed op.
@@ -175,12 +206,12 @@ item. Phases 1-6 may run once 0.2 is chosen.
       authority-expanding and lands in NONE of them, so nothing would have stopped it. The
       restraint here is model-carried, not enforced — which is the honest description and an
       argument for widening that gate's scope rather than for trusting the next run.
-- [ ] **1.5 `ask-when-uncertain.md`: the philosophy line yields to ownership.** *One question
+- [ ] <!-- blocked-by: kernel-guard-first-crossing | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question; the deny was reproduced on this tree and only a maintainer can retire it --> **1.5 `ask-when-uncertain.md`: the philosophy line yields to ownership.** *One question
       too many beats one wrong assumption* is replaced by a pointer to the ownership routing
       table, and the nine vague-request triggers are scoped to chat without a mission.
       verify: a mission fixture with twelve seeded technical ambiguities produces zero owner
       questions; the same twelve outside a mission still trigger the vague-request path.
-- [ ] **1.6 `no-cheap-questions.md`: collapse the exception list.** Iron Laws 4-6 and
+- [ ] <!-- blocked-by: kernel-guard-first-crossing | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question; the deny was reproduced on this tree and only a maintainer can retire it --> **1.6 `no-cheap-questions.md`: collapse the exception list.** Iron Laws 4-6 and
       self-check items 8-14 become one clause — *under a mission, a question the contract
       already answers is forbidden*. Body stays under 40 lines.
       verify: `wc -l src/rules/no-cheap-questions.md` is at most 40, and
@@ -401,7 +432,7 @@ item. Phases 1-6 may run once 0.2 is chosen.
       (exit 1). The ladder ran for real — an independent AI council over two providers, three
       rounds, two refusals; the mechanism refused its own author twice before it passed
       anything, which is the only evidence that it is a control and not a form.
-- [ ] **5.2 Replace the deny with a gate.** **Gate built and landed; the REPLACEMENT was
+- [ ] <!-- blocked-by: ratification-platform-anchor | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question; both residual limbs are maintainer forge actions --> **5.2 Replace the deny with a gate.** **Gate built and landed; the REPLACEMENT was
       refused and is not done.** The step has two halves and only one of them shipped.
 
       **Shipped — the gate, as an ADDITIONAL control.** `check_kernel_edit_ratified.ts` runs
