@@ -189,12 +189,21 @@ rounds since have re-derived the architecture instead of reading the file.
 > check in one command instead of an argument they must re-read. The blocker's own
 > **Recommendation** — promote none in this change — is followed, and following a recommendation
 > is not the same as taking the decision, so both steps stay open.
+>
+> **Both steps now carry the inline `blocked-by:` marker, and that is a fix rather than a
+> formality.** `scanOpenSteps` in `src/scripts/hooks/run_continuation_hook.ts` reads blockedness
+> from the marker and from nothing else — it never parses `## Blockers` — so a step declared
+> blocked only in prose still counts as open work to the stop-slot concern, which re-engaged an
+> autonomous run into this owner decision on every fire. Measured on this file before the markers:
+> `{ open: 2, blocked: 0 }`, with `next` pointing at 5.1; after: `{ open: 0, blocked: 2, next:
+> null }`. The dashboard is unmoved by the edit, which is the point — the boxes stay `[ ]` and the
+> roadmap stays unarchivable; only the concern's read of them changes.
 
-- [ ] **5.1 Promote one track to a roadmap, or record that none qualifies.** Both are acceptable
+- [ ] <!-- blocked-by: which-track-promotes-is-owner-reserved | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **5.1 Promote one track to a roadmap, or record that none qualifies.** Both are acceptable
       outcomes and the second needs a reason, not an apology.
       verify: either exactly one new roadmap exists carrying its estate keys, or the stub records
       why none qualified.
-- [ ] **5.2 Measure the estate before promoting, not after.**
+- [ ] <!-- blocked-by: which-track-promotes-is-owner-reserved | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **5.2 Measure the estate before promoting, not after.**
       verify: `./scripts-run src/scripts/check_estate_count` is green on the promoting change.
       **Measured anyway, so the owner does not have to.** At this revision
       `./scripts-run src/scripts/check_estate_count` is green with `open_blockers 53 (floor 53 at
