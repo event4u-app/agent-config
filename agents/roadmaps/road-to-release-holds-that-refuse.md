@@ -419,6 +419,24 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
   is nothing left to look up. What remains is a cost judgement: whether to spend Phases 2 through
   5 building a mechanism with no exercised path. No measurement answers that, and none was
   claimed to.
+  **Third reading, 2026-09-14 (later the same day), appended to the Phase 0 file as
+  § "Third reading" — nothing above substituted.** Two findings, and the second is the useful one.
+  - **Exposure has saturated and still produces no instance.** At `aed1e94f6` the active corpus is
+    **10** files, down from 14 as four archived, and **all 10** are mid-flight — **6 of 6** on the
+    `ready` subset. From 1-of-14 to total in two days. The declaration count is **still zero**.
+    The warning above holds with more force, not less: the more dramatic the exposure figure gets,
+    the more tempting it is to read as the live subject it is not.
+  - **The first near-miss in the corpus resolves one rung BELOW a hold.** Extending the grep to
+    `later/` and `stubs/` returns exactly one hit,
+    `agents/roadmaps/stubs/road-to-main-protection-ruleset-changes.md:146` — *it must land in the
+    same small PR as the enablement*. It is **not** a hold and is not counted as one: the stub's
+    own words say the trigger *"is inert until the queue exists"*, which is the **guard** rung,
+    and landing both in one diff is the **re-sequence** rung. A hold is rung three and this case
+    never reaches it. So the closest thing to a release-coupled state anywhere in the tree was
+    resolved by its author, with no hold vocabulary in existence, using exactly the two cheaper
+    answers rule 28's authoring order would have told them to try first. That is evidence **for**
+    the honest-null branch, and the first positive evidence about the ladder rather than about the
+    population. It does not close this blocker, which stays a cost judgement and stays yours.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-11 | reviewer: claude/host -->
