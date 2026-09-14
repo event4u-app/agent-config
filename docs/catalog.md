@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **741 public artefacts** shipped by
+Consumer-facing catalog of all **742 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
