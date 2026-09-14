@@ -47,11 +47,39 @@ describe('surface detection', () => {
 
 describe('hooks:status is untouched by the surface field', () => {
     it('emits no surface key on any platform row', () => {
+        // `ask` IS on the row by design (the host's question-primitive shape,
+        // declared in the manifest). `surface` is not, and that is what this
+        // test guards — the key set is pinned so a new field is a reviewed
+        // edit rather than a leak.
         const matrix = collect(process.cwd(), { platforms: {} });
         for (const row of matrix.platforms) {
             expect(Object.keys(row).sort()).toEqual(
-                ['bindings', 'bridge_path', 'fallback_only', 'hint', 'platform', 'status'].sort(),
+                [
+                    'ask',
+                    'bindings',
+                    'bridge_path',
+                    'fallback_only',
+                    'hint',
+                    'platform',
+                    'status',
+                ].sort(),
             );
+            expect(Object.keys(row)).not.toContain('surface');
         }
+    });
+
+    it('a platform with no declared ask shape reads `text`, never unknown', () => {
+        // Absent must be the conservative answer: an unknown the contract then
+        // treats as native is the silent degrade the row exists to prevent.
+        const matrix = collect(process.cwd(), { platforms: {} });
+        for (const row of matrix.platforms) {
+            expect(row.ask).toBe('text');
+        }
+    });
+
+    it('a declared native shape is carried through', () => {
+        const matrix = collect(process.cwd(), { platforms: { claude: { ask: 'native' } } });
+        const claude = matrix.platforms.find((r) => r.platform === 'claude');
+        expect(claude?.ask).toBe('native');
     });
 });

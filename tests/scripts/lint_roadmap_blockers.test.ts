@@ -11,6 +11,8 @@ import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
+    OWNER_OWNED_CLASSES,
+    TECHNICAL_CLASSES,
     _archiveOverlap,
     _blockerClass,
     _hasExecutableSubstance,
@@ -449,5 +451,54 @@ describe('lint_roadmap_blockers — active/archived open-blocker overlap', () =>
             '',
         ].join('\n');
         expect([..._openBlockerIds(text)]).toEqual([]);
+    });
+});
+
+describe('lint_roadmap_blockers — the ownership axis', () => {
+    const entry = (extra: string[]): string =>
+        [
+            '## Blockers',
+            '',
+            '### blocker: a-decision',
+            '- **Status:** open',
+            '- **Owner:** user',
+            '- **Blocks:** Phase 2',
+            ...extra,
+            '- **Recommendation:** (a) — it is the cheaper of the two.',
+            '- **If you do nothing:** the phase stays parked.',
+            '- **What to do:**',
+            '  1. Pick (a) or (b).',
+            '- **Resolved when:** the choice is recorded',
+            '',
+        ].join('\n');
+
+    it.each([...OWNER_OWNED_CLASSES])('accepts the owner-owned class %s', (cls) => {
+        expect(_scan(entry([`- **Ownership:** ${cls}`]))).toEqual([]);
+    });
+
+    it.each([...TECHNICAL_CLASSES])('rejects the technical class %s — it is not parkable', (cls) => {
+        // The retirement in one assertion: a technical decision routes back
+        // through closure; parking it here is the shape being retired.
+        const gaps = _scan(entry([`- **Ownership:** ${cls}`]));
+        expect(gaps).toHaveLength(1);
+        expect(gaps[0]!.message).toContain('technical class');
+    });
+
+    it('rejects an ownership value from neither axis', () => {
+        const gaps = _scan(entry(['- **Ownership:** high-impact']));
+        expect(gaps).toHaveLength(1);
+        expect(gaps[0]!.message).toContain('unknown ownership');
+    });
+
+    it('the field stays optional — no entry in the tree declares one yet', () => {
+        expect(_scan(entry([]))).toEqual([]);
+    });
+
+    it('a resolved entry is history and is not re-litigated', () => {
+        const resolved = entry(['- **Ownership:** contested-technical']).replace(
+            '- **Status:** open',
+            '- **Status:** resolved',
+        );
+        expect(_scan(resolved)).toEqual([]);
     });
 });

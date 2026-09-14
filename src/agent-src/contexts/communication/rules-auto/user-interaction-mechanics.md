@@ -252,3 +252,50 @@ block and the closing reply carries none. It sees one user turn on one host,
 so everything outside that is model-carried, exactly like Iron Law 2's own
 "no gate ships for this" note. `check_reply_consistency` reads a single draft
 and holds no cross-turn state; it cannot see this law at all.
+
+## The native ask — per host, and what it changes
+
+> **Why this is here and not in the rule.** `user-interaction` is a
+> project-scope rule, so its every byte is re-written into the preamble on
+> **every subagent spawn**, and `check_preamble_payload_budget` is a measured
+> ratchet with no headroom — a four-line addition to the rule measured +219
+> tokens per spawn and failed it. The rule's own § Mechanics already routes
+> "everything you look up rather than obey" here, and the ask SHAPE is lookup
+> material: Iron Law 1 governs the recommendation identically on both shapes,
+> so the rule needed no new obligation, only this contract to point at.
+
+`ask: native | text` is declared per host in `src/scripts/hook_manifest.yaml`
+and printed by `agent-config hooks:status`. It is **declared, not probed**: the
+row records what the host's documented tool surface offers. A host declaring
+`native` whose primitive turns out to be absent degrades to the text block —
+the same question, the same content — so a wrong row costs a missed upgrade and
+never a broken ask. Absent reads `text`.
+
+| Shape | What the ask is | Where the recommendation lives |
+|---|---|---|
+| `native` | the host's structured-ask tool call | the **default option** of the native ask |
+| `text` | the numbered block, per Iron Law 1 | the `Recommendation:` / `Empfehlung:` line directly under the block |
+
+Four obligations hold on both shapes, and three of them are why the native
+form is preferred rather than merely available:
+
+1. **One decision point per turn.** A native ask presenting several unrelated
+   questions is the same violation as several text blocks. One number — or one
+   selection — answers it, or it is two asks.
+2. **Every option says what changes by answering it.** Not the option's name
+   again: the consequence. A native ask makes this structural, because an
+   option carries a description field the text form leaves to discipline.
+3. **The recommendation has exactly ONE source.** On a native ask that source
+   is the default option; naming it a second time in the prose above is the
+   drift Iron Law 1 exists to make structurally impossible.
+4. **The answer is recorded before the next step runs.** Where the ask came out
+   of a plan-closure pass, it becomes a `## Decisions` row — id, ownership,
+   `resolved by: owner`, the decision, its evidence, its `revisit if`. An
+   answer that lives only in the transcript is re-derived after the next
+   context reset, which is the repeat the ask census counts as a defect.
+
+**What the native shape does NOT change.** It is not a license to ask more: the
+one-question-per-turn floor, the no-cheap-questions floor and the ownership
+routing all run first, and a question that should not have been asked is not
+improved by a better widget. Nor does it change who may be asked — a technical
+decision does not reach the owner on any host.

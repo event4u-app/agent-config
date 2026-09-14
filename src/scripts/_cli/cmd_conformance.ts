@@ -6,7 +6,9 @@
  * consumer-facing checks that answer ONE question deterministically:
  * "is agent-config installed AND firing in this repo?"
  *
- *   (a) txlog-clean          — install log tail carries no abandoned run
+ *   (a) txlog-clean          — install log tail carries no abandoned run;
+ *                              an absent log on an installed tree is `unknown`,
+ *                              not green (see `_check_txlog_clean`)
  *   (b) router-pointers      — dist/router.json ids + routes_to resolve on disk
  *   (c) hook-dispatcher      — dispatcher answers synthetic session_start/stop
  *   (d) lean-projection      — lean_projection.mode matches projected artifacts
@@ -75,6 +77,21 @@ export const CONFORMANCE_CHECK_IDS = [
 /** Marker emitted by `project_thin_rules.thin_entry()` — the thin-stub signature. */
 export const THIN_STUB_MARKER = 'Routed rule — load the body on trigger-match';
 
+/**
+ * Rendering symbols for this verb's rows — doctor's table plus `unknown`.
+ *
+ * `unknown` is a conformance concept: the check ran and could not answer.
+ * Distinct from `skipped` ("not applicable here") and from `ok` ("answered,
+ * green"), and never folded into the exit code, which keys off `fail` alone.
+ * It lives here rather than in `cmd_doctor`'s table because doctor emits no
+ * such row — and because `cmd_doctor.ts` is already over the source-size
+ * ceiling, so a line added there is a ratchet violation.
+ */
+const CONFORMANCE_STATUS_SYMBOLS: Record<string, string> = {
+    ...STATUS_SYMBOLS,
+    unknown: '❔',
+};
+
 function print(s = ''): void {
     process.stdout.write(`${s}\n`);
 }
@@ -105,21 +122,75 @@ export function installLogPath(): string {
 // Check (a) — txlog tail clean.
 // ---------------------------------------------------------------------------
 
-export function _check_txlog_clean(logPath: string = installLogPath()): Dict {
-    if (!fs.existsSync(logPath)) {
-        return {
-            id: 'txlog-clean',
-            status: 'ok',
-            message: 'no install transaction log — nothing to recover',
-            remedy: '',
-        };
-    }
-    const entries = readRecentEntries(logPath);
+/**
+ * True when this tree carries an install manifest — i.e. something was
+ * installed here, so an install transaction log was expected.
+ *
+ * The discriminator for the two absent-log cases below. A tree with no
+ * manifest was never installed and has genuinely nothing to recover; a
+ * tree WITH a manifest recorded an install and no log for it, which is
+ * not the same answer and must not be reported as the same colour.
+ */
+export function _installLogExpected(projectRoot: string): boolean {
+    return fs.existsSync(installed_tools.manifest_path(projectRoot));
+}
+
+/**
+ * Check (a) — the install transaction log tail carries no abandoned run.
+ *
+ * A log with nothing usable in it is two answers, not one
+ * (road-to-a-conformance-check-that-can-fail Phase 1). Until this split the
+ * branch returned `ok` unconditionally, so every install satisfied the check
+ * by having produced nothing.
+ *
+ * - nothing usable, no manifest  → `ok`      (nothing was installed here)
+ * - nothing usable, manifest     → `unknown` (an install recorded nothing)
+ * - usable entries               → `ok` / `fail` on the tail, as before
+ *
+ * `unknown` is deliberately NOT `fail`: an install that predates the log, or
+ * one written by a path that does not log, is an unanswered question rather
+ * than a broken install, and reddening every such consumer at upgrade is the
+ * risk this phase's shape exists to avoid. The exit contract keys off `fail`
+ * only, so `unknown` leaves exit codes untouched — including the verdict
+ * banner, where the per-row symbol is the only signal.
+ *
+ * Reach, stated rather than implied, and stated after a review corrected it:
+ * NO install path writes this log — browser included. `appendTxLog` has one
+ * call site repository-wide (`src/server/routes/install.ts`, the
+ * recovery-dismiss handler), and it appends a `rollback` marker with an empty
+ * path and a null hash; the TypeScript apply route it once sat beside was
+ * removed. So `unknown` is the answer for every installed tree, not for a
+ * narrow class, and `fail` is currently unreachable because nothing writes an
+ * `abort`. That is the honest state of the check, and closing it is Phase 3,
+ * behind an open owner blocker.
+ */
+export function _check_txlog_clean(
+    logPath: string = installLogPath(),
+    projectRoot: string | null = null,
+): Dict {
+    const entries = fs.existsSync(logPath) ? readRecentEntries(logPath) : [];
     if (entries.length === 0) {
+        // One branch for all three no-usable-entries shapes — absent, empty,
+        // and unreadable. Splitting them let a zero-byte or fully-corrupt log
+        // reach `ok` on a tree the absent-log branch would have called
+        // `unknown`: `readRecentEntries` drops malformed lines silently, so
+        // "the file exists" is not evidence that anything recorded anything.
+        if (projectRoot !== null && _installLogExpected(projectRoot)) {
+            return {
+                id: 'txlog-clean',
+                status: 'unknown',
+                message:
+                    'install manifest present, no usable install transaction log — ' +
+                    'nothing recorded this install, so the last run cannot be confirmed complete',
+                remedy:
+                    'no install path writes this log today; ' +
+                    'run `agent-config doctor` for the drift answer this check cannot give',
+            };
+        }
         return {
             id: 'txlog-clean',
             status: 'ok',
-            message: 'install transaction log is empty',
+            message: 'no usable install transaction log and no install manifest — nothing was installed here',
             remedy: '',
         };
     }
@@ -131,7 +202,9 @@ export function _check_txlog_clean(logPath: string = installLogPath()): Dict {
             message:
                 `install log tail is an abandoned run (abort at ${last.ts}` +
                 `${last.note ? `: ${last.note}` : ''})`,
-            remedy: 're-run `agent-config init` (recovery reverse-applies the aborted tail)',
+            remedy:
+                're-run `agent-config init` — it re-applies the plan over the partial tail; ' +
+                "the aborted run's writes stay on disk and are replaced only where the plan covers them",
         };
     }
     return {
@@ -492,7 +565,7 @@ export function runConformanceChecks(opts: ConformanceRunOptions = {}): Dict[] {
     const projectRoot = opts.projectRoot ?? process.cwd();
     const packageRoot = opts.packageRoot ?? PACKAGE_ROOT;
     const checks: Dict[] = [];
-    checks.push(_check_txlog_clean());
+    checks.push(_check_txlog_clean(installLogPath(), projectRoot));
     checks.push(_check_router_pointers(packageRoot));
     if (opts.skipDispatcher === true) {
         checks.push({
@@ -653,7 +726,7 @@ function main(argv: string[] | null = null): number {
         print(`  📍  project_root: ${project_root}`);
         print('conformance:');
         for (const c of allChecks) {
-            const sym = STATUS_SYMBOLS[c['status'] as string] ?? '?';
+            const sym = CONFORMANCE_STATUS_SYMBOLS[c['status'] as string] ?? '?';
             print(`  ${sym} ${c['id']}: ${c['message']}`);
             if (c['status'] !== 'ok' && c['remedy']) {
                 print(`      fix: ${c['remedy']}`);

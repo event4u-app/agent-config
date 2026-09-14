@@ -5,6 +5,7 @@
  * failure condition is seeded, and stay green on a clean fixture.
  */
 
+import { createHash } from 'node:crypto';
 import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -111,6 +112,42 @@ describe('checkConflicts', () => {
             }),
         );
         expect(findings.some((f) => f.id === 'conflicts' && f.severity === 'warning')).toBe(true);
+    });
+
+    // Findings 1-2 of the completion review: this branch shipped a remedy
+    // saying "a default install leaves it alone", which the single writer
+    // (src/scripts/install.ts::_resolve_file_conflict, unconditional `write`
+    // for deployed files) contradicts. The guard is generic so the class
+    // cannot come back through a neighbouring string.
+    it('no conflict remedy claims an install preserves the existing file', () => {
+        const srcDir = join(tmp, 'src');
+        const destDir = join(tmp, 'dest');
+        mkdirSync(srcDir, { recursive: true });
+        mkdirSync(destDir, { recursive: true });
+        writeFileSync(join(srcDir, 'a.md'), 'planned content');
+        const edited = 'the user edited this';
+        writeFileSync(join(destDir, 'a.md'), edited);
+        // A manifest recording a DIFFERENT digest for that path is what makes
+        // the row `recorded-modified` — the branch whose remedy is under test.
+        // Without it ownership is `unknown` and this fixture exercises the
+        // wrong string, which is how the first version of this test passed a
+        // sabotage probe.
+        mkdirSync(join(destDir, 'agents'), { recursive: true });
+        writeFileSync(
+            join(destDir, 'agents', 'installed-tools.lock'),
+            'schema_version: 2\ntools:\n  - name: claude\n    files:\n' +
+                `      - path: a.md\n        kind: deployed\n        sha256: "${createHash('sha256').update('what we wrote').digest('hex')}"\n`,
+        );
+        const findings = checkConflicts(
+            inputs({
+                root: destDir,
+                sources: [{ toolId: 'claude-code', srcDir, destDir, kind: 'deployed' }],
+            }),
+        );
+        expect(findings.some((f) => /edited since we wrote it/.test(f.message))).toBe(true);
+        for (const f of findings) {
+            expect(f.remedy).not.toMatch(/leaves? it alone|survives?|untouched|is safe|preserv/i);
+        }
     });
 
     it('is green when destination is empty', () => {

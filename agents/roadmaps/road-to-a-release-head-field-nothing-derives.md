@@ -54,7 +54,7 @@ of four labels and false of the fifth.
 
 ## Phase 1 — Make the field falsifiable
 
-- [ ] **1.1 Derive known-limitation candidates from the span, the way the other
+- [x] **1.1 Derive known-limitation candidates from the span, the way the other
       four labels are derived.** Add a `Known limitations` entry to
       `_DERIVED_REASON` and a matching rule in the derivation: a commit whose
       subject or body, or a file the commit touches, carries a self-declared
@@ -68,14 +68,14 @@ of four labels and false of the fifth.
       detector-E commit derives at least one candidate, and a fixture span of
       pure chore commits derives none.
 
-- [ ] **1.2 Prove the derivation on the two spans that shipped `_none_`.** Run
+- [x] **1.2 Prove the derivation on the two spans that shipped `_none_`.** Run
       the new derivation over `15.0.0..16.0.0` and over the 14.23.0 → 15.0.0
       span and record what it returns for each.
       verify: the run over `15.0.0..16.0.0` names the `dropped_decision.ts`
       residuals; the output is pasted into the evidence record, both spans, with
       the commands that produced it.
 
-- [ ] **1.3 Refuse `_none_` when the derivation found candidates.** Extend the
+- [x] **1.3 Refuse `_none_` when the derivation found candidates.** Extend the
       head gate the module header already describes — the one built for *"a
       human editing a substantiated line back down to `_none_`"* — so it covers
       the fifth label on the same terms as the other four.
@@ -86,7 +86,7 @@ of four labels and false of the fifth.
 
 ## Phase 2 — Correct the two published heads
 
-- [ ] **2.1 Replace `_none_` in the 16.0.0 and 15.0.0 heads with what the
+- [x] **2.1 Replace `_none_` in the 16.0.0 and 15.0.0 heads with what the
       derivation returns.** One in-place head correction each, naming the
       residuals and not rewriting anything else in those sections.
       verify: `grep -n 'Known limitations' CHANGELOG.md docs/archive/CHANGELOG-pre-16.0.0.md`
@@ -104,14 +104,14 @@ of four labels and false of the fifth.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `Known limitations` has an entry in `_DERIVED_REASON` and a
+- [x] AC-1 — `Known limitations` has an entry in `_DERIVED_REASON` and a
       derivation rule, so all five curated labels are derived from the span
       rather than four of five.
-- [ ] AC-2 — A head that says `_none_` over a span carrying a derived candidate
+- [x] AC-2 — A head that says `_none_` over a span carrying a derived candidate
       is refused, and the refusal names the candidate.
-- [ ] AC-3 — Neither the 16.0.0 nor the 15.0.0 head says
+- [x] AC-3 — Neither the 16.0.0 nor the 15.0.0 head says
       `Known limitations: _none_`, and the text that replaced it names a
       residual findable at a real `file:line` in that span.
-- [ ] AC-4 — The evidence record carries the derivation's output over both
+- [x] AC-4 — The evidence record carries the derivation's output over both
       spans with the commands that produced it, so a later reader can re-run
       the measurement rather than trust the summary.

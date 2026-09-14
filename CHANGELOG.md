@@ -683,7 +683,7 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 - **Default changes + migration:** _none_
 - **Security and correctness:** refuse a repair over a file with no reading to preserve (0339e07); a dead flat key told the reader the opposite of the truth (9476a4e); drop the three imports that left with detector E (f414ee0); pay the ratchets this branch moved, in the way both prescribe (6b5c574); the instrument's turn boundary was not the gate's (c510f01); an empty checkout is not an empty instrument (fc7cdae); +12 more.
 - **Honest nulls:** _none_
-- **Known limitations:** _none_
+- **Known limitations:** the dropped-decision detector this span moved into `_lib/dropped_decision.ts` names two false-positive paths it does not close — a BLOCKQUOTED illustration of an ask reads as live, because `OPTION_LINE_RE` accepts a leading `>` and narrowing it would change what `check_reply_consistency` enforces about Iron Law 1; and a genuine user turn carrying no `type: 'text'` block does not reset the turn boundary (`src/scripts/_lib/dropped_decision.ts:80-94`, 6b5c574). The installer's overlap gate is not exercised by `--dry-run`: `main()` returns from `_dry_run_summary` before scope and tools are resolved, so its `dry_run` parameter is always `false` today (`src/scripts/install.ts:2206`, 3232bde).
 
 > **Governance mix:** governance-only 57 vs consumer-only 16 (taxonomy 1.1.0).
 

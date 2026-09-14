@@ -155,8 +155,23 @@ export function checkConflicts(inputs: PlanInputs): PreflightFinding[] {
         id: 'conflicts' as const,
         severity: 'warning' as const,
         path: c.path,
-        message: `existing file conflicts with planned ${c.kind} content`,
-        remedy: 'resolve interactively, or pass --force to overwrite',
+        message:
+            c.ownership === 'recorded-modified'
+                ? `managed ${c.kind} file has been edited since we wrote it`
+                : `existing file conflicts with planned ${c.kind} content`,
+        // No remedy here may describe what an install does to the file. This
+        // probe reports on a plan; the writer is `src/scripts/install.ts`,
+        // which overwrites every deployed file unconditionally and documents
+        // `--force` as an accepted no-op. Telling an operator their edit is
+        // safe from a default run would be false — and so was the other arm's
+        // pre-existing "resolve interactively, or pass --force to overwrite",
+        // which named an interactive resolution that path never reaches and a
+        // flag that changes nothing there. Both arms now say only what the
+        // operator can act on.
+        remedy:
+            c.ownership === 'recorded-modified'
+                ? 'back up your edit — installing refreshes every managed file with package content'
+                : 'back up this file — installing writes the planned content over it',
     }));
 }
 

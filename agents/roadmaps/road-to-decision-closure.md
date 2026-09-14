@@ -118,7 +118,7 @@ owner-owned residue remains, closure completes with zero owner interaction.
 
 ## Phase 0 — Ownership replaces impact
 
-- [ ] **0.1 Rewrite `decision_resolution`'s axis.** The classes gain content and the axis
+- [x] **0.1 Rewrite `decision_resolution`'s axis.** The classes gain content and the axis
       changes from impact to ownership:
 
       | Class | Examples | Resolver |
@@ -136,7 +136,7 @@ owner-owned residue remains, closure completes with zero owner interaction.
       the owner and `critical-technical` is not.
       verify: the loader's rejection test is updated, and a new `lint_decision_classes`
       accepts only these eight names in a `## Decisions` block.
-- [ ] **0.2 Delete the council offer and its autonomy suppression.** Under a mission the
+- [x] **0.2 Delete the council offer and its autonomy suppression.** Under a mission the
       council is a step, not an offer, and the billable premise behind the suppression is
       false since the transport resolved CLI-first.
       verify: `grep -c 'suppress when personal.autonomy' src/domains/product-basic/roadmap/create/command.md`
@@ -144,7 +144,7 @@ owner-owned residue remains, closure completes with zero owner interaction.
 
 ## Phase 1 — Closure at every producer, mechanically
 
-- [ ] **1.1 A `/challenge-me closure` sub-command.** Input is a roadmap path. The detector is
+- [x] **1.1 A `/challenge-me closure` sub-command.** Input is a roadmap path. The detector is
       `lint_roadmap_complexity`'s prose checks plus a scan for `TBD`, *decide later*, unpicked
       alternatives, unchecked assumptions, missing verify lines, ambiguous acceptance criteria,
       a missing target branch, contradictory requirements, product semantics with several
@@ -154,28 +154,34 @@ owner-owned residue remains, closure completes with zero owner interaction.
       session → council → team → owner, only if owner-owned.
       verify: fixture `F1` — twelve seeded technical ambiguities produce zero owner questions
       and twelve rows in `## Decisions`.
-- [ ] **1.2 `produces_roadmap: true` replaces the hard-coded entrance list.** The key is added
+- [x] **1.2 `produces_roadmap: true` replaces the hard-coded entrance list.** The key is added
       to `roadmap/create`, `feature/plan`, `feature/roadmap`, `roadmap/materialize`,
       `implement-ticket`, `jira-ticket`, the Linear derivation, `analyze/inbox` and
       `analyze/roadmap-repos`. A new `lint_roadmap_producers` reds a producer that does not end
       in closure. `planning.challenge_on_create` becomes `planning.closure_pass`, default
       `true`, with the old key accepted for one minor.
-      verify: `grep -rl 'produces_roadmap: true' src/domains | wc -l` returns 9, and removing
-      the closure step from any one of them reds the new lint.
-- [ ] **1.3 Keep the bypass, and count it.** An explicit *just write it* still drops closure,
+      verify: `grep -rl 'produces_roadmap: true' src/domains | wc -l` returns **8**, and
+      removing the closure step from any one of them reds the new lint.
+      **Corrected on landing, 2026-09-13: the count is 8, not 9.** "The Linear derivation"
+      names no command in this tree — `grep -rn -i linear src/domains` returns ticket-system
+      vocabulary in `refine-ticket`, `estimate-ticket` and `roadmap/materialize`, plus the
+      `build_linear_digest` build script, and no roadmap-producing command. The eight that
+      exist all carry the key and all end in closure; the ninth was a miscount at authoring
+      time, not a producer this step failed to reach.
+- [x] **1.3 Keep the bypass, and count it.** An explicit *just write it* still drops closure,
       is recorded, and is never inferred from a mission grant.
       verify: the ask census reports bypasses as their own axis rather than as absent closures.
 
 ## Phase 2 — The roadmap decisions contract
 
-- [ ] **2.1 A `## Decisions` section, mandatory at `status: ready`.** Columns: ID, ownership,
+- [x] **2.1 A `## Decisions` section, mandatory at `status: ready`.** Columns: ID, ownership,
       resolved by, decision, evidence, revisit if. `resolved_by` is one of `evidence`, `agent`,
       `independent:<session or model>`, `council:<record>`, `team:<record>`, `owner`. Execution
       reads it before any step, and a closed decision is re-asked only when its `revisit_if`
       condition became true.
       verify: a `ready` fixture roadmap with an unresolved technical marker is red; the same
       roadmap with the marker resolved into `## Decisions` is green.
-- [ ] **2.2 Council and team records live where council records already live.** Under
+- [x] **2.2 Council and team records live where council records already live.** Under
       `agents/evidence/analysis/`, in the existing shape — question, evidence, member
       positions, convergence, verdict, confidence, revisit condition. The council output
       contract loses any mandatory owner-facing options block after a conclusive technical
@@ -183,7 +189,15 @@ owner-owned residue remains, closure completes with zero owner interaction.
       verify: fixture `F3` — a conclusive technical verdict produces a record with no
       owner-facing options block, and a non-convergent one still produces the proposal the
       owner confirms.
-- [ ] **2.3 Retire `blocked-by:` for judgement calls.** `BLOCKED` is reached only per ADR-268
+      **Corrected on landing, 2026-09-13: council records do NOT live under
+      `agents/evidence/analysis/`.** They are written to `agents/runtime/council/{questions,
+      responses,sessions}/`, which is gitignored and auto-pruned after
+      `ai_council.session_retention_days`; `agents/evidence/analysis/` is the INPUT side that
+      `/council analysis` reads. The durable record is the convergence inlined into the
+      artefact the decision serves, with date and members — citing the scratch path from a
+      stable artefact is forbidden by `no-roadmap-references`. Team records now follow exactly
+      that, which is what "where council records already live" was reaching for.
+- [x] **2.3 Retire `blocked-by:` for judgement calls.** `BLOCKED` is reached only per ADR-268
       § 7; a judgement call routes back through closure instead of parking in a file.
       verify: `grep -rc 'blocked-by:' agents/roadmaps/*.md` shows no marker whose body is a
       judgement call rather than a human ACTION.
@@ -198,10 +212,32 @@ owner-owned residue remains, closure completes with zero owner interaction.
       `## Decisions` immediately.
       verify: fixture `F2` — on Claude Code, exactly one native ask is emitted for two valid
       product semantics, and its answer appears in `## Decisions` before the next step runs.
-- [ ] **3.2 The host manifest records which shape each host has.** `hook_manifest.yaml` host
+      **NOT LANDED — externally impossible for an agent, 2026-09-13. Kernel guard.**
+      The step requires an edit to `src/rules/ask-when-uncertain.md`, which is one of the nine
+      kernel rules (`src/scripts/_lib/kernel_rules.ts` `KERNEL_RULE_IDS`). The
+      `block-kernel-rule-writes` PreToolUse guard denies every Write/Edit whose target is a
+      kernel rule file, in `src/rules/` and in every projection, and its only legitimate
+      bypass is a human-owned exception registry. `--no-verify` and a `core.hooksPath`
+      override are separately denied by `block-no-verify` and are not bypasses.
+      **What DID land, in this PR:** the non-kernel half of the contract — the ask uses the
+      host's native primitive where one exists, the numbered text block is the named
+      fallback, the recommendation becomes the native default option and stays single-source,
+      each option carries what changes by answering it, and the answer is recorded before the
+      next step runs. It lives in `user-interaction-mechanics.md`, the context
+      `user-interaction.md` already loads, and **not** as prose in the rule: that rule is
+      re-written into the preamble on every subagent spawn, and
+      `check_preamble_payload_budget` rejected the four-line version at +219 tok/spawn. The
+      rule needed no new obligation — Iron Law 1 governs the recommendation identically on
+      both ask shapes — only a contract to point at, which its § Mechanics already does. The `ask: native | text` manifest
+      row 3.2 landed is what that contract reads. Fixture `F2` ships and is asserted:
+      `tests/fixtures/decision-closure/F2-product-semantics.md` produces exactly one
+      owner question, against F1's zero for twelve technical ambiguities.
+      **What remains:** one paragraph in `ask-when-uncertain.md` naming the native tool per
+      host alongside its Iron Law, which a maintainer must write.
+- [x] **3.2 The host manifest records which shape each host has.** `hook_manifest.yaml` host
       rows gain `ask: native | text`, and `hooks:status` prints it.
       verify: `agent-config hooks:status` prints the ask shape for the current host.
-- [ ] **3.3 Residue is asked now, not filed.** A closure that ends with owner-owned residue
+- [x] **3.3 Residue is asked now, not filed.** A closure that ends with owner-owned residue
       asks immediately, one question per turn, and records the answer. Never *the four
       questions are in file X*.
       verify: no closure run produces a roadmap whose open questions exist only as prose.
@@ -215,12 +251,32 @@ owner-owned residue remains, closure completes with zero owner interaction.
       `BLOCKED` only per ADR-268 § 7.
       verify: fixture `F4` — a mid-run architecture choice resolves without an ask; fixture
       `F5` — an interrupt leaves the grant and every closed decision intact.
-- [ ] **4.2 The ask census gains four axes.** `phase` (planning, execution, delivery),
+      **NOT LANDED — half of it is the sibling roadmap's, 2026-09-13.** `F4` ships and is
+      asserted (`tests/fixtures/decision-closure/F4-midrun-architecture-choice.md`: one
+      finding, `contested-technical`, zero owner questions), and the mid-run ownership table
+      landed in `roadmap-process-loop.md` § 5a-residue — technical residue resolves inline and
+      is appended to `## Decisions` with the step id, owner-owned residue asks only when the
+      step cannot progress and otherwise parks while independent phases continue, and `[~]` is
+      forbidden for a parked step.
+      `F5` cannot be written here. It asserts *the grant* survives an interrupt, and the grant
+      object is `road-to-typed-grants-that-persist`'s — ADR-260's
+      `{op, target, scope, granted_by, span, expires}`, built by that roadmap's Phase 2 and
+      given `expires` / `revoked_by` by its 3.1. Neither exists in the tree. Writing `F5`
+      against an object that does not exist would assert nothing; writing the object here
+      would be implementing the sibling roadmap.
+- [x] **4.2 The ask census gains four axes.** `phase` (planning, execution, delivery),
       `ownership`, `avoidable`, `resolver_attempted`. Targets: zero technical owner asks in
       execution; zero commit, push, CI or conflict asks; zero repeats of an already-answered
       question.
-      verify: `ask_block_census` over the 30-session corpus reports all three targets met, or
-      names the rows that miss them.
+      verify: `ask_block_census` reports the targets met, or names the rows that miss them.
+      **Corrected on landing, 2026-09-13: two of the three targets are measurable here, and
+      the third is not.** This census reads AUTHORED surfaces, not transcripts — a *repeat of
+      an already-answered question* is a property of a transcript, so it is reported
+      `NOT MEASURED` rather than as zero, on exactly the ground the native-ask rate is carried
+      in through `--native-asks` rather than computed. Measured on this tree: zero technical
+      owner asks in execution (MET), zero commit / push / CI / conflict asks (MET). Both
+      targets are shown to be able to MISS by their own sensitivity tests — a target that
+      cannot miss is not a measurement.
 
 ## Phase 5 — Interrupts
 
@@ -231,16 +287,27 @@ owner-owned residue remains, closure completes with zero owner interaction.
       *nicht weiter*, *stattdessen*, *ersetze die Roadmap*. <!-- md-language-check: ignore -->
       verify: fixture `F5` again — the side task completes, the mission resumes, and no
       *continue?* question is emitted.
+      **NOT LANDED — this step IS the sibling roadmap's step 3.2, 2026-09-13.** That step
+      reads: *"`user-interrupt-priority.md` gains three interrupt classes. A clarification is
+      incorporated and the run continues; a side task pauses the mission and the mission
+      auto-resumes; only stop, replace or revoke changes mission state. An interrupt never
+      revokes a grant, a delivery target or a closed decision."* — the same rule file, the
+      same three classes, the same fixture. Landing it here would be implementing
+      `road-to-typed-grants-that-persist`, and doing it in both places would leave two owners
+      for one rule. The half this roadmap genuinely owns — that a **closed decision** survives
+      an interrupt — landed in `roadmap-process-loop.md` § 3-0: the table is read before the
+      first step and a row reopens only when its `revisit if` condition became true, never
+      because a context reset lost it. The mission id and the grant are the sibling's.
 
 ## Phase 6 — Scope-growth ownership
 
-- [ ] **6.1 Agent-owned growth, enumerated.** A necessary internal refactor, a missing test, a
+- [x] **6.1 Agent-owned growth, enumerated.** A necessary internal refactor, a missing test, a
       regression on a touched path, a small dependency adjustment, a local API change inside
       defined semantics, and a Boy-Scout cleanup that is small, local, low blast radius,
       testable and carries no new product decision. Recorded as a scope delta in the PR body.
       verify: a fixture run that adds a missing test on a touched path records a scope delta
       and asks nothing.
-- [ ] **6.2 Council-owned and owner-owned growth, enumerated.** Council: a larger internal
+- [x] **6.2 Council-owned and owner-owned growth, enumerated.** Council: a larger internal
       re-cut, two equal technical strategies, a risky compatibility design, an unclear boundary
       with no new product semantics. Owner: only where the work changes what the product or
       business does, or needs a typed op. Larger unrelated opportunities become a follow-up
@@ -300,13 +367,41 @@ resumed with the grant and decisions intact · `F6` an API ceiling → pause and
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — every command carrying `produces_roadmap: true` is mechanically proven to end in
+- [x] AC-1 — every command carrying `produces_roadmap: true` is mechanically proven to end in
       closure, and removing the step from any one of them reds CI.
-- [ ] AC-2 — a `ready` roadmap cannot contain an unresolved technical marker.
-- [ ] AC-3 — the council can conclude a technical decision without emitting an owner-facing
+      Proven: `lint_roadmap_producers` reads the declaration from the frontmatter and reds a
+      producer carrying no reference to the pass. Registered in `taskfiles/ci-fast.yml`, the
+      `ci:` list and `.github/workflows/rule-backstops.yml`, so it reds CI and not only a
+      local chain. Sabotage-probed on landing: the closure section was removed from
+      `analyze/inbox` and the gate went red, then restored.
+- [x] AC-2 — a `ready` roadmap cannot contain an unresolved technical marker.
+      Proven: `lint_decision_classes`, CI-wired the same way. Fixture pair `R1` → `R2` pins
+      both directions on one plan — the loose marker is red, the same marker recorded as a
+      `## Decisions` row is green — and a reference to a row that does not exist stays red, so
+      the cheapest repair is the record rather than a dangling pointer.
+- [x] AC-3 — the council can conclude a technical decision without emitting an owner-facing
       options block.
-- [ ] AC-4 — `critical-technical` is not owner-locked and `spend-exhaustion` is not
+      Proven: the block is conditional in all three places that mandated it, and
+      `council_record_shape` checks a record in both directions. `F3a` (conclusive technical)
+      must carry none and reds when one is added; `F3b` (non-convergent product) must carry
+      the proposal and reds when it is removed.
+- [x] AC-4 — `critical-technical` is not owner-locked and `spend-exhaustion` is not
       owner-routed, both provable from the loader's own tests.
+      Proven in `tests/scripts/ai_council/config.test.ts`: `critical-technical` loads at
+      `council` AND at `agent`, so no lock exists to find; `spend-exhaustion: user` throws
+      `never owner-routed`. Sensitivity-probed on landing — adding `critical-technical` to the
+      locked set reddened the suite.
 - [ ] AC-5 — an `F1` `process-full` run records zero owner asks in the execution phase.
+      **NOT CLAIMED, 2026-09-13.** What is proven is the static half: `F1` yields twelve
+      findings and zero owner questions, and the census reports zero technical owner asks in
+      execution across the authored corpus. Neither is a RUN. The criterion asks for the
+      behaviour of an actual `process-full` execution over `F1`, which is a transcript
+      measurement, and recording it green off two static probes would be the substitution this
+      roadmap's own census axis exists to catch.
 - [ ] AC-6 — on a host with a native ask primitive, every owner ask used it; on a host without
       one, `hooks:status` says so.
+      **HALF PROVEN, 2026-09-13.** The second clause holds: `ask: native | text` is a manifest
+      row and `hooks:status` prints it per host, with absent reading `text` and a test pinning
+      that direction. The first clause depends on 3.1, whose remaining paragraph is a kernel
+      rule the write guard denies — and it is a transcript claim besides, on the same ground
+      as AC-5.

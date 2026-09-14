@@ -1,6 +1,7 @@
 ---
 model_tier: inherit
 name: feature-plan
+produces_roadmap: true
 pack: engineering-base
 visibility: internal
 cluster: feature
@@ -24,7 +25,7 @@ packs:
 
 Before gathering, run the plan-confidence gate per
 [`plan-confidence-gate`](../../contexts/execution/plan-confidence-gate.md):
-read `planning.challenge_on_create` (missing = `true`), do the codebase
+read `planning.closure_pass` (missing = `true`), do the codebase
 lookup, and assess the four 95%-conditions — **seed = the provided
 description** (when none was provided, step 1's ask supplies it first).
 Confident → single marker line, continue with step 1. Uncertain → route
@@ -389,3 +390,29 @@ What's next?
 - [`role-contracts`](../../guidelines/agent-infra/role-contracts.md#po) — PO mode output contract (Goal / Assumptions / Acceptance criteria / Impacted modules / Risks / Open questions for stakeholder)
 - [`refine-ticket`](refine-ticket.md) — optional upstream step: run first when the input is a Jira/Linear ticket rather than a fresh idea
 - [`estimate-ticket`](estimate-ticket.md) — sibling of `refine-ticket`; size + risk + split recommendation for an already-refined ticket
+
+## Closure — the last step, always
+
+```
+THIS COMMAND PRODUCES A ROADMAP, SO IT ENDS IN CLOSURE.
+NEVER HAND BACK A PLAN CARRYING A DECISION PLANNING COULD HAVE CLOSED.
+```
+
+Declared by `produces_roadmap: true` in the frontmatter and enforced by
+`lint_roadmap_producers`: a producer that does not end here reds CI.
+
+Read `planning.closure_pass` (missing = `true`). When active, run
+[`/challenge-me closure`](../../../meta/challenge-me/closure/command.md) on the
+roadmap this command just produced, before handing back:
+
+```bash
+./scripts-run src/scripts/closure_scan <roadmap-path>
+```
+
+Every detected decision is resolved at the lowest rung that owns it and written
+into the roadmap's `## Decisions` table. Owner-owned residue is asked **now**,
+one question per turn, and its answer recorded — never handed back as *"the
+open questions are in the file"*.
+
+An explicit *just write it* drops the pass and is recorded as a **bypass** on
+its own axis, never as an absent closure. A mission grant is not a bypass.

@@ -79,9 +79,12 @@ describe('ask_block_census — the classification unit', () => {
         expect(censusSelfTest()).toBe(0);
     });
 
-    it('declares exactly the four classes the roadmap names', () => {
+    it('declares exactly the five classes, closed', () => {
+        // `bypass` joined the four: an explicit user bypass is a decision the
+        // user took, and counting it as an absent closure reads as a surface
+        // that forgot to close rather than one the user told to stop.
         expect([...ASK_CLASSES].sort()).toEqual(
-            ['batch', 'count-only', 'file-parked', 'single'].sort(),
+            ['batch', 'bypass', 'count-only', 'file-parked', 'single'].sort(),
         );
     });
 

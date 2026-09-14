@@ -93,6 +93,26 @@ Update stale idioms to the version the project **actually runs** — but only wh
 - Subordinate to `no-cheap-questions` (self-check items 3 & 14 — real trade-off, not a disguised continuation/commit ask), `autonomous-execution` (the end-of-session batch must not read as "shall I continue?"), `user-interaction`, `ask-when-uncertain` (one batched prompt = one question).
 - Threshold to surface at all: a **real, nameable** improvement with a concrete benefit. Cosmetic nitpicks with no trade-off → drop silently. The live-security carve-out is the only case that interrupts or overrides autonomy.
 
+## The other axis — who owns the growth
+
+The ladder above sizes a change: *is this small and aligned enough to do now.*
+It does not say **whose decision it is**, and both must clear before work
+happens inline — something small and council-owned is still not the agent's to
+decide, and something agent-owned and large is still bounded by
+`minimal-safe-diff`.
+
+Three closed lists answer the ownership half: six agent-owned kinds (done
+inline, recorded as a scope delta in the PR body, never asked about), four
+council-owned (routed through the ownership ladder, reaching the owner in none
+of them), and two owner-owned. Anything matching none of them is not scope
+growth at all — it is a follow-up artifact, and the mission does not expand to
+hold it.
+
+Full enumeration: [`scope-growth-ownership`](../../../src/agent-src/contexts/authority/scope-growth-ownership.md).
+One item classifies deterministically with
+`./scripts-run src/scripts/scope_growth "<description>"`; `unknown` is a real
+verdict there, never a fallback to the cheapest rung.
+
 ## See also
 
 - [`active-remediation`](../../../src/rules/active-remediation.md) — the rule this file details (Iron Law + ladder + live-security carve-out).

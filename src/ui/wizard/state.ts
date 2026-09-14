@@ -425,6 +425,13 @@ export interface ConflictEntryWire {
     readonly plannedSha256: string | null;
     readonly existingSha256: string | null;
     readonly mergeable: boolean;
+    /**
+     * Three-state ownership from the install manifest's recorded digest.
+     * `recorded-modified` is a file we wrote that the user has since edited —
+     * the screen should say so rather than treating it as a foreign
+     * collision. Optional on the wire: older servers omit it.
+     */
+    readonly ownership?: 'recorded-unchanged' | 'recorded-modified' | 'unknown';
 }
 
 /**
@@ -432,6 +439,13 @@ export interface ConflictEntryWire {
  * `ConflictResolution` on the server. `skip` leaves the file untouched,
  * `overwrite` writes the planned bytes verbatim, `merge` performs a JSON
  * deep-merge (server-side; falls back to `overwrite` for non-JSON).
+ *
+ * Those three sentences describe the RESOLUTION VOCABULARY, not the outcome
+ * of an install: no writer in the tree consumes this value. The single
+ * writer, `src/scripts/install.ts`, overwrites every deployed file
+ * unconditionally and reads neither these values nor the `conflicts` list
+ * they key against. A screen offering `skip` must not present it as leaving
+ * the file alone through the next install.
  */
 export type ConflictResolutionWire = 'skip' | 'overwrite' | 'merge';
 
