@@ -154,8 +154,13 @@ note, package-internal path-swap, description budget, and the
 | Layer | Count | Purpose |
 |---|---|---|
 | **Skills** | 299 | On-demand expertise — stack analysis (Laravel · Symfony · Zend / Laminas · Next.js · React · Node), testing, Docker, API design, security, observability, … |
+<<<<<<< HEAD
 | **Rules** | 121 | Always-active constraints — coding standards, scope control, verification, language-and-tone, agent-authority |
-| **Commands** | 202 | Slash-command workflows — `/commit`, `/create-pr`, `/fix ci`, `/optimize skills`, `/feature plan`, `/work`, `/implement-ticket`, `/condense`, … |
+| **Commands** | 203 | Slash-command workflows — `/commit`, `/create-pr`, `/fix ci`, `/optimize skills`, `/feature plan`, `/work`, `/implement-ticket`, `/condense`, … |
+=======
+| **Rules** | 121 | Always-active constraints — coding standards, scope control, verification, language-and-tone, agent-authority |
+| **Commands** | 203 | Slash-command workflows — `/commit`, `/create-pr`, `/fix ci`, `/optimize skills`, `/feature plan`, `/work`, `/implement-ticket`, `/condense`, … |
+>>>>>>> origin/main
 | **Guidelines** | 121 | Reference material cited by skills — PHP patterns, Eloquent, Playwright, agent-infra, … |
 | **Templates** | 7 | Scaffolds for features, roadmaps, contexts, skills, overrides |
 | **Contexts** | 5 | Shared knowledge about the system itself |

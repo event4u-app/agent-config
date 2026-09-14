@@ -548,7 +548,7 @@ Rows follow template order, so a diff against the template reads straight down.
 | `roadmap.horizon_weeks` | C | `0` | a non-zero value relaxes a lint's plate-token ban | policy |
 | `roadmap.gate_budget.max_cost_per_run_usd` | C | `5` | per-run spend ceiling on class-1 gate execution | consent |
 | `roadmap.gate_budget.max_cost_per_rolling_7d_usd` | C | `25` | rolling spend ceiling on class-1 gate execution | consent |
-| `planning.challenge_on_create` | C | `true` | disables the plan-confidence gate | derivable — the gate's own confidence conditions; a confident plan passes straight through |
+| `planning.closure_pass` | C | `true` | disables the plan-closure pass | derivable — the gate's own confidence conditions; a confident plan passes straight through |
 | `planning.risk_review` | C | `true` | disables the risk-register validator | derivable — `lint_plan_risk_register`'s own scope predicate (ready, non-draft plans only) |
 | `planning.completion_review` | C | `true` | disables the completion-review validator | derivable — `check_completion_review`'s own scope predicate, bound to the current diff hash |
 | `quality.local_auto_run` | C | `false` | governs whether local verification runs at all | consent |

@@ -138,9 +138,42 @@ Versioned under `/api/v1/`. Selected routes:
 | POST   | `/api/v1/shutdown`            | Browser-close shutdown beacon (`navigator.sendBeacon` target; real-serve only) |
 | POST   | `/api/v1/wizard/apply`        | **Single real-apply route.** `dry_run:true` → buffered plan preview; otherwise SSE-streams `src/scripts/install.ts --apply-payload` |
 | GET    | `/api/v1/install/detect`      | Scope + project shape + tool presence                                   |
-| POST   | `/api/v1/install/plan`        | Plan preview (per-tool file counts + conflicts) for the Review step     |
+| POST   | `/api/v1/install/plan`        | Plan preview (per-tool file counts + conflicts) for the Review step — each conflict carries `ownership` (see below) |
 | GET    | `/api/v1/install/recovery`    | Interrupted-run recovery state                                          |
 | GET    | `/api/v1/install/legacy-v3`   | v3-install detection (backup screen)                                    |
+
+### Conflict ownership — three states, from a digest
+
+Each entry in the `/api/v1/install/plan` `conflicts[]` array carries an
+`ownership` field, read from the per-file SHA-256 the installed-tools manifest
+records rather than from path-set membership:
+
+| `ownership` | Means | Screen should say |
+|---|---|---|
+| `recorded-unchanged` | we wrote it and the bytes still match | never surfaced — nothing to resolve |
+| `recorded-modified` | we wrote it and the user has since edited it | "your edit" — say the edit will be replaced |
+| `unknown` | no digest recorded (no manifest, an unreadable one, a bridge) | the pre-hash answer: a foreign collision |
+
+The field defaults to `unknown` on the wire, so a client that omits it on an
+apply round-trip parses and behaves exactly as before.
+
+**No component reads this field yet.** `src/ui/wizard/state.ts` is the only
+file under `src/ui/` that mentions `conflicts`, and it carries types and
+signals rather than a conflict screen. The column below is therefore a
+requirement on the screen when one is built, not a description of one that
+renders today.
+
+**What `recorded-modified` does NOT mean.** It is a statement about the plan,
+not a promise about the file. The single writer is
+[`src/scripts/install.ts`](../../src/scripts/install.ts), whose
+`_resolve_file_conflict` returns `write` unconditionally for deployed files —
+its own header records that a run refreshes every deployed file with the
+current package content and that `--force` is an accepted no-op. Nothing in
+that writer reads `conflicts` or `ConflictResolution`. So a screen rendering
+this field must tell the user their edit will be replaced, and must not offer
+"leave it alone" as an outcome this install path can deliver. Making the
+writer consult the matrix is an install-behavior change that no part of this
+contract takes.
 
 The TypeScript apply engine and its `POST /api/v1/install/apply` SSE route
 were removed (road-to-single-install-source-of-truth § Phase 3). All real

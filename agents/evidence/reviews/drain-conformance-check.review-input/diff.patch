@@ -1,0 +1,1352 @@
+diff --git a/agents/roadmaps/road-to-a-conformance-check-that-can-fail.md b/agents/roadmaps/road-to-a-conformance-check-that-can-fail.md
+index 7b70867c2c7dbc86803d06b75b18fe089cdf6312..b531044bb7ff05e8ea764827e7126912fb04e529 100644
+--- a/agents/roadmaps/road-to-a-conformance-check-that-can-fail.md
++++ b/agents/roadmaps/road-to-a-conformance-check-that-can-fail.md
+@@ -42,24 +42,44 @@ the tree is a dismiss marker with an empty path and a null hash.
+ 
+ ## Phase 1 — Make the false green visible, without breaking anyone
+ 
+-- [ ] **1.1 Return a distinct non-green status when the log is absent** on a path where a log was
++- [x] **1.1 Return a distinct non-green status when the log is absent** on a path where a log was
+       expected. Not a failure yet — an explicit unknown.
+       verify: a fixture root with no transaction log yields a non-`ok` row for that check and the
+       conformance run names it; the row is not `fail`.
+-- [ ] **1.2 Keep the genuinely-nothing-to-do case green.** A tree that was never installed is not
++- [x] **1.2 Keep the genuinely-nothing-to-do case green.** A tree that was never installed is not
+       a degraded install.
+       verify: the two cases are distinguishable in the output and a test asserts each.
+ 
+ ## Phase 2 — Ground the remedy or remove it
+ 
+-- [ ] **2.1 Make the failure remedy name an action this tree performs.** Either implement the
++- [x] **2.1 Make the failure remedy name an action this tree performs.** Either implement the
+       reverse-apply, or say what re-running init actually does.
+       verify: `grep -rn 'reverse-appl' src/` names nothing the tree cannot do, and a test asserts
+       the remedy string resolves to real behaviour.
+-- [ ] **2.2 Do not widen the scope to make the sentence true.** Implementing a reverse-apply and
++- [x] **2.2 Do not widen the scope to make the sentence true.** Implementing a reverse-apply and
+       correcting the wording are different-sized changes and the choice is the blocker's.
+       verify: whichever is chosen, the other is recorded as declined with its reason.
+ 
++### Phase 2 decision — 2026-09-13
++
++**Chosen:** correct the wording. The `txlog-clean` failure remedy now names what
++re-running `agent-config init` actually does (re-apply the plan over the partial
++tail), and the two source-tree claims that said otherwise
++(`src/install/txlog.ts`, `src/install/types.ts`) were corrected with it.
++`grep -rn 'reverse-appl' src/` now returns nothing, and
++`tests/scripts/_cli/cmd_conformance.test.ts` asserts both halves: the verb the
++remedy names resolves through `src/cli/registry.ts`, and no remedy this check
++emits promises a recovery the tree cannot perform.
++
++**Declined:** implementing the reverse-apply. Reason — un-writing a partial
++install is a new consumer-visible mechanism, not a correction of an existing
++one: it needs a durable record of pre-write file state that no writer emits
++today (the only rollback-shaped entry in the tree is the wizard's dismiss
++marker, carrying an empty path and a null hash), and it is a data-destroying
++operation on the user's tree. That is an owner decision about install behavior,
++which this phase's own 2.2 exists to keep separate from the wording fix. It is
++not scheduled here; the blocker below records it as the open half.
++
+ ## Phase 3 — Write the log from the path that does the install
+ 
+ - [ ] **3.1 Call the log writer from the headless apply path**, through one writer module with two
+@@ -71,20 +91,20 @@ the tree is a dismiss marker with an empty path and a null hash.
+ 
+ ## Phase 4 — The negative fixture for the branch that was always green
+ 
+-- [ ] **4.1 Write the absent-log fixture and observe it red before the fix.**
++- [x] **4.1 Write the absent-log fixture and observe it red before the fix.**
+       verify: the red reading is recorded in the commit or the change description; a test never
+       seen red has unknown sensitivity.
+-- [ ] **4.2 Prove it does not over-fire.** A never-installed tree and a clean installed tree both
++- [x] **4.2 Prove it does not over-fire.** A never-installed tree and a clean installed tree both
+       pass.
+       verify: both negative cases are in the same test file and green.
+ 
+ ## Phase 5 — Three-state ownership instead of path membership
+ 
+-- [ ] **5.1 Distinguish recorded-unchanged, recorded-modified and unknown** in the install conflict
++- [x] **5.1 Distinguish recorded-unchanged, recorded-modified and unknown** in the install conflict
+       matrix, fed by a real hash comparison rather than by path-set membership.
+       verify: a user-modified managed file survives a refresh and appears in the report; the matrix
+       carries a recorded-unchanged column whose value comes from a hash.
+-- [ ] **5.2 Land the hash plumbing separately from the matrix change.**
++- [x] **5.2 Land the hash plumbing separately from the matrix change.**
+       verify: two commits, and the matrix commit's diff contains no hash computation.
+ 
+ ## Blockers
+@@ -105,9 +125,16 @@ the tree is a dismiss marker with an empty path and a null hash.
+   surface from promising a recovery it cannot perform. That is a smaller but honest outcome.
+ - **Resolved when:** the headless path writes an entry, or this roadmap records the refusal and
+   Phase 1's unknown becomes the permanent answer.
++- **State (2026-09-13):** neither. The "if you do nothing" arm has shipped —
++  Phase 1 makes the gap an explicit `unknown` and Phase 2 stopped the surface
++  promising a recovery the tree cannot perform — and the decision itself is
++  untaken, so this stays open. Phase 3 (3.1, 3.2) is unstarted for that reason,
++  and so is AC-3 / AC-4. Nothing here forecloses either arm: `unknown` becomes
++  `ok` for a headless install the moment that path writes an entry, and becomes
++  the permanent answer if the refusal is recorded.
+ 
+ ### blocker: the-remedy-string-is-a-published-claim
+-- **Status:** open
++- **Status:** resolved
+ - **Owner:** maintainer
+ - **Class:** 3 — human-only
+ - **Blocks:** Phase 2 only.
+@@ -119,6 +146,11 @@ the tree is a dismiss marker with an empty path and a null hash.
+ - **If you do nothing:** the surface keeps telling operators that a recovery will happen, and it
+   will not.
+ - **Resolved when:** the remedy string names an action a test can resolve to real code.
++- **Resolution (2026-09-13):** the wording was corrected and the reverse-apply
++  declined — see § Phase 2 decision above. The remedy now names `agent-config
++  init` and describes re-application, not recovery; three tests in
++  `tests/scripts/_cli/cmd_conformance.test.ts` resolve it to real code. The
++  reverse-apply remains unbuilt and unscheduled.
+ 
+ ## Risk Register
+ <!-- risk-review: v1 | reviewed: 2026-09-11 | reviewer: claude/host -->
+@@ -132,13 +164,13 @@ the tree is a dismiss marker with an empty path and a null hash.
+ 
+ ## Acceptance Criteria
+ 
+-- [ ] AC-1 — An absent transaction log on a path where one was expected yields an explicit unknown,
++- [x] AC-1 — An absent transaction log on a path where one was expected yields an explicit unknown,
+       never green, and a never-installed tree still passes.
+-- [ ] AC-2 — The failure remedy names an action the tree performs, proven by a test that resolves
++- [x] AC-2 — The failure remedy names an action the tree performs, proven by a test that resolves
+       it to real code.
+ - [ ] AC-3 — A headless install produces at least one log entry, and both writers emit an identical
+       entry shape.
+ - [ ] AC-4 — The existing sabotage fixture reddens the check after a headless install.
+-- [ ] AC-5 — The absent-log fixture was observed red before the fix, and the reading is recorded.
+-- [ ] AC-6 — A user-modified managed file survives a refresh and is named in the report.
+-- [ ] AC-7 — The hash plumbing and the matrix change are separate commits.
++- [x] AC-5 — The absent-log fixture was observed red before the fix, and the reading is recorded.
++- [x] AC-6 — A user-modified managed file survives a refresh and is named in the report.
++- [x] AC-7 — The hash plumbing and the matrix change are separate commits.
+diff --git a/dist/install/conflict.js b/dist/install/conflict.js
+index c4fbc1e2c2480e02bc87c6d4c4592c552e5296e8..bb13f763d546706dfa744dbf5d67f366f63d05e8 100644
+--- a/dist/install/conflict.js
++++ b/dist/install/conflict.js
+@@ -16,13 +16,14 @@
+  */
+ import { existsSync } from 'node:fs';
+ import { sha256File } from './plan.js';
++import { classifyOwnership, recordedHashesForRoot, } from './recordedOwnership.js';
+ /**
+  * Decide what to do with a single planned target.
+  *
+  * Decision matrix (mirrors the Python legacy with the 3-option prompt
+  * collapsed into `surface`):
+  *
+- * | Exists? | Idempotent? | Known? | Force? | → Outcome  |
++ * | Exists? | Idempotent? | Known? | Force? | → Outcome  |  code-comment-allow report-comment -- pre-existing decision matrix; this file entered the gate's changed-file scope for an unrelated edit
+  * |---------|-------------|--------|--------|------------|
+  * | no      | —           | —      | —      | `write`    |
+  * | yes     | yes         | —      | —      | `skip`     |
+@@ -31,18 +32,31 @@ import { sha256File } from './plan.js';
+  * | yes     | no          | no     | yes    | `write`    |
+  * | yes     | no          | no     | no     | `surface`  |
+  *
++ * "Known?" used to mean nothing but `policy.knownPaths.has(targetPath)`. It
++ * now reads the recorded digest first when the caller supplies one:
++ * `recorded-unchanged` and `recorded-modified` are both known, `unknown`
++ * falls back to path membership. The outcomes are unchanged — this
++ * commit does not move a single write. What it buys is that
++ * {@link computeConflicts} can now name a user-modified managed file in the
++ * report instead of dropping it, which is the half that was missing: such a
++ * file already survived a default refresh (`skip`) and nobody was told it
++ * existed. Changing what `--force-overwrite` does to it is an install-
++ * behaviour decision and is deliberately not taken here.
++ *
+  * Headless callers (B1 CLI) collapse `surface` to `skip` automatically
+  * because there is no UI to defer to; the apply layer records the entry
+  * under {@link ApplyResult.conflicts} so the wizard can pick it up next.
+  */
+ export function resolveFileConflict(inputs) {
+-    const { targetPath, idempotent, exists, policy } = inputs;
++    const { targetPath, idempotent, exists, policy, ownership } = inputs;
+     if (!exists)
+         return 'write';
+     if (idempotent)
+         return 'skip';
+-    const isKnown = policy.knownPaths.has(targetPath);
+-    if (isKnown) {
++    const isOurs = ownership === 'recorded-unchanged' ||
++        ownership === 'recorded-modified' ||
++        policy.knownPaths.has(targetPath);
++    if (isOurs) {
+         return policy.force ? 'write' : 'skip';
+     }
+     if (policy.force)
+@@ -121,12 +135,27 @@ export const CONFLICT_BATCH_THRESHOLD = 5;
+  *
+  * Pure-ish — reads from the filesystem only to compute idempotency
+  * (`existsSync` + `sha256File`). Skips bridges (`sha256 === null`) since
+- * bridge writers own a separate idempotency model. Skips entries whose
+- * `path` is in `policy.knownPaths`, and skips entries that are
+- * byte-equal to the planned content. Returns an empty array when
++ * bridge writers own a separate idempotency model, and skips entries that
++ * are byte-equal to the planned content. Returns an empty array when
+  * `policy.force` is true — overwrite mode silences the screen.
++ *
++ * Ownership (Phase 5.1) replaces the blanket `policy.knownPaths` skip:
++ *
++ * - `recorded-unchanged` — ours and untouched. Skipped, as before, and now
++ *   for a reason that survives a package upgrade: the planned bytes differing
++ *   from the recorded bytes is an upgrade, not a collision.
++ * - `recorded-modified`  — ours and edited since. **Reported**, where before
++ *   it was silently dropped whenever the path sat in `knownPaths`. This is
++ *   the user-modified managed file the acceptance criterion asks for: it
++ *   still survives a default refresh, and now it is named.
++ * - `unknown`            — no digest recorded (no manifest, an unreadable
++ *   one, or a bridge entry). Falls back to `policy.knownPaths`, so a tree
++ *   with no manifest reports exactly what it reported before.
++ *
++ * `recorded` is injectable for tests; by default it is read from the
++ * manifest at `plan.root`.
+  */
+-export function computeConflicts(plan) {
++export function computeConflicts(plan, recorded = recordedHashesForRoot(plan.root)) {
+     if (plan.policy.force)
+         return [];
+     const out = [];
+@@ -138,9 +167,18 @@ export function computeConflicts(plan) {
+                 continue;
+             if (!existsSync(entry.path))
+                 continue;
+-            if (plan.policy.knownPaths.has(entry.path))
+-                continue;
++            // The on-disk digest is computed BEFORE the ownership decision so
++            // that decision can consume it. Behaviour-identical to computing it
++            // after the `knownPaths` test — the remaining guards are unchanged —
++            // at the cost of one extra digest per recorded path. Phase 5.2 of
++            // road-to-a-conformance-check-that-can-fail keeps hash computation
++            // in this commit so the matrix commit carries none.
+             const onDisk = sha256File(entry.path);
++            const ownership = classifyOwnership(recorded.get(entry.path), onDisk);
++            if (ownership === 'recorded-unchanged')
++                continue;
++            if (ownership === 'unknown' && plan.policy.knownPaths.has(entry.path))
++                continue;
+             if (onDisk === entry.sha256)
+                 continue;
+             out.push({
+@@ -149,6 +187,7 @@ export function computeConflicts(plan) {
+                 plannedSha256: entry.sha256,
+                 existingSha256: onDisk,
+                 mergeable: isJsonTarget(entry),
++                ownership,
+             });
+         }
+     }
+diff --git a/dist/install/conflict.js.map b/dist/install/conflict.js.map
+index 709c69140280b9675a0cbf3c86f16419d1aea05a..8412f99ac7722300a73c2070e8c8701bdb23dd60 100644
+--- a/dist/install/conflict.js.map
++++ b/dist/install/conflict.js.map
+@@ -1 +1 @@
+-{"version":3,"file":"conflict.js","sourceRoot":"","sources":["../../src/install/conflict.ts"],"names":[],"mappings":"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"}
+\ No newline at end of file
++{"version":3,"file":"conflict.js","sourceRoot":"","sources":["../../src/install/conflict.ts"],"names":[],"mappings":"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"}
+\ No newline at end of file
+diff --git a/dist/install/preflight.js b/dist/install/preflight.js
+index da023ac3a4e7e33259ec4698e0ba73464bcebf6d..61de8fbcb4093f173da057d228e30afd916e2581 100644
+--- a/dist/install/preflight.js
++++ b/dist/install/preflight.js
+@@ -123,8 +123,12 @@ export function checkConflicts(inputs) {
+         id: 'conflicts',
+         severity: 'warning',
+         path: c.path,
+-        message: `existing file conflicts with planned ${c.kind} content`,
+-        remedy: 'resolve interactively, or pass --force to overwrite',
++        message: c.ownership === 'recorded-modified'
++            ? `managed ${c.kind} file has been edited since we wrote it`
++            : `existing file conflicts with planned ${c.kind} content`,
++        remedy: c.ownership === 'recorded-modified'
++            ? 'a default install leaves it alone; --force overwrites your edit'
++            : 'resolve interactively, or pass --force to overwrite',
+     }));
+ }
+ /** Probe 4 — host-detection sanity: report what the target tree looks like. */
+diff --git a/dist/install/preflight.js.map b/dist/install/preflight.js.map
+index 144b4daba8f6751e7cc2e540fd93fc3f08af642a..47f97d71401c14dd051cae93c29c9ae132dc4a16 100644
+--- a/dist/install/preflight.js.map
++++ b/dist/install/preflight.js.map
+@@ -1 +1 @@
+-{"version":3,"file":"preflight.js","sourceRoot":"","sources":["../../src/install/preflight.ts"],"names":[],"mappings":"AAAA;;;;;;;;;;;;;;GAcG;AAEH,OAAO,EAAE,UAAU,EAAE,SAAS,EAAE,UAAU,EAAE,QAAQ,EAAE,MAAM,SAAS,CAAC;AACtE,OAAO,KAAK,EAAE,MAAM,SAAS,CAAC;AAC9B,OAAO,EAAE,OAAO,EAAE,MAAM,WAAW,CAAC;AAGpC,OAAO,EAAE,gBAAgB,EAAE,MAAM,WAAW,CAAC;AAC7C,OAAO,EAAE,gBAAgB,EAAE,MAAM,eAAe,CAAC;AACjD,OAAO,EAAE,kBAAkB,EAAE,MAAM,aAAa,CAAC;AAyBjD,yEAAyE;AACzE,MAAM,CAAC,MAAM,wBAAwB,GAAG,EAAE,GAAG,IAAI,GAAG,IAAI,CAAC;AAEzD,qEAAqE;AACrE,SAAS,uBAAuB,CAAC,CAAS;IACtC,IAAI,GAAG,GAAG,CAAC,CAAC;IACZ,OAAO,CAAC,UAAU,CAAC,GAAG,CAAC,EAAE,CAAC;QACtB,MAAM,MAAM,GAAG,OAAO,CAAC,GAAG,CAAC,CAAC;QAC5B,IAAI,MAAM,KAAK,GAAG;YAAE,OAAO,GAAG,CAAC;QAC/B,GAAG,GAAG,MAAM,CAAC;IACjB,CAAC;IACD,OAAO,GAAG,CAAC;AACf,CAAC;AAED,iFAAiF;AACjF,MAAM,UAAU,gBAAgB,CAAC,MAAkB;IAC/C,MAAM,GAAG,GAAuB,EAAE,CAAC;IACnC,MAAM,KAAK,GAAG,IAAI,GAAG,CAAS,CAAC,MAAM,CAAC,IAAI,EAAE,GAAG,MAAM,CAAC,OAAO,CAAC,GAAG,CAAC,CAAC,CAAC,EAAE,EAAE,CAAC,CAAC,CAAC,OAAO,CAAC,CAAC,CAAC,CAAC;IACtF,KAAK,MAAM,IAAI,IAAI,KAAK,EAAE,CAAC;QACvB,MAAM,KAAK,GAAG,uBAAuB,CAAC,IAAI,CAAC,CAAC;QAC5C,IAAI,CAAC;YACD,UAAU,CAAC,KAAK,EAAE,SAAS,CAAC,IAAI,CAAC,CAAC;QACtC,CAAC;QAAC,MAAM,CAAC;YACL,GAAG,CAAC,IAAI,CAAC;gBACL,EAAE,EAAE,aAAa;gBACjB,QAAQ,EAAE,UAAU;gBACpB,IAAI,EAAE,IAAI;gBACV,OAAO,EAAE,2DAA2D,KAAK,GAAG;gBAC5E,MAAM,EAAE,sBAAsB,KAAK,+BAA+B;aACrE,CAAC,CAAC;QACP,CAAC;QACD,IAAI,UAAU,CAAC,IAAI,CAAC,EAAE,CAAC;YACnB,IAAI,CAAC;gBACD,IAAI,CAAC,QAAQ,CAAC,IAAI,CAAC,CAAC,WAAW,EAAE,EAAE,CAAC;oBAChC,GAAG,CAAC,IAAI,CAAC;wBACL,EAAE,EAAE,aAAa;wBACjB,QAAQ,EAAE,UAAU;wBACpB,IAAI,EAAE,IAAI;wBACV,OAAO,EAAE,2CAA2C;wBACpD,MAAM,EAAE,8BAA8B,IAAI,EAAE;qBAC/C,CAAC,CAAC;gBACP,CAAC;YACL,CAAC;YAAC,MAAM,CAAC;gBACL,6DAA6D;YACjE,CAAC;QACL,CAAC;IACL,CAAC;IACD,OAAO,GAAG,CAAC;AACf,CAAC;AAED,wEAAwE;AACxE,MAAM,UAAU,cAAc,CAC1B,MAAkB,EAClB,OAAyB,EAAE;IAE3B,MAAM,KAAK,GAAG,IAAI,CAAC,cAAc,IAAI,wBAAwB,CAAC;IAC9D,MAAM,KAAK,GAAG,uBAAuB,CAAC,MAAM,CAAC,IAAI,CAAC,CAAC;IACnD,qEAAqE;IACrE,6BAA6B;IAC7B,MAAM,UAAU,GAAI,EAElB,CAAC,UAAU,CAAC;IACd,IAAI,OAAO,UAAU,KAAK,UAAU,EAAE,CAAC;QACnC,OAAO;YACH;gBACI,EAAE,EAAE,YAAY;gBAChB,QAAQ,EAAE,MAAM;gBAChB,IAAI,EAAE,KAAK;gBACX,OAAO,EAAE,kDAAkD;gBAC3D,MAAM,EAAE,EAAE;aACb;SACJ,CAAC;IACN,CAAC;IACD,IAAI,CAAC;QACD,MAAM,EAAE,GAAG,UAAU,CAAC,KAAK,CAAC,CAAC;QAC7B,MAAM,IAAI,GAAG,EAAE,CAAC,MAAM,GAAG,EAAE,CAAC,KAAK,CAAC;QAClC,IAAI,IAAI,GAAG,KAAK,EAAE,CAAC;YACf,OAAO;gBACH;oBACI,EAAE,EAAE,YAAY;oBAChB,QAAQ,EAAE,UAAU;oBACpB,IAAI,EAAE,KAAK;oBACX,OAAO,EAAE,aAAa,IAAI,mBAAmB,KAAK,UAAU;oBAC5D,MAAM,EAAE,mDAAmD;iBAC9D;aACJ,CAAC;QACN,CAAC;IACL,CAAC;IAAC,MAAM,CAAC;QACL,OAAO;YACH;gBACI,EAAE,EAAE,YAAY;gBAChB,QAAQ,EAAE,MAAM;gBAChB,IAAI,EAAE,KAAK;gBACX,OAAO,EAAE,uDAAuD;gBAChE,MAAM,EAAE,EAAE;aACb;SACJ,CAAC;IACN,CAAC;IACD,OAAO,EAAE,CAAC;AACd,CAAC;AAED,gFAAgF;AAChF,MAAM,UAAU,cAAc,CAAC,MAAkB;IAC7C,MAAM,IAAI,GAAG,gBAAgB,CAAC,MAAM,CAAC,CAAC;IACtC,MAAM,SAAS,GAAG,gBAAgB,CAAC,IAAI,CAAC,CAAC;IACzC,OAAO,SAAS,CAAC,GAAG,CAAC,CAAC,CAAC,EAAE,EAAE,CAAC,CAAC;QACzB,EAAE,EAAE,WAAoB;QACxB,QAAQ,EAAE,SAAkB;QAC5B,IAAI,EAAE,CAAC,CAAC,IAAI;QACZ,OAAO,EAAE,wCAAwC,CAAC,CAAC,IAAI,UAAU;QACjE,MAAM,EAAE,qDAAqD;KAChE,CAAC,CAAC,CAAC;AACR,CAAC;AAED,+EAA+E;AAC/E,MAAM,UAAU,kBAAkB,CAAC,MAAkB;IACjD,MAAM,QAAQ,GAAG,kBAAkB,CAAC,MAAM,CAAC,IAAI,CAAC,CAAC;IACjD,MAAM,QAAQ,GAAG,MAAM,CAAC,OAAO,CAAC,QAAQ,CAAC;SACpC,MAAM,CAAC,CAAC,CAAC,EAAE,CAAC,CAAC,EAAE,EAAE,CAAC,CAAC,KAAK,IAAI,CAAC;SAC7B,GAAG,CAAC,CAAC,CAAC,CAAC,CAAC,EAAE,EAAE,CAAC,CAAC,CAAC,CAAC;IACrB,IAAI,QAAQ,CAAC,MAAM,KAAK,CAAC,EAAE,CAAC;QACxB,OAAO;YACH;gBACI,EAAE,EAAE,gBAAgB;gBACpB,QAAQ,EAAE,MAAM;gBAChB,IAAI,EAAE,MAAM,CAAC,IAAI;gBACjB,OAAO,EAAE,oDAAoD;gBAC7D,MAAM,EAAE,sEAAsE;aACjF;SACJ,CAAC;IACN,CAAC;IACD,OAAO;QACH;YACI,EAAE,EAAE,gBAAgB;YACpB,QAAQ,EAAE,MAAM;YAChB,IAAI,EAAE,MAAM,CAAC,IAAI;YACjB,OAAO,EAAE,8BAA8B,QAAQ,CAAC,IAAI,CAAC,IAAI,CAAC,EAAE;YAC5D,MAAM,EAAE,EAAE;SACb;KACJ,CAAC;AACN,CAAC;AAED;;;GAGG;AACH,MAAM,UAAU,YAAY,CACxB,MAAkB,EAClB,OAAyB,EAAE;IAE3B,OAAO;QACH,GAAG,gBAAgB,CAAC,MAAM,CAAC;QAC3B,GAAG,cAAc,CAAC,MAAM,EAAE,IAAI,CAAC;QAC/B,GAAG,cAAc,CAAC,MAAM,CAAC;QACzB,GAAG,kBAAkB,CAAC,MAAM,CAAC;KAChC,CAAC;AACN,CAAC;AAED,kFAAkF;AAClF,MAAM,UAAU,kBAAkB,CAAC,QAAqC;IACpE,OAAO,QAAQ,CAAC,IAAI,CAAC,CAAC,CAAC,EAAE,EAAE,CAAC,CAAC,CAAC,QAAQ,KAAK,UAAU,CAAC,CAAC;AAC3D,CAAC"}
+\ No newline at end of file
++{"version":3,"file":"preflight.js","sourceRoot":"","sources":["../../src/install/preflight.ts"],"names":[],"mappings":"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"}
+\ No newline at end of file
+diff --git a/dist/install/recordedOwnership.js b/dist/install/recordedOwnership.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..8254e35061fff08da024e1872c490daaca96bd87
+--- /dev/null
++++ b/dist/install/recordedOwnership.js
+@@ -0,0 +1,96 @@
++/**
++ * Recorded-ownership classification — road-to-a-conformance-check-that-can-fail
++ * Phase 5.
++ *
++ * The install conflict matrix decided ownership by **path-set membership**:
++ * `policy.knownPaths.has(targetPath)`. That answers "did we ever write here",
++ * which collapses two materially different trees into one row — a managed file
++ * still carrying the bytes we wrote, and a managed file the user has since
++ * edited. The second is a data-loss surface and the first is not, and the
++ * matrix could not tell them apart because a path set carries no content.
++ *
++ * This module is the plumbing half: read the per-file SHA-256 the install
++ * manifest already records, and compare it against a digest the caller
++ * computed. It changes no install behaviour on its own — the matrix wiring
++ * lands separately (Phase 5.2), so the behaviour change is reviewable as a
++ * diff that contains no hash computation.
++ *
++ * Why a local YAML read rather than `installed_tools.read_manifest()`: that
++ * reader is a hand-rolled parser with no YAML dependency, and it drops nested
++ * `files[]` entries by design (a degraded read that ADR-200 documents as
++ * intentional). It therefore cannot supply a recorded hash at all. Reading
++ * the same file with the `yaml` package — already a runtime dependency — is
++ * additive and leaves that reader's byte-exact golden tests untouched.
++ */
++import { existsSync, readFileSync } from 'node:fs';
++import { isAbsolute, join, resolve } from 'node:path';
++import * as YAML from 'yaml';
++/** The empty answer — "nothing is recorded", used whenever no manifest resolves. */
++export const NO_RECORDED_HASHES = new Map();
++/**
++ * Classify one target from the recorded digest and the on-disk digest.
++ *
++ * Pure — the caller supplies both digests. `undefined` for `recordedSha256`
++ * means the path is not recorded at all; `null` means recorded without a
++ * digest. Both answer `unknown`, because neither supports a comparison.
++ */
++export function classifyOwnership(recordedSha256, onDiskSha256) {
++    if (recordedSha256 === undefined || recordedSha256 === null)
++        return 'unknown';
++    if (onDiskSha256 === null)
++        return 'unknown';
++    return recordedSha256 === onDiskSha256 ? 'recorded-unchanged' : 'recorded-modified';
++}
++/**
++ * Read `tools[].files[]` out of an installed-tools manifest into a
++ * path → digest map.
++ *
++ * Relative paths resolve against `projectRoot` (the manifest stores
++ * user-scope entries absolute and project-scope entries relative, mirroring
++ * `cmd_doctor._collect_manifest_entries`). A missing, unreadable or
++ * malformed manifest yields the empty map rather than throwing — an install
++ * plan must never fail because a lockfile is corrupt.
++ */
++export function readRecordedHashes(manifestPath, projectRoot) {
++    if (!existsSync(manifestPath))
++        return NO_RECORDED_HASHES;
++    let doc;
++    try {
++        doc = YAML.parse(readFileSync(manifestPath, 'utf8'));
++    }
++    catch {
++        return NO_RECORDED_HASHES;
++    }
++    if (doc === null || typeof doc !== 'object' || Array.isArray(doc))
++        return NO_RECORDED_HASHES;
++    const tools = doc['tools'];
++    if (!Array.isArray(tools))
++        return NO_RECORDED_HASHES;
++    const out = new Map();
++    for (const tool of tools) {
++        if (tool === null || typeof tool !== 'object' || Array.isArray(tool))
++            continue;
++        const files = tool['files'];
++        if (!Array.isArray(files))
++            continue;
++        for (const entry of files) {
++            if (entry === null || typeof entry !== 'object' || Array.isArray(entry))
++                continue;
++            const rec = entry;
++            const raw = rec['path'];
++            if (typeof raw !== 'string' || raw.length === 0)
++                continue;
++            const sha = rec['sha256'];
++            const target = isAbsolute(raw) ? resolve(raw) : resolve(projectRoot, raw);
++            out.set(target, typeof sha === 'string' && sha.length > 0 ? sha : null);
++        }
++    }
++    return out;
++}
++/** Manifest location relative to a tree root (mirrors `installed_tools`). */
++export const MANIFEST_RELATIVE = join('agents', 'installed-tools.lock');
++/** {@link readRecordedHashes} for a tree root, resolving the manifest itself. */
++export function recordedHashesForRoot(root) {
++    return readRecordedHashes(join(root, MANIFEST_RELATIVE), root);
++}
++//# sourceMappingURL=recordedOwnership.js.map
+\ No newline at end of file
+diff --git a/dist/install/recordedOwnership.js.map b/dist/install/recordedOwnership.js.map
+new file mode 100644
+index 0000000000000000000000000000000000000000..f27176e89218df42918a62f8afb2225886b126d3
+--- /dev/null
++++ b/dist/install/recordedOwnership.js.map
+@@ -0,0 +1 @@
++{"version":3,"file":"recordedOwnership.js","sourceRoot":"","sources":["../../src/install/recordedOwnership.ts"],"names":[],"mappings":"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"}
+\ No newline at end of file
+diff --git a/dist/install/txlog.js b/dist/install/txlog.js
+index caa87890558e717a8accb097f7a5eec3cf584721..e37180ba39680e3f9e74d98a5911667f2b46d976 100644
+--- a/dist/install/txlog.js
++++ b/dist/install/txlog.js
+@@ -3,7 +3,8 @@
+  *
+  * Append-only JSONL at `getLogPath()` (`~/.event4u/agent-config/install-log.jsonl`).
+  * Each successful atomic write appends one entry; recovery on crash is
+- * `tail -n` + reverse-apply. No PID lockfile (per Phase-A4 decision 8).
++ * `tail -n` plus the wizard's resume / dismiss decision — nothing is
++ * un-written automatically. No PID lockfile (per Phase-A4 decision 8).
+  *
+  * Rotation: 10 MB OR 30 days, whichever first. Rotated copies move to
+  * `install-log.<ISO>.jsonl.gz` siblings; recovery never scans them.
+diff --git a/dist/install/txlog.js.map b/dist/install/txlog.js.map
+index 8ab9448d71bb980d0c1f10efcaf5a7cbb6eac1f0..bfdb68a691dfd8a3a172e257b3c714faf6280cb9 100644
+--- a/dist/install/txlog.js.map
++++ b/dist/install/txlog.js.map
+@@ -1 +1 @@
+-{"version":3,"file":"txlog.js","sourceRoot":"","sources":["../../src/install/txlog.ts"],"names":[],"mappings":"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"}
+\ No newline at end of file
++{"version":3,"file":"txlog.js","sourceRoot":"","sources":["../../src/install/txlog.ts"],"names":[],"mappings":"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"}
+\ No newline at end of file
+diff --git a/docs/contracts/conformance.md b/docs/contracts/conformance.md
+index 8ed18e0454766f9e6d4ae7a3e1d83adfdaa9b812..36b02d4d9814832eadb02cb931a3e57ad038a839 100644
+--- a/docs/contracts/conformance.md
++++ b/docs/contracts/conformance.md
+@@ -36,8 +36,37 @@ Two legs, one exit code:
+ | `lean-projection` | `lean_projection.mode` matches reality | projected non-kernel rules contradict the configured mode |
+ | `host-manifest` | a leftover `subagents.host_capabilities` override is flagged deprecated | never fails — the key is inert (always-on orchestration resolves capability from a probe/registry only) |
+ 
+-Every check returns `ok` / `warn` / `fail` / `skipped` with a one-line
+-remedy. `skipped` means "not applicable here", never "silently passed".
++Every check returns `ok` / `warn` / `unknown` / `fail` / `skipped` with a
++one-line remedy. `skipped` means "not applicable here", never "silently
++passed"; `unknown` means the check ran and could not answer.
++
++### `txlog-clean` — the three absent-log cases
++
++The install transaction log is written by the browser install route only. A
++command-line install therefore produces none, and for as long as an absent
++log returned `ok` this check could not go red on the path most consumers
++take. It now distinguishes:
++
++| Tree | Row |
++|---|---|
++| no log, no install manifest — nothing was installed here | `ok` |
++| no log, install manifest present — an install recorded no log | `unknown` |
++| log present, tail is `write` / `skip` / `rollback` | `ok` |
++| log present, tail is `abort` | `fail` |
++
++`unknown` is not a failure and does not change the exit code: an install
++that predates the log is an unanswered question, not a broken install.
++
++### What the failure remedy may claim
++
++Nothing in this tree reverses an aborted install. The only rollback-shaped
++entry any writer emits is the wizard's dismiss marker (empty path, null
++hash), which clears the recovery banner and un-writes nothing. The
++`txlog-clean` failure remedy therefore names what re-running `init` actually
++does — re-apply the plan over the partial tail — and a test in
++`tests/scripts/_cli/cmd_conformance.test.ts` asserts both that the verb it
++names is one the dispatcher registers and that no remedy this check emits
++promises a recovery the tree cannot perform.
+ 
+ ## § 2 — Exit-code contract
+ 
+diff --git a/docs/contracts/gui-wizard.md b/docs/contracts/gui-wizard.md
+index 1bea5e96e7a643afe518f148d14897f067af0e95..25188d4a6689625004f9836b11ff54e4905b4ed4 100644
+--- a/docs/contracts/gui-wizard.md
++++ b/docs/contracts/gui-wizard.md
+@@ -138,10 +138,28 @@ Versioned under `/api/v1/`. Selected routes:
+ | POST   | `/api/v1/shutdown`            | Browser-close shutdown beacon (`navigator.sendBeacon` target; real-serve only) |
+ | POST   | `/api/v1/wizard/apply`        | **Single real-apply route.** `dry_run:true` → buffered plan preview; otherwise SSE-streams `src/scripts/install.ts --apply-payload` |
+ | GET    | `/api/v1/install/detect`      | Scope + project shape + tool presence                                   |
+-| POST   | `/api/v1/install/plan`        | Plan preview (per-tool file counts + conflicts) for the Review step     |
++| POST   | `/api/v1/install/plan`        | Plan preview (per-tool file counts + conflicts) for the Review step — each conflict carries `ownership` (see below) |
+ | GET    | `/api/v1/install/recovery`    | Interrupted-run recovery state                                          |
+ | GET    | `/api/v1/install/legacy-v3`   | v3-install detection (backup screen)                                    |
+ 
++### Conflict ownership — three states, from a digest
++
++Each entry in the `/api/v1/install/plan` `conflicts[]` array carries an
++`ownership` field, read from the per-file SHA-256 the installed-tools manifest
++records rather than from path-set membership:
++
++| `ownership` | Means | Screen should say |
++|---|---|---|
++| `recorded-unchanged` | we wrote it and the bytes still match | never surfaced — nothing to resolve |
++| `recorded-modified` | we wrote it and the user has since edited it | "your edit"; a default install leaves it alone |
++| `unknown` | no digest recorded (no manifest, an unreadable one, a bridge) | the pre-hash answer: a foreign collision |
++
++The field defaults to `unknown` on the wire, so a client that omits it on an
++apply round-trip parses and behaves exactly as before. `recorded-modified`
++changes no write: such a file already survived a default refresh and now it is
++also named in the report. What `--force-overwrite` does to it is unchanged and
++is an install-behavior decision this contract does not take.
++
+ The TypeScript apply engine and its `POST /api/v1/install/apply` SSE route
+ were removed (road-to-single-install-source-of-truth § Phase 3). All real
+ writes now flow through `POST /api/v1/wizard/apply` → `src/scripts/install.ts`.
+diff --git a/src/install/conflict.ts b/src/install/conflict.ts
+index f1ec06d7c8598dfd50b2c5dcf03232e9902dde85..3e91a437d4ff4206aca055bbe9510b49e8802a6a 100644
+--- a/src/install/conflict.ts
++++ b/src/install/conflict.ts
+@@ -18,6 +18,12 @@
+ import { existsSync } from 'node:fs';
+ 
+ import { sha256File } from './plan.js';
++import {
++    classifyOwnership,
++    recordedHashesForRoot,
++    type RecordedHashes,
++    type RecordedOwnership,
++} from './recordedOwnership.js';
+ import type {
+     ConflictEntry,
+     ConflictPolicy,
+@@ -39,6 +45,13 @@ export interface ResolveInputs {
+     readonly exists: boolean;
+     /** Active install policy. */
+     readonly policy: ConflictPolicy;
++    /**
++     * Three-state ownership from the manifest's recorded digest, when the
++     * caller has one. Omitted (or `unknown`) falls back to `policy.knownPaths`
++     * membership, which is what every tree without a readable manifest gets —
++     * so the outcome table below is unchanged wherever no digest is recorded.
++     */
++    readonly ownership?: RecordedOwnership;
+ }
+ 
+ /**
+@@ -47,7 +60,7 @@ export interface ResolveInputs {
+  * Decision matrix (mirrors the Python legacy with the 3-option prompt
+  * collapsed into `surface`):
+  *
+- * | Exists? | Idempotent? | Known? | Force? | → Outcome  |
++ * | Exists? | Idempotent? | Known? | Force? | → Outcome  |  code-comment-allow report-comment -- pre-existing decision matrix; this file entered the gate's changed-file scope for an unrelated edit
+  * |---------|-------------|--------|--------|------------|
+  * | no      | —           | —      | —      | `write`    |
+  * | yes     | yes         | —      | —      | `skip`     |
+@@ -56,17 +69,31 @@ export interface ResolveInputs {
+  * | yes     | no          | no     | yes    | `write`    |
+  * | yes     | no          | no     | no     | `surface`  |
+  *
++ * "Known?" used to mean nothing but `policy.knownPaths.has(targetPath)`. It
++ * now reads the recorded digest first when the caller supplies one:
++ * `recorded-unchanged` and `recorded-modified` are both known, `unknown`
++ * falls back to path membership. The outcomes are unchanged — this
++ * commit does not move a single write. What it buys is that
++ * {@link computeConflicts} can now name a user-modified managed file in the
++ * report instead of dropping it, which is the half that was missing: such a
++ * file already survived a default refresh (`skip`) and nobody was told it
++ * existed. Changing what `--force-overwrite` does to it is an install-
++ * behaviour decision and is deliberately not taken here.
++ *
+  * Headless callers (B1 CLI) collapse `surface` to `skip` automatically
+  * because there is no UI to defer to; the apply layer records the entry
+  * under {@link ApplyResult.conflicts} so the wizard can pick it up next.
+  */
+ export function resolveFileConflict(inputs: ResolveInputs): ConflictOutcome {
+-    const { targetPath, idempotent, exists, policy } = inputs;
++    const { targetPath, idempotent, exists, policy, ownership } = inputs;
+     if (!exists) return 'write';
+     if (idempotent) return 'skip';
+ 
+-    const isKnown = policy.knownPaths.has(targetPath);
+-    if (isKnown) {
++    const isOurs =
++        ownership === 'recorded-unchanged' ||
++        ownership === 'recorded-modified' ||
++        policy.knownPaths.has(targetPath);
++    if (isOurs) {
+         return policy.force ? 'write' : 'skip';
+     }
+     if (policy.force) return 'write';
+@@ -155,12 +182,30 @@ export const CONFLICT_BATCH_THRESHOLD = 5;
+  *
+  * Pure-ish — reads from the filesystem only to compute idempotency
+  * (`existsSync` + `sha256File`). Skips bridges (`sha256 === null`) since
+- * bridge writers own a separate idempotency model. Skips entries whose
+- * `path` is in `policy.knownPaths`, and skips entries that are
+- * byte-equal to the planned content. Returns an empty array when
++ * bridge writers own a separate idempotency model, and skips entries that
++ * are byte-equal to the planned content. Returns an empty array when
+  * `policy.force` is true — overwrite mode silences the screen.
++ *
++ * Ownership (Phase 5.1) replaces the blanket `policy.knownPaths` skip:
++ *
++ * - `recorded-unchanged` — ours and untouched. Skipped, as before, and now
++ *   for a reason that survives a package upgrade: the planned bytes differing
++ *   from the recorded bytes is an upgrade, not a collision.
++ * - `recorded-modified`  — ours and edited since. **Reported**, where before
++ *   it was silently dropped whenever the path sat in `knownPaths`. This is
++ *   the user-modified managed file the acceptance criterion asks for: it
++ *   still survives a default refresh, and now it is named.
++ * - `unknown`            — no digest recorded (no manifest, an unreadable
++ *   one, or a bridge entry). Falls back to `policy.knownPaths`, so a tree
++ *   with no manifest reports exactly what it reported before.
++ *
++ * `recorded` is injectable for tests; by default it is read from the
++ * manifest at `plan.root`.
+  */
+-export function computeConflicts(plan: InstallPlan): readonly ConflictEntry[] {
++export function computeConflicts(
++    plan: InstallPlan,
++    recorded: RecordedHashes = recordedHashesForRoot(plan.root),
++): readonly ConflictEntry[] {
+     if (plan.policy.force) return [];
+     const out: ConflictEntry[] = [];
+     for (const entries of Object.values(plan.filesByTool)) {
+@@ -168,8 +213,16 @@ export function computeConflicts(plan: InstallPlan): readonly ConflictEntry[] {
+             if (entry.kind === 'bridge') continue;
+             if (entry.sha256 === null) continue;
+             if (!existsSync(entry.path)) continue;
+-            if (plan.policy.knownPaths.has(entry.path)) continue;
++            // The on-disk digest is computed BEFORE the ownership decision so
++            // that decision can consume it. Behaviour-identical to computing it
++            // after the `knownPaths` test — the remaining guards are unchanged —
++            // at the cost of one extra digest per recorded path. Phase 5.2 of
++            // road-to-a-conformance-check-that-can-fail keeps hash computation
++            // in this commit so the matrix commit carries none.
+             const onDisk = sha256File(entry.path);
++            const ownership = classifyOwnership(recorded.get(entry.path), onDisk);
++            if (ownership === 'recorded-unchanged') continue;
++            if (ownership === 'unknown' && plan.policy.knownPaths.has(entry.path)) continue;
+             if (onDisk === entry.sha256) continue;
+             out.push({
+                 path: entry.path,
+@@ -177,6 +230,7 @@ export function computeConflicts(plan: InstallPlan): readonly ConflictEntry[] {
+                 plannedSha256: entry.sha256,
+                 existingSha256: onDisk,
+                 mergeable: isJsonTarget(entry),
++                ownership,
+             });
+         }
+     }
+diff --git a/src/install/preflight.ts b/src/install/preflight.ts
+index 014f31e579277d16f280c9696d1ef90a9d74db29..e92fd9947fe28bf2529694524bf3dec699d9e483 100644
+--- a/src/install/preflight.ts
++++ b/src/install/preflight.ts
+@@ -155,8 +155,14 @@ export function checkConflicts(inputs: PlanInputs): PreflightFinding[] {
+         id: 'conflicts' as const,
+         severity: 'warning' as const,
+         path: c.path,
+-        message: `existing file conflicts with planned ${c.kind} content`,
+-        remedy: 'resolve interactively, or pass --force to overwrite',
++        message:
++            c.ownership === 'recorded-modified'
++                ? `managed ${c.kind} file has been edited since we wrote it`
++                : `existing file conflicts with planned ${c.kind} content`,
++        remedy:
++            c.ownership === 'recorded-modified'
++                ? 'a default install leaves it alone; --force overwrites your edit'
++                : 'resolve interactively, or pass --force to overwrite',
+     }));
+ }
+ 
+diff --git a/src/install/recordedOwnership.ts b/src/install/recordedOwnership.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..1a69d291ce6f10beff904256d979f8daad170a8f
+--- /dev/null
++++ b/src/install/recordedOwnership.ts
+@@ -0,0 +1,113 @@
++/**
++ * Recorded-ownership classification — road-to-a-conformance-check-that-can-fail
++ * Phase 5.
++ *
++ * The install conflict matrix decided ownership by **path-set membership**:
++ * `policy.knownPaths.has(targetPath)`. That answers "did we ever write here",
++ * which collapses two materially different trees into one row — a managed file
++ * still carrying the bytes we wrote, and a managed file the user has since
++ * edited. The second is a data-loss surface and the first is not, and the
++ * matrix could not tell them apart because a path set carries no content.
++ *
++ * This module is the plumbing half: read the per-file SHA-256 the install
++ * manifest already records, and compare it against a digest the caller
++ * computed. It changes no install behaviour on its own — the matrix wiring
++ * lands separately (Phase 5.2), so the behaviour change is reviewable as a
++ * diff that contains no hash computation.
++ *
++ * Why a local YAML read rather than `installed_tools.read_manifest()`: that
++ * reader is a hand-rolled parser with no YAML dependency, and it drops nested
++ * `files[]` entries by design (a degraded read that ADR-200 documents as
++ * intentional). It therefore cannot supply a recorded hash at all. Reading
++ * the same file with the `yaml` package — already a runtime dependency — is
++ * additive and leaves that reader's byte-exact golden tests untouched.
++ */
++
++import { existsSync, readFileSync } from 'node:fs';
++import { isAbsolute, join, resolve } from 'node:path';
++
++import * as YAML from 'yaml';
++
++/**
++ * How the install matrix owns a target on disk.
++ *
++ * - `recorded-unchanged` — the manifest records this path and the bytes on
++ *   disk still match the digest it recorded. Ours, untouched.
++ * - `recorded-modified`  — the manifest records this path and the bytes have
++ *   changed since. Ours, edited by someone. Overwriting loses their work.
++ * - `unknown`            — the manifest does not record this path, or records
++ *   it without a digest (bridges carry `sha256: null`), or the bytes could not
++ *   be read. Not an assertion that the file is foreign — an assertion that
++ *   this tree cannot say.
++ */
++export type RecordedOwnership = 'recorded-unchanged' | 'recorded-modified' | 'unknown';
++
++/** Absolute target path → the SHA-256 the manifest recorded (`null` for bridges). */
++export type RecordedHashes = ReadonlyMap<string, string | null>;
++
++/** The empty answer — "nothing is recorded", used whenever no manifest resolves. */
++export const NO_RECORDED_HASHES: RecordedHashes = new Map<string, string | null>();
++
++/**
++ * Classify one target from the recorded digest and the on-disk digest.
++ *
++ * Pure — the caller supplies both digests. `undefined` for `recordedSha256`
++ * means the path is not recorded at all; `null` means recorded without a
++ * digest. Both answer `unknown`, because neither supports a comparison.
++ */
++export function classifyOwnership(
++    recordedSha256: string | null | undefined,
++    onDiskSha256: string | null,
++): RecordedOwnership {
++    if (recordedSha256 === undefined || recordedSha256 === null) return 'unknown';
++    if (onDiskSha256 === null) return 'unknown';
++    return recordedSha256 === onDiskSha256 ? 'recorded-unchanged' : 'recorded-modified';
++}
++
++/**
++ * Read `tools[].files[]` out of an installed-tools manifest into a
++ * path → digest map.
++ *
++ * Relative paths resolve against `projectRoot` (the manifest stores
++ * user-scope entries absolute and project-scope entries relative, mirroring
++ * `cmd_doctor._collect_manifest_entries`). A missing, unreadable or
++ * malformed manifest yields the empty map rather than throwing — an install
++ * plan must never fail because a lockfile is corrupt.
++ */
++export function readRecordedHashes(manifestPath: string, projectRoot: string): RecordedHashes {
++    if (!existsSync(manifestPath)) return NO_RECORDED_HASHES;
++    let doc: unknown;
++    try {
++        doc = YAML.parse(readFileSync(manifestPath, 'utf8'));
++    } catch {
++        return NO_RECORDED_HASHES;
++    }
++    if (doc === null || typeof doc !== 'object' || Array.isArray(doc)) return NO_RECORDED_HASHES;
++    const tools = (doc as Record<string, unknown>)['tools'];
++    if (!Array.isArray(tools)) return NO_RECORDED_HASHES;
++
++    const out = new Map<string, string | null>();
++    for (const tool of tools) {
++        if (tool === null || typeof tool !== 'object' || Array.isArray(tool)) continue;
++        const files = (tool as Record<string, unknown>)['files'];
++        if (!Array.isArray(files)) continue;
++        for (const entry of files) {
++            if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) continue;
++            const rec = entry as Record<string, unknown>;
++            const raw = rec['path'];
++            if (typeof raw !== 'string' || raw.length === 0) continue;
++            const sha = rec['sha256'];
++            const target = isAbsolute(raw) ? resolve(raw) : resolve(projectRoot, raw);
++            out.set(target, typeof sha === 'string' && sha.length > 0 ? sha : null);
++        }
++    }
++    return out;
++}
++
++/** Manifest location relative to a tree root (mirrors `installed_tools`). */
++export const MANIFEST_RELATIVE = join('agents', 'installed-tools.lock');
++
++/** {@link readRecordedHashes} for a tree root, resolving the manifest itself. */
++export function recordedHashesForRoot(root: string): RecordedHashes {
++    return readRecordedHashes(join(root, MANIFEST_RELATIVE), root);
++}
+diff --git a/src/install/txlog.ts b/src/install/txlog.ts
+index 3cb22b97c75bf5b3046787180e77599a201335a1..c035b561696bb093d413eef2d71d7e61cdc15bce 100644
+--- a/src/install/txlog.ts
++++ b/src/install/txlog.ts
+@@ -3,7 +3,8 @@
+  *
+  * Append-only JSONL at `getLogPath()` (`~/.event4u/agent-config/install-log.jsonl`).
+  * Each successful atomic write appends one entry; recovery on crash is
+- * `tail -n` + reverse-apply. No PID lockfile (per Phase-A4 decision 8).
++ * `tail -n` plus the wizard's resume / dismiss decision — nothing is
++ * un-written automatically. No PID lockfile (per Phase-A4 decision 8).
+  *
+  * Rotation: 10 MB OR 30 days, whichever first. Rotated copies move to
+  * `install-log.<ISO>.jsonl.gz` siblings; recovery never scans them.
+diff --git a/src/install/types.ts b/src/install/types.ts
+index 04a23a26da388e1c6dabc20a7f2b303069e9304e..fb40f1548e8c6e0f91a2826311bff0e52476652d 100644
+--- a/src/install/types.ts
++++ b/src/install/types.ts
+@@ -16,6 +16,9 @@
+  *   - v2 manifest `files_by_tool` → {@link InstallPlan.filesByTool}
+  */
+ 
++// Type-only — erased at compile time, so this module stays runtime-free.
++import type { RecordedOwnership } from './recordedOwnership.js';
++
+ /**
+  * Where the install lands.
+  *
+@@ -145,6 +148,15 @@ export interface ConflictEntry {
+     readonly plannedSha256: string | null;
+     readonly existingSha256: string | null;
+     readonly mergeable: boolean;
++    /**
++     * Three-state ownership from the manifest's recorded digest — the column
++     * path-set membership could not produce (Phase 5.1 of
++     * road-to-a-conformance-check-that-can-fail). `recorded-modified` is the
++     * row that matters: a file we wrote that someone has since edited.
++     * `unknown` reproduces the pre-hash answer and is what every tree without
++     * a readable manifest reports.
++     */
++    readonly ownership: RecordedOwnership;
+ }
+ 
+ /**
+@@ -164,7 +176,8 @@ export type ConflictResolution = 'skip' | 'overwrite' | 'merge';
+  * Result of applying an {@link InstallPlan}.
+  *
+  * Surfaced to the wizard's progress bar (Phase B1) and recorded in the
+- * transaction log (Phase A4) so recovery can reverse-apply on crash.
++ * transaction log (Phase A4) so a crashed run's tail can be surfaced to
++ * the wizard's recovery screen.
+  */
+ export interface ApplyResult {
+     readonly target: InstallTarget;
+diff --git a/src/scripts/_cli/cmd_conformance.ts b/src/scripts/_cli/cmd_conformance.ts
+index 897a79861fca79b1b96ad30e79cbe009260b45c2..9a152aefa227e11f19264dc6dea48f47b5b3c762 100644
+--- a/src/scripts/_cli/cmd_conformance.ts
++++ b/src/scripts/_cli/cmd_conformance.ts
+@@ -6,7 +6,9 @@
+  * consumer-facing checks that answer ONE question deterministically:
+  * "is agent-config installed AND firing in this repo?"
+  *
+- *   (a) txlog-clean          — install log tail carries no abandoned run
++ *   (a) txlog-clean          — install log tail carries no abandoned run;
++ *                              an absent log on an installed tree is `unknown`,
++ *                              not green (see `_check_txlog_clean`)
+  *   (b) router-pointers      — dist/router.json ids + routes_to resolve on disk
+  *   (c) hook-dispatcher      — dispatcher answers synthetic session_start/stop
+  *   (d) lean-projection      — lean_projection.mode matches projected artifacts
+@@ -75,6 +77,21 @@ export const CONFORMANCE_CHECK_IDS = [
+ /** Marker emitted by `project_thin_rules.thin_entry()` — the thin-stub signature. */
+ export const THIN_STUB_MARKER = 'Routed rule — load the body on trigger-match';
+ 
++/**
++ * Rendering symbols for this verb's rows — doctor's table plus `unknown`.
++ *
++ * `unknown` is a conformance concept: the check ran and could not answer.
++ * Distinct from `skipped` ("not applicable here") and from `ok` ("answered,
++ * green"), and never folded into the exit code, which keys off `fail` alone.
++ * It lives here rather than in `cmd_doctor`'s table because doctor emits no
++ * such row — and because `cmd_doctor.ts` is already over the source-size
++ * ceiling, so a line added there is a ratchet violation.
++ */
++const CONFORMANCE_STATUS_SYMBOLS: Record<string, string> = {
++    ...STATUS_SYMBOLS,
++    unknown: '❔',
++};
++
+ function print(s = ''): void {
+     process.stdout.write(`${s}\n`);
+ }
+@@ -105,12 +122,60 @@ export function installLogPath(): string {
+ // Check (a) — txlog tail clean.
+ // ---------------------------------------------------------------------------
+ 
+-export function _check_txlog_clean(logPath: string = installLogPath()): Dict {
++/**
++ * True when this tree carries an install manifest — i.e. something was
++ * installed here, so an install transaction log was expected.
++ *
++ * The discriminator for the two absent-log cases below. A tree with no
++ * manifest was never installed and has genuinely nothing to recover; a
++ * tree WITH a manifest recorded an install and no log for it, which is
++ * not the same answer and must not be reported as the same colour.
++ */
++export function _installLogExpected(projectRoot: string): boolean {
++    return fs.existsSync(installed_tools.manifest_path(projectRoot));
++}
++
++/**
++ * Check (a) — the install transaction log tail carries no abandoned run.
++ *
++ * Three absent-log outcomes, not one (road-to-a-conformance-check-that-can-fail
++ * Phase 1). Until this split the branch returned `ok` unconditionally, and
++ * since the log's only writer is the browser install route
++ * (`src/server/routes/install.ts`), every command-line install satisfied the
++ * check by having produced nothing — a green that could not go red on the
++ * path most consumers take.
++ *
++ * - no log, no manifest  → `ok`      (nothing was installed here)
++ * - no log, manifest     → `unknown` (an install happened and recorded no log)
++ * - log present          → `ok` / `fail` on the tail, as before
++ *
++ * `unknown` is deliberately NOT `fail`: an install that predates the log, or
++ * one written by a path that does not log, is an unanswered question rather
++ * than a broken install, and reddening every such consumer at upgrade is the
++ * risk this phase's shape exists to avoid. The exit contract keys off `fail`
++ * only, so `unknown` leaves exit codes untouched.
++ */
++export function _check_txlog_clean(
++    logPath: string = installLogPath(),
++    projectRoot: string | null = null,
++): Dict {
+     if (!fs.existsSync(logPath)) {
++        if (projectRoot !== null && _installLogExpected(projectRoot)) {
++            return {
++                id: 'txlog-clean',
++                status: 'unknown',
++                message:
++                    'install manifest present but no install transaction log — ' +
++                    'this install recorded none, so the last run cannot be confirmed complete',
++                remedy:
++                    'only the browser install route (`agent-config setup`) writes the log today; ' +
++                    'run `agent-config doctor` for the drift answer this check cannot give',
++            };
++        }
+         return {
+             id: 'txlog-clean',
+             status: 'ok',
+-            message: 'no install transaction log — nothing to recover',
++            message: 'no install transaction log and no install manifest — nothing was installed here',
+             remedy: '',
+         };
+     }
+@@ -131,7 +196,9 @@ export function _check_txlog_clean(logPath: string = installLogPath()): Dict {
+             message:
+                 `install log tail is an abandoned run (abort at ${last.ts}` +
+                 `${last.note ? `: ${last.note}` : ''})`,
+-            remedy: 're-run `agent-config init` (recovery reverse-applies the aborted tail)',
++            remedy:
++                're-run `agent-config init` — it re-applies the plan over the partial tail; ' +
++                "the aborted run's writes stay on disk and are replaced only where the plan covers them",
+         };
+     }
+     return {
+@@ -492,7 +559,7 @@ export function runConformanceChecks(opts: ConformanceRunOptions = {}): Dict[] {
+     const projectRoot = opts.projectRoot ?? process.cwd();
+     const packageRoot = opts.packageRoot ?? PACKAGE_ROOT;
+     const checks: Dict[] = [];
+-    checks.push(_check_txlog_clean());
++    checks.push(_check_txlog_clean(installLogPath(), projectRoot));
+     checks.push(_check_router_pointers(packageRoot));
+     if (opts.skipDispatcher === true) {
+         checks.push({
+@@ -653,7 +720,7 @@ function main(argv: string[] | null = null): number {
+         print(`  📍  project_root: ${project_root}`);
+         print('conformance:');
+         for (const c of allChecks) {
+-            const sym = STATUS_SYMBOLS[c['status'] as string] ?? '?';
++            const sym = CONFORMANCE_STATUS_SYMBOLS[c['status'] as string] ?? '?';
+             print(`  ${sym} ${c['id']}: ${c['message']}`);
+             if (c['status'] !== 'ok' && c['remedy']) {
+                 print(`      fix: ${c['remedy']}`);
+diff --git a/src/server/routes/install.ts b/src/server/routes/install.ts
+index 96a9992e501fe375c99a85525af601e158c4f75c..131cfbffc00a2d2d166cddf6bffa97698ffd0409 100644
+--- a/src/server/routes/install.ts
++++ b/src/server/routes/install.ts
+@@ -102,12 +102,20 @@ const FileEntrySchema: z.ZodType<FileEntry> = z.object({
+     sha256: z.string().nullable(),
+ });
+ 
+-const ConflictEntrySchema: z.ZodType<ConflictEntry> = z.object({
++// Input type is `unknown` rather than `ConflictEntry`: `ownership` carries a
++// `.default()`, so the parsed OUTPUT always has the field while the accepted
++// INPUT may omit it (older clients on an apply round-trip).
++const ConflictEntrySchema: z.ZodType<ConflictEntry, z.ZodTypeDef, unknown> = z.object({
+     path: z.string().min(1),
+     kind: FileKindSchema,
+     plannedSha256: z.string().nullable(),
+     existingSha256: z.string().nullable(),
+     mergeable: z.boolean(),
++    // Additive (Phase 5.1). `default` keeps apply round-trips from older
++    // clients parsing — they omit the field and get the pre-hash answer.
++    ownership: z
++        .enum(['recorded-unchanged', 'recorded-modified', 'unknown'])
++        .default('unknown'),
+ });
+ 
+ /**
+diff --git a/src/ui/wizard/state.ts b/src/ui/wizard/state.ts
+index 474d2d1486919b399187cc17a3125e0db0ccc028..7703246845d1cbb348a01b2a2429fcc403be6ad8 100644
+--- a/src/ui/wizard/state.ts
++++ b/src/ui/wizard/state.ts
+@@ -425,6 +425,13 @@ export interface ConflictEntryWire {
+     readonly plannedSha256: string | null;
+     readonly existingSha256: string | null;
+     readonly mergeable: boolean;
++    /**
++     * Three-state ownership from the install manifest's recorded digest.
++     * `recorded-modified` is a file we wrote that the user has since edited —
++     * the screen should say so rather than treating it as a foreign
++     * collision. Optional on the wire: older servers omit it.
++     */
++    readonly ownership?: 'recorded-unchanged' | 'recorded-modified' | 'unknown';
+ }
+ 
+ /**
+diff --git a/tests/install/conflict.test.ts b/tests/install/conflict.test.ts
+index 82a978b377c660c73f2dff064b91c5f3c6fd3070..e8dd7be6256722497aa796918da315b42a781eac 100644
+--- a/tests/install/conflict.test.ts
++++ b/tests/install/conflict.test.ts
+@@ -83,6 +83,53 @@ describe('conflict — resolveFileConflict', () => {
+         expect(r).toBe('skip');
+     });
+ 
++    it('treats a recorded-modified file as ours with an empty knownPaths set', () => {
++        // The write outcome is deliberately identical to the membership
++        // answer — Phase 5.1 moves no writes. What changes is that
++        // computeConflicts can now name this file; see its own describe block.
++        const r = resolveFileConflict({
++            targetPath: '/x/a',
++            idempotent: false,
++            exists: true,
++            policy: policy(),
++            ownership: 'recorded-modified',
++        });
++        expect(r).toBe('skip');
++    });
++
++    it('treats a recorded-unchanged file as ours with an empty knownPaths set', () => {
++        const r = resolveFileConflict({
++            targetPath: '/x/a',
++            idempotent: false,
++            exists: true,
++            policy: policy(),
++            ownership: 'recorded-unchanged',
++        });
++        expect(r).toBe('skip');
++    });
++
++    it('does not over-fire: unknown ownership still surfaces a foreign path', () => {
++        const r = resolveFileConflict({
++            targetPath: '/x/a',
++            idempotent: false,
++            exists: true,
++            policy: policy(),
++            ownership: 'unknown',
++        });
++        expect(r).toBe('surface');
++    });
++
++    it('does not over-fire: force still overwrites a recorded-modified file', () => {
++        const r = resolveFileConflict({
++            targetPath: '/x/a',
++            idempotent: false,
++            exists: true,
++            policy: policy({ force: true }),
++            ownership: 'recorded-modified',
++        });
++        expect(r).toBe('write');
++    });
++
+     it('returns write when known path collides with force', () => {
+         const r = resolveFileConflict({
+             targetPath: '/x/a',
+@@ -253,6 +300,52 @@ describe('conflict — computeConflicts', () => {
+             plannedSha256: hex('planned'),
+             existingSha256: hex('on-disk'),
+             mergeable: false,
++            ownership: 'unknown',
++        });
++    });
++
++    // Phase 5.1 — three-state ownership instead of path membership.
++    describe('recorded ownership', () => {
++        it('drops a recorded-unchanged file even when the plan carries new bytes', () => {
++            // A package upgrade: the planned bytes differ from the bytes we
++            // recorded, and the file on disk still matches what we recorded.
++            // Path membership could not see that; a digest can.
++            const e = entry('a.md', 'planned-v2');
++            writeFileSync(e.path, 'installed-v1');
++            const p = plan({ claude: [e] });
++            const recorded = new Map([[e.path, hex('installed-v1')]]);
++            expect(computeConflicts(p, recorded)).toEqual([]);
++        });
++
++        it('REPORTS a managed file the user edited, which membership dropped', () => {
++            const e = entry('a.md', 'planned');
++            writeFileSync(e.path, 'user-edited');
++            const p = plan({ claude: [e] }, { knownPaths: new Set([e.path]) });
++            // Pre-hash answer for exactly this tree: silence.
++            expect(computeConflicts(p, new Map())).toEqual([]);
++            const recorded = new Map([[e.path, hex('installed-v1')]]);
++            const conflicts = computeConflicts(p, recorded);
++            expect(conflicts).toHaveLength(1);
++            expect(conflicts[0]?.ownership).toBe('recorded-modified');
++            expect(conflicts[0]?.existingSha256).toBe(hex('user-edited'));
++        });
++
++        it('does not over-fire: no recorded digest reproduces the membership answer', () => {
++            const e = entry('a.md', 'planned');
++            writeFileSync(e.path, 'on-disk');
++            const known = plan({ claude: [e] }, { knownPaths: new Set([e.path]) });
++            expect(computeConflicts(known, new Map())).toEqual([]);
++            const foreign = plan({ claude: [e] });
++            expect(computeConflicts(foreign, new Map())).toHaveLength(1);
++            expect(computeConflicts(foreign, new Map())[0]?.ownership).toBe('unknown');
++        });
++
++        it('does not over-fire: a bridge-shaped null digest stays unknown, not modified', () => {
++            const e = entry('a.md', 'planned');
++            writeFileSync(e.path, 'on-disk');
++            const p = plan({ claude: [e] }, { knownPaths: new Set([e.path]) });
++            const recorded = new Map<string, string | null>([[e.path, null]]);
++            expect(computeConflicts(p, recorded)).toEqual([]);
+         });
+     });
+ 
+diff --git a/tests/install/recordedOwnership.test.ts b/tests/install/recordedOwnership.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..fdfacc5d8a0d782fd54656a18bac71625f6c29c7
+--- /dev/null
++++ b/tests/install/recordedOwnership.test.ts
+@@ -0,0 +1,119 @@
++/**
++ * Recorded-ownership plumbing — road-to-a-conformance-check-that-can-fail
++ * Phase 5.2.
++ *
++ * The plumbing half, tested on its own: reading recorded digests out of an
++ * installed-tools manifest and comparing them against an on-disk digest. No
++ * install behaviour is exercised here — the matrix wiring is a separate
++ * commit with a separate test.
++ */
++
++import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
++import { tmpdir } from 'node:os';
++import { join, resolve } from 'node:path';
++import { afterEach, beforeEach, describe, expect, it } from 'vitest';
++
++import {
++    NO_RECORDED_HASHES,
++    classifyOwnership,
++    readRecordedHashes,
++} from '../../src/install/recordedOwnership.js';
++
++let tmp: string;
++
++beforeEach(() => {
++    tmp = mkdtempSync(join(tmpdir(), 'recorded-ownership-'));
++});
++
++afterEach(() => {
++    rmSync(tmp, { recursive: true, force: true });
++});
++
++function writeManifest(body: string): string {
++    mkdirSync(join(tmp, 'agents'), { recursive: true });
++    const p = join(tmp, 'agents', 'installed-tools.lock');
++    writeFileSync(p, body);
++    return p;
++}
++
++const MANIFEST = `schema_version: 2
++agent_config_version: "1.0.0"
++tools:
++  - name: claude
++    scope: project
++    bridge_marker: false
++    installed_at: "2026-09-13T00:00:00Z"
++    files:
++      - path: .claude/rules/a.md
++        kind: deployed
++        sha256: "aaa"
++      - path: .cursorrules
++        kind: bridge
++        sha256: null
++`;
++
++describe('classifyOwnership', () => {
++    it('is recorded-unchanged when the digests agree', () => {
++        expect(classifyOwnership('aaa', 'aaa')).toBe('recorded-unchanged');
++    });
++
++    it('is recorded-modified when the digests differ', () => {
++        expect(classifyOwnership('aaa', 'bbb')).toBe('recorded-modified');
++    });
++
++    it('is unknown when the path is not recorded at all', () => {
++        expect(classifyOwnership(undefined, 'bbb')).toBe('unknown');
++    });
++
++    it('is unknown when the manifest recorded no digest (bridge)', () => {
++        expect(classifyOwnership(null, 'bbb')).toBe('unknown');
++    });
++
++    it('is unknown when the on-disk digest could not be read', () => {
++        expect(classifyOwnership('aaa', null)).toBe('unknown');
++    });
++});
++
++describe('readRecordedHashes', () => {
++    it('reads nested files[] entries the hand-rolled manifest parser drops', () => {
++        const hashes = readRecordedHashes(writeManifest(MANIFEST), tmp);
++        expect(hashes.get(resolve(tmp, '.claude/rules/a.md'))).toBe('aaa');
++    });
++
++    it('records a digest-less entry as null, not as absent', () => {
++        const hashes = readRecordedHashes(writeManifest(MANIFEST), tmp);
++        expect(hashes.has(resolve(tmp, '.cursorrules'))).toBe(true);
++        expect(hashes.get(resolve(tmp, '.cursorrules'))).toBeNull();
++    });
++
++    it('resolves relative manifest paths against the project root', () => {
++        const hashes = readRecordedHashes(writeManifest(MANIFEST), tmp);
++        for (const key of hashes.keys()) {
++            expect(key.startsWith(tmp)).toBe(true);
++        }
++    });
++
++    it('keeps an absolute manifest path absolute', () => {
++        const abs = process.platform === 'win32' ? 'C:/opt/x.md' : '/opt/x.md';
++        const p = writeManifest(
++            `tools:\n  - name: t\n    files:\n      - path: "${abs}"\n        kind: deployed\n        sha256: "zzz"\n`,
++        );
++        const hashes = readRecordedHashes(p, tmp);
++        expect(hashes.get(resolve(abs))).toBe('zzz');
++    });
++
++    it('is empty when the manifest is absent', () => {
++        expect(readRecordedHashes(join(tmp, 'nope.lock'), tmp)).toBe(NO_RECORDED_HASHES);
++    });
++
++    it('SABOTAGE: a corrupt manifest yields the empty map, never a throw', () => {
++        const p = writeManifest('tools:\n  - name: [unclosed\n    files:\n');
++        expect(() => readRecordedHashes(p, tmp)).not.toThrow();
++        expect(readRecordedHashes(p, tmp).size).toBe(0);
++    });
++
++    it('SABOTAGE: a manifest whose tools is not a list yields the empty map', () => {
++        const p = writeManifest('schema_version: 2\ntools: "nope"\n');
++        expect(readRecordedHashes(p, tmp).size).toBe(0);
++    });
++});
+diff --git a/tests/scripts/_cli/cmd_conformance.test.ts b/tests/scripts/_cli/cmd_conformance.test.ts
+index c2b77d5aff5d4d134173d85f975d7de38d22a459..ed33323eed9179e9aacde92b7c5a83140613a80d 100644
+--- a/tests/scripts/_cli/cmd_conformance.test.ts
++++ b/tests/scripts/_cli/cmd_conformance.test.ts
+@@ -18,11 +18,13 @@ import {
+     _check_lean_projection,
+     _check_router_pointers,
+     _check_txlog_clean,
++    _installLogExpected,
+     appendConformanceReport,
+     conformanceLogPath,
+     detectSmokePlatform,
+     routeTargetPaths,
+ } from '../../../src/scripts/_cli/cmd_conformance.js';
++import { findCommand } from '../../../src/cli/registry.js';
+ 
+ let tmp: string;
+ 
+@@ -65,6 +67,34 @@ describe('_check_txlog_clean', () => {
+         expect(_check_txlog_clean(log)['status']).toBe('ok');
+     });
+ 
++    it('SABOTAGE: an installed tree with no transaction log is not green', () => {
++        // Phase 4.1 negative fixture for the branch that was always green:
++        // a tree carrying an install manifest but no log did not record one,
++        // and reporting that as `ok` is the false green this roadmap opened.
++        mkdirSync(join(tmp, 'agents'), { recursive: true });
++        writeFileSync(join(tmp, 'agents', 'installed-tools.lock'), 'schema_version: 2\ntools: []\n');
++        const res = _check_txlog_clean(join(tmp, 'absent.jsonl'), tmp);
++        expect(res['status']).toBe('unknown');
++        expect(String(res['message'])).toContain('no install transaction log');
++        expect(res['status']).not.toBe('fail');
++    });
++
++    it('does not over-fire: a never-installed tree stays green', () => {
++        const res = _check_txlog_clean(join(tmp, 'absent.jsonl'), tmp);
++        expect(res['status']).toBe('ok');
++    });
++
++    it('does not over-fire: an installed tree with a clean log stays green', () => {
++        mkdirSync(join(tmp, 'agents'), { recursive: true });
++        writeFileSync(join(tmp, 'agents', 'installed-tools.lock'), 'schema_version: 2\ntools: []\n');
++        const log = join(tmp, 'log.jsonl');
++        writeFileSync(
++            log,
++            JSON.stringify({ ts: '2026-07-07T00:00:00Z', kind: 'write', path: '/x', sha256: 'a' }) + '\n',
++        );
++        expect(_check_txlog_clean(log, tmp)['status']).toBe('ok');
++    });
++
+     it('SABOTAGE: fails when the tail is an abandoned abort', () => {
+         const log = join(tmp, 'log.jsonl');
+         writeFileSync(
+@@ -86,6 +116,67 @@ describe('_check_txlog_clean', () => {
+     });
+ });
+ 
++describe('the txlog remedy resolves to real behaviour', () => {
++    function abortLog(): string {
++        const log = join(tmp, 'log.jsonl');
++        writeFileSync(
++            log,
++            JSON.stringify({
++                ts: '2026-07-07T00:00:01Z',
++                kind: 'abort',
++                path: '/y',
++                sha256: null,
++                note: 'client disconnect',
++            }) + '\n',
++        );
++        return log;
++    }
++
++    it('names a verb the dispatcher actually registers', () => {
++        const remedy = String(_check_txlog_clean(abortLog())['remedy']);
++        const verb = /`agent-config ([a-z][a-z0-9:-]*)`/.exec(remedy)?.[1];
++        expect(verb).toBeDefined();
++        expect(findCommand(verb as string)).toBeDefined();
++    });
++
++    it('claims no recovery this tree cannot perform', () => {
++        // The only rollback-shaped writer in the tree is the wizard's
++        // dismiss marker (empty path, null hash) — nothing un-writes a
++        // partial run, so no remedy may promise that it does.
++        for (const res of [
++            _check_txlog_clean(abortLog()),
++            _check_txlog_clean(join(tmp, 'absent.jsonl')),
++            _check_txlog_clean(join(tmp, 'absent.jsonl'), tmp),
++        ]) {
++            expect(String(res['remedy'])).not.toMatch(/revers/i);
++            expect(String(res['remedy'])).not.toMatch(/undo|roll\s?back/i);
++        }
++    });
++
++    it('the source tree publishes no un-backed recovery claim', () => {
++        for (const rel of [
++            '../../../src/install/txlog.ts',
++            '../../../src/install/types.ts',
++            '../../../src/scripts/_cli/cmd_conformance.ts',
++        ]) {
++            const text = readFileSync(new URL(rel, import.meta.url), 'utf8');
++            expect(text).not.toMatch(/reverse-appl/i);
++        }
++    });
++});
++
++describe('_installLogExpected', () => {
++    it('is false for a tree with no install manifest', () => {
++        expect(_installLogExpected(tmp)).toBe(false);
++    });
++
++    it('is true once an install manifest exists', () => {
++        mkdirSync(join(tmp, 'agents'), { recursive: true });
++        writeFileSync(join(tmp, 'agents', 'installed-tools.lock'), 'schema_version: 2\ntools: []\n');
++        expect(_installLogExpected(tmp)).toBe(true);
++    });
++});
++
+ describe('_check_router_pointers', () => {
+     function scaffoldPackage(root: string): void {
+         mkdirSync(join(root, 'dist', 'agent-src', 'rules'), { recursive: true });

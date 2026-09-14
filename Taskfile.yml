@@ -177,6 +177,8 @@ tasks:
       - task: smoke-quickstart
       - task: check-examples-shape
       - task: lint-roadmap-complexity
+      - task: lint-decision-classes
+      - task: lint-roadmap-producers
       - task: lint-roadmap-ci-steps
       - task: lint-empty-roadmaps
       - task: lint-symptom-intake

@@ -73,11 +73,22 @@ export const PLATFORM_BRIDGES: Record<string, [string, string]> = {
   copilot: ["", "rule-only fallback — this package binds no hook here"],
 };
 
+/** The shape of a host's user-facing question primitive. */
+export type AskShape = "native" | "text";
+
 export interface PlatformRow {
   platform: string;
   status: string;
   bridge_path: string | null;
   fallback_only: boolean;
+  /**
+   * DECLARED in the manifest, never probed. A host with no row reads `text`:
+   * the conservative answer, and the one that is true of every host that has
+   * not said otherwise. Absent must not read as "unknown" here — an unknown
+   * that the contract then treats as native is exactly the silent degrade the
+   * row exists to prevent.
+   */
+  ask: AskShape;
   bindings: Record<string, string[]>;
   hint: string | null;
 }
@@ -122,6 +133,7 @@ export function collect(project_root: string, manifest: JsonObject): StatusMatri
     const blockRaw = platforms[platform];
     const block = _isObject(blockRaw) ? blockRaw : {};
     const fallback_only = Boolean(block["fallback_only"]);
+    const ask: AskShape = block["ask"] === "native" ? "native" : "text";
     const bindings: Record<string, string[]> = {};
     if (!fallback_only) {
       for (const [ev, c] of Object.entries(block)) {
@@ -138,6 +150,7 @@ export function collect(project_root: string, manifest: JsonObject): StatusMatri
       status,
       bridge_path: rel || null,
       fallback_only,
+      ask,
       bindings,
       hint: ["missing", "empty", "degraded", "n/a"].includes(status)
         ? hint
@@ -166,6 +179,12 @@ export function _render_table(matrix: StatusMatrix): string {
       head += `  (${row.bridge_path})`;
     }
     lines.push(head);
+    lines.push(
+      `    ask                    → ${row.ask}` +
+        (row.ask === "native"
+          ? "  (structured-ask tool; the recommendation is its default option)"
+          : "  (numbered text block — the fallback, and it says so)"),
+    );
     if (row.fallback_only) {
       lines.push(
         "    degraded: rule-only fallback " +

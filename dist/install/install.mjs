@@ -10510,6 +10510,44 @@ function carveOutKeys() {
   return SETTINGS_CARVE_OUT.map((c) => c.key);
 }
 
+// src/scripts/_lib/settings_renamed_keys.ts
+var RENAMED_KEYS = /* @__PURE__ */ new Map([
+  ["planning.challenge_on_create", "planning.closure_pass"]
+]);
+var _warned = /* @__PURE__ */ new Set();
+function _read(tree, dotted) {
+  let cur = tree;
+  for (const part of dotted.split(".")) {
+    if (cur === null || typeof cur !== "object" || Array.isArray(cur)) return void 0;
+    cur = cur[part];
+  }
+  return cur;
+}
+function _write(tree, dotted, value) {
+  const parts = dotted.split(".");
+  let cur = tree;
+  for (const part of parts.slice(0, -1)) {
+    const next = cur[part];
+    if (next === null || typeof next !== "object" || Array.isArray(next)) cur[part] = {};
+    cur = cur[part];
+  }
+  cur[parts[parts.length - 1]] = value;
+}
+function applyRenamedKeys(layer) {
+  for (const [oldKey, newKey] of RENAMED_KEYS) {
+    const oldValue = _read(layer, oldKey);
+    if (oldValue === void 0) continue;
+    if (_read(layer, newKey) === void 0) _write(layer, newKey, oldValue);
+    if (_warned.has(oldKey)) continue;
+    _warned.add(oldKey);
+    process.stderr.write(
+      `\u26A0\uFE0F  settings: \`${oldKey}\` was renamed to \`${newKey}\`. The old key still works for one minor; rename it in your .agent-settings.yml.
+`
+    );
+  }
+  return layer;
+}
+
 // src/scripts/_lib/agent_settings.ts
 var _require2 = createRequire2(import.meta.url);
 var Logger = class {
@@ -10870,9 +10908,9 @@ function load_agent_settings(options = {}) {
   }
   const cascade = _resolve_cascade_paths(cwd, project_path);
   const merged = template_defaults(template_path ?? void 0);
-  _deep_merge(merged, user_global_filtered);
+  _deep_merge(merged, applyRenamedKeys(user_global_filtered));
   for (const p of cascade) {
-    const layer = _read_yaml(p) ?? {};
+    const layer = applyRenamedKeys(_read_yaml(p) ?? {});
     if (Object.keys(layer).length > 0) {
       _deep_merge(merged, layer);
     }
@@ -15756,8 +15794,8 @@ var settingsSchema = external_exports.object({
     }).default({ max_cost_per_run_usd: 5, max_cost_per_rolling_7d_usd: 25 })
   }),
   planning: external_exports.object({
-    challenge_on_create: external_exports.boolean().default(true).describe(
-      "Gate C \u2014 plan-confidence gate before authoring. true (default) = a plan-artifact ask (/roadmap:create, roadmap-writing, /feature:plan, /feature:roadmap) first checks the four 95%-confidence conditions from /challenge-me vision; any gap routes into the interview (or the inline degrade protocol) before authoring, and a confident pass emits exactly one marker line. false = inert, plan asks author directly. An explicit user bypass always wins for that turn and is counted."
+    closure_pass: external_exports.boolean().default(true).describe(
+      `Gate C \u2014 plan-closure pass. true (default) = a plan-artifact ask (/roadmap:create, roadmap-writing, /feature:plan, /feature:roadmap, /roadmap:materialize, /implement-ticket, /jira-ticket, /analyze:inbox, /analyze:roadmap-repos) ends in a closure pass (/challenge-me closure): every foreseeable decision is closed at the lowest rung that owns it and written into the roadmap's "## Decisions" table, so a long run never meets a question planning could have closed. false = inert, plan asks author directly. An explicit user bypass always wins for that turn and is counted as a bypass rather than as an absent closure.`
     ),
     risk_review: external_exports.boolean().default(true).describe(
       'Gate R1 \u2014 plan-risk review. true (default) = every ready (non-draft) plan must carry a schema-valid "## Risk Register" section (ranked risks, mitigation + anchor per row, freshness marker, exact honest-null grammar), enforced by lint_plan_risk_register at pre-push + CI. false = escape hatch, the validator skips.'

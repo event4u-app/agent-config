@@ -15,16 +15,23 @@
  * A **region** is one contiguous stretch of an authored file. Every region
  * falls into exactly one of four classes, decided in this precedence order:
  *
- *   1. `count-only`   — a line that renders a NUMBER where a question belongs:
+ *   1. `bypass`      — a line recording an EXPLICIT user bypass of a gate
+ *                       ("just write it", "skip closure", "einfach machen").
+ *                       Its own axis, and that is the whole point: a bypass is
+ *                       a decision the user took, and counting it as an absent
+ *                       closure would read as a surface that forgot to close
+ *                       rather than one the user told to stop. It is also never
+ *                       inferred — only an explicit phrasing matches.
+ *   2. `count-only`   — a line that renders a NUMBER where a question belongs:
  *                       it mentions `question(s)` and carries a `{count}`
  *                       placeholder. This is the shape that prints how many
  *                       decisions are outstanding instead of putting one.
- *   2. `file-parked`  — an `Open questions` SECTION heading whose body carries
+ *   3. `file-parked`  — an `Open questions` SECTION heading whose body carries
  *                       no ask obligation. The section is then a parking lot:
  *                       a place a question is written down instead of asked.
- *   3. `batch`        — a run of non-blank lines carrying TWO OR MORE question
+ *   4. `batch`        — a run of non-blank lines carrying TWO OR MORE question
  *                       lines: one hand-back, several decisions.
- *   4. `single`       — the same run carrying exactly one.
+ *   5. `single`       — the same run carrying exactly one.
  *
  * A **question line** is a non-blank line that either ends in `?` (after
  * trailing backticks, emphasis and whitespace are stripped) or is a list item
@@ -77,7 +84,7 @@ const _HERE = fileURLToPath(import.meta.url);
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 
 /** The census classes, in precedence order. */
-export const ASK_CLASSES = ['single', 'batch', 'count-only', 'file-parked'] as const;
+export const ASK_CLASSES = ['single', 'batch', 'count-only', 'file-parked', 'bypass'] as const;
 export type AskClass = (typeof ASK_CLASSES)[number];
 
 /** Default scan roots. `src/domains` is narrowed to `command.md` — the ask surface. */
@@ -86,6 +93,16 @@ export const DEFAULT_ROOTS: readonly string[] = [
     'src/skills',
     'src/agent-src/contexts',
 ];
+
+/**
+ * An EXPLICIT user bypass of a gate. Every alternative is a phrasing the user
+ * types; none of them is a state the agent can infer. A mission grant, an
+ * autonomy setting and momentum are deliberately absent from this list — an
+ * inferred bypass is the failure this axis exists to make visible, not a
+ * second way to match.
+ */
+export const BYPASS_RE =
+    /\b(?:just write it|just do it|skip (?:the )?(?:closure|protocol|validation)|einfach machen|mach einfach|skip closure)\b/i;
 
 /** A line printing a question COUNT where a question belongs. */
 export const COUNT_ONLY_RE = /\bquestions?\b/i;
@@ -124,10 +141,149 @@ export function isQuestionLine(line: string): boolean {
     return line.replace(TRAILING_NOISE_RE, '').endsWith('?');
 }
 
+/**
+ * THE FOUR AXES
+ *
+ * The class above says what SHAPE an ask has. It does not say whether the ask
+ * should have existed, and that is the question the targets are about. Four
+ * axes, each decidable from the region and its file — never from intent:
+ *
+ *   `phase`               planning · execution · delivery. Read from the file's
+ *                         role, because "an owner ask in execution" and the same
+ *                         ask during planning are different defects: planning is
+ *                         where a decision is SUPPOSED to be closed.
+ *   `ownership`           which class the ask routes to, from the same mapping
+ *                         `closure_scan` uses. `unknown` when the region carries
+ *                         no signal — reported as unknown, never as technical.
+ *   `avoidable`           the ask is one the surface could have closed itself: a
+ *                         commit / push / CI / conflict ask, a continuation, a
+ *                         count, or a TECHNICAL question routed to the owner.
+ *   `resolver_attempted`  the region names a rung it tried before asking —
+ *                         evidence, convention, the agent, an independent
+ *                         session, the council, the team. An ask that names none
+ *                         went to the person first.
+ *
+ * All four are properties of an AUTHORED surface. The third target — zero
+ * repeats of an already-answered question — is a property of a TRANSCRIPT and
+ * is reported NOT MEASURED rather than as zero, on the same ground the
+ * native-ask rate is carried in rather than computed: a number this script
+ * cannot see must not be published as a number it measured.
+ */
+export const PHASES = ['planning', 'execution', 'delivery'] as const;
+export type Phase = (typeof PHASES)[number];
+
+/** Path fragments that put a file in a phase. First match wins, in order. */
+const PHASE_MARKERS: ReadonlyArray<readonly [Phase, RegExp]> = [
+    ['delivery', /(commit|\/pr\/|pull-request|release|push|merge)/],
+    [
+        'planning',
+        /(roadmap\/create|roadmap\/materialize|feature\/plan|feature\/roadmap|challenge-me|analyze\/|refine-ticket|estimate-ticket|plan-confidence)/,
+    ],
+    ['execution', /(process-full|process-phase|process-step|implement-ticket|work|roadmap-process-loop|jira-ticket)/],
+];
+
+/** Ask shapes the surface could have closed itself. */
+export const AVOIDABLE_RE =
+    /\b(?:shall i (?:continue|go on|proceed)|weiter\?|should i commit|commit this|one commit or multiple|push (?:this|it)\?|re-?run ci|resolve the conflicts?\?|which branch|new pr\?)\b/i;
+
+/** A rung named before the ask — the region tried something first. */
+export const RESOLVER_RE =
+    /\b(?:evidence|convention|ADR-\d+|contract|independent session|the council|council:status|the team|ai_team)\b/i;
+
+/** Ownership signals, the same mapping the closure detector uses. */
+const OWNERSHIP_MARKERS: ReadonlyArray<readonly [string, RegExp]> = [
+    ['destructive-owned', /\b(?:merge|force-push|deploy|publish|purchase|delete the branch)\b/i],
+    ['product-owned', /\b(?:user-visible|what the user sees|product semantics|UX)\b/i],
+    ['business-owned', /\b(?:deadline|budget|policy|pricing)\b/i],
+    ['spend-exhaustion', /\b(?:ceiling|quota|spend)\b/i],
+    ['critical-technical', /\b(?:security|auth|tenant|authority)\b/i],
+    ['contested-technical', /\b(?:architecture|two valid|trade-?off|migration design)\b/i],
+    ['reversible-technical', /\b(?:refactor|test organisation|pattern)\b/i],
+    ['deterministic', /\b(?:naming|file placement|commit split)\b/i],
+];
+
+/** The three owner-routed classes — the ones an ask legitimately reaches. */
+const OWNER_OWNED: ReadonlySet<string> = new Set([
+    'product-owned',
+    'business-owned',
+    'destructive-owned',
+]);
+
+export function phaseOf(file: string): Phase {
+    for (const [phase, re] of PHASE_MARKERS) {
+        if (re.test(file)) return phase;
+    }
+    return 'planning';
+}
+
+export function ownershipOf(text: string): string {
+    for (const [cls, re] of OWNERSHIP_MARKERS) {
+        if (re.test(text)) return cls;
+    }
+    return 'unknown';
+}
+
 export interface Region {
     readonly cls: AskClass;
     readonly line: number;
     readonly questions: number;
+    /** The region's own text, for the axis classifiers. */
+    readonly text: string;
+}
+
+/** One region with its four axes resolved. */
+export interface AxisRow {
+    readonly file: string;
+    readonly line: number;
+    readonly cls: AskClass;
+    readonly phase: Phase;
+    readonly ownership: string;
+    /** A commit / push / CI / conflict / continuation ask — target 2's subject. */
+    readonly workflow: boolean;
+    readonly avoidable: boolean;
+    readonly resolver_attempted: boolean;
+}
+
+export function axesFor(file: string, region: Region): AxisRow {
+    const ownership = ownershipOf(region.text);
+    const technical = ownership !== 'unknown' && !OWNER_OWNED.has(ownership);
+    const phase = phaseOf(file);
+    const workflow = AVOIDABLE_RE.test(region.text);
+    return {
+        file,
+        line: region.line,
+        cls: region.cls,
+        phase,
+        ownership,
+        workflow,
+        // A technical question put to a person in EXECUTION is avoidable by
+        // construction: planning owned it, and the ownership ladder closes it
+        // without a person at all.
+        avoidable: workflow || (technical && phase === 'execution'),
+        resolver_attempted: RESOLVER_RE.test(region.text),
+    };
+}
+
+/** The three targets, and whether the corpus meets them. */
+export interface Targets {
+    readonly technical_owner_asks_in_execution: number;
+    readonly workflow_asks: number;
+    /** Transcript-only. `null` is NOT MEASURED, never zero. */
+    readonly repeat_asks: number | null;
+}
+
+export function targets(rows: readonly AxisRow[]): Targets {
+    const asks = rows.filter((r) => r.cls === 'single' || r.cls === 'batch');
+    return {
+        technical_owner_asks_in_execution: asks.filter(
+            (r) =>
+                r.phase === 'execution' &&
+                r.ownership !== 'unknown' &&
+                !OWNER_OWNED.has(r.ownership),
+        ).length,
+        workflow_asks: asks.filter((r) => r.workflow).length,
+        repeat_asks: null,
+    };
 }
 
 /**
@@ -143,8 +299,13 @@ export function scanFile(text: string): Region[] {
 
     for (let i = 0; i < lines.length; i += 1) {
         const line = lines[i] as string;
+        if (BYPASS_RE.test(line)) {
+            out.push({ cls: 'bypass', line: i + 1, questions: 0, text: line });
+            consumed.add(i);
+            continue;
+        }
         if (COUNT_ONLY_RE.test(line) && COUNT_PLACEHOLDER_RE.test(line)) {
-            out.push({ cls: 'count-only', line: i + 1, questions: 0 });
+            out.push({ cls: 'count-only', line: i + 1, questions: 0, text: line });
             consumed.add(i);
         }
     }
@@ -159,22 +320,25 @@ export function scanFile(text: string): Region[] {
         }
         const body = lines.slice(i, end);
         if (!body.some((l) => ASK_OBLIGATION_RE.test(l))) {
-            out.push({ cls: 'file-parked', line: i + 1, questions: 0 });
+            out.push({ cls: 'file-parked', line: i + 1, questions: 0, text: body.join(' ') });
         }
     }
 
     let start = -1;
     let questions = 0;
+    let end = -1;
     const flush = (): void => {
         if (start >= 0 && questions > 0) {
             out.push({
                 cls: questions >= 2 ? 'batch' : 'single',
                 line: start + 1,
                 questions,
+                text: lines.slice(start, end + 1).join(' '),
             });
         }
         start = -1;
         questions = 0;
+        end = -1;
     };
     let inFence = false;
     for (let i = 0; i < lines.length; i += 1) {
@@ -194,6 +358,7 @@ export function scanFile(text: string): Region[] {
         if (start < 0) {
             start = i;
         }
+        end = i;
         if (!consumed.has(i) && isQuestionLine(line)) {
             questions += 1;
         }
@@ -246,19 +411,33 @@ export interface Census {
     readonly totals: Record<AskClass, number>;
     readonly files: readonly FileCensus[];
     readonly scanned: number;
+    readonly axes: readonly AxisRow[];
+}
+
+/** One line per target, for the terminal summary. */
+export function renderTargets(t: Targets): string[] {
+    const verdict = (n: number): string => (n === 0 ? 'MET' : `MISSED (${String(n)})`);
+    return [
+        `  target: zero technical owner asks in execution  ${verdict(t.technical_owner_asks_in_execution)}`,
+        `  target: zero commit/push/CI/conflict asks       ${verdict(t.workflow_asks)}`,
+        `  target: zero repeats of an answered question    NOT MEASURED (transcript axis)`,
+    ];
 }
 
 function zero(): Record<AskClass, number> {
-    return { single: 0, batch: 0, 'count-only': 0, 'file-parked': 0 };
+    return { single: 0, batch: 0, 'count-only': 0, 'file-parked': 0, bypass: 0 };
 }
 
 export function census(roots: readonly string[], only: string | null): Census {
     const totals = zero();
+    const axes: AxisRow[] = [];
     const files: FileCensus[] = [];
-    const targets = only
+    // Renamed off `targets` — that name is the exported target-summary
+    // function now, and a local shadowing it reads as a call site that works.
+    const targetFiles = only
         ? [path.join(REPO_ROOT, only)]
         : roots.flatMap((r) => filesUnder(r));
-    for (const abs of targets) {
+    for (const abs of targetFiles) {
         let text: string;
         try {
             text = fs.readFileSync(abs, 'utf8');
@@ -266,15 +445,17 @@ export function census(roots: readonly string[], only: string | null): Census {
             continue;
         }
         const counts = zero();
+        const rel = path.relative(REPO_ROOT, abs).split(path.sep).join('/');
         for (const r of scanFile(text)) {
             counts[r.cls] += 1;
             totals[r.cls] += 1;
+            axes.push(axesFor(rel, r));
         }
         if (ASK_CLASSES.some((c) => counts[c] > 0)) {
             files.push({ file: path.relative(REPO_ROOT, abs).split(path.sep).join('/'), counts });
         }
     }
-    return { roots, totals, files, scanned: targets.length };
+    return { roots, totals, files, scanned: targetFiles.length, axes };
 }
 
 /** `<sha> <ISO commit date>` — the pin. Deterministic at a given commit. */
@@ -345,14 +526,76 @@ export function render(c: Census, native: NativeRate | null): string {
         lines.push('MEASURED zero, not an uninstrumented one.');
     }
     lines.push('');
+    lines.push('## Axes');
+    lines.push('');
+    lines.push(
+        'Four axes per ask region — `phase`, `ownership`, `avoidable`,',
+    );
+    lines.push(
+        '`resolver_attempted`. Every one is decidable from the region and its file;',
+    );
+    lines.push('none is read from intent.');
+    lines.push('');
+    lines.push('| phase | regions | avoidable | resolver named |');
+    lines.push('|---|---|---|---|');
+    for (const phase of PHASES) {
+        const rows = c.axes.filter((r) => r.phase === phase);
+        lines.push(
+            `| \`${phase}\` | ${String(rows.length)} | ` +
+                `${String(rows.filter((r) => r.avoidable).length)} | ` +
+                `${String(rows.filter((r) => r.resolver_attempted).length)} |`,
+        );
+    }
+    lines.push('');
+    lines.push('| ownership | regions |');
+    lines.push('|---|---|');
+    const byOwnership = new Map<string, number>();
+    for (const r of c.axes) byOwnership.set(r.ownership, (byOwnership.get(r.ownership) ?? 0) + 1);
+    for (const key of [...byOwnership.keys()].sort()) {
+        lines.push(`| \`${key}\` | ${String(byOwnership.get(key) ?? 0)} |`);
+    }
+    lines.push('');
+    lines.push('### Targets');
+    lines.push('');
+    const t = targets(c.axes);
+    const verdict = (n: number): string => (n === 0 ? 'MET' : `MISSED (${String(n)})`);
+    lines.push(
+        `- **Zero technical owner asks in execution:** ${verdict(t.technical_owner_asks_in_execution)}`,
+    );
+    lines.push(`- **Zero commit / push / CI / conflict asks:** ${verdict(t.workflow_asks)}`);
+    lines.push(
+        '- **Zero repeats of an already-answered question:** NOT MEASURED — a repeat is a',
+    );
+    lines.push(
+        '  property of a TRANSCRIPT, not of an authored surface. Reported absent rather than',
+    );
+    lines.push('  as zero, on the same ground the native-ask rate is carried in.');
+    if (t.technical_owner_asks_in_execution > 0 || t.workflow_asks > 0) {
+        lines.push('');
+        lines.push('Rows that miss a target:');
+        lines.push('');
+        for (const r of c.axes) {
+            if (r.cls !== 'single' && r.cls !== 'batch') continue;
+            const missesOne =
+                r.phase === 'execution' && r.ownership !== 'unknown' && !OWNER_OWNED.has(r.ownership);
+            if (!missesOne && !r.workflow) continue;
+            lines.push(
+                `- \`${r.file}:${String(r.line)}\` — ${r.cls}, ${r.phase}, ${r.ownership}` +
+                    (r.workflow ? ', workflow ask' : ''),
+            );
+        }
+    }
+    lines.push('');
     lines.push('## Per file');
     lines.push('');
-    lines.push('| file | single | batch | count-only | file-parked |');
-    lines.push('|---|---|---|---|---|');
+    // Derived from ASK_CLASSES rather than written out: a hand-written header
+    // and a derived Totals block drift the moment a class is added, and the
+    // drift is silent because both tables still render.
+    lines.push(`| file | ${ASK_CLASSES.join(' | ')} |`);
+    lines.push(`|${'---|'.repeat(ASK_CLASSES.length + 1)}`);
     for (const f of c.files) {
         lines.push(
-            `| \`${f.file}\` | ${String(f.counts.single)} | ${String(f.counts.batch)} | ` +
-                `${String(f.counts['count-only'])} | ${String(f.counts['file-parked'])} |`,
+            `| \`${f.file}\` | ${ASK_CLASSES.map((cls) => String(f.counts[cls])).join(' | ')} |`,
         );
     }
     lines.push('');
@@ -366,6 +609,30 @@ export function selfTest(): number {
             'OPEN QUESTIONS: {count}\n',
             'count-only',
             1,
+        ],
+        [
+            'an explicit user bypass is its own axis',
+            'An explicit *just write it* drops the closure pass.\n',
+            'bypass',
+            1,
+        ],
+        [
+            'a bypass line is not also counted as a question',
+            'Did the user say just write it?\n',
+            'single',
+            0,
+        ],
+        [
+            'a mission grant is NOT a bypass — an inferred one never matches',
+            'The mission grant authorises the run end to end.\n',
+            'bypass',
+            0,
+        ],
+        [
+            'an autonomy setting is NOT a bypass either',
+            'With personal.autonomy on, trivial questions are suppressed.\n',
+            'bypass',
+            0,
         ],
         [
             'a bare Open questions section with no obligation is file-parked',
@@ -490,6 +757,9 @@ export function main(argv: string[]): number {
     );
     for (const cls of ASK_CLASSES) {
         process.stdout.write(`  ${cls.padEnd(12)} ${String(c.totals[cls])}\n`);
+    }
+    for (const line of renderTargets(targets(c.axes))) {
+        process.stdout.write(`${line}\n`);
     }
     return 0;
 }

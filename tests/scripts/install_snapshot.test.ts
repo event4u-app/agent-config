@@ -18,6 +18,8 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { parse as parseYaml } from 'yaml';
+
+import { isPlatformMetadataKey } from '../../src/scripts/_lib/hook_platform_keys.js';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import * as inst from '../../src/scripts/install.js';
@@ -173,8 +175,14 @@ describe('Binding coverage snapshot', () => {
         const platforms = (manifest['platforms'] ?? {}) as JsonObject;
 
         for (const platform of ['augment', 'cursor', 'cline', 'windsurf', 'gemini']) {
+            // Metadata keys come from the one definition rather than a literal
+            // here: this filter and two others had each grown their own, so a
+            // new descriptive key had to be added to three places or it read as
+            // an unbound event in whichever one was missed.
             const manifestEvents = new Set(
-                Object.keys((platforms[platform] ?? {}) as JsonObject).filter((e) => e !== 'fallback_only'),
+                Object.keys((platforms[platform] ?? {}) as JsonObject).filter(
+                    (e) => !isPlatformMetadataKey(e),
+                ),
             );
             const bound = new Set(hostBindings(platform).map((b) => b.slot));
             for (const ev of manifestEvents) {

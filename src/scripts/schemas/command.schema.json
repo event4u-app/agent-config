@@ -103,6 +103,10 @@
       "pattern": "^[a-z][a-z0-9-]*$",
       "description": "Sub-command identifier within the cluster (e.g. `ci` for `/fix ci`)."
     },
+    "produces_roadmap": {
+      "type": "boolean",
+      "description": "This command produces a roadmap, so it ends in the plan-closure pass (`/challenge-me closure`). The declaration replaces the hard-coded entrance list that lived inside three command bodies and left the other five producers uncovered with nothing saying so. `lint_roadmap_producers` reds a command that declares it and carries no reference to the closure pass. Omit the key for commands that produce no plan."
+    },
     "superseded_by": {
       "type": "string",
       "pattern": "^[a-z][a-z0-9-]*( (--[a-z][a-z0-9-]*|[a-z][a-z0-9-]*))?$",

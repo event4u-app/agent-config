@@ -27,6 +27,7 @@
  * `--strict` upgrades warnings to errors.
  */
 import fs from "node:fs";
+import { PLATFORM_METADATA_KEYS } from "./_lib/hook_platform_keys.js";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parse as parseYaml } from "yaml";
@@ -452,10 +453,20 @@ function _check_platforms(
       errors.push(`platforms.${plat}: must be mapping or null`);
       continue;
     }
+    const askShape = block["ask"];
+    if (askShape !== undefined && askShape !== "native" && askShape !== "text") {
+      errors.push(
+        `platforms.${plat}.ask: must be 'native' or 'text' ` +
+          `(got ${JSON.stringify(askShape)})`,
+      );
+    }
     if (block["fallback_only"]) {
       continue; // Copilot — intentional, no event surface
     }
     for (const [event, names] of Object.entries(block)) {
+      if (PLATFORM_METADATA_KEYS.has(event)) {
+        continue;
+      }
       if (!EVENT_VOCABULARY.has(event)) {
         errors.push(
           `platforms.${plat}.${event}: unknown event ` +
