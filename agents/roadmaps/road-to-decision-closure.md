@@ -234,6 +234,14 @@ owner-owned residue remains, closure completes with zero owner interaction.
       owner question, against F1's zero for twelve technical ambiguities.
       **What remains:** one paragraph in `ask-when-uncertain.md` naming the native tool per
       host alongside its Iron Law, which a maintainer must write.
+      **Re-verified 2026-09-14 by reproduction, not by reading this note.** The `Edit` was
+      attempted with the paragraph in it and denied at tool-call time —
+      `block-kernel-rule-writes: BLOCKED — kernel rule ask-when-uncertain is immutable`.
+      `check_envelope` was then probed across every write shape an agent holds — in-place
+      `sed`, redirection, `tee`, `mv`-into-place, and the `.claude/rules/` and
+      `dist/agent-src/rules/` projections — and all deny, while a plain read is allowed, which
+      is what makes the probe sensitive rather than uniformly red. The cause has not dissolved
+      and the step stays open.
 - [x] **3.2 The host manifest records which shape each host has.** `hook_manifest.yaml` host
       rows gain `ask: native | text`, and `hooks:status` prints it.
       verify: `agent-config hooks:status` prints the ask shape for the current host.
@@ -264,6 +272,9 @@ owner-owned residue remains, closure completes with zero owner interaction.
       given `expires` / `revoked_by` by its 3.1. Neither exists in the tree. Writing `F5`
       against an object that does not exist would assert nothing; writing the object here
       would be implementing the sibling roadmap.
+      **Re-verified 2026-09-14:** the sibling's 2.1, 2.2 and 3.1 all still read `[ ]`, and
+      `grep -rln granted_by src tests` returns nothing — the identifier exists only in
+      ADR-260, ADR-266 and ADR-268, as a specification. The cause has not dissolved.
 - [x] **4.2 The ask census gains four axes.** `phase` (planning, execution, delivery),
       `ownership`, `avoidable`, `resolver_attempted`. Targets: zero technical owner asks in
       execution; zero commit, push, CI or conflict asks; zero repeats of an already-answered
@@ -298,6 +309,9 @@ owner-owned residue remains, closure completes with zero owner interaction.
       an interrupt — landed in `roadmap-process-loop.md` § 3-0: the table is read before the
       first step and a row reopens only when its `revisit if` condition became true, never
       because a context reset lost it. The mission id and the grant are the sibling's.
+      **Re-verified 2026-09-14:** the sibling's 3.2 still reads `[ ]` and
+      `src/rules/user-interrupt-priority.md` still carries none of the three classes, so the
+      two-owners hazard is live rather than historical. The cause has not dissolved.
 
 ## Phase 6 — Scope-growth ownership
 
@@ -398,6 +412,10 @@ resumed with the grant and decisions intact · `F6` an API ceiling → pause and
       behaviour of an actual `process-full` execution over `F1`, which is a transcript
       measurement, and recording it green off two static probes would be the substitution this
       roadmap's own census axis exists to catch.
+      **Re-verified 2026-09-14:** both static halves still hold on this tree —
+      `tests/fixtures/decision-closure/F1-technical-ambiguities.md` ships and
+      `src/scripts/ask_block_census.ts` still reports its two measurable targets — and the
+      missing half is still a run, which nothing in this tree produces. Unchanged, not stalled.
 - [ ] AC-6 — on a host with a native ask primitive, every owner ask used it; on a host without
       one, `hooks:status` says so.
       **HALF PROVEN, 2026-09-13.** The second clause holds: `ask: native | text` is a manifest
@@ -405,3 +423,7 @@ resumed with the grant and decisions intact · `F6` an API ceiling → pause and
       that direction. The first clause depends on 3.1, whose remaining paragraph is a kernel
       rule the write guard denies — and it is a transcript claim besides, on the same ground
       as AC-5.
+      **Re-verified 2026-09-14:** the second clause still holds — `src/scripts/hook_manifest.yaml`
+      still carries an `ask:` row on every host block, one `native` and the rest `text`. The
+      first clause is blocked twice over, by the reproduced deny recorded on 3.1 and by being
+      a transcript claim, so discharging either alone would not close it.
