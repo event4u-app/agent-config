@@ -2,7 +2,7 @@
 #
 # Verify the rule-13 split proposal WITHOUT applying it.
 #
-# Checks the four properties the `rule-13-amendment` blocker turns on, in the
+# Checks the five properties the `rule-13-amendment` blocker turns on, in the
 # order a reviewer would want them:
 #
 #   1. the patch applies cleanly to the template at HEAD
@@ -11,8 +11,23 @@
 #      anywhere in the file is removed or changed, so the five prohibition
 #      sentences cannot have moved by a character.
 #   3. the prohibition block hashes to the pinned sha256 before AND after
-#   4. the applied result carries 27 numbered rules (up from 26) and rule 27
+#   4. the applied result carries 28 numbered rules (up from 27) and rule 28
 #      carries the non-goal sentence verbatim
+#   5. no rule number appears twice. The count in 4 cannot see a collision —
+#      two rules both numbered 27 still total 28 — and a collision is exactly
+#      what went wrong on 2026-09-13, so it gets its own assertion. Observed
+#      RED 2026-09-14 against a copy renumbering the new rule back to 27:
+#      check 5 fails and check 4 passes, which is the whole reason it exists.
+#
+# REBASED 2026-09-14. The counts above read 27-up-from-26 until today, and the
+# patch no longer applied at all. `088f98fc2` / `5ed431b04` (2026-09-13) added a
+# DIFFERENT rule 27 to the template — `## Decisions` — hours after this proposal
+# was cut, so hunk 3's tail context had moved and the new rule's number
+# collided. The patch is re-cut onto the moved base and the release-holds rule
+# is renumbered 27 -> 28, with its two cross-references (rule 13's "per rule 28"
+# and rule 20's "(rule 28)") moved with it. The semantic content is unchanged
+# and still purely additive; the prohibition block still hashes to the same pin.
+# The number was always positional, never load-bearing.
 #
 # Applies to a scratch copy under a temp dir; the working tree is never touched.
 #
@@ -89,17 +104,28 @@ if (cd "$tmp" && git apply "$PATCH_ABS" 2>/dev/null); then
   fi
 
   rules=$(grep -cE '^[0-9]+\. \*\*' "$tmp/$TEMPLATE" || true)
-  if [ "$rules" = '27' ]; then
-    note 'OK' 'numbered rules read 27 after the split (26 before)'
+  if [ "$rules" = '28' ]; then
+    note 'OK' 'numbered rules read 28 after the split (27 before)'
   else
-    note 'FAIL' "numbered rules read $rules after the split, expected 27"
+    note 'FAIL' "numbered rules read $rules after the split, expected 28"
+    fail=1
+  fi
+
+  # The count above cannot see a DUPLICATE number — two rules both called 27
+  # would still total 28. Assert the sequence instead, which is the property
+  # the 2026-09-13 collision actually broke.
+  dupes=$(grep -oE '^[0-9]+\. \*\*' "$tmp/$TEMPLATE" | sort | uniq -d | tr -d '\n')
+  if [ -z "$dupes" ]; then
+    note 'OK' 'no duplicate rule number after the split'
+  else
+    note 'FAIL' "duplicate rule number(s) after the split: $dupes"
     fail=1
   fi
 
   if grep -qF "$NON_GOAL" "$tmp/$TEMPLATE"; then
-    note 'OK' 'rule 27 carries the non-goal sentence verbatim'
+    note 'OK' 'rule 28 carries the non-goal sentence verbatim'
   else
-    note 'FAIL' 'rule 27 does not carry the non-goal sentence'
+    note 'FAIL' 'rule 28 does not carry the non-goal sentence'
     fail=1
   fi
 else

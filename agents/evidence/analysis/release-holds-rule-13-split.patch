@@ -1,6 +1,6 @@
 --- a/src/agent-src/templates/roadmaps.md
 +++ b/src/agent-src/templates/roadmaps.md
-@@ -64,6 +64,16 @@
+@@ -64,6 +64,16 @@ that was never a judgement call.
      "Target release: X.Y.Z", never plan git tags or deprecation dates. Release
      and tag decisions belong to the user and are taken outside the roadmap.
      This is enforced by [`scope-control`](../rules/scope-control.md#git-operations--permission-gated).
@@ -9,7 +9,7 @@
 +    sentences above are unchanged and stay the rule: a roadmap does not decide
 +    *when* or *in which version* work ships. It MUST, however, declare any
 +    intentionally unreleasable intermediate tree state, together with the
-+    machine-verified condition that clears it, per rule 27. Naming a state that
++    machine-verified condition that clears it, per rule 28. Naming a state that
 +    must not be published is not a release decision — it is a fact about the tree
 +    that the release path has no other way to learn, and today cannot learn: the
 +    release entry points read no roadmap at all. Declaring the state is
@@ -17,13 +17,13 @@
  14. **No automatic branch switches mid-roadmap.** Roadmap work runs on the
      branch the user is on. If a separate branch (spike, hotfix, experiment)
      would be genuinely useful, the agent may propose it **once** while
-@@ -301,6 +311,13 @@
+@@ -327,6 +337,13 @@ that was never a judgement call.
      step gated by a specific blocker may cross-reference it inline:
      `- [ ] … <!-- blocked-by: <blocker-id> -->`.
  
 +    **A blocker stops execution; a hold stops publication.** The two are not
 +    interchangeable and never substitute for one another. A blocker says the work
-+    cannot proceed and is cleared by a person; a release hold (rule 27) says the
++    cannot proceed and is cleared by a person; a release hold (rule 28) says the
 +    work may proceed but its intermediate tree state must not ship, and is
 +    cleared by a checkbox whose `verify:` a machine runs. A roadmap that is
 +    merely unfinished has neither — incompleteness is not a release condition.
@@ -31,11 +31,11 @@
      **A user-decision blocker's annotation records whether the question
      was actually put.** Where the blocker's `Owner:` is the maintainer,
      the user or the owner, the marker carries an `asked:` field —
-@@ -581,7 +598,83 @@
-     a high-noise drafting context and do not establish precision on the
-     tracked estate; blocking is earned by tracked-scope evidence, not
-     assumed).
-+27. **Release holds — declare an unreleasable intermediate state, or there is
+@@ -667,6 +684,83 @@ that was never a judgement call.
+     complete; an empty table written to satisfy a template records
+     nothing, exactly as rule 25 says of a perfunctory pre-mortem.
+ 
++28. **Release holds — declare an unreleasable intermediate state, or there is
 +    not one.** A roadmap whose intermediate tree state must not be published
 +    declares that state in a `## Release holds` section. Nothing else in the
 +    repository can express it, and the release path reads no roadmap today, so
@@ -46,7 +46,7 @@
 +    roadmap does not block a release, has never blocked one, and must not start
 +    to. A hold is a positive declaration about a named tree state, never a side
 +    effect of open checkboxes.
- 
++
 +    **Authoring order — `re-sequence → guard → hold`, in that order.** A hold is
 +    the last resort, not the first tool:
 +

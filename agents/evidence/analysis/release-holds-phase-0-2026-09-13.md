@@ -256,3 +256,45 @@ branch exists to prevent.
 What it does do is strengthen the *prior* the owner is deciding against: the latent need is
 larger and more routine than one day's snapshot suggested, which is an argument about cost and
 frequency rather than about evidence.
+
+### Third reading, 2026-09-14 (later the same day) — saturation, and the first near-miss
+
+Appended, nothing above substituted. Taken at `aed1e94f6`, a branch off `main` at `7b5f75edc`,
+with `bash agents/evidence/analysis/release-holds-exposure-row.sh HEAD`.
+
+| Reading | Active files | Mid-flight | Of the `ready` subset |
+|---|---:|---:|---|
+| `7182f5d07`, 2026-09-13 | 14 | 1 | **0 of 7** |
+| merged head, 2026-09-14 | 14 | **6** | **4 of 7** |
+| `aed1e94f6`, 2026-09-14 | **10** | **10** | **6 of 6** |
+
+The active corpus shrank from 14 to 10 as four roadmaps archived, and **every** surviving active
+roadmap is now mid-flight, `ready` and `draft` alike. The exposure row has gone from 1-of-14 to
+saturation inside two days.
+
+**The declaration count is still zero, and that is still the number this decision turns on.** The
+narrow grep re-run at this ref returns nothing in `agents/roadmaps/*.md` outside this file's own
+self-references. Saturation makes the *population* total; it produces no instance. The warning in
+the addendum above applies with more force, not less: the more dramatic the exposure figure gets,
+the more tempting it is to read it as the live subject it is not.
+
+**The first near-miss in the corpus, and it resolves one rung below a hold.** Extending the grep
+to `later/` and `stubs/` — folders the 2026-09-13 sweep also covered and found empty — returns
+exactly one hit at this ref:
+
+    agents/roadmaps/stubs/road-to-main-protection-ruleset-changes.md:146
+
+It reads *it must land in the same small PR as the enablement*, about adding `merge_group:`
+triggers ahead of enabling a merge queue. **This is not a release hold and must not be counted as
+one.** It is PR atomicity, and the stub's own sentence says why: the trigger *"is inert until the
+queue exists"*. Inert-until-wired is the **guard** rung of rule 28's authoring order; landing the
+two together in one diff is the **re-sequence** rung. A hold is rung three, and this case never
+reaches it.
+
+That makes it the most useful finding of the three readings, and it points the same way as the
+other two. The closest thing to a release-coupled state anywhere in the tree was resolved by its
+author, without any vocabulary for holds existing, using precisely the two cheaper answers rule 28
+would have told them to try first. That is evidence **for** the honest-null branch — the ladder's
+top two rungs absorb the real cases — and it is the first positive evidence about the ladder
+rather than about the population. It does not close `zero-live-subjects`, which remains a cost
+judgement and remains the owner's.
