@@ -66,7 +66,7 @@ the tree is a dismiss marker with an empty path and a null hash.
       correcting the wording are different-sized changes and the choice is the blocker's.
       verify: whichever is chosen, the other is recorded as declined with its reason.
 
-### Phase 2 decision — 2026-09-13
+### Decision for Phase 2 — 2026-09-13
 
 **Chosen:** correct the wording. The `txlog-clean` failure remedy now names what
 re-running `agent-config init` actually does (re-apply the plan over the partial
@@ -88,11 +88,11 @@ not scheduled here; the blocker below records it as the open half.
 
 ## Phase 3 — Write the log from the path that does the install
 
-- [ ] **3.1 Call the log writer from the headless apply path**, through one writer module with two
+- [ ] <!-- blocked-by: headless-log-write-is-a-consumer-visible-default | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **3.1 Call the log writer from the headless apply path**, through one writer module with two
       callers.
       verify: a headless install into a fixture root produces at least one write entry, and a test
       asserts both callers emit an identical entry shape.
-- [ ] **3.2 The existing sabotage fixture now fires on that path.**
+- [ ] <!-- blocked-by: headless-log-write-is-a-consumer-visible-default | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **3.2 The existing sabotage fixture now fires on that path.**
       verify: the fixture reddens the check after a headless install, which it could not do before.
 
 ## Phase 4 — The negative fixture for the branch that was always green
@@ -106,14 +106,14 @@ not scheduled here; the blocker below records it as the open half.
 
 ## Phase 5 — Three-state ownership instead of path membership
 
-- [ ] **5.1 Distinguish recorded-unchanged, recorded-modified and unknown** in the install conflict
+- [ ] <!-- blocked-by: the-installer-does-not-consult-the-conflict-matrix | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **5.1 Distinguish recorded-unchanged, recorded-modified and unknown** in the install conflict
       matrix, fed by a real hash comparison rather than by path-set membership.
       verify: a user-modified managed file survives a refresh and appears in the report; the matrix
       carries a recorded-unchanged column whose value comes from a hash.
 - [x] **5.2 Land the hash plumbing separately from the matrix change.**
       verify: two commits, and the matrix commit's diff contains no hash computation.
 
-### Phase 5 state — 2026-09-13
+### State of Phase 5 — 2026-09-13
 
 **Landed:** the recorded-unchanged / recorded-modified / unknown split, fed by
 the per-file SHA-256 the manifest records, in two commits with the hash
@@ -142,6 +142,9 @@ it is recorded as one below rather than taken here.
 ### blocker: the-installer-does-not-consult-the-conflict-matrix
 - **Status:** open
 - **Owner:** maintainer
+- **Ownership:** `destructive-owned` — the decision trades a data-loss surface on the
+  user's own tree for a staleness surface. What an install may overwrite is
+  owner-owned by ADR-268 § 10, not a technical call the ladder can close.
 - **Class:** 3 — human-only
 - **Blocks:** the first half of 5.1 and of AC-6 (*survives a refresh*). The
   reporting half is landed.
@@ -164,6 +167,9 @@ it is recorded as one below rather than taken here.
 ### blocker: headless-log-write-is-a-consumer-visible-default
 - **Status:** open
 - **Owner:** maintainer
+- **Ownership:** `product-owned` — a new on-disk artefact under every
+  consumer's home directory, written by default on every command-line
+  install. A consumer-facing default is owner-owned by ADR-268 § 10.
 - **Class:** 3 — human-only
 - **Blocks:** Phase 3, and Phase 4's fix arm. Phases 1, 2 and 5 proceed without it.
 - **What to do:** decide whether the command-line install may write a transaction log. It creates
@@ -199,10 +205,54 @@ it is recorded as one below rather than taken here.
   will not.
 - **Resolved when:** the remedy string names an action a test can resolve to real code.
 - **Resolution (2026-09-13):** the wording was corrected and the reverse-apply
-  declined — see § Phase 2 decision above. The remedy now names `agent-config
+  declined — see § Decision for Phase 2 above. The remedy now names `agent-config
   init` and describes re-application, not recovery; three tests in
   `tests/scripts/_cli/cmd_conformance.test.ts` resolve it to real code. The
   reverse-apply remains unbuilt and unscheduled.
+
+### Run state — 2026-09-14, capability screen
+
+A `/roadmap:process-full` run re-ran the § 3c capability screen over all six
+open items and reached `blocked`. Both remaining blockers are owner-owned in the
+ADR-268 § 10 sense and are now classified as such in the field the linter reads:
+`destructive-owned` for the conflict matrix, `product-owned` for the headless
+log write. Neither is a technical judgement call with a closure-ladder rung, so
+neither routes to the council.
+
+**What the run verified rather than re-derived.** `appendTxLog` still has exactly
+one call site repository-wide (`src/server/routes/install.ts`, the
+recovery-dismiss handler), and `_resolve_file_conflict` in `src/scripts/install.ts`
+still returns `write` unconditionally for deployed files. Both blockers therefore
+stand on the same evidence they were written on.
+
+**What the run changed.** The three open phase steps (3.1, 3.2, 5.1) now carry
+inline `blocked-by:` markers. They did not before, and the absence was a live
+defect rather than bookkeeping: `scanOpenSteps` in
+`src/scripts/hooks/run_continuation_hook.ts` reads blockedness from that marker
+and from nothing else, so the stop-slot concern read this roadmap as
+`{open: 3, blocked: 0}` and re-engaged an autonomous run into step 3.1 on every
+fire. It now reads `{open: 0, blocked: 3}`. Acceptance criteria are deliberately
+unmarked: `phaseLines` excludes them from the scan, so a marker there would be
+read by nothing.
+
+**What stays open, and why the count does not move.** Six items — 3.1, 3.2, 5.1,
+AC-3, AC-4, AC-6 — remain `[ ]`. No checkbox was flipped and none was parked as
+`[~]`: a blocked run that reaches a clean count has laundered the work, not done
+it.
+
+**One finding this run made and deliberately did not land.** `txLogDir` in
+`src/install/txlog.ts` carries the docstring "helper for callers (apply.ts)".
+`src/install/apply.ts` does not exist — it was removed with the TypeScript apply
+route — and the export has zero callers repository-wide. That is the same
+defect class § Decision for Phase 2 already corrected twice in this file: a
+claim in shipped source naming something the tree does not contain. The
+correction was written, verified and then reverted, because `check_test_delta`
+counts any `src/` path as a code path and reds a change with no accompanying
+test. A comment has no testable behaviour, so the only exits are a tautological
+test or the `test-delta-acknowledged` label — and that label exists in neither
+the repository nor any prior PR, so creating it is an owner action rather than
+an agent one. Recorded here so the claim is tracked rather than lost; it needs
+one docstring edit plus either that label or a maintainer pushing it directly.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-11 | reviewer: claude/host -->
