@@ -2,8 +2,19 @@
  * Transaction log — Phase A4 (council Finding #18).
  *
  * Append-only JSONL at `getLogPath()` (`~/.event4u/agent-config/install-log.jsonl`).
- * Each successful atomic write appends one entry; recovery on crash is
- * `tail -n` + reverse-apply. No PID lockfile (per Phase-A4 decision 8).
+ * Recovery on crash is `tail -n` plus the wizard's resume / dismiss decision —
+ * nothing is un-written automatically. No PID lockfile (per Phase-A4
+ * decision 8).
+ *
+ * WHAT ACTUALLY WRITES THIS FILE, as of 2026-09-13: one call site
+ * repository-wide — `src/server/routes/install.ts`'s recovery-dismiss
+ * handler, appending a `rollback` marker with an empty path and a null hash.
+ * The design below describes a per-write entry emitted by an apply path; the
+ * TypeScript apply route was removed (road-to-single-install-source-of-truth
+ * Phase 3) and `src/scripts/install.ts`, the surviving writer, does not call
+ * this module. So `write` / `skip` / `abort` entries are a shape nothing
+ * currently produces, and every consumer downstream — the recovery screen,
+ * the conformance `txlog-clean` check — reads an empty world by default.
  *
  * Rotation: 10 MB OR 30 days, whichever first. Rotated copies move to
  * `install-log.<ISO>.jsonl.gz` siblings; recovery never scans them.

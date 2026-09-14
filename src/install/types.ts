@@ -16,6 +16,9 @@
  *   - v2 manifest `files_by_tool` → {@link InstallPlan.filesByTool}
  */
 
+// Type-only — erased at compile time, so this module stays runtime-free.
+import type { RecordedOwnership } from './recordedOwnership.js';
+
 /**
  * Where the install lands.
  *
@@ -130,9 +133,11 @@ export interface InstallPlan {
  * Phase B3 — surfaced by the `/api/v1/install/plan` route so the wizard's
  * conflict screen can render single-pick / batch-resolution UI **before**
  * the apply phase opens the transaction log. A `ConflictEntry` means the
- * target exists, its bytes do not match the planned SHA, it is not in
- * `policy.knownPaths`, and `policy.force` is false — i.e. the policy
- * would surface this file to the UI during apply.
+ * target exists, its bytes do not match the planned SHA, `policy.force` is
+ * false, and the planner does not hold it as ours-and-unchanged — i.e. the
+ * policy would surface this file to the UI. Since `ownership` landed it is
+ * NO LONGER equivalent to "not in `policy.knownPaths`": a `recorded-modified`
+ * entry is emitted precisely when the path IS in that set.
  *
  * `mergeable` is `true` only for `.json` deployed files; the wizard
  * shows the per-row `merge` button only on those. `existingSha256` is
@@ -145,6 +150,15 @@ export interface ConflictEntry {
     readonly plannedSha256: string | null;
     readonly existingSha256: string | null;
     readonly mergeable: boolean;
+    /**
+     * Three-state ownership from the manifest's recorded digest — the column
+     * path-set membership could not produce (Phase 5.1 of
+     * road-to-a-conformance-check-that-can-fail). `recorded-modified` is the
+     * row that matters: a file we wrote that someone has since edited.
+     * `unknown` reproduces the pre-hash answer and is what every tree without
+     * a readable manifest reports.
+     */
+    readonly ownership: RecordedOwnership;
 }
 
 /**
@@ -164,7 +178,8 @@ export type ConflictResolution = 'skip' | 'overwrite' | 'merge';
  * Result of applying an {@link InstallPlan}.
  *
  * Surfaced to the wizard's progress bar (Phase B1) and recorded in the
- * transaction log (Phase A4) so recovery can reverse-apply on crash.
+ * transaction log (Phase A4) so a crashed run's tail can be surfaced to
+ * the wizard's recovery screen.
  */
 export interface ApplyResult {
     readonly target: InstallTarget;

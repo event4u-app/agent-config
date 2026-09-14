@@ -102,12 +102,20 @@ const FileEntrySchema: z.ZodType<FileEntry> = z.object({
     sha256: z.string().nullable(),
 });
 
-const ConflictEntrySchema: z.ZodType<ConflictEntry> = z.object({
+// Input type is `unknown` rather than `ConflictEntry`: `ownership` carries a
+// `.default()`, so the parsed OUTPUT always has the field while the accepted
+// INPUT may omit it (older clients on an apply round-trip).
+const ConflictEntrySchema: z.ZodType<ConflictEntry, z.ZodTypeDef, unknown> = z.object({
     path: z.string().min(1),
     kind: FileKindSchema,
     plannedSha256: z.string().nullable(),
     existingSha256: z.string().nullable(),
     mergeable: z.boolean(),
+    // Additive (Phase 5.1). `default` keeps apply round-trips from older
+    // clients parsing — they omit the field and get the pre-hash answer.
+    ownership: z
+        .enum(['recorded-unchanged', 'recorded-modified', 'unknown'])
+        .default('unknown'),
 });
 
 /**

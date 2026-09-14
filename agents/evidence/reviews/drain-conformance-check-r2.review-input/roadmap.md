@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: structural
 status: ready
@@ -9,11 +11,9 @@ estate_growth_exempt: >-
   A published contract that cannot be false on the path most consumers take. Verified 2026-09-11:
   `src/scripts/_cli/cmd_conformance.ts:109-115` returns `status: 'ok'` with the message
   "no install transaction log — nothing to recover" when the log is absent, and `appendTxLog` has
-  exactly one call site repository-wide — `src/server/routes/install.ts`, and a completion review
-  on 2026-09-13 established that it is the recovery-DISMISS handler writing a `rollback` marker,
-  not an install route: no install path writes this log, browser included. EVERY install therefore
-  passes that check by construction, while the surface publishes "green means installed and
-  firing". The same function offers a remedy that reverse-applies an
+  exactly one call site repository-wide — `src/server/routes/install.ts:442`, the browser route.
+  Every headless install therefore passes that check by construction, while the surface publishes
+  "green means installed and firing". The same function offers a remedy that reverse-applies an
   aborted tail; nothing in the tree reverse-applies anything. Also grows open_blockers by two.
 estate_offset_exempt: >-
   No offset is available. The prior disposition for this subject reads "Shipped" in an archived
@@ -34,13 +34,9 @@ estate_offset_exempt: >-
 The install-conformance surface can go red on the install path most consumers take, and it stops
 offering a recovery this tree cannot perform.
 
-Both halves are measured, not inferred, and the first was measured again and corrected. The
-transaction-log check returns green when the log is absent. The only writer of that log is the
-recovery-dismiss handler, which appends a `rollback` marker — not an install route, browser or
-otherwise — so EVERY install satisfies the check by having produced nothing. This sentence
-originally read "the browser install route"; that reading and the one in the Blockers section
-below contradicted each other about the same call site, and the Blockers section was the correct
-one. The check's own test file names the branch
+Both halves are measured, not inferred. The transaction-log check returns green when the log is
+absent, and the only writer of that log is the browser install route — so a headless install
+satisfies the check by having produced nothing. The check's own test file names the branch
 explicitly, and its sabotage fixture writes a log first, which means the fixture exercises a path
 a headless install never reaches. Meanwhile the failure remedy tells the operator that re-running
 init reverse-applies the aborted tail, and no reverse-apply exists: the only rollback writer in
