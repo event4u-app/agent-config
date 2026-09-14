@@ -239,6 +239,66 @@ exists to prevent.
   named, or the axis change is refused.
 - **STILL OPEN.** The blast-radius assessment is the owner's, and (b) refuse-and-drop-Phase-4 is
   one of the two readings, so this is not a measurement an agent closes.
+- **The blast radius was measured 2026-09-14, and it corrects this blocker's own premise.**
+  Stating it does not resolve the blocker — the choice between (a) and (b) stays the owner's, and
+  one material question below is still open — but "nobody has looked" is no longer true.
+
+  **This blocker says an axis change "ships into every consumer project". Measured, that is wrong
+  in two independent ways.**
+
+  1. **The live engine is never read from the consumer's tree.** `cmd_work` and
+     `cmd_implement_ticket` in `src/scripts/_dispatch.bash` both pin
+     `engine_root="$PACKAGE_ROOT/dist/agent-src/templates/scripts"`. The consumer-override
+     resolver `resolve_template_script` exists, but is called for eight flat scripts only
+     (`memory_*`, `telemetry_*`, `check_memory*`) and for **no** work_engine file. So the axis
+     change reaches a consumer through an npm upgrade, not through an installed file.
+  2. **The installer's only copy is augment-global, not per-project.** `GLOBAL_DEPLOY_SOURCES` in
+     `src/scripts/install.ts` carries `['dist/agent-src/templates', 'templates']` on the `augment`
+     row alone, landing at `~/.augment/templates/`. Consumer installs are global-only
+     (`_enforce_consumer_global_only`). That copy is inert with respect to `/work` by point 1.
+
+  **What an already-installed consumer sees: a silent overwrite, and it always did.**
+  `_resolve_file_conflict` in `src/scripts/install.ts` is three lines and returns `'write'`
+  unconditionally — its own comment reads *"deploys always overwrite our own content"* — so the
+  `skip` branch at both call sites is dead. Neither `--force` nor a local edit changes it. The
+  recorded-unchanged / recorded-modified / unknown machinery in `src/install/conflict.ts` and
+  `src/install/recordedOwnership.ts` is **not wired to the writer**, and that module's own header
+  says so: *"what this resolver decides is in any case NOT what the installer does."* **Do not
+  cite it as a safety net.** A drift report is printed immediately before the redeploy and never
+  blocks. So the migration path for a project already carrying the template is: none is needed,
+  because the copy is overwritten and was never executing.
+
+  **What an added axis actually breaks, inside this repository:** `_EMPTY_AXES` is typed
+  `StackAxes`, so a new required key is a compile error there (the one loud failure);
+  `_OVERLAY_AXES` / `_AXIS_OVERLAYS` in `directives/ui/stack_bundles.ts` silently ignore an axis
+  they do not list — `css` is already in that state, so it is an accepted shape, not a new one;
+  `_AMBIGUOUS_AXES`, the hard-coded `['view', 'reactivity']` back-fill, the 12-row `_AXIS_COMBOS`
+  matrix in `src/scripts/lint_ui_stack_bundles.ts` and `tests/scripts/work_engine/ui_lane_matrix.test.ts`
+  all enumerate axes by hand. **And two shipped skills cite the table by line number** —
+  `src/skills/existing-ui-audit/SKILL.md` and `src/skills/react-shadcn-ui/SKILL.md` both write
+  `work_engine/stack/detect.ts:521-524`. Verified: those lines are the `tailwind-v4` / `tailwind-v3`
+  rows today, so the citations are accurate **now** and any axis inserted above the `css` block
+  shifts them. No gate validates a line-number citation.
+
+- **The material question this raised, which the owner should weigh before (a): the detector may
+  have no caller at all.** `grep` for `detect_stack` across the tree, excluding `dist/` and
+  `tests/`, returns the definition, its own recursion, one doc comment in `runner.ts`, two
+  SKILL.md prose mentions and the contract doc — and **no importer of `stack/detect` anywhere in
+  the shipped template tree**. Meanwhile `work_engine/state.ts` states at its `_validate_stack`
+  docstring that *"the detector populates `state.stack` lazily — the first dispatch"*, and
+  `_validate_stack` checks only that `frontend` is a non-empty string and `mtime` is a number; it
+  never enumerates axes. The UI directives reach `stack_bundles.ts`, which reads
+  `stack_state['axes']` as an untyped record. **Not established:** any production path that calls
+  `detect_stack` and writes its result into `state.stack`. If there is none, Phase 4's radius is
+  test-and-prose rather than engine behaviour, and the phase is worth less than it looks — which
+  is an argument for (b) that did not exist when this blocker was written.
+
+- **Landed alongside this assessment:** `docs/architecture.md` claimed the engine is *"shipped to
+  consumer projects via `scripts/install.py`"*. That file does not exist anywhere in the tree, and
+  the claim is wrong on both halves per points 1 and 2 above. Corrected in the same change,
+  because a wrong answer to exactly this blocker's question is what the owner would have read
+  first.
+
 - **One factual check done 2026-09-13, so the decision is not taken on a wrong pointer.** The
   path the step's `corrected-from-reproduction` tag asserts is **correct**:
   `src/agent-src/templates/scripts/work_engine/stack/detect.ts` exists (39 KB), and a tree-wide

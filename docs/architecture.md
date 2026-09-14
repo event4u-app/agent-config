@@ -261,8 +261,14 @@ Planned scope: `php` / `node` handlers, tool-registry wiring for
 > `refine → score → plan → implement → test → verify → report` loop,
 > persists state in `.work-state.json`, and routes UI-shaped work
 > through the product UI track. Lives at
-> [`templates/scripts/work_engine/`](../src/agent-src/templates/scripts/work_engine/);
-> shipped to consumer projects via `scripts/install.py`.
+> [`templates/scripts/work_engine/`](../src/agent-src/templates/scripts/work_engine/).
+> **It is executed from the installed package, not from the consumer's tree** —
+> `cmd_work` and `cmd_implement_ticket` in `src/scripts/_dispatch.bash` pin
+> `engine_root` to `$PACKAGE_ROOT/dist/agent-src/templates/scripts`, so the engine
+> reaches a project through an npm upgrade rather than through a file copy. The
+> installer's only copy of the template tree is the `augment` global-deploy row,
+> which lands under `~/.augment/templates/`, and no work_engine file is resolved
+> through the consumer-override path.
 
 > **Status: beta.** The contract (directive sets, halt budgets,
 > envelope shape) has shipped one full SemVer-minor cycle, but the
