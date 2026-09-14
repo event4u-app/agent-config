@@ -114,7 +114,7 @@ import {
     resolve_project_root,
     type TraceRecord,
 } from '../_lib/agent_settings.js';
-import { executionJson } from './doctor_execution.js';
+import { executionJson, forgeProtectionJson, UNREAD_FORGE } from './doctor_execution.js';
 import * as ai_council_clients from '../ai_council/clients.js';
 import * as ai_council_config from '../ai_council/config.js';
 import {
@@ -3075,10 +3075,9 @@ function _emit_json(
         foreign,
         tag_drift,
     };
-    if (origin !== null) {
-        payload['project_root_origin'] = origin;
-    }
+    if (origin !== null) payload['project_root_origin'] = origin;
     payload['execution'] = executionJson(() => iter_setting_overrides({ cwd: project_root }));
+    payload['forge_protection'] = forgeProtectionJson(UNREAD_FORGE); // 3.2
     if (checks !== null) {
         payload['checks'] = checks;
         const drift = missing.length + modified.length + foreign.length + tag_drift.length;

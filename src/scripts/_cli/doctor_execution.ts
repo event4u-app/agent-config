@@ -18,6 +18,11 @@ import {
     executionPostureFromOverrides,
     resolveExecutionPosture,
 } from '../../shared/missionExecution.js';
+import {
+    forgeProtectionRows,
+    protectionActions,
+    type ForgeReading,
+} from '../_lib/forge_protection.js';
 
 type Dict = Record<string, unknown>;
 
@@ -43,3 +48,43 @@ export function executionJson(overrides: () => OverrideStream): Dict {
         escalation: [...posture.escalation],
     };
 }
+
+/**
+ * The `forge_protection` block of `doctor --json` — Phase 3.2.
+ *
+ * **`doctor` does NOT reach the network on its own.** A diagnostic that makes a
+ * `gh` call on every invocation is one nobody runs offline, and the sibling
+ * anchor gate already declined that cost for the same reason. So the reading is
+ * INJECTED: a caller that has queried the forge passes it, and a caller that has
+ * not passes the all-null reading, which produces five `unread` rows that still
+ * name the call each value would come from.
+ *
+ * That is the honest shape for *read, never guessed*: the block is always
+ * present, a value appears only when a named call produced it, and `unread` is a
+ * third state rather than a quiet `false`. A row that was never looked at and a
+ * row that was looked at and failed are different repairs.
+ *
+ * `actions` carries the human ACTION lines — the step's own words are that a
+ * missing row is a blocker entry and NOT a halt, so this reports and returns.
+ */
+export function forgeProtectionJson(reading: ForgeReading): Dict {
+    const rows = forgeProtectionRows(reading);
+    return {
+        rows: rows.map((r) => ({
+            id: r.id,
+            state: r.state,
+            source: r.source,
+            detail: r.detail,
+        })),
+        actions: protectionActions(rows),
+        read_from_forge: rows.some((r) => r.state !== 'unread'),
+    };
+}
+
+/** The all-null reading: nothing was queried. */
+export const UNREAD_FORGE: ForgeReading = {
+    rulesets: null,
+    defaultBranch: null,
+    allowAutoMerge: null,
+    deployRestricted: null,
+};

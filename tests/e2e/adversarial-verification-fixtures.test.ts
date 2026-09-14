@@ -33,6 +33,8 @@ import {
     ladder,
     type LadderState,
 } from '../../src/scripts/_lib/continuation_ladder.js';
+import { isDeliveryReady } from '../../src/scripts/_lib/delivery_ready.js';
+import { forgeProtectionRows } from '../../src/scripts/_lib/forge_protection.js';
 import { classify, findingFor } from '../../src/scripts/check_test_delta.js';
 import {
     sameSessionTestFlag,
@@ -356,6 +358,96 @@ describe('G8 / G9 — the two test gates and the same-session flag', () => {
         expect(touchesTestAndCode(['tests/a.test.ts'])).toBe(false);
         expect(touchesTestAndCode(['src/a.ts'])).toBe(false);
         expect(touchesTestAndCode([])).toBe(false);
+    });
+});
+
+describe('3.1 — the six required layers, each with its command', () => {
+    const CMD = 'src/domains/product-basic/roadmap/process-full/command.md';
+
+    it('names all six layers in order', () => {
+        const body = flat(CMD);
+        for (const layer of [
+            'A targeted local RED, then GREEN',
+            'Quality scoped to the changed surface',
+            'Per-phase fast CI',
+            'The final full required CI',
+            'Forge branch protection',
+            'Final-head verification',
+        ]) {
+            expect(body).toContain(layer);
+        }
+    });
+
+    it('every layer row carries a command, never a bare claim', () => {
+        const lines = read(CMD).split('\n');
+        const start = lines.findIndex((l) => l.startsWith('| # | Layer |'));
+        expect(start).toBeGreaterThan(-1);
+        const rows = lines
+            .slice(start + 2)
+            .filter((l) => /^\| [1-6] \|/.test(l))
+            .slice(0, 6);
+        expect(rows).toHaveLength(6);
+        for (const row of rows) {
+            const command = row.split('|')[3]?.trim() ?? '';
+            // A layer with no command is a claim; a layer with one is a check.
+            expect(command).toMatch(/`/);
+        }
+    });
+
+    it('CI rejects all five conditions and gates on none of them being size', () => {
+        const body = flat(CMD);
+        for (const reject of [
+            'A SKIPPED OR DISABLED REQUIRED CHECK',
+            'UNRESOLVED GENERATED DRIFT',
+            'POLICY-PROJECTION DRIFT',
+            'A STALE-HEAD MERGE',
+            'A CONFLICT RESOLUTION THAT WAS NOT REVALIDATED',
+        ]) {
+            expect(body).toContain(reject);
+        }
+        expect(body).toMatch(
+            /CI NEVER REQUIRES A HUMAN APPROVAL MERELY BECAUSE A CHANGE IS LARGE/,
+        );
+    });
+
+    it('a disabled required check cannot reach delivery-ready — the executable half', () => {
+        // The doc states it; this is the predicate that enforces it, asserted
+        // here so the roadmap's clause has a mechanism rather than a sentence.
+        const skipped = {
+            requiredContexts: ['Required'],
+            checks: [{ name: 'Required', conclusion: 'SKIPPED', status: 'COMPLETED' }],
+            observedHead: 'h',
+            head: 'h',
+        };
+        expect(isDeliveryReady(skipped)).toBe(false);
+    });
+});
+
+describe('3.2 — doctor reads forge protection from the forge', () => {
+    it('an unread forge yields five rows that still name their API call', () => {
+        const rows = forgeProtectionRows({
+            rulesets: null,
+            defaultBranch: null,
+            allowAutoMerge: null,
+            deployRestricted: null,
+        });
+        expect(rows).toHaveLength(5);
+        for (const r of rows) {
+            expect(r.state).toBe('unread');
+            expect(r.source).toMatch(/^GET repos\//);
+        }
+    });
+
+    it('`unread` is a third state — never reported as a false', () => {
+        // The blocker's own re-scope forbids reading a 404 from the classic
+        // endpoint as absence of protection; the same principle one layer in.
+        const rows = forgeProtectionRows({
+            rulesets: null,
+            defaultBranch: null,
+            allowAutoMerge: null,
+            deployRestricted: null,
+        });
+        expect(rows.some((r) => r.state === 'unsatisfied')).toBe(false);
     });
 });
 

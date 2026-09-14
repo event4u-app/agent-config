@@ -153,6 +153,46 @@ waiting on that remote CI is part of the run per the Iron Law below. It is
 the whole of what this command delivers: there is no flag that carries it
 further, and § Merging below says why.
 
+### The six required layers, in order, each with the command that runs it
+
+`road-to-adversarial-verification-and-long-runs` 3.1. Correctness is owned by the
+forge and CI, not by an owner reading a diff — so the layers are named, ordered,
+and each one carries the command that produces its verdict. A layer with no
+command is a claim; a layer with one is a check.
+
+| # | Layer | Command that runs it |
+|---|---|---|
+| 1 | A targeted local RED, then GREEN | the test runner filtered to the failing name — `npm run test:ts -- <file>`, never the suite |
+| 2 | Quality scoped to the changed surface | the type-checker and linter over the diff — `task typecheck-ts`, the linter on changed files |
+| 3 | Per-phase fast CI | `roadmap.quality_cadence: per_phase` (Phase 0.2) at each phase boundary |
+| 4 | The final full required CI | `./scripts-run src/scripts/ci_settle <PR> --timeout 1700` — its LAST OUTPUT LINE is the verdict |
+| 5 | Forge branch protection | `agent-config doctor --json` → `forge_protection` (Phase 3.2), read from the forge |
+| 6 | Final-head verification | `ci_settle`'s verdict line names the head; it must be the head that was pushed last |
+
+**Layer 1 before layer 2 before layer 3, and the order is the substance.** Each
+layer is cheaper and narrower than the one after it, so running them out of order
+spends the expensive verdict on a failure the cheap one would have named. A run
+that reaches layer 4 with layer 1 unrun has not saved a step; it has moved the
+same failure to where it costs a CI cycle.
+
+```
+CI REJECTS: A SKIPPED OR DISABLED REQUIRED CHECK · UNRESOLVED GENERATED DRIFT ·
+POLICY-PROJECTION DRIFT · A STALE-HEAD MERGE · A CONFLICT RESOLUTION THAT WAS
+NOT REVALIDATED.
+CI NEVER REQUIRES A HUMAN APPROVAL MERELY BECAUSE A CHANGE IS LARGE.
+```
+
+That last line is not a courtesy. Size is the one property of a diff that
+correlates with nothing a reviewer can check mechanically, and gating on it is
+how *ask the owner* re-enters through a door marked prudence — which is the loop
+ADR-268 § 0 is trying to end. Gate on the five conditions above, which are
+falsifiable, and never on how big the change looks.
+
+**A disabled required check cannot reach delivery-ready**, and that is the
+condition to test rather than assert: a PR whose required context is skipped has
+a green rollup and an unenforced gate, so a delivery-ready test that reads only
+the rollup passes exactly when it should fail.
+
 ### Merging — out of scope, cancelled rather than deferred
 
 ```

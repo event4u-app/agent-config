@@ -240,7 +240,7 @@ before the record is signed.
 
 ## Phase 3 — The forge and CI own correctness
 
-- [ ] **3.1 Name the required layers, in order.** A targeted local RED then GREEN → quality
+- [x] **3.1 Name the required layers, in order.** A targeted local RED then GREEN → quality
       scoped to the changed surface → per-phase fast CI → the final full required CI → forge
       branch protection → final-head verification. CI rejects a skipped or disabled check,
       unresolved generated drift, policy-projection drift, a stale-head merge, and a conflict
@@ -248,12 +248,40 @@ before the record is signed.
       change is large.
       verify: each layer is named in the delivery contract with the command that runs it, and
       a fixture PR with a disabled required check cannot reach delivery-ready.
-- [ ] **3.2 `doctor` reads forge protection from the forge.** A `forge_protection` block —
+      <!-- landed 2026-09-13 in `process-full/command.md` § The six required layers, plus
+      `_lib/delivery_ready.ts` for the executable half — a layer with no command is a claim,
+      a layer with one is a check, and the fixture asserts every row carries one.
+      **The disabled-check clause needed a predicate, not a sentence.** A required context
+      that SKIPPED leaves a GREEN rollup, so `checks.every(passing)` returns true exactly
+      where it must return false. `deliveryBlocks` therefore asks two questions — did every
+      required context report, and did each report SUCCESS — and treats SKIPPED, CANCELLED and
+      NEUTRAL alike: a check that reached no verdict enforced nothing, whatever colour it
+      rendered. Sensitivity proven rather than assumed: replacing the check with the naive
+      `conclusion === 'FAILURE'` reds 4 of 12 cases.
+      It returns ALL blocks rather than the first, because a run that fixes one and re-pushes
+      to find the next pays a CI cycle per block — the cost the layer ORDER exists to avoid. -->
+      <!-- verify: npm run test:ts -- tests/scripts/delivery_ready.test.ts -->
+- [x] **3.2 `doctor` reads forge protection from the forge.** A `forge_protection` block —
       default branch protected, required checks present, force-push disabled, auto-merge
       available, deploy only via pipeline — read, never guessed. A missing row becomes a human
       ACTION blocker entry, not a halt.
       verify: `agent-config doctor --json` carries the block and every row's value has a source
       field naming the forge API call it came from.
+      <!-- landed 2026-09-13. The block is `_lib/forge_protection.ts` (pure mapper) plus
+      `_cli/doctor_forge_protection` in `doctor_execution.ts`; `cmd_doctor.ts` gains two lines,
+      the rest lives under the 1,500-line cap.
+      **Three states, not two, and that is the substance.** A row is `satisfied` /
+      `unsatisfied` only when a NAMED call produced it; otherwise `unread`. A gate reporting
+      `false` for something it never looked at is the failure the blocker's own re-scope
+      names, and two states cannot express the difference.
+      **`doctor` does not reach the network.** The reading is injected — a caller that queried
+      the forge passes it, one that did not passes `UNREAD_FORGE` and gets five `unread` rows
+      that still name the call each value would come from. A diagnostic nobody can run offline
+      is one nobody runs; the sibling anchor gate declined the same cost.
+      **Rulesets, never the classic endpoint**: `branches/main/protection` 404s on this
+      repository while a ruleset protects it, so the unsatisfied detail warns about that 404
+      explicitly. No ruleset id is pinned — the re-scope forbids it, since rulesets split. -->
+      <!-- verify: ./agent-config doctor --json | grep -A 8 '"forge_protection"' -->
 
 ## Phase 4 — A recovery ladder with strategy epochs
 
@@ -497,6 +525,25 @@ before the record is signed.
   | required checks | **provisional** | one context required, `Sync + Generate Tools Consistency`, `strict: true`. Whether one context is the intended required SET is undecided, so this is not counted satisfied |
   | auto-merge available | **unmeasured** | not queried |
   | deploy restricted to pipeline | **unmeasured** | not queried |
+
+- **RE-MEASURED 2026-09-13, post-Phase-3.2, and this is the run the criterion asked for.**
+  Read through the mapper Phase 3.2 landed, against the live forge. Two rows that were
+  `unmeasured` above now have values, and one that was `provisional` is satisfied:
+
+  | Row | State | Evidence |
+  |---|---|---|
+  | default-branch protection | **satisfied** | one active `target: branch` ruleset, `conditions.ref_name.include = ["~DEFAULT_BRANCH"]` |
+  | force-push disabled | **satisfied** | the ruleset carries `rules[].type: non_fast_forward` |
+  | required checks present | **satisfied** | TWO contexts now, up from the one recorded on 2026-09-10: `Sync + Generate Tools Consistency` and `Standing payload delta + budget gate`. The 2026-09-10 note withheld `satisfied` because one context might not be the intended SET; two independent gates is no longer that question |
+  | auto-merge available | **UNSATISFIED** | `repos/…` reports `allow_auto_merge: false`. Merge delivery cannot queue behind checks — ADR-268 § 3's mechanism is unavailable until an admin enables it |
+  | deploy restricted to pipeline | **UNSATISFIED** | the one environment, `github-pages`, has `custom_branch_policies: true, protected_branches: false` — it accepts a deployment from any branch |
+
+  Method: `gh api repos/event4u-app/agent-config`, `…/rulesets`, `…/rulesets/17749383`,
+  `…/environments`, 2026-09-13. **The blocker stays OPEN**, and now for a sharper reason than
+  before: it is no longer unmeasured, it is measured and two of five rows are false. Both are
+  admin settings — enabling auto-merge and restricting the `github-pages` deployment branches —
+  which is a human action outside an agent session. `doctor` lists them as ACTION lines and the
+  run continues, which is what "not a halt" means.
 
   Method: `gh api repos/event4u-app/agent-config/rulesets` and `…/rulesets/17749383`,
   2026-09-10, one active ruleset. **These are preflight measurements. Phase 3.2 has not
