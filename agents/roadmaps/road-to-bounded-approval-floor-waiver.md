@@ -453,8 +453,17 @@ DIFFERENCE IS STATED PER STEP RATHER THAN AVERAGED AWAY.
       **What survived the change of subject is the scope discipline**, and it
       shipped verbatim: a waiver may not excuse a selector (`enforcement`,
       `target`, `covers_default_branch`), `allow_unconditional_bypass`,
-      deletion or force-push — those six are `NEVER_WAIVABLE`, refused by
-      construction. **What the shipped shape adds that this step did not ask
+      `required_review_thread_resolution`, deletion or force-push — those
+      **seven** are `NEVER_WAIVABLE`, refused by construction.
+      **COUNT CORRECTED 2026-09-14, and the enumeration with it.** This read
+      *those six*, and it listed six because it omitted
+      `required_review_thread_resolution` — measured, not argued:
+      `NEVER_WAIVABLE.length` is **7** (`Object.keys(NON_NEGOTIABLE_FLOOR)`
+      is 8, less `minimum_required_contexts`, which is a count and not a
+      dimension). The omitted dimension is exactly the one the code comment at
+      `platform_anchor.ts:135-143` says *IS here, and it was briefly not* — the
+      blind review that restored it to the floor updated the DERIVED list and
+      left every hand-written prose enumeration of that list behind. **What the shipped shape adds that this step did not ask
       for** is the inverse guarantee the council later made load-bearing: the
       eligible set is bounded by a *committed list*, not by the quality of a
       waiver's prose. Proven sensitive 2026-09-13 by neutralising
@@ -735,7 +744,7 @@ DIFFERENCE IS STATED PER STEP RATHER THAN AVERAGED AWAY.
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | The waiver outlives its ground | implementation | **CORRECTED 2026-09-14 — the approval exemption this row was written against was never built.** The risk survives, re-pointed at the mechanism that did ship: the waiver `arr-2026-09-10-strict-status-checks` is renewed past its expiry without anyone re-measuring the re-run cost that is its stated ground, and it then reads as permanent policy. *Original, whose premise the owner ruling removed:* "The single-operator model ends, or a collaborator is added, and nobody re-raises the floor" — there is no approval floor left to re-raise | Answered in 0.1 and shipped as a hard `expires: 2026-12-09`, which is the condition that ends it, plus a stated ground a reader can re-measure. `check_platform_anchor` refuses a waiver past its `expires`, so lapsing is loud rather than silent — renewal is the unguarded move, and it needs the cost re-measured | Phase 0 — answer the two questions, then sequence |
-| 2 | The waiver becomes a general escape | implementation | A later edit widens the waivable set to a threshold or a selector, hollowing out the floor through the door built here | **CORRECTED 2026-09-14 — the closed two-element list was never built, and a reader auditing this mitigation would have grepped for one and found nothing.** The shipped boundary is `NEVER_WAIVABLE` (six dimensions) plus `WAIVER_AUTHORITIES`, and a waiver scoped to any of the six is refused by a test that has been seen red (AC-3). `platform-anchor.json` is on `ANCHOR_PATHS`, so the widening attempt still needs its own ratification. *Original:* "The suspended set is validated against a closed two-element list with a test asserting rejection." | Phase 1 — the exemption, fail-closed |
+| 2 | The waiver becomes a general escape | implementation | A later edit widens the waivable set to a threshold or a selector, hollowing out the floor through the door built here | **CORRECTED 2026-09-14 — the closed two-element list was never built, and a reader auditing this mitigation would have grepped for one and found nothing.** The shipped boundary is `NEVER_WAIVABLE` (**seven** dimensions, measured 2026-09-14 — see AC-3) plus `WAIVER_AUTHORITIES`, and a waiver scoped to any of the seven is refused by a test that iterates the exported constant rather than a literal list. `platform-anchor.json` is on `ANCHOR_PATHS`, so the widening attempt still needs its own ratification. *Original:* "The suspended set is validated against a closed two-element list with a test asserting rejection." | Phase 1 — the exemption, fail-closed |
 | 3 | A second lockout with no way back | implementation | With `bypass_actors: []` another ruleset mistake re-locks the sole maintainer out of the PR path, as 12:51 did. `admin: true` is a capability, not a rehearsed procedure | 0.2 requires a written procedure executed once against a non-default-branch ruleset. Until that exists this risk is open, and both council seats raised it | Phase 0 — answer the two questions, then sequence |
 | 4 | The remaining protection is weaker than assumed | implementation | **CORRECTED 2026-09-14 in the reassuring direction, which is why it is corrected rather than left:** approvals are *removed* from the trust model rather than suspended, and M16 measured **two** required contexts, not one — so more carries the load than this row assumed. The residual it names is untouched: a required context pins a job name, never the steps inside it. *Original:* "With approvals suspended and merge-freshness off, one required context carries the load." | M11 records that an empty context set is already refused. The job-name residual is recorded in `platform-anchor.json`'s own note and is **not** closed here | Phase 1 — the exemption, fail-closed |
 
@@ -773,11 +782,55 @@ INSTRUCTION SHOULD BE LEFT LYING.
       scoped to a `NEVER_WAIVABLE` dimension is refused, each case covered by a
       test that has been seen red. A **missing** waiver is green.
       **Met**, with the scope re-pointed from "the two approval keys" to the
-      six `NEVER_WAIVABLE` dimensions, which is where the boundary actually
-      lives. Three mechanisms were neutralised on 2026-09-13 and observed red
+      `NEVER_WAIVABLE` dimensions, which is where the boundary actually
+      lives. **COUNT CORRECTED 2026-09-14: seven, not six.** This clause read
+      *the six `NEVER_WAIVABLE` dimensions*; the set has seven members and the
+      missing one is `required_review_thread_resolution`. The criterion itself
+      is unaffected — 1.4's `NEVER_WAIVABLE` membership test iterates the
+      exported constant rather than a literal list, so it covered all seven the
+      whole time and no test was weakened by the wrong number. What the wrong
+      number did was misdescribe the boundary to a human reader. Three mechanisms were neutralised on 2026-09-13 and observed red
       (6 tests total, table in 1.4), each restored with the suite back at 57/57.
       The missing-waiver-is-green half is `treats an absent or malformed waiver
       list as no waivers, never as a pass` (:737).
+      **THE SAME OMISSION HAS THREE SITES AND ONE CAUSE, and the third cannot
+      be closed by an agent.** Named as the exact construct rather than as a
+      description, and grepped for rather than assumed: every hand-written
+      prose enumeration of `NEVER_WAIVABLE` in the tree omits
+      `required_review_thread_resolution` and therefore says *six*. Pinned so
+      it is reproducible: at `origin/main`, `git grep -c NEVER_WAIVABLE --
+      '*.md' '*.ts' '*.json'` returns **22** hits across 7 files. Exactly
+      **three** of them are a prose enumeration carrying a count, in **two**
+      files, and all three are wrong in the same direction; the other 19 are
+      code, tests, or prose naming the constant without counting it. The two
+      sites that name it without a count — `docs/contracts/ratification-artifact.md`
+      and `agents/evidence/ratifications/drain-anchor-owner-ruling.md` — were
+      read and are correct as written, which is worth stating because "I fixed
+      what I found" and "I checked the rest" are different claims.
+      Two are in this file (step 1.2 and this criterion) and are corrected
+      above. The third is **`src/config/platform-anchor.json` ·
+      `accepted_risk_note`**, which reads *"Six dimensions are hard —
+      `NEVER_WAIVABLE` … : enforcement, target, default-branch coverage,
+      unconditional bypass, deletion and force-push"* and later *"it is a
+      6-dimension hard floor"*. That is the shipped config telling a reader
+      that `required_review_thread_resolution` is a trade-offable baseline
+      expectation, when the code makes it unwaivable — an error in the
+      PERMISSIVE direction, which is the direction `platform_anchor.ts:213`
+      already records a previous hand-written drift for.
+      **Why it is left standing here.** `src/config/platform-anchor.json` is on
+      `ANCHOR_PATHS`, so any edit to it sets `self` and
+      `requiresRatification(classifyPaths(['src/config/platform-anchor.json']))`
+      returns **true** — measured 2026-09-14 by calling the exported predicate,
+      not inferred from the path list. A ratification artifact needs a council
+      verdict and owner authority; writing one to clear a gate over one's own
+      diff is the fabrication `evaluator-independence` forbids. So the fix is a
+      one-line prose correction behind a governance gate an agent may not open.
+      **What closes it:** the note's enumeration gains
+      `required_review_thread_resolution` and both counts become seven, in a
+      change that carries its own ratification artifact — cheapest as a rider on
+      the next ratified anchor edit rather than as a ratification of its own.
+      No test and no gate verdict changes: the membership check iterates the
+      exported constant, so only the human-facing description is wrong.
 - [x] AC-4 — **CORRECTED 2026-09-13. Reads now:** a test pinning the *absence*
       of both approval dimensions from the floor exists, since the test M10
       asked for cannot be written.
