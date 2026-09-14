@@ -70,6 +70,7 @@ import {
     type SpanCommit,
     collect_span_commits,
     derive_categories,
+    make_span_file_reader,
     parse_git_log,
     previous_release_tag,
     stale_draft_labels,
@@ -125,6 +126,24 @@ export interface Contradiction {
     label: string;
     evidence: string[];
 }
+
+/** The fifth label, named once so the note below and the gate cannot drift. */
+export const KNOWN_LIMITATIONS = 'Known limitations';
+
+/**
+ * What a passing `Known limitations: _none_` actually claims.
+ *
+ * Exported so it is a fixture rather than a sentence somebody can soften: the
+ * derivation reads self-declared residuals, so it is blind to a limitation
+ * nobody documented, and printing `_none_` without saying so would turn an
+ * undefended field into a defended-looking one. That inversion is the whole
+ * risk the roadmap registered against making this label derivable.
+ */
+export const UNDERIVED_LIMITATIONS_NOTE =
+    'ℹ️  `Known limitations: _none_` means NO CANDIDATE WAS DERIVED from the span, ' +
+    'not that no limitations exist —\n' +
+    '    the derivation reads residuals a commit or a touched executable file ' +
+    'DECLARES, so an undocumented one is invisible to it.';
 
 /**
  * A populated generated category meeting a `_none_` curated field is a
@@ -281,7 +300,12 @@ export function main(argv: readonly string[]): number {
     // reaches another section, another era file, or `docs/archive/`. That is
     // what keeps eighteen historical marker lines from turning this into a
     // permanent red on every future release.
-    const derived = derive_categories(span);
+    // `--to` and not the worktree: the gate must answer about the ref it was
+    // pointed at, and on a release branch the checkout and `--to` are the same
+    // commit only by accident of how the gate happens to be invoked.
+    const derived = derive_categories(span, {
+        readTouchedFile: make_span_file_reader(to, REPO_ROOT),
+    });
     const drafts = stale_draft_labels(curated);
     if (drafts.length > 0) {
         process.stderr.write(
@@ -315,6 +339,14 @@ export function main(argv: readonly string[]): number {
     const contradictions = highlight_contradictions(curated, derived);
     if (contradictions.length === 0) {
         process.stdout.write(`✅  curated head plausible for ${version} (span ${from}..${to})\n`);
+        // Risk 2 of the roadmap that made `Known limitations` derivable, paid
+        // where it lands rather than in a comment: a self-declared residual is
+        // only detectable when somebody WROTE IT DOWN, so a derived `_none_`
+        // here reads stronger than the undefended one it replaced unless the
+        // gate says which of the two it means. It means the first.
+        if ((curated[KNOWN_LIMITATIONS] ?? '').trim() === HEAD_NONE) {
+            process.stdout.write(`${UNDERIVED_LIMITATIONS_NOTE}\n`);
+        }
         return 0;
     }
     process.stderr.write(

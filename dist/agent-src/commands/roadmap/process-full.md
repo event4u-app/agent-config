@@ -163,7 +163,7 @@ command is a claim; a layer with one is a check.
 | # | Layer | Command that runs it |
 |---|---|---|
 | 1 | A targeted local RED, then GREEN | the test runner filtered to the failing name — `npm run test:ts -- <file>`, never the suite |
-| 2 | Quality scoped to the changed surface | the project's type-checker and linter over the diff, never the whole tree |
+| 2 | Quality scoped to the changed surface | the type-checker and linter over the diff — `npm run typecheck`, the linter on changed files |
 | 3 | Per-phase fast CI | `roadmap.quality_cadence: per_phase` (Phase 0.2) at each phase boundary |
 | 4 | The final full required CI | `./scripts-run src/scripts/ci_settle <PR> --timeout 1700` — its LAST OUTPUT LINE is the verdict |
 | 5 | Forge branch protection | `agent-config doctor --json` → `forge_protection` (Phase 3.2), read from the forge |

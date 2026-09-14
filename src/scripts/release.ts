@@ -122,9 +122,7 @@ import {
 import {
     HEAD_LABELS,
     type MixObligation,
-    collect_span_commits,
-    derive_category_hits,
-    render_derived_head_values,
+    derive_head_prefill,
 } from './_lib/release_highlights.js';
 import { canPrompt, promptLine } from './_lib/tty_prompt.js';
 import { preflightPosition } from './_lib/release_position.js';
@@ -307,8 +305,7 @@ export { RELEASE_HEAD_CAP_LINES } from './_lib/release_material.js';
  */
 function _derive_head_prefill(prev: string | null): Record<string, string> {
     try {
-        const span = collect_span_commits(prev, 'HEAD', REPO_ROOT);
-        return render_derived_head_values(derive_category_hits(span));
+        return derive_head_prefill(prev, 'HEAD', REPO_ROOT);
     } catch (err) {
         process.stderr.write(
             `warning: could not derive release-head highlights (${(err as Error).message}); ` +
