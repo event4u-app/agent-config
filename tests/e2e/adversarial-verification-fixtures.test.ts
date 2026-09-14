@@ -936,3 +936,167 @@ describe('T10 — an over-ceiling API requirement produces a report and no ask',
         expect(d.route).toBe('cli');
     });
 });
+
+/**
+ * AC-7 — the whole file in one run.
+ *
+ * Every fixture above pins one mechanism. This one pins the COMPOSITION, which
+ * is where the roadmap's actual claim lives: that a run can cross more wall-clock
+ * time than any single run is allowed to spend, and still reach `merged` without
+ * spending one owner question on it.
+ *
+ * The two modules have to disagree about scope for that to work, and they do.
+ * `continuation_ladder` bounds ONE run — 25 iterations, four hours — and a run
+ * that hits either bound is `exhausted`, which is a budget word and not a
+ * failure. `mission_record` carries the MISSION, which is longer than a run by
+ * construction. Collapsing the two is the plausible wrong implementation in
+ * either direction: a ladder that never halted would be the unbounded loop K1
+ * killed, and a record that expired with the run's wall clock would make a
+ * long run impossible and every resume an owner interrupt.
+ */
+describe('AC-7 — a throttled four-phase long run ends merged, one resume, zero owner asks', () => {
+    const HOUR = 60 * 60 * 1000;
+    const t0 = Date.parse('2026-09-14T08:00:00.000Z');
+
+    /** Each phase's remaining open-step count, read at that phase's stop. */
+    const PHASES = [
+        { phase: 'Phase 1', openAfter: 3 },
+        { phase: 'Phase 2', openAfter: 2 },
+        { phase: 'Phase 3', openAfter: 1 },
+        { phase: 'Phase 4', openAfter: 0 },
+    ] as const;
+
+    const runA: LadderState = {
+        iterations: 4,
+        started_at: new Date(t0).toISOString(),
+        // Distinct counts: the open-step scan is moving, so the stall rung is
+        // not what this fixture is measuring.
+        history: [4, 3, 2],
+    };
+
+    const record = (over: Partial<MissionRecord> = {}): MissionRecord => ({
+        mission_id: 'ac7-long-run',
+        roadmap: 'agents/roadmaps/road-to-adversarial-verification-and-long-runs.md',
+        phase: 'Phase 2',
+        completed_steps: ['1.1', '2.1'],
+        decisions: [
+            { id: 'branch-base', where: 'run notes § Decisions' },
+            { id: 'delivery-target', where: 'run notes § Decisions' },
+        ],
+        authority: {
+            grant: 'roadmap:process-full',
+            expires: new Date(t0 + 48 * HOUR).toISOString(),
+            revoked_by: null,
+        },
+        target_branch: 'main',
+        pr: 2042,
+        head_sha: 'deadbee',
+        last_ci: { verdict: 'green', head: 'deadbee' },
+        recovery_epoch: 1,
+        attempt_count: 3,
+        pending_reviews: [],
+        owner_owned_residue: [],
+        ...over,
+    });
+
+    it('phases 1 and 2 keep the first run engaged while steps remain', () => {
+        for (const { openAfter } of PHASES.slice(0, 2)) {
+            expect(ladder(runA, openAfter, t0 + HOUR, 0, undefined, null, false, 'pr-open')).toBe(
+                'engage',
+            );
+        }
+    });
+
+    it('the first run ends on its own wall clock — a budget word, not a failure', () => {
+        // The throttle. Five hours in, run A stops at `halt-wall-clock`. What
+        // matters is the WORD: `exhausted`, never `blocked` and never an ask.
+        // A run that reported `blocked` here would send a nameable continuation
+        // to the owner-owned rung, which is the count-to-an-ask move Phase 4.1
+        // removed wearing a different name.
+        const action = ladder(runA, 2, t0 + 5 * HOUR, 0, undefined, null, false, 'pr-open');
+        expect(action).toBe('halt-wall-clock');
+        expect(terminalStateFor(action)).toBe('exhausted');
+        expect(terminalStateFor(action)).not.toBe('blocked');
+    });
+
+    it('the record survives the phase boundary and the session end', () => {
+        // Written at each boundary and cleared by none of them. A record cleared
+        // at `session-end` would make the resume a fresh start, which is the
+        // same thing as having no record.
+        for (const boundary of WRITE_BOUNDARIES) expect(clearedBy(boundary)).toBe(false);
+        expect(missingFields(record())).toEqual([]);
+    });
+
+    it('ONE resume, twelve hours later, and it re-asks nothing', () => {
+        const verdict = restore(
+            record(),
+            { grant: 'roadmap:process-full', revoked_by: null },
+            new Date(t0 + 12 * HOUR),
+        );
+        expect(verdict.state).toBe('resume');
+        expect(verdict.closed).toEqual(['branch-base', 'delivery-target']);
+        for (const id of verdict.closed) expect(alreadyAnswered(record(), id)).toBe(true);
+    });
+
+    it('the resume is what buys the zero asks — without it the questions reopen', () => {
+        // Sensitivity for the composition rather than for a branch. A mission
+        // restarted from a record that carries no decisions answers none of
+        // them, so every one of those is an owner question the run would have
+        // to spend. The record is the mechanism; this asserts it is load-bearing.
+        const amnesiac = record({ decisions: [] });
+        expect(restore(amnesiac, null, new Date(t0 + 12 * HOUR)).closed).toEqual([]);
+        for (const id of ['branch-base', 'delivery-target']) {
+            expect(alreadyAnswered(amnesiac, id)).toBe(false);
+        }
+    });
+
+    it('phases 3 and 4 run under a FRESH clock and reach merged', () => {
+        // Run B starts its own wall clock — that is what makes the mission
+        // longer than any run. The same elapsed instant that halted run A is
+        // ordinary mid-run time here.
+        const runB: LadderState = {
+            iterations: 2,
+            started_at: new Date(t0 + 12 * HOUR).toISOString(),
+            history: [2, 1],
+        };
+        expect(ladder(runB, 1, t0 + 13 * HOUR, 0, undefined, null, false, 'pr-open')).toBe('engage');
+        expect(ladder(runB, 0, t0 + 14 * HOUR, 0, undefined, null, false, 'merged')).toBe(
+            'complete',
+        );
+        expect(DELIVERY_ENDINGS).toContain('merged');
+    });
+
+    it('zero open steps with delivery NOT reached does not end the run', () => {
+        // The forbidden ending, restated inside the long run: four phases of
+        // flipped checkboxes over a red CI is the exact shape 8.1 forbids.
+        const runB: LadderState = {
+            iterations: 2,
+            started_at: new Date(t0 + 12 * HOUR).toISOString(),
+            history: [2, 1],
+        };
+        expect(ladder(runB, 0, t0 + 14 * HOUR, 0, undefined, null, false, 'ci-red')).toBe('engage');
+    });
+
+    it('the whole run spans more wall clock than any single run may spend', () => {
+        // The claim in one line, so a reader does not have to add the hours up.
+        expect(14 * HOUR).toBeGreaterThan(WALL_CLOCK_CAP_MS);
+        expect(PHASES).toHaveLength(4);
+        expect(PHASES[PHASES.length - 1]?.openAfter).toBe(0);
+    });
+
+    it('no action reachable anywhere in the run is an owner ask', () => {
+        // Collected over the run's own observed rungs plus the whole vocabulary,
+        // because the criterion is about the run AND about what the run could
+        // have produced. `MAX_ITERATIONS` is asserted so a future widening of the
+        // budget cannot silently turn the throttle off.
+        const observed: LadderAction[] = [
+            'engage',
+            'halt-wall-clock',
+            'complete',
+        ];
+        for (const action of [...observed, ...Object.keys(TERMINAL_STATE_BY_ACTION)]) {
+            expect(action).not.toMatch(/ask|question|confirm|owner/i);
+        }
+        expect(MAX_ITERATIONS).toBe(25);
+    });
+});

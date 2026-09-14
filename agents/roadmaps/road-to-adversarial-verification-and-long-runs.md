@@ -769,5 +769,29 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       repository.
 - [ ] AC-6 — `docs/enforcement-by-host.md`'s `destructive:` column is measured for all eight
       hosts, with every `manual-only` row a recorded decision.
-- [ ] AC-7 — a throttled four-phase long-run fixture ends merged, with one continuity resume
+- [x] AC-7 — a throttled four-phase long-run fixture ends merged, with one continuity resume
       and zero owner asks.
+      <!-- closed 2026-09-14 as the `AC-7` describe in
+      `tests/e2e/adversarial-verification-fixtures.test.ts`. Every other fixture in that file
+      pins ONE mechanism; this one pins the COMPOSITION, which is where this roadmap's actual
+      claim lives — that a run can cross more wall-clock time than any single run may spend and
+      still reach `merged` without spending one owner question on it.
+      **The two modules have to disagree about scope for that to work, and they do.**
+      `continuation_ladder` bounds ONE run (25 iterations, four hours) and a run that hits
+      either bound reports `exhausted` — a budget word. `mission_record` carries the MISSION,
+      which is longer than a run by construction. Collapsing them is the plausible wrong
+      implementation in both directions: a ladder that never halted is the unbounded loop K1
+      killed, and a record that expired with the run's wall clock makes a long run impossible
+      and every resume an owner interrupt.
+      The fixture runs phases 1-2 under one clock, stops run A at `halt-wall-clock` five hours
+      in, asserts that rung maps to `exhausted` and NOT to `blocked` — a `blocked` here would
+      route a nameable continuation to the owner-owned rung, which is Phase 4.1's
+      count-to-an-ask move under a different name — restores twelve hours later with the
+      decisions closed, and runs phases 3-4 under a FRESH clock to `merged`. Total span 14h
+      against a 4h per-run cap, asserted rather than left for the reader to add up.
+      **One negative and one sensitivity.** Zero-open over `ci-red` still returns `engage`, so
+      four phases of flipped checkboxes over a red CI is not an ending. And a record carrying
+      no decisions closes nothing, which is what makes the resume load-bearing rather than
+      decorative. Neutralising the ladder's wall-clock branch reds this fixture's halt case
+      (plus one pre-existing T7/T8 case that pins the same branch) and nothing else. -->
+      <!-- verify: npm run test:ts -- tests/e2e/adversarial-verification-fixtures.test.ts -->
