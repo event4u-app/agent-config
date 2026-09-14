@@ -240,6 +240,20 @@ AC-3, AC-4, AC-6 — remain `[ ]`. No checkbox was flipped and none was parked a
 `[~]`: a blocked run that reaches a clean count has laundered the work, not done
 it.
 
+**One finding this run made and deliberately did not land.** `txLogDir` in
+`src/install/txlog.ts` carries the docstring "helper for callers (apply.ts)".
+`src/install/apply.ts` does not exist — it was removed with the TypeScript apply
+route — and the export has zero callers repository-wide. That is the same
+defect class § Decision for Phase 2 already corrected twice in this file: a
+claim in shipped source naming something the tree does not contain. The
+correction was written, verified and then reverted, because `check_test_delta`
+counts any `src/` path as a code path and reds a change with no accompanying
+test. A comment has no testable behaviour, so the only exits are a tautological
+test or the `test-delta-acknowledged` label — and that label exists in neither
+the repository nor any prior PR, so creating it is an owner action rather than
+an agent one. Recorded here so the claim is tracked rather than lost; it needs
+one docstring edit plus either that label or a maintainer pushing it directly.
+
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-11 | reviewer: claude/host -->
 

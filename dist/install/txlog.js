@@ -144,11 +144,7 @@ function tryParseEntry(line) {
         return null;
     }
 }
-/**
- * Resolve the directory holding `logPath`. No caller repository-wide as of
- * 2026-09-14: the `apply.ts` this line used to name was removed with the
- * TypeScript apply route, and nothing replaced the call.
- */
+/** Resolve the directory holding `logPath` \u2014 helper for callers (apply.ts). */
 export function txLogDir(logPath) {
     return dirname(logPath);
 }
