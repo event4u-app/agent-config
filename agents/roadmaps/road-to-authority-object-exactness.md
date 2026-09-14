@@ -48,7 +48,7 @@ preceded the first edit is recorded.
 
 ## Phase 1 — Threat-model before the first edit
 
-- [ ] **1.1 Run the threat pass over the two modules, and record it.** Both are
+- [x] **1.1 Run the threat pass over the two modules, and record it.** Both are
       authorization surfaces: `typed_op_grant` decides whether a typed op
       proceeds, `mission_record.restore` decides whether a mission resumes under
       a grant. `security-sensitive-stop` puts this before the first edit rather
