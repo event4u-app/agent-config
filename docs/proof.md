@@ -175,7 +175,7 @@ guidelines, personas) are **generated from source and CI-drift-checked**:
 fails the build on any count-shaped prose mention that drifts from the
 source count — or on two different numbers for the same artefact kind.
 
-We also publish our **debt**: 32 claim(s) are logged as
+We also publish our **debt**: 33 claim(s) are logged as
 `unbacked` inventory in the ledger — not yet bound, and therefore not
 allowed to carry a marker in public prose. Hiding them would be the
 opposite of the point.
@@ -353,7 +353,7 @@ resolution (`check_enforcement_coverage`) and the claims ledger
 
 Undeclared rules (81, of which 9 kernel-denied) carry no row — an honest gap beats a false claim.
 
-**Axis 2 — evidence form per public claim.** 101 ledger entries · 61 backed · 33 unbacked inventory · 7 resolved-null.
+**Axis 2 — evidence form per public claim.** 102 ledger entries · 61 backed · 34 unbacked inventory · 7 resolved-null.
 
 | Claim id | Kind | Status | Measured on | Evidence pointer |
 |---|---|---|---|---|
@@ -418,6 +418,7 @@ Undeclared rules (81, of which 9 kernel-denied) carry no row — an honest gap b
 | `lexical-ranking-lift` | quant | backed | — | `exec:measure_lexical_ranking -> 0` |
 | `mcp-registered-server-standing-cost` | quant | backed | — | `agents/evidence/metrics/mcp-tool-standing-cost.jsonl#tool_search_threshold` |
 | `no-runtime-daemon` | qual | withdrawn | — | `docs/contracts/no-runtime-boundary.md` |
+| `obligation-settle-shadow-bar` | quant | unbacked | — | `PRE-REGISTERED 2026-09-13 (`road-to-a-ledger-that-closes-the-loop` steps 5.2 and 5.3), committed in the SAME change that ships the detector and BEFORE any code able to refuse exists. The concern returns `EXIT_ALLOW` on every path and the manifest declares it `severity: advisory, fail_closed: false`, so at the moment this bar is filed there is no arming switch to fit it to. That ordering is the pre-registration.` |
 | `orchestration-dispatch-net-win` | comparative | unbacked | — | `PRE-REGISTERED 2026-07-11 (road-to-orchestration-scope-decision Phase 1 — no goalpost-moving after the numbers land). Falsification criteria fixed BEFORE data: (1) held quality is deterministic, scored by `src/scripts/check_quality_regression.ts` thresholds — a token/wall win that degrades output below the regression threshold FAILS the claim; (2) negative control — `pv-02-negative-control` must NOT trigger dispatch (a classifier that fires on everything is a cost leak, not a win); (3) win metric — ≥15% reduction in token-or-wall on `orch-02`+`orch-03` vs the single-agent baseline, read from `agents/runtime/state/audit/*.jsonl` orchestration lines through `gateVerdict()` / `resolveShippedDefault()`. Binds to a resolving report once ≥20 real `ask`-mode telemetry lines exist (Phase 2 — maintainer-run; the corpus `--run` agent-spawn is gated out of auto-mode). PROVE → flip to backed for the proven family only; DROP → renewed honest-null, keep `ask`, demote orchestration from the public value proposition.` |
 | `orchestration-observed-dispatch-cost` | comparative | resolved-null | — | `internal/bench/orchestration/backfill-2026-08-07-verdict.md#honest null` |
 | `persona-identity-placebo-null` | quant | backed | — | `internal/bench/reports/persona-placebo.json#honest-null` |

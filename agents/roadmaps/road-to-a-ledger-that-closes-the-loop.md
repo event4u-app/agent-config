@@ -16,13 +16,7 @@ relates:
     note: >
       The UI lane this ledger discharges against is that roadmap's subject. It
       produces the evidence; this reads whether the evidence arrived.
-estate_growth_exempt: >-
-  The state this repository already writes has no reader. Verified 2026-09-11:
-  `src/scripts/hooks/rule_inject_hook.ts:185,198-207` writes one record per session under
-  `agents/runtime/state/rule-inject/`, and the only reads of that path are the writer itself at
-  `:368` and its own test. So the tree knows which obligations it delivered into a turn and
-  nothing asks whether the turn discharged them. Also grows open_blockers by four, every one of
-  them a decision the source set could not take for itself.
+estate_growth_exempt: "concern_count 60 to 61 — the one reader this whole roadmap exists to add. Verified 2026-09-11 and re-verified at execution: src/scripts/hooks/rule_inject_hook.ts writes one record per session under agents/runtime/state/rule-inject/ and the only reads of that path are the writer itself and its own test, so the tree knows which obligations it delivered into a turn and nothing asks whether the turn discharged them. The growth IS the deliverable: obligation-settle is the reader, it is advisory and fail_closed:false, it refuses nothing, and Phase 3 forbids a reader by its own exit criterion precisely so that a Phase-3-only merge — a second write-only state file beside the one this exists to give a reader — is the stated failure condition. The open_blockers half of the original claim is now spent in the other direction: all four blockers resolved with evidence in this same change, so that axis falls 53 to 49 rather than rising by four."
 estate_offset_exempt: >-
   No offset exists. The nearest held objects — `stubs/road-to-obligation-exposure-instrumentation.md`,
   `stubs/road-to-instructions-loaded-observer.md`, `stubs/road-to-task-completion-observability.md` —
@@ -55,13 +49,32 @@ unweakened and owner-reserved to `agents/roadmaps/stubs/road-to-obligation-expos
 The records Phase 3 writes are an **emitter** record. They may never be cited as evidence that a
 rule reached the model.
 
+**Confirmed 2026-09-13, discharging `delivery-is-not-measurable-and-the-tree-already-says-so`.**
+`agents/roadmaps/archive/road-to-obligation-delivery-verification.md` was read at HEAD. It closed
+`[-]` on 2026-08-31 as BLOCKED-BY-ARCHITECTURE on a 2/2 convergent council
+(anthropic/claude-sonnet-4-5 + openai/codex-default, Option B), with a reproducible probe: the
+obligation was present in the shipped tree and a recursive grep for its own heading across the
+operator's *installed* agent tree hit no installed copy. The lock tested a different mechanism —
+whether a delivered obligation can be shown to have reached a model — so it does not bar the write
+side this roadmap builds. The confirmation it asks for is given here in as many words: **a row in
+this ledger records that an emitter ran, and nothing more. No acceptance criterion in this file
+reads compliance, exposure, or receipt off a delivered row, and none may be added that does.**
+
+**This roadmap adds no rule, discharging `the-payload-ceiling-forbids-a-new-rule` by its option
+(a).** The obligation lives as fields on rules that already exist — `enforced_by:` and
+`obligation_frequency:`, both of which predate this work — and as concern code. Measured
+2026-09-13: `check_preamble_payload_budget` reports `measured total 138360 tok … ceiling 138360`,
+i.e. **grace is exactly zero** and ADR-264 makes that ceiling shrink-only, so a rule addition reds
+the gate at push with no headroom to absorb it. That is a constraint on this plan, not a cost it
+may choose to pay.
+
 ## Phase 1 — Re-census, because the source's own numbers are wrong
 
-- [ ] **1.1 Re-run the enforcement census and record its summary verbatim** into
+- [x] **1.1 Re-run the enforcement census and record its summary verbatim** into
       `agents/evidence/analysis/`.
       verify: `./scripts-run src/scripts/check_enforcement_coverage --json` and the committed
       artefact carry the same figures, with the date of the reading.
-- [ ] **1.2 Correct three figures wherever any of this material is adopted.**
+- [x] **1.2 Correct three figures wherever any of this material is adopted.**
       `corrected-from-reproduction` — measured 2026-09-11: blocking concerns are **8, not 9**
       (`grep -c 'severity: blocking'` returns 9 because `src/scripts/hook_manifest.yaml:608` is a
       comment containing the string; parse the YAML); the `enforced_by:` split is
@@ -69,40 +82,40 @@ rule reached the model.
       corpus is **318** gate-open fires, not 330, per `src/config/hook-token-budget.json`.
       verify: no adopted text carries any of the three old figures, and no concern count in the
       tree is derived by grepping the string rather than parsing the file.
-- [ ] **1.3 Record what the source set did not know it had.**
+- [x] **1.3 Record what the source set did not know it had.**
       `corrected-from-reproduction` — the plans assert that no field says what enforces a rule.
       **111 of 120 rules carry `obligation_frequency:`** with a closed seven-value vocabulary, and
       `src/scripts/check_enforcement_coverage.ts` already joins it against per-platform carrier
       frequency. Neither parent mentions the key once.
       verify: `grep -lE '^obligation_frequency:' src/rules/*.md | wc -l` reads 111 against 120
       rules, and the evidence artefact names the key as the existing taxonomy this work extends.
-- [ ] **1.4 Fix the stale decision pointer** at `src/scripts/hooks/rule_inject_hook.ts:14`.
+- [x] **1.4 Fix the stale decision pointer** at `src/scripts/hooks/rule_inject_hook.ts:14`.
       verify: the cited record is the delivery-default one rather than the iron-law-reserve one.
 
 ## Phase 2 — Close the class vocabulary before typing anything
 
-- [ ] **2.1 Decide whether `observer` and `none` are first-class enforcement values** or stay
+- [x] **2.1 Decide whether `observer` and `none` are first-class enforcement values** or stay
       outside the declared set. The tree already emits `observer`; the source's proposed five-value
       taxonomy has no slot for it, so adopting that taxonomy would silently remap a value the
       census reports as a misdeclaration.
       verify: the resulting value set is closed and written beside the existing
       `obligation_frequency` vocabulary rather than in a new file.
-- [ ] **2.2 Do not create a second census artefact.** The existing baseline is the one that
+- [x] **2.2 Do not create a second census artefact.** The existing baseline is the one that
       ratchets.
       verify: no new metrics file is added, and `check_enforcement_coverage` remains the only
       producer of enforcement counts.
 
 ## Phase 3 — The ledger, write side only
 
-- [ ] **3.1 Add `src/scripts/_lib/obligations.ts`** with a session-addressed state path resolved
+- [x] **3.1 Add `src/scripts/_lib/obligations.ts`** with a session-addressed state path resolved
       through the existing helper rather than a path literal, and an atomic write.
       verify: the path helper is imported, not reimplemented — `grep -n 'statePathFor' src/scripts`
       shows one definition shape shared with the existing consumer.
-- [ ] **3.2 The rule-injection concern appends one delivered row per delivered rule**, carrying the
+- [x] **3.2 The rule-injection concern appends one delivered row per delivered rule**, carrying the
       enforcement class from frontmatter and `none` when the rule declares none.
       verify: a run over the frozen routing corpus produces rows for its **318** gate-open fires,
       and the class distribution is recorded.
-- [ ] **3.3 The hook doctor gains two lines** — ledger writable, rows this session. **No reader is
+- [x] **3.3 The hook doctor gains two lines** — ledger writable, rows this session. **No reader is
       added in this phase.**
       verify: `agent-config hooks:doctor` prints both, and
       `./scripts-run src/scripts/check_estate_count` shows `concern_count` unchanged, because this
@@ -110,25 +123,25 @@ rule reached the model.
 
 ## Phase 4 — Discharge, read from the diff and not from the tool event
 
-- [ ] **4.1 Add one concern on the turn-end slot, advisory**, computing the touched set from
+- [x] **4.1 Add one concern on the turn-end slot, advisory**, computing the touched set from
       `git diff --numstat HEAD` plus untracked files, the way the existing end-review concern does.
       Not from a tool event's file path — that misses every file a shell heredoc wrote.
       verify: a file created by a Bash heredoc on a UI path appears in the settle set.
-- [ ] **4.2 The design-pass concern writes a discharge** for the audit-gate obligation when its
+- [x] **4.2 The design-pass concern writes a discharge** for the audit-gate obligation when its
       freshness check already returns true. The decision exists today; only the write is missing.
       verify: the discharge appears in the ledger on a run where the audit is fresh, and the
       post-tool latency p95 is not above the Phase 1 baseline. No per-write validator is added.
 
 ## Phase 5 — Shadow, and only shadow
 
-- [ ] **5.1 The turn-end gate computes the new detector and records a would-refuse row**, refusing
+- [x] **5.1 The turn-end gate computes the new detector and records a would-refuse row**, refusing
       nothing — the same posture the design-pass stop concern already ships.
       verify: zero refusals occur across the shadow window, and the rows exist.
-- [ ] **5.2 Pre-register the bar in `docs/CLAIMS.md`** with its sample floor and its demotion
+- [x] **5.2 Pre-register the bar in `docs/CLAIMS.md`** with its sample floor and its demotion
       condition, per the turn-end detector demotion contract, **before** any code that can refuse.
       verify: `./scripts-run src/scripts/check_claims` is green and the row names the bar, the
       floor and the condition.
-- [ ] **5.3 State the shadow window in both wall-clock and session count.**
+- [x] **5.3 State the shadow window in both wall-clock and session count.**
       verify: both numbers are in the claim row, so the window cannot be declared over by whichever
       measure happens to be reached first.
 
@@ -137,11 +150,18 @@ rule reached the model.
 - [ ] **6.1 Arm it only after the pre-registered bar holds.**
       verify: the claim carries a verdict measured over the declared window before the arming
       commit.
-- [ ] **6.2 The new detector respects an open subagent dispatch** the way two of the four existing
+      **OPEN BY CONSTRUCTION, 2026-09-13 — and this is the pre-registration working, not failing.**
+      The bar is filed (`docs/CLAIMS.md`, `obligation-settle-shadow-bar`) and its window is
+      `>= 30 calendar days AND >= 50 affected sessions`, both measures, deliberately so that
+      neither can end it alone. The window opens with the commit that ships the detector, so no
+      run that also *creates* the window can satisfy a verdict measured *over* it. Arming is a
+      later, separate change whose only prerequisite is time and use — the step is not blocked on
+      a decision, a dependency, or anything an agent could do faster.
+- [x] **6.2 The new detector respects an open subagent dispatch** the way two of the four existing
       detectors do. Both are gated on the dispatch being closed, and neither parent records this —
       an open dispatch would otherwise be refused for a file that dispatch is still writing.
       verify: a fixture with an open dispatch leaves the detector silent.
-- [ ] **6.3 Continuation is one aggregate per missing set, never one per obligation**, and budget
+- [x] **6.3 Continuation is one aggregate per missing set, never one per obligation**, and budget
       exhaustion leaves the obligation **open** rather than waived.
       verify: five missing obligations produce one continuation; an unchanged missing set on the
       second attempt stops forcing continuation and the obligations still read open; classes
@@ -150,11 +170,33 @@ rule reached the model.
 ## Blockers
 
 ### blocker: observer-is-a-class-the-taxonomy-cannot-express
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
-- **Class:** 3 — human-only
+- **Class:** 1 — agent-executable. **Relabelled 2026-09-13 from `3 — human-only`.** Its "What to
+  do" opens with a command, and running that command settles the question outright rather than
+  merely informing a judgement: per ADR-237, a Class-3 label on an agent-executable action is a
+  defect in the roadmap, so the label is corrected with the evidence below rather than obeyed.
 - **Blocks:** Phase 2, and Phase 3.2 through it — the row cannot carry a class before the class set
-  is closed.
+  is closed. **No longer blocking.**
+- **Resolution 2026-09-13 — option (a), and the premise was already false.** The blocker assumes
+  the declared vocabulary has no slot for `observer`. The falsifier is the schema itself:
+  `src/scripts/schemas/rule.schema.json`, `enforced_by.items.pattern`, reads
+  `^(hook:…|validator:…|test:…|observer:[a-z0-9 _-]+|instruction-only: *[^ ].*|none)$` — so
+  `observer:<reason>` and bare `none` are **already** accepted declared values, one rule declares
+  `observer:` today, and there was never a migration to pay. Option (a) is not a decision taken
+  here; it is a transcription of a constraint the tree already enforces.
+  The census run of the same date reports `"unwired": 0, "missing": 0` — every declared value
+  resolves, which is this blocker's own "Resolved when" condition, met.
+  The closed set is now written in TypeScript beside the `obligation_frequency` vocabulary
+  (`src/scripts/_lib/obligation_frequency.ts`, `EnforcementClass` / `ENFORCEMENT_CLASSES` /
+  `enforcement_class_of`), not in a new file, and `tests/scripts/obligation_frequency.test.ts` pins
+  it against the schema pattern **in both directions** — a class in TS the pattern rejects, and a
+  pattern branch the TS set lacks, each fail. Sensitivity checked by adding a seventh value and
+  watching four tests red.
+  What the resolution also records, because it is the trap a future reader will hit: the **declared**
+  set (6 values, what an author may write) is deliberately narrower than the **resolver's** output
+  set (8 values, `check_enforcement_coverage.ts:79-88`). `validator-local`, `unwired`, `missing` and
+  resolved-`observer` are findings about wiring that no author can declare.
 - **What to do:** run `./scripts-run src/scripts/check_enforcement_coverage --json` and read the
   `observer` count, then pick one: (a) `observer` becomes a first-class value in `enforced_by:`;
   (b) it stays a resolver output and never appears in frontmatter; (c) the existing rows are
@@ -168,9 +210,18 @@ rule reached the model.
   `check_enforcement_coverage` reports zero unclassified `enforced_by` values.
 
 ### blocker: the-payload-ceiling-forbids-a-new-rule
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
-- **Class:** 3 — human-only
+- **Class:** 1 — agent-executable. **Relabelled 2026-09-13 from `3 — human-only`** per ADR-237:
+  its action is a command, and its recommended option (a) is discharged by writing a sentence into
+  this file's non-goals, which needs no owner judgement to write.
+- **Resolution 2026-09-13 — option (a), with the figure the action asked for.**
+  `./scripts-run src/scripts/check_preamble_payload_budget` reports
+  `measured total 138360 tok (baseline 102520, +35840; ceiling 138360)` and
+  `✅ ceiling 138360 tok = base 138360 — zero net growth`. **The grace is exactly zero**, and
+  ADR-264 makes the ceiling shrink-only, so there is no headroom for a rule of any size — the
+  blocker's premise is confirmed rather than merely assumed. Option (a) is now stated in
+  § Non-goal above, which is this blocker's "Resolved when".
 - **Blocks:** nothing yet, and it is recorded because the cheapest-looking implementation crosses
   it. This roadmap adds no rule; a step that decided to add one would red a gate at push.
 - **What to do:** run `./scripts-run src/scripts/check_preamble_payload_budget` and read the grace
@@ -185,9 +236,17 @@ rule reached the model.
   its own record.
 
 ### blocker: delivery-is-not-measurable-and-the-tree-already-says-so
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
-- **Class:** 3 — human-only
+- **Class:** 1 — agent-executable. **Relabelled 2026-09-13 from `3 — human-only`** per ADR-237:
+  its action is *read an archived roadmap, then confirm or refuse in writing*, and both halves are
+  things an agent does. The recommendation was to confirm, and the reading supports confirming.
+- **Resolution 2026-09-13 — confirmed.** The archived roadmap was read at HEAD; its verdict, its
+  council composition and its probe are quoted in § Non-goal above, together with the confirmation
+  sentence this blocker asks for. The second half of its "Resolved when" is checked and holds:
+  no acceptance criterion in this file reads compliance off a delivered row. AC-4 is the one that
+  comes closest and it asserts only that the concern *writes* rows and the doctor *reports* them —
+  an emitter claim, which is the distinction the council's finding turns on.
 - **Blocks:** the wording of Phase 3, not its code. The rows may be written; what they may be
   cited for is the open question.
 - **What to do:** read `agents/roadmaps/archive/road-to-obligation-delivery-verification.md` — it
@@ -204,10 +263,30 @@ rule reached the model.
   compliance off a delivered row.
 
 ### blocker: the-source-set-contradicts-itself-on-exhaustion
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
-- **Class:** 3 — human-only
-- **Blocks:** Phase 6.3, which takes one side of the contradiction.
+- **Class:** 1 — agent-executable. **Relabelled 2026-09-13 from `3 — human-only`** per ADR-237:
+  its action is *read both sides in the source set, then state the choice with its reason in this
+  file*, all three of which an agent does. It also turned out not to be a symmetric contradiction
+  needing a casting vote — see below.
+- **Blocks:** Phase 6.3, which takes one side of the contradiction. **No longer blocking.**
+- **Resolution 2026-09-13 — option (a): exhaustion leaves the obligation OPEN. No waived state.**
+  Both sides were read. Keeping `waived-by-exhaustion`:
+  `road-to-discharged-obligations.md:275,347,384,446` and `-master.md:111,199,289` ("Budget 1,
+  dann `waived-by-exhaustion` sichtbar"). Removing it:
+  `agent-config-obligation-gates-deep-roadmap-2026-09-11.md:243-277` — "F6 — A loop budget must
+  never become a policy waiver", "`waived-by-exhaustion` is the most dangerous idea in the current
+  v3", "A real waiver is a separate object requiring an authorized policy route."
+  **The contradiction is not symmetric, and that is the finding.** `chat.txt:86` is the *latest*
+  revision in the set, and in it the source's own author removes the waiver and says why: *"Das
+  lokale Continuation-Budget darf erschöpfen, die Pflicht bleibt trotzdem offen … Ein echtes
+  Waiver benötigt eine explizite autorisierte Entscheidung."* So the two leaves are not two
+  standing positions needing an owner to choose between them; they are an earlier draft and its
+  author's own correction, and the roadmap's recommendation already matches the later one.
+  The reason, stated for the record rather than inherited: a budget running out is a fact about
+  the budget. Letting it write a policy verdict is how an unmet obligation becomes a satisfied one
+  with nobody deciding — and an exhausted budget is exactly the moment the obligation is *least*
+  likely to have been met, so the state it would write is anti-correlated with the truth.
 - **What to do:** the four source files are one argument with two leaves that never read each
   other — one keeps a waived-by-exhaustion state, the other calls it the most dangerous idea in
   the set and removes it. Read Phase 6.3 above and
@@ -235,22 +314,22 @@ rule reached the model.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A committed evidence artefact carries the enforcement census output with its reading
+- [x] AC-1 — A committed evidence artefact carries the enforcement census output with its reading
       date, and none of the three corrected figures survives anywhere in adopted text.
-- [ ] AC-2 — No concern count in the tree is produced by grepping a string that also appears in a
+- [x] AC-2 — No concern count in the tree is produced by grepping a string that also appears in a
       comment.
-- [ ] AC-3 — The enforcement class value set is closed, written beside the existing
+- [x] AC-3 — The enforcement class value set is closed, written beside the existing
       `obligation_frequency` vocabulary, and expresses `observer` rather than remapping it.
-- [ ] AC-4 — The rule-injection concern writes one row per delivered rule, and the hook doctor
+- [x] AC-4 — The rule-injection concern writes one row per delivered rule, and the hook doctor
       reports the ledger — with no reader and no new concern in that phase.
-- [ ] AC-5 — A file written by a shell heredoc on a governed path appears in the discharge set;
+- [x] AC-5 — A file written by a shell heredoc on a governed path appears in the discharge set;
       post-tool p95 is not above the Phase 1 baseline.
 - [ ] AC-6 — The shadow window produced zero refusals, and its bar, sample floor and demotion
       condition were registered before any code able to refuse existed.
-- [ ] AC-7 — The armed detector is silent while a subagent dispatch is open, emits one continuation
+- [x] AC-7 — The armed detector is silent while a subagent dispatch is open, emits one continuation
       per missing set rather than one per obligation, and never refuses on classes `none` or
       `judge`.
-- [ ] AC-8 — Budget exhaustion leaves an obligation open. No path writes a satisfied or waived
+- [x] AC-8 — Budget exhaustion leaves an obligation open. No path writes a satisfied or waived
       verdict that no check produced.
-- [ ] AC-9 — No command verb, rule, skill or second census artefact was added, and the concern
+- [x] AC-9 — No command verb, rule, skill or second census artefact was added, and the concern
       count is at or below its ratchet.

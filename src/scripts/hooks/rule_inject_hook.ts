@@ -11,7 +11,14 @@
  * the 36.2 %-against-48 % run at `docs/CLAIMS.md:188-189`. Whatever that
  * instrument's flaws — and ADR-202 closed it — it points one way.
  *
- * SHIPPED ON FOR CLAUDE CODE SINCE ADR-265 — corrected 2026-09-08 (R2 finding
+ * SHIPPED ON FOR CLAUDE CODE SINCE ADR-267 — the delivery-default record, and
+ * the citation is corrected here (2026-09-13) from ADR-265, which decides
+ * something else entirely: whether the iron-law reserve is activated, answered
+ * no, with the verifier kept inside the change. Nothing in it ships a
+ * projection mode. ADR-267 `delivery-default-for-claude-code` is the record
+ * that turns this concern on for this host, and it is the one whose
+ * `review_trigger` fires if a rule stops arriving. Previously corrected
+ * 2026-09-08 (R2 finding
  * 4), because this paragraph read "DEFAULT OFF, AND OFF MEANS ZERO BYTES …
  * under every shipped default it emits nothing … there is no measured emission
  * to register yet" and all four clauses became false in the same change that
@@ -94,6 +101,8 @@ import {
     normalizeLeanProjectionMode,
     resolveLeanProjectionHosts,
 } from '../_lib/lean_projection_mode.js';
+import { enforcement_class_from_frontmatter } from '../_lib/obligation_frequency.js';
+import { appendDelivered, stamp, type DeliveredRow } from '../_lib/obligations.js';
 import {
     loadRuleBody,
     loadRouter,
@@ -238,6 +247,44 @@ export interface Injection {
 }
 
 /**
+ * Record what this fire delivered, so something can later ask whether the turn
+ * discharged it.
+ *
+ * The write happens HERE and not in a later slot because this is the only
+ * place that knows the answer. By the time a turn ends, the selection that
+ * produced these ids is gone — the router would have to be re-run against a
+ * prompt nobody kept, which is a different computation that could disagree.
+ *
+ * EMITTER RECORD, NEVER A COMPLIANCE ONE. A row says a body was emitted into
+ * this slot. It does not say the model read it, and the ledger's own header
+ * carries the council lock that forbids reading it that way.
+ *
+ * Best-effort by construction: every failure path inside `appendDelivered`
+ * returns rather than throws, and this wrapper adds one more guard so a
+ * ledger problem can never turn a successful injection into a failed hook.
+ * A missed reading is cheaper than a refused turn, and this concern has no
+ * refusal to offer anyway.
+ */
+export function recordDelivered(root: string, session: string, ruleIds: string[]): number {
+    try {
+        const now = stamp();
+        const rows: DeliveredRow[] = ruleIds.map((id) => {
+            const body = loadRuleBody(root, id);
+            return {
+                rule: id,
+                // A rule with no projected body declares nothing this can read,
+                // which is `none` — the same answer as a body declaring none.
+                cls: body === null ? 'none' : enforcement_class_from_frontmatter(body),
+                at: now,
+            };
+        });
+        return appendDelivered(root, session, rows);
+    } catch {
+        return 0;
+    }
+}
+
+/**
  * Build the injection for one event, or `null` for silence.
  *
  * `prompt` drives keyword / phrase / command triggers; `openFiles` drives
@@ -371,6 +418,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
 
     for (const id of injection.rules) seen.add(id);
     writeSeen(root, session, seen);
+    recordDelivered(root, session, injection.rules);
 
     process.stdout.write(
         `${JSON.stringify({

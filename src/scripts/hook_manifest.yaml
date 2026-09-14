@@ -911,6 +911,19 @@ concerns:
   # future blocking decision has a measured distribution to cite. Never
   # blocks the turn — see the hook's file header for the `host_semantics.
   # emitFor` proof. fail_closed: false.
+  # The reader the delivered-obligation record never had. SHADOW ONLY: it
+  # computes the verdict an armed detector would reach, records one row per
+  # missing SET, and returns allow on every path — arming is gated on a bar
+  # pre-registered in docs/CLAIMS.md before any code able to refuse exists.
+  # advisory + fail_closed: false, and both are load-bearing rather than
+  # conventional: this estate already carries one BLOCKING turn-end concern,
+  # and the first-ranked risk against this lane is that a second one refuses a
+  # clean turn and an operator disables the carrier for good.
+  obligation-settle:
+    script: src/scripts/hooks/obligation_settle_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
   end-review-nudge:
     script: src/scripts/hooks/end_review_nudge_hook.ts
     args: []
@@ -1381,7 +1394,7 @@ platforms:
     ask:              native
     session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register, review-baseline, journal-record]
     session_end:      [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush, journal-record]
-    stop:             [chat-history, verify-before-complete, team-review-gate, end-review-nudge, turn-end-gate, self-repair, session-register, session-eol, interruption-ledger, roadmap-progress, design-pass-stop, suggestion-capture, journal-record, run-continuation]
+    stop:             [chat-history, verify-before-complete, team-review-gate, end-review-nudge, obligation-settle, turn-end-gate, self-repair, session-register, session-eol, interruption-ledger, roadmap-progress, design-pass-stop, suggestion-capture, journal-record, run-continuation]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, skill-route, git-authorization, session-canary, self-repair, session-register, rule-inject, suggestion-capture, journal-record]
     # `rule-inject` was bound here and is not any more
     # (road-to-delivery-for-every-host 3.2, owner ruling E2). E2's strategy is

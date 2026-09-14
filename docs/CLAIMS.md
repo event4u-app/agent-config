@@ -1203,6 +1203,20 @@ is the named exception in the claim itself.
 - status: unbacked
 - last_verified:
 
+### claim: obligation-settle-shadow-bar
+- claim: PRE-REGISTERED, unmeasured. Whether the `obligation-settle` turn-end detector may be armed — i.e. whether its shadow readings show it would have refused only turns that genuinely left a mechanically-dischargeable obligation unmet.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-09-13 (`road-to-a-ledger-that-closes-the-loop` steps 5.2 and 5.3), committed in the SAME change that ships the detector and BEFORE any code able to refuse exists. The concern returns `EXIT_ALLOW` on every path and the manifest declares it `severity: advisory, fail_closed: false`, so at the moment this bar is filed there is no arming switch to fit it to. That ordering is the pre-registration.
+  (1) THE BAR, one number and not a catalogue: across the declared window, the false-positive rate of the shadow verdict must be **<= 5 %**, where a false positive is a recorded `would_refuse` row on a turn that a human reading the turn judges to have discharged the obligation, or to have had no obligation to discharge. The rate is over ROWS, not over sessions, because one row already aggregates a whole missing set.
+  (2) THE SAMPLE FLOOR, mirroring `turn-end-detector-demotion` § Sample floor rather than inventing a second standard: **>= 100 shadow rows**, **>= 50 affected sessions**, and no change inside the window to anything altering the detector's exposure — which here means `touchedPaths`, `computeVerdict`, `REFUSABLE_CLASSES`, the dispatch gate, or the injector's delivered-row write. Any such change resets qualification. The same additive carve-out applies: a change that only ADDS a field or a counter, leaving every existing count and every allow path untouched, does not reset.
+  (3) THE WINDOW, stated in BOTH measures so neither can end it alone: **>= 30 calendar days AND >= 50 affected sessions.** Both, never whichever arrives first. A window closed on the faster measure is the failure this clause exists to stop — 50 sessions inside a week is one week of one operator's habits, and 30 days carrying six sessions is not a distribution.
+  (4) THE DEMOTION / NON-ARMING CONDITION, carrying the same force and fixed now: above 5 %, or a floor unmet at the end of the window, the detector is NOT armed, stays advisory, and the result is filed `resolved-null`. No re-scoped claim is invented afterwards — "it was right about a different thing than we measured" is exactly the move this pre-registration makes unavailable. Re-arming after a null requires a NEW pre-registered claim.
+  (5) UNDERPOWERED is neither a pass nor a null: below the floor the window settles nothing and may be cited for neither direction.
+  (6) WHAT A ROW MAY NEVER BE CITED FOR, independent of the result: the delivered rows this detector reads are an EMITTER record. A council closed 2026-08-31 (2/2 convergent, blocked-by-architecture) on a reproducible probe that installation proves availability and not exposure. Neither a passing bar nor a failing one licenses reading a delivered row as evidence that a rule reached the model.
+  (7) SCOPE BOUND, before the reading: the shadow corpus is one machine's gitignored runtime state under `agents/runtime/state/obligations/`, janitor-pruned, and measures THIS install rather than the package's population. A bar read off it is a statement about this operator's turns.
+- status: unbacked
+- last_verified:
+
 ### claim: ui-conformance-behavioral-catch
 - claim: Over the frozen ui-conformance fixture, the probe reports all four planted behavioral defects and raises zero findings for the one declared deviation, against a pre-registered screenshot arm that catches two of the same four and raises one.
 - kind: quant

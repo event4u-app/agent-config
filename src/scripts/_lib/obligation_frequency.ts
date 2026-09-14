@@ -80,6 +80,223 @@ export function is_frequency(v: unknown): v is Frequency {
     return typeof v === 'string' && (FREQUENCIES as readonly string[]).includes(v);
 }
 
+// ------------------------------------------------- declared enforcement class
+
+/**
+ * The CLOSED set of classes a rule may DECLARE in `enforced_by:`.
+ *
+ * It lives here, beside `Frequency`, because these are the two halves of one
+ * question and splitting them across files is how a third taxonomy gets born.
+ * `enforced_by` says *what kind of thing carries this*; `obligation_frequency`
+ * says *how often it comes due*. Neither answers the other, and
+ * `check_enforcement_coverage.ts` joins both.
+ *
+ * DECLARED IS NOT RESOLVED, and conflating them is the live trap.
+ * This set is what an AUTHOR may write. It is deliberately NARROWER than
+ * `Resolution` in `check_enforcement_coverage.ts:79-88`, which is what the
+ * RESOLVER may conclude. Four of the resolver's values — `validator-local`,
+ * `unwired`, `missing`, and resolved-`observer` — are findings about whether
+ * the declared carrier is actually reachable. No author can declare them,
+ * because they are not facts about intent.
+ *
+ * The asymmetry is load-bearing rather than accidental. A rule declaring
+ * `hook:design-pass` whose hook is `fail_closed: false` resolves to `observer`
+ * (`check_enforcement_coverage.ts:421-422`). Measured 2026-09-13: 11 declared
+ * hooks become 1 effective hook and 10 effective observers exactly this way.
+ * A reader who takes the resolved table for the declared one concludes the
+ * frontmatter is lying when it is merely being resolved.
+ *
+ * `observer` AND `none` ARE FIRST-CLASS HERE, and always were.
+ * Recorded because a proposed five-value taxonomy had no slot for `observer`,
+ * and adopting it would have silently remapped a value the schema already
+ * accepts and the census already counts. The falsifier is the schema pattern
+ * itself (`src/scripts/schemas/rule.schema.json`, `enforced_by.items.pattern`),
+ * which admits `observer:<reason>` and bare `none`. There was no decision to
+ * take: the set below is a transcription of a constraint the tree enforces,
+ * not a new vocabulary competing with it.
+ *
+ * Keep this in sync with that pattern. It is the same set written twice — once
+ * where JSON Schema can check authored frontmatter, once where TypeScript can
+ * check code — and `tests/scripts/obligation_frequency.test.ts` pins the
+ * two together so the pair cannot drift silently.
+ */
+export type EnforcementClass =
+    | 'hook'
+    | 'validator'
+    | 'test'
+    | 'observer'
+    | 'instruction-only'
+    | 'none';
+
+export const ENFORCEMENT_CLASSES: readonly EnforcementClass[] = [
+    'hook',
+    'validator',
+    'test',
+    'observer',
+    'instruction-only',
+    'none',
+] as const;
+
+export function is_enforcement_class(v: unknown): v is EnforcementClass {
+    return typeof v === 'string' && (ENFORCEMENT_CLASSES as readonly string[]).includes(v);
+}
+
+/**
+ * The class a single declared `enforced_by:` entry belongs to.
+ *
+ * `null` for anything outside the closed set — never a guess and never a
+ * silent `none`, because `none` is itself a meaningful declaration ("recorded
+ * gap") and returning it for an unparseable string would convert a schema
+ * violation into a legitimate-looking record.
+ *
+ * Bare `none` is matched exactly; every other class carries a `:` payload the
+ * schema requires to be non-empty.
+ */
+export function enforcement_class_of(declared: string): EnforcementClass | null {
+    const trimmed = declared.trim();
+    if (trimmed === 'none') return 'none';
+    const colon = trimmed.indexOf(':');
+    if (colon <= 0) return null;
+    const head = trimmed.slice(0, colon);
+    if (!is_enforcement_class(head) || head === 'none') return null;
+    // A prefix with an empty payload is a schema violation, not a declaration.
+    if (trimmed.slice(colon + 1).trim() === '') return null;
+    return head;
+}
+
+/**
+ * The class for a whole rule's `enforced_by:` list.
+ *
+ * A rule may declare several carriers; the ledger row carries ONE class, so a
+ * choice is forced. It takes the STRONGEST by {@link ENFORCEMENT_CLASSES}
+ * order, which is the same direction `check_enforcement_coverage.ts`'s `RANK`
+ * runs, so the two never disagree about which of two declarations dominates.
+ *
+ * An empty list — a rule declaring nothing at all — is `none`. That is the
+ * honest reading: the roadmap step requiring this says the row carries `none`
+ * when the rule declares none, and a rule with no declaration has made no
+ * claim this could contradict.
+ */
+/**
+ * Classes whose discharge a machine could, in principle, observe.
+ *
+ * The discriminator is not severity — it is whether a mechanical discharge
+ * EXISTS to look for. `hook`, `validator` and `test` name a carrier that runs
+ * and leaves a trace. `observer`, `instruction-only` and `none` name,
+ * respectively, an instrument that cannot block, an honestly model-carried
+ * obligation, and no carrier at all — none of the three produces an artefact a
+ * detector could read, so a detector refusing on one would be demanding
+ * evidence nobody can produce.
+ *
+ * Measured 2026-09-13 over the frozen routing corpus: 69 of 97 delivered rules
+ * are class `none`. A detector without this filter would fire on the large
+ * majority of every turn, which is the "one false block and the operator
+ * disables the carrier for good" failure the risk register ranks first.
+ *
+ * The source set's proposed taxonomy also named a `judge` class that never
+ * refuses. It has no representation here because it is not in the declared
+ * vocabulary the schema admits, and adding a value to make a sentence
+ * transcribe literally would be inventing the second taxonomy this work exists
+ * to avoid. Its INTENT — a class whose discharge is a human judgement and so
+ * must never be refused on — is carried by `observer` and `instruction-only`,
+ * both excluded below.
+ */
+export const REFUSABLE_CLASSES: ReadonlySet<EnforcementClass> = new Set<EnforcementClass>([
+    'hook',
+    'validator',
+    'test',
+]);
+
+/** Whether a detector may ever refuse on this class. */
+export function may_refuse_on(cls: EnforcementClass): boolean {
+    return REFUSABLE_CLASSES.has(cls);
+}
+
+/**
+ * The class declared by a rule's frontmatter, read straight off the body text.
+ *
+ * Lives here rather than in the ledger that calls it, so every piece of
+ * reasoning about the class vocabulary sits in one module — the roadmap's
+ * second-ranked risk is this set drifting from the census that ratchets it,
+ * and two readers in two files is the first step of that drift.
+ *
+ * Deliberately NOT a general YAML parser and deliberately not the census's
+ * `read_frontmatter`: this runs inside a hook on the prompt path, where the
+ * cost of importing the coverage module's whole wiring corpus is paid on every
+ * fire, and the only key it needs is one list. The accepted shapes are exactly
+ * the two the rule schema permits — inline `enforced_by: [a, b]` and a block
+ * of `- ` items.
+ *
+ * A rule that declares nothing is `none`, which is the honest reading: it has
+ * made no claim, so there is none to contradict.
+ */
+export function enforcement_class_from_frontmatter(text: string): EnforcementClass {
+    if (!text.startsWith('---\n')) return 'none';
+    const end = text.indexOf('\n---\n', 4);
+    if (end === -1) return 'none';
+    const lines = text.slice(4, end).split('\n');
+
+    const entries: string[] = [];
+    let collecting = false;
+    for (const line of lines) {
+        if (collecting) {
+            const item = /^\s+-\s*(.+?)\s*$/.exec(line);
+            if (item !== null) {
+                entries.push(unquote(item[1] as string));
+                continue;
+            }
+            // Any non-item line ends the block. Checked before anything else so
+            // a following key can never be read as a carrier declaration.
+            if (/^\S/.test(line)) collecting = false;
+            if (!collecting && /^\s*$/.test(line)) continue;
+            if (!collecting) break;
+            continue;
+        }
+        const m = /^enforced_by:\s*(.*)$/.exec(line);
+        if (m === null) continue;
+        const rest = (m[1] ?? '').trim();
+        if (rest === '') {
+            collecting = true;
+            continue;
+        }
+        const inline = /^\[(.*)\]$/.exec(rest);
+        if (inline !== null) {
+            for (const part of (inline[1] as string).split(',')) {
+                const v = unquote(part.trim());
+                if (v !== '') entries.push(v);
+            }
+        } else {
+            entries.push(unquote(rest));
+        }
+        break;
+    }
+    return enforcement_class_for(entries);
+}
+
+/** Strip one layer of matching quotes, which the schema permits on any entry. */
+function unquote(raw: string): string {
+    const s = raw.trim();
+    if (s.length >= 2 && ((s[0] === '"' && s.endsWith('"')) || (s[0] === "'" && s.endsWith("'")))) {
+        return s.slice(1, -1);
+    }
+    return s;
+}
+
+export function enforcement_class_for(declared: readonly string[]): EnforcementClass {
+    let best: EnforcementClass = 'none';
+    let bestRank = ENFORCEMENT_CLASSES.length;
+    for (const entry of declared) {
+        const cls = enforcement_class_of(entry);
+        if (cls === null) continue;
+        const rank = ENFORCEMENT_CLASSES.indexOf(cls);
+        if (rank < bestRank) {
+            bestRank = rank;
+            best = cls;
+        }
+    }
+    return best;
+}
+
 export type Root = 'lifecycle' | 'tool-call' | 'repository' | 'external-event' | 'none';
 
 const ROOT_OF: Record<Frequency, Root> = {

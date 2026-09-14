@@ -149,6 +149,13 @@
             "reason": "Design-pass hook latch."
         },
         {
+            "id": "obligations",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/_lib/obligations.ts:57",
+            "reason": "Per-session obligation ledger — instrumentation, not continuity. A later session must not resume from it: the rows record which obligations THIS session was delivered, and attributing them to a successor would be the one claim the ledger is forbidden to make."
+        },
+        {
             "id": "design-slop-hook.json",
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",
