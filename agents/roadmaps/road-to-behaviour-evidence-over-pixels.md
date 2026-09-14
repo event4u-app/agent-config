@@ -106,7 +106,16 @@ is not that the states are unnamed; it is that nothing can test them.
 
 ## Phase 4 — Demote the screenshot, with a verify line that can fail
 
-- [ ] **4.1 Rewrite the two mandatory screenshot steps** in the review skill so they read the probe
+> **Both steps carry the inline `blocked-by:` marker, and that is a fix rather than a formality.**
+> `scanOpenSteps` in `src/scripts/hooks/run_continuation_hook.ts` reads blockedness from the
+> marker and from nothing else — it never parses `## Blockers` — so a step declared blocked only
+> in prose still counts as open work to the stop-slot concern, which re-engaged an autonomous run
+> into this owner decision on every fire. Measured on this file before the markers:
+> `{ open: 2, blocked: 0 }`, with `next` pointing at 4.1; after: `{ open: 0, blocked: 2, next:
+> null }`. No checkbox moved: the boxes stay `[ ]`, the two blockers stay open and the roadmap
+> stays unarchivable. Only the concern's read of them changes.
+
+- [ ] <!-- blocked-by: screenshot-mandate-reopens-a-completed-decision | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **4.1 Rewrite the two mandatory screenshot steps** in the review skill so they read the probe
       artefact, and move the pixel comparison into a section explicitly marked appearance-only.
       verify: `grep -nE 'Take (a )?(baseline )?screenshots?' src/skills/design-review/SKILL.md`
       returns nothing. **`corrected-from-reproduction`** — the source's verify lines use the literal
@@ -114,7 +123,7 @@ is not that the states are unnamed; it is that nothing can test them.
       first matches one line and the second matches the other, so each under-covers by half and
       the first would have passed before any work was done. The regex above matches both lines
       (`:58`, `:105`) and is the only form that can fail correctly.
-- [ ] **4.2 Apply the same correction to the viewport section** of the Playwright skill.
+- [ ] <!-- blocked-by: screenshot-mandate-reopens-a-completed-decision | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **4.2 Apply the same correction to the viewport section** of the Playwright skill.
       verify: the section reads the probe artefact, and its own verify line is a regex over the
       real sentence shapes rather than a literal.
 
