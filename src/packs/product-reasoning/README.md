@@ -7,11 +7,12 @@ Interactive reasoning surfaces (council, challenge-me, grill-me) — classified 
 - **id**: `product-reasoning`
 - **owner**: agent-config-maintainer
 - **requires**: meta
-- **artefacts**: 11
+- **artefacts**: 12
 
-## Commands (11)
+## Commands (12)
 
-- **`challenge-me`** — Challenge-me orchestrator — routes to vision, with-docs
+- **`challenge-me`** — Challenge-me orchestrator — routes to vision, with-docs, closure
+- **`challenge-me-closure`** — Close every foreseeable decision in a roadmap before execution — detect the open ones, resolve each at the lowest rung that owns it, and write the answers into a `## Decisions` table.
 - **`challenge-me-vision`** — Stress-test a plan or idea by one-question-at-a-time interview until 95% confidence — emits a copyable Markdown vision pitch for tickets, roadmaps, or fresh-chat handoff.
 - **`challenge-me-with-docs`** — Doc-aware /challenge-me — 95%-confidence interview with session glossary vs CONTEXT.md, load-bearing claim-vs-code verification, optional CONTEXT.md patch + ADR candidates in the pitch.
 - **`council`** — Council orchestrator — routes to default, pr, design, optimize, analysis, debate

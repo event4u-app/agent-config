@@ -29,6 +29,7 @@
  */
 
 import { execFileSync, spawnSync } from 'node:child_process';
+import { PLATFORM_METADATA_KEYS } from './_lib/hook_platform_keys.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -64,17 +65,8 @@ export function loadPlatforms(root: string): Record<string, Record<string, strin
     return JSON.parse(out.stdout) as Record<string, Record<string, string[]>>;
 }
 
-/**
- * Keys under a platform that are NOT lifecycle slots.
- *
- * `fallback_only` is a marker saying this package binds nothing here, and
- * counting it as a slot made copilot read 1 against the 0 that
- * `docs/enforcement-by-host.md` records — a one-row disagreement with the host
- * table for a nameable reason, which is the drift this repository gates
- * elsewhere. Caught by comparing the generated table against that doc rather
- * than by a test, so it is named here.
- */
-const NON_SLOT_KEYS: ReadonlySet<string> = new Set(['fallback_only']);
+/** Non-slot keys, from the one definition — see `_lib/hook_platform_keys.ts`. */
+const NON_SLOT_KEYS = PLATFORM_METADATA_KEYS;
 
 /** Lifecycle slots bound for a host, on the host table's own definition. */
 export function boundSlotCount(platforms: Readonly<Record<string, Readonly<Record<string, readonly string[]>>>>, host: string): number {

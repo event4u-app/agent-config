@@ -271,9 +271,17 @@ Every council reply MUST contain, in this order:
    / `accept-with-modification` / `reject` / `needs-input` plus a
    one-line reason citing host evidence (file:line, ADR, contract).
    See *Critical evaluation* above.
-5. **User-facing options** — numbered block per `user-interaction`,
-   carrying the host verdict in each option, with "discard council
-   input" always present as an option.
+5. **User-facing options — CONDITIONAL, on ownership.** A conclusive
+   **technical** verdict emits **no** options block: it is a resolution,
+   and handing it over as options routes a technical decision to a person
+   because it was hard (ADR-268 § 10). The block is owed when the verdict
+   is owner-owned (`product-owned`, `business-owned`, `destructive-owned`)
+   or when the council did not converge — then it is a numbered block per
+   `user-interaction`, carrying the host verdict in each option, with
+   "discard council input" always present. Convergence is read from the
+   record, never inferred: a record that does not say whether its members
+   converged is itself the finding. Checkable in both directions with
+   `./scripts-run src/scripts/council_record_shape <record.md>`.
 
 The host agent NEVER ships council output as its own reasoning, and
 NEVER ships the host verdict as council output. Provider attribution

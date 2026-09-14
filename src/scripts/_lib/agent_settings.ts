@@ -53,6 +53,7 @@ import { fileURLToPath } from 'node:url';
 
 import * as user_global_paths from './user_global_paths.js';
 import { carveOutKeys } from '../../shared/settingsCarveOut.js';
+import { applyRenamedKeys } from './settings_renamed_keys.js';
 import type * as YamlModule from 'yaml';
 
 // ESM has no `require`; `createRequire(import.meta.url)` restores it so the
@@ -956,9 +957,9 @@ export function load_agent_settings(
     // precedence here is the inverse of the server family's, so the order of
     // these three statements is the whole contract.
     const merged: SettingsDict = template_defaults(template_path ?? undefined);
-    _deep_merge(merged, user_global_filtered);
+    _deep_merge(merged, applyRenamedKeys(user_global_filtered));
     for (const p of cascade) {
-        const layer = _read_yaml(p) ?? {};
+        const layer = applyRenamedKeys(_read_yaml(p) ?? {});
         if (Object.keys(layer).length > 0) {
             _deep_merge(merged, layer);
         }
@@ -966,6 +967,7 @@ export function load_agent_settings(
     _warn_removed_always_on_keys(merged);
     return merged;
 }
+
 
 /**
  * Settings keys this package has DELETED. A leftover value from an older

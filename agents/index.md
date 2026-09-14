@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **741 artefacts** in this package.
+Maintainer-facing index of all **742 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -435,7 +435,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`user-interrupt-priority`](../src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (202)
+## Commands (203)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -474,7 +474,8 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`bug`](../src/domains/engineering-base/bug/command.md) | cluster: bug | Bug orchestrator — routes to investigate (root cause) and fix (plan + implement) |
 | command | [`bug-fix`](../src/domains/engineering-base/bug/fix/command.md) | cluster: bug | Plan and implement a bug fix — based on investigation, with quality checks and test verification |
 | command | [`bug-investigate`](../src/domains/engineering-base/bug/investigate/command.md) | cluster: bug | Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause |
-| command | [`challenge-me`](../src/domains/meta/challenge-me/command.md) | cluster: challenge-me | Challenge-me orchestrator — routes to vision, with-docs |
+| command | [`challenge-me`](../src/domains/meta/challenge-me/command.md) | cluster: challenge-me | Challenge-me orchestrator — routes to vision, with-docs, closure |
+| command | [`challenge-me-closure`](../src/domains/meta/challenge-me/closure/command.md) | cluster: challenge-me | Close every foreseeable decision in a roadmap before execution — detect the open ones, resolve each at the lowest rung that owns it, and write the answers into a `## Decisions` table. |
 | command | [`challenge-me-vision`](../src/domains/meta/challenge-me/vision/command.md) | cluster: challenge-me | Stress-test a plan or idea by one-question-at-a-time interview until 95% confidence — emits a copyable Markdown vision pitch for tickets, roadmaps, or fresh-chat handoff. |
 | command | [`challenge-me-with-docs`](../src/domains/meta/challenge-me/with-docs/command.md) | cluster: challenge-me | Doc-aware /challenge-me — 95%-confidence interview with session glossary vs CONTEXT.md, load-bearing claim-vs-code verification, optional CONTEXT.md patch + ADR candidates in the pitch. |
 | command | [`check-current-md`](../src/domains/meta/check-current-md/command.md) |  | Check the open .md file (or a passed path) for German outside DE:/EN: anchor blocks — umlauts, function words, untranslated quotes. Reports and offers fixes. |

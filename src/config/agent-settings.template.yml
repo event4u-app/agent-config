@@ -690,20 +690,26 @@ roadmap:
 # roadmaps AND feature plans — which is why these keys do not live under
 # `roadmap:`. All three default to true; a missing key behaves as true.
 planning:
-  # Gate C — plan-confidence gate, BEFORE authoring (true, false).
-  # true  = default. A plan-artifact authoring ask (/roadmap:create,
-  #         roadmap-writing, /feature:plan, /feature:roadmap) first runs
-  #         the four 95%-confidence conditions from /challenge-me vision.
-  #         All four hold → the agent creates directly and emits exactly
-  #         one marker line ("Confidence ≥ 95% — creating directly").
-  #         Any gap → the ask routes into the /challenge-me vision
-  #         interview first; hosts without that command run the inline
-  #         degrade interview (one question per turn, same stop
-  #         conditions — contexts/execution/plan-confidence-gate.md).
+  # Gate C — plan-closure pass, at the END of planning (true, false).
+  # true  = default. Every command declaring `produces_roadmap: true`
+  #         ends in a closure pass (/challenge-me closure): the open
+  #         decisions are detected, each resolved at the lowest rung
+  #         that owns it — evidence, convention, the agent, an
+  #         independent session, the council, the team, the owner last
+  #         and only for owner-owned residue — and written into the
+  #         roadmap's `## Decisions` table. The seed-confidence check
+  #         from /challenge-me vision still runs where a plan starts
+  #         from a fuzzy ask; the difference is that closure is now
+  #         measured at the END, where an open decision actually costs
+  #         a run, rather than only at the start.
   #         An explicit user bypass ("just write it") wins for that turn
-  #         and is counted (gate_c_bypass_rate).
+  #         and is counted AS A BYPASS, on its own axis — never as an
+  #         absent closure.
   # false = inert; plan asks author directly (today's behavior).
-  challenge_on_create: true
+  #
+  # `challenge_on_create` is the deprecated alias, accepted for one
+  # minor so an installed settings file keeps loading.
+  closure_pass: true
 
   # Gate R1 — plan-risk review at plan creation / substantial change
   # (true, false).

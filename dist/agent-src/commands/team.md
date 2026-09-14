@@ -130,6 +130,28 @@ control, no background jobs, no delegate write path; the capability delta
 vs. the native plugin is stated in the output. When the codex CLI itself is
 absent, the same fail-closed principle applies: state it plainly and stop.
 
+## Records — the same shape and the same place as a council record
+
+```
+A TEAM VERDICT IS RECORDED THE WAY A COUNCIL VERDICT IS. NO SECOND FORMAT.
+THE OPTIONS BLOCK IS CONDITIONAL ON OWNERSHIP HERE TOO.
+```
+
+A team run produces the same seven fields a council record carries — question,
+evidence, member positions, convergence, verdict, confidence, revisit
+condition — and lives in the same place: the dev-time artifact under
+`agents/runtime/` (gitignored, pruned on the configured retention window), and
+the **durable** record inlined into the artifact the decision serves, with date
+and members. Never a link to the scratch file; it is not in a clone.
+
+Where the decision closes a roadmap question, the durable record is one
+`## Decisions` row with `resolved by: team:<record>`.
+
+The options block follows the same ownership condition as a council record: a
+conclusive **technical** verdict emits none, an owner-owned or non-convergent
+one carries the proposal the owner confirms. Both directions are checkable —
+`./scripts-run src/scripts/council_record_shape <record.md>`.
+
 ## No-claims note
 
 The review-lift value of cross-model team review is **unproven** until the
