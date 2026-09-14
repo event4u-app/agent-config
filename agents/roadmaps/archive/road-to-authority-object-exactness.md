@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: draft
+status: ready
 execution:
   mode: phase-checkpoints
 relates:
@@ -48,7 +48,7 @@ preceded the first edit is recorded.
 
 ## Phase 1 — Threat-model before the first edit
 
-- [ ] **1.1 Run the threat pass over the two modules, and record it.** Both are
+- [x] **1.1 Run the threat pass over the two modules, and record it.** Both are
       authorization surfaces: `typed_op_grant` decides whether a typed op
       proceeds, `mission_record.restore` decides whether a mission resumes under
       a grant. `security-sensitive-stop` puts this before the first edit rather
@@ -60,7 +60,7 @@ preceded the first edit is recorded.
 
 ## Phase 2 — Make the exact object exact
 
-- [ ] **2.1 A category can no longer pass as an object.** `objectIsExact`
+- [x] **2.1 A category can no longer pass as an object.** `objectIsExact`
       currently accepts any string of eight or more characters containing one
       non-letter, so `!!!!!!!!` and `all-branches` both pass. Both council seats
       reported this independently, and `openai` named the consequence plainly:
@@ -71,13 +71,13 @@ preceded the first edit is recorded.
       verify: a test asserting `!!!!!!!!`, `all-branches` and `category-1` are
       each refused, red before the change; and the shipped exact object for each
       typed op still grants.
-- [ ] **2.2 An empty or whitespace-only `op` cannot grant.** Nothing validates
+- [x] **2.2 An empty or whitespace-only `op` cannot grant.** Nothing validates
       `op` today, so a confirmed ask carrying `op: ''` and a well-formed object
       is granted. The object is checked and the verb is not, which is the half
       that names what is about to happen.
       verify: a test over `''`, `'   '` and a tab-only `op`, each refused, red
       before the change.
-- [ ] **2.3 Decide whether `confirmed` can carry "this turn" at all.** The Hard
+- [x] **2.3 Decide whether `confirmed` can carry "this turn" at all.** The Hard
       Floor's wording is a THIS-TURN confirmation; a bare boolean cannot express
       it, so a confirmation from an earlier turn is indistinguishable from a
       fresh one. This step is deliberately a decision rather than an
@@ -90,7 +90,7 @@ preceded the first edit is recorded.
 
 ## Phase 3 — The ledger's grant identity
 
-- [ ] **3.1 A restore under a DIFFERENT grant is not a resume.** `restore` reads
+- [x] **3.1 A restore under a DIFFERENT grant is not a resume.** `restore` reads
       `ledger.revoked_by` and ignores `ledger.grant`, so a record carrying grant
       A and a ledger describing grant B resumes as though the two agreed. The
       one-way precedence the module already documents — the ledger may revoke,
@@ -109,11 +109,11 @@ preceded the first edit is recorded.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — a recorded threat pass over both modules predates the first edit to
+- [x] AC-1 — a recorded threat pass over both modules predates the first edit to
       either, and names the negative tests each fix owes.
-- [ ] AC-2 — `!!!!!!!!`, `all-branches`, an empty `op` and a whitespace-only `op`
+- [x] AC-2 — `!!!!!!!!`, `all-branches`, an empty `op` and a whitespace-only `op`
       are each refused, by a test that was red before its fix.
-- [ ] AC-3 — a snapshot and a ledger naming different grants do not resume, and
+- [x] AC-3 — a snapshot and a ledger naming different grants do not resume, and
       the ledger's one-way revoke precedence is unchanged.
-- [ ] AC-4 — "this turn" is either enforceable from the type or recorded as
+- [x] AC-4 — "this turn" is either enforceable from the type or recorded as
       deliberately not enforced there, with what carries it instead.
