@@ -7,6 +7,20 @@ relates:
   - slug: road-to-adversarial-verification-and-long-runs
     relation: extends
     note: AC-2's independent authorship pass produced these four findings; they are about the authority implementation rather than about its tests, so that roadmap carried them here rather than folding them in
+estate_growth_exempt: >-
+  The tracked-follow-up disposition `fix-what-you-see` requires in the SAME change as the
+  finding, for four defects on an authorization surface that an independent two-provider pass
+  reported on 2026-09-14. The alternative dispositions were both worse: fixing them inside a
+  run scoped to an acceptance criterion would re-decide how a force-push gets authorised
+  without the threat pass `security-sensitive-stop` puts first, and a prose note closes
+  nothing. The estate grows by one because a live authority hole was found, not because a
+  plan was written.
+estate_offset_exempt: >-
+  Nothing in the estate can be offset against it. The parent roadmap is 27 of 30 with three
+  criteria open and two open blockers, so it cannot be archived; and disposing an unrelated
+  roadmap to pay for this one would trade a recorded authority defect against work chosen for
+  its cost rather than its state. The offset is declined on the record instead of taken
+  silently.
 ---
 # Road to authority object exactness
 
