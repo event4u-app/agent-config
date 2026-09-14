@@ -13,7 +13,15 @@ estate_offset_exempt: >-
   priority. check_platform_anchor runs in taskfiles/ci-fast.yml, so while the drift stood every
   kernel-rule, governance-hook and anchor-path change was refused at pre-push. The waiver
   mechanism then landed: measured 2026-09-13, the gate reports PASS_WITH_ACCEPTED_RISK and
-  exits 0, so nothing is refused. What remained was record work, which is what closed this file.
+  exits 0, so nothing is refused. What remained was record work. CORRECTED AGAIN 2026-09-14, and in
+  both halves, because each had aged into a false present tense. The two roadmaps named above as the
+  active set have both left it — road-to-delivery-for-every-host is archived and
+  road-to-delivery-on-hook-hosts is parked under later/ — so that sentence is a superseded
+  measurement of exactly the kind AC-6 forbids, written into the frontmatter of the file whose own
+  criterion forbids it. And the record work did not close this file: AC-7 is open, stays open, and
+  is not an agent's to close. The key itself is kept rather than deleted: it is what
+  check_estate_count was satisfied by when the file landed, and removing it would re-take a gate
+  decision this correction has no business re-taking.
 execution:
   mode: phase-checkpoints
 relates:
@@ -340,6 +348,23 @@ cost argument is a given rather than a proposal.
       the second half of the `ratification-platform-anchor` blocker on
       `road-to-typed-grants-that-persist.md` — so closing this file does not
       drop it.
+      **RE-VERIFIED 2026-09-14 and still open, by a run that was sent to close
+      it.** Three facts re-measured rather than re-read: the written half is
+      present (`branch-protection-policy.md` § Administrator recovery from a
+      lockout, five steps, and its own closing paragraph still reads
+      *NOT yet rehearsed*); `check_platform_anchor --files
+      src/config/platform-anchor.json` exits 0 with `PASS_WITH_ACCEPTED_RISK`;
+      and the rehearsal is unchanged in kind — every step is an admin API write
+      on repository protection settings. **The `[~]` carry was considered and
+      refused, which is worth recording because it is the move that would have
+      closed this file.** A `carried-to` / `merged-into` annotation naming the
+      sibling roadmap would satisfy `deferralProblems` and let the sweep archive
+      this file, and that is the argument against it rather than for it: the
+      receiver already carries the remainder in prose, so the carry buys no
+      safety it does not already have, while an archived roadmap is a durable
+      record that its acceptance criteria were met. AC-7's load-bearing word is
+      *tested*, and it is not. Leaving the box open costs a count; closing it
+      would file a false completion.
 
 - [x] **0.3 Record that the council's safe sequence was already violated, and
       what follows from that.** The sequence is ratify → deploy reader → test →
@@ -705,14 +730,14 @@ DIFFERENCE IS STATED PER STEP RATHER THAN AVERAGED AWAY.
       2026-09-13.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-10 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-09-14 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | The exemption outlives its ground | implementation | The single-operator model ends, or a collaborator is added, and nobody re-raises the floor. The exemption then reads as permanent policy — openai's stated ground for a `refused` vote | Decided in 0.1, because the two seats disagree on whether this can be measured at all. Whatever is chosen, the ground is named in the file as a choice rather than a constraint, so the condition that ends it is legible | Phase 0 — answer the two questions, then sequence |
-| 2 | The exemption becomes a general escape | implementation | A later edit widens the suspended set to a threshold or a selector, hollowing out the floor through the door built here | The suspended set is validated against a closed two-element list with a test asserting rejection. `platform-anchor.json` is on `ANCHOR_PATHS`, so the attempt needs its own ratification | Phase 1 — the exemption, fail-closed |
+| 1 | The waiver outlives its ground | implementation | **CORRECTED 2026-09-14 — the approval exemption this row was written against was never built.** The risk survives, re-pointed at the mechanism that did ship: the waiver `arr-2026-09-10-strict-status-checks` is renewed past its expiry without anyone re-measuring the re-run cost that is its stated ground, and it then reads as permanent policy. *Original, whose premise the owner ruling removed:* "The single-operator model ends, or a collaborator is added, and nobody re-raises the floor" — there is no approval floor left to re-raise | Answered in 0.1 and shipped as a hard `expires: 2026-12-09`, which is the condition that ends it, plus a stated ground a reader can re-measure. `check_platform_anchor` refuses a waiver past its `expires`, so lapsing is loud rather than silent — renewal is the unguarded move, and it needs the cost re-measured | Phase 0 — answer the two questions, then sequence |
+| 2 | The waiver becomes a general escape | implementation | A later edit widens the waivable set to a threshold or a selector, hollowing out the floor through the door built here | **CORRECTED 2026-09-14 — the closed two-element list was never built, and a reader auditing this mitigation would have grepped for one and found nothing.** The shipped boundary is `NEVER_WAIVABLE` (six dimensions) plus `WAIVER_AUTHORITIES`, and a waiver scoped to any of the six is refused by a test that has been seen red (AC-3). `platform-anchor.json` is on `ANCHOR_PATHS`, so the widening attempt still needs its own ratification. *Original:* "The suspended set is validated against a closed two-element list with a test asserting rejection." | Phase 1 — the exemption, fail-closed |
 | 3 | A second lockout with no way back | implementation | With `bypass_actors: []` another ruleset mistake re-locks the sole maintainer out of the PR path, as 12:51 did. `admin: true` is a capability, not a rehearsed procedure | 0.2 requires a written procedure executed once against a non-default-branch ruleset. Until that exists this risk is open, and both council seats raised it | Phase 0 — answer the two questions, then sequence |
-| 4 | The remaining protection is weaker than assumed | implementation | With approvals suspended and merge-freshness off, one required context carries the load. A required context pins a job name, never the steps inside it | M11 records that an empty context set is already refused. The job-name residual is recorded in `platform-anchor.json`'s own note and is **not** closed here | Phase 1 — the exemption, fail-closed |
+| 4 | The remaining protection is weaker than assumed | implementation | **CORRECTED 2026-09-14 in the reassuring direction, which is why it is corrected rather than left:** approvals are *removed* from the trust model rather than suspended, and M16 measured **two** required contexts, not one — so more carries the load than this row assumed. The residual it names is untouched: a required context pins a job name, never the steps inside it. *Original:* "With approvals suspended and merge-freshness off, one required context carries the load." | M11 records that an empty context set is already refused. The job-name residual is recorded in `platform-anchor.json`'s own note and is **not** closed here | Phase 1 — the exemption, fail-closed |
 
 ## Acceptance Criteria
 
@@ -796,6 +821,27 @@ INSTRUCTION SHOULD BE LEFT LYING.
       roadmaps under `agents/roadmaps/archive/`, and dated historical records
       that already carry their date or a SUPERSEDED marker — a correctly dated
       record is correct, and re-dating it would be churn.
+      **THE SWEEP MISSED ITS OWN FILE, in two places, found 2026-09-14 and
+      closed in the same change.** The list above names this file's frontmatter,
+      Goal, M6, M12, AC-2 and AC-4 — and not its Risk Register, which carried
+      three rows written against the exemption that was never built. Row 2's
+      mitigation claimed a *closed two-element list with a test asserting
+      rejection*: a reader auditing the boundary would have grepped for that
+      list and found nothing, because the shipped boundary is `NEVER_WAIVABLE`
+      plus `WAIVER_AUTHORITIES`. Row 4 said *one required context carries the
+      load* where M16 in this same file measures two. Row 1 named the
+      single-operator model as the ground of a waiver whose ground is the
+      measured re-run cost. The frontmatter's `estate_offset_exempt` still named
+      two roadmaps as *the two roadmaps the gate counts as active* when one is
+      archived and one is parked under `later/`. All four are corrected in place
+      with the original quoted, and the marker date moved to 2026-09-14.
+      **What this does to the criterion's own wording:** "Met for every
+      definitely-stale finding of a **tree-wide** sweep" was the claim, and a
+      sweep that skipped the register of the file it was run from was not
+      tree-wide. The criterion stays `[x]` because the findings are now closed,
+      not because the 2026-09-13 sweep was complete — and the miss is recorded
+      here rather than quietly patched, since a self-applied criterion that
+      cannot see its own file is the one failure mode worth leaving legible.
 - [ ] AC-7 — A **tested** administrator recovery procedure exists for a lockout
       with `bypass_actors: []`.
       **NOT MET, and this is the roadmap's one open item.** The procedure is
@@ -806,4 +852,8 @@ INSTRUCTION SHOULD BE LEFT LYING.
       `non-destructive-by-default`, maintainer-only with explicit this-turn
       confirmation — so no agent can close it. Tracked on beyond this file as
       the `ratification-platform-anchor` blocker of
-      `road-to-typed-grants-that-persist.md`.
+      `road-to-typed-grants-that-persist.md`, whose own text says that blocker
+      *now carries the remainder* — so the obligation is live in the estate
+      whatever this file's status is.
+      **Re-verified 2026-09-14: still not met, and deliberately not carried.**
+      See 0.2 for why a `[~]` carry was refused rather than overlooked.
