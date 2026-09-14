@@ -29,9 +29,23 @@ capability_gap: none
 ---
 # Road to decision closure
 
-> **Blocked on its declared dependency, recorded 2026-09-10 by an owner-delegated drain run
-> under a 2/2 convergent AI council verdict.** This file was screened for execution and left
-> untouched, deliberately rather than by omission — 0 of 22, and no step was started.
+> **Status, 2026-09-14 — 17 of 22 landed, 5 open, and every open one is blocked on a cause
+> reproduced on this tree rather than inferred from the last run's note.** Open: steps 3.1,
+> 4.1 and 5.1, and acceptance criteria AC-5 and AC-6; each carries its own dated
+> re-verification. Three distinct causes hold them: the kernel-write deny on
+> `src/rules/ask-when-uncertain.md` (3.1, and AC-6's first clause), the grant object that
+> `road-to-typed-grants-that-persist` Phase 2 has not built (4.1's `F5`), and this file's 5.1
+> being word-for-word that sibling's step 3.2. AC-5 and AC-6's first clause are transcript
+> claims on top, so neither closes on a static probe alone.
+>
+> **The paragraphs below are the 2026-09-10 screening record.** They were written when the
+> file stood at 0 of 22 and are kept because their reading of the dependency is still the live
+> one — but they are no longer the status, and this paragraph is.
+>
+> **Screening record, 2026-09-10, by an owner-delegated drain run under a 2/2 convergent AI
+> council verdict.** The file was screened for execution and left untouched, deliberately
+> rather than by omission — 0 of 22 at that time, and no step started. Seventeen landed on
+> 2026-09-13; this record is why none had landed before then.
 >
 > `depends: road-to-typed-grants-that-persist`, and that roadmap cannot complete: its Phase 1
 > rewrites five kernel rules, `src/scripts/hooks/block_kernel_rule_writes.ts` denies those
@@ -56,14 +70,18 @@ capability_gap: none
 > `resolved` and its condition re-verifies: `grep -m1 '^status:' docs/decisions/ADR-268-*.md`
 > reads `accepted`. The dependency is the whole of it.
 >
-> **No step was executed as "dependency-free", and that was a decision.** The council set a
-> four-part test for independence — a step qualifies only if it neither consumes nor assumes
-> the grant object or its behaviour, its output stays valid under any compliant implementation
-> of the dependency, its acceptance criterion can be evaluated now, and recording it cannot
-> imply that dependent integration was validated. openai: *"No step should be presumed
-> independent from the information supplied."* anthropic: *"the council cannot declare
-> 'execute dependency-free steps' without naming which those are."* Nobody named any, so none
-> were run, and this note says that instead of implying the file was merely skipped.
+> **The four-part independence test is what decided which steps could run.** The council set
+> it: a step qualifies only if it neither consumes nor assumes the grant object or its
+> behaviour, its output stays valid under any compliant implementation of the dependency, its
+> acceptance criterion can be evaluated now, and recording it cannot imply that dependent
+> integration was validated. openai: *"No step should be presumed independent from the
+> information supplied."* anthropic: *"the council cannot declare 'execute dependency-free
+> steps' without naming which those are."*
+>
+> **On 2026-09-10 nobody had named any, so none were run.** On 2026-09-13 they were named step
+> by step, and seventeen passed all four parts and landed. The five that remain each fail a
+> named part — 4.1 consumes the grant object, 5.1 is the dependency's own step, and AC-5 and
+> AC-6 cannot be evaluated now — which is the test applied rather than waived.
 >
 > **Nothing here was descoped.** Both seats refused the drain run's terminal descope rule for
 > this file: closing it around an unmet dependency would misrepresent the estate. Reopen when
@@ -234,6 +252,14 @@ owner-owned residue remains, closure completes with zero owner interaction.
       owner question, against F1's zero for twelve technical ambiguities.
       **What remains:** one paragraph in `ask-when-uncertain.md` naming the native tool per
       host alongside its Iron Law, which a maintainer must write.
+      **Re-verified 2026-09-14 by reproduction, not by reading this note.** The `Edit` was
+      attempted with the paragraph in it and denied at tool-call time —
+      `block-kernel-rule-writes: BLOCKED — kernel rule ask-when-uncertain is immutable`.
+      `check_envelope` was then probed across every write shape an agent holds — in-place
+      `sed`, redirection, `tee`, `mv`-into-place, and the `.claude/rules/` and
+      `dist/agent-src/rules/` projections — and all deny, while a plain read is allowed, which
+      is what makes the probe sensitive rather than uniformly red. The cause has not dissolved
+      and the step stays open.
 - [x] **3.2 The host manifest records which shape each host has.** `hook_manifest.yaml` host
       rows gain `ask: native | text`, and `hooks:status` prints it.
       verify: `agent-config hooks:status` prints the ask shape for the current host.
@@ -264,6 +290,9 @@ owner-owned residue remains, closure completes with zero owner interaction.
       given `expires` / `revoked_by` by its 3.1. Neither exists in the tree. Writing `F5`
       against an object that does not exist would assert nothing; writing the object here
       would be implementing the sibling roadmap.
+      **Re-verified 2026-09-14:** the sibling's 2.1, 2.2 and 3.1 all still read `[ ]`, and
+      `grep -rln granted_by src tests` returns nothing — the identifier exists only in
+      ADR-260, ADR-266 and ADR-268, as a specification. The cause has not dissolved.
 - [x] **4.2 The ask census gains four axes.** `phase` (planning, execution, delivery),
       `ownership`, `avoidable`, `resolver_attempted`. Targets: zero technical owner asks in
       execution; zero commit, push, CI or conflict asks; zero repeats of an already-answered
@@ -298,6 +327,9 @@ owner-owned residue remains, closure completes with zero owner interaction.
       an interrupt — landed in `roadmap-process-loop.md` § 3-0: the table is read before the
       first step and a row reopens only when its `revisit if` condition became true, never
       because a context reset lost it. The mission id and the grant are the sibling's.
+      **Re-verified 2026-09-14:** the sibling's 3.2 still reads `[ ]` and
+      `src/rules/user-interrupt-priority.md` still carries none of the three classes, so the
+      two-owners hazard is live rather than historical. The cause has not dissolved.
 
 ## Phase 6 — Scope-growth ownership
 
@@ -398,6 +430,10 @@ resumed with the grant and decisions intact · `F6` an API ceiling → pause and
       behaviour of an actual `process-full` execution over `F1`, which is a transcript
       measurement, and recording it green off two static probes would be the substitution this
       roadmap's own census axis exists to catch.
+      **Re-verified 2026-09-14:** both static halves still hold on this tree —
+      `tests/fixtures/decision-closure/F1-technical-ambiguities.md` ships and
+      `src/scripts/ask_block_census.ts` still reports its two measurable targets — and the
+      missing half is still a run, which nothing in this tree produces. Unchanged, not stalled.
 - [ ] AC-6 — on a host with a native ask primitive, every owner ask used it; on a host without
       one, `hooks:status` says so.
       **HALF PROVEN, 2026-09-13.** The second clause holds: `ask: native | text` is a manifest
@@ -405,3 +441,7 @@ resumed with the grant and decisions intact · `F6` an API ceiling → pause and
       that direction. The first clause depends on 3.1, whose remaining paragraph is a kernel
       rule the write guard denies — and it is a transcript claim besides, on the same ground
       as AC-5.
+      **Re-verified 2026-09-14:** the second clause still holds — `src/scripts/hook_manifest.yaml`
+      still carries an `ask:` row on every host block, one `native` and the rest `text`. The
+      first clause is blocked twice over, by the reproduced deny recorded on 3.1 and by being
+      a transcript claim, so discharging either alone would not close it.
