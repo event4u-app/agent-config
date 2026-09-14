@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: draft
+status: ready
 estate_offset_exempt: "Draft, so the count half reports +0 active; the file-based one-in-one-out half fires on the added file regardless of status, and this exemption answers that half. The subject is a published BREAKING entry contradicted by the shipped tree — a consumer-facing release-truth defect with no existing owner: no stub, no later/ entry and no active roadmap names the 15.0.0 kernel-deny line or the missing MIGRATION sections."
 execution:
   mode: phase-checkpoints
