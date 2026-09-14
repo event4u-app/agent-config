@@ -928,11 +928,11 @@ item. Phases 1-6 may run once 0.2 is chosen.
   file is untouched — `git log -- src/config/platform-anchor.json` still ends at `b4beff026`.
   Measured against the ruleset history rather than inferred: version `49500777` (2026-09-12
   15:05) carries `required_review_thread_resolution: true`; the current version `49599840`
-  (2026-09-14 09:19:21) carries `false`. Every other field of the `pull_request` rule is
-  byte-identical across the two, and `bypass_actors: []` holds in both.
+  (2026-09-14 09:19:21) carries `false`. Every other field of the ruleset rule of type
+  `pull_request` is byte-identical across the two, and `bypass_actors: []` holds in both.
   **Three ruleset edits were made this morning within 56 seconds**, and the middle one explains
-  the loss: `49599808` (09:18:25) still has the `pull_request` rule with the field `true`;
-  `49599828` (09:18:58) has **no `pull_request` rule at all** (only `deletion`,
+  the loss: `49599808` (09:18:25) still carries the ruleset rule of type `pull_request` with the
+  field `true`; `49599828` (09:18:58) carries **no rule of type `pull_request` at all** (only `deletion`,
   `non_fast_forward`, `required_status_checks`); `49599840` (09:19:21) re-adds the rule with the
   field `false`. That is the shape of a rule toggled off and back on, with a non-default
   sub-setting not restored — but this run measured the sequence, not the intent, and does not
