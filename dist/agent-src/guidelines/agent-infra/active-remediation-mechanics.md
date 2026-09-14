@@ -113,7 +113,7 @@ One item classifies deterministically with
 `./scripts-run src/scripts/scope_growth "<description>"`; `unknown` is a real
 verdict there, never a fallback to the cheapest rung.
 
-## Inside a mission — the middle rung becomes an artefact
+## Inside a mission — the middle rung becomes an artifact
 
 `road-to-adversarial-verification-and-long-runs` 6.1. The ladder's middle rung is
 **note + ask**, and inside an autonomous mission there is nobody to ask. Left
@@ -122,7 +122,7 @@ this suite already names: every spotted issue becomes a fix (the scope creep
 [`minimal-safe-diff`](minimal-safe-diff-mechanics.md) exists to stop), or every
 one becomes silence (the look-away `active-remediation` exists to stop).
 
-So under a mission the middle rung is **emit a follow-up artefact and leave the
+So under a mission the middle rung is **emit a follow-up artifact and leave the
 code alone**.
 
 **What may ride along at all** — nine kinds, and the list is closed:
@@ -146,9 +146,9 @@ inputs always land the same way and a later reader can check the call rather tha
 re-litigate the taste.
 
 **A deferral states every reason it was deferred**, not the first one it hit. The
-artefact exists because the issue is still owed, and "it failed one of six" is not
+artifact exists because the issue is still owed, and "it failed one of six" is not
 something a later triage can act on. A deferral with no reason is the
-note-and-forget this rule already forbids, wearing an artefact's clothes.
+note-and-forget this rule already forbids, wearing an artifact's clothes.
 
 ## See also
 

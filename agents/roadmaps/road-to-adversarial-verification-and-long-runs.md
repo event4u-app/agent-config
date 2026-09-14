@@ -509,7 +509,7 @@ before the record is signed.
 
 ## Phase 9 — Long-run continuity
 
-- [ ] **9.1 Write the record at every boundary, and never re-ask on restore.** The continuity
+- [x] **9.1 Write the record at every boundary, and never re-ask on restore.** The continuity
       record carries the mission id, the roadmap, the phase, completed steps, decision
       references, the authority snapshot including `expires` and `revoked_by`, the target
       branch, the PR, the head SHA, the last CI result, the recovery epoch, the attempt count,
@@ -519,24 +519,67 @@ before the record is signed.
       clear it.
       verify: fixture `T6` — a resume simulation preserves the grant and every decision, and
       the run completes delivery without a repeated question.
+      <!-- landed 2026-09-13 as `_lib/mission_record.ts` — the MISSION record, beside the
+      session record `continuity_writer` already produces. All fourteen fields, the four write
+      boundaries, and `clearedBy` which returns false for a side task: only mission completion
+      clears it.
+      **`restore` is not a deserialise, and Risk 5 is why.** The record carries the grant with
+      `expires` and `revoked_by`; a restore that trusted the snapshot would resume with
+      authority the owner withdrew AFTER it was written. So the snapshot is revalidated against
+      the LEDGER, which is the surface a revocation actually writes to. Sensitivity proven —
+      removing the ledger check reds that exact case.
+      The precedence runs ONE WAY: the ledger can revoke a grant the record shows live, and
+      cannot revive one the record shows revoked. A ledger that could un-revoke would make the
+      record the weaker authority and the revocation advisory.
+      An UNPARSEABLE expiry is treated as EXPIRED — a grant whose lifetime cannot be read is
+      not a grant with no lifetime. -->
+      <!-- verify: npm run test:ts -- tests/scripts/mission_continuity.test.ts -->
 
 ## Phase 10 — Council transport and cost
 
-- [ ] **10.1 Pause and report, never ask.** The posture is CLI → CLI quota exhausted → API
+- [x] **10.1 Pause and report, never ask.** The posture is CLI → CLI quota exhausted → API
       within the ceiling → API over the ceiling → pause and report, naming what needed the
       council, why the CLI was unavailable, the estimated spend, the mission state, and what
       can still proceed. No question about buying more technical API usage. Business spend is
       a typed op and a different category.
       verify: fixture `T10` — an over-ceiling API requirement produces a report and no ask.
+      <!-- landed 2026-09-13 as `_lib/council_transport.ts`. The four rungs, with the report
+      carrying all six fields the step names.
+      **Why a report rather than an ask, when both interrupt.** They interrupt differently. An
+      ask BLOCKS — the run stops until an answer arrives, and the thing being asked about is a
+      few dollars of inference, worth less than the run's remaining work. A report does not
+      block: it names what needed the council, why the cheaper route was gone, the estimate,
+      the mission state, and — the load-bearing field — WHAT CAN STILL PROCEED. Most of a
+      mission can.
+      `renderReport` emits no `?` and a test asserts the absence, because the failure mode is a
+      report drifting into an ask one helpful sentence at a time. "Nothing can proceed" renders
+      as a stated answer rather than an empty section.
+      An estimate exactly AT the ceiling is WITHIN it — a limit, not an exclusive bound; the
+      other reading pauses a run that budgeted exactly. -->
+      <!-- verify: npm run test:ts -- tests/scripts/mission_continuity.test.ts -->
 
 ## Phase 11 — Authority-changing PRs
 
-- [ ] **11.1 The strictest path, reserved for authority.** An independent test author, an
+- [x] **11.1 The strictest path, reserved for authority.** An independent test author, an
       independent governance reviewer, a council pass, and a provider-diverse reviewer, plus
       the ratification artefact the sibling roadmap defines. CI verifies that new authority is
       inert before ratification.
       verify: fixture `G15` from the sibling roadmap passes here too — an authority-expanding
       change is inert until the artefact carries `verdict: ratified`.
+      <!-- landed 2026-09-13 as `_lib/authority_path.ts`. Four passes, all four, and the
+      artefact.
+      **Inert-until-ratified is the property that makes the rest safe.** Without it the four
+      passes are a process the author could complete and then merge; with it the change can
+      land, be read, and still do nothing — so ratification is a separate act on a separate
+      turn by a party that is not the author.
+      Two checks are over the SET rather than over a claim, because both are satisfiable on
+      paper otherwise: the AUTHOR may perform none of the four (ADR-268 § 4 — sensitivity
+      proven, removing that branch reds exactly that case), and provider diversity is computed
+      from the passes' own providers rather than trusted from the pass named
+      `provider-diverse-reviewer`.
+      It reports EVERY blocker, because the artefact is a checklist a human completes and
+      handing them one item at a time turns four passes into four round trips. -->
+      <!-- verify: npm run test:ts -- tests/scripts/mission_continuity.test.ts -->
 
 ## Kill register
 
