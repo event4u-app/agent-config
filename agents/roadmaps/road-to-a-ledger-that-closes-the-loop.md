@@ -157,6 +157,25 @@ may choose to pay.
       run that also *creates* the window can satisfy a verdict measured *over* it. Arming is a
       later, separate change whose only prerequisite is time and use — the step is not blocked on
       a decision, a dependency, or anything an agent could do faster.
+      **READING 2026-09-14, recorded so a later run does not re-derive it. The bar does NOT
+      hold, and the two measures are not merely early — they are moving at different rates.**
+      The window opened at `70b3559bd` (2026-09-13 12:50:52 +0200), the commit that ships the
+      detector. **Calendar: 1 of >= 30 days. Affected sessions: 0 of >= 50. Shadow rows: 0 of
+      >= 100.** The zero is not an artefact of where the reading looked:
+      `agents/runtime/state/obligations/` exists in neither the main checkout nor any of the
+      seven live worktrees, so no session has written a row anywhere on this machine.
+      **The cause is installation lag rather than a broken writer, and that is the half a later
+      run needs.** The runtime that fires these hooks is the globally installed
+      `@event4u/agent-config` at `16.0.0`, tagged 2026-09-12:
+      `git merge-base --is-ancestor 70b3559bd 16.0.0` exits 1, and `grep -rl appendDelivered`
+      over the installed bundle (`dist/hooks`, `dist/scripts`) returns nothing. The writer is
+      functional at this SHA — `tests/scripts/obligations.test.ts` (22 tests) and
+      `tests/hooks/obligation_settle.test.ts` (19 tests) are both green. So the calendar clock
+      is running while the session clock has not started, and it cannot start until a release
+      carrying `70b3559bd` is cut AND installed. A run that reaches day 30 against 0 sessions
+      has not found a fault: it has found that the second measure never opened, which is what
+      stating the window in both measures was for. **Neither this step nor AC-6 may be flipped
+      on the calendar measure alone.**
 - [x] **6.2 The new detector respects an open subagent dispatch** the way two of the four existing
       detectors do. Both are gated on the dispatch being closed, and neither parent records this —
       an open dispatch would otherwise be refused for a file that dispatch is still writing.
@@ -301,7 +320,7 @@ may choose to pay.
 - **Resolved when:** the choice is stated in this file with its reason.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-11 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-09-14 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -311,6 +330,7 @@ may choose to pay.
 | 4 | The evidence the plans want to read lives in a consumer template | implementation | The work-engine delivery state the source cites sits under the agent-source template tree, which ships into consumer projects and which the hook dispatcher cannot import | Phase 4 discharges only from artefacts the dispatcher already reaches; the template boundary is out of scope until it is designed | Phase 4 — Discharge, read from the diff and not from the tool event |
 | 5 | Phase 3 lands and Phase 4 never does | product | The roadmap would then have added a second write-only state file beside the one it exists to give a reader — the exact defect, doubled | Phase 3 forbids a reader by its own exit criterion, and Phase 4 is the only phase that adds one; a Phase-3-only merge is the stated failure condition | Phase 3 — The ledger, write side only |
 | 6 | The corrected figures are adopted from the source anyway | implementation | Nine of the source's claims were wrong at its own drafting commit, and the three load-bearing counts read plausibly | Phase 1.2 names all three with their measurement, and Phase 1.1 commits the census output so a later reader checks a file rather than a memory | Phase 1 — Re-census, because the source's own numbers are wrong |
+| 7 | The session measure never opens, so the pre-registered bar is unreachable on this install and the plan stalls at 24 of 26 indefinitely | implementation | The window needs `>= 50 affected sessions`, but a row is only written by hooks running from the globally installed release, and `16.0.0` (tagged 2026-09-12) predates the detector at `70b3559bd` (2026-09-13) — measured 2026-09-14: zero session ledgers exist in the main checkout or any of the seven live worktrees, while the calendar clock has already spent 1 of its 30 days | Recorded at step 6.1 in both directions: the two measures move at different rates, the session clock starts only when a release carrying `70b3559bd` is cut and installed, and neither 6.1 nor AC-6 may be flipped on the calendar measure alone | Phase 6 — Arm the detector, conditional like its siblings |
 
 ## Acceptance Criteria
 
@@ -326,6 +346,9 @@ may choose to pay.
       post-tool p95 is not above the Phase 1 baseline.
 - [ ] AC-6 — The shadow window produced zero refusals, and its bar, sample floor and demotion
       condition were registered before any code able to refuse existed.
+      OPEN. Registration is done; the window is not. Reading 2026-09-14 at step 6.1 — 1 of
+      >= 30 calendar days, 0 of >= 50 affected sessions, 0 of >= 100 shadow rows, with the
+      session measure held at zero by installation lag rather than by a fault.
 - [x] AC-7 — The armed detector is silent while a subagent dispatch is open, emits one continuation
       per missing set rather than one per obligation, and never refuses on classes `none` or
       `judge`.
