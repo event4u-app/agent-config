@@ -66,7 +66,7 @@ the tree is a dismiss marker with an empty path and a null hash.
       correcting the wording are different-sized changes and the choice is the blocker's.
       verify: whichever is chosen, the other is recorded as declined with its reason.
 
-### Phase 2 decision — 2026-09-13
+### Decision for Phase 2 — 2026-09-13
 
 **Chosen:** correct the wording. The `txlog-clean` failure remedy now names what
 re-running `agent-config init` actually does (re-apply the plan over the partial
@@ -113,7 +113,7 @@ not scheduled here; the blocker below records it as the open half.
 - [x] **5.2 Land the hash plumbing separately from the matrix change.**
       verify: two commits, and the matrix commit's diff contains no hash computation.
 
-### Phase 5 state — 2026-09-13
+### State of Phase 5 — 2026-09-13
 
 **Landed:** the recorded-unchanged / recorded-modified / unknown split, fed by
 the per-file SHA-256 the manifest records, in two commits with the hash
@@ -199,7 +199,7 @@ it is recorded as one below rather than taken here.
   will not.
 - **Resolved when:** the remedy string names an action a test can resolve to real code.
 - **Resolution (2026-09-13):** the wording was corrected and the reverse-apply
-  declined — see § Phase 2 decision above. The remedy now names `agent-config
+  declined — see § Decision for Phase 2 above. The remedy now names `agent-config
   init` and describes re-application, not recovery; three tests in
   `tests/scripts/_cli/cmd_conformance.test.ts` resolve it to real code. The
   reverse-apply remains unbuilt and unscheduled.
