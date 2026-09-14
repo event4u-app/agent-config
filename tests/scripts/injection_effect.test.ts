@@ -106,9 +106,12 @@ describe('the committed record and the live manifest', () => {
     it('the slot count matches the host table rather than the raw key count', () => {
         // `fallback_only` is a marker, not a lifecycle slot. Counting it made
         // copilot read 1 against the 0 `docs/enforcement-by-host.md` records.
+        // `ask` is the second such key — the shape of the host's question
+        // primitive, which binds no event — and counting it would have added
+        // one phantom slot to every host at once.
         const platforms = loadPlatforms(REPO_ROOT);
         expect(boundSlotCount(platforms, 'copilot')).toBe(0);
-        expect(Object.keys(platforms['copilot'] ?? {})).toEqual(['fallback_only']);
+        expect(Object.keys(platforms['copilot'] ?? {}).sort()).toEqual(['ask', 'fallback_only']);
         expect(boundSlotCount(platforms, 'claude')).toBe(9);
         expect(boundSlotCount(platforms, 'cowork')).toBe(8);
     });

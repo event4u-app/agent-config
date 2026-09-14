@@ -8,7 +8,30 @@ resolution, commit-step pre-scan, halt conditions, and archival check.
 The three command files are thin wrappers that bind only the **scope
 delta**.
 
-**Size budget:** ≤ 57,000 chars — restated from the original 4,000.
+**Size budget:** ≤ 62,000 chars — restated from 57,000, which the file had
+already outgrown before this edit.
+
+**Restated 2026-09-13, with the reason, because the contract below demands
+one.** The line read 57,000 and the file measured **57,906** on `origin/main`:
+the budget was already false, so the first honest act is to say so rather than
+to inherit it. What this change then added is halt-list CONTENT — the
+`BLOCKED` list aligned row-for-row with ADR-268 § 7, which gained a missing
+owner-owned-decision row, contradictory requirements, technical impossibility
+under the stated constraints and an authority crossing, and moved a failed
+first approach and dependency trouble to the not-blocked side. That list is
+read at the moment a run decides whether it may stop; behind a pointer it
+would be read later or not at all, which is the one place in this file where
+depth is the point.
+
+Everything about the change that is EXPLANATORY rather than decisive was moved
+out instead, to [`decision-closure-execution`](decision-closure-execution.md):
+the `## Decisions` row shape and reopen rule, the per-class mid-run residue
+table, and what `blocked-by:` may point at after the retirement. The file grew
+by 2.4k where a naive edit would have grown it by 7.6k.
+
+**Still a ratchet, and still enforced by nothing.** The next edit inherits
+62,000, not a license to keep restating. Splitting the halt list out is the
+real repair and it is a change of its own.
 
 The old figure described nothing: the file measured 47,115 bytes against it, a
 factor of 11.8, so it was a dead budget rather than a typo. Restated at the
@@ -142,6 +165,20 @@ when scope, roadmap, and council are all unambiguous in the invocation
 does not fire.
 
 ## 3. Pre-scan — execution contract or commit-step ask
+
+### 3-0. Read `## Decisions` — before any step, once per run
+
+```
+THE `## Decisions` TABLE IS READ BEFORE THE FIRST STEP, NOT WHEN A STEP TRIPS OVER IT.
+A ROW IN IT IS A CLOSED DECISION. NEVER RE-DERIVE ONE. NEVER RE-ASK ONE.
+A CLOSED DECISION REOPENS ONLY WHEN ITS `revisit if` CONDITION BECAME TRUE —
+NEVER BECAUSE A CONTEXT RESET LOST IT, AND NEVER BECAUSE THE ANSWER LOOKS ODD.
+```
+
+Read it whole and cache it for the run alongside the cadences (§ 4). No section
+is not an error — a plan that closed everything inline carries none. Row shape,
+the three consequences during a run, and the reopen rule:
+[`decision-closure-execution`](decision-closure-execution.md).
 
 ### 3a. Mode derivation ladder — first source wins
 
@@ -651,6 +688,19 @@ For each open step in the working set (scope-bound — see wrapper):
    A loop iteration that lands work without flipping its box is a
    rule violation. Do not save flips for the archive commit.
 
+### 5a-residue. Mid-run residue — the same ownership table, inline
+
+```
+A DECISION THE RUN MEETS MID-STEP IS ROUTED BY THE SAME TABLE THAT CLOSED THE
+PLAN. TECHNICAL RESIDUE RESOLVES INLINE AND IS APPENDED TO `## Decisions` WITH
+THE STEP ID. IT NEVER BECOMES A QUESTION, AND IT NEVER BECOMES A HALT.
+OWNER-OWNED RESIDUE ASKS **ONLY IF THE STEP CANNOT PROGRESS**. OTHERWISE THE
+STEP IS PARKED, INDEPENDENT PHASES CONTINUE, AND THE RUN COMES BACK TO IT.
+```
+
+Per-class routing, why parking is not deferring, and the scope-growth pointer:
+[`decision-closure-execution`](decision-closure-execution.md).
+
 ### 5b. Flip-guard — deterministic
 
    Before advancing to step 6, run:
@@ -884,16 +934,35 @@ BEFORE REPORTING IT, ASK PER REMAINING STEP: CAN I DO THIS AT ALL?
 ONE STEP THE AGENT COULD HAVE EXECUTED REJECTS THE CLAIM.
 ```
 
-**Externally impossible — the whole list.** A required credential that does not
-exist and the agent cannot create · a purchase beyond the delegated budget ·
-physical hardware access · another person or organisation must act · a wait that
-is factually mandatory and cannot be simulated or verified.
+**Externally impossible — the whole list**, aligned with ADR-268 § 7. A missing
+**owner-owned** decision — `product-owned`, `business-owned` or
+`destructive-owned`, and nothing else · a missing permission, secret or access ·
+a required credential that does not exist and the agent cannot create · a
+purchase beyond the delegated budget · physical hardware access · another person
+or organisation must act · a wait that is factually mandatory and cannot be
+simulated or verified · contradictory requirements · technical impossibility
+under the stated constraints · a needed crossing of a real authority boundary.
 
 **Not externally impossible — every one of these is work.** An unprotected
 branch · a branch to create · a push · a PR to open · a repository or branch
 setting the agent can change · a workflow to start · CI to re-run · a merge base
 to update · conflicts · failing tests · local configuration · a paid call under
-the ceiling · "this could be risky" · "a maintainer should do this".
+the ceiling · a failed first approach · dependency trouble · "this could be
+risky" · "a maintainer should do this".
+
+```
+A SOLVABLE ARCHITECTURAL AMBIGUITY IS NOT `BLOCKED`. IT IS A DECISION.
+A TECHNICAL JUDGEMENT CALL IS NEVER PARKED IN A FILE — IT ROUTES BACK THROUGH
+CLOSURE AND IS RESOLVED AT THE LOWEST RUNG THAT OWNS IT: EVIDENCE, CONVENTION,
+THE AGENT, AN INDEPENDENT SESSION, THE COUNCIL, THE TEAM.
+A COUNT IS NEVER A QUESTION — A BOUNDED LOOP'S BOUND TRIGGERS A STRATEGY CHANGE
+AND THE ESCALATION LADDER, NEVER AN OWNER QUESTION (ADR-268 § 7).
+```
+
+`blocked-by:` stays — it is how `run-continuation` reads blockedness — but a
+blocker entry is the record of a decision the agent **correctly did not own**;
+what it may point at narrows accordingly
+([`decision-closure-execution`](decision-closure-execution.md)).
 
 The `[~]` prohibition is load-bearing and was the one point the council split on.
 Deferring a blocked step to `[~]` would let the run reach `count_open == 0` and

@@ -132,7 +132,13 @@ Append a **Host verdict** sub-block under the Council review block in the roadma
 | 4 | <one-line> | `needs-input` | open question — user picks below |
 ```
 
-Then surface a single numbered-options block per [`user-interaction`](../../rules/user-interaction.md), carrying the verdict per option:
+Then, **when the verdict is owed to the owner** — it is owner-owned
+(`product-owned`, `business-owned`, `destructive-owned`) or the council did not
+converge — surface a single numbered-options block per
+[`user-interaction`](../../rules/user-interaction.md), carrying the verdict per
+option. A conclusive **technical** verdict emits no block at all: it is a
+resolution, it is recorded in the roadmap's `## Decisions` table as
+`resolved by: council:<record>`, and the run continues on it (ADR-268 § 10).
 
 > 1. `[accept]` Apply finding 1 — <one-line patch summary>
 > 2. `[accept-with-modification]` Apply finding 2 (modified) — <one-line patch summary + adjustment>

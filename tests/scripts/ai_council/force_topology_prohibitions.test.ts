@@ -32,6 +32,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { LOCKED_IMPACT_CLASSES } from '../../../src/scripts/ai_council/necessity.js';
+import { allOwnerLocked } from '../../../src/scripts/ai_council/ownership_classes.js';
 
 const REPO_ROOT = path.resolve(__dirname, '../../..');
 
@@ -118,7 +119,17 @@ describe('12.3 P1 — user-required decisions stay locked to the user', () => {
         const cfg = read('src', 'scripts', 'ai_council', 'config.ts');
         expect(cfg).toMatch(/const _LOCKED_IMPACT_CLASSES: ReadonlySet<string>/);
         expect(cfg).toMatch(/_LOCKED_IMPACT_CLASSES\.has\(cls\) && mode !== 'user'/);
-        expect(cfg).toMatch(/_LOCKED_IMPACT_CLASSES\.has\(cls\) && 'dispatch' in entry_raw/);
+        // The dispatch branch reads `_ALL_OWNER_LOCKED`, which is
+        // `_LOCKED_IMPACT_CLASSES` WIDENED by the ownership axis's three
+        // owner-owned classes. Following the rename is not a weakening — the
+        // set is a strict superset — so the superset relation is asserted here
+        // rather than taken on the name's word, and the impact half is
+        // re-asserted at runtime below.
+        expect(cfg).toMatch(/_ALL_OWNER_LOCKED\.has\(cls\) && 'dispatch' in entry_raw/);
+        expect(cfg).toMatch(/allOwnerLocked\(_LOCKED_IMPACT_CLASSES\)/);
+        for (const cls of LOCKED_IMPACT_CLASSES) {
+            expect(allOwnerLocked(LOCKED_IMPACT_CLASSES).has(cls)).toBe(true);
+        }
         // And the runtime router agrees with the schema.
         expect(read('src', 'scripts', 'ai_council', 'necessity.ts')).toMatch(
             /LOCKED_IMPACT_CLASSES\.has\(verdict\.impact_class\)/,

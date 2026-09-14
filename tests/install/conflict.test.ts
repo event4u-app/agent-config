@@ -253,6 +253,67 @@ describe('conflict — computeConflicts', () => {
             plannedSha256: hex('planned'),
             existingSha256: hex('on-disk'),
             mergeable: false,
+            ownership: 'unknown',
+        });
+    });
+
+    // Phase 5.1 — three-state ownership instead of path membership.
+    describe('recorded ownership', () => {
+        it('drops a recorded-unchanged file even when the plan carries new bytes', () => {
+            // A package upgrade: the planned bytes differ from the bytes we
+            // recorded, and the file on disk still matches what we recorded.
+            // Path membership could not see that; a digest can.
+            const e = entry('a.md', 'planned-v2');
+            writeFileSync(e.path, 'installed-v1');
+            const p = plan({ claude: [e] });
+            const recorded = new Map([[e.path, hex('installed-v1')]]);
+            expect(computeConflicts(p, recorded)).toEqual([]);
+        });
+
+        it('REPORTS a managed file the user edited, which membership dropped', () => {
+            const e = entry('a.md', 'planned');
+            writeFileSync(e.path, 'user-edited');
+            const p = plan({ claude: [e] }, { knownPaths: new Set([e.path]) });
+            // Pre-hash answer for exactly this tree: silence.
+            expect(computeConflicts(p, new Map())).toEqual([]);
+            const recorded = new Map([[e.path, hex('installed-v1')]]);
+            const conflicts = computeConflicts(p, recorded);
+            expect(conflicts).toHaveLength(1);
+            expect(conflicts[0]?.ownership).toBe('recorded-modified');
+            expect(conflicts[0]?.existingSha256).toBe(hex('user-edited'));
+        });
+
+        it('does not over-fire: no recorded digest reproduces the membership answer', () => {
+            const e = entry('a.md', 'planned');
+            writeFileSync(e.path, 'on-disk');
+            const known = plan({ claude: [e] }, { knownPaths: new Set([e.path]) });
+            expect(computeConflicts(known, new Map())).toEqual([]);
+            const foreign = plan({ claude: [e] });
+            expect(computeConflicts(foreign, new Map())).toHaveLength(1);
+            expect(computeConflicts(foreign, new Map())[0]?.ownership).toBe('unknown');
+        });
+
+        it('drops an unchanged file from an EMPTY-knownPaths caller — the live shape', () => {
+            // `cmd_preflight` builds `knownPaths: new Set()`, so before the
+            // digest every managed file whose planned bytes differed was a
+            // finding, including a routine package upgrade. This is a
+            // deliberate REDUCTION for a manifest-carrying tree; the
+            // docstring's "reports exactly what it reported before" holds
+            // only where no digest is recorded, and this pins both halves.
+            const e = entry('a.md', 'planned-v2');
+            writeFileSync(e.path, 'installed-v1');
+            const p = plan({ claude: [e] });
+            expect(computeConflicts(p, new Map())).toHaveLength(1);
+            const recorded = new Map([[e.path, hex('installed-v1')]]);
+            expect(computeConflicts(p, recorded)).toEqual([]);
+        });
+
+        it('does not over-fire: a bridge-shaped null digest stays unknown, not modified', () => {
+            const e = entry('a.md', 'planned');
+            writeFileSync(e.path, 'on-disk');
+            const p = plan({ claude: [e] }, { knownPaths: new Set([e.path]) });
+            const recorded = new Map<string, string | null>([[e.path, null]]);
+            expect(computeConflicts(p, recorded)).toEqual([]);
         });
     });
 
@@ -284,6 +345,7 @@ describe('conflict — expandBatchChoice', () => {
             plannedSha256: 'p',
             existingSha256: 'e',
             mergeable,
+            ownership: 'unknown',
         };
     }
 

@@ -107,9 +107,11 @@ export function buildSecondModel(
     if (locked.has(cls)) {
         throw d.error(
             `decision_resolution.classes.${cls}.second_model=${d.repr(entry['second_model'])}: ` +
-                `a second-model rung is not configurable for high-impact / user-required ` +
-                `decisions — those classes are LOCKED to \`user\` (Iron Law) and never resolve ` +
-                `on a model of any kind.`,
+                `a second-model rung is not configurable for an owner-routed class ` +
+                `(high-impact / user-required on the impact axis; product-owned / ` +
+                `business-owned / destructive-owned on the ownership axis) — those ` +
+                `classes are LOCKED to \`user\` (Iron Law) and never resolve on a ` +
+                `model of any kind.`,
         );
     }
     const raw = entry['second_model'];

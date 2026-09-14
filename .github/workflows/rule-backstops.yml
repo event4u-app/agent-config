@@ -660,6 +660,12 @@ jobs:
       - name: Roadmaps schedule no full-pipeline CI steps
         run: ./scripts-run src/scripts/lint_roadmap_ci_steps
 
+      - name: The `## Decisions` contract — ownership classes and closure
+        run: ./scripts-run src/scripts/lint_decision_classes
+
+      - name: Every roadmap producer ends in the closure pass
+        run: ./scripts-run src/scripts/lint_roadmap_producers
+
       # `check_platform_anchor` is NOT wired here, and the reason is a platform
       # capability rather than a choice.
       #

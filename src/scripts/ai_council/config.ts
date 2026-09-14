@@ -543,6 +543,7 @@ export type QuorumMinPresent = number;
 
 export type { FallbackConfig } from './fallback_config.js';
 import { buildFallback, buildSecondModel, type FallbackConfig as _FallbackConfig } from './fallback_config.js';
+import { OWNERSHIP_CLASSES, allOwnerLocked, defaultModeFor, ownershipModeError } from './ownership_classes.js';
 import {
     _f,
     _pyOct,
@@ -1182,13 +1183,7 @@ const _LOCKED_IMPACT_CLASSES: ReadonlySet<string> = new Set([
     'user_required',
 ]);
 
-const _DEFAULT_RESOLUTION_MODES: Readonly<Record<string, string>> = {
-    trivial: 'agent',
-    low_impact: 'agent',
-    medium_impact: 'council',
-    high_impact: 'user',
-    user_required: 'user',
-};
+const _ALL_OWNER_LOCKED = allOwnerLocked(_LOCKED_IMPACT_CLASSES);
 
 function _build_decision_resolution(d: Dict): DecisionResolutionConfig {
     if (!_isDict(d)) {
@@ -1207,14 +1202,14 @@ function _build_decision_resolution(d: Dict): DecisionResolutionConfig {
         );
     }
     const classes = new Map<string, DecisionResolutionEntry>();
-    for (const cls of _IMPACT_CLASSES) {
+    for (const cls of [..._IMPACT_CLASSES, ...OWNERSHIP_CLASSES]) {
         const entry_raw = _orEmpty(classes_raw[cls] ?? null);
         if (!_isDict(entry_raw)) {
             throw new CouncilConfigError(
                 `\`decision_resolution.classes.${cls}\` must be a mapping.`,
             );
         }
-        const mode = _get(entry_raw, 'mode', _DEFAULT_RESOLUTION_MODES[cls] as string);
+        const mode = _get(entry_raw, 'mode', defaultModeFor(cls));
         if (!(_isStr(mode) && _VALID_RESOLUTION_MODES.has(mode))) {
             throw new CouncilConfigError(
                 `decision_resolution.classes.${cls}.mode=${_pyRepr(mode)} not in ` +
@@ -1230,10 +1225,12 @@ function _build_decision_resolution(d: Dict): DecisionResolutionConfig {
                     `the user.`,
             );
         }
+        const ownErr = ownershipModeError(cls, mode, _pyRepr);
+        if (ownErr !== null) throw new CouncilConfigError(ownErr);
         // Iron Law: `dispatch` is not configurable for locked classes
         // (step-9 P8/P11 · U3). Any nested `dispatch` key — including
         // smuggled-in YAML anchor merges — is a hard schema error.
-        if (_LOCKED_IMPACT_CLASSES.has(cls) && 'dispatch' in entry_raw) {
+        if (_ALL_OWNER_LOCKED.has(cls) && 'dispatch' in entry_raw) {
             throw new CouncilConfigError(
                 `decision_resolution.classes.${cls}.dispatch=` +
                     `${_pyRepr(entry_raw.dispatch)}: dispatch is not ` +
@@ -1251,7 +1248,7 @@ function _build_decision_resolution(d: Dict): DecisionResolutionConfig {
         // UOTL Phase 4.1 — the optional local rung, REFUSED on a locked
         // class rather than ignored: a dropped key reads as configured.
             const second_model = buildSecondModel(
-            entry_raw as Record<string, unknown>, cls, _LOCKED_IMPACT_CLASSES, _FALLBACK_DEPS);
+            entry_raw as Record<string, unknown>, cls, _ALL_OWNER_LOCKED, _FALLBACK_DEPS);
         classes.set(cls, { mode, confidence_threshold: threshold, second_model });
     }
     const fast_path_raw = _getOr(d, 'fast_path', {});

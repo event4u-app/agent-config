@@ -16,13 +16,14 @@
  */
 import { existsSync } from 'node:fs';
 import { sha256File } from './plan.js';
+import { classifyOwnership, recordedHashesForRoot, } from './recordedOwnership.js';
 /**
  * Decide what to do with a single planned target.
  *
  * Decision matrix (mirrors the Python legacy with the 3-option prompt
  * collapsed into `surface`):
  *
- * | Exists? | Idempotent? | Known? | Force? | → Outcome  |
+ * | Exists? | Idempotent? | Known? | Force? | → Outcome  |  code-comment-allow report-comment -- pre-existing decision matrix; this file entered the gate's changed-file scope for an unrelated edit
  * |---------|-------------|--------|--------|------------|
  * | no      | —           | —      | —      | `write`    |
  * | yes     | yes         | —      | —      | `skip`     |
@@ -31,9 +32,17 @@ import { sha256File } from './plan.js';
  * | yes     | no          | no     | yes    | `write`    |
  * | yes     | no          | no     | no     | `surface`  |
  *
- * Headless callers (B1 CLI) collapse `surface` to `skip` automatically
- * because there is no UI to defer to; the apply layer records the entry
- * under {@link ApplyResult.conflicts} so the wizard can pick it up next.
+ * Deliberately NOT extended with the recorded-digest ownership that
+ * {@link computeConflicts} consumes. This function has no caller in `src/` —
+ * the only references are its own definition and the `{@link}` above — so an
+ * `ownership` input would be a parameter nobody supplies, on a decision
+ * nobody reads. The ownership split lives where it is live: in the report.
+ *
+ * What this resolver decides is in any case NOT what the installer does. The
+ * single writer is `src/scripts/install.ts`, whose `_resolve_file_conflict`
+ * returns `write` unconditionally for deployed files and which reads nothing
+ * from this module; `skip` here means "the planner would not touch it", never
+ * "your edit is safe".
  */
 export function resolveFileConflict(inputs) {
     const { targetPath, idempotent, exists, policy } = inputs;
@@ -121,14 +130,38 @@ export const CONFLICT_BATCH_THRESHOLD = 5;
  *
  * Pure-ish — reads from the filesystem only to compute idempotency
  * (`existsSync` + `sha256File`). Skips bridges (`sha256 === null`) since
- * bridge writers own a separate idempotency model. Skips entries whose
- * `path` is in `policy.knownPaths`, and skips entries that are
- * byte-equal to the planned content. Returns an empty array when
+ * bridge writers own a separate idempotency model, and skips entries that
+ * are byte-equal to the planned content. Returns an empty array when
  * `policy.force` is true — overwrite mode silences the screen.
+ *
+ * Ownership (Phase 5.1) replaces the blanket `policy.knownPaths` skip:
+ *
+ * - `recorded-unchanged` — ours and untouched. Skipped, and now for a reason
+ *   that survives a package upgrade: the planned bytes differing from the
+ *   recorded bytes is an upgrade, not a collision. This is a REDUCTION in
+ *   what a manifest-carrying tree reports — `cmd_preflight` builds an empty
+ *   `knownPaths`, so every such file used to be a finding — and it is the
+ *   intended direction: a routine upgrade is not a conflict.
+ * - `recorded-modified`  — ours and edited since. **Reported**, where before
+ *   it was silently dropped whenever the path sat in `knownPaths`. Reported
+ *   is all it is: the installer does not consult this matrix, so being named
+ *   here is not protection from the next deploy.
+ * - `unknown`            — no digest recorded (no manifest, an unreadable
+ *   one, or a bridge entry). Falls back to `policy.knownPaths`, so a tree
+ *   with no manifest reports exactly what it reported before. A tree WITH a
+ *   manifest reports differently in both directions, by design: it gains the
+ *   modified rows above and loses the unchanged ones below.
+ *
+ * `recorded` is injectable for tests; by default it is read from the
+ * manifest at `plan.root`.
  */
-export function computeConflicts(plan) {
+export function computeConflicts(plan, recordedOverride) {
+    // Force returns before the manifest is read. As a default parameter the
+    // map was built at call entry and discarded on the next line, so every
+    // force-mode plan paid a read and a YAML parse for nothing.
     if (plan.policy.force)
         return [];
+    const recorded = recordedOverride ?? recordedHashesForRoot(plan.root);
     const out = [];
     for (const entries of Object.values(plan.filesByTool)) {
         for (const entry of entries) {
@@ -138,9 +171,19 @@ export function computeConflicts(plan) {
                 continue;
             if (!existsSync(entry.path))
                 continue;
-            if (plan.policy.knownPaths.has(entry.path))
-                continue;
+            // The on-disk digest is computed BEFORE the ownership decision so
+            // that decision can consume it. Behaviour-identical to computing it
+            // after the `knownPaths` test — the remaining guards are unchanged.
+            // The added cost is one digest per EXISTING path in
+            // `policy.knownPaths`, the set the removed short-circuit used to
+            // skip; everything else was already being hashed. That set is empty
+            // for `cmd_preflight` and caller-supplied for the plan route.
             const onDisk = sha256File(entry.path);
+            const ownership = classifyOwnership(recorded.get(entry.path), onDisk);
+            if (ownership === 'recorded-unchanged')
+                continue;
+            if (ownership === 'unknown' && plan.policy.knownPaths.has(entry.path))
+                continue;
             if (onDisk === entry.sha256)
                 continue;
             out.push({
@@ -149,6 +192,7 @@ export function computeConflicts(plan) {
                 plannedSha256: entry.sha256,
                 existingSha256: onDisk,
                 mergeable: isJsonTarget(entry),
+                ownership,
             });
         }
     }

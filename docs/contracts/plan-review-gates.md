@@ -35,7 +35,7 @@ the C→R1 handoff state schema, the metrics event floor, and the validator
 exit-code contract. Agent-side procedure lives in
 [`plan-confidence-gate`](../../src/agent-src/contexts/execution/plan-confidence-gate.md)
 (Gate C) and the gated surfaces. Settings keys:
-`planning.challenge_on_create` / `planning.risk_review` /
+`planning.closure_pass` / `planning.risk_review` /
 `planning.completion_review` in
 [`agent-settings.template.yml`](../../src/config/agent-settings.template.yml)
 (missing key = `true`).
@@ -692,7 +692,7 @@ convention defends against *silent agent shortcuts* — an agent that skips the
 interview and claims resolved branches leaves a missing or mismatched
 transcript a human can spot. It does **not** defend against the local human,
 who holds a legitimate settings escape hatch
-(`planning.challenge_on_create: false`) anyway, so forgery gains nothing that
+(`planning.closure_pass: false`) anyway, so forgery gains nothing that
 cannot be done openly. Detectability over prevention, by design.
 Cryptographic tamper-proofing is refused: a secret stored in a local repo is
 not a secret. Since detection is human-only here, § 4 is honestly
