@@ -745,8 +745,45 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       turning `<=` into `<` in `routeCouncil` reds exactly `T10`'s at-the-ceiling case — one
       test each, no collateral, so neither is passing for an unrelated reason. -->
       <!-- verify: npm run test:ts -- tests/e2e/adversarial-verification-fixtures.test.ts -->
-- [ ] AC-2 — independent test provenance is recorded per test, and critical tests are at L3 or
+- [x] AC-2 — independent test provenance is recorded per test, and critical tests are at L3 or
       L4 wherever two providers are configured.
+      <!-- closed 2026-09-14. Phase 2.1 shipped the LEVELS; it shipped no place to write one
+      down, so until now the level a given test reached was unrecorded and therefore
+      uncheckable — the same shape as the recorded failure `evaluator-independence` exists
+      over, a verdict nobody could trace back to the prompt that produced it.
+      **The record** is a marker line directly above each `describe` — `// provenance:
+      level=L4 | critical=yes | evidence=<slug>` — parsed by `_lib/test_provenance.ts` (pure,
+      11 unit tests). Three decisions with plausible opposites: an unmarked group is
+      `ungoverned` and never defaulted to L0, because defaulting would make "provenance is
+      recorded per test" true by construction; the provider count is a PARAMETER rather than a
+      probe, since `council:status` resolves from a user-global file a CI runner does not have
+      and probing would relax the floor exactly where the obligation matters; and `evidence` is
+      required at L3/L4 and ignored below, because an unattributed claim of independence
+      cannot be checked for the independence it claims.
+      **The independence is real and was bought, not asserted.** `council:status` reports two
+      providers (`anthropic`, `openai`), so the reachable level is L4. Three peer-reviewed
+      runs, `2/2 present` AFTER each — scoped by the 51,200-byte bundle ceiling, covering every
+      group in the file between them. Nine convergent findings were folded in the same day:
+      `T1`'s first test was a tautology passing against a `findingFor` that always returned
+      null; `terminalStateFor(halt) !== null` passed against a map sending every halt to
+      `success`; the ask-regex was evaded by a rung named `escalate`; `T6` used `Date.now()`,
+      which made its boundary cases unwritable, and asserted the ledger precedence in one
+      direction only and one field of fourteen; `T7/T8` tested five of eleven delivery states,
+      so an implementation recognising only those five passed. `G9` was RENAMED — its title
+      claimed "test-first across two sessions" while its own body conceded the gate cannot see
+      a session boundary, which both seats called a title-body contradiction.
+      **Four findings are NOT folded in, and the reason is stated rather than implied.** They
+      are defects in the authority IMPLEMENTATION (`objectIsExact` accepts `!!!!!!!!` and
+      `all-branches` as exact objects; `op` is never validated; `confirmed` carries no turn
+      provenance; `restore` ignores `ledger.grant`), and `security-sensitive-stop` puts a
+      threat pass before the first edit to a surface like that. They ship as
+      `road-to-authority-object-exactness` — the tracked-follow-up disposition, not a note.
+      Full record incl. the prompts and what the pass did not close:
+      `agents/evidence/analysis/ac2-independent-test-authorship-2026-09-14.md`.
+      **The honest limit**, stated there and worth repeating: L4 means a multi-provider council
+      participated as an evaluator on that group. It does not mean the group was independently
+      authored end to end, and reading the marker that way would over-claim. -->
+      <!-- verify: npm run test:ts -- tests/scripts/test_provenance.test.ts -->
 - [x] AC-3 — `check_test_delta` and `check_test_weakening` run in `ci-fast`, and this
       repository is green under them at promotion or ratcheted from a measured baseline.
       <!-- closed 2026-09-14, VERIFIED rather than assumed: both halves were re-read on this

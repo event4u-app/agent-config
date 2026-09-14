@@ -27,6 +27,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
     DELIVERY_ENDINGS,
+    DELIVERY_STATES,
     HALT_ACTIONS,
     MAX_ITERATIONS,
     TERMINAL_STATE_BY_ACTION,
@@ -58,6 +59,11 @@ import {
     type MissionRecord,
 } from '../../src/scripts/_lib/mission_record.js';
 import {
+    criticalGaps,
+    levelRank,
+    parseProvenance,
+} from '../../src/scripts/_lib/test_provenance.js';
+import {
     grantFor,
     verdictAloneGrants,
     type ExactObjectAsk,
@@ -80,6 +86,7 @@ const read = (rel: string): string => fs.readFileSync(path.join(REPO, rel), 'utf
  */
 const flat = (rel: string): string => read(rel).replace(/\s+/g, ' ');
 
+// provenance: level=L0 | critical=no | evidence=
 describe('Phase 1.1 — the test-first rule', () => {
     const RULE = 'src/rules/test-first.md';
 
@@ -122,6 +129,7 @@ describe('Phase 1.1 — the test-first rule', () => {
     });
 });
 
+// provenance: level=L0 | critical=no | evidence=
 describe('T3 — ten failed fixes produce strategy changes, never an owner ask', () => {
     // The bands, the five bound outcomes and the read-the-red discipline live in
     // their own context file: `autonomy-mechanics.md` sat at its 16,000-char depth
@@ -187,6 +195,7 @@ describe('T3 — ten failed fixes produce strategy changes, never an owner ask',
     });
 });
 
+// provenance: level=L4 | critical=yes | evidence=ac2-independent-test-authorship-2026-09-14
 describe('T7 / T8 — a run cannot end with red CI while its checkboxes read complete', () => {
     const base = (over: Partial<LadderState> = {}): LadderState => ({
         iterations: 1,
@@ -195,20 +204,44 @@ describe('T7 / T8 — a run cannot end with red CI while its checkboxes read com
         ...over,
     });
 
-    it('T7 — zero open, delivery not reached: the run does NOT end', () => {
-        for (const pos of ['pushed', 'pr-open', 'ci-pending', 'ci-red', 'target-moved'] as const) {
-            expect(ladder(base(), 0, Date.now(), 0, undefined, null, false, pos)).toBe('engage');
+    it('T7 / T8 — the WHOLE delivery vocabulary partitions into ends and does-not-end', () => {
+        // Driven over `DELIVERY_STATES` rather than over a hand-picked subset,
+        // which the independent authorship pass of 2026-09-14 named as the
+        // group's central gap in both seats: an implementation that recognised
+        // only the five states the old loop listed passed it. Enumerating the
+        // whole vocabulary means a NEW state has to be classified deliberately,
+        // and a state silently reclassified from hold to ending reds here.
+        const ends: string[] = [];
+        const holds: string[] = [];
+        for (const pos of DELIVERY_STATES) {
+            const action = ladder(base(), 0, Date.now(), 0, undefined, null, false, pos);
+            (action === 'complete' ? ends : holds).push(pos);
+            expect(['complete', 'engage']).toContain(action);
         }
+        expect(ends).toEqual(['merged', 'open-green']);
+        expect(holds).toEqual([
+            'working',
+            'local-green',
+            'pushed',
+            'pr-open',
+            'ci-pending',
+            'ci-red',
+            'target-sync-check',
+            'target-moved',
+            'delivery-ready',
+        ]);
+        // The partition covers the vocabulary with nothing left over.
+        expect(ends.length + holds.length).toBe(DELIVERY_STATES.length);
+        expect(DELIVERY_ENDINGS).toEqual(ends);
     });
 
-    it('T8 — no grant, PR open and green: the run ENDS, and open-green is the ending', () => {
-        expect(ladder(base(), 0, Date.now(), 0, undefined, null, false, 'open-green')).toBe(
-            'complete',
-        );
-        expect(ladder(base(), 0, Date.now(), 0, undefined, null, false, 'merged')).toBe(
-            'complete',
-        );
-        expect(DELIVERY_ENDINGS).toEqual(['merged', 'open-green']);
+    it('`deliveryBlocksCompletion` carries BOTH polarities, not just the hold', () => {
+        // The old group asserted the fail-open direction only. A predicate that
+        // returned `true` for every non-null state would have passed it.
+        for (const ending of DELIVERY_ENDINGS) expect(deliveryBlocksCompletion(ending)).toBe(false);
+        for (const pos of DELIVERY_STATES) {
+            expect(deliveryBlocksCompletion(pos)).toBe(!DELIVERY_ENDINGS.includes(pos));
+        }
     });
 
     it('an unrecorded delivery position decides exactly as before — fail-open', () => {
@@ -266,6 +299,7 @@ describe('T7 / T8 — a run cannot end with red CI while its checkboxes read com
     });
 });
 
+// provenance: level=L4 | critical=yes | evidence=ac2-independent-test-authorship-2026-09-14
 describe('T2 / Phase 2 — tests are evaluators', () => {
     const RULE = 'src/rules/evaluator-independence.md';
     const MECH = 'docs/guidelines/agent-infra/evaluator-independence-mechanics.md';
@@ -335,15 +369,29 @@ describe('T2 / Phase 2 — tests are evaluators', () => {
     });
 });
 
+// provenance: level=L4 | critical=yes | evidence=ac2-independent-test-authorship-2026-09-14
 describe('G8 / G9 — the two test gates and the same-session flag', () => {
-    it('G8 — a code change with no test delta is RED', () => {
-        expect(findingFor(classify(['src/scripts/thing.ts']))).not.toBeNull();
+    it('G8 — a code change with no test delta is RED, and the finding names the path', () => {
+        const finding = findingFor(classify(['src/scripts/thing.ts']));
+        expect(finding).not.toBeNull();
+        // `!== null` alone passed against a gate that emitted a constant string.
+        // The finding has to name the file the reader must act on, and the
+        // owner-label escape, which is the only legitimate way past it.
+        expect(finding).toContain('src/scripts/thing.ts');
+        expect(finding).toContain('test-delta-acknowledged');
     });
 
-    it('G9 — test-first across two sessions is GREEN', () => {
-        // The gate cannot see the session boundary; what it can see is that a
-        // test arrived with the code, which is the mechanically decidable half.
+    it('G9 — a code change WITH a qualifying test delta is GREEN', () => {
+        // **Renamed 2026-09-14.** It read "test-first across two sessions is
+        // GREEN", and both seats of the independent authorship pass called that
+        // a title-body contradiction: the body already conceded the gate cannot
+        // see a session boundary, so the title claimed provenance the assertion
+        // does not establish. The mechanically decidable half is that a test
+        // arrived with the code — which is what this now says and all it says.
+        // The two-session half is carried by the hook flag, WARN-only, below.
         expect(findingFor(classify(['tests/a.test.ts', 'src/a.ts']))).toBeNull();
+        // …and a test that is not a test path does not satisfy it.
+        expect(findingFor(classify(['docs/a.md', 'src/a.ts']))).not.toBeNull();
     });
 
     it('both gates are registered with CI-identical argv and a floor', () => {
@@ -388,6 +436,7 @@ describe('G8 / G9 — the two test gates and the same-session flag', () => {
     });
 });
 
+// provenance: level=L4 | critical=no | evidence=ac2-independent-test-authorship-2026-09-14
 describe('3.1 — the six required layers, each with its command', () => {
     const CMD = 'src/domains/product-basic/roadmap/process-full/command.md';
 
@@ -450,6 +499,7 @@ describe('3.1 — the six required layers, each with its command', () => {
     });
 });
 
+// provenance: level=L4 | critical=yes | evidence=ac2-independent-test-authorship-2026-09-14
 describe('3.2 — doctor reads forge protection from the forge', () => {
     it('an unread forge yields five rows that still name their API call', () => {
         const rows = forgeProtectionRows({
@@ -478,6 +528,7 @@ describe('3.2 — doctor reads forge protection from the forge', () => {
     });
 });
 
+// provenance: level=L4 | critical=yes | evidence=ac2-independent-test-authorship-2026-09-14
 describe('T5 / 5.1 — sync before every push, across a cascade', () => {
     it('a stacked branch owes both hops, nearest first', () => {
         const c = cascadeBase('feat/child', 'main', (r) =>
@@ -514,6 +565,7 @@ describe('T5 / 5.1 — sync before every push, across a cascade', () => {
     });
 });
 
+// provenance: level=L4 | critical=yes | evidence=ac2-independent-test-authorship-2026-09-14
 describe('T4 / 5.2 — an unenumerated conflict routes rather than halting', () => {
     const MERGE = 'src/domains/git/pr/merge/command.md';
     const FULL = 'src/domains/product-basic/roadmap/process-full/command.md';
@@ -564,6 +616,7 @@ describe('T4 / 5.2 — an unenumerated conflict routes rather than halting', () 
     });
 });
 
+// provenance: level=L4 | critical=yes | evidence=ac2-independent-test-authorship-2026-09-14
 describe('7.2 — a per-host destructive column, measured', () => {
     const DOC = 'docs/enforcement-by-host.md';
 
@@ -637,6 +690,7 @@ describe('7.2 — a per-host destructive column, measured', () => {
     });
 });
 
+// provenance: level=L0 | critical=no | evidence=
 describe('8.2 — the PR body is one page for the owner', () => {
     const CMD = 'src/domains/product-basic/roadmap/process-full/command.md';
 
@@ -667,6 +721,7 @@ describe('8.2 — the PR body is one page for the owner', () => {
     });
 });
 
+// provenance: level=L0 | critical=no | evidence=
 describe('Phase 4.2 — read the red before diagnosing it', () => {
     it('process-full never reaches for `gh pr checks --watch`', () => {
         const cmd = read('src/domains/product-basic/roadmap/process-full/command.md');
@@ -683,6 +738,7 @@ describe('Phase 4.2 — read the red before diagnosing it', () => {
     });
 });
 
+// provenance: level=L4 | critical=no | evidence=ac2-independent-test-authorship-2026-09-14
 describe('T1 — a normal feature runs independent-RED → implement → green, with zero asks', () => {
     const base = (over: Partial<LadderState> = {}): LadderState => ({
         iterations: 1,
@@ -691,18 +747,30 @@ describe('T1 — a normal feature runs independent-RED → implement → green, 
         ...over,
     });
 
-    it('a test-first diff produces no test-delta finding', () => {
-        // The normal shape: the independent author's test lands in the same diff
-        // as the implementation it was written against. `findingFor` must stay
-        // silent — a gate that red-flagged the compliant case would be trained
-        // around within a week, which is this file's own Risk 4.
-        const verdict = classify([
+    it('a test-first diff produces no finding, and a code-only one DOES', () => {
+        // Both polarities in one test, because the silent half alone is a
+        // tautology: an implementation whose `findingFor` always returned null
+        // passed the compliant-case assertion. Named by both seats of the
+        // 2026-09-14 independent authorship pass, and it was right.
+        const compliant = classify([
             'src/scripts/_lib/mission_record.ts',
             'tests/scripts/mission_continuity.test.ts',
         ]);
-        expect(verdict.code.length).toBeGreaterThan(0);
-        expect(verdict.tests.length).toBeGreaterThan(0);
-        expect(findingFor(verdict)).toBeNull();
+        expect(compliant.code).toEqual(['src/scripts/_lib/mission_record.ts']);
+        expect(compliant.tests).toEqual(['tests/scripts/mission_continuity.test.ts']);
+        expect(findingFor(compliant)).toBeNull();
+
+        const codeOnly = classify(['src/scripts/_lib/mission_record.ts']);
+        expect(codeOnly.tests).toEqual([]);
+        const finding = findingFor(codeOnly);
+        expect(finding).not.toBeNull();
+        expect(finding).toContain('src/scripts/_lib/mission_record.ts');
+
+        // A test-only diff is not a code change, so it is not a finding either —
+        // the other direction a one-sided gate gets wrong.
+        const testOnly = classify(['tests/scripts/mission_continuity.test.ts']);
+        expect(testOnly.code).toEqual([]);
+        expect(findingFor(testOnly)).toBeNull();
     });
 
     it('the same-session flag WARNS and never blocks, because L0 is a legal state', () => {
@@ -728,23 +796,54 @@ describe('T1 — a normal feature runs independent-RED → implement → green, 
         expect(sameSessionTestFlag(null)).toBeNull();
     });
 
-    it('the happy path ends the run, and no ladder rung is an owner ask', () => {
+    it('the happy path ends the run, and the rung vocabulary is pinned', () => {
         // T1's load-bearing half. The run reaching a delivery ending must
-        // `complete`; and the ladder's WHOLE action vocabulary must contain no
-        // rung that routes to the owner — a count mapped to an ask is exactly
-        // what Phase 4.1 removed, and the union is where it would reappear.
+        // `complete`; and the ladder's WHOLE action vocabulary is enumerated, so
+        // a new rung has to be added deliberately here too. The regex alone was
+        // the weaker form the 2026-09-14 pass flagged — a rung named `escalate`
+        // or `await-input` would route to the owner and evade it.
         expect(ladder(base(), 0, Date.now(), 0, undefined, null, false, 'merged')).toBe('complete');
+        expect(Object.keys(TERMINAL_STATE_BY_ACTION).sort()).toEqual([
+            'blocked',
+            'complete',
+            'engage',
+            'halt-dependency-unavailable',
+            'halt-max-iterations',
+            'halt-premise-invalidated',
+            'halt-stall',
+            'halt-wall-clock',
+        ]);
         for (const action of Object.keys(TERMINAL_STATE_BY_ACTION)) {
-            expect(action).not.toMatch(/ask|question|confirm|owner/i);
+            expect(action).not.toMatch(/ask|question|confirm|owner|escalate|await|prompt/i);
         }
+    });
+
+    it('each halt maps to its OWN terminal state, never to success', () => {
+        // `terminalStateFor(halt) !== null` passed against an implementation
+        // mapping every halt to `success` — the second tautology the 2026-09-14
+        // pass named. The exact map is the assertion; the two exhaustion rungs
+        // sharing one word is a decision, not an accident.
+        expect(terminalStateFor('halt-max-iterations')).toBe('exhausted');
+        expect(terminalStateFor('halt-wall-clock')).toBe('exhausted');
+        expect(terminalStateFor('halt-stall')).toBe('stagnated');
+        expect(terminalStateFor('halt-dependency-unavailable')).toBe('blocked');
+        expect(terminalStateFor('halt-premise-invalidated')).toBe('premise-invalidated');
+        expect(terminalStateFor('engage')).toBeNull();
         for (const halt of HALT_ACTIONS) {
             expect(terminalStateFor(halt)).not.toBeNull();
+            expect(terminalStateFor(halt)).not.toBe('success');
         }
     });
 });
 
+// provenance: level=L4 | critical=yes | evidence=ac2-independent-test-authorship-2026-09-14
 describe('T6 — a twelve-hour resume preserves the grant and every closed decision', () => {
     const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
+    // A FIXED clock. `Date.now()` in an authority test makes the boundary cases
+    // below non-reproducible and the "exactly at expiry" case unwritable — both
+    // seats of the 2026-09-14 independent authorship pass named it.
+    const NOW = Date.parse('2026-09-14T12:00:00.000Z');
+    const at = (offsetMs: number): Date => new Date(NOW + offsetMs);
 
     const record = (over: Partial<MissionRecord> = {}): MissionRecord => ({
         mission_id: 'm-1',
@@ -757,7 +856,7 @@ describe('T6 — a twelve-hour resume preserves the grant and every closed decis
         ],
         authority: {
             grant: 'roadmap:process-full',
-            expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            expires: at(24 * 60 * 60 * 1000).toISOString(),
             revoked_by: null,
         },
         target_branch: 'main',
@@ -776,22 +875,42 @@ describe('T6 — a twelve-hour resume preserves the grant and every closed decis
         // the RUN's wall clock. `WALL_CLOCK_CAP_MS` bounds one run; a mission
         // spans many, so twelve hours must not be an expiry on its own.
         expect(TWELVE_HOURS_MS).toBeGreaterThan(WALL_CLOCK_CAP_MS * 2);
-        const later = new Date(Date.now() + TWELVE_HOURS_MS);
-        const rec = record({
-            authority: {
-                grant: 'roadmap:process-full',
-                expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-                revoked_by: null,
-            },
-        });
-        expect(restore(rec, { grant: 'roadmap:process-full', revoked_by: null }, later).state).toBe(
-            'resume',
-        );
+        expect(
+            restore(
+                record(),
+                { grant: 'roadmap:process-full', revoked_by: null },
+                at(TWELVE_HOURS_MS),
+            ).state,
+        ).toBe('resume');
+    });
+
+    it('expiry decides at the boundary, and an unreadable one is EXPIRED', () => {
+        // Four cases the group did not have. The middle one is the reason the
+        // clock had to be fixed: `expires === now` is `<=`, so exactly-at is
+        // expired — a limit read the opposite way from `council_transport`'s
+        // ceiling, and both readings are deliberate.
+        const future = (): MissionRecord =>
+            record({ authority: { grant: 'g', expires: at(60_000).toISOString(), revoked_by: null } });
+        const past = (): MissionRecord =>
+            record({ authority: { grant: 'g', expires: at(-60_000).toISOString(), revoked_by: null } });
+        const exactly = (): MissionRecord =>
+            record({ authority: { grant: 'g', expires: at(0).toISOString(), revoked_by: null } });
+        const unreadable = (): MissionRecord =>
+            record({ authority: { grant: 'g', expires: 'sometime soon', revoked_by: null } });
+        const never = (): MissionRecord =>
+            record({ authority: { grant: 'g', expires: null, revoked_by: null } });
+
+        expect(restore(future(), null, at(0)).state).toBe('resume');
+        expect(restore(past(), null, at(0)).state).toBe('authority-expired');
+        expect(restore(exactly(), null, at(0)).state).toBe('authority-expired');
+        // A grant whose lifetime cannot be read is not a grant with no lifetime.
+        expect(restore(unreadable(), null, at(0)).state).toBe('authority-expired');
+        expect(restore(never(), null, at(0)).state).toBe('resume');
     });
 
     it('the resume re-asks nothing the mission already settled', () => {
         const rec = record();
-        const verdict = restore(rec, null, new Date());
+        const verdict = restore(rec, null, at(0));
         expect(verdict.state).toBe('resume');
         expect(verdict.closed).toEqual(['branch-base', 'conflict-class-4']);
         for (const id of verdict.closed) {
@@ -800,13 +919,31 @@ describe('T6 — a twelve-hour resume preserves the grant and every closed decis
         expect(alreadyAnswered(rec, 'never-asked')).toBe(false);
     });
 
-    it('a record is not one while a field is missing', () => {
-        // Provenance of the resume: the fourteen fields are what makes the
-        // restore a read rather than a re-derivation.
+    it('the closed set survives a REFUSED restore too', () => {
+        // An implementation that dropped `closed` when it refused would make a
+        // withdrawn-authority restart re-ask everything the mission settled —
+        // the failure the record exists against, arriving through the error path
+        // instead of the happy one.
+        const withdrawn = restore(record({
+            authority: { grant: 'g', expires: null, revoked_by: 'owner' },
+        }), null, at(0));
+        expect(withdrawn.state).toBe('authority-withdrawn');
+        expect(withdrawn.closed).toEqual(['branch-base', 'conflict-class-4']);
+    });
+
+    it('EVERY one of the fourteen fields is reported when it is the one missing', () => {
+        // Dropping only `head_sha` established that one field is checked. The
+        // whole list is the contract: a `REQUIRED_FIELDS` that quietly lost a
+        // member passed the single-field form.
         expect(missingFields(record())).toEqual([]);
-        const partial: Partial<MissionRecord> = { ...record() };
-        delete (partial as { head_sha?: string }).head_sha;
-        expect(missingFields(partial)).toContain('head_sha');
+        const complete = record() as unknown as Record<string, unknown>;
+        const names = Object.keys(complete);
+        expect(names).toHaveLength(14);
+        for (const field of names) {
+            const partial = { ...complete };
+            delete partial[field];
+            expect(missingFields(partial as Partial<MissionRecord>)).toEqual([field]);
+        }
     });
 
     it('a side task does not clear the record; only mission completion does', () => {
@@ -819,16 +956,30 @@ describe('T6 — a twelve-hour resume preserves the grant and every closed decis
         // Sensitivity for the half that matters: the ledger is the surface a
         // revocation writes to, so a restore that trusted the snapshot alone
         // would resume with authority the owner took back mid-gap.
-        const later = new Date(Date.now() + TWELVE_HOURS_MS);
-        const verdict = restore(
-            record(),
-            { grant: 'roadmap:process-full', revoked_by: 'owner' },
-            later,
+        expect(
+            restore(
+                record(),
+                { grant: 'roadmap:process-full', revoked_by: 'owner' },
+                at(TWELVE_HOURS_MS),
+            ).state,
+        ).toBe('authority-withdrawn');
+    });
+
+    it('the ledger revokes in ONE direction — it can never revive', () => {
+        // The precedence, asserted from the side that was missing: a snapshot
+        // already revoked stays revoked even where the ledger shows the grant
+        // live. A ledger that could un-revoke would make the record the weaker
+        // authority and the revocation advisory.
+        const revokedSnapshot = record({
+            authority: { grant: 'g', expires: null, revoked_by: 'owner' },
+        });
+        expect(restore(revokedSnapshot, { grant: 'g', revoked_by: null }, at(0)).state).toBe(
+            'authority-withdrawn',
         );
-        expect(verdict.state).toBe('authority-withdrawn');
     });
 });
 
+// provenance: level=L4 | critical=yes | evidence=ac2-independent-test-authorship-2026-09-14
 describe('T9 — a typed op reaches an exact-object ask, and a verdict alone never grants', () => {
     const unconfirmed: ExactObjectAsk = {
         op: 'git push --force',
@@ -881,6 +1032,7 @@ describe('T9 — a typed op reaches an exact-object ask, and a verdict alone nev
     });
 });
 
+// provenance: level=L4 | critical=yes | evidence=ac2-independent-test-authorship-2026-09-14
 describe('T10 — an over-ceiling API requirement produces a report and no ask', () => {
     const ctx = {
         needed: 'an independent validator pass over the Phase 2 fixtures',
@@ -894,13 +1046,41 @@ describe('T10 — an over-ceiling API requirement produces a report and no ask',
         ceilingUsd: 25,
     };
 
-    it('over the ceiling pauses and carries all six report fields', () => {
+    it('over the ceiling pauses, and the report carries the INPUT values', () => {
+        // `toBeDefined()` over the six fields passed against a report of
+        // fabricated values — named by both seats of the 2026-09-14 pass. The
+        // whole object is compared instead, so a field that carries the wrong
+        // estimate or the wrong mission state is a failure rather than a pass.
         const d = routeCouncil(overCeiling, ctx);
         expect(d.route).toBe('paused');
-        expect(d.report).not.toBeNull();
-        for (const field of REPORT_FIELDS) {
-            expect(d.report?.[field]).toBeDefined();
+        expect(d.report).toEqual({
+            needed: ctx.needed,
+            cliUnavailableBecause: 'cli quota exhausted',
+            estimateUsd: 40,
+            ceilingUsd: 25,
+            missionState: ctx.missionState,
+            canStillProceed: ctx.canStillProceed,
+        });
+        expect(Object.keys(d.report as PauseReport).sort()).toEqual([...REPORT_FIELDS].sort());
+    });
+
+    it('a route that is not `paused` carries NO report at all', () => {
+        // The structural half of "a report, not an ask": only the paused rung
+        // produces one, so a caller cannot find a pause report on a route that
+        // did not pause.
+        for (const input of [
+            { ...overCeiling, cliAvailable: true },
+            { ...overCeiling, estimateUsd: 1 },
+        ]) {
+            const d = routeCouncil(input, ctx);
+            expect(d.route).not.toBe('paused');
+            expect(d.report).toBeNull();
         }
+    });
+
+    it('an unstated CLI reason is reported as unstated, never invented', () => {
+        const d = routeCouncil({ ...overCeiling, cliUnavailableReason: null }, ctx);
+        expect(d.report?.cliUnavailableBecause).toBe('unstated');
     });
 
     it('the rendered report contains no question mark at all', () => {
@@ -954,6 +1134,7 @@ describe('T10 — an over-ceiling API requirement produces a report and no ask',
  * killed, and a record that expired with the run's wall clock would make a
  * long run impossible and every resume an owner interrupt.
  */
+// provenance: level=L4 | critical=yes | evidence=ac2-independent-test-authorship-2026-09-14
 describe('AC-7 — a throttled four-phase long run ends merged, one resume, zero owner asks', () => {
     const HOUR = 60 * 60 * 1000;
     const t0 = Date.parse('2026-09-14T08:00:00.000Z');
@@ -1098,5 +1279,75 @@ describe('AC-7 — a throttled four-phase long run ends merged, one resume, zero
             expect(action).not.toMatch(/ask|question|confirm|owner/i);
         }
         expect(MAX_ITERATIONS).toBe(25);
+    });
+});
+
+// provenance: level=L0 | critical=no | evidence=
+describe('AC-2 — every group in this file records its independence, and the critical ones clear the floor', () => {
+    const SELF = 'tests/e2e/adversarial-verification-fixtures.test.ts';
+    const EVIDENCE = 'agents/evidence/analysis/ac2-independent-test-authorship-2026-09-14.md';
+    /**
+     * Two, pinned rather than probed.
+     *
+     * `agent-config council:status` reports `anthropic` and `openai` enabled for
+     * this repository, and that is the number this criterion is asserted at. It
+     * is NOT read here: the council config resolves from a user-global file a CI
+     * runner does not have, so probing would make the floor collapse to the
+     * single-provider ceiling exactly where the obligation matters — an
+     * environment deciding an obligation, which is the shape
+     * `council-availability` exists over.
+     */
+    const CONFIGURED_PROVIDERS = 2;
+
+    it('no group is ungoverned — every describe carries a valid marker', () => {
+        const { ungoverned } = parseProvenance(read(SELF));
+        expect(ungoverned).toEqual([]);
+    });
+
+    it('every critical group clears L3 with evidence, at this repository’s two providers', () => {
+        const { records } = parseProvenance(read(SELF));
+        expect(criticalGaps(records, CONFIGURED_PROVIDERS)).toEqual([]);
+        // …and the set is not empty, which is the way this assertion would
+        // otherwise pass by declaring nothing critical.
+        const critical = records.filter((r) => r.critical);
+        expect(critical.length).toBeGreaterThanOrEqual(9);
+        for (const r of critical) expect(levelRank(r.level)).toBeGreaterThanOrEqual(levelRank('L3'));
+    });
+
+    it('every evidence slug names a file that exists and states its members', () => {
+        // An unattributed validation is not one. The slug has to resolve, and the
+        // artefact has to carry the identity and provider the level claims —
+        // otherwise `evidence=` is a string that satisfies a regex.
+        const { records } = parseProvenance(read(SELF));
+        const slugs = new Set(records.map((r) => r.evidence).filter((e) => e !== ''));
+        expect(slugs.size).toBeGreaterThan(0);
+        for (const slug of slugs) {
+            const file = path.join(REPO, 'agents', 'evidence', 'analysis', `${slug}.md`);
+            expect(fs.existsSync(file)).toBe(true);
+            const body = fs.readFileSync(file, 'utf8');
+            expect(body).toMatch(/anthropic/);
+            expect(body).toMatch(/openai/);
+            expect(body).toMatch(/2\/2 present/);
+        }
+    });
+
+    it('the evidence records the prompt, so the verdict can be checked for steering', () => {
+        // `evaluator-independence` item 3: a self-commissioned review is
+        // admissible as gate evidence only when the prompt is recorded alongside
+        // the verdict. Omission beats substitution there, so the artefact has to
+        // carry it and this asserts that it does.
+        const body = read(EVIDENCE);
+        expect(body).toMatch(/## The prompt/);
+        expect(body).toMatch(/It states no expected outcome/);
+    });
+
+    it('the evidence states what the pass did NOT close', () => {
+        // A validator record listing only what was fixed reads as a clean bill.
+        // The four implementation findings and the composition limitation are
+        // the part a later reader needs most.
+        const body = read(EVIDENCE);
+        expect(body).toMatch(/What the pass found that is NOT folded in/);
+        expect(body).toMatch(/objectIsExact/);
+        expect(body).toMatch(/road-to-authority-object-exactness/);
     });
 });
