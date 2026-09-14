@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: draft
+status: ready
 execution:
   mode: phase-checkpoints
 relates:
@@ -109,11 +109,11 @@ preceded the first edit is recorded.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — a recorded threat pass over both modules predates the first edit to
+- [x] AC-1 — a recorded threat pass over both modules predates the first edit to
       either, and names the negative tests each fix owes.
-- [ ] AC-2 — `!!!!!!!!`, `all-branches`, an empty `op` and a whitespace-only `op`
+- [x] AC-2 — `!!!!!!!!`, `all-branches`, an empty `op` and a whitespace-only `op`
       are each refused, by a test that was red before its fix.
-- [ ] AC-3 — a snapshot and a ledger naming different grants do not resume, and
+- [x] AC-3 — a snapshot and a ledger naming different grants do not resume, and
       the ledger's one-way revoke precedence is unchanged.
-- [ ] AC-4 — "this turn" is either enforceable from the type or recorded as
+- [x] AC-4 — "this turn" is either enforceable from the type or recorded as
       deliberately not enforced there, with what carries it instead.
