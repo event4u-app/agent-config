@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: draft
+status: ready
 estate_offset_exempt: "Draft, so the count half reports +0 active; the file-based one-in-one-out half fires on the added file regardless of status, and this exemption answers that half. The subject is a shipped release-truth defect found by three independent reviewers in one round, and it has no existing owner in the estate — no stub, no later/ entry, nothing under agents/roadmaps/ mentions the Known-limitations field."
 execution:
   mode: phase-checkpoints
