@@ -113,6 +113,43 @@ One item classifies deterministically with
 `./scripts-run src/scripts/scope_growth "<description>"`; `unknown` is a real
 verdict there, never a fallback to the cheapest rung.
 
+## Inside a mission — the middle rung becomes an artefact
+
+`road-to-adversarial-verification-and-long-runs` 6.1. The ladder's middle rung is
+**note + ask**, and inside an autonomous mission there is nobody to ask. Left
+unreplaced the rung collapses in one of two bad directions, and both are failures
+this suite already names: every spotted issue becomes a fix (the scope creep
+[`minimal-safe-diff`](minimal-safe-diff-mechanics.md) exists to stop), or every
+one becomes silence (the look-away `active-remediation` exists to stop).
+
+So under a mission the middle rung is **emit a follow-up artefact and leave the
+code alone**.
+
+**What may ride along at all** — nine kinds, and the list is closed:
+characterization tests · regression tests · a small adjacent bug · naming · types
+· robustness · local dead code · simplifying code the mission already touched ·
+testability.
+
+**Six criteria, ALL of which must hold** for one of those to ride along: local to
+the path the mission is already touching · small · low blast radius · clearly
+correct · testable in the same commit · carries no new product decision.
+
+```
+THE SIX ARE AND-ED, NEVER SCORED.
+A SCORED VERSION LETS A LARGE CHANGE BUY ITS WAY IN WITH FIVE CHEAP YESES,
+WHICH IS HOW A BOY-SCOUT RULE BECOMES A REFACTOR LICENCE.
+```
+
+The **characterisation is the agent's judgement; the DECISION is mechanical** —
+`_lib/rides_along.ts` takes the six booleans and returns the rung, so the same
+inputs always land the same way and a later reader can check the call rather than
+re-litigate the taste.
+
+**A deferral states every reason it was deferred**, not the first one it hit. The
+artefact exists because the issue is still owed, and "it failed one of six" is not
+something a later triage can act on. A deferral with no reason is the
+note-and-forget this rule already forbids, wearing an artefact's clothes.
+
 ## See also
 
 - [`active-remediation`](../../rules/active-remediation.md) — the rule this file details (Iron Law + ladder + live-security carve-out).

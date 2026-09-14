@@ -373,17 +373,33 @@ before the record is signed.
 
 ## Phase 6 — Boy-Scout and adjacent improvement
 
-- [ ] **6.1 What rides along, and what does not.** During a mission the agent may add
+- [x] **6.1 What rides along, and what does not.** During a mission the agent may add
       characterisation and regression tests, fix a small adjacent bug, improve naming, types or
       robustness, remove local dead code, simplify code it touched, and improve testability —
       where each is small, local, low blast radius, clearly correct, testable, and carries no
       new product decision. Anything larger becomes a follow-up artefact.
       verify: a fixture run that finds a larger adjacent refactor emits the artefact and leaves
       the code alone.
+      <!-- landed 2026-09-13 as `_lib/rides_along.ts` plus the prose in
+      `active-remediation-mechanics` § Inside a mission.
+      **The gap it closes is structural, not a missing list.** `active-remediation`'s middle
+      rung is NOTE + ASK, and inside a mission there is nobody to ask — so left unreplaced the
+      rung collapses in one of two directions this suite already names: every issue becomes a
+      fix (the scope creep `minimal-safe-diff` stops) or every one becomes silence (the
+      look-away `active-remediation` stops). Under a mission it becomes EMIT A FOLLOW-UP
+      ARTEFACT and leave the code alone.
+      Six criteria, AND-ed rather than scored: a scored version lets a large change buy its way
+      in with five cheap yeses, which is how a boy-scout rule becomes a refactor licence.
+      Sensitivity proven — emptying the criteria filter reds 10 of 13.
+      The characterisation stays the agent's judgement; the DECISION is mechanical, so the same
+      inputs land the same way and a reader can check the call rather than re-litigate taste.
+      A deferral states EVERY reason, because "it failed one of six" is not something a later
+      triage can act on. -->
+      <!-- verify: npm run test:ts -- tests/scripts/rides_along.test.ts -->
 
 ## Phase 7 — Guardrails for the eleven ops
 
-- [ ] **7.1 Layer them, and measure before enforcing.** Forge protection → the host hook where
+- [x] **7.1 Layer them, and measure before enforcing.** Forge protection → the host hook where
       one is bound → a guardrail daemon, sibling of `collector_daemon.ts` under ADR-249's
       supervision contract → model policy as the last layer. The daemon watches the reflog, the
       exposed shell history and the forge event stream for typed ops, stops the host process
@@ -393,6 +409,26 @@ before the record is signed.
       the 30-session corpus.
       verify: the daemon's first shipped mode writes observations and takes no action, and the
       false-positive measurement exists as an artefact before the enforcing mode is enabled.
+      <!-- landed 2026-09-13 as `_lib/typed_op_watch.ts` — the OBSERVATION-ONLY floor, which is
+      what K5 permits and all it permits.
+      Both halves of the verify are mechanical rather than promised. `actionFor('observe', …)`
+      returns `record` for EVERY measurement including a perfect one — there is no branch in
+      that mode that acts, so no configuration flips it into one. And `enforcementAllowed(null)`
+      REFUSES: an absent artefact is a refusal with its own reason, never a pass, which is the
+      direction an absent-artefact check gets wrong by default. Sensitivity proven — removing
+      that branch reds 2 of 26.
+      Three further refusals worth reading: a corpus below the 30 sessions the roadmap fixed
+      BEFORE any measurement; ZERO observations, because a rate over an empty denominator is
+      not a measurement and is exactly what a broken recogniser produces; and a rate exactly AT
+      1%, since the bar is "below".
+      **The honest limit, in the module's own header:** it reads LINES, and a line is not an
+      intention — an op typed into a comment or a heredoc looks identical to one about to run.
+      That is why the first mode only writes down what it saw. Process supervision itself
+      reuses ADR-249's contract rather than being reimplemented here, and the enforcing mode
+      stays blocked on `daemon-host-kill-switch`.
+      Recogniser ORDER is load-bearing and asserted: `git push --force` is a force-push, not a
+      push, and a misordered table reports the milder op for the more dangerous line. -->
+      <!-- verify: npm run test:ts -- tests/scripts/typed_op_watch.test.ts -->
 - [x] **7.2 A per-host destructive column, measured.** `docs/enforcement-by-host.md` gains
       `destructive:` with values hook, daemon or manual-only, measured per host rather than
       asserted; `non-destructive-by-default`'s `enforced_by:` names the live layer on the
@@ -416,11 +452,25 @@ before the record is signed.
       `block_kernel_rule_writes` refused the edit at tool-call time — reproduced, not
       assumed. Lifting it is a human action outside an agent session. -->
       <!-- verify: ./scripts-run src/scripts/check_enforcement_matrix --quiet -->
-- [ ] **7.3 The council may veto a typed op, never grant one.** Under a mission: a council
+- [x] **7.3 The council may veto a typed op, never grant one.** Under a mission: a council
       check that the op belongs to the mission → a native ask naming the object → execute. Per
       ADR-257 an unpaid route may propose and score, never decide.
       verify: fixture `T9` — a typed op reaches an exact-object ask after the council check,
       and a council verdict alone never produces the grant.
+      <!-- landed 2026-09-13 as `_lib/typed_op_grant.ts`. `verdictAloneGrants` exists as its
+      own function so the Iron Law is CHECKABLE rather than merely stated: it returns false
+      over the whole verdict domain, unanimity included, and a test asserts that.
+      The asymmetry is the design (ADR-257): a council that could grant would be a second
+      authorisation path around the this-turn confirmation — and the cheaper one, so it would
+      become the only one. Vetoing adds a refusal without adding an authority, which is the one
+      direction safe to add for free.
+      Three directions asserted because each is a plausible wrong implementation: a clearance
+      read as a grant; a veto overridden by a later yes (an advisory veto is not one —
+      sensitivity proven, gating the veto on `!confirmed` reds that case); and an UNAVAILABLE
+      council read as a veto, which would make an unconfigured council a silent kill switch on
+      every typed op — the same-shaped wrong guess `council-availability` exists over.
+      The ask must name an exact OBJECT, not a category, per the Hard Floor's own wording. -->
+      <!-- verify: npm run test:ts -- tests/scripts/typed_op_grant.test.ts -->
 
 ## Phase 8 — A delivery state machine
 
