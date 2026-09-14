@@ -175,7 +175,7 @@ guidelines, personas) are **generated from source and CI-drift-checked**:
 fails the build on any count-shaped prose mention that drifts from the
 source count — or on two different numbers for the same artefact kind.
 
-We also publish our **debt**: 32 claim(s) are logged as
+We also publish our **debt**: 33 claim(s) are logged as
 `unbacked` inventory in the ledger — not yet bound, and therefore not
 allowed to carry a marker in public prose. Hiding them would be the
 opposite of the point.
@@ -353,7 +353,7 @@ resolution (`check_enforcement_coverage`) and the claims ledger
 
 Undeclared rules (81, of which 9 kernel-denied) carry no row — an honest gap beats a false claim.
 
-**Axis 2 — evidence form per public claim.** 101 ledger entries · 61 backed · 33 unbacked inventory · 7 resolved-null.
+**Axis 2 — evidence form per public claim.** 102 ledger entries · 61 backed · 34 unbacked inventory · 7 resolved-null.
 
 | Claim id | Kind | Status | Measured on | Evidence pointer |
 |---|---|---|---|---|
