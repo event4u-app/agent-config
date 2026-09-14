@@ -981,10 +981,12 @@ describe('T6 — a twelve-hour resume preserves the grant and every closed decis
 
 // provenance: level=L4 | critical=yes | evidence=ac2-independent-test-authorship-2026-09-14
 describe('T9 — a typed op reaches an exact-object ask, and a verdict alone never grants', () => {
+    const TURN = 'turn-91';
     const unconfirmed: ExactObjectAsk = {
         op: 'git push --force',
         object: 'origin/drain/adversarial-verification-rest @ abc1234',
         confirmed: false,
+        confirmed_turn: TURN,
     };
     const confirmed: ExactObjectAsk = { ...unconfirmed, confirmed: true };
 
@@ -992,7 +994,7 @@ describe('T9 — a typed op reaches an exact-object ask, and a verdict alone nev
         // The whole of T9 in one assertion: a clearance is not an authorisation.
         // The reason has to SAY so, because a state name alone reads the same
         // whether the council mattered or not.
-        const d = grantFor('in-mission', unconfirmed);
+        const d = grantFor('in-mission', unconfirmed, TURN);
         expect(d.state).toBe('ask-required');
         expect(d.reason).toMatch(/which is not a grant/);
         expect(d.reason).toMatch(/the ask still has to happen/);
@@ -1001,7 +1003,7 @@ describe('T9 — a typed op reaches an exact-object ask, and a verdict alone nev
     it('no verdict in the whole domain grants without the this-turn confirmation', () => {
         for (const v of ['in-mission', 'out-of-mission', 'unavailable', null] as const) {
             expect(verdictAloneGrants(v)).toBe(false);
-            expect(grantFor(v, unconfirmed).state).not.toBe('granted');
+            expect(grantFor(v, unconfirmed, TURN).state).not.toBe('granted');
         }
     });
 
@@ -1010,25 +1012,37 @@ describe('T9 — a typed op reaches an exact-object ask, and a verdict alone nev
         // still `ask-required` — the plausible wrong implementation treats the
         // `confirmed` boolean as sufficient and never reads what was named.
         const category: ExactObjectAsk = { ...confirmed, object: 'branches' };
-        expect(grantFor('in-mission', category).state).toBe('ask-required');
-        expect(grantFor('in-mission', category).reason).toMatch(/category rather than an object/);
-        expect(grantFor('in-mission', confirmed).state).toBe('granted');
+        expect(grantFor('in-mission', category, TURN).state).toBe('ask-required');
+        expect(grantFor('in-mission', category, TURN).reason).toMatch(
+            /category rather than an object/,
+        );
+        expect(grantFor('in-mission', confirmed, TURN).state).toBe('granted');
+    });
+
+    it('a confirmation carried over from an EARLIER turn does not grant', () => {
+        // The long-run case this file exists for: a mission record persists the
+        // ask across a restart, so `confirmed: true` outlives the turn it was
+        // given in. A bare boolean cannot express the Hard Floor's THIS-TURN
+        // wording, and a replayed yes is indistinguishable from a fresh one.
+        const replayed: ExactObjectAsk = { ...confirmed, confirmed_turn: 'turn-3' };
+        expect(grantFor('in-mission', replayed, TURN).state).toBe('ask-required');
+        expect(grantFor('in-mission', replayed, TURN).reason).toMatch(/not this turn/);
     });
 
     it('an out-of-mission verdict VETOES, and a later yes does not override it', () => {
         // An advisory veto is not one. Order is the assertion: veto first, so a
         // confirmation arriving afterwards changes nothing.
-        expect(grantFor('out-of-mission', unconfirmed).state).toBe('vetoed');
-        expect(grantFor('out-of-mission', confirmed).state).toBe('vetoed');
+        expect(grantFor('out-of-mission', unconfirmed, TURN).state).toBe('vetoed');
+        expect(grantFor('out-of-mission', confirmed, TURN).state).toBe('vetoed');
     });
 
     it('an UNAVAILABLE council is not a veto', () => {
         // The same-shaped wrong guess `council-availability` exists over: reading
         // absence as refusal would make an unconfigured council a silent kill
         // switch on every typed op.
-        expect(grantFor('unavailable', unconfirmed).state).not.toBe('vetoed');
-        expect(grantFor(null, unconfirmed).state).not.toBe('vetoed');
-        expect(grantFor('unavailable', confirmed).state).toBe('granted');
+        expect(grantFor('unavailable', unconfirmed, TURN).state).not.toBe('vetoed');
+        expect(grantFor(null, unconfirmed, TURN).state).not.toBe('vetoed');
+        expect(grantFor('unavailable', confirmed, TURN).state).toBe('granted');
     });
 });
 

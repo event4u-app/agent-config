@@ -60,7 +60,7 @@ preceded the first edit is recorded.
 
 ## Phase 2 — Make the exact object exact
 
-- [ ] **2.1 A category can no longer pass as an object.** `objectIsExact`
+- [x] **2.1 A category can no longer pass as an object.** `objectIsExact`
       currently accepts any string of eight or more characters containing one
       non-letter, so `!!!!!!!!` and `all-branches` both pass. Both council seats
       reported this independently, and `openai` named the consequence plainly:
@@ -71,13 +71,13 @@ preceded the first edit is recorded.
       verify: a test asserting `!!!!!!!!`, `all-branches` and `category-1` are
       each refused, red before the change; and the shipped exact object for each
       typed op still grants.
-- [ ] **2.2 An empty or whitespace-only `op` cannot grant.** Nothing validates
+- [x] **2.2 An empty or whitespace-only `op` cannot grant.** Nothing validates
       `op` today, so a confirmed ask carrying `op: ''` and a well-formed object
       is granted. The object is checked and the verb is not, which is the half
       that names what is about to happen.
       verify: a test over `''`, `'   '` and a tab-only `op`, each refused, red
       before the change.
-- [ ] **2.3 Decide whether `confirmed` can carry "this turn" at all.** The Hard
+- [x] **2.3 Decide whether `confirmed` can carry "this turn" at all.** The Hard
       Floor's wording is a THIS-TURN confirmation; a bare boolean cannot express
       it, so a confirmation from an earlier turn is indistinguishable from a
       fresh one. This step is deliberately a decision rather than an
