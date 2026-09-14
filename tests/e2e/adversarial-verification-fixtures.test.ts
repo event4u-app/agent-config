@@ -33,6 +33,11 @@ import {
     ladder,
     type LadderState,
 } from '../../src/scripts/_lib/continuation_ladder.js';
+import {
+    cascadeBase,
+    cascadeCurrent,
+    hopsNeedingMerge,
+} from '../../src/scripts/_lib/cascade_base.js';
 import { isDeliveryReady } from '../../src/scripts/_lib/delivery_ready.js';
 import { forgeProtectionRows } from '../../src/scripts/_lib/forge_protection.js';
 import { classify, findingFor } from '../../src/scripts/check_test_delta.js';
@@ -448,6 +453,92 @@ describe('3.2 — doctor reads forge protection from the forge', () => {
             deployRestricted: null,
         });
         expect(rows.some((r) => r.state === 'unsatisfied')).toBe(false);
+    });
+});
+
+describe('T5 / 5.1 — sync before every push, across a cascade', () => {
+    it('a stacked branch owes both hops, nearest first', () => {
+        const c = cascadeBase('feat/child', 'main', (r) =>
+            r === 'feat/child' ? 'feat/parent' : r === 'feat/parent' ? 'main' : null,
+        );
+        expect(c.hops).toEqual(['feat/parent', 'main']);
+    });
+
+    it('the common case is unchanged — a trunk-based branch is still one hop', () => {
+        const c = cascadeBase('feat/x', 'main', (r) => (r === 'feat/x' ? 'main' : null));
+        expect(c.hops).toEqual(['main']);
+    });
+
+    it('T5 — a target that moved twice is behind on BOTH hops and not current', () => {
+        const c = cascadeBase('feat/child', 'main', (r) =>
+            r === 'feat/child' ? 'feat/parent' : r === 'feat/parent' ? 'main' : null,
+        );
+        const readings = c.hops.map((ref) => ({ ref, behind: true }));
+        expect(hopsNeedingMerge(readings)).toHaveLength(2);
+        expect(cascadeCurrent(readings)).toBe(false);
+    });
+
+    it('the final head is the one CI observed — a stale head is not delivery-ready', () => {
+        // The second half of T5: both hops merged, but the verdict must be about
+        // the head that was actually pushed last.
+        expect(
+            isDeliveryReady({
+                requiredContexts: [],
+                checks: [],
+                observedHead: 'before-the-merge',
+                head: 'after-the-merge',
+            }),
+        ).toBe(false);
+    });
+});
+
+describe('T4 / 5.2 — an unenumerated conflict routes rather than halting', () => {
+    const MERGE = 'src/domains/git/pr/merge/command.md';
+    const FULL = 'src/domains/product-basic/roadmap/process-full/command.md';
+
+    it('the four classes are named AIDS, not exhaustive authority', () => {
+        const body = flat(MERGE);
+        expect(body).toMatch(/THE FOUR CLASSES ARE AIDS, NOT EXHAUSTIVE AUTHORITY/);
+        expect(body).toMatch(/AN UNENUMERATED CONFLICT IS ROUTED, NOT HALTED/);
+    });
+
+    it('the ladder is present in order, with the owner LAST', () => {
+        const body = flat(MERGE);
+        const rungs = [
+            'UNDERSTAND BOTH INTENTS',
+            'INSPECT RECENCY, AUTHORS AND OPEN PRs',
+            'PRESERVE BOTH WHERE COMPATIBLE',
+            'INDEPENDENT REVIEW FOR A RISKY MERGE',
+            'COUNCIL OR TEAM',
+            'THE OWNER ONLY FOR A PRODUCT-SEMANTIC INCOMPATIBILITY',
+        ];
+        let at = -1;
+        for (const rung of rungs) {
+            const i = body.indexOf(rung);
+            expect(i).toBeGreaterThan(at);
+            at = i;
+        }
+    });
+
+    it('the run’s own uncertainty is explicitly NOT an owner trigger', () => {
+        expect(flat(MERGE)).toMatch(
+            /"I DO NOT KNOW WHICH SIDE IS RIGHT" IS A REASON TO ESCALATE INDEPENDENTLY, NOT A REASON TO ASK/,
+        );
+    });
+
+    it('the silent-resolution prohibition SURVIVES the retirement', () => {
+        // The halt is gone; what replaced it is a record. A retirement that also
+        // dropped the record would be a removal, not a migration.
+        expect(flat(MERGE)).toMatch(/Deciding it \*\*silently\*\* inside a drain loop is still how work disappears/);
+    });
+
+    it('process-full carries five live halts, and halt 6 is retired in place', () => {
+        const body = flat(FULL);
+        expect(body).toMatch(/five — and only five — live halt conditions/);
+        expect(body).toMatch(/6\. \*\*RETIRED 2026-09-13\*\*/);
+        // Numbered, never renumbered: the list is cited by index elsewhere.
+        expect(body).toMatch(/Numbered rather than renumbered/);
+        expect(body).not.toMatch(/six — and only six/);
     });
 });
 

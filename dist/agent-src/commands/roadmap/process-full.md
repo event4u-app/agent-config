@@ -259,7 +259,7 @@ RUNNING" IS NOT A BOUNDARY, NOT A HALT, AND NOT A REPORT — THE RUN ENDS
 AT A MERGEABLE PR, NEVER AT AN OFFER TO GO CHECK ON ONE.
 ```
 
-The **six — and only six — halt conditions** (exhaustive; nothing else
+The **five — and only five — live halt conditions** (exhaustive; nothing else
 stops the run):
 
 1. **Hard-Floor** trigger ([`non-destructive-by-default`](../../rules/non-destructive-by-default.md)).
@@ -267,13 +267,21 @@ stops the run):
 3. **Security-sensitive** surface reached.
 4. **Scope-out-of-roadmap** work discovered.
 5. **Test / quality red** that cannot be cleared within the N=3 budget.
-6. **A merge conflict outside the four enumerated classes** of
-   [`/pr:merge` § 3](../../../git/pr/merge/command.md), during the delivery
-   loop. Added when delivery became unconditional: the loop runs on every
-   completed run, `--all` or not, so its stop is a stop of this command and
-   calling it "a kill switch rather than a halt reason" would not change that —
-   a run that stops has stopped. It fires only where a run reaches delivery,
-   which is the one thing that distinguishes it from the five above.
+6. **RETIRED 2026-09-13** by `road-to-adversarial-verification-and-long-runs`
+   5.2. This read *a merge conflict outside the four enumerated classes of
+   [`/pr:merge` § 3](../../../git/pr/merge/command.md)*. That section now ROUTES
+   an unenumerated conflict — understand both intents, inspect recency and
+   authorship, preserve both where compatible, independent review, council or
+   team, and the owner **only** for a product-semantic incompatibility — so
+   there is no longer a conflict class whose arrival ends a run. Numbered rather
+   than renumbered: the list is cited by index from several places, and silently
+   shifting five conditions up one is how a citation comes to name a different
+   halt. **Five live halt conditions, not six.**
+
+   What did NOT change: an unenumerated conflict may still never be resolved
+   silently. The ladder's own record — which rung settled it, both intents, why
+   the resolution preserves them — is the replacement for the stop, and the
+   reason the stop could be removed at all.
 
 **Under `--all`, which of these end the roadmap and which end the loop.** Two
 of the five are safety floors and they end the **whole run**, not the current
@@ -286,7 +294,7 @@ roadmap:
 | 2. Council-off + genuine ambiguity | Ends the roadmap; the loop records it and continues. |
 | 4. Scope-out-of-roadmap work | Ends the roadmap; the loop records it and continues. |
 | 5. Test / quality red past N=3 | Ends the roadmap; the loop records it and continues. |
-| 6. Unenumerated merge conflict in delivery | Ends the roadmap; the loop records it and continues. |
+| ~~6. Unenumerated merge conflict in delivery~~ | **RETIRED** — `/pr:merge` § 3 routes it instead of stopping. |
 
 **And the conditions that end the loop without ending a roadmap:**
 estate-queue exhaustion (always), a
@@ -297,8 +305,9 @@ authorization-window expiry — which is **unreachable in this command**,
 because it never performs a `BLOCK_OPS` operation for the window to govern. Three conditions, one of them currently inert, and this
 table is the only place the set is stated.
 
-Nothing here widens a run without `--all`: it still has exactly the six
-above, all of them ending the run because there is no loop to continue.
+Nothing here widens a run without `--all`: it still has exactly the five live
+conditions above, all of them ending the run because there is no loop to
+continue.
 
 ```
 FORBIDDEN NON-HALT REASONS — NEVER STOP THE RUN FOR ANY OF THESE:
@@ -312,12 +321,13 @@ FORBIDDEN NON-HALT REASONS — NEVER STOP THE RUN FOR ANY OF THESE:
   · "the branch is not protected" / "a branch must be created"
   · "a PR must be opened" / "a GitHub setting must change"
   · "CI must be re-run" / "the merge base needs updating" / "there are
-    conflicts" — resolving these IS the work. The one exception, and it is a
-    kill switch rather than a halt reason: a conflict **outside** the four
-    enumerated classes of [`/pr:merge` § 3](../../../git/pr/merge/command.md)
-    stops the delivery loop, because that is a case nobody has decided yet and
-    deciding it silently is how work disappears. An enumerated conflict is
-    never a stop.
+    conflicts" — resolving these IS the work, and since 2026-09-13 that holds
+    for an UNENUMERATED conflict too: [`/pr:merge` § 3](../../../git/pr/merge/command.md)
+    routes it (understand both intents → recency and authorship → preserve both
+    where compatible → independent review → council or team → the owner only for
+    a product-semantic incompatibility) instead of stopping. The prohibition that
+    survives is on resolving one SILENTLY: the rung that settled it, both
+    intents, and why the resolution preserves them are recorded.
   · "a paid service is needed" — authorised under the ceiling below
   · "a maintainer should do this" when the agent can perform the same action
   · any agent-invented caution not in the five halt conditions above.

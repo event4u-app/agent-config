@@ -326,19 +326,50 @@ before the record is signed.
 
 ## Phase 5 — Target sync and conflict recovery
 
-- [ ] **5.1 Sync before every push and before delivery.** Fetch; merge the remote target into
+- [x] **5.1 Sync before every push and before delivery.** Fetch; merge the remote target into
       the task branch; where the target is not the trunk, also merge the trunk per project
       policy — a cascade base, extending the single-hop freshness check; resolve conflicts
       semantically; re-run the affected tests and quality; push; observe the final head's CI.
       verify: fixture `T5` — a target that moved twice during the run is merged in both hops
       and the final head is the one CI observed.
-- [ ] **5.2 The four conflict classes become aids, not exhaustive authority.** An unenumerated
+      <!-- landed 2026-09-13 as `_lib/cascade_base.ts`, extending the single-hop freshness
+      check rather than replacing it: a branch based on the trunk still yields exactly ONE
+      hop, which is the compatibility property that matters — this widens the check, it does
+      not change the common answer.
+      The defect it closes: `check_branch_freshness` asks whether a branch is behind the base
+      its PR TARGETS, so a stacked branch perfectly current with `feat/parent` reports GREEN
+      while `feat/parent` sits fifty commits behind the trunk. Hops are nearest-first because
+      taking the trunk first pulls trunk commits past the parent and makes the stack's own
+      diff unreadable.
+      Two decisions a reviewer should check: a CYCLE and a TRUNCATION are reported rather than
+      silently cut (a hop list cut short is indistinguishable from a short one), and an
+      UNMEASURED hop counts as needing a merge — "could not tell" treated as "current" is the
+      exact conflation that let the single-hop check pass a stale stack. Sensitivity proven:
+      narrowing that filter to `behind === true` reds 1 of 12.
+      The final-head half reuses `_lib/delivery_ready.ts` from 3.1 — a green verdict on a head
+      that is no longer the branch head describes a different tree. -->
+      <!-- verify: npm run test:ts -- tests/scripts/cascade_base.test.ts -->
+- [x] **5.2 The four conflict classes become aids, not exhaustive authority.** An unenumerated
       conflict routes: understand both intents → inspect recency, authors and open PRs →
       preserve both where compatible → independent review for a risky merge → council or team
       → owner only for a product-semantic incompatibility. `process-full`'s halt 6 retires
       with the sibling roadmap's halt-table rewrite.
       verify: fixture `T4` — an unknown conflict class is resolved semantically and validated
       independently rather than halting the run.
+      <!-- landed 2026-09-13. `/pr:merge` § 3's halt becomes the six-rung ladder, and
+      `process-full` halt 6 is RETIRED IN PLACE — numbered, never renumbered, because the
+      halt list is cited by index from several places and shifting five conditions up one is
+      how a citation comes to name a different halt. Five live halts, not six.
+      The substantive argument: "nobody has decided this yet" describes a class of CONFLICT,
+      not a class of thing only an owner may touch. Most unenumerated conflicts are two
+      branches editing adjacent prose, and halting on one converts a two-minute read into an
+      owner interrupt. So the owner is the LAST rung and is reached by a semantic test — the
+      two sides encode incompatible PRODUCT semantics — never by the run's own uncertainty,
+      which the command says in its own fence.
+      **What did NOT change, and the retirement depends on it:** an unenumerated conflict may
+      still never be resolved silently. The record — which rung settled it, both intents, why
+      the resolution preserves them — is what replaced the stop. A retirement that dropped the
+      record too would be a removal rather than a migration. -->
 
 ## Phase 6 — Boy-Scout and adjacent improvement
 
