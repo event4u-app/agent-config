@@ -57,6 +57,21 @@ capability_gap: >-
 > is the only forward motion this file received, and it is evidence rather than progress: no
 > checkbox moved.
 
+> **SUPERSEDED IN PART, 2026-09-14 — the paragraph above describes 2026-09-10 and is kept for
+> the reasoning, not for the count.** All twenty-three phase steps landed on 2026-09-13, and
+> four of the seven acceptance criteria closed on 2026-09-14. The screening verdict was right
+> about the two blockers and wrong about the steps: what the blockers actually gate is
+> narrower than the file read as. `forge-protection-settings` gates **3.2's acceptance**, not
+> its code; `daemon-host-kill-switch` gates **7.1's enforcing mode**, not the observation-only
+> floor that ships first. Both are stated that way in their own entries below, and both were
+> re-read rather than trusted.
+>
+> **27 of 30. The three that remain are each externally impossible, not unstarted** — and each
+> says so under its own criterion rather than here: **AC-4** needs an edit to a kernel rule and
+> `block_kernel_rule_writes` refused it at tool-call time (reproduced 2026-09-14, not assumed);
+> **AC-5** needs two forge admin settings, re-measured the same day and still false; **AC-6**
+> needs the owner decision its blocker is, and the measurement half is already done.
+
 > **Source:** `agents/tmp.old/inbox-2026-09-w/` — an inbox round carrying two challenge-me
 > interviews with the owner plus three generations of consolidated proposals. Verified against
 > `main@399beecab` on 2026-09-08.
@@ -802,10 +817,54 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       <!-- verify: ./scripts-run src/scripts/check_test_delta --self-test -->
 - [ ] AC-4 — `fix_loop_max` defaults to 10, `grep -rn 'N=3' src/rules` returns 0, and no
       escalation path maps a count to an owner ask.
+      <!-- OPEN 2026-09-14 — two of three clauses are met and the third is agent-impossible.
+      MET: `fix_loop_max` defaults to 10 (`agent-settings.template.yml:760`, the Zod schema's
+      `.default(10)`, and `missionExecution`'s fallback). MET: no escalation path maps a count
+      to an owner ask — `autonomous-execution` carries `THE BOUND TRIGGERS A STRATEGY CHANGE,
+      NEVER A QUESTION` and `A COUNT IS NOT A REASON TO ASK`, the old `ASK USER FOR GUIDANCE`
+      and `DO NOT ITERATE BEYOND` are gone, and `T3` asserts their absence rather than only
+      the new prose's presence.
+      NOT MET, and not by an agent: `grep -rn 'N=3' src/rules` returns ONE, in
+      `verify-before-complete.md` — one of the nine kernel rules. The edit was ATTEMPTED on
+      2026-09-14 and refused at tool-call time: `block-kernel-rule-writes: BLOCKED — kernel
+      rule verify-before-complete is immutable`. Reproduced, not assumed, and the denial names
+      its own remedy: a human action outside the agent session, via the override exception
+      registry. The occurrence is a pointer in a mechanics link — `Mechanics (N=3 / Hard-Floor
+      bounds)` — so the obligation this criterion protects is already satisfied everywhere the
+      cap could bind; what is left is a stale three characters in a file no agent may open.
+      `T3`'s fixture asserts the offender set is EXACTLY `['verify-before-complete.md']`, which
+      keeps the obligation live for every non-kernel rule and reds the moment another
+      reintroduces the cap. -->
+      <!-- verify: grep -rln 'N=3' src/rules -->
 - [ ] AC-5 — `agent-config doctor --json` reports every `forge_protection` row true on this
       repository.
+      <!-- OPEN 2026-09-14 — three of five rows satisfied, two false, and both falses are admin
+      settings. RE-MEASURED this day rather than carried from the blocker's 2026-09-13 table:
+      `gh api repos/event4u-app/agent-config --jq '.allow_auto_merge'` → `false`, and the one
+      environment `github-pages` still reports `custom_branch_policies: true,
+      protected_branches: false`. Unchanged in both rows.
+      This is the blocker working as its own entry describes it — `forge-protection-settings`
+      gates this CRITERION, never the run: `doctor` lists the two as ACTION lines and execution
+      continues, which is what "not a halt" means. Phase 3.2's code shipped and is asserted.
+      An agent cannot close it: enabling auto-merge and restricting a deployment environment
+      are repository-admin actions outside an agent session. -->
+      <!-- verify: gh api repos/event4u-app/agent-config --jq '.allow_auto_merge' -->
 - [ ] AC-6 — `docs/enforcement-by-host.md`'s `destructive:` column is measured for all eight
       hosts, with every `manual-only` row a recorded decision.
+      <!-- OPEN 2026-09-14 — the MEASUREMENT half is complete, the DECISION half is
+      owner-reserved and that is the whole remaining distance. All eight rows carry a value
+      and the reading it came from (`host_lowering.yaml`, 2026-09-13): one `hook`, seven
+      `manual-only`, and the four distinct states inside those seven kept apart rather than
+      collapsed. `daemon` is in the vocabulary and describes nothing, which the doc says
+      rather than leaving as an unreachable value a reader would take for a live option.
+      What is missing is not a measurement. `daemon-host-kill-switch` is Class 3, human-only,
+      and its question is what the FALLBACK should be on a host with no process-level stop:
+      `manual-only`, or no autonomous mode there at all. The doc currently records what layer
+      exists, which is an observation; "a recorded decision" is the owner choosing between
+      those two, and an agent recording a preference as a decision would be taking it in the
+      owner's name. The blocker's own recommendation is `manual-only`; it is not this run's to
+      accept. -->
+      <!-- verify: ./scripts-run src/scripts/check_enforcement_matrix --quiet -->
 - [x] AC-7 — a throttled four-phase long-run fixture ends merged, with one continuity resume
       and zero owner asks.
       <!-- closed 2026-09-14 as the `AC-7` describe in
