@@ -27,10 +27,13 @@ import { describe, expect, it } from 'vitest';
 
 import {
     DELIVERY_ENDINGS,
+    HALT_ACTIONS,
     MAX_ITERATIONS,
+    TERMINAL_STATE_BY_ACTION,
     WALL_CLOCK_CAP_MS,
     deliveryBlocksCompletion,
     ladder,
+    terminalStateFor,
     type LadderState,
 } from '../../src/scripts/_lib/continuation_ladder.js';
 import {
@@ -38,8 +41,27 @@ import {
     cascadeCurrent,
     hopsNeedingMerge,
 } from '../../src/scripts/_lib/cascade_base.js';
+import {
+    REPORT_FIELDS,
+    renderReport,
+    routeCouncil,
+    type PauseReport,
+} from '../../src/scripts/_lib/council_transport.js';
 import { isDeliveryReady } from '../../src/scripts/_lib/delivery_ready.js';
 import { forgeProtectionRows } from '../../src/scripts/_lib/forge_protection.js';
+import {
+    WRITE_BOUNDARIES,
+    alreadyAnswered,
+    clearedBy,
+    missingFields,
+    restore,
+    type MissionRecord,
+} from '../../src/scripts/_lib/mission_record.js';
+import {
+    grantFor,
+    verdictAloneGrants,
+    type ExactObjectAsk,
+} from '../../src/scripts/_lib/typed_op_grant.js';
 import { classify, findingFor } from '../../src/scripts/check_test_delta.js';
 import {
     sameSessionTestFlag,
@@ -658,5 +680,259 @@ describe('Phase 4.2 — read the red before diagnosing it', () => {
         // The two traps that make the naive read wrong, not just the tool name.
         expect(body).toMatch(/LAST OUTPUT LINE is the verdict/);
         expect(body).toMatch(/exit code, which is 0 on a failure/);
+    });
+});
+
+describe('T1 — a normal feature runs independent-RED → implement → green, with zero asks', () => {
+    const base = (over: Partial<LadderState> = {}): LadderState => ({
+        iterations: 1,
+        started_at: new Date().toISOString(),
+        history: [],
+        ...over,
+    });
+
+    it('a test-first diff produces no test-delta finding', () => {
+        // The normal shape: the independent author's test lands in the same diff
+        // as the implementation it was written against. `findingFor` must stay
+        // silent — a gate that red-flagged the compliant case would be trained
+        // around within a week, which is this file's own Risk 4.
+        const verdict = classify([
+            'src/scripts/_lib/mission_record.ts',
+            'tests/scripts/mission_continuity.test.ts',
+        ]);
+        expect(verdict.code.length).toBeGreaterThan(0);
+        expect(verdict.tests.length).toBeGreaterThan(0);
+        expect(findingFor(verdict)).toBeNull();
+    });
+
+    it('the same-session flag WARNS and never blocks, because L0 is a legal state', () => {
+        // The plausible wrong implementation is a flag that refuses the diff.
+        // L0 is a permitted fallback, so refusing it would forbid a legal state —
+        // the flag therefore produces prose, and the prose says so itself.
+        expect(
+            touchesTestAndCode([
+                'src/scripts/_lib/mission_record.ts',
+                'tests/scripts/mission_continuity.test.ts',
+            ]),
+        ).toBe(true);
+        const text = sameSessionTestFlag('git commit -m "feat: x"');
+        expect(text).not.toBeNull();
+        expect(text).toMatch(/permitted FALLBACK/);
+        expect(text).toMatch(/prompt to STATE the level, not a finding/);
+    });
+
+    it('the flag is silent on a command that is not a commit', () => {
+        // Sensitivity: a flag that fired on every command would carry no
+        // information about the staged set at all.
+        expect(sameSessionTestFlag('npm run test:ts')).toBeNull();
+        expect(sameSessionTestFlag(null)).toBeNull();
+    });
+
+    it('the happy path ends the run, and no ladder rung is an owner ask', () => {
+        // T1's load-bearing half. The run reaching a delivery ending must
+        // `complete`; and the ladder's WHOLE action vocabulary must contain no
+        // rung that routes to the owner — a count mapped to an ask is exactly
+        // what Phase 4.1 removed, and the union is where it would reappear.
+        expect(ladder(base(), 0, Date.now(), 0, undefined, null, false, 'merged')).toBe('complete');
+        for (const action of Object.keys(TERMINAL_STATE_BY_ACTION)) {
+            expect(action).not.toMatch(/ask|question|confirm|owner/i);
+        }
+        for (const halt of HALT_ACTIONS) {
+            expect(terminalStateFor(halt)).not.toBeNull();
+        }
+    });
+});
+
+describe('T6 — a twelve-hour resume preserves the grant and every closed decision', () => {
+    const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
+
+    const record = (over: Partial<MissionRecord> = {}): MissionRecord => ({
+        mission_id: 'm-1',
+        roadmap: 'agents/roadmaps/road-to-adversarial-verification-and-long-runs.md',
+        phase: 'Phase 3',
+        completed_steps: ['0.1', '0.2', '1.1'],
+        decisions: [
+            { id: 'branch-base', where: 'run notes § Decisions' },
+            { id: 'conflict-class-4', where: 'run notes § Decisions' },
+        ],
+        authority: {
+            grant: 'roadmap:process-full',
+            expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            revoked_by: null,
+        },
+        target_branch: 'main',
+        pr: 2031,
+        head_sha: 'abc1234',
+        last_ci: { verdict: 'green', head: 'abc1234' },
+        recovery_epoch: 2,
+        attempt_count: 7,
+        pending_reviews: ['independent-validator'],
+        owner_owned_residue: [],
+        ...over,
+    });
+
+    it('a gap THREE TIMES the run wall-clock cap still resumes', () => {
+        // The plausible wrong implementation: expiring the mission record with
+        // the RUN's wall clock. `WALL_CLOCK_CAP_MS` bounds one run; a mission
+        // spans many, so twelve hours must not be an expiry on its own.
+        expect(TWELVE_HOURS_MS).toBeGreaterThan(WALL_CLOCK_CAP_MS * 2);
+        const later = new Date(Date.now() + TWELVE_HOURS_MS);
+        const rec = record({
+            authority: {
+                grant: 'roadmap:process-full',
+                expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+                revoked_by: null,
+            },
+        });
+        expect(restore(rec, { grant: 'roadmap:process-full', revoked_by: null }, later).state).toBe(
+            'resume',
+        );
+    });
+
+    it('the resume re-asks nothing the mission already settled', () => {
+        const rec = record();
+        const verdict = restore(rec, null, new Date());
+        expect(verdict.state).toBe('resume');
+        expect(verdict.closed).toEqual(['branch-base', 'conflict-class-4']);
+        for (const id of verdict.closed) {
+            expect(alreadyAnswered(rec, id)).toBe(true);
+        }
+        expect(alreadyAnswered(rec, 'never-asked')).toBe(false);
+    });
+
+    it('a record is not one while a field is missing', () => {
+        // Provenance of the resume: the fourteen fields are what makes the
+        // restore a read rather than a re-derivation.
+        expect(missingFields(record())).toEqual([]);
+        const partial: Partial<MissionRecord> = { ...record() };
+        delete (partial as { head_sha?: string }).head_sha;
+        expect(missingFields(partial)).toContain('head_sha');
+    });
+
+    it('a side task does not clear the record; only mission completion does', () => {
+        for (const boundary of WRITE_BOUNDARIES) expect(clearedBy(boundary)).toBe(false);
+        expect(clearedBy('side-task')).toBe(false);
+        expect(clearedBy('mission-complete')).toBe(true);
+    });
+
+    it('a grant withdrawn DURING the twelve hours does not survive the resume', () => {
+        // Sensitivity for the half that matters: the ledger is the surface a
+        // revocation writes to, so a restore that trusted the snapshot alone
+        // would resume with authority the owner took back mid-gap.
+        const later = new Date(Date.now() + TWELVE_HOURS_MS);
+        const verdict = restore(
+            record(),
+            { grant: 'roadmap:process-full', revoked_by: 'owner' },
+            later,
+        );
+        expect(verdict.state).toBe('authority-withdrawn');
+    });
+});
+
+describe('T9 — a typed op reaches an exact-object ask, and a verdict alone never grants', () => {
+    const unconfirmed: ExactObjectAsk = {
+        op: 'git push --force',
+        object: 'origin/drain/adversarial-verification-rest @ abc1234',
+        confirmed: false,
+    };
+    const confirmed: ExactObjectAsk = { ...unconfirmed, confirmed: true };
+
+    it('an in-mission verdict produces an ASK, never a grant', () => {
+        // The whole of T9 in one assertion: a clearance is not an authorisation.
+        // The reason has to SAY so, because a state name alone reads the same
+        // whether the council mattered or not.
+        const d = grantFor('in-mission', unconfirmed);
+        expect(d.state).toBe('ask-required');
+        expect(d.reason).toMatch(/which is not a grant/);
+        expect(d.reason).toMatch(/the ask still has to happen/);
+    });
+
+    it('no verdict in the whole domain grants without the this-turn confirmation', () => {
+        for (const v of ['in-mission', 'out-of-mission', 'unavailable', null] as const) {
+            expect(verdictAloneGrants(v)).toBe(false);
+            expect(grantFor(v, unconfirmed).state).not.toBe('granted');
+        }
+    });
+
+    it('the confirmation must name an exact OBJECT, not a category', () => {
+        // The Hard Floor's own wording. A confirmed ask over "the branch" is
+        // still `ask-required` — the plausible wrong implementation treats the
+        // `confirmed` boolean as sufficient and never reads what was named.
+        const category: ExactObjectAsk = { ...confirmed, object: 'branches' };
+        expect(grantFor('in-mission', category).state).toBe('ask-required');
+        expect(grantFor('in-mission', category).reason).toMatch(/category rather than an object/);
+        expect(grantFor('in-mission', confirmed).state).toBe('granted');
+    });
+
+    it('an out-of-mission verdict VETOES, and a later yes does not override it', () => {
+        // An advisory veto is not one. Order is the assertion: veto first, so a
+        // confirmation arriving afterwards changes nothing.
+        expect(grantFor('out-of-mission', unconfirmed).state).toBe('vetoed');
+        expect(grantFor('out-of-mission', confirmed).state).toBe('vetoed');
+    });
+
+    it('an UNAVAILABLE council is not a veto', () => {
+        // The same-shaped wrong guess `council-availability` exists over: reading
+        // absence as refusal would make an unconfigured council a silent kill
+        // switch on every typed op.
+        expect(grantFor('unavailable', unconfirmed).state).not.toBe('vetoed');
+        expect(grantFor(null, unconfirmed).state).not.toBe('vetoed');
+        expect(grantFor('unavailable', confirmed).state).toBe('granted');
+    });
+});
+
+describe('T10 — an over-ceiling API requirement produces a report and no ask', () => {
+    const ctx = {
+        needed: 'an independent validator pass over the Phase 2 fixtures',
+        missionState: 'Phase 2 of 11, PR open, CI green',
+        canStillProceed: ['Phases 3-5', 'the delivery state machine'],
+    };
+    const overCeiling = {
+        cliAvailable: false,
+        cliUnavailableReason: 'cli quota exhausted',
+        estimateUsd: 40,
+        ceilingUsd: 25,
+    };
+
+    it('over the ceiling pauses and carries all six report fields', () => {
+        const d = routeCouncil(overCeiling, ctx);
+        expect(d.route).toBe('paused');
+        expect(d.report).not.toBeNull();
+        for (const field of REPORT_FIELDS) {
+            expect(d.report?.[field]).toBeDefined();
+        }
+    });
+
+    it('the rendered report contains no question mark at all', () => {
+        // The failure mode is a report drifting into an ask one helpful sentence
+        // at a time. A single `?` anywhere is the drift.
+        const d = routeCouncil(overCeiling, ctx);
+        const text = renderReport(d.report as PauseReport);
+        expect(text).not.toContain('?');
+        expect(text).toMatch(/Proceeding meanwhile with:/);
+        expect(text).toMatch(/Phases 3-5/);
+    });
+
+    it('"nothing can proceed" renders as a stated answer, not an empty section', () => {
+        const d = routeCouncil(overCeiling, { ...ctx, canStillProceed: [] });
+        const text = renderReport(d.report as PauseReport);
+        expect(text).toMatch(/nothing; the mission is blocked on this council pass alone/);
+        expect(text).not.toContain('?');
+    });
+
+    it('an estimate exactly AT the ceiling is WITHIN it', () => {
+        // A limit, not an exclusive bound. The other reading pauses a run that
+        // budgeted exactly, which is the arithmetic-off-by-one this pins.
+        const d = routeCouncil({ ...overCeiling, estimateUsd: 25 }, ctx);
+        expect(d.route).toBe('api');
+        expect(d.report).toBeNull();
+    });
+
+    it('an available CLI never reaches the metered rung', () => {
+        const d = routeCouncil(
+            { cliAvailable: true, cliUnavailableReason: null, estimateUsd: 999, ceilingUsd: 1 },
+            ctx,
+        );
+        expect(d.route).toBe('cli');
     });
 });

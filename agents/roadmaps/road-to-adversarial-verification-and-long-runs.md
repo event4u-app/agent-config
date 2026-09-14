@@ -724,11 +724,45 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `T1`-`T10`, `G8` and `G9` exist under `tests/e2e/` and are green.
+- [x] AC-1 — `T1`-`T10`, `G8` and `G9` exist under `tests/e2e/` and are green.
+      <!-- closed 2026-09-14. `tests/e2e/adversarial-verification-fixtures.test.ts`, 74 green.
+      `T2`-`T5`, `T7`, `T8`, `G8` and `G9` landed with their phases on 2026-09-13; the four
+      this criterion was still waiting on — `T1`, `T6`, `T9`, `T10` — landed here over the
+      modules their phases shipped (`continuation_ladder`, `mission_record`, `typed_op_grant`,
+      `council_transport`).
+      **Each of the four pins the direction its mechanism could plausibly have gone wrong**,
+      which is the bar Phase 2.3 sets and the reason a fixture restating an implementation line
+      is not evidence. `T1` asserts the ladder's WHOLE action vocabulary carries no rung
+      matching `/ask|question|confirm|owner/` — a count mapped to an ask is what Phase 4.1
+      removed, and the union is where it would come back. `T6` asserts a twelve-hour gap
+      exceeds `WALL_CLOCK_CAP_MS` by more than 2× and still resumes: the wrong implementation
+      expires the MISSION record with the RUN's wall clock. `T9` asserts a confirmed ask naming
+      a category is still `ask-required` — the wrong implementation reads the `confirmed`
+      boolean and never reads what was named. `T10` asserts an estimate exactly AT the ceiling
+      is within it, and that `renderReport` emits no `?` anywhere.
+      **Sensitivity proven on two, by deliberate sabotage and restore**: neutralising
+      `restore`'s ledger-revocation branch reds exactly `T6`'s withdrawn-grant case, and
+      turning `<=` into `<` in `routeCouncil` reds exactly `T10`'s at-the-ceiling case — one
+      test each, no collateral, so neither is passing for an unrelated reason. -->
+      <!-- verify: npm run test:ts -- tests/e2e/adversarial-verification-fixtures.test.ts -->
 - [ ] AC-2 — independent test provenance is recorded per test, and critical tests are at L3 or
       L4 wherever two providers are configured.
-- [ ] AC-3 — `check_test_delta` and `check_test_weakening` run in `ci-fast`, and this
+- [x] AC-3 — `check_test_delta` and `check_test_weakening` run in `ci-fast`, and this
       repository is green under them at promotion or ratcheted from a measured baseline.
+      <!-- closed 2026-09-14, VERIFIED rather than assumed: both halves were re-read on this
+      tree rather than taken from Phase 2.4's landing note.
+      Registration: `taskfiles/ci-fast.yml` carries `check-test-delta` and
+      `check-test-weakening`; `Taskfile.yml`'s `ci` aggregate calls both; `.github/workflows/
+      tests.yml` runs both under `static-checks` with the same `--quiet` argv the Taskfile
+      uses, which is the identical-argv condition a gate registration owes.
+      Green: both run clean on this tree — `scanned=0` on an empty diff, which is the honest
+      reading of a diff-scoped gate with nothing yet to scan, and `0 code path(s)` /
+      `no net weakening` on the working diff.
+      **No ratchet entry, and that is the correct shape for these two.** Both are DIFF-scoped:
+      they measure the change under review, never a tree-wide population, so there is no count
+      to ratchet down and a baseline file would pin a number that is zero by construction on
+      every clean branch. "Green at promotion" is the branch this criterion takes. -->
+      <!-- verify: ./scripts-run src/scripts/check_test_delta --self-test -->
 - [ ] AC-4 — `fix_loop_max` defaults to 10, `grep -rn 'N=3' src/rules` returns 0, and no
       escalation path maps a count to an owner ask.
 - [ ] AC-5 — `agent-config doctor --json` reports every `forge_protection` row true on this
