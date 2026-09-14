@@ -77,6 +77,21 @@ export interface SpanCommit {
     breaking: boolean;
 }
 
+/**
+ * Optional inputs the derivation cannot get from the span alone.
+ *
+ * `readTouchedFile` is the one seam where a label needs FILE CONTENT rather
+ * than commit metadata, and it is a callback rather than a git call inside the
+ * derivation for two reasons: the derivation stays pure and unit-testable
+ * against a fixture map, and the caller keeps ownership of WHICH ref it is
+ * reading (the gate reads `--to`, the generator reads `HEAD`). Returning
+ * `null` means "not readable" and is never treated as "no residual" — an
+ * unreadable file simply does not substantiate the label.
+ */
+export interface DeriveOptions {
+    readTouchedFile?: (path: string) => string | null;
+}
+
 /** One derived hit: the commit that substantiates a label. */
 export interface CategoryHit {
     sha: string;
@@ -122,13 +137,16 @@ const _EXECUTABLE_EXACT: ReadonlySet<string> = new Set([
     'src/scripts/agent-config',
 ]);
 
-function _touches_executable(files: SpanCommit['files']): boolean {
-    return files.some(
-        (f) =>
-            _EXECUTABLE_SUFFIX.test(f.path) ||
-            _EXECUTABLE_EXACT.has(f.path) ||
-            _EXECUTABLE_PREFIXES.some((p) => f.path.startsWith(p)),
+function _is_executable_path(p: string): boolean {
+    return (
+        _EXECUTABLE_SUFFIX.test(p) ||
+        _EXECUTABLE_EXACT.has(p) ||
+        _EXECUTABLE_PREFIXES.some((prefix) => p.startsWith(prefix))
     );
+}
+
+function _touches_executable(files: SpanCommit['files']): boolean {
+    return files.some((f) => _is_executable_path(f.path));
 }
 
 /**
@@ -180,14 +198,66 @@ const _NULL_FORMS: readonly RegExp[] = [
 ];
 
 /**
+ * Self-declared-residual forms — the `Known limitations` half of the same
+ * shape `_NULL_FORMS` uses, and taken from real prose in this tree rather than
+ * invented.
+ *
+ * PHRASE-LEVEL, NEVER WORD-LEVEL, and that is the measured part. The first
+ * draft matched the bare word `residual`, and over `15.0.0..16.0.0` its top
+ * hit was a commit where `residual` is a LOCAL VARIABLE holding a parse error
+ * (`const residual = residualParseError(rawText)`). A residual in this repo's
+ * vocabulary is a sentence about what a change did not reach, so every pattern
+ * below carries the noun it qualifies or the verb that declares it.
+ *
+ * TWO FURTHER NARROWINGS, both taken from running this derivation over the
+ * `14.23.0..15.0.0` and `15.0.0..16.0.0` spans before it gated anything, and
+ * both the same failure as the bare word — the pattern matching the repo's
+ * VOCABULARY for limits rather than a declaration of one:
+ *
+ *   · `residual risk` / `residual cost` are OUT; `residual limit` / `residual
+ *     gap` are in. "carries more residual risk than one just past the fire
+ *     threshold" (`review_skipped_record.ts`) is a threshold rationale, and it
+ *     alone produced three of the five candidates over `15.0.0..16.0.0`.
+ *   · `known limitation(s)` is in; bare `known limit(s)` is OUT, because
+ *     `build_proof.ts` EMITS a report section called `## 3. Known limits` —
+ *     the phrase is a string literal in a generator, not a limit the file has.
+ *
+ * `does not yet` and `is not covered` are the two broadest and they are kept:
+ * both are the plainest way this tree writes a residual down, and the second
+ * is what makes `obligation_frequency.ts`'s "one session is not covered by a
+ * `session_start` check" derivable — a true positive neither narrow pattern
+ * would have reached.
+ */
+const _RESIDUAL_FORMS: readonly RegExp[] = [
+    /\bknown limitations?\b/iu,
+    /\bknown false[- ]positive/iu,
+    /\bresidual (?:limit|gap)\b/iu,
+    /\bowes? (?:its|their|the) residual\b/iu,
+    /\b(?:limit|gap|residual|recall limit) that remains\b/iu,
+    /\bdoes not yet\b/iu,
+    /\b(?:is|are|was|were) not covered\b/iu,
+    /\bnot (?:excluded|covered) and tested\b/iu,
+    /\bnamed rather than left to be discovered\b/iu,
+    /\bnot gate-checkable\b/iu,
+];
+
+/**
  * Why a label fired, in generator-facing prose. Keyed by label; a label absent
- * here is never derived (`Known limitations` is pure prose, not checkable).
+ * here is never derived.
+ *
+ * All FIVE labels are keyed here since 2026-09-13. `Known limitations` used to
+ * be the exception — "pure prose, not checkable" — and the consequence is what
+ * removed it: the field printed `_none_` in 15.0.0 and in 16.0.0, both times
+ * over a span whose own code documented its residuals, because `_none_` is
+ * what an underived label prints when nobody writes anything. A derived
+ * `_none_` and an unfilled one are now distinguishable.
  */
 const _DERIVED_REASON: Readonly<Record<string, string>> = {
     'Behaviour changes': 'rule/schema diffs, breaking commits or removed public surface',
     'Default changes + migration': 'commits naming a default, migration or migrate',
     'Security and correctness': 'security-scoped commits or fixes to executable surface',
     'Honest nulls': 'commits recording a null, waived or falsified result',
+    'Known limitations': 'commits declaring a residual, known limit or uncovered case',
 };
 
 /**
@@ -204,7 +274,19 @@ const _DERIVED_REASON: Readonly<Record<string, string>> = {
  * - Honest nulls: subject or body carrying one of the recorded-null forms —
  *   the literal marker, a waived-rather-than-met condition, a published or
  *   recorded null, an archival on a roadmap's own falsifier.
- * - Known limitations: never derived — pure prose, not gate-checkable.
+ * - Known limitations: subject or body carrying one of the self-declared
+ *   residual forms, OR a touched EXECUTABLE file whose text carries one. The
+ *   second half is what makes the label reachable at all: a residual is
+ *   written where the code that has it lives, and `6b5c574` — the commit that
+ *   moved detector E into `_lib/dropped_decision.ts` with its two named
+ *   false-positive paths — says nothing about a limit in its own subject or
+ *   body. It needs `opts.readTouchedFile`; without a reader the label falls
+ *   back to the subject/body half alone, which is the pure-metadata behaviour
+ *   every other label has.
+ *
+ *   Scoped to executable surface on purpose (Risk 1 of the roadmap that added
+ *   it): a residual declared in a rule or a roadmap is a plan, a residual
+ *   declared in shipped code is a property of the release.
  *
  * Derivation is deliberately conservative: a false red makes every release
  * annoying, a miss only returns the head to the pre-gate state. Conservative
@@ -220,11 +302,37 @@ const _DERIVED_REASON: Readonly<Record<string, string>> = {
  */
 export function derive_category_hits(
     commits: readonly SpanCommit[],
+    opts: DeriveOptions = {},
 ): Record<string, CategoryHit[]> {
     const out: Record<string, CategoryHit[]> = {};
     for (const label of HEAD_LABELS) {
         out[label] = [];
     }
+    // One verdict per path for the whole span, not per commit: a file touched
+    // by eleven commits is read once, and the eleven commits then agree by
+    // construction. Memoising the VERDICT rather than the text also keeps the
+    // peak memory of a wide span flat.
+    const residualPath = new Map<string, boolean>();
+    const _declares_residual_file = (files: SpanCommit['files']): string | null => {
+        if (!opts.readTouchedFile) {
+            return null;
+        }
+        for (const f of files) {
+            if (f.status.startsWith('D') || !_is_executable_path(f.path)) {
+                continue;
+            }
+            let verdict = residualPath.get(f.path);
+            if (verdict === undefined) {
+                const text = opts.readTouchedFile(f.path);
+                verdict = text !== null && _RESIDUAL_FORMS.some((re) => re.test(text));
+                residualPath.set(f.path, verdict);
+            }
+            if (verdict) {
+                return f.path;
+            }
+        }
+        return null;
+    };
     for (const c of commits) {
         const scopeMatch = /^\w+\(([^)]*)\)!?:/u.exec(c.subject);
         const scope = scopeMatch ? scopeMatch[1]! : '';
@@ -256,6 +364,17 @@ export function derive_category_hits(
         if (_NULL_FORMS.some((re) => re.test(subjectAndBody))) {
             out['Honest nulls']!.push({ sha: c.sha, text: c.subject });
         }
+        if (_RESIDUAL_FORMS.some((re) => re.test(subjectAndBody))) {
+            out['Known limitations']!.push({ sha: c.sha, text: c.subject });
+        } else {
+            const declaring = _declares_residual_file(c.files);
+            if (declaring !== null) {
+                out['Known limitations']!.push({
+                    sha: c.sha,
+                    text: `${c.subject} (${declaring} declares a residual)`,
+                });
+            }
+        }
     }
     return out;
 }
@@ -265,8 +384,11 @@ export function derive_category_hits(
  * reports to a human. Derived from the structured hits so the two can never
  * disagree.
  */
-export function derive_categories(commits: readonly SpanCommit[]): Record<string, string[]> {
-    const hits = derive_category_hits(commits);
+export function derive_categories(
+    commits: readonly SpanCommit[],
+    opts: DeriveOptions = {},
+): Record<string, string[]> {
+    const hits = derive_category_hits(commits, opts);
     const out: Record<string, string[]> = {};
     for (const label of HEAD_LABELS) {
         out[label] = (hits[label] ?? []).map((h) => `${h.sha.slice(0, 7)} ${h.text}`);
@@ -569,6 +691,73 @@ export function collect_span_commits(from: string | null, to: string, cwd: strin
         throw new Error(`git ${span_log_args(from, to).join(' ')} failed: ${r.stderr}`);
     }
     return parse_git_log(r.stdout);
+}
+
+/**
+ * Cap on distinct blobs one derivation will read.
+ *
+ * A bound and not a tuning knob: the `15.0.0..16.0.0` span touches 52 distinct
+ * executable paths, so the cap is an order of magnitude of headroom over the
+ * widest span measured. It exists so a pathological range (an era-spanning
+ * `--from`) cannot turn a gate into a thousand `git show` spawns. Hitting it
+ * degrades the label to the subject/body half rather than failing the gate,
+ * which is the same best-effort stance the rest of this derivation takes.
+ */
+export const RESIDUAL_BLOB_CAP = 600;
+
+/**
+ * A `readTouchedFile` backed by `git show <ref>:<path>`, for the callers that
+ * have a repository.
+ *
+ * Reads at a REF rather than from the working tree on purpose: the gate runs
+ * on a release branch whose checkout is the release commit, and a derivation
+ * that read the worktree would answer about the checkout instead of about the
+ * span it was handed. `git show` failing (path absent at that ref, binary,
+ * submodule) returns null, which the derivation treats as unsubstantiated.
+ */
+export function make_span_file_reader(
+    ref: string,
+    cwd: string,
+    cap: number = RESIDUAL_BLOB_CAP,
+): (path: string) => string | null {
+    let reads = 0;
+    return (p: string): string | null => {
+        if (reads >= cap) {
+            return null;
+        }
+        reads++;
+        const r = spawnSync('git', ['show', `${ref}:${p}`], {
+            encoding: 'utf-8',
+            cwd,
+            maxBuffer: 16 * 1024 * 1024,
+        });
+        return r.status === 0 ? r.stdout : null;
+    };
+}
+
+/**
+ * The whole span → curated-head prefill, in one call.
+ *
+ * The composition lives here rather than at the call site because the span's
+ * end ref and the file reader's ref MUST be the same one: `Known limitations`
+ * reads file CONTENT at a ref, so a caller that collected the span at `to`
+ * while reading blobs at some other ref would derive a head describing two
+ * different trees. Pairing them in one function makes that mismatch
+ * unexpressible rather than merely discouraged.
+ *
+ * Throws whatever `collect_span_commits` throws. Whether a git failure is
+ * fatal or degrades to the `_none_` skeleton is the caller's decision, and it
+ * stays the caller's — the generator catches, the gate does not.
+ */
+export function derive_head_prefill(
+    from: string | null,
+    to: string,
+    cwd: string,
+): Record<string, string> {
+    const span = collect_span_commits(from, to, cwd);
+    return render_derived_head_values(
+        derive_category_hits(span, { readTouchedFile: make_span_file_reader(to, cwd) }),
+    );
 }
 
 /** Latest reachable release tag before `ref`, or null when there is none. */

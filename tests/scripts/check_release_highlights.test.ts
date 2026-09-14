@@ -21,6 +21,7 @@ import {
     main,
     parse_curated_head,
     type SpanCommit,
+    UNDERIVED_LIMITATIONS_NOTE,
 } from '../../src/scripts/check_release_highlights.js';
 import {
     DERIVED_MARKER,
@@ -119,9 +120,28 @@ describe('derive_categories — per-label rules', () => {
         expect(derived['Default changes + migration']).toHaveLength(1);
     });
 
-    it('never derives Known limitations', () => {
+    /**
+     * REVERSED 2026-09-13, and rewritten in place rather than deleted so the
+     * change of contract reads off the diff.
+     *
+     * This test was called `never derives Known limitations` and pinned the
+     * empty array on the SAME fixture — a subject literally ending in "known
+     * limitation". That was the contract: the fifth label was the one curated
+     * label nothing derived, so `_none_` was what it printed whenever nobody
+     * wrote anything, and 15.0.0 and 16.0.0 both shipped exactly that over
+     * spans whose own code documented residuals.
+     */
+    it('derives Known limitations from a self-declaring subject', () => {
         const derived = derive_categories([
             commit({ subject: 'fix(security)!: everything at once — known limitation' }),
+        ]);
+        expect(derived['Known limitations']).toHaveLength(1);
+    });
+
+    it('does not derive Known limitations from ordinary chore prose', () => {
+        const derived = derive_categories([
+            commit({ subject: 'chore: bump the ratchet baseline' }),
+            commit({ subject: 'feat: add a thing', body: 'It works.' }),
         ]);
         expect(derived['Known limitations']).toEqual([]);
     });
@@ -627,5 +647,238 @@ describe('_parse_git_log', () => {
         const derived = derive_categories(commits);
         expect(derived['Security and correctness']).toHaveLength(1);
         expect(derived['Honest nulls']).toHaveLength(1);
+    });
+});
+
+describe('Known limitations — the fifth label, derived since 2026-09-13', () => {
+    /**
+     * The defect these fixtures pin, in one sentence: `Known limitations` was
+     * the one curated label of five that nothing derived, so `_none_` was what
+     * it printed when nobody wrote anything — and 15.0.0 and 16.0.0 both
+     * shipped that line over spans whose own code documented its residuals.
+     *
+     * The 16.0.0 case is the shaped fixture below. `6b5c574` moved detector E
+     * into `_lib/dropped_decision.ts`, whose doc block opens "TWO KNOWN
+     * FALSE-POSITIVE PATHS, named because a refusing detector owes its
+     * residual" — and whose own SUBJECT AND BODY say nothing about a limit.
+     * That is why the label needs `readTouchedFile` and not only the metadata
+     * half every other label has.
+     */
+    const DETECTOR_E = commit({
+        sha: '6b5c5742ff1955d27bd12ae9ada207eb7e929b84',
+        subject: 'fix(ci): pay the ratchets this branch moved, in the way both prescribe',
+        body: 'Source size: turn_end_gate_hook.ts crossed the 1500-line ceiling.',
+        files: [
+            { status: 'A', path: 'src/scripts/_lib/dropped_decision.ts' },
+            { status: 'M', path: 'src/scripts/hooks/turn_end_gate_hook.ts' },
+        ],
+    });
+
+    const DECLARING_TEXT =
+        ' * TWO KNOWN FALSE-POSITIVE PATHS, named because a refusing detector owes its\n' +
+        ' * residual rather than only its fix.\n';
+
+    function readerFor(map: Record<string, string>): (p: string) => string | null {
+        return (p) => map[p] ?? null;
+    }
+
+    it('§ 1.1 red-side: the detector-E commit derives a candidate from the file it touches', () => {
+        const derived = derive_categories([DETECTOR_E], {
+            readTouchedFile: readerFor({
+                'src/scripts/_lib/dropped_decision.ts': DECLARING_TEXT,
+            }),
+        });
+        expect(derived['Known limitations']).toHaveLength(1);
+        expect(derived['Known limitations']![0]).toContain('dropped_decision.ts');
+    });
+
+    it('§ 1.1 green-side: a span of pure chore commits derives none', () => {
+        const derived = derive_categories(
+            [
+                commit({ subject: 'chore: bump the ratchet baseline' }),
+                commit({
+                    subject: 'chore(deps): update the lockfile',
+                    files: [{ status: 'M', path: 'src/scripts/_lib/quiet.ts' }],
+                }),
+            ],
+            { readTouchedFile: readerFor({ 'src/scripts/_lib/quiet.ts': 'const x = 1;\n' }) },
+        );
+        expect(derived['Known limitations']).toEqual([]);
+    });
+
+    it('the metadata half alone is the fallback when no reader is supplied', () => {
+        // Same commit, no reader: the label degrades to subject/body, which
+        // this commit does not satisfy. Pinned so a later caller that forgets
+        // to pass the reader fails loudly in a test rather than silently in a
+        // release head.
+        expect(derive_categories([DETECTOR_E])['Known limitations']).toEqual([]);
+    });
+
+    it('a DELETED file is never read for a residual it no longer has', () => {
+        const derived = derive_categories(
+            [
+                commit({
+                    subject: 'chore: retire the detector',
+                    files: [{ status: 'D', path: 'src/scripts/_lib/dropped_decision.ts' }],
+                }),
+            ],
+            {
+                readTouchedFile: readerFor({
+                    'src/scripts/_lib/dropped_decision.ts': DECLARING_TEXT,
+                }),
+            },
+        );
+        expect(derived['Known limitations']).toEqual([]);
+    });
+
+    it('only EXECUTABLE surface is read — a roadmap declaring a residual is a plan', () => {
+        const derived = derive_categories(
+            [
+                commit({
+                    subject: 'docs(roadmap): plan the next cut',
+                    files: [{ status: 'M', path: 'agents/roadmaps/road-to-x.md' }],
+                }),
+            ],
+            { readTouchedFile: readerFor({ 'agents/roadmaps/road-to-x.md': DECLARING_TEXT }) },
+        );
+        expect(derived['Known limitations']).toEqual([]);
+    });
+
+    it('the narrowings hold: report vocabulary and threshold rationale are NOT residuals', () => {
+        // Both measured over the two real spans before this gated anything.
+        // `build_proof.ts` EMITS a section titled "Known limits"; the phrase is
+        // a string literal in a generator. `review_skipped_record.ts` weighs
+        // "more residual risk than one just past the fire threshold" — a
+        // threshold rationale, and alone it produced three of five candidates.
+        const derived = derive_categories(
+            [
+                commit({
+                    subject: 'docs(governance): stop asserting a mechanism that no longer exists',
+                    files: [{ status: 'M', path: 'src/scripts/build_proof.ts' }],
+                }),
+                commit({
+                    subject: 'feat(end-review-nudge): charge a session for its own mutation',
+                    files: [{ status: 'M', path: 'src/scripts/_lib/review_skipped_record.ts' }],
+                }),
+            ],
+            {
+                readTouchedFile: readerFor({
+                    'src/scripts/build_proof.ts':
+                        "    L.push('## 3. Known limits (published, witness-tested)');\n",
+                    'src/scripts/_lib/review_skipped_record.ts':
+                        ' * carries more residual risk than one just past the fire threshold.\n',
+                }),
+            },
+        );
+        expect(derived['Known limitations']).toEqual([]);
+        // And the bare word that started the narrowing, pinned as dead: a
+        // local variable named `residual` must never substantiate the label.
+        const identifier = derive_categories(
+            [
+                commit({
+                    subject: 'fix(settings): refuse a repair over a file with no reading',
+                    files: [{ status: 'M', path: 'src/scripts/_lib/settings_repair.ts' }],
+                }),
+            ],
+            {
+                readTouchedFile: readerFor({
+                    'src/scripts/_lib/settings_repair.ts':
+                        '    const residual = residualParseError(rawText);\n',
+                }),
+            },
+        );
+        expect(identifier['Known limitations']).toEqual([]);
+    });
+
+    it('§ 1.3 red: a `_none_` head over a span with a candidate is a contradiction', () => {
+        const derived = derive_categories([DETECTOR_E], {
+            readTouchedFile: readerFor({
+                'src/scripts/_lib/dropped_decision.ts': DECLARING_TEXT,
+            }),
+        });
+        const found = highlight_contradictions(ALL_NONE, derived);
+        expect(found.map((c) => c.label)).toContain('Known limitations');
+        const kl = found.find((c) => c.label === 'Known limitations')!;
+        // "names the candidate" is the load-bearing half of § 1.3's verify:
+        // the refusal has to say WHICH residual, or a releaser cannot act on
+        // it without re-deriving it by hand.
+        expect(kl.evidence[0]).toContain('6b5c574');
+        expect(kl.evidence[0]).toContain('src/scripts/_lib/dropped_decision.ts');
+    });
+
+    it('§ 1.3 green: the same head over a span with no candidate is clean', () => {
+        const derived = derive_categories([commit({ subject: 'chore: routine' })], {
+            readTouchedFile: () => null,
+        });
+        expect(highlight_contradictions(ALL_NONE, derived).map((c) => c.label)).not.toContain(
+            'Known limitations',
+        );
+    });
+});
+
+describe('a passing `Known limitations: _none_` says which _none_ it means', () => {
+    /**
+     * Risk 2 of the roadmap that made this label derivable: a self-declared
+     * residual is only detectable when somebody wrote it down, so a DERIVED
+     * `_none_` reads stronger than the undefended one it replaced unless the
+     * gate states the difference. These two fixtures pin that it does, and
+     * that it stays quiet when the field is filled.
+     *
+     * Scope, stated rather than implied: the span here is empty (`--from HEAD
+     * --to HEAD`), the same shallow-checkout-safe shape every other `main()`
+     * fixture in this file uses. The REFUSING direction is pinned one layer
+     * down, on the `highlight_contradictions(curated, derive_categories(...))`
+     * composition `main()` performs — `main()` resolves its repository from
+     * `import.meta.url` and takes no `--repo-root`, so no synthetic span can
+     * reach it without a refactor this change does not make.
+     */
+    function runHead(headValues: Record<string, string>): { code: number; stdout: string } {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'release-kl-'));
+        const changelog = path.join(dir, 'CHANGELOG.md');
+        const head = render_release_head(headValues).join('\n');
+        fs.writeFileSync(
+            changelog,
+            `# Changelog\n\n## [9.99.0](https://example.invalid) (2026-01-01)\n\n${head}\n`,
+        );
+        let stdout = '';
+        const outSpy = vi
+            .spyOn(process.stdout, 'write')
+            .mockImplementation((chunk: string | Uint8Array): boolean => {
+                stdout += String(chunk);
+                return true;
+            });
+        const errSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+        try {
+            const code = main([
+                '--version',
+                '9.99.0',
+                '--from',
+                'HEAD',
+                '--to',
+                'HEAD',
+                '--changelog',
+                changelog,
+            ]);
+            return { code, stdout };
+        } finally {
+            outSpy.mockRestore();
+            errSpy.mockRestore();
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    }
+
+    it('prints the no-candidate-derived note when the field passes as `_none_`', () => {
+        const { code, stdout } = runHead({});
+        expect(code).toBe(0);
+        expect(stdout).toContain(UNDERIVED_LIMITATIONS_NOTE);
+        expect(stdout).toContain('not that no limitations exist');
+    });
+
+    it('stays quiet when a human filled the field', () => {
+        const { code, stdout } = runHead({
+            'Known limitations': 'the blockquoted-ask false positive is not excluded.',
+        });
+        expect(code).toBe(0);
+        expect(stdout).not.toContain(UNDERIVED_LIMITATIONS_NOTE);
     });
 });

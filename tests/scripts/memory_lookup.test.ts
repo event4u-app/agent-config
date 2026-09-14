@@ -287,7 +287,12 @@ describe('memory_lookup.ts — supersession & staleness', () => {
 
     it('stale entry excluded from retrieve() but present in retrieve_with_meta().skipped', () => {
         chdirInto(tmp);
-        const today = new Date(Date.UTC(2026, 5, 15));
+        // Anchored to the real clock, not a literal: `retrieve()` below reads the
+        // real today, so a fixed anchor makes `own-fresh` decay into staleness
+        // once review_after_days elapses since that literal — which is what turned
+        // this test red on 2026-09-14, ninety-one days after a 2026-06-15 anchor.
+        const now = new Date();
+        const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
         // Entry validated 200 days ago, review_after_days=90 → STALE.
         const stale = new Date(today.getTime() - 200 * 86_400_000);
         const iso = (d: Date): string =>
