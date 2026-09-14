@@ -29,9 +29,23 @@ capability_gap: none
 ---
 # Road to decision closure
 
-> **Blocked on its declared dependency, recorded 2026-09-10 by an owner-delegated drain run
-> under a 2/2 convergent AI council verdict.** This file was screened for execution and left
-> untouched, deliberately rather than by omission — 0 of 22, and no step was started.
+> **Status, 2026-09-14 — 17 of 22 landed, 5 open, and every open one is blocked on a cause
+> reproduced on this tree rather than inferred from the last run's note.** Open: steps 3.1,
+> 4.1 and 5.1, and acceptance criteria AC-5 and AC-6; each carries its own dated
+> re-verification. Three distinct causes hold them: the kernel-write deny on
+> `src/rules/ask-when-uncertain.md` (3.1, and AC-6's first clause), the grant object that
+> `road-to-typed-grants-that-persist` Phase 2 has not built (4.1's `F5`), and this file's 5.1
+> being word-for-word that sibling's step 3.2. AC-5 and AC-6's first clause are transcript
+> claims on top, so neither closes on a static probe alone.
+>
+> **The paragraphs below are the 2026-09-10 screening record.** They were written when the
+> file stood at 0 of 22 and are kept because their reading of the dependency is still the live
+> one — but they are no longer the status, and this paragraph is.
+>
+> **Screening record, 2026-09-10, by an owner-delegated drain run under a 2/2 convergent AI
+> council verdict.** The file was screened for execution and left untouched, deliberately
+> rather than by omission — 0 of 22 at that time, and no step started. Seventeen landed on
+> 2026-09-13; this record is why none had landed before then.
 >
 > `depends: road-to-typed-grants-that-persist`, and that roadmap cannot complete: its Phase 1
 > rewrites five kernel rules, `src/scripts/hooks/block_kernel_rule_writes.ts` denies those
@@ -56,14 +70,18 @@ capability_gap: none
 > `resolved` and its condition re-verifies: `grep -m1 '^status:' docs/decisions/ADR-268-*.md`
 > reads `accepted`. The dependency is the whole of it.
 >
-> **No step was executed as "dependency-free", and that was a decision.** The council set a
-> four-part test for independence — a step qualifies only if it neither consumes nor assumes
-> the grant object or its behaviour, its output stays valid under any compliant implementation
-> of the dependency, its acceptance criterion can be evaluated now, and recording it cannot
-> imply that dependent integration was validated. openai: *"No step should be presumed
-> independent from the information supplied."* anthropic: *"the council cannot declare
-> 'execute dependency-free steps' without naming which those are."* Nobody named any, so none
-> were run, and this note says that instead of implying the file was merely skipped.
+> **The four-part independence test is what decided which steps could run.** The council set
+> it: a step qualifies only if it neither consumes nor assumes the grant object or its
+> behaviour, its output stays valid under any compliant implementation of the dependency, its
+> acceptance criterion can be evaluated now, and recording it cannot imply that dependent
+> integration was validated. openai: *"No step should be presumed independent from the
+> information supplied."* anthropic: *"the council cannot declare 'execute dependency-free
+> steps' without naming which those are."*
+>
+> **On 2026-09-10 nobody had named any, so none were run.** On 2026-09-13 they were named step
+> by step, and seventeen passed all four parts and landed. The five that remain each fail a
+> named part — 4.1 consumes the grant object, 5.1 is the dependency's own step, and AC-5 and
+> AC-6 cannot be evaluated now — which is the test applied rather than waived.
 >
 > **Nothing here was descoped.** Both seats refused the drain run's terminal descope rule for
 > this file: closing it around an unmet dependency would misrepresent the estate. Reopen when
