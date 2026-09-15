@@ -113,6 +113,8 @@ import {
 } from './_lib/model_tier.js';
 import { main as cmdMigrateMain } from './_cli/cmd_migrate.js';
 import { SCOPE_DETECT_AI_DIRS, SCOPE_DETECT_MANIFESTS } from '../install/detect.js';
+import { getLogPath } from '../install/paths.js';
+import { appendTxLog } from '../install/txlog.js';
 
 // ---------------------------------------------------------------------------
 // Python-runtime parity helpers
@@ -2891,6 +2893,25 @@ function _escapes_package_root(resolved: string, package_root: string | null): b
 }
 
 /**
+ * Append one `write`/`skip` entry to the transaction log, through the same
+ * `appendTxLog` module the recovery-dismiss route calls — one writer, two
+ * callers, identical entry shape. Failure is swallowed: the log is a recovery
+ * aid, never a condition for the install itself to proceed.
+ */
+function _log_tx_entry(kind: 'write' | 'skip', target: string): void {
+    try {
+        appendTxLog(getLogPath(), {
+            ts: new Date().toISOString(),
+            kind,
+            path: target,
+            sha256: kind === 'write' ? sha256OfFile(target) : null,
+        });
+    } catch {
+        /* swallow — the log is a recovery aid, not a precondition */
+    }
+}
+
+/**
  * Copy `src` → `dest`, dereferencing symlinks, returning
  * `[written, skipped, written_paths]`.
  *
@@ -2926,9 +2947,13 @@ function _copy_dir_dereferencing_symlinks(
         }
         mkdirp(path.dirname(dest));
         const decision = _resolve_file_conflict(dest, force);
-        if (decision === 'skip') return [0, 1, written_paths];
+        if (decision === 'skip') {
+            _log_tx_entry('skip', dest);
+            return [0, 1, written_paths];
+        }
         fs.copyFileSync(src, dest); // follow_symlinks=True is fs.copyFileSync default
         _inject_package_tag(dest, src, package_root);
+        _log_tx_entry('write', dest);
         written_paths.push(dest);
         return [1, 0, written_paths];
     }
@@ -2998,11 +3023,13 @@ function _copy_dir_dereferencing_symlinks(
         const decision = _resolve_file_conflict(target, force);
         if (decision === 'skip') {
             skipped += 1;
+            _log_tx_entry('skip', target);
             continue;
         }
         mkdirp(path.dirname(target));
         fs.copyFileSync(resolved, target);
         _inject_package_tag(target, resolved, package_root);
+        _log_tx_entry('write', target);
         written += 1;
         written_paths.push(target);
     }

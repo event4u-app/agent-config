@@ -154,15 +154,15 @@ export function _installLogExpected(projectRoot: string): boolean {
  * only, so `unknown` leaves exit codes untouched — including the verdict
  * banner, where the per-row symbol is the only signal.
  *
- * Reach, stated rather than implied, and stated after a review corrected it:
- * NO install path writes this log — browser included. `appendTxLog` has one
- * call site repository-wide (`src/server/routes/install.ts`, the
- * recovery-dismiss handler), and it appends a `rollback` marker with an empty
- * path and a null hash; the TypeScript apply route it once sat beside was
- * removed. So `unknown` is the answer for every installed tree, not for a
- * narrow class, and `fail` is currently unreachable because nothing writes an
- * `abort`. That is the honest state of the check, and closing it is Phase 3,
- * behind an open owner blocker.
+ * Reach, updated 2026-09-15 — Phase 3 landed: the headless installer
+ * (`src/scripts/install.ts`, `_copy_dir_dereferencing_symlinks`) now appends
+ * a `write` or `skip` entry per copied/skipped path, through the same
+ * `appendTxLog` module the recovery-dismiss route calls. So a headless
+ * install now leaves the `unknown` branch above and reads `ok` on its own
+ * evidence rather than on the absence of any. `unknown` is still the answer
+ * for an install that predates this change, or for the wizard's browser
+ * path, which does not call the headless copy function; `fail` is still
+ * unreachable because nothing writes an `abort` yet.
  */
 export function _check_txlog_clean(
     logPath: string = installLogPath(),
