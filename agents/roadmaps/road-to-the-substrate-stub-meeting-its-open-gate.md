@@ -199,23 +199,33 @@ rounds since have re-derived the architecture instead of reading the file.
 > null }`. The dashboard is unmoved by the edit, which is the point — the boxes stay `[ ]` and the
 > roadmap stays unarchivable; only the concern's read of them changes.
 
-- [ ] <!-- blocked-by: which-track-promotes-is-owner-reserved | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **5.1 Promote one track to a roadmap, or record that none qualifies.** Both are acceptable
+- [x] **5.1 Promote one track to a roadmap, or record that none qualifies.** Both are acceptable
       outcomes and the second needs a reason, not an apology.
       verify: either exactly one new roadmap exists carrying its estate keys, or the stub records
       why none qualified.
-- [ ] <!-- blocked-by: which-track-promotes-is-owner-reserved | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **5.2 Measure the estate before promoting, not after.**
+      **DECIDED 2026-09-15 — promote none, per the blocker's own recommendation.** The owner
+      approved this session's batch of prepared recommendations. No track carries a ruling on
+      the second blocker (`the-governance-conditions-are-a-supervision-read`) yet, and
+      `check_estate_count` sits at the floor with no offset in hand (5.2), so promoting any
+      track now would either red the estate ratchet or promote on an unruled governance
+      condition — exactly the technicality risk rank 1 names. Recorded on the stub itself:
+      `agents/roadmaps/stubs/road-to-runtime-orchestration-substrate.md` now carries a line
+      under its track table stating none qualified this round and why, dated 2026-09-15.
+- [x] **5.2 Measure the estate before promoting, not after.**
       verify: `./scripts-run src/scripts/check_estate_count` is green on the promoting change.
       **Measured anyway, so the owner does not have to.** At this revision
       `./scripts-run src/scripts/check_estate_count` is green with `open_blockers 53 (floor 53 at
       origin/main, +0)` and `this change +0 active / -0 disposed`. A promotion adds one active
       roadmap against an unconditional one-in-one-out floor, so it needs an offset named in the
-      same change. The step stays open because its subject is the promoting change, which does not
-      exist.
+      same change.
+      **CLOSED 2026-09-15 by 5.1's decision.** No promoting change exists — none was promoted —
+      so there is no offset to name; the measurement above (`open_blockers 53`, floor 53, `+0`)
+      is the record this step asked for.
 
 ## Blockers
 
 ### blocker: which-track-promotes-is-owner-reserved
-- **Status:** open
+- **Status:** resolved — 2026-09-15, "promote none this round" (owner-approved recommendation)
 - **Owner:** maintainer
 - **Class:** 3 — human-only
 - **Blocks:** Phase 5 only. Phases 1 through 4 proceed without it and are the phases that produce
@@ -254,20 +264,22 @@ rounds since have re-derived the architecture instead of reading the file.
   pending with the date it was requested.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-13 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-09-15 | reviewer: claude/host -->
 
-Re-reviewed 2026-09-13 after Phases 1 to 4 landed. Ranks 3 and 5 are **discharged** by
-the change that closed them and say so in place rather than being deleted — a risk removed
-from the table is indistinguishable from one nobody thought of. Ranks 1, 2 and 4 stay live
-because their subject is Phase 5, which is not landed. Rank 6 is **new**, and it is the risk
-this run created rather than one it inherited.
+Re-reviewed 2026-09-15 after Phase 5 landed (promote none). Ranks 3 and 5 discharged
+2026-09-13; rank 2 discharges in this pass — Phase 5's measurement is on record and no
+promotion occurred, so there is nothing left for it to guard against. Rank 1 stays live: it
+guards the per-track governance ruling, which promoting none does not settle. Rank 4 is
+**discharged**: the pressure it named was resolved by naming conditions rather than a track,
+which is exactly its own stated mitigation landing. Rank 6 stays live — it is about the
+table's own staleness, which this re-review is an instance of rather than a fix for.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | The gate reads open while its conditions are unmet per track | product | The record is accepted, which is not the same as its conditions being satisfied for a resident process, and conflating the two would unblock eight tracks on a technicality | **Holding, and tested once.** Phase 1.1 enumerated all four conditions with their states before any track moved; the stub's new gate line states in its own text that the common gate is retired and the per-track condition is reserved; the second blocker reserves the ruling. The temptation was live and real — "the ADR exists" reads as "the tracks are unblocked", and the evidence artefact § 2 keeps the two readings apart on purpose | Phase 1 — Read the gate and say whether it is open |
-| 2 | Promotion reds the estate ratchet | implementation | The active count is measured against the base ref and a promotion adds to it without an offset | **Live — Phase 5 is not landed.** 5.2's measurement is run and recorded at this revision (`open_blockers 53`, floor 53, `+0 active`) so the promoting change starts from a known floor instead of discovering it | Phase 5 — Promote at most one track, or none |
+| 2 | Promotion reds the estate ratchet | implementation | The active count is measured against the base ref and a promotion adds to it without an offset | **Discharged 2026-09-15.** Phase 5 decided promote-none; no active roadmap was added, so there is no offset to owe. 5.2's measurement (`open_blockers 53`, floor 53, `+0 active`) is the record of the floor the decision was taken against | Phase 5 — Promote at most one track, or none |
 | 3 | The track rows dereference into a deleted tree | implementation | The stub's rows point into a consumed inbox directory no clone carries, so a reader who follows them finds nothing | **Discharged 2026-09-13.** The `Source section` column is removed, not relabelled; every remaining pointer in the table resolves in a clone | Phase 4 — Re-cut the eight tracks against the open gate |
-| 4 | The arrival count becomes the argument | product | A large count invites acting on the subject because it keeps coming back, which is capitulation rather than adjudication | **Live, and the pressure was felt.** One of the eleventh round's two reviews recommends promoting a named track; this change promotes none and cites conditions instead. The count sets the venue, never the verdict | Phase 2 — Write the arrival count onto the object |
+| 4 | The arrival count becomes the argument | product | A large count invites acting on the subject because it keeps coming back, which is capitulation rather than adjudication | **Discharged 2026-09-15.** The owner-approved decision promotes none and cites the per-track gated conditions, not the arrival count, as the reason. The count set the venue; the conditions set the verdict | Phase 2 — Write the arrival count onto the object |
 | 5 | Phase 4 produces eight dispositions nobody revisits | product | A table of dispositions written once ages exactly like the prose it replaced | **Discharged as far as authoring can.** Every gate cell names a file, a command or a cancelled step a later reader checks directly. What authoring cannot do is make anyone look, which is what rank 6 now carries | Phase 4 — Re-cut the eight tracks against the open gate |
 | 6 | The re-cut table ages the way the sentence it replaced did | product | This roadmap exists because one header line stopped being true and no surface noticed for fifteen days. Eight per-track gates are eight more sentences that can go stale the same way — and two of them cite the state of *other* roadmaps, which move | The stub is now inside `stubs:due`: `reviewed_at`, `blocker_class` and `blocker_opened` are set, and its blocker counts as an owner decision, so a lapse surfaces in the dashboard header instead of waiting for the next arrival. That is a reader, not a guarantee — the honest residual is that nothing re-checks the eight gate conditions themselves | Phase 3 — Give the stub the two fields tooling reads |
 
@@ -304,7 +316,8 @@ this run created rather than one it inherited.
 - [x] AC-6 — All eight tracks carry exactly one disposition each, and each row stands alone
       without a pointer into a consumed tree. — Disposition column added, `Source section` column
       removed, every gate cell cites a path that exists in a clone.
-- [ ] AC-7 — Either one track is promoted with its estate keys and the estate gate green, or the
-      stub records why none qualified. — **open by decision**, not by omission: reserved to the
-      owner by `which-track-promotes-is-owner-reserved`, whose own Recommendation is to promote
-      none in this change.
+- [x] AC-7 — Either one track is promoted with its estate keys and the estate gate green, or the
+      stub records why none qualified. — **DECIDED 2026-09-15**: promote none, per the owner's
+      approval of `which-track-promotes-is-owner-reserved`'s own recommendation. The stub records
+      why (all eight rows read `gated` on their own measured condition; nothing was open to
+      choose between) at `road-to-runtime-orchestration-substrate.md`, above the track table.
