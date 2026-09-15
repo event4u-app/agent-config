@@ -64,6 +64,16 @@ that was never a judgement call.
     "Target release: X.Y.Z", never plan git tags or deprecation dates. Release
     and tag decisions belong to the user and are taken outside the roadmap.
     This is enforced by [`scope-control`](../rules/scope-control.md#git-operations--permission-gated).
+
+    **What the prohibition does not reach — a state, not a schedule.** The five
+    sentences above are unchanged and stay the rule: a roadmap does not decide
+    *when* or *in which version* work ships. It MUST, however, declare any
+    intentionally unreleasable intermediate tree state, together with the
+    machine-verified condition that clears it, per rule 28. Naming a state that
+    must not be published is not a release decision — it is a fact about the tree
+    that the release path has no other way to learn, and today cannot learn: the
+    release entry points read no roadmap at all. Declaring the state is
+    mandatory; deciding what to do about it at a cut is still the operator's.
 14. **No automatic branch switches mid-roadmap.** Roadmap work runs on the
     branch the user is on. If a separate branch (spike, hotfix, experiment)
     would be genuinely useful, the agent may propose it **once** while
@@ -326,6 +336,13 @@ that was never a judgement call.
     [`roadmap-progress-sync`](../rules/roadmap-progress-sync.md). A
     step gated by a specific blocker may cross-reference it inline:
     `- [ ] … <!-- blocked-by: <blocker-id> -->`.
+
+    **A blocker stops execution; a hold stops publication.** The two are not
+    interchangeable and never substitute for one another. A blocker says the work
+    cannot proceed and is cleared by a person; a release hold (rule 28) says the
+    work may proceed but its intermediate tree state must not ship, and is
+    cleared by a checkbox whose `verify:` a machine runs. A roadmap that is
+    merely unfinished has neither — incompleteness is not a release condition.
 
     **A user-decision blocker's annotation records whether the question
     was actually put.** Where the blocker's `Owner:` is the maintainer,
@@ -666,6 +683,83 @@ that was never a judgement call.
     closed everything inline carries no table and no marker, and is
     complete; an empty table written to satisfy a template records
     nothing, exactly as rule 25 says of a perfunctory pre-mortem.
+
+28. **Release holds — declare an unreleasable intermediate state, or there is
+    not one.** A roadmap whose intermediate tree state must not be published
+    declares that state in a `## Release holds` section. Nothing else in the
+    repository can express it, and the release path reads no roadmap today, so
+    an undeclared unreleasable state is invisible to every release boundary.
+
+    **Non-goal, stated first because it is the failure mode closest to hand:
+    roadmap *incompleteness* is never a release condition.** An unfinished
+    roadmap does not block a release, has never blocked one, and must not start
+    to. A hold is a positive declaration about a named tree state, never a side
+    effect of open checkboxes.
+
+    **Authoring order — `re-sequence → guard → hold`, in that order.** A hold is
+    the last resort, not the first tool:
+
+    1. **Re-sequence.** Can the phases be cut so that no intermediate state is
+       broken? A continuous shape needs no hold and is always preferred.
+    2. **Guard.** Can the half-built surface be hidden behind a flag, an unwired
+       entry point, or a default that keeps it inert? A guarded state is
+       publishable and needs no hold.
+    3. **Hold.** Only when neither works. Every hold entry therefore carries a
+       mandatory `Why not a guard:` field naming the concrete reason the guard
+       rung failed. A hold entry without it is malformed and reddens CI.
+
+    **Entry shape** (one entry per hold, inside `## Release holds`):
+
+    ```markdown
+    ## Release holds
+
+    ### hold: <kebab-id>
+    - **Channel:** all             <!-- all | latest -->
+    - **Opened by:** <phase.step>  <!-- the checkbox whose [x] opens the window -->
+    - **Cleared by:** <phase.step> <!-- the checkbox whose [x] closes it -->
+    - **State:** {the one sentence naming what is broken in the tree while open.}
+    - **Why not a guard:** {why rung 2 failed, concretely.}
+    ```
+
+    **Marker grammar.** Both named steps carry an inline marker so the binding is
+    readable from the checkbox and not only from the section:
+    `- [ ] … <!-- opens-hold: <hold-id> -->` and
+    `- [ ] … <!-- clears-hold: <hold-id> -->`. The clearing step MUST carry a
+    `verify:` field (rule 23) — a hold cleared by an unverified flip is a hold
+    cleared by assertion.
+
+    **Channel vocabulary.** `all` (the default, and what an omitted `Channel:`
+    parses to) refuses every cut. `latest` refuses a stable `X.Y.Z` cut and
+    permits a `-next.N` prerelease, for a state safe to publish to an opt-in
+    channel but not to the default one. There is no third value and no override:
+    a plain `X.Y.Z` cut is never silently converted to a prerelease, and the
+    choice between finishing the clearing step, cutting `-next.N`, and using a
+    release line stays the operator's.
+
+    **State table.** A hold is in exactly one of four states, and only the first
+    is publishable:
+
+    | State | How it is reached | Release boundary |
+    |---|---|---|
+    | `unopened` | the opening checkbox is not `[x]` | permits |
+    | `open` | opener `[x]`, clearer not `[x]` | **refuses**, per `Channel:` |
+    | `cleared` | both `[x]` | permits |
+    | `not-evaluable` | the declaration is malformed, the file unreadable, or the evaluator errored or timed out | **refuses**, always, on every channel |
+
+    `not-evaluable` refusing is the load-bearing row: there is no path on which
+    "could not evaluate" reads as safe. A malformed declaration additionally
+    reddens normal CI, so a broken hold cannot fail open by being unparseable.
+
+    **Per-folder lifecycle.** A window does not disappear by moving the file.
+    A roadmap with an open window may not be moved to `archive/` or `skipped/` —
+    the move is refused naming the hold id. It may be moved to `later/`, and the
+    open window is then named in the `entry_condition.what` part; it still lists
+    and still refuses. Deletion is a known residual, not a mitigation: rule 12
+    already forbids it and no gate can see a file that is gone.
+
+    **No versions inside a hold entry.** Rule 13's prohibition applies inside
+    `## Release holds` exactly as it does everywhere else. A hold names a *state*
+    and its clearing *checkbox*; it never names a version, a tag, or a date.
 
 ---
 

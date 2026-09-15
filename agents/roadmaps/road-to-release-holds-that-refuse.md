@@ -129,7 +129,7 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
 > it can start, and it is not lost by being absent from the marker — it is a second, separate
 > owner decision and stays declared in `## Blockers`.
 
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **1.1 Split template rule 13.** The version/tag/date prohibition stays byte-identical. The
+- [x] **1.1 Split template rule 13.** The version/tag/date prohibition stays byte-identical. The
       new second half says roadmaps do not decide when or in which version work ships, and MUST
       declare any intentionally unreleasable intermediate state together with its machine-verified
       clearance.
@@ -142,9 +142,17 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
       STRONGER than character-for-character: the patch carries ZERO deletion lines, so nothing
       anywhere in the file is removed or changed, and the prohibition block hashes to
       `5827d0e4…` identically at HEAD, at `9d3e40ab0` (where this roadmap landed) and after the
-      patch applies. `lint_roadmap_complexity` was measured green at HEAD. Stays `[ ]` because
+      patch applies. `lint_roadmap_complexity` was measured green at HEAD.
+      **APPROVED AND APPLIED 2026-09-15.** The owner approved the prepared patch (this
+      session's question, "Empfehlungen übernehmen"); `git apply
+      agents/evidence/analysis/release-holds-rule-13-split.patch` applied cleanly to
+      `src/agent-src/templates/roadmaps.md`, `task sync` regenerated `dist/agent-src/`, and
+      both halves of the verify condition were re-run after the write rather than trusted
+      from the proposal: `git diff` shows only additions and the prohibition block still
+      hashes to the pinned value, and `./scripts-run src/scripts/lint_roadmap_complexity` is
+      green (10 roadmaps).
       the template does not carry the split, and an agent may not approve a contract rule.
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **1.2 Add the release-holds template rule, now numbered 28** — marker grammar, entry
+- [x] **1.2 Add the release-holds template rule, now numbered 28** — marker grammar, entry
       shape, the state table, the channel vocabulary, per-folder lifecycle, and the authoring
       order `re-sequence → guard → hold` with a mandatory `Why not a guard:` field. It states as
       its own non-goal that roadmap *incompleteness* is never a release condition.
@@ -169,7 +177,11 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
       duplicate-number clause is new in the verify because the *count* cannot see a collision:
       two rules both numbered 27 still total 28, so the original verify would have passed on
       exactly the defect that occurred.
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **1.3 Rule 20 gains one sentence** distinguishing the two mechanisms: a blocker stops
+      **APPROVED AND APPLIED 2026-09-15**, same decision and same patch as 1.1. Re-run
+      after the write: `grep -cE '^[0-9]+\. \*\*' src/agent-src/templates/roadmaps.md`
+      reads 28, `sort | uniq -d` over the rule headings is empty, and the non-goal sentence
+      is present verbatim.
+- [x] **1.3 Rule 20 gains one sentence** distinguishing the two mechanisms: a blocker stops
       execution, a hold stops publication.
       verify: `./scripts-run src/scripts/lint_roadmap_blockers` stays green on every active
       roadmap — the pre-change baseline was measured green on 2026-09-11.
@@ -177,7 +189,10 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
       *a blocker stops execution; a hold stops publication*, with the four lines that make the
       distinction operational. `lint_roadmap_blockers` re-measured green at HEAD on 2026-09-13
       (14 roadmaps, blocker-contract-clean), so the baseline this verify compares against still
-      holds. Blocked on the same approval as 1.1.
+      holds.
+      **APPROVED AND APPLIED 2026-09-15**, same decision and same patch as 1.1.
+      `./scripts-run src/scripts/lint_roadmap_blockers` re-run after the write and is still
+      green (10 roadmaps).
 - [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **1.4 `new_roadmap.ts` emits the `## Release holds` block as a comment**, and the authoring
       self-check lands in `roadmap-writing/SKILL.md` and `/roadmap:create`, logging every
       `gated → re-sequenced` outcome so Phase 6 has a numerator.
