@@ -105,6 +105,13 @@ landed on 2026-08-27.
 | **Confidence ladder C0–C5 and independence classes** | **gated** | **A precondition whose owner is gone.** It needs the assurance registry to carry evidence-backed states instead of `unknown`; that was specification-layer Phase 3.3, which is `[-]` **cancelled** in the archived roadmap. No active roadmap owns the registry's states. Opens only if something re-adopts that work — the narrowest gate of the eight, and the strongest candidate for a *killed* ruling |
 | **Evidence graph, replay, multi-repo pilot** | **gated** | **Something worth replaying exists.** Last by construction: it consumes the artefacts the earlier seven tracks would produce, and none of them has produced any. Opens after at least one other row is promoted and has shipped |
 
+**None promoted, 2026-09-15.** All eight rows above read `gated` on their own named,
+individually-measured condition — no row's gate was open at the time of this reading, so
+there was nothing to choose between. Recorded per
+`road-to-the-substrate-stub-meeting-its-open-gate.md` step 5.1, whose blocker
+(`which-track-promotes-is-owner-reserved`) the owner resolved as "promote none this round".
+The table itself, not this line, is what would change first if that verdict were to move.
+
 ## Why one stub
 
 Seven roadmaps for eight gated tracks is seven files against an estate whose
