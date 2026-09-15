@@ -147,6 +147,71 @@ describe('_check_txlog_clean', () => {
         expect(res['status']).toBe('fail');
         expect(String(res['message'])).toContain('abandoned');
     });
+
+    async function realHeadlessInstallLog(): Promise<{ fakeHome: string; logPath: string }> {
+        const { _copy_dir_dereferencing_symlinks } = await import('../../../src/scripts/install.js');
+        const fakeHome = mkdtempSync(join(tmpdir(), 'txlog-fires-home-'));
+        process.env['HOME'] = fakeHome;
+        const src = join(tmp, 'src');
+        mkdirSync(src, { recursive: true });
+        writeFileSync(join(src, 'file.md'), '# x\n');
+        _copy_dir_dereferencing_symlinks(src, join(tmp, 'dest'), false);
+        mkdirSync(join(tmp, 'agents'), { recursive: true });
+        writeFileSync(join(tmp, 'agents', 'installed-tools.lock'), 'schema_version: 2\ntools: []\n');
+        return { fakeHome, logPath: join(fakeHome, '.event4u', 'agent-config', 'install-log.jsonl') };
+    }
+
+    it('a real headless install now leaves the unknown branch — Phase 3 fires on this path', async () => {
+        // Before road-to-a-conformance-check-that-can-fail Phase 3, no install
+        // path wrote this log, so this exact fixture (an installed tree,
+        // checked against the log a real headless install produced) could
+        // only ever read `unknown`. It now reads `ok` on real evidence.
+        const prevHome = process.env['HOME'];
+        let fakeHome = '';
+        try {
+            const real = await realHeadlessInstallLog();
+            fakeHome = real.fakeHome;
+            expect(_check_txlog_clean(real.logPath, tmp)['status']).toBe('ok');
+        } finally {
+            if (prevHome === undefined) {
+                delete process.env['HOME'];
+            } else {
+                process.env['HOME'] = prevHome;
+            }
+            if (fakeHome) rmSync(fakeHome, { recursive: true, force: true });
+        }
+    });
+
+    it('SABOTAGE: an abandoned real headless install still reddens the check', async () => {
+        // Same real log a headless install produced (previously unreachable —
+        // the sabotage fixture at line ~130 could only fake this shape by
+        // hand-writing the JSONL). Appending an `abort` tail now exercises the
+        // real writer's output, not a synthetic stand-in for it.
+        const prevHome = process.env['HOME'];
+        let fakeHome = '';
+        try {
+            const real = await realHeadlessInstallLog();
+            fakeHome = real.fakeHome;
+            const abortEntry = JSON.stringify({
+                ts: new Date().toISOString(),
+                kind: 'abort',
+                path: '',
+                sha256: null,
+                note: 'client disconnect',
+            });
+            writeFileSync(real.logPath, `${readFileSync(real.logPath, 'utf8')}${abortEntry}\n`);
+            const res = _check_txlog_clean(real.logPath, tmp);
+            expect(res['status']).toBe('fail');
+            expect(String(res['message'])).toContain('abandoned');
+        } finally {
+            if (prevHome === undefined) {
+                delete process.env['HOME'];
+            } else {
+                process.env['HOME'] = prevHome;
+            }
+            if (fakeHome) rmSync(fakeHome, { recursive: true, force: true });
+        }
+    });
 });
 
 describe('the txlog remedy resolves to real behaviour', () => {
