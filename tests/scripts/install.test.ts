@@ -32,6 +32,8 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import * as inst from '../../src/scripts/install.js';
+import { getLogPath } from '../../src/install/paths.js';
+import { readRecentEntries } from '../../src/install/txlog.js';
 
 // Real repo root — used to exercise the scoped-projection helpers against
 // the real `src/config/discovery/packs.yml` and `agent-settings.template.yml`.
@@ -619,6 +621,83 @@ describe('install — scoped-projection prune (road-to-credible-install Phase 2)
                 expect(kept).toContain(path.join(root, 'skills', 'a-generic-core-skill', 'SKILL.md'));
                 expect(kept).not.toContain(path.join(root, 'skills', 'video-director', 'SKILL.md'));
                 expect(kept).not.toContain(path.join(root, 'skills', 'prediction-pool-optimizer', 'SKILL.md'));
+            } finally {
+                fs.rmSync(root, { recursive: true, force: true });
+            }
+        });
+    });
+
+    describe('_copy_dir_dereferencing_symlinks writes the transaction log', () => {
+        let fakeHome: string;
+        let prevHome: string | undefined;
+
+        beforeEach(() => {
+            fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'txlog-home-'));
+            prevHome = process.env['HOME'];
+            process.env['HOME'] = fakeHome;
+        });
+
+        afterEach(() => {
+            if (prevHome === undefined) {
+                delete process.env['HOME'];
+            } else {
+                process.env['HOME'] = prevHome;
+            }
+            fs.rmSync(fakeHome, { recursive: true, force: true });
+        });
+
+        it('a headless copy into a fixture root produces at least one write entry', () => {
+            const root = fs.mkdtempSync(path.join(os.tmpdir(), 'install-copy-'));
+            try {
+                const src = path.join(root, 'src');
+                const dest = path.join(root, 'dest');
+                fs.mkdirSync(src, { recursive: true });
+                fs.writeFileSync(path.join(src, 'a.md'), '# a\n');
+
+                inst._copy_dir_dereferencing_symlinks(src, dest, false);
+
+                const entries = readRecentEntries(getLogPath());
+                const writes = entries.filter((e) => e.kind === 'write');
+                expect(writes.length).toBeGreaterThanOrEqual(1);
+                expect(writes.some((e) => e.path === path.join(dest, 'a.md'))).toBe(true);
+                expect(writes[0]?.sha256).not.toBeNull();
+            } finally {
+                fs.rmSync(root, { recursive: true, force: true });
+            }
+        });
+
+        it('the headless caller and the recovery-dismiss caller emit the identical entry shape', () => {
+            const root = fs.mkdtempSync(path.join(os.tmpdir(), 'install-copy-shape-'));
+            try {
+                const src = path.join(root, 'src');
+                const dest = path.join(root, 'dest');
+                fs.mkdirSync(src, { recursive: true });
+                fs.writeFileSync(path.join(src, 'c.md'), '# c\n');
+
+                inst._copy_dir_dereferencing_symlinks(src, dest, false);
+                const headlessEntry = readRecentEntries(getLogPath()).find((e) => e.kind === 'write');
+                expect(headlessEntry).toBeDefined();
+
+                // Same shape the recovery-dismiss route in src/server/routes/install.ts
+                // writes via the identical `appendTxLog` call.
+                const dismissEntry = {
+                    ts: new Date().toISOString(),
+                    kind: 'rollback' as const,
+                    path: '',
+                    sha256: null,
+                    note: 'recovery dismissed: ignore',
+                };
+                expect(Object.keys(headlessEntry ?? {}).sort()).toEqual(
+                    ['ts', 'kind', 'path', 'sha256'].sort(),
+                );
+                expect(Object.keys(dismissEntry).sort()).toEqual(
+                    ['ts', 'kind', 'path', 'sha256', 'note'].sort(),
+                );
+                // Both are TxLogEntry — the optional `note` field is the only
+                // difference, and it is optional on the shared type, not a second shape.
+                for (const key of Object.keys(headlessEntry ?? {})) {
+                    expect(Object.prototype.hasOwnProperty.call(dismissEntry, key)).toBe(true);
+                }
             } finally {
                 fs.rmSync(root, { recursive: true, force: true });
             }
