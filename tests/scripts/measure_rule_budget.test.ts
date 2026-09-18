@@ -43,9 +43,9 @@ describe('measure_rule_budget — behavioural spec', () => {
 
     it('aggregate: buckets by type and kernel membership', () => {
         const rules: mrb.RuleMeasure[] = [
-            { id: 'commit-policy', type: 'always', tier: '', chars: 100, lines: 3, tokens_gpt: 25, tokens_claude: 28 },
-            { id: 'some-auto', type: 'auto', tier: '', chars: 200, lines: 5, tokens_gpt: 50, tokens_claude: 56 },
-            { id: 'oversize', type: 'auto', tier: '', chars: 3000, lines: 40, tokens_gpt: 750, tokens_claude: 833 },
+            { id: 'commit-policy', type: 'always', tier: '', chars: 100, lines: 3, tokens_gpt: 25, tokens_claude: 28, iron_laws: 0 },
+            { id: 'some-auto', type: 'auto', tier: '', chars: 200, lines: 5, tokens_gpt: 50, tokens_claude: 56, iron_laws: 0 },
+            { id: 'oversize', type: 'auto', tier: '', chars: 3000, lines: 40, tokens_gpt: 750, tokens_claude: 833, iron_laws: 0 },
         ];
         const agg = mrb.aggregate(rules);
         expect(agg.rule_count).toBe(3);
@@ -69,7 +69,7 @@ describe('measure_rule_budget — behavioural spec', () => {
             'non-destructive-by-default',
             'scope-control',
             'verify-before-complete',
-        ].map((id) => ({ id, type: 'always', tier: '', chars: 500, lines: 10, tokens_gpt: 125, tokens_claude: 139 }));
+        ].map((id) => ({ id, type: 'always', tier: '', chars: 500, lines: 10, tokens_gpt: 125, tokens_claude: 139, iron_laws: 0 }));
         const agg = mrb.aggregate(kernel);
         const [code, report] = mrb.kernel_budget_check(kernel, agg, new Set());
         expect(code).toBe(0);
@@ -78,7 +78,7 @@ describe('measure_rule_budget — behavioural spec', () => {
 
     it('kernel_budget_check: fails on a missing kernel rule + oversize rule', () => {
         const kernel: mrb.RuleMeasure[] = [
-            { id: 'commit-policy', type: 'always', tier: '', chars: 3000, lines: 40, tokens_gpt: 750, tokens_claude: 833 },
+            { id: 'commit-policy', type: 'always', tier: '', chars: 3000, lines: 40, tokens_gpt: 750, tokens_claude: 833, iron_laws: 0 },
         ];
         const agg = mrb.aggregate(kernel);
         const [code, report] = mrb.kernel_budget_check(kernel, agg, new Set());
@@ -107,6 +107,7 @@ describe('measure_rule_budget — behavioural spec', () => {
             lines: 10,
             tokens_gpt: 1,
             tokens_claude: 1,
+            iron_laws: 0,
         }));
         const agg = mrb.aggregate(kernel);
         const [code, report] = mrb.kernel_budget_check(kernel, agg, new Set(['commit-policy']));
@@ -116,8 +117,8 @@ describe('measure_rule_budget — behavioural spec', () => {
 
     it('render_table: shows the over-cap flag and totals', () => {
         const rules: mrb.RuleMeasure[] = [
-            { id: 'small', type: 'auto', tier: '3', chars: 100, lines: 3, tokens_gpt: 25, tokens_claude: 28 },
-            { id: 'big', type: 'auto', tier: '', chars: 3000, lines: 40, tokens_gpt: 750, tokens_claude: 833 },
+            { id: 'small', type: 'auto', tier: '3', chars: 100, lines: 3, tokens_gpt: 25, tokens_claude: 28, iron_laws: 0 },
+            { id: 'big', type: 'auto', tier: '', chars: 3000, lines: 40, tokens_gpt: 750, tokens_claude: 833, iron_laws: 0 },
         ];
         const agg = mrb.aggregate(rules);
         const table = mrb.render_table(rules, agg);
