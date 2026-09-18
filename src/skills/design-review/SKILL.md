@@ -234,6 +234,56 @@ THE Q1-Q6 FLOOR SET IS IDENTICAL IN ALL FOUR MODES.
 Do not re-derive any of these fields here. This skill is a declared consumer of
 that object, and the contract's consumer table names it.
 
+## Fidelity proof — the chapter matrix
+
+```
+A 1:1 CLAIM IS PROVEN BY A COMMITTED MATRIX, NEVER BY A GREEN SUITE.
+ONE ROW PER HANDOVER CHAPTER. ONE EVIDENCE KIND PER ROW. NO EMPTY CELL.
+A BEHAVIOUR TEST ANSWERS "DOES IT WORK", NOT "DOES IT MATCH".
+```
+
+This discharges [`design-fidelity`](../../rules/design-fidelity.md)'s proof
+clause. It fires when a numbered handover is the spec — chapters like
+`10-datenmodell-api.md` … `46-roadmap-achse-randtage.md`, each an abgegrenzter
+contract. Such a handover is already a checklist; the failure it prevents is
+reading it and never working it as one.
+
+**Build the matrix from the handover's own numbering**, one row per chapter:
+
+| Chapter | Claim it makes | Evidence | Status |
+
+**Evidence is exactly one of four kinds**, and the row names which:
+
+1. **Element-scoped screenshot baseline** — `toHaveScreenshot` on the component,
+   not the page. Built into Playwright via pixelmatch, so no new dependency
+   ([`playwright-testing`](../playwright-testing/SKILL.md)). Mask dynamic
+   content (timestamps, running numbers, ids) or the baseline flakes on data
+   rather than on design.
+2. **`toHaveCSS` assertion on the value the chapter names** — the right kind
+   when the chapter states a token, a spacing step or a colour rather than a
+   shape.
+3. **Behaviour spec with a sensitivity probe** — legitimate where the chapter
+   describes an interaction. The probe is not optional: neutralise the
+   mechanism, watch the spec go red, restore it. A spec never seen red has
+   unknown sensitivity and is not evidence.
+4. **Explicitly not implemented, with the reason** — a real row, not a gap. An
+   honest `not implemented` is what makes the other three trustworthy.
+
+**The matrix is committed**, not written into a reply. A matrix that lives in a
+chat message dies with the session, which is the difference between a method and
+an artefact — and the whole reason this section exists rather than a paragraph
+telling a reviewer to be thorough.
+
+**The staleness trap.** A new handover version ships and the baselines stay
+pinned to the old one, so every screenshot row passes against a reference nobody
+uses any more. Check the baseline timestamps against the handover's own
+CHANGELOG before reading a green matrix as a pass.
+
+**What the matrix does not do.** It records what was compared, never that the
+comparison was honest — nothing in this tree reads a handover, so a row naming
+evidence nobody took looks exactly like one naming evidence that was. The
+control is that a reviewer can open it.
+
 ## Review independence — two passes, isolated, in this order
 
 ```
