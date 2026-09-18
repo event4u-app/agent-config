@@ -152,7 +152,14 @@ describe('governed non-JSON budgets — explicit list, never a widened glob', ()
         // an outcome-bar prereg is not a budget. It carries `owner` and
         // `review_by` anyway — see its own shape check in
         // tests/scripts/capability_native_outcome_bars.test.ts.
-        expect(budgetFiles(CONFIG_DIR)).toHaveLength(14);
+        //
+        // 14 -> 15 on 2026-09-18 (road-to-design-fidelity-proof Phase 3.1):
+        // `auto-rule-budget.json`, the growth ratchet for the `auto` rule bucket
+        // that `check_always_budget` does not see. It carries `owner` and
+        // `review_by`, which is the only thing that makes raising this
+        // legitimate — the raise was forced by CI naming the missing
+        // `review_by`, not by editing the number to clear a red.
+        expect(budgetFiles(CONFIG_DIR)).toHaveLength(15);
     });
 
     it('an UNLISTED *budget*.yml is not silently included', () => {
