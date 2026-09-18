@@ -43,4 +43,3 @@ assertion over prose written to satisfy this rule manufactures the evidence it e
 **Honest enforcement — `instruction-only`.** No gate sees which was written
 first: `check_test_delta` and `check_test_weakening` catch an absence, never an
 order. Model-carried; the red-first discipline is the control.
-
