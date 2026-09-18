@@ -239,7 +239,7 @@ that object, and the contract's consumer table names it.
 ```
 A 1:1 CLAIM IS PROVEN BY A COMMITTED MATRIX, NEVER BY A GREEN SUITE.
 ONE ROW PER HANDOVER CHAPTER. ONE EVIDENCE KIND PER ROW. NO EMPTY CELL.
-A BEHAVIOUR TEST ANSWERS "DOES IT WORK", NOT "DOES IT MATCH".
+A BEHAVIOR TEST ANSWERS "DOES IT WORK", NOT "DOES IT MATCH".
 ```
 
 This discharges [`design-fidelity`](../../rules/design-fidelity.md)'s proof
@@ -260,9 +260,9 @@ reading it and never working it as one.
    content (timestamps, running numbers, ids) or the baseline flakes on data
    rather than on design.
 2. **`toHaveCSS` assertion on the value the chapter names** — the right kind
-   when the chapter states a token, a spacing step or a colour rather than a
+   when the chapter states a token, a spacing step or a color rather than a
    shape.
-3. **Behaviour spec with a sensitivity probe** — legitimate where the chapter
+3. **Behavior spec with a sensitivity probe** — legitimate where the chapter
    describes an interaction. The probe is not optional: neutralise the
    mechanism, watch the spec go red, restore it. A spec never seen red has
    unknown sensitivity and is not evidence.
@@ -271,7 +271,7 @@ reading it and never working it as one.
 
 **The matrix is committed**, not written into a reply. A matrix that lives in a
 chat message dies with the session, which is the difference between a method and
-an artefact — and the whole reason this section exists rather than a paragraph
+an artifact — and the whole reason this section exists rather than a paragraph
 telling a reviewer to be thorough.
 
 **The staleness trap.** A new handover version ships and the baselines stay

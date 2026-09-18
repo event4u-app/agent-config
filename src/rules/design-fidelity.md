@@ -38,7 +38,7 @@ packs: [engineering-base, frontend-design]
 collision_ok:
   "mockup": "a provided mockup is the spec — 1:1 fidelity floor"
 enforced_by:
-  - "instruction-only: no artefact in this tree records a fidelity comparison. lint_design_slop and lint_design_quality measure generic AI-aesthetic tells and accessibility; neither reads the handover, so a 1:1 claim is model-carried"
+  - "instruction-only: no artifact in this tree records a fidelity comparison. lint_design_slop and lint_design_quality measure generic AI-aesthetic tells and accessibility; neither reads the handover, so a 1:1 claim is model-carried"
 # obligation: line 58
 obligation_frequency: "per-edit"
 ---
@@ -70,9 +70,9 @@ THE IMAGE IS THE SPEC AND THE 1:1 FLOOR ABOVE APPLIES TO IT UNCHANGED.
 WHERE THE ARTIFACT'S OWN MARKUP / CSS / JS IS STACK-COMPATIBLE, ADAPTING
 THAT CODE IS THE DEFAULT — A FROM-SCRATCH RE-DERIVATION IS A DEVIATION
 AND NEEDS THE SAME CONFIRMATION AS A SWAPPED CONTROL.
-A 1:1 CLAIM IS DISCHARGED BY A COMMITTED ARTEFACT NAMING, PER HANDOVER
-CHAPTER, THE EVIDENCE TAKEN — NEVER BY A BEHAVIOUR TEST, AND NEVER BY A
-SENTENCE IN A REPLY. A GREEN SUITE THAT MEASURED BEHAVIOUR ANSWERS A
+A 1:1 CLAIM IS DISCHARGED BY A COMMITTED ARTIFACT NAMING, PER HANDOVER
+CHAPTER, THE EVIDENCE TAKEN — NEVER BY A BEHAVIOR TEST, AND NEVER BY A
+SENTENCE IN A REPLY. A GREEN SUITE THAT MEASURED BEHAVIOR ANSWERS A
 QUESTION FIDELITY DID NOT ASK.
 ```
 
