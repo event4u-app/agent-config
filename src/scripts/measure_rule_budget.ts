@@ -38,6 +38,7 @@ const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 
 const OVERRIDES_FILE = path.join(REPO_ROOT, 'docs', 'contracts', 'iron-law-overrides.txt');
 const TREND_FILE = path.join(REPO_ROOT, 'agents', 'runtime', '.rule-budget-history.jsonl');
+const AUTO_BUDGET_FILE = path.join(REPO_ROOT, 'src', 'config', 'auto-rule-budget.json');
 
 // Council R2 amendments (2026-05-06) — see docs/contracts/kernel-membership.md § 5.1.
 // Per-rule cap raised 1.5k → 2.5k; warning band raised 1.2k → 2.0k.
@@ -59,6 +60,8 @@ export interface RuleMeasure {
     lines: number;
     tokens_gpt: number;
     tokens_claude: number;
+    /** Iron-Law headings in the body — the obligation count a char count hides. */
+    iron_laws: number;
 }
 
 export interface Aggregate {
@@ -80,6 +83,7 @@ export interface Aggregate {
     per_rule_hard: number;
     per_rule_target: number;
     per_rule_override_ceiling: number;
+    iron_law_total: number;
     oversize_rules: RuleMeasure[];
     top5_largest: RuleMeasure[];
 }
@@ -130,7 +134,30 @@ export function measure_rule(p: string): RuleMeasure {
         lines: _count(body, '\n'),
         tokens_gpt: token_count.gpt_tokens(body).tokens,
         tokens_claude: token_count.claude_tokens(body).tokens,
+        iron_laws: count_iron_laws(body),
     };
+}
+
+/**
+ * Count Iron-Law HEADINGS in a rule body.
+ *
+ * road-to-design-fidelity-proof Phase 3.2. A rule is not an instruction:
+ * `token-efficiency` carries five Iron Laws in one file, so a file count and a
+ * char count both understate what a model is asked to hold at once. The
+ * instruction-following literature measures against the number of SIMULTANEOUS
+ * constraints, and an Iron-Law heading is the closest proxy this tree can count
+ * deterministically.
+ *
+ * Heading forms accepted, matching `preservation-guard`'s own definition: any
+ * level, optional `The`, singular or plural, optional trailing number or
+ * qualifier (`## Iron Law 2`, `## Iron Law — Gate`). A prose mention is NOT a
+ * heading, and a heading that merely contains the words later (`## Why the Iron
+ * Law exists`) is not one either — the phrase must open the heading text, or
+ * every retrospective paragraph would inflate the count.
+ */
+export function count_iron_laws(body: string): number {
+    const re = /^#{1,6}[ \t]+(?:The[ \t]+)?Iron[ \t]+Laws?\b/gim;
+    return (body.match(re) ?? []).length;
 }
 
 /**
@@ -198,6 +225,7 @@ export function aggregate(rules: RuleMeasure[]): Aggregate {
         per_rule_hard: PER_RULE_HARD,
         per_rule_target: PER_RULE_TARGET,
         per_rule_override_ceiling: PER_RULE_OVERRIDE_CEILING,
+        iron_law_total: _sum(rules.map((r) => r.iron_laws)),
         oversize_rules: rules
             .filter((r) => r.chars > PER_RULE_HARD)
             .sort((a, b) => _cmp([-a.chars, a.id], [-b.chars, b.id])),
@@ -324,6 +352,59 @@ export function kernel_budget_check(
     return [0, out];
 }
 
+export interface AutoBudgetConfig {
+    baseline_chars: number;
+}
+
+/** Read the auto-bucket baseline. Throws rather than defaulting: a ratchet that
+ * silently falls back to "no bound" is a permanently green gate. */
+export function load_auto_budget(file: string = AUTO_BUDGET_FILE): AutoBudgetConfig {
+    const raw = JSON.parse(fs.readFileSync(file, 'utf-8')) as { baseline_chars?: unknown };
+    if (typeof raw.baseline_chars !== 'number') {
+        throw new Error(`${file}: baseline_chars must be a number`);
+    }
+    return { baseline_chars: raw.baseline_chars };
+}
+
+/**
+ * Enforce the `auto`-bucket growth ratchet. Returns `[exit_code, report_lines]`.
+ *
+ * road-to-design-fidelity-proof Phase 3.1. `kernel_budget_check` above bounds
+ * nine rules; this bounds the other 107, which carry ~93 % of the estate's rule
+ * prose and grew against nothing. Shrink-only: growth fails, a shrink passes and
+ * says how much slack it created, so the number walks down rather than becoming
+ * unused headroom.
+ *
+ * The Iron-Law total is REPORTED, never gated. No measurement in this tree says
+ * how many simultaneous obligations this layer can carry, and a bound nobody
+ * measured would publish a guess as a finding.
+ */
+export function auto_budget_check(agg: Aggregate, cfg: AutoBudgetConfig): [number, string[]] {
+    const out: string[] = [];
+    const delta = agg.auto_chars - cfg.baseline_chars;
+    const signed = delta >= 0 ? `+${delta}` : String(delta);
+    out.push(
+        `auto-bucket: ${agg.auto_chars} / ${cfg.baseline_chars} chars ` +
+            `(${agg.auto_count} rules, ${signed} vs baseline)`,
+    );
+    out.push(`iron-law total: ${agg.iron_law_total} heading(s) — reported, not gated`);
+    out.push('');
+    if (delta > 0) {
+        out.push(`\u274c  auto budget check: the auto bucket grew ${signed} chars`);
+        out.push(
+            '  The baseline may only move DOWN. Walk the bucket back, or state the ' +
+                'compensating reduction — raising it to clear this is config weakening.',
+        );
+        return [1, out];
+    }
+    out.push(
+        delta === 0
+            ? '\u2705  auto budget check: pass (at the baseline)'
+            : `\u2705  auto budget check: pass (${signed} chars of slack — ratchet it down)`,
+    );
+    return [0, out];
+}
+
 /**
  * Append a daily snapshot to agents/runtime/.rule-budget-history.jsonl.
  * Idempotent per UTC day. Mirrors `trend_append`. Returns `[exit, msg]`.
@@ -363,19 +444,22 @@ export function trend_append(agg: Aggregate): [number, string] {
 interface Args {
     json: boolean;
     kernelBudgetCheck: boolean;
+    autoBudgetCheck: boolean;
     trendAppend: boolean;
 }
 
 function parse_args(argv: string[]): Args {
     let json = false;
     let kernelBudgetCheck = false;
+    let autoBudgetCheck = false;
     let trendAppend = false;
     for (const a of argv) {
         if (a === '--json') json = true;
         else if (a === '--kernel-budget-check') kernelBudgetCheck = true;
+        else if (a === '--auto-budget-check') autoBudgetCheck = true;
         else if (a === '--trend-append') trendAppend = true;
     }
-    return { json, kernelBudgetCheck, trendAppend };
+    return { json, kernelBudgetCheck, autoBudgetCheck, trendAppend };
 }
 
 export function main(argv: string[] = process.argv.slice(2)): number {
@@ -384,10 +468,22 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     const rules = collect();
     const agg = aggregate(rules);
 
-    if (args.kernelBudgetCheck) {
-        const overrides = load_overrides();
-        const [code, report] = kernel_budget_check(rules, agg, overrides);
-        process.stdout.write(report.join('\n') + '\n');
+    // Both budget flags may be passed in one invocation, and the CI step does
+    // exactly that — a second task step would be a new gate `check_ci_local_parity`
+    // has to be told about, for two checks over one measurement.
+    if (args.kernelBudgetCheck || args.autoBudgetCheck) {
+        let code = 0;
+        if (args.kernelBudgetCheck) {
+            const overrides = load_overrides();
+            const [kCode, report] = kernel_budget_check(rules, agg, overrides);
+            process.stdout.write(report.join('\n') + '\n');
+            code = Math.max(code, kCode);
+        }
+        if (args.autoBudgetCheck) {
+            const [aCode, report] = auto_budget_check(agg, load_auto_budget());
+            process.stdout.write(report.join('\n') + '\n');
+            code = Math.max(code, aCode);
+        }
         return code;
     }
 

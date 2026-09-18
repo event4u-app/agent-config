@@ -126,3 +126,48 @@ describe('measure_rule_budget — behavioural spec', () => {
         expect(table).toContain('OVER per-rule hard cap (2500 chars): 1 rule(s)');
     });
 });
+
+// road-to-design-fidelity-proof Phase 3 — the auto-bucket ratchet and the
+// Iron-Law count. The kernel check beside it gates 9 rules; these two cover the
+// 107 `auto` rules that carry ~93 % of the estate's rule prose and were
+// measured by this script and gated by nothing.
+describe('measure_rule_budget — auto-bucket ratchet', () => {
+    const agg = (autoChars: number, ironLaws: number): mrb.Aggregate =>
+        ({ auto_chars: autoChars, auto_count: 107, iron_law_total: ironLaws }) as mrb.Aggregate;
+
+    it('passes at the baseline', () => {
+        const [code] = mrb.auto_budget_check(agg(1000, 5), { baseline_chars: 1000 });
+        expect(code).toBe(0);
+    });
+
+    it('passes below the baseline and reports the slack', () => {
+        const [code, out] = mrb.auto_budget_check(agg(900, 5), { baseline_chars: 1000 });
+        expect(code).toBe(0);
+        expect(out.join('\n')).toContain('-100');
+    });
+
+    it('FAILS on one character of growth', () => {
+        const [code, out] = mrb.auto_budget_check(agg(1001, 5), { baseline_chars: 1000 });
+        expect(code).toBe(1);
+        expect(out.join('\n')).toContain('+1');
+    });
+
+    it('reports the Iron-Law total, which is the obligation count the char count hides', () => {
+        const [, out] = mrb.auto_budget_check(agg(1000, 94), { baseline_chars: 1000 });
+        expect(out.join('\n')).toContain('94');
+    });
+});
+
+describe('measure_rule_budget — Iron-Law counting', () => {
+    it('counts a plain, a "The"-prefixed and a numbered heading at any level', () => {
+        expect(mrb.count_iron_laws('## Iron Law\nx\n### The Iron Law\ny\n## Iron Law 2\n')).toBe(3);
+    });
+
+    it('counts a plural heading', () => {
+        expect(mrb.count_iron_laws('## Iron Laws\nbody\n')).toBe(1);
+    });
+
+    it('does NOT count a prose mention or a mid-heading occurrence', () => {
+        expect(mrb.count_iron_laws('The Iron Law says x.\n## Why the Iron Law exists\n')).toBe(0);
+    });
+});
