@@ -37,6 +37,8 @@ workspaces: [engineering]
 packs: [engineering-base, frontend-design]
 collision_ok:
   "mockup": "a provided mockup is the spec — 1:1 fidelity floor"
+enforced_by:
+  - "instruction-only: no artefact in this tree records a fidelity comparison. lint_design_slop and lint_design_quality measure generic AI-aesthetic tells and accessibility; neither reads the handover, so a 1:1 claim is model-carried"
 # obligation: line 58
 obligation_frequency: "per-edit"
 ---
@@ -68,6 +70,10 @@ THE IMAGE IS THE SPEC AND THE 1:1 FLOOR ABOVE APPLIES TO IT UNCHANGED.
 WHERE THE ARTIFACT'S OWN MARKUP / CSS / JS IS STACK-COMPATIBLE, ADAPTING
 THAT CODE IS THE DEFAULT — A FROM-SCRATCH RE-DERIVATION IS A DEVIATION
 AND NEEDS THE SAME CONFIRMATION AS A SWAPPED CONTROL.
+A 1:1 CLAIM IS DISCHARGED BY A COMMITTED ARTEFACT NAMING, PER HANDOVER
+CHAPTER, THE EVIDENCE TAKEN — NEVER BY A BEHAVIOUR TEST, AND NEVER BY A
+SENTENCE IN A REPLY. A GREEN SUITE THAT MEASURED BEHAVIOUR ANSWERS A
+QUESTION FIDELITY DID NOT ASK.
 ```
 
 The qualifier is load-bearing, not hedging. Unqualified, the screenshot line
@@ -140,51 +146,40 @@ porting, or modifying UI to match it.
 
 ## Routing — an attached artifact is a trigger, an attached HTML file is not
 
-Matching is plain lower-cased substring containment on the prompt, plus fnmatch
-over the open files. Three handover classes must reach this rule: an English
-phrasing, a German one, and a prompt carrying **no** keyword at all because the
-artifact is simply attached. The last is covered by two file patterns:
-`*design.html`, the conventional handover filename, and `*.dc.html`, the Claude
-Design canvas artboard — which `*design.html` cannot match, because it compiles
-to `^(?:.*design\.html)$` and `ToDo.dc.html` does not end in `design.html`.
-Neither is `*.html`, which would fire on every HTML edit in every project and be
-strictly worse than the gap it closes; `near-plain-html-open-file` pins that
-form silent. A handover under some other filename needs one word in the prompt.
+Matching is lower-cased substring containment on the prompt plus fnmatch over
+the open files. Five classes reach this rule without a keyword being typed: the
+filename patterns `*design.html` and `*.dc.html`, the published-artifact path
+`claude.site/artifacts`, the directory prefix `.claude/design-system/`, and the
+English and German handover phrasings. A handover under any other filename, and
+a third-party builder's share link, need one word in the prompt — the
+builder-URL trigger was tried and **withdrawn** as over-broad, and stays pinned
+silent rather than merely absent.
 
-Two further handover shapes carry the artifact without any of the above:
-
-- **A capability URL.** A published artifact is handed over as a link, not a
-  file — so `phrase: "claude.site/artifacts"` fires on the *published-artifact
-  path*, not on the host. `claude.ai` alone is a chat link and must stay quiet:
-  a keyword on the bare domain would fire on "I pasted this from claude.ai",
-  which is a conversation reference, not a spec.
-- **A design-system directory.** `path_prefix: ".claude/design-system/"` — the
-  conventional location for a handed-over token/component set. The prefix is the
-  vendor-scoped directory, never a bare `design-system/`, which is a normal
-  source folder in a large fraction of frontend repos.
-- **A third-party builder's share link — UNCOVERED, deliberately.** A page built
-  in Lovable / v0 / bolt and handed over as a link is a finished spec and this
-  rule does not route it; the trigger was tried and withdrawn as over-broad.
-  Until then the class needs one word in the prompt. Why, what closes it, and
-  the row that pins the broad form silent:
-  [`design-fidelity-routing`](../guidelines/design-fidelity-routing.md).
-
-Every class here carries its own near-miss row in `ROUTING_MATRIX`
-([`design_fidelity_routing.test.ts`](../../tests/scripts/design_fidelity_routing.test.ts));
-extending the set without one is how an over-broad trigger lands. Which row, and
-why: [`design-fidelity-routing`](../guidelines/design-fidelity-routing.md).
-
-**The near-miss must test the direction the new trigger opens, not a direction
-that was already closed** — apply this before writing a trigger, not after. The
-worked example and the review that produced the rule:
+Every class carries its own near-miss row in `ROUTING_MATRIX`
+([`design_fidelity_routing.test.ts`](../../tests/scripts/design_fidelity_routing.test.ts)),
+and the row must test the direction the NEW trigger opens, not one that was
+already closed — apply that before writing a trigger, not after. Why each class
+is shaped as it is, why `*.html` and a bare builder host are refused, and the
+worked example behind the direction rule:
 [`design-fidelity-routing`](../guidelines/design-fidelity-routing.md).
 
 Body migrated to [`guideline:design-fidelity-mechanics`](../guidelines/design-fidelity-mechanics.md) (per P4 of `road-to-kernel-and-router.md`) — URL / live-page handover (extraction into the `design-system.json` contract before the first UI write, the retrieval order, the lock boundary), surgical visual edits (targeted-edit vs redesign-trigger discipline, stable anchors), asset & imagery discipline (owned-asset path, third-party delivery is self-hosted by default, real-imagery-as-proof, iconography floor, no unrequested filler), deviation-surfacing shape, failure-mode catalog, `daf-*` fixtures.
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
+
+## Honest enforcement — `instruction-only`
+
+Nothing records a fidelity comparison. The estate's two design linters measure
+generic AI-aesthetic tells (`lint_design_slop`) and accessibility
+(`lint_design_quality`); neither opens the handover, so nothing can tell a
+proven 1:1 from an asserted one. The proof clause in the Iron Law is therefore
+model-carried, and the committed matrix
+([`design-review`](../skills/design-review/SKILL.md) § Fidelity proof) is the
+control — a reviewer can open it, which is more than any gate here does.
 
 ## See also
 
 - [`brand-source-of-truth`](brand-source-of-truth.md) / [`brand-consistency`](brand-consistency.md) — same precedence shape, for registered brand tokens.
 - [`minimal-safe-diff`](minimal-safe-diff.md) — the code-diff analog (smallest change; no drive-by restructure).
 - [`existing-ui-audit`](../skills/existing-ui-audit/SKILL.md) / [`ui-audit-gate`](ui-audit-gate.md) — inventory existing components before adding new ones.
+- [`design-review`](../skills/design-review/SKILL.md) § Fidelity proof — the matrix that discharges the proof clause.
 - [`ask-when-uncertain`](ask-when-uncertain.md) — the one-question, numbered-option surfacing shape.

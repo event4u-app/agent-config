@@ -43,7 +43,7 @@ The source's own 1.3 requires both halves in one change: the rule gains a proof 
 loses depth, because ADR-264 forbids standing-rule growth without a compensating reduction and
 `check_preamble_payload_budget` measures zero net headroom at HEAD.
 
-- [ ] **1.1 Migrate the trigger-authoring detail out of `## Routing`.** The section's second half
+- [x] **1.1 Migrate the trigger-authoring detail out of `## Routing`.** The section's second half
       is about *how to write a trigger* (near-miss direction, the `*.html` over-breadth argument,
       the withdrawn builder-link trigger) and already cites
       `docs/guidelines/design-fidelity-routing.md` three times. Move that prose verbatim into that
@@ -52,20 +52,20 @@ loses depth, because ADR-264 forbids standing-rule growth without a compensating
       verify: `./scripts-run src/scripts/measure_rule_budget | grep design-fidelity` reports fewer
       body chars than the 9,713 at HEAD, and every migrated paragraph is findable in
       `docs/guidelines/design-fidelity-routing.md`.
-- [ ] **1.2 Add the proof clause to the Iron Law.** The Iron Law says *build it 1:1* eleven times
+- [x] **1.2 Add the proof clause to the Iron Law.** The Iron Law says *build it 1:1* eleven times
       and *prove it 1:1* zero times. Add one clause: a 1:1 claim is discharged by a committed
       artefact naming, per handover chapter, the evidence that was taken — never by a behaviour
       test and never by a sentence in a reply. Keep it to a clause; the procedure is Phase 2.
       verify: `grep -c 'nachweis\|proof\|prove' src/rules/design-fidelity.md` is non-zero inside
       the fenced Iron Law block, and `./scripts-run src/scripts/check_condensation` is green.
-- [ ] **1.3 Declare the enforcement honestly and tighten the baseline.** Add
+- [x] **1.3 Declare the enforcement honestly and tighten the baseline.** Add
       `enforced_by: ["instruction-only: <reason>"]` naming that no artefact records a fidelity
       comparison, add the matching one-line body statement the honesty convention requires, and
       delete `"design-fidelity.md"` from `src/config/rule-enforcement-baseline.json`. The baseline
       is a shrink-only ratchet, so removing an entry strengthens it 81 → 80.
       verify: `./scripts-run src/scripts/lint_rule_enforcement_declaration` reports
       `scanned=41 planned=121 skipped=80` and does not name `design-fidelity.md`.
-- [ ] **1.4 Prove the phase is net-negative on the gated payload.**
+- [x] **1.4 Prove the phase is net-negative on the gated payload.**
       verify: `./scripts-run src/scripts/check_preamble_payload_budget` is green and its
       `project-scope rules` figure is at or below the 122,757 tok measured at HEAD.
 
@@ -77,7 +77,7 @@ element-scoped `toHaveScreenshot`, built into Playwright, no new dependency — 
 in `src/skills/playwright-testing/SKILL.md`; what is missing is the obligation to produce a matrix
 and the route to it.
 
-- [ ] **2.1 Add a `## Fidelity proof — the chapter matrix` section to `design-review`.** It states:
+- [x] **2.1 Add a `## Fidelity proof — the chapter matrix` section to `design-review`.** It states:
       derive one row per numbered handover chapter; each row carries exactly one evidence kind —
       an element-scoped screenshot baseline, a `toHaveCSS` assertion on the value the handover
       names, a behaviour spec with a sensitivity probe, or an explicit *not implemented* with a
@@ -85,7 +85,7 @@ and the route to it.
       measured: a new handover version with baselines still pinned to the old one.
       verify: `./scripts-run src/scripts/lint_skills -- design-review` is green and the section
       exists with all four evidence kinds enumerated.
-- [ ] **2.2 Route `design-fidelity` § See also to it, and back.** One line each way, so the rule's
+- [x] **2.2 Route `design-fidelity` § See also to it, and back.** One line each way, so the rule's
       proof clause has a reachable procedure and the procedure names the rule it discharges.
       verify: `./scripts-run src/scripts/check_references` is green.
 
@@ -95,17 +95,17 @@ and the route to it.
 measures all 121 rules (402,710 chars, 373,354 of them `auto`), already writes a trend file, and
 already runs in CI — with `--kernel-budget-check` only. The measurement exists; the gate does not.
 
-- [ ] **3.1 Add `--auto-budget-check` to `measure_rule_budget`.** Reads an auto-bucket baseline
+- [x] **3.1 Add `--auto-budget-check` to `measure_rule_budget`.** Reads an auto-bucket baseline
       from config, fails on growth, prints the delta against the base ref. Shrink-only, same shape
       as the kernel check beside it — a growth ratchet, never a deletion mandate.
       verify: the flag fails on a seeded +1 char and passes at HEAD; the red is proven by sabotage,
       not asserted.
-- [ ] **3.2 Count the simultaneously binding obligations, not the files.** The source's 3.2 is
+- [x] **3.2 Count the simultaneously binding obligations, not the files.** The source's 3.2 is
       right that a rule is not an instruction — `token-efficiency` alone carries five Iron Laws.
       Add an Iron-Law count per rule and a total to the existing output.
       verify: the printed total matches `grep -c '^## .*Iron Law' src/rules/*.md` summed, modulo
       the documented `docs/contracts/iron-law-overrides.txt` exemptions.
-- [ ] **3.3 Wire the flag into the CI step that already runs.** `taskfiles/ci-fast.yml:596` invokes
+- [x] **3.3 Wire the flag into the CI step that already runs.** `taskfiles/ci-fast.yml:596` invokes
       the script with `--kernel-budget-check`; add the second flag to the same step rather than a
       new one, so `check_ci_local_parity` sees no new gate.
       verify: `./scripts-run src/scripts/check_ci_local_parity` is green.
@@ -124,6 +124,20 @@ disposition.
 | 4.4 item 2 — `check_single_delivery` as release precondition | **declined** | Measured on a two-layer install: the gate reds on five paths that lie outside the repo, so arming it as a release precondition would block every release on such a machine by construction. Item 1 of the same proposal (`.agent-settings.yml` parses) already ships as `_settings-readable` in `taskfiles/release.yml`. |
 | B5 / 4.2 — Worktree-Isolation | **out of repo** | The string *"This session is isolated in the worktree"* exists nowhere in `src/`; it is a host message, and ADR-229 removed the `worktrees.mode` setting. Nothing here can change it. |
 
+Six further source findings carry no phase here. Each was verified and is dispositioned rather
+than dropped — the source's own rule is that a point leaves with a named disposition or it was not
+judged.
+
+| Source finding | Disposition | Evidence at HEAD |
+|---|---|---|
+| B7 — 23 englische Antwortanfänge | **already fixed** | The `language-mirror` concern is bound on `user_prompt_submit` and `pre_compact` and emitted a `<language-pin>` block in the session that ran this analysis. Observed directly, not inferred. |
+| B11 — Bash:Read 96:1, five *File has been modified since read* errors | **already fixed** | The `reread-guard` concern is bound on `pre_tool_use` with a per-path once-per-session latch. The source proposed nothing here; the tree had already answered it. |
+| B8 / 3.4 — `AskUserQuestion` statt Prosa-Optionen | **partly built, record diverged** | The `one-question-per-ask` guard IS bound on `claude` `pre_tool_use` and filtered to `AskUserQuestion`. But `src/scripts/_lib/structured_ask.ts` ships `STRUCTURED_ASK_SHAPES = {}` and its hook docstring states *"on every host measured today it therefore fires on nothing"* — false for `claude`, which ships the tool. Recording the observed shape is a separate, cheap change and is deliberately not bundled into a design-fidelity PR. |
+| 2.1 — sessionübergreifender Wiederholungszähler | **not planned here** | `recurring-criticism` is `instruction-only` (its own frontmatter says so), and `self-repair-loop`'s counter is gitignored and detector-scoped. Both facts confirmed; the mechanism is a distinct roadmap, not a step in this one. |
+| 2.2 — Blocker-Übergaben mit Handlungsanweisung | **not planned here** | `src/rules/active-remediation.md` carries no such clause — verified. The user asked for it in the rules on 12.09.; it belongs in `active-remediation`, a rule this PR does not touch, and adding it needs its own compensating reduction under ADR-264. |
+| 2.3 — Konventions-Lookup vor Neuerfindung | **partly satisfied** | `improve-before-implement` § solution-size ladder already carries `reuse-in-repo` as rung 2. What it does not carry is the narrower case the source names — a *convention* already solved elsewhere in the repo, cited with `file:line`. A one-clause gap, not a missing ladder. |
+| 4.1 / 4.3 — Fanout-Budget und Denial-Lernen | **not planned here** | `subagents.model_ceiling` and the tier-budget routing exist (`src/scripts/_lib/tier_budget_routing.ts`); no pre-fanout spend probe does. Both are orchestration surfaces, unrelated to design fidelity. |
+
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-18 | reviewer: claude/host -->
 
@@ -136,13 +150,13 @@ disposition.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `src/rules/design-fidelity.md` carries an `enforced_by` declaration and a body line
+- [x] AC-1 — `src/rules/design-fidelity.md` carries an `enforced_by` declaration and a body line
       naming the gap, and is absent from `src/config/rule-enforcement-baseline.json`.
-- [ ] AC-2 — The rule's body character count is lower than the 9,713 measured at HEAD, and
+- [x] AC-2 — The rule's body character count is lower than the 9,713 measured at HEAD, and
       `check_preamble_payload_budget` is green.
-- [ ] AC-3 — A reader following `design-fidelity` reaches a procedure that names the four evidence
+- [x] AC-3 — A reader following `design-fidelity` reaches a procedure that names the four evidence
       kinds and requires the matrix to be committed.
-- [ ] AC-4 — `measure_rule_budget` fails on `auto`-bucket growth and reports an Iron-Law total, and
+- [x] AC-4 — `measure_rule_budget` fails on `auto`-bucket growth and reports an Iron-Law total, and
       the CI step that already runs it exercises both checks.
-- [ ] AC-5 — Every source proposal not executed is named in § Out of scope (verified) with the
+- [x] AC-5 — Every source proposal not executed is named in § Out of scope (verified) with the
       command or file that establishes its disposition.

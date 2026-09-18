@@ -39,3 +39,8 @@ reason — the obligation is an independent *review*, never a fake test: an
 assertion over prose written to satisfy this rule manufactures the evidence it exists to require.
 
 **Does NOT fire on** a rename, typo, formatting or comment-only edit · a change the user fenced this turn · a spike deleted before it lands.
+
+**Honest enforcement — `instruction-only`.** No gate sees which was written
+first: `check_test_delta` and `check_test_weakening` catch an absence, never an
+order. Model-carried; the red-first discipline is the control.
+
