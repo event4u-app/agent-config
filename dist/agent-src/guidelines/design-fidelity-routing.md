@@ -13,6 +13,35 @@ Migrated out of `design-fidelity.md` on 2026-09-09 under the council verdict on
 the operative pointers the same verdict requires, not an arbitrary line cut. The
 rule keeps the obligations; this holds the reasoning behind them.
 
+### The matcher, and why each shipped class is shaped that way
+
+Migrated out of `design-fidelity.md` on 2026-09-18 under
+`road-to-design-fidelity-proof` Phase 1.1 — the rule keeps the operative class
+list, this holds the argument behind each one.
+
+Matching is plain lower-cased substring containment on the prompt, plus fnmatch
+over the open files. Three handover classes must reach this rule: an English
+phrasing, a German one, and a prompt carrying **no** keyword at all because the
+artifact is simply attached. The last is covered by two file patterns:
+`*design.html`, the conventional handover filename, and `*.dc.html`, the Claude
+Design canvas artboard — which `*design.html` cannot match, because it compiles
+to `^(?:.*design\.html)$` and `ToDo.dc.html` does not end in `design.html`.
+Neither is `*.html`, which would fire on every HTML edit in every project and be
+strictly worse than the gap it closes; `near-plain-html-open-file` pins that
+form silent. A handover under some other filename needs one word in the prompt.
+
+Two further handover shapes carry the artifact without any of the above:
+
+- **A capability URL.** A published artifact is handed over as a link, not a
+  file — so `phrase: "claude.site/artifacts"` fires on the *published-artifact
+  path*, not on the host. `claude.ai` alone is a chat link and must stay quiet:
+  a keyword on the bare domain would fire on "I pasted this from claude.ai",
+  which is a conversation reference, not a spec.
+- **A design-system directory.** `path_prefix: ".claude/design-system/"` — the
+  conventional location for a handed-over token/component set. The prefix is the
+  vendor-scoped directory, never a bare `design-system/`, which is a normal
+  source folder in a large fraction of frontend repos.
+
 ### The withdrawn builder-URL trigger
 
 A page built in Lovable / v0 / bolt and handed over as a share link is a

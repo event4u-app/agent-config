@@ -77,7 +77,7 @@
   "refresh_cadence": "quarterly",
   "upstream": {
     "repo": "derived: MITRE ATT&CK + CWE + OWASP API Top 10 / ASVS 4.0",
-    "sha": "ATT&CK v16 / ASVS 4.0.3",
-    "last_checked": "2026-06-07"
+    "sha": "derived against ATT&CK v16 / ASVS 4.0.3. Verified 2026-09-18 and FOUND BEHIND: ATT&CK is v19.2 (2026-08) and ASVS is 5.0.0 (2025-05), which renumbers 4.x \u2014 the Source Refs column still cites 4.0.3 identifiers and needs a content pass",
+    "last_checked": "2026-09-18"
   }
 }

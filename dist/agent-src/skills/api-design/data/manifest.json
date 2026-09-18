@@ -28,7 +28,7 @@
   "refresh_cadence": "quarterly",
   "upstream": {
     "repo": "derived: RFC 9110/9457/7396/8288 + httpapi WG drafts",
-    "sha": "RFC set as of 2026-06",
-    "last_checked": "2026-06-07"
+    "sha": "RFC 9110 (STD 97) / 9457 / 7396 / 8288 \u2014 verified 2026-09-18: 9110 neither obsoleted nor updated; 9457 current and obsoletes 7807",
+    "last_checked": "2026-09-18"
   }
 }

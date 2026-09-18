@@ -305,7 +305,7 @@ Pure projection of what the repo already knows — the `enforced_by`
 resolution (`check_enforcement_coverage`) and the claims ledger
 (`docs/CLAIMS.md`). No new taxonomy, zero hand-written rows.
 
-**Axis 1 — enforcement level per rule.** 121 rules · 16 blocking (13.2%) · 10 observer · 0 local-only · 81 undeclared — of which 9 kernel-denied (`block_kernel_rule_writes` refuses an `enforced_by` write on a kernel rule, so no declaration is reachable for them at all) and 72 not declared yet.
+**Axis 1 — enforcement level per rule.** 121 rules · 16 blocking (13.2%) · 10 observer · 0 local-only · 80 undeclared — of which 9 kernel-denied (`block_kernel_rule_writes` refuses an `enforced_by` write on a kernel rule, so no declaration is reachable for them at all) and 71 not declared yet.
 
 `denominator: 121 rule(s), frame in-scope (src/rules/*.md) == governed-total 121`
 
@@ -317,6 +317,7 @@ resolution (`check_enforcement_coverage`) and the claims ledger
 | `context-hygiene` | observer | `hook:context-hygiene` |
 | `council-availability` | none | `instruction-only: no gate reads a chat claim about availability; check_council_config_location covers the tree side only` |
 | `decision-revisit-gate` | none | `instruction-only: no gate can observe an agent citing a decision it never opened; adr_cite_check is deterministic where it runs and nothing makes it run` |
+| `design-fidelity` | none | `instruction-only: no artifact in this tree records a fidelity comparison. lint_design_slop and lint_design_quality measure generic AI-aesthetic tells and accessibility; neither reads the handover, so a 1:1 claim is model-carried` |
 | `design-review-after-ui-write` | none | `instruction-only: no artefact proves a design review happened outside the work-engine dispatcher; the review verdict is self-report` |
 | `evaluator-independence` | observer | `hook:evidence-independence` |
 | `fix-what-you-see` | none | `instruction-only: ownership-as-excuse is a disposition in prose; no gate can see a red check handed back with its cause named` |
@@ -352,7 +353,7 @@ resolution (`check_enforcement_coverage`) and the claims ledger
 | `untrusted-input-defense` | none | `instruction-only: no deterministic gate inspects fetched content for injected instructions; injection_scan_hook is warn-only and default-OFF` |
 | `verify-before-complete` | observer | `hook:verify-before-complete` |
 
-Undeclared rules (81, of which 9 kernel-denied) carry no row — an honest gap beats a false claim.
+Undeclared rules (80, of which 9 kernel-denied) carry no row — an honest gap beats a false claim.
 
 **Axis 2 — evidence form per public claim.** 102 ledger entries · 61 backed · 34 unbacked inventory · 7 resolved-null.
 

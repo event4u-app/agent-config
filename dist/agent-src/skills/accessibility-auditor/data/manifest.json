@@ -28,7 +28,7 @@
   "refresh_cadence": "quarterly",
   "upstream": {
     "repo": "derived: W3C ARIA Authoring Practices Guide + WCAG 2.2",
-    "sha": "APG 2026 / WCAG 2.2",
-    "last_checked": "2026-06-07"
+    "sha": "APG 2026 / WCAG 2.2 (W3C Recommendation 12 Dec 2024) \u2014 verified not superseded 2026-09-18",
+    "last_checked": "2026-09-18"
   }
 }

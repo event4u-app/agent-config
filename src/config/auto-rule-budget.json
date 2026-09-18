@@ -1,0 +1,16 @@
+{
+  "_comment": "Growth ratchet for the `auto`-tier rule bucket (road-to-design-fidelity-proof Phase 3). check_always_budget gates the nine kernel rules; measure_rule_budget already measured all 121 and gated none of them, so ~93 % of the estate's rule prose grew against nothing. Seeded AT the measurement, exactly like the preamble-payload ceiling and for the same reason: seeding below it would red every pull request from the day it lands, which is a self-inflicted CI stop rather than a gate. It may only move DOWN. Raising it to clear a failing check is the config-weakening move this repo refuses; walk the bucket back instead, or state the compensating reduction.",
+  "schema_version": 1,
+  "registered_at": "2026-09-18",
+  "owner": "maintainer",
+  "review_by": "2027-09-18",
+  "baseline_chars": 373000,
+  "baseline_history": [
+    {
+      "chars": 373000,
+      "at": "2026-09-18",
+      "why": "registered with the gate, seeded at the measured auto bucket (107 rules) after road-to-design-fidelity-proof Phase 1 returned 1,885 chars from design-fidelity.md"
+    }
+  ],
+  "_what_this_does_not_claim": "A char count is not an obligation count. The Iron-Law total printed beside it is the closer proxy for what the instruction-following research calls simultaneous constraints, and it is REPORTED, not gated \u2014 nobody has measured a threshold for this layer, and gating an unmeasured number would publish a bound as if it were a finding."
+}
