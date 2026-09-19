@@ -237,22 +237,52 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
 
 ## Phase 2 — The evaluator, and the glob nobody has paid for yet
 
-> **Not started — blocked by `rule-13-amendment`.** Every step here parses or
-> evaluates a marker the template does not yet permit a roadmap to carry, so there is no
-> grammar to write a parser against. 2.3's glob measurement is the one step that could in
-> principle run early; it is left with the phase because a p95 budget measured for a
-> declaration format that may change during review would have to be re-taken.
+> **Closed 2026-09-19, all three steps.** The phase note above was written while
+> `rule-13-amendment` was open; rule 28 has been in the template since `47bb07719`, so the
+> grammar the parser is written against exists and is the contract rather than a guess.
 
-- [ ] **2.1 Write `src/scripts/_lib/release_holds.ts`** — parse and evaluate. Reuse
+- [x] **2.1 Write `src/scripts/_lib/release_holds.ts`** — parse and evaluate. Reuse
       `check_roadmap_trackable`'s checkbox and fence parser and `lint_roadmap_blockers`' marker
       grammar. No third parser.
       verify: neither helper is copied — `grep -n 'from .*roadmap_trackable\|from .*roadmap_blockers'`
       in the new lib resolves, and the two existing gates stay green.
-- [ ] **2.2 Write `src/scripts/check_release_holds.ts`** with `--lint`, `--status`,
+      LANDED 2026-09-19. Both imports resolve and are load-bearing rather than decorative:
+      `CHECKBOX_RE` from `check_roadmap_trackable` (whose source is spliced into the two
+      marker regexes, so the accepted mark set cannot drift from the dashboard's) and
+      `_stripFencedCode` from `lint_roadmap_blockers` — newly exported, an additive change to
+      that module's export block and nothing else. Both gates re-run green after the write:
+      `check_roadmap_trackable` reads 6 active roadmaps all parseable, `lint_roadmap_blockers`
+      12 blocker-contract-clean with 725 archived files read.
+      WHY THE SPLICE RATHER THAN A SECOND REGEX: a marker this evaluator accepted and
+      `lint_roadmap_blockers` rejected would be a hold that reddens one gate and is invisible
+      to the other, which is the silent-drift failure the no-third-parser instruction exists
+      to prevent.
+- [x] **2.2 Write `src/scripts/check_release_holds.ts`** with `--lint`, `--status`,
       `--require-safe [--channel latest|all]` and `--selftest`.
       verify: `--selftest` covers every state-table row **including the not-evaluable row**, where
       a fixture the evaluator cannot read yields a refusal and never a pass.
-- [ ] **2.3 Measure the wider glob before wiring it.** `corrected-from-reproduction` — the source
+      LANDED 2026-09-19. `--selftest` reads **13/13**: the four state-table rows, the
+      `latest`-channel split (open + `Channel: latest` refuses a stable cut and permits a
+      prerelease), **seven distinct ways of being not-evaluable**, and two NEGATIVE cases.
+      The negatives are not padding — without them an evaluator that refused everything would
+      pass every positive row, which is the tautology `testing-anti-patterns` names. They are
+      a roadmap with no holds section (declares nothing) and a fenced documentation example
+      (`_stripFencedCode` blanks it, so rule 28's own entry-shape block in the template does
+      not parse as a live declaration).
+      THE NOT-EVALUABLE ROW WAS PROVEN SENSITIVE, not asserted: deleting the
+      `state === 'not-evaluable' → refuse` branch turns exactly those **7 of 13** red, and
+      collapsing the channel expression to `return true` turns the `latest` case red on its
+      own. Both readings were taken with the file byte-restored afterwards and the selftest
+      back at 13/13.
+      CHANNEL SEMANTICS, decided here because rule 28 fixes the hold field's two tokens but
+      the roadmap left the FLAG's reading open: `--channel` names the set of hold channels
+      that refuse the cut. `all` (the default) is a stable `X.Y.Z` — every open hold refuses;
+      `latest` is a `-next.N` prerelease — only `Channel: all` holds refuse, because a
+      `latest` hold permits the opt-in channel by its own definition. This is the only reading
+      under which the flag's two values give different answers, which is why it is the one
+      implemented. No override exists: `grep -rn 'force|override|accept-risk'` over the script
+      returns nothing, which is step 4.4's condition already satisfied at the source.
+- [x] **2.3 Measure the wider glob before wiring it.** `corrected-from-reproduction` — the source
       claimed `check_roadmap_trackable` already scans every folder and that the precedent exists.
       It does not: `check_roadmap_trackable.ts:71` sets
       `EXCLUDE_DIRS = new Set(['archive','skipped','stubs','later'])` and the unfiltered walk at
@@ -260,6 +290,16 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
       710 archived ones for content is new work on the release hot path.
       verify: the measured p95 runtime over the real corpus is recorded in the Phase 0 evidence
       file and sits under the budget derived there; no index is built in v1.
+      LANDED 2026-09-19, and the step's own premise was wrong in a way worth recording:
+      **Phase 0 derived no runtime budget**, so there was nothing to sit under. It derived the
+      four wiring points and the exposure row and never a p95 ceiling. The budget is therefore
+      derived now from a measurement rather than from a preference —
+      `agents/evidence/analysis/release-holds-phase-0-2026-09-13.md` § 2.3.
+      MEASURED: **950 files** across the five folders, p95 **56.2 ms** (n=25, in-process).
+      BUDGET: **250 ms p95**, taken from `lint_roadmap_blockers` — the nearest comparable the
+      repository has ALREADY accepted on the pre-push path, reading the same archive, at
+      0.25/0.25/0.26 s wall. 56.2 ms is 22 % of it. No index in v1: at 22 % of an accepted
+      gate an index buys nothing that justifies the staleness surface it adds.
 
 ## Phase 3 — Lifecycle integrity
 

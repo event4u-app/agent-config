@@ -298,3 +298,38 @@ would have told them to try first. That is evidence **for** the honest-null bran
 top two rungs absorb the real cases — and it is the first positive evidence about the ladder
 rather than about the population. It does not close `zero-live-subjects`, which remains a cost
 judgement and remains the owner's.
+
+---
+
+## 2.3 — The wider glob, measured before it was wired (added 2026-09-19)
+
+Step 2.3's verify asks that the p95 sit "under the budget derived there", meaning in this
+file. **No budget was derived here on 2026-09-13** — Phase 0 derived the four wiring points
+and the exposure row, never a runtime budget. The step's premise was wrong, so the budget is
+derived now, from a measurement rather than from a number someone liked.
+
+**What the glob actually costs.** `check_release_holds`' `globRoadmaps` walks five folders —
+the active root plus `later/`, `archive/`, `skipped/` and `stubs/` — because rule 28's
+per-folder lifecycle says a window does not disappear by moving the file. That is **950
+markdown files**, against the 12 the active-only gates read.
+
+    n=25 in-process runs of collect() over the real corpus
+    files = 950
+    min 54.3 ms · median 55.0 ms · p95 56.2 ms · max 61.8 ms
+
+**The budget, and why this one.** The nearest accepted comparable is
+`lint_roadmap_blockers`, which already runs on the pre-push path and already reads the
+archive — 725 files, three consecutive wall-clock runs of **0.25 s, 0.25 s, 0.26 s**
+including process start. A corpus read of the same class that the repository has already
+accepted at ~250 ms is the honest ceiling, so the budget is **250 ms p95**. The measured
+56.2 ms is **22 %** of it.
+
+Two things this does NOT claim. The 56.2 ms is the evaluator's own work measured in-process,
+not a wall-clock CLI figure — process start dominates a one-shot invocation and is not
+attributable to the glob. And 25 runs on one warm machine is a reading, not a distribution:
+it establishes the order of magnitude, which is all the "can we afford the wider glob"
+question needs, and it would not survive being quoted as a performance guarantee.
+
+**No index is built in v1**, as the step requires: `collect()` reads and parses on every
+call. At 22 % of an accepted gate there is nothing an index would buy that would justify the
+staleness surface it adds.
