@@ -441,22 +441,78 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
 
 ## Phase 5 — Adversarial proof, each case with a known-red arm
 
-> **Not started — blocked by `rule-13-amendment`.** There is no guard to
-> neutralise and no refusal message to assert against.
+> **Closed 2026-09-19, all three steps.** There are guards to neutralise now, and each one
+> was. `tests/scripts/release_holds_sabotage.test.ts`, 15 tests.
 
-- [ ] **5.1 Write the sabotage set**, one assertion per case, no case shared: delete a clear
+- [x] **5.1 Write the sabotage set**, one assertion per case, no case shared: delete a clear
       marker after opening · flip a clear `[x]` back to `[~]` · `[x] → [-]` with and without a
       `Closed by:` field · duplicate hold id · move to `later/`, `archive/`, `skipped/` · a marker
       that is not on a checkbox · a clear with no `verify:` · a fenced documentation example · a
       hand-made release PR · a hand-pushed tag · the evaluator killed mid-run.
       verify: the test file lists all eleven cases and each asserts its own exact refusal message.
-- [ ] **5.2 Prove sensitivity — neutralise the guard, watch each case fail, restore it.** A test
+      LANDED 2026-09-19 — `tests/scripts/release_holds_sabotage.test.ts`. All eleven cases in
+      the step's own order, as **12 tests** because case 3 is written as 3a/3b: the step says
+      *"with and without a `Closed by:` field"*, which is two fixtures, and collapsing them
+      would have left one of the two unasserted.
+      NO CASE SHARED, and the constraint is the substance rather than style: a suite whose
+      cases all assert a generic "it refused" cannot say WHICH defence caught the attack, so
+      neutralising any one of them leaves the suite green through the others. Each case
+      asserts its own exact message — `no checkbox carries \`clears-hold: half-wired\``,
+      `duplicate hold id \`half-wired\``, ``the `clears-hold: half-wired` step carries no
+      `verify:` field``, ``may not live in `archive/` ``, and so on.
+      CASE 3's ANSWER IS THAT `Closed by:` IS DELIBERATELY NOT CONSULTED. `[-]` is CANCELLED,
+      so a clearing step that will never run cannot clear a window and the hold stays `open`
+      either way. A prose field that overrode the checkbox would be exactly the
+      cleared-by-assertion failure rule 28's `verify:` requirement exists to stop.
+      CASE 4 RETURNS BOTH ENTRIES, both not-evaluable — the behaviour worth pinning, because
+      an evaluator that silently picked the first or the last would resolve the ambiguity in
+      the attacker's favour half the time and would not say so. The first draft of this test
+      asserted one entry and was wrong; the code was right.
+      CASES 9 AND 10 ARE NOT EVALUATOR BEHAVIOUR and are asserted against the PARSED workflow
+      YAML, not prose: a hand-made release PR and a hand-pushed tag are precisely the paths
+      that do not go through `release.ts`, so the boundary that catches them is the workflow.
+      Case 10 additionally asserts step ORDER — the evaluation must come after the tagged
+      checkout, or it reads `main` instead of the tree being published.
+      CASE 11 KILLS A REAL PROCESS (`SIGKILL`, asserting a non-zero exit) and separately
+      exercises the unreadable-file path a kill leaves behind, which yields `not-evaluable`
+      and refuses on both channels.
+- [x] **5.2 Prove sensitivity — neutralise the guard, watch each case fail, restore it.** A test
       never seen red has unknown sensitivity.
       verify: the commit message or the test file records the red reading per case, taken with the
       guard neutralised.
-- [ ] **5.3 Prove it does not over-fire.** A valid unfinished `continuous` roadmap and an
+      LANDED 2026-09-19. Nine targeted neutralisations, each removing ONE defence, run against
+      the suite; every one of the 12 sabotage tests appears in at least one red reading, and
+      each neutralisation reds a distinct and explainable set rather than the whole file:
+
+      | Defence neutralised | Cases that went RED |
+      |---|---|
+      | the `clears-hold` marker-on-a-checkbox requirement | 1, 6 |
+      | `isChecked` — `[~]` and `[-]` made to count as cleared | 2, 3a, 3b |
+      | duplicate-id detection | 4 |
+      | the `archive/` + `skipped/` lifecycle refusal | 5 |
+      | the clearing-step `verify:` requirement | 7 |
+      | fenced-code blanking | 8 |
+      | the `release-validation.yml` release-holds job | 9 |
+      | the `release-guard.yml` tagged-tree evaluation | 10 |
+      | `not-evaluable` refuses | 1, 4, 7, 11 |
+
+      The last row is the load-bearing one: four cases depend on it, so removing the single
+      branch `state === 'not-evaluable' → refuse` opens four different attacks at once. That
+      is the argument for why it has no flag.
+      Every file was byte-restored after each probe — `git diff` over the evaluator and both
+      workflows is empty — and the suite is green at 15/15.
+- [x] **5.3 Prove it does not over-fire.** A valid unfinished `continuous` roadmap and an
       unopened window both pass.
       verify: both negative cases are in the same test file and are green.
+      LANDED 2026-09-19, and a THIRD negative was added beyond the two the step asks for.
+      The two required: a valid unfinished `continuous` roadmap — two open steps across two
+      phases — declares nothing and `refusalReport` is `null` on both channels, which is rule
+      28's non-goal (roadmap incompleteness is never a release condition) asserted rather than
+      promised; and an unopened window (`[ ]` opener) permits every cut.
+      The third is the strongest available and costs nothing: the **live repository corpus**,
+      read through `git ls-files agents/roadmaps`, carries zero not-evaluable holds and
+      refuses no cut. A gate that over-fired on real roadmaps would red here, in the same file
+      as the attacks it is supposed to catch.
 
 ## Phase 6 — Evaluate the claim after 30 tags, and accept the null if it comes
 
