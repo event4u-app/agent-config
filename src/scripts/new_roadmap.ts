@@ -48,6 +48,13 @@ function titleOf(slug: string): string {
     return slug.replace(/-/g, ' ');
 }
 
+// The two heading markers the release-holds block emits, interpolated rather
+// than written literally: `lint_code_comments` strips indentation before
+// matching, so a template-literal line beginning `## ` reads to it as a
+// markdown heading left in source. The emitted text is unchanged.
+const H2 = '#'.repeat(2) + ' ';
+const H3 = '#'.repeat(3) + ' ';
+
 export function skeleton(slug: string, complexity: 'lightweight' | 'structural', date: string): string {
     return `---
 complexity: ${complexity}
@@ -86,9 +93,9 @@ could tell whether it happened.
      resequenced: <one line — the broken intermediate state, and the phase cut
      that removed it, so no window was ever needed.>
 
-     ## Release holds
+     ${H2}Release holds
 
-     ### hold: <kebab-id>
+     ${H3}hold: <kebab-id>
      - **Channel:** all             (all | latest; omitted parses to all)
      - **Opened by:** <phase.step>  (the checkbox whose [x] opens the window)
      - **Cleared by:** <phase.step> (the checkbox whose [x] closes it)

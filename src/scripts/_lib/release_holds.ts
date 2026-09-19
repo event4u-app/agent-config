@@ -347,7 +347,7 @@ export interface LifecycleViolation {
     readonly reason: string;
 }
 
-/** The `agents/roadmaps/` subfolder of `file`, or `''` for the active root. */
+/** The roadmap subfolder of `file`, or `''` when it sits in the active root. */
 export function holdFolder(file: string): string {
     const m = /agents\/roadmaps\/([^/]+)\//.exec(file.split(path.sep).join('/'));
     return m ? m[1]! : '';

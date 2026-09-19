@@ -201,22 +201,29 @@ function cmdRequireSafe(cut: CutChannel): number {
 
 /** Rule 28's state table, one fixture per row, plus the two channel cases. */
 function cmdSelftest(): number {
-    const base = (open: string, clear: string, channel = 'all', extra = '') => `
-## Phase 1
-- [${open}] **1.1 opener** <!-- opens-hold: probe -->
-      verify: the opener's own check
-- [${clear}] **1.2 clearer** <!-- clears-hold: probe -->
-      verify: the check that proves the state is repaired
-
-## Release holds
-
-### hold: probe
-- **Channel:** ${channel}
-- **Opened by:** 1.1
-- **Cleared by:** 1.2
-- **State:** the surface is half wired while this is open.
-- **Why not a guard:** the entry point is reachable and cannot be made inert.
-${extra}`;
+    // Built line-by-line rather than as one template literal on purpose: a
+    // heredoc whose lines begin with `##` reads to `lint_code_comments` as a
+    // markdown heading left in source, and the fixture would redden a gate it
+    // has nothing to do with.
+    const base = (open: string, clear: string, channel = 'all', extra = '') =>
+        [
+            '',
+            '## Phase 1',
+            `- [${open}] **1.1 opener** <!-- opens-hold: probe -->`,
+            "      verify: the opener's own check",
+            `- [${clear}] **1.2 clearer** <!-- clears-hold: probe -->`,
+            '      verify: the check that proves the state is repaired',
+            '',
+            '## Release holds',
+            '',
+            '### hold: probe',
+            `- **Channel:** ${channel}`,
+            '- **Opened by:** 1.1',
+            '- **Cleared by:** 1.2',
+            '- **State:** the surface is half wired while this is open.',
+            '- **Why not a guard:** the entry point is reachable and cannot be made inert.',
+            extra,
+        ].join('\n');
 
     type Case = { name: string; text: string; state: string; all: boolean; latest: boolean };
     const cases: Case[] = [
