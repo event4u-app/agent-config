@@ -22,6 +22,7 @@
  */
 
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -37,6 +38,7 @@ import {
 } from './_lib/release_holds.js';
 import { REPO_ROOT } from './lint_roadmap_blockers.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -79,7 +81,7 @@ function rel(p: string): string {
     return path.relative(REPO_ROOT, p).split(path.sep).join('/');
 }
 
-function cmdLint(): number {
+function cmdLint(root: string): number {
     // A broken glob is this gate's one silent failure mode: with zero files it
     // would print "0 declared hold(s), all well-formed" and exit 0, certifying
     // a coverage that does not exist. "Zero holds" is a real and normal state;
@@ -87,7 +89,7 @@ function cmdLint(): number {
     try {
         assertScanned({
             gate: 'check_release_holds',
-            scanned: globRoadmaps().length,
+            scanned: globRoadmaps(root).length,
             units: 'roadmap file(s)',
             roots: ['agents/roadmaps'],
         });
@@ -99,8 +101,8 @@ function cmdLint(): number {
         throw e;
     }
 
-    const files = globRoadmaps();
-    const holds = collect();
+    const files = globRoadmaps(root);
+    const holds = collect(root);
     const bad = holds.filter((h) => h.state === 'not-evaluable');
 
     // The lifecycle half. A move already made is what a gate can see: if a file
@@ -194,8 +196,8 @@ function cmdCanMove(file: string, dest: string): number {
     return 1;
 }
 
-function cmdStatus(): number {
-    const holds = collect();
+function cmdStatus(root: string): number {
+    const holds = collect(root);
     if (holds.length === 0) {
         process.stdout.write('No release holds declared. Every cut is permitted.\n');
         return 0;
@@ -209,8 +211,8 @@ function cmdStatus(): number {
     return 0;
 }
 
-function cmdRequireSafe(cut: CutChannel): number {
-    const report = refusalReport(collect(), cut);
+function cmdRequireSafe(root: string, cut: CutChannel): number {
+    const report = refusalReport(collect(root), cut);
     if (report === null) {
         process.stdout.write(`✅  release-holds: safe to cut (channel ${cut})\n`);
         return 0;
@@ -414,10 +416,96 @@ function cmdSelftest(): number {
     return 0;
 }
 
+/**
+ * The house self-test: fixture trees on disk, this gate's real CLI, exit codes.
+ *
+ * Two accept cases are not padding. A gate that refused everything would pass
+ * every reject case, and the one that matters most is the VALID OPEN WINDOW:
+ * normal CI must stay green on exactly the tree state the release path refuses,
+ * and nothing else in this suite would notice if `--lint` started reddening it.
+ */
+function cmdConventionSelfTest(): number {
+    const script = 'src/scripts/check_release_holds.ts';
+    const mk = (name: string, files: Record<string, string>): string => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), `crh-${name}-`));
+        for (const [rel, body] of Object.entries(files)) {
+            const abs = path.join(root, rel);
+            fs.mkdirSync(path.dirname(abs), { recursive: true });
+            fs.writeFileSync(abs, body, 'utf8');
+        }
+        return root;
+    };
+    const hold = (open: string, clear: string, extra = ''): string =>
+        [
+            '## Phase 1',
+            `- [${open}] **1.1 opener** <!-- opens-hold: probe -->`,
+            '      verify: the opener check',
+            `- [${clear}] **1.2 clearer** <!-- clears-hold: probe -->`,
+            '      verify: ./scripts-run src/scripts/check_surface_whole',
+            '',
+            '## Release holds',
+            '',
+            '### hold: probe',
+            '- **Channel:** all',
+            '- **Opened by:** 1.1',
+            '- **Cleared by:** 1.2',
+            '- **State:** the surface is half wired while this is open.',
+            `- **Why not a guard:** the entry point cannot be made inert.${extra}`,
+            '',
+        ].join('\n');
+    const at = (root: string, args: string[]): number =>
+        runGateCli(REPO_ROOT, script, [...args, '--root', root], REPO_ROOT);
+
+    const cases: SelfTestCase[] = [
+        {
+            name: 'a malformed declaration reddens --lint',
+            expect: 'reject',
+            run: () =>
+                at(
+                    mk('bad', {
+                        'agents/roadmaps/r.md': hold('x', ' ').replace(
+                            /- \*\*Why not a guard:\*\*.*\n/,
+                            '',
+                        ),
+                    }),
+                    ['--lint'],
+                ),
+        },
+        {
+            name: 'an open window refuses --require-safe',
+            expect: 'reject',
+            run: () => at(mk('open', { 'agents/roadmaps/r.md': hold('x', ' ') }), ['--require-safe']),
+        },
+        {
+            name: 'a live window sitting in archive/ reddens --lint',
+            expect: 'reject',
+            run: () => at(mk('arch', { 'agents/roadmaps/archive/r.md': hold('x', ' ') }), ['--lint']),
+        },
+        {
+            name: 'a dead scan scope reddens rather than certifying an empty corpus',
+            expect: 'reject',
+            run: () => at(mk('dead', { 'README.md': 'no roadmaps here\n' }), ['--lint']),
+        },
+        {
+            name: 'a clean corpus passes --lint',
+            expect: 'accept',
+            run: () =>
+                at(mk('clean', { 'agents/roadmaps/r.md': '## Phase 1\n- [ ] **1.1 x**\n' }), ['--lint']),
+        },
+        {
+            name: 'a VALID OPEN window passes --lint — normal CI stays green on it',
+            expect: 'accept',
+            run: () => at(mk('valid', { 'agents/roadmaps/r.md': hold('x', ' ') }), ['--lint']),
+        },
+    ];
+    return runSelfTest({ gate: 'check_release_holds', cases, minCases: 6, minRejectCases: 4 });
+}
+
 function usage(): number {
     process.stderr.write(
         'usage: check_release_holds (--lint | --status | --require-safe [--channel latest|all]\n' +
-            '                            | --can-move <file> <archive|skipped|later> | --selftest)\n' +
+            '                            | --can-move <file> <archive|skipped|later>\n' +
+            '                            | --selftest | --self-test) [--root <dir>]\n' +
             '  --channel all     (default) a stable X.Y.Z cut — every open hold refuses\n' +
             '  --channel latest  a -next.N prerelease — only `Channel: all` holds refuse\n',
     );
@@ -425,14 +513,24 @@ function usage(): number {
 }
 
 function main(argv: string[] = process.argv.slice(2)): number {
+    const ri = argv.indexOf('--root');
+    const root = ri === -1 ? REPO_ROOT : path.resolve(argv[ri + 1] ?? '.');
+    // `--self-test` is the house convention (`_lib/gate_self_test`): it drives
+    // this CLI against fixture trees on disk and asserts the exit code, so what
+    // it proves is that the BINARY still rejects. `--selftest` is the unit-level
+    // state-table suite. They are complementary, not duplicates -- one can pass
+    // while the other fails, which is the whole reason both exist.
+    if (argv.includes('--self-test') && process.env['GATE_SELF_TEST_CHILD'] !== '1') {
+        return cmdConventionSelfTest();
+    }
     if (argv.includes('--selftest')) {
         return cmdSelftest();
     }
     if (argv.includes('--lint')) {
-        return cmdLint();
+        return cmdLint(root);
     }
     if (argv.includes('--status')) {
-        return cmdStatus();
+        return cmdStatus(root);
     }
     if (argv.includes('--require-safe')) {
         const i = argv.indexOf('--channel');
@@ -441,7 +539,7 @@ function main(argv: string[] = process.argv.slice(2)): number {
             process.stderr.write(`❌  --channel must be \`all\` or \`latest\`, got \`${raw ?? ''}\`\n`);
             return usage();
         }
-        return cmdRequireSafe(raw);
+        return cmdRequireSafe(root, raw);
     }
     const mv = argv.indexOf('--can-move');
     if (mv !== -1) {
