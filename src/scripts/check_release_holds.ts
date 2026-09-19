@@ -30,6 +30,7 @@ import {
     evaluateHolds,
     lifecycleViolations,
     refuses,
+    refusalReport,
     REFUSING_DIRS,
     type CutChannel,
     type Hold,
@@ -189,31 +190,12 @@ function cmdStatus(): number {
 }
 
 function cmdRequireSafe(cut: CutChannel): number {
-    const holds = collect();
-    const blocking = holds.filter((h) => refuses(h, cut));
-    if (blocking.length === 0) {
+    const report = refusalReport(collect(), cut);
+    if (report === null) {
         process.stdout.write(`✅  release-holds: safe to cut (channel ${cut})\n`);
         return 0;
     }
-    process.stderr.write(`❌  release-holds: REFUSED — ${blocking.length} hold(s) block this cut\n`);
-    for (const h of blocking) {
-        process.stderr.write(`\n   hold: ${h.id}   [${h.state}, channel ${h.channel}]\n`);
-        process.stderr.write(`   roadmap:  ${rel(h.file)}\n`);
-        if (h.state === 'not-evaluable') {
-            for (const why of h.malformed) {
-                process.stderr.write(`   not evaluable: ${why}\n`);
-            }
-            continue;
-        }
-        process.stderr.write(`   opened by: ${h.openedBy}\n`);
-        process.stderr.write(`   cleared by: ${h.clearedBy}\n`);
-    }
-    process.stderr.write(
-        '\n   Three ways forward, and the choice is yours — there is no override flag:\n' +
-            '     1. finish the clearing step (run its `verify:` command, then flip it)\n' +
-            '     2. cut `-next.N` instead, if every blocking hold is `Channel: latest`\n' +
-            '     3. use a release line — docs/contracts/release-trunk-sync.md\n',
-    );
+    process.stderr.write(`❌  ${report}\n`);
     return 1;
 }
 

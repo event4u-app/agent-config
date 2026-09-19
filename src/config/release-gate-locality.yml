@@ -140,3 +140,14 @@ jobs:
     verify: true
     script: src/scripts/report_skill_activation.ts
     guard: ~
+
+  release-holds:
+    # Template rule 28. Fully local by construction: the evaluator reads the
+    # roadmap corpus out of the checked-out tree and talks to nothing, so the
+    # runner and a maintainer's laptop can only disagree if the trees differ —
+    # which is the disagreement the gate is supposed to surface.
+    local: './scripts-run src/scripts/check_release_holds --lint'
+    verify: true
+    network: false
+    script: src/scripts/check_release_holds.ts
+    guard: ~

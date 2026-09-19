@@ -347,32 +347,97 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
 
 ## Phase 4 — Wire all four boundaries to one refusal
 
-> **Not started — blocked by `rule-13-amendment` for the phase itself, and by
-> `zero-live-subjects` for its migration value.** The two are different blocks and only the
-> first is structural. The four wiring points are already enumerated with file and line in
+> **Closed 2026-09-19, all four steps.** `rule-13-amendment` is resolved, which is the
+> structural block; `zero-live-subjects` governs this phase's migration VALUE and never
+> whether it can start, so it stays open and Phase 4 shipped under it — exactly the split
+> the note below already drew. The four wiring points are already enumerated with file and line in
 > the Phase 0 evidence file, § 0.3, so this phase starts from a table rather than a search.
 > Step 4.2's figure is stale and the correction is recorded rather than applied: the registry
 > carries 9 jobs at HEAD, not 8; the "4 carrying local commands" half reproduces exactly.
 
-- [ ] **4.1 `release.ts` pre-flight before step 1.** The refusal names the roadmap, the hold, its
+- [x] **4.1 `release.ts` pre-flight before step 1.** The refusal names the roadmap, the hold, its
       opener, its closer and the closer's `verify:` command, plus the three ways out: finish the
       clearer, cut `-next.N`, or use a release line per `docs/contracts/release-trunk-sync.md`.
       verify: a fixture tree with an open `latest` hold refuses at the pre-flight with all five
       fields in the message.
-- [ ] **4.2 One row in `src/config/release-gate-locality.yml`** (`verify: true`, `network: false`),
+      LANDED 2026-09-19 at the wiring point § 0.3 row 1 names — the LAST check inside
+      `preflight()`, which runs before step 1 and before `execute()`, so a refusal costs
+      nothing: no branch, no tag, no push has happened. Observed against a fixture tree with an
+      open `Channel: latest` hold, and all five fields are in the message: the roadmap path,
+      the hold id, `opened by: 1.1`, `cleared by: 1.2`, and `its verify:` carrying the closing
+      step's own command. The three ways out follow it verbatim.
+      THE FIFTH FIELD WAS MISSING AND WAS ADDED HERE. The Phase 2 evaluator captured four; a
+      refusal that does not say what to RUN to clear it has told the operator they are stuck
+      rather than what to do, so `Hold.clearVerify` now carries the clearing step's `verify:`
+      text. One formatter — `refusalReport` — serves both `--require-safe` and the pre-flight,
+      because two copies would drift and the drift would land where it hurts most: a different
+      message at the CLI and at the cut.
+      `release.ts` accepts only a bare `X.Y.Z` (`SEMVER_RE`), so its cut is always the stable
+      one and the channel is always `all`. That is why an open `latest` hold refuses here: the
+      `-next.N` escape is NAMED in the refusal and never taken automatically, which is step
+      4.4's no-silent-redirect rule enforced at the only place that could break it.
+- [x] **4.2 One row in `src/config/release-gate-locality.yml`** (`verify: true`, `network: false`),
       plus the `release-validation.yml` job, `ci-strict`, and `release-guard.yml` on the
       checked-out tag.
       verify: `./scripts-run src/scripts/release_verify --list` shows the new row — the registry
       was reproduced live on 2026-09-11 with 8 jobs, 4 carrying local commands — and
       `./scripts-run src/scripts/check_ci_strict_superset` stays green.
-- [ ] **4.3 An evaluator error, timeout, or unreadable file refuses the cut.** There is no path
+      LANDED 2026-09-19, all four boundaries. `release_verify --list` now prints
+      `release-holds  ./scripts-run src/scripts/check_release_holds --lint`, and
+      `check_ci_strict_superset` is green (`ci-strict ⊇ ci by construction`).
+      The row is `verify: true`, `network: false`, and the `network: false` is a fact rather
+      than an aspiration: the evaluator reads the roadmap corpus out of the checked-out tree
+      and talks to nothing, so a runner and a laptop can only disagree if the trees differ —
+      which is the disagreement the gate exists to surface.
+      `release-validation.yml` gains a tenth job running BOTH `--lint` and `--require-safe`;
+      the first is the one with teeth for normal CI, because a malformed declaration reddens
+      there and so cannot fail open by being unparseable. `ci-strict` needs no edit and gets
+      none: it delegates through `Taskfile.yml`'s `- task: ci`, the by-construction superset.
+      `release-guard.yml` gains a step inside `assert-version-matches-tag`, after the tagged
+      checkout and before "Compare versions", so it reads the TREE BEING PUBLISHED rather than
+      `main` — which is the whole reason that boundary exists separately from the pre-flight:
+      a tag can be pushed by hand.
+      THE STALE FIGURE IN THIS STEP IS CONFIRMED STALE: the registry carried 9 jobs before
+      this change and 10 after, not the 8 the step's own text pins. Phase 0 § 0.3 already
+      recorded the correction; it is restated here rather than silently left to contradict
+      the line above it.
+- [x] **4.3 An evaluator error, timeout, or unreadable file refuses the cut.** There is no path
       on which "could not evaluate" reads as safe.
       verify: `release_drill` gains three scenarios — open `latest`, open `all`, evaluator error —
       and the error scenario exits non-zero.
-- [ ] **4.4 No override, and no silent channel redirect.** A plain `X.Y.Z` cut is never
+      LANDED 2026-09-19. `release_drill` reads **25 scenarios**, up from 22, and all three new
+      ones are green: `release-hold-open-all-refuses-the-cut`,
+      `release-hold-open-latest-refuses-the-stable-cut` and
+      `release-hold-not-evaluable-refuses-the-cut`. The error scenario asserts
+      `SystemExit(` on the captured outcome, so "exits non-zero" is checked rather than
+      assumed. `tests/scripts/release_drill.test.ts` picks all three up without an edit — 26
+      tests, up from 23.
+      ONE RUNNER CHANGE WAS NEEDED AND IT IS ADDITIVE. The drill drives `execute()`, while
+      this boundary is `preflight()`, which runs BEFORE it — so a scenario driving `execute()`
+      could never reach the check. `Scenario` gains an optional `run?: () => void`; every
+      pre-existing scenario omits it and keeps `execute()` byte-identically.
+      Each scenario builds a throwaway roadmap tree on disk and points the real
+      `assert_no_open_release_hold` at it, because the assertion is about what the evaluator
+      READS — a mocked return would assert the mock.
+      SENSITIVITY OBSERVED: replacing the pre-flight's `die(report)` with a no-op turns
+      exactly those 3 of 25 red and the drill exits 1; the file was byte-restored and the
+      drill is green again at 25/25.
+- [x] **4.4 No override, and no silent channel redirect.** A plain `X.Y.Z` cut is never
       auto-converted to `-next.N`; the hint is offered and the decision stays the operator's.
       verify: `grep -rn 'force\|override\|accept-risk' src/scripts/check_release_holds.ts` returns
       no flag, label or trailer that bypasses a refusal, and `Channel: all` is the parsed default.
+      VERIFIED 2026-09-19, both halves, and the first is satisfied at the source rather than
+      by policy. The grep over `check_release_holds.ts` and `_lib/release_holds.ts` returns
+      exactly **one** line, and it is the refusal text saying *"there is no override flag"* —
+      a statement that none exists, not one that does. No `--force`, no `--accept-risk`, no
+      environment variable, no commit trailer, and no code path on which a refusal becomes a
+      pass.
+      A hold entry with no `Channel:` field parses to `all` — measured, not assumed — so the
+      permissive value is never the one you get by forgetting to write anything.
+      The no-silent-redirect half is asserted as BEHAVIOUR, not as a grep: the drill scenario
+      `release-hold-open-latest-refuses-the-stable-cut` proves a stable cut over a
+      `Channel: latest` hold DIES. A `release.ts` that quietly converted it to `-next.N` would
+      have completed, and the scenario would be red.
 
 ## Phase 5 — Adversarial proof, each case with a known-red arm
 

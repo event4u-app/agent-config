@@ -51,6 +51,8 @@ export interface Hold {
     readonly channel: HoldChannel;
     readonly openedBy: string;
     readonly clearedBy: string;
+    /** The clearing step's `verify:` text — the command that proves the fix. */
+    readonly clearVerify: string;
     readonly state: HoldState;
     readonly file: string;
     /** Non-empty iff `state === 'not-evaluable'`; each entry is a reason. */
@@ -160,6 +162,7 @@ export function evaluateHolds(text: string, file: string): Hold[] {
             channel: 'all' as const,
             openedBy: '',
             clearedBy: '',
+            clearVerify: '',
             state: 'not-evaluable' as const,
             file,
             malformed: [`marker \`${id}\` has no \`## Release holds\` entry`],
@@ -230,18 +233,29 @@ export function evaluateHolds(text: string, file: string): Hold[] {
 
         const openMark = markerMark(lines, OPENS_MARKER_RE, id);
         const clearMark = markerMark(lines, CLEARS_MARKER_RE, id);
+        const clearSpan = stepSpan(lines, CLEARS_MARKER_RE, id).join('\n');
+        const clearVerify = (/^[ \t]*verify:[ \t]*(\S.*)$/im.exec(clearSpan)?.[1] ?? '').trim();
         if (openMark === null) {
             malformed.push(`no checkbox carries \`opens-hold: ${id}\``);
         }
         if (clearMark === null) {
             malformed.push(`no checkbox carries \`clears-hold: ${id}\``);
         }
-        if (clearMark !== null && !VERIFY_FIELD_RE.test(stepSpan(lines, CLEARS_MARKER_RE, id).join('\n'))) {
+        if (clearMark !== null && !VERIFY_FIELD_RE.test(clearSpan)) {
             malformed.push(`the \`clears-hold: ${id}\` step carries no \`verify:\` field`);
         }
 
         if (malformed.length > 0) {
-            return { id, channel, openedBy, clearedBy, state: 'not-evaluable' as const, file, malformed };
+            return {
+                id,
+                channel,
+                openedBy,
+                clearedBy,
+                clearVerify,
+                state: 'not-evaluable' as const,
+                file,
+                malformed,
+            };
         }
 
         const state: HoldState = !isChecked(openMark!)
@@ -250,7 +264,7 @@ export function evaluateHolds(text: string, file: string): Hold[] {
               ? 'cleared'
               : 'open';
 
-        return { id, channel, openedBy, clearedBy, state, file, malformed: [] };
+        return { id, channel, openedBy, clearedBy, clearVerify, state, file, malformed: [] };
     });
 }
 
@@ -269,6 +283,7 @@ export function evaluateFile(path: string): Hold[] {
                 channel: 'all',
                 openedBy: '',
                 clearedBy: '',
+                clearVerify: '',
                 state: 'not-evaluable',
                 file: path,
                 malformed: [`file could not be read: ${(exc as Error).message}`],
@@ -284,6 +299,7 @@ export function evaluateFile(path: string): Hold[] {
                 channel: 'all',
                 openedBy: '',
                 clearedBy: '',
+                clearVerify: '',
                 state: 'not-evaluable',
                 file: path,
                 malformed: [`evaluator errored: ${(exc as Error).message}`],
@@ -386,4 +402,48 @@ export function lifecycleViolations(
         }
     }
     return out;
+}
+
+/**
+ * The refusal message, or `null` when the cut is permitted.
+ *
+ * One formatter, used by BOTH `check_release_holds --require-safe` and
+ * `release.ts`'s pre-flight, because two copies would drift and the drift would
+ * land where it hurts most: an operator reading one message at the CLI and a
+ * different one at the cut.
+ *
+ * Five fields per hold — roadmap, hold, opener, closer, and the closer's
+ * `verify:` command — because a refusal that does not say what to run to clear
+ * it has told the operator they are stuck rather than what to do.
+ */
+export function refusalReport(holds: readonly Hold[], cut: CutChannel): string | null {
+    const blocking = holds.filter((h) => refuses(h, cut));
+    if (blocking.length === 0) {
+        return null;
+    }
+    const lines: string[] = [
+        `release-holds: REFUSED — ${blocking.length} hold(s) block this cut (channel ${cut})`,
+    ];
+    for (const h of blocking) {
+        lines.push('');
+        lines.push(`  hold: ${h.id}   [${h.state}, channel ${h.channel}]`);
+        lines.push(`  roadmap:    ${h.file}`);
+        if (h.state === 'not-evaluable') {
+            for (const why of h.malformed) {
+                lines.push(`  not evaluable: ${why}`);
+            }
+            continue;
+        }
+        lines.push(`  opened by:  ${h.openedBy}`);
+        lines.push(`  cleared by: ${h.clearedBy}`);
+        lines.push(`  its verify: ${h.clearVerify || '(none recorded)'}`);
+    }
+    lines.push(
+        '',
+        '  Three ways forward, and the choice is yours — there is no override flag:',
+        '    1. finish the clearing step (run its `verify:` above, then flip it)',
+        '    2. cut `-next.N` instead, if every blocking hold is `Channel: latest`',
+        '    3. use a release line — docs/contracts/release-trunk-sync.md',
+    );
+    return lines.join('\n');
 }
