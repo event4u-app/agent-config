@@ -172,6 +172,23 @@ exact honest-null grammar from the contract. Self-review suffices.
 `lint_plan_risk_register` enforces this at pre-push + CI; drafts are
 exempt until flipped to ready.
 
+### 5c. Release-holds self-check (template rule 28) — before save
+
+Ask once: *does any intermediate tree state of this roadmap have to stay
+unpublished?* The default answer is **no**, and a roadmap declaring no hold is
+the normal shape. Roadmap *incompleteness* is never a release condition.
+
+If the answer is yes, walk rule 28's authoring order and stop at the first rung
+that works — **re-sequence → guard → hold**. A hold is the last resort and its
+entry carries a mandatory `Why not a guard:` field.
+
+**Record the outcome either way.** Reaching rung 1 or 2 writes the one-line
+`resequenced:` / `guarded:` note inside the commented `## Release holds` block
+the skeleton emits; reaching rung 3 uncomments the entry. A considered hold that
+was avoided is a counted outcome — see
+[`roadmap-writing § 5b-holds`](../../../../skills/roadmap-writing/SKILL.md).
+Checked by `./scripts-run src/scripts/check_release_holds --lint`.
+
 ### 6. Save the file
 
 - Generate a filename from the title: kebab-case, e.g. `optimize-webhook-jobs.md`.
