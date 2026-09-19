@@ -439,7 +439,7 @@ exists to prevent.
   same external system; correcting the tool names does not license adopting them.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-13 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-09-19 | reviewer: claude/host -->
 
 **Re-reviewed 2026-09-13, after Phase 1 landed.** All six rows stand as written; two have had
 their mitigation move from planned to real, and one row's premise was strengthened by a
@@ -455,6 +455,29 @@ measurement rather than weakened.
   That raises the row's likelihood rather than lowering it, and the fixture is what answers it.
 - **Rows 2 through 5 are unchanged and unexercised.** Their phases did not run.
 - **No row was added.** Nothing in this pass surfaced a risk the six do not already name.
+
+**Re-reviewed 2026-09-19, after the detector blocker was executed and closed.** Six rows still, no
+row added, no row removed — but **row 2's premise is refuted and its mitigation is discharged**,
+and that is a change to the register rather than a note beside it.
+
+- **Row 2 is now DISCHARGED, and its description was wrong.** It reads *"The stack detector ships
+  into every consumer project … so the blast radius of a new axis has never been assessed."*
+  Measured: it does **not** ship in the sense that matters. Both `/work` entry points pin
+  `engine_root` to the package tree, no work_engine file passes through the consumer-override
+  resolver, and the installer's only copy of the template tree is an augment-global one that is
+  inert with respect to dispatch. The assessment the row asked for now exists in the evidence tree
+  and names the migration path as none-required, so the mitigation the row specifies — Phase 4.2 as
+  an acceptance criterion, the blocker holding the phase until it exists — has run to completion.
+  The row is kept rather than deleted because the risk it names was real when written and its
+  discharge is the record.
+- **One risk the six did not name, and it is not added as a row — deliberately.** The detector has
+  no production caller: nothing imports it in the shipped template tree and nothing writes its
+  result into `state.stack`. That is not a risk to this roadmap's execution; it is an argument
+  about whether Phase 4 is worth running at all, which belongs to the owner's (a)/(b) choice and is
+  recorded on the blocker and in the evidence artefact. A register row would restate a decision
+  input as a hazard.
+- **Rows 1 and 6 are unchanged from the 2026-09-13 reading.** Rows 3, 4 and 5 remain unexercised;
+  their phases still did not run.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
