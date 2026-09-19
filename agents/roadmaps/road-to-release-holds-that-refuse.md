@@ -221,6 +221,19 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
       `src/scripts/trigger_eval_grandfather.json`, the shrink-only list of skills carrying no
       eval set. Adding `evals/triggers.json` makes that entry false, so it is removed —
       `check_trigger_eval_presence` reads 101/299 carrying evals, 198 grandfathered.
+      THE SKILL CARRIES A POINTER, NOT A SECTION, AND THE REASON IS MEASURED RATHER THAN
+      stylistic. `roadmap-writing/SKILL.md` stood at **399 lines against the linter's 400-line
+      cap** with density 0.27 — already inside the band `skill_linter` flags `review for split`.
+      A 26-line § 5b-holds was written first and it turned the skill `pass → pass_with_warnings`,
+      which the pre-push preflight correctly refused. Density 0.27 is nowhere near the 0.60
+      escape, so line count was the only lever and the headroom was exactly one line. The
+      guidance therefore lands where it costs nothing and is read at the right moment: the full
+      self-check in `/roadmap:create` § 5c, the contract in template rule 28, and one folded
+      sentence in the skill's § 5b — renamed to cover both mechanisms, which is the shape rule
+      20 already took in step 1.3 when it gained *a blocker stops execution, a hold stops
+      publication*. The pointer keeps the half that gets skipped: record the avoided outcome,
+      not only the taken one. `task lint-skills` reads 451 pass / 1 warn / 0 fail, its
+      pre-change baseline.
 
 ## Phase 2 — The evaluator, and the glob nobody has paid for yet
 
