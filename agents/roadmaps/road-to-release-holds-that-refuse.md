@@ -193,7 +193,7 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
       **APPROVED AND APPLIED 2026-09-15**, same decision and same patch as 1.1.
       `./scripts-run src/scripts/lint_roadmap_blockers` re-run after the write and is still
       green (10 roadmaps).
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **1.4 `new_roadmap.ts` emits the `## Release holds` block as a comment**, and the authoring
+- [ ] **1.4 `new_roadmap.ts` emits the `## Release holds` block as a comment**, and the authoring
       self-check lands in `roadmap-writing/SKILL.md` and `/roadmap:create`, logging every
       `gated → re-sequenced` outcome so Phase 6 has a numerator.
       verify: `./scripts-run src/scripts/new_roadmap probe --stdout` shows the commented block,
@@ -213,16 +213,16 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
 > principle run early; it is left with the phase because a p95 budget measured for a
 > declaration format that may change during review would have to be re-taken.
 
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **2.1 Write `src/scripts/_lib/release_holds.ts`** — parse and evaluate. Reuse
+- [ ] **2.1 Write `src/scripts/_lib/release_holds.ts`** — parse and evaluate. Reuse
       `check_roadmap_trackable`'s checkbox and fence parser and `lint_roadmap_blockers`' marker
       grammar. No third parser.
       verify: neither helper is copied — `grep -n 'from .*roadmap_trackable\|from .*roadmap_blockers'`
       in the new lib resolves, and the two existing gates stay green.
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **2.2 Write `src/scripts/check_release_holds.ts`** with `--lint`, `--status`,
+- [ ] **2.2 Write `src/scripts/check_release_holds.ts`** with `--lint`, `--status`,
       `--require-safe [--channel latest|all]` and `--selftest`.
       verify: `--selftest` covers every state-table row **including the not-evaluable row**, where
       a fixture the evaluator cannot read yields a refusal and never a pass.
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **2.3 Measure the wider glob before wiring it.** `corrected-from-reproduction` — the source
+- [ ] **2.3 Measure the wider glob before wiring it.** `corrected-from-reproduction` — the source
       claimed `check_roadmap_trackable` already scans every folder and that the precedent exists.
       It does not: `check_roadmap_trackable.ts:71` sets
       `EXCLUDE_DIRS = new Set(['archive','skipped','stubs','later'])` and the unfiltered walk at
@@ -236,12 +236,12 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
 > **Not started — blocked by `rule-13-amendment`.** The archival, skip and
 > `later/` paths would have to refuse on a window that cannot exist yet.
 
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **3.1 The archival and skip paths refuse to move a file with an open window**, and a
+- [ ] **3.1 The archival and skip paths refuse to move a file with an open window**, and a
       `later/` move requires the window named in `entry_condition.what`.
       verify: a fixture move to `archive/` or `skipped/` with an open window is refused naming
       the hold id; a move to `later/` succeeds, `--status` still lists it, and a release is still
       refused.
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **3.2 Record deletion as a residual, not a mitigation.** Deleting a file removes its window
+- [ ] **3.2 Record deletion as a residual, not a mitigation.** Deleting a file removes its window
       and no gate sees it; template rule 12 already forbids the delete.
       verify: the residual is a Risk Register row in this file, and no acceptance criterion claims
       it is solved.
@@ -255,22 +255,22 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
 > Step 4.2's figure is stale and the correction is recorded rather than applied: the registry
 > carries 9 jobs at HEAD, not 8; the "4 carrying local commands" half reproduces exactly.
 
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **4.1 `release.ts` pre-flight before step 1.** The refusal names the roadmap, the hold, its
+- [ ] **4.1 `release.ts` pre-flight before step 1.** The refusal names the roadmap, the hold, its
       opener, its closer and the closer's `verify:` command, plus the three ways out: finish the
       clearer, cut `-next.N`, or use a release line per `docs/contracts/release-trunk-sync.md`.
       verify: a fixture tree with an open `latest` hold refuses at the pre-flight with all five
       fields in the message.
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **4.2 One row in `src/config/release-gate-locality.yml`** (`verify: true`, `network: false`),
+- [ ] **4.2 One row in `src/config/release-gate-locality.yml`** (`verify: true`, `network: false`),
       plus the `release-validation.yml` job, `ci-strict`, and `release-guard.yml` on the
       checked-out tag.
       verify: `./scripts-run src/scripts/release_verify --list` shows the new row — the registry
       was reproduced live on 2026-09-11 with 8 jobs, 4 carrying local commands — and
       `./scripts-run src/scripts/check_ci_strict_superset` stays green.
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **4.3 An evaluator error, timeout, or unreadable file refuses the cut.** There is no path
+- [ ] **4.3 An evaluator error, timeout, or unreadable file refuses the cut.** There is no path
       on which "could not evaluate" reads as safe.
       verify: `release_drill` gains three scenarios — open `latest`, open `all`, evaluator error —
       and the error scenario exits non-zero.
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **4.4 No override, and no silent channel redirect.** A plain `X.Y.Z` cut is never
+- [ ] **4.4 No override, and no silent channel redirect.** A plain `X.Y.Z` cut is never
       auto-converted to `-next.N`; the hint is offered and the decision stays the operator's.
       verify: `grep -rn 'force\|override\|accept-risk' src/scripts/check_release_holds.ts` returns
       no flag, label or trailer that bypasses a refusal, and `Channel: all` is the parsed default.
@@ -280,17 +280,17 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
 > **Not started — blocked by `rule-13-amendment`.** There is no guard to
 > neutralise and no refusal message to assert against.
 
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **5.1 Write the sabotage set**, one assertion per case, no case shared: delete a clear
+- [ ] **5.1 Write the sabotage set**, one assertion per case, no case shared: delete a clear
       marker after opening · flip a clear `[x]` back to `[~]` · `[x] → [-]` with and without a
       `Closed by:` field · duplicate hold id · move to `later/`, `archive/`, `skipped/` · a marker
       that is not on a checkbox · a clear with no `verify:` · a fenced documentation example · a
       hand-made release PR · a hand-pushed tag · the evaluator killed mid-run.
       verify: the test file lists all eleven cases and each asserts its own exact refusal message.
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **5.2 Prove sensitivity — neutralise the guard, watch each case fail, restore it.** A test
+- [ ] **5.2 Prove sensitivity — neutralise the guard, watch each case fail, restore it.** A test
       never seen red has unknown sensitivity.
       verify: the commit message or the test file records the red reading per case, taken with the
       guard neutralised.
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **5.3 Prove it does not over-fire.** A valid unfinished `continuous` roadmap and an
+- [ ] **5.3 Prove it does not over-fire.** A valid unfinished `continuous` roadmap and an
       unopened window both pass.
       verify: both negative cases are in the same test file and are green.
 
@@ -301,10 +301,10 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
 > wired refusal. The null branch is already recorded as the predicted outcome, so this phase
 > reads a result rather than deciding what the result would mean.
 
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **6.1 Read the refusal log, the re-sequence log and a re-taken Phase 0 prose count**, then
+- [ ] **6.1 Read the refusal log, the re-sequence log and a re-taken Phase 0 prose count**, then
       flip `release-hold-refuses-declared-state` to `backed` or `honest-null`.
       verify: the claim row carries both numbers and the tag range it was measured over.
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **6.2 On an honest null, keep the primitive and strike only the free parts** — the boundary
+- [ ] **6.2 On an honest null, keep the primitive and strike only the free parts** — the boundary
       screen line and the runbook bullet — and record the disposition on rule 28 with the tag
       range. Deleting the primitive is not the null disposition: the owner's constraint is that a
       broken state must not ship, and a mechanism whose value stayed latent is not one that failed.
@@ -313,7 +313,7 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
 ## Blockers
 
 ### blocker: rule-13-amendment
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Class:** 3 — human-only
 - **Blocks:** Phases 2 through 6. Template rule 13 is contract layer, and until it is split a
@@ -376,6 +376,29 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
   passes, which is exactly why the new check exists. **The template remains untouched on this
   branch and the decision is unchanged: applying the patch is the approval, and it is still
   yours.**
+
+- **RESOLVED 2026-09-19, by executing the condition rather than reading the status line.**
+  The `Resolved when` above was run against the applied template at `origin/main`
+  (`107a21051`), not against the patch, and all four of its clauses hold:
+  - the release-holds rule **numbered 28** is present — `src/agent-src/templates/roadmaps.md:687`;
+  - rule 13's prohibition block hashes to
+    `5827d0e4b5a1c88e7d646e7157fed36564890a5aaa5f2e33c0007ad77b9ed407`, the pinned value;
+  - `grep -oE '^[0-9]+\. \*\*' | sort | uniq -d` is empty, so the duplicate-number defect the
+    2026-09-14 rewording was written to catch did not recur;
+  - rule 28 carries the non-goal sentence verbatim.
+
+  The owner applied the patch on 2026-09-15 and it merged as `47bb07719` (PR #2055); steps
+  1.1, 1.2 and 1.3 were flipped `[x]` in the same change. **This `Status:` line was not, and
+  the 15 open steps kept an inline `blocked-by: rule-13-amendment` marker for four days
+  against a blocker that no longer existed.** That is the failure worth recording, not the
+  approval: `scanOpenSteps` reads blockedness from the marker alone, so every autonomous run
+  in that window read this file as `{ open: 0, blocked: 15 }` and declined work it was free to
+  do. A stale marker fails in the expensive direction — silently, and toward inaction.
+
+  The verifier `release-holds-rule-13-split-verify.sh` is deliberately NOT the instrument here
+  and its exit code must not be quoted as one: its check 1 is `git apply --check`, which fails
+  once the patch is applied, so the script reports red on exactly the state that means success.
+  It verifies a *proposal*; the condition above verifies the *template*. Kept for provenance.
 
 ### blocker: zero-live-subjects
 - **Status:** open
