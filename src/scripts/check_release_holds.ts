@@ -28,7 +28,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
     evaluateFile,
     evaluateHolds,
+    lifecycleViolations,
     refuses,
+    REFUSING_DIRS,
     type CutChannel,
     type Hold,
 } from './_lib/release_holds.js';
@@ -76,20 +78,97 @@ function rel(p: string): string {
 }
 
 function cmdLint(): number {
+    const files = globRoadmaps();
     const holds = collect();
     const bad = holds.filter((h) => h.state === 'not-evaluable');
-    process.stdout.write(`scanned: ${globRoadmaps().length}\n`);
-    if (bad.length === 0) {
+
+    // The lifecycle half. A move already made is what a gate can see: if a file
+    // with a live window is sitting in `archive/` or `skipped/`, the refused
+    // move happened, and reddening CI is how the move is refused in practice.
+    const lifecycle = files.flatMap((f) => {
+        const hs = evaluateFile(f);
+        if (hs.length === 0) {
+            return [];
+        }
+        let text: string;
+        try {
+            text = fs.readFileSync(f, 'utf8');
+        } catch {
+            return [];
+        }
+        return lifecycleViolations(f, hs, text);
+    });
+
+    process.stdout.write(`scanned: ${files.length}\n`);
+    if (bad.length === 0 && lifecycle.length === 0) {
         process.stdout.write(
-            `✅  check-release-holds: ${holds.length} declared hold(s), all well-formed\n`,
+            `✅  check-release-holds: ${holds.length} declared hold(s), all well-formed, ` +
+                `lifecycle clean\n`,
         );
         return 0;
     }
-    process.stderr.write('❌  check-release-holds: malformed declaration(s):\n');
-    for (const h of bad) {
-        for (const why of h.malformed) {
-            process.stderr.write(`   - ${rel(h.file)} · hold \`${h.id}\`: ${why}\n`);
+    if (bad.length > 0) {
+        process.stderr.write('❌  check-release-holds: malformed declaration(s):\n');
+        for (const h of bad) {
+            for (const why of h.malformed) {
+                process.stderr.write(`   - ${rel(h.file)} · hold \`${h.id}\`: ${why}\n`);
+            }
         }
+    }
+    if (lifecycle.length > 0) {
+        process.stderr.write('❌  check-release-holds: lifecycle violation(s):\n');
+        for (const v of lifecycle) {
+            process.stderr.write(`   - ${rel(v.file)} · hold \`${v.holdId}\`: ${v.reason}\n`);
+        }
+    }
+    return 1;
+}
+
+/**
+ * Answer the move BEFORE it happens, so the loop asks rather than discovers.
+ *
+ * `--can-move <file> <archive|skipped|later>`; exit 0 permits, 1 refuses. The
+ * `--lint` gate above is the backstop that catches a move made without asking.
+ */
+function cmdCanMove(file: string, dest: string): number {
+    if (!(REFUSING_DIRS as readonly string[]).includes(dest) && dest !== 'later') {
+        process.stderr.write(`❌  --can-move destination must be archive, skipped or later\n`);
+        return 2;
+    }
+    const holds = evaluateFile(file);
+    const live = holds.filter((h) => h.state === 'open' || h.state === 'not-evaluable');
+    if (live.length === 0) {
+        process.stdout.write(`✅  no live window — the move to \`${dest}/\` is permitted\n`);
+        return 0;
+    }
+    if (dest === 'later') {
+        let text = '';
+        try {
+            text = fs.readFileSync(file, 'utf8');
+        } catch {
+            /* an unreadable file is already not-evaluable above */
+        }
+        const problems = lifecycleViolations(
+            path.join(REPO_ROOT, 'agents', 'roadmaps', 'later', path.basename(file)),
+            holds,
+            text,
+        );
+        if (problems.length === 0) {
+            process.stdout.write(
+                `✅  the move to \`later/\` is permitted — the window stays listed and still refuses\n`,
+            );
+            return 0;
+        }
+        for (const v of problems) {
+            process.stderr.write(`❌  hold \`${v.holdId}\`: ${v.reason}\n`);
+        }
+        return 1;
+    }
+    for (const h of live) {
+        process.stderr.write(
+            `❌  REFUSED: hold \`${h.id}\` is ${h.state} — a roadmap with a live window may not ` +
+                `move to \`${dest}/\`. Finish \`${h.clearedBy || '?'}\`, or move it to \`later/\`.\n`,
+        );
     }
     return 1;
 }
@@ -238,6 +317,48 @@ ${extra}`;
         },
     ];
 
+    // Lifecycle, rule 28's per-folder half. Asserted on the SAME fixture text
+    // under three different paths, so the only variable is the folder.
+    const openText = base('x', ' ');
+    const lifecycle: { name: string; file: string; text: string; want: number }[] = [
+        {
+            name: 'archive/ refuses a live window',
+            file: 'agents/roadmaps/archive/probe.md',
+            text: openText,
+            want: 1,
+        },
+        {
+            name: 'skipped/ refuses a live window',
+            file: 'agents/roadmaps/skipped/probe.md',
+            text: openText,
+            want: 1,
+        },
+        {
+            name: 'later/ refuses when entry_condition.what does not name the hold',
+            file: 'agents/roadmaps/later/probe.md',
+            text: `---\nstatus: later\nentry_condition:\n  what: something else entirely\n  when: later\n  who: maintainer\n---\n${openText}`,
+            want: 1,
+        },
+        {
+            name: 'later/ permits when entry_condition.what names the hold',
+            file: 'agents/roadmaps/later/probe.md',
+            text: `---\nstatus: later\nentry_condition:\n  what: the probe hold stays open until 1.2 lands\n  when: later\n  who: maintainer\n---\n${openText}`,
+            want: 0,
+        },
+        {
+            name: 'the active root permits a live window',
+            file: 'agents/roadmaps/probe.md',
+            text: openText,
+            want: 0,
+        },
+        {
+            name: 'archive/ permits a CLEARED window',
+            file: 'agents/roadmaps/archive/probe.md',
+            text: base('x', 'x'),
+            want: 0,
+        },
+    ];
+
     let failed = 0;
     for (const c of cases) {
         const holds = evaluateHolds(c.text, 'selftest.md');
@@ -264,21 +385,30 @@ ${extra}`;
         }
     }
 
-    const total = cases.length + negatives.length;
+    for (const l of lifecycle) {
+        const got = lifecycleViolations(l.file, evaluateHolds(l.text, l.file), l.text).length;
+        if (got !== l.want) {
+            failed += 1;
+            process.stderr.write(`   ❌ ${l.name}: got ${got} violation(s), want ${l.want}\n`);
+        }
+    }
+
+    const total = cases.length + negatives.length + lifecycle.length;
     if (failed > 0) {
         process.stderr.write(`❌  check-release-holds --selftest: ${failed}/${total} failed\n`);
         return 1;
     }
     process.stdout.write(
         `✅  check-release-holds --selftest: ${total}/${total} — every state-table row ` +
-            `(including not-evaluable, 7 ways) plus both negatives\n`,
+            `(including not-evaluable, 7 ways), both negatives, and all six lifecycle cases\n`,
     );
     return 0;
 }
 
 function usage(): number {
     process.stderr.write(
-        'usage: check_release_holds (--lint | --status | --require-safe [--channel latest|all] | --selftest)\n' +
+        'usage: check_release_holds (--lint | --status | --require-safe [--channel latest|all]\n' +
+            '                            | --can-move <file> <archive|skipped|later> | --selftest)\n' +
             '  --channel all     (default) a stable X.Y.Z cut — every open hold refuses\n' +
             '  --channel latest  a -next.N prerelease — only `Channel: all` holds refuse\n',
     );
@@ -303,6 +433,15 @@ function main(argv: string[] = process.argv.slice(2)): number {
             return usage();
         }
         return cmdRequireSafe(raw);
+    }
+    const mv = argv.indexOf('--can-move');
+    if (mv !== -1) {
+        const file = argv[mv + 1];
+        const dest = argv[mv + 2];
+        if (file === undefined || dest === undefined) {
+            return usage();
+        }
+        return cmdCanMove(path.resolve(file), dest);
     }
     return usage();
 }

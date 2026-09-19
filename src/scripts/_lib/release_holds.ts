@@ -20,9 +20,11 @@
  */
 
 import { readFileSync } from 'node:fs';
+import * as path from 'node:path';
 
 import { CHECKBOX_RE } from '../check_roadmap_trackable.js';
 import { _stripFencedCode } from '../lint_roadmap_blockers.js';
+import { entryConditionParts, _frontmatter } from '../lint_roadmap_later_disposition.js';
 
 /** Rule 28's state table. Only `unopened` and `cleared` permit a cut. */
 export type HoldState = 'unopened' | 'open' | 'cleared' | 'not-evaluable';
@@ -299,4 +301,89 @@ export function refuses(hold: Hold, cut: CutChannel): boolean {
         return false;
     }
     return cut === 'all' ? true : hold.channel === 'all';
+}
+
+/* ------------------------------------------------------------------ *
+ * Lifecycle — rule 28's per-folder half.
+ *
+ * "A window does not disappear by moving the file." The three folders answer
+ * differently and the difference is the whole point:
+ *
+ *   archive/, skipped/  the move is REFUSED while a window is open. Both mean
+ *                       "no further work", and an open window is unfinished
+ *                       work by definition, so the move would retire a refusal
+ *                       nobody would ever clear.
+ *   later/              the move is PERMITTED — the work resumes — but the open
+ *                       window must be named in `entry_condition.what`, so the
+ *                       thing that has to come back is written where the wake
+ *                       contract can be read. It still lists and still refuses.
+ *
+ * Deletion is NOT handled here and cannot be: a gate sees files, and a deleted
+ * file is not one. Rule 12 forbids the delete; this is a recorded residual.
+ * ------------------------------------------------------------------ */
+
+/** The folders a move is refused into while a window is open. */
+export const REFUSING_DIRS = ['archive', 'skipped'] as const;
+
+export interface LifecycleViolation {
+    readonly file: string;
+    readonly holdId: string;
+    readonly reason: string;
+}
+
+/** The `agents/roadmaps/` subfolder of `file`, or `''` for the active root. */
+export function holdFolder(file: string): string {
+    const m = /agents\/roadmaps\/([^/]+)\//.exec(file.split(path.sep).join('/'));
+    return m ? m[1]! : '';
+}
+
+/**
+ * Lifecycle violations for one already-evaluated file.
+ *
+ * Takes the holds rather than re-reading, so the caller's evaluation is the one
+ * reported on — a second read could disagree with the first and the disagreement
+ * would be invisible.
+ */
+export function lifecycleViolations(
+    file: string,
+    holds: readonly Hold[],
+    text: string,
+): LifecycleViolation[] {
+    const out: LifecycleViolation[] = [];
+    const folder = holdFolder(file);
+    // `not-evaluable` is deliberately included: a declaration nobody can read
+    // is not a declaration anybody can clear, so retiring it is the same defect.
+    const live = holds.filter((h) => h.state === 'open' || h.state === 'not-evaluable');
+    if (live.length === 0) {
+        return out;
+    }
+
+    if ((REFUSING_DIRS as readonly string[]).includes(folder)) {
+        for (const h of live) {
+            out.push({
+                file,
+                holdId: h.id,
+                reason:
+                    `refused: a roadmap with a ${h.state} window may not live in \`${folder}/\` ` +
+                    `— finish the clearing step \`${h.clearedBy || '?'}\` first, or move it to \`later/\``,
+            });
+        }
+        return out;
+    }
+
+    if (folder === 'later') {
+        const what = entryConditionParts(_frontmatter(text)).parts['what'] ?? '';
+        for (const h of live) {
+            if (!what.toLowerCase().includes(h.id.toLowerCase())) {
+                out.push({
+                    file,
+                    holdId: h.id,
+                    reason:
+                        `a \`later/\` roadmap with an ${h.state} window must name the hold id in ` +
+                        `\`entry_condition.what\` — it is absent there`,
+                });
+            }
+        }
+    }
+    return out;
 }

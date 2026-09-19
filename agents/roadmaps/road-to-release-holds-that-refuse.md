@@ -303,18 +303,47 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
 
 ## Phase 3 — Lifecycle integrity
 
-> **Not started — blocked by `rule-13-amendment`.** The archival, skip and
-> `later/` paths would have to refuse on a window that cannot exist yet.
+> **Closed 2026-09-19, both steps.** The window can exist now, so the three paths have
+> something to refuse on.
 
-- [ ] **3.1 The archival and skip paths refuse to move a file with an open window**, and a
+- [x] **3.1 The archival and skip paths refuse to move a file with an open window**, and a
       `later/` move requires the window named in `entry_condition.what`.
       verify: a fixture move to `archive/` or `skipped/` with an open window is refused naming
       the hold id; a move to `later/` succeeds, `--status` still lists it, and a release is still
       refused.
-- [ ] **3.2 Record deletion as a residual, not a mitigation.** Deleting a file removes its window
+      LANDED 2026-09-19. All four clauses observed, each against a fixture:
+      `--can-move <file> archive` and `--can-move <file> skipped` both exit 1 naming the hold
+      — *"REFUSED: hold `half-wired` is open … Finish `1.2`, or move it to `later/`"* — and a
+      `later/` move with the hold named in `entry_condition.what` exits 0, after which
+      `collect()` over that tree still lists `half-wired=open` and `refuses()` is still true on
+      BOTH channels. The move changed nothing about the refusal, which is rule 28's
+      per-folder claim stated as a test.
+      TWO SHAPES, NOT ONE, because a `git mv` is performed by the process loop rather than by
+      a script there is any way to intercept. `--can-move <file> <dest>` answers BEFORE the
+      move so the loop asks; `--lint` is the backstop that reddens CI when a file with a live
+      window is found sitting in `archive/` or `skipped/`, which is how a move made without
+      asking is refused in practice. A gate sees files, so the after-the-fact half is the only
+      half that can be deterministic.
+      `not-evaluable` counts as live here, deliberately: a declaration nobody can read is not
+      a declaration anybody can clear, so retiring it is the same defect as retiring an open
+      one. Six lifecycle cases are in `--selftest` (19/19 total) and the archive/skipped pair
+      was observed RED — forcing the folder test false turns exactly those 2 of 19 — with the
+      file byte-restored afterwards.
+      The `later/` rung reuses `entryConditionParts` from `lint_roadmap_later_disposition`
+      rather than re-reading the frontmatter, on the same no-third-parser grounds as 2.1.
+- [x] **3.2 Record deletion as a residual, not a mitigation.** Deleting a file removes its window
       and no gate sees it; template rule 12 already forbids the delete.
       verify: the residual is a Risk Register row in this file, and no acceptance criterion claims
       it is solved.
+      VERIFIED 2026-09-19 by inspection, and it was already true — this step is a check that
+      the record says what it should, not a change. Risk Register **row 5** carries it:
+      *"A file with an open window is deleted · implementation · Deletion removes the window
+      and bypasses the lifecycle guard entirely · Template rule 12 already forbids the delete;
+      recorded as a residual in Phase 3.2 and not claimed as solved."* No acceptance criterion
+      claims it: AC-6 is scoped to **moving** a roadmap to `later/`, `archive/` or `skipped/`,
+      and a deletion is not a move. The residual is honest rather than mitigated — a gate
+      enumerates files, and a deleted file is not one, so no amount of implementation here
+      would close it.
 
 ## Phase 4 — Wire all four boundaries to one refusal
 
