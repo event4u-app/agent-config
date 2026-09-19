@@ -34,11 +34,12 @@ import {
     _MERGE_UPDATE_ROUNDS,
     _set_changelog_reader,
     _set_exec_override,
-    assert_no_open_release_hold,
     execute,
     Plan,
     SystemExitError,
 } from './release.js';
+import { releaseHoldPreflight } from './_lib/release_holds.js';
+import { die } from './release_publication.js';
 import { DERIVED_MARKER } from './_lib/release_highlights.js';
 import {
     AUGMENT_MARKETPLACE_JSON,
@@ -659,7 +660,7 @@ const SCENARIOS: Record<string, Scenario> = {
         config: {},
         expect_success: false,
         run: () => {
-            assert_no_open_release_hold(_holdFixtureRoot('all', _openHoldBody('all')));
+            releaseHoldPreflight(_holdFixtureRoot('all', _openHoldBody('all')), die);
         },
         verify: (_w, error) => {
             const f: string[] = [];
@@ -688,7 +689,7 @@ const SCENARIOS: Record<string, Scenario> = {
         config: {},
         expect_success: false,
         run: () => {
-            assert_no_open_release_hold(_holdFixtureRoot('latest', _openHoldBody('latest')));
+            releaseHoldPreflight(_holdFixtureRoot('latest', _openHoldBody('latest')), die);
         },
         verify: (_w, error) => {
             const f: string[] = [];
@@ -723,7 +724,7 @@ const SCENARIOS: Record<string, Scenario> = {
                 /- \*\*Why not a guard:\*\*.*\n/,
                 '',
             );
-            assert_no_open_release_hold(_holdFixtureRoot('bad', body));
+            releaseHoldPreflight(_holdFixtureRoot('bad', body), die);
         },
         verify: (_w, error) => {
             const f: string[] = [];

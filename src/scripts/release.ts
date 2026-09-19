@@ -139,14 +139,13 @@ import {
     assert_major_migration_section,
     assert_scheduled_deprecations_clear,
 } from './_lib/release_migration_gate.js';
-import { evaluateFile, refusalReport } from './_lib/release_holds.js';
+import { releaseHoldPreflight } from './_lib/release_holds.js';
 
 // `__doc__.splitlines()[0]` in `_parse_args` — the argparse description. Kept
 // as a referenceable constant so the first docstring line is preserved exactly.
 const MODULE_DOC_FIRST_LINE = 'End-to-end release automation for `event4u/agent-config`.';
 
 const _HERE = fileURLToPath(import.meta.url);
-
 
 import {
     ArgparseExit,
@@ -227,7 +226,6 @@ import {
 // identifier rather than a second surface — the import above is what makes the
 // existing block resolve. This is the whole of step 1.1's "re-export shape that
 // keeps callers unaffected": no caller and no test import path changes.
-
 
 // ---------------------------------------------------------------------------
 // Parity helpers — code-point length, comma grouping, regex escape, JSON
@@ -792,46 +790,7 @@ function preflight(target: string, opts: { resume?: boolean; ci?: boolean } = {}
             die(`tag '${target}' already exists; nothing to release`);
         }
     }
-
-    assert_no_open_release_hold();
-}
-
-/**
- * Template rule 28 — refuse the cut while a declared tree state is unpublishable.
- *
- * LAST check in `preflight`, which runs before step 1 and before `execute()`, so
- * a refusal costs nothing: no branch, no tag, no push has happened yet.
- *
- * `release.ts` accepts only a bare `X.Y.Z` (`SEMVER_RE`), so the cut it performs
- * is always the STABLE one and the channel is always `all` — the strict reading,
- * under which every open hold refuses. The `-next.N` escape is named in the
- * refusal text rather than taken here, because converting a stable cut into a
- * prerelease is exactly the silent channel redirect rule 28 forbids: the choice
- * stays the operator's.
- *
- * An evaluator error or an unreadable roadmap yields `not-evaluable`, which
- * refuses. There is no path on which "could not evaluate" reads as safe, and no
- * try/catch here that would quietly restore one.
- */
-export function assert_no_open_release_hold(root: string = REPO_ROOT): void {
-    const dirs = ['', 'later', 'archive', 'skipped', 'stubs'];
-    const holds = [];
-    for (const sub of dirs) {
-        const dir = path.join(root, 'agents', 'roadmaps', sub);
-        let names: string[];
-        try {
-            names = fs.readdirSync(dir).filter((n) => n.endsWith('.md')).sort();
-        } catch {
-            continue;
-        }
-        for (const n of names) {
-            holds.push(...evaluateFile(path.join(dir, n)));
-        }
-    }
-    const report = refusalReport(holds, 'all');
-    if (report !== null) {
-        die(report);
-    }
+    releaseHoldPreflight(REPO_ROOT, die);
 }
 
 // ─── plan ─────────────────────────────────────────────────────────────────────

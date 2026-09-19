@@ -19,7 +19,7 @@
  * than an absent hold or a thrown error.
  */
 
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import * as path from 'node:path';
 
 import { CHECKBOX_RE } from '../check_roadmap_trackable.js';
@@ -446,4 +446,48 @@ export function refusalReport(holds: readonly Hold[], cut: CutChannel): string |
         '    3. use a release line — docs/contracts/release-trunk-sync.md',
     );
     return lines.join('\n');
+}
+
+/**
+ * The release pre-flight — refuse the cut while a declared tree state is
+ * unpublishable (template rule 28).
+ *
+ * Lives here rather than in `release.ts` for the reason that file's sibling
+ * `_lib/release_position.ts` states in its own docblock: `release.ts` sits far
+ * over the 1,500-line source ratchet, so growing it is a gate failure by
+ * construction, and `_lib/` is where the predicates the pipeline and its gates
+ * share already live. Its caller is the LAST check in `preflight()`, which runs
+ * before step 1 and before `execute()` — so a refusal costs nothing: no branch,
+ * no tag, no push has happened yet.
+ *
+ * The channel is always `all` because `release.ts` accepts only a bare `X.Y.Z`,
+ * so the cut it performs is always the stable one. The `-next.N` escape is named
+ * in the refusal text and never taken automatically: silently converting a
+ * stable cut into a prerelease is exactly the channel redirect rule 28 forbids,
+ * and the choice stays the operator's.
+ *
+ * `die` is injected rather than imported to keep the dependency pointing one
+ * way — `release.ts` already owns the process-exit semantics, and a `_lib`
+ * module that exits on its own behalf is not unit-testable.
+ */
+export function releaseHoldPreflight(root: string, die: (msg: string) => void): void {
+    const holds: Hold[] = [];
+    for (const sub of ['', 'later', 'archive', 'skipped', 'stubs']) {
+        const dir = path.join(root, 'agents', 'roadmaps', sub);
+        let names: string[];
+        try {
+            names = readdirSync(dir)
+                .filter((n) => n.endsWith('.md'))
+                .sort();
+        } catch {
+            continue;
+        }
+        for (const n of names) {
+            holds.push(...evaluateFile(path.join(dir, n)));
+        }
+    }
+    const report = refusalReport(holds, 'all');
+    if (report !== null) {
+        die(report);
+    }
 }
