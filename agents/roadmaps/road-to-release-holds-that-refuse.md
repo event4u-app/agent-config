@@ -516,15 +516,20 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
 
 ## Phase 6 — Evaluate the claim after 30 tags, and accept the null if it comes
 
-> **Not started — blocked by `rule-13-amendment`, and by its own denominator.**
-> The claim is pre-registered (0.4) and its 30-tag window cannot begin until Phase 4 lands a
-> wired refusal. The null branch is already recorded as the predicted outcome, so this phase
-> reads a result rather than deciding what the result would mean.
+> **Not started, and legitimately so: the measurement window has not opened.** Phase 4's
+> refusal is wired in this change and no release has been cut since, so the denominator
+> Phase 0.4 pre-registered — 30 consecutive tags counted from the first tag whose tree
+> carries a wired refusal — stands at **zero**. The claim row says what that means in its own
+> words: *"UNDERPOWERED is neither a pass nor a null: fewer than 30 post-Phase-4 tags settles
+> nothing and may be cited for neither direction."* Flipping the verdict now would be reading
+> a result that does not exist, and shortening the denominator after the mechanism shipped
+> would be fitting the threshold to the outcome the pre-registration was written to prevent.
+> Blocked on `measurement-window-not-open`.
 
-- [ ] **6.1 Read the refusal log, the re-sequence log and a re-taken Phase 0 prose count**, then
+- [ ] <!-- blocked-by: measurement-window-not-open | asked: no — there is no question to put: the block is 30 elapsed release tags, not a decision --> **6.1 Read the refusal log, the re-sequence log and a re-taken Phase 0 prose count**, then
       flip `release-hold-refuses-declared-state` to `backed` or `honest-null`.
       verify: the claim row carries both numbers and the tag range it was measured over.
-- [ ] **6.2 On an honest null, keep the primitive and strike only the free parts** — the boundary
+- [ ] <!-- blocked-by: measurement-window-not-open | asked: no — there is no question to put: the block is 30 elapsed release tags, not a decision --> **6.2 On an honest null, keep the primitive and strike only the free parts** — the boundary
       screen line and the runbook bullet — and record the disposition on rule 28 with the tag
       range. Deleting the primitive is not the null disposition: the owner's constraint is that a
       broken state must not ship, and a mechanism whose value stayed latent is not one that failed.
@@ -620,6 +625,44 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
   once the patch is applied, so the script reports red on exactly the state that means success.
   It verifies a *proposal*; the condition above verifies the *template*. Kept for provenance.
 
+### blocker: measurement-window-not-open
+- **Status:** open
+- **Owner:** maintainer
+- **Class:** 3 — human-only
+- **Blocks:** Phase 6 (both steps) and AC-9. Nothing else — the mechanism itself is complete
+  and wired; what is missing is the elapsed evidence its verdict is defined over.
+- **What to do:** nothing but cut releases as normal — the refusal is wired at all four
+  boundaries as of this change, so the window opens with the next tag. To read how far it has
+  come, count the tags whose tree already carries the evaluator:
+
+  ```bash
+  first=$(git log --reverse --format=%H -- src/scripts/check_release_holds.ts | head -1)
+  git tag --contains "$first" --sort=creatordate | wc -l   # 30 or more → the window is closed
+  ```
+
+  At 30 or more, run Phase 6.1: read the refusal log, read the Phase 1.4 re-sequence log, and
+  set `release-hold-refuses-declared-state` in `docs/CLAIMS.md` to `backed` or `honest-null`
+  with both numbers and that tag range.
+- **Recommendation:** leave it open and do not shorten the denominator. Phase 0.4 fixed 30
+  tags on 2026-09-13, while the mechanism was still unbuildable — that ordering is what makes
+  it a pre-registration rather than a number chosen to fit a result. Shortening it now, after
+  the mechanism shipped, would convert the one falsifiable claim in this roadmap into an
+  unfalsifiable one.
+- **If you do nothing:** the claim stays `unbacked`, which is its correct state. It is not a
+  gap: `docs/CLAIMS.md` records `unbacked` for exactly this, and the row's own text forbids
+  citing an underpowered window in either direction.
+- **Resolved when:** `git tag --sort=creatordate` lists **30 or more** tags whose creation
+  post-dates the first tag whose tree carries `src/scripts/check_release_holds.ts` — check
+  with `git tag --contains <first-such-tag>` — AND the refusal log and the Phase 1.4
+  re-sequence log have been read, AND `release-hold-refuses-declared-state` in
+  `docs/CLAIMS.md` reads `backed` or `honest-null` carrying both numerator arms and that tag
+  range. Zero refusals and zero logged re-sequences over the 30 is the honest null, and 6.2
+  is then the disposition — keep the primitive, strike only the boundary-screen line and the
+  runbook bullet.
+- **Evidence (2026-09-19):** the denominator is **0**. Phase 4 landed in this change and no
+  tag has been cut since; `git tag --sort=-creatordate | head -1` reads `16.0.0`, whose tree
+  predates the evaluator. The window opens at the first tag after this PR merges.
+
 ### blocker: zero-live-subjects
 - **Status:** open
 - **Owner:** maintainer
@@ -711,22 +754,30 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A roadmap can name an unreleasable intermediate state, and that state is bound to
+- [x] AC-1 — A roadmap can name an unreleasable intermediate state, and that state is bound to
       the checkbox that opens it and the checkbox that clears it. Today no vocabulary for this
       exists anywhere in `src/`, `docs/` or `.github/`.
-- [ ] AC-2 — All four release boundaries refuse to publish while such a state is open, with one
+      CLOSED 2026-09-19 — template rule 28 gives the vocabulary (`## Release holds`, `### hold: <id>`, the five fields) and `opens-hold:` / `clears-hold:` bind it to the two checkboxes. `--selftest` 19/19 evaluates that binding; sabotage cases 1 and 6 prove a marker off a checkbox is not one.
+- [x] AC-2 — All four release boundaries refuse to publish while such a state is open, with one
       script and one message naming roadmap, hold, opener, closer and the closer's `verify:`.
-- [ ] AC-3 — An evaluator error, timeout or unreadable file refuses the cut. No path exists on
+      CLOSED 2026-09-19 — one script (`check_release_holds`) and one formatter (`refusalReport`) serve all four: the `release.ts` pre-flight, the `release-gate-locality` row, the `release-validation.yml` job (inherited by `ci-strict` through `- task: ci`) and the `release-guard.yml` step on the tagged tree. The message names roadmap, hold, opener, closer and the closer's `verify:` — asserted field by field in drill scenario `release-hold-open-all-refuses-the-cut`.
+- [x] AC-3 — An evaluator error, timeout or unreadable file refuses the cut. No path exists on
       which "could not evaluate" is treated as safe.
-- [ ] AC-4 — An unfinished roadmap with no declared window never blocks a release, and normal CI
+      CLOSED 2026-09-19 — `not-evaluable` refuses on every channel, and it is reached by an evaluator error, an unreadable file, a kill, and seven malformed shapes. Proven by removal: deleting that one branch turns 7 of 13 selftest rows and 4 of 12 sabotage cases red at once.
+- [x] AC-4 — An unfinished roadmap with no declared window never blocks a release, and normal CI
       on a tree carrying a valid open window is green.
-- [ ] AC-5 — A malformed or ambiguous hold declaration reddens normal CI, so a broken declaration
+      CLOSED 2026-09-19, both halves measured. An unfinished roadmap declares nothing — sabotage negative 1, a two-phase roadmap with two open steps, yields zero holds and a null refusal report. And a tree carrying a VALID OPEN window passes `--lint` (0 malformed, 0 lifecycle) while `--require-safe` refuses: normal CI stays green on exactly the state the release path refuses, which is the separation this criterion is about.
+- [x] AC-5 — A malformed or ambiguous hold declaration reddens normal CI, so a broken declaration
       cannot fail open.
-- [ ] AC-6 — Moving a roadmap to `later/`, `archive/` or `skipped/` cannot make an open window
+      CLOSED 2026-09-19 — and this one needed work beyond Phase 4. `--lint` is now a task in NORMAL `ci` (`taskfiles/ci-fast.yml` → `Taskfile.yml`), not only in the release-branch workflow. Without that, a malformed declaration would have reddened only on a release branch, which is precisely the fail-open-by-being-unparseable hole the criterion names.
+- [x] AC-6 — Moving a roadmap to `later/`, `archive/` or `skipped/` cannot make an open window
       disappear from `--status` or from the release refusal.
-- [ ] AC-7 — No override flag, label or commit trailer bypasses a refusal, and a plain `X.Y.Z`
+      CLOSED 2026-09-19 — sabotage case 5. `archive/` and `skipped/` refuse the move naming the hold id; `later/` permits it and the window still lists and still refuses from there.
+- [x] AC-7 — No override flag, label or commit trailer bypasses a refusal, and a plain `X.Y.Z`
       cut is never silently converted to a prerelease channel.
-- [ ] AC-8 — Every sabotage case has been observed red with the guard neutralised and green with
+      CLOSED 2026-09-19 — the grep over both source files returns one line, the refusal text stating no override exists. The no-silent-redirect half is asserted as behaviour: drill scenario `release-hold-open-latest-refuses-the-stable-cut` proves a bare `X.Y.Z` over a `Channel: latest` hold DIES rather than becoming a prerelease.
+- [x] AC-8 — Every sabotage case has been observed red with the guard neutralised and green with
       it restored, and both non-over-firing cases pass.
-- [ ] AC-9 — `release-hold-refuses-declared-state` carries a verdict measured over a named tag
+      CLOSED 2026-09-19 — nine targeted neutralisations, every one of the 12 sabotage tests red in at least one, each file byte-restored after (git diff empty) and the suite green at 15/15. The per-defence red table is in step 5.2. Both required non-over-firing cases pass, plus a third over the live repository corpus.
+- [ ] <!-- blocked-by: measurement-window-not-open | asked: no — there is no question to put: the block is 30 elapsed release tags, not a decision --> AC-9 — `release-hold-refuses-declared-state` carries a verdict measured over a named tag
       range, and an honest null is recorded as a disposition rather than as a deletion.

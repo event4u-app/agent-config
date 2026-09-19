@@ -1472,6 +1472,15 @@ tasks:
     desc: Enforce the roadmap ## Blockers contract — required fields present, blocked-by references resolve (templates/roadmaps.md rule 20)
     cmd: ./scripts-run src/scripts/lint_roadmap_blockers {{.QUIET_FLAG}}
 
+  lint-release-holds:
+    silent: true
+    desc: >-
+      Every declared release hold is well-formed and lifecycle-clean
+      (templates/roadmaps.md rule 28). In NORMAL ci, not only on a release
+      branch — a malformed declaration must redden here, or a broken hold
+      fails open by being unparseable.
+    cmd: ./scripts-run src/scripts/check_release_holds --lint {{.QUIET_FLAG}}
+
   lint-adr-sweep-routing:
     silent: true
     desc: Every REVIEW-NOW / SUPERSEDE (candidate) row in an ADR evidence sweep carries a route and a dated follow-up (road-to-evidence-based-adr-governance 3.4)
