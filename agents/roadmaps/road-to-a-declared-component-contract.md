@@ -217,6 +217,34 @@ exists to prevent.
     which is the state the archived risk register wanted before the question was reopened. The
     decision is therefore no longer urgent: option (c), reversing only the ordering statement,
     costs nothing and is unaffected by any of this.
+- **Screened again 2026-09-19 by executing this blocker's own § What to do, and the packet had two
+  defects. Both are corrected; the decision is untouched and stays owner-reserved.** The full
+  record, with every store searched and the gate source quoted, is
+  `agents/evidence/analysis/component-taxonomy-rejection-reachability-2026-09-19.md` — a surface a
+  stable artefact may cite, which is the operative point below.
+  - **The grep in § What to do returns nothing.** `grep -n 'no order is prescribed'` is
+    case-sensitive and the sentence opens a bolded line: the text is `No order is prescribed`, at
+    `src/skills/ui-component-architect/SKILL.md:88`. An owner following the instruction as written
+    would conclude the statement does not exist. The original line is left standing above so the
+    correction is visible rather than hidden.
+  - **The rejection is structurally uncitable, which is a SECOND reachability failure and not the
+    one already recorded here.** Its only record is the archived granularity roadmap, and
+    `check_no_roadmap_refs` forbids every stable artefact from citing any `*.md` under
+    `agents/roadmaps/` at any depth, `archive/` included — verified against `ROADMAP_FILE_RE` and
+    `STABLE_TREES` in the gate's own source. So no rule, skill, command, context, guideline or
+    contract is permitted to point a later reader at the reason. Repairing the guard did not touch
+    this; the evidence artefact above is the repair, per the promote-and-cite Iron Law of
+    [`no-roadmap-references`](../../src/rules/no-roadmap-references.md).
+  - **Option (c) is not the zero-cost edit the Recommendation calls it.** The ordering statement is
+    not recorded as a taste: the skill states that no primary source requires an order, that
+    measured evidence comparing build orders is *absent, not merely weak*, and that a claimed order
+    is therefore a preference someone holds. Reversing it means prescribing an order the tree has
+    recorded as evidentially unsupported. That may still be the right call — it is a different call
+    from the one the Recommendation describes.
+  - **Classification verified, not inherited.** Choosing among three conventions with no measurable
+    discriminator is `product-owned` under ADR-268 § 10 — two valid user-visible semantics with no
+    source of truth — and that class is owner-locked. `critical-technical` would route to a council;
+    this does not. A council may advise here and may not rule.
 
 ### blocker: the-detector-is-a-consumer-template
 - **Status:** open
