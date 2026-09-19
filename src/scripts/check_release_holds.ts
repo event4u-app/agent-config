@@ -36,6 +36,7 @@ import {
     type Hold,
 } from './_lib/release_holds.js';
 import { REPO_ROOT } from './lint_roadmap_blockers.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -79,6 +80,25 @@ function rel(p: string): string {
 }
 
 function cmdLint(): number {
+    // A broken glob is this gate's one silent failure mode: with zero files it
+    // would print "0 declared hold(s), all well-formed" and exit 0, certifying
+    // a coverage that does not exist. "Zero holds" is a real and normal state;
+    // "zero FILES under agents/roadmaps" never is.
+    try {
+        assertScanned({
+            gate: 'check_release_holds',
+            scanned: globRoadmaps().length,
+            units: 'roadmap file(s)',
+            roots: ['agents/roadmaps'],
+        });
+    } catch (e) {
+        if (e instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${e.message}\n`);
+            return 1;
+        }
+        throw e;
+    }
+
     const files = globRoadmaps();
     const holds = collect();
     const bad = holds.filter((h) => h.state === 'not-evaluable');
