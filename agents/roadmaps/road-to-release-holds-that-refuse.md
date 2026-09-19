@@ -193,7 +193,7 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
       **APPROVED AND APPLIED 2026-09-15**, same decision and same patch as 1.1.
       `./scripts-run src/scripts/lint_roadmap_blockers` re-run after the write and is still
       green (10 roadmaps).
-- [ ] **1.4 `new_roadmap.ts` emits the `## Release holds` block as a comment**, and the authoring
+- [x] **1.4 `new_roadmap.ts` emits the `## Release holds` block as a comment**, and the authoring
       self-check lands in `roadmap-writing/SKILL.md` and `/roadmap:create`, logging every
       `gated → re-sequenced` outcome so Phase 6 has a numerator.
       verify: `./scripts-run src/scripts/new_roadmap probe --stdout` shows the commented block,
@@ -204,6 +204,23 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
       before rule 28 exists would put a rule-13 violation into every newly created roadmap, which
       is the exact failure the `rule-13-amendment` blocker names. The authoring self-check has the
       same dependency. Open with a named reason, not deferred.
+      LANDED 2026-09-19, once the `rule-13-amendment` blocker was executed rather than read and
+      found already resolved by the owner's 2026-09-15 patch. Both verify clauses re-run after
+      the write: `./scripts-run src/scripts/new_roadmap probe --stdout` emits the block inside a
+      single `<!-- ... -->` comment, and `src/skills/roadmap-writing/evals/triggers.json` carries
+      the positive case `resequence-not-hold`, whose `note` pins the expected output as a
+      re-sequenced phase cut plus the one-line `resequenced:` note, NOT a `### hold:` entry.
+      THE COMMENT IS THE LOAD-BEARING HALF, and the test asserts it two ways rather than one: a
+      live `## Release holds` heading in every newly created roadmap would make rung 3 the
+      default shape when rule 28's whole point is that it is the last resort, and the block must
+      contribute ZERO checkboxes or it silently inflates every new roadmap's open count. Both
+      were observed RED before being trusted — sabotaging the `re-sequence -> guard -> hold`
+      string reds the case, and uncommenting the block reds it again; the file is byte-restored
+      and green at 9/9.
+      One downstream change the step did not name: `roadmap-writing` was in
+      `src/scripts/trigger_eval_grandfather.json`, the shrink-only list of skills carrying no
+      eval set. Adding `evals/triggers.json` makes that entry false, so it is removed —
+      `check_trigger_eval_presence` reads 101/299 carrying evals, 198 grandfathered.
 
 ## Phase 2 — The evaluator, and the glob nobody has paid for yet
 

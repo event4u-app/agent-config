@@ -193,6 +193,32 @@ them through it. Ratcheted by `lint_roadmap_blockers`. Full shape:
 [`templates/roadmaps.md` rule 20](../../agent-src/templates/roadmaps.md).
 Omit it entirely when there is no such gate; run the § 4c gate-test first.
 
+### 5b-holds. Release holds — ask the question, then record the answer
+
+A blocker stops execution; a **hold** stops publication. Before saving, ask
+once: *does any intermediate tree state of this roadmap have to stay
+unpublished?* Then walk template rule 28's authoring order, in order, and stop
+at the first rung that works:
+
+1. **Re-sequence.** Cut the phases so no intermediate state is broken. A
+   continuous shape needs no hold and is always preferred.
+2. **Guard.** Hide the half-built surface behind a flag, an unwired entry
+   point, or an inert default. A guarded state is publishable.
+3. **Hold.** Only when neither works. The entry then carries a mandatory
+   `Why not a guard:` field naming the concrete reason rung 2 failed.
+
+**Record the outcome either way, and this half is the one that gets skipped.**
+A roadmap that considered a hold and re-sequenced instead writes a one-line
+`resequenced:` (or `guarded:`) note in the commented `## Release holds` block
+`new_roadmap` emits. That note is a counted outcome, not a comment: a hold that
+was never needed is the mechanism working, and counting only refusals would
+score the best outcome as a failure.
+
+The default answer is **no hold**, and a roadmap that declares none is the
+normal shape. Never write a hold because the roadmap is unfinished — roadmap
+*incompleteness* is never a release condition, and rule 28 says so as its own
+non-goal. Checked by `./scripts-run src/scripts/check_release_holds --lint`.
+
 ### 5c. Risk review (Gate R1) — after draft, before save
 
 - Ready (non-draft) plan → `## Risk Register` before save, self-review; seed
