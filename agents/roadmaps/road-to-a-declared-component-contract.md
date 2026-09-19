@@ -132,11 +132,11 @@ exists to prevent.
 
 ## Phase 4 — Two axes on the stack detector, in the right file
 
-- [ ] <!-- blocked-by: the-detector-is-a-consumer-template | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **4.1 Add a workshop axis and a verification axis** to the stack-detection axis table and to
+- [ ] <!-- blocked-by: taxonomy-reversal-is-a-second-arrival | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **4.1 Add a workshop axis and a verification axis** to the stack-detection axis table and to
       the documented stack seam, filling the workshop capabilities as booleans.
       verify: the library fixture resolves a workshop value; a project with no marker resolves none
       and its fallback path runs without error.
-- [ ] <!-- blocked-by: the-detector-is-a-consumer-template | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **4.2 Treat this as a consumer-template change, not an engine change.**
+- [x] **4.2 Treat this as a consumer-template change, not an engine change.**
       `corrected-from-reproduction` — every revision in the source set cites the detector as
       `work_engine/stack/detect.ts`. The real path is under
       `src/agent-src/templates/scripts/work_engine/`, a template shipped into every consumer
@@ -144,7 +144,28 @@ exists to prevent.
       revision noticed.
       verify: the blast radius across installed consumers is stated in the evidence tree, and the
       migration path for a project already carrying the template is named.
-- [ ] <!-- blocked-by: the-detector-is-a-consumer-template | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **4.3 No provider registry file.** The axes carry what the lane needs; a registry is a second
+
+      **DONE — and the step's own framing is the thing the measurement refuted.** Both halves of
+      the verify are met by
+      `agents/evidence/analysis/stack-detector-axis-blast-radius-2026-09-19.md`: the radius is
+      stated in the evidence tree, and the migration path is named as **none required**, because a
+      consumer's copy of the template is overwritten without prompting on every deploy and is
+      never executed — `cmd_work` and `cmd_implement_ticket` pin `engine_root` to the package tree,
+      and no work_engine file is resolved through the consumer-override path.
+
+      Closing this step does not release 4.1 or 4.3 and reverses nothing. It records an assessment
+      whose absence was the blocker; the axis change itself stays held by
+      `taxonomy-reversal-is-a-second-arrival`, and both remaining markers were re-pointed at it in
+      the same change so that neither cites a resolved blocker.
+
+      **Three corrections to the earlier measurement, recorded rather than carried forward.**
+      `_AMBIGUOUS_AXES` is `['reactivity']`, not `['view', 'reactivity']` — the latter is a
+      separate inline array at `detect.ts:589`; the `detect.ts:521-524` citation under-scopes the
+      `tailwind-v3` row, whose payload runs to line 531; and the `detect_stack` grep returns eight
+      locations rather than five, having missed
+      `src/agent-src/contexts/execution/toolchain-resolver.md:35`. The findings stand; the
+      attributions did not.
+- [ ] <!-- blocked-by: taxonomy-reversal-is-a-second-arrival | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **4.3 No provider registry file.** The axes carry what the lane needs; a registry is a second
       source of truth for twelve adapters that do not exist.
       verify: no new configuration file is added by this phase.
 
@@ -247,7 +268,7 @@ exists to prevent.
     this does not. A council may advise here and may not rule.
 
 ### blocker: the-detector-is-a-consumer-template
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Class:** 3 — human-only
 - **Blocks:** Phase 4 only.
@@ -265,8 +286,13 @@ exists to prevent.
   reduces this roadmap to the decision record and the guard.
 - **Resolved when:** the blast radius is stated in the evidence tree and the migration path is
   named, or the axis change is refused.
-- **STILL OPEN.** The blast-radius assessment is the owner's, and (b) refuse-and-drop-Phase-4 is
-  one of the two readings, so this is not a measurement an agent closes.
+- **~~STILL OPEN.~~ SUPERSEDED 2026-09-19 — left standing so the transition is visible.** It read:
+  *"The blast-radius assessment is the owner's, and (b) refuse-and-drop-Phase-4 is one of the two
+  readings, so this is not a measurement an agent closes."* That contradicts this blocker's own
+  **Resolved when**, which asks for the radius to be *stated* and the migration path *named* — not
+  for (a) or (b) to be chosen. The condition was executed rather than read off the status line, and
+  it is now met. The (a)/(b) choice was never inside this blocker's closing condition and remains
+  the owner's, unprejudiced; Phase 4 stays held by `taxonomy-reversal-is-a-second-arrival`.
 - **The blast radius was measured 2026-09-14, and it corrects this blocker's own premise.**
   Stating it does not resolve the blocker — the choice between (a) and (b) stays the owner's, and
   one material question below is still open — but "nobody has looked" is no longer true.
@@ -335,6 +361,29 @@ exists to prevent.
   `work_engine/stack/detect.ts` anywhere outside the template tree, so the source set's
   `work_engine/stack/detect.ts` citation resolves to a shipped consumer template and to nothing
   else. The correction stands; the radius is still unassessed.
+
+- **Resolution (2026-09-19) — the pre-registered bar was executed and is met.** Not by adopting the
+  earlier prose: all twelve of its factual claims were re-verified one at a time against the files
+  at `origin/main` (`107a21051`). Nine confirmed verbatim, three corrected (see step 4.2). The
+  radius is now **stated in the evidence tree** at
+  `agents/evidence/analysis/stack-detector-axis-blast-radius-2026-09-19.md`, and the **migration
+  path is named**: none is required, because a consumer's copy of the template is overwritten
+  without prompting on every deploy — `_resolve_file_conflict` returns `write` unconditionally —
+  and is never executed, since both `/work` entry points pin `engine_root` to the package tree and
+  no work_engine file passes through the consumer-override resolver.
+
+  **What resolving this does NOT do.** It does not choose (a) over (b), does not release Phase 4,
+  and does not touch the axis table. 4.1 and 4.3 were re-pointed at
+  `taxonomy-reversal-is-a-second-arrival`, which gates them independently per its own § Blocks.
+  Only 4.2 — the assessment step whose verify *is* this condition — closed.
+
+  **And the assessment argues against (a) more strongly than the blocker expected.** The detector
+  has **no production caller**: no executable import of the module exists anywhere in the shipped
+  template tree, the committed code graph lists only the definition, its own recursion and six test
+  call sites, and — newly established — nothing writes a detector result into `state.stack` either,
+  so `state.ts:501-505`'s claim that "the dispatcher fills it in" describes behaviour the tree does
+  not implement. If Phase 4's radius is test-and-prose rather than engine behaviour, the phase buys
+  less than it costs. That is an input the owner should weigh, not a verdict this run may take.
 
 ### blocker: workshop-tool-names-are-unverified
 - **Status:** resolved
@@ -426,8 +475,10 @@ measurement rather than weakened.
       roadmap records the refusal and the archived roadmap carries the arrival count.
 - [ ] AC-3 — No component level is ever derived from props, depth, path or file length, and an
       undeclared component is reported undeclared rather than assigned a tier.
-- [ ] AC-4 — The stack detector's blast radius across installed consumers is stated before its
+- [x] AC-4 — The stack detector's blast radius across installed consumers is stated before its
       axis table changes, or the change is refused.
+      **Met** — stated in `agents/evidence/analysis/stack-detector-axis-blast-radius-2026-09-19.md`,
+      and stated *before* any change: the axis table is byte-unchanged by this roadmap.
 - [ ] AC-5 — No new configuration file carries a provider or workshop registry.
 - [ ] AC-6 — The contract rule is lane-gated, shadow-enforced, framework-neutral, and passes a
       fixture that lands contract and consumer in one commit.
