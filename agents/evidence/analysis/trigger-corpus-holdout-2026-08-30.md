@@ -15,7 +15,7 @@ a claim made here.
 ## The frozen set
 
 Every `src/skills/*/evals/triggers.json` present on this tree at the moment of
-freezing: **100 files**, 18 holdout and 82 train.
+freezing: **101 files**, 18 holdout and 83 train (100 at the freeze; see § Growth 2026-09-19).
 
 ## The partition rule — deterministic, name-derived, no discretion
 
@@ -43,11 +43,11 @@ prevent.
 ## The set hash
 
 ```
-SET-SHA256  0667fbd96d7d1da88368d4d587545ff03475208ab9d07ca5212975e8cdaaa4d6
+SET-SHA256  6cac70513a26f48e37447c265d75777ff39f6e6ff67403976d5d8362f20e58f6
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for all
-100 files, byte-sorted as one list (`LC_ALL=C`) — NOT per partition. The two
+101 files, byte-sorted as one list (`LC_ALL=C`) — NOT per partition. The two
 tables below split that same list in two for reading; the hash is over the
 undivided, byte-sorted whole, and the reproduce command below is the
 authority on the order. It pins the partition **and** the corpus content: editing any one
@@ -144,7 +144,7 @@ open and which this file does not settle.
 | `threat-modeling` | `6bdb1d3b44939ac8f6ba78bb6145ca3bea91adb50991cd44bd700987adf903f2` |
 | `worktree-lifecycle` | `1cdde59eaaadc1cb7dfa1cd86d9852326c352a7dcd884dbcbaa414f36d176326` |
 
-## Train — 82 files
+## Train — 83 files
 
 | Skill | sha256 of `evals/triggers.json` |
 |---|---|
@@ -216,6 +216,7 @@ open and which this file does not settle.
 | `prompt-validator` | `daeecf1063775e3c4671de74f3b292fe30fb6d3e4ce8e1c490c2935ef5e5af07` |
 | `reasoning-orchestrator` | `a968ef1f04693b46eb3838b43eb83b092429149069599c3aef2c2e4628701b85` |
 | `refine-ticket` | `bab09021f8664cd0676e9613bd511a3f87d115583ea5f4639fb4800df9715328` |
+| `roadmap-writing` | `3559ef4117112f053288fb55da5b3ced3cebe2ab914e2e5d82e8f726f20339d2` |
 | `screenshot-hygiene` | `2493ae6cee8869c659e34610c7ec6a7d7a6f5c76098136c98fa35c90484adb2c` |
 | `security-audit` | `27ccbdcd02b8cf7fbd6b85da1043c680233a6ed840697eac6ef9dace37cb0993` |
 | `security-maturity-assessment` | `071894293d4c9a1997843d9bfc78f69b2fc64c0e5306544756cb6853bfd31b30` |
@@ -230,6 +231,49 @@ open and which this file does not settle.
 | `verify-repair-loop` | `0e66da5e7daac823b400f9493cc2865f9521a40dc7a01bf74ed81702680cb47b` |
 | `wireframe` | `a8d5417a0cdc00557cbc7e55db8184943d971f60d279b4d68eb549cb2ab6a77a` |
 | `workspace-link` | `b4733d41b6460c62cfb91bbbdaf6e764124d115035ee6d780f782ca4e3aae675` |
+
+## Growth 2026-09-19 — the corpus gained one TRAIN file; the seal did not move
+
+```
+THE CORPUS GREW. THE HOLDOUT DID NOT.
+ALL 18 SEALED ROWS ARE BYTE-IDENTICAL. THE RULE IS UNCHANGED.
+NO HOLDOUT RESULT IS VOIDED, BECAUSE NO HOLDOUT FILE WAS TOUCHED.
+```
+
+**What changed.** `road-to-release-holds-that-refuse` step 1.4 authored
+`src/skills/roadmap-writing/evals/triggers.json` — one file, nine cases — and
+removed that skill's now-false entry from `trigger_eval_grandfather.json`. The
+corpus is **101 files, 18 holdout and 83 train**, and `SET-SHA256` is re-pinned
+to `6cac7051…` from `0667fbd9…`.
+
+**This is recorded rather than re-pinned quietly, which is what § The partition
+rule requires**: *"A change is legal; a silent change is the compromise this
+step exists to prevent."* The § Set hash section already predicted this exact
+case — *"A later run recomputing a different value has either grown the corpus
+or edited a frozen file, and either is a finding before it is a bug."* It grew.
+
+**What provably did NOT change, checked rather than asserted.** Re-running this
+file's own reproduce recipe and diffing every row against the published tables
+leaves **exactly one** row absent from the artefact — `roadmap-writing`, on the
+`train` side. All 18 holdout rows and all 82 pre-existing train rows reproduce
+byte-for-byte:
+
+- the partition **rule** is untouched — ceiling 51, name-derived, no discretion;
+- `sha256('roadmap-writing')[0:2]` places it in **train**, so the holdout
+  membership is the same 18 skills, and the seal AC-6 rests on is intact;
+- no holdout file's bytes moved, so no holdout result is voided.
+
+**The ordering claim is unaffected and is worth restating, because a re-pin is
+exactly where it would be quietly lost.** AC-6's claim is that the holdout's
+content hash predates the first proposer commit. That claim is about the 18
+holdout rows and the git history that carries them, and neither moved here. A
+growth on the train side cannot retro-fit a holdout that was fixed before it.
+
+**The residual, stated because it is real.** `SET-SHA256` is computed over the
+undivided list, so it changes whenever the corpus grows on either side — it
+cannot distinguish "grew on train" from "edited a frozen file" on its own. What
+distinguishes them is the per-row diff above, which is why this section carries
+it rather than only the new number. A future growth owes the same check.
 
 ## What this freeze does NOT establish
 

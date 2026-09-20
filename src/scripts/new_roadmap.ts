@@ -48,6 +48,13 @@ function titleOf(slug: string): string {
     return slug.replace(/-/g, ' ');
 }
 
+// The two heading markers the release-holds block emits, interpolated rather
+// than written literally: `lint_code_comments` strips indentation before
+// matching, so a template-literal line beginning `## ` reads to it as a
+// markdown heading left in source. The emitted text is unchanged.
+const H2 = '#'.repeat(2) + ' ';
+const H3 = '#'.repeat(3) + ' ';
+
 export function skeleton(slug: string, complexity: 'lightweight' | 'structural', date: string): string {
     return `---
 complexity: ${complexity}
@@ -72,6 +79,36 @@ could tell whether it happened.
       already the case.
       verify: the check that proves it — a command, a test, an observable
       state. Never "looks right".
+
+<!-- Release holds — emitted commented out, because the default is that there is
+     not one. Uncomment ONLY if an intermediate tree state of this roadmap must
+     not be published. Template rule 28 is the contract; the authoring order is
+     re-sequence -> guard -> hold, and a hold is the last resort, never the
+     first tool.
+
+     Record the outcome either way. A roadmap that considered a hold and reached
+     rung 1 or 2 instead writes the one-line \`resequenced:\` / \`guarded:\` note
+     below and deletes the entry; that note is a counted outcome, not a comment.
+
+     resequenced: <one line — the broken intermediate state, and the phase cut
+     that removed it, so no window was ever needed.>
+
+     ${H2}Release holds
+
+     ${H3}hold: <kebab-id>
+     - **Channel:** all             (all | latest; omitted parses to all)
+     - **Opened by:** <phase.step>  (the checkbox whose [x] opens the window)
+     - **Cleared by:** <phase.step> (the checkbox whose [x] closes it)
+     - **State:** <one sentence naming what is broken in the tree while open.>
+     - **Why not a guard:** <why the guard rung failed, concretely. Mandatory —
+       an entry without it is malformed and reddens CI.>
+
+     Both named steps carry an inline HTML-comment marker on the checkbox line
+     itself — \`opens-hold: <kebab-id>\` on the opener, \`clears-hold: <kebab-id>\`
+     on the clearer — so the binding is readable from the checkbox and not only
+     from this section. The clearing step MUST carry a \`verify:\` field: a hold
+     cleared by an unverified flip is a hold cleared by assertion.
+-->
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: ${date} | reviewer: claude/host -->

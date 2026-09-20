@@ -26,6 +26,7 @@
  */
 
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -37,6 +38,8 @@ import {
     Plan,
     SystemExitError,
 } from './release.js';
+import { releaseHoldPreflight } from './_lib/release_holds.js';
+import { die } from './release_publication.js';
 import { DERIVED_MARKER } from './_lib/release_highlights.js';
 import {
     AUGMENT_MARKETPLACE_JSON,
@@ -588,6 +591,16 @@ interface Scenario {
     /** What the scenario proves — printed by the CLI. */
     summary: string;
     config: WorldConfig;
+    /**
+     * Run THIS instead of `execute()`.
+     *
+     * Added for the release-holds scenarios, whose boundary is `preflight()` —
+     * it runs before step 1 and therefore before `execute()`, so a scenario
+     * driving `execute()` could never reach it. Every pre-existing scenario
+     * omits the field and keeps `execute()` byte-identically; the override is
+     * additive and changes nothing it does not set.
+     */
+    run?: () => void;
     /** Whether execute() is expected to complete (vs die/throw). */
     expect_success: boolean;
     /** Extra assertions over the finished world; return failure strings. */
@@ -604,7 +617,137 @@ function _count(world: FakeWorld, needle: string): number {
     return world.calls.filter((c) => c === needle).length;
 }
 
+
+/* ------------------------------------------------------------------ *
+ * Release-holds fixtures (template rule 28, roadmap step 4.3).
+ *
+ * A throwaway tree per scenario, because the assertion is about what the
+ * evaluator READS — a mocked return would assert the mock.
+ * ------------------------------------------------------------------ */
+
+function _holdFixtureRoot(name: string, body: string): string {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), `release-holds-${name}-`));
+    const dir = path.join(root, 'agents', 'roadmaps');
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, 'fixture.md'), body, 'utf8');
+    return root;
+}
+
+function _openHoldBody(channel: string): string {
+    return [
+        '## Phase 1',
+        '- [x] **1.1 opener** <!-- opens-hold: half-wired -->',
+        '      verify: the opener\'s own check',
+        '- [ ] **1.2 clearer** <!-- clears-hold: half-wired -->',
+        '      verify: ./scripts-run src/scripts/check_surface_whole',
+        '',
+        '## Release holds',
+        '',
+        '### hold: half-wired',
+        `- **Channel:** ${channel}`,
+        '- **Opened by:** 1.1',
+        '- **Cleared by:** 1.2',
+        '- **State:** the surface is half wired while this is open.',
+        '- **Why not a guard:** the entry point is reachable and cannot be made inert.',
+        '',
+    ].join('\n');
+}
+
 const SCENARIOS: Record<string, Scenario> = {
+    'release-hold-open-all-refuses-the-cut': {
+        summary:
+            'pre-flight: an open hold with `Channel: all` refuses the cut, naming the roadmap, the hold, its opener, its closer and the closer\'s verify command',
+        config: {},
+        expect_success: false,
+        run: () => {
+            releaseHoldPreflight(_holdFixtureRoot('all', _openHoldBody('all')), die);
+        },
+        verify: (_w, error) => {
+            const f: string[] = [];
+            const msg = error ?? '';
+            // All five fields, asserted individually. A refusal missing any one
+            // of them tells the operator they are stuck rather than what to do,
+            // which is the failure step 4.1 names.
+            for (const field of [
+                'fixture.md',
+                'half-wired',
+                'opened by:  1.1',
+                'cleared by: 1.2',
+                'check_surface_whole',
+            ]) {
+                _expect(msg.includes(field), `the refusal never named \`${field}\`: ${msg}`, f);
+            }
+            for (const way of ['finish the clearing step', '-next.N', 'release line']) {
+                _expect(msg.includes(way), `the refusal never offered \`${way}\`: ${msg}`, f);
+            }
+            return f;
+        },
+    },
+    'release-hold-open-latest-refuses-the-stable-cut': {
+        summary:
+            'pre-flight: an open hold with `Channel: latest` still refuses, because release.ts cuts a bare X.Y.Z and never silently redirects it to a prerelease',
+        config: {},
+        expect_success: false,
+        run: () => {
+            releaseHoldPreflight(_holdFixtureRoot('latest', _openHoldBody('latest')), die);
+        },
+        verify: (_w, error) => {
+            const f: string[] = [];
+            const msg = error ?? '';
+            _expect(msg.includes('half-wired'), `the refusal never named the hold: ${msg}`, f);
+            _expect(
+                msg.includes('channel latest'),
+                `the refusal never showed the hold's own channel: ${msg}`,
+                f,
+            );
+            // The silent-redirect prohibition, asserted as a behaviour rather
+            // than as a grep: the run DIED. A release.ts that quietly converted
+            // this into `-next.N` would have completed.
+            _expect(
+                msg.startsWith('SystemExit('),
+                `the stable cut was not refused — a silent channel redirect: ${msg}`,
+                f,
+            );
+            return f;
+        },
+    },
+    'release-hold-not-evaluable-refuses-the-cut': {
+        summary:
+            'pre-flight: a malformed declaration the evaluator cannot read refuses the cut — there is no path on which "could not evaluate" reads as safe',
+        config: {},
+        expect_success: false,
+        run: () => {
+            // Missing `Why not a guard:`, which rule 28 makes mandatory. The
+            // evaluator can parse the file but not trust the declaration, which
+            // is exactly the not-evaluable row.
+            const body = _openHoldBody('all').replace(
+                /- \*\*Why not a guard:\*\*.*\n/,
+                '',
+            );
+            releaseHoldPreflight(_holdFixtureRoot('bad', body), die);
+        },
+        verify: (_w, error) => {
+            const f: string[] = [];
+            const msg = error ?? '';
+            _expect(
+                msg.startsWith('SystemExit('),
+                `an unreadable declaration did not refuse — it failed OPEN: ${msg}`,
+                f,
+            );
+            _expect(
+                msg.includes('not evaluable'),
+                `the refusal did not say the declaration was unreadable: ${msg}`,
+                f,
+            );
+            _expect(
+                msg.includes('Why not a guard'),
+                `the refusal did not name what was wrong with it: ${msg}`,
+                f,
+            );
+            return f;
+        },
+    },
+
     'findings-ledger-verified-on-the-remote-branch': {
         summary:
             'step 7: the ledger is on the remote branch and the gate passes — the release continues without producing anything',
@@ -1206,7 +1349,11 @@ function run_scenario(name: string): ScenarioOutcome {
     // Without this the drill's step 9 reads the repository's real CHANGELOG.md.
     _set_changelog_reader(() => world.changelog_file);
     try {
-        execute(plan, { wait_for_checks: true, dry_run: false, resume: scenario.config.resume ?? true });
+        if (scenario.run !== undefined) {
+            scenario.run();
+        } else {
+            execute(plan, { wait_for_checks: true, dry_run: false, resume: scenario.config.resume ?? true });
+        }
     } catch (err) {
         if (err instanceof SystemExitError) {
             error = `SystemExit(${err.code}): ${captured.join('')}`;

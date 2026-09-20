@@ -80,8 +80,18 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
     });
 
     it('and the partition is not vacuously all-train', () => {
+        // 100 -> 101 on 2026-09-19: `roadmap-writing` gained an eval set
+        // (road-to-release-holds-that-refuse step 1.4). The corpus grows
+        // whenever a skill does, and these two numbers move with it.
+        //
+        // THE SEAL IS UNAFFECTED, which is the half worth checking rather than
+        // assuming: `partitionOf` is a hash of the skill NAME, and
+        // `roadmap-writing` lands in `train`, so the holdout is still the same
+        // 18 skills the freeze artefact lists. A new skill that hashed into
+        // `holdout` would fail the line below rather than silently joining a
+        // sealed partition.
         const all = corpusSkills(REPO);
-        expect(all.length).toBe(100);
+        expect(all.length).toBe(101);
         expect(all.filter((r) => r.partition === 'holdout').length).toBe(18);
     });
 });
@@ -91,7 +101,8 @@ describe('5.1 — the measurement is non-vacuous', () => {
         expect(loadCatalogue(REPO).length).toBeGreaterThan(200);
         const cases = loadTrainCases(REPO);
         expect(cases.length).toBeGreaterThan(500);
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(82);
+        // 82 -> 83: `roadmap-writing`'s eval set, train partition (see above).
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(83);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {

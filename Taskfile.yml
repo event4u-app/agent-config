@@ -183,6 +183,7 @@ tasks:
       - task: lint-empty-roadmaps
       - task: lint-symptom-intake
       - task: lint-roadmap-blockers
+      - task: lint-release-holds
       - task: lint-roadmap-later-disposition
       - task: lint-roadmap-family-cap
       # src/scripts/check_rule_activation_census — ratchet on which rules the

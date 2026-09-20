@@ -495,3 +495,36 @@ jobs:
 
       - name: Published census figure agrees with its record
         run: ./scripts-run src/scripts/check_skill_activation_claim
+
+  release-holds:
+    # Template rule 28. The tenth job, and the cheapest: it reads the roadmap
+    # corpus out of the checked-out tree and talks to nothing, so it needs no
+    # credentials, no artifact and no PR body. `ci-strict` inherits it through
+    # `Taskfile.yml`'s `- task: ci`, which is the by-construction superset
+    # `check_ci_strict_superset` asserts -- no separate `ci-strict` edit.
+    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.head_ref, 'release/') }}
+    name: No roadmap declares an open, unpublishable tree state
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Node deps
+        run: |
+          npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
+            || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
+
+      # Two assertions, and the second is the one with teeth. `--lint` reddens
+      # on a MALFORMED declaration, so a broken hold cannot fail open by being
+      # unparseable. `--require-safe` refuses the cut itself.
+      - name: Every declared hold is well-formed and lifecycle-clean
+        run: ./scripts-run src/scripts/check_release_holds --lint
+
+      - name: No open window blocks this cut
+        run: ./scripts-run src/scripts/check_release_holds --require-safe --channel all
