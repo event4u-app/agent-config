@@ -14,8 +14,12 @@ import {
     _read_complexity,
 } from '../../src/scripts/lint_roadmap_complexity.js';
 import { MARKER_RE } from '../../src/scripts/lint_plan_risk_register.js';
+import { CHECKBOX_LINE } from '../../src/scripts/_lib/roadmap_checkboxes.js';
 
 const DATE = '2026-08-20';
+
+/** The dashboard's own checkbox vocabulary, global, for counting. */
+const CHECKBOX_LINE_G = new RegExp(CHECKBOX_LINE.source, 'gm');
 
 describe('the emitted skeleton satisfies each gate convention', () => {
     const lw = skeleton('probe-slug', 'lightweight', DATE);
@@ -65,6 +69,47 @@ describe('the emitted skeleton satisfies each gate convention', () => {
 
     it('has one open step, so the roadmap is trackable and not empty', () => {
         expect((lw.match(/^- \[ \] /gm) ?? []).length).toBeGreaterThan(0);
+    });
+
+    it('emits the release-holds block COMMENTED OUT, with rule 28\'s authoring order', () => {
+        // Step 1.4 of road-to-release-holds-that-refuse. The block has to be a
+        // comment: the default is that a roadmap declares no hold, and emitting
+        // a live `## Release holds` heading into every new file would make the
+        // rare case the default shape. It also must not become a checkbox or a
+        // phase — the caps test above would catch a phase, nothing would catch
+        // a stray step.
+        const open = lw.indexOf('<!-- Release holds');
+        expect(open).toBeGreaterThan(-1);
+        const close = lw.indexOf('-->', open);
+        expect(close).toBeGreaterThan(open);
+        const block = lw.slice(open, close);
+
+        // The heading and the entry shape live INSIDE the comment.
+        expect(block).toContain('## Release holds');
+        expect(block).toContain('### hold: <kebab-id>');
+        for (const field of ['**Channel:**', '**Opened by:**', '**Cleared by:**', '**State:**']) {
+            expect(block).toContain(field);
+        }
+        // `Why not a guard:` is the field rule 28 makes mandatory.
+        expect(block).toContain('**Why not a guard:**');
+        // The authoring order, which is the half that keeps holds rare.
+        expect(block).toContain('re-sequence -> guard -> hold');
+        // The re-sequence note is what Phase 6 counts; without it the only
+        // countable outcome is a refusal, which scores the best case as a loss.
+        expect(block).toContain('resequenced:');
+        // Both markers are named, so the checkbox binding is authorable.
+        expect(block).toContain('opens-hold:');
+        expect(block).toContain('clears-hold:');
+
+        // Commented out means: no live heading, and no extra checkbox. The
+        // block contributes ZERO checkboxes — asserted on the block rather than
+        // on a whole-file total, which would pin an unrelated count (the
+        // skeleton's own step 1.1 and AC-1) and move for the wrong reason.
+        expect(/^## Release holds\s*$/m.test(lw)).toBe(false);
+        expect(block.match(CHECKBOX_LINE_G)).toBeNull();
+        expect(lw.replace(block, '').match(CHECKBOX_LINE_G)?.length).toBe(
+            lw.match(CHECKBOX_LINE_G)?.length,
+        );
     });
 
     it('ships as draft, so emitting one does not silently grow the ready estate', () => {

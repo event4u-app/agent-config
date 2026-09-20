@@ -1,0 +1,60 @@
+{
+    "skill": "roadmap-writing",
+    "last_eval": "2026-09-19",
+    "description": "4 positives + 3 near-misses + 2 counterexamples. Authored 2026-09-19 under road-to-release-holds-that-refuse step 1.4, which asked for one positive case whose expected output is a re-sequenced phase rather than a hold — `resequence-not-hold` below is that case, and its note pins the expectation. Positives cover authoring or rewriting a plan, in EN and DE. Near-misses are the three neighbours that all say `roadmap`: managing an existing one, picking the next one, and executing one — none of which is authoring.",
+    "queries": [
+        {
+            "q": "write a roadmap for migrating the auth layer off the legacy session store",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "draft a plan for the new export pipeline with phases and acceptance criteria",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "schreib mir einen Fahrplan für den Umbau der Queue, mit Phasen und Abnahmekriterien",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "plan the storage-engine swap — phases 2 and 3 leave the tree half-migrated and it must not ship in that state",
+            "trigger": true,
+            "class": "exemplar",
+            "id": "resequence-not-hold",
+            "note": "The release-holds positive (template rule 28, authoring order re-sequence → guard → hold). EXPECTED OUTPUT: a re-sequenced phase cut that removes the broken intermediate state, plus the one-line `resequenced:` note — NOT a `### hold:` entry. A hold is rung 3 and this case never reaches it, because a swap can be cut so each phase leaves the tree whole. A roadmap answering this with a hold has skipped rungs 1 and 2 and is the failure the case exists to catch."
+        },
+        {
+            "q": "archive the finished roadmap and regenerate the progress dashboard",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "managing an existing roadmap's lifecycle, not authoring one → roadmap-management"
+        },
+        {
+            "q": "which roadmap should I pick up next?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "selection across the estate, not authoring → /roadmap:next"
+        },
+        {
+            "q": "work through the open steps of road-to-typed-grants and close them",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "executing an existing roadmap; the sharpest edge because the file is the same object → /roadmap:process-full"
+        },
+        {
+            "q": "write the README for this package",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "authoring prose that is not a plan; guards against triggering on any 'write me a document' phrasing"
+        },
+        {
+            "q": "create a Jira ticket for the broken CSV export",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "a single unit of work with no phases → jira-integration"
+        }
+    ]
+}

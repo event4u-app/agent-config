@@ -48,6 +48,17 @@ jobs:
           persist-credentials: false
           ref: ${{ steps.tag.outputs.name }}
 
+      # Template rule 28, on the TAGGED tree rather than on main. The checkout
+      # above is pinned to the tag, so this reads the tree that is actually
+      # being published -- which is the whole reason the boundary exists here
+      # and not only in the pre-flight: a tag can be pushed by hand.
+      - name: No roadmap declares an open, unpublishable tree state
+        run: |
+          npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
+            || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
+          ./scripts-run src/scripts/check_release_holds --lint
+          ./scripts-run src/scripts/check_release_holds --require-safe --channel all
+
       - name: Compare versions
         run: |
           tag="${{ steps.tag.outputs.name }}"

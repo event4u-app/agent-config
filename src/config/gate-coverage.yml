@@ -2904,3 +2904,32 @@ gates:
       from the generator's own output, so a sabotaged mapping was self-backing
       and the phantom value wrote through; the backing set now reads the raw
       configuration fields and the same sabotage exits 1.
+
+  - id: check_release_holds
+    argv: ['--lint']
+    ci_invocation: .github/workflows/release-validation.yml
+    min_scanned: 700
+    corpus: >
+      every markdown file under `agents/roadmaps/` and its four subfolders —
+      the active root plus `later/`, `archive/`, `skipped/` and `stubs/`, 950 at
+      baseline. Wider than the active-only glob the sibling roadmap gates use,
+      and deliberately: template rule 28's per-folder lifecycle says a window
+      does not disappear by moving the file, so a hold in `later/` still lists
+      and still refuses. The floor sits at 700 because the archive alone holds
+      ~725 files and legitimate archival churn moves the total by tens, never by
+      hundreds; a reading below it means the walk lost a folder, not that
+      roadmaps were deleted.
+    status: enforced
+    no_canary_reason: >-
+      the canary contract is create-only, and a planted roadmap carrying a
+      well-formed hold would be a legitimate corpus member rather than a
+      violation — the gate would read it, evaluate it, and be right to stay
+      green. Every violation this gate has is a MALFORMED declaration or a
+      lifecycle breach, both of which are properties of a file's content or its
+      folder, not of its existence. Discrimination is proven by `--selftest`
+      instead (19 cases, 13 of them refusing: the four state-table rows, the
+      channel split, seven distinct not-evaluable shapes, and six lifecycle
+      cases), and the scan-scope collapse this row exists to catch is caught
+      inside the gate by `assertScanned` — observed red on 2026-09-19 by
+      pointing the folder list at a non-existent directory, which exits 1 with
+      "scanned 0 roadmap file(s)" rather than certifying an empty corpus.

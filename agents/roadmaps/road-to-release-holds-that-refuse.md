@@ -193,7 +193,7 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
       **APPROVED AND APPLIED 2026-09-15**, same decision and same patch as 1.1.
       `./scripts-run src/scripts/lint_roadmap_blockers` re-run after the write and is still
       green (10 roadmaps).
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **1.4 `new_roadmap.ts` emits the `## Release holds` block as a comment**, and the authoring
+- [x] **1.4 `new_roadmap.ts` emits the `## Release holds` block as a comment**, and the authoring
       self-check lands in `roadmap-writing/SKILL.md` and `/roadmap:create`, logging every
       `gated → re-sequenced` outcome so Phase 6 has a numerator.
       verify: `./scripts-run src/scripts/new_roadmap probe --stdout` shows the commented block,
@@ -204,25 +204,85 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
       before rule 28 exists would put a rule-13 violation into every newly created roadmap, which
       is the exact failure the `rule-13-amendment` blocker names. The authoring self-check has the
       same dependency. Open with a named reason, not deferred.
+      LANDED 2026-09-19, once the `rule-13-amendment` blocker was executed rather than read and
+      found already resolved by the owner's 2026-09-15 patch. Both verify clauses re-run after
+      the write: `./scripts-run src/scripts/new_roadmap probe --stdout` emits the block inside a
+      single `<!-- ... -->` comment, and `src/skills/roadmap-writing/evals/triggers.json` carries
+      the positive case `resequence-not-hold`, whose `note` pins the expected output as a
+      re-sequenced phase cut plus the one-line `resequenced:` note, NOT a `### hold:` entry.
+      THE COMMENT IS THE LOAD-BEARING HALF, and the test asserts it two ways rather than one: a
+      live `## Release holds` heading in every newly created roadmap would make rung 3 the
+      default shape when rule 28's whole point is that it is the last resort, and the block must
+      contribute ZERO checkboxes or it silently inflates every new roadmap's open count. Both
+      were observed RED before being trusted — sabotaging the `re-sequence -> guard -> hold`
+      string reds the case, and uncommenting the block reds it again; the file is byte-restored
+      and green at 9/9.
+      One downstream change the step did not name: `roadmap-writing` was in
+      `src/scripts/trigger_eval_grandfather.json`, the shrink-only list of skills carrying no
+      eval set. Adding `evals/triggers.json` makes that entry false, so it is removed —
+      `check_trigger_eval_presence` reads 101/299 carrying evals, 198 grandfathered.
+      THE SKILL CARRIES A POINTER, NOT A SECTION, AND THE REASON IS MEASURED RATHER THAN
+      stylistic. `roadmap-writing/SKILL.md` stood at **399 lines against the linter's 400-line
+      cap** with density 0.27 — already inside the band `skill_linter` flags `review for split`.
+      A 26-line § 5b-holds was written first and it turned the skill `pass → pass_with_warnings`,
+      which the pre-push preflight correctly refused. Density 0.27 is nowhere near the 0.60
+      escape, so line count was the only lever and the headroom was exactly one line. The
+      guidance therefore lands where it costs nothing and is read at the right moment: the full
+      self-check in `/roadmap:create` § 5c, the contract in template rule 28, and one folded
+      sentence in the skill's § 5b — renamed to cover both mechanisms, which is the shape rule
+      20 already took in step 1.3 when it gained *a blocker stops execution, a hold stops
+      publication*. The pointer keeps the half that gets skipped: record the avoided outcome,
+      not only the taken one. `task lint-skills` reads 451 pass / 1 warn / 0 fail, its
+      pre-change baseline.
 
 ## Phase 2 — The evaluator, and the glob nobody has paid for yet
 
-> **Not started — blocked by `rule-13-amendment`.** Every step here parses or
-> evaluates a marker the template does not yet permit a roadmap to carry, so there is no
-> grammar to write a parser against. 2.3's glob measurement is the one step that could in
-> principle run early; it is left with the phase because a p95 budget measured for a
-> declaration format that may change during review would have to be re-taken.
+> **Closed 2026-09-19, all three steps.** The phase note above was written while
+> `rule-13-amendment` was open; rule 28 has been in the template since `47bb07719`, so the
+> grammar the parser is written against exists and is the contract rather than a guess.
 
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **2.1 Write `src/scripts/_lib/release_holds.ts`** — parse and evaluate. Reuse
+- [x] **2.1 Write `src/scripts/_lib/release_holds.ts`** — parse and evaluate. Reuse
       `check_roadmap_trackable`'s checkbox and fence parser and `lint_roadmap_blockers`' marker
       grammar. No third parser.
       verify: neither helper is copied — `grep -n 'from .*roadmap_trackable\|from .*roadmap_blockers'`
       in the new lib resolves, and the two existing gates stay green.
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **2.2 Write `src/scripts/check_release_holds.ts`** with `--lint`, `--status`,
+      LANDED 2026-09-19. Both imports resolve and are load-bearing rather than decorative:
+      `CHECKBOX_RE` from `check_roadmap_trackable` (whose source is spliced into the two
+      marker regexes, so the accepted mark set cannot drift from the dashboard's) and
+      `_stripFencedCode` from `lint_roadmap_blockers` — newly exported, an additive change to
+      that module's export block and nothing else. Both gates re-run green after the write:
+      `check_roadmap_trackable` reads 6 active roadmaps all parseable, `lint_roadmap_blockers`
+      12 blocker-contract-clean with 725 archived files read.
+      WHY THE SPLICE RATHER THAN A SECOND REGEX: a marker this evaluator accepted and
+      `lint_roadmap_blockers` rejected would be a hold that reddens one gate and is invisible
+      to the other, which is the silent-drift failure the no-third-parser instruction exists
+      to prevent.
+- [x] **2.2 Write `src/scripts/check_release_holds.ts`** with `--lint`, `--status`,
       `--require-safe [--channel latest|all]` and `--selftest`.
       verify: `--selftest` covers every state-table row **including the not-evaluable row**, where
       a fixture the evaluator cannot read yields a refusal and never a pass.
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **2.3 Measure the wider glob before wiring it.** `corrected-from-reproduction` — the source
+      LANDED 2026-09-19. `--selftest` reads **13/13**: the four state-table rows, the
+      `latest`-channel split (open + `Channel: latest` refuses a stable cut and permits a
+      prerelease), **seven distinct ways of being not-evaluable**, and two NEGATIVE cases.
+      The negatives are not padding — without them an evaluator that refused everything would
+      pass every positive row, which is the tautology `testing-anti-patterns` names. They are
+      a roadmap with no holds section (declares nothing) and a fenced documentation example
+      (`_stripFencedCode` blanks it, so rule 28's own entry-shape block in the template does
+      not parse as a live declaration).
+      THE NOT-EVALUABLE ROW WAS PROVEN SENSITIVE, not asserted: deleting the
+      `state === 'not-evaluable' → refuse` branch turns exactly those **7 of 13** red, and
+      collapsing the channel expression to `return true` turns the `latest` case red on its
+      own. Both readings were taken with the file byte-restored afterwards and the selftest
+      back at 13/13.
+      CHANNEL SEMANTICS, decided here because rule 28 fixes the hold field's two tokens but
+      the roadmap left the FLAG's reading open: `--channel` names the set of hold channels
+      that refuse the cut. `all` (the default) is a stable `X.Y.Z` — every open hold refuses;
+      `latest` is a `-next.N` prerelease — only `Channel: all` holds refuse, because a
+      `latest` hold permits the opt-in channel by its own definition. This is the only reading
+      under which the flag's two values give different answers, which is why it is the one
+      implemented. No override exists: `grep -rn 'force|override|accept-risk'` over the script
+      returns nothing, which is step 4.4's condition already satisfied at the source.
+- [x] **2.3 Measure the wider glob before wiring it.** `corrected-from-reproduction` — the source
       claimed `check_roadmap_trackable` already scans every folder and that the precedent exists.
       It does not: `check_roadmap_trackable.ts:71` sets
       `EXCLUDE_DIRS = new Set(['archive','skipped','stubs','later'])` and the unfiltered walk at
@@ -230,81 +290,246 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
       710 archived ones for content is new work on the release hot path.
       verify: the measured p95 runtime over the real corpus is recorded in the Phase 0 evidence
       file and sits under the budget derived there; no index is built in v1.
+      LANDED 2026-09-19, and the step's own premise was wrong in a way worth recording:
+      **Phase 0 derived no runtime budget**, so there was nothing to sit under. It derived the
+      four wiring points and the exposure row and never a p95 ceiling. The budget is therefore
+      derived now from a measurement rather than from a preference —
+      `agents/evidence/analysis/release-holds-phase-0-2026-09-13.md` § 2.3.
+      MEASURED: **950 files** across the five folders, p95 **56.2 ms** (n=25, in-process).
+      BUDGET: **250 ms p95**, taken from `lint_roadmap_blockers` — the nearest comparable the
+      repository has ALREADY accepted on the pre-push path, reading the same archive, at
+      0.25/0.25/0.26 s wall. 56.2 ms is 22 % of it. No index in v1: at 22 % of an accepted
+      gate an index buys nothing that justifies the staleness surface it adds.
 
 ## Phase 3 — Lifecycle integrity
 
-> **Not started — blocked by `rule-13-amendment`.** The archival, skip and
-> `later/` paths would have to refuse on a window that cannot exist yet.
+> **Closed 2026-09-19, both steps.** The window can exist now, so the three paths have
+> something to refuse on.
 
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **3.1 The archival and skip paths refuse to move a file with an open window**, and a
+- [x] **3.1 The archival and skip paths refuse to move a file with an open window**, and a
       `later/` move requires the window named in `entry_condition.what`.
       verify: a fixture move to `archive/` or `skipped/` with an open window is refused naming
       the hold id; a move to `later/` succeeds, `--status` still lists it, and a release is still
       refused.
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **3.2 Record deletion as a residual, not a mitigation.** Deleting a file removes its window
+      LANDED 2026-09-19. All four clauses observed, each against a fixture:
+      `--can-move <file> archive` and `--can-move <file> skipped` both exit 1 naming the hold
+      — *"REFUSED: hold `half-wired` is open … Finish `1.2`, or move it to `later/`"* — and a
+      `later/` move with the hold named in `entry_condition.what` exits 0, after which
+      `collect()` over that tree still lists `half-wired=open` and `refuses()` is still true on
+      BOTH channels. The move changed nothing about the refusal, which is rule 28's
+      per-folder claim stated as a test.
+      TWO SHAPES, NOT ONE, because a `git mv` is performed by the process loop rather than by
+      a script there is any way to intercept. `--can-move <file> <dest>` answers BEFORE the
+      move so the loop asks; `--lint` is the backstop that reddens CI when a file with a live
+      window is found sitting in `archive/` or `skipped/`, which is how a move made without
+      asking is refused in practice. A gate sees files, so the after-the-fact half is the only
+      half that can be deterministic.
+      `not-evaluable` counts as live here, deliberately: a declaration nobody can read is not
+      a declaration anybody can clear, so retiring it is the same defect as retiring an open
+      one. Six lifecycle cases are in `--selftest` (19/19 total) and the archive/skipped pair
+      was observed RED — forcing the folder test false turns exactly those 2 of 19 — with the
+      file byte-restored afterwards.
+      The `later/` rung reuses `entryConditionParts` from `lint_roadmap_later_disposition`
+      rather than re-reading the frontmatter, on the same no-third-parser grounds as 2.1.
+- [x] **3.2 Record deletion as a residual, not a mitigation.** Deleting a file removes its window
       and no gate sees it; template rule 12 already forbids the delete.
       verify: the residual is a Risk Register row in this file, and no acceptance criterion claims
       it is solved.
+      VERIFIED 2026-09-19 by inspection, and it was already true — this step is a check that
+      the record says what it should, not a change. Risk Register **row 5** carries it:
+      *"A file with an open window is deleted · implementation · Deletion removes the window
+      and bypasses the lifecycle guard entirely · Template rule 12 already forbids the delete;
+      recorded as a residual in Phase 3.2 and not claimed as solved."* No acceptance criterion
+      claims it: AC-6 is scoped to **moving** a roadmap to `later/`, `archive/` or `skipped/`,
+      and a deletion is not a move. The residual is honest rather than mitigated — a gate
+      enumerates files, and a deleted file is not one, so no amount of implementation here
+      would close it.
 
 ## Phase 4 — Wire all four boundaries to one refusal
 
-> **Not started — blocked by `rule-13-amendment` for the phase itself, and by
-> `zero-live-subjects` for its migration value.** The two are different blocks and only the
-> first is structural. The four wiring points are already enumerated with file and line in
+> **Closed 2026-09-19, all four steps.** `rule-13-amendment` is resolved, which is the
+> structural block; `zero-live-subjects` governs this phase's migration VALUE and never
+> whether it can start, so it stays open and Phase 4 shipped under it — exactly the split
+> the note below already drew. The four wiring points are already enumerated with file and line in
 > the Phase 0 evidence file, § 0.3, so this phase starts from a table rather than a search.
 > Step 4.2's figure is stale and the correction is recorded rather than applied: the registry
 > carries 9 jobs at HEAD, not 8; the "4 carrying local commands" half reproduces exactly.
 
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **4.1 `release.ts` pre-flight before step 1.** The refusal names the roadmap, the hold, its
+- [x] **4.1 `release.ts` pre-flight before step 1.** The refusal names the roadmap, the hold, its
       opener, its closer and the closer's `verify:` command, plus the three ways out: finish the
       clearer, cut `-next.N`, or use a release line per `docs/contracts/release-trunk-sync.md`.
       verify: a fixture tree with an open `latest` hold refuses at the pre-flight with all five
       fields in the message.
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **4.2 One row in `src/config/release-gate-locality.yml`** (`verify: true`, `network: false`),
+      LANDED 2026-09-19 at the wiring point § 0.3 row 1 names — the LAST check inside
+      `preflight()`, which runs before step 1 and before `execute()`, so a refusal costs
+      nothing: no branch, no tag, no push has happened. Observed against a fixture tree with an
+      open `Channel: latest` hold, and all five fields are in the message: the roadmap path,
+      the hold id, `opened by: 1.1`, `cleared by: 1.2`, and `its verify:` carrying the closing
+      step's own command. The three ways out follow it verbatim.
+      THE FIFTH FIELD WAS MISSING AND WAS ADDED HERE. The Phase 2 evaluator captured four; a
+      refusal that does not say what to RUN to clear it has told the operator they are stuck
+      rather than what to do, so `Hold.clearVerify` now carries the clearing step's `verify:`
+      text. One formatter — `refusalReport` — serves both `--require-safe` and the pre-flight,
+      because two copies would drift and the drift would land where it hurts most: a different
+      message at the CLI and at the cut.
+      `release.ts` accepts only a bare `X.Y.Z` (`SEMVER_RE`), so its cut is always the stable
+      one and the channel is always `all`. That is why an open `latest` hold refuses here: the
+      `-next.N` escape is NAMED in the refusal and never taken automatically, which is step
+      4.4's no-silent-redirect rule enforced at the only place that could break it.
+- [x] **4.2 One row in `src/config/release-gate-locality.yml`** (`verify: true`, `network: false`),
       plus the `release-validation.yml` job, `ci-strict`, and `release-guard.yml` on the
       checked-out tag.
       verify: `./scripts-run src/scripts/release_verify --list` shows the new row — the registry
       was reproduced live on 2026-09-11 with 8 jobs, 4 carrying local commands — and
       `./scripts-run src/scripts/check_ci_strict_superset` stays green.
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **4.3 An evaluator error, timeout, or unreadable file refuses the cut.** There is no path
+      LANDED 2026-09-19, all four boundaries. `release_verify --list` now prints
+      `release-holds  ./scripts-run src/scripts/check_release_holds --lint`, and
+      `check_ci_strict_superset` is green (`ci-strict ⊇ ci by construction`).
+      The row is `verify: true`, `network: false`, and the `network: false` is a fact rather
+      than an aspiration: the evaluator reads the roadmap corpus out of the checked-out tree
+      and talks to nothing, so a runner and a laptop can only disagree if the trees differ —
+      which is the disagreement the gate exists to surface.
+      `release-validation.yml` gains a tenth job running BOTH `--lint` and `--require-safe`;
+      the first is the one with teeth for normal CI, because a malformed declaration reddens
+      there and so cannot fail open by being unparseable. `ci-strict` needs no edit and gets
+      none: it delegates through `Taskfile.yml`'s `- task: ci`, the by-construction superset.
+      `release-guard.yml` gains a step inside `assert-version-matches-tag`, after the tagged
+      checkout and before "Compare versions", so it reads the TREE BEING PUBLISHED rather than
+      `main` — which is the whole reason that boundary exists separately from the pre-flight:
+      a tag can be pushed by hand.
+      THE STALE FIGURE IN THIS STEP IS CONFIRMED STALE: the registry carried 9 jobs before
+      this change and 10 after, not the 8 the step's own text pins. Phase 0 § 0.3 already
+      recorded the correction; it is restated here rather than silently left to contradict
+      the line above it.
+- [x] **4.3 An evaluator error, timeout, or unreadable file refuses the cut.** There is no path
       on which "could not evaluate" reads as safe.
       verify: `release_drill` gains three scenarios — open `latest`, open `all`, evaluator error —
       and the error scenario exits non-zero.
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **4.4 No override, and no silent channel redirect.** A plain `X.Y.Z` cut is never
+      LANDED 2026-09-19. `release_drill` reads **25 scenarios**, up from 22, and all three new
+      ones are green: `release-hold-open-all-refuses-the-cut`,
+      `release-hold-open-latest-refuses-the-stable-cut` and
+      `release-hold-not-evaluable-refuses-the-cut`. The error scenario asserts
+      `SystemExit(` on the captured outcome, so "exits non-zero" is checked rather than
+      assumed. `tests/scripts/release_drill.test.ts` picks all three up without an edit — 26
+      tests, up from 23.
+      ONE RUNNER CHANGE WAS NEEDED AND IT IS ADDITIVE. The drill drives `execute()`, while
+      this boundary is `preflight()`, which runs BEFORE it — so a scenario driving `execute()`
+      could never reach the check. `Scenario` gains an optional `run?: () => void`; every
+      pre-existing scenario omits it and keeps `execute()` byte-identically.
+      Each scenario builds a throwaway roadmap tree on disk and points the real
+      `assert_no_open_release_hold` at it, because the assertion is about what the evaluator
+      READS — a mocked return would assert the mock.
+      SENSITIVITY OBSERVED: replacing the pre-flight's `die(report)` with a no-op turns
+      exactly those 3 of 25 red and the drill exits 1; the file was byte-restored and the
+      drill is green again at 25/25.
+- [x] **4.4 No override, and no silent channel redirect.** A plain `X.Y.Z` cut is never
       auto-converted to `-next.N`; the hint is offered and the decision stays the operator's.
       verify: `grep -rn 'force\|override\|accept-risk' src/scripts/check_release_holds.ts` returns
       no flag, label or trailer that bypasses a refusal, and `Channel: all` is the parsed default.
+      VERIFIED 2026-09-19, both halves, and the first is satisfied at the source rather than
+      by policy. The grep over `check_release_holds.ts` and `_lib/release_holds.ts` returns
+      exactly **one** line, and it is the refusal text saying *"there is no override flag"* —
+      a statement that none exists, not one that does. No `--force`, no `--accept-risk`, no
+      environment variable, no commit trailer, and no code path on which a refusal becomes a
+      pass.
+      A hold entry with no `Channel:` field parses to `all` — measured, not assumed — so the
+      permissive value is never the one you get by forgetting to write anything.
+      The no-silent-redirect half is asserted as BEHAVIOUR, not as a grep: the drill scenario
+      `release-hold-open-latest-refuses-the-stable-cut` proves a stable cut over a
+      `Channel: latest` hold DIES. A `release.ts` that quietly converted it to `-next.N` would
+      have completed, and the scenario would be red.
 
 ## Phase 5 — Adversarial proof, each case with a known-red arm
 
-> **Not started — blocked by `rule-13-amendment`.** There is no guard to
-> neutralise and no refusal message to assert against.
+> **Closed 2026-09-19, all three steps.** There are guards to neutralise now, and each one
+> was. `tests/scripts/release_holds_sabotage.test.ts`, 15 tests.
 
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **5.1 Write the sabotage set**, one assertion per case, no case shared: delete a clear
+- [x] **5.1 Write the sabotage set**, one assertion per case, no case shared: delete a clear
       marker after opening · flip a clear `[x]` back to `[~]` · `[x] → [-]` with and without a
       `Closed by:` field · duplicate hold id · move to `later/`, `archive/`, `skipped/` · a marker
       that is not on a checkbox · a clear with no `verify:` · a fenced documentation example · a
       hand-made release PR · a hand-pushed tag · the evaluator killed mid-run.
       verify: the test file lists all eleven cases and each asserts its own exact refusal message.
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **5.2 Prove sensitivity — neutralise the guard, watch each case fail, restore it.** A test
+      LANDED 2026-09-19 — `tests/scripts/release_holds_sabotage.test.ts`. All eleven cases in
+      the step's own order, as **12 tests** because case 3 is written as 3a/3b: the step says
+      *"with and without a `Closed by:` field"*, which is two fixtures, and collapsing them
+      would have left one of the two unasserted.
+      NO CASE SHARED, and the constraint is the substance rather than style: a suite whose
+      cases all assert a generic "it refused" cannot say WHICH defence caught the attack, so
+      neutralising any one of them leaves the suite green through the others. Each case
+      asserts its own exact message — `no checkbox carries \`clears-hold: half-wired\``,
+      `duplicate hold id \`half-wired\``, ``the `clears-hold: half-wired` step carries no
+      `verify:` field``, ``may not live in `archive/` ``, and so on.
+      CASE 3's ANSWER IS THAT `Closed by:` IS DELIBERATELY NOT CONSULTED. `[-]` is CANCELLED,
+      so a clearing step that will never run cannot clear a window and the hold stays `open`
+      either way. A prose field that overrode the checkbox would be exactly the
+      cleared-by-assertion failure rule 28's `verify:` requirement exists to stop.
+      CASE 4 RETURNS BOTH ENTRIES, both not-evaluable — the behaviour worth pinning, because
+      an evaluator that silently picked the first or the last would resolve the ambiguity in
+      the attacker's favour half the time and would not say so. The first draft of this test
+      asserted one entry and was wrong; the code was right.
+      CASES 9 AND 10 ARE NOT EVALUATOR BEHAVIOUR and are asserted against the PARSED workflow
+      YAML, not prose: a hand-made release PR and a hand-pushed tag are precisely the paths
+      that do not go through `release.ts`, so the boundary that catches them is the workflow.
+      Case 10 additionally asserts step ORDER — the evaluation must come after the tagged
+      checkout, or it reads `main` instead of the tree being published.
+      CASE 11 KILLS A REAL PROCESS (`SIGKILL`, asserting a non-zero exit) and separately
+      exercises the unreadable-file path a kill leaves behind, which yields `not-evaluable`
+      and refuses on both channels.
+- [x] **5.2 Prove sensitivity — neutralise the guard, watch each case fail, restore it.** A test
       never seen red has unknown sensitivity.
       verify: the commit message or the test file records the red reading per case, taken with the
       guard neutralised.
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **5.3 Prove it does not over-fire.** A valid unfinished `continuous` roadmap and an
+      LANDED 2026-09-19. Nine targeted neutralisations, each removing ONE defence, run against
+      the suite; every one of the 12 sabotage tests appears in at least one red reading, and
+      each neutralisation reds a distinct and explainable set rather than the whole file:
+
+      | Defence neutralised | Cases that went RED |
+      |---|---|
+      | the `clears-hold` marker-on-a-checkbox requirement | 1, 6 |
+      | `isChecked` — `[~]` and `[-]` made to count as cleared | 2, 3a, 3b |
+      | duplicate-id detection | 4 |
+      | the `archive/` + `skipped/` lifecycle refusal | 5 |
+      | the clearing-step `verify:` requirement | 7 |
+      | fenced-code blanking | 8 |
+      | the `release-validation.yml` release-holds job | 9 |
+      | the `release-guard.yml` tagged-tree evaluation | 10 |
+      | `not-evaluable` refuses | 1, 4, 7, 11 |
+
+      The last row is the load-bearing one: four cases depend on it, so removing the single
+      branch `state === 'not-evaluable' → refuse` opens four different attacks at once. That
+      is the argument for why it has no flag.
+      Every file was byte-restored after each probe — `git diff` over the evaluator and both
+      workflows is empty — and the suite is green at 15/15.
+- [x] **5.3 Prove it does not over-fire.** A valid unfinished `continuous` roadmap and an
       unopened window both pass.
       verify: both negative cases are in the same test file and are green.
+      LANDED 2026-09-19, and a THIRD negative was added beyond the two the step asks for.
+      The two required: a valid unfinished `continuous` roadmap — two open steps across two
+      phases — declares nothing and `refusalReport` is `null` on both channels, which is rule
+      28's non-goal (roadmap incompleteness is never a release condition) asserted rather than
+      promised; and an unopened window (`[ ]` opener) permits every cut.
+      The third is the strongest available and costs nothing: the **live repository corpus**,
+      read through `git ls-files agents/roadmaps`, carries zero not-evaluable holds and
+      refuses no cut. A gate that over-fired on real roadmaps would red here, in the same file
+      as the attacks it is supposed to catch.
 
 ## Phase 6 — Evaluate the claim after 30 tags, and accept the null if it comes
 
-> **Not started — blocked by `rule-13-amendment`, and by its own denominator.**
-> The claim is pre-registered (0.4) and its 30-tag window cannot begin until Phase 4 lands a
-> wired refusal. The null branch is already recorded as the predicted outcome, so this phase
-> reads a result rather than deciding what the result would mean.
+> **Not started, and legitimately so: the measurement window has not opened.** Phase 4's
+> refusal is wired in this change and no release has been cut since, so the denominator
+> Phase 0.4 pre-registered — 30 consecutive tags counted from the first tag whose tree
+> carries a wired refusal — stands at **zero**. The claim row says what that means in its own
+> words: *"UNDERPOWERED is neither a pass nor a null: fewer than 30 post-Phase-4 tags settles
+> nothing and may be cited for neither direction."* Flipping the verdict now would be reading
+> a result that does not exist, and shortening the denominator after the mechanism shipped
+> would be fitting the threshold to the outcome the pre-registration was written to prevent.
+> Blocked on `measurement-window-not-open`.
 
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **6.1 Read the refusal log, the re-sequence log and a re-taken Phase 0 prose count**, then
+- [ ] <!-- blocked-by: measurement-window-not-open | asked: no — there is no question to put: the block is 30 elapsed release tags, not a decision --> **6.1 Read the refusal log, the re-sequence log and a re-taken Phase 0 prose count**, then
       flip `release-hold-refuses-declared-state` to `backed` or `honest-null`.
       verify: the claim row carries both numbers and the tag range it was measured over.
-- [ ] <!-- blocked-by: rule-13-amendment | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **6.2 On an honest null, keep the primitive and strike only the free parts** — the boundary
+- [ ] <!-- blocked-by: measurement-window-not-open | asked: no — there is no question to put: the block is 30 elapsed release tags, not a decision --> **6.2 On an honest null, keep the primitive and strike only the free parts** — the boundary
       screen line and the runbook bullet — and record the disposition on rule 28 with the tag
       range. Deleting the primitive is not the null disposition: the owner's constraint is that a
       broken state must not ship, and a mechanism whose value stayed latent is not one that failed.
@@ -313,7 +538,7 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
 ## Blockers
 
 ### blocker: rule-13-amendment
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Class:** 3 — human-only
 - **Blocks:** Phases 2 through 6. Template rule 13 is contract layer, and until it is split a
@@ -376,6 +601,67 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
   passes, which is exactly why the new check exists. **The template remains untouched on this
   branch and the decision is unchanged: applying the patch is the approval, and it is still
   yours.**
+
+- **RESOLVED 2026-09-19, by executing the condition rather than reading the status line.**
+  The `Resolved when` above was run against the applied template at `origin/main`
+  (`107a21051`), not against the patch, and all four of its clauses hold:
+  - the release-holds rule **numbered 28** is present — `src/agent-src/templates/roadmaps.md:687`;
+  - rule 13's prohibition block hashes to
+    `5827d0e4b5a1c88e7d646e7157fed36564890a5aaa5f2e33c0007ad77b9ed407`, the pinned value;
+  - `grep -oE '^[0-9]+\. \*\*' | sort | uniq -d` is empty, so the duplicate-number defect the
+    2026-09-14 rewording was written to catch did not recur;
+  - rule 28 carries the non-goal sentence verbatim.
+
+  The owner applied the patch on 2026-09-15 and it merged as `47bb07719` (PR #2055); steps
+  1.1, 1.2 and 1.3 were flipped `[x]` in the same change. **This `Status:` line was not, and
+  the 15 open steps kept an inline `blocked-by: rule-13-amendment` marker for four days
+  against a blocker that no longer existed.** That is the failure worth recording, not the
+  approval: `scanOpenSteps` reads blockedness from the marker alone, so every autonomous run
+  in that window read this file as `{ open: 0, blocked: 15 }` and declined work it was free to
+  do. A stale marker fails in the expensive direction — silently, and toward inaction.
+
+  The verifier `release-holds-rule-13-split-verify.sh` is deliberately NOT the instrument here
+  and its exit code must not be quoted as one: its check 1 is `git apply --check`, which fails
+  once the patch is applied, so the script reports red on exactly the state that means success.
+  It verifies a *proposal*; the condition above verifies the *template*. Kept for provenance.
+
+### blocker: measurement-window-not-open
+- **Status:** open
+- **Owner:** maintainer
+- **Class:** 3 — human-only
+- **Blocks:** Phase 6 (both steps) and AC-9. Nothing else — the mechanism itself is complete
+  and wired; what is missing is the elapsed evidence its verdict is defined over.
+- **What to do:** nothing but cut releases as normal — the refusal is wired at all four
+  boundaries as of this change, so the window opens with the next tag. To read how far it has
+  come, count the tags whose tree already carries the evaluator:
+
+  ```bash
+  first=$(git log --reverse --format=%H -- src/scripts/check_release_holds.ts | head -1)
+  git tag --contains "$first" --sort=creatordate | wc -l   # 30 or more → the window is closed
+  ```
+
+  At 30 or more, run Phase 6.1: read the refusal log, read the Phase 1.4 re-sequence log, and
+  set `release-hold-refuses-declared-state` in `docs/CLAIMS.md` to `backed` or `honest-null`
+  with both numbers and that tag range.
+- **Recommendation:** leave it open and do not shorten the denominator. Phase 0.4 fixed 30
+  tags on 2026-09-13, while the mechanism was still unbuildable — that ordering is what makes
+  it a pre-registration rather than a number chosen to fit a result. Shortening it now, after
+  the mechanism shipped, would convert the one falsifiable claim in this roadmap into an
+  unfalsifiable one.
+- **If you do nothing:** the claim stays `unbacked`, which is its correct state. It is not a
+  gap: `docs/CLAIMS.md` records `unbacked` for exactly this, and the row's own text forbids
+  citing an underpowered window in either direction.
+- **Resolved when:** `git tag --sort=creatordate` lists **30 or more** tags whose creation
+  post-dates the first tag whose tree carries `src/scripts/check_release_holds.ts` — check
+  with `git tag --contains <first-such-tag>` — AND the refusal log and the Phase 1.4
+  re-sequence log have been read, AND `release-hold-refuses-declared-state` in
+  `docs/CLAIMS.md` reads `backed` or `honest-null` carrying both numerator arms and that tag
+  range. Zero refusals and zero logged re-sequences over the 30 is the honest null, and 6.2
+  is then the disposition — keep the primitive, strike only the boundary-screen line and the
+  runbook bullet.
+- **Evidence (2026-09-19):** the denominator is **0**. Phase 4 landed in this change and no
+  tag has been cut since; `git tag --sort=-creatordate | head -1` reads `16.0.0`, whose tree
+  predates the evaluator. The window opens at the first tag after this PR merges.
 
 ### blocker: zero-live-subjects
 - **Status:** open
@@ -454,36 +740,50 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
     population. It does not close this blocker, which stays a cost judgement and stays yours.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-11 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-09-19 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | Zero live subjects at HEAD | product | The proposal's own migration target is archived and the active corpus is clean, so the mechanism may ship having never been exercised against a real case | Phase 0.1 records the zero as the finding rather than hiding it; Phase 0.4 pre-registers the falsifier with a denominator; Phase 6.2 keeps only the free parts on a null | Phase 0 — Measure first, and record the honest null up front |
-| 2 | Holds become the default answer | product | A hold is easier to write than a re-sequenced phase, so trunk ends up held most of the time and the mechanism inverts into the blocker it replaced | Rule 28 mandates `re-sequence → guard → hold` with a `Why not a guard:` field; the Phase 1.4 re-sequence log is Phase 6's numerator | Phase 1 — The contract, before any file carries a marker |
-| 3 | The marker lies in the safe direction | implementation | A marker is only as honest as the checkbox flip, and the `verify:` flip-guard is prose in the process loop, not a deterministic gate | Both opener and closer carry `verify:`; the Phase 5 sabotage set targets exactly the dishonest flip; the guard's instruction-only status is stated rather than implied to be enforcement | Phase 5 — Adversarial proof, each case with a known-red arm |
-| 4 | The wider glob costs more than assumed | implementation | No gate scans `later/` or `archive/` for content today, so 85 plus 710 files enter the release hot path with no precedent to inherit a budget from | Phase 2.3 measures p95 over the real corpus before anything is wired; active corpus first and `later/` as backstop only; no index in v1 | Phase 2 — The evaluator, and the glob nobody has paid for yet |
+| 2 | Holds become the default answer | product | A hold is easier to write than a re-sequenced phase, so trunk ends up held most of the time and the mechanism inverts into the blocker it replaced | SHIPPED 2026-09-19 and now enforced rather than intended: rule 28 mandates `re-sequence → guard → hold`, and a missing `Why not a guard:` makes the hold `not-evaluable`, which REFUSES — so a lazily-written hold blocks the cut rather than easing it. The `new_roadmap` skeleton emits the block commented out, so declaring one is a deliberate act. Still live: nothing counts re-sequences yet, which is Phase 6's arm (b) | Phase 1 — The contract, before any file carries a marker |
+| 3 | The marker lies in the safe direction | implementation | A marker is only as honest as the checkbox flip, and the `verify:` flip-guard is prose in the process loop, not a deterministic gate | PARTLY DISCHARGED 2026-09-19. A clearer with no `verify:` is now `not-evaluable` and refuses, and sabotage cases 2, 3a and 3b prove `[~]` and `[-]` do not clear a window — so the *mechanical* dishonest flips are caught. What remains is the irreducible half and it is unchanged: a human who runs nothing and flips `[x]` is not detectable by any gate, and that stays stated rather than implied to be enforcement | Phase 5 — Adversarial proof, each case with a known-red arm |
+| 4 | The wider glob costs more than assumed | implementation | No gate scans `later/` or `archive/` for content today, so 85 plus 710 files enter the release hot path with no precedent to inherit a budget from | DISCHARGED 2026-09-19 by measurement: 950 files, p95 **56.2 ms**, against a **250 ms** budget derived from `lint_roadmap_blockers` — a comparable the repository already accepts on the pre-push path over the same archive. 22 % of an accepted gate. No index in v1, and none is warranted | Phase 2 — The evaluator, and the glob nobody has paid for yet |
 | 5 | A file with an open window is deleted | implementation | Deletion removes the window and bypasses the lifecycle guard entirely | Template rule 12 already forbids the delete; recorded as a residual in Phase 3.2 and not claimed as solved | Phase 3 — Lifecycle integrity |
-| 6 | A refusal lands mid-emergency | implementation | A live hold discovered at cut time costs a day if the clearing step is heavy | Boundary screen at phase entry; `release:verify` before the push; the release-line path is named inside the refusal text itself | Phase 4 — Wire all four boundaries to one refusal |
-| 7 | The rule 13 amendment reads as a licence | product | "Target release" creeps back into roadmaps once the rule is touched at all | The prohibition stays byte-identical; rule 28 forbids versions and dates inside hold entries; the existing version regexes are unchanged and were measured green | Phase 1 — The contract, before any file carries a marker |
+| 6 | A refusal lands mid-emergency | implementation | A live hold discovered at cut time costs a day if the clearing step is heavy | SHIPPED 2026-09-19: the refusal names the closer's own `verify:` command and all three ways out, so the operator is told what to run rather than that they are stuck. `task release:verify` carries `--lint` before the push. Still live — a heavy clearing step discovered at cut time is a real cost, and only arm (a) of Phase 6 would measure it | Phase 4 — Wire all four boundaries to one refusal |
+| 7 | The rule 13 amendment reads as a licence | product | "Target release" creeps back into roadmaps once the rule is touched at all | DISCHARGED 2026-09-19: the applied patch carried zero deletion lines and the prohibition block still hashes to the pinned `5827d0e4…`. Rule 13's ban is now enforced INSIDE a hold entry too — a version, tag or date there makes the hold `not-evaluable`, which refuses | Phase 1 — The contract, before any file carries a marker |
+
+**Re-reviewed 2026-09-19**, after Phases 1–5 landed. Ranks 4 and 7 are **discharged** by
+measurement and by the applied patch; ranks 2, 3 and 6 have shipped mitigations and their
+residual halves are named rather than closed. **Ranks 1 and 5 are unchanged and still live** —
+rank 1 (`zero-live-subjects`) is the open owner decision and rank 5 (deletion) is the honest
+residual step 3.2 records, which no implementation in this roadmap can close.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A roadmap can name an unreleasable intermediate state, and that state is bound to
+- [x] AC-1 — A roadmap can name an unreleasable intermediate state, and that state is bound to
       the checkbox that opens it and the checkbox that clears it. Today no vocabulary for this
       exists anywhere in `src/`, `docs/` or `.github/`.
-- [ ] AC-2 — All four release boundaries refuse to publish while such a state is open, with one
+      CLOSED 2026-09-19 — template rule 28 gives the vocabulary (`## Release holds`, `### hold: <id>`, the five fields) and `opens-hold:` / `clears-hold:` bind it to the two checkboxes. `--selftest` 19/19 evaluates that binding; sabotage cases 1 and 6 prove a marker off a checkbox is not one.
+- [x] AC-2 — All four release boundaries refuse to publish while such a state is open, with one
       script and one message naming roadmap, hold, opener, closer and the closer's `verify:`.
-- [ ] AC-3 — An evaluator error, timeout or unreadable file refuses the cut. No path exists on
+      CLOSED 2026-09-19 — one script (`check_release_holds`) and one formatter (`refusalReport`) serve all four: the `release.ts` pre-flight, the `release-gate-locality` row, the `release-validation.yml` job (inherited by `ci-strict` through `- task: ci`) and the `release-guard.yml` step on the tagged tree. The message names roadmap, hold, opener, closer and the closer's `verify:` — asserted field by field in drill scenario `release-hold-open-all-refuses-the-cut`.
+- [x] AC-3 — An evaluator error, timeout or unreadable file refuses the cut. No path exists on
       which "could not evaluate" is treated as safe.
-- [ ] AC-4 — An unfinished roadmap with no declared window never blocks a release, and normal CI
+      CLOSED 2026-09-19 — `not-evaluable` refuses on every channel, and it is reached by an evaluator error, an unreadable file, a kill, and seven malformed shapes. Proven by removal: deleting that one branch turns 7 of 13 selftest rows and 4 of 12 sabotage cases red at once.
+- [x] AC-4 — An unfinished roadmap with no declared window never blocks a release, and normal CI
       on a tree carrying a valid open window is green.
-- [ ] AC-5 — A malformed or ambiguous hold declaration reddens normal CI, so a broken declaration
+      CLOSED 2026-09-19, both halves measured. An unfinished roadmap declares nothing — sabotage negative 1, a two-phase roadmap with two open steps, yields zero holds and a null refusal report. And a tree carrying a VALID OPEN window passes `--lint` (0 malformed, 0 lifecycle) while `--require-safe` refuses: normal CI stays green on exactly the state the release path refuses, which is the separation this criterion is about.
+- [x] AC-5 — A malformed or ambiguous hold declaration reddens normal CI, so a broken declaration
       cannot fail open.
-- [ ] AC-6 — Moving a roadmap to `later/`, `archive/` or `skipped/` cannot make an open window
+      CLOSED 2026-09-19 — and this one needed work beyond Phase 4. `--lint` is now a task in NORMAL `ci` (`taskfiles/ci-fast.yml` → `Taskfile.yml`), not only in the release-branch workflow. Without that, a malformed declaration would have reddened only on a release branch, which is precisely the fail-open-by-being-unparseable hole the criterion names.
+- [x] AC-6 — Moving a roadmap to `later/`, `archive/` or `skipped/` cannot make an open window
       disappear from `--status` or from the release refusal.
-- [ ] AC-7 — No override flag, label or commit trailer bypasses a refusal, and a plain `X.Y.Z`
+      CLOSED 2026-09-19 — sabotage case 5. `archive/` and `skipped/` refuse the move naming the hold id; `later/` permits it and the window still lists and still refuses from there.
+- [x] AC-7 — No override flag, label or commit trailer bypasses a refusal, and a plain `X.Y.Z`
       cut is never silently converted to a prerelease channel.
-- [ ] AC-8 — Every sabotage case has been observed red with the guard neutralised and green with
+      CLOSED 2026-09-19 — the grep over both source files returns one line, the refusal text stating no override exists. The no-silent-redirect half is asserted as behaviour: drill scenario `release-hold-open-latest-refuses-the-stable-cut` proves a bare `X.Y.Z` over a `Channel: latest` hold DIES rather than becoming a prerelease.
+- [x] AC-8 — Every sabotage case has been observed red with the guard neutralised and green with
       it restored, and both non-over-firing cases pass.
-- [ ] AC-9 — `release-hold-refuses-declared-state` carries a verdict measured over a named tag
+      CLOSED 2026-09-19 — nine targeted neutralisations, every one of the 12 sabotage tests red in at least one, each file byte-restored after (git diff empty) and the suite green at 15/15. The per-defence red table is in step 5.2. Both required non-over-firing cases pass, plus a third over the live repository corpus.
+- [ ] <!-- blocked-by: measurement-window-not-open | asked: no — there is no question to put: the block is 30 elapsed release tags, not a decision --> AC-9 — `release-hold-refuses-declared-state` carries a verdict measured over a named tag
       range, and an honest null is recorded as a disposition rather than as a deletion.

@@ -686,6 +686,7 @@ if (_isCliEntry() || process.argv[1] === _HERE) {
 export {
     REPO_ROOT,
     ROADMAP_GLOB,
+    _stripFencedCode,
     REQUIRED_FIELDS,
     DECIDABILITY_FIELDS,
     KNOWN_CLASSES,
