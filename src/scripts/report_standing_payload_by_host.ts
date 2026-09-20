@@ -156,8 +156,13 @@ export const HOST_SURFACES: readonly HostSurface[] = [
     },
     {
         host: 'codex', surface: '.codex/agent-config.md', perRuleTree: false,
-        writer: 'src/scripts/install.ts:1541',
-        anchor: '\'agent-config.md\'',
+        writer: 'src/scripts/install.ts:1442',
+        // Scoped to `.codex` rather than the bare filename: nine other lines in
+        // `install.ts` write an `agent-config.md` for some other host, so the
+        // unscoped anchor would have accepted a drift onto any of them — the
+        // bounds-test-wearing-a-provenance-test's-name failure this field exists
+        // to close, one level down.
+        anchor: '\'.codex\', \'agent-config.md\'',
         note: 'written by the installer, not by `condense`; absent in this checkout',
     },
 ];
