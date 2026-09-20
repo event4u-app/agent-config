@@ -7512,6 +7512,97 @@ function build_merge_entries(file_label, overlay) {
   }));
 }
 
+// src/scripts/_lib/json_python_parity.ts
+function jsonStrNoAscii(s) {
+  let out = '"';
+  for (const ch of s) {
+    const code = ch.codePointAt(0);
+    switch (ch) {
+      case '"':
+        out += '\\"';
+        break;
+      case "\\":
+        out += "\\\\";
+        break;
+      case "\n":
+        out += "\\n";
+        break;
+      case "\r":
+        out += "\\r";
+        break;
+      case "	":
+        out += "\\t";
+        break;
+      case "\b":
+        out += "\\b";
+        break;
+      case "\f":
+        out += "\\f";
+        break;
+      default:
+        if (code < 32) {
+          out += "\\u" + code.toString(16).padStart(4, "0");
+        } else {
+          out += ch;
+        }
+    }
+  }
+  return out + '"';
+}
+function _jsonScalar(value) {
+  if (value === null || value === void 0) return "null";
+  if (typeof value === "boolean") return value ? "true" : "false";
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) {
+      if (Number.isNaN(value)) return "NaN";
+      return value > 0 ? "Infinity" : "-Infinity";
+    }
+    return String(value);
+  }
+  if (typeof value === "string") return jsonStrNoAscii(value);
+  return null;
+}
+function _dumpIndent(value, indent, depth) {
+  const scalar = _jsonScalar(value);
+  if (scalar !== null) return scalar;
+  const pad = " ".repeat(indent * (depth + 1));
+  const closePad = " ".repeat(indent * depth);
+  if (Array.isArray(value)) {
+    if (value.length === 0) return "[]";
+    const items = value.map((v) => pad + _dumpIndent(v, indent, depth + 1));
+    return `[
+${items.join(",\n")}
+${closePad}]`;
+  }
+  if (typeof value === "object" && value !== null) {
+    const obj = value;
+    const keys = Object.keys(obj);
+    if (keys.length === 0) return "{}";
+    const items = keys.map(
+      (k) => `${pad}${jsonStrNoAscii(k)}: ${_dumpIndent(obj[k], indent, depth + 1)}`
+    );
+    return `{
+${items.join(",\n")}
+${closePad}}`;
+  }
+  return jsonStrNoAscii(String(value));
+}
+function jsonDumpsIndent(value, indent) {
+  return _dumpIndent(value, indent, 0);
+}
+function jsonDumpsCompact(value) {
+  const scalar = _jsonScalar(value);
+  if (scalar !== null) return scalar;
+  if (Array.isArray(value)) {
+    return "[" + value.map((v) => jsonDumpsCompact(v)).join(",") + "]";
+  }
+  if (typeof value === "object" && value !== null) {
+    const obj = value;
+    return "{" + Object.keys(obj).map((k) => `${jsonStrNoAscii(k)}:${jsonDumpsCompact(obj[k])}`).join(",") + "}";
+  }
+  return jsonStrNoAscii(String(value));
+}
+
 // src/scripts/_lib/claude_builtin_names.ts
 var _CURRENT = [
   "add-dir",
@@ -18620,95 +18711,6 @@ function utcStamp(now) {
   const d = now ?? /* @__PURE__ */ new Date();
   const pad = (n, w = 2) => String(n).padStart(w, "0");
   return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}Z`;
-}
-function _jsonStrNoAscii(s) {
-  let out = '"';
-  for (const ch of s) {
-    const code = ch.codePointAt(0);
-    switch (ch) {
-      case '"':
-        out += '\\"';
-        break;
-      case "\\":
-        out += "\\\\";
-        break;
-      case "\n":
-        out += "\\n";
-        break;
-      case "\r":
-        out += "\\r";
-        break;
-      case "	":
-        out += "\\t";
-        break;
-      case "\b":
-        out += "\\b";
-        break;
-      case "\f":
-        out += "\\f";
-        break;
-      default:
-        if (code < 32) {
-          out += "\\u" + code.toString(16).padStart(4, "0");
-        } else {
-          out += ch;
-        }
-    }
-  }
-  return out + '"';
-}
-function _jsonScalar(value) {
-  if (value === null || value === void 0) return "null";
-  if (typeof value === "boolean") return value ? "true" : "false";
-  if (typeof value === "number") {
-    if (!Number.isFinite(value)) {
-      if (Number.isNaN(value)) return "NaN";
-      return value > 0 ? "Infinity" : "-Infinity";
-    }
-    return String(value);
-  }
-  if (typeof value === "string") return _jsonStrNoAscii(value);
-  return null;
-}
-function _dumpIndent(value, indent, depth) {
-  const scalar = _jsonScalar(value);
-  if (scalar !== null) return scalar;
-  const pad = " ".repeat(indent * (depth + 1));
-  const closePad = " ".repeat(indent * depth);
-  if (Array.isArray(value)) {
-    if (value.length === 0) return "[]";
-    const items = value.map((v) => pad + _dumpIndent(v, indent, depth + 1));
-    return `[
-${items.join(",\n")}
-${closePad}]`;
-  }
-  if (typeof value === "object" && value !== null) {
-    const obj = value;
-    const keys = Object.keys(obj);
-    if (keys.length === 0) return "{}";
-    const items = keys.map(
-      (k) => `${pad}${_jsonStrNoAscii(k)}: ${_dumpIndent(obj[k], indent, depth + 1)}`
-    );
-    return `{
-${items.join(",\n")}
-${closePad}}`;
-  }
-  return _jsonStrNoAscii(String(value));
-}
-function jsonDumpsIndent(value, indent) {
-  return _dumpIndent(value, indent, 0);
-}
-function jsonDumpsCompact(value) {
-  const scalar = _jsonScalar(value);
-  if (scalar !== null) return scalar;
-  if (Array.isArray(value)) {
-    return "[" + value.map((v) => jsonDumpsCompact(v)).join(",") + "]";
-  }
-  if (typeof value === "object" && value !== null) {
-    const obj = value;
-    return "{" + Object.keys(obj).map((k) => `${_jsonStrNoAscii(k)}:${jsonDumpsCompact(obj[k])}`).join(",") + "}";
-  }
-  return _jsonStrNoAscii(String(value));
 }
 function yamlSafeLoad2(text) {
   let YAML3;
