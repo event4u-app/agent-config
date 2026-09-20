@@ -592,8 +592,13 @@ tasks:
 
   lint-rule-budget:
     silent: true
-    desc: Enforce kernel-bucket + per-rule size caps (Council R2 amendments) — see road-to-kernel-and-router.md P5.1
-    cmd: ./scripts-run src/scripts/measure_rule_budget --kernel-budget-check
+    desc: Enforce kernel-bucket + per-rule size caps (Council R2 amendments) and the auto-bucket growth ratchet — see road-to-kernel-and-router.md P5.1 and road-to-design-fidelity-proof Phase 3
+    # Both flags on ONE invocation, deliberately. The kernel check bounds nine
+    # rules; the auto check bounds the other 107, which carry ~93 % of the
+    # estate's rule prose and were measured by this script and gated by nothing.
+    # A second task step would be a new gate `check_ci_local_parity` has to be
+    # told about, for two checks over one measurement.
+    cmd: ./scripts-run src/scripts/measure_rule_budget --kernel-budget-check --auto-budget-check
 
   lint-handoffs:
     silent: true
@@ -1466,6 +1471,15 @@ tasks:
     silent: true
     desc: Enforce the roadmap ## Blockers contract — required fields present, blocked-by references resolve (templates/roadmaps.md rule 20)
     cmd: ./scripts-run src/scripts/lint_roadmap_blockers {{.QUIET_FLAG}}
+
+  lint-release-holds:
+    silent: true
+    desc: >-
+      Every declared release hold is well-formed and lifecycle-clean
+      (templates/roadmaps.md rule 28). In NORMAL ci, not only on a release
+      branch — a malformed declaration must redden here, or a broken hold
+      fails open by being unparseable.
+    cmd: ./scripts-run src/scripts/check_release_holds --lint {{.QUIET_FLAG}}
 
   lint-adr-sweep-routing:
     silent: true

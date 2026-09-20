@@ -156,15 +156,57 @@ is not that the states are unnamed; it is that nothing can test them.
 - **Class:** 3 — human-only
 - **Blocks:** Phase 4 only. Phases 0 through 3, 5 and 6 proceed without it — the probe can exist
   and be measured while the screenshot step stays mandatory.
-- **What to do:** decide whether the mandatory screenshot step may be demoted before the probe has
-  a measured false-positive rate. The step is the shipped output of a completed roadmap whose
-  stated mission makes headless screenshots the only objective signal in the engine, so demoting
-  it lowers a recorded verification floor. Read
-  `agents/roadmaps/archive/road-to-visual-review-loop.md` for what that roadmap claimed, then the
-  Phase 0.2 pre-registration for what replaces it.
-- **Recommendation:** demote only after Phase 6 reports a rate against a bar set in Phase 0.2.
-  The gap between the two is the window in which the review has neither signal, and pre-registering
-  the bar is what keeps the measurement from being read backwards.
+- **What to do:** pick exactly one reading of this blocker's own `Resolved when`, below. The
+  evidence half is settled and the premise half was wrong; what is left is a narrow interpretation
+  conflict, not the open-ended product question this entry originally posed.
+
+  **(a) The measurement authorises Phase 4 by itself** — arm (a) of `Resolved when` is an
+  independent, evidence-triggered exit, so the bar clearing is the resolution and Phase 4 runs.
+
+  **(b) The measurement satisfies a prerequisite only** — maintainer acceptance is still required
+  before Phase 4 runs, and arm (b) then covers acceptance *without* qualifying evidence.
+
+  Whichever is recorded, a Phase 4 specification must additionally answer three preservation
+  questions before it lands, because "nothing is deleted" speaks to capability and not to
+  verification-floor coverage: is appearance verification still **mandatory** wherever appearance
+  can be affected; does it keep the archived roadmap's "renders without obvious breakage" sanity
+  function rather than only pixel comparison; and is its trigger at least as broad as the trigger
+  the present screenshot step carries?
+
+  **Two findings from executing this entry's own instructions, recorded 2026-09-19 so the decision
+  is taken against the tree rather than against the entry's summary of it.**
+
+  **1. The measurement cleared the pre-registered bar.** The bar, fixed in
+  `tests/design-artifacts/fixtures/ui-conformance/README.md` before `src/scripts/ui_conformance_probe.ts`
+  existed, is *strictly more than 2 of 4 caught AND zero findings for the declared deviation*.
+  Re-run live rather than quoted — `npx vitest run tests/scripts/ui_conformance_probe.test.ts`,
+  12 of 12 green, including a live re-capture matching the committed observations. Observed: 4 of 4
+  planted defects caught, one per intended dimension, and zero raised for `DECL` — which the suite
+  proves is suppression rather than absence by re-running with the declaration removed and
+  asserting the finding returns.
+
+  **2. This entry's stated premise does not survive its own citation.** The sentence it replaces
+  read that the cited roadmap's "stated mission makes headless screenshots the only objective
+  signal in the engine". Read at HEAD,
+  `agents/roadmaps/archive/road-to-visual-review-loop.md` says the opposite in three places: it
+  names visual preview **and** accessibility tooling as the objective signals, not one; it states
+  "A11y is the lever, not the screenshot"; and it scopes the screenshot to "presence + sanity
+  check that nothing renders broken. Not pixel-perfect regression." The floor that roadmap
+  actually recorded for the screenshot is therefore visual presence and sanity, which is narrower
+  than the premise claimed — and narrowing the premise does not by itself establish that the
+  narrower floor may be moved, which is why this entry stays open rather than closing on the
+  correction.
+- **Recommendation:** none offered here, deliberately. An AI council was run on the routing
+  question on 2026-09-19 (2 members, anthropic and openai, subscription transport, $0 billed) and
+  **split 1/1**: one member read arm (a) as dispositive and the work as a scope reallocation that
+  raises the behavioural floor while preserving appearance coverage; the other read the records as
+  contradictory and routed to the maintainer, on the ground that the experiment measures behaviour
+  and not the separate mandatory visual-sanity floor. Both agreed on the two findings above, that
+  the `docs/CLAIMS.md` `non_inference` sentence is a scope caveat on what the measurement licenses
+  rather than a governance ruling, and that the false premise should be corrected regardless of
+  how the routing lands. Per `decision-revisit-gate`, a council split is an escalation condition
+  rather than a verdict, so the choice between (a) and (b) is the maintainer's and neither the
+  agent nor the council may record it.
 - **If you do nothing:** Phase 4 does not run, the probe ships alongside the screenshot rather than
   in place of it, and the review carries both. That is a usable outcome and not a failure.
 - **Resolved when:** either Phase 6's measurement clears the pre-registered bar, or the owner

@@ -139,13 +139,13 @@ import {
     assert_major_migration_section,
     assert_scheduled_deprecations_clear,
 } from './_lib/release_migration_gate.js';
+import { releaseHoldPreflight } from './_lib/release_holds.js';
 
 // `__doc__.splitlines()[0]` in `_parse_args` — the argparse description. Kept
 // as a referenceable constant so the first docstring line is preserved exactly.
 const MODULE_DOC_FIRST_LINE = 'End-to-end release automation for `event4u/agent-config`.';
 
 const _HERE = fileURLToPath(import.meta.url);
-
 
 import {
     ArgparseExit,
@@ -226,7 +226,6 @@ import {
 // identifier rather than a second surface — the import above is what makes the
 // existing block resolve. This is the whole of step 1.1's "re-export shape that
 // keeps callers unaffected": no caller and no test import path changes.
-
 
 // ---------------------------------------------------------------------------
 // Parity helpers — code-point length, comma grouping, regex escape, JSON
@@ -791,6 +790,7 @@ function preflight(target: string, opts: { resume?: boolean; ci?: boolean } = {}
             die(`tag '${target}' already exists; nothing to release`);
         }
     }
+    releaseHoldPreflight(REPO_ROOT, die);
 }
 
 // ─── plan ─────────────────────────────────────────────────────────────────────

@@ -29,7 +29,7 @@
   "refresh_cadence": "quarterly",
   "upstream": {
     "repo": "derived: PostgreSQL 16 + MySQL 8 reference docs",
-    "sha": "PostgreSQL 16.x / MySQL 8.4 docs",
-    "last_checked": "2026-06-07"
+    "sha": "derived against PostgreSQL 16.x / MySQL 8.4. Verified 2026-09-18: both still supported (PG 16 EOL 2028-11-09, MySQL 8.4 LTS premier to 2029-04), but PG 18 (2025-09) and MySQL 9.7 LTS (2026-04) are now current \u2014 the tuning patterns were NOT re-derived against them",
+    "last_checked": "2026-09-18"
   }
 }
