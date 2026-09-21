@@ -508,6 +508,68 @@ describe('lint_plan_risk_register — git layers (grandfather + staleness)', () 
         expect(kinds(res.violations)).toContain('stale_review');
     });
 
+    // Merge-date lag: a review stamped on the day the work was authored, but
+    // committed (or squash-merged) the next day. The stamp and the content it
+    // reviewed land in the SAME commit, whose date is LATER than the stamp — so a
+    // baseline of "newest commit dated <= reviewed" skips that very commit and
+    // falls back to a pre-work one, reporting stale against a plan reviewed
+    // exactly as required. The baseline is the commit that INTRODUCED the stamp.
+    it('review stamp introduced by a commit dated after it → fresh (no stale_review)', () => {
+        initRepo(tmp);
+        const p = path.join(tmp, 'plan.md');
+        const reviewedOld =
+            '<!-- risk-review: v1 | reviewed: 2026-01-01 | reviewer: tester -->\n' + VALID_TABLE;
+        fs.writeFileSync(p, planWith(reviewedOld), 'utf-8');
+        commitAll(tmp, '2026-01-01');
+
+        // Substantial change AND its fresh review stamp in one commit, committed
+        // the DAY AFTER the review date.
+        const reviewedNew =
+            '<!-- risk-review: v1 | reviewed: 2026-02-01 | reviewer: tester -->\n' + VALID_TABLE;
+        fs.writeFileSync(
+            p,
+            `${planWith(reviewedNew)}\n## Phase 3: New scope\n\n- [ ] **Step 1:** more work\n`,
+            'utf-8',
+        );
+        commitAll(tmp, '2026-02-02');
+
+        expect(mod.hasUncommittedChanges(p)).toBe(false);
+        const res = mod.checkFile(p);
+        expect(kinds(res.violations)).not.toContain('stale_review');
+        expect(res.status).toBe('ok');
+    });
+
+    // Non-vacuousness guard for the fix above. The run of commits carrying the
+    // current stamp is [c3, c2]; the baseline must be c2 (the commit that
+    // INTRODUCED the stamp), not c3 (the newest of the run, which is the current
+    // content and would make every committed file trivially fresh).
+    it('content changed AFTER the stamp was introduced → still stale_review', () => {
+        initRepo(tmp);
+        const p = path.join(tmp, 'plan.md');
+        const reviewedOld =
+            '<!-- risk-review: v1 | reviewed: 2026-01-01 | reviewer: tester -->\n' + VALID_TABLE;
+        fs.writeFileSync(p, planWith(reviewedOld), 'utf-8');
+        commitAll(tmp, '2026-01-01'); // c1
+
+        const reviewedNew =
+            '<!-- risk-review: v1 | reviewed: 2026-02-01 | reviewer: tester -->\n' + VALID_TABLE;
+        fs.writeFileSync(p, planWith(reviewedNew), 'utf-8');
+        commitAll(tmp, '2026-02-02'); // c2 — introduces the stamp, content unchanged
+
+        // c3 — substantial change, stamp NOT bumped. This is what the gate exists
+        // to catch, and it must still be caught.
+        fs.writeFileSync(
+            p,
+            planWith(reviewedNew).replace('## Phase 2: Ship the thing', '## Phase 2: Ship something else'),
+            'utf-8',
+        );
+        commitAll(tmp, '2026-03-01');
+
+        const res = mod.checkFile(p);
+        expect(res.status).toBe('fail');
+        expect(kinds(res.violations)).toContain('stale_review');
+    });
+
     it('register just written on an untracked file → fresh (no stale violation)', () => {
         initRepo(tmp);
         const p = path.join(tmp, 'plan.md');
