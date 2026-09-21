@@ -588,6 +588,46 @@ function _blobAt(absPath: string, sha: string): string | null {
     return _git(root, ['show', `${sha}:${rel}`]);
 }
 
+/** The `reviewed:` value carried by `text`, or null when it has no valid marker. */
+function _reviewedIn(text: string): string | null {
+    for (const line of text.split('\n')) {
+        const m = parseMarker(line);
+        if (m !== null) return m.reviewed;
+    }
+    return null;
+}
+
+/**
+ * The commit that INTRODUCED the current `reviewed:` value — the oldest of the
+ * unbroken run of commits, counting back from the newest, that all carry it.
+ *
+ * Merge-date lag is why this exists. A review stamped on the day the work was
+ * authored but committed (or squash-merged) the next day puts the stamp and the
+ * content it reviewed in ONE commit whose date is later than the stamp itself.
+ * A baseline of "newest commit dated <= reviewed" then skips that very commit,
+ * falls back to the pre-work state, and reports stale against a plan that was
+ * reviewed exactly as the contract asks — every author-today/merge-tomorrow PR
+ * reproduces it.
+ *
+ * The oldest commit of the run is the honest baseline, and the age matters:
+ * comparing against the NEWEST commit carrying the stamp would compare the
+ * current content with itself, making every committed file trivially fresh and
+ * emptying the gate.
+ */
+function _stampIntroducedAt(
+    absPath: string,
+    history: HistoryEntry[],
+    reviewed: string,
+): HistoryEntry | undefined {
+    let introduced: HistoryEntry | undefined;
+    for (const entry of history) {
+        const blob = _blobAt(absPath, entry.sha);
+        if (blob === null || _reviewedIn(blob) !== reviewed) break;
+        introduced = entry;
+    }
+    return introduced;
+}
+
 export type FileStatus = 'ok' | 'draft-exempt' | 'grandfathered' | 'fail';
 
 export interface FileResult {
@@ -653,10 +693,14 @@ export function checkFile(absPath: string): FileResult {
     // current content, so staleness is not judgeable — see
     // hasUncommittedChanges. The committed-history case below is unchanged.
     if (content.reviewed !== null && !hasUncommittedChanges(absPath)) {
-        // Staleness (contract §§ 1.1 + 3): compare features of the newest
-        // commit on/before the reviewed date against the current content.
+        // Staleness (contract §§ 1.1 + 3): compare the features of the version
+        // the review was stamped on against the current content. That version
+        // is the commit which INTRODUCED the current `reviewed:` value; the
+        // date lookup is the fallback for a stamp no commit carries yet.
         const history = fileHistory(absPath);
-        const base = history.find((h) => h.date <= (content.reviewed as string));
+        const base =
+            _stampIntroducedAt(absPath, history, content.reviewed) ??
+            history.find((h) => h.date <= (content.reviewed as string));
         if (base !== undefined) {
             const blob = _blobAt(absPath, base.sha);
             if (blob !== null && !featuresEqual(extractFeatures(blob), extractFeatures(text))) {
