@@ -202,6 +202,62 @@ four days old, that yields a discriminator without overlap. If the owner would
 rather these sat as `[~]` behind a stub, that is a one-line change to this file —
 the evidence does not move either way.
 
+### The rejection arrived a second time (2026-09-11), and it HELD (2026-09-21)
+
+**Arrivals: 2. This is the arrival record, kept on this file so a third arrival
+meets it rather than a blank.** Risk row 1 of the register below predicted this
+exact re-arrival — *"a three-tier vocabulary landing out of it will be read as a
+first step toward atoms and molecules, and the next contributor will 'complete'
+it"* — and it was right: the second arrival was written on 2026-09-11, inside
+three weeks of this file's own council session of 2026-08-26.
+
+- **The second arrival.** `agents/roadmaps/road-to-a-declared-component-contract.md`,
+  written 2026-09-11 out of a separate inbox round, proposed reversing this
+  rejection together with the `No order is prescribed` statement in
+  `src/skills/ui-component-architect/SKILL.md`. Its own § Goal names the reversal
+  as its whole subject, and it filed the question as an owner-reserved blocker
+  rather than acting on it — which is the behaviour this file's risk row wanted.
+- **The disposition held.** AI council 2026-09-21, 2 seats
+  (`anthropic/claude-sonnet-4-5` + `openai/codex-default`), deep mode, 3 rounds,
+  **2/2 convergent: uphold both rejections.** The five-level taxonomy stays
+  rejected and the ordering statement stays as written. The measurement this
+  rejection rests on — that the level is not computable from props, depth, path
+  or file length — was **not re-measured** by that round, and both seats said so
+  explicitly: nothing had moved, so nothing was reopened.
+- **What the seats added that this file did not have.** The proposal's fallback
+  reading — reverse *only* the ordering statement, "which costs nothing" — was
+  found **not decision-ready**, and that finding overturned the proposing
+  roadmap's own recommendation. Reversing an ordering statement without
+  specifying the replacement ordering leaves the third moving part unspecified,
+  once the vocabulary that supplied the candidate levels has been rejected. A
+  concrete, taxonomy-independent ordering proposal remains open on its merits.
+- **The guard this file promised did NOT exist, and that is the system failure
+  worth carrying forward.** Step 0.3 in Phase 0 below records its first half DONE
+  and claims *"no five-level name can enter the emitted vocabulary without turning
+  that test red"*. Measured 2026-09-13: **false.** The test it rested on compares
+  `AUDIT_KINDS` to the skill's `kind:` line — the two surfaces **to each other**,
+  never to an independent policy authority — and forbids exactly two dead values,
+  `partial` and `layout`, neither of which is a five-level name. Planting
+  `organism` into **both** surfaces, which is precisely what "completing" the
+  taxonomy looks like, left all 36 tests green. The disposition was right, it was
+  recorded, and the carrier did not carry it: the **third** outcome in
+  `recurring-criticism`, not the first. The over-claim is left standing at 0.3 and
+  at AC-2 so the correction is visible rather than hidden.
+- **The guard exists now.** The second-arrival roadmap's Phase 1 landed it —
+  a fourth `describe` block in `tests/cli/uiAudit_design_system.test.ts`
+  asserting this file's own named set (`atom`, `molecule`, `organism`,
+  `template`) against `AUDIT_KINDS` and against the skill's declared list
+  **independently**, so a coordinated edit reds both. `page` is deliberately
+  outside the forbidden set: it is Frost's fifth level and a value this
+  repository emits on its own Blade/Next evidence, predating the harvest.
+  Readings recorded: RED `2 failed | 37 passed (39)` with the plant, GREEN
+  `39 passed (39)` without it.
+- **What a third arrival owes.** Not a re-argument. Either the corpus the
+  condition above names — levelled libraries, plural, not four days old,
+  yielding a discriminator without overlap — or a concrete replacement ordering
+  that does not depend on the rejected vocabulary. Repetition reopens the
+  question; it does not answer it.
+
 ## Phase 0 — fix the contract before widening it
 
 - [x] **0.1 Reconcile the audit `kind` enum between the skill and the code.**
@@ -712,7 +768,13 @@ the evidence does not move either way.
 - [x] **AC-2** — the emitted granularity vocabulary contains no five-level taxonomy name, proven by a fixture that fails if one appears, AND a second fixture proves a directory name alone does not determine the tier.
 
       **Met on the first half; the second half is unbuildable and recorded as
-      such.** No five-level name can enter the vocabulary — pinned. The
+      such.** **— CORRECTED 2026-09-13: the first half was an OVER-CLAIM.** "Pinned"
+      below describes a test that compares `AUDIT_KINDS` and the skill's `kind:` line
+      to each other and forbids only `partial` and `layout`; planting `organism` into
+      both surfaces left all 36 tests green. A real guard landed 2026-09-13 from the
+      second-arrival roadmap — see § The rejection arrived a second time (2026-09-11),
+      and it HELD (2026-09-21). Original text kept verbatim below.
+      No five-level name can enter the vocabulary — pinned. The
       directory-name fixture cannot exist, because it asserts a non-relationship
       to a tier field that 1.1 records as not created. The risk it guards is
       closed by the code instead: `classify()` reads four path shapes and none is
