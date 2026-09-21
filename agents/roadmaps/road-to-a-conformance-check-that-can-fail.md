@@ -88,12 +88,24 @@ not scheduled here; the blocker below records it as the open half.
 
 ## Phase 3 — Write the log from the path that does the install
 
-- [ ] <!-- blocked-by: headless-log-write-is-a-consumer-visible-default | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **3.1 Call the log writer from the headless apply path**, through one writer module with two
+- [x] **3.1 Call the log writer from the headless apply path**, through one writer module with two
       callers.
       verify: a headless install into a fixture root produces at least one write entry, and a test
       asserts both callers emit an identical entry shape.
-- [ ] <!-- blocked-by: headless-log-write-is-a-consumer-visible-default | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **3.2 The existing sabotage fixture now fires on that path.**
+      **DONE 2026-09-15.** Owner approved `headless-log-write-is-a-consumer-visible-default`'s
+      own recommendation ("write it"). `_copy_dir_dereferencing_symlinks` in
+      `src/scripts/install.ts` now calls `appendTxLog` through a shared `_log_tx_entry`
+      helper on every write and skip, computing sha256 on write and null on skip — the same
+      module and entry shape `src/server/routes/install.ts`'s recovery-dismiss handler already
+      calls. `tests/scripts/install.test.ts` asserts a real headless copy produces a `write`
+      entry and that both callers' key sets match (the dismiss entry's `note` is optional on
+      the shared `TxLogEntry` type, not a second shape).
+- [x] **3.2 The existing sabotage fixture now fires on that path.**
       verify: the fixture reddens the check after a headless install, which it could not do before.
+      **DONE 2026-09-15**, in `tests/scripts/_cli/cmd_conformance.test.ts`: a real headless
+      install now reads `ok` (leaving the `unknown` branch), and appending an `abort` tail to
+      the SAME real-produced log reddens `_check_txlog_clean` with `abandoned` — exercising
+      the writer's real output rather than a hand-crafted stand-in.
 
 ## Phase 4 — The negative fixture for the branch that was always green
 
@@ -165,7 +177,7 @@ it is recorded as one below rather than taken here.
   the refusal and the reporting half becomes the whole of 5.1.
 
 ### blocker: headless-log-write-is-a-consumer-visible-default
-- **Status:** open
+- **Status:** resolved — 2026-09-15, "write it" (owner-approved recommendation); see Phase 3
 - **Owner:** maintainer
 - **Ownership:** `product-owned` — a new on-disk artefact under every
   consumer's home directory, written by default on every command-line
@@ -255,12 +267,18 @@ an agent one. Recorded here so the claim is tracked rather than lost; it needs
 one docstring edit plus either that label or a maintainer pushing it directly.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-11 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-09-15 | reviewer: claude/host -->
+
+Re-reviewed 2026-09-15 after Phase 3 landed (the owner-approved
+`headless-log-write-is-a-consumer-visible-default` decision). Rank 2 discharges;
+ranks 1, 3 and 4 stay live — rank 3's subject (Phase 5) is unowned and
+deliberately not decided in this pass, and ranks 1 and 4 are general-shaped
+rather than tied to a step that just closed.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | The check flips red for every existing install at upgrade | product | Turning an always-green branch into a failure reddens every consumer who installed before the log existed | Phase 1 emits an explicit unknown rather than a failure; failure becomes possible only after Phase 3 gives the log something to be clean about | Phase 1 — Make the false green visible, without breaking anyone |
-| 2 | A second log writer diverges from the first | implementation | Two call sites emitting different entry shapes makes the log unreadable and the check wrong in a new way | One writer module with two callers, and a shape-equality test across both | Phase 3 — Write the log from the path that does the install |
+| 2 | A second log writer diverges from the first | implementation | Two call sites emitting different entry shapes makes the log unreadable and the check wrong in a new way | **Discharged 2026-09-15.** One writer module (`appendTxLog`) with two callers landed; `tests/scripts/install.test.ts` asserts a shape-equality test across both | Phase 3 — Write the log from the path that does the install |
 | 3 | Adding a hash changes install-plan behaviour silently | implementation | Feeding a hash into the conflict matrix changes which files are written on a refresh, and that is a data-loss surface | Phase 5.2 separates the plumbing commit from the matrix commit so each is reviewable on its own; the user-modified-file case is an acceptance criterion | Phase 5 — Three-state ownership instead of path membership |
 | 4 | The prior disposition recurs | product | This subject was closed once as shipped, which was true of the module and false of the path, and the same reading would close it again | The change description states which of the three recurrence outcomes applies — here the disposition was wrong, not merely unrecorded — so the distinction is in the record rather than in someone's memory | Phase 4 — The negative fixture for the branch that was always green |
 
@@ -270,9 +288,10 @@ one docstring edit plus either that label or a maintainer pushing it directly.
       never green, and a never-installed tree still passes.
 - [x] AC-2 — The failure remedy names an action the tree performs, proven by a test that resolves
       it to real code.
-- [ ] AC-3 — A headless install produces at least one log entry, and both writers emit an identical
-      entry shape.
-- [ ] AC-4 — The existing sabotage fixture reddens the check after a headless install.
+- [x] AC-3 — A headless install produces at least one log entry, and both writers emit an identical
+      entry shape. — `tests/scripts/install.test.ts`, 2026-09-15.
+- [x] AC-4 — The existing sabotage fixture reddens the check after a headless install. —
+      `tests/scripts/_cli/cmd_conformance.test.ts`, 2026-09-15.
 - [x] AC-5 — The absent-log fixture was observed red before the fix, and the reading is recorded.
 - [ ] AC-6 — A user-modified managed file survives a refresh and is named in the report.
 - [x] AC-7 — The hash plumbing and the matrix change are separate commits.

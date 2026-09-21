@@ -7512,6 +7512,97 @@ function build_merge_entries(file_label, overlay) {
   }));
 }
 
+// src/scripts/_lib/json_python_parity.ts
+function jsonStrNoAscii(s) {
+  let out = '"';
+  for (const ch of s) {
+    const code = ch.codePointAt(0);
+    switch (ch) {
+      case '"':
+        out += '\\"';
+        break;
+      case "\\":
+        out += "\\\\";
+        break;
+      case "\n":
+        out += "\\n";
+        break;
+      case "\r":
+        out += "\\r";
+        break;
+      case "	":
+        out += "\\t";
+        break;
+      case "\b":
+        out += "\\b";
+        break;
+      case "\f":
+        out += "\\f";
+        break;
+      default:
+        if (code < 32) {
+          out += "\\u" + code.toString(16).padStart(4, "0");
+        } else {
+          out += ch;
+        }
+    }
+  }
+  return out + '"';
+}
+function _jsonScalar(value) {
+  if (value === null || value === void 0) return "null";
+  if (typeof value === "boolean") return value ? "true" : "false";
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) {
+      if (Number.isNaN(value)) return "NaN";
+      return value > 0 ? "Infinity" : "-Infinity";
+    }
+    return String(value);
+  }
+  if (typeof value === "string") return jsonStrNoAscii(value);
+  return null;
+}
+function _dumpIndent(value, indent, depth) {
+  const scalar = _jsonScalar(value);
+  if (scalar !== null) return scalar;
+  const pad = " ".repeat(indent * (depth + 1));
+  const closePad = " ".repeat(indent * depth);
+  if (Array.isArray(value)) {
+    if (value.length === 0) return "[]";
+    const items = value.map((v) => pad + _dumpIndent(v, indent, depth + 1));
+    return `[
+${items.join(",\n")}
+${closePad}]`;
+  }
+  if (typeof value === "object" && value !== null) {
+    const obj = value;
+    const keys = Object.keys(obj);
+    if (keys.length === 0) return "{}";
+    const items = keys.map(
+      (k) => `${pad}${jsonStrNoAscii(k)}: ${_dumpIndent(obj[k], indent, depth + 1)}`
+    );
+    return `{
+${items.join(",\n")}
+${closePad}}`;
+  }
+  return jsonStrNoAscii(String(value));
+}
+function jsonDumpsIndent(value, indent) {
+  return _dumpIndent(value, indent, 0);
+}
+function jsonDumpsCompact(value) {
+  const scalar = _jsonScalar(value);
+  if (scalar !== null) return scalar;
+  if (Array.isArray(value)) {
+    return "[" + value.map((v) => jsonDumpsCompact(v)).join(",") + "]";
+  }
+  if (typeof value === "object" && value !== null) {
+    const obj = value;
+    return "{" + Object.keys(obj).map((k) => `${jsonStrNoAscii(k)}:${jsonDumpsCompact(obj[k])}`).join(",") + "}";
+  }
+  return jsonStrNoAscii(String(value));
+}
+
 // src/scripts/_lib/claude_builtin_names.ts
 var _CURRENT = [
   "add-dir",
@@ -10241,6 +10332,17 @@ function atomicWriteFile(target, data, options = {}) {
     }
     throw err;
   }
+}
+function atomicAppendLine(target, line) {
+  let existing = "";
+  try {
+    existing = readFileSync11(target, "utf8");
+  } catch {
+    existing = "";
+  }
+  const sep6 = existing.length > 0 && !existing.endsWith("\n") ? "\n" : "";
+  atomicWriteFile(target, `${existing}${sep6}${line}
+`);
 }
 function randSuffix() {
   return Math.floor(Math.random() * 281474976710655).toString(16).padStart(12, "0");
@@ -18375,6 +18477,103 @@ var SCOPE_DETECT_AI_DIRS = [
   ".kilocode"
 ];
 
+// src/install/paths.ts
+import { homedir as homedir8, tmpdir } from "node:os";
+import { join as join21 } from "node:path";
+var INSTALL_ROOT_SUBPATH = ".event4u/agent-config";
+var INSTALL_LOG_FILENAME = "install-log.jsonl";
+function resolveHome(home) {
+  if (home && home.length > 0) {
+    return home;
+  }
+  const fromOs = homedir8();
+  if (!fromOs) {
+    throw new Error(
+      "Cannot resolve home directory \u2014 both $HOME (POSIX) and $USERPROFILE (Windows) are unset."
+    );
+  }
+  return fromOs;
+}
+function getInstallRoot(home) {
+  return join21(resolveHome(home), INSTALL_ROOT_SUBPATH);
+}
+function getLogPath(home) {
+  return join21(getInstallRoot(home), INSTALL_LOG_FILENAME);
+}
+
+// src/install/txlog.ts
+import { createGzip } from "node:zlib";
+import { createReadStream, createWriteStream, existsSync as existsSync10, readFileSync as readFileSync21, renameSync as renameSync6, statSync as statSync9, unlinkSync as unlinkSync7 } from "node:fs";
+import { pipeline } from "node:stream/promises";
+var ROTATION_MAX_BYTES = 10 * 1024 * 1024;
+var ROTATION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1e3;
+function appendTxLog(logPath, entry) {
+  if (shouldRotate(logPath)) {
+    rotateLogSync(logPath);
+  }
+  atomicAppendLine(logPath, JSON.stringify(entry));
+}
+function shouldRotate(logPath, now = /* @__PURE__ */ new Date()) {
+  if (!existsSync10(logPath)) {
+    return false;
+  }
+  let size = 0;
+  try {
+    size = statSync9(logPath).size;
+  } catch {
+    return false;
+  }
+  if (size >= ROTATION_MAX_BYTES) {
+    return true;
+  }
+  const firstTs = readFirstTimestamp(logPath);
+  if (firstTs === null) {
+    return false;
+  }
+  return now.getTime() - firstTs >= ROTATION_MAX_AGE_MS;
+}
+function rotateLogSync(logPath) {
+  if (!existsSync10(logPath)) {
+    return;
+  }
+  const stamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
+  const rotated = logPath.replace(/\.jsonl$/, `.${stamp}.jsonl`);
+  renameSync6(logPath, rotated);
+  void gzipInPlace(rotated).catch(() => {
+  });
+}
+async function gzipInPlace(source) {
+  const target = `${source}.gz`;
+  await pipeline(createReadStream(source), createGzip(), createWriteStream(target));
+  try {
+    unlinkSync7(source);
+  } catch {
+  }
+}
+function readFirstTimestamp(logPath) {
+  try {
+    const raw = readFileSync21(logPath, "utf8");
+    const firstLine = raw.split("\n", 1)[0] ?? "";
+    const parsed = tryParseEntry(firstLine);
+    if (parsed === null) return null;
+    const t = Date.parse(parsed.ts);
+    return Number.isFinite(t) ? t : null;
+  } catch {
+    return null;
+  }
+}
+function tryParseEntry(line) {
+  try {
+    const obj = JSON.parse(line);
+    if (typeof obj.ts !== "string" || typeof obj.kind !== "string" || typeof obj.path !== "string") {
+      return null;
+    }
+    return obj;
+  } catch {
+    return null;
+  }
+}
+
 // src/scripts/install.ts
 var _HERE2 = fileURLToPath6(import.meta.url);
 var SystemExitError = class extends Error {
@@ -18512,95 +18711,6 @@ function utcStamp(now) {
   const d = now ?? /* @__PURE__ */ new Date();
   const pad = (n, w = 2) => String(n).padStart(w, "0");
   return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}Z`;
-}
-function _jsonStrNoAscii(s) {
-  let out = '"';
-  for (const ch of s) {
-    const code = ch.codePointAt(0);
-    switch (ch) {
-      case '"':
-        out += '\\"';
-        break;
-      case "\\":
-        out += "\\\\";
-        break;
-      case "\n":
-        out += "\\n";
-        break;
-      case "\r":
-        out += "\\r";
-        break;
-      case "	":
-        out += "\\t";
-        break;
-      case "\b":
-        out += "\\b";
-        break;
-      case "\f":
-        out += "\\f";
-        break;
-      default:
-        if (code < 32) {
-          out += "\\u" + code.toString(16).padStart(4, "0");
-        } else {
-          out += ch;
-        }
-    }
-  }
-  return out + '"';
-}
-function _jsonScalar(value) {
-  if (value === null || value === void 0) return "null";
-  if (typeof value === "boolean") return value ? "true" : "false";
-  if (typeof value === "number") {
-    if (!Number.isFinite(value)) {
-      if (Number.isNaN(value)) return "NaN";
-      return value > 0 ? "Infinity" : "-Infinity";
-    }
-    return String(value);
-  }
-  if (typeof value === "string") return _jsonStrNoAscii(value);
-  return null;
-}
-function _dumpIndent(value, indent, depth) {
-  const scalar = _jsonScalar(value);
-  if (scalar !== null) return scalar;
-  const pad = " ".repeat(indent * (depth + 1));
-  const closePad = " ".repeat(indent * depth);
-  if (Array.isArray(value)) {
-    if (value.length === 0) return "[]";
-    const items = value.map((v) => pad + _dumpIndent(v, indent, depth + 1));
-    return `[
-${items.join(",\n")}
-${closePad}]`;
-  }
-  if (typeof value === "object" && value !== null) {
-    const obj = value;
-    const keys = Object.keys(obj);
-    if (keys.length === 0) return "{}";
-    const items = keys.map(
-      (k) => `${pad}${_jsonStrNoAscii(k)}: ${_dumpIndent(obj[k], indent, depth + 1)}`
-    );
-    return `{
-${items.join(",\n")}
-${closePad}}`;
-  }
-  return _jsonStrNoAscii(String(value));
-}
-function jsonDumpsIndent(value, indent) {
-  return _dumpIndent(value, indent, 0);
-}
-function jsonDumpsCompact(value) {
-  const scalar = _jsonScalar(value);
-  if (scalar !== null) return scalar;
-  if (Array.isArray(value)) {
-    return "[" + value.map((v) => jsonDumpsCompact(v)).join(",") + "]";
-  }
-  if (typeof value === "object" && value !== null) {
-    const obj = value;
-    return "{" + Object.keys(obj).map((k) => `${_jsonStrNoAscii(k)}:${jsonDumpsCompact(obj[k])}`).join(",") + "}";
-  }
-  return _jsonStrNoAscii(String(value));
 }
 function yamlSafeLoad2(text) {
   let YAML3;
@@ -20461,6 +20571,17 @@ function _escapes_package_root(resolved, package_root) {
   }
   return !is_ancestor(root, resolved);
 }
+function _log_tx_entry(kind, target) {
+  try {
+    appendTxLog(getLogPath(), {
+      ts: (/* @__PURE__ */ new Date()).toISOString(),
+      kind,
+      path: target,
+      sha256: kind === "write" ? sha256OfFile(target) : null
+    });
+  } catch {
+  }
+}
 function _copy_dir_dereferencing_symlinks(src, dest, force, package_root = null, file_filter = null) {
   let written = 0;
   let skipped = 0;
@@ -20480,9 +20601,13 @@ function _copy_dir_dereferencing_symlinks(src, dest, force, package_root = null,
     }
     mkdirp(path21.dirname(dest));
     const decision = _resolve_file_conflict(dest, force);
-    if (decision === "skip") return [0, 1, written_paths];
+    if (decision === "skip") {
+      _log_tx_entry("skip", dest);
+      return [0, 1, written_paths];
+    }
     fs24.copyFileSync(src, dest);
     _inject_package_tag(dest, src, package_root);
+    _log_tx_entry("write", dest);
     written_paths.push(dest);
     return [1, 0, written_paths];
   }
@@ -20540,11 +20665,13 @@ function _copy_dir_dereferencing_symlinks(src, dest, force, package_root = null,
     const decision = _resolve_file_conflict(target, force);
     if (decision === "skip") {
       skipped += 1;
+      _log_tx_entry("skip", target);
       continue;
     }
     mkdirp(path21.dirname(target));
     fs24.copyFileSync(resolved, target);
     _inject_package_tag(target, resolved, package_root);
+    _log_tx_entry("write", target);
     written += 1;
     written_paths.push(target);
   }
