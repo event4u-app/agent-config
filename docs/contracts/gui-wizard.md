@@ -163,17 +163,37 @@ signals rather than a conflict screen. The column below is therefore a
 requirement on the screen when one is built, not a description of one that
 renders today.
 
-**What `recorded-modified` does NOT mean.** It is a statement about the plan,
-not a promise about the file. The single writer is
-[`src/scripts/install.ts`](../../src/scripts/install.ts), whose
-`_resolve_file_conflict` returns `write` unconditionally for deployed files —
-its own header records that a run refreshes every deployed file with the
-current package content and that `--force` is an accepted no-op. Nothing in
-that writer reads `conflicts` or `ConflictResolution`. So a screen rendering
-this field must tell the user their edit will be replaced, and must not offer
-"leave it alone" as an outcome this install path can deliver. Making the
-writer consult the matrix is an install-behavior change that no part of this
-contract takes.
+**What `recorded-modified` means as of 2026-09-21.** The owner ruled (option
+(a), after a 1/1 council split) that `agent-config init` stops overwriting a
+managed file the user has edited. The single writer is
+[`src/scripts/install.ts`](../../src/scripts/install.ts); its
+`_resolve_file_conflict` now consults
+[`src/install/preserve.ts`](../../src/install/preserve.ts), re-hashing the
+destination immediately before mutating it, and a `recorded-modified` file is
+**preserved**. The package content it would have been replaced with is staged
+beside it as `<path>.agent-config.new`.
+
+So a screen rendering this field may now say the edit is kept — and it must
+also say the install is **not current** until the sidecar is merged, because
+that is the cost the ruling accepted. `--force` is the escape hatch and is no
+longer a no-op: it replaces the managed file.
+
+`unknown` is unchanged. Nothing is recorded for that path, so the writer still
+writes over it, and a screen must not claim otherwise.
+
+**Exit codes.** `0` — installed and current. `1` — the run failed. `2` — usage
+error. `3` — completed with conflicts: everything installed, at least one
+user-modified file preserved, the active installation not current. Exit `3`
+still emits a `done` NDJSON frame, not an `error` one, because the install
+completed; the frame carries `conflicts: <count>` when the count is non-zero,
+and `POST /api/v1/wizard/apply` forwards it as `summary.conflicts`. A
+zero-conflict run's frames are byte-identical to the historical ones.
+
+The writer still reads neither `conflicts` nor `ConflictResolution` from the
+planner — it reaches the same verdict independently, from the manifest digest
+and a write-time re-hash. The planner's list is advisory state, not a safety
+capability, and a plan-time verdict would be blind to an edit made between
+planning and writing.
 
 The TypeScript apply engine and its `POST /api/v1/install/apply` SSE route
 were removed (road-to-single-install-source-of-truth § Phase 3). All real

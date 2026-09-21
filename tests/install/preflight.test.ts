@@ -20,6 +20,7 @@ import {
     hasBlockingFinding,
     runPreflight,
 } from '../../src/install/preflight.js';
+import { SIDECAR_SUFFIX } from '../../src/install/preserve.js';
 import type { PlanInputs } from '../../src/install/plan.js';
 import type { ConflictPolicy } from '../../src/install/types.js';
 
@@ -115,11 +116,18 @@ describe('checkConflicts', () => {
     });
 
     // Findings 1-2 of the completion review: this branch shipped a remedy
-    // saying "a default install leaves it alone", which the single writer
+    // saying "a default install leaves it alone", which the writer of the day
     // (src/scripts/install.ts::_resolve_file_conflict, unconditional `write`
-    // for deployed files) contradicts. The guard is generic so the class
-    // cannot come back through a neighbouring string.
-    it('no conflict remedy claims an install preserves the existing file', () => {
+    // for deployed files) contradicted.
+    //
+    // The owner ruling of 2026-09-21 inverted the premise: a `recorded-modified`
+    // file IS now preserved and the package content staged as
+    // `<path>.agent-config.new`. So the guard is inverted with it rather than
+    // deleted — the defect class is "the remedy disagrees with the writer", and
+    // that class is live in both directions. This arm must now STATE the
+    // preservation; the `unknown` arm, where nothing is recorded and the writer
+    // still overwrites, must still not claim it.
+    it('the recorded-modified remedy states the preservation the writer performs', () => {
         const srcDir = join(tmp, 'src');
         const destDir = join(tmp, 'dest');
         mkdirSync(srcDir, { recursive: true });
@@ -145,6 +153,34 @@ describe('checkConflicts', () => {
             }),
         );
         expect(findings.some((f) => /edited since we wrote it/.test(f.message))).toBe(true);
+        const modified = findings.filter((f) => /edited since we wrote it/.test(f.message));
+        for (const f of modified) {
+            expect(f.remedy).toMatch(/preserv/i);
+            // Naming the sidecar is what makes the remedy actionable: without
+            // it the operator is told their edit survived and not where the
+            // package content went.
+            expect(f.remedy).toContain(SIDECAR_SUFFIX);
+            expect(f.remedy).toContain('--force');
+        }
+    });
+
+    it('the unknown-ownership remedy still does not claim an install preserves the file', () => {
+        // No manifest at all, so every row is `unknown` — the writer overwrites
+        // there exactly as before, and a remedy promising otherwise would be
+        // the original defect with the polarity flipped.
+        const srcDir = join(tmp, 'src');
+        const destDir = join(tmp, 'dest');
+        mkdirSync(srcDir, { recursive: true });
+        mkdirSync(destDir, { recursive: true });
+        writeFileSync(join(srcDir, 'a.md'), 'planned content');
+        writeFileSync(join(destDir, 'a.md'), 'the user edited this');
+        const findings = checkConflicts(
+            inputs({
+                root: destDir,
+                sources: [{ toolId: 'claude-code', srcDir, destDir, kind: 'deployed' }],
+            }),
+        );
+        expect(findings.length).toBeGreaterThan(0);
         for (const f of findings) {
             expect(f.remedy).not.toMatch(/leaves? it alone|survives?|untouched|is safe|preserv/i);
         }

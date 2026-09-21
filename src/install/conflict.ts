@@ -69,9 +69,15 @@ export interface ResolveInputs {
  *
  * What this resolver decides is in any case NOT what the installer does. The
  * single writer is `src/scripts/install.ts`, whose `_resolve_file_conflict`
- * returns `write` unconditionally for deployed files and which reads nothing
- * from this module; `skip` here means "the planner would not touch it", never
- * "your edit is safe".
+ * reads nothing from this module; `skip` here means "the planner would not
+ * touch it", never "your edit is safe".
+ *
+ * Since the owner ruling of 2026-09-21 that writer no longer overwrites
+ * unconditionally — a managed file diverging from its recorded digest is
+ * preserved and the package content staged beside it (`src/install/preserve.ts`).
+ * The two still reach that answer independently: this module decides from a
+ * plan, the writer re-hashes the destination at the moment it is about to
+ * mutate it. A `skip` here remains a statement about the plan.
  */
 export function resolveFileConflict(inputs: ResolveInputs): ConflictOutcome {
     const { targetPath, idempotent, exists, policy } = inputs;
