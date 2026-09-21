@@ -118,10 +118,19 @@ not scheduled here; the blocker below records it as the open half.
 
 ## Phase 5 — Three-state ownership instead of path membership
 
-- [ ] <!-- blocked-by: the-installer-does-not-consult-the-conflict-matrix | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **5.1 Distinguish recorded-unchanged, recorded-modified and unknown** in the install conflict
+- [x] **5.1 Distinguish recorded-unchanged, recorded-modified and unknown** in the install conflict
       matrix, fed by a real hash comparison rather than by path-set membership.
       verify: a user-modified managed file survives a refresh and appears in the report; the matrix
       carries a recorded-unchanged column whose value comes from a hash.
+      **DONE 2026-09-21.** Owner ruled option (a) on
+      `the-installer-does-not-consult-the-conflict-matrix` after an AI council split 1/1:
+      `agent-config init` stops overwriting a managed file the user has edited. The writer's
+      `_resolve_file_conflict` in `src/scripts/install.ts` now consults
+      `src/install/preserve.ts`, re-hashing the destination at the moment of the write, and a
+      `recorded-modified` file is preserved with the package content staged as
+      `<path>.agent-config.new`. The run exits `3` and names each preserved file, so the
+      staleness the ruling accepts is stated rather than silent. The reporting half was already
+      landed; both halves of the verify line now hold.
 - [x] **5.2 Land the hash plumbing separately from the matrix change.**
       verify: two commits, and the matrix commit's diff contains no hash computation.
 
@@ -131,6 +140,13 @@ not scheduled here; the blocker below records it as the open half.
 the per-file SHA-256 the manifest records, in two commits with the hash
 plumbing separate from the matrix change (5.2, AC-7). A user-modified managed
 file is now **named in the report**, where path-set membership dropped it.
+
+**Superseded 2026-09-21 — 5.1 and AC-6 are closed.** The paragraphs below are
+kept as written because they are the record of a premature closure being
+corrected, and because the last of them names exactly what closing 5.1 would
+take. That is what the owner ruling then authorised and what landed; see
+§ blocker `the-installer-does-not-consult-the-conflict-matrix` § Resolution.
+Read everything from here to the end of this section in the past tense.
 
 **5.1 and AC-6 stay open, and were un-flipped after a completion review**
 (`agents/evidence/reviews/drain-conformance-check.findings.md`, findings 1-2).
@@ -152,7 +168,8 @@ it is recorded as one below rather than taken here.
 ## Blockers
 
 ### blocker: the-installer-does-not-consult-the-conflict-matrix
-- **Status:** open
+- **Status:** resolved — 2026-09-21, option (a) "stop overwriting a user-modified managed file"
+  (owner decision, taken after an AI council split 1/1); see Resolution below
 - **Owner:** maintainer
 - **Ownership:** `destructive-owned` — the decision trades a data-loss surface on the
   user's own tree for a staleness surface. What an install may overwrite is
@@ -175,6 +192,56 @@ it is recorded as one below rather than taken here.
   week ago they said the opposite.
 - **Resolved when:** the writer consults the matrix, or this roadmap records
   the refusal and the reporting half becomes the whole of 5.1.
+- **Resolution (2026-09-21):** the first arm. The owner ruled option (a) —
+  `agent-config init` may not overwrite a managed file the user has edited —
+  after an AI council split 1/1 on the trade. The recommendation field above
+  offered none, deliberately, and none was manufactured: the trade of a
+  data-loss surface for a staleness surface is owner-owned by ADR-268 § 10 and
+  was decided as one.
+
+  **What landed.** `src/install/preserve.ts` holds the decision and the
+  wording; `_resolve_file_conflict` in `src/scripts/install.ts` consults it and
+  re-hashes the destination immediately before the copy, so the verdict is
+  taken from the bytes actually about to be destroyed rather than from a
+  plan-time `ConflictEntry` — that list is advisory state, not a safety
+  capability, and the gap between planning and writing is real. A preserved
+  file's package content is staged as `<path>.agent-config.new`.
+
+  **The staleness is answered, not accepted silently.** That was the whole
+  objection to option (a) in the council's adversarial rounds: preserving an
+  edit leaves the installation not current. So the run exits `3` — distinct
+  from `0`, `1` and argparse's `2` — names each preserved file on stderr with
+  the sentence "the active installation is not current", and reports a count
+  that also rides on the NDJSON `done` frame and through the wizard's apply
+  route as `summary.conflicts`. The non-zero exit and that sentence are what
+  convert silent staleness into loud staleness; shipping the preservation
+  without them would have delivered the objection rather than the ruling.
+
+  **Four constraints the council's rounds produced, all held.** The sidecar
+  suffix is tool-owned (`.agent-config.new`, never a bare `.new`). There is no
+  semantic classification — any divergence from the recorded digest is treated
+  identically, because a format-aware diff would pull per-format parsers into
+  the installer's trusted computing base and a syntactically trivial edit can
+  still be intentional. An existing sidecar is never clobbered on pathname
+  alone: identical bytes are a no-op and anything else fails the run, since a
+  matching name is not provenance. And a staging failure fails the operation —
+  it has not "completed with conflicts" if the package content reached nowhere.
+  No fallback to unconditional overwrite exists under conflict volume or
+  resource pressure, and there is no bulk accept flag.
+
+  **One defect this work found and fixed before shipping.** `resolvePath` in
+  the installer realpaths; `readRecordedHashes` resolves without realpathing.
+  Keying the manifest lookup on the realpath alone would have missed every
+  entry on macOS, where the temp and home trees sit behind `/var → /private/var`
+  — the feature would have been inert on the platform it was written on. The
+  lookup tries the plain resolve first and the realpath second.
+
+  **What is unchanged, and stated so it is not read as wider than it is.** A
+  path with no recorded digest — no manifest, a global anchor that holds none,
+  a bridge entry recorded without a hash — still gets written over exactly as
+  before. The ruling covers a file this tree can show it wrote and can show has
+  changed since. Preserving on `unknown` would stage a sidecar beside every
+  pre-existing file on a first install, which is noise, not protection.
 
 ### blocker: headless-log-write-is-a-consumer-visible-default
 - **Status:** resolved — 2026-09-15, "write it" (owner-approved recommendation); see Phase 3
@@ -267,19 +334,25 @@ an agent one. Recorded here so the claim is tracked rather than lost; it needs
 one docstring edit plus either that label or a maintainer pushing it directly.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-15 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-09-21 | reviewer: claude/host -->
 
-Re-reviewed 2026-09-15 after Phase 3 landed (the owner-approved
-`headless-log-write-is-a-consumer-visible-default` decision). Rank 2 discharges;
-ranks 1, 3 and 4 stay live — rank 3's subject (Phase 5) is unowned and
-deliberately not decided in this pass, and ranks 1 and 4 are general-shaped
-rather than tied to a step that just closed.
+Re-reviewed 2026-09-21 after Phase 5.1 closed on the owner ruling for
+`the-installer-does-not-consult-the-conflict-matrix`. Rank 3 discharges — its
+subject is now decided and the decision moved away from the data-loss
+direction it warned about. Ranks 1 and 4 stay live: both are general-shaped
+rather than tied to a step that just closed, and rank 4 in particular still
+applies to this file, whose Phase 5 section already carries one premature
+closure being corrected.
+
+Reviewed 2026-09-15 after Phase 3 landed (the owner-approved
+`headless-log-write-is-a-consumer-visible-default` decision): rank 2
+discharged, ranks 1, 3 and 4 live.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | The check flips red for every existing install at upgrade | product | Turning an always-green branch into a failure reddens every consumer who installed before the log existed | Phase 1 emits an explicit unknown rather than a failure; failure becomes possible only after Phase 3 gives the log something to be clean about | Phase 1 — Make the false green visible, without breaking anyone |
 | 2 | A second log writer diverges from the first | implementation | Two call sites emitting different entry shapes makes the log unreadable and the check wrong in a new way | **Discharged 2026-09-15.** One writer module (`appendTxLog`) with two callers landed; `tests/scripts/install.test.ts` asserts a shape-equality test across both | Phase 3 — Write the log from the path that does the install |
-| 3 | Adding a hash changes install-plan behaviour silently | implementation | Feeding a hash into the conflict matrix changes which files are written on a refresh, and that is a data-loss surface | Phase 5.2 separates the plumbing commit from the matrix commit so each is reviewable on its own; the user-modified-file case is an acceptance criterion | Phase 5 — Three-state ownership instead of path membership |
+| 3 | Adding a hash changes install-plan behaviour silently | implementation | Feeding a hash into the conflict matrix changes which files are written on a refresh, and that is a data-loss surface | **Discharged 2026-09-21.** The behaviour change landed as an owner decision rather than as a side effect, and it moved the writer away from the data-loss direction: a user-modified managed file is preserved. It is not silent — the run exits `3` and names every preserved file. `tests/scripts/install.preserve.test.ts` pins the refresh, preserve, `--force` and write-time-revalidation arms, and 9 of its assertions were observed red against a neutralised mechanism | Phase 5 — Three-state ownership instead of path membership |
 | 4 | The prior disposition recurs | product | This subject was closed once as shipped, which was true of the module and false of the path, and the same reading would close it again | The change description states which of the three recurrence outcomes applies — here the disposition was wrong, not merely unrecorded — so the distinction is in the record rather than in someone's memory | Phase 4 — The negative fixture for the branch that was always green |
 
 ## Acceptance Criteria
@@ -293,5 +366,6 @@ rather than tied to a step that just closed.
 - [x] AC-4 — The existing sabotage fixture reddens the check after a headless install. —
       `tests/scripts/_cli/cmd_conformance.test.ts`, 2026-09-15.
 - [x] AC-5 — The absent-log fixture was observed red before the fix, and the reading is recorded.
-- [ ] AC-6 — A user-modified managed file survives a refresh and is named in the report.
+- [x] AC-6 — A user-modified managed file survives a refresh and is named in the report. —
+      survival: `tests/scripts/install.preserve.test.ts`, 2026-09-21; report: landed 2026-09-13.
 - [x] AC-7 — The hash plumbing and the matrix change are separate commits.

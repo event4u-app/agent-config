@@ -20,13 +20,25 @@
  * Usage:
  *   tsx src/scripts/install.ts                     # defaults: rule_loading_tier=balanced
  *   tsx src/scripts/install.ts --profile=minimal   # set rule_loading_tier=minimal (kernel only)
- *   tsx src/scripts/install.ts --force             # accepted (no-op): installs always overwrite
+ *   tsx src/scripts/install.ts --force             # replace managed files the user has edited
  *   tsx src/scripts/install.ts --skip-bridges      # only create .agent-settings.yml
  *   tsx src/scripts/install.ts --project <dir>     # override project root
  *
- * Idempotent — safe to run multiple times. A run always refreshes every
- * deployed file with the current package content; user configuration
- * (.agent-settings.yml) is merged by the settings layer, never clobbered.
+ * Idempotent — safe to run multiple times. A run refreshes every deployed file
+ * with the current package content, EXCEPT a managed file whose bytes diverge
+ * from the digest the install manifest recorded: that file is preserved and the
+ * package content is staged beside it as `<path>.agent-config.new`. User
+ * configuration (.agent-settings.yml) is merged by the settings layer, never
+ * clobbered.
+ *
+ * Exit codes: 0 — installed and current. 1 — the run failed. 2 — usage error
+ * (argparse). 3 — completed with conflicts: everything installed, but at least
+ * one user-modified managed file was preserved, so the active installation is
+ * NOT current until those sidecars are merged. `--force` replaces the managed
+ * files instead and exits 0. The `3` is deliberate and load-bearing: preserving
+ * an edit trades a data-loss surface for a staleness surface, and a stale
+ * install exiting 0 would make that staleness silent. Behaviour and rationale
+ * live in `src/install/preserve.ts`.
  *
  * --- Parity notes (ADR-200) ---
  *
@@ -78,6 +90,16 @@ import * as installed_lock from './_lib/installed_lock.js';
 import * as mcp_bridge from './_lib/mcp_bridge.js';
 import * as mcp_consent from './_lib/mcp_consent_residual.js';
 import * as scoped_projection from './_lib/scoped_projection.js';
+import {
+    EXIT_COMPLETED_WITH_CONFLICTS,
+    conflictSummaryMessage,
+    decideDeployWrite,
+    foreignSidecarMessage,
+    preservedFileMessage,
+    sidecarPathFor,
+    type DeployWriteDecision,
+} from '../install/preserve.js';
+import { recordedHashesForRoot, type RecordedHashes } from '../install/recordedOwnership.js';
 import * as surface_tiers from './_lib/surface_tiers.js';
 import * as global_deploy_inventory from './_lib/global_deploy_inventory.js';
 import * as rule_layer_overlap from './_lib/rule_layer_overlap.js';
@@ -383,6 +405,13 @@ function _emit_progress_terminal(rc: number): void {
     if (!state.PROGRESS_NDJSON) return;
     if (rc === 0) {
         _emit_progress({ type: 'done' });
+    } else if (rc === EXIT_COMPLETED_WITH_CONFLICTS) {
+        // A conflict is a completion, not a failure: everything the run could
+        // install is installed. The count rides on `done` rather than becoming
+        // an `error` frame, so the wizard reports success and still receives
+        // the number. A zero-conflict run never reaches here, so its frame
+        // stays byte-identical to the historical `{"type":"done"}`.
+        _emit_progress({ type: 'done', conflicts: conflictState.preserved.length });
     } else {
         _emit_progress({ type: 'error', code: 'E_INSTALL', exitCode: rc });
     }
@@ -454,9 +483,139 @@ function _is_interactive(): boolean {
     }
 }
 
-function _resolve_file_conflict(_target: string, _force_hint: boolean): string {
-    // del force_hint / del target — deploys always overwrite our own content.
-    return 'write';
+/**
+ * Per-run conflict tracking.
+ *
+ * Module-mutable like `state.QUIET` / `state.PROGRESS_NDJSON` above, and for
+ * the same reason: `_copy_dir_dereferencing_symlinks` is reached through six
+ * `_deploy_*` frames that carry no project root, and threading one through all
+ * of them to hand the resolver a manifest path would be a far larger diff than
+ * the decision it feeds.
+ *
+ * `recorded` is read lazily and cached for the whole run, so the digests
+ * compared against are the ones recorded BEFORE this run started — the manifest
+ * is rewritten at the end of the install, and re-reading it mid-run would
+ * compare a file against a digest this very run had just recorded for it.
+ */
+const conflictState: {
+    root: string | null;
+    recorded: RecordedHashes | null;
+    preserved: string[];
+} = { root: null, recorded: null, preserved: [] };
+
+/** Reset the tracker and point it at the tree whose manifest records ownership. */
+function _begin_conflict_tracking(root: string | null): void {
+    conflictState.root = root;
+    conflictState.recorded = null;
+    conflictState.preserved = [];
+}
+
+/**
+ * Recorded digest for `target`, or `undefined` when this tree cannot say.
+ *
+ * Two keys are tried, and the plain `path.resolve` one comes FIRST because it
+ * is the form that actually matches: `_file_entry` records the path verbatim as
+ * the copy loop built it, and `readRecordedHashes` re-resolves with
+ * `path.resolve` and no realpath. Looking up only the realpath would miss every
+ * entry on macOS, where the temp and home trees sit behind the
+ * `/var → /private/var` symlink — the feature would have been inert on the
+ * platform it was developed on. The realpath is kept as a second key so a
+ * manifest written through a symlinked deploy root still resolves.
+ */
+function _recorded_hash_for(target: string): string | null | undefined {
+    if (conflictState.root === null) return undefined;
+    conflictState.recorded ??= recordedHashesForRoot(conflictState.root);
+    const plain = path.resolve(target);
+    if (conflictState.recorded.has(plain)) return conflictState.recorded.get(plain);
+    const real = resolvePath(target);
+    return real === plain ? undefined : conflictState.recorded.get(real);
+}
+
+/**
+ * Decide what the writer does with one deploy target.
+ *
+ * The on-disk digest is computed HERE rather than carried from the plan: this
+ * runs immediately before the caller copies over `target`, so a file edited
+ * between planning and writing is still classified from the bytes that are
+ * actually about to be destroyed.
+ */
+function _resolve_file_conflict(target: string, force: boolean): DeployWriteDecision {
+    const exists = pathExists(target);
+    return decideDeployWrite({
+        exists,
+        recordedSha256: exists ? _recorded_hash_for(target) : undefined,
+        onDiskSha256: exists ? sha256OfFile(target) : null,
+        force,
+    });
+}
+
+/**
+ * Stage `source` beside `target` as `<target>.agent-config.new`, then record
+ * and report the preserved file.
+ *
+ * An existing sidecar is never replaced. Byte-identical content is a no-op (a
+ * re-run of an install that already staged this file); anything else fails the
+ * run, because the package content was then written nowhere and reporting
+ * "completed with conflicts" would claim a staging that did not happen.
+ */
+function _preserve_user_modified(
+    target: string,
+    source: string,
+    package_root: string | null,
+): void {
+    const sidecar = sidecarPathFor(target);
+    const source_sha = sha256OfFile(source);
+    if (pathExists(sidecar)) {
+        if (source_sha === null || sha256OfFile(sidecar) !== source_sha) {
+            fail(foreignSidecarMessage(target, sidecar));
+        }
+    } else {
+        mkdirp(path.dirname(sidecar));
+        const tmp = path.join(
+            path.dirname(sidecar),
+            `.${path.basename(sidecar)}.${process.pid}.${crypto.randomBytes(6).toString('hex')}.tmp`,
+        );
+        try {
+            fs.copyFileSync(source, tmp);
+            fs.renameSync(tmp, sidecar);
+        } catch (exc) {
+            try {
+                fs.unlinkSync(tmp);
+            } catch {
+                /* swallow — best-effort cleanup of our own temp file */
+            }
+            fail(
+                `Could not stage package content for ${target} at ${sidecar}: ${String(exc)}. ` +
+                    'Nothing was written; the managed file is unchanged.',
+            );
+        }
+        _log_tx_entry('write', sidecar);
+    }
+    // `package_root` is accepted and unused: `_inject_package_tag` stamps
+    // `package:` / `source_path:` into a DEPLOYED `.md`, and the sidecar is not
+    // deployed — it is the package bytes the user merges by hand. Tagging it
+    // would put an install-time annotation into content the user diffs.
+    void package_root;
+    conflictState.preserved.push(target);
+    warn(preservedFileMessage(target, sidecar));
+}
+
+/**
+ * Fold preserved-file conflicts into the run's exit code and report them.
+ *
+ * Runs before `_emit_progress_terminal` so the terminal NDJSON frame can carry
+ * the count. A failing run keeps its own code — a conflict never masks a
+ * failure.
+ */
+function _finalize_install_rc(rc: number): number {
+    const count = conflictState.preserved.length;
+    if (count === 0) return rc;
+    _emit_progress({ type: 'conflicts', count, paths: [...conflictState.preserved] });
+    // `warn` writes to stderr and is deliberately NOT gated on QUIET: the
+    // wizard runs the installer with QUIET set, and a preserved edit is the one
+    // thing a silent run must still say.
+    warn(conflictSummaryMessage(count));
+    return rc === 0 ? EXIT_COMPLETED_WITH_CONFLICTS : rc;
 }
 
 // --- File utilities ---
@@ -2846,7 +3005,8 @@ function _copy_dir_dereferencing_symlinks(
         }
         mkdirp(path.dirname(dest));
         const decision = _resolve_file_conflict(dest, force);
-        if (decision === 'skip') {
+        if (decision === 'preserve') {
+            _preserve_user_modified(dest, resolved_src, package_root);
             _log_tx_entry('skip', dest);
             return [0, 1, written_paths];
         }
@@ -2920,7 +3080,8 @@ function _copy_dir_dereferencing_symlinks(
             continue;
         }
         const decision = _resolve_file_conflict(target, force);
-        if (decision === 'skip') {
+        if (decision === 'preserve') {
+            _preserve_user_modified(target, resolved, package_root);
             skipped += 1;
             _log_tx_entry('skip', target);
             continue;
@@ -4853,10 +5014,17 @@ function main(argv: string[]): number {
             const rc = _run_migrate_to_global(detect_root);
             if (rc !== 0) return rc;
         }
-        const rc = install_global(parsed_tools, opts.force, detect_root, opts.core_only);
+        _begin_conflict_tracking(detect_root);
+        const rc = _finalize_install_rc(
+            install_global(parsed_tools, opts.force, detect_root, opts.core_only),
+        );
         _emit_progress_terminal(rc);
-        if (rc === 0 && wizard_handoff) {
-            return _wizard_spawn(detect_root, false);
+        if ((rc === 0 || rc === EXIT_COMPLETED_WITH_CONFLICTS) && wizard_handoff) {
+            // A preserved edit does not withhold the wizard — the install
+            // completed. It does survive it: a zero from the wizard must not
+            // erase the conflict signal this run earned.
+            const wizard_rc = _wizard_spawn(detect_root, false);
+            return wizard_rc === 0 ? rc : wizard_rc;
         }
         return rc;
     }
@@ -4864,10 +5032,12 @@ function main(argv: string[]): number {
     const project_root =
         custom_path || resolvePath(opts.project || process.env['PROJECT_ROOT'] || process.cwd());
     const is_first_run = !pathExists(path.join(project_root, SETTINGS_FILE));
-    const rc = _main_project_install(opts, project_root, parsed_tools, is_first_run);
+    _begin_conflict_tracking(project_root);
+    let rc = _main_project_install(opts, project_root, parsed_tools, is_first_run);
     if (rc === 0 && opts.interactive) {
         run_interactive_init(project_root, opts.force);
     }
+    rc = _finalize_install_rc(rc);
     _emit_progress_terminal(rc);
     return rc;
 }
@@ -5289,6 +5459,13 @@ export {
     // road-to-local-ci-trust: exported for the symlink-confinement tests
     // (PR #1076 review-gate finding).
     _copy_dir_dereferencing_symlinks,
+    // road-to-a-conformance-check-that-can-fail Phase 5.1 (owner ruling
+    // 2026-09-21): exported so the preservation path is testable without
+    // driving a full install.
+    _begin_conflict_tracking,
+    _resolve_file_conflict,
+    _finalize_install_rc,
+    conflictState,
     _preview_global_reap,
     _resolve_global_rule_scope,
     _rule_filter_for_source,
