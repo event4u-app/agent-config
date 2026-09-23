@@ -1287,7 +1287,19 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                             });
                         } else if (t === 'done') {
                             sawTerminal = true;
-                            writeFrame(reply, { type: 'done', summary: { written, total } });
+                            // `conflicts` rides on the installer's own `done`
+                            // frame when it preserved a user-modified managed
+                            // file (exit 3, src/install/preserve.ts). Forwarded
+                            // rather than dropped: a preserved edit means the
+                            // install is not current, and this SSE frame is the
+                            // browser's only channel for that. Omitted when
+                            // zero, so the historical summary shape is
+                            // unchanged for every run that has no conflicts.
+                            const conflicts = typeof obj.conflicts === 'number' ? obj.conflicts : 0;
+                            writeFrame(reply, {
+                                type: 'done',
+                                summary: conflicts > 0 ? { written, total, conflicts } : { written, total },
+                            });
                         } else if (t === 'error') {
                             sawTerminal = true;
                             writeFrame(reply, {
