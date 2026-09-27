@@ -1,6 +1,5 @@
 ---
 complexity: lightweight
-status: draft
 execution:
   mode: phase-checkpoints
 owner: maintainer
@@ -52,26 +51,38 @@ as a new problem rather than as a known one.
 
 ## Phase 1 — Make the claim unfalsifiable by a neighbour
 
-- [ ] **1.1 Stop watching a path any other test may touch.** The instrument's scope is the whole
+- [x] **1.1 Stop watching a path any other test may touch.** The instrument's scope is the whole
       worktree including ignored entries, which by construction includes every scratch directory
       the suite uses. Narrow it to paths `reach:doctor` could plausibly write, or drop the
       porcelain layer entirely — a scope-out list per offending path is the allowlist-growth
       antipattern and is explicitly not the fix.
       verify: the witness passes with `bench_ab_v2_run` deliberately writing and removing a
       report during its window — the interference is staged, not waited for.
-- [ ] **1.2 Carry the read-only claim with a static check instead.** Parse each `reach:doctor`
+      Landed: the whole-worktree `git status --porcelain --ignored` instrument is gone (a
+      pathspec-scoped porcelain call was considered and rejected — it would report nothing the
+      tracked-file instrument does not already report, with less precision). A new staged-
+      interference test writes and removes a file in `internal/bench/reports/ab-v2/` from
+      inside the witness's own run window and asserts no change, deterministically.
+- [x] **1.2 Carry the read-only claim with a static check instead.** Parse each `reach:doctor`
       source and report a write primitive only in callee position of a call expression, so the
       claim rests on the code rather than on an observation a neighbour can spoil.
       verify: proven in both directions — a real `fs.writeFileSync` planted in a reach script
       fails the test naming `file → primitive@Lnnn`, and the same word inside a comment and a
       string literal passes.
+      Landed: the STRUCTURAL AST scan (already present) is now the claim's primary carrier,
+      backed by the tracked-file stats instrument as defense-in-depth. A dedicated sensitivity
+      test proves both directions on an in-memory fixture shaped like one of `REACH_SOURCES`.
 
 ## Phase 2 — Stop losing the finding
 
-- [~] **2.1 Ask whether a flake fixed in place should leave a tracked record.** The first
+- [x] **2.1 Ask whether a flake fixed in place should leave a tracked record.** The first
       occurrence was diagnosed correctly and repaired, and nothing in the tree remembers it, so
       the second cost a full diagnosis again. Whether that warrants a convention is a maintainer
-      question. Human-gated, not started.
+      question.
+      Answered via council (see `## Decisions` below): yes, with a bounded convention — a
+      `Flake-diagnosis:` commit trailer for diagnosed, non-deterministic, reusable-root-cause
+      failures, documented in `CONTRIBUTING.md`, no separate registry. Applied to this
+      roadmap's own Phase 1 fixing commit as the first example.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-18 | reviewer: claude/host -->
@@ -84,8 +95,14 @@ as a new problem rather than as a known one.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The witness passes while a neighbouring test deliberately writes and removes a file
+- [x] AC-1 — The witness passes while a neighbouring test deliberately writes and removes a file
       in the worktree during its window.
-- [ ] AC-2 — `reach:doctor mutates nothing` is asserted by a check that a parallel test cannot
+- [x] AC-2 — `reach:doctor mutates nothing` is asserted by a check that a parallel test cannot
       falsify, proven red by a planted write.
-- [ ] AC-3 — The record-keeping question in Phase 2 is answered, or is still open and visibly `[~]`.
+- [x] AC-3 — The record-keeping question in Phase 2 is answered, or is still open and visibly `[~]`.
+
+## Decisions
+
+| ID | ownership | resolved by | decision | evidence | revisit if |
+|---|---|---|---|---|---|
+| D1 | contested-technical | council:2026-09-27 (anthropic + openai, 2/2 present, 2 rounds, $0 — subscription) | Adopt a `Flake-diagnosis:` commit-trailer convention for a diagnosed, non-deterministic CI failure with a reusable root-cause class; no separate registry | `CONTRIBUTING.md` § Branches, commits, and PRs; this roadmap's own Phase 1 fixing commit carries the first trailer | `git log --all --grep="Flake-diagnosis:"` demonstrably fails to surface a prior diagnosis, or several recurring classes accumulate enough to justify a dedicated registry |
