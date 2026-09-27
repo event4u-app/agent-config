@@ -28,8 +28,8 @@
   "owner": "package-maintainer",
   "refresh_cadence": "quarterly",
   "upstream": {
-    "repo": "derived: PostgreSQL 16 + MySQL 8 reference docs",
-    "sha": "derived against PostgreSQL 16.x / MySQL 8.4. Verified 2026-09-18: both still supported (PG 16 EOL 2028-11-09, MySQL 8.4 LTS premier to 2029-04), but PG 18 (2025-09) and MySQL 9.7 LTS (2026-04) are now current \u2014 the tuning patterns were NOT re-derived against them",
+    "repo": "derived: PostgreSQL 18 + MySQL 9.7 reference docs (previously PostgreSQL 16 + MySQL 8)",
+    "sha": "re-derived 2026-09-27 against PostgreSQL 18.x / MySQL 9.7: all 12 rows of query-tuning.csv still apply as written on both engines. Three rows gained a version-scoped annotation for a genuinely new capability rather than a rewrite \u2014 row 1 (Slow WHERE on large table) notes PG18's B-tree skip scan, which relaxes the equality-first composite-index rule on PG18+ only; row 5 (JOIN explosion) notes MySQL 9.7's Hypergraph Optimizer, now GA in Community Edition, improving join-order choices automatically; row 12 (JSON column filtering) notes that PG18 flips the GENERATED-column default from STORED to VIRTUAL, and VIRTUAL columns are not indexable, so STORED must now be explicit. PostgreSQL 16.x and MySQL 8.4 remain supported and the patterns apply there unchanged",
     "last_checked": "2026-09-18"
   }
 }
