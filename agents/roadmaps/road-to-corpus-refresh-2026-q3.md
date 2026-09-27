@@ -42,7 +42,7 @@ actually looked, and the two clean results are recorded below so nobody re-check
 
 ## Phase 1 — Re-derive the two corpora that moved
 
-- [ ] **1.1 Re-derive `threat-modeling` against ASVS 5.0.0 and ATT&CK v19.x.** This is the
+- [x] **1.1 Re-derive `threat-modeling` against ASVS 5.0.0 and ATT&CK v19.x.** This is the
       urgent half: ASVS 5.0.0 renumbers 4.x, so the `Source Refs` column in `threats.csv`
       cites identifiers that no longer resolve in the current standard — a reader following a
       citation lands nowhere. Map the cited 4.0.3 requirements onto their 5.0.0 successors,
@@ -50,13 +50,34 @@ actually looked, and the two clean results are recorded below so nobody re-check
       verify: every `Source Refs` value in `threats.csv` resolves in ASVS 5.0.0 or ATT&CK
       v19.x, or is explicitly marked as having no successor, and the `sha` field drops its
       FOUND BEHIND note.
-- [ ] **1.2 Re-derive `database` against PostgreSQL 18 and MySQL 9.7.** Lower urgency: both
+      <!-- done 2026-09-27: threats.csv's Source Refs column carries no ASVS
+      identifiers at all (only CWE + ATT&CK + OWASP-API/A0x) — nothing to remap
+      there. Checked every ATT&CK id in the column against the live Enterprise
+      matrix (attack.mitre.org, v19.x): T1110, T1563, T1105, T1090, T1499,
+      T1552, T1552.001, T1190, T1078.004 — all nine resolve, none deprecated or
+      revoked. The actual ASVS 4.0.3 citation lived in SKILL.md's References
+      section (V3/V4/V5 by the old numbering); fetched the standard's own
+      4.0-to-5.0 migration guide and 5.0.0 chapter list and remapped to V7
+      Session Management, V8 Authorization, V1 Encoding and Sanitization + V2
+      Validation and Business Logic. manifest.json's sha field updated to drop
+      FOUND BEHIND. -->
+- [x] **1.2 Re-derive `database` against PostgreSQL 18 and MySQL 9.7.** Lower urgency: both
       declared versions are still supported, so nothing in `query-tuning.csv` is wrong today.
       What is unknown is whether the newer majors changed a recommended strategy or added one
       the corpus should carry.
       verify: each row in `query-tuning.csv` is confirmed against the current docs or is
       annotated with the version range it applies to, and the `sha` field names the revision
       it was re-derived against.
+      <!-- done 2026-09-27: all 12 rows confirmed against PG 18 and MySQL 9.7
+      release notes/docs — still correct as written. Three rows gained a
+      version-scoped annotation for a genuinely new capability rather than a
+      rewrite: row 1 (PG18 B-tree skip scan relaxes the equality-first
+      composite-index rule on PG18+ only), row 5 (MySQL 9.7's Hypergraph
+      Optimizer is now GA in Community Edition and can improve join-order
+      choices on its own), row 12 (PG18 flips GENERATED columns' default from
+      STORED to VIRTUAL, and VIRTUAL is not indexable — STORED must now be
+      explicit). manifest.json's sha field names the re-derivation and the
+      revision (PostgreSQL 18.x / MySQL 9.7). -->
 
 ## Phase 2 — Decide whether the bound is the right shape
 
@@ -77,9 +98,19 @@ actually looked, and the two clean results are recorded below so nobody re-check
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `threats.csv` cites only identifiers that resolve in ASVS 5.0.0 or ATT&CK v19.x,
+- [x] AC-1 — `threats.csv` cites only identifiers that resolve in ASVS 5.0.0 or ATT&CK v19.x,
       or explicitly marked no-successor entries.
-- [ ] AC-2 — `query-tuning.csv` is confirmed or annotated against PostgreSQL 18 and MySQL 9.7,
+      <!-- met: vacuously for ASVS (no ASVS identifiers in the CSV); every
+      ATT&CK id present resolves in v19.x, verified live against
+      attack.mitre.org — see 1.1's note. -->
+- [x] AC-2 — `query-tuning.csv` is confirmed or annotated against PostgreSQL 18 and MySQL 9.7,
       and neither `sha` field still carries a FOUND BEHIND note.
-- [ ] AC-3 — The cadence-versus-batch question in Phase 2 is answered by the maintainer, or is
+      <!-- met: see 1.1/1.2 notes; both manifest.json sha fields rewritten,
+      neither contains "FOUND BEHIND" any more. -->
+- [x] AC-3 — The cadence-versus-batch question in Phase 2 is answered by the maintainer, or is
       still open and visibly `[~]`.
+      <!-- met by the second disjunct: 2.1 stays [~], visibly unresolved — the
+      maintainer question is not answered here. The item itself is carried
+      forward into a follow-up roadmap at archival time (Iron Law 3), per
+      roadmap-management's spawn-follow-up procedure — see the note appended
+      near 2.1 once that follow-up lands. -->
