@@ -25,8 +25,8 @@ triggers:
 > "<surface description>"` returns the surface class, ATT&CK/CWE-cited
 > threats, required controls, and negative tests, with confidence +
 > evidence-gap. Propose grounded findings; the human confirms. Corpus:
-> [`data/threats.csv`](data/threats.csv) (MITRE ATT&CK v16 / OWASP
-> ASVS-derived, owner + cadence in the manifest).
+> [`data/threats.csv`](data/threats.csv) (MITRE ATT&CK v19.x / OWASP
+> ASVS 5.0.0-derived, owner + cadence in the manifest).
 
 > You are a reviewer specialized in **pre-implementation threat analysis**.
 > Your only job is to produce a compact threat model for a planned change —
@@ -215,8 +215,13 @@ run tests**.
   *Threat Modeling: Designing for Security* (2014). Framing basis for the
   Actors / Assets / Entry Points / Trust Boundaries / Abuse Cases rubric.
   [learn.microsoft.com/en-us/security/engineering/threat-modeling-tool-threats](https://learn.microsoft.com/en-us/security/engineering/threat-modeling-tool-threats)
-- **OWASP ASVS v4.0.3** — Authorization (V4), Validation & Encoding (V5),
-  Session Management (V3) — default baseline for "Missing control" entries.
+- **OWASP ASVS v5.0.0** — Authorization (V8), Encoding and Sanitization (V1)
+  + Validation and Business Logic (V2), Session Management (V7) — default
+  baseline for "Missing control" entries. Renumbered from 4.0.3's V4/V5/V3
+  per the standard's own 4.0→5.0 migration guide (`5.0/en/0x05-For-Users-Of-4.0.md`
+  in the ASVS repo) — 5.0.0 splits the old V5 Validation/Sanitization/Encoding
+  chapter into separate Encoding-and-Sanitization and Validation-and-Business-Logic
+  chapters, and drops direct CWE/NIST cross-mappings from the requirements.
   [owasp.org/www-project-application-security-verification-standard/](https://owasp.org/www-project-application-security-verification-standard/)
 - **OWASP Top 10 2021** — A01 Broken Access Control, A04 Insecure Design,
   A05 Security Misconfiguration — cross-reference when naming abuse cases.

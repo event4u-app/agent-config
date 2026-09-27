@@ -76,8 +76,8 @@
   "owner": "package-maintainer",
   "refresh_cadence": "quarterly",
   "upstream": {
-    "repo": "derived: MITRE ATT&CK + CWE + OWASP API Top 10 / ASVS 4.0",
-    "sha": "derived against ATT&CK v16 / ASVS 4.0.3. Verified 2026-09-18 and FOUND BEHIND: ATT&CK is v19.2 (2026-08) and ASVS is 5.0.0 (2025-05), which renumbers 4.x \u2014 the Source Refs column still cites 4.0.3 identifiers and needs a content pass",
+    "repo": "derived: MITRE ATT&CK + CWE + OWASP API Top 10 / ASVS 5.0",
+    "sha": "re-derived 2026-09-27 against ATT&CK v19.x and ASVS 5.0.0: every ATT&CK id cited in threats.csv's Source Refs column (T1110, T1563, T1105, T1090, T1499, T1552, T1552.001, T1190, T1078.004) resolves in the current Enterprise matrix and none is deprecated or revoked \u2014 threats.csv itself carries no ASVS identifiers, so there is nothing to remap there. SKILL.md's References section cited ASVS 4.0.3's V3/V4/V5 by the old numbering; updated to 5.0.0's V7 Session Management, V8 Authorization, and V1 Encoding and Sanitization + V2 Validation and Business Logic, per the standard's own 4.0\u21925.0 migration guide",
     "last_checked": "2026-09-18"
   }
 }
