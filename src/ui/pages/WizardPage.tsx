@@ -886,19 +886,31 @@ async function finish(): Promise<void> {
         } else if (applyPayload !== null) {
             try {
                 let streamError: string | null = null;
+                let conflicts = 0;
                 await apiStream('/api/v1/wizard/apply', applyPayload, (frame) => {
                     if (frame.type === 'error') {
                         streamError = typeof frame.message === 'string' ? frame.message : 'install failed';
+                    } else if (frame.type === 'done') {
+                        // The count the installer preserved. Dropping it left
+                        // the banner saying the install applied cleanly while
+                        // the active installation was in fact not current —
+                        // the one thing the operator has to be told.
+                        const summary = frame.summary as { conflicts?: number } | undefined;
+                        conflicts = typeof summary?.conflicts === 'number' ? summary.conflicts : 0;
                     }
-                    // 'progress' / 'done' frames could drive a live progress
-                    // bar; the Finish banner only needs the terminal outcome.
+                    // 'progress' frames could drive a live progress bar.
                 });
                 const toolCount = applyPayload.tools.length;
                 const packCount = applyPayload.packs.length;
                 applyCopy = streamError !== null
                     ? ` Installer failed: ${streamError}. Settings were saved; re-run the wizard to retry.`
                     : ` Installer applied ${toolCount} tool${toolCount === 1 ? '' : 's'}` +
-                      (packCount > 0 ? ` and ${packCount} pack${packCount === 1 ? '' : 's'}.` : '.');
+                      (packCount > 0 ? ` and ${packCount} pack${packCount === 1 ? '' : 's'}.` : '.') +
+                      (conflicts > 0
+                          ? ` ${conflicts} file${conflicts === 1 ? '' : 's'} you had edited ${conflicts === 1 ? 'was' : 'were'} kept;` +
+                            ' the new package content is staged alongside as *.agent-config.new.' +
+                            ' This installation is not current until you merge it.'
+                          : '');
             } catch (err) {
                 const message = err instanceof ApiCallError
                     ? topLevelCopy(err.body.error ?? { code: 'UNKNOWN', message: err.message })

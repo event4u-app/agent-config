@@ -25,9 +25,11 @@ import { recordedHashesForRoot } from './recordedOwnership.js';
 /**
  * Build a tracker bound to one installer's reporting surface.
  *
- * A factory rather than module-level state: the state is per-run, and a module
- * singleton would make two installs in one process — which the test suite does
- * — share a `preserved` list.
+ * A factory rather than module-level state so the reporting surface is injected
+ * rather than imported. It is NOT what keeps two installs in one process apart:
+ * `src/scripts/install.ts` calls this once at module scope, so both runs share
+ * the instance and therefore the `preserved` list. `begin()` is what scopes the
+ * state to a run, and it is the only thing that does.
  */
 export function createConflictTracker(host) {
     const conflictState = {
@@ -62,32 +64,85 @@ export function createConflictTracker(host) {
         return real === plain ? undefined : conflictState.recorded.get(real);
     }
     /**
-     * Write the package bytes to the sidecar through a temp-and-rename, then
-     * record the digest actually staged.
+     * Produce the bytes this run would have written, then reconcile them with
+     * whatever already sits at the sidecar path.
      *
-     * The digest is re-read from the sidecar rather than taken from `source`
-     * so it stays true if the staged bytes ever stop being a byte copy of the
-     * package file.
+     * The candidate is built into a temp file FIRST so the comparison is against
+     * the bytes that would actually be staged rather than against the raw
+     * package source — those differ, because a deployed file is the package
+     * bytes plus the install-time `package:` tag, and comparing the untagged
+     * source would call every already-staged sidecar stale and rewrite it on
+     * every run.
+     *
+     * The temp name ends in the TARGET's extension because `_inject_package_tag`
+     * keys on it: a sidecar is `<name>.md.agent-config.new`, whose extension is
+     * `.new`, so tagging it in place would silently do nothing.
      */
-    function stage(target, source, sidecar) {
+    function stageInto(target, sidecar, produce) {
         mkdirp(path.dirname(sidecar));
-        const tmp = path.join(path.dirname(sidecar), `.${path.basename(sidecar)}.${process.pid}.${crypto.randomBytes(6).toString('hex')}.tmp`);
-        try {
-            fs.copyFileSync(source, tmp);
-            fs.renameSync(tmp, sidecar);
-        }
-        catch (exc) {
+        const tmp = path.join(path.dirname(sidecar), `.${path.basename(sidecar)}.${process.pid}.${crypto.randomBytes(6).toString('hex')}${path.extname(target)}`);
+        const discard = () => {
             try {
                 fs.unlinkSync(tmp);
             }
             catch {
                 /* swallow — best-effort cleanup of our own temp file */
             }
+        };
+        let candidate;
+        try {
+            produce(tmp);
+            candidate = sha256OfFile(tmp);
+        }
+        catch (exc) {
+            discard();
             host.fail(`Could not stage package content for ${target} at ${sidecar}: ${String(exc)}. ` +
                 'Nothing was written; the managed file is unchanged.');
         }
-        conflictState.staged.set(sidecar, sha256OfFile(sidecar));
+        if (pathExists(sidecar)) {
+            const onDisk = sha256OfFile(sidecar);
+            // Three outcomes, and only the third is a refusal. Identical bytes:
+            // already staged, so the file is left alone. Bytes this tree
+            // RECORDED staging: an earlier run staged them against an older
+            // package version and the user has not merged them yet — the
+            // staging workflow behaving as designed, so the stale copy is
+            // refreshed. Anything else is unattributable and the run stops.
+            //
+            // Ownership is decided by the recorded digest, never by whether the
+            // bytes match the CURRENT package: that test called every unmerged
+            // sidecar foreign the moment a new version shipped, and aborted the
+            // whole install saying it could not show it wrote a file it had
+            // written one version earlier.
+            if (onDisk !== null && onDisk === candidate) {
+                discard();
+                conflictState.staged.set(sidecar, onDisk);
+                return;
+            }
+            if (onDisk === null || onDisk !== recordedHashFor(sidecar)) {
+                discard();
+                host.fail(foreignSidecarMessage(target, sidecar));
+            }
+        }
+        try {
+            fs.renameSync(tmp, sidecar);
+        }
+        catch (exc) {
+            discard();
+            host.fail(`Could not stage package content for ${target} at ${sidecar}: ${String(exc)}. ` +
+                'Nothing was written; the managed file is unchanged.');
+        }
+        conflictState.staged.set(sidecar, candidate);
         host.logWrite(sidecar);
+    }
+    /** Record and report one preserved target, once per destination. */
+    function record(target, sidecar) {
+        // Deduped: two plan entries can resolve to one destination, and a count
+        // is a promise about FILES. Double-counting inflates the summary, the
+        // NDJSON frame and anything downstream reading either.
+        if (conflictState.preserved.includes(target))
+            return;
+        conflictState.preserved.push(target);
+        host.warn(preservedFileMessage(target, sidecar));
     }
     return {
         conflictState,
@@ -113,51 +168,34 @@ export function createConflictTracker(host) {
             });
         },
         /**
-         * An existing sidecar is never replaced. Byte-identical content is a
-         * no-op (a re-run of an install that already staged this file);
-         * anything else fails the run, because the package content was then
-         * written nowhere and reporting "completed with conflicts" would claim
-         * a staging that did not happen.
+         * Stage the package content beside a preserved target.
+         *
+         * The staged bytes are what the installer WOULD have written — the
+         * package file plus its install-time tag — so merging the sidecar by
+         * hand yields a file that matches the digest this run records and still
+         * carries the ownership evidence the reaper reads.
          */
         preserve(target, source, packageRoot) {
             const sidecar = sidecarPathFor(target);
-            const sourceSha = sha256OfFile(source);
-            if (pathExists(sidecar)) {
-                const onDisk = sha256OfFile(sidecar);
-                // Three outcomes, and only the third is a refusal. Identical
-                // bytes: this run re-staged what is already there. Bytes this
-                // tree RECORDED staging: an earlier run staged them against an
-                // older package version and the user has not merged them yet —
-                // which is the staging workflow behaving as designed, so the
-                // stale copy is refreshed rather than treated as a stranger's
-                // file. Anything else is unattributable and the run stops.
-                //
-                // Ownership is decided by the recorded digest, never by whether
-                // the bytes happen to match the CURRENT package: that test
-                // called every unmerged sidecar foreign the moment a new
-                // version shipped, and aborted the whole install saying this
-                // install could not show it wrote a file it had written.
-                if (onDisk !== null && sourceSha !== null && onDisk === sourceSha) {
-                    conflictState.staged.set(sidecar, onDisk);
-                }
-                else if (onDisk !== null && onDisk === recordedHashFor(sidecar)) {
-                    stage(target, source, sidecar);
-                }
-                else {
-                    host.fail(foreignSidecarMessage(target, sidecar));
-                }
-            }
-            else {
-                stage(target, source, sidecar);
-            }
-            // `packageRoot` is accepted and unused: `_inject_package_tag` stamps
-            // `package:` / `source_path:` into a DEPLOYED `.md`, and the sidecar
-            // is not deployed — it is the package bytes the user merges by hand.
-            // Tagging it would put an install-time annotation into content the
-            // user diffs.
-            void packageRoot;
-            conflictState.preserved.push(target);
-            host.warn(preservedFileMessage(target, sidecar));
+            stageInto(target, sidecar, (tmp) => {
+                fs.copyFileSync(source, tmp);
+                host.tagDeployed(tmp, source, packageRoot);
+            });
+            record(target, sidecar);
+        },
+        /**
+         * The same, for a managed file the installer GENERATES rather than
+         * copies (the Claude Desktop marker).
+         *
+         * Those writers are recorded in the manifest with a digest, so they are
+         * in the class the ruling covers, and one of them wrote unconditionally
+         * — ignoring even `--force` — because the tracker was wired only into
+         * the copy loop.
+         */
+        preserveContent(target, content) {
+            const sidecar = sidecarPathFor(target);
+            stageInto(target, sidecar, (tmp) => fs.writeFileSync(tmp, content, 'utf-8'));
+            record(target, sidecar);
         },
         /**
          * Runs before the installer's terminal NDJSON frame so that frame can

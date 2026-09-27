@@ -111,5 +111,19 @@ if [[ ! -f "$INSTALLER" ]]; then
 fi
 
 echo "  🚀  Running src/scripts/install --target $TARGET ${PASSTHROUGH[*]:-}"
-bash "$INSTALLER" --target "$TARGET" "${PASSTHROUGH[@]}"
+# Exit 3 is "completed with conflicts": everything installable was installed and
+# at least one file you had edited was kept. Under `set -e` that aborted the
+# script before the line below, so the one-liner ended on the installer's own
+# output with no closing word — indistinguishable from a crash.
+rc=0
+bash "$INSTALLER" --target "$TARGET" "${PASSTHROUGH[@]}" || rc=$?
+if [[ $rc -eq 3 ]]; then
+    echo "  ⚠️   Done, with conflicts — files you had edited were kept and the new"
+    echo "      package content is staged alongside as *.agent-config.new."
+    echo "      This installation is not current until you merge them."
+    exit 3
+fi
+if [[ $rc -ne 0 ]]; then
+    exit "$rc"
+fi
 echo "  ✅  Done."

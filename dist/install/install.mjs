@@ -9287,26 +9287,55 @@ function createConflictTracker(host) {
     const real = resolvePath(target);
     return real === plain ? void 0 : conflictState.recorded.get(real);
   }
-  function stage(target, source, sidecar) {
+  function stageInto(target, sidecar, produce) {
     mkdirp(path8.dirname(sidecar));
     const tmp = path8.join(
       path8.dirname(sidecar),
-      `.${path8.basename(sidecar)}.${process.pid}.${crypto2.randomBytes(6).toString("hex")}.tmp`
+      `.${path8.basename(sidecar)}.${process.pid}.${crypto2.randomBytes(6).toString("hex")}${path8.extname(target)}`
     );
-    try {
-      fs9.copyFileSync(source, tmp);
-      fs9.renameSync(tmp, sidecar);
-    } catch (exc) {
+    const discard = () => {
       try {
         fs9.unlinkSync(tmp);
       } catch {
       }
+    };
+    let candidate;
+    try {
+      produce(tmp);
+      candidate = sha256OfFile(tmp);
+    } catch (exc) {
+      discard();
       host.fail(
         `Could not stage package content for ${target} at ${sidecar}: ${String(exc)}. Nothing was written; the managed file is unchanged.`
       );
     }
-    conflictState.staged.set(sidecar, sha256OfFile(sidecar));
+    if (pathExists(sidecar)) {
+      const onDisk = sha256OfFile(sidecar);
+      if (onDisk !== null && onDisk === candidate) {
+        discard();
+        conflictState.staged.set(sidecar, onDisk);
+        return;
+      }
+      if (onDisk === null || onDisk !== recordedHashFor(sidecar)) {
+        discard();
+        host.fail(foreignSidecarMessage(target, sidecar));
+      }
+    }
+    try {
+      fs9.renameSync(tmp, sidecar);
+    } catch (exc) {
+      discard();
+      host.fail(
+        `Could not stage package content for ${target} at ${sidecar}: ${String(exc)}. Nothing was written; the managed file is unchanged.`
+      );
+    }
+    conflictState.staged.set(sidecar, candidate);
     host.logWrite(sidecar);
+  }
+  function record(target, sidecar) {
+    if (conflictState.preserved.includes(target)) return;
+    conflictState.preserved.push(target);
+    host.warn(preservedFileMessage(target, sidecar));
   }
   return {
     conflictState,
@@ -9332,30 +9361,34 @@ function createConflictTracker(host) {
       });
     },
     /**
-     * An existing sidecar is never replaced. Byte-identical content is a
-     * no-op (a re-run of an install that already staged this file);
-     * anything else fails the run, because the package content was then
-     * written nowhere and reporting "completed with conflicts" would claim
-     * a staging that did not happen.
+     * Stage the package content beside a preserved target.
+     *
+     * The staged bytes are what the installer WOULD have written — the
+     * package file plus its install-time tag — so merging the sidecar by
+     * hand yields a file that matches the digest this run records and still
+     * carries the ownership evidence the reaper reads.
      */
     preserve(target, source, packageRoot) {
       const sidecar = sidecarPathFor(target);
-      const sourceSha = sha256OfFile(source);
-      if (pathExists(sidecar)) {
-        const onDisk = sha256OfFile(sidecar);
-        if (onDisk !== null && sourceSha !== null && onDisk === sourceSha) {
-          conflictState.staged.set(sidecar, onDisk);
-        } else if (onDisk !== null && onDisk === recordedHashFor(sidecar)) {
-          stage(target, source, sidecar);
-        } else {
-          host.fail(foreignSidecarMessage(target, sidecar));
-        }
-      } else {
-        stage(target, source, sidecar);
-      }
-      void packageRoot;
-      conflictState.preserved.push(target);
-      host.warn(preservedFileMessage(target, sidecar));
+      stageInto(target, sidecar, (tmp) => {
+        fs9.copyFileSync(source, tmp);
+        host.tagDeployed(tmp, source, packageRoot);
+      });
+      record(target, sidecar);
+    },
+    /**
+     * The same, for a managed file the installer GENERATES rather than
+     * copies (the Claude Desktop marker).
+     *
+     * Those writers are recorded in the manifest with a digest, so they are
+     * in the class the ruling covers, and one of them wrote unconditionally
+     * — ignoring even `--force` — because the tracker was wired only into
+     * the copy loop.
+     */
+    preserveContent(target, content) {
+      const sidecar = sidecarPathFor(target);
+      stageInto(target, sidecar, (tmp) => fs9.writeFileSync(tmp, content, "utf-8"));
+      record(target, sidecar);
     },
     /**
      * Runs before the installer's terminal NDJSON frame so that frame can
@@ -9391,6 +9424,16 @@ function filesByToolFromDeploy(deployResults) {
     } else {
       out[toolId] = null;
     }
+  }
+  return out;
+}
+function filesByToolFromBridges(tools, projectRoot, scope, bridgeMarker) {
+  const out = {};
+  for (const toolId of [...tools].sort()) {
+    const marker = bridgeMarker(toolId, scope);
+    if (!marker) continue;
+    const markerPath = isAbsolute2(marker) ? marker : join9(projectRoot, marker);
+    out[toolId] = [fileEntry(markerPath, "bridge", false)];
   }
   return out;
 }
@@ -9468,10 +9511,10 @@ function reconcileToolFiles(fresh, prior, preserved) {
   }
   const out = [...fresh];
   for (const file of prior.files) {
-    if (!preserved.has(file.resolved) || seen.has(file.resolved)) continue;
-    out.push(file.entry);
-    const sidecar = preserved.get(file.resolved);
-    if (sidecar !== void 0 && sidecar !== null) out.push(sidecar);
+    const staged = preserved.get(file.resolved);
+    if (staged === void 0 || seen.has(file.resolved)) continue;
+    out.push(staged.sha256 === null ? file.entry : { ...file.entry, sha256: staged.sha256 });
+    if (staged.sidecar !== null) out.push(staged.sidecar);
   }
   return out;
 }
@@ -9479,11 +9522,11 @@ function preservedIndex(preservedTargets, staged) {
   const out = /* @__PURE__ */ new Map();
   for (const target of preservedTargets) {
     const sidecar = sidecarPathFor(target);
-    const sha = staged.get(sidecar);
-    out.set(
-      resolve4(target),
-      sha === void 0 ? null : { path: sidecar, kind: "sidecar", sha256: sha }
-    );
+    const sha = staged.get(sidecar) ?? null;
+    out.set(resolve4(target), {
+      sha256: sha,
+      sidecar: sha === null ? null : { path: sidecar, kind: "sidecar", sha256: sha }
+    });
   }
   return out;
 }
@@ -11800,8 +11843,8 @@ function _withPreservedKeys(rendered, original) {
   }
   return ["---", ...keep, "---", "", rendered].join("\n");
 }
-function rewriteAndReport(rulesDir, quiet, info2, warn2, wrappers) {
-  const result = rewriteClaudeRules(rulesDir);
+function rewriteAndReport(rulesDir, quiet, info2, warn2, wrappers, preserved = /* @__PURE__ */ new Set()) {
+  const result = rewriteClaudeRules(rulesDir, preserved);
   if (wrappers && !quiet) {
     if (wrappers.wrapped.length > 0) {
       info2(
@@ -11850,7 +11893,7 @@ function renderClaudeRule(sourceText) {
   lines.push(pyRstrip(body) + "\n");
   return { text: lines.join("\n"), globs: plan.globs, dropped: plan.dropped };
 }
-function rewriteClaudeRules(rulesDir) {
+function rewriteClaudeRules(rulesDir, preserved = /* @__PURE__ */ new Set()) {
   const result = { rewritten: 0, scoped: [], dropped: [], failed: [] };
   let entries;
   try {
@@ -11860,6 +11903,7 @@ function rewriteClaudeRules(rulesDir) {
   }
   for (const name of entries.filter((n) => n.endsWith(".md")).sort()) {
     const full = path19.join(rulesDir, name);
+    if (preserved.has(path19.resolve(full))) continue;
     let stat;
     try {
       stat = fs21.lstatSync(full);
@@ -19142,7 +19186,8 @@ var tracker = createConflictTracker({
   warn,
   fail,
   logWrite: (target) => _log_tx_entry("write", target),
-  emitProgress: (frame) => _emit_progress(frame)
+  emitProgress: (frame) => _emit_progress(frame),
+  tagDeployed: (target, source, package_root) => _inject_package_tag(target, source, package_root)
 });
 function ensure_directory(p) {
   mkdirp(p);
@@ -20568,19 +20613,6 @@ function prompt_scope_choice(reason) {
   }
   fail("Scope prompt aborted (3 invalid replies); pass --scope=project|global to override");
 }
-function _files_by_tool_from_bridges(tools, project_root, scope) {
-  const out = {};
-  for (const tool_id of [...tools].sort()) {
-    const marker = _bridge_marker(tool_id, scope);
-    if (!marker) continue;
-    let marker_path = marker;
-    if (!path23.isAbsolute(marker_path)) {
-      marker_path = path23.join(project_root, marker_path);
-    }
-    out[tool_id] = [fileEntry(marker_path, "bridge", false)];
-  }
-  return out;
-}
 function _update_installed_tools_manifest(project_root, tools, scope, force, files_by_tool = null, merged_keys_by_tool = null) {
   const target = manifest_path(project_root);
   const existing = read_manifest(target) ?? {};
@@ -20971,12 +21003,17 @@ function _copy_dir_dereferencing_symlinks(src, dest, force, package_root = null,
 function _claude_desktop_bundles_dir() {
   return write_target(_CLAUDE_DESKTOP_BUNDLES_SUBPATH);
 }
-function _write_claude_desktop_marker(_force, lockfile_path2, bundles_dir, bundle_count) {
+function _write_claude_desktop_marker(force, lockfile_path2, bundles_dir, bundle_count) {
   const anchor = expanduser8(USER_SCOPE_PATHS["claude-desktop"]);
   const target = path23.join(anchor, "agent-config.md");
   mkdirp(anchor);
   const body = claudeDesktopMarkerBody(lockfile_path2, anchor, bundles_dir, bundle_count);
+  if (tracker.resolve(target, force) === "preserve") {
+    tracker.preserveContent(target, body);
+    return [0, 1, []];
+  }
   writeText(target, body);
+  _log_tx_entry("write", target);
   return [1, 0, [target]];
 }
 function _deploy_claude_desktop(force, package_root, lockfile_path2) {
@@ -21100,7 +21137,8 @@ function _deploy_global_content(tools, force, package_root, lockfile_path2) {
         state.QUIET,
         info,
         warn,
-        res
+        res,
+        new Set(tracker.conflictState.preserved.map((p) => path23.resolve(p)))
       );
     }
     const missing_targets = _verify_deploy_targets(anchor, plan);
@@ -22641,7 +22679,7 @@ function _main_project_install(opts, project_root, parsed_tools, is_first_run) {
     _smoke_test_hooks(project_root, package_root);
   }
   if (!opts.skip_bridges) {
-    const files_by_tool = _files_by_tool_from_bridges(parsed_tools, project_root, "project");
+    const files_by_tool = filesByToolFromBridges(parsed_tools, project_root, "project", _bridge_marker);
     const rc = _update_installed_tools_manifest(
       project_root,
       parsed_tools,
@@ -22750,7 +22788,7 @@ export {
   _deploy_global_content,
   _detect_legacy_for_migration,
   _dry_run_summary,
-  _files_by_tool_from_bridges,
+  filesByToolFromBridges as _files_by_tool_from_bridges,
   filesByToolFromDeploy as _files_by_tool_from_deploy,
   _format_global_root_for_marker,
   _gate_rule_layer_overlap,

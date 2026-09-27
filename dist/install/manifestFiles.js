@@ -80,6 +80,27 @@ export function filesByToolFromDeploy(deployResults) {
     }
     return out;
 }
+/**
+ * The bridge marker each selected tool claims, as a one-entry inventory.
+ *
+ * `bridgeMarker` is injected because the marker table lives with the installer's
+ * tool registry; passing it keeps that registry in one place instead of giving
+ * this module a second copy to drift from. Bridge entries are recorded WITHOUT
+ * a digest — a bridge is a pointer the consumer owns and edits, so there is
+ * nothing for this tree to claim ownership of, and `classifyOwnership` reads a
+ * null digest as `unknown` and leaves the file alone.
+ */
+export function filesByToolFromBridges(tools, projectRoot, scope, bridgeMarker) {
+    const out = {};
+    for (const toolId of [...tools].sort()) {
+        const marker = bridgeMarker(toolId, scope);
+        if (!marker)
+            continue;
+        const markerPath = isAbsolute(marker) ? marker : join(projectRoot, marker);
+        out[toolId] = [fileEntry(markerPath, 'bridge', false)];
+    }
+    return out;
+}
 /** Expand a leading `~`, matching `installed_tools.expanduser`. */
 function expanduser(p) {
     if (p === '~')
@@ -183,14 +204,21 @@ export function hydrateRecordedInventories(entries, prior) {
  * - otherwise → what this run wrote, plus a carried-forward entry for every
  *   PRESERVED path this tool recorded before.
  *
- * The carried entry keeps its previously recorded digest verbatim, and that is
- * the load-bearing choice. The digest means "the package content this
- * installer last produced for this path"; a preserved run produced that content
- * too — it staged it in the sidecar instead of writing it — so the meaning is
- * unchanged and the next run still measures the user's bytes against package
- * bytes. Re-hashing the target instead would record the USER's content as
- * ours, and the run after that would classify the edit `recorded-unchanged`
- * and overwrite it: the same data loss, one indirection further away.
+ * The carried entry keeps the path and kind it had, and takes the digest of
+ * the content STAGED this run. Both halves are load-bearing.
+ *
+ * The digest means "the package content this installer last produced for this
+ * path". A preserved run produced that content too — it staged it in the
+ * sidecar instead of writing it — so recording it keeps the field's meaning
+ * exact and makes the documented resolution work: merge the sidecar and the
+ * file matches, so the conflict clears and the next install refreshes it
+ * normally. Carrying the OLDER digest instead would leave a correctly merged
+ * file looking modified forever, resolvable only with `--force`.
+ *
+ * What it must never be is a re-hash of the target. That records the USER's
+ * content as ours, and the run after that classifies the edit
+ * `recorded-unchanged` and overwrites it — the same data loss, one
+ * indirection further away.
  */
 export function reconcileToolFiles(fresh, prior, preserved) {
     if (fresh === null || fresh === undefined) {
@@ -206,12 +234,12 @@ export function reconcileToolFiles(fresh, prior, preserved) {
     }
     const out = [...fresh];
     for (const file of prior.files) {
-        if (!preserved.has(file.resolved) || seen.has(file.resolved))
+        const staged = preserved.get(file.resolved);
+        if (staged === undefined || seen.has(file.resolved))
             continue;
-        out.push(file.entry);
-        const sidecar = preserved.get(file.resolved);
-        if (sidecar !== undefined && sidecar !== null)
-            out.push(sidecar);
+        out.push(staged.sha256 === null ? file.entry : { ...file.entry, sha256: staged.sha256 });
+        if (staged.sidecar !== null)
+            out.push(staged.sidecar);
     }
     return out;
 }
@@ -220,8 +248,11 @@ export function preservedIndex(preservedTargets, staged) {
     const out = new Map();
     for (const target of preservedTargets) {
         const sidecar = sidecarPathFor(target);
-        const sha = staged.get(sidecar);
-        out.set(resolve(target), sha === undefined ? null : { path: sidecar, kind: 'sidecar', sha256: sha });
+        const sha = staged.get(sidecar) ?? null;
+        out.set(resolve(target), {
+            sha256: sha,
+            sidecar: sha === null ? null : { path: sidecar, kind: 'sidecar', sha256: sha },
+        });
     }
     return out;
 }

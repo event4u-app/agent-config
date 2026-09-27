@@ -156,7 +156,7 @@ export const HOST_SURFACES: readonly HostSurface[] = [
     },
     {
         host: 'codex', surface: '.codex/agent-config.md', perRuleTree: false,
-        writer: 'src/scripts/install.ts:1430',
+        writer: 'src/scripts/install.ts:1432',
         // Scoped to `.codex` rather than the bare filename: nine other lines in
         // `install.ts` write an `agent-config.md` for some other host, so the
         // unscoped anchor would have accepted a drift onto any of them — the

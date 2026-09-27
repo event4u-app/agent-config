@@ -264,3 +264,51 @@ describe('install reporting is one counted line, not one per pattern', () => {
         }
     });
 });
+
+describe('a preserved rule is left alone by the rewrite', () => {
+    /**
+     * The rewrite runs over every `*.md` in the anchor after the copy loop and
+     * consults nothing from the conflict tracker. Its only guard skips a file
+     * that already carries `paths:` and no `triggers:` — but every `always`
+     * rule and every mixed-trigger rule deploys with no `paths:` block at all,
+     * so they fail the guard and get re-rendered. `_withPreservedKeys` re-adds
+     * only `package:` / `source_path:`, so a key the user added is dropped in
+     * the same run that reported the file preserved: the body survives, the
+     * frontmatter does not.
+     */
+    const USER_EDITED =
+        '---\npackage: event4u/agent-config\nsource_path: dist/agent-src/rules/z.md\n' +
+        'type: auto\ntriggers:\n  - keyword: "design"\nmy_own_key: keep me\n---\n\nMy own body.\n';
+
+    it('keeps a user-added frontmatter key when the file is in the preserved set', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'claude-preserved-'));
+        try {
+            const file = path.join(dir, 'edited.md');
+            fs.writeFileSync(file, USER_EDITED);
+
+            const res = rewriteClaudeRules(dir, new Set([path.resolve(file)]));
+
+            expect(fs.readFileSync(file, 'utf-8')).toBe(USER_EDITED);
+            expect(res.rewritten).toBe(0);
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    });
+
+    it('still rewrites the same file when it is NOT preserved', () => {
+        // Without this the case above would pass against a rewrite that had
+        // simply stopped working.
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'claude-unpreserved-'));
+        try {
+            const file = path.join(dir, 'edited.md');
+            fs.writeFileSync(file, USER_EDITED);
+
+            const res = rewriteClaudeRules(dir);
+
+            expect(res.rewritten).toBe(1);
+            expect(fs.readFileSync(file, 'utf-8')).not.toContain('my_own_key');
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    });
+});

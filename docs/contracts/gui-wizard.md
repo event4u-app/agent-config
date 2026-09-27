@@ -157,11 +157,12 @@ records rather than from path-set membership:
 The field defaults to `unknown` on the wire, so a client that omits it on an
 apply round-trip parses and behaves exactly as before.
 
-**No component reads this field yet.** `src/ui/wizard/state.ts` is the only
-file under `src/ui/` that mentions `conflicts`, and it carries types and
-signals rather than a conflict screen. The column below is therefore a
-requirement on the screen when one is built, not a description of one that
-renders today.
+**No component reads this PLAN field yet.** `src/ui/wizard/state.ts` carries
+types and signals for it rather than a conflict screen. The column below is
+therefore a requirement on that screen when one is built, not a description of
+one that renders today. It is a separate thing from the apply-time count: the
+Finish banner does read `summary.conflicts` off the `done` frame (below), which
+is the run's outcome rather than the plan's per-file `ownership` verdict.
 
 **What `recorded-modified` means as of 2026-09-21.** The owner ruled (option
 (a), after a 1/1 council split) that `agent-config init` stops overwriting a
@@ -177,6 +178,25 @@ So a screen rendering this field may now say the edit is kept — and it must
 also say the install is **not current** until the sidecar is merged, because
 that is the cost the ruling accepted. `--force` is the escape hatch and is no
 longer a no-op: it replaces the managed file.
+
+The staged sidecar is what the installer **would have written** — the package
+file plus its install-time `package:` tag — and the digest recorded for the
+preserved path is that content's. Both halves exist so the documented
+resolution works: move the sidecar over the file and it matches what the
+manifest records, so the conflict clears and the next install refreshes it
+normally. A sidecar left unmerged across a version bump is refreshed rather
+than refused, because the manifest records this tree staging it; a file at that
+path matching neither the current content nor anything recorded is still left
+alone and still stops the run.
+
+**What the Finish banner says today.** Not a conflict screen — the count and
+the consequence. When a run preserves files, the banner names how many were
+kept, says the content is staged as `*.agent-config.new`, and states that the
+installation is not current until they are merged. Exit `3` is treated as a
+completion everywhere in the route, including the fallback path that speaks
+when the installer dies before its terminal frame; that path used to report it
+as `BRIDGE_FAILED`, telling the operator an install had failed when it had
+succeeded and kept their edits.
 
 `unknown` is unchanged. Nothing is recorded for that path, so the writer still
 writes over it, and a screen must not claim otherwise.
