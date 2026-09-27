@@ -211,7 +211,7 @@ first step toward atoms and molecules, and the next contributor will 'complete'
 it"* — and it was right: the second arrival was written on 2026-09-11, inside
 three weeks of this file's own council session of 2026-08-26.
 
-- **The second arrival.** `agents/roadmaps/road-to-a-declared-component-contract.md`,
+- **The second arrival.** `agents/roadmaps/archive/road-to-a-declared-component-contract.md`,
   written 2026-09-11 out of a separate inbox round, proposed reversing this
   rejection together with the `No order is prescribed` statement in
   `src/skills/ui-component-architect/SKILL.md`. Its own § Goal names the reversal

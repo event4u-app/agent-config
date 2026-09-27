@@ -10,7 +10,11 @@ relates:
     note: >
       Same source set, opposite dependency direction. This one needs no declared
       component contract and no workshop lane; that one needs no runtime probe.
-      Deliberately separated so this can ship while that waits on an owner call.
+      Deliberately separated so this could ship while that waited on an owner call.
+      The owner call has since landed: the council ruled (b) uphold on 2026-09-21,
+      the reversal was refused, and that roadmap archived on 2026-09-27 at
+      `agents/roadmaps/archive/road-to-a-declared-component-contract.md`. The
+      separation did its job and nothing here inherits the refusal.
 estate_growth_exempt: >-
   The UI review can assert appearance and nothing else. Verified 2026-09-11 against the current
   tree: `toHaveCSS`, `emulateMedia`, `userEvent.hover`, `composeStories` and `play: async` return

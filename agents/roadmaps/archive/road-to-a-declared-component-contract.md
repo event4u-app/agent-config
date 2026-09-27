@@ -63,8 +63,75 @@ exists to prevent.
 > is the roadmap's real yield. Phases 2 through 6 do not proceed — read
 > `### blocker: taxonomy-reversal-is-a-second-arrival` before treating any of them as workable.
 > The second arrival is recorded on the archived granularity roadmap so a third meets a record
-> rather than a blank. Disposing of the refused steps' glyphs is owner-reserved and deliberately
-> untaken here; see that blocker's § What this resolution does NOT do.
+> rather than a blank.
+>
+> **CLOSED OUT 2026-09-27 on an explicit owner ruling, which is the one thing the paragraph
+> above said this run could not do.** It read: *"Disposing of the refused steps' glyphs is
+> owner-reserved and deliberately untaken here."* That was correct when written and is now
+> spent: the owner ruled on the disposition directly, authorising `[-]` for the twelve refused
+> steps and for AC-3, AC-6 and AC-7 — and for those items only. AC-5 and AC-8 were ruled the
+> other way and carry `[x]`: they are negative criteria the refusal SATISFIES rather than
+> cancels, and `[-]` on AC-8 would record in the archive that the claims gate was cancelled,
+> which is false. Read § Outcome next; the roadmap is archived.
+
+## Outcome — read this before the phases
+
+**Phase 1 landed in full. Phases 2 through 6 are CANCELLED as REFUSED-ON-THEIR-PREMISE, by an AI
+council verdict this roadmap's own blocker asked for.** Archived 2026-09-27.
+
+| Phase | State | Why |
+|---|---|---|
+| **1** — land the guard the earlier decision promised | **satisfied** | The fixture the archived granularity roadmap specified, and never shipped, exists and was observed red against a planted five-level name and green without one. It landed in its own commit, ahead of any reversal. This is the roadmap's real yield. |
+| **2** — record the reversal, or stop here | **cancelled, refused** | There is no reversal to record. The council upheld both rejections, so the decision record 2.1 would write has no decision in it, and the fixture 2.2 would amend has no record to be amended under. |
+| **3** — declared level, never inferred | **cancelled with Phase 2** | The declared level is the five-level taxonomy under another name. It stays rejected, so there is no level for a lint to check a title, a metadata field and a directory against. |
+| **4** — two axes on the stack detector | **4.2 satisfied, 4.1 and 4.3 cancelled** | The blast-radius assessment 4.2 asks for was executed and is in the evidence tree; that is a real closure and it stands. The axis change itself is refused with the lane it would have served — and the assessment argues against it independently, having found the detector has no production caller. |
+| **5** — contract before consumption | **cancelled with Phase 2** | The rule is gated on a resolved workshop lane, which Phase 4 does not resolve and Phase 6 does not add. |
+| **6** — exactly one lane beyond the reference | **cancelled with Phase 2** | Same gate. Zero lanes exist, which is why AC-7 is cancelled rather than met. |
+
+### What the verdict actually decided, and what it deliberately did not
+
+The council ran 2026-09-21, two seats (`anthropic/claude-sonnet-4-5` + `openai/codex-default`),
+deep mode, three rounds, **2/2 convergent for option (b) — uphold both rejections**, reached
+independently on the same three reasons. Those reasons are recorded verbatim at
+`### blocker: taxonomy-reversal-is-a-second-arrival` § Resolution and are not restated here; the
+shortest of them is the one to carry away: **a broken lock on a door is not evidence about what is
+behind it.** This round repaired a carrier that had failed. It re-measured nothing, and the
+measurement the vocabulary was rejected on — that the level is not computable from props, depth,
+path or file length — is untouched on both sides.
+
+Upholding is not reversing. **The owner may still reverse either rejection at any time**, and a
+concrete, taxonomy-independent, reversible ordering proposal would be council-decidable on its own
+merits. Option (c) *as written* is what was found not decision-ready — it never specified what the
+replacement ordering would be. The strongest argument recorded against the verdict, which survives
+it, is that upholding the ordering rejection may preserve historical inertia where a concrete
+ordering rule could improve consistency. That is the shape a third arrival should take.
+
+### Why 17 boxes closed in two different ways, on an explicit owner ruling
+
+`[-]` cancelled is owner-reserved under `roadmap-progress-sync`'s preservation test, and this
+file's own Resolution routed the disposition to the owner rather than taking it. The owner ruled on
+2026-09-27, authorising `[-]` for **the twelve steps in Phases 2 through 6 and for AC-3, AC-6 and
+AC-7 — and for no other item**. Those hang on phases that will not run.
+
+**AC-5 and AC-8 were ruled the other way and carry `[x]`.** Both are *negative* criteria — "no new
+configuration file carries a provider or workshop registry", "the claims file is unchanged by this
+roadmap" — and the refusal **satisfies** them rather than cancelling them: they hold precisely
+because nothing was built. Marking AC-8 `[-]` would record in the archive that the claims gate was
+cancelled, which is false; the gate ran and passed. Each carries an executed verify proof rather
+than an assertion — a `--diff-filter=A` sweep of this roadmap's ten commits for AC-5, a
+per-commit `docs/CLAIMS.md` check plus a green `check_claims` run for AC-8.
+
+### Arrivals, and what a third one meets
+
+This was the subject's **second arrival**; the counter is under the title. A third now meets three
+things the second did not: a test that goes red on a planted five-level name in either surface
+independently, a recorded disposition with its reasoning, and — per
+[`recurring-criticism`](../../../src/rules/recurring-criticism.md) — the arrival recorded at
+`archive/road-to-component-granularity-vocabulary.md` § Outcome, which is where a reader looking
+for the reason lands. The rejection's structural uncitability, the second reachability failure this
+round found, is repaired at
+`agents/evidence/analysis/component-taxonomy-rejection-reachability-2026-09-19.md` — a surface a
+stable artefact is permitted to cite.
 
 ## Phase 1 — Land the guard the earlier decision promised
 
@@ -137,34 +204,44 @@ exists to prevent.
 > converting them to `[-]` cancelled is owner-reserved under `roadmap-progress-sync`'s
 > preservation test, and `[~]` would assert a deferral to a receiver that does not exist.
 > Neither disposition is this run's to take.
+>
+> **Both halves of that are now spent, 2026-09-27, and the markers are GONE rather than
+> re-pointed.** The owner authorised `[-]`, so the boxes moved; and once a box reads `[-]` the
+> marker it carried is not merely redundant, it is a false statement — `blocked-by:` asserts a
+> step pending a decision, and these steps are refused. Removing it costs the concern nothing,
+> which is a measurement rather than an expectation: `OPEN_BOX` at
+> `src/scripts/hooks/run_continuation_hook.ts:411` is `/^[ \t]*[-*][ \t]+\[ \][ \t]+(.*)$/` and
+> matches the literal `[ ]` only, so a `[-]` line is never reached by the marker test at all.
+> Executed on the edited file: `scanOpenSteps` returns `{ open: 0, blocked: 0, next: null }` —
+> the same `next: null` the markers were bought for, now held by the glyph instead.
 
 
-- [ ] <!-- blocked-by: taxonomy-reversal-is-a-second-arrival | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **2.1 Write one decision record** superseding three things at once: the no-prescribed-order
+- [-] <!-- cancelled-by: taxonomy-reversal-is-a-second-arrival § Resolution 2026-09-21 — AI council 2/2 for option (b), uphold --> **2.1 Write one decision record** superseding three things at once: the no-prescribed-order
       statement, the five-level-name prohibition the Phase 1 fixture now enforces, and a
       lane-scoped amendment to the abstraction thresholds so a single-use component inside a
       declared lane is not a threshold violation.
       verify: the decision index is regenerated, and the abstraction-threshold gate stays green on
       non-lane fixtures while not firing on a one-use component inside a lane fixture.
-- [ ] <!-- blocked-by: taxonomy-reversal-is-a-second-arrival | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **2.2 Amend the Phase 1 fixture under the new record** so the reversal is visible in the
+- [-] <!-- cancelled-by: taxonomy-reversal-is-a-second-arrival § Resolution 2026-09-21 — AI council 2/2 for option (b), uphold --> **2.2 Amend the Phase 1 fixture under the new record** so the reversal is visible in the
       guard rather than in the guard's absence.
       verify: the fixture is red against an undeclared five-level name and green against a declared
       one, and the amendment cites the record.
-- [ ] <!-- blocked-by: taxonomy-reversal-is-a-second-arrival | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **2.3 Make no quality claim.** This is a convention, not a measured improvement.
+- [-] <!-- cancelled-by: taxonomy-reversal-is-a-second-arrival § Resolution 2026-09-21 — AI council 2/2 for option (b), uphold --> **2.3 Make no quality claim.** This is a convention, not a measured improvement.
       verify: `docs/CLAIMS.md` is unchanged by this roadmap and the claims gate is green.
 
 ## Phase 3 — Declared level, never inferred
 
-- [ ] <!-- blocked-by: taxonomy-reversal-is-a-second-arrival | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **3.1 Carry the level as a title prefix and a metadata field**, from a taxonomy the project
+- [-] <!-- cancelled-by: taxonomy-reversal-is-a-second-arrival § Resolution 2026-09-21 — AI council 2/2 for option (b), uphold --> **3.1 Carry the level as a title prefix and a metadata field**, from a taxonomy the project
       configures, and add a level column to the owned-component list.
       verify: a lint checks that title, metadata and directory agree, and it never derives a level
       from props, depth, path or file length — the measurement that the level is not computable is
       cited in the lint's own docstring rather than re-argued.
-- [ ] <!-- blocked-by: taxonomy-reversal-is-a-second-arrival | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **3.2 An undeclared component has no level.** Absent is absent, never guessed.
+- [-] <!-- cancelled-by: taxonomy-reversal-is-a-second-arrival § Resolution 2026-09-21 — AI council 2/2 for option (b), uphold --> **3.2 An undeclared component has no level.** Absent is absent, never guessed.
       verify: the lint reports an undeclared component as undeclared and does not assign it a tier.
 
 ## Phase 4 — Two axes on the stack detector, in the right file
 
-- [ ] <!-- blocked-by: taxonomy-reversal-is-a-second-arrival | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **4.1 Add a workshop axis and a verification axis** to the stack-detection axis table and to
+- [-] <!-- cancelled-by: taxonomy-reversal-is-a-second-arrival § Resolution 2026-09-21 — AI council 2/2 for option (b), uphold --> **4.1 Add a workshop axis and a verification axis** to the stack-detection axis table and to
       the documented stack seam, filling the workshop capabilities as booleans.
       verify: the library fixture resolves a workshop value; a project with no marker resolves none
       and its fallback path runs without error.
@@ -197,29 +274,29 @@ exists to prevent.
       locations rather than five, having missed
       `src/agent-src/contexts/execution/toolchain-resolver.md:35`. The findings stand; the
       attributions did not.
-- [ ] <!-- blocked-by: taxonomy-reversal-is-a-second-arrival | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **4.3 No provider registry file.** The axes carry what the lane needs; a registry is a second
+- [-] <!-- cancelled-by: taxonomy-reversal-is-a-second-arrival § Resolution 2026-09-21 — AI council 2/2 for option (b), uphold --> **4.3 No provider registry file.** The axes carry what the lane needs; a registry is a second
       source of truth for twelve adapters that do not exist.
       verify: no new configuration file is added by this phase.
 
 ## Phase 5 — Contract before consumption, lane-gated and shadow-only
 
-- [ ] <!-- blocked-by: taxonomy-reversal-is-a-second-arrival | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **5.1 Add one rule**, gated on a resolved workshop lane, enforced in shadow.
+- [-] <!-- cancelled-by: taxonomy-reversal-is-a-second-arrival § Resolution 2026-09-21 — AI council 2/2 for option (b), uphold --> **5.1 Add one rule**, gated on a resolved workshop lane, enforced in shadow.
       verify: the framework-neutrality gate is green — the rule names no framework, or carries a
       declared exemption.
-- [ ] <!-- blocked-by: taxonomy-reversal-is-a-second-arrival | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **5.2 Keep the local-inline escape.** A component used once, in one place, under the stated
+- [-] <!-- cancelled-by: taxonomy-reversal-is-a-second-arrival § Resolution 2026-09-21 — AI council 2/2 for option (b), uphold --> **5.2 Keep the local-inline escape.** A component used once, in one place, under the stated
       conditions, stays legal.
       verify: the rule names the conditions verbatim, and a fixture exercising each one passes.
-- [ ] <!-- blocked-by: taxonomy-reversal-is-a-second-arrival | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **5.3 It is a dependency rule, not a commit-order rule.** The contract must exist before the
+- [-] <!-- cancelled-by: taxonomy-reversal-is-a-second-arrival § Resolution 2026-09-21 — AI council 2/2 for option (b), uphold --> **5.3 It is a dependency rule, not a commit-order rule.** The contract must exist before the
       import resolves, not in an earlier commit.
       verify: a fixture landing both in one commit passes.
 
 ## Phase 6 — Exactly one lane beyond the reference
 
-- [ ] <!-- blocked-by: taxonomy-reversal-is-a-second-arrival | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **6.1 Add one non-reference workshop lane**, chosen by what a real consumer project actually
+- [-] <!-- cancelled-by: taxonomy-reversal-is-a-second-arrival § Resolution 2026-09-21 — AI council 2/2 for option (b), uphold --> **6.1 Add one non-reference workshop lane**, chosen by what a real consumer project actually
       uses, with a minimal fixture.
       verify: the lane emits a conformance artefact whose unavailable dimensions carry
       not-applicable rows with reasons.
-- [ ] <!-- blocked-by: taxonomy-reversal-is-a-second-arrival | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **6.2 One, not twelve.** The documented stack seam already says to defer a stack until more
+- [-] <!-- cancelled-by: taxonomy-reversal-is-a-second-arrival § Resolution 2026-09-21 — AI council 2/2 for option (b), uphold --> **6.2 One, not twelve.** The documented stack seam already says to defer a stack until more
       than one consumer asks.
       verify: exactly one lane is added, and the reason it was the one chosen is recorded.
 
@@ -249,7 +326,7 @@ exists to prevent.
 - **Resolved when:** the decision record exists with one of the three readings, or this roadmap
   records the refusal and the archived roadmap carries the arrival.
 - **STILL OPEN, and deliberately.** Reversing a recorded rejection on its second arrival is
-  owner-reserved under [`decision-revisit-gate`](../../src/rules/decision-revisit-gate.md)
+  owner-reserved under [`decision-revisit-gate`](../../../src/rules/decision-revisit-gate.md)
   § owner-reserved set; an agent manufacturing that decision is the failure this blocker exists
   to prevent. Phase 1 landed without it, as the blocker's own § Blocks permits.
 - **New evidence for whoever decides, gathered 2026-09-13 while landing Phase 1.** It changes
@@ -261,7 +338,7 @@ exists to prevent.
     rested on compares the two surfaces **to each other** and forbids exactly two dead values,
     `partial` and `layout` — neither of which is a five-level name. A contributor "completing"
     the taxonomy updates both surfaces and passes.
-  - **So this is the third outcome in [`recurring-criticism`](../../src/rules/recurring-criticism.md),
+  - **So this is the third outcome in [`recurring-criticism`](../../../src/rules/recurring-criticism.md),
     not the first.** The disposition was right, it was recorded, and the carrier that was
     supposed to make it reachable did not carry it. That is a system failure and not evidence
     that the rejection was wrong — the measurement it rests on (the level is not computable from
@@ -287,7 +364,7 @@ exists to prevent.
     `STABLE_TREES` in the gate's own source. So no rule, skill, command, context, guideline or
     contract is permitted to point a later reader at the reason. Repairing the guard did not touch
     this; the evidence artefact above is the repair, per the promote-and-cite Iron Law of
-    [`no-roadmap-references`](../../src/rules/no-roadmap-references.md).
+    [`no-roadmap-references`](../../../src/rules/no-roadmap-references.md).
   - **Option (c) is not the zero-cost edit the Recommendation calls it.** The ordering statement is
     not recorded as a taste: the skill states that no primary source requires an order, that
     measured evidence comparing build orders is *absent, not merely weak*, and that a claimed order
@@ -330,7 +407,7 @@ exists to prevent.
      records that *"a council may advise here and may not rule"*, on the `product-owned` /
      owner-locked classification. Both seats addressed that line explicitly and independently, and
      the distinction they drew is narrow:
-     [`decision-revisit-gate`](../../src/rules/decision-revisit-gate.md) reserves **reversal** of a
+     [`decision-revisit-gate`](../../../src/rules/decision-revisit-gate.md) reserves **reversal** of a
      recorded decision to the owner; it does not forbid a council from **declining** a reversal and
      preserving the recorded state. Upholding is not reversing — it takes no action, lowers no
      floor, and leaves every artefact byte-identical. The owner-reserved half is untouched and
@@ -345,7 +422,7 @@ exists to prevent.
   consistency. That argument survives this ruling, and it is the shape a third arrival should take.
 
   **The second arrival is recorded on the archived file**, per
-  [`recurring-criticism`](../../src/rules/recurring-criticism.md) —
+  [`recurring-criticism`](../../../src/rules/recurring-criticism.md) —
   `agents/roadmaps/archive/road-to-component-granularity-vocabulary.md` § Outcome now carries the
   arrival, the disposition that held, and the reachability finding. That is the second branch of
   this blocker's own **Resolved when**, and it is why no decision record was written: the condition
@@ -359,6 +436,15 @@ exists to prevent.
     routed it to the owner — and `[~]` would assert a deferral to a receiver that does not exist.
     They stay `[ ]` with their `blocked-by:` markers pointing here, which keeps `scanOpenSteps`
     treating them as not-this-run's work; see the note under § Phase 2.
+
+    **Superseded 2026-09-27 by the owner, and left standing so the routing is visible.** The
+    bullet routed the disposition to the owner; the owner answered it. Twelve steps and AC-3,
+    AC-6 and AC-7 now read `[-]`, on that authorisation and scoped to exactly those items.
+    AC-5 and AC-8 were deliberately excluded from it and read `[x]` — see § Outcome.
+  - It did **not**, and this roadmap's archival does not, disturb the ruling itself. Closing a
+    roadmap out is a disposition of the FILE. The five-level taxonomy stays rejected, the
+    `No order is prescribed` statement stays as written, and the owner's freedom to reverse
+    either at any time is exactly where the Resolution left it.
   - It does **not** settle the `(a)`/`(b)` choice on `the-detector-is-a-consumer-template`. That
     blocker closed on its own stated condition; its Phase 4 is refused by this ruling rather than
     by that one.
@@ -609,6 +695,18 @@ that distinction is the reading.
   argument about a future proposal's merits, not a hazard to this roadmap's execution — the same
   reason the 2026-09-19 pass declined to add the no-production-caller finding as a row.
 
+**Closing read, 2026-09-27, taken at archival rather than as a scheduled refresh.** Six rows
+still, no row added, no row removed — the register is frozen here. One thing changed since the
+reading directly above, and it is a change of record rather than of hazard: the twelve steps and
+AC-3, AC-6 and AC-7 now carry `[-]`, on an explicit owner authorisation. So rows 3, 4 and 5, which
+that reading correctly downgraded from "unexercised" to "unreachable", are now **cancelled in the
+file itself** — their anchoring phases are glyphed as dropped, not merely held. The hazards are
+unchanged and the rows stay, because any future proposal reviving those phases inherits them
+verbatim. **Row 6 remains the only live row** and archival makes it more live, not less: this file
+leaves the active set, so a third arrival will meet the fixture, the arrival counter and the
+archived disposition rather than an open roadmap. Rows 1 and 2 are unchanged from their 2026-09-27
+and 2026-09-19 readings respectively.
+
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | The reversal happens without its guard | product | The earlier decision predicted this arrival and specified a fixture that was never written, so a reversal now would repeat the failure at a level the tree cannot see | Phase 1 lands the guard first, in its own commit, and Phase 2.2 amends it under the record so the reversal lives in the guard rather than in its absence | Phase 1 — Land the guard the earlier decision promised |
@@ -635,14 +733,57 @@ that distinction is the reading.
       **This AC being met does not make the roadmap complete.** AC-3, AC-5, AC-6 and AC-7 are
       refused rather than met — their phases do not run — and disposing of them is owner-reserved,
       per the Resolution's § What this resolution does NOT do.
-- [ ] AC-3 — No component level is ever derived from props, depth, path or file length, and an
+
+      **Corrected 2026-09-27, and the sentence above is left standing because the correction is
+      the point.** It put AC-5 in the refused set. That is wrong, and it is the exact error the
+      owner's ruling separates out: AC-5 and AC-8 are *negative* criteria — nothing was built, and
+      not-building is what they ask for — so the refusal **satisfies** them. They are `[x]`, each
+      with an executed verify proof. Only AC-3, AC-6 and AC-7 are cancelled. The disposition itself
+      is no longer owner-reserved-and-untaken either: the owner took it, scoped to those items.
+- [-] AC-3 — No component level is ever derived from props, depth, path or file length, and an
       undeclared component is reported undeclared rather than assigned a tier.
+      **CANCELLED** — refused by `### blocker: taxonomy-reversal-is-a-second-arrival`
+      § Resolution (2026-09-21), AI council 2/2 for option (b). The criterion describes a
+      declared-level lint that Phase 3 would have built; Phase 3 does not run, so there is no
+      artefact for it to hold. Glyph authorised by the owner 2026-09-27.
 - [x] AC-4 — The stack detector's blast radius across installed consumers is stated before its
       axis table changes, or the change is refused.
       **Met** — stated in `agents/evidence/analysis/stack-detector-axis-blast-radius-2026-09-19.md`,
       and stated *before* any change: the axis table is byte-unchanged by this roadmap.
-- [ ] AC-5 — No new configuration file carries a provider or workshop registry.
-- [ ] AC-6 — The contract rule is lane-gated, shadow-enforced, framework-neutral, and passes a
+- [x] AC-5 — No new configuration file carries a provider or workshop registry.
+      **MET — and met BECAUSE nothing was built. This is a negative criterion the refusal
+      SATISFIES rather than cancels**, which is why it carries `[x]` and not the `[-]` its
+      neighbours take. Step 4.3's own verify reads *"no new configuration file is added by
+      this phase"*; Phase 4 did not run, so the condition holds by construction.
+      verify (executed 2026-09-27): `git show --diff-filter=A --name-only` across all ten
+      commits that touched this roadmap — `9d3e40ab0` (2026-09-11) through `19cb97b5b`
+      (2026-09-27) — lists thirteen added files: three evidence artefacts under
+      `agents/evidence/` and ten roadmap files under `agents/roadmaps/`. **No configuration
+      file of any kind was added**, under `src/config/` or anywhere else. The two
+      registry-named configs that do exist — `src/config/assurance-capability-registry.json`
+      and `src/config/metric-registry.yml` — were both last written by `6a9411fc6` on
+      2026-09-07, four days before this roadmap's first commit, and neither carries a provider
+      or a workshop registry.
+- [-] AC-6 — The contract rule is lane-gated, shadow-enforced, framework-neutral, and passes a
       fixture that lands contract and consumer in one commit.
-- [ ] AC-7 — Exactly one non-reference lane exists, and the reason it was chosen is recorded.
-- [ ] AC-8 — The claims file is unchanged by this roadmap.
+      **CANCELLED** — refused by `### blocker: taxonomy-reversal-is-a-second-arrival`
+      § Resolution (2026-09-21), AI council 2/2 for option (b). The rule it describes is
+      Phase 5's whole output and Phase 5 does not run; no rule was written, so there is
+      nothing to be lane-gated or shadow-enforced. Glyph authorised by the owner 2026-09-27.
+- [-] AC-7 — Exactly one non-reference lane exists, and the reason it was chosen is recorded.
+      **CANCELLED** — refused by `### blocker: taxonomy-reversal-is-a-second-arrival`
+      § Resolution (2026-09-21), AI council 2/2 for option (b). Phase 6 adds the lane and
+      Phase 6 does not run. Zero non-reference lanes exist, which is not the "exactly one"
+      this asks for — so it is cancelled, never met. Glyph authorised by the owner 2026-09-27.
+- [x] AC-8 — The claims file is unchanged by this roadmap.
+      **MET — and met BECAUSE nothing was built. A negative criterion the refusal SATISFIES
+      rather than cancels**, and the distinction is load-bearing here rather than pedantic:
+      `[-]` on this line would record in the archive that the claims gate was *cancelled*,
+      which is false. The gate ran and passed.
+      verify (executed 2026-09-27): `git show --name-only --format= <c> -- docs/CLAIMS.md`
+      returns **zero paths for every one of this roadmap's ten commits**, so no commit of
+      this roadmap touched the file. `docs/CLAIMS.md` was last modified by `3f3421031`
+      (2026-09-20, PR #2061, release holds that refuse) — an unrelated change on a different
+      roadmap. And the gate is green rather than merely unexercised:
+      `./scripts-run src/scripts/check_claims` exits **0** — *9 markered claim(s) bound ·
+      ledger 102 entries (61 backed, 33 unbacked inventory)*.
