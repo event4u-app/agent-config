@@ -84,6 +84,7 @@ import * as mcp_consent from './_lib/mcp_consent_residual.js';
 import * as scoped_projection from './_lib/scoped_projection.js';
 import { createConflictTracker } from '../install/conflictTracker.js';
 import { mkdirp, pathExists, resolvePath, sha256OfFile } from '../install/fsPrimitives.js';
+import { fileEntry as _file_entry, filesByToolFromDeploy as _files_by_tool_from_deploy, hydrateRecordedInventories, preservedIndex, readRecordedByTool, reconcileToolFiles, type ManifestFileEntry } from '../install/manifestFiles.js';
 import { EXIT_COMPLETED_WITH_CONFLICTS } from '../install/preserve.js';
 import * as surface_tiers from './_lib/surface_tiers.js';
 import * as global_deploy_inventory from './_lib/global_deploy_inventory.js';
@@ -2332,36 +2333,7 @@ void prompt_collision_choice;
 
 // --- Manifest / inventory helpers (lazy-import twins are eager static here) ---
 
-function _sha256_of_file(p: string): string | null {
-    return sha256OfFile(p);
-}
-
-function _file_entry(p: string, kind: string, hash_content: boolean): Record<string, unknown> {
-    return {
-        path: p,
-        kind,
-        sha256: hash_content ? _sha256_of_file(p) : null,
-    };
-}
-
 type DeployResult = scoped_projection.DeployTuple;
-
-function _files_by_tool_from_deploy(
-    deploy_results: Record<string, DeployResult>,
-): Record<string, Record<string, unknown>[]> {
-    const out: Record<string, Record<string, unknown>[]> = {};
-    for (const tool_id of Object.keys(deploy_results)) {
-        const [, , status, paths] = deploy_results[tool_id] as DeployResult;
-        if (status === 'deployed') {
-            out[tool_id] = paths.map((p) => _file_entry(p, 'deployed', true));
-        } else if (status === 'marker') {
-            out[tool_id] = paths.map((p) => _file_entry(p, 'marker', true));
-        } else {
-            out[tool_id] = [];
-        }
-    }
-    return out;
-}
 
 function _files_by_tool_from_bridges(
     tools: Set<string>,
@@ -2386,21 +2358,29 @@ function _update_installed_tools_manifest(
     tools: Set<string>,
     scope: string,
     force: boolean,
-    files_by_tool: Record<string, Record<string, unknown>[]> | null = null,
+    files_by_tool: Record<string, ManifestFileEntry[] | null> | null = null,
     merged_keys_by_tool: Record<string, Record<string, unknown>[]> | null = null,
 ): number {
     const target = installed_tools.manifest_path(project_root);
     const existing = (installed_tools.read_manifest(target) ?? {}) as Record<string, unknown>;
-    let entries = Array.isArray(existing['tools'])
-        ? ([...(existing['tools'] as unknown[])] as Record<string, unknown>[])
-        : [];
+    // Hydrated because `read_manifest` drops nested `files[]` by design: without
+    // this, rewriting the manifest erases every recorded digest it did not just
+    // rebuild, and an unrecorded managed file is overwritten on the next run.
+    const prior = readRecordedByTool(target, project_root);
+    const preserved = preservedIndex(tracker.conflictState.preserved, tracker.conflictState.staged);
+    let entries = hydrateRecordedInventories(
+        Array.isArray(existing['tools'])
+            ? ([...(existing['tools'] as unknown[])] as Record<string, unknown>[])
+            : [],
+        prior,
+    );
 
     const version = installed_lock.current_package_version();
 
     for (const tool_id of [...tools].sort()) {
         const marker = _bridge_marker(tool_id, scope);
         if (!marker) continue;
-        const files = files_by_tool ? (files_by_tool[tool_id] ?? null) : null;
+        const files = reconcileToolFiles(files_by_tool?.[tool_id], prior.get(tool_id), preserved);
         const merged_keys = merged_keys_by_tool ? (merged_keys_by_tool[tool_id] ?? null) : null;
         try {
             entries = installed_tools.upsert_tool(entries, {
@@ -5224,6 +5204,7 @@ export {
     _format_global_root_for_marker,
     _files_by_tool_from_bridges,
     _files_by_tool_from_deploy,
+    _update_installed_tools_manifest,
     _verify_deploy_targets,
     _wizard_should_launch,
     _dry_run_summary,

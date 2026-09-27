@@ -30,7 +30,12 @@ import { recordedHashesForRoot } from './recordedOwnership.js';
  * — share a `preserved` list.
  */
 export function createConflictTracker(host) {
-    const conflictState = { root: null, recorded: null, preserved: [] };
+    const conflictState = {
+        root: null,
+        recorded: null,
+        preserved: [],
+        staged: new Map(),
+    };
     /**
      * Recorded digest for `target`, or `undefined` when this tree cannot say.
      *
@@ -56,12 +61,41 @@ export function createConflictTracker(host) {
         const real = resolvePath(target);
         return real === plain ? undefined : conflictState.recorded.get(real);
     }
+    /**
+     * Write the package bytes to the sidecar through a temp-and-rename, then
+     * record the digest actually staged.
+     *
+     * The digest is re-read from the sidecar rather than taken from `source`
+     * so it stays true if the staged bytes ever stop being a byte copy of the
+     * package file.
+     */
+    function stage(target, source, sidecar) {
+        mkdirp(path.dirname(sidecar));
+        const tmp = path.join(path.dirname(sidecar), `.${path.basename(sidecar)}.${process.pid}.${crypto.randomBytes(6).toString('hex')}.tmp`);
+        try {
+            fs.copyFileSync(source, tmp);
+            fs.renameSync(tmp, sidecar);
+        }
+        catch (exc) {
+            try {
+                fs.unlinkSync(tmp);
+            }
+            catch {
+                /* swallow — best-effort cleanup of our own temp file */
+            }
+            host.fail(`Could not stage package content for ${target} at ${sidecar}: ${String(exc)}. ` +
+                'Nothing was written; the managed file is unchanged.');
+        }
+        conflictState.staged.set(sidecar, sha256OfFile(sidecar));
+        host.logWrite(sidecar);
+    }
     return {
         conflictState,
         begin(root) {
             conflictState.root = root;
             conflictState.recorded = null;
             conflictState.preserved = [];
+            conflictState.staged = new Map();
         },
         /**
          * The on-disk digest is computed HERE rather than carried from the
@@ -89,28 +123,32 @@ export function createConflictTracker(host) {
             const sidecar = sidecarPathFor(target);
             const sourceSha = sha256OfFile(source);
             if (pathExists(sidecar)) {
-                if (sourceSha === null || sha256OfFile(sidecar) !== sourceSha) {
+                const onDisk = sha256OfFile(sidecar);
+                // Three outcomes, and only the third is a refusal. Identical
+                // bytes: this run re-staged what is already there. Bytes this
+                // tree RECORDED staging: an earlier run staged them against an
+                // older package version and the user has not merged them yet —
+                // which is the staging workflow behaving as designed, so the
+                // stale copy is refreshed rather than treated as a stranger's
+                // file. Anything else is unattributable and the run stops.
+                //
+                // Ownership is decided by the recorded digest, never by whether
+                // the bytes happen to match the CURRENT package: that test
+                // called every unmerged sidecar foreign the moment a new
+                // version shipped, and aborted the whole install saying this
+                // install could not show it wrote a file it had written.
+                if (onDisk !== null && sourceSha !== null && onDisk === sourceSha) {
+                    conflictState.staged.set(sidecar, onDisk);
+                }
+                else if (onDisk !== null && onDisk === recordedHashFor(sidecar)) {
+                    stage(target, source, sidecar);
+                }
+                else {
                     host.fail(foreignSidecarMessage(target, sidecar));
                 }
             }
             else {
-                mkdirp(path.dirname(sidecar));
-                const tmp = path.join(path.dirname(sidecar), `.${path.basename(sidecar)}.${process.pid}.${crypto.randomBytes(6).toString('hex')}.tmp`);
-                try {
-                    fs.copyFileSync(source, tmp);
-                    fs.renameSync(tmp, sidecar);
-                }
-                catch (exc) {
-                    try {
-                        fs.unlinkSync(tmp);
-                    }
-                    catch {
-                        /* swallow — best-effort cleanup of our own temp file */
-                    }
-                    host.fail(`Could not stage package content for ${target} at ${sidecar}: ${String(exc)}. ` +
-                        'Nothing was written; the managed file is unchanged.');
-                }
-                host.logWrite(sidecar);
+                stage(target, source, sidecar);
             }
             // `packageRoot` is accepted and unused: `_inject_package_tag` stamps
             // `package:` / `source_path:` into a DEPLOYED `.md`, and the sidecar
