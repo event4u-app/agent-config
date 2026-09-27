@@ -29,11 +29,15 @@
  * documented. Failing closed here means leaving a file alone, which is the
  * recoverable direction.
  *
- * NO OWNERSHIP CLAIM OVER AN EXISTING SIDECAR. A file already sitting at the
- * sidecar path is only ever left alone: identical bytes are a no-op, anything
- * else refuses. A pathname matching the convention is not provenance, and
- * destroying an unrecognised file while claiming to protect files would be the
- * defect this module exists to remove, wearing the fix's clothes.
+ * NO UNPROVEN OWNERSHIP CLAIM OVER AN EXISTING SIDECAR. A pathname matching the
+ * convention is not provenance, and destroying an unrecognised file while
+ * claiming to protect files would be the defect this module exists to remove,
+ * wearing the fix's clothes. So a file at the sidecar path is replaced only
+ * when the manifest RECORDS this tree staging those exact bytes; a sidecar
+ * still holding an older version's content is therefore refreshed rather than
+ * refused, because leaving it unmerged is the staging workflow working. Bytes
+ * matching neither the current content nor anything recorded are left alone and
+ * the run stops.
  */
 import { classifyOwnership } from './recordedOwnership.js';
 /**
@@ -129,6 +133,23 @@ export function foreignSidecarMessage(target, sidecar) {
  * this module's, and because `src/server/routes/wizard.ts` sits against the
  * 1,500-line source ceiling that `check_source_size_budget` ratchets.
  */
+/**
+ * Did the installer COMPLETE, whatever it exited with?
+ *
+ * `3` is a completion with preserved files, not a failure. The wizard's
+ * fallback path — the one that speaks when the installer dies before its
+ * terminal frame — tested `exitCode === 0` and reported everything else as
+ * `BRIDGE_FAILED`, so a run that installed everything it could and kept the
+ * user's edits was announced to the operator as a failed install.
+ *
+ * Here rather than in the route for the same reason as {@link installDoneSummary}:
+ * the semantics are this module's, and `src/server/routes/wizard.ts` sits
+ * against the 1,500-line source ceiling that `check_source_size_budget`
+ * ratchets.
+ */
+export function installCompleted(exitCode) {
+    return exitCode === 0 || exitCode === EXIT_COMPLETED_WITH_CONFLICTS;
+}
 export function installDoneSummary(frame, written, total) {
     const conflicts = typeof frame.conflicts === 'number' ? frame.conflicts : 0;
     return conflicts > 0 ? { written, total, conflicts } : { written, total };
