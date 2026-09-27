@@ -20,13 +20,17 @@
  * Usage:
  *   tsx src/scripts/install.ts                     # defaults: rule_loading_tier=balanced
  *   tsx src/scripts/install.ts --profile=minimal   # set rule_loading_tier=minimal (kernel only)
- *   tsx src/scripts/install.ts --force             # accepted (no-op): installs always overwrite
+ *   tsx src/scripts/install.ts --force             # replace managed files the user has edited
  *   tsx src/scripts/install.ts --skip-bridges      # only create .agent-settings.yml
  *   tsx src/scripts/install.ts --project <dir>     # override project root
  *
- * Idempotent — safe to run multiple times. A run always refreshes every
- * deployed file with the current package content; user configuration
- * (.agent-settings.yml) is merged by the settings layer, never clobbered.
+ * Idempotent — safe to run multiple times. A run refreshes every deployed file
+ * with the current package content, EXCEPT a managed file whose bytes diverge
+ * from the digest the install manifest recorded: that one is preserved, package
+ * content is staged beside it as `<path>.agent-config.new`, and the run exits 3
+ * rather than 0 so the staleness is stated, not silent; `--force` replaces it
+ * instead. Contract + state machine: `install/preserve.ts`, `conflictTracker.ts`.
+ * User config (.agent-settings.yml) is settings-layer merged, never clobbered.
  *
  * --- Parity notes (ADR-200) ---
  *
@@ -78,6 +82,9 @@ import * as installed_lock from './_lib/installed_lock.js';
 import * as mcp_bridge from './_lib/mcp_bridge.js';
 import * as mcp_consent from './_lib/mcp_consent_residual.js';
 import * as scoped_projection from './_lib/scoped_projection.js';
+import { createConflictTracker } from '../install/conflictTracker.js';
+import { mkdirp, pathExists, resolvePath, sha256OfFile } from '../install/fsPrimitives.js';
+import { EXIT_COMPLETED_WITH_CONFLICTS } from '../install/preserve.js';
 import * as surface_tiers from './_lib/surface_tiers.js';
 import * as global_deploy_inventory from './_lib/global_deploy_inventory.js';
 import * as rule_layer_overlap from './_lib/rule_layer_overlap.js';
@@ -146,15 +153,6 @@ function expanduser(p: string): string {
     return p;
 }
 
-/** `Path.resolve()` — absolute, symlink-resolved where possible. */
-function resolvePath(p: string): string {
-    try {
-        return fs.realpathSync(path.resolve(p));
-    } catch {
-        return path.resolve(p);
-    }
-}
-
 function isFile(p: string): boolean {
     try {
         return fs.statSync(p).isFile();
@@ -166,15 +164,6 @@ function isFile(p: string): boolean {
 function isDir(p: string): boolean {
     try {
         return fs.statSync(p).isDirectory();
-    } catch {
-        return false;
-    }
-}
-
-function pathExists(p: string): boolean {
-    try {
-        fs.statSync(p);
-        return true;
     } catch {
         return false;
     }
@@ -194,11 +183,6 @@ function readText(p: string): string {
 
 function writeText(p: string, content: string): void {
     fs.writeFileSync(p, content, 'utf-8');
-}
-
-/** `path.mkdir(parents=True, exist_ok=True)`. */
-function mkdirp(p: string): void {
-    fs.mkdirSync(p, { recursive: true });
 }
 
 /**
@@ -239,17 +223,6 @@ function countZips(directory: string): number {
         if (name.endsWith('.zip')) n += 1;
     }
     return n;
-}
-
-/** `hashlib.sha256(data).hexdigest()` of a file's bytes, or null when unreadable. */
-function sha256OfFile(p: string): string | null {
-    let data: Buffer;
-    try {
-        data = fs.readFileSync(p);
-    } catch {
-        return null;
-    }
-    return crypto.createHash('sha256').update(data).digest('hex');
 }
 
 /**
@@ -383,6 +356,11 @@ function _emit_progress_terminal(rc: number): void {
     if (!state.PROGRESS_NDJSON) return;
     if (rc === 0) {
         _emit_progress({ type: 'done' });
+    } else if (rc === EXIT_COMPLETED_WITH_CONFLICTS) {
+        // A conflict is a completion, not a failure, so the count rides on
+        // `done`, not an `error` frame. Zero conflicts never reach here, so that
+        // frame stays byte-identical to `{"type":"done"}`.
+        _emit_progress({ type: 'done', conflicts: tracker.conflictState.preserved.length });
     } else {
         _emit_progress({ type: 'error', code: 'E_INSTALL', exitCode: rc });
     }
@@ -454,10 +432,19 @@ function _is_interactive(): boolean {
     }
 }
 
-function _resolve_file_conflict(_target: string, _force_hint: boolean): string {
-    // del force_hint / del target — deploys always overwrite our own content.
-    return 'write';
-}
+/**
+ * Per-run conflict tracking; the state machine, the sidecar staging and the
+ * exit-code folding live in `src/install/conflictTracker.ts`, and only the
+ * wiring is here. Module scope, like `state` above, because
+ * `_copy_dir_dereferencing_symlinks` is reached through six `_deploy_*` frames
+ * carrying no project root — `begin()` scopes the tracker to a run instead.
+ */
+const tracker = createConflictTracker({
+    warn,
+    fail,
+    logWrite: (target) => _log_tx_entry('write', target),
+    emitProgress: (frame) => _emit_progress(frame),
+});
 
 // --- File utilities ---
 
@@ -2845,8 +2832,9 @@ function _copy_dir_dereferencing_symlinks(
             return [0, 0, written_paths];
         }
         mkdirp(path.dirname(dest));
-        const decision = _resolve_file_conflict(dest, force);
-        if (decision === 'skip') {
+        const decision = tracker.resolve(dest, force);
+        if (decision === 'preserve') {
+            tracker.preserve(dest, resolved_src, package_root);
             _log_tx_entry('skip', dest);
             return [0, 1, written_paths];
         }
@@ -2919,8 +2907,9 @@ function _copy_dir_dereferencing_symlinks(
         if (file_filter !== null && !file_filter(entry)) {
             continue;
         }
-        const decision = _resolve_file_conflict(target, force);
-        if (decision === 'skip') {
+        const decision = tracker.resolve(target, force);
+        if (decision === 'preserve') {
+            tracker.preserve(target, resolved, package_root);
             skipped += 1;
             _log_tx_entry('skip', target);
             continue;
@@ -4853,10 +4842,16 @@ function main(argv: string[]): number {
             const rc = _run_migrate_to_global(detect_root);
             if (rc !== 0) return rc;
         }
-        const rc = install_global(parsed_tools, opts.force, detect_root, opts.core_only);
+        tracker.begin(detect_root);
+        const rc = tracker.finalizeRc(
+            install_global(parsed_tools, opts.force, detect_root, opts.core_only),
+        );
         _emit_progress_terminal(rc);
-        if (rc === 0 && wizard_handoff) {
-            return _wizard_spawn(detect_root, false);
+        // A preserved edit does not withhold the wizard, but it survives one: a
+        // zero from the wizard must not erase the conflict signal this run earned.
+        if ((rc === 0 || rc === EXIT_COMPLETED_WITH_CONFLICTS) && wizard_handoff) {
+            const wizard_rc = _wizard_spawn(detect_root, false);
+            return wizard_rc === 0 ? rc : wizard_rc;
         }
         return rc;
     }
@@ -4864,10 +4859,12 @@ function main(argv: string[]): number {
     const project_root =
         custom_path || resolvePath(opts.project || process.env['PROJECT_ROOT'] || process.cwd());
     const is_first_run = !pathExists(path.join(project_root, SETTINGS_FILE));
-    const rc = _main_project_install(opts, project_root, parsed_tools, is_first_run);
+    tracker.begin(project_root);
+    let rc = _main_project_install(opts, project_root, parsed_tools, is_first_run);
     if (rc === 0 && opts.interactive) {
         run_interactive_init(project_root, opts.force);
     }
+    rc = tracker.finalizeRc(rc);
     _emit_progress_terminal(rc);
     return rc;
 }
@@ -5289,6 +5286,9 @@ export {
     // road-to-local-ci-trust: exported for the symlink-confinement tests
     // (PR #1076 review-gate finding).
     _copy_dir_dereferencing_symlinks,
+    // road-to-a-conformance-check-that-can-fail Phase 5.1: the wired tracker,
+    // so the preservation path is testable (owner ruling 2026-09-21).
+    tracker,
     _preview_global_reap,
     _resolve_global_rule_scope,
     _rule_filter_for_source,

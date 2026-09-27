@@ -159,18 +159,17 @@ export function checkConflicts(inputs: PlanInputs): PreflightFinding[] {
             c.ownership === 'recorded-modified'
                 ? `managed ${c.kind} file has been edited since we wrote it`
                 : `existing file conflicts with planned ${c.kind} content`,
-        // No remedy here may describe what an install does to the file. This
-        // probe reports on a plan; the writer is `src/scripts/install.ts`,
-        // which overwrites every deployed file unconditionally and documents
-        // `--force` as an accepted no-op. Telling an operator their edit is
-        // safe from a default run would be false — and so was the other arm's
-        // pre-existing "resolve interactively, or pass --force to overwrite",
-        // which named an interactive resolution that path never reaches and a
-        // flag that changes nothing there. Both arms now say only what the
-        // operator can act on.
+        // A remedy here may only describe what an install actually does. Before
+        // the owner ruling of 2026-09-21 the writer overwrote every deployed
+        // file unconditionally, so the `recorded-modified` arm told the
+        // operator to back their edit up. It now preserves that file and stages
+        // the package content beside it, so the same sentence would be false in
+        // the opposite direction — it would understate a protection that ships.
+        // The `unknown` arm is unchanged: nothing is recorded for that path, so
+        // the writer still writes over it.
         remedy:
             c.ownership === 'recorded-modified'
-                ? 'back up your edit — installing refreshes every managed file with package content'
+                ? 'installing preserves your edit and stages package content as <path>.agent-config.new; --force replaces it instead'
                 : 'back up this file — installing writes the planned content over it',
     }));
 }

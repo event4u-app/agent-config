@@ -30,6 +30,46 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ## [Unreleased]
 
+### Changed
+
+- **`agent-config init` no longer overwrites a managed file you have edited.**
+  Owner ruling, 2026-09-21, taken after an AI council split 1/1 on it. Until
+  now the installer's `_resolve_file_conflict` returned `write` for every
+  deployed file and its header recorded `--force` as an accepted no-op
+  "because installs always overwrite" — while the planner had, since the
+  preceding change, produced a list naming exactly the files you had edited.
+  The report named the file and the next install replaced it.
+  A managed file whose bytes diverge from the SHA-256 the install manifest
+  recorded is now **preserved**, and the package content it would have been
+  replaced with is staged beside it as `<path>.agent-config.new` — a
+  tool-owned suffix, not a bare `.new`, so the installer never claims a
+  namespace other tools already write into.
+  **The staleness is deliberately loud, and that is the load-bearing half.**
+  Preserving an edit leaves the active installation not-current, and a stale
+  install exiting `0` would make that silent. So a run that preserved anything
+  exits **`3`** (new, distinct from `0` success, `1` failure and `2` usage),
+  names each preserved file on stderr with the sentence "the active
+  installation is not current", and prints a count. Under `--progress-ndjson`
+  the count also rides on the terminal `done` frame, which the wizard's apply
+  route forwards as `summary.conflicts`; a zero-conflict run's frames are
+  byte-identical to before. **`--force` is now a real escape hatch** — it
+  replaces the managed file and exits `0`.
+  Scripts that treat any non-zero exit from `init` as a failure will see `3`
+  on a tree with local edits. That is the intended signal, not a regression:
+  the install did complete, and the tree is not current.
+  Three things are deliberately absent. There is **no semantic
+  classification** — one byte of divergence from the recorded digest is the
+  whole test, because a format-aware diff would pull per-format parsers into
+  the installer's trusted computing base and a syntactically trivial edit can
+  still be intentional. There is **no fallback to overwriting** under conflict
+  volume or resource pressure, and no bulk accept flag. And an **existing
+  sidecar is never clobbered**: identical bytes are a no-op, anything else
+  fails the run with the package content staged nowhere, because a pathname
+  matching the convention is not proof the installer wrote it.
+  The verdict is computed from a re-hash of the destination **at the moment of
+  the write**, not from the plan: the planner's conflict list is advisory
+  state, and a plan-time verdict is blind to an edit made in between.
+
 ### Fixed
 
 - **The self-review gate reviews again — it had reviewed nothing for four

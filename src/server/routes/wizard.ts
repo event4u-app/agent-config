@@ -45,6 +45,7 @@ import { detectRtk, rtkInstallCommands, RTK_UPSTREAM_REPO } from '../../install/
 import { readSelectedTools, readSelectedPacks, writeSelectedTools } from '../../install/selectedTools.js';
 import { detectAgentSwitch, AGENT_SWITCH_INSTALL_COMMAND, AGENT_SWITCH_REPO } from '../../install/agentSwitchDetection.js';
 import { readDismissedRecommendations, dismissRecommendation } from '../../install/wizardDismissals.js';
+import { installDoneSummary } from '../../install/preserve.js';
 import { apiOnQuotaView } from '../../scripts/ai_council/transport_resolver.js';
 
 export interface WizardRouteOptions {
@@ -1287,7 +1288,7 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                             });
                         } else if (t === 'done') {
                             sawTerminal = true;
-                            writeFrame(reply, { type: 'done', summary: { written, total } });
+                            writeFrame(reply, { type: 'done', summary: installDoneSummary(obj, written, total) });
                         } else if (t === 'error') {
                             sawTerminal = true;
                             writeFrame(reply, {
