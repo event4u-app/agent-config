@@ -45,7 +45,7 @@ import { detectRtk, rtkInstallCommands, RTK_UPSTREAM_REPO } from '../../install/
 import { readSelectedTools, readSelectedPacks, writeSelectedTools } from '../../install/selectedTools.js';
 import { detectAgentSwitch, AGENT_SWITCH_INSTALL_COMMAND, AGENT_SWITCH_REPO } from '../../install/agentSwitchDetection.js';
 import { readDismissedRecommendations, dismissRecommendation } from '../../install/wizardDismissals.js';
-import { installDoneSummary } from '../../install/preserve.js';
+import { installCompleted, installDoneSummary } from '../../install/preserve.js';
 import { apiOnQuotaView } from '../../scripts/ai_council/transport_resolver.js';
 
 export interface WizardRouteOptions {
@@ -1269,6 +1269,7 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
             let written = 0;
             let total = 0;
             let sawTerminal = false;
+            let conflictCount = 0;
             try {
                 await fs.writeFile(tmpPath, JSON.stringify(payload), { mode: 0o600 });
                 const result = await streamInstaller(
@@ -1286,6 +1287,8 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                                 written,
                                 total,
                             });
+                        } else if (t === 'conflicts') {
+                            conflictCount = typeof obj.count === 'number' ? obj.count : conflictCount;
                         } else if (t === 'done') {
                             sawTerminal = true;
                             writeFrame(reply, { type: 'done', summary: installDoneSummary(obj, written, total) });
@@ -1304,8 +1307,9 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                 // install.py exited without a terminal frame (crash / kill): emit
                 // one so the UI never hangs waiting for `done`/`error`.
                 if (!sawTerminal) {
-                    if (result.exitCode === 0) {
-                        writeFrame(reply, { type: 'done', summary: { written, total } });
+                    if (installCompleted(result.exitCode)) {
+                        const c = { conflicts: result.exitCode === 0 ? 0 : conflictCount };
+                        writeFrame(reply, { type: 'done', summary: installDoneSummary(c, written, total) });
                     } else {
                         writeFrame(reply, {
                             type: 'error',
