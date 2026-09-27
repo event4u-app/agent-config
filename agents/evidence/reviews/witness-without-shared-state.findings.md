@@ -1,6 +1,10 @@
 # Findings: witness-without-shared-state — test-weakening verdict
 
+<!-- evidence-type: original-review -->
 <!-- test-weakening-review: v1 | reviewed: 2026-09-27 | diff: b6e934e83 | file: tests/scripts/witness/reach_doctor_readonly.test.ts | reviewer: fresh-subagent-no-prior-context | prompt: ./witness-without-shared-state.review-input/prompt.md -->
+
+`original-review` and not `current-binding`: this is the review as it was produced against
+commit `b6e934e83`, and it asserts nothing about any later state of the tree.
 
 `check_test_weakening` measured **2 assertion(s) net-removed** in
 `tests/scripts/witness/reach_doctor_readonly.test.ts` on commit `b6e934e83` and refused it
