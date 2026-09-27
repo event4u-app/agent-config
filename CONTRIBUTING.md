@@ -101,6 +101,15 @@ task lint-skills      # ./scripts-run src/scripts/skill_linter --all
 - Keep commits focused. Split mechanical renames from logic changes.
 - Open the PR against `main` with a short description of the change,
   motivation, and any notes for reviewers.
+- **Fixed a diagnosed, non-deterministic CI flake with a reusable root cause?**
+  Add a `Flake-diagnosis:` trailer to the fixing commit's body naming the
+  class in a few words, e.g. `Flake-diagnosis: gitignored-dir-watch-scope |
+  parallel writes to an unrelated ignored dir trip a whole-worktree witness`.
+  Scope it narrowly — a diagnosed, non-deterministic failure whose root cause
+  could plausibly recur, never a deterministic bug or an unexplained one — so
+  the convention stays a one-line note, not a registry. Search prior
+  diagnoses with `git log --all --grep="Flake-diagnosis:"` before
+  re-investigating a failure shape from scratch.
 
 ### Branch names, PR text and commit messages are a gated surface
 
