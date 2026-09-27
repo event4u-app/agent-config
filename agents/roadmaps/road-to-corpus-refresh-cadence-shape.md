@@ -39,8 +39,10 @@ had.
 
 ## Phase 1 — Put the question, then apply the answer
 
-- [ ] **1.1 Put the cadence-versus-batch question to the maintainer and record
-      the answer.** Two options, and the trade-off is real rather than
+- [x] **1.1 Put the cadence-versus-batch question to the maintainer and record
+      the answer.** *(2026-09-27 — delegated by the maintainer to the AI council;
+      answered as D1 below. The recorded decision names the chosen shape and its
+      reason, which is what this step's verify demands.)* Two options, and the trade-off is real rather than
       cosmetic: staggering the four stamps spreads the re-check work across the
       quarter and means at most one corpus reddens at a time, at the cost of
       four separate re-check occasions a year instead of one; keeping the batch
@@ -52,13 +54,37 @@ had.
       verify: a recorded decision exists — an entry under `agents/decisions/`,
       an ADR, or a `## Decisions` row on this roadmap — naming which of the
       three was chosen and why.
-- [ ] **1.2 Apply the recorded answer to the four manifests.** Only the chosen
+- [ ] **1.2 Apply the recorded answer to the four manifests.** *(Under D1 this
+      step is four separate occasions, not one edit: re-check one corpus against
+      its upstream, update only that manifest's `last_checked` to the date the
+      check actually ran, and repeat for the other three on different dates
+      before ~2026-12-27. Editing any stamp without having run its check is the
+      fabrication D1 and Risk 2 both forbid — there is no shortcut here.)* Only the chosen
       option, nothing wider; if the answer was "the batch is intended", this
       step is the one-line note in each manifest saying so, not a no-op.
       verify: for a stagger, the four `upstream.last_checked` values under
       `src/skills/*/data/manifest.json` are no longer all equal and
       `check_corpus_staleness` is green; for an intended batch, each of the four
       manifests carries the note, and the recorded decision from 1.1 is cited.
+
+## Decisions
+
+| id | Decision | Alternatives rejected | Reason | Revisit if |
+|----|----------|----------------------|--------|------------|
+| D1 | **Stagger — achieved prospectively, by four real re-checks on separate dates before ~2026-12-27. The four existing `2026-09-18` stamps are NOT edited.** | (a) Keep the batch and record it as intended — rejected: the facts establish only that the four were *checked* together, never that they are interdependent or share an upstream, so "intended batch" would record a coupling nobody has shown to exist. (b) Change the gate's severity to warn — rejected: it changes the blast radius without answering the cadence question, and leaves a required check that no longer checks. (c) Stagger by editing the stamps — rejected outright, see Reason. | A `last_checked` stamp asserts that a corpus was verified against its upstream on that date. Moving one without a corresponding verification is fabricated evidence — the identical defect this roadmap's parent found in `last_eval`, and precisely the failure mode Risk 2 names. Staggering is the right *shape*; performing four genuine checks on four separate dates is the only honest way to reach it, and it also produces the re-check work the quarterly cadence exists to force. | The four corpora turn out to share an upstream or a release train (then the batch is real and (a) becomes correct); or four separate re-check sittings a year prove operationally impractical; or corpus freshness is shown to be informational rather than safety-relevant. |
+
+**Provenance.** Decided by AI council on 2026-09-27 — 2 of 2 seats present
+(anthropic, openai), 2 rounds, converged, no billable spend. The maintainer
+delegated this specific question to the council in-session, which is the only
+reason an agent-run council answered a question this roadmap reserves to the
+maintainer; absent that delegation the reservation stands. Both seats
+independently rejected stamp-editing, and both arrived at "create the stagger
+through real future checks" without prompting. The council also observed that
+this question and the parent's `last_eval` staleness share one principle —
+evidence must come from the event that proves it — while needing two different
+mechanisms, and asked whether a fixed-cadence gate is the right control at all
+for verification work that is episodic upstream; that second question is NOT
+answered here and is left open.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-27 | reviewer: claude/host -->
@@ -70,7 +96,7 @@ had.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A recorded decision names the chosen shape (stagger, intended
-      batch, or gate-severity change) and its reason.
+- [x] AC-1 — A recorded decision names the chosen shape (stagger, intended
+      batch, or gate-severity change) and its reason. *(D1, 2026-09-27.)*
 - [ ] AC-2 — The four `quarterly` corpus manifests match that decision, and
       `check_corpus_staleness` is green against them.
