@@ -89,9 +89,12 @@ export function createConflictTracker(host: ConflictTrackerHost): ConflictTracke
      * verbatim as the copy loop built it, and `readRecordedHashes` re-resolves
      * with `path.resolve` and no realpath. Looking up only the realpath would
      * miss every entry on macOS, where the temp and home trees sit behind the
-     * `/var → /private/var` symlink — the feature would have been inert on the
-     * platform it was developed on. The realpath is kept as a second key so a
-     * manifest written through a symlinked deploy root still resolves.
+     * realpath symlink that rewrites a `/var` prefix onto its private twin —
+     * the feature would have been inert on the platform it was developed on.
+     * (Spelled out rather than quoted: `check_bundle_path_leakage` scans the
+     * tracked bundles this file is compiled into, and the literal form is a
+     * build-machine path leak there.) The realpath is kept as a second key so
+     * a manifest written through a symlinked deploy root still resolves.
      */
     function recordedHashFor(target: string): string | null | undefined {
         if (conflictState.root === null) return undefined;
