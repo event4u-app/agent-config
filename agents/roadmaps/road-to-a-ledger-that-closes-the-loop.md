@@ -197,6 +197,23 @@ may choose to pay.
       write. Clause (5) governs the interim — below the floor the window is UNDERPOWERED, settles
       nothing, and may be cited for neither direction. **Neither this step nor AC-6 may be flipped
       on the calendar measure alone.**
+      **READING 2026-09-27. No reset condition fired between the two readings, and the bar still
+      does not hold.** `git log --since=2026-09-19 --until=2026-09-28` over
+      `src/scripts/hooks/obligation_settle_hook.ts`, `src/scripts/_lib/obligation_frequency.ts` and
+      `src/scripts/hooks/rule_inject_hook.ts` is empty, so the window keeps qualifying rather than
+      resetting.
+      **Calendar: 14 of >= 30 days. Affected sessions: 4 of >= 50. Shadow rows: 0 of >= 100.**
+      A third and fourth session ledger have landed under `agents/runtime/state/obligations/`,
+      taking the cumulative `delivered` count to **80** across the four ledgers, dated 2026-09-18
+      through 2026-09-27. **All four still carry `"shadow": []`.** The measure the bar counts is
+      still zero.
+      **The rate revises down, not up.** 4 sessions in 14.3 days from window-open is ~0.28/day,
+      against the 2026-09-19 reading's ~0.35/day from 2 sessions in 5.78 days — reaching 50 in
+      roughly **179 days from window-open** (~165 days still to run), longer than the 2026-09-19
+      estimate of 144, not shorter. The session floor remains the governing constraint over the
+      calendar one.
+      **Still open, and still not this step's or AC-6's to flip on the calendar measure alone** —
+      16 calendar days and 46 sessions remain against the respective floors.
 - [x] **6.2 The new detector respects an open subagent dispatch** the way two of the four existing
       detectors do. Both are gated on the dispatch being closed, and neither parent records this —
       an open dispatch would otherwise be refused for a file that dispatch is still writing.
@@ -341,7 +358,7 @@ may choose to pay.
 - **Resolved when:** the choice is stated in this file with its reason.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-19 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-09-27 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -351,7 +368,7 @@ may choose to pay.
 | 4 | The evidence the plans want to read lives in a consumer template | implementation | The work-engine delivery state the source cites sits under the agent-source template tree, which ships into consumer projects and which the hook dispatcher cannot import | Phase 4 discharges only from artefacts the dispatcher already reaches; the template boundary is out of scope until it is designed | Phase 4 — Discharge, read from the diff and not from the tool event |
 | 5 | Phase 3 lands and Phase 4 never does | product | The roadmap would then have added a second write-only state file beside the one it exists to give a reader — the exact defect, doubled | Phase 3 forbids a reader by its own exit criterion, and Phase 4 is the only phase that adds one; a Phase-3-only merge is the stated failure condition | Phase 3 — The ledger, write side only |
 | 6 | The corrected figures are adopted from the source anyway | implementation | Nine of the source's claims were wrong at its own drafting commit, and the three load-bearing counts read plausibly | Phase 1.2 names all three with their measurement, and Phase 1.1 commits the census output so a later reader checks a file rather than a memory | Phase 1 — Re-census, because the source's own numbers are wrong |
-| 7 | The session measure fills far slower than the calendar one, so the pre-registered bar stalls on the session floor rather than on time | implementation | The window needs `>= 50 affected sessions`. Re-measured 2026-09-19, correcting the 2026-09-14 entry: the clock is NOT gated on a release — `16.0.0` still excludes `70b3559bd` and carries no `appendDelivered`, yet 2 session ledgers exist, because the host dispatcher prefers this checkout's own `dist/hooks/dispatch.js`. The real bound is narrower: only sessions run inside this maintainer checkout write rows, at ~0.35/day, which reaches 50 in ~144 days against a 30-day calendar measure | Recorded at step 6.1 in both directions: `delivered` rows are not `shadow` rows and the latter remain 0 of >= 100; the session floor, not the calendar, is the governing constraint; and neither 6.1 nor AC-6 may be flipped on the calendar measure alone | Phase 6 — Arm the detector, conditional like its siblings |
+| 7 | The session measure fills far slower than the calendar one, so the pre-registered bar stalls on the session floor rather than on time | implementation | The window needs `>= 50 affected sessions`. Re-measured 2026-09-27, correcting the 2026-09-19 entry: the clock is NOT gated on a release — `16.0.0` still excludes `70b3559bd` and carries no `appendDelivered`, yet 4 session ledgers now exist, because the host dispatcher prefers this checkout's own `dist/hooks/dispatch.js`. The real bound is narrower: only sessions run inside this maintainer checkout write rows, at ~0.28/day (revised down from ~0.35/day), which reaches 50 in ~179 days from window-open against a 30-day calendar measure | Recorded at step 6.1 in both directions: `delivered` rows are not `shadow` rows and the latter remain 0 of >= 100; the session floor, not the calendar, is the governing constraint; and neither 6.1 nor AC-6 may be flipped on the calendar measure alone | Phase 6 — Arm the detector, conditional like its siblings |
 
 ## Acceptance Criteria
 
@@ -367,12 +384,13 @@ may choose to pay.
       post-tool p95 is not above the Phase 1 baseline.
 - [ ] AC-6 — The shadow window produced zero refusals, and its bar, sample floor and demotion
       condition were registered before any code able to refuse existed.
-      OPEN. Registration is done; the window is not. Reading 2026-09-19 at step 6.1 — 5 of
-      >= 30 calendar days, 2 of >= 50 affected sessions, 0 of >= 100 shadow rows. The session
+      OPEN. Registration is done; the window is not. Reading 2026-09-27 at step 6.1 — 14 of
+      >= 30 calendar days, 4 of >= 50 affected sessions, 0 of >= 100 shadow rows. The session
       measure has opened (the 2026-09-14 installation-lag diagnosis is refuted there), but it
-      fills only from sessions run inside this maintainer checkout, at a rate that reaches the
-      50-session floor long after the 30-day one. Zero refusals so far is not yet a pass: clause
-      (5) makes an under-floor window UNDERPOWERED, citable for neither direction.
+      fills only from sessions run inside this maintainer checkout, at a rate (~0.28/day, revised
+      down from the 2026-09-19 reading's ~0.35/day) that reaches the 50-session floor long after
+      the 30-day one. Zero refusals so far is not yet a pass: clause (5) makes an under-floor
+      window UNDERPOWERED, citable for neither direction.
 - [x] AC-7 — The armed detector is silent while a subagent dispatch is open, emits one continuation
       per missing set rather than one per obligation, and never refuses on classes `none` or
       `judge`.
