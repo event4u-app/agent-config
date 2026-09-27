@@ -84,7 +84,7 @@ import * as mcp_consent from './_lib/mcp_consent_residual.js';
 import * as scoped_projection from './_lib/scoped_projection.js';
 import { createConflictTracker } from '../install/conflictTracker.js';
 import { mkdirp, pathExists, resolvePath, sha256OfFile } from '../install/fsPrimitives.js';
-import { fileEntry as _file_entry, filesByToolFromDeploy as _files_by_tool_from_deploy, hydrateRecordedInventories, preservedIndex, readRecordedByTool, reconcileToolFiles, type ManifestFileEntry } from '../install/manifestFiles.js';
+import { filesByToolFromBridges as _files_by_tool_from_bridges, filesByToolFromDeploy as _files_by_tool_from_deploy, hydrateRecordedInventories, preservedIndex, readRecordedByTool, reconcileToolFiles, type ManifestFileEntry } from '../install/manifestFiles.js';
 import { EXIT_COMPLETED_WITH_CONFLICTS } from '../install/preserve.js';
 import * as surface_tiers from './_lib/surface_tiers.js';
 import * as global_deploy_inventory from './_lib/global_deploy_inventory.js';
@@ -445,6 +445,8 @@ const tracker = createConflictTracker({
     fail,
     logWrite: (target) => _log_tx_entry('write', target),
     emitProgress: (frame) => _emit_progress(frame),
+    tagDeployed: (target, source, package_root) =>
+        _inject_package_tag(target, source, package_root),
 });
 
 // --- File utilities ---
@@ -2335,24 +2337,6 @@ void prompt_collision_choice;
 
 type DeployResult = scoped_projection.DeployTuple;
 
-function _files_by_tool_from_bridges(
-    tools: Set<string>,
-    project_root: string,
-    scope: string,
-): Record<string, Record<string, unknown>[]> {
-    const out: Record<string, Record<string, unknown>[]> = {};
-    for (const tool_id of [...tools].sort()) {
-        const marker = _bridge_marker(tool_id, scope);
-        if (!marker) continue;
-        let marker_path = marker;
-        if (!path.isAbsolute(marker_path)) {
-            marker_path = path.join(project_root, marker_path);
-        }
-        out[tool_id] = [_file_entry(marker_path, 'bridge', false)];
-    }
-    return out;
-}
-
 function _update_installed_tools_manifest(
     project_root: string,
     tools: Set<string>,
@@ -2909,7 +2893,7 @@ function _claude_desktop_bundles_dir(): string {
 }
 
 function _write_claude_desktop_marker(
-    _force: boolean,
+    force: boolean,
     lockfile_path: string,
     bundles_dir: string,
     bundle_count: number,
@@ -2918,7 +2902,15 @@ function _write_claude_desktop_marker(
     const target = path.join(anchor, 'agent-config.md');
     mkdirp(anchor);
     const body = claudeDesktopMarkerBody(lockfile_path, anchor, bundles_dir, bundle_count);
+    // Generated, but manifest-recorded with a digest — so it is in the class the
+    // preservation ruling covers, and it used to write unconditionally, ignoring
+    // even `--force`, because the tracker was wired only into the copy loop.
+    if (tracker.resolve(target, force) === 'preserve') {
+        tracker.preserveContent(target, body);
+        return [0, 1, []];
+    }
     writeText(target, body);
+    _log_tx_entry('write', target);
     return [1, 0, [target]];
 }
 
@@ -3112,6 +3104,7 @@ function _deploy_global_content(
                 info,
                 warn,
                 res,
+                new Set(tracker.conflictState.preserved.map((p) => path.resolve(p))),
             );
         }
 
@@ -5088,7 +5081,7 @@ function _main_project_install(
     }
 
     if (!opts.skip_bridges) {
-        const files_by_tool = _files_by_tool_from_bridges(parsed_tools, project_root, 'project');
+        const files_by_tool = _files_by_tool_from_bridges(parsed_tools, project_root, 'project', _bridge_marker);
         const rc = _update_installed_tools_manifest(
             project_root,
             parsed_tools,

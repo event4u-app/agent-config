@@ -43,7 +43,12 @@ describe('install — preservation survives repeated installs', () => {
      */
     function install(force = false): number {
         inst.tracker.begin(root);
-        const [written, skipped, paths] = inst._copy_dir_dereferencing_symlinks(src, dest, force);
+        const [written, skipped, paths] = inst._copy_dir_dereferencing_symlinks(
+            src,
+            dest,
+            force,
+            src,
+        );
         inst._update_installed_tools_manifest(
             root,
             new Set([TOOL]),
@@ -144,6 +149,41 @@ describe('install — preservation survives repeated installs', () => {
         expect(rc).toBe(EXIT_COMPLETED_WITH_CONFLICTS);
         expect(fs.readFileSync(sidecarPathFor(target), 'utf8')).toBe('# v3\n');
         expect(fs.readFileSync(target, 'utf8')).toBe(edit);
+    });
+
+    it('merging the sidecar resolves the conflict, and the next install is clean', () => {
+        const edit = '# v1\nmy own note\n';
+
+        publish('# v1\n');
+        install();
+        fs.writeFileSync(target, edit);
+        publish('# v2\n');
+        expect(install()).toBe(EXIT_COMPLETED_WITH_CONFLICTS);
+
+        // The documented resolution: move the staged content over the file.
+        fs.renameSync(sidecarPathFor(target), target);
+
+        // It must now MATCH what the run recorded, or the conflict is
+        // unresolvable by hand and `--force` becomes the only way out.
+        expect(install()).toBe(0);
+        expect(fs.readFileSync(target, 'utf8')).toBe('# v2\n');
+    });
+
+    it('stages the file the installer WOULD have written, tag and all', () => {
+        // A deployed `.md` is the package bytes plus the install-time
+        // `package:` tag. A sidecar without it merges into a file the reaper
+        // can no longer prove it owns.
+        const framed = '---\ntype: auto\n---\n\n# v1\n';
+        publish(framed);
+        install();
+        const deployed = fs.readFileSync(target, 'utf8');
+        expect(deployed).toContain('package:');
+
+        fs.writeFileSync(target, `${deployed}my own note\n`);
+        publish('---\ntype: auto\n---\n\n# v2\n');
+        expect(install()).toBe(EXIT_COMPLETED_WITH_CONFLICTS);
+
+        expect(fs.readFileSync(sidecarPathFor(target), 'utf8')).toContain('package:');
     });
 
     it('still refuses a sidecar path holding bytes it cannot attribute to itself', () => {
