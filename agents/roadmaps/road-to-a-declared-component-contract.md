@@ -538,7 +538,7 @@ exists to prevent.
   same external system; correcting the tool names does not license adopting them.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-19 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-09-27 | reviewer: claude/host -->
 
 **Re-reviewed 2026-09-13, after Phase 1 landed.** All six rows stand as written; two have had
 their mitigation move from planned to real, and one row's premise was strengthened by a
@@ -577,6 +577,37 @@ and that is a change to the register rather than a note beside it.
   input as a hazard.
 - **Rows 1 and 6 are unchanged from the 2026-09-13 reading.** Rows 3, 4 and 5 remain unexercised;
   their phases still did not run.
+
+**Re-reviewed 2026-09-27, after the reversal was refused.** Six rows still, no row added, no
+row removed. The ruling does not falsify a row; it changes which rows can still be *reached*, and
+that distinction is the reading.
+
+- **Row 1 is moot on its own terms, and is kept rather than discharged.** It names the hazard
+  *"the reversal happens without its guard"*. The council ruled (b) — the reversal does not happen
+  at all — so the hazard has no occasion to fire. That is not the same as a mitigation having
+  worked, and marking it discharged would claim a guard defeated a reversal it never met. Its
+  first half ran anyway: Phase 1 landed the fixture, which is this roadmap's real yield. Its
+  second half (2.2 amends the fixture under the record) is now **refused**, not pending — there is
+  no record for it to amend.
+- **Row 6 is the one row the ruling makes MORE live, and it is now the register's only active
+  row.** It names *"the subject arrives a third time"*. The second arrival is what this round
+  disposed of, so a third is the standing risk rather than a speculative one, and the archived
+  roadmap's own risk row predicted this arrival correctly inside three weeks. Its mitigation is
+  real and no longer prose-only: the fixture exists, was observed red against a planted five-level
+  name, and the arrival count now sits under the title of this file and at the archived file's
+  Outcome. A third arrival meets a test, a counter and a recorded disposition.
+- **Rows 3, 4 and 5 are unreachable on these terms, not merely unexercised.** They are anchored
+  under Phases 5 and 6, which the refusal does not permit to proceed. The earlier readings called
+  them "unexercised" while their phases were merely held; that word is now wrong, and the rows are
+  left in place because their hazards would return unchanged with any future proposal that revives
+  those phases.
+- **Row 2 is unchanged from the 2026-09-19 reading** — discharged there, on a measurement this
+  round did not disturb.
+- **No row was added, and one candidate was considered and rejected.** The strongest argument
+  against the ruling, recorded on the blocker, is that upholding may preserve historical inertia
+  where a concrete taxonomy-independent ordering rule could improve consistency. That is an
+  argument about a future proposal's merits, not a hazard to this roadmap's execution — the same
+  reason the 2026-09-19 pass declined to add the no-production-caller finding as a row.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
