@@ -733,6 +733,13 @@ and 2026-09-19 readings respectively.
       **This AC being met does not make the roadmap complete.** AC-3, AC-5, AC-6 and AC-7 are
       refused rather than met — their phases do not run — and disposing of them is owner-reserved,
       per the Resolution's § What this resolution does NOT do.
+
+      **Corrected 2026-09-27, and the sentence above is left standing because the correction is
+      the point.** It put AC-5 in the refused set. That is wrong, and it is the exact error the
+      owner's ruling separates out: AC-5 and AC-8 are *negative* criteria — nothing was built, and
+      not-building is what they ask for — so the refusal **satisfies** them. They are `[x]`, each
+      with an executed verify proof. Only AC-3, AC-6 and AC-7 are cancelled. The disposition itself
+      is no longer owner-reserved-and-untaken either: the owner took it, scoped to those items.
 - [-] AC-3 — No component level is ever derived from props, depth, path or file length, and an
       undeclared component is reported undeclared rather than assigned a tier.
       **CANCELLED** — refused by `### blocker: taxonomy-reversal-is-a-second-arrival`
