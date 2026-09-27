@@ -126,6 +126,7 @@ stays legible. M14-M16 are new on 2026-09-13.**
 | M15 | The 2026-09-11 version added an `OrganizationAdmin` bypass actor with `bypass_mode: always`, **and the 2026-09-12 version removed it again**. Live on 2026-09-13: `bypass_actors: []`, `current_user_can_bypass: never`. So `ADR-276`'s present-tense record of that bypass describes a state reverted the next day | `/history/49393554` and `/history/49500777`, read via `.state.bypass_actors` — the history payload nests the ruleset under `state`, and a top-level `.bypass_actors` jq reads empty on every version, which is a trap worth naming |
 | M16 | The live ruleset now requires **two** contexts, not one: `Sync + Generate Tools Consistency` and `Standing payload delta + budget gate`. The expectation names only the first, and that is not a finding — `minimum_required_contexts` is a floor, so a forge requiring more than the expectation satisfies it | `gh api …/rulesets/17749383`; `check_platform_anchor` output |
 | M17 | **The gate passes today.** `check_platform_anchor --files src/config/platform-anchor.json` reports `PASS_WITH_ACCEPTED_RISK`, ledger `planned 3 · completed 1 · failed 0`, exit 0. The frontmatter's "blocking drift" premise is therefore spent | run 2026-09-13 |
+| M18 | **Corrected 2026-09-27: the gate no longer passes, on a dimension this roadmap never touched.** `check_platform_anchor --files src/config/platform-anchor.json` now exits 1 — the live ruleset has `required_review_thread_resolution` off, a `NEVER_WAIVABLE` dimension unrelated to the approval-floor waiver. M17 was true on 2026-09-13 and is not true today; the drift is out of this roadmap's scope and is not remediated here (see AC-1) | run 2026-09-27 |
 
 ## What the council actually said
 
@@ -365,6 +366,22 @@ cost argument is a given rather than a proposal.
       record that its acceptance criteria were met. AC-7's load-bearing word is
       *tested*, and it is not. Leaving the box open costs a count; closing it
       would file a false completion.
+      **RE-VERIFIED 2026-09-27, thirteen days later, by the run that processed
+      this roadmap end to end.** Same three facts re-measured, not re-read:
+      `branch-protection-policy.md` § Administrator recovery from a lockout is
+      still present, five steps, and its own closing paragraph still reads
+      *NOT yet rehearsed*; the rehearsal is unchanged in kind — every step is
+      still an admin API write on repository protection settings, which is a
+      Hard-Floor action under `non-destructive-by-default` and outside this
+      run's authorization, which was scoped to this roadmap's own PR and
+      explicitly excluded infra/secrets changes. **One measurement moved, and
+      it is not this step's:** `check_platform_anchor --files
+      src/config/platform-anchor.json` now exits 1 — see M18 and AC-1. It is a
+      different, unrelated dimension (`required_review_thread_resolution`),
+      recorded rather than acted on here for the same Hard-Floor reason the
+      rehearsal itself is not attempted. This run did not touch the sibling
+      blocker on `road-to-typed-grants-that-persist.md`, which still carries
+      the remainder.
 
 - [x] **0.3 Record that the council's safe sequence was already violated, and
       what follows from that.** The sequence is ratify → deploy reader → test →
@@ -766,6 +783,19 @@ INSTRUCTION SHOULD BE LEFT LYING.
       exit 0, ledger `planned 3 · completed 1 · failed 0` (M17), with the one
       deviation surfaced as a dated waiver rather than suppressed. Both
       questions are answered above, 2/2 convergent, with the chosen shape named.
+      **Live-state note, 2026-09-27, not a reopening of this criterion.** A
+      fresh run of the same command now exits 1 (M18): the live ruleset has
+      `required_review_thread_resolution` off, a `NEVER_WAIVABLE` dimension
+      this roadmap never touched and the waiver above cannot cover by
+      construction — it is not one of the two approval checks and not
+      `strict_required_status_checks`. The criterion here is that the
+      exemption mechanism THIS roadmap built produces no finding it does not
+      intend to fix, and that still holds; the new finding is a separate,
+      unrelated forge-side drift on a dimension outside this roadmap's scope,
+      surfaced so the next reader does not meet "the gate passes today" as a
+      live claim it no longer is. Not remediated here: fixing it is an admin
+      write on the live ruleset, the same Hard-Floor class as 0.2 and AC-7,
+      and outside what this run is authorized to touch.
 - [x] AC-2 — **CORRECTED 2026-09-13. Reads now:** `NON_NEGOTIABLE_FLOOR` carries
       *neither* `minimum_approving_reviews` nor `require_last_push_approval`,
       and that absence is deliberate, recorded, and pinned by a test so a future
@@ -910,3 +940,10 @@ INSTRUCTION SHOULD BE LEFT LYING.
       whatever this file's status is.
       **Re-verified 2026-09-14: still not met, and deliberately not carried.**
       See 0.2 for why a `[~]` carry was refused rather than overlooked.
+      **Re-verified 2026-09-27: still not met.** Nothing in the tree touched
+      `branch-protection-policy.md`'s recovery procedure since the last
+      reading, and the rehearsal remains a Hard-Floor admin write on
+      repository protection settings reserved for the maintainer with
+      explicit this-turn confirmation. See 0.2 for the 2026-09-27 pass, the
+      unrelated live-ruleset finding it surfaced, and why a `[~]` carry is
+      refused rather than overlooked.
