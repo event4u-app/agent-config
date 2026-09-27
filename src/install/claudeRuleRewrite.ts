@@ -133,8 +133,9 @@ export function rewriteAndReport(
     info: (m: string) => void,
     warn: (m: string) => void,
     wrappers?: { wrapped: readonly string[]; reserved: readonly string[] },
+    preserved: ReadonlySet<string> = new Set(),
 ): ClaudeRuleRewriteResult {
-    const result = rewriteClaudeRules(rulesDir);
+    const result = rewriteClaudeRules(rulesDir, preserved);
     // The flat-command wrapper report rides along rather than sitting at the
     // call site: `install.ts` is thousands of lines past
     // `check_source_size_budget`'s ceiling, and this module is the one place
@@ -228,9 +229,21 @@ export function renderClaudeRule(sourceText: string): {
  * detected and skipped rather than re-run — re-running is the silent-widening
  * failure this module exists to fix, applied to its own output.
  *
+ * `preserved` names destinations the conflict tracker kept because the user had
+ * edited them. They are skipped outright. This pass re-renders frontmatter and
+ * re-adds only `package:` / `source_path:`, so any key the user added is
+ * dropped — and every `always` rule and every mixed-trigger rule deploys
+ * without a `paths:` block, so the already-host-form guard above lets them
+ * straight through. Without this set, the same run that reported a file
+ * preserved went on to rewrite it, and the edit survived in the body while
+ * disappearing from the frontmatter.
+ *
  * Returns counts rather than printing. The caller owns the reporting surface.
  */
-export function rewriteClaudeRules(rulesDir: string): ClaudeRuleRewriteResult {
+export function rewriteClaudeRules(
+    rulesDir: string,
+    preserved: ReadonlySet<string> = new Set(),
+): ClaudeRuleRewriteResult {
     const result: ClaudeRuleRewriteResult = { rewritten: 0, scoped: [], dropped: [], failed: [] };
     let entries: string[];
     try {
@@ -240,6 +253,7 @@ export function rewriteClaudeRules(rulesDir: string): ClaudeRuleRewriteResult {
     }
     for (const name of entries.filter((n) => n.endsWith('.md')).sort()) {
         const full = path.join(rulesDir, name);
+        if (preserved.has(path.resolve(full))) continue;
         let stat: fs.Stats;
         try {
             stat = fs.lstatSync(full);
