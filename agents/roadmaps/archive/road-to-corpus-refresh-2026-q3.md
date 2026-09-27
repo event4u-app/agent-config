@@ -86,6 +86,7 @@ actually looked, and the two clean results are recorded below so nobody re-check
       status check. They now all read 2026-09-18, so the same four-way red returns in ~100
       days unless the stamps are deliberately staggered. Whether the batch is intended is a
       maintainer question, not an agent call. Human-gated, not started.
+      <!-- deferred-resolution: carried-to=road-to-corpus-refresh-cadence-shape -->
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-18 | reviewer: claude/host -->
@@ -114,3 +115,11 @@ actually looked, and the two clean results are recorded below so nobody re-check
       forward into a follow-up roadmap at archival time (Iron Law 3), per
       roadmap-management's spawn-follow-up procedure — see the note appended
       near 2.1 once that follow-up lands. -->
+
+<!-- Deferred items migrated to agents/roadmaps/road-to-corpus-refresh-cadence-shape.md on 2026-09-27.
+     The [~] line at 2.1 stays as it is, on purpose: the executable copy of that
+     question now lives in the follow-up (status: draft, hidden from the dashboard
+     until the maintainer flips it to ready), and this file keeps the trail grep-able.
+     Disposition picked under Iron Law 3 of roadmap-progress-sync: option 1, spawn a
+     follow-up as DRAFT — a preservation-passing disposition, so it did not need to
+     reach the user, while options 3 and 5 (drop / cancel) would have. -->
