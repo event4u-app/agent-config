@@ -126,7 +126,7 @@ per-commit `docs/CLAIMS.md` check plus a green `check_claims` run for AC-8.
 This was the subject's **second arrival**; the counter is under the title. A third now meets three
 things the second did not: a test that goes red on a planted five-level name in either surface
 independently, a recorded disposition with its reasoning, and — per
-[`recurring-criticism`](../../src/rules/recurring-criticism.md) — the arrival recorded at
+[`recurring-criticism`](../../../src/rules/recurring-criticism.md) — the arrival recorded at
 `archive/road-to-component-granularity-vocabulary.md` § Outcome, which is where a reader looking
 for the reason lands. The rejection's structural uncitability, the second reachability failure this
 round found, is repaired at
@@ -326,7 +326,7 @@ stable artefact is permitted to cite.
 - **Resolved when:** the decision record exists with one of the three readings, or this roadmap
   records the refusal and the archived roadmap carries the arrival.
 - **STILL OPEN, and deliberately.** Reversing a recorded rejection on its second arrival is
-  owner-reserved under [`decision-revisit-gate`](../../src/rules/decision-revisit-gate.md)
+  owner-reserved under [`decision-revisit-gate`](../../../src/rules/decision-revisit-gate.md)
   § owner-reserved set; an agent manufacturing that decision is the failure this blocker exists
   to prevent. Phase 1 landed without it, as the blocker's own § Blocks permits.
 - **New evidence for whoever decides, gathered 2026-09-13 while landing Phase 1.** It changes
@@ -338,7 +338,7 @@ stable artefact is permitted to cite.
     rested on compares the two surfaces **to each other** and forbids exactly two dead values,
     `partial` and `layout` — neither of which is a five-level name. A contributor "completing"
     the taxonomy updates both surfaces and passes.
-  - **So this is the third outcome in [`recurring-criticism`](../../src/rules/recurring-criticism.md),
+  - **So this is the third outcome in [`recurring-criticism`](../../../src/rules/recurring-criticism.md),
     not the first.** The disposition was right, it was recorded, and the carrier that was
     supposed to make it reachable did not carry it. That is a system failure and not evidence
     that the rejection was wrong — the measurement it rests on (the level is not computable from
@@ -364,7 +364,7 @@ stable artefact is permitted to cite.
     `STABLE_TREES` in the gate's own source. So no rule, skill, command, context, guideline or
     contract is permitted to point a later reader at the reason. Repairing the guard did not touch
     this; the evidence artefact above is the repair, per the promote-and-cite Iron Law of
-    [`no-roadmap-references`](../../src/rules/no-roadmap-references.md).
+    [`no-roadmap-references`](../../../src/rules/no-roadmap-references.md).
   - **Option (c) is not the zero-cost edit the Recommendation calls it.** The ordering statement is
     not recorded as a taste: the skill states that no primary source requires an order, that
     measured evidence comparing build orders is *absent, not merely weak*, and that a claimed order
@@ -407,7 +407,7 @@ stable artefact is permitted to cite.
      records that *"a council may advise here and may not rule"*, on the `product-owned` /
      owner-locked classification. Both seats addressed that line explicitly and independently, and
      the distinction they drew is narrow:
-     [`decision-revisit-gate`](../../src/rules/decision-revisit-gate.md) reserves **reversal** of a
+     [`decision-revisit-gate`](../../../src/rules/decision-revisit-gate.md) reserves **reversal** of a
      recorded decision to the owner; it does not forbid a council from **declining** a reversal and
      preserving the recorded state. Upholding is not reversing — it takes no action, lowers no
      floor, and leaves every artefact byte-identical. The owner-reserved half is untouched and
@@ -422,7 +422,7 @@ stable artefact is permitted to cite.
   consistency. That argument survives this ruling, and it is the shape a third arrival should take.
 
   **The second arrival is recorded on the archived file**, per
-  [`recurring-criticism`](../../src/rules/recurring-criticism.md) —
+  [`recurring-criticism`](../../../src/rules/recurring-criticism.md) —
   `agents/roadmaps/archive/road-to-component-granularity-vocabulary.md` § Outcome now carries the
   arrival, the disposition that held, and the reachability finding. That is the second branch of
   this blocker's own **Resolved when**, and it is why no decision record was written: the condition
