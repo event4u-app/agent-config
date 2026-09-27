@@ -45,6 +45,7 @@ import { detectRtk, rtkInstallCommands, RTK_UPSTREAM_REPO } from '../../install/
 import { readSelectedTools, readSelectedPacks, writeSelectedTools } from '../../install/selectedTools.js';
 import { detectAgentSwitch, AGENT_SWITCH_INSTALL_COMMAND, AGENT_SWITCH_REPO } from '../../install/agentSwitchDetection.js';
 import { readDismissedRecommendations, dismissRecommendation } from '../../install/wizardDismissals.js';
+import { installDoneSummary } from '../../install/preserve.js';
 import { apiOnQuotaView } from '../../scripts/ai_council/transport_resolver.js';
 
 export interface WizardRouteOptions {
@@ -1287,19 +1288,7 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                             });
                         } else if (t === 'done') {
                             sawTerminal = true;
-                            // `conflicts` rides on the installer's own `done`
-                            // frame when it preserved a user-modified managed
-                            // file (exit 3, src/install/preserve.ts). Forwarded
-                            // rather than dropped: a preserved edit means the
-                            // install is not current, and this SSE frame is the
-                            // browser's only channel for that. Omitted when
-                            // zero, so the historical summary shape is
-                            // unchanged for every run that has no conflicts.
-                            const conflicts = typeof obj.conflicts === 'number' ? obj.conflicts : 0;
-                            writeFrame(reply, {
-                                type: 'done',
-                                summary: conflicts > 0 ? { written, total, conflicts } : { written, total },
-                            });
+                            writeFrame(reply, { type: 'done', summary: installDoneSummary(obj, written, total) });
                         } else if (t === 'error') {
                             sawTerminal = true;
                             writeFrame(reply, {

@@ -5,7 +5,7 @@
 // `tests/install/preserve.test.ts` covers the pure decision; what is only
 // observable here is that the writer consults it at all — which is precisely
 // what was missing. The planner has named user-modified files since Phase 5.2
-// and `_resolve_file_conflict` returned `write` for every one of them.
+// and the writer's conflict resolver returned `write` for every one of them.
 //
 // Expectations are derived from the fixture inputs (digests hashed here from
 // the content under test, package bytes compared against the source file on
@@ -69,7 +69,7 @@ describe('install — preserving a user-modified managed file', () => {
         fs.writeFileSync(p.source, opts.packaged);
         fs.writeFileSync(p.target, opts.onDisk);
         recordManifest([[p.target, opts.recorded]]);
-        inst._begin_conflict_tracking(root);
+        inst.tracker.begin(root);
     }
 
     beforeEach(() => {
@@ -87,7 +87,7 @@ describe('install — preserving a user-modified managed file', () => {
         else process.env['HOME'] = prevHome;
         if (prevManifest === undefined) delete process.env['AGENT_CONFIG_INSTALLED_TOOLS'];
         else process.env['AGENT_CONFIG_INSTALLED_TOOLS'] = prevManifest;
-        inst._begin_conflict_tracking(null);
+        inst.tracker.begin(null);
         fs.rmSync(fakeHome, { recursive: true, force: true });
         fs.rmSync(root, { recursive: true, force: true });
     });
@@ -102,7 +102,7 @@ describe('install — preserving a user-modified managed file', () => {
         expect(skipped).toBe(0);
         expect(fs.readFileSync(p.target, 'utf8')).toBe(fs.readFileSync(p.source, 'utf8'));
         expect(fs.existsSync(sidecarPathFor(p.target))).toBe(false);
-        expect(inst.conflictState.preserved).toEqual([]);
+        expect(inst.tracker.conflictState.preserved).toEqual([]);
     });
 
     it('preserves a user-modified managed file and stages the package content beside it', () => {
@@ -121,7 +121,7 @@ describe('install — preserving a user-modified managed file', () => {
         expect(fs.readFileSync(sidecarPathFor(p.target), 'utf8')).toBe(
             fs.readFileSync(p.source, 'utf8'),
         );
-        expect(inst.conflictState.preserved).toEqual([p.target]);
+        expect(inst.tracker.conflictState.preserved).toEqual([p.target]);
     });
 
     it('--force replaces the managed file and stages nothing', () => {
@@ -134,7 +134,7 @@ describe('install — preserving a user-modified managed file', () => {
         expect(skipped).toBe(0);
         expect(fs.readFileSync(p.target, 'utf8')).toBe(fs.readFileSync(p.source, 'utf8'));
         expect(fs.existsSync(sidecarPathFor(p.target))).toBe(false);
-        expect(inst.conflictState.preserved).toEqual([]);
+        expect(inst.tracker.conflictState.preserved).toEqual([]);
     });
 
     it('re-running over an already-staged sidecar is a no-op, not a rewrite', () => {
@@ -144,12 +144,12 @@ describe('install — preserving a user-modified managed file', () => {
         const sidecar = sidecarPathFor(p.target);
         const firstIno = fs.statSync(sidecar).ino;
 
-        inst._begin_conflict_tracking(root);
+        inst.tracker.begin(root);
         expect(() => inst._copy_dir_dereferencing_symlinks(p.src, p.dest, false)).not.toThrow();
 
         expect(fs.readFileSync(sidecar, 'utf8')).toBe(fs.readFileSync(p.source, 'utf8'));
         expect(fs.statSync(sidecar).ino).toBe(firstIno);
-        expect(inst.conflictState.preserved).toEqual([p.target]);
+        expect(inst.tracker.conflictState.preserved).toEqual([p.target]);
     });
 
     it('refuses to clobber a foreign file sitting at the sidecar path, and fails the run', () => {
@@ -189,22 +189,22 @@ describe('install — preserving a user-modified managed file', () => {
         fixture({ packaged: '# v2\n', recorded: '# v1\n', onDisk: '# v1\n' });
 
         // Reading 1 — the verdict a plan built at this moment would carry.
-        expect(inst._resolve_file_conflict(p.target, false)).toBe('write');
+        expect(inst.tracker.resolve(p.target, false)).toBe('write');
 
         // The window a plan-time verdict would have carried straight through.
         fs.writeFileSync(p.target, '# v1\nedited between plan and write\n');
 
         // Reading 2 — same call, same arguments, different answer, because the
         // digest comes from disk here rather than from the earlier verdict.
-        expect(inst._resolve_file_conflict(p.target, false)).toBe('preserve');
+        expect(inst.tracker.resolve(p.target, false)).toBe('preserve');
     });
 
     describe('exit code and conflict count', () => {
         it('a zero-conflict run keeps its own exit code', () => {
-            inst._begin_conflict_tracking(root);
-            expect(inst.conflictState.preserved).toEqual([]);
-            expect(inst._finalize_install_rc(0)).toBe(0);
-            expect(inst._finalize_install_rc(1)).toBe(1);
+            inst.tracker.begin(root);
+            expect(inst.tracker.conflictState.preserved).toEqual([]);
+            expect(inst.tracker.finalizeRc(0)).toBe(0);
+            expect(inst.tracker.finalizeRc(1)).toBe(1);
         });
 
         it('an N-conflict run counts N and exits with the conflicts code', () => {
@@ -219,15 +219,15 @@ describe('install — preserving a user-modified managed file', () => {
                 recorded.push([path.join(p.dest, name), `# as we wrote ${name}\n`]);
             }
             recordManifest(recorded);
-            inst._begin_conflict_tracking(root);
+            inst.tracker.begin(root);
 
             inst._copy_dir_dereferencing_symlinks(p.src, p.dest, false);
 
-            expect(inst.conflictState.preserved).toHaveLength(names.length);
+            expect(inst.tracker.conflictState.preserved).toHaveLength(names.length);
             for (const name of names) {
                 expect(fs.readFileSync(path.join(p.dest, name), 'utf8')).toBe(`# edited ${name}\n`);
             }
-            expect(inst._finalize_install_rc(0)).toBe(EXIT_COMPLETED_WITH_CONFLICTS);
+            expect(inst.tracker.finalizeRc(0)).toBe(EXIT_COMPLETED_WITH_CONFLICTS);
         });
 
         it('a conflict never masks a failing run', () => {
@@ -235,8 +235,8 @@ describe('install — preserving a user-modified managed file', () => {
             fixture({ packaged: '# v2\n', recorded: '# v1\n', onDisk: '# v1\nmine\n' });
             inst._copy_dir_dereferencing_symlinks(p.src, p.dest, false);
 
-            expect(inst.conflictState.preserved).toHaveLength(1);
-            expect(inst._finalize_install_rc(1)).toBe(1);
+            expect(inst.tracker.conflictState.preserved).toHaveLength(1);
+            expect(inst.tracker.finalizeRc(1)).toBe(1);
         });
     });
 });

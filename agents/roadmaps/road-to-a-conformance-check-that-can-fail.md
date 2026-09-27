@@ -124,9 +124,9 @@ not scheduled here; the blocker below records it as the open half.
       carries a recorded-unchanged column whose value comes from a hash.
       **DONE 2026-09-21.** Owner ruled option (a) on
       `the-installer-does-not-consult-the-conflict-matrix` after an AI council split 1/1:
-      `agent-config init` stops overwriting a managed file the user has edited. The writer's
-      `_resolve_file_conflict` in `src/scripts/install.ts` now consults
-      `src/install/preserve.ts`, re-hashing the destination at the moment of the write, and a
+      `agent-config init` stops overwriting a managed file the user has edited. The writer in
+      `src/scripts/install.ts` now consults `src/install/preserve.ts` through
+      `src/install/conflictTracker.ts`, re-hashing the destination at the moment of the write, and a
       `recorded-modified` file is preserved with the package content staged as
       `<path>.agent-config.new`. The run exits `3` and names each preserved file, so the
       staleness the ruling accepts is stated rather than silent. The reporting half was already
@@ -200,8 +200,9 @@ it is recorded as one below rather than taken here.
   was decided as one.
 
   **What landed.** `src/install/preserve.ts` holds the decision and the
-  wording; `_resolve_file_conflict` in `src/scripts/install.ts` consults it and
-  re-hashes the destination immediately before the copy, so the verdict is
+  wording; the writer in `src/scripts/install.ts` consults it through
+  `src/install/conflictTracker.ts` and re-hashes the destination immediately
+  before the copy, so the verdict is
   taken from the bytes actually about to be destroyed rather than from a
   plan-time `ConflictEntry` — that list is advisory state, not a safety
   capability, and the gap between planning and writing is real. A preserved

@@ -3,7 +3,7 @@
  * Phase 5.1, owner ruling 2026-09-21 (option (a), after a 1/1 council split).
  *
  * THE GAP THIS CLOSES. Until this module existed, `agent-config init` overwrote
- * every deployed file unconditionally: `_resolve_file_conflict` in
+ * every deployed file unconditionally: the conflict resolver in
  * `src/scripts/install.ts` returned `write` for every target, and the module
  * header recorded `--force` as an accepted no-op "because installs always
  * overwrite". The planner produced a `ConflictEntry` list naming the files the
@@ -157,4 +157,27 @@ export function foreignSidecarMessage(target: string, sidecar: string): string {
         `install cannot show it wrote it. Package content for ${target} was NOT staged. ` +
         'Move or delete that file and re-run, or rerun with --force to replace the managed file instead.'
     );
+}
+
+/**
+ * Summary payload for the GUI wizard's `done` SSE frame.
+ *
+ * `conflicts` rides on the installer's own `done` frame when the run preserved
+ * a user-modified managed file (exit {@link EXIT_COMPLETED_WITH_CONFLICTS}).
+ * The wizard forwards it rather than dropping it: a preserved edit means the
+ * active installation is not current, and that frame is the browser's only
+ * channel for saying so. Omitted when zero, so the historical summary shape is
+ * unchanged for every run that has no conflicts.
+ *
+ * It lives here rather than in the route because the conflict semantics are
+ * this module's, and because `src/server/routes/wizard.ts` sits against the
+ * 1,500-line source ceiling that `check_source_size_budget` ratchets.
+ */
+export function installDoneSummary(
+    frame: Record<string, unknown>,
+    written: number,
+    total: number,
+): { written: number; total: number; conflicts?: number } {
+    const conflicts = typeof frame.conflicts === 'number' ? frame.conflicts : 0;
+    return conflicts > 0 ? { written, total, conflicts } : { written, total };
 }

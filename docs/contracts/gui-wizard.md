@@ -166,11 +166,11 @@ renders today.
 **What `recorded-modified` means as of 2026-09-21.** The owner ruled (option
 (a), after a 1/1 council split) that `agent-config init` stops overwriting a
 managed file the user has edited. The single writer is
-[`src/scripts/install.ts`](../../src/scripts/install.ts); its
-`_resolve_file_conflict` now consults
-[`src/install/preserve.ts`](../../src/install/preserve.ts), re-hashing the
-destination immediately before mutating it, and a `recorded-modified` file is
-**preserved**. The package content it would have been replaced with is staged
+[`src/scripts/install.ts`](../../src/scripts/install.ts); it now consults
+[`src/install/preserve.ts`](../../src/install/preserve.ts) through
+[`src/install/conflictTracker.ts`](../../src/install/conflictTracker.ts),
+re-hashing the destination immediately before mutating it, and a
+`recorded-modified` file is **preserved**. The package content it would have been replaced with is staged
 beside it as `<path>.agent-config.new`.
 
 So a screen rendering this field may now say the edit is kept — and it must

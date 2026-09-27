@@ -39,9 +39,9 @@ import { classifyOwnership, recordedHashesForRoot, } from './recordedOwnership.j
  * nobody reads. The ownership split lives where it is live: in the report.
  *
  * What this resolver decides is in any case NOT what the installer does. The
- * single writer is `src/scripts/install.ts`, whose `_resolve_file_conflict`
- * reads nothing from this module; `skip` here means "the planner would not
- * touch it", never "your edit is safe".
+ * single writer is `src/scripts/install.ts`, whose conflict resolver
+ * (`src/install/conflictTracker.ts`) reads nothing from this module; `skip`
+ * here means "the planner would not touch it", never "your edit is safe".
  *
  * Since the owner ruling of 2026-09-21 that writer no longer overwrites
  * unconditionally — a managed file diverging from its recorded digest is
