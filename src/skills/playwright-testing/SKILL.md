@@ -144,21 +144,45 @@ test('homepage visual regression', async ({ page }) => {
 
 ## Viewport testing
 
+A viewport loop whose only assertion is an image proves that the page rendered,
+not that the breakpoint did anything: the same picture comes back whether the
+media query fired or silently did not. Assert the layout property the breakpoint
+is supposed to change, then keep the capture and name it for the one thing it
+proves.
+
 ```ts
 test.describe('Responsive design', () => {
   for (const viewport of [
-    { width: 1440, height: 900, name: 'desktop' },
-    { width: 768, height: 1024, name: 'tablet' },
-    { width: 375, height: 812, name: 'mobile' },
+    { width: 1440, height: 900, name: 'desktop', columns: '1fr 1fr 1fr' },
+    { width: 768, height: 1024, name: 'tablet', columns: '1fr 1fr' },
+    { width: 375, height: 812, name: 'mobile', columns: '1fr' },
   ]) {
-    test(`renders correctly on ${viewport.name}`, async ({ page }) => {
-      await page.setViewportSize(viewport)
+    test(`lays out correctly on ${viewport.name}`, async ({ page }) => {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height })
       await page.goto('/')
-      await expect(page).toHaveScreenshot(`home-${viewport.name}.png`)
+      // Behaviour: the declared breakpoint actually changed the layout.
+      await expect(page.locator('#grid')).toHaveCSS('grid-template-columns', viewport.columns)
+      // Appearance only: presence + sanity that nothing renders broken.
+      await expect(page).toHaveScreenshot(`appearance-${viewport.name}.png`)
     })
   }
 })
 ```
+
+**Read the probe artefact rather than re-deriving the matrix by hand.**
+`agents/runtime/state/ui-conformance.json` — produced by
+`ui_conformance_probe --target <file> --reference <file>` — carries a
+`viewport_matrix` row per declared width, plus a not-applicable row with its
+reason wherever the host could not cross the breakpoint. A width with no row is
+missing evidence, not a pass, and no dimension reads zero findings because it did
+not run.
+
+**The capture above is appearance-only, and it stays mandatory.** It proves
+presence and sanity — the surface rendered and nothing renders obviously broken —
+and proves nothing about hover, focus, keyboard or a media-preference branch.
+Demoting it from behavioural evidence does not narrow when it runs: it still runs
+at every width in the matrix. Floor and division of labour:
+[`design-review`](../design-review/SKILL.md) § Appearance verification.
 
 ## Debugging
 

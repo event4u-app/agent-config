@@ -44,7 +44,7 @@ A **live preview URL** is required for testing.
 
 ## Procedure: Design review
 
-1. **Inspect the PR and preview** — Read the PR description, diff, and identify changed components/pages; capture a baseline screenshot of the preview URL.
+1. **Inspect the PR and preview** — Read the PR description, diff, and identify changed components/pages; read the probe artefact and run the appearance floor over the preview URL (Phase 0).
 2. **Walk the interactions** — Run Phase 1; cover hover/focus/active/disabled, keyboard, loading, and form error states.
 3. **Cover responsiveness, polish, a11y, robustness** — Run Phases 2–5 in order; record findings per phase.
 4. **Audit code-health and content** — Run Phases 6–7; check tokens, dead styles, copy, console warnings.
@@ -55,7 +55,14 @@ A **live preview URL** is required for testing.
 - Read PR description and git diff.
 - Identify changed components and affected pages.
 - Navigate to preview URL.
-- Take baseline screenshot.
+- **Read the probe artefact** — `agents/runtime/state/ui-conformance.json`, produced
+  by `ui_conformance_probe --target <file> --reference <file>`. Its per-dimension
+  counters are the behavioural evidence Phases 1 and 2 report against. An absent
+  artefact is absent, never clean; a dimension the host could not exercise carries
+  a not-applicable row with its reason rather than a zero.
+- **Run the appearance floor** (§ Appearance verification). It is mandatory on
+  every review this skill runs — the same trigger the capture step it replaces
+  carried, narrowed in what it is evidence *for* and in nothing else.
 
 ### Phase 1: Interaction
 
@@ -102,7 +109,13 @@ asserted floor outside the measured set is an assertion nobody checks; 375px
 passing says nothing about 320px, which is where a two-column grid or a fixed
 `min-width` actually breaks.
 
-- Take screenshots at each viewport.
+- **Read the probe artefact's `viewport_matrix` rows** — one per declared width,
+  each recording whether the layout property that is supposed to change at that
+  breakpoint actually changed. That is the responsiveness evidence. A width whose
+  row is not applicable is missing evidence, not a pass.
+- **Run the appearance floor** (§ Appearance verification) at every one of the
+  four widths — mandatory at each, unchanged in trigger from the capture step it
+  replaces.
 - **Scroll-driven surface** — read the `scroll_evidence` artefact
   ([`references/verification-automation.md`](references/verification-automation.md)
   § Scroll evidence) and report every sample whose asserted `state` and
@@ -155,6 +168,49 @@ passing says nothing about 320px, which is where a two-column grid or a fixed
 - Consistent terminology and tone.
 - No placeholder text left in production.
 - Check browser console for JavaScript errors or warnings.
+
+## Appearance verification — mandatory, and explicitly appearance-only
+
+```
+APPEARANCE VERIFICATION IS MANDATORY WHEREVER APPEARANCE CAN BE AFFECTED.
+THE PROBE DEMOTES THE IMAGE FROM PRIMARY EVIDENCE. IT DOES NOT MOVE THE FLOOR.
+A PIXEL COMPARISON PROVES APPEARANCE AND NOTHING ELSE. IT IS NEVER READ AS
+EVIDENCE FOR HOVER, FOCUS, KEYBOARD, BREAKPOINT OR JAVASCRIPT BEHAVIOUR.
+AN UNRUN APPEARANCE CHECK IS REPORTED AS UNRUN, NEVER AS PASSED.
+```
+
+**The trigger is unchanged, deliberately.** This section runs on every review this
+skill runs, and at every width in the Phase 2 matrix. That is exactly the trigger
+the two capture steps it replaces carried — Phase 0 unconditionally, Phase 2 once
+per viewport. What changed is what the image is *evidence for*, never when it is
+required. A verdict reached without it is incomplete however the probe read.
+
+**Two jobs, and the older one is the one that survives intact.**
+
+1. **Presence and sanity** — the surface renders, and nothing renders obviously
+   broken: no blank frame, no collapsed or overlapping layout, no missing region,
+   no unstyled flash left standing. This is the floor
+   `agents/roadmaps/archive/road-to-visual-review-loop.md` recorded — *"presence +
+   sanity check that nothing renders broken. Not pixel-perfect regression"* — and
+   it is carried forward word for word. **No probe dimension covers it.** A
+   computed style can be correct on a node nobody can see, so a green
+   `computed_style` row is not a substitute for looking.
+2. **Pixel comparison against a baseline**, where one exists — element-scoped
+   where possible, dynamic content masked. This is the narrower job, and the one
+   the probe genuinely supersedes for behaviour.
+
+**What it is not evidence for.** A clean render says nothing about the six
+interaction states, the four-width behaviour matrix, a handler that fires, or a
+media-preference branch. Those are the probe's `computed_style`, `interaction`,
+`viewport_matrix` and `media_emulation` dimensions
+([contract](../../../docs/contracts/design-artifact-verification.md)). Reading a
+clean image as though it covered them is the substitution this section exists to
+prevent — and the reason the two jobs above are listed separately rather than as
+one "visual check".
+
+**Honest degrade.** No render capability on this host → say so and scope the
+verdict to what was statically checked, per the render-verification gate at the
+top of this skill. Degrading is reported; it is never a pass.
 
 ## Reviewer posture
 
