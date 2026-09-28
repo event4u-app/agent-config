@@ -257,6 +257,20 @@ rounds since have re-derived the architecture instead of reading the file.
 - **Class:** 3 — human-only
 - **Blocks:** Phase 1.2's confirmation, per track. Phase 1.1's enumeration is unblocked — listing
   the conditions and their observable state is evidence work.
+  **Also blocks this roadmap's archival, and since 2026-09-28 the estate half of `task ci`.**
+  With AC-4 closed every box is checked (18/18), which puts the file in a state two gates read
+  in opposite directions: `archive_completed_roadmaps.ts` refuses to move a roadmap carrying an
+  open blocker ("a roadmap carrying an open decision stays visible until the decision is made"),
+  while `unarchived_complete` in `update_roadmap_progress.ts` filters on step counts alone, with
+  no blocker carve-out, and so demands the archival its sibling forbids. Measured on this branch:
+  `./scripts-run src/agent-src/scripts/update_roadmap_progress --check --untracked-mode` exits
+  **1**, naming this file as the only offender; `--dashboard-only` — the narrow form wired into
+  required CI — exits **0**. Required CI is therefore unaffected, by deliberate design:
+  `dashboard_mode.ts` excludes the estate half from required checks precisely so a pre-existing
+  estate defect cannot block every PR. **Not repaired here on purpose.** Exempting a class from
+  the estate check lowers a recorded floor, which is owner-reserved, and the only other exits are
+  resolving this blocker or reopening a step that is genuinely done. Resolving this blocker clears
+  all three at once: the ruling, the archival, and the red.
 - **What to do:** decide whether the accepted record's conditions are satisfied for a given track.
   Read `docs/decisions/ADR-249-supervised-resident-process-permitted-under-governance.md` and
   `agents/roadmaps/stubs/road-to-runtime-orchestration-substrate.md` for the eight tracks they
@@ -268,7 +282,10 @@ rounds since have re-derived the architecture instead of reading the file.
 - **Recommendation:** take the enumeration from Phase 1.1 and rule on it per track. The expensive
   half is the reading, and Phase 1.1 does it.
 - **If you do nothing:** the gate line stays as written, and the eleventh arrival of this subject
-  meets the same unread sentence the tenth did.
+  meets the same unread sentence the tenth did. Additionally, since 2026-09-28: this roadmap stays
+  in the active tree at 18/18 and the estate half of `task ci` stays red on it for everyone, in
+  PRs about unrelated subjects. Required CI is not affected, so nothing is merge-blocked — the
+  cost is a standing local red and an estate slot that does not free up.
 - **Resolved when:** each condition carries a ruling, or the stub records that the ruling is
   pending with the date it was requested.
 
@@ -334,13 +351,23 @@ table's own staleness, which this re-review is an instance of rather than a fix 
       (`_openBlockerIds` returns `per-track-governance-ruling-unmade`), and each of the five
       required fields was deleted in turn from an in-memory copy with the gate naming that exact
       field every time — 5 of 5. Unmodified: `hard=0 decidability=0`.
-      **Measured cost of the widening: nothing to migrate.** 121 stubs enter scope; 6 carry a
+      **What it does NOT buy, stated because the obvious reading is wrong.** Both scanners require
+      the entry to sit under a `## Blockers` heading, and 2 of the 6 stubs carrying a blocker
+      heading put it under `## State`. So a third of the population is now in the glob and still
+      unread. The widening fixes WHERE the gate looks, not WHAT it parses.
+      **Measured cost of the widening: nothing to migrate.** 121 files enter scope (120 stubs plus
+      the directory README, which the glob does not special-case); 6 carry a
       `### blocker:` heading, 4 declare one open inside a `## Blockers` section (the other two put
       the heading outside one, so the scanner does not reach them — recorded, not fixed here).
       Across all 121: **0 hard violations, 0 additions to the `:decidability` ratchet** (still 0,
       no baseline needed), **0 new active/archived overlaps**. The gate reports `131 roadmap(s)
       blocker-contract-clean`, up from 10. The estate ratchet is untouched by construction —
       `check_estate_count` runs its own collector that excludes any path with a `stubs` component.
+      **One consequence this closure creates, recorded rather than left to be discovered.** Closing
+      the last box takes the file to 18/18, and `unarchived_complete` then demands an archival that
+      `archive_completed_roadmaps` refuses while a blocker is open. Full mechanism, the measured
+      exit codes and why it is not repaired here: the `Blocks:` field of
+      `the-governance-conditions-are-a-supervision-read` below.
       **Sibling defect, still open and still only a pointer:**
       `agents/roadmaps/stubs/road-to-blocker-parse-visibility.md` records that the gate reports a
       file clean when it parsed no blocker at all. This change widens *where* the gate looks and
