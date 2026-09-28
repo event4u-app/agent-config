@@ -1,0 +1,1187 @@
+{
+  "schema_version": 1,
+  "release": "16.1.0",
+  "findings": [
+    {
+      "finding_id": "c5bd9dd50ea5",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "Release highlights claim contradicts tree evidence",
+      "detail": "CHANGELOG.md:688 states 'Known limitations: _none_' for 16.0.0, but src/scripts/_lib/dropped_decision.ts:80-94 documents two known false-positive paths that shipped in that release. The same claim appeared in 15.0.0 (docs/archive/CHANGELOG-pre-16.0.0.md:686). This is the defect road-to-a-release-head-field-nothing-derives exists to correct, and it shipped twice.",
+      "file": "CHANGELOG.md"
+    },
+    {
+      "finding_id": "48ddb8b65fbe",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "Migration sections missing for two BREAKING majors",
+      "detail": "CHANGELOG.md documents BREAKING CHANGES in 15.0.0 (kernel-rule-writes deny, archived in docs/archive/CHANGELOG-pre-16.0.0.md:31) and 16.0.0 (delivery default flip, CHANGELOG.md:45), but docs/MIGRATION.md carries no 15.0.0 or 16.0.0 entry (grep '^## ' returns 14.22.x, 14.21.x, 9.0.0, 1.15.0 only). ADR-113 § Obligations states 'every BREAKING entry owes a MIGRATION.md section'. Verified: road-to-a-breaking-line-the-tree-does-not-contain Phases 1-2 landed to close this, but the verification gate (lint_major_migration_sections) does not exist in this tree — it is added by the same PR.",
+      "file": "docs/MIGRATION.md"
+    },
+    {
+      "finding_id": "2486919aa3b7",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "Installer conflict resolution claims overwrite while code preserves",
+      "detail": "CHANGELOG.md:45 states 'agent-config init no longer overwrites a managed file you have edited' and describes a preservation mechanism with exit 3 and .agent-config.new sidecars. But src/scripts/install.ts:556-559 _resolve_file_conflict returns 'write' unconditionally with comment 'deploys always overwrite our own content', and both parameters are underscore-prefixed unused, so neither --force nor a local edit changes the outcome. Either the code does not implement what the changelog claims, or the changelog describes a change not in this diff. Cross-check: the preservation machinery (conflict.ts, recordedOwnership.ts) exists in src/install/, but conflict.ts:66-71 states '_resolve_file_conflict returns write unconditionally for deployed files and which reads nothing from this module'.",
+      "file": "CHANGELOG.md"
+    },
+    {
+      "finding_id": "d43e46327be6",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Release-holds exposure figure contradicts its own measurement",
+      "detail": "agents/evidence/analysis/release-holds-phase-0-2026-09-13.md § 0.2 states '3 of 7 mid-flight at 15.0.0', but the roadmap (road-to-release-holds-that-refuse.md) and the zero-live-subjects blocker both say 'four of the seven active roadmaps were mid-flight when 15.0.0 shipped'. The evidence file explicitly corrects this ('The measured figure is **three**') and records the correction rather than propagating the stale count. The blocker carries the wrong number.",
+      "file": "agents/roadmaps/road-to-release-holds-that-refuse.md"
+    },
+    {
+      "finding_id": "773d0cf5dda6",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Enforcement-census blocking-concern count is grep-derived and wrong",
+      "detail": "agents/evidence/analysis/enforcement-census-2026-09-13.md § 1 reproduces 'grep -c severity: blocking src/scripts/hook_manifest.yaml' returning **9**, while a YAML parse returns **8** blocking concerns. The ninth match is :608, a comment line quoting the string while explaining it. The roadmap's 0.2 figure (9) is therefore wrong, and § 1 is the correction. The trap: the string that misleads a grep is the string in a sentence warning you not to read it naively. AC-2 verifies that no concern count in this tree is grep-derived, and finds zero — the grep/parse divergence is a trap for a future author, not a live defect.",
+      "file": "agents/roadmaps/road-to-a-ledger-that-closes-the-loop.md"
+    },
+    {
+      "finding_id": "5f4de939cf3b",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Capability index command count drifts from actual surface",
+      "detail": "CAPABILITIES.yaml:15 states 'commands_total: 203', while the linked dist/agent-src/commands directory description states '202 counted recursively'. The badge in README.md reads 'Commands-203', matching CAPABILITIES.yaml. Sub-claim in both files states 'Commands 202 counts every command file recursively (the linked directory holds 61 at its top level)', so 202 is the intended figure and 203 is either a counting error or the catalog has not been regenerated after a command was added.",
+      "file": "CAPABILITIES.yaml"
+    },
+    {
+      "finding_id": "2b7fc5c0a366",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Installer preservation mechanism cost understated in changelog",
+      "detail": "CHANGELOG.md:64 states 'Scripts that treat any non-zero exit from init as a failure will see 3 on a tree with local edits. That is the intended signal, not a regression'. But it does not quantify how often 'a tree with local edits' occurs. If every consumer install has local edits (e.g., a common customization), then every consumer install now exits 3, and 'treat non-zero as failure' scripts now fail everywhere. The changelog presents this as an edge case ('a tree with local edits') when the distribution is unknown.",
+      "file": "CHANGELOG.md"
+    },
+    {
+      "finding_id": "07ae7693aed9",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Rule count badge drift between README and shipped corpus",
+      "detail": "README.md:7 badge states 'Rules-121', CAPABILITIES.yaml:15 confirms 'rules' (though that key is absent from the visible excerpt), but CHANGELOG.md:688 documents 'Known limitations' for 16.0.0 claiming '_none_', and sub-claim at README.md:9 states 'Rules 121 counts the **source** rules while the linked projection holds 120 — one rule is dormant and is not projected'. The 121 vs 120 split is documented, but the changelog's '_none_' claim for limitations contradicts the evidence that limitations exist. This is a consistency issue rather than a count error.",
+      "file": "README.md"
+    },
+    {
+      "finding_id": "e5904881c2a0",
+      "severity": "low",
+      "kind": "claim",
+      "title": "Cross-model canary now gates on secret presence, but prior claim of 'live job is a no-op' is not updated",
+      "detail": ".github/workflows/cross-model-canary.yml:11-12 states 'Without [API keys] the live job is a no-op (logged), never a failure'. But the new secret-presence gate (job secret-presence, output anthropic) means periodic-live is **skipped** when the key is absent, not run-as-no-op. The comment describes the old behavior (no-op) rather than the new behavior (skipped).",
+      "file": ".github/workflows/cross-model-canary.yml"
+    },
+    {
+      "finding_id": "bb7c115d53ca",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Release-guard workflow now runs check_release_holds but comment does not mention it",
+      "detail": ".github/workflows/release-guard.yml adds a step 'No roadmap declares an open, unpublishable tree state' (new lines after :48), but the workflow header comment (lines 1-8) does not describe this new gate. The comment describes version-tag matching and npmjs publish conditions, but not the roadmap-hold check.",
+      "file": ".github/workflows/release-guard.yml"
+    },
+    {
+      "finding_id": "0ef795a01cc9",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Honest-null addendum records exposure jump but does not restate the decision it validates",
+      "detail": "agents/evidence/analysis/release-holds-phase-0-2026-09-13.md § Addendum 2026-09-14 records exposure jumping from 1/14 to 6/14 mid-flight roadmaps, then to 10/10 saturation by third reading. It correctly states 'The declaration count is still zero' and 'strengthens the prior the owner is deciding against'. But it does not restate the owner's decision or confirm the decision stands — it ends 'it remains the owner's', which is accurate but leaves the reader unsure whether the decision was revisited after the jump. The zero-live-subjects blocker is marked resolved, so presumably it was, but the addendum does not say.",
+      "file": "agents/evidence/analysis/release-holds-phase-0-2026-09-13.md"
+    },
+    {
+      "finding_id": "3ff50ffea1dc",
+      "severity": "low",
+      "kind": "style",
+      "title": "Enforcement-table ratification uses 'confirmed-non-expanding' but does not define it inline",
+      "detail": "agents/evidence/ratifications/drain-enforcement-table.md:18 states 'verdict: confirmed-non-expanding' and § Why confirmed-non-expanding rather than ratified explains the choice. But the term 'confirmed-non-expanding' is not defined in this artifact — it is presumably defined in docs/contracts/ratification-artifact.md, but a reader of this artifact alone does not know what it means until they reach the explanation section.",
+      "file": "agents/evidence/ratifications/drain-enforcement-table.md"
+    },
+    {
+      "finding_id": "5cb5a3ee9bd0",
+      "severity": "critical",
+      "kind": "security",
+      "title": "adversarial-review skill removed without threat analysis",
+      "detail": "The `adversarial-review` skill (SKILL.md) was deleted in this release. This skill was the self-review gate mechanism — it provided the Attack-Defend-Revise procedure this very PR invokes. Removing it means no future PR can apply the three-lens adversarial pass that caught defects in `typed_op_grant.ts` (per `road-to-authority-object-exactness.md`). The deletion is not mentioned in CHANGELOG.md, and no replacement mechanism is documented. The `self_review_gate.ts` script that loads this skill as its system prompt will fail."
+    },
+    {
+      "finding_id": "fc69f0a50442",
+      "severity": "critical",
+      "kind": "security",
+      "title": "agent-security-review skill removed without migration",
+      "detail": "The `agent-security-review` skill (SKILL.md) was deleted. This skill provided the red-team/blue-team/auditor review of AI agent configs — the holistic attack-chain analysis over rules, skills, MCP servers, hooks, permissions, and CI workflows. The `/security-audit-config` command it pairs with still exists (per the skill's own text), but the adversarial three-lens pass no longer has a skill file to invoke. No migration or deprecation is recorded."
+    },
+    {
+      "finding_id": "b843a038199b",
+      "severity": "high",
+      "kind": "claim",
+      "title": "16.1.0 CHANGELOG claims features not in the diff or range",
+      "detail": "CHANGELOG.md lists additions under 16.1.0 (enforcement matrix generation, corpus refresh, design fidelity proof, loop instrument reachability, etc.) but the packaging diff shows only metadata and one template example file. The analysis range `16.0.0...HEAD` may contain these features in commits, but they are not evidenced in the diff under review. A release claiming features that are not in its commit range or are already in `main` misstates what shipped."
+    },
+    {
+      "finding_id": "bc40becbf592",
+      "severity": "high",
+      "kind": "security",
+      "title": "Archived roadmaps document authority defects without remediation status",
+      "detail": "`road-to-authority-object-exactness.md` (archived) documents four authority-implementation defects found by independent test authorship: `objectIsExact` accepts `!!!!!!!!` as an exact object, empty `op` strings are not validated, `confirmed` lacks turn provenance, and `restore` ignores `ledger.grant`. The roadmap is marked `status: ready` and all ACs are `[x]`, but AC-2 states the findings are in a *tracked follow-up*, not fixed. The follow-up's status is not linked, so a reader cannot verify whether these authority holes are closed."
+    },
+    {
+      "finding_id": "cecd6316d03c",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "road-to-adversarial-verification AC-4 claims 'N=3' grep returns 0, but notes say it returns 1",
+      "detail": "`road-to-adversarial-verification-and-long-runs.md` AC-4 is marked `[x]` with verify `grep -rn 'N=3' src/rules` returns 0. The step's own note (under 4.1) records the grep returns **1** (in `verify-before-complete.md`, a kernel rule), and states the occurrence is agent-impossible to fix. AC-4 is therefore not met by its own criterion, yet the checkbox is checked."
+    },
+    {
+      "finding_id": "580b7b0f2b68",
+      "severity": "high",
+      "kind": "claim",
+      "title": "road-to-bounded-approval-floor-waiver AC-7 remains open, but file is in archive/",
+      "detail": "`road-to-bounded-approval-floor-waiver.md` AC-7 is `[ ]` (NOT met) — the administrator recovery procedure is written but NOT tested, and testing requires Hard-Floor actions outside agent scope. The file is in `archive/`, which implies completion, but an incomplete AC in an archived roadmap misrepresents closure. The blocker text confirms the remainder is tracked elsewhere (`road-to-typed-grants-that-persist.md` blocker), but the archive status contradicts the open box."
+    },
+    {
+      "finding_id": "1f84a012b0ea",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "road-to-decision-closure AC-5 and AC-6 marked open with 'NOT CLAIMED' notes, but file is active",
+      "detail": "`road-to-decision-closure.md` is `status: ready` (17 of 22 steps done), but AC-5 and AC-6 both carry `NOT CLAIMED` or `HALF PROVEN` verdicts dated 2026-09-13/14. AC-5 says 'static probes are not a transcript run' and AC-6 says 'the first clause depends on 3.1, whose remaining paragraph is kernel-rule and agent-impossible'. These ACs cannot close on static checks alone per their own notes, yet the roadmap is marked ready for execution."
+    },
+    {
+      "finding_id": "647a4d3e6769",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Multiple roadmaps reference measurement dates (2026-09-10 to 2026-09-27) after 16.0.0 tag",
+      "detail": "Archived roadmaps cite measurements, council sessions, and re-verifications dated 2026-09-10 through 2026-09-27 (e.g., `road-to-bounded-approval-floor-waiver.md` M17/M18, `road-to-adversarial-verification` status update). The git tag `16.0.0` is 2024-12-19 per conventional versioning. Either the dates are from a different timeline, the tag is mislabeled, or the measurements post-date the claimed base but are presented as evidence for this release. This breaks the 'analysis range is 16.0.0...HEAD' premise."
+    },
+    {
+      "finding_id": "4813e4f3d636",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "road-to-corpus-refresh-2026-q3 AC-3 defers to a follow-up, but the follow-up is DRAFT and hidden",
+      "detail": "`road-to-corpus-refresh-2026-q3.md` AC-3 is met by the second disjunct: 'still open and visibly `[~]`'. The deferred item was spawned to `road-to-corpus-refresh-cadence-shape.md` per the note. That file ships `status: draft`, deliberately hidden from dashboards. AC-3 is satisfied on a technicality (the `[~]` is visible), but the substance — whether the four-way expiry is a cadence or a batch — is parked indefinitely with no forcing function."
+    },
+    {
+      "finding_id": "9eb99b388444",
+      "severity": "low",
+      "kind": "style",
+      "title": "Inconsistent 'status: ready' vs open ACs across archived roadmaps",
+      "detail": "Several archived roadmaps carry `status: ready` while having `[ ]` ACs or `[~]` deferrals: `road-to-bounded-approval-floor-waiver` (AC-7 open), `road-to-corpus-refresh-2026-q3` (AC-3 deferred). The convention appears to be 'ready = all checkboxes dispositioned', but mixing `ready` with open boxes in an archive is ambiguous — a reader cannot tell if 'ready' means 'may execute' or 'execution attempted and residue recorded'."
+    },
+    {
+      "finding_id": "4d2147e39c63",
+      "severity": "low",
+      "kind": "style",
+      "title": "Repetitive 'corrected 2026-09-XX' amendments in multiple roadmap files",
+      "detail": "Files like `road-to-bounded-approval-floor-waiver.md`, `road-to-component-granularity-vocabulary.md` carry multiple dated correction paragraphs (2026-09-10, 2026-09-13, 2026-09-14) inline within steps and criteria. While these preserve audit trail, they make the text dense and harder to scan. Consider consolidating corrections into a single `## Amendments` section per file."
+    },
+    {
+      "finding_id": "fe35bf0ce1cd",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "Release-holds rule numbering collision undetected in proposal",
+      "detail": "agents/roadmaps/road-to-release-holds-that-refuse.md step 1.2 was authored as 'add rule 27' with verify pinning '27, up from 26'. Between proposal cut (2026-09-13) and approval (2026-09-15), commits 088f98fc2 and 5ed431b04 added an unrelated rule 27 to the template (§ Decisions). The prepared patch stopped applying (hunk 3 tail context moved), and two rules both numbered 27 would have totaled 28, passing the original verify's count check on exactly the defect that occurred. The patch was rebased and the rule renumbered 27→28, but the collision window proves the verify as written was insufficient. The corrected verify — now in the landed step — adds 'no rule number appears twice' via `sort | uniq -d`, which would have caught this.",
+      "file": "agents/roadmaps/road-to-release-holds-that-refuse.md"
+    },
+    {
+      "finding_id": "5a9855a5594f",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "Stale inline blocked-by markers produced false open-work signals",
+      "detail": "Two roadmaps carried steps with `blocked-by: rule-13-amendment` markers for four days (2026-09-15 to 2026-09-19) after the blocker was resolved. `scanOpenSteps` reads blockedness from the marker alone and never parses `## Blockers`, so both files reported `{open: 0, blocked: N}` while the work was executable. road-to-release-holds: 15 steps held; road-to-typed-grants: 5 kernel steps held. Every autonomous run in that window declined work it was free to do. The marker is correct at merge — both blockers now read Status: resolved and the markers are removed — but the lapse is recorded because a stale marker fails silently toward inaction.",
+      "file": "agents/roadmaps/road-to-release-holds-that-refuse.md"
+    },
+    {
+      "finding_id": "a74ae62b15ff",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Feature claimed 'not in the diff' when present in the release range",
+      "detail": "The prompt states 'Do NOT report a feature as not in the diff when it is present in the release range.' The release-holds mechanism is cited in the diff (multiple files), exists in the source (`src/scripts/check_release_holds.ts`, `_lib/release_holds.ts`), is wired at all four boundaries (`release.ts`, `release-gate-locality.yml`, `release-validation.yml`, `release-guard.yml`), and shipped in this release. No finding of 'not in the diff' should appear for it."
+    },
+    {
+      "finding_id": "2cdb6659ac55",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Arrival count correction not propagated to every occurrence",
+      "detail": "road-to-the-substrate-stub § 0.2 measured the mid-flight count at tag 15.0.0 as **three** of seven on 2026-09-13 and recorded it in the evidence file. The frontmatter's estate_growth_exempt note and the zero-live-subjects blocker still said 'four of seven' until 2026-09-19. Both were corrected in phase 0's landed change, but the correction itself arrived six days after the measurement, and the inconsistency sat across two instances of the same claim. The evidence artefact is the authority and was never wrong; the two prose copies lagged it.",
+      "file": "agents/roadmaps/road-to-the-substrate-stub-meeting-its-open-gate.md"
+    },
+    {
+      "finding_id": "5d96c0169794",
+      "severity": "medium",
+      "kind": "security",
+      "title": "Conflict-tracker preserved-file set not passed to rewriter",
+      "detail": "dist/install/claudeRuleRewrite.js gains a `preserved` parameter (Set<string>) that skips destinations the conflict tracker kept. The tracker builds this set (`conflictState.preserved`), but the call site in the diff does not pass it: `rewriteAndReport(rulesDir, quiet, info, warn, wrappers)` has five arguments where the signature now takes six. Without it, a file the tracker reported as preserved and staged beside is still rewritten in the same run, and the edit survives in the body while disappearing from the frontmatter. This is not a runtime error (the parameter has a default `new Set()`), but it silently defeats the preservation the owner ruling of 2026-09-21 was written to enforce.",
+      "file": "dist/install/claudeRuleRewrite.js"
+    },
+    {
+      "finding_id": "44e06e30e290",
+      "severity": "low",
+      "kind": "style",
+      "title": "Decision-matrix comment flag may trigger over-broad linter match",
+      "detail": "dist/install/conflict.js line ~41 carries `code-comment-allow report-comment -- pre-existing decision matrix`. The inline suppression is legitimate (the matrix is a ported Python contract, byte-identical by design), but the double-dash syntax is non-standard for this repository's comment linters and may match rules it was not written to suppress. Recommend verifying the comment does not silence unrelated findings.",
+      "file": "dist/install/conflict.js"
+    },
+    {
+      "finding_id": "8c24f0b758a7",
+      "severity": "critical",
+      "kind": "claim",
+      "title": "Published artifact count (commands) contradicts the measured tree",
+      "detail": "CLAIMS.md § published-artifact-counts states 'commands 202' and describes it as 'Measured 2026-09-13'. catalog.md § Commands header says '203'. architecture.md § Architecture table says '203'. Both catalog.md and architecture.md were updated in this PR (visible in the diff), so their '203' is current. Either the measurement in CLAIMS.md ran at an older revision, or the claim was not re-run after a command was added. The claim's 'evidence: exec:update_counts --check -> 0' says the counter passed, which means the three counts were aligned at the moment the claim was recorded — but that is not the moment this PR was cut, because the diff shows two of the three rose by one. Recommendation: re-run update_counts before merging, or fix the claim and re-measure."
+    },
+    {
+      "finding_id": "ce77fee046fc",
+      "severity": "critical",
+      "kind": "claim",
+      "title": "Published artifact count (rules) contradicts the measured tree",
+      "detail": "CLAIMS.md § published-artifact-counts states 'rules 120'. catalog.md § Rules header says '119'. architecture.md § Architecture table says '121'. All three differ, and the claim says 'Measured 2026-09-13', which is within this PR's range. The claim's own non_inference clarifies '`rules 120` counts source rules, of which one is dormant and reaches no consumer, so it is not a count of rules in force' — which reconciles 120 (source) vs 119 (projected), but does NOT reconcile either against 121. One of the three is wrong, or the measurement mixed bases. Recommendation: re-derive all three from the canonical counter, state which base each uses, and re-measure."
+    },
+    {
+      "finding_id": "f2ffa813e274",
+      "severity": "high",
+      "kind": "claim",
+      "title": "Published artifact count (guidelines) contradicts the measured tree",
+      "detail": "CLAIMS.md § published-artifact-counts states 'guidelines 114'. architecture.md § Architecture table says '121'. The 7-delta is large enough to be visible to an operator comparing the two, and the claim says it was measured at 2026-09-13, which falls inside this release. Either one file was updated and the other was not, or the measurement ran at two different revisions. Recommendation: re-run update_counts and re-measure."
+    },
+    {
+      "finding_id": "82a8806fd231",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "obligation-settle-shadow-bar claim may not be measurable",
+      "detail": "CLAIMS.md § obligation-settle-shadow-bar describes a pre-registered bar for the obligation-settle turn-end detector. The claim says 'PRE-REGISTERED 2026-09-13' and describes a 5% false-positive threshold over shadow rows. The claim also says the concern 'returns EXIT_ALLOW on every path' and is declared 'severity: advisory, fail_closed: false', so at the moment this bar is filed there is no arming switch. The claim is internally consistent (pre-registration before arming), but the practical consequence is unstated: if the detector stays advisory indefinitely, the shadow corpus never represents refused turns, so the 5% bar measures a different distribution than the one that would fire if the detector were armed. The claim says 'Re-arming after a null requires a NEW pre-registered claim', which makes this measurable only if arming happens. Recommendation: confirm with the owner whether the detector is expected to be armed, or whether this claim is parking the measurement until a future decision makes it relevant."
+    },
+    {
+      "finding_id": "ac16697da4ca",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "conformance.md describes a check that returns 'unknown', but the exit-code table does not account for it",
+      "detail": "conformance.md § txlog-clean describes a four-row verdict table that includes 'unknown' (when the log is absent but the install manifest is present). The text says 'unknown is not a failure and does not change the exit code'. The exit-code contract table (§ 2) lists only 0 (green), 1 (red), 2 (environment unresolvable), and the '0' row says 'warn and unknown rows allowed'. So the contract does account for 'unknown', but only in the '0' row's prose — the table itself does not name it as a distinct exit code. The text is consistent, but a reader scanning the table alone will not see 'unknown' as a documented outcome. Recommendation: add a note column to the exit-code table, or add a sentence immediately after it clarifying that 'unknown' and 'warn' both resolve to exit 0."
+    },
+    {
+      "finding_id": "c2efb8c67aca",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "branch-protection-policy.md describes an un-rehearsed recovery procedure as a 'capability claim, not a rehearsed procedure', but the procedure steps are written in the imperative",
+      "detail": "branch-protection-policy.md § Administrator recovery from a lockout describes a five-step recovery procedure (capture state, identify last good version, restore, re-enable, verify). The text says 'admin: true on the acting account is a capability claim, not a rehearsed procedure, and the difference is the whole reason this section exists'. It also says 'Step 0.2 of road-to-bounded-approval-floor-waiver.md requires it to have been executed once against a non-default-branch ruleset before it may be called tested, and that has not been done'. The final paragraph says 'treat it as a documented hypothesis: the commands are the right ones, and nobody has watched them work'. The steps are written as confident imperatives ('capture', 'restore', 'verify'), which reads as a tested procedure rather than a hypothesis. The text is honest at the end, but the shape misleads in the middle. Recommendation: prefix each step with a marker (e.g. 'UNTESTED — '), or rewrite the steps as 'the commands that SHOULD work are ...' to match the hypothesis framing."
+    },
+    {
+      "finding_id": "c296086d114c",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "design-artifact-verification.md describes four behavioral primitives as 'separate' and 'dependants' of playwright, but does not state what the degraded artifact shape is",
+      "detail": "design-artifact-verification.md § Host-class capability table lists four behavioral primitives (computed_style, interaction, viewport_matrix, media_emulation) and says they 'resolve to ❌ wherever playwright does — they are that primitive's dependants, never a second capability'. The degradation clause says 'A DIMENSION THAT DID NOT RUN HAS NO FINDING COUNT. IT REPORTS NOT-APPLICABLE AND THE REASON. NEVER ZERO.' The text describes the prose output ('Resolved styles not read on this host ...'), and says the artifact carries 'findings: null on a not-applicable row and a required non-empty reason'. It does NOT show the JSON shape. A consumer implementing the contract has to infer it from the prose. Recommendation: show the degraded JSON shape once (e.g. '{\"dimension\": \"computed_style\", \"findings\": null, \"reason\": \"...\"}'), or link to the schema/type definition."
+    },
+    {
+      "finding_id": "02b545dcbc0b",
+      "severity": "low",
+      "kind": "style",
+      "title": "MIGRATION.md § 15.0.0 correction is verbose and duplicates the CHANGELOG correction",
+      "detail": "MIGRATION.md § 15.0.0 carries a correction block ('The announced kernel-deny retirement did not ship') that quotes the CHANGELOG correction verbatim. The CHANGELOG entry is the source of truth, and MIGRATION.md says 'the correction is recorded at the head itself'. The duplication is load-bearing for a reader who lands on MIGRATION.md first, but the block is 15 lines and the link to the CHANGELOG is two lines down. Recommendation: keep the one-line summary ('The second BREAKING entry was reverted inside the same release') and the actionable part ('There is nothing to do'), and point to the CHANGELOG for the full rationale. The duplication is correct, but it is not minimal."
+    },
+    {
+      "finding_id": "9f1637945bd5",
+      "severity": "low",
+      "kind": "style",
+      "title": "branch-protection-policy.md § Recovery step 3 says 'The history payload nests the ruleset under .state', but the jq filter is shown without explanation",
+      "detail": "branch-protection-policy.md § Recovery step 3 says 'The history payload nests the ruleset under .state; a top-level .bypass_actors jq reads empty on every version and will mislead you'. The warning is precise, but the reader is expected to infer that the correct jq filter is '.state.bypass_actors' rather than '.bypass_actors'. The next line shows '.state' as the full shape, but does not state the implication. Recommendation: add one sentence: 'The correct path is .state.bypass_actors, not .bypass_actors'."
+    },
+    {
+      "finding_id": "2c0a127a57ac",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Undeclared command count increase not reflected in documentation",
+      "detail": "The release adds one command (`/challenge-me closure`) but the count claim in `docs/getting-started.md` and `docs/getting-started-by-role.md` changed from 202→203, while `docs/featured-skills.md` also shows 203 commands. However, the CHANGELOG does not explicitly call out a new command in its user-facing summary. The command exists (`src/domains/meta/challenge-me/closure/command.md`) and is reachable, but a command added without CHANGELOG mention is a documentation gap for users upgrading.",
+      "file": "CHANGELOG.md"
+    },
+    {
+      "finding_id": "ef80ad14ec6c",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Rule count increase from 120→121 lacks explicit CHANGELOG entry",
+      "detail": "Multiple files (docs/getting-started.md, docs/governance-advantage.md, src/domains/engineering-base/README.md, pack.yaml files) now state 121 rules vs 120 in 16.0.0. The release range includes `src/rules/test-first.md` as a new rule file. However, the CHANGELOG's 'Added' section does not explicitly list 'New rule: test-first' as a headline item, only mentioning it within a longer Feature entry about adversarial verification. A rule addition is a governance surface expansion that warrants its own CHANGELOG line.",
+      "file": "CHANGELOG.md"
+    },
+    {
+      "finding_id": "7f3beb1cf4d7",
+      "severity": "low",
+      "kind": "style",
+      "title": "Inconsistent terminology: 'plan-confidence gate' vs 'plan-closure pass'",
+      "detail": "The settings key `planning.closure_pass` replaced `planning.challenge_on_create` (per ADR changes), but some command docs still reference 'plan-confidence gate' in their step descriptions (e.g., feature/plan/command.md line 27: 'run the plan-confidence gate per plan-confidence-gate.md: read planning.closure_pass'). The gate's name changed from seed-confidence to closure, but the prose hasn't fully migrated. This creates reader confusion about which gate is actually running.",
+      "file": "src/domains/engineering-base/feature/plan/command.md"
+    },
+    {
+      "finding_id": "913b599851eb",
+      "severity": "critical",
+      "kind": "security",
+      "title": "Conflict resolution ladder removes halt without proving safety of autonomous resolution",
+      "detail": "The release removes halt condition #6 ('merge conflict outside enumerated classes') from roadmap-process-full, replacing it with an autonomous escalation ladder (understand intents → inspect recency → preserve both → independent review → council/team → owner). This is a safety regression: the original halt ensured a human decided unenumerated conflicts; the new ladder attempts autonomous resolution of cases 'nobody has decided yet'. The docs state 'deciding it silently inside a drain loop is how work disappears' but then immediately permit exactly that if rungs 1-5 succeed. No evidence is provided that the ladder's judgment is sound for arbitrary conflicts, and the change ships in a package whose own Iron Law is 'non-destructive-by-default'. A conflict resolution that might destroy work should halt, not escalate.",
+      "file": "src/domains/git/pr/merge/command.md"
+    },
+    {
+      "finding_id": "8db6afdf1e0d",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "Preservation logic depends on recorded digests that can be lost in three ways",
+      "detail": "The file-preservation feature (src/install/preserve.ts, src/install/conflictTracker.ts) classifies files as 'recorded-unchanged' vs 'recorded-modified' by comparing to digests in the installed-tools manifest. However, manifestFiles.ts documents three digest-loss paths that existed: (1) preserved files were never recorded in written_paths, (2) failed deploys wiped their tool's inventory, (3) tools outside the current selection lost inventories. While manifestFiles.ts claims to fix these, the fix is a reconciliation function (reconcileToolFiles) that depends on correct calling. No test evidence is provided that all three loss paths are actually closed, and the feature's safety claim ('your edit will be preserved') collapses if any digest loss remains.",
+      "file": "src/install/manifestFiles.ts"
+    },
+    {
+      "finding_id": "bb3959c13bfb",
+      "severity": "high",
+      "kind": "claim",
+      "title": "Six-layer delivery verification table asserts commands but doesn't prove they run",
+      "detail": "docs/contracts/roadmap-process-full adds a six-layer verification table (lines 178-190) naming the command that runs each layer (e.g., 'npm run test:ts -- <file>', 'ci_settle <PR> --timeout 1700'). This is presented as 'the layers are named, ordered, and each carries the command that produces its verdict' — implying these commands are actually invoked in this order. But the table is documentation, not executable contract. No test verifies that a roadmap run actually calls these commands in sequence, so the table could drift from reality. A test proving the execution order matches the table is the backing this claim needs.",
+      "file": "src/domains/product-basic/roadmap/process-full/command.md"
+    },
+    {
+      "finding_id": "1f21b041582c",
+      "severity": "low",
+      "kind": "style",
+      "title": "Release version metadata scattered across multiple files without central schema",
+      "detail": "The version '16.1.0' appears in package.json, multiple marketplace.json files, and agent-project-settings.example.yml. While this is standard practice, the release diff shows no schema or validation that these stay in sync. A maintainer could update package.json but forget .augment-plugin/marketplace.json. Consider a single-source-of-truth or a pre-commit check that versions match.",
+      "file": "package.json"
+    },
+    {
+      "finding_id": "e5c04b934c54",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Standing payload cost measurement for rtk_wrap hook is stated as unmeasured",
+      "detail": "src/config/hook-token-budget.json states the rtk_wrap hook's activation charge is 'one advisory line under the 1,024 B default concern cap' but immediately says 'the per-fire distribution is UNMEASURED — stated rather than estimated'. An unmeasured cost in a token-budget file means the gate can't actually enforce the cap, because it doesn't know what the fire costs. Either measure it or don't claim it fits under 1,024 B.",
+      "file": "src/config/hook-token-budget.json"
+    },
+    {
+      "finding_id": "54abdbaa965f",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "auto-rule-budget.json registered at measurement, violating the pre-registration discipline",
+      "detail": "src/config/auto-rule-budget.json is a new file registering a growth ratchet at 373,000 chars, 'seeded AT the measurement'. The file's own comment says 'seeding below it would red every pull request from the day it lands'. But this is exactly the post-hoc baseline the package's other ratchets refuse: check_source_size_budget was measured, then lowered repeatedly to pay for additions; this one is measured and locked at the measurement. No pre-period exists to compare against, so the 'ratchet' can only go down from an arbitrary starting point.",
+      "file": "src/config/auto-rule-budget.json"
+    },
+    {
+      "finding_id": "82e2af2594f9",
+      "severity": "low",
+      "kind": "style",
+      "title": "Multiple files reference 'PRIOR ENTRY' dates in reverse chronological order, obscuring current truth",
+      "detail": "Files like src/config/gate-violation-baselines.json and docs/contracts/rule-router.md have 'PRIOR ENTRY' blocks stacked newest-first, making it hard to find the current value. The reader must parse 'Lowered X->Y on DATE' repeatedly to find what Y is today. Consider moving historical entries to a separate section or file so the current value is at the top.",
+      "file": "src/config/gate-violation-baselines.json"
+    },
+    {
+      "finding_id": "761981d6069a",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "loop-surfaces.yaml declares two experimental instruments with the same expiry date",
+      "detail": "src/config/loop-surfaces.yaml declares rejectedTacticRepeat and compareTriggers, both with 'expires: 2026-12-12'. The file's purpose is to make dead code findable, but using the same date for unrelated instruments suggests the dates are placeholders rather than actual decision points. If both genuinely expire on the same day, state why; otherwise, stagger them to reflect real review cadences.",
+      "file": "src/config/loop-surfaces.yaml"
+    }
+  ],
+  "review_independence": "single-member",
+  "context_relation": "unknown",
+  "acceptance_status": "provisional",
+  "assurance": "single-pass",
+  "reviewers": [
+    "anthropic"
+  ],
+  "coverage": {
+    "chunks": 6,
+    "filesReviewed": 202,
+    "filesTotal": 401,
+    "unreviewed": [
+      {
+        "path": "src/install/preserve.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/install/recordedOwnership.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/install/txlog.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/install/types.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/packs/product-reasoning/README.md",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/packs/product-reasoning/pack.yaml",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/autonomous-execution.md",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/delegation-policy.md",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/design-fidelity.md",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/evaluator-independence.md",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/test-first.md",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_cli/cmd_conformance.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_cli/cmd_doctor.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_cli/cmd_route_explain.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_cli/cmd_settings_get.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_cli/doctor_execution.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/activation_payload.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/agent_settings.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/authority_path.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/cascade_base.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/changelog_eras.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/continuation_ladder.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/council_transport.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/delivery_ready.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/forge_protection.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/hook_platform_keys.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/json_python_parity.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/lean_projection_mode.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/loop_surfaces.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/mission_record.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/obligation_frequency.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/obligations.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/orchestration_record.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/release_highlights.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/release_holds.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/release_migration_gate.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/rides_along.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/settings_renamed_keys.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/test_delta.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/test_provenance.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/typed_op_grant.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/typed_op_watch.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/ai_council/config.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/ai_council/fallback_config.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/ai_council/ownership_classes.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/ask_block_census.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/check_enforcement_matrix.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/check_gate_reachability.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/check_generator_sync.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/check_preamble_payload_budget.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/check_release_highlights.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/check_release_holds.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/check_rule_projection_integrity.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/check_test_delta.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/check_test_weakening.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/closure_scan.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/compile_hook_manifest.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/council_record_shape.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hook_manifest.json",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hook_manifest.yaml",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks/concern_registry.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks/design_pass_hook.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks/evidence_independence.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks/memory_recall_hook.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks/obligation_settle_hook.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks/rule_inject_hook.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks/run_continuation_hook.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks_doctor.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks_status.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/install.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/janitor.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/lint_decision_classes.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/lint_hook_manifest.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/lint_major_migration_sections.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/lint_plan_risk_register.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/lint_roadmap_blockers.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/lint_roadmap_producers.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/measure_rule_budget.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/new_roadmap.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/orchestration_record.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/release.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/release_drill.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/release_publication.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/report_enforcement_drift.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/report_host_injection_effect.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/report_standing_payload_by_host.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/schemas/agent-settings.schema.json",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/schemas/command.schema.json",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/scope_growth.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/trigger_eval_grandfather.json",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/ui_conformance_probe.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/server/routes/install.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/server/routes/wizard.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/server/schemas/settings.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/shared/missionExecution.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/accessibility-auditor/data/manifest.json",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/ai-council/SKILL.md",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/api-design/data/manifest.json",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/database/data/manifest.json",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/database/data/query-tuning.csv",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/design-review/SKILL.md",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/existing-ui-audit/SKILL.md",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/experiment-loop/SKILL.md",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/roadmap-writing/SKILL.md",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/roadmap-writing/evals/triggers.json",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/storybook-workshop/SKILL.md",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/threat-modeling/SKILL.md",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/threat-modeling/data/manifest.json",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/verify-repair-loop/SKILL.md",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/ui/pages/WizardPage.tsx",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/ui/wizard/state.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "taskfiles/ci-fast.yml",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/cli/uiAudit_design_system.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/design-artifacts/fixtures/ui-conformance/README.md",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/design-artifacts/fixtures/ui-conformance/capture.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/design-artifacts/fixtures/ui-conformance/observations/reference.json",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/design-artifacts/fixtures/ui-conformance/observations/variant-defects.json",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/design-artifacts/fixtures/ui-conformance/observations/variant-renamed.json",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/design-artifacts/fixtures/ui-conformance/reference/app.js",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/design-artifacts/fixtures/ui-conformance/reference/index.html",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/design-artifacts/fixtures/ui-conformance/reference/styles.css",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/design-artifacts/fixtures/ui-conformance/variant-defects/app.js",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/design-artifacts/fixtures/ui-conformance/variant-defects/conformance.declared.json",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/design-artifacts/fixtures/ui-conformance/variant-defects/index.html",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/design-artifacts/fixtures/ui-conformance/variant-defects/styles.css",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/design-artifacts/fixtures/ui-conformance/variant-renamed/app.js",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/design-artifacts/fixtures/ui-conformance/variant-renamed/index.html",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/design-artifacts/fixtures/ui-conformance/variant-renamed/styles.css",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/e2e/adversarial-verification-fixtures.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/eval/routing-matrix/test-first.yaml",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/fixtures/decision-closure/F0-closed-plan.md",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/fixtures/decision-closure/F1-technical-ambiguities.md",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/fixtures/decision-closure/F2-product-semantics.md",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/fixtures/decision-closure/F3a-conclusive-technical.md",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/fixtures/decision-closure/F3b-non-convergent-product.md",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/fixtures/decision-closure/F4-midrun-architecture-choice.md",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/fixtures/decision-closure/R1-ready-unresolved.md",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/fixtures/decision-closure/R2-ready-resolved.md",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/hooks/design_pass.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/hooks/hook_manifest_compiled.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/hooks/obligation_settle.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/hooks/surface_envelope.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/install/claude_rule_rewrite.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/install/conflict.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/install/manifestFiles.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/install/preflight.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/install/preserve.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/install/recordedOwnership.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/_cli/cmd_conformance.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/activation_payload.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/ai_council/config.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/ai_council/force_topology_prohibitions.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/ask_block_census_axes.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/ask_surface.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/cascade_base.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/check_enforcement_matrix.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/check_generator_sync.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/check_release_highlights.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/check_routing_coverage.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/check_test_delta.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/closure_scan.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/council_record_shape.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/delivery_ready.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/forge_protection.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/hooks/hooks_doctor.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/injection_effect.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/install.preserve.roundtrip.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/install.preserve.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/install.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/install_snapshot.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/lint_budget_ownership.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/lint_decision_classes.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/lint_major_migration_sections.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/lint_plan_risk_register.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/lint_roadmap_blockers.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/lint_roadmap_producers.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/measure_rule_budget.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/memory_lookup.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/memory_recall_hook.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/mission_continuity.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/new_roadmap.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/obligation_frequency.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/obligations.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/release.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/release_holds_sabotage.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/report_enforcement_drift.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/rides_along.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/routing_signal_measurement.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/rule_inject_hook.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/scope_growth.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/settings_renamed_keys.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/test_provenance.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/typed_op_grant.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/typed_op_watch.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/ui_conformance_probe.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/witness/reach_doctor_readonly.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/work_engine/directives_backend_self_fix.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/server/helpers.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/shared/missionExecution.test.ts",
+        "reason": "the span needs 10 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      }
+    ]
+  }
+}
