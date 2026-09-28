@@ -8,7 +8,21 @@ name: Cross-model canary
 #     that a periodic-only-or-never check would miss silently.
 #
 # To enable the live tier, add repo secrets ANTHROPIC_API_KEY / OPENAI_API_KEY /
-# GEMINI_API_KEY. Without them the live job is a no-op (logged), never a failure.
+# GEMINI_API_KEY.
+#
+# Without ANTHROPIC_API_KEY the live job does not RUN at all: `secret-presence`
+# reports the secret absent and `periodic-live` is skipped on that output. A
+# skipped job is not a failed job, so an unconfigured fork or a fresh clone sees
+# a clean weekly run rather than a standing red. With the key the job runs for
+# real and is allowed to fail — a live floor breach is the maintainer
+# notification this canary exists to produce, and swallowing it would make the
+# whole tier decorative.
+#
+# The gate lives in a preflight JOB rather than in `periodic-live`'s own `if:`
+# because the `secrets` context is not available in a job-level condition; only
+# a job's outputs are. The steps below therefore no longer re-check the key that
+# gates them — the smoke step keeps its own check, because it needs all three
+# secrets and the job gate only proves one.
 
 on:
   pull_request:
@@ -34,6 +48,26 @@ permissions:
   contents: read
 
 jobs:
+  # Presence-only probe. It prints `true`/`false`, never a secret, and writes no
+  # key material to disk — the job that needs the key materializes it itself.
+  secret-presence:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    outputs:
+      anthropic: ${{ steps.probe.outputs.anthropic }}
+    steps:
+      - id: probe
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -n "$ANTHROPIC_API_KEY" ]; then
+            echo 'anthropic=true' >> "$GITHUB_OUTPUT"
+            echo '::notice::ANTHROPIC_API_KEY present — the live canary will run.'
+          else
+            echo 'anthropic=false' >> "$GITHUB_OUTPUT"
+            echo '::notice::ANTHROPIC_API_KEY absent — the live canary is skipped, not failed. Set the repo secret to enable it.'
+          fi
+
   gate-dry-run:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
@@ -49,7 +83,8 @@ jobs:
         run: ./node_modules/.bin/tsx src/scripts/cross_model_smoke.ts --dry-run --skills image-analyser
 
   periodic-live:
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    needs: secret-presence
+    if: needs.secret-presence.outputs.anthropic == 'true'
     runs-on: ubuntu-latest
     env:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -80,12 +115,8 @@ jobs:
       # THIS scheduled job only — PRs are never blocked by live results. The
       # local interactive skill_trigger_eval gate is untouched; authorization
       # derives exclusively from the repo-secret key file written here.
-      - name: Trigger-eval pass-rate rotation (skips if key secret absent)
+      - name: Trigger-eval pass-rate rotation
         run: |
-          if [ -z "$ANTHROPIC_API_KEY" ]; then
-            echo "::notice::Trigger-eval rotation skipped — set ANTHROPIC_API_KEY repo secret to enable."
-            exit 0
-          fi
           mkdir -p "$HOME/.event4u/agent-config"
           ( umask 077
             printf '%s' "$ANTHROPIC_API_KEY" > "$HOME/.event4u/agent-config/anthropic.key" )
@@ -95,12 +126,8 @@ jobs:
       # suite (~40 cases, deterministic sampling). Same contract as the skills
       # rotation above: a floor breach fails THIS scheduled job only — PRs are
       # never blocked by live results; the PR gate stays skills-dry-run-only.
-      - name: Rule trigger-eval, advisory (skips if key secret absent)
+      - name: Rule trigger-eval, advisory
         run: |
-          if [ -z "$ANTHROPIC_API_KEY" ]; then
-            echo "::notice::Rule trigger-eval skipped — set ANTHROPIC_API_KEY repo secret to enable."
-            exit 0
-          fi
           mkdir -p "$HOME/.event4u/agent-config"
           ( umask 077
             printf '%s' "$ANTHROPIC_API_KEY" > "$HOME/.event4u/agent-config/anthropic.key" )
