@@ -122,3 +122,35 @@ the async verifier above, which captures the fan-out's main win without spinning
 up four separate views. Reconsider only when `design-review` runs as a standalone
 heavy batch over many *independent* surfaces, where per-surface
 `do-in-parallel` genuinely pays.
+
+## Appearance verification — what a clean render does not answer
+
+The skill body carries the floor: appearance verification is mandatory wherever
+appearance can be affected, its trigger is identical to the two capture steps it
+replaces, and presence-and-sanity comes before pixel comparison. This section is
+the part a reviewer looks up rather than obeys — the division of labour between a
+render and the probe's four dimensions.
+
+A render is a resting frame. It can only show what the surface looks like with
+nothing driving it, which is why a clean one says nothing about:
+
+| The question | Why the render cannot answer it | What does |
+|---|---|---|
+| Does hover / focus / active feedback exist? | the state is never entered | `interaction` |
+| Does the keyboard reach it, and does the handler fire? | no input is delivered | `interaction` |
+| Did the breakpoint change the layout, or did the media query silently not fire? | the same picture comes back either way | `viewport_matrix` |
+| Is the resolved value the token intended, after cascade and fallback? | a wrong value can look plausible | `computed_style` |
+| Is `prefers-reduced-motion` honoured, and with *what* instead? | the preference is never emulated | `media_emulation` |
+
+Reading a clean render as though it covered a row of this table is the
+substitution the appearance-only marking exists to prevent, and it is the reason
+the floor lists its two jobs separately rather than as one "visual check": the
+first job is the one no probe dimension replaces, and the second is the one the
+probe supersedes for behavior.
+
+**The converse holds and is the less obvious half.** No probe dimension covers
+presence and sanity. A `computed_style` row can be green on a node that is
+off-screen, transparent, zero-height or painted under an overlay — correct
+resolved values on something nobody can see. That asymmetry is why demoting the
+image from *primary evidence* is not the same as removing it, and why an unrun
+appearance check is reported as unrun rather than folded into a probe verdict.
