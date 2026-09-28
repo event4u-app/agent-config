@@ -15,6 +15,7 @@ import {
     TECHNICAL_CLASSES,
     _archiveOverlap,
     _blockerClass,
+    _globRoadmaps,
     _hasExecutableSubstance,
     _openBlockerIds,
     _scan,
@@ -500,5 +501,99 @@ describe('lint_roadmap_blockers — the ownership axis', () => {
             '- **Status:** resolved',
         );
         expect(_scan(resolved)).toEqual([]);
+    });
+});
+
+// The scanned scope, after the 2026-09-28 owner ruling widened it one
+// directory down into `stubs/`.
+//
+// `_globRoadmaps` takes its root as an argument so the scope can be driven
+// from a fixture tree. Asserting against the real tree would only restate
+// today's file list; a fixture pins the RULE — a stub is judged, a parked or
+// archived roadmap is not — in both directions, so the widening cannot be
+// silently reverted and cannot silently keep growing.
+describe('lint_roadmap_blockers — the scanned scope', () => {
+    let tmp: string;
+    beforeEach(() => {
+        tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'lrb-scope-'));
+    });
+    afterEach(() => {
+        fs.rmSync(tmp, { recursive: true, force: true });
+    });
+
+    /** A blocker entry missing the required `Resolved when:` field. */
+    const MALFORMED = [
+        '# Fixture',
+        '',
+        '## Blockers',
+        '',
+        '### blocker: b-malformed',
+        '- **Status:** open',
+        '- **Owner:** maintainer',
+        '- **Blocks:** nothing',
+        '- **What to do:** run `./scripts-run src/scripts/check_estate_count`',
+        '- **Recommendation:** decide it',
+        '- **If you do nothing:** it stays parked',
+        '',
+    ].join('\n');
+
+    function write(rel: string, body: string): string {
+        const fp = path.join(tmp, rel);
+        fs.mkdirSync(path.dirname(fp), { recursive: true });
+        fs.writeFileSync(fp, body, 'utf-8');
+        return fp;
+    }
+
+    /** Repo-relative-ish suffixes of what the glob returned, for readability. */
+    const seen = (root: string): string[] =>
+        (_globRoadmaps(root) as string[]).map((f) => path.relative(root, f).split(path.sep).join('/')).sort();
+
+    it('a malformed blocker in a STUB is caught', () => {
+        write('active.md', '# Active\n');
+        write('stubs/parked-idea.md', MALFORMED);
+
+        const found = _globRoadmaps(tmp) as string[];
+        expect(seen(tmp)).toContain('stubs/parked-idea.md');
+
+        // The scope is only worth widening if the contract then applies: run
+        // the same scan `main()` runs over everything the glob returned.
+        const violations = found.flatMap((f) => _scan(fs.readFileSync(f, 'utf-8')));
+        expect(violations).toHaveLength(1);
+        expect(violations[0]!.message).toContain("blocker 'b-malformed' missing required field(s): Resolved when");
+    });
+
+    it('a malformed blocker in later/ or archive/ is still OUT of scope', () => {
+        // The other half of the ruling: it widened the glob to `stubs/` and to
+        // nothing else. Without this, widening again would pass unnoticed.
+        write('active.md', '# Active\n');
+        write('later/parked.md', MALFORMED);
+        write('archive/closed.md', MALFORMED);
+        write('skipped/dropped.md', MALFORMED);
+
+        expect(seen(tmp)).toEqual(['active.md']);
+        const violations = (_globRoadmaps(tmp) as string[]).flatMap((f) =>
+            _scan(fs.readFileSync(f, 'utf-8')),
+        );
+        expect(violations).toEqual([]);
+    });
+
+    it('a well-formed stub passes, so the scope is not a blanket failure', () => {
+        write(
+            'stubs/clean.md',
+            MALFORMED.replace(
+                '- **If you do nothing:** it stays parked\n',
+                '- **If you do nothing:** it stays parked\n- **Resolved when:** it is decided\n',
+            ),
+        );
+        expect(seen(tmp)).toEqual(['stubs/clean.md']);
+        const violations = (_globRoadmaps(tmp) as string[]).flatMap((f) =>
+            _scan(fs.readFileSync(f, 'utf-8')),
+        );
+        expect(violations).toEqual([]);
+    });
+
+    it('a missing stubs/ directory is not an error', () => {
+        write('active.md', '# Active\n');
+        expect(seen(tmp)).toEqual(['active.md']);
     });
 });
