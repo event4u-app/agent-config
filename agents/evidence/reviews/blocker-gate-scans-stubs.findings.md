@@ -78,6 +78,27 @@ Disposition and nothing else.
 > load-bearing it is. If a question has no findings, say so for that question.
 > Do not fix anything.
 
+## Contract §2.5 deviation — the fixes were committed before this artifact
+
+Stated here rather than left for the gate to say. `check_completion_review`
+reports `fix-before-artifact` on every row marked `fixed`: the artifact's
+first-add commit is later than the two commits its rows cite. The contract wants
+the opposite order so that a `fixed` claim cannot be written to match work
+already done — backdating is exactly what it detects, and it detected this.
+
+What happened is the plain version: the reviewer's report arrived, the findings
+were fixed and committed as two ordinary chunks, and the artifact was written
+afterwards. Repairing the order now needs a history rewrite on a pushed branch,
+which is a Hard-Floor action nobody authorised, so the order stands and the
+violation is recorded instead of being made to disappear.
+
+What a reader should check, given the order cannot vouch for the content: the
+prompt is reproduced verbatim below and can be judged for steering; the findings
+name file:line and were reproduced independently before being fixed; and the
+`accepted-risk` rows are the ones where the author declined the reviewer, which
+is where steering would show up first. The gate's finding is correct and this
+note does not argue with it.
+
 ## Findings
 
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
