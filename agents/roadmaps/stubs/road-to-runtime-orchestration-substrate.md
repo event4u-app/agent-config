@@ -112,6 +112,91 @@ there was nothing to choose between. Recorded per
 (`which-track-promotes-is-owner-reserved`) the owner resolved as "promote none this round".
 The table itself, not this line, is what would change first if that verdict were to move.
 
+## The per-track governance ruling is pending — requested 2026-09-28
+
+Recorded under arm (b) of the blocker `the-governance-conditions-are-a-supervision-read` on
+`road-to-the-substrate-stub-meeting-its-open-gate.md` (archived on closure to
+`agents/roadmaps/archive/`),
+whose `Resolved when` reads "each condition carries a ruling, **or** the stub records that the
+ruling is pending with the date it was requested". **Requested 2026-09-28. No condition carries
+a ruling for any track.**
+
+Arm (b) was taken rather than arm (a), and the reason matters more than the date: a read-only
+enumeration found the ruling **not answerable as posed**, which is a different state from
+*unmet* and would be misreported as a deferral. Three independent reasons, each checkable in
+one command or one file:
+
+1. **No track has a process, so conditions 1 to 3 have no subject.** Supervised, scoped writes
+   and stoppable are all questions *about a process*, and none of the eight rows above has one.
+   Every cell therefore reads `unverifiable from tree evidence` in
+   [`substrate-stub-gate-conditions-2026-09-13.md`](../../evidence/analysis/substrate-stub-gate-conditions-2026-09-13.md)
+   § 1 — The four governance conditions. **Unverifiable is not unmet.** Ruling them unmet would record a
+   judgement nobody measured, about a subject that does not exist — and it would then be cited
+   as a finding.
+2. **Condition 4 is not per-track.** Its documentation half is green and mechanically checked
+   (`./scripts-run src/scripts/check_supervision_claim_atomicity`). Its process half — a
+   same-revision activation guard — is absent for every track *equally*:
+   `docs/contracts/resident-process-governance.md` says in its own text that the guard "belongs
+   to whichever change first ships a P1 process, and does not exist yet". A per-track ruling
+   has nothing per-track to rule on here.
+3. **Track 1's gate is not ADR-249.** The control-store row is shut by **ADR-124 § 6's
+   state-store test**, which ADR-249 does not touch — its `supersedes_scope` frontmatter
+   preserves "its § 6 state-store test" in those words, and § Not reopened restates the
+   boundary. A ruling on the four governance conditions cannot open it. Track 4 inherits that
+   gate in its own row's words ("inherits that row's P3 gate in full and cannot open before
+   it"), and track 8 opens only "after at least one other row is promoted and has shipped" —
+   so neither of those is opened by a four-condition ruling either.
+
+**ADR-249 is live, and it is not an unqualified lock.**
+`./scripts-run src/scripts/adr_cite_check ADR-249` reports `status: accepted`,
+`trigger state: indeterminate`, `reopen_policy: owner (declared)`,
+`authority_basis: owner_intent`, evidence `E2`, and 5 of 5 basis refs resolving. The tool's own
+verdict, quoted whole because its trailing clause is the operative half, is "LIVE, TRIGGER
+INDETERMINATE — the reopen condition is semantic and this tool cannot decide it. Not an
+unqualified lock: evaluate the condition against the current tree and route the result."
+This section is that routing. So this pending state is a deferred **supervision
+judgement**, never a reading of that record as settled or as closed.
+
+### What would make this pending state stale
+
+Reason 1 is the load-bearing one, and it is the one most likely to be read too broadly. It rests
+on *no track above* having a process — **not** on the package having none.
+
+The neighbouring question, whether a supervised resident process has shipped at all, was
+measured on 2026-09-28 and the answer is two-valued: **yes as code, no as residency.**
+`src/scripts/collector_daemon.ts` ships and `src/scripts/run_lifecycle_suite` exercises it
+against real spawned processes — the suite drives `tests/scripts/collector_lifecycle.test.ts`,
+which is the layer that spawns the daemons, and derives its verdict from five named lifecycle
+properties rather than hardcoding it; nothing in `src/` writes or loads a `launchd` plist or a
+`systemd --user` unit, and the `ENABLED` opt-in marker has no production writer, so it is
+default-off by absence of mechanism rather than by configuration. That measurement corrected
+`docs/CLAIMS.md`'s `resident-process-permitted-under-governance`, whose `non_inference` had
+denied it since 2026-08-27 — when it was written and true — and went on denying it after
+2026-08-30, when it became false. The two dates are different facts and the entry keeps them
+apart. It **does not** discharge reason 1: the collector belongs to
+`road-to-supervised-telemetry-collector`, not to any of the eight tracks here — which is
+exactly why the shipped-or-not answer and this pending state can both be true at once.
+
+**Revisit when any one of the three reasons stops holding.** They fail differently, so name
+which one moved:
+
+- **a track above acquires a process** — reason 1 is gone for that track, and conditions 1 to 3
+  become measurable for it rather than unverifiable;
+- **the same-revision activation guard ships** — reason 2 is gone, and condition 4 becomes a
+  real per-track question instead of a uniform absence;
+- **ADR-124 § 6 is reopened by a separate record, or a control-store design passes its test on
+  its own terms** — reason 3 is gone for tracks 1 and 4, and for those two only. Track 4 is
+  downstream of track 1 in its own row's words ("inherits that row's P3 gate in full");
+- **any track above is promoted AND has shipped** — that, and not the § 6 bullet, is what
+  reaches track 8. Its row says "opens after at least one other row is promoted and has
+  shipped", which is **any** of the other seven and is two steps beyond a design passing a
+  test. Reopening § 6 promotes nothing and ships nothing, so it moves track 8 not at all —
+  this bullet was folded into the one above in the first draft, which would have handed a
+  future reader a revisit trigger for a gate that had not moved.
+
+Until one of those happens, re-requesting the ruling meets the same three reasons, and the
+honest answer is this section rather than a fresh enumeration.
+
 ## Why one stub
 
 Seven roadmaps for eight gated tracks is seven files against an estate whose
