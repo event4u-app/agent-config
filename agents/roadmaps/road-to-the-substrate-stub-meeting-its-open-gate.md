@@ -130,6 +130,15 @@ rounds since have re-derived the architecture instead of reading the file.
       Measured so the next person does not have to: all five stubs that already carry blocker
       headings pass both the required and the decidability field sets, so the widening looks cheap
       — it is still a decision, and it is not this roadmap's.
+      **SUPERSEDED 2026-09-28 — the owner took that decision and the glob is widened.** The
+      "unsatisfiable at this file's location" finding above was true when written and is no longer:
+      `lint_roadmap_blockers` now scans `stubs/` and sees this entry. The paragraph is corrected in
+      place rather than deleted, because the finding is what produced the ruling. Re-measured at
+      the widening: the count is **six** stubs carrying blocker headings, not five. Two of the six
+      — `road-to-kernel-clause-1-restore.md` and `road-to-preamble-transfer-debt-221.md` — place the
+      heading OUTSIDE a `## Blockers` section, so the scanner does not reach them even now. That is
+      unchanged by the widening and belongs to the sibling parse defect, not to this roadmap.
+      Full evidence: AC-4.
 - [x] **3.2 Add a status line** so lifecycle tooling can place the object.
       verify: the stub carries a status and the roadmap dashboard reflects it after a regeneration.
       **landed 2026-09-13.** Two surfaces, because a stub's lifecycle fields are not a roadmap's:
@@ -293,23 +302,38 @@ table's own staleness, which this re-review is an instance of rather than a fix 
 - [x] AC-3 — The stub carries an arrival line with its count, codenames only, and its denominator
       named. — landed on `origin/main` by the `depends:` roadmap; re-verified here, source-silence
       gate at baseline 148 after this change's edits to the same file.
-- [ ] AC-4 — The blocker linter sees the stub's hold as a parseable entry with all five required
-      fields. **Open, and deliberately not laundered.** The five fields are present and the entry
-      parses — `count_owner_decisions()` in `src/agent-src/scripts/stubs_due.ts` goes **0 → 1** on
-      it, which is what made Phase 3 landable. But the AC names `lint_roadmap_blockers`, and that
-      gate does **not** see the entry and structurally cannot: `lint_roadmap_blockers.ts:48` globs
-      `agents/roadmaps/*.md` non-recursively, and its own header declares non-active directories
-      out of scope on purpose ("`later/` and `archive/` are outside this gate's glob"). `stubs/`
-      is outside it on identical terms.
-      **Two ways to close it, neither this roadmap's to take.** Widen that glob to `stubs/` — cheap
-      on today's measurement (all five stubs that carry blocker headings already pass both the
-      required and the decidability field sets) but still a gate-scope decision over 121 files. Or
-      amend the AC to name the gate that actually reads stub blockers. Left open rather than
-      reworded, because an AC edited to match what was achieved stops being an acceptance test.
-      The receiving object for the gate-blindness half already exists:
-      `agents/roadmaps/stubs/road-to-blocker-parse-visibility.md`, which records the sibling defect
-      in the same parser family. It is a stub, so it is named as a *pointer* and not as a
-      `carried-to=` receiver — a deferral needs a real roadmap, and none owns this yet.
+- [x] AC-4 — The blocker linter sees the stub's hold as a parseable entry with all five required
+      fields. **CLOSED 2026-09-28 by an owner ruling: widen the glob.** The AC is met as written —
+      it was not reworded.
+      **The ruling.** Maintainer (Matze), 2026-09-28, owner decision. This roadmap recorded two
+      ways to close AC-4 and said neither was its own to take, because a gate's scope over 121
+      files is a decision about what the gate is for. The owner took it: `lint_roadmap_blockers`
+      now scans `agents/roadmaps/` **and** `stubs/`. **Rejected alternative:** reword AC-4 to name
+      `count_owner_decisions()` in `src/agent-src/scripts/stubs_due.ts` — the gate that already
+      read stub blockers. Rejected on this roadmap's own stated ground, that an AC edited to match
+      what was achieved stops being an acceptance test.
+      **Why a stub and not `later/` or `archive/`.** Those record decisions already taken — parked,
+      closed, dropped — so a blocker left unresolved in one is history. A stub records a decision
+      still to take, and is where a hold sits longest; excluding it exempted exactly the entries
+      most likely to rot. The exclusion of the other three is unchanged and now pinned by a test in
+      its own direction.
+      **Verified, per field, rather than inferred from a green exit.** A file the gate never opened
+      also produces no violation, so absence of a finding proves nothing on its own. The entry is
+      in the glob (`_globRoadmaps()` contains the stub's path), it PARSES
+      (`_openBlockerIds` returns `per-track-governance-ruling-unmade`), and each of the five
+      required fields was deleted in turn from an in-memory copy with the gate naming that exact
+      field every time — 5 of 5. Unmodified: `hard=0 decidability=0`.
+      **Measured cost of the widening: nothing to migrate.** 121 stubs enter scope; 6 carry a
+      `### blocker:` heading, 4 declare one open inside a `## Blockers` section (the other two put
+      the heading outside one, so the scanner does not reach them — recorded, not fixed here).
+      Across all 121: **0 hard violations, 0 additions to the `:decidability` ratchet** (still 0,
+      no baseline needed), **0 new active/archived overlaps**. The gate reports `131 roadmap(s)
+      blocker-contract-clean`, up from 10. The estate ratchet is untouched by construction —
+      `check_estate_count` runs its own collector that excludes any path with a `stubs` component.
+      **Sibling defect, still open and still only a pointer:**
+      `agents/roadmaps/stubs/road-to-blocker-parse-visibility.md` records that the gate reports a
+      file clean when it parsed no blocker at all. This change widens *where* the gate looks and
+      does not make a vacuous pass refuse — that is that stub's subject, not this one's.
 - [x] AC-5 — The stub carries a status line and the dashboard reflects it. — `- **Status:** open`
       inside the blocker plus three stub-contract frontmatter fields; dashboard owner-decision
       counter 12 → 13 after regeneration, `stubs:due` OWNER bucket 37 → 38.
