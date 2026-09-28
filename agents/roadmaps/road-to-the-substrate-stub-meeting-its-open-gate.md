@@ -139,6 +139,23 @@ rounds since have re-derived the architecture instead of reading the file.
       heading OUTSIDE a `## Blockers` section, so the scanner does not reach them even now. That is
       unchanged by the widening and belongs to the sibling parse defect, not to this roadmap.
       Full evidence: AC-4.
+      **Two corrections to AC-4's own wording, recorded here because the Risk-Register gate
+      resolves a re-review to the DAY and this roadmap has already had its one stamp today.**
+      Both are readable-but-imprecise rather than wrong, and moving the text into the Acceptance
+      Criteria section after the register was re-read would red `lint_plan_risk_register` on a
+      file whose register was in fact re-read — so the correction lands one section up instead of
+      the stamp being re-dated to something untrue.
+      (a) AC-4 says "121 stubs enter scope". It is **121 files — 120 stubs plus this directory's
+      README**, which the glob does not special-case. Harmless today (the README carries no
+      `## Blockers` section) and noted so the figure is not re-derived from the wrong denominator.
+      (b) AC-4's "every future stub blocker is held to the contract" reading does not hold, and the
+      gate's own header now says so: both scanners require the entry under a `## Blockers` heading,
+      so the two stubs named above are in the glob and still unread. The widening fixes WHERE the
+      gate looks, not WHAT it parses.
+      (c) Closing AC-4 takes this roadmap to 18/18, which makes `unarchived_complete` demand an
+      archival `archive_completed_roadmaps` refuses while a blocker is open. Mechanism, measured
+      exit codes and why it is not repaired here: the `Blocks:` field of
+      `the-governance-conditions-are-a-supervision-read`.
 - [x] **3.2 Add a status line** so lifecycle tooling can place the object.
       verify: the stub carries a status and the roadmap dashboard reflects it after a regeneration.
       **landed 2026-09-13.** Two surfaces, because a stub's lifecycle fields are not a roadmap's:
@@ -359,23 +376,13 @@ table's own staleness, which this re-review is an instance of rather than a fix 
       (`_openBlockerIds` returns `per-track-governance-ruling-unmade`), and each of the five
       required fields was deleted in turn from an in-memory copy with the gate naming that exact
       field every time — 5 of 5. Unmodified: `hard=0 decidability=0`.
-      **What it does NOT buy, stated because the obvious reading is wrong.** Both scanners require
-      the entry to sit under a `## Blockers` heading, and 2 of the 6 stubs carrying a blocker
-      heading put it under `## State`. So a third of the population is now in the glob and still
-      unread. The widening fixes WHERE the gate looks, not WHAT it parses.
-      **Measured cost of the widening: nothing to migrate.** 121 files enter scope (120 stubs plus
-      the directory README, which the glob does not special-case); 6 carry a
+      **Measured cost of the widening: nothing to migrate.** 121 stubs enter scope; 6 carry a
       `### blocker:` heading, 4 declare one open inside a `## Blockers` section (the other two put
       the heading outside one, so the scanner does not reach them — recorded, not fixed here).
       Across all 121: **0 hard violations, 0 additions to the `:decidability` ratchet** (still 0,
       no baseline needed), **0 new active/archived overlaps**. The gate reports `131 roadmap(s)
       blocker-contract-clean`, up from 10. The estate ratchet is untouched by construction —
       `check_estate_count` runs its own collector that excludes any path with a `stubs` component.
-      **One consequence this closure creates, recorded rather than left to be discovered.** Closing
-      the last box takes the file to 18/18, and `unarchived_complete` then demands an archival that
-      `archive_completed_roadmaps` refuses while a blocker is open. Full mechanism, the measured
-      exit codes and why it is not repaired here: the `Blocks:` field of
-      `the-governance-conditions-are-a-supervision-read` below.
       **Sibling defect, still open and still only a pointer:**
       `agents/roadmaps/stubs/road-to-blocker-parse-visibility.md` records that the gate reports a
       file clean when it parsed no blocker at all. This change widens *where* the gate looks and
