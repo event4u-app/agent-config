@@ -269,7 +269,19 @@ rounds since have re-derived the architecture instead of reading the file.
   qualified and why.
 
 ### blocker: the-governance-conditions-are-a-supervision-read
-- **Status:** open
+- **Status:** resolved 2026-09-28 under arm (b) of the `Resolved when` below — the stub records
+  that the ruling is **pending**, requested 2026-09-28, with the three reasons the ruling is not
+  answerable as posed. Recorded at
+  `agents/roadmaps/stubs/road-to-runtime-orchestration-substrate.md` § The per-track governance
+  ruling is pending. Arm (a), a ruling per condition, was **not** taken and was not available:
+  conditions 1 to 3 have no process to be met *for* (so `unverifiable from tree evidence`, which
+  is not `unmet`), condition 4's process half is absent for every track equally, and track 1's
+  gate is ADR-124 § 6 rather than ADR-249 — with tracks 4 and 8 downstream of that row. The stub
+  section carries the citation per reason and the condition under which the pending state goes
+  stale. `./scripts-run src/scripts/adr_cite_check ADR-249` is recorded there too: live,
+  `trigger state: indeterminate`, `reopen_policy: owner`, `authority_basis: owner_intent`,
+  evidence `E2` — not an unqualified lock, which is why a deferral had to be recorded rather
+  than assumed. Closing this also clears the archival deadlock the `Blocks:` field describes.
 - **Owner:** maintainer
 - **Class:** 3 — human-only
 - **Blocks:** Phase 1.2's confirmation, per track. Phase 1.1's enumeration is unblocked — listing
