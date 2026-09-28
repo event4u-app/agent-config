@@ -189,10 +189,10 @@ required. A verdict reached without it is incomplete however the probe read.
 
 1. **Presence and sanity** — the surface renders, and nothing renders obviously
    broken: no blank frame, no collapsed or overlapping layout, no missing region,
-   no unstyled flash left standing. This is the floor
-   `agents/roadmaps/archive/road-to-visual-review-loop.md` recorded — *"presence +
-   sanity check that nothing renders broken. Not pixel-perfect regression"* — and
-   it is carried forward word for word. **No probe dimension covers it.** A
+   no unstyled flash left standing. This is the floor the visual review has
+   carried since it had one — *"presence + sanity check that nothing renders
+   broken. Not pixel-perfect regression"* — reproduced word for word rather than
+   restated, so nobody rewrites it while moving it. **No probe dimension covers it.** A
    computed style can be correct on a node nobody can see, so a green
    `computed_style` row is not a substitute for looking.
 2. **Pixel comparison against a baseline**, where one exists — element-scoped
