@@ -1,10 +1,10 @@
 # Findings: blocker-gate-scans-stubs
-<!-- completion-review: v1 | reviewed: 2026-09-28 | scope: c067709b17cce17a772d98917eace1c95762d72fd8174d1b8a28729425b0bb32 | diff: b4f175167550e2944de4e91b3cc4001f880054cb | reviewer: independent-subagent-blocker-gate-scans-stubs -->
+<!-- completion-review: v1 | reviewed: 2026-09-28 | scope: be9dbde7829c903837946863bf753300820356cad81b667b41d23ccba45c9b62 | diff: b4f175167550e2944de4e91b3cc4001f880054cb | reviewer: independent-subagent-blocker-gate-scans-stubs -->
 
 <!-- context-manifest: v1
 inputs:
   diff_sha: 254bf5596f00438b1cdbd2aeca1f0c533f6ac458
-  scope_hash: c067709b17cce17a772d98917eace1c95762d72fd8174d1b8a28729425b0bb32
+  scope_hash: be9dbde7829c903837946863bf753300820356cad81b667b41d23ccba45c9b62
   roadmap: agents/roadmaps/road-to-the-substrate-stub-meeting-its-open-gate.md
   roadmap_hash: 60113114a7ad92ecf16377cb2ba5ebdc40796b80bf72654a1f9fa9477bbcaffd
   ac_hash: cf760b64b0a1882fb3462246fdf4b3983efe49bcd5f3a0d8daddfe190cdac386
