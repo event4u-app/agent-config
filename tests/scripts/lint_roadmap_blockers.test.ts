@@ -12,6 +12,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
     OWNER_OWNED_CLASSES,
+    REPO_ROOT,
     TECHNICAL_CLASSES,
     _archiveOverlap,
     _blockerClass,
@@ -595,5 +596,35 @@ describe('lint_roadmap_blockers — the scanned scope', () => {
     it('a missing stubs/ directory is not an error', () => {
         write('active.md', '# Active\n');
         expect(seen(tmp)).toEqual(['active.md']);
+    });
+
+    // The consequence the widening carries into a second assertion:
+    // `_archiveOverlap` defaults its ACTIVE corpus to this glob, so a stub is
+    // now one of the files that can contradict an archived record. Every other
+    // overlap test passes both corpora explicitly, so the widened DEFAULT was
+    // the one path nothing covered.
+    it('a stub counts as ACTIVE for the archived-overlap assertion', () => {
+        const open = (id: string): string =>
+            [
+                '# Fixture',
+                '',
+                '## Blockers',
+                '',
+                `### blocker: ${id}`,
+                '- **Status:** open',
+                '- **Owner:** maintainer',
+                '- **Blocks:** nothing',
+                '- **What to do:** decide',
+                '- **Resolved when:** decided',
+                '',
+            ].join('\n');
+
+        const stub = write('stubs/parked.md', open('b-contradiction'));
+        const archived = write('archive/closed.md', open('b-contradiction'));
+
+        // Driven through _globRoadmaps, which is what main() passes by default.
+        const overlap = _archiveOverlap(_globRoadmaps(tmp) as string[], [archived]);
+        expect(overlap.map((o) => o.id)).toEqual(['b-contradiction']);
+        expect(overlap[0]!.active).toEqual([path.relative(REPO_ROOT, stub)]);
     });
 });

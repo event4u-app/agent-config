@@ -4,7 +4,7 @@
  * (`templates/roadmaps.md` rule 20 / `roadmap-ci-steps-policy` siblings).
  *
  * Validates, for every active roadmap and every parked idea one directory
- * down in `stubs/`:  code-comment-allow provenance-comment -- the roots are this gate's operand, not where the code came from
+ * down in `stubs/`:
  *
  *   1. Every `### blocker: <id>` entry declares all five required fields
  *      (Status, Owner, Blocks, What to do, Resolved when).
@@ -23,11 +23,14 @@
  *      road-to-asked-not-parked exists to stop; without this field a marker
  *      cannot distinguish a declined decision from an unoffered one.
  *
- *      HARD, not ratcheted, and it can be: no active roadmap carries a real
- *      checkbox annotation today, so on the day it ships the rule fires on
- *      nothing — the same "no backlog to grandfather" argument the `Class:`
- *      contract above makes. `later/` and `archive/` are outside this gate's
- *      glob and are untouched by it.
+ *      HARD, not ratcheted, and it can be: no file in scope carries a real
+ *      checkbox annotation pointing at a blocker today, so on the day it ships
+ *      the rule fires on nothing — the same "no backlog to grandfather"
+ *      argument the `Class:` contract above makes. Re-measured when `stubs/`
+ *      entered scope on 2026-09-28: 7 stubs carry checkboxes and 0 of them
+ *      carry a `blocked-by:` marker, so the rule stays latent there too.
+ *      `later/`, `archive/` and `skipped/` are outside this gate's glob and
+ *      are untouched by it; `stubs/` is inside it — see § SCOPE.
  *
  *   5. An entry that declares `- **Ownership:**` declares one of the three
  *      OWNER-OWNED classes (`product-owned`, `business-owned`,
@@ -51,12 +54,22 @@
  * acceptance criterion that named this gate — refused because a criterion
  * edited to match what was achieved stops being an acceptance test.
  *
- * Measured on the tree the widening shipped against: 121 stubs, of which 6
- * carry a `### blocker:` heading and 4 declare one open inside a `## Blockers`
- * section. Zero hard violations, zero additions to the decidability ratchet,
- * zero new active/archived overlaps. So it lands on nothing and every future
- * stub blocker is held to the contract from its first line — the same "no
- * backlog to grandfather" argument the `Class:` and `Ownership:` contracts make.
+ * Measured on the tree the widening shipped against: 121 files under `stubs/`
+ * (120 stubs plus the directory README), of which 6 carry a `### blocker:`
+ * heading and 4 declare one open inside a `## Blockers` section. Zero hard
+ * violations, zero additions to the decidability ratchet, zero new
+ * active/archived overlaps. So it lands on nothing — the same "no backlog to
+ * grandfather" argument the `Class:` and `Ownership:` contracts make.
+ *
+ * REACH, stated honestly, because the obvious reading of the paragraph above
+ * is wrong: this does NOT hold every future stub blocker to the contract. Both
+ * scanners require the entry to sit under a `## Blockers` heading, and 2 of
+ * today's 6 put it under `## State` instead — so a third of the population is
+ * in the glob and still unread. Stub headings are free-form, unlike the
+ * template-driven roadmaps this gate was written for, so that is the likely
+ * shape rather than an edge case. Widening the glob fixes WHERE the gate looks
+ * and not WHAT it can parse; the second half is the sibling defect recorded in
+ * `stubs/road-to-blocker-parse-visibility.md`, and it is untouched here.
  *
  * `later/`, `archive/` and `skipped/` stay OUT, and the reason is not symmetry:
  * those record decisions already taken (parked, closed, dropped), so a blocker
@@ -88,7 +101,12 @@ const _HERE = fileURLToPath(import.meta.url);
 const QUIET = process.argv.slice(2).includes('--quiet');
 
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
-const ROADMAP_GLOB = 'agents/roadmaps/{,stubs/}*.md';
+/**
+ * The scanned scope, for display. Two plain globs rather than one brace
+ * expression: nothing globs with this string, and a `{,stubs/}` empty
+ * alternative is bash-only syntax that would mislead anyone who tried.
+ */
+const ROADMAP_GLOB = 'agents/roadmaps/*.md + agents/roadmaps/stubs/*.md';
 /** The one subdirectory inside the glob. See § SCOPE for why only this one. */
 const SCANNED_SUBDIRS: readonly string[] = ['stubs'];
 
@@ -609,7 +627,7 @@ function main(): number {
     const roadmaps = _globRoadmaps();
     if (roadmaps.length === 0) {
         if (!QUIET) {
-            process.stdout.write(`✅  no active roadmaps under ${ROADMAP_GLOB}\n`);
+            process.stdout.write(`✅  nothing in scope under ${ROADMAP_GLOB}\n`);
         }
         return 0;
     }
