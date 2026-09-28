@@ -115,7 +115,8 @@ The table itself, not this line, is what would change first if that verdict were
 ## The per-track governance ruling is pending — requested 2026-09-28
 
 Recorded under arm (b) of the blocker `the-governance-conditions-are-a-supervision-read` on
-[`road-to-the-substrate-stub-meeting-its-open-gate.md`](../road-to-the-substrate-stub-meeting-its-open-gate.md),
+`road-to-the-substrate-stub-meeting-its-open-gate.md` (archived on closure to
+`agents/roadmaps/archive/`),
 whose `Resolved when` reads "each condition carries a ruling, **or** the stub records that the
 ruling is pending with the date it was requested". **Requested 2026-09-28. No condition carries
 a ruling for any track.**
