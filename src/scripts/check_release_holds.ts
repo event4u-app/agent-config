@@ -45,7 +45,8 @@ const _HERE = fileURLToPath(import.meta.url);
 /**
  * The folders a release question must read.
  *
- * Wider than `lint_roadmap_blockers`' active-only glob on purpose: rule 28's
+ * Wider than `lint_roadmap_blockers`' glob on purpose — that gate reads the
+ * active tree plus `stubs/` and stops there (2026-09-28), while rule 28's
  * per-folder lifecycle says a window does not disappear by moving the file, and
  * a `later/` roadmap still refuses. `archive/` and `skipped/` are included
  * because the move INTO them is refused while a window is open — a file that
