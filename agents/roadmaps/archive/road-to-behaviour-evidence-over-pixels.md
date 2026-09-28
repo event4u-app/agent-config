@@ -269,7 +269,40 @@ is not that the states are unnamed; it is that nothing can test them.
   records the swap as accepted without it.
 
 ### blocker: the-lane-this-probe-runs-in
-- **Status:** open
+- **Status:** resolved 2026-09-28 — **owner decision, taken in-session by the maintainer**, who
+  chose **option (a)** of the two below: *leave the file URL as the permanent answer here and let
+  the sibling roadmap own lane detection for consumer projects.* Recorded in the option's own
+  words rather than restated, so the ruling cannot drift stronger or weaker than what was chosen.
+
+  **The absence was reproduced before the decision was put to the maintainer, not quoted from this
+  entry.** Re-run at HEAD on 2026-09-28, the command this entry names returns exactly one line —
+  `src/scripts/lint_archived_skills.ts:306` — and that line is a comment inside an archived-skill
+  linter naming two skills, not a workshop. So the 2026-09-11 reading still holds: no workshop
+  exists in this repository, the probe has no isolation URL, and Phase 2 running against a file
+  URL is designed behaviour rather than a defect.
+
+  **This resolution departs from the literal `Resolved when`, deliberately.** That condition names
+  the *sibling* roadmap as the recorder — "the sibling roadmap either lands a lane or records that
+  none is needed" — and the owner recorded it directly here instead. The condition's wording is
+  left untouched below so the departure stays visible rather than being smoothed away by an edit.
+  Two reasons it was taken here:
+
+  1. **The substance of the condition is exactly what was ruled.** It asks for one of two
+     outcomes — a lane, or a record that none is needed — and the owner recorded that none is
+     needed for this repository. What moved is the *recorder*, not the *finding*, and the finding
+     rests on the reproduced absence above rather than on an assumption.
+  2. **The named recorder did neither.** `agents/roadmaps/archive/road-to-a-declared-component-contract.md`
+     archived on 2026-09-27 with its lane-bearing work cancelled — 4.1 and 4.3, and Phases 5 and
+     6, all marked `[-]` by the 2026-09-21 council's 2/2 for option (b), uphold. That ruling was
+     about the taxonomy reversal rather than about whether a lane is needed, and the roadmap's own
+     disposition table records "Zero lanes exist". So the sibling neither landed a lane nor
+     recorded that none is needed, and the literal condition has no live recorder left to satisfy
+     it.
+
+  **No claim is made that the sibling recorded anything**, and none is made on its behalf about
+  consumer projects. This entry records one thing only: that *this repository's* answer is the
+  file URL, and that the owner said so directly rather than through the roadmap the condition
+  names.
 - **Owner:** maintainer
 - **Class:** 3 — human-only
 - **Blocks:** nothing in this roadmap, and it is recorded because the absence is load-bearing.
