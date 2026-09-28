@@ -95,6 +95,12 @@ export interface LedgerFinding {
     rationale?: string;
     verified_by?: string;
     date?: string;
+    /**
+     * The tree's mechanical disproof of the finding's premise, written by
+     * `self_review_gate.annotateContradicted`. A finding carrying one is not
+     * blocking — see `isBlocking`.
+     */
+    contradicted?: string;
 }
 
 export interface Ledger {
@@ -220,8 +226,21 @@ function _clean_review_reason(artifact: Record<string, unknown>): string {
     );
 }
 
-/** Mirrors self_review_gate.classifyBlocking — security/claim × critical/high. */
-export function isBlocking(f: Pick<LedgerFinding, 'kind' | 'severity'>): boolean {
+/**
+ * Mirrors self_review_gate.classifyBlocking — security/claim × critical/high,
+ * MINUS anything the tree disproved.
+ *
+ * The `contradicted` clause is not a second policy; it is the same one, and
+ * the mirror has to carry it or the two gates disagree: the review would stop
+ * counting a disproved deletion claim as blocking while the release kept
+ * demanding a disposition for it. A `contradicted` value is written only by
+ * `annotateContradicted`, which checks the claim against
+ * `git diff --name-status base...HEAD` AND the working tree.
+ */
+export function isBlocking(f: Pick<LedgerFinding, 'kind' | 'severity' | 'contradicted'>): boolean {
+    if ((f.contradicted ?? '').trim() !== '') {
+        return false;
+    }
     return (
         (f.kind === 'security' || f.kind === 'claim') &&
         (f.severity === 'critical' || f.severity === 'high')
@@ -413,7 +432,7 @@ export function resolve_release_status(release: string): ReleaseStatus {
 
 /** Findings the gate comment reported but the ledger never ingested. */
 export function unrecorded_findings(
-    reported: ReadonlyArray<Pick<LedgerFinding, 'finding_id' | 'severity' | 'kind' | 'title'>>,
+    reported: ReadonlyArray<Pick<LedgerFinding, 'finding_id' | 'severity' | 'kind' | 'title' | 'contradicted'>>,
     ledger: readonly LedgerFinding[],
 ): string[] {
     const known = new Set(ledger.map((f) => f.finding_id));

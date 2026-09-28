@@ -50,6 +50,15 @@ export interface Finding {
     title: string;
     detail: string;
     file?: string;
+    /**
+     * Set when the tree mechanically DISPROVES the finding's premise — today
+     * only for the deletion class: the finding says an artifact was removed,
+     * the range deletes nothing by that name, and the artifact is still in the
+     * tree. Carries the disproof, so the finding stays readable rather than
+     * disappearing. A finding carrying this is not merge-blocking; see
+     * `classifyBlocking`.
+     */
+    contradicted?: string;
 }
 
 /**
@@ -74,6 +83,13 @@ export function findingId(f: Pick<Finding, 'kind' | 'title' | 'file'>): string {
  * block ONLY on the narrow security/claim × {critical,high} intersection.
  */
 export function classifyBlocking(f: Finding): boolean {
+    // A premise the tree DISPROVES cannot block a merge. This is not leniency
+    // and not a heuristic: `contradicted` is set only where a deletion claim
+    // was checked against `git diff --name-status base...HEAD` AND against the
+    // working tree, and both said the named artifact is present and undeleted.
+    // See `contradictedByTree` for why this class needed a mechanical disproof
+    // rather than one more sentence in the prompt.
+    if ((f.contradicted ?? '').trim() !== '') return false;
     return (f.kind === 'security' || f.kind === 'claim') && (f.severity === 'critical' || f.severity === 'high');
 }
 
@@ -118,6 +134,121 @@ function changedFiles(baseRef: string, cwd: string = REPO_ROOT): string[] {
         .map((s) => s.trim())
         .filter(Boolean)
         .filter(isReviewablePath);
+}
+
+/**
+ * The paths the range actually DELETES, from `git diff --name-status`.
+ *
+ * Deliberately NOT filtered by `isReviewablePath`: the question this answers is
+ * "did the range remove this artifact", and a removal under `dist/agent-src/`
+ * is a removal even though the projection is never sent to the reviewer. A
+ * filter here would turn a real deletion into a disproof of itself.
+ *
+ * Renames are reported by `--name-status` as `R<score>\told\tnew`, and the old
+ * path IS gone, so it is counted. A roadmap moved into `archive/` shows up as a
+ * genuine deletion of its old path, which is exactly the reading a finding
+ * about that path deserves.
+ */
+export function rangeDeletions(baseRef: string, cwd: string = REPO_ROOT): Set<string> {
+    const r = spawnSync('git', ['-c', 'core.quotePath=false', 'diff', '--name-status', `${baseRef}...HEAD`], {
+        cwd,
+        encoding: 'utf8',
+    });
+    if (r.status !== 0) {
+        throw new Error(`git diff --name-status failed: ${(r.stderr ?? '').toString().slice(0, 300)}`);
+    }
+    return parseDeletions(r.stdout ?? '');
+}
+
+/** Pure core of `rangeDeletions`, so the parse is testable without a repo. */
+export function parseDeletions(nameStatus: string): Set<string> {
+    const out = new Set<string>();
+    for (const line of nameStatus.split('\n')) {
+        const cols = line.split('\t');
+        const status = (cols[0] ?? '').trim();
+        if (status === '') continue;
+        if (status === 'D' && cols[1]) out.add(cols[1].trim());
+        // A rename removes its OLD path; `R100\told\tnew` puts it in column 1.
+        if (status.startsWith('R') && cols[1]) out.add(cols[1].trim());
+    }
+    return out;
+}
+
+/**
+ * Names a finding points at: its `file`, plus every backticked token in the
+ * title and detail that could be a path or an artifact directory name.
+ *
+ * Backticks are the convention the review prompt asks for and the one every
+ * measured finding used, so this reads what the model actually writes rather
+ * than guessing at prose.
+ */
+export function namedArtifacts(f: Pick<Finding, 'title' | 'detail' | 'file'>): string[] {
+    const out = new Set<string>();
+    if (f.file) out.add(f.file);
+    for (const m of `${f.title}\n${f.detail}`.matchAll(/`([^`\n]{2,120})`/g)) {
+        const tok = (m[1] ?? '').trim();
+        // A token with whitespace is prose in backticks, not a name.
+        if (tok !== '' && !/\s/.test(tok)) out.add(tok);
+    }
+    return [...out];
+}
+
+/** Does the finding's text assert that something was removed from the tree? */
+export function assertsDeletion(f: Pick<Finding, 'title' | 'detail'>): boolean {
+    return /\b(deleted|removed|deletion|removal)\b/i.test(`${f.title}\n${f.detail}`);
+}
+
+/**
+ * The disproof, or null when there is none.
+ *
+ * WHY THIS IS MECHANICAL AND NOT A PROMPT LINE. The review runs over a
+ * per-file PARTITION of the span and, on a large release, over only part of it
+ * — 202 of 401 files at the 16.1.0 cut. A reviewer holding half the files
+ * cannot distinguish "this artifact is absent from my chunk" from "this
+ * artifact was deleted", and on that cut it reported two `critical security`
+ * deletions of skills the range never touched. Both blocked the release and
+ * cost a full adjudication cycle each.
+ *
+ * The prompt already carries a sentence for the neighbouring class ("Do NOT
+ * report a feature as not in the diff when it is present in the release
+ * range") and the same run violated it, which is the evidence that a sentence
+ * is not the control here.
+ *
+ * The test is conservative in the direction that matters: a disproof needs a
+ * named artifact that is BOTH absent from the range's deletion set AND present
+ * in the tree. A genuine deletion satisfies neither half, so it is untouched.
+ */
+export function contradictedByTree(
+    f: Pick<Finding, 'title' | 'detail' | 'file'>,
+    deleted: ReadonlySet<string>,
+    exists: (p: string) => boolean,
+): string | null {
+    if (!assertsDeletion(f)) return null;
+    for (const name of namedArtifacts(f)) {
+        // Any deletion whose path mentions the token leaves the claim standing.
+        if ([...deleted].some((d) => d === name || d.includes(name))) continue;
+        const candidates = [name, `src/skills/${name}/SKILL.md`, `src/rules/${name}.md`, `src/scripts/${name}`];
+        const hit = candidates.find((c) => exists(c));
+        if (hit !== undefined) {
+            return (
+                `the range deletes nothing matching \`${name}\`, and \`${hit}\` is present in the tree — ` +
+                'checked against `git diff --name-status base...HEAD` and the working tree, not against the review chunk.'
+            );
+        }
+    }
+    return null;
+}
+
+/** Annotate every finding the tree disproves. Pure given `deleted` + `exists`. */
+export function annotateContradicted(
+    findings: readonly Finding[],
+    deleted: ReadonlySet<string>,
+    exists: (p: string) => boolean,
+): Finding[] {
+    return findings.map((f) => {
+        const why = contradictedByTree(f, deleted, exists);
+        return why === null ? f : { ...f, contradicted: why };
+    });
 }
 
 function diffText(baseRef: string, files: string[], cwd: string = REPO_ROOT): string {
@@ -639,7 +770,11 @@ export function renderReview(findings: Finding[], enforce: boolean, escalation: 
     // read as inconsistent with the narrow `blocking.length` verdict count.
     const rows = findings
         .map((f) => {
-            const marker = classifyBlocking(f) ? 'Blocking' : 'Advisory';
+            const marker = (f.contradicted ?? '') !== ''
+                ? 'Contradicted'
+                : classifyBlocking(f)
+                    ? 'Blocking'
+                    : 'Advisory';
             return `| ${findingId(f)} | ${f.severity} (${marker}) | ${f.kind} | ${f.file ?? '—'} | ${f.title} |`;
         })
         .join('\n');
@@ -653,6 +788,12 @@ export function renderReview(findings: Finding[], enforce: boolean, escalation: 
     // 12-hex id looks exactly like a short SHA, so the rendered comment now says
     // what it is and where its disposition lives. This is the only place a reader
     // of the comment can learn it without opening the source.
+    const contradicted = findings.filter((f) => (f.contradicted ?? '') !== '');
+    const contradictedNote = contradicted.length === 0
+        ? ''
+        : '\n\n**Contradicted by the tree** — these assert a removal the range does not contain, '
+            + 'so they are reported and NOT counted as blocking:\n'
+            + contradicted.map((f) => `- \`${findingId(f)}\` ${f.title} — ${f.contradicted ?? ''}`).join('\n');
     const idNote =
         '\n\n`id` above is a FINDING id — the first 12 hex of sha256(kind|title|file), '
         + '**not a commit SHA**. Searching the git log for it finds nothing, by design. '
@@ -662,9 +803,20 @@ export function renderReview(findings: Finding[], enforce: boolean, escalation: 
     // demands committed dispositions. The comment is transport, never the
     // record — the record is `agents/evidence/release-findings/<version>.json`.
     const machine = `\n\n<!-- release-findings-json: ${JSON.stringify(
-        findings.map((f) => ({ finding_id: findingId(f), severity: f.severity, kind: f.kind, title: f.title, file: f.file ?? null })),
+        findings.map((f) => ({
+            finding_id: findingId(f),
+            severity: f.severity,
+            kind: f.kind,
+            title: f.title,
+            file: f.file ?? null,
+            // Carried into the trigger block, not only the rendered table: the
+            // PR-comment path of `check_finding_dispositions` reads THIS, and
+            // would otherwise demand a disposition for a claim the tree already
+            // disproved.
+            ...((f.contradicted ?? '') !== '' ? { contradicted: f.contradicted } : {}),
+        })),
     )} -->`;
-    return `${banner}\n\n${verdictLine}\n\n| id | severity | kind | file | finding |\n|---|---|---|---|---|\n${rows}${idNote}${cov}${esc}${machine}`;
+    return `${banner}\n\n${verdictLine}\n\n| id | severity | kind | file | finding |\n|---|---|---|---|---|\n${rows}${contradictedNote}${idNote}${cov}${esc}${machine}`;
 }
 
 function postReview(body: string): void {
@@ -854,6 +1006,15 @@ export function main(argv: string[]): 0 | 2 {
             filesTotal: plan.files.length,
             unreviewed,
         };
+        // Ground-truth pass, ONCE, before anything reads the finding set. A
+        // deletion claim the range and the tree both disprove is annotated
+        // here and stops being merge-blocking; it is still written to the
+        // artifact and still rendered, carrying its disproof.
+        const reviewed = annotateContradicted(
+            dedupeFindings(findings),
+            rangeDeletions(baseRef),
+            (p) => existsSync(path.join(REPO_ROOT, p)),
+        );
         const outIdx = argv.indexOf('--findings-out');
         if (outIdx >= 0 && argv[outIdx + 1]) {
             // Durable ingestion input for the disposition ledger (release-truth
@@ -869,7 +1030,7 @@ export function main(argv: string[]): 0 | 2 {
                         schema_version: 1,
                         ...independenceFields(['anthropic']),
                         coverage,
-                        findings: dedupeFindings(findings).map((f) => ({
+                        findings: reviewed.map((f) => ({
                             finding_id: findingId(f),
                             ...f,
                         })),
@@ -879,10 +1040,10 @@ export function main(argv: string[]): 0 | 2 {
                 ) + '\n',
             );
         }
-        const body = renderReview(dedupeFindings(findings), enforce, plan.escalation, coverage);
+        const body = renderReview(reviewed, enforce, plan.escalation, coverage);
         postReview(body);
 
-        const code = gateVerdict(dedupeFindings(findings), { enforce });
+        const code = gateVerdict(reviewed, { enforce });
         if (code === 2) {
             process.stdout.write('::error::self-review-gate — merge-blocking findings under enforce mode.\n');
         }
