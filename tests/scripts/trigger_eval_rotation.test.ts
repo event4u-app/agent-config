@@ -3,11 +3,17 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {
+    COVERAGE_TOLERANCE_WEEKS,
+    FRESHNESS_WINDOW_DAYS,
+    MIN_BATCH,
+    cycle_weeks,
     list_trigger_suites,
     pick_rotation,
+    required_batch,
     run_rotation,
     week_index,
 } from '../../src/scripts/trigger_eval_rotation.js';
+import { MAX_AGE_DAYS } from '../../src/scripts/check_trigger_evals.js';
 import { DEFAULT_FLOOR, DOMAIN_FLOORS, floor_for } from '../../src/scripts/_lib/trigger_eval_floors.js';
 
 describe('pick_rotation — deterministic weekly selection', () => {
@@ -79,5 +85,52 @@ describe('run_rotation — dry-run plumbing (MockRouter, no keys, no spend)', ()
         // run must not throw on the split should_trigger/should_not_trigger shape.
         const wideBatch = await run_rotation({ dryRun: true, week: 0, batch: 10, outDir });
         expect(wideBatch.outcomes.length).toBe(10);
+    });
+});
+
+describe('coverage — the rotation must reach every suite inside the freshness window', () => {
+    it('pins FRESHNESS_WINDOW_DAYS to the gate that actually enforces it', () => {
+        // The duplication is deliberate (see the constant's docstring); this is
+        // the test that makes it safe. If the gate's window moves and this does
+        // not, the derived batch silently stops guaranteeing coverage.
+        expect(FRESHNESS_WINDOW_DAYS).toBe(MAX_AGE_DAYS);
+    });
+
+    it('derives a batch whose worst-case cycle fits the window, for the real tree', () => {
+        const total = list_trigger_suites().length;
+        expect(total).toBeGreaterThan(0);
+
+        const batch = required_batch(total);
+        const days = cycle_weeks(total, batch) * 7;
+        const tolerance = COVERAGE_TOLERANCE_WEEKS * 7;
+
+        expect(days + tolerance).toBeLessThanOrEqual(FRESHNESS_WINDOW_DAYS);
+    });
+
+    it('holds the property as the suite count grows', () => {
+        for (const total of [1, 5, 50, 101, 200, 500, 1000]) {
+            const batch = required_batch(total);
+            const days = cycle_weeks(total, batch) * 7;
+            expect(days + COVERAGE_TOLERANCE_WEEKS * 7).toBeLessThanOrEqual(FRESHNESS_WINDOW_DAYS);
+        }
+    });
+
+    it('is SENSITIVE — the historical fixed batch of 5 fails the same property at 101 suites', () => {
+        // Without this the coverage assertions above could pass vacuously. 101 is
+        // the suite count that was actually in the tree when the gate was found
+        // red: ceil(101/5) = 21 weeks = 147 days against a 90-day window.
+        const days = cycle_weeks(101, MIN_BATCH) * 7;
+        expect(days).toBeGreaterThan(FRESHNESS_WINDOW_DAYS);
+    });
+
+    it('never drops below the historical batch floor', () => {
+        expect(required_batch(1)).toBe(MIN_BATCH);
+        expect(required_batch(0)).toBe(MIN_BATCH);
+    });
+
+    it('run_rotation uses the derived batch when none is given', async () => {
+        const outDir = join(tmpdir(), `rot-coverage-${Date.now()}`);
+        const summary = await run_rotation({ dryRun: true, week: 0, outDir });
+        expect(summary.batch).toBe(required_batch(summary.total_suites));
     });
 });

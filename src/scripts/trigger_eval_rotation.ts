@@ -20,8 +20,12 @@
  *   floors are REPORTED but never fail the run — mock routing says nothing
  *   about real trigger accuracy.
  * - Rotation is a pure function of (week index, batch size, sorted suite
- *   list): ~batch suites per week, wrapping so every suite is visited on a
- *   fixed cadence regardless of suite-count drift.
+ *   list): ~batch suites per week, wrapping so every suite is visited within
+ *   `ceil(total / batch)` weeks. The batch is DERIVED from the suite count
+ *   (`required_batch`) so that cycle stays inside the freshness window
+ *   `check_trigger_evals` enforces; a fixed batch made that cadence a function
+ *   of suite-count drift, which is how 101 suites at batch 5 ended up on a
+ *   147-day cycle against a 90-day window.
  *
  * Exit codes: 0 pass (always, in --dry-run) · 1 live floor breach ·
  * 2 usage / IO error.
@@ -48,7 +52,67 @@ const _HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(_HERE, '..', '..');
 const SKILLS_DIR = path.join(REPO_ROOT, 'src', 'skills');
 const DEFAULT_OUT_DIR = path.join(REPO_ROOT, 'internal', 'evals', 'results', 'rotation');
-const DEFAULT_BATCH = 5;
+
+/**
+ * Floor on the weekly batch. The rotation ran five suites a week from its first
+ * commit; the derived batch below may raise that, never lower it.
+ */
+export const MIN_BATCH = 5;
+
+/**
+ * The freshness window `check_trigger_evals` enforces, in days.
+ *
+ * Duplicated from that gate's `MAX_AGE_DAYS` rather than imported, following the
+ * same reasoning `lint_decision_classes` records for `OWNERSHIP_CLASSES`: the
+ * gate is a CLI with its own scan-scope assertions, and importing it here would
+ * make the rotation runner depend on a gate module to compute its batch size.
+ * The duplication is pinned by a test that reads both.
+ */
+export const FRESHNESS_WINDOW_DAYS = 90;
+
+/**
+ * Weeks held back from the coverage budget, so one missed or failed scheduled
+ * run does not immediately push a suite past the window. The canary is weekly
+ * and has missed runs before, so the slack is not hypothetical.
+ */
+export const COVERAGE_TOLERANCE_WEEKS = 1;
+
+/**
+ * The smallest batch whose worst-case cycle still fits inside the freshness
+ * window, with the tolerance held back.
+ *
+ * Coverage is the property the whole rotation rests on: `pick_rotation` visits
+ * every suite within `ceil(total / batch)` weeks, so the gate's window is only
+ * satisfiable when that cycle — plus slack — stays under it. A FIXED batch
+ * cannot hold that property, because `total` grows as skills are added: at the
+ * historical batch of 5, the 101 suites in the tree needed 21 weeks (147 days)
+ * against a 90-day window, so suites expired faster than the rotation could
+ * reach them and the gate went red by construction rather than by neglect.
+ * Deriving the batch from `total` keeps the property true as the suite count
+ * drifts, instead of restating a number that silently stops being enough.
+ */
+export function required_batch(
+    total: number,
+    windowDays: number = FRESHNESS_WINDOW_DAYS,
+    toleranceWeeks: number = COVERAGE_TOLERANCE_WEEKS,
+): number {
+    if (total <= 0) {
+        return MIN_BATCH;
+    }
+    const budgetWeeks = Math.floor(windowDays / 7) - toleranceWeeks;
+    if (budgetWeeks <= 0) {
+        return total;
+    }
+    return Math.max(MIN_BATCH, Math.ceil(total / budgetWeeks));
+}
+
+/** Worst-case weeks to visit every suite at a given batch size. */
+export function cycle_weeks(total: number, batch: number): number {
+    if (total <= 0 || batch <= 0) {
+        return 0;
+    }
+    return Math.ceil(total / batch);
+}
 
 /** Router that may expose an async route (fetch-based live routers). */
 type AsyncCapableRouter = TriggerRouter & {
@@ -211,13 +275,15 @@ export interface RotationSummary {
 
 export async function run_rotation(opts: RotationOptions = {}): Promise<RotationSummary> {
     const dryRun = opts.dryRun ?? false;
-    const batch = opts.batch ?? DEFAULT_BATCH;
     const week = opts.week ?? week_index(new Date());
     const outDir = opts.outDir ?? DEFAULT_OUT_DIR;
     const model = opts.model ?? DEFAULT_MODEL;
     const skillsDir = opts.skillsDir ?? SKILLS_DIR;
 
     const suites = list_trigger_suites(skillsDir);
+    // Derived AFTER the suites are known — the batch is a function of how many
+    // there are, so an explicit --batch is the only way to get a fixed one.
+    const batch = opts.batch ?? required_batch(suites.length);
     const picked = pick_rotation(suites, week, batch);
     const catalogue = load_skill_metas();
 
