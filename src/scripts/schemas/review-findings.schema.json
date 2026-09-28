@@ -127,6 +127,10 @@
             "type": "string",
             "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
             "description": "ISO calendar date of the disposition."
+          },
+          "contradicted": {
+            "type": "string",
+            "description": "The tree's mechanical disproof of the finding's premise, written by self_review_gate.annotateContradicted when a deletion claim names an artifact the range does not delete and the working tree still holds. A finding carrying this is NOT merge-blocking in either gate (self_review_gate.classifyBlocking and check_finding_dispositions.isBlocking both read it), and it is still reported so a human sees what was claimed and why it was set aside."
           }
         }
       }
