@@ -273,9 +273,19 @@ rounds since have re-derived the architecture instead of reading the file.
   pending with the date it was requested.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-15 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-09-28 | reviewer: claude/host -->
 
-Re-reviewed 2026-09-15 after Phase 5 landed (promote none). Ranks 3 and 5 discharged
+Re-reviewed 2026-09-28 after AC-4 closed on the owner's glob ruling. Rank 6 stays live and is
+**partly mitigated** by that change rather than discharged by it: the stub's blocker entry is now
+inside a CI gate, so the five-field contract on it can no longer rot silently — but the eight
+per-track gate conditions are prose the gate does not read, which is what rank 6 actually names, so
+nothing about it is closed. Rank 1 stays live, untouched: the widening is a scope decision about a
+linter and settles nothing about whether ADR-249's conditions hold per track. Ranks 2, 3, 4 and 5
+stay discharged; none of their subjects is in this change. **Rank 7 is new** — it is the risk the
+widening itself creates, and it is recorded here rather than left as a surprise for whoever next
+adds a stub blocker.
+
+Prior pass, 2026-09-15, after Phase 5 landed (promote none). Ranks 3 and 5 discharged
 2026-09-13; rank 2 discharges in this pass — Phase 5's measurement is on record and no
 promotion occurred, so there is nothing left for it to guard against. Rank 1 stays live: it
 guards the per-track governance ruling, which promoting none does not settle. Rank 4 is
@@ -290,7 +300,8 @@ table's own staleness, which this re-review is an instance of rather than a fix 
 | 3 | The track rows dereference into a deleted tree | implementation | The stub's rows point into a consumed inbox directory no clone carries, so a reader who follows them finds nothing | **Discharged 2026-09-13.** The `Source section` column is removed, not relabelled; every remaining pointer in the table resolves in a clone | Phase 4 — Re-cut the eight tracks against the open gate |
 | 4 | The arrival count becomes the argument | product | A large count invites acting on the subject because it keeps coming back, which is capitulation rather than adjudication | **Discharged 2026-09-15.** The owner-approved decision promotes none and cites the per-track gated conditions, not the arrival count, as the reason. The count set the venue; the conditions set the verdict | Phase 2 — Write the arrival count onto the object |
 | 5 | Phase 4 produces eight dispositions nobody revisits | product | A table of dispositions written once ages exactly like the prose it replaced | **Discharged as far as authoring can.** Every gate cell names a file, a command or a cancelled step a later reader checks directly. What authoring cannot do is make anyone look, which is what rank 6 now carries | Phase 4 — Re-cut the eight tracks against the open gate |
-| 6 | The re-cut table ages the way the sentence it replaced did | product | This roadmap exists because one header line stopped being true and no surface noticed for fifteen days. Eight per-track gates are eight more sentences that can go stale the same way — and two of them cite the state of *other* roadmaps, which move | The stub is now inside `stubs:due`: `reviewed_at`, `blocker_class` and `blocker_opened` are set, and its blocker counts as an owner decision, so a lapse surfaces in the dashboard header instead of waiting for the next arrival. That is a reader, not a guarantee — the honest residual is that nothing re-checks the eight gate conditions themselves | Phase 3 — Give the stub the two fields tooling reads |
+| 6 | The re-cut table ages the way the sentence it replaced did | product | This roadmap exists because one header line stopped being true and no surface noticed for fifteen days. Eight per-track gates are eight more sentences that can go stale the same way — and two of them cite the state of *other* roadmaps, which move | The stub is now inside `stubs:due`: `reviewed_at`, `blocker_class` and `blocker_opened` are set, and its blocker counts as an owner decision, so a lapse surfaces in the dashboard header instead of waiting for the next arrival. **Strengthened 2026-09-28, and only on one axis:** the blocker entry is now inside `lint_roadmap_blockers`, so its five fields are CI-enforced and a later edit cannot quietly drop one. The honest residual is unchanged and is the part rank 6 is actually about — nothing re-checks the eight gate conditions themselves, because they are prose no gate parses | Phase 3 — Give the stub the two fields tooling reads |
+| 7 | The widened glob reds CI on a file the change did not touch | implementation | `lint_roadmap_blockers` now judges 121 stubs it never read before, and its `:decidability` ratchet sits at **0 with zero headroom** — so the next stub blocker authored without `Recommendation:`, `If you do nothing:` or an actionable `What to do:` reds the build, in a PR whose subject is something else entirely | **Accepted deliberately, and measured before landing rather than discovered after.** All 121 files were scanned at the widening: 0 hard violations, 0 additions to the ratchet, 0 new active/archived overlaps — so it lands on nothing and there is no backlog to grandfather, the same argument the `Class:` and `Ownership:` contracts in that gate already make. The red is the intended behaviour, not the failure mode: a stub is where a hold sits longest, so a hold authored there is exactly the one worth refusing at the gate. What is NOT accepted is scope creep — `later/`, `archive/` and `skipped/` stay out, pinned in that direction by `tests/scripts/lint_roadmap_blockers.test.ts` § the scanned scope, so a future widening cannot arrive unnoticed | Acceptance Criteria |
 
 ## Acceptance Criteria
 
