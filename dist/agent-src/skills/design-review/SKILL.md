@@ -44,7 +44,7 @@ A **live preview URL** is required for testing.
 
 ## Procedure: Design review
 
-1. **Inspect the PR and preview** — Read the PR description, diff, and identify changed components/pages; capture a baseline screenshot of the preview URL.
+1. **Inspect the PR and preview** — Read the PR description, diff, and identify changed components/pages; read the probe artifact and run the appearance floor over the preview URL (Phase 0).
 2. **Walk the interactions** — Run Phase 1; cover hover/focus/active/disabled, keyboard, loading, and form error states.
 3. **Cover responsiveness, polish, a11y, robustness** — Run Phases 2–5 in order; record findings per phase.
 4. **Audit code-health and content** — Run Phases 6–7; check tokens, dead styles, copy, console warnings.
@@ -55,7 +55,11 @@ A **live preview URL** is required for testing.
 - Read PR description and git diff.
 - Identify changed components and affected pages.
 - Navigate to preview URL.
-- Take baseline screenshot.
+- **Read the probe artifact** `agents/runtime/state/ui-conformance.json`
+  (`ui_conformance_probe --target <file> --reference <file>`) — its per-dimension counters are the
+  behavioral evidence Phases 1–2 report against. Absent is absent, never clean; a dimension the host
+  could not exercise carries a not-applicable row with its reason rather than a zero.
+- **Run the appearance floor** (§ Appearance verification) — mandatory on every review.
 
 ### Phase 1: Interaction
 
@@ -102,7 +106,9 @@ asserted floor outside the measured set is an assertion nobody checks; 375px
 passing says nothing about 320px, which is where a two-column grid or a fixed
 `min-width` actually breaks.
 
-- Take screenshots at each viewport.
+- **Read the probe artifact's `viewport_matrix` rows** — one per declared width, recording whether the
+  layout property that should change at that breakpoint did. A not-applicable row is missing evidence, not a pass.
+- **Run the appearance floor** (§ Appearance verification) at every one of the four widths.
 - **Scroll-driven surface** — read the `scroll_evidence` artefact
   ([`references/verification-automation.md`](references/verification-automation.md)
   § Scroll evidence) and report every sample whose asserted `state` and
@@ -156,6 +162,26 @@ passing says nothing about 320px, which is where a two-column grid or a fixed
 - No placeholder text left in production.
 - Check browser console for JavaScript errors or warnings.
 
+## Appearance verification — mandatory, and explicitly appearance-only
+
+```
+APPEARANCE VERIFICATION IS MANDATORY WHEREVER APPEARANCE CAN BE AFFECTED.
+THE PROBE DEMOTES THE IMAGE FROM PRIMARY EVIDENCE — IT DOES NOT MOVE THE FLOOR.
+AN IMAGE IS NEVER EVIDENCE FOR HOVER, FOCUS, KEYBOARD, BREAKPOINT OR JS BEHAVIOR.
+AN UNRUN APPEARANCE CHECK IS REPORTED AS UNRUN, NEVER AS PASSED.
+```
+
+**Trigger — identical to the two capture steps it replaces**, not merely as broad: Phase 0
+unconditionally, Phase 2 once per width. Only what the image is evidence *for* narrowed.
+**Two jobs, and the older one comes first:** (1) presence and sanity — *"presence + sanity
+check that nothing renders broken. Not pixel-perfect regression"* — no blank frame, no
+collapsed or overlapping layout, no missing region, no unstyled flash; **no probe dimension
+covers it**, because a computed style can be correct on a node nobody can see; (2) pixel
+comparison against a baseline where one exists, element-scoped, dynamic content masked. No
+render capability → scope the verdict and say so per the gate at the top of this skill;
+degrading is reported, never a pass. What a clean render does *not* answer:
+[`references/verification-automation.md`](references/verification-automation.md) § Appearance verification.
+
 ## Reviewer posture
 
 **Approval is earned, not assumed. Default to flagging.**
@@ -187,7 +213,7 @@ excessive copy, and redundant UI chrome.
 Load the reference file whose sections the review needs — never all of them by default:
 
 - [`references/review-communication.md`](references/review-communication.md) — Before / After / Why output format · Communication principles · Report structure · Design Review Summary
-- [`references/verification-automation.md`](references/verification-automation.md) — Visual QA with browser automation · Async-verifier pattern (keep the main context clean)
+- [`references/verification-automation.md`](references/verification-automation.md) — Visual QA with browser automation · Async-verifier pattern (keep the main context clean) · Appearance verification (what a clean render does not answer)
 
 ## Output format
 
