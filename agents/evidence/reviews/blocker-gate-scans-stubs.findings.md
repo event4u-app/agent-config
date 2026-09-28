@@ -6,8 +6,8 @@ inputs:
   diff_sha: 254bf5596f00438b1cdbd2aeca1f0c533f6ac458
   scope_hash: be9dbde7829c903837946863bf753300820356cad81b667b41d23ccba45c9b62
   roadmap: agents/roadmaps/road-to-the-substrate-stub-meeting-its-open-gate.md
-  roadmap_hash: 60113114a7ad92ecf16377cb2ba5ebdc40796b80bf72654a1f9fa9477bbcaffd
-  ac_hash: cf760b64b0a1882fb3462246fdf4b3983efe49bcd5f3a0d8daddfe190cdac386
+  roadmap_hash: f3bfca08743e8aa9784da42446c3c7604c187876dd79966d42e3c662ad4404b7
+  ac_hash: 4e8ca6a07532144a4cfca953d492d95d69b26d766ec9e949840b4331960370cc
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
 dispatched: 2026-09-28T13:00:00Z
