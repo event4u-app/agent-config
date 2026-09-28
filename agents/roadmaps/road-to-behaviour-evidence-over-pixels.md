@@ -291,11 +291,11 @@ is not that the states are unnamed; it is that nothing can test them.
 - **Resolved when:** the sibling roadmap either lands a lane or records that none is needed.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-11 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-09-28 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | A verify line that cannot fail | implementation | The source's own screenshot-demotion checks match strings the file does not contain in the asserted form, so the phase would report success untouched — measured, not hypothesised | Phase 4.1 replaces the literal with a regex over the real sentence shapes and pins the pre-fix match count, so the check is red before the work and green after | Phase 4 — Demote the screenshot, with a verify line that can fail |
+| 1 | A verify line that cannot fail | implementation | The source's own screenshot-demotion checks match strings the file does not contain in the asserted form, so the phase would report success untouched — measured, not hypothesised | **Discharged 2026-09-28.** Both Phase 4 steps replaced the literal with a shape regex and pinned the pre-fix match count: 4.1 two matches before and zero after, 4.2 one before and zero after, paired with a probe-artefact grep that matched nothing before and matches now. Each check was run red on the untouched file first, so none of them could have passed against no work | Phase 4 — Demote the screenshot, with a verify line that can fail |
 | 2 | Computed-style comparison is noisy | implementation | Token indirection and font fallback make raw style diffs fire on differences nobody cares about | The compared property list is curated from the design-token set; an unset tolerance emits a not-applicable row with its reason rather than a pass | Phase 2 — The probe |
 | 3 | The probe has no lane in this repository | implementation | With no workshop detected anywhere in the tree, there is no isolation URL and the probe could look broken | Phase 2 runs against a file URL in the fixture; lane detection is explicitly the sibling roadmap's subject and is named as a blocker rather than assumed | Phase 2 — The probe |
 | 4 | The review grows two conformance concepts | product | The existing audit skill already carries a conforms/deviates/unknown verdict for reuse candidates, and a second one for built artefacts reads as duplication | The two are cross-linked with their subjects named — candidate reuse stays with the audit, built-artefact behaviour goes to the probe — and neither is merged into the other | Phase 5 — Mount it, in shadow only |
