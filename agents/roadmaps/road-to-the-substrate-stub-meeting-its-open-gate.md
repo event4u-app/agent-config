@@ -302,6 +302,14 @@ stay discharged; none of their subjects is in this change. **Rank 7 is new** —
 widening itself creates, and it is recorded here rather than left as a surprise for whoever next
 adds a stub blocker.
 
+Second pass the same day, after an independent review of the branch. AC-4 gained the reach
+qualification (the widening does not reach a blocker heading placed outside a `## Blockers`
+section), the corrected file count, and a pointer to the archival deadlock the closure creates.
+None of that moves a rank: the reach limit is the sibling parse defect rank 6 already routes to,
+and the deadlock is recorded on the blocker that closes it rather than as a risk, because it has
+a named owner and an exit condition — which is a blocker, not a residual. Rank 7's wording already
+covers the widened gate's standing cost. Re-read all seven; no rank changed state in this pass.
+
 Prior pass, 2026-09-15, after Phase 5 landed (promote none). Ranks 3 and 5 discharged
 2026-09-13; rank 2 discharges in this pass — Phase 5's measurement is on record and no
 promotion occurred, so there is nothing left for it to guard against. Rank 1 stays live: it
