@@ -3,7 +3,8 @@
  * Hard-gate linter for the roadmap `## Blockers` contract
  * (`templates/roadmaps.md` rule 20 / `roadmap-ci-steps-policy` siblings).
  *
- * Validates, for every active roadmap under `agents/roadmaps/*.md`:
+ * Validates, for every active roadmap and every parked idea one directory
+ * down in `stubs/`:
  *
  *   1. Every `### blocker: <id>` entry declares all five required fields
  *      (Status, Owner, Blocks, What to do, Resolved when).
@@ -22,11 +23,14 @@
  *      road-to-asked-not-parked exists to stop; without this field a marker
  *      cannot distinguish a declined decision from an unoffered one.
  *
- *      HARD, not ratcheted, and it can be: no active roadmap carries a real
- *      checkbox annotation today, so on the day it ships the rule fires on
- *      nothing — the same "no backlog to grandfather" argument the `Class:`
- *      contract above makes. `later/` and `archive/` are outside this gate's
- *      glob and are untouched by it.
+ *      HARD, not ratcheted, and it can be: no file in scope carries a real
+ *      checkbox annotation pointing at a blocker today, so on the day it ships
+ *      the rule fires on nothing — the same "no backlog to grandfather"
+ *      argument the `Class:` contract above makes. Re-measured when `stubs/`
+ *      entered scope on 2026-09-28: 7 stubs carry checkboxes and 0 of them
+ *      carry a `blocked-by:` marker, so the rule stays latent there too.
+ *      `later/`, `archive/` and `skipped/` are outside this gate's glob and
+ *      are untouched by it; `stubs/` is inside it — see § SCOPE.
  *
  *   5. An entry that declares `- **Ownership:**` declares one of the three
  *      OWNER-OWNED classes (`product-owned`, `business-owned`,
@@ -41,10 +45,49 @@
  *      field, so on the day it ships no entry in the tree declares one and the
  *      rule fires on nothing.
  *
+ * SCOPE — the active tree plus `stubs/`, and deliberately nothing else.
+ *
+ * Widened from the active tree alone by an owner ruling on 2026-09-28. Before
+ * it, a stub's hold was unreachable by every blocker gate: a parked idea is
+ * where a hold sits LONGEST, so excluding it exempted exactly the entries most
+ * likely to rot. The rejected alternative was to keep the scope and reword the
+ * acceptance criterion that named this gate — refused because a criterion
+ * edited to match what was achieved stops being an acceptance test.
+ *
+ * Measured on the tree the widening shipped against: 121 files under `stubs/`
+ * (120 stubs plus the directory README), of which 6 carry a `### blocker:`
+ * heading and 4 declare one open inside a `## Blockers` section. Zero hard
+ * violations, zero additions to the decidability ratchet, zero new
+ * active/archived overlaps. So it lands on nothing — the same "no backlog to
+ * grandfather" argument the `Class:` and `Ownership:` contracts make.
+ *
+ * REACH, stated honestly, because the obvious reading of the paragraph above
+ * is wrong: this does NOT hold every future stub blocker to the contract. Both
+ * scanners require the entry to sit under a `## Blockers` heading, and 2 of
+ * today's 6 put it under `## State` instead — so a third of the population is
+ * in the glob and still unread. Stub headings are free-form, unlike the
+ * template-driven roadmaps this gate was written for, so that is the likely
+ * shape rather than an edge case. Widening the glob fixes WHERE the gate looks
+ * and not WHAT it can parse; the second half is the sibling defect recorded in
+ * `stubs/road-to-blocker-parse-visibility.md`, and it is untouched here.
+ *
+ * `later/`, `archive/` and `skipped/` stay OUT, and the reason is not symmetry:
+ * those record decisions already taken (parked, closed, dropped), so a blocker
+ * left unresolved there is history rather than debt. A stub records a decision
+ * still to take. The polarity is pinned in both directions by
+ * `tests/scripts/lint_roadmap_blockers.test.ts` § the scanned scope, so
+ * widening further cannot happen by accident.
+ *
+ * One consequence worth naming rather than discovering: `_archiveOverlap`
+ * defaults its ACTIVE corpus to this glob, so a stub declaring a blocker open
+ * that an archived roadmap also declares open now fails. That is the same
+ * self-contradiction the assertion already caught one directory up, and it
+ * measured 0 on the widening tree.
+ *
  * Fenced code blocks are stripped before scanning so a roadmap that shows
  * the `## Blockers` shape as a documentation example is not flagged.
  *
- * Exit codes: 0 = clean / no active roadmaps, 1 = violations.
+ * Exit codes: 0 = clean / nothing in scope, 1 = violations.
  */
 
 import * as fs from 'node:fs';
@@ -58,7 +101,14 @@ const _HERE = fileURLToPath(import.meta.url);
 const QUIET = process.argv.slice(2).includes('--quiet');
 
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
-const ROADMAP_GLOB = 'agents/roadmaps/*.md';
+/**
+ * The scanned scope, for display. Two plain globs rather than one brace
+ * expression: nothing globs with this string, and a `{,stubs/}` empty
+ * alternative is bash-only syntax that would mislead anyone who tried.
+ */
+const ROADMAP_GLOB = 'agents/roadmaps/*.md + agents/roadmaps/stubs/*.md';
+/** The one subdirectory inside the glob. See § SCOPE for why only this one. */
+const SCANNED_SUBDIRS: readonly string[] = ['stubs'];
 
 const FENCED_CODE_RE = /^[ \t]*```[^\n]*\n[\s\S]*?^[ \t]*```[ \t]*$/gm;
 const BLOCKERS_SECTION_RE = /^##[ \t]+Blockers[ \t]*$/im;
@@ -370,13 +420,14 @@ function _scanBoth(rawText: string): ScanResult {
     return { hard: violations, decidability };
 }
 
-/** Sorted `agents/roadmaps/*.md` (non-recursive — active roadmaps only). */
-function _globRoadmaps(): string[] {
-    const dir = path.join(REPO_ROOT, 'agents', 'roadmaps');
+/** Sorted `*.md` directly inside `dir` — never recursive. */
+function _globFlat(dir: string): string[] {
     let entries: fs.Dirent[];
     try {
         entries = fs.readdirSync(dir, { withFileTypes: true });
     } catch {
+        // A missing directory is not an error: `stubs/` is optional, and the
+        // dead-scope assertion in `main` is what catches a MOVED root.
         return [];
     }
     const out: string[] = [];
@@ -386,6 +437,21 @@ function _globRoadmaps(): string[] {
         }
     }
     return out.sort();
+}
+
+/**
+ * The files this gate judges: active roadmaps, plus `stubs/`. See § SCOPE.
+ *
+ * Takes its root so the scope can be driven from a fixture tree. Asserting the
+ * rule against the real tree would only restate today's file list; the test
+ * pins which DIRECTORIES are in and which are out, in both directions.
+ */
+function _globRoadmaps(roadmapRoot: string = path.join(REPO_ROOT, 'agents', 'roadmaps')): string[] {
+    const out = _globFlat(roadmapRoot);
+    for (const sub of SCANNED_SUBDIRS) {
+        out.push(..._globFlat(path.join(roadmapRoot, sub)));
+    }
+    return out;
 }
 
 function _relPosix(target: string, root: string): string {
@@ -561,7 +627,7 @@ function main(): number {
     const roadmaps = _globRoadmaps();
     if (roadmaps.length === 0) {
         if (!QUIET) {
-            process.stdout.write(`✅  no active roadmaps under ${ROADMAP_GLOB}\n`);
+            process.stdout.write(`✅  nothing in scope under ${ROADMAP_GLOB}\n`);
         }
         return 0;
     }

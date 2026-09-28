@@ -19,6 +19,28 @@ not appear on `agents/roadmaps-progress.md`. Promotion to active
 status moves the file up one directory and adds the complexity
 frontmatter expected by the linter.
 
+**One gate reaches in here, and it is the one that matters when you write a
+blocker.** Since 2026-09-28 (owner ruling) `lint_roadmap_blockers` scans this
+directory as well as the active tree. So a `### blocker:` you add to a stub is
+CI-enforced exactly as it would be in an active roadmap:
+
+- the five required fields — `Status`, `Owner`, `Blocks`, `What to do`,
+  `Resolved when` — are a **hard** failure if any is missing;
+- `Recommendation:`, `If you do nothing:` and a `What to do:` carrying a
+  command, a path or an enumerated option set run through a **shrink-only
+  ratchet that currently sits at zero with no headroom**, so the first entry
+  that omits one reds the build — very possibly in somebody else's PR.
+
+Write the full entry the first time; there is no grandfathering here. The
+contract itself is `templates/roadmaps.md` rule 20.
+
+Two caveats worth knowing before you rely on either direction. The gate only
+sees a `### blocker:` that sits under a `## Blockers` heading — two stubs in
+this directory put theirs under `## State` today and are invisible to it, which
+is a known defect tracked in `road-to-blocker-parse-visibility.md`, not a
+licence to place the heading anywhere. And `stubs:due` reads blockers by a
+*different*, looser rule (anywhere in the file), so the two counts can disagree.
+
 ## The two classes
 
 This directory holds two structurally different classes of stub, and the
