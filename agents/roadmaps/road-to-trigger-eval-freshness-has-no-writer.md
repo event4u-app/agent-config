@@ -3,6 +3,13 @@ complexity: lightweight
 status: draft
 execution:
   mode: phase-checkpoints
+estate_offset_exempt: >-
+  Nothing in the active estate can be archived to pay for this one. It records a
+  defect found while dispositioning PR #2078 — a freshness gate reading a field
+  no code writes — and the alternative to adding it is dropping the finding,
+  which is the outcome the ratchet is not trying to buy. It ships as a draft, so
+  it is already excluded from the dashboard and from /roadmap:process-* until a
+  maintainer promotes it.
 ---
 # Road to trigger eval freshness has no writer
 
