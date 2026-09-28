@@ -169,7 +169,7 @@ test.describe('Responsive design', () => {
 })
 ```
 
-**Read the probe artefact rather than re-deriving the matrix by hand.**
+**Read the probe artifact rather than re-deriving the matrix by hand.**
 `agents/runtime/state/ui-conformance.json` — produced by
 `ui_conformance_probe --target <file> --reference <file>` — carries a
 `viewport_matrix` row per declared width, plus a not-applicable row with its
@@ -180,7 +180,7 @@ not run.
 **The capture above is appearance-only, and it stays mandatory.** It proves
 presence and sanity — the surface rendered and nothing renders obviously broken —
 and proves nothing about hover, focus, keyboard or a media-preference branch.
-Demoting it from behavioural evidence does not narrow when it runs: it still runs
+Demoting it from behavioral evidence does not narrow when it runs: it still runs
 at every width in the matrix. Floor and division of labour:
 [`design-review`](../design-review/SKILL.md) § Appearance verification.
 

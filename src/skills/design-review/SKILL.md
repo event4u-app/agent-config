@@ -44,7 +44,7 @@ A **live preview URL** is required for testing.
 
 ## Procedure: Design review
 
-1. **Inspect the PR and preview** — Read the PR description, diff, and identify changed components/pages; read the probe artefact and run the appearance floor over the preview URL (Phase 0).
+1. **Inspect the PR and preview** — Read the PR description, diff, and identify changed components/pages; read the probe artifact and run the appearance floor over the preview URL (Phase 0).
 2. **Walk the interactions** — Run Phase 1; cover hover/focus/active/disabled, keyboard, loading, and form error states.
 3. **Cover responsiveness, polish, a11y, robustness** — Run Phases 2–5 in order; record findings per phase.
 4. **Audit code-health and content** — Run Phases 6–7; check tokens, dead styles, copy, console warnings.
@@ -55,9 +55,9 @@ A **live preview URL** is required for testing.
 - Read PR description and git diff.
 - Identify changed components and affected pages.
 - Navigate to preview URL.
-- **Read the probe artefact** `agents/runtime/state/ui-conformance.json`
+- **Read the probe artifact** `agents/runtime/state/ui-conformance.json`
   (`ui_conformance_probe --target <file> --reference <file>`) — its per-dimension counters are the
-  behavioural evidence Phases 1–2 report against. Absent is absent, never clean; a dimension the host
+  behavioral evidence Phases 1–2 report against. Absent is absent, never clean; a dimension the host
   could not exercise carries a not-applicable row with its reason rather than a zero.
 - **Run the appearance floor** (§ Appearance verification) — mandatory on every review.
 
@@ -106,7 +106,7 @@ asserted floor outside the measured set is an assertion nobody checks; 375px
 passing says nothing about 320px, which is where a two-column grid or a fixed
 `min-width` actually breaks.
 
-- **Read the probe artefact's `viewport_matrix` rows** — one per declared width, recording whether the
+- **Read the probe artifact's `viewport_matrix` rows** — one per declared width, recording whether the
   layout property that should change at that breakpoint did. A not-applicable row is missing evidence, not a pass.
 - **Run the appearance floor** (§ Appearance verification) at every one of the four widths.
 - **Scroll-driven surface** — read the `scroll_evidence` artefact
@@ -167,7 +167,7 @@ passing says nothing about 320px, which is where a two-column grid or a fixed
 ```
 APPEARANCE VERIFICATION IS MANDATORY WHEREVER APPEARANCE CAN BE AFFECTED.
 THE PROBE DEMOTES THE IMAGE FROM PRIMARY EVIDENCE — IT DOES NOT MOVE THE FLOOR.
-AN IMAGE IS NEVER EVIDENCE FOR HOVER, FOCUS, KEYBOARD, BREAKPOINT OR JS BEHAVIOUR.
+AN IMAGE IS NEVER EVIDENCE FOR HOVER, FOCUS, KEYBOARD, BREAKPOINT OR JS BEHAVIOR.
 AN UNRUN APPEARANCE CHECK IS REPORTED AS UNRUN, NEVER AS PASSED.
 ```
 

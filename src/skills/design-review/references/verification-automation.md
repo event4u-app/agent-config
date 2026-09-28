@@ -146,7 +146,7 @@ Reading a clean render as though it covered a row of this table is the
 substitution the appearance-only marking exists to prevent, and it is the reason
 the floor lists its two jobs separately rather than as one "visual check": the
 first job is the one no probe dimension replaces, and the second is the one the
-probe supersedes for behaviour.
+probe supersedes for behavior.
 
 **The converse holds and is the less obvious half.** No probe dimension covers
 presence and sanity. A `computed_style` row can be green on a node that is
