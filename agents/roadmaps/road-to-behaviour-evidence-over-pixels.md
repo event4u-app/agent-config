@@ -110,16 +110,45 @@ is not that the states are unnamed; it is that nothing can test them.
 
 ## Phase 4 — Demote the screenshot, with a verify line that can fail
 
-> **Both steps carry the inline `blocked-by:` marker, and that is a fix rather than a formality.**
-> `scanOpenSteps` in `src/scripts/hooks/run_continuation_hook.ts` reads blockedness from the
-> marker and from nothing else — it never parses `## Blockers` — so a step declared blocked only
-> in prose still counts as open work to the stop-slot concern, which re-engaged an autonomous run
-> into this owner decision on every fire. Measured on this file before the markers:
-> `{ open: 2, blocked: 0 }`, with `next` pointing at 4.1; after: `{ open: 0, blocked: 2, next:
-> null }`. No checkbox moved: the boxes stay `[ ]`, the two blockers stay open and the roadmap
-> stays unarchivable. Only the concern's read of them changes.
+> **While this phase was blocked, both steps carried an inline `blocked-by:` marker, and that was
+> a fix rather than a formality.** `scanOpenSteps` in `src/scripts/hooks/run_continuation_hook.ts`
+> reads blockedness from the marker and from nothing else — it never parses `## Blockers` — so a
+> step declared blocked only in prose still counted as open work to the stop-slot concern, which
+> re-engaged an autonomous run into this owner decision on every fire. Measured on this file
+> before the markers: `{ open: 2, blocked: 0 }`, with `next` pointing at 4.1; after:
+> `{ open: 0, blocked: 2, next: null }`. No checkbox moved at the time: the boxes stayed `[ ]` and
+> only the concern's read of them changed. **The markers were removed on 2026-09-28** when the
+> blocker resolved and the steps were done — a `blocked-by:` marker on a completed step points at
+> a resolved blocker and is exactly the stale state the mechanism above is sensitive to.
 
-- [ ] <!-- blocked-by: screenshot-mandate-reopens-a-completed-decision | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **4.1 Rewrite the two mandatory screenshot steps** in the review skill so they read the probe
+> **The three preservation questions, answered before the rewrite landed.** The blocker requires
+> these of any Phase 4 specification whichever arm is recorded, because "nothing is deleted"
+> speaks to capability and not to verification-floor coverage.
+>
+> 1. **Is appearance verification still mandatory wherever appearance can be affected?** Yes.
+>    `src/skills/design-review/SKILL.md` § Appearance verification opens with
+>    `APPEARANCE VERIFICATION IS MANDATORY WHEREVER APPEARANCE CAN BE AFFECTED`, and both demoted
+>    steps call into it rather than standing in for it — Phase 0 once per review, Phase 2 once per
+>    width. The Playwright viewport section states the same of its own capture.
+> 2. **Does it keep the "renders without obvious breakage" sanity function rather than only pixel
+>    comparison?** Yes, and as the *first* of the section's two jobs, ahead of pixel comparison:
+>    presence and sanity — no blank frame, no collapsed or overlapping layout, no missing region,
+>    no unstyled flash — quoting `agents/roadmaps/archive/road-to-visual-review-loop.md` word for
+>    word. The section states in its own text that no probe dimension covers it, because a
+>    computed style can be correct on a node nobody can see.
+> 3. **Is its trigger at least as broad as the one the present screenshot step carries?**
+>    Identical, not merely as broad. Both old triggers were unconditional — Phase 0's bullet on
+>    every review, Phase 2's once per viewport across the four-width matrix — and the appearance
+>    floor carries exactly those two, saying so in the artefact so a later reader can check the
+>    claim instead of trusting it.
+>
+> **What did change, stated plainly:** the image is no longer read as evidence for hover, focus,
+> keyboard, breakpoint or JavaScript behaviour. That narrows what the capture *proves*, never when
+> it is required. The phrase-level rewrite is what lets 4.1's regex fail correctly while the floor
+> it guards is untouched, and that is recorded here rather than left for a reader to infer from a
+> green grep.
+
+- [x] **4.1 Rewrite the two mandatory screenshot steps** in the review skill so they read the probe
       artefact, and move the pixel comparison into a section explicitly marked appearance-only.
       verify: `grep -nE 'Take (a )?(baseline )?screenshots?' src/skills/design-review/SKILL.md`
       returns nothing. **`corrected-from-reproduction`** — the source's verify lines use the literal
@@ -127,9 +156,21 @@ is not that the states are unnamed; it is that nothing can test them.
       first matches one line and the second matches the other, so each under-covers by half and
       the first would have passed before any work was done. The regex above matches both lines
       (`:58`, `:105`) and is the only form that can fail correctly.
-- [ ] <!-- blocked-by: screenshot-mandate-reopens-a-completed-decision | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question --> **4.2 Apply the same correction to the viewport section** of the Playwright skill.
+      **Measured 2026-09-28:** two matches before the work (`:58` baseline, `:105` per-viewport),
+      zero after. Appearance capture itself survives under § Appearance verification in wording the
+      regex does not match — the intended outcome, stated here rather than left to be discovered:
+      the check is a shape test on the two demoted steps, never a ban on appearance evidence.
+- [x] **4.2 Apply the same correction to the viewport section** of the Playwright skill.
       verify: the section reads the probe artefact, and its own verify line is a regex over the
       real sentence shapes rather than a literal.
+      **Measured 2026-09-28.** Removal half —
+      `grep -nE 'toHaveScreenshot\(.home-' src/skills/playwright-testing/SKILL.md` matched one line
+      before the work (`:157`) and nothing after. The `.` is the shape: it covers either quote
+      style and any `home-*` snapshot name, where the one literal the source pattern assumed would
+      have covered neither a renamed snapshot nor a re-quoted one. Addition half —
+      `grep -n 'ui-conformance.json' src/skills/playwright-testing/SKILL.md` matched nothing before
+      and matches now. One half is red-then-green on what left, the other on what arrived, so
+      neither can pass against an untouched file.
 
 ## Phase 5 — Mount it, in shadow only
 
@@ -155,7 +196,18 @@ is not that the states are unnamed; it is that nothing can test them.
 ## Blockers
 
 ### blocker: screenshot-mandate-reopens-a-completed-decision
-- **Status:** open
+- **Status:** resolved 2026-09-28 — **owner decision, taken in-session by the maintainer**, who
+  chose **arm (a)** of the two readings below: *the measurement authorises Phase 4 by itself —
+  arm (a) of `Resolved when` is an independent, evidence-triggered exit, so the bar clearing is
+  the resolution and Phase 4 runs.* Recorded in the entry's own words rather than restated, so
+  the ruling cannot drift stronger or weaker than what was chosen: it says the cleared bar is
+  the resolution and Phase 4 runs, and it says nothing else. Arm (b) was not chosen, so no
+  separate maintainer acceptance was required on top of the evidence. The AI council run of
+  2026-09-19 had **split 1/1** on the routing question, which per `decision-revisit-gate` is an
+  escalation condition and not a verdict — the choice was therefore the maintainer's, and it was
+  made here rather than inferred by the agent or read off the council. The hard condition the
+  entry attaches to *either* arm — the three preservation questions — was answered before the
+  Phase 4 rewrite landed; the answers are in § Phase 4 and in the artefacts themselves.
 - **Owner:** maintainer
 - **Class:** 3 — human-only
 - **Blocks:** Phase 4 only. Phases 0 through 3, 5 and 6 proceed without it — the probe can exist
@@ -259,8 +311,9 @@ is not that the states are unnamed; it is that nothing can test them.
 - [x] AC-4 — On a host that cannot run a dimension the artefact says so with a reason; no
       dimension ever reads zero findings because it did not run.
 - [x] AC-5 — The probe emits no scalar score and no coverage percentage.
-- [ ] AC-6 — The regex over the real screenshot sentence shapes returns nothing in the review
-      skill, and that regex matched two lines before the work.
+- [x] AC-6 — The regex over the real screenshot sentence shapes returns nothing in the review
+      skill, and that regex matched two lines before the work. Measured 2026-09-28: `:58` and
+      `:105` before, zero after.
 - [x] AC-7 — Removing one hover rule turns exactly one story red; removing one media rule turns
       exactly one breakpoint row red.
 - [x] AC-8 — The hook's block path is unchanged, and a run without the lane completes cleanly.
