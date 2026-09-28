@@ -1,6 +1,6 @@
 # Completion review — behaviour-evidence-over-pixels, Phase 4
 
-**Skipped:** no code surface for this completion — the diff is two skill markdown files, one skill reference markdown file, one roadmap markdown file and their three generated `dist/agent-src/` projections; the validator reports 0 code path(s) of 7 changed file(s), scope 6fe92a2569cae42f3990b5799a1116a8f0142ee3cbc3784dcff19fb055074390, declared 2026-09-28
+**Skipped:** no code surface for this completion — the diff is two skill markdown files, one skill reference markdown file, one roadmap markdown file, one regenerated measurement record and their three generated `dist/agent-src/` projections; the validator reports 0 code path(s) of 8 changed file(s), scope f54e89db0d248eca7a68ad9f667f886c150264988c68556fe58be69f4ecfbaea, declared 2026-09-28
 
 ## What this change is, and why R2 has nothing to bind to
 
@@ -24,8 +24,8 @@ artefact against the claim instead of against my assertion about it.
 
 ## What was caught in-flight, recorded rather than hidden
 
-Two gates found real defects in my own work and both are in the history rather
-than folded away:
+Four gates found real defects in my own work and all four are in the history
+rather than folded away. Two locally:
 
 1. `check_no_roadmap_refs` caught a shipped skill citing
    `agents/roadmaps/archive/road-to-visual-review-loop.md` — a stable artifact
@@ -37,8 +37,23 @@ than folded away:
    by keeping the binding half in the skill body and moving the lookup half to
    the skill's on-demand reference — 399 lines.
 
-Neither was found by reading my own diff, which is the argument for the gates
-and against treating an author's own pass as coverage.
+Then CI caught two that `task preflight` does not run:
+
+3. `lint_canonical_terms` rose 1004 to 1011 — seven house-dialect slips in my
+   own new prose (`artefact` for `artifact`, `behavioural` for `behavioral`).
+   Rewritten line-scoped; the five pre-existing occurrences in the same three
+   files stay as baselined debt, because a file-wide sweep is not authorised and
+   would hide the ratchet's signal.
+4. `routing_signal_measurement` 5.1 stopped reproducing — that measurement reads
+   skill **bodies**, and this branch rewrote two of them. Regenerated with
+   `measure_routing_signal --write`; the verdict is unchanged (`harmful`, same
+   breached guard, bars untouched) and one discordant pair reclassified.
+   Confirmed as this branch's doing rather than inherited: both shard 2/4 jobs
+   passed on PR #2082, whose head is the current main.
+
+None of the four was found by reading my own diff, which is the argument for the
+gates and against treating an author's own pass as coverage. The last two are
+also the argument against reading a green `task preflight` as a green CI.
 
 ## The one thing a reviewer should look at first
 
