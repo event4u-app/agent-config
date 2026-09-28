@@ -130,7 +130,7 @@ one command or one file:
    and stoppable are all questions *about a process*, and none of the eight rows above has one.
    Every cell therefore reads `unverifiable from tree evidence` in
    [`substrate-stub-gate-conditions-2026-09-13.md`](../../evidence/analysis/substrate-stub-gate-conditions-2026-09-13.md)
-   § the condition table. **Unverifiable is not unmet.** Ruling them unmet would record a
+   § 1 — The four governance conditions. **Unverifiable is not unmet.** Ruling them unmet would record a
    judgement nobody measured, about a subject that does not exist — and it would then be cited
    as a finding.
 2. **Condition 4 is not per-track.** Its documentation half is green and mechanically checked
@@ -151,8 +151,10 @@ one command or one file:
 `./scripts-run src/scripts/adr_cite_check ADR-249` reports `status: accepted`,
 `trigger state: indeterminate`, `reopen_policy: owner (declared)`,
 `authority_basis: owner_intent`, evidence `E2`, and 5 of 5 basis refs resolving. The tool's own
-verdict is "LIVE, TRIGGER INDETERMINATE — the reopen condition is semantic and this tool cannot
-decide it. Not an unqualified lock." So this pending state is a deferred **supervision
+verdict, quoted whole because its trailing clause is the operative half, is "LIVE, TRIGGER
+INDETERMINATE — the reopen condition is semantic and this tool cannot decide it. Not an
+unqualified lock: evaluate the condition against the current tree and route the result."
+This section is that routing. So this pending state is a deferred **supervision
 judgement**, never a reading of that record as settled or as closed.
 
 ### What would make this pending state stale
@@ -163,11 +165,15 @@ on *no track above* having a process — **not** on the package having none.
 The neighbouring question, whether a supervised resident process has shipped at all, was
 measured on 2026-09-28 and the answer is two-valued: **yes as code, no as residency.**
 `src/scripts/collector_daemon.ts` ships and `src/scripts/run_lifecycle_suite` exercises it
-against real spawned processes; nothing in `src/` writes or loads a `launchd` plist or a
+against real spawned processes — the suite drives `tests/scripts/collector_lifecycle.test.ts`,
+which is the layer that spawns the daemons, and derives its verdict from five named lifecycle
+properties rather than hardcoding it; nothing in `src/` writes or loads a `launchd` plist or a
 `systemd --user` unit, and the `ENABLED` opt-in marker has no production writer, so it is
 default-off by absence of mechanism rather than by configuration. That measurement corrected
 `docs/CLAIMS.md`'s `resident-process-permitted-under-governance`, whose `non_inference` had
-denied it since 2026-08-30. It **does not** discharge reason 1: the collector belongs to
+denied it since 2026-08-27 — when it was written and true — and went on denying it after
+2026-08-30, when it became false. The two dates are different facts and the entry keeps them
+apart. It **does not** discharge reason 1: the collector belongs to
 `road-to-supervised-telemetry-collector`, not to any of the eight tracks here — which is
 exactly why the shipped-or-not answer and this pending state can both be true at once.
 
@@ -179,7 +185,14 @@ which one moved:
 - **the same-revision activation guard ships** — reason 2 is gone, and condition 4 becomes a
   real per-track question instead of a uniform absence;
 - **ADR-124 § 6 is reopened by a separate record, or a control-store design passes its test on
-  its own terms** — reason 3 is gone for tracks 1, 4 and 8.
+  its own terms** — reason 3 is gone for tracks 1 and 4, and for those two only. Track 4 is
+  downstream of track 1 in its own row's words ("inherits that row's P3 gate in full");
+- **any track above is promoted AND has shipped** — that, and not the § 6 bullet, is what
+  reaches track 8. Its row says "opens after at least one other row is promoted and has
+  shipped", which is **any** of the other seven and is two steps beyond a design passing a
+  test. Reopening § 6 promotes nothing and ships nothing, so it moves track 8 not at all —
+  this bullet was folded into the one above in the first draft, which would have handed a
+  future reader a revisit trigger for a gate that had not moved.
 
 Until one of those happens, re-requesting the ruling meets the same three reasons, and the
 honest answer is this section rather than a fresh enumeration.

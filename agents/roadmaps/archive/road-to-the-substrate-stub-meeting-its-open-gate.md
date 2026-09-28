@@ -276,7 +276,9 @@ rounds since have re-derived the architecture instead of reading the file.
   ruling is pending. Arm (a), a ruling per condition, was **not** taken and was not available:
   conditions 1 to 3 have no process to be met *for* (so `unverifiable from tree evidence`, which
   is not `unmet`), condition 4's process half is absent for every track equally, and track 1's
-  gate is ADR-124 § 6 rather than ADR-249 — with tracks 4 and 8 downstream of that row. The stub
+  gate is ADR-124 § 6 rather than ADR-249 — with track 4 downstream of that row and track 8
+  waiting on any row being promoted and shipped, which is a different trigger and is recorded
+  as one. The stub
   section carries the citation per reason and the condition under which the pending state goes
   stale. `./scripts-run src/scripts/adr_cite_check ADR-249` is recorded there too: live,
   `trigger state: indeterminate`, `reopen_policy: owner`, `authority_basis: owner_intent`,
