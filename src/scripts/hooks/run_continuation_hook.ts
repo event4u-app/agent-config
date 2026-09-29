@@ -152,6 +152,7 @@ import {
     sessionRefusalFile,
 } from '../_lib/turn_end_refusals.js';
 import { phaseLines } from '../_lib/roadmap_checkboxes.js';
+import { commandBearing, formatExpectation, type VerifyClause } from '../_lib/verify_clause.js';
 
 const EXIT_ALLOW = 0;
 /** Dispatcher-internal block code; the dispatcher maps stop-slot 1 → host 2. */
@@ -375,8 +376,14 @@ export function isDuplicateFire(
 export interface NextStep {
     /** The step's own line, checkbox stripped, truncated for the message. */
     text: string;
-    /** The step's `verify:` command, when its line carries one. */
-    verify: string | null;
+    /**
+     * The step's `verify:` clause, when its line carries a command.
+     *
+     * A clause, not a bare string: the command alone never said what it had to
+     * produce, so a step could be flipped on a command that cannot fail. The
+     * expectation half travels with it into the continuation message.
+     */
+    verify: VerifyClause | null;
 }
 
 export interface ScanResult {
@@ -481,15 +488,16 @@ export function scanOpenSteps(text: string): ScanResult {
  * The comment form wins when both are present: it is the machine-readable one,
  * and a step carrying both has a human-facing line and a tooling-facing line
  * rather than two commands.
+ *
+ * The grammar itself moved to `_lib/verify_clause.ts` when the clause gained an
+ * optional expectation half. This stays as the hook's narrowing — a prose
+ * clause is not a command, and the continuation message renders commands — but
+ * it parses nothing: a second copy of the arrow grammar is how the hook and
+ * `closure_scan` would drift, and a drifted grammar stops reading expectations
+ * without failing anything.
  */
-export function extractVerify(stepText: string): string | null {
-    const html = /<!--\s*verify:\s*(.*?)\s*-->/.exec(stepText);
-    if (html !== null) return (html[1] as string).trim() || null;
-    // `verify:` then the command, both backticked. The label's own backticks
-    // are optional because the tree carries `verify:` and `` `verify:` ``.
-    const backticked = /`?verify:`?\s*`([^`]+)`/.exec(stepText);
-    if (backticked !== null) return (backticked[1] as string).trim() || null;
-    return null;
+export function extractVerify(stepText: string): VerifyClause | null {
+    return commandBearing(stepText);
 }
 
 /**
@@ -1486,9 +1494,17 @@ export function main(): number {
 }
 
 function _continuationText(slug: string, scan: ScanResult, iteration: number): string {
+    // The expectation half rides along. A re-engagement told only the command
+    // can run it, see exit 0, and flip the box — which is the whole defect the
+    // arrow exists to close. Told the expectation too, it has an oracle.
+    const verify = scan.next?.verify ?? null;
+    const verifyLine =
+        verify === null
+            ? ''
+            : `\n  verify: ${verify.command ?? ''}` +
+              (verify.expect === null ? '' : ` ${formatExpectation(verify.expect)}`);
     const stepLine = scan.next
-        ? `Next step: ${scan.next.text}` +
-          (scan.next.verify ? `\n  verify: ${scan.next.verify}` : '')
+        ? `Next step: ${scan.next.text}${verifyLine}`
         : 'Next step: (first open checkbox in the roadmap)';
     return (
         `run-continuation: the contracted roadmap \`${slug}\` has ${scan.open} open ` +
