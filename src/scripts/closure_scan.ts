@@ -139,6 +139,15 @@ const FIXED_OUTPUT_HEADS: ReadonlySet<string> = new Set(['echo', 'true', 'printf
  *
  * Three shapes, each one a way of carrying a `verify:` line that reads as
  * verification and decides nothing.
+ *
+ * THE COUNT IS A LOWER BOUND, and saying so is the point. `scan()` assigns at
+ * most one kind per unit and the line patterns run first, so a step that also
+ * says "assuming", "merge" or "deploy" is claimed by the broader family and
+ * never reaches this one. Measured on 2026-09-29: 12 of 50 candidates were
+ * shadowed that way, so the published listing under-reports by roughly a
+ * quarter. A reader told a number and not told it is a floor would read the
+ * remainder as clean, which is the same mistake as reporting a share off a
+ * corpus nobody scanned.
  */
 export function unfalsifiableReason(clause: VerifyClause): string | null {
     if (clause.command === null) {
