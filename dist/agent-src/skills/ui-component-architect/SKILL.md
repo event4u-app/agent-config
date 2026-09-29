@@ -74,7 +74,10 @@ component goes.** The audit (§ 1b of
 [`existing-ui-audit`](../existing-ui-audit/SKILL.md)) records the project's
 **own** granularity tiers, joined with `/`, or `none`:
 
-- **It names tiers** → place the component inside one of them and say which:
+- **It names tiers** → record the chosen tier on the component's
+  `state.ui_design.components[]` entry as `tier` (the apply step reads that
+  field and nothing else writes it), then place the component inside it and say
+  which:
   *"conforming to the project's `primitives/patterns/features` taxonomy —
   `Checkout` goes under `src/components/features/`"*. Match the tier by name;
   there is no rule here that computes a tier, and there must not be one.
