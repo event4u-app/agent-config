@@ -26,6 +26,7 @@ import {
     computeVerdict,
     main as settleMain,
     resolveSettleContext,
+    resolveSettleContextPreFix,
     shouldContinue,
     touchedPaths,
 } from '../../src/scripts/hooks/obligation_settle_hook.js';
@@ -281,14 +282,20 @@ describe('the settle hook resolves the session the way the injector does', () =>
         process.chdir(cwd);
     });
 
-    it('REPRODUCES the zero-shadow defect: env-only resolution finds no ledger', () => {
-        // The pre-fix behavior, pinned as a fixture rather than described: a
-        // session id that reaches the hook ONLY through the envelope is what
-        // every dispatched stop event actually looks like.
+    it('REPRODUCES the zero-shadow defect by RUNNING the old resolver', () => {
+        // The old resolver is kept reachable precisely so this case can drive
+        // `main()` through it. Asserting a property of the NEW function on empty
+        // inputs — which this test used to do — could only ever have failed on a
+        // missing export, which is not the defect.
         seedUndischargedTurn();
-        expect(process.env['CLAUDE_CODE_SESSION_ID']).toBeUndefined();
-        expect(resolveSettleContext({}, {}, {}).session).toBe('');
+        setHookStdinOverride(envelope());
+        expect(settleMain(resolveSettleContextPreFix)).toBe(0);
         expect(readShadow(root, SESSION)).toHaveLength(0);
+
+        // Same ledger, same envelope, same turn: only the resolver differs.
+        setHookStdinOverride(envelope());
+        expect(settleMain()).toBe(0);
+        expect(readShadow(root, SESSION)).toHaveLength(1);
     });
 
     it('writes a shadow row for an envelope-keyed session', () => {

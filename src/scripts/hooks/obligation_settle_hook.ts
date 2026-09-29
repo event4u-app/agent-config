@@ -42,6 +42,11 @@ import path from 'node:path';
 import process from 'node:process';
 
 import { readHookStdin } from './hook_stdin.js';
+// The WRITER's own root resolver, imported rather than re-derived. A second
+// spelling of "which tree is this" is how a reader comes to address a ledger
+// the writer never wrote — which is the defect this whole file is repairing,
+// one field over.
+import { workspaceRoot as writerWorkspaceRoot } from './rule_inject_hook.js';
 
 import { may_refuse_on } from '../_lib/obligation_frequency.js';
 import { appendShadow, readDelivered, readDischarged, stamp } from '../_lib/obligations.js';
@@ -183,7 +188,19 @@ export function resolveSettleContext(
         return '';
     };
     return {
-        root: str(envelope['workspace_root'], envelope['workspace'], envelope['cwd']) || process.cwd(),
+        // `workspaceRoot` is the INJECTOR's function, not a copy of it. It reads
+        // `workspace` / `cwd` / `project_dir`; this file used to read
+        // `workspace_root` / `workspace` / `cwd`, so the two key sets overlapped
+        // without matching and the pair was joined on the session only. It
+        // happened to agree on both real envelope shapes — the dispatcher sets
+        // `workspace_root` and chdirs concerns to it, a native wiring passes
+        // `cwd` — which made the asymmetry a property of today's envelopes
+        // rather than of the code. `workspace_root` is appended ahead of the
+        // shared resolver because the dispatcher is the only producer that sets
+        // it and nothing else reads it.
+        root:
+            str(envelope['workspace_root'])
+            || writerWorkspaceRoot(envelope as Parameters<typeof writerWorkspaceRoot>[0]),
         session: str(
             envelope['session_id'],
             envelope['sessionId'],
@@ -196,6 +213,18 @@ export function resolveSettleContext(
         ),
     };
 }
+
+/**
+ * The session id the WRITER would have used, for the ledger nobody reads.
+ *
+ * `rule_inject_hook.ts` defaults an unnamed session to the literal `unknown`
+ * and writes delivered rows there; this reader used to return `''` and allow, so
+ * that population was invisible to every reading of the bar. Reported rather
+ * than silently joined: a shared `unknown` bucket aggregates unrelated sessions,
+ * so reading it as one session's turn would be worse than not reading it. The
+ * constant is exported so a future census can count what is sitting there.
+ */
+export const WRITER_UNNAMED_SESSION = 'unknown';
 
 /** The envelope on stdin, or an empty object when there is none to read. */
 function readEnvelope(): { envelope: Record<string, unknown>; payload: Record<string, unknown> } {
@@ -218,9 +247,36 @@ function readEnvelope(): { envelope: Record<string, unknown>; payload: Record<st
     return { envelope, payload };
 }
 
-export function main(): number {
+/**
+ * The resolver as it stood BEFORE the join fix, kept reachable for one test.
+ *
+ * A reproduction that cannot run the old code is not a reproduction — it is an
+ * assertion about the new function's behavior on inputs nobody sends, and
+ * `tests/hooks/obligation_settle.test.ts` carried exactly that until an
+ * independent review named it. This function is dead on every production path
+ * (nothing but the fixture calls it) and exists so the defect stays executable:
+ * environment-only resolution, allow when empty, root from the cwd.
+ */
+export function resolveSettleContextPreFix(
+    _envelope: Record<string, unknown>,
+    _payload: Record<string, unknown>,
+    env: Record<string, string | undefined>,
+): { root: string; session: string } {
+    // Same arity as the live resolver ON PURPOSE. A narrower signature would let
+    // the fixture pass the envelope in as `env`, where the lookup misses for the
+    // wrong reason and the test goes green without exercising the defect.
+    return { root: process.cwd(), session: (env['CLAUDE_CODE_SESSION_ID'] ?? '').trim() };
+}
+
+export function main(
+    resolve: (
+        envelope: Record<string, unknown>,
+        payload: Record<string, unknown>,
+        env: Record<string, string | undefined>,
+    ) => { root: string; session: string } = resolveSettleContext,
+): number {
     const { envelope, payload } = readEnvelope();
-    const { root, session } = resolveSettleContext(envelope, payload, process.env);
+    const { root, session } = resolve(envelope, payload, process.env);
     if (session === '') return EXIT_ALLOW;
 
     let verdict: SettleVerdict;
