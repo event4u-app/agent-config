@@ -64,6 +64,8 @@ import {
   update_json_under_lock,
 } from "./hooks/state_io.js";
 import { readHookStdin } from "./hooks/hook_stdin.js";
+import { isVerificationCommand } from "./_lib/verification_command.js";
+import { runnerOf } from "./_lib/verification_evidence.js";
 
 // NOTE: the Python docstring says `agents/runtime/state/`, but the code
 // constant is `agents/state/`. Replicated verbatim — latent docstring/code
@@ -193,6 +195,11 @@ function _empty_state(): StateDict {
     // has to survive it: the measured failure is a completion claim in a LATER
     // turn than the poll it rests on.
     ci_last: null,
+    // Round 8 — see `_reset_turn`. Present in the empty state so a freshly
+    // created file has the same shape as one that has seen a turn boundary;
+    // a reader must never have to distinguish "no runs yet" from "key absent".
+    verification_runs: [],
+    edits_this_turn: 0,
     checked_at: _now(),
   };
 }
@@ -334,11 +341,88 @@ function _extract_output(payload: StateDict): string | null {
   return null;
 }
 
+/**
+ * Tool names that CHANGE the tree, across the platforms this concern sees.
+ *
+ * The first four mirror `_EDIT_TOOLS` in the turn-end gate exactly; the rest are
+ * the same three tools under the names Augment, Cline and Cursor give them. The
+ * gate reads a Claude transcript and can afford four names; this recorder runs
+ * on every platform the manifest binds `post_tool_use` on, so it needs all of
+ * them — a missed edit name means `edits_this_turn` undercounts and a
+ * verification run looks LATER in the sequence than it was, which is the one
+ * direction that could clear an unverified edit.
+ */
+const EDIT_TOOLS: ReadonlySet<string> = new Set([
+  "Edit",
+  "Write",
+  "MultiEdit",
+  "NotebookEdit",
+  "str-replace-editor",
+  "save-file",
+  "str_replace_editor",
+  "create_file",
+  "write_to_file",
+  "replace_in_file",
+  "apply_diff",
+  "edit_file",
+]);
+
+/**
+ * How many run records one turn may keep.
+ *
+ * The state file is read by a stop-slot hook on every turn, so it is on the
+ * latency path and cannot grow without a ceiling. The NEWEST are kept because
+ * the only question asked of them is whether a passing run follows the LAST
+ * edit, which is always answered by the tail.
+ */
+export const MAX_VERIFICATION_RUNS_PER_TURN = 24;
+
+/** Bytes of tool output retained per record — enough for any runner's summary. */
+export const RUN_OUTPUT_TAIL_BYTES = 4096;
+
+/**
+ * The exit code a post-tool payload carries, or `null` when it carries none.
+ *
+ * `null` is a REAL value here and is never normalised to 0. Several hosts do not
+ * surface an exit status on this event at all, and a recorder that wrote 0 for
+ * "the host said nothing" would manufacture the strongest possible evidence out
+ * of silence — the classifier's `exit_code_unavailable` verdict exists precisely
+ * so that this gap stays visible downstream instead of becoming a pass.
+ */
+function _extract_exit_code(payload: StateDict): number | null {
+  const sources: unknown[] = [payload];
+  for (const key of ["tool_response", "toolResponse", "result"]) {
+    const v = payload[key];
+    if (v !== null && typeof v === "object" && !Array.isArray(v)) {
+      sources.push(v);
+    }
+  }
+  for (const src of sources) {
+    const obj = src as StateDict;
+    for (const key of ["exit_code", "exitCode", "returncode", "returnCode", "status_code"]) {
+      const v = obj[key];
+      if (typeof v === "number" && Number.isFinite(v)) {
+        return Math.trunc(v);
+      }
+      if (typeof v === "string" && v.trim() !== "" && Number.isFinite(Number(v))) {
+        return Math.trunc(Number(v));
+      }
+    }
+  }
+  return null;
+}
+
 function _reset_turn(state: StateDict, session_id: string): StateDict {
   state["session_id"] = session_id || state["session_id"] || "";
   state["turn_started_at"] = _now();
   state["verifications_this_turn"] = 0;
   state["verified_this_turn"] = false;
+  // Round 8 — the run records the stop gate reads instead of the command text,
+  // and the edit counter that places them in the turn's sequence. Both are
+  // TURN-scoped: a run from the previous turn demonstrably did not exercise this
+  // turn's edits, which is the freshness argument `verify-before-complete` makes.
+  state["verification_runs"] = [];
+  state["edits_this_turn"] = 0;
   // FC-3b turn-scoped counters: a CI settle must be witnessed within the same
   // turn that claims it, so the in-flight observation does not survive a turn.
   state["ci_saw_pending"] = false;
@@ -386,6 +470,11 @@ function _update(state: StateDict, event: string, envelope: StateDict): StateDic
     state = _reset_turn(state, session_id);
   } else if (event === "post_tool_use") {
     const [tool, cmd] = _extract_command(pl);
+    // Counted BEFORE the verification branch, so a run recorded in this same
+    // event is placed after the edits that preceded it and never after itself.
+    if (tool !== null && EDIT_TOOLS.has(tool)) {
+      state["edits_this_turn"] = _asInt(state["edits_this_turn"]) + 1;
+    }
     if (cmd && _is_verification(cmd)) {
       const output = _extract_output(pl);
       // No readable output → the guard has nothing to judge, so behaviour is
@@ -439,6 +528,7 @@ function _update(state: StateDict, event: string, envelope: StateDict): StateDic
         vacuous,
         counted: counts,
       };
+
       if (counts) {
         state["verifications_this_turn"] = _asInt(state["verifications_this_turn"]) + 1;
         state["verifications_this_session"] =
@@ -447,6 +537,43 @@ function _update(state: StateDict, event: string, envelope: StateDict): StateDic
       } else {
         state["nonevidence_this_turn"] = _asInt(state["nonevidence_this_turn"]) + 1;
       }
+    }
+
+    // The RUN record, written beside `last_verification` and gated on a
+    // DIFFERENT, wider selector — the one the turn-end gate's detector C uses.
+    //
+    // Two selectors is a smell, so here is why it is not one. `_is_verification`
+    // above decides what enters this concern's COUNTERS, and those counters have
+    // pinned meanings (`verifications_this_turn`, the FC-3b `ci_last`
+    // discrimination) that a widening would silently change. The run record
+    // decides nothing by itself: it is raw evidence, and `classifyRun` is what
+    // judges it. So the record path wants every command the gate might read,
+    // including the ones the classifier will then reject —
+    // `not_a_verification_command` is a verdict the gate needs to SEE, and a
+    // recorder that filtered those out would leave the gate unable to tell "the
+    // turn ran `echo test`" from "the turn ran nothing at all".
+    //
+    // `after_edits` is the edit counter as it stood when the command ran. The
+    // reader compares it against the number of edits the turn made in total:
+    // equal or greater means nothing was edited afterwards. That is an ORDINAL
+    // comparison needing no clock, so it survives a host whose timestamps are
+    // coarse or absent, and it degrades toward under-refusing when the reader's
+    // own count is short.
+    if (cmd && isVerificationCommand(cmd)) {
+      const run_output = _extract_output(pl);
+      const runs = Array.isArray(state["verification_runs"])
+        ? [...(state["verification_runs"] as unknown[])]
+        : [];
+      runs.push({
+        command: cmd.slice(0, 512),
+        tool,
+        exit_code: _extract_exit_code(pl),
+        stdout_tail: run_output === null ? "" : run_output.slice(-RUN_OUTPUT_TAIL_BYTES),
+        runner: runnerOf(cmd),
+        after_edits: _asInt(state["edits_this_turn"]),
+        at: _now(),
+      });
+      state["verification_runs"] = runs.slice(-MAX_VERIFICATION_RUNS_PER_TURN);
     }
   } else if (event === "stop") {
     state["last_stop_at"] = _now();
