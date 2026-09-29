@@ -3,16 +3,7 @@ complexity: lightweight
 status: ready
 execution:
   mode: phase-checkpoints
-estate_offset_exempt: >-
-  Nothing in the active estate can be archived to pay for this one, and the two
-  neighbours that look like payers are not. The stub it extends holds a
-  stack-and-rig question that is still owner-gated, so archiving it would delete
-  the open question rather than settle it; the sibling stub on proposal
-  adoptability holds a different owner question and would take the same loss.
-  What is here is the residue neither holds: three places where this tree states
-  one thing and does another, each re-verified at 20bfb1f53 and each fixable
-  without deciding either owner question. It ships as a draft, so it is excluded
-  from the dashboard and from /roadmap:process-* until a maintainer promotes it.
+estate_offset_exempt: "Nothing in the active estate can be archived to pay for this one, and the two neighbours that look like payers are not. The stub it extends holds a stack-and-rig decision that is still owner-reserved, so archiving it would delete that decision rather than settle it; the sibling stub on proposal adoptability holds a different owner-reserved decision and would take the same loss. What is here is the residue neither holds: three places where this tree states one thing and does another, each re-verified at 20bfb1f53 and each fixable without settling either owner-reserved decision."
 relates:
   - slug: road-to-executable-specification-adapter
     relation: extends

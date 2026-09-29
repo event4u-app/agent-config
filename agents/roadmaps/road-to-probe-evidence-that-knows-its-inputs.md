@@ -96,7 +96,7 @@ actually ported a provided handover stops reading as unremarkable.
 
 ## Decisions
 
-| Decision | Alternatives | Reason | Revisit-if |
-|---|---|---|---|
-| Content digests over mtime | reuse the mtime rule the same file already applies to the audit artefact | mtime moves on a checkout or a touch and would report stale on turns nothing changed | A digest proves measurably slower than mtime on a real reference |
-| Report stale instead of blocking | make a stale artefact refuse the turn | The reader is advisory by design and this roadmap adds no refusal surface | The advisory line is measured as ignored across real turns |
+| ID | ownership | resolved by | decision | evidence | revisit if |
+|---|---|---|---|---|---|
+| D1 | reversible-technical | evidence | Content digests over mtime, rather than reusing the mtime rule the same file already applies to the audit artefact | mtime moves on a checkout or a touch, so it would report stale on turns where nothing changed — a digest answers the question actually being asked | A digest proves measurably slower than mtime on a real reference |
+| D2 | reversible-technical | evidence | Report stale instead of blocking, rather than making a stale artefact refuse the turn | The reader is advisory by design and this roadmap adds no refusal surface; a refusal would be a new authority, not a fix | The advisory line is measured as ignored across real turns |

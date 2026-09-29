@@ -123,7 +123,7 @@ and by a pre-registered count of what today's gates catch, recorded before any g
 
 ## Decisions
 
-| Decision | Alternatives | Reason | Revisit-if |
-|---|---|---|---|
-| Fix the three matching/outcome/scan defects, leave the inventory source alone | derive the inventory from the artefact in the same roadmap | The derived denominator needs a browser capture path and an unresolved row-source decision; the three defects here need neither and each is a few lines | The row-source owner decision lands and a derived inventory makes exact id matching moot |
-| Shadow-then-flip for the outcome change | flip directly | An engine outcome is a surface existing callers branch on | No caller is found to branch on `SUCCESS` from this directive |
+| ID | ownership | resolved by | decision | evidence | revisit if |
+|---|---|---|---|---|---|
+| D1 | reversible-technical | evidence | Fix the three matching/outcome/scan defects and leave the inventory source alone, rather than deriving the inventory from the artefact in the same roadmap | The derived denominator needs a browser capture path and an unresolved row-source decision; the three defects need neither, and each is a few lines at `apply.ts:129,190,268` | The row-source owner decision lands and a derived inventory makes exact id matching moot |
+| D2 | reversible-technical | evidence | Shadow-then-flip the outcome change rather than flipping directly | An engine outcome is a surface existing callers branch on, so the flip is only safe once the shadow shows who reads it | No caller is found to branch on `SUCCESS` from this directive |
