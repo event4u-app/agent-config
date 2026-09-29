@@ -121,15 +121,15 @@ fb000c3314639eb9df0400a9f8f9ad45ecdbbdba9a81f607d8584f6224d9c0af  tests/golden/b
 be20a43f657c54d5bcf1befdbdc34fc0b9e9089827cd6ea9ead180e8e03ef9f8  tests/golden/baseline/GT-U10/delivery-report.md
 09df1c20494e3bd353ed76200643cc7b4fc7a64dd29e71eac6cf569b19265510  tests/golden/baseline/GT-U10/exit-codes.json
 51089615e0f0baa8beb33b937052dcd5d98d4d2a8279fd60fe6abf929655bbfc  tests/golden/baseline/GT-U10/fixture/gt-u10-greenfield-bare.txt
-e02b252fb52db236c9a7fd0772b18ded6eb75cbdc69ed4f9ad5bf8ab528418d3  tests/golden/baseline/GT-U10/halt-markers.json
+2c7d05f40985745abbd0f85f51dc2405d179a05c38f689e6afd65df285f7578a  tests/golden/baseline/GT-U10/halt-markers.json
 b9046e79b42dc31dd8faf6e297b9375aebe483061bc5a067bd259eeba53568d0  tests/golden/baseline/GT-U10/state-snapshots/cycle-01.json
-63b0e9b3456e191f6b04dd04126236427e9c36a60ff37acb22ad99ee64c85764  tests/golden/baseline/GT-U10/state-snapshots/cycle-02.json
+267d4cd9887af6ea6935bd5f7b684ef0470c3788d2c8d6a25b2fda4ad8497abc  tests/golden/baseline/GT-U10/state-snapshots/cycle-02.json
 ad23df7ecf2310821c9cf6b62d36444b02652b82ec50df8cd507935efd3b0a20  tests/golden/baseline/GT-U10/state-snapshots/cycle-03.json
 73d17ea0c7dc8c18c261200c448c7affbe8ebfa8107b169f4c739293686c5216  tests/golden/baseline/GT-U10/state-snapshots/cycle-04.json
 d63a2027c0548d3109a39bd208fa2a1b33623914caac5b853be63ad62c5c052d  tests/golden/baseline/GT-U10/state-snapshots/cycle-05.json
 0bd379eee8f6f5cacdaf9f55b87e612f249e098c465a76fba2f51864f76dd060  tests/golden/baseline/GT-U10/state-snapshots/cycle-06.json
 ef085ea43dbbaa2b2aebec2c68ee14d07d5f9131b7727d090e2182fac296acc1  tests/golden/baseline/GT-U10/state-snapshots/cycle-07.json
-1754ee16cfebcf44dea3329af8fba51f6c3f7dbde7e9ddcace214254e0aca3e0  tests/golden/baseline/GT-U10/transcript.json
+2d0f079d2fa318c81fea04fb0afac8e2647bafa7733264c487da06a1ec3e27cd  tests/golden/baseline/GT-U10/transcript.json
 3cf06bfd6e36bb88de796a86780137c77e02452a272361565736fdaded5ef9b2  tests/golden/baseline/GT-U11/delivery-report.md
 af5d32104c3a7210392baa6f2c573a432fb7f1018d875d99b82dc163532d78ff  tests/golden/baseline/GT-U11/exit-codes.json
 787fd5651f4f693ca698b519307ccea46b9350692bbecbc07727e523198925d7  tests/golden/baseline/GT-U11/fixture/gt-u11-high-confidence.txt
@@ -264,9 +264,9 @@ fc06539473c538239d2854481901c9d3362123583e48f8d2a94ee32ee82ad40f  tests/golden/b
 d5e6fdc05a96107486a78c8e8827fbf57878e7ab3adaeeedab35cc29a33f7029  tests/golden/baseline/GT-U9/delivery-report.md
 63ef2497d16d0635660542b6fb5958bf04e33b5a54833a61d12f026bbe4b2b60  tests/golden/baseline/GT-U9/exit-codes.json
 b7c7ef487cd43a1bbb614e701e45952848f7a9c5850b5f525905ab58927cf68d  tests/golden/baseline/GT-U9/fixture/gt-u9-greenfield-scaffold.txt
-e3e079a45f61bc306e53ce6967f0ab0b2d9286c136df189037f5461fd4a355e3  tests/golden/baseline/GT-U9/halt-markers.json
+79544437be648e01b2af6d483e1453488a97095f6f4f37a609486d60eea35241  tests/golden/baseline/GT-U9/halt-markers.json
 940a8cbff4d3310d5a804f2c89a7fd1f19da3b86bb1abd4f5322ad40a7ae7557  tests/golden/baseline/GT-U9/state-snapshots/cycle-01.json
-897903b5a3fc09e9f65ea0a9ef1d24e5cf22879842504b065984804caeb772ef  tests/golden/baseline/GT-U9/state-snapshots/cycle-02.json
+2a7747e081cd51e51a80ef475c9cf8e6ffb2427ddbc29886da8b237cf208ff86  tests/golden/baseline/GT-U9/state-snapshots/cycle-02.json
 bf16c4fe869847d6b8c78c2f73a8a9fab6c3044d38818ee8ce5b8f9071cad031  tests/golden/baseline/GT-U9/state-snapshots/cycle-03.json
 da883c1189a3606a098a98390ca34833de2bf26d9a897f3abebba681c63f19fc  tests/golden/baseline/GT-U9/state-snapshots/cycle-04.json
 4cb9aef7c718bb593b150e492eb8d6c77c35a64dba55922ff75ee205fa9b20b4  tests/golden/baseline/GT-U9/state-snapshots/cycle-05.json
@@ -276,5 +276,5 @@ c032858774d701dbd24df16f3eb36f03d70c530898afafafd34ec6433cac7c28  tests/golden/b
 861cc55b5f366bf4b69dd5b63daab622ca60f1420d78218d62a3d25e1ecc2d62  tests/golden/baseline/GT-U9/state-snapshots/cycle-09.json
 4a93a1265b5eda8bce81528314007dfedfc56c5a50f2aef583d2be98209911b3  tests/golden/baseline/GT-U9/state-snapshots/cycle-10.json
 60d3b81995cdd8761c4812c3ce27f7169f7f2e7facdd66216481ea763348b6a1  tests/golden/baseline/GT-U9/state-snapshots/cycle-11.json
-5af59b5b6cd37b614f7438a13cbfe2e372fa0c1a1d7669fc5568ed81dadcc828  tests/golden/baseline/GT-U9/transcript.json
+82d2b1b43484a65611e8dcd2580fdab9adbed48728348ff87455bab9ca17d5ca  tests/golden/baseline/GT-U9/transcript.json
 bd440f5b684dc7bf7671a0de9165bea519d0cfdf2269b7d80a92901da6b17bcd  tests/golden/baseline/summary.json

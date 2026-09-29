@@ -41,6 +41,7 @@
     "> 1. Scaffold — minimal token set + base component primitive folder",
     "> 2. Bare — proceed with Tailwind defaults, no scaffolding",
     "> 3. External reference — point me at a design-system URL or file",
+    "> 4. Scaffold + a granularity convention — as 1, and new components go into named granularity folders you pick the names for; rename or drop it later and nothing here objects",
     "",
     "**Recommendation: 1 — Scaffold tokens + primitives** — even one extra screen benefits from a shared base; the scaffold cost is ~10 min and saves re-doing every primitive on screen 2. Caveat: flip to 2 if this is a demo or single-page prototype that will not grow."
   ],
