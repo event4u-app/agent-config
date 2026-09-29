@@ -350,3 +350,43 @@ loads stay viable. Two implications for the leanness and presentation tracks:
 > Figures are approximate (`chars/4` token estimate, frontmatter-only family
 > assignment) and provisional; they establish the cost baseline that Phase 2's
 > presentation work and the leanness cull share.
+
+## Trigger-corpus coverage by pack (road-to-a-menu-whose-precision-is-measured 2.1)
+
+Regenerate with `./scripts-run src/scripts/check_routing_coverage --census`. Measured
+2026-09-29; the ratio itself is ratcheted by `check_routing_coverage` and seeded in
+`src/config/routing-coverage-seed.json`, so this table is the WHICH and that gate is
+the HOW MANY.
+
+Why a pack grouping and not a flat list: a flat list of 198 names is not actionable
+by anyone, while a pack column is a unit one owner can take. A skill declaring several
+packs appears under each, so the column counts sum to more than the total.
+
+The touched-skill scope of `check_routing_coverage` closes this table from the other
+end: a PR that CHANGES a skill listed here fails until that skill gains its corpus, so
+the list shrinks at the one moment the corpus is cheapest to write.
+
+Skills with no `evals/triggers.json`: **198 of 299**.
+
+| Pack | Uncovered | Skills |
+|---|---:|---|
+| `ai-video` | 6 | `character-consistency`, `motion-choreographer`, `pixar-storyteller`, `scene-expander`, `song-to-script`, `video-director` |
+| `analysis-workbench` | 3 | `decision-review`, `premortem`, `root-cause-frameworks` |
+| `engineering-base` | 59 | `accessibility-auditor`, `api-design`, `api-endpoint`, `api-testing`, `aws-infrastructure`, `conventional-commits-writing`, `dashboard-design`, `data-handling-judgment`, `database`, `deep-reading-analyst`, `defense-in-depth`, `dependency-upgrade`, `design-review`, `devcontainer`, `developer-like-execution`, `docker`, `error-handling-patterns`, `finishing-a-development-branch`, `form-handler`, `git-workflow`, `github-ci`, `grafana`, `merge-conflicts`, `migration-architect`, `mobile-e2e-strategy`, `multi-tenancy`, `openapi`, `performance`, `performance-analysis`, `playwright-architect`, `playwright-testing`, `privacy-review`, `project-analysis-core`, `project-analysis-hypothesis-driven`, `project-analyzer`, `quality-tools`, `receiving-code-review`, `requesting-code-review`, `risk-officer`, `secrets-management`, `security`, `sentry-integration`, `source-discovery`, `sql-writing`, `standards-from-config`, `systematic-debugging`, `tailwind-engineer`, `tech-debt-tracker`, `terraform`, `terragrunt`, `test-driven-development`, `test-performance`, `testing-anti-patterns`, `traefik`, `ui-component-architect`, `universal-project-analysis`, `using-git-worktrees`, `validate-feature-fit`, `verify-completion-evidence` |
+| `finance-advanced` | 2 | `dcf-modeling`, `scenario-modeling` |
+| `finance-basic` | 3 | `forecasting`, `runway-cognition`, `unit-economics-modeling` |
+| `founder-strategy` | 6 | `build-buy-partner`, `fundraising-narrative`, `launch-readiness`, `market-entry-analysis`, `okr-tree-modeling`, `vision-articulation` |
+| `frontend-design` | 1 | `design-system-capture` |
+| `gtm-marketing` | 8 | `competitive-positioning`, `content-funnel-design`, `editorial-calendar`, `gtm-launch`, `messaging-architecture`, `positioning-strategy`, `release-comms`, `voice-and-tone-design` |
+| `gtm-sales` | 4 | `deal-qualification-meddic`, `expansion-playbook`, `forecast-accuracy`, `pipeline-strategy` |
+| `laravel` | 22 | `artisan-commands`, `blade-ui`, `flux`, `jobs-events`, `laravel`, `laravel-api-endpoint`, `laravel-dto`, `laravel-horizon`, `laravel-mail`, `laravel-middleware`, `laravel-migration`, `laravel-notifications`, `laravel-pennant`, `laravel-pulse`, `laravel-reverb`, `laravel-scheduling`, `laravel-validation`, `laravel-websocket`, `livewire`, `livewire-architect`, `pest-testing`, `project-analysis-laravel` |
+| `meta` | 51 | `agent-docs-writing`, `agents-md-thin-root`, `ai-council`, `check-refs`, `command-routing`, `command-writing`, `condense-memory`, `context-authoring`, `context-document`, `copilot-agents-optimization`, `copilot-config`, `description-assist`, `emit-tickets`, `file-editor`, `guideline-writing`, `jira-integration`, `judge-bug-hunter`, `judge-code-quality`, `judge-security-auditor`, `judge-test-coverage`, `learning-to-rule-or-skill`, `lint-skills`, `mcp`, `mcp-builder`, `md-language-check`, `memory-consolidation`, `module-detect-on-the-fly`, `module-management`, `override-management`, `persona-writing`, `project-docs`, `prompt-optimizer`, `readme-reviewer`, `readme-writing`, `readme-writing-package`, `recursive-verification`, `refine-prompt`, `repomix-packer`, `review-routing`, `roadmap-management`, `rtk-output-filtering`, `rule-refactor`, `rule-writing`, `script-writing`, `sequential-thinking`, `skill-improvement-pipeline`, `skill-management`, `skill-reviewer`, `subagent-orchestration`, `token-optimizer`, `upstream-contribute` |
+| `nextjs` | 2 | `nextjs-patterns`, `project-analysis-nextjs` |
+| `ops-people` | 8 | `comp-banding`, `contracts-cognition`, `hiring-loop-design`, `onboarding-program`, `one-on-one-cadence`, `org-design`, `perf-feedback-craft`, `throughput-vs-morale-tradeoff` |
+| `php` | 4 | `composer-packages`, `php-debugging`, `php-service`, `project-analysis-zend-laminas` |
+| `product-basic` | 9 | `churn-prevention`, `feature-planning`, `funnel-analysis`, `onboarding-design`, `po-discovery`, `retention-loops`, `rice-prioritization`, `stakeholder-tradeoff`, `technical-specification` |
+| `product-discovery` | 3 | `activation-design`, `discovery-interview`, `voc-extract` |
+| `python` | 1 | `async-python-patterns` |
+| `react` | 3 | `project-analysis-react`, `react-native-setup`, `react-shadcn-ui` |
+| `symfony` | 2 | `project-analysis-symfony`, `symfony-workflow` |
+| `typescript` | 1 | `project-analysis-node-express` |

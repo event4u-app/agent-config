@@ -22,8 +22,22 @@
  * adding corpus cases lowers coverage while every count rises, and a count
  * ratchet would call that progress.
  *
- * Exit codes: 0 = at or above seed · 1 = a scope fell · 2 = dead scope.
+ * THE THIRD SCOPE, ADDED BY `road-to-a-menu-whose-precision-is-measured` 2.1.
+ * The two ratios above are estate-wide and therefore patient: a contributor can
+ * edit a corpus-less skill for a year without either ratio moving, because the
+ * numerator and the denominator both stay put. `touched` closes that on the one
+ * occasion where the cost of writing a corpus is lowest — the author already has
+ * the skill open. A skill CHANGED by the diff must carry `evals/triggers.json`.
+ *
+ * It is deliberately not a fourth ratio. A ratio over a diff is meaningless when
+ * the diff touches one skill, and the obligation here is per skill rather than
+ * per estate: one uncovered touched skill is one failure, whatever the estate
+ * average says.
+ *
+ * Exit codes: 0 = at or above seed and no uncovered touched skill · 1 = a scope
+ * fell or a touched skill has no corpus · 2 = dead scope.
  */
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -32,6 +46,7 @@ import { fileURLToPath } from 'node:url';
 
 import { GateLedger } from './_lib/gate_ledger.js';
 import { type SelfTestCase, runGateCli, runSelfTest } from './_lib/gate_self_test.js';
+import { gitEnv } from './_lib/git_env.js';
 import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
 
 const HERE = fileURLToPath(import.meta.url);
@@ -114,6 +129,70 @@ export function measureSkills(root: string): ScopeReading {
     return { scope: 'skills', cases, units, ratio: units === 0 ? 0 : cases / units };
 }
 
+/**
+ * The skills carrying no `evals/triggers.json`, grouped by the packs they declare.
+ *
+ * `road-to-a-menu-whose-precision-is-measured` 2.1's second half. The ratio above
+ * says HOW MANY are uncovered; this says WHICH, in the grouping a contributor
+ * can act on — a pack owner can take their own column without reading the other
+ * twenty-six. A skill declaring several packs appears under each, so the column
+ * sums exceed the total; that is the grouping working, not double counting.
+ *
+ * A skill declaring no pack lands under `(no pack declared)` rather than being
+ * dropped, because a silently omitted skill is exactly the coverage hole this
+ * census exists to make visible.
+ */
+export function uncoveredByPack(root: string): Record<string, string[]> {
+    const base = path.join(root, 'src', 'skills');
+    const out: Record<string, string[]> = {};
+    for (const e of fs.readdirSync(base, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+        if (!e.isDirectory()) continue;
+        const skillMd = path.join(base, e.name, 'SKILL.md');
+        if (!fs.existsSync(skillMd)) continue;
+        if (fs.existsSync(path.join(base, e.name, 'evals', 'triggers.json'))) continue;
+        const packs = readPacks(skillMd);
+        for (const p of packs.length > 0 ? packs : ['(no pack declared)']) {
+            (out[p] ??= []).push(e.name);
+        }
+    }
+    return out;
+}
+
+/** The `packs:` list from a SKILL.md frontmatter block. Line-oriented on purpose. */
+function readPacks(skillMd: string): string[] {
+    const text = fs.readFileSync(skillMd, 'utf-8');
+    if (!text.startsWith('---')) return [];
+    const end = text.indexOf('\n---', 3);
+    if (end === -1) return [];
+    const lines = text.slice(3, end).split('\n');
+    const at = lines.findIndex((l) => /^packs:/u.test(l));
+    if (at === -1) return [];
+    const out: string[] = [];
+    for (let i = at + 1; i < lines.length; i += 1) {
+        const m = /^\s+-\s+(\S+)\s*$/u.exec(lines[i] as string);
+        if (!m) break;
+        out.push(m[1] as string);
+    }
+    return out;
+}
+
+/** Render the census as the markdown section `docs/SKILL_CENSUS.md` carries. */
+export function renderUncoveredCensus(root: string): string[] {
+    const byPack = uncoveredByPack(root);
+    const reading = measureSkills(root);
+    const total = reading.units - reading.cases;
+    const L: string[] = [];
+    L.push(`Skills with no \`evals/triggers.json\`: **${String(total)} of ${String(reading.units)}**.`);
+    L.push('');
+    L.push('| Pack | Uncovered | Skills |');
+    L.push('|---|---:|---|');
+    for (const pack of Object.keys(byPack).sort()) {
+        const names = byPack[pack] as string[];
+        L.push(`| \`${pack}\` | ${String(names.length)} | ${names.map((n) => `\`${n}\``).join(', ')} |`);
+    }
+    return L;
+}
+
 export function readSeed(root: string): Seed {
     const p = path.join(root, SEED_REL);
     let raw: string;
@@ -136,10 +215,84 @@ export function readSeed(root: string): Seed {
     return { rules: s.rules, skills: s.skills };
 }
 
+/** The ref the touched-skill scope diffs against when `--base` is not given. */
+export const TOUCHED_BASE_DEFAULT = 'origin/main';
+
+/**
+ * Paths this working tree changed against `base` — committed, staged and dirty.
+ *
+ * `ACMR` and not `D`: a DELETED skill cannot be asked for a corpus, and reading
+ * a deletion as an uncovered touch would make removing a skill impossible.
+ * Untracked files are included so a brand-new skill counts as touched before
+ * its first commit.
+ */
+export function changedPaths(root: string, base: string): string[] {
+    const env = gitEnv();
+    const run = (args: string[]): string[] => {
+        const r = spawnSync('git', args, { cwd: root, encoding: 'utf-8', env });
+        return r.status === 0 ? r.stdout.split('\n') : [];
+    };
+    return [
+        ...new Set([
+            ...run(['diff', '--name-only', '--diff-filter=ACMR', `${base}...HEAD`]),
+            ...run(['diff', '--name-only', '--diff-filter=ACMR']),
+            ...run(['diff', '--name-only', '--diff-filter=ACMR', '--cached']),
+            ...run(['ls-files', '--others', '--exclude-standard']),
+        ]),
+    ].filter((f) => f.trim().length > 0);
+}
+
+/** True when `base` names something git can resolve in `root`. */
+export function baseResolvable(root: string, base: string): boolean {
+    const r = spawnSync('git', ['rev-parse', '--verify', '--quiet', `${base}^{commit}`], {
+        cwd: root,
+        encoding: 'utf-8',
+        env: gitEnv(),
+    });
+    return r.status === 0;
+}
+
+export interface TouchedReading {
+    /** Skills the diff changed, sorted. */
+    touched: string[];
+    /** Of those, the ones with no `evals/triggers.json`, sorted. */
+    uncovered: string[];
+    /** False when the base ref does not resolve — the scope is then not measured. */
+    measured: boolean;
+    base: string;
+}
+
+/**
+ * Which skills the diff touched, and which of those still have no corpus.
+ *
+ * An unresolvable base is NOT an empty touch set. A shallow clone, a detached
+ * build or a fresh worktree with no remote would otherwise report "nothing
+ * touched" and pass, which is the silent-green shape this repository's gates are
+ * written against. It reports `measured: false` and the caller says so out loud.
+ */
+export function measureTouchedSkills(root: string, base: string): TouchedReading {
+    if (!baseResolvable(root, base)) {
+        return { touched: [], uncovered: [], measured: false, base };
+    }
+    const names = new Set<string>();
+    for (const rel of changedPaths(root, base)) {
+        const m = /^src\/skills\/([^/]+)\//.exec(rel.replace(/\\/g, '/'));
+        if (m?.[1] !== undefined) names.add(m[1]);
+    }
+    const touched = [...names].sort();
+    const uncovered = touched.filter(
+        (n) =>
+            fs.existsSync(path.join(root, 'src', 'skills', n, 'SKILL.md')) &&
+            !fs.existsSync(path.join(root, 'src', 'skills', n, 'evals', 'triggers.json')),
+    );
+    return { touched, uncovered, measured: true, base };
+}
+
 export interface Verdict {
     readings: ScopeReading[];
     seed: Seed;
     fallen: Scope[];
+    touched: TouchedReading;
     ledger: GateLedger;
 }
 
@@ -163,14 +316,14 @@ export function r4(n: number): number {
     return Math.round(n * 10_000) / 10_000;
 }
 
-export function evaluate(root = REPO_ROOT): Verdict {
+export function evaluate(root = REPO_ROOT, base = TOUCHED_BASE_DEFAULT): Verdict {
     const seed = readSeed(root);
     const readings = [measureRules(root), measureSkills(root)];
     // The ledger's target is the SCOPE, not the individual unit: this gate's
     // verdict is per scope, so a ledger over 404 units would report 404 rows
     // no one can act on while hiding which of the two actually fell.
     const ledger = new GateLedger('check_routing_coverage');
-    ledger.plan(readings.map((r) => r.scope));
+    ledger.plan([...readings.map((r) => r.scope), 'touched']);
     const fallen: Scope[] = [];
     for (const r of readings) {
         if (r4(r.ratio) < r4(seed[r.scope])) {
@@ -184,7 +337,15 @@ export function evaluate(root = REPO_ROOT): Verdict {
             ledger.complete(r.scope);
         }
     }
-    return { readings, seed, fallen, ledger };
+    const touched = measureTouchedSkills(root, base);
+    if (!touched.measured) {
+        ledger.skip('touched', 'precondition_unmet');
+    } else if (touched.uncovered.length > 0) {
+        ledger.fail('touched', `${String(touched.uncovered.length)} touched skill(s) with no corpus`);
+    } else {
+        ledger.complete('touched');
+    }
+    return { readings, seed, fallen, touched, ledger };
 }
 
 /**
@@ -231,12 +392,43 @@ function selfTestRoot(
     return root;
 }
 
+/**
+ * Turn a self-test root into a git repository with a `base` commit, then apply
+ * `edit` as the working-tree change the gate will read as "this diff".
+ *
+ * A real repository rather than a stubbed diff: the touched scope's whole risk
+ * is that its git invocation resolves against the wrong tree (an inherited
+ * `GIT_DIR` does exactly that), and a stub would never see it.
+ */
+function gitBaseline(root: string, edit: (root: string) => void): string {
+    const env = gitEnv();
+    const git = (...args: string[]): void => {
+        const r = spawnSync('git', args, { cwd: root, encoding: 'utf-8', env });
+        if (r.status !== 0) throw new Error(`git ${args.join(' ')} failed: ${r.stderr}`);
+    };
+    git('init', '--quiet', '--initial-branch=base');
+    git('config', 'user.email', 'selftest@example.invalid');
+    git('config', 'user.name', 'selftest');
+    git('config', 'commit.gpgsign', 'false');
+    git('add', '--all');
+    git('commit', '--quiet', '-m', 'baseline');
+    edit(root);
+    return root;
+}
+
+/** Write `evals/triggers.json` for a self-test skill. */
+function plantCorpus(root: string, skill: string): void {
+    const d = path.join(root, 'src', 'skills', skill, 'evals');
+    fs.mkdirSync(d, { recursive: true });
+    fs.writeFileSync(path.join(d, 'triggers.json'), '[]\n');
+}
+
 export function selfTest(): number {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'crc-selftest-'));
-    const run = (root: string): number => {
+    const run = (root: string, args: readonly string[] = []): number => {
         process.env['CHECK_ROUTING_COVERAGE_ROOT'] = root;
         try {
-            return runGateCli(REAL_REPO_ROOT, 'src/scripts/check_routing_coverage.ts', [], root);
+            return runGateCli(REAL_REPO_ROOT, 'src/scripts/check_routing_coverage.ts', args, root);
         } finally {
             delete process.env['CHECK_ROUTING_COVERAGE_ROOT'];
         }
@@ -285,13 +477,62 @@ export function selfTest(): number {
                 return run(root);
             },
         },
+        {
+            name: 'TOUCHING a skill that has no evals/triggers.json is rejected',
+            expect: 'reject',
+            run: () => {
+                // st-skill-9 is outside `sc`, so the baseline leaves it corpus-less.
+                const root = gitBaseline(selfTestRoot(tmp, { r: 10, rc: 8, s: 10, sc: 5 }), (r) => {
+                    fs.appendFileSync(path.join(r, 'src', 'skills', 'st-skill-9', 'SKILL.md'), '\nedited\n');
+                });
+                return run(root, ['--base', 'base']);
+            },
+        },
+        {
+            name: 'touching a skill that DOES carry a corpus is accepted',
+            expect: 'accept',
+            run: () => {
+                const root = gitBaseline(selfTestRoot(tmp, { r: 10, rc: 8, s: 10, sc: 5 }), (r) => {
+                    fs.appendFileSync(path.join(r, 'src', 'skills', 'st-skill-0', 'SKILL.md'), '\nedited\n');
+                });
+                return run(root, ['--base', 'base']);
+            },
+        },
+        {
+            name: 'a corpus-less skill the diff did NOT touch is accepted — the scope is the diff',
+            expect: 'accept',
+            run: () => {
+                const root = gitBaseline(selfTestRoot(tmp, { r: 10, rc: 8, s: 10, sc: 5 }), (r) => {
+                    fs.writeFileSync(path.join(r, 'unrelated.txt'), 'x\n');
+                });
+                return run(root, ['--base', 'base']);
+            },
+        },
+        {
+            name: 'a NEW corpus-less skill added by the diff is rejected before its first commit',
+            expect: 'reject',
+            run: () => {
+                const root = gitBaseline(selfTestRoot(tmp, { r: 10, rc: 8, s: 10, sc: 5 }), (r) => {
+                    const d = path.join(r, 'src', 'skills', 'st-skill-new');
+                    fs.mkdirSync(d, { recursive: true });
+                    fs.writeFileSync(path.join(d, 'SKILL.md'), '---\nname: st\n---\n');
+                    // A corpus-less sibling gains one, so the SKILLS RATIO stays above
+                    // seed (6/11 > 0.5) and the only thing left to reject on is the new
+                    // skill's own missing corpus. Without this the case rejected for the
+                    // ratio instead — green for the wrong reason, which the sabotage
+                    // probe caught.
+                    plantCorpus(r, 'st-skill-6');
+                });
+                return run(root, ['--base', 'base']);
+            },
+        },
     ];
     try {
         return runSelfTest({
             gate: 'check_routing_coverage',
             cases,
-            minCases: 7,
-            minRejectCases: 5,
+            minCases: 11,
+            minRejectCases: 7,
         });
     } finally {
         fs.rmSync(tmp, { recursive: true, force: true });
@@ -300,9 +541,15 @@ export function selfTest(): number {
 
 export function main(argv: string[] = process.argv.slice(2), root = REPO_ROOT): number {
     if (argv.includes('--self-test')) return selfTest();
+    if (argv.includes('--census')) {
+        process.stdout.write(`${renderUncoveredCensus(root).join('\n')}\n`);
+        return 0;
+    }
+    const baseIdx = argv.indexOf('--base');
+    const base = baseIdx !== -1 ? (argv[baseIdx + 1] ?? TOUCHED_BASE_DEFAULT) : TOUCHED_BASE_DEFAULT;
     let v: Verdict;
     try {
-        v = evaluate(root);
+        v = evaluate(root, base);
         reportScanned({
             gate: 'check_routing_coverage',
             scanned: v.readings.reduce((n, r) => n + r.units, 0),
@@ -330,9 +577,29 @@ export function main(argv: string[] = process.argv.slice(2), root = REPO_ROOT): 
                 `${r.ratio.toFixed(4)}  (seed ${seed.toFixed(4)})\n`,
         );
     }
-    if (v.fallen.length === 0) {
-        process.stdout.write('✅  routing coverage at or above seed in both scopes.\n');
+    if (!v.touched.measured) {
+        process.stdout.write(
+            `  · touched skills NOT measured — base ref ${v.touched.base} does not resolve here.\n`,
+        );
+    } else {
+        process.stdout.write(
+            `  ${v.touched.uncovered.length === 0 ? '=' : '❌'} touched ${String(v.touched.touched.length).padStart(4)} skill(s) ` +
+                `vs ${v.touched.base}, ${String(v.touched.uncovered.length)} without evals/triggers.json\n`,
+        );
+    }
+    if (v.fallen.length === 0 && v.touched.uncovered.length === 0) {
+        process.stdout.write('✅  routing coverage at or above seed, and every touched skill carries a corpus.\n');
         return 0;
+    }
+    if (v.touched.uncovered.length > 0) {
+        process.stderr.write(
+            `❌  ${String(v.touched.uncovered.length)} skill(s) changed by this diff carry no ` +
+                'evals/triggers.json:\n' +
+                v.touched.uncovered.map((n) => `    · src/skills/${n}/evals/triggers.json\n`).join('') +
+                '    The corpus is cheapest to write while the skill is open. Write the trigger ' +
+                'cases for each; the discipline each file must meet is enforced by ' +
+                'lint_skill_trigger_corpus.\n',
+        );
     }
     for (const s of v.fallen) {
         const r = v.readings.find((x) => x.scope === s)!;

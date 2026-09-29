@@ -3,6 +3,7 @@
 // The property worth guarding is not "does it count" but "does it count the
 // right denominator". A ratio falls two ways — a corpus case removed, or units
 // added without cases — and a count ratchet would call the second one progress.
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -15,8 +16,11 @@ import {
     main,
     measureRules,
     measureSkills,
+    measureTouchedSkills,
     r4,
     readSeed,
+    renderUncoveredCensus,
+    uncoveredByPack,
 } from '../../src/scripts/check_routing_coverage';
 
 const REPO = path.resolve(__dirname, '..', '..');
@@ -181,5 +185,119 @@ describe('the live tree', () => {
         // a thing a reader should be told about rather than have absorbed.
         expect(measureRules(REPO).units).toBe(106);
         expect(measureSkills(REPO).units).toBe(299);
+    });
+});
+
+// The touched-skill scope. The two ratios above are estate-wide and patient:
+// editing a corpus-less skill moves neither, because numerator and denominator
+// both stay put. What follows pins the third scope, whose value is that it is
+// diff-shaped — and whose risk is that an unresolvable base ref reads as
+// "nothing touched" and passes while checking nothing.
+
+function gitInit(at: string, edit: () => void): void {
+    const env = { ...process.env };
+    for (const k of ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_COMMON_DIR']) delete env[k];
+    const git = (...args: string[]): void => {
+        const r = spawnSync('git', args, { cwd: at, encoding: 'utf-8', env });
+        if (r.status !== 0) throw new Error(`git ${args.join(' ')}: ${r.stderr}`);
+    };
+    git('init', '--quiet', '--initial-branch=base');
+    git('config', 'user.email', 'test@example.invalid');
+    git('config', 'user.name', 'test');
+    git('config', 'commit.gpgsign', 'false');
+    git('add', '--all');
+    git('commit', '--quiet', '-m', 'baseline');
+    edit();
+}
+
+describe('check_routing_coverage — the touched-skill scope', () => {
+    it('reports a touched skill that carries no corpus', () => {
+        fixture();
+        gitInit(root, () => write('src/skills/s4/SKILL.md', '---\nname: s4\nedited: true\n---\n'));
+        const t = measureTouchedSkills(root, 'base');
+        expect(t.measured).toBe(true);
+        expect(t.touched).toEqual(['s4']);
+        expect(t.uncovered).toEqual(['s4']);
+    });
+
+    it('accepts a touched skill that does carry a corpus', () => {
+        fixture();
+        gitInit(root, () => write('src/skills/s1/SKILL.md', '---\nname: s1\nedited: true\n---\n'));
+        const t = measureTouchedSkills(root, 'base');
+        expect(t.touched).toEqual(['s1']);
+        expect(t.uncovered).toEqual([]);
+    });
+
+    it('ignores corpus-less skills the diff never touched', () => {
+        fixture();
+        gitInit(root, () => write('unrelated.txt', 'x\n'));
+        const t = measureTouchedSkills(root, 'base');
+        expect(t.touched).toEqual([]);
+        expect(t.uncovered).toEqual([]);
+    });
+
+    it('an unresolvable base is NOT read as an empty touch set', () => {
+        fixture();
+        gitInit(root, () => write('src/skills/s4/SKILL.md', '---\nname: s4\nedited: true\n---\n'));
+        const t = measureTouchedSkills(root, 'no-such-ref');
+        expect(t.measured).toBe(false);
+    });
+
+    it('main exits 1 on an uncovered touched skill and 0 once its corpus lands', () => {
+        fixture();
+        gitInit(root, () => write('src/skills/s4/SKILL.md', '---\nname: s4\nedited: true\n---\n'));
+        expect(main(['--base', 'base', '--quiet'], root)).toBe(1);
+        write('src/skills/s4/evals/triggers.json', '{}');
+        expect(main(['--base', 'base', '--quiet'], root)).toBe(0);
+    });
+});
+
+// The by-pack census. Its risk is not arithmetic but OMISSION: a skill dropped
+// from the table is invisible to the contributor who would have written its
+// corpus, and a table that silently lists 197 of 198 reads exactly like one that
+// lists all of them.
+describe('check_routing_coverage --census', () => {
+    function packed(name: string, packs: string[], corpus = false): void {
+        write(
+            `src/skills/${name}/SKILL.md`,
+            `---\nname: ${name}\npacks:\n${packs.map((p) => `  - ${p}\n`).join('')}---\n`,
+        );
+        if (corpus) write(`src/skills/${name}/evals/triggers.json`, '{}');
+    }
+
+    it('lists only the skills with NO corpus, grouped by the packs they declare', () => {
+        fixture();
+        packed('covered', ['alpha'], true);
+        packed('bare', ['alpha', 'beta']);
+        const byPack = uncoveredByPack(root);
+        expect(byPack['alpha']).toEqual(['bare']);
+        expect(byPack['beta']).toEqual(['bare']);
+    });
+
+    it('buckets a pack-less skill rather than dropping it — an omission is the defect', () => {
+        fixture();
+        packed('nopack', []);
+        expect(uncoveredByPack(root)['(no pack declared)']).toContain('nopack');
+    });
+
+    it('the rendered total equals units minus cases, so the table cannot disagree with the ratio', () => {
+        fixture();
+        const lines = renderUncoveredCensus(root);
+        const reading = measureSkills(root);
+        expect(lines[0]).toContain(`**${String(reading.units - reading.cases)} of ${String(reading.units)}**`);
+    });
+
+    it('every uncovered skill appears in the rendered table at least once', () => {
+        fixture();
+        packed('bare-one', ['alpha']);
+        packed('bare-two', []);
+        const text = renderUncoveredCensus(root).join('\n');
+        for (const name of ['bare-one', 'bare-two', 's2', 's3', 's4']) expect(text).toContain(`\`${name}\``);
+        expect(text).not.toContain('`s1`');
+    });
+
+    it('--census exits 0 and prints the table without running the ratchet', () => {
+        fixture({ rules: 0.99, skills: 0.99 });
+        expect(main(['--census'], root)).toBe(0);
     });
 });
