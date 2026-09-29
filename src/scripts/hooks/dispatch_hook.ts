@@ -59,7 +59,7 @@ import { _py_json_dumps } from './py_json_dumps.js';
 import { _fallback_yaml } from './fallback_yaml.js';
 import { detectSurface } from '../_lib/surface.js';
 import { recordCapture, recordOpportunity } from "../_lib/collector_denominator.js";
-import { EXIT_ALLOW, EXIT_BLOCK, EXIT_WARN } from './exit_codes.js';
+import { EXIT_ALLOW, EXIT_BLOCK, EXIT_WARN, EXIT_USAGE } from './exit_codes.js';
 export { EXIT_ALLOW, EXIT_BLOCK, EXIT_WARN };
 export { _fallback_yaml } from './fallback_yaml.js';
 
@@ -1059,7 +1059,7 @@ function _parse_args(argv: string[]): Args {
     process.stderr.write(
       `dispatch_hook: the following arguments are required: ${missing.join(", ")}\n`,
     );
-    process.exit(2);
+    process.exit(EXIT_USAGE);
   }
   return args;
 }

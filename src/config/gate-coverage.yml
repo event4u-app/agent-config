@@ -3012,6 +3012,48 @@ gates:
       the committed Cursor row exits 1 naming that row and that token, and the
       restore exits 0.
 
+  - id: lint_deny_text
+    argv: []
+    ci_invocation: .github/workflows/consistency.yml
+    min_scanned: 5
+    corpus: "the `severity: blocking` concerns in src/scripts/hook_manifest.yaml, read from the manifest rather than listed in the gate (9 at baseline)"
+    status: enforced
+    no_canary_reason: >-
+      the corpus is derived from one manifest at a fixed path and the canary
+      contract is create-only. A planted extra concern file is out of scope
+      unless the manifest also names it, and every violation this gate can have
+      is a MODIFICATION — a refusal message edited to name the switch that
+      turns the guard off. Discrimination is proven by `--self-test` instead
+      (7 cases, 3 rejecting: an env assignment with its value, an `export`
+      line, a settings key in prose, and — the direction that matters for a
+      young pattern gate — a bare settings key used as a LOOKUP, which must
+      pass, because a rule that fired on it would fire on every concern that
+      reads its own configuration). An empty corpus is refused by
+      `assertScanned` before the verdict, so a manifest whose `severity:` key
+      was renamed fails rather than certifying zero concerns clean.
+
+  - id: lint_exit_codes
+    argv: []
+    ci_invocation: .github/workflows/consistency.yml
+    min_scanned: 40
+    corpus: "every `.ts` under src/scripts/hooks/ except `exit_codes.ts` itself, which is where the numerals are defined (59 at baseline)"
+    status: enforced
+    no_canary_reason: >-
+      the canary contract is create-only, and a planted hook file carrying a
+      bare `process.exit(1)` WOULD be a legitimate violation the gate is right
+      to report — so a create-only canary here proves detection, not
+      discrimination, and the interesting direction is the opposite one: an
+      imported name must PASS. Discrimination is proven by `--self-test`
+      instead (6 cases, 4 rejecting: a bare deny numeral, a bare allow numeral
+      — `0` is the one people assume is harmless — a call with whitespace
+      inside it, and an empty corpus; against two accepting cases, an imported
+      name and the table file, whose fixture plants a bare exit into
+      `exit_codes.ts` every run so the one exclusion is exercised rather than
+      asserted). What a green does NOT cover is stated in the gate's header: it
+      accepts an identifier without resolving where the identifier came from, so
+      a local `const EXIT_BLOCK = 1` shadowing the import passes this gate and
+      is caught in review as a duplicate declaration.
+
   - id: check_release_holds
     argv: ['--lint']
     ci_invocation: .github/workflows/release-validation.yml

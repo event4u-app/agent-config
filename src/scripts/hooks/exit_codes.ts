@@ -43,6 +43,24 @@ export const EXIT_WARN = 2;
  */
 export const EXIT_ERROR = 3;
 
+/**
+ * Usage error on the process's OWN argv — not a verdict, and not a row.
+ *
+ * `dispatch_hook` and `replay_hook` are also CLIs: run with `--platform`
+ * missing they exit before any concern is consulted. The number is 2 by the
+ * POSIX convention for a usage error, which COLLIDES with `EXIT_WARN` by
+ * coincidence and not by meaning — nothing advisory has happened, and no
+ * concern has spoken.
+ *
+ * Named rather than left as a bare `2`, and kept OUT of `EXIT_CODES`, because
+ * both readings are wrong: importing `EXIT_WARN` here would assert a verdict
+ * that was never reached, and adding a fifth row would put a non-verdict in a
+ * table whose whole subject is what a concern may say. `lint_exit_codes`
+ * refuses the bare literal, so the next writer has to pick one of the two
+ * deliberately.
+ */
+export const EXIT_USAGE = 2;
+
 export interface ExitCodeRow {
     /** The numeric code, or its floor for the open-ended error band. */
     readonly code: number;

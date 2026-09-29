@@ -232,6 +232,11 @@ jobs:
           ./scripts-run src/scripts/check_argument_hint
           ./scripts-run src/scripts/check_inputs_parity
 
+      - name: Plumbing guards — deny text and the exit-code table
+        run: |
+          ./scripts-run src/scripts/lint_deny_text
+          ./scripts-run src/scripts/lint_exit_codes
+
       - name: Block readable external inspiration/harvest source names
         run: task check-no-external-sources
 

@@ -36,6 +36,7 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { EXIT_USAGE } from './exit_codes.js';
 
 // src/scripts/hooks/replay_hook.ts → parents[3] is the repo root.
 const REPO_ROOT = path.resolve(
@@ -175,7 +176,7 @@ function _parse_args(argv: string[]): ReplayArgs {
     process.stderr.write(
       `replay_hook: the following arguments are required: ${missing.join(", ")}\n`,
     );
-    process.exit(2);
+    process.exit(EXIT_USAGE);
   }
   return args;
 }
