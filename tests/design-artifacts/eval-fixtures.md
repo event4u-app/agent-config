@@ -438,6 +438,25 @@ other three are rubric-scored: no unit test can assert whether an agent
   was *copied* from one that was *resolved*. Recorded as a known limit rather
   than dressed up as a computed score.
 
+### daf-port-losses
+- **primitive:** `static_inspect`
+- **lifecycle stage:** apply (the coverage ledger's own sensitivity)
+- **scenario:** A port that lost three things, each in a way the ledger reads
+  past: one declared item matched only by a substring collision inside an
+  unrelated bucket entry, every declared item handed back in `flagged`, and a
+  placeholder in a written file that `ui_apply.rendered` does not repeat. Plus a
+  faithful fourth arm with nothing planted.
+- **pass:** Each of the three is caught by a named halt or a non-success
+  outcome, **and** the faithful arm raises zero findings. A run that catches all
+  three by tightening until the faithful arm also reds has failed.
+- **what it measures that `daf-port-interactions` does not:** that fixture asks
+  whether the ledger exists; this one asks whether it can fail. The three arms
+  are the three places the gate read the porter's own report and called it
+  evidence — see `fixtures/ui-port-losses/README.md`.
+- **measured 2026-09-29 — pre-registered before-count `caught 0 of 3`,** all
+  three arms returning `success`, with the after-count recorded beside it in the
+  same README by the same command.
+
 ## Ad-hoc port fixtures (`road-to-source-first-frontend`)
 
 The three above run inside the engine, where `state.ui_design` exists. These
