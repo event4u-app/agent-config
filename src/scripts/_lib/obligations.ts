@@ -107,7 +107,7 @@ export function isWriterRole(value: unknown): value is WriterRole {
  * Classify the root this ledger lives under.
  *
  * ORDER IS THE CONTRACT. `package` is tested FIRST, because a maintainer checkout
- * routinely also carries the install artefacts a consumer has — this repository
+ * routinely also carries the install artifacts a consumer has — this repository
  * installs itself — and a consumer-first test would label the maintainer tree
  * `consumer` on exactly the machine the bar is being read from. The sentinel is
  * `hasSentinel` from `repo_root.ts` rather than a second `package.json` reader:
