@@ -899,12 +899,6 @@ export interface TurnRunState {
   readonly edits_this_turn: number;
 }
 
-/** A session id stable enough to key state on — same predicate the pin uses. */
-function has_stable_session_id(session_id: string): boolean {
-  const s = (session_id ?? "").trim();
-  return s !== "" && s !== "unknown" && s !== "unknown-session";
-}
-
 /**
  * The turn's recorded verification runs, or `null` when the recorder is not live.
  *
