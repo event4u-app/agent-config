@@ -8,6 +8,45 @@
   "additionalProperties": false,
   "required": ["name", "description", "disable-model-invocation"],
   "properties": {
+    "inputs": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Structured declaration of the parameters this artifact takes. OPTIONAL on every artifact: one with no block validates unchanged, so nothing existing breaks and no migration is owed. Where the block IS present it is the single authority — the argument-hint and the MCP `arguments` set are derived from it, and a hand-written hint on the same artifact is a conflict rather than a merge (road-to-an-invocation-contract-that-reaches-the-wire).",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "type"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "description": "Parameter name. Lowercase snake_case, so it is safe both as a wire key and as an in-body ${name} reference."
+          },
+          "type": {
+            "enum": ["string", "number", "boolean", "enum", "path"],
+            "description": "Closed set on purpose: an unknown type must FAIL validation rather than reach a host that cannot interpret it."
+          },
+          "required": {
+            "type": "boolean",
+            "description": "Absent means optional."
+          },
+          "default": {
+            "description": "Value used when the caller supplies none. Any JSON type — it is checked against `type` by the consuming generator, not here."
+          },
+          "enum": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string" },
+            "description": "Allowed values. Only meaningful when `type` is `enum`."
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "description": "One line, shown to a caller choosing a value."
+          }
+        }
+      }
+    },
     "name": {
       "type": "string",
       "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
