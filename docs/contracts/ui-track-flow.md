@@ -69,7 +69,7 @@ Mandatory pre-step. Routes on `state.ui_audit` shape:
 | State | Outcome | Handler |
 |---|---|---|
 | `None` / empty / non-dict | `BLOCKED` + `@agent-directive: existing-ui-audit` | First-pass delegation |
-| `greenfield=True`, no `greenfield_decision` | `BLOCKED` numbered options | User picks `scaffold` / `bare` / `external_reference` |
+| `greenfield=True`, no `greenfield_decision` | `BLOCKED` numbered options | User picks `scaffold` / `bare` / `external_reference` / `granularity_convention` |
 | `shadcn_inventory.version` major ≠ `TESTED_AGAINST_SHADCN_MAJOR` (`2`) and no `version_mismatch_decision` | `BLOCKED` soft halt | "Cautious composition / abort" |
 | Confidence `high` + ≥1 match with similarity ≥ `STRONG_SIMILARITY` (`0.7`) and no runner-up within `TIE_GAP` (`0.05`) | `SUCCESS`, `audit_path = "high_confidence"` | Design folds findings into brief |
 | Anything else populated | `BLOCKED` numbered options | User picks candidate to extend (or "build new"); records `audit_path = "ambiguous"` + `candidate_pick` |

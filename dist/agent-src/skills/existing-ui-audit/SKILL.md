@@ -97,6 +97,38 @@ nobody can test is how the previous mismatch happened.
 It reads zero in a JavaScript tree by construction, which is not the same as
 unused.
 
+### 1b. Detect the component-granularity taxonomy the project already chose
+
+Run the detector and record its single answer:
+
+```bash
+npx tsx scripts/work_engine/taxonomy/detect.ts   # or import detect_component_taxonomy(root)
+```
+
+It reads the component directory layout and the project's own docs, and
+returns the project's **own** tier names joined with `/` — `atoms/molecules/organisms`,
+`primitives/patterns/features`, whatever the project actually uses — or `none`.
+
+Write two keys: `state.ui_audit.component_taxonomy` (that string) and
+`state.ui_audit.component_root` (where the components live).
+
+Three properties matter more than the mechanism, and each is pinned by a test:
+
+- **A declared convention outranks an inferred one.** A `## Component taxonomy`
+  section in the project's `DESIGN.md` listing backticked directory names wins,
+  provided those directories exist. This is how a project whose tiers are in no
+  vocabulary the detector knows still gets conformance.
+- **One granularity-sounding folder is a collision, not a convention.**
+  `components/{checkout,billing,molecules}` records `none`. Inference needs at
+  least two tier-shaped buckets AND a majority of them.
+- **`none` is a real answer, not a failure.** A flat tree, an unreadable tree,
+  no component folder at all: all record `none`, and every downstream step then
+  behaves exactly as it did before this detection existed.
+
+Never write a taxonomy the project does not evidence, and never "tidy" an
+existing layout into one. Holding to the project's own structures is the
+standing rule; this step exists to *find* that structure, not to supply one.
+
 ### 2. Identify the design system
 
 Detect markers, in order. **Stop at the first match** — projects rarely run more than one design system.
@@ -271,6 +303,9 @@ then set `state.ui_audit.greenfield = true` and emit a halt:
 >    before building (recommended for projects with >1 planned screen)
 > 2. Proceed bare with Tailwind defaults (recommended for one-off prototypes)
 > 3. Point me at an external design-system reference (URL or file)
+> 4. Scaffold + a granularity convention — as 1, and new components go into
+>    named granularity folders you pick the names for; rename or drop it later
+>    and nothing here objects
 
 **Recommendation: 1 — Scaffold tokens + primitives** — even one extra screen
 benefits from a shared base; the scaffold cost is ~10 min and saves
@@ -278,7 +313,22 @@ re-doing every primitive on screen 2. Caveat: flip to 2 if this is a
 demo or single-page prototype that will not grow.
 ```
 
-Record the user's pick in `state.ui_audit.greenfield_decision` (`scaffold` | `bare` | `external_reference`). Re-running the skill on the same state-file with `greenfield_decision` set is a no-op for the halt (audit findings stay).
+Option 4 is an **offer**, and it is the only place one is made. A project that
+already exists is never asked — § 1b reads what it chose and the suite conforms
+to that. A greenfield project that picks any other number has declined, and the
+decline is terminal: the halt is a no-op once a decision is recorded, so the
+offer costs one number once and never comes back.
+
+It stays one more number in the same block rather than a second question. The
+axis is admittedly different from scaffold-versus-bare, but a single number
+still answers the block, which is the property the reply-shape rule requires;
+an option grid needing `1a` would not be.
+
+Record the user's pick in `state.ui_audit.greenfield_decision` (`scaffold` |
+`bare` | `external_reference` | `granularity_convention`). Re-running the skill
+on the same state-file with `greenfield_decision` set is a no-op for the halt
+(audit findings stay). `granularity_convention` takes the same scaffold path as
+`scaffold` — it adds the convention, it does not replace the scaffolding.
 
 ### 8. (Optional) Capture an a11y baseline
 
@@ -344,6 +394,8 @@ Load on demand once the audit needs the pitfall catalog:
 5. **`state.ui_audit.patterns`** — object with forms, tables, modals, empty_states, navigation, data_display arrays
 6. **`state.ui_audit.candidates`** — top-5 similarity matches for the current input (may be empty)
 7. **`state.ui_audit.greenfield`** — boolean; when true, `greenfield_decision` MUST also be set before the dispatcher advances
+7b. **`state.ui_audit.component_taxonomy`** — single string: the project's own granularity tiers joined with `/`, or `none`. Never a canonical tier list — a project with three tiers records three. `none` is the value that leaves every downstream step unchanged.
+7c. **`state.ui_audit.component_root`** — where the components live, relative to the project root (e.g. `src/components`)
 8. **`state.ui_audit.a11y_baseline`** *(optional)* — array of `{rule, selector, severity?}` entries documenting pre-existing a11y violations the review gate should treat as informational. Omit the key entirely when no baseline applies; do not write `[]` for "I checked and there are none" — that disables the gate's filter for every future run.
 
 **Design-system export (current-repo source):** when the goal is to seed

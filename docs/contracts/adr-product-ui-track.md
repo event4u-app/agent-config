@@ -77,7 +77,8 @@ before code, polish before ship"**. Everything in R3 follows from that.
 
 The audit gate refuses `apply` until `state.ui_audit` is well-formed:
 either `≥1 components_found` entry, or `greenfield=True` with a user-chosen
-`greenfield_decision` ∈ `{scaffold, bare, external_reference}`. An empty
+`greenfield_decision` ∈ `{scaffold, bare, external_reference,
+granularity_convention}`. An empty
 dict, `None`, or a populated dict without those keys is **not** findings;
 the gate emits `@agent-directive: existing-ui-audit` and refuses to advance.
 
@@ -113,7 +114,7 @@ resolves to one of:
   with a tie. Numbered-options halt records `audit_path = "ambiguous"`
   + `candidate_pick`.
 - `greenfield` — no `components_found`, `greenfield = True`, user picks
-  `scaffold` / `bare` / `external_reference`.
+  `scaffold` / `bare` / `external_reference` / `granularity_convention`.
 
 Constants are named, exported, and imported by tests so a re-tune
 re-captures Goldens explicitly rather than drifting silently.

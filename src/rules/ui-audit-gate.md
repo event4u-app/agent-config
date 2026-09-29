@@ -72,7 +72,7 @@ EXISTING-UI-AUDIT RUNS FIRST. ALWAYS.
 
 - `components_found` — inventory entries from `existing-ui-audit`.
 - `greenfield: true` plus `greenfield_decision` ∈
-  `{scaffold, bare, external_reference}`.
+  `{scaffold, bare, external_reference, granularity_convention}`.
 - Legacy `components` alias — back-compat.
 
 `null` or `{}` is **not** findings; empty dict is rejected on purpose.
