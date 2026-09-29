@@ -127,6 +127,17 @@ share per roadmap is a published number rather than an impression.
       of its holders are still open. The denominator moves with archival, so the page says
       to compare the falsifiable SHARE across readings and to treat a moved total with an
       unmoved numerator as archival until proven otherwise.
+
+      **Reporting against the acceptance criteria rather than editing them.** Two of the
+      four carry figures that did not reproduce — *"proven by running it against today's 8
+      roadmaps"* (there are 22) and *"the 51-of-155 baseline"* (the measured baseline is
+      93-of-230). They are left exactly as written: they are the contract this work was
+      judged against, and rewriting them after the fact moves the bar. How each was
+      actually met: the exit-0-under-`--strict` proof runs against fixture F5, which IS
+      entirely unfalsifiable — the live corpus is not (6 of 230 carry an expectation), so
+      it cannot prove that criterion and the narrower proof is the honest one. The
+      committed baseline is 93-of-230 with its producing command on the page that carries
+      it, which is the criterion's substance with its figure corrected.
 - [x] **2.3 An absence check names its positive control.** A `verify:` asserting that
       something is absent must name the input on which it fires, or it is a check that has
       never been seen working.
@@ -149,14 +160,9 @@ share per roadmap is a published number rather than an impression.
 
 - The arrow form is legal in rule 23 and parsed in exactly one place.
 - `closure_scan` reports the unfalsifiable family and exits 0 on a corpus that is entirely
-  unfalsifiable. **Met, with the proof narrowed and the narrowing stated:** exit 0 under
-  `--strict` is proven against fixture F5, which IS entirely unfalsifiable. The live corpus
-  is not — 6 of 230 clauses carry an expectation — so it cannot prove this criterion, and
-  "today's 8 roadmaps" did not reproduce either; there are 22.
-- The baseline is committed with the command that produced it, before any fix moves the
-  number. **Met, and this criterion's own figure was the first casualty:** 51-of-155 did
-  not reproduce. What is committed is the measured 93-of-230, with
-  `./scripts-run src/scripts/roadmap_verify_share` named on the page that carries it.
+  unfalsifiable, proven by running it against today's 8 roadmaps.
+- The 51-of-155 baseline is committed with the command that produced it, before any fix
+  moves the number.
 - No existing `verify:` line is invalidated by this change; prose stays legal.
 - No ratchet, no gate, no CI-blocking step lands in this roadmap.
 
