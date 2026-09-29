@@ -10,6 +10,9 @@
  * rejection, or change recording. Apply validates the output against the
  * brief's microcopy lock so a mid-loop hallucination is caught at the boundary.
  */
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+
 import {
     type Any,
     type DeliveryState,
@@ -414,7 +417,53 @@ function _resolve_directive(state: DeliveryState): string {
  * exactly the same inputs.
  */
 function _placeholder_violations_in_output(envelope: Record<string, Any>): string[] {
-    return placeholder_paths(envelope['rendered']);
+    return [...placeholder_paths(envelope['rendered']), ...written_file_placeholders(envelope)];
+}
+
+/**
+ * Return the written files whose text carries a placeholder pattern.
+ *
+ * `rendered` is the porter's own report of what it wrote. The files are what
+ * it actually wrote, and nothing made the two agree — a placeholder that never
+ * entered the report was invisible to a gate that only read the report. This
+ * reads the other side of that pair.
+ *
+ * **Only `envelope['files']`** — the set the port declares it changed. Never a
+ * tree sweep: the directive has no business reading files this run did not
+ * touch, and a sweep would grow with the repository rather than with the port.
+ *
+ * A path that does not resolve to a readable file is **skipped, not reported**.
+ * `apply` runs at points where a declared file may not be on disk yet, and
+ * halting a correct port because a path failed to resolve would be a worse
+ * failure than the one this closes. The cost is real and worth naming: a
+ * placeholder inside a file the engine cannot read stays unseen.
+ *
+ * `root` defaults to the working directory, which is the consumer project root
+ * when the engine runs — the same convention as `scaffold`'s token lookup.
+ */
+export function written_file_placeholders(
+    envelope: Record<string, Any>,
+    root: string | null = null,
+): string[] {
+    const files = envelope['files'];
+    if (!Array.isArray(files)) return [];
+    const base = root !== null ? root : process.cwd();
+    const hits: string[] = [];
+    for (const rel of files as Any[]) {
+        if (typeof rel !== 'string' || rel === '') continue;
+        let text: string;
+        try {
+            const full = path.resolve(base, rel);
+            if (!fs.statSync(full).isFile()) continue;
+            text = fs.readFileSync(full, 'utf8');
+        } catch {
+            continue;
+        }
+        if (placeholder_paths(text, rel).length > 0) {
+            hits.push(rel);
+        }
+    }
+    return hits;
 }
 
 /** First-pass halt — emit the stack-specific apply directive. */
@@ -480,9 +529,10 @@ function _halt_placeholders(state: DeliveryState, violations: string[]): StepRes
     const directive = _resolve_directive(state);
     const lines: string[] = [
         agent_directive(directive),
-        '> Apply rejected: rendered output contains placeholder strings. ' +
+        '> Apply rejected: the port output contains placeholder strings. ' +
             'The design-brief microcopy lock failed mid-loop.',
-        '> Affected paths in `ui_apply.rendered`:',
+        '> Affected paths, in `ui_apply.rendered` and in the files the ' +
+            'envelope declares it wrote:',
     ];
     for (const p of violations) {
         lines.push(`> - \`${p}\``);
