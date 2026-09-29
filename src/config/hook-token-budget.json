@@ -108,8 +108,8 @@
   },
   "tool_result_bytes": {
    "definition": "road-to-inbox-harvest-2026-08-d-context-ledger 1.1: UTF-8 bytes of every tool RESULT entering context, per call, keyed by tool name. Closes the gap `unbounded_output_advisory_rate` registered above - the injection census measures what this suite puts into context, this measures what the host's tools do, and the second is the larger term. CAPTURE ONLY: the concern emits zero bytes to the model, so it carries no per-concern injection cap; it is registered here because this file already owns the owner/review discipline for context-cost instruments.",
-   "instrument": "the `tool-result-bytes` concern (src/scripts/hooks/tool_result_bytes_hook.ts) on post_tool_use, appending {ts, tool, bytes, measurable} to agents/runtime/state/tool-result-census.jsonl",
-   "privacy": "census lines carry a tool NAME, a byte COUNT and a timestamp - the record type has no field able to hold file contents, command output or any free text, so there is no scrubber that can fail",
+   "instrument": "the `tool-result-bytes` concern (src/scripts/hooks/tool_result_bytes_hook.ts) on post_tool_use, appending {ts, tool, raw_bytes, delivered_bytes, measurable} to agents/runtime/state/tool-result-census.jsonl, and ONLY where the maintainer workspace resolves (or AGENT_CONFIG_TOOL_BYTE_CENSUS=1) - a per-call write in every consumer install would be a second unread instrument",
+   "privacy": "census lines carry a tool NAME, two byte COUNTS and a timestamp - the record type has no field able to hold file contents, command output or any free text, so there is no scrubber that can fail",
    "threshold": "none committed before data - baseline first, threshold at review date. A `measurable: false` line means the host's payload carried no readable result; that absence is itself a coverage finding and is never counted as zero bytes"
   },
   "turns_per_task": {

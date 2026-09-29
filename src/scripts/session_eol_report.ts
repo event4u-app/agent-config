@@ -31,7 +31,15 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as path from 'node:path';
 
-import { DEFAULT_PROJECTS_ROOT, listTranscriptFiles } from './_lib/cc_transcript.js';
+import {
+    DEFAULT_PROJECTS_ROOT,
+    derivedBytes,
+    listTranscriptFiles,
+    measureBytesPerToken,
+    scanTranscripts,
+    type BytesPerToken,
+    type DerivedBytes,
+} from './_lib/cc_transcript.js';
 import { emptyCounters, scanEolSlice, type EolCounters } from './_lib/session_eol.js';
 
 export interface SessionSummary {
@@ -90,6 +98,28 @@ export interface EolReport {
     };
     /** Pearson r of file bytes vs final context tokens over the readable set. */
     bytes_tokens_pearson_r: number | null;
+    /**
+     * The median session's final context expressed in bytes - DERIVED, and
+     * labelled so (`road-to-a-bytes-row-that-exists` Phase 2, metric
+     * `provider-bytes-per-call`).
+     *
+     * Do NOT confuse this with `SessionSummary.bytes` or with the Pearson r
+     * above: those are the transcript FILE's size on this disk, a local
+     * artefact. This is an estimate of the context volume a round re-sends,
+     * obtained by multiplying a token count by a ratio measured on this same
+     * store. `null` whenever either input is missing - there is no fallback
+     * ratio anywhere in this path, deliberately.
+     *
+     * COST, named rather than discovered: producing it costs a second pass
+     * over the store (`scanTranscripts`), because the end-of-life counters are
+     * accumulated by `_lib/session_eol.ts`, whose shape is PERSISTED in state
+     * files and whose fields therefore carry a migration obligation this
+     * report does not need to take on for a derived column.
+     */
+    provider_bytes: {
+        factor: BytesPerToken | null;
+        median_final_context: DerivedBytes | null;
+    };
     threshold_crossings: Record<string, number>;
 }
 
@@ -220,6 +250,11 @@ export function buildReport(root: string, now: Date = new Date()): EolReport {
     const post = allEvents.map((e) => e.post_tokens).filter((v): v is number => v !== null);
     const summaryRecords = sessions.reduce((s, x) => s + x.counters.compact_summaries, 0);
 
+    // Byte factor, measured on this same store. Separate pass - see the
+    // `provider_bytes` doc comment for why it is not folded into EolCounters.
+    const byteScan = scanTranscripts({ root, measureBytes: true });
+    const bytesFactor = measureBytesPerToken(byteScan.records);
+
     const crossings: Record<string, number> = {};
     for (const thr of [200_000, 400_000, 600_000, 800_000]) {
         crossings[`>=${thr / 1000}k`] = finals.filter((c) => c >= thr).length;
@@ -250,6 +285,10 @@ export function buildReport(root: string, now: Date = new Date()): EolReport {
                 .filter((s) => (s.counters.final_context_tokens as number) > 1_000)
                 .map((s) => [s.bytes, s.counters.final_context_tokens as number]),
         ),
+        provider_bytes: {
+            factor: bytesFactor,
+            median_final_context: derivedBytes(percentiles(finals)?.median ?? 0, finals.length > 0 ? bytesFactor : null),
+        },
         threshold_crossings: crossings,
     };
 }
@@ -273,6 +312,20 @@ export function renderText(r: EolReport): string {
     }
     if (r.turns) {
         lines.push(`turns per session: median=${fmt(r.turns.median)} p90=${fmt(r.turns.p90)} max=${fmt(r.turns.max)}`);
+    }
+    const pb = r.provider_bytes;
+    if (pb.factor === null || pb.median_final_context === null) {
+        lines.push('provider bytes: basis unavailable - this store supplied no bytes-per-token factor');
+    } else {
+        lines.push(
+            `provider bytes (basis: ${pb.median_final_context.basis}): median final context`
+                + ` ~= ${fmt(pb.median_final_context.bytes)} bytes`,
+        );
+        lines.push(
+            `  factor ${pb.factor.bytes_per_token.toFixed(4)} bytes/token (basis: ${pb.factor.basis},`
+                + ` ${fmt(pb.factor.content_bytes)} content bytes / ${fmt(pb.factor.output_tokens)} output tokens,`
+                + ` n=${pb.factor.records}) - measured on assistant output, applied to an input token count`,
+        );
     }
     const c = r.compaction;
     lines.push(

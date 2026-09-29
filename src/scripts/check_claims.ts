@@ -208,9 +208,76 @@ const SELF_COUNT = new RegExp(
     'i',
 );
 
+/**
+ * Byte-unit metric ids, read from `src/config/metric-registry.yml`.
+ *
+ * WHY THE IDS AND NOT THE WORD `bytes`. A detector keyed on a number near the
+ * word would red on ordinary documentation — a file size in a README, a payload
+ * example in a contract — and the cheapest repair for a gate that reds on
+ * correct prose is to weaken it until it finds nothing. Keyed on the DECLARED
+ * ids, only a figure claiming a registered metric is checked, and a line that
+ * merely mentions bytes is not a claim about this package at all.
+ *
+ * `MAGNITUDE` already covers `KB|MB|GB`, so this is not the first byte-shaped
+ * figure the gate sees; what it adds is the id-bearing form, which is how
+ * `road-to-a-bytes-row-that-exists` made a byte statement expressible in the
+ * first place.
+ *
+ * Parsed with a line scanner rather than a YAML dependency: the shape read is
+ * two adjacent keys at a fixed indent, and an unreadable registry yields an
+ * EMPTY id list, which makes the detector inert rather than throwing inside a
+ * gate whose job is to report other people's problems.
+ */
+export function parse_byte_metric_ids(raw: string): string[] {
+    const out: string[] = [];
+    let current: string | null = null;
+    for (const line of raw.split('\n')) {
+        const id = /^\s*-\s+id:\s*([A-Za-z0-9._-]+)\s*$/.exec(line);
+        if (id?.[1] !== undefined) {
+            current = id[1];
+            continue;
+        }
+        const unit = /^\s*unit:\s*(\S+)\s*$/.exec(line);
+        if (unit?.[1] !== undefined && current !== null && /^bytes/.test(unit[1])) {
+            out.push(current);
+            current = null;
+        }
+    }
+    return out;
+}
+
+const METRIC_REGISTRY_REL = 'src/config/metric-registry.yml';
+let _byteMetricIds: string[] | null = null;
+
+function byteMetricIds(): string[] {
+    if (_byteMetricIds === null) {
+        try {
+            _byteMetricIds = parse_byte_metric_ids(
+                fs.readFileSync(path.join(REPO, METRIC_REGISTRY_REL), 'utf-8'),
+            );
+        } catch {
+            _byteMetricIds = [];
+        }
+    }
+    return _byteMetricIds;
+}
+
+/**
+ * A line naming a declared byte metric AND carrying a figure.
+ *
+ * Both halves are required. The id alone is prose about the metric — the
+ * registry entry itself says what it is for, and that is not a claim. A number
+ * alone is every other line in the tree.
+ */
+export function is_byte_metric_claim(line: string, ids: string[] = byteMetricIds()): boolean {
+    if (ids.length === 0) return false;
+    if (!/\b\d[\d,._]*\b/.test(line)) return false;
+    return ids.some((id) => new RegExp(String.raw`\b${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\b`).test(line));
+}
+
 /** True when a line carries any figure shape that must bind to a claim. */
 export function is_quantified_claim(line: string): boolean {
-    return RATIO.test(line) || MAGNITUDE.test(line) || SELF_COUNT.test(line);
+    return RATIO.test(line) || MAGNITUDE.test(line) || SELF_COUNT.test(line) || is_byte_metric_claim(line);
 }
 
 class ExitCode extends Error {
@@ -1041,6 +1108,17 @@ function selfTest(): number {
 
     const CLEAN_README = '# Agent Config\n\nGoverned skills, rules and commands.\n';
 
+    /** A registry carrying exactly one byte-unit metric, for the 4.1 cases. */
+    const BYTE_REGISTRY = [
+        'metrics:',
+        '  - id: tool-raw-bytes',
+        '    unit: bytes',
+        '    basis: measured',
+        '  - id: some-token-metric',
+        '    unit: tokens',
+        '',
+    ].join('\n');
+
     const cases: SelfTestCase[] = [
         {
             name: 'a retired phrasing absent from every publish surface → accept',
@@ -1070,6 +1148,52 @@ function selfTest(): number {
             name: 'a needle too short to be specific → reject',
             expect: 'reject',
             run: () => fixture({ 'docs/CLAIMS.md': closed('daemon'), 'README.md': CLEAN_README }),
+        },
+
+        // road-to-a-bytes-row-that-exists 4.1 — both directions, because a
+        // one-directional fixture cannot tell a working detector from one that
+        // reds on everything. The registry file is part of the fixture: the
+        // gate reads it relative to its own location, so the copied script in
+        // the temp root reads the copied registry.
+        {
+            name: 'a byte figure naming a metric with no ledger entry → reject',
+            expect: 'reject',
+            run: () =>
+                fixture({
+                    'docs/CLAIMS.md': closed(null),
+                    'src/config/metric-registry.yml': BYTE_REGISTRY,
+                    'README.md': `${CLEAN_README}\nEach dispatch records 2048 tool-raw-bytes.\n`,
+                }),
+        },
+        {
+            name: 'the same figure once a markered ledger entry backs it → accept',
+            expect: 'accept',
+            run: () =>
+                fixture({
+                    'docs/CLAIMS.md': [
+                        closed(null),
+                        '### claim: tool-raw-bytes-observed',
+                        '- claim: Each dispatch records 2048 tool-raw-bytes.',
+                        '- kind: quant',
+                        '- evidence: docs/evidence.md#ANCHOR',
+                        '- status: backed',
+                        '- last_verified: 2026-09-29',
+                        '',
+                    ].join('\n'),
+                    'src/config/metric-registry.yml': BYTE_REGISTRY,
+                    'README.md':
+                        `${CLEAN_README}\nEach dispatch records 2048 tool-raw-bytes. <!-- claim:tool-raw-bytes-observed -->\n`,
+                }),
+        },
+        {
+            name: 'ordinary prose carrying a byte size but no declared id → accept',
+            expect: 'accept',
+            run: () =>
+                fixture({
+                    'docs/CLAIMS.md': closed(null),
+                    'src/config/metric-registry.yml': BYTE_REGISTRY,
+                    'README.md': `${CLEAN_README}\nThe example payload below is 2048 bytes long.\n`,
+                }),
         },
         {
             name: 'the never-published sentinel with a stated reason → accept',

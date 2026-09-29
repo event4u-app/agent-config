@@ -3,6 +3,7 @@
 // Step 1.1). Imports `processEnvelope` directly so the written JSONL can be
 // inspected; a subprocess-only test could only see the exit code, and this
 // concern's entire output is the file.
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -11,17 +12,35 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { JsonObject } from '../../src/scripts/hooks/envelope.js';
 import {
     CENSUS_FILE,
+    CENSUS_OPT_IN_ENV,
+    MAINTAINER_PACKAGE_NAME,
+    _resetMaintainerCache,
     _resultBytes,
     _toolName,
     processEnvelope,
     resolveConsumerRoot,
+    resolvesMaintainerWorkspace,
 } from '../../src/scripts/hooks/tool_result_bytes_hook.js';
 
 let tmp: string;
+
+/**
+ * Mark a directory as the maintainer workspace. The census is default-off
+ * everywhere else (step 3.3), so a fixture that wants a written line has to
+ * say which workspace it is — which is the behaviour, stated as a helper.
+ */
+function markMaintainer(root: string): void {
+    fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ name: MAINTAINER_PACKAGE_NAME }));
+    _resetMaintainerCache();
+}
+
 beforeEach(() => {
     tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'tool-result-bytes-'));
+    markMaintainer(tmp);
 });
 afterEach(() => {
+    delete process.env[CENSUS_OPT_IN_ENV];
+    _resetMaintainerCache();
     fs.rmSync(tmp, { recursive: true, force: true });
 });
 
@@ -91,7 +110,7 @@ describe('the census line', () => {
         processEnvelope(envelope({ tool_name: 'Read', tool_response: 'abcd' }), tmp);
         const lines = readCensus(tmp);
         expect(lines).toHaveLength(1);
-        expect(lines[0]).toMatchObject({ tool: 'Read', bytes: 4, measurable: true });
+        expect(lines[0]).toMatchObject({ tool: 'Read', raw_bytes: 4, delivered_bytes: 4, measurable: true });
         expect(typeof lines[0]!['ts']).toBe('string');
     });
 
@@ -101,7 +120,7 @@ describe('the census line', () => {
         processEnvelope(envelope({ tool_name: 'Read' }), tmp);
         const lines = readCensus(tmp);
         expect(lines).toHaveLength(1);
-        expect(lines[0]).toMatchObject({ bytes: null, measurable: false });
+        expect(lines[0]).toMatchObject({ raw_bytes: null, delivered_bytes: null, measurable: false });
     });
 
     it('carries no field able to hold result content', () => {
@@ -110,8 +129,14 @@ describe('the census line', () => {
         const raw = fs.readFileSync(path.join(tmp, CENSUS_FILE), 'utf8');
         expect(raw).not.toContain(secret);
         expect(raw).not.toContain('AKIA');
-        // Privacy is a property of the shape: exactly four keys, all scalar.
-        expect(Object.keys(readCensus(tmp)[0]!).sort()).toEqual(['bytes', 'measurable', 'tool', 'ts']);
+        // Privacy is a property of the shape: exactly five keys, all scalar.
+        expect(Object.keys(readCensus(tmp)[0]!).sort()).toEqual([
+            'delivered_bytes',
+            'measurable',
+            'raw_bytes',
+            'tool',
+            'ts',
+        ]);
     });
 
     it('appends rather than overwrites across calls', () => {
@@ -122,7 +147,7 @@ describe('the census line', () => {
 
     it('records a null tool name rather than dropping the line', () => {
         processEnvelope(envelope({ tool_response: 'abc' }), tmp);
-        expect(readCensus(tmp)[0]).toMatchObject({ tool: null, bytes: 3, measurable: true });
+        expect(readCensus(tmp)[0]).toMatchObject({ tool: null, raw_bytes: 3, delivered_bytes: 3, measurable: true });
     });
 });
 
@@ -143,6 +168,7 @@ describe('it never disturbs the run', () => {
     it('returns 0 when the census path cannot be written', () => {
         const blocked = path.join(tmp, 'blocked');
         fs.writeFileSync(blocked, 'not a directory');
+        process.env[CENSUS_OPT_IN_ENV] = '1'; // past the workspace gate, into the write
         // `agents/` under a regular file cannot be created — the write throws
         // inside, and the hook must still allow the turn.
         expect(processEnvelope(envelope({ tool_name: 'Read', tool_response: 'x' }), blocked)).toBe(0);
@@ -165,5 +191,86 @@ describe('root and tool-name resolution', () => {
         expect(_toolName({ tool: 'C' }, {})).toBe('C');
         expect(_toolName({}, { tool_name: 'D' })).toBe('D');
         expect(_toolName({}, {})).toBeNull();
+    });
+});
+
+// -- Steps 3.2 / 3.3 (road-to-a-bytes-row-that-exists) -----------------
+
+describe('delivered_bytes is equal to raw_bytes BY CONSTRUCTION, not by copy', () => {
+    it('records both fields with equal values on every measurable line', () => {
+        for (const body of ['a', 'x'.repeat(5000), '\u{1F642} Gr\u00fc\u00dfe']) {
+            const root = fs.mkdtempSync(path.join(os.tmpdir(), 'trb-equal-'));
+            markMaintainer(root);
+            processEnvelope(envelope({ tool_name: 'Bash', tool_response: body }), root);
+            const line = readCensus(root)[0]!;
+            expect(line['raw_bytes']).toBe(Buffer.byteLength(body, 'utf8'));
+            expect(line['delivered_bytes']).toBe(line['raw_bytes']);
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    });
+
+    it('the construction still holds: nothing in the tree rewrites a tool result', () => {
+        // The equality above is only meaningful while no concern can rewrite a
+        // result on its way to the model. This is that premise, checked rather
+        // than asserted - the day a rewrite lands, this goes red and the two
+        // fields stop being redundant.
+        const repoRoot = path.resolve(__dirname, '..', '..');
+        // `grep` exits 1 on NO MATCH, which is the outcome this asserts, so the
+        // throw has to be read as a result rather than as a failure. A
+        // directory sweep rather than `git grep`: an untracked file that emits
+        // the field would still rewrite results, and git would not see it.
+        let hits: string;
+        try {
+            hits = execFileSync('grep', ['-rl', '--', 'updatedToolOutput', 'src', 'docs'], {
+                cwd: repoRoot,
+                encoding: 'utf8',
+            }).trim();
+        } catch (err) {
+            const status = (err as { status?: number }).status;
+            if (status !== 1) throw err;
+            hits = '';
+        }
+        expect(hits).toBe('');
+    });
+});
+
+describe('the recorder is default-off outside the maintainer workspace', () => {
+    it('writes NO byte record at all when no maintainer workspace resolves', () => {
+        const consumer = fs.mkdtempSync(path.join(os.tmpdir(), 'trb-consumer-'));
+        _resetMaintainerCache();
+        expect(processEnvelope(envelope({ tool_name: 'Read', tool_response: 'abcd' }), consumer)).toBe(0);
+        expect(fs.existsSync(path.join(consumer, CENSUS_FILE))).toBe(false);
+        expect(readCensus(consumer)).toHaveLength(0);
+        fs.rmSync(consumer, { recursive: true, force: true });
+    });
+
+    it('stays off for a DIFFERENT package, not merely for a root with no package.json', () => {
+        const other = fs.mkdtempSync(path.join(os.tmpdir(), 'trb-other-'));
+        fs.writeFileSync(path.join(other, 'package.json'), JSON.stringify({ name: 'some-consumer-app' }));
+        _resetMaintainerCache();
+        processEnvelope(envelope({ tool_name: 'Read', tool_response: 'abcd' }), other);
+        expect(readCensus(other)).toHaveLength(0);
+        fs.rmSync(other, { recursive: true, force: true });
+    });
+
+    it('resolves the maintainer workspace off package.json name, and nothing else', () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'trb-resolve-'));
+        _resetMaintainerCache();
+        expect(resolvesMaintainerWorkspace(root)).toBe(false);
+        fs.writeFileSync(path.join(root, 'package.json'), '{ not json');
+        _resetMaintainerCache();
+        expect(resolvesMaintainerWorkspace(root)).toBe(false);
+        markMaintainer(root);
+        expect(resolvesMaintainerWorkspace(root)).toBe(true);
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('lets a consumer opt in deliberately with the env marker', () => {
+        const consumer = fs.mkdtempSync(path.join(os.tmpdir(), 'trb-optin-'));
+        _resetMaintainerCache();
+        process.env[CENSUS_OPT_IN_ENV] = '1';
+        processEnvelope(envelope({ tool_name: 'Read', tool_response: 'abcd' }), consumer);
+        expect(readCensus(consumer)).toHaveLength(1);
+        fs.rmSync(consumer, { recursive: true, force: true });
     });
 });

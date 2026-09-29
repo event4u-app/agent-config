@@ -60,6 +60,7 @@ function baseReport(): Report {
             subagent: { ...emptyBucket, bucket: 'subagent' as const },
         },
         subagent_cold_start: computeColdStarts([]),
+        provider_bytes: { factor: null, main: null, subagent: null },
         by_agent: [],
         duplicate_scope: {
             duplicated_rule_names: [],
@@ -626,5 +627,39 @@ describe('prefix stability — road-to-runtime-context-floors step 1.3', () => {
         expect(text).toContain('stable cohort:');
         expect(text).toContain('unstable cohort:');
         expect(text).toContain('read_share=insufficient data');
+    });
+});
+
+// -- Derived provider bytes (road-to-a-bytes-row-that-exists, Phase 2) --
+
+describe('provider bytes are derived and say so - never a counted wire figure', () => {
+    it('renders the unavailable basis rather than a figure when no factor exists', () => {
+        const text = renderText(baseReport());
+        expect(text).toContain('Provider bytes (DERIVED');
+        expect(text).toContain('basis: unavailable');
+        // A fabricated 0 bytes for "nothing was measured" is the failure the
+        // null factor exists to prevent.
+        expect(text).not.toMatch(/main: 0 bytes/);
+    });
+
+    it('labels every emitted figure derived and prints the factor beside it', () => {
+        const factor = {
+            basis: 'measured' as const,
+            content_bytes: 400,
+            output_tokens: 100,
+            bytes_per_token: 4,
+            records: 2,
+        };
+        const text = renderText({
+            ...baseReport(),
+            provider_bytes: {
+                factor,
+                main: { basis: 'derived' as const, tokens: 1000, factor, bytes: 4000 },
+                subagent: null,
+            },
+        });
+        expect(text).toContain('4.0000 bytes/token');
+        expect(text).toContain('main: 4000 bytes (basis: derived');
+        expect(text).toContain('subagent: basis: unavailable');
     });
 });
