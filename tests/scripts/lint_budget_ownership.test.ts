@@ -133,7 +133,7 @@ describe('governed non-JSON budgets — explicit list, never a widened glob', ()
         expect(rels).toContain('budgets.yml');
     });
 
-    it('the corpus is 14 — the thirteen JSON budgets plus the one named YAML', () => {
+    it('the corpus is 16 — the fifteen JSON budgets plus the one named YAML', () => {
         // A floor AND a ceiling: a drop means src/config/ moved, and a silent rise
         // is exactly the glob-widening failure this mechanism exists to prevent.
         //
@@ -159,7 +159,15 @@ describe('governed non-JSON budgets — explicit list, never a widened glob', ()
         // `review_by`, which is the only thing that makes raising this
         // legitimate — the raise was forced by CI naming the missing
         // `review_by`, not by editing the number to clear a red.
-        expect(budgetFiles(CONFIG_DIR)).toHaveLength(15);
+        //
+        // 15 -> 16 on 2026-09-29 (road-to-an-invocation-contract-that-reaches-the-wire
+        // 1.2): `placeholder-drift-budget.json`, the shrink-only ceiling on
+        // foreign in-prose placeholder syntaxes. It carries `owner` and
+        // `review_by`, which is the only thing that makes raising this
+        // legitimate — and, as with the previous raise, the number moved
+        // because CI named the missing fields first, not because the count was
+        // edited to clear a red.
+        expect(budgetFiles(CONFIG_DIR)).toHaveLength(16);
     });
 
     it('an UNLISTED *budget*.yml is not silently included', () => {
