@@ -5,7 +5,7 @@ depends on what that host exposes. We say so plainly rather than imply
 "deterministic everywhere".
 
 - **Compile-time (every host).** Rules and Iron Laws are compiled into each
-  host's native instruction format at projection time (`.cursorrules`,
+  host's native instruction format at projection time (`.cursor/rules/*.mdc`,
   `.windsurfrules`, `copilot-instructions.md`, `GEMINI.md`, Claude/Augment
   native rule dirs). This is the universal layer — it works on all projection
   targets. It is **model-cooperative**: the agent is instructed, strongly, but
@@ -20,12 +20,23 @@ depends on what that host exposes. We say so plainly rather than imply
 | Claude Code (plugin) | ✅ | 9 |
 | Cowork | ✅ | 8 |
 | Augment | ✅ native rules | 5 |
-| Cursor | ✅ `.cursorrules` | 5 |
+| Cursor | ✅ `.cursor/rules/*.mdc` | 5 |
 | Cline | ✅ `.clinerules` | 5 |
 | Gemini | ✅ `GEMINI.md` | 5 |
 | Windsurf | ✅ `.windsurfrules` | 3 |
 | Copilot | ✅ `copilot-instructions.md` | 0 |
 | Codex | ✅ skill bundle to `~/.codex/` | 0 |
+
+**The two columns carry different guarantees and the difference is the point.**
+Every path named in the compile-time column is checked, per PR, against paths
+generated from the emitters — `check_host_format_column` runs the two
+install-time rule emitters into a throwaway tree and reads what they wrote, and
+compares that against the tool-root registries the projection generators are
+already bound to. A cell naming a path no emitter produces fails the gate. The
+slot-count column beside it carries no such check: it is a hand-read of
+`src/scripts/hook_manifest.yaml`'s `platforms:` bindings, measured elsewhere and
+the subject of other work, so a reader must not carry the format column's
+guarantee across to it.
 
 **This table used to carry a fourth column, and it was removed on 2026-09-12
 rather than corrected.** The column read `Deny honoured` and answered per HOST,
@@ -357,6 +368,56 @@ files in this repository, not a fact about Cowork, and it passes CI only because
 `tests/scripts/install_snapshot.test.ts:175` loops over five hosts and omits
 `claude` and `cowork`.
 
+### What this document does NOT record about a bound hook that runs too long
+
+The tables above record which concerns are **bound** per slot. Binding is not
+delivery, and the gap between them has a name: what the host does when a bound
+hook runs too long. On `claude`'s `user_prompt_submit` that gap is the widest in
+this tree, because `src/scripts/hook_manifest.yaml`'s
+`platforms.claude.user_prompt_submit` binds **13 concerns** on that one slot —
+`chat-history`, `verify-before-complete`, `minimal-safe-diff`,
+`language-mirror`, `delegation-nudge`, `skill-route`, `git-authorization`,
+`session-canary`, `self-repair`, `session-register`, `rule-inject`,
+`suggestion-capture`, `journal-record` — and they share one process.
+
+**The consequence of a timeout on that slot is stated nowhere here, and the
+omission is deliberate.** A draft of this section carried three rows describing
+the host's cancel-and-discard semantics, each marked
+`read-from-host-documentation`. An independent two-provider review refused them
+on 2026-09-29, on a ground this document cannot argue with: the citation was
+`Claude Code's own hooks reference, § hook execution / timeout` with no URL, no
+host version and no retrieval date, in a document whose every other column is
+read off a file in this repository. One seat further held that the current
+primary source contradicts part of what the rows asserted. A provenance marker
+on an unanchored claim marks it as unanchored; it does not make it usable, and a
+row nobody can re-derive is the substitution
+[`host-capability-manifest.md`](contracts/host-capability-manifest.md)
+§ Observation protocol exists to refuse.
+
+**What would fill the gap** is a row of the shape that file already demands: the
+host and host version observed, the exact page and section with its URL, the
+date it was read, and — for the part that is a runtime claim rather than a
+documentation claim — a session in which the timeout was actually reached and
+its effect on the thirteen concerns recorded. Until one exists, this document
+says the tables do not cover slot-failure behavior, which is true, rather than
+covering it from an unpinnable source.
+
+**Two things this tree does know about that slot, and they are measurements.**
+`hook_manifest.yaml` sets **no `timeout` key anywhere** — grepped on
+2026-09-29, zero hits — so every slot runs on whatever default the host applies.
+And `docs/hook-latency.json` records `user_prompt_submit` at **p95 81 ms** over
+50 CI invocations on 2026-07-27.
+
+**No conclusion is drawn from those two numbers, and the refusal is
+deliberate.** A low p95 beside any timeout invites the reading that the timeout
+is unreachable and slot-failure behavior therefore does not matter. A p95 is
+the 95th percentile of a synthetic bench on an idle runner; it is silent about
+the tail, and the tail is the only part of the distribution a timeout ever
+meets. Thirteen concerns sharing one process is a failure mode to be designed
+against on its shape, not dismissed on a median-adjacent statistic — and with
+the semantics unrecorded above, there is not even a documented consequence to
+weigh the number against.
+
 ### Open internal inconsistency — `pre_compact` on cursor and cline
 
 `native_event_aliases` carries `preCompact: pre_compact` for `cursor`
@@ -570,11 +631,19 @@ the narrowest sentence the manifest supports and no wider:
   Iron Law and [`user-interaction`](../src/rules/user-interaction.md)'s
   one-decision-point clause. That is L5 on the ladder above, and it is the
   floor everywhere.
-- **It fires on nothing today, on every host.** No host in the capability
-  registry carries an OBSERVED structured-ask tool
-  (`src/scripts/_lib/structured_ask.ts`), so there is no such call to intercept.
-  The guard exists so the first host to ship a picker meets the rule already in
-  force. A reader must not take its presence as evidence that any host has one.
+- **No host's delivered surface has been OBSERVED carrying a picker.** That is
+  why `STRUCTURED_ASK_SHAPES` is empty (`src/scripts/_lib/structured_ask.ts`)
+  and no per-host shape row exists. It is narrower than the claim this bullet
+  used to make — "it fires on nothing today, on every host" — and the narrowing
+  is the measurement base: `_lib/host_capability.ts` carries exactly one row,
+  `structured_ask: false` for `claude`, observed-absent on Claude Code 2.1.263
+  on 2026-09-07; the other eight hosts in the table at the top of this file have
+  no row at all, which is never-looked rather than measured. One dated reading of
+  one host version does not support a standing present-tense claim about nine
+  hosts, and the registry's own comment says so — the observation "is not a claim
+  that the vendor ships no such tool anywhere". The guard exists so the first
+  host whose delivered surface carries a picker meets the rule already in force.
+  A reader must not take its presence as evidence that any host has one.
 
 See also the artifact-projection view: [`capability-matrix.md`](capability-matrix.md).
 Its `hooks` row records which host consumes the `hooks/` **artifact** — that is a

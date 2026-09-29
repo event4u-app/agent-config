@@ -695,6 +695,18 @@ tasks:
       agreement with the configuration and nothing about any host's runtime.
     cmd: ./scripts-run src/scripts/check_enforcement_matrix {{.QUIET_FLAG}}
 
+  check-host-format-column:
+    silent: true
+    desc: |
+      The compile-time (format) column of the host table in
+      docs/enforcement-by-host.md may only name paths an emitter in this tree
+      actually writes. The Cursor cell read `.cursorrules` — a file nothing has
+      ever written — until an external reader found it. The gate runs the two
+      install-time rule emitters into a throwaway tree and reads what they left
+      on disk, rather than scraping emitter source, so an interpolated target
+      cannot be reported as drift.
+    cmd: ./scripts-run src/scripts/check_host_format_column {{.QUIET_FLAG}}
+
   check-mcp-doc-drift:
     silent: true
     desc: |
