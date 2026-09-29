@@ -12,6 +12,9 @@ execution:
 > Adopted 2026-08-17 via `/analyze:inbox` after per-claim verification against
 > `origin/main` @ `097ab6549`.
 
+> **Arrivals:** 8 (at least) — latest `inbox-2026-09-ab` (2026-09-29);
+> earlier rounds not enumerated here.
+
 > **Blocked until:** `agents/evidence/metrics/skill-catalogue.jsonl` holds at
 > least 20 observations spanning at least 2 distinct `host` values.
 > **Probe:** `capture_skill_catalogue --cadence` prints progress against exactly

@@ -5,6 +5,8 @@ review_by: 2026-12-08
 
 # Stub: road to a path-activation route under `delivery`
 
+> **Arrivals:** 1 — latest `inbox-2026-09-ab` (2026-09-29).
+
 > **Stub — not active work.** Created 2026-09-08 by the owner-delegated drain run
 > holding `road-to-delivery-for-every-host`, as the receiver for R2 finding 1 on
 > PR #1923. The finding is real and measured; every way to CLOSE it is a budget

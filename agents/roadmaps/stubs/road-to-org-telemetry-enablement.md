@@ -5,6 +5,8 @@ review_by: 2026-12-24
 
 # Stub: road to org telemetry enablement
 
+> **Arrivals:** 1 — latest `inbox-2026-09-ab` (2026-09-29).
+
 > **Stub — not active work.** Transferred out of
 > [`road-to-org-telemetry.md`](../road-to-org-telemetry.md) Phase 3 on
 > 2026-08-20 under blocker `dpo-signoff`, by the drain-run disposition

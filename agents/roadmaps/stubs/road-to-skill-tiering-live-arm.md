@@ -5,6 +5,8 @@ review_by: 2026-09-25
 
 # Stub: the live arm for skill tiering (H1) — needs host sessions, not a repository
 
+> **Arrivals:** 9 (at least) — latest `inbox-2026-09-ab` (2026-09-29); earlier rounds not enumerated here.
+
 > **Stub — not active work.** A **drain-run transfer**, not a demand-gated
 > placeholder: the work is specified, wanted, and blocked only on a capability an
 > autonomous repository run does not have. Transferred out of

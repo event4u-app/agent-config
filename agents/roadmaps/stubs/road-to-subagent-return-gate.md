@@ -5,7 +5,8 @@ review_by: 2026-12-24
 
 # Stub: road to a subagent return gate
 
-> **Arrivals:** 25 (at least) - latest `inbox-2026-09-aa` (2026-09-12), a round of
+> **Arrivals:** 26 (at least) - latest `inbox-2026-09-ab` (2026-09-29); earlier:
+> `inbox-2026-09-aa` (2026-09-12), a round of
 > fourteen independent external reviews of which two reach this subject - and both
 > answer the posed question the same way: keep the parking, because the promotion
 > preconditions are still absent. One states it as "not on 24 arrivals = build it, but
@@ -16,7 +17,7 @@ review_by: 2026-12-24
 > Read `(at least)` strictly: a broad keyword sweep returns a larger set that includes
 > incidental mentions, so this is the subject-matched floor.
 
-> **The posed owner question — 25 arrivals, no recommended answer.** The
+> **The posed owner question — 26 arrivals, no recommended answer.** The
 > promotion probe below has never returned true: `no_message` is 0 of 1,751
 > post-split stops, `ok` is 0 over the same window, and nothing writes the disk
 > envelope the fallback would read. Exactly one of:

@@ -5,6 +5,8 @@ review_by: 2026-11-30
 
 # Stub: road to a routing-signal verdict that reproduces every run
 
+> **Arrivals:** 1 — latest `inbox-2026-09-ab` (2026-09-29).
+
 > **Stub — not active work.** Found 2026-08-31 (drain run 11) on PR #1780, which
 > is the first branch in some time to touch `src/` and therefore the first to
 > trigger the full Node suite. The failure is **INTERMITTENT**, and that word is

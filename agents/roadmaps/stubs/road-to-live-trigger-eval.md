@@ -5,13 +5,14 @@ review_by: 2026-09-25
 
 # Stub: road to the live trigger-eval reading
 
-> **Arrivals:** 10 (at least) - latest `inbox-2026-09-y` (2026-09-11). Counted as
+> **Arrivals:** 11 (at least) - latest `inbox-2026-09-ab` (2026-09-29); earlier:
+> `inbox-2026-09-y` (2026-09-11). Counted as
 > distinct prior round directories under the consumed-inbox tree, which is gitignored -
 > so the count is machine-local and the ordering is the finding, not the exact figure.
 > Read `(at least)` strictly: a broad keyword sweep returns a larger set that includes
 > incidental mentions, so this is the subject-matched floor.
 
-> **The posed owner question — 10 arrivals, no recommended answer.** All four
+> **The posed owner question — 11 arrivals, no recommended answer.** All four
 > re-entry preconditions below read FAIL, and the one that gates the others is
 > P3: the pre-registration asks for at least 100 requests across at least 3
 > shapes, and the fixture corpus holds 34 across 2 of 3 kinds, so a sitting run

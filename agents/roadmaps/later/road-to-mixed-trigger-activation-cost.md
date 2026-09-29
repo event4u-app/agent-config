@@ -14,10 +14,11 @@ execution:
 > were proposal IDs; § 1 below records which of its claims survived verification,
 > which were overtaken, and the one that is refuted as written.
 
-> **Arrivals:** the delivery/`eager-all` subject appears in **19** consumed inbox
+> **Arrivals:** the delivery/`eager-all` subject appears in **20** consumed inbox
 > rounds under `agents/tmp.old/` (measured 2026-09-06, `grep -rl "eager-all"`,
 > distinct round directories); `lean_projection` in **18**. Latest
-> `inbox-2026-09-r`, which proposed a delivery roadmap whose own decision packet
+> `inbox-2026-09-ab` (2026-09-29); earlier: `inbox-2026-09-r`, which proposed
+> a delivery roadmap whose own decision packet
 > already exists. The figure counts rounds that RAISE the subject, not rounds
 > that demand this roadmap specifically — it is a floor on the recurrence, not
 > a count of asks. Written here so the next round meets a number.

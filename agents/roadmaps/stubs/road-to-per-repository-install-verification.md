@@ -5,6 +5,8 @@ review_by: 2026-09-25
 
 # Stub: road to per-repository install verification
 
+> **Arrivals:** 4 — latest `inbox-2026-09-ab` (2026-09-29); earlier rounds not enumerated here.
+
 > **Stub — not active work.** A **drain-run transfer**, not a demand-gated stub.
 > Created 2026-08-26 when
 > [`road-to-internal-estate-fit`](../archive/road-to-internal-estate-fit.md) was

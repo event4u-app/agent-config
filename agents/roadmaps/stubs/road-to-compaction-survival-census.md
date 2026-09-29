@@ -5,6 +5,8 @@ review_by: 2026-12-24
 
 # Stub: road to a compaction-survival census
 
+> **Arrivals:** 1 — latest `inbox-2026-09-ab` (2026-09-29).
+
 > **Stub — not active work.** Transferred out of
 > [`road-to-context-fidelity.md`](../road-to-context-fidelity.md) Phase 0 and
 > Phase 1 on 2026-08-20 under disposition **B — outcome `transferred`**, recorded

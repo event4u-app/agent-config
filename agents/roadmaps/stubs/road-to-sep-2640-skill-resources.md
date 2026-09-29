@@ -5,7 +5,7 @@ review_by: 2026-12-24
 
 # Stub: SEP-2640 (`skill://` resources) — a quarterly date carrier
 
-> **Arrivals:** 4 (at least) — latest `inbox-2026-09-k` (2026-09-05); earlier: agents/roadmaps/archive/road-to-skill-delivery-over-mcp.md, agents/roadmaps/archive/road-to-activation-evidence-or-refusal.md, agents/roadmaps/archive/road-to-routing-assurance.md.
+> **Arrivals:** 5 (at least) — latest `inbox-2026-09-ab` (2026-09-29); earlier: `inbox-2026-09-k` (2026-09-05), agents/roadmaps/archive/road-to-skill-delivery-over-mcp.md, agents/roadmaps/archive/road-to-activation-evidence-or-refusal.md, agents/roadmaps/archive/road-to-routing-assurance.md.
 
 > **Stub — not active work, and not deferred work either.** A **date carrier**,
 > like [`road-to-adr-134-expiry.md`](road-to-adr-134-expiry.md): there is no step

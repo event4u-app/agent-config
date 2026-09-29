@@ -14,7 +14,8 @@ probe: none
 > **Zero were adoptable unchanged.** The full per-proposal disposition is in
 > `agents/evidence/analysis/inbox-2026-09-r-verification.md`.
 
-> **Arrivals:** 1 — `inbox-2026-09-r` (2026-09-06). First observation of this
+> **Arrivals:** 2 — latest `inbox-2026-09-ab` (2026-09-29); earlier:
+> `inbox-2026-09-r` (2026-09-06). First observation of this
 > shape at this scale; the counter exists so a second batch is recognisable as
 > a second rather than as eleven new things.
 
