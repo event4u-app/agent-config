@@ -19,6 +19,8 @@
  *   `unpicked-alternative`     "either X or Y", "option A … option B"
  *   `unchecked-assumption`     "assuming", "presumably", "probably fine"
  *   `missing-verify`           an open step with no `verify:` line
+ *   `unfalsifiable-verify`     a step WITH a `verify:` line whose oracle
+ *                              cannot say no
  *   `ambiguous-acceptance`     a vague acceptance criterion (improve / clean up
  *                              / best practices / handle errors properly)
  *   `contradictory`            "contradicts", "conflicts with", "but also"
@@ -35,12 +37,32 @@
  * Exit codes: 0 no open decisions · 1 open decisions found · 2 bad argv.
  * Finding open decisions is the POINT, so `--strict` is what makes exit 1 a
  * failure for a caller that wants one; the default is a report.
+ *
+ * ONE FAMILY IS A LISTING AND NEVER A GATE. `unfalsifiable-verify` exits 0
+ * unconditionally — under `--strict` too — and that is a property of the
+ * family, not a flag a caller can flip. The reason is the one this script's
+ * own header already records about a detector that fires on ordinary prose,
+ * sharpened by a measurement: on 2026-09-29 the active roadmap tree carried
+ * 230 clauses and 6 machine-decidable expectations — 97.4% of them state no
+ * oracle — so a family promoted to a gate would red all but a handful of
+ * roadmaps at once, and the cheapest repair for a gate that reds on
+ * everything is to weaken it until it finds nothing. The exemption is
+ * narrow: a `tbd` in the same corpus still goes red under `--strict`.
+ *
+ * The figure is the MEASURED one, not the commissioning roadmap's. That
+ * roadmap asserted zero expectations tree-wide; a reading refuted it — six
+ * exist, all six written before the grammar was legal, and three of them are
+ * that roadmap's own verify lines. The producing
+ * command is `./scripts-run src/scripts/roadmap_verify_share`, so the number
+ * above is re-derivable rather than remembered.
  */
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
+
+import { parseVerifyClause, type VerifyClause } from './_lib/verify_clause.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const _PROG = 'closure_scan';
@@ -50,6 +72,7 @@ export type Kind =
     | 'unpicked-alternative'
     | 'unchecked-assumption'
     | 'missing-verify'
+    | 'unfalsifiable-verify'
     | 'ambiguous-acceptance'
     | 'contradictory'
     | 'product-semantics'
@@ -74,6 +97,7 @@ export const OWNERSHIP_BY_KIND: Readonly<Record<Kind, string>> = {
     'unpicked-alternative': 'contested-technical',
     'unchecked-assumption': 'reversible-technical',
     'missing-verify': 'deterministic',
+    'unfalsifiable-verify': 'deterministic',
     'ambiguous-acceptance': 'reversible-technical',
     contradictory: 'contested-technical',
     'product-semantics': 'product-owned',
@@ -87,6 +111,73 @@ export const OWNER_ROUTED: ReadonlySet<string> = new Set([
     'business-owned',
     'destructive-owned',
 ]);
+
+/**
+ * Families that report and never gate — `--strict` cannot make these exit 1.
+ *
+ * A set rather than a flag, so the exemption is a property of the family that a
+ * caller cannot accidentally promote. See the header for the measurement that
+ * makes promotion a bad trade today.
+ */
+export const NON_BLOCKING_KINDS: ReadonlySet<Kind> = new Set<Kind>(['unfalsifiable-verify']);
+
+/**
+ * Command heads whose exit status is decided by something other than the
+ * property a step is claiming.
+ *
+ * Deliberately short. `echo`, `true` and `printf` cannot fail at all; `cat`,
+ * `ls`, `pwd` and `date` fail only on a missing path or a broken clock, never
+ * on the CONTENT a step asserts. Anything whose exit code already tracks the
+ * claim — `grep` (1 on no match), a linter, a test runner — is absent on
+ * purpose: including it would turn this listing into a census of every verify
+ * line in the tree, which is step 2.2's instrument, not this one.
+ */
+const FIXED_OUTPUT_HEADS: ReadonlySet<string> = new Set(['echo', 'true', 'printf', 'cat', 'ls', 'pwd', 'date']);
+
+/**
+ * Why this clause's oracle cannot say no — or `null` when it can.
+ *
+ * Three shapes, each one a way of carrying a `verify:` line that reads as
+ * verification and decides nothing.
+ *
+ * THE COUNT IS A LOWER BOUND, and saying so is the point. `scan()` assigns at
+ * most one kind per unit and the line patterns run first, so a step that also
+ * says "assuming", "merge" or "deploy" is claimed by the broader family and
+ * never reaches this one. Measured on 2026-09-29: 12 of 50 candidates were
+ * shadowed that way, so the published listing under-reports by roughly a
+ * quarter. A reader told a number and not told it is a floor would read the
+ * remainder as clean, which is the same mistake as reporting a share off a
+ * corpus nobody scanned.
+ */
+export function unfalsifiableReason(clause: VerifyClause): string | null {
+    if (clause.command === null) {
+        // A MANUAL clause asserting a QUANTITY nothing produced. Narrowed to a
+        // multi-digit number or an explicit `N of`/`N%` shape: a lone digit is
+        // usually a step id or an exit code being discussed, and firing on
+        // those would bury the real ones.
+        const quantity = /\b\d{2,}\b/.test(clause.raw) || /\b\d+\s*(?:%|of\b)/.test(clause.raw);
+        return quantity ? 'a manual clause asserts a quantity nothing here produces' : null;
+    }
+
+    const head = (clause.command.trim().split(/\s+/)[0] ?? '').split('/').pop() ?? '';
+    if (FIXED_OUTPUT_HEADS.has(head) && clause.expect?.kind !== 'regex') {
+        // A regex expectation rescues a fixed-output head: `cat f -> /x/` does
+        // decide something. An exit expectation does not — naming exit 0 on a
+        // command that cannot exit anything else adds a symbol, not an oracle.
+        return `the command head \`${head}\` produces a fixed result, so the clause cannot fail`;
+    }
+
+    if (clause.expect?.kind === 'regex') {
+        try {
+            if (new RegExp(clause.expect.source).test(clause.command)) {
+                return 'the expectation matches the command text, so an echo of the command satisfies it';
+            }
+        } catch {
+            // An expectation that cannot compile never became one upstream.
+        }
+    }
+    return null;
+}
 
 interface Pattern {
     readonly kind: Kind;
@@ -145,6 +236,17 @@ export interface Unit {
     /** 1-based line of the unit's first line. */
     readonly line: number;
     readonly text: string;
+    /**
+     * The same block with its NEWLINES intact.
+     *
+     * `text` is joined with spaces so a wrapped pattern still matches across
+     * the wrap, and that is right for the line patterns. It is wrong for the
+     * `verify:` clause: with no newline left, "to end of line" means "to end of
+     * the step", so a manual clause inherited every digit in the evidence block
+     * written under it. Measured before this field existed: 46 of 50
+     * `unfalsifiable-verify` hits fired on a quantity the clause never wrote.
+     */
+    readonly blockText: string;
     readonly inAcceptance: boolean;
     readonly isOpenStep: boolean;
     readonly hasVerify: boolean;
@@ -188,6 +290,7 @@ export function units(lines: readonly string[]): Unit[] {
                 // written with single spaces stops matching across the wrap —
                 // which is the case this unit exists to catch.
                 text: block.join(' ').replace(/\s+/g, ' '),
+                blockText: block.join('\n'),
                 inAcceptance,
                 isOpenStep: OPEN_STEP_RE.test(line),
                 hasVerify: /(?:^|\s)verify:/m.test(block.join('\n')),
@@ -198,6 +301,7 @@ export function units(lines: readonly string[]): Unit[] {
         out.push({
             line: i + 1,
             text: line,
+            blockText: line,
             inAcceptance,
             isOpenStep: false,
             hasVerify: false,
@@ -226,6 +330,14 @@ export function scan(text: string): Finding[] {
         // carry no verify line by design.
         if (matched === null && u.isOpenStep && !u.hasVerify && !u.inAcceptance) {
             matched = 'missing-verify';
+        }
+        // A step that HAS a verify line, whose oracle still cannot say no.
+        // Checked on closed steps too — a `[x]` flipped on a command that
+        // could not fail is the defect in its completed form, and restricting
+        // this to open steps would hide every instance that already landed.
+        if (matched === null && u.hasVerify && !u.inAcceptance) {
+            const clause = parseVerifyClause(u.blockText);
+            if (clause !== null && unfalsifiableReason(clause) !== null) matched = 'unfalsifiable-verify';
         }
         if (matched === null) continue;
         findings.push({
@@ -316,7 +428,9 @@ export function main(argv?: readonly string[]): number {
         }
     }
     if (!findings.length) return 0;
-    return strict ? 1 : 0;
+    // `--strict` goes red on the families that gate, never on the listing.
+    const blocking = findings.filter((f) => !NON_BLOCKING_KINDS.has(f.kind));
+    return strict && blocking.length > 0 ? 1 : 0;
 }
 
 function _isCliEntry(): boolean {
