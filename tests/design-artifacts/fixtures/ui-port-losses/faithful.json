@@ -1,0 +1,13 @@
+{
+  "_planted": "NOTHING IS PLANTED. This arm is the false-positive meter: every declared item is named exactly once, the rendered report is clean, and the written file is clean. A run that raises anything here has failed the fixture exactly as badly as one that misses a planted loss.",
+  "_expected_after": "success, zero findings, before and after every change",
+  "ui_apply": {
+    "rendered": { "panel.html": "Release notes" },
+    "files": ["tests/design-artifacts/fixtures/ui-port-losses/written/faithful/panel.html"],
+    "coverage": {
+      "honoured": ["tab", "disclosure toggle", "subscribe submit"],
+      "translated": ["rule-draw"],
+      "flagged": ["mark.svg"]
+    }
+  }
+}

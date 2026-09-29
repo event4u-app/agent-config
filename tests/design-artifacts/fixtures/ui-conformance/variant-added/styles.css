@@ -1,0 +1,27 @@
+/* Reference stylesheet. Every rule a variant removes carries the defect id it
+   becomes when removed, so a later reader can tell a planted defect from a bug
+   in the fixture. */
+:root { --brand: rgb(21, 94, 117); --ink: rgb(15, 23, 42); }
+body { margin: 0; font-family: system-ui, sans-serif; color: var(--ink); }
+.card { padding: 24px; max-width: 640px; }
+.toolbar { display: flex; flex-direction: row; align-items: center; gap: 12px; }
+.title { font-size: 20px; margin: 0; }
+.badge { background-color: var(--brand); color: rgb(255, 255, 255); padding: 2px 8px; }
+.body { line-height: 24px; }
+.action { background-color: var(--brand); color: rgb(255, 255, 255); border: 0; padding: 8px 16px; }
+
+/* D1 — variant-defects removes this rule: the hover affordance disappears while
+   the resting state stays byte-identical. */
+.action:hover { background-color: rgb(8, 51, 68); }
+
+.action:focus-visible { outline: rgb(234, 88, 12) solid 3px; outline-offset: 2px; }
+
+/* D2 — variant-defects removes this block: the toolbar never stacks at narrow
+   width. */
+@media (max-width: 480px) {
+  .toolbar { flex-direction: column; align-items: flex-start; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .action { transition-duration: 0s; }
+}

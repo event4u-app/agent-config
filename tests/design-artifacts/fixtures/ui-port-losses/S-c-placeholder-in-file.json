@@ -1,0 +1,13 @@
+{
+  "_planted": "S-c — the written file carries a placeholder string that `rendered` does not repeat. `rendered` is the porter's own report of what it wrote; the file is what it actually wrote. Today the scan reads the report, so a placeholder that never entered the report is invisible.",
+  "_expected_after": "blocked / apply_placeholders_in_output naming the written file",
+  "ui_apply": {
+    "rendered": { "panel.html": "Release notes" },
+    "files": ["tests/design-artifacts/fixtures/ui-port-losses/written/S-c/panel.html"],
+    "coverage": {
+      "honoured": ["tab", "disclosure toggle", "subscribe submit"],
+      "translated": ["rule-draw"],
+      "flagged": ["mark.svg"]
+    }
+  }
+}
