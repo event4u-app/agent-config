@@ -1,6 +1,11 @@
 ---
 model_tier: medium
 name: markitdown
+inputs:
+  - name: source
+    type: path
+    required: true
+    description: The file to convert — PDF, DOCX, XLSX, PPTX, EPUB, image or audio.
 description: "Convert PDF, DOCX, XLSX, PPTX, EPUB, images, or audio to Markdown via the markitdown-mcp server — 'extract this PDF', 'OCR this image', 'transcribe this audio'."
 status: active
 tier: senior
