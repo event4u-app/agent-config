@@ -41,6 +41,8 @@
 import path from 'node:path';
 import process from 'node:process';
 
+import { readHookStdin } from './hook_stdin.js';
+
 import { may_refuse_on } from '../_lib/obligation_frequency.js';
 import { appendShadow, readDelivered, readDischarged, stamp } from '../_lib/obligations.js';
 import { loadRouter, matchTierRules } from '../_lib/rule_injection.js';
@@ -142,9 +144,83 @@ export function shouldContinue(attempt: number): boolean {
     return attempt <= 1;
 }
 
+/**
+ * The session and root this reading is about, resolved the way the WRITER does.
+ *
+ * THE DEFECT THIS EXISTS TO CLOSE. This hook used to read
+ * `CLAUDE_CODE_SESSION_ID` out of the process environment and return allow when
+ * it was empty. The dispatcher sets no such variable — it hands each concern
+ * the envelope on stdin and `AGENT_CONFIG_PACKAGE_ROOT` in the environment,
+ * nothing else — so on every dispatched stop event the reader looked for a
+ * ledger under a key the writer never used. Measured 2026-09-29 on this
+ * machine's own ledgers: 187 delivered rows, 0 shadow rows, across 8 sessions.
+ *
+ * WHY THE ORDER IS ENVELOPE-THEN-ENVIRONMENT AND NOT THE REVERSE. The envelope
+ * id is the key `rule_inject_hook.ts` wrote the delivered rows under, so it is
+ * not merely the better source — it is the ONLY one that can find them. The
+ * environment fallback survives for a raw invocation that carries no envelope
+ * at all (a maintainer piping nothing, a host shim that skips the dispatcher),
+ * which is a case where guessing wrong costs a missing reading rather than a
+ * wrong one.
+ *
+ * THE ROOT IS PART OF THE SAME JOIN, not a second change riding along. A ledger
+ * is addressed by root AND session; reading the session from the envelope while
+ * taking the root from `process.cwd()` would leave the pair half-joined, and the
+ * two disagree exactly on the hosts whose shim does not chdir. `cwd` stays the
+ * fallback because that is what the dispatcher sets it to.
+ *
+ * Both spellings of each key are accepted because the injector accepts both.
+ */
+export function resolveSettleContext(
+    envelope: Record<string, unknown>,
+    payload: Record<string, unknown>,
+    env: Record<string, string | undefined>,
+): { root: string; session: string } {
+    const str = (...values: unknown[]): string => {
+        for (const v of values) {
+            if (typeof v === 'string' && v.trim() !== '') return v.trim();
+        }
+        return '';
+    };
+    return {
+        root: str(envelope['workspace_root'], envelope['workspace'], envelope['cwd']) || process.cwd(),
+        session: str(
+            envelope['session_id'],
+            envelope['sessionId'],
+            payload['session_id'],
+            payload['sessionId'],
+            // The one pre-existing source, kept as the last resort and NOT
+            // joined by siblings: adding a name the writer never keys on
+            // would address a ledger that cannot exist.
+            env['CLAUDE_CODE_SESSION_ID'],
+        ),
+    };
+}
+
+/** The envelope on stdin, or an empty object when there is none to read. */
+function readEnvelope(): { envelope: Record<string, unknown>; payload: Record<string, unknown> } {
+    let envelope: Record<string, unknown> = {};
+    try {
+        const raw = readHookStdin();
+        const parsed: unknown = raw.trim() === '' ? {} : JSON.parse(raw);
+        if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+            envelope = parsed as Record<string, unknown>;
+        }
+    } catch {
+        // A malformed envelope is not a reason to refuse, and this concern
+        // refuses nothing anyway. It is a reason to read nothing from it.
+    }
+    const nested = envelope['payload'];
+    const payload =
+        typeof nested === 'object' && nested !== null && !Array.isArray(nested)
+            ? (nested as Record<string, unknown>)
+            : envelope;
+    return { envelope, payload };
+}
+
 export function main(): number {
-    const root = process.cwd();
-    const session = (process.env['CLAUDE_CODE_SESSION_ID'] ?? '').trim();
+    const { envelope, payload } = readEnvelope();
+    const { root, session } = resolveSettleContext(envelope, payload, process.env);
     if (session === '') return EXIT_ALLOW;
 
     let verdict: SettleVerdict;

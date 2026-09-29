@@ -21,8 +21,11 @@ import {
     readShadow,
     stamp,
 } from '../../src/scripts/_lib/obligations.js';
+import { clearHookStdinOverride, setHookStdinOverride } from '../../src/scripts/hooks/hook_stdin.js';
 import {
     computeVerdict,
+    main as settleMain,
+    resolveSettleContext,
     shouldContinue,
     touchedPaths,
 } from '../../src/scripts/hooks/obligation_settle_hook.js';
@@ -232,4 +235,125 @@ describe('continuation is one aggregate per missing set, and exhaustion leaves i
     function appendShadowRow(missing: string[]): number {
         return appendShadow(root, 's1', missing);
     }
+});
+
+/**
+ * The join between the injector and this reader — `road-to-a-stop-that-holds` 3.1.
+ *
+ * The defect these tests reproduce: the injector keys its delivered rows on the
+ * DISPATCHER ENVELOPE's `session_id` (`rule_inject_hook.ts`, `str(env,
+ * 'session_id', 'sessionId')`), while this hook read `CLAUDE_CODE_SESSION_ID`
+ * out of the process environment and returned allow when it was empty — which
+ * the dispatcher never sets (`dispatch_hook.ts` hands each concern the envelope
+ * on stdin and `AGENT_CONFIG_PACKAGE_ROOT` in the environment, nothing else).
+ * So the reader looked for a ledger under a key the writer never used, and the
+ * measured consequence was 187 delivered rows against 0 shadow rows.
+ */
+describe('the settle hook resolves the session the way the injector does', () => {
+    const SESSION = 'sess-envelope-keyed';
+    let cwd = '';
+
+    function envelope(over: Record<string, unknown> = {}): string {
+        return JSON.stringify({
+            schema_version: 1,
+            event: 'stop',
+            session_id: SESSION,
+            workspace_root: root,
+            payload: {},
+            ...over,
+        });
+    }
+
+    /** A turn that wrote a UI file under an undischarged path-triggered rule. */
+    function seedUndischargedTurn(): void {
+        heredocWrite('components/Widget.tsx', 'export const Widget = () => null;');
+        appendDelivered(root, SESSION, [{ rule: 'ui-audit-gate', cls: 'hook', at: stamp() }]);
+    }
+
+    beforeEach(() => {
+        cwd = process.cwd();
+        process.chdir(root);
+        delete process.env['CLAUDE_CODE_SESSION_ID'];
+    });
+
+    afterEach(() => {
+        clearHookStdinOverride();
+        process.chdir(cwd);
+    });
+
+    it('REPRODUCES the zero-shadow defect: env-only resolution finds no ledger', () => {
+        // The pre-fix behavior, pinned as a fixture rather than described: a
+        // session id that reaches the hook ONLY through the envelope is what
+        // every dispatched stop event actually looks like.
+        seedUndischargedTurn();
+        expect(process.env['CLAUDE_CODE_SESSION_ID']).toBeUndefined();
+        expect(resolveSettleContext({}, {}, {}).session).toBe('');
+        expect(readShadow(root, SESSION)).toHaveLength(0);
+    });
+
+    it('writes a shadow row for an envelope-keyed session', () => {
+        seedUndischargedTurn();
+        setHookStdinOverride(envelope());
+        expect(settleMain()).toBe(0);
+        const rows = readShadow(root, SESSION);
+        expect(rows).toHaveLength(1);
+        expect(rows[0]?.missing).toContain('ui-audit-gate');
+    });
+
+    it('reads `sessionId` too, the spelling the injector also accepts', () => {
+        seedUndischargedTurn();
+        setHookStdinOverride(
+            JSON.stringify({ event: 'stop', sessionId: SESSION, workspace_root: root, payload: {} }),
+        );
+        expect(settleMain()).toBe(0);
+        expect(readShadow(root, SESSION)).toHaveLength(1);
+    });
+
+    it('reads the nested payload when the envelope itself carries no id', () => {
+        seedUndischargedTurn();
+        setHookStdinOverride(
+            JSON.stringify({ event: 'stop', workspace_root: root, payload: { session_id: SESSION } }),
+        );
+        expect(settleMain()).toBe(0);
+        expect(readShadow(root, SESSION)).toHaveLength(1);
+    });
+
+    it('keeps the env variable as a FALLBACK, not as the primary', () => {
+        // Order matters: an envelope id must win, because that is the key the
+        // writer used. The env var survives only for a raw invocation that
+        // carries no envelope at all.
+        seedUndischargedTurn();
+        process.env['CLAUDE_CODE_SESSION_ID'] = 'some-other-session';
+        try {
+            setHookStdinOverride(envelope());
+            expect(settleMain()).toBe(0);
+            expect(readShadow(root, SESSION)).toHaveLength(1);
+            expect(readShadow(root, 'some-other-session')).toHaveLength(0);
+        } finally {
+            delete process.env['CLAUDE_CODE_SESSION_ID'];
+        }
+    });
+
+    it('resolves the root from the envelope, falling back to the cwd', () => {
+        expect(resolveSettleContext({ workspace_root: root }, {}, {}).root).toBe(root);
+        expect(resolveSettleContext({}, {}, {}).root).toBe(process.cwd());
+    });
+
+    it('still allows when nothing anywhere names a session', () => {
+        seedUndischargedTurn();
+        setHookStdinOverride(JSON.stringify({ event: 'stop', payload: {} }));
+        expect(settleMain()).toBe(0);
+        expect(readShadow(root, SESSION)).toHaveLength(0);
+    });
+
+    it('writes no row when the delivered obligation WAS discharged', () => {
+        heredocWrite('components/Widget.tsx', 'export const Widget = () => null;');
+        appendDelivered(root, SESSION, [{ rule: 'ui-audit-gate', cls: 'hook', at: stamp() }]);
+        appendDischarge(root, SESSION, [
+            { rule: 'ui-audit-gate', by: 'test', at: stamp() },
+        ]);
+        setHookStdinOverride(envelope());
+        expect(settleMain()).toBe(0);
+        expect(readShadow(root, SESSION)).toHaveLength(0);
+    });
 });
