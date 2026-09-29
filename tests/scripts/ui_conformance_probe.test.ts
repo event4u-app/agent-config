@@ -28,6 +28,12 @@ import {
     readObservation,
     unavailableArtefact,
 } from '../../src/scripts/ui_conformance_probe.js';
+import {
+    INPUTS_SCHEMA,
+    INPUT_KEYS,
+    PROBE_VERSION,
+    compareInputs,
+} from '../../src/scripts/_lib/probe_inputs.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..', '..');
@@ -179,5 +185,53 @@ describe('ui_conformance_probe — the frozen records are still true', () => {
         // was asked and answered. In CI this is false and the block above is
         // skipped; the frozen records still carry the detection assertions.
         expect(typeof live).toBe('boolean');
+    });
+});
+
+describe('the artefact knows what it read — Phase 1', () => {
+    it('every artefact carries an inputs block with all three keys', () => {
+        const artefact = evaluate(reference(), defects(), declarations());
+        expect(artefact.inputs.schema).toBe(INPUTS_SCHEMA);
+        expect(artefact.inputs.probe).toBe(PROBE_VERSION);
+        for (const key of INPUT_KEYS) {
+            // A silently missing key is the failure 1.2 exists to prevent, so
+            // presence is asserted per key rather than by a whole-shape match.
+            expect(artefact.inputs[key], `inputs.${key}`).toBeDefined();
+            expect(artefact.inputs[key].state).toMatch(/^(read|absent)$/);
+        }
+        expect(artefact.inputs.target.digest).toMatch(/^sha256:/);
+        expect(artefact.inputs.reference.digest).toMatch(/^sha256:/);
+    });
+
+    it('two evaluations over unchanged inputs agree on every digest', () => {
+        // `generated_at` differs between the two and the digests must not — that
+        // separation is the whole reason for recording both.
+        const a = evaluate(reference(), defects(), declarations());
+        const b = evaluate(reference(), defects(), declarations());
+        // Presence asserted before equality. A sensitivity probe that deleted the
+        // block entirely left this test GREEN without it — `undefined` equals
+        // `undefined` — which made the assertion true and worthless.
+        expect(a.inputs).toBeDefined();
+        expect(a.inputs).toStrictEqual(b.inputs);
+    });
+
+    it('the degraded artefact records its inputs too, rather than omitting them', () => {
+        // An artefact with no inputs block reads to the design-pass hook as a
+        // version skew, which is a weaker and different statement than "this
+        // host could not run a browser".
+        const a = unavailableArtefact(
+            path.relative(ROOT, path.join(FIXTURE, 'variant-defects', 'index.html')),
+            'no browser on this host',
+        );
+        for (const key of INPUT_KEYS) expect(a.inputs[key], `inputs.${key}`).toBeDefined();
+        expect(a.inputs.reference.state).toBe('absent');
+        expect(a.inputs.reference.reason).toBeTruthy();
+    });
+
+    it('the reader can compare the block the probe just wrote', () => {
+        // Producer and consumer in one assertion: a round trip through the real
+        // comparison, not a hand-built fixture that only resembles one.
+        const artefact = evaluate(reference(), defects(), declarations());
+        expect(compareInputs(artefact.inputs, (p) => p).verdict).toBe('unchanged');
     });
 });
