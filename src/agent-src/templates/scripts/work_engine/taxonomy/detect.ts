@@ -68,28 +68,62 @@ export const NO_TAXONOMY = 'none';
 /**
  * Granularity words used to RECOGNISE a tier name — never to prescribe one.
  *
- * Unordered by construction (a `Set`), drawn from several vocabularies rather
- * than one, and read at exactly one place: {@link _infer_tiers}. It carries no
- * ordering, no level, no cap and no placement rule, and it is not consulted
- * when a component is placed. A project is free to use names that appear
- * nowhere here — it declares them, and the declaration wins.
+ * Drawn from several vocabularies rather than one, and read at exactly one
+ * place: {@link _infer_tiers}, which calls `.has()` and nothing else. It
+ * carries no level, no cap and no placement rule, and it is not consulted when
+ * a component is placed. A project is free to use names that appear nowhere
+ * here — it declares them, and the declaration wins.
+ *
+ * **Held ALPHABETICALLY, and that is load-bearing rather than tidy.** A
+ * JavaScript `Set` iterates in INSERTION order, so "it is a Set" proves
+ * nothing about ordering — an earlier draft of this file claimed exactly that
+ * while the first five entries were one vocabulary's five levels in their own
+ * sequence. Alphabetical order cannot be a level sequence, it is checkable,
+ * and a test asserts it. Iteration order is still never read for a decision.
  */
-export const GRANULARITY_LEXICON: ReadonlySet<string> = new Set([
+const _LEXICON_WORDS: ReadonlyArray<string> = [
     'atom',
+    'block',
+    'cell',
+    'composite',
+    'element',
+    'layout',
     'molecule',
     'organism',
-    'template',
     'page',
-    'primitive',
-    'element',
-    'block',
-    'pattern',
-    'layout',
-    'composite',
-    'widget',
     'part',
     'particle',
-    'cell',
+    'pattern',
+    'primitive',
+    'template',
+    'widget',
+];
+
+export const GRANULARITY_LEXICON: ReadonlySet<string> = new Set(_LEXICON_WORDS);
+
+/**
+ * Sibling folders that hold no components of their own tier.
+ *
+ * Excluded from the majority DENOMINATOR, never from the matches. A project
+ * that keeps `hooks/`, `utils/` and `types/` next to its tiers has not stopped
+ * using its tiers, but {@link COMPONENT_SUFFIXES} includes `.ts`, so those
+ * folders read as buckets and drag the share down: `atoms / molecules /
+ * organisms / hooks / utils / types` measured 3 of 6 and recorded `none`.
+ * Three ordinary sibling folders were enough to suppress a real taxonomy.
+ */
+export const SUPPORT_BUCKETS: ReadonlySet<string> = new Set([
+    'constant',
+    'context',
+    'helper',
+    'hook',
+    'icon',
+    'lib',
+    'provider',
+    'store',
+    'style',
+    'test',
+    'type',
+    'util',
 ]);
 
 /** Fewest tiers that can evidence a taxonomy. One name is a coincidence. */
@@ -98,11 +132,20 @@ export const MIN_TIERS = 2;
 /**
  * Share of a component root's buckets that must be tier-shaped to infer one.
  *
- * Strictly above one half on purpose: at exactly half, a project split evenly
- * between domain folders and granularity-sounding folders would read as a
- * taxonomy, and Phase 2 would then start placing components into it.
+ * **Above two thirds, which is a measurement rather than a preference.** It
+ * sat at 0.6, and at 0.6 the ordinary kind-split `components/{layout, pages,
+ * forms}` measured 2 of 3 = 0.67 and was recorded as the taxonomy
+ * `layout/pages` — every `forms` component then a conformance gap, on a
+ * project that never chose a taxonomy at all. That is this roadmap's
+ * highest-ranked risk happening, so the floor is set above the 2-of-3 ratio
+ * that produced it. `layout`, `page`, `block`, `element`, `part` and `cell`
+ * are all ordinary folder names as well as granularity words, which is why a
+ * bare share is not enough on its own and {@link SUPPORT_BUCKETS} exists.
+ *
+ * It is NOT set higher: `atoms / molecules / organisms` beside one support
+ * folder is 3 of 4 = 0.75 and must still be found.
  */
-export const TIER_MAJORITY = 0.6;
+export const TIER_MAJORITY = 0.7;
 
 /** Directory names searched, in order, for the project's component root. */
 export const COMPONENT_ROOT_CANDIDATES: ReadonlyArray<string> = [
@@ -116,7 +159,12 @@ export const COMPONENT_ROOT_CANDIDATES: ReadonlyArray<string> = [
     'components',
 ];
 
-/** Docs read for a declared convention, in order; first hit wins. */
+/**
+ * Docs read for a declared convention, in order; the first QUALIFYING one wins.
+ *
+ * A doc with no `## Component taxonomy` section, or one naming fewer than
+ * {@link MIN_TIERS} tiers that exist on disk, falls through to the next.
+ */
 export const DECLARATION_DOCS: ReadonlyArray<string> = [
     'DESIGN.md',
     'docs/DESIGN.md',
@@ -146,7 +194,15 @@ export interface TaxonomyResult {
      * — the project's own tiers joined with `/`, or {@link NO_TAXONOMY}.
      */
     taxonomy: string;
-    /** The same tiers as a list, in the project's own order. */
+    /**
+     * The same tiers as a list.
+     *
+     * `declared` carries the DOCUMENT's order, which is the project's own.
+     * `inferred` carries alphabetical order, because bucket names arrive
+     * sorted and no filesystem fact states a level sequence. It reads as one
+     * for `atoms/molecules/organisms` by coincidence and would not for
+     * `pages/templates/organisms`. Nothing downstream reads the order.
+     */
     tiers: string[];
     /** Component root relative to the project root, or `null` when none. */
     component_root: string | null;
@@ -196,8 +252,12 @@ export function detect_component_taxonomy(project_root: string): TaxonomyResult 
         return _none([...evidence, 'component root unreadable'], component_root);
     }
 
+    // `_declared_tiers` already applies the MIN_TIERS floor and returns `[]`
+    // below it, so re-testing the floor here would be a second copy of one
+    // invariant — the shape this branch removed from `apply.ts` for masking a
+    // regression in its own sibling. One owner; this asks only "was there one".
     const declared = _declared_tiers(project_root, buckets, evidence);
-    if (declared.length >= MIN_TIERS) {
+    if (declared.length > 0) {
         return {
             taxonomy: declared.join('/'),
             tiers: declared,
@@ -311,7 +371,10 @@ function _declared_tiers(
             // prose sentence is a mention — the `legacy` fixture says in prose
             // that it is NOT a tier, and a parser that scanned the whole
             // section would enrol it on the strength of the backticks alone.
-            const item = /^\s*(?:[-*+]|\d+[.)])\s+`([^`\n]+)`/u.exec(line);
+            // `**` / `__` may lead the name: `- **\`alpha\`** — ...` is a
+            // completely ordinary way to write this list, and a regex that
+            // demanded the backtick lead dropped it silently.
+            const item = /^\s*(?:[-*+]|\d+[.)])\s+(?:\*\*|__)?`([^`\n]+)`/u.exec(line);
             if (item === null) continue;
             const name = (item[1] ?? '').trim();
             // Grounded against the tree: a declaration cannot conjure a tier
@@ -366,17 +429,24 @@ function _infer_tiers(buckets: string[], evidence: string[]): string[] {
         return [];
     }
     const matched = buckets.filter((b) => GRANULARITY_LEXICON.has(_singular(b)));
-    const share = matched.length / buckets.length;
+    const counted = buckets.filter((b) => !SUPPORT_BUCKETS.has(_singular(b)));
+    if (counted.length === 0) {
+        evidence.push('every bucket is a support folder — no tiers to weigh');
+        return [];
+    }
+    const share = matched.length / counted.length;
     if (matched.length < MIN_TIERS || share < TIER_MAJORITY) {
         evidence.push(
-            `${matched.length} of ${buckets.length} buckets carry granularity names ` +
-                `(need >= ${MIN_TIERS} and >= ${Math.round(TIER_MAJORITY * 100)}%) — ` +
+            `${matched.length} of ${counted.length} weighed buckets carry granularity ` +
+                `names (need >= ${MIN_TIERS} and >= ${Math.round(TIER_MAJORITY * 100)}%; ` +
+                `${buckets.length - counted.length} support folder(s) not weighed) — ` +
                 'reads as domain folders, not a taxonomy',
         );
         return [];
     }
     evidence.push(
-        `${matched.length} of ${buckets.length} buckets carry granularity names — ` +
+        `${matched.length} of ${counted.length} weighed buckets carry granularity ` +
+            `names (${buckets.length - counted.length} support folder(s) not weighed) — ` +
             'inferred from layout',
     );
     return matched;
@@ -398,4 +468,33 @@ function _singular(name: string): string {
 function _display(p: string): string {
     const base = path.basename(p);
     return base === '' ? p : base;
+}
+
+/**
+ * CLI entry: print the detection result for a project root as JSON.
+ *
+ * `existing-ui-audit` § 1b tells the agent to RUN this file, so it has to be
+ * runnable. Without this block `npx tsx .../detect.ts` exited 0 and printed
+ * nothing, and an agent following the instruction literally got silence and
+ * then had to invent the two state keys the audit is supposed to record.
+ *
+ * ```bash
+ * npx tsx scripts/work_engine/taxonomy/detect.ts [--root <dir>]
+ * ```
+ *
+ * Defaults to the process CWD. Exits 0 whichever answer it reaches: `none` is
+ * a real answer here, not a failure, and an exit code that said otherwise
+ * would push a caller toward treating a no-taxonomy project as an error.
+ */
+export function main(argv: ReadonlyArray<string>): number {
+    const at = argv.indexOf('--root');
+    const root = at !== -1 && at + 1 < argv.length ? (argv[at + 1] as string) : process.cwd();
+    process.stdout.write(`${JSON.stringify(detect_component_taxonomy(root), null, 2)}\n`);
+    return 0;
+}
+
+// Only when this module is the process entry, never on import. tsx sets
+// `import.meta.url` to the entry file URL.
+if (import.meta.url === `file://${process.argv[1]}`) {
+    process.exitCode = main(process.argv.slice(2));
 }

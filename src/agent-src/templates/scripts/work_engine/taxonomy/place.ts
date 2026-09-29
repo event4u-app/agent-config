@@ -1,8 +1,9 @@
 /**
  * Placing a new component inside the taxonomy a project already chose.
  *
- * Leaf module — stdlib-free, NO intra-`work_engine` imports beyond its sibling
- * detector's `NO_TAXONOMY` constant. Public API names stay snake_case to
+ * Leaf module — no intra-`work_engine` imports beyond its sibling detector's
+ * `NO_TAXONOMY` constant. That one import does pull `node:fs` in transitively;
+ * "stdlib-free" was the old wording here and it was simply wrong. Public API names stay snake_case to
  * mirror the sibling detectors 1:1, per ADR-200.
  *
  * The contract, and the reason it is this small: placement reads the RECORDED
@@ -47,7 +48,19 @@ export interface PlacementPlan {
 }
 
 /** Component root used when the audit recorded none. */
-export const DEFAULT_COMPONENT_ROOT = 'src/components';
+/**
+ * Gap reported when a taxonomy is recorded without the root it lives under.
+ *
+ * Guessing `src/components` here is the same failure as placing a component in
+ * a tier the project does not have, at the other end of the path: a project
+ * rooted at `app/components` or `resources/js/components` — both of which the
+ * detector searches — would have been handed a directory that does not exist,
+ * with no gap and no warning. This module exists so nothing is placed
+ * somewhere the project did not choose, so it says so instead.
+ */
+export const MISSING_ROOT_GAP =
+    'the audit recorded a taxonomy but no `component_root`, so there is no ' +
+    'directory to place into — re-run the audit, or record the root by hand';
 
 /**
  * Plan where each requested component belongs under a recorded taxonomy.
@@ -63,11 +76,14 @@ export function plan_component_placement(
     components: ReadonlyArray<ComponentRequest>,
 ): PlacementPlan[] {
     const tiers = read_tiers(taxonomy);
-    const root = _trim_slashes(component_root) || DEFAULT_COMPONENT_ROOT;
+    const root = _trim_slashes(component_root);
     return components.map((component) => {
         const name = _text(component.name) || '(unnamed)';
         if (tiers.length === 0) {
             return { name, tier: null, directory: null, gap: null };
+        }
+        if (root === '') {
+            return { name, tier: null, directory: null, gap: `\`${name}\` — ${MISSING_ROOT_GAP}` };
         }
         const hint = _text(component.tier);
         if (hint === '') {
@@ -97,10 +113,20 @@ export function plan_component_placement(
     });
 }
 
-/** Split a recorded taxonomy value into the project's own tier names. */
+/**
+ * Split a recorded taxonomy value into the project's own tier names.
+ *
+ * **The sentinel comparison is case-insensitive, and that is not politeness.**
+ * This field is written by an agent following `existing-ui-audit` § 1b, so
+ * `'None'` is reachable, and an exact comparison let it through as a
+ * one-element tier list: a project with no taxonomy then got a "conforming to
+ * `None`" banner and a conformance gap per component — precisely the output
+ * AC-2 forbids. It is the one guard standing between a no-taxonomy project and
+ * a changed authoring step, so it refuses every spelling of the sentinel.
+ */
 export function read_tiers(taxonomy: string): string[] {
     const value = _text(taxonomy);
-    if (value === '' || value === NO_TAXONOMY) {
+    if (value === '' || value.toLowerCase() === NO_TAXONOMY) {
         return [];
     }
     return value
@@ -123,10 +149,11 @@ export function conformance_lines(
     if (read_tiers(taxonomy).length === 0) {
         return [];
     }
-    const root = _trim_slashes(component_root) || DEFAULT_COMPONENT_ROOT;
+    const root = _trim_slashes(component_root);
+    const under = root === '' ? 'an unrecorded component root' : `\`${root}/\``;
     const lines: string[] = [
         `> Conforming to the project's own component taxonomy ` +
-            `\`${taxonomy}\` under \`${root}/\` — detected, not imposed. ` +
+            `\`${taxonomy}\` under ${under} — detected, not imposed. ` +
             'A component that fits no tier is reported, never relocated.',
     ];
     for (const plan of plans) {

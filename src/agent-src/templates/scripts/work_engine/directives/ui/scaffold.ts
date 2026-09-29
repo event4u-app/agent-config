@@ -42,6 +42,7 @@ import {
     StepResult,
     agent_directive,
 } from '../../delivery_state.js';
+import { GRANULARITY_CONVENTION } from '../../state.js';
 
 /**
  * Conventional locations for a project's DTCG `tokens.json`.
@@ -313,7 +314,7 @@ function _is_greenfield_scaffold(state: DeliveryState): boolean {
     return (
         audit['greenfield'] === true &&
         (audit['greenfield_decision'] === 'scaffold' ||
-            audit['greenfield_decision'] === 'granularity_convention')
+            audit['greenfield_decision'] === GRANULARITY_CONVENTION)
     );
 }
 

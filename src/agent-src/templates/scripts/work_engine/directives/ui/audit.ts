@@ -22,16 +22,16 @@ import {
 /**
  * The greenfield pick that adopts a component-granularity convention.
  *
- * Offered only on the greenfield halt, and only as an OFFER: a project that
- * already exists is never asked, and a user who picks any other number has
- * declined it for good — the halt is a no-op once a decision is recorded, so
- * declining costs one number and is never raised again.
+ * Re-exported from the schema, which owns it beside `GREENFIELD_DECISIONS` —
+ * an option the user can pick that the schema then rejects is a halt with a
+ * dead exit, so the two cannot be allowed to drift.
  *
- * Must appear in the schema's `GREENFIELD_DECISIONS`; a test pins the two
- * together, because an option the user can pick that the schema then rejects
- * is a halt with a dead exit.
+ * Offered only here, and only as an OFFER: a project that already exists is
+ * never asked, and a user who picks any other number has declined it for good
+ * — the halt is a no-op once a decision is recorded, so declining costs one
+ * number and is never raised again.
  */
-export const GRANULARITY_CONVENTION = 'granularity_convention';
+export { GRANULARITY_CONVENTION } from '../../state.js';
 
 /** Similarity threshold for a "strong reusable match". */
 export const STRONG_SIMILARITY = 0.7;
@@ -228,7 +228,8 @@ function _halt_greenfield(state: DeliveryState, audit: Record<string, Any>): Ste
         questions,
         message:
             'UI audit detected greenfield; halting for scaffolding ' +
-            'direction (scaffold / bare / external_reference).',
+            'direction (scaffold / bare / external_reference / ' +
+            'granularity_convention).',
     });
 }
 

@@ -43,7 +43,12 @@
  * - `ui_design` — optional design brief produced by
  *   `work_engine.directives.ui.design` (R3 Phase 3 Step 1). Locks
  *   layout / components / states / microcopy / a11y; `design_confirmed`
- *   carries the user's sign-off.
+ *   carries the user's sign-off. A `components[]` entry MAY carry a
+ *   `tier` naming one of `ui_audit.component_taxonomy`'s tiers; the
+ *   apply step reads it to name the target directory, and it is the
+ *   only producer of that field. Omit it and the component is
+ *   reported as a conformance gap rather than placed, which is the
+ *   honest answer when nothing said where it belongs.
  * - `ui_scaffold` — optional greenfield scaffold plan written by
  *   `work_engine.directives.ui.scaffold` (greenfield-scaffold
  *   Phase 3). Plan-only and stack-agnostic
@@ -175,7 +180,6 @@ export const KNOWN_DIRECTIVE_SETS: ReadonlySet<string> = new Set([
     'mixed',
 ]);
 
-/** Raised when a state payload violates the v1 contract. */
 /**
  * Every value `state.ui_audit.greenfield_decision` may carry.
  *
@@ -195,6 +199,19 @@ export const GREENFIELD_DECISIONS: ReadonlyArray<string> = [
     'granularity_convention',
 ];
 
+/**
+ * The greenfield pick that adopts a component-granularity convention.
+ *
+ * Exported HERE, beside the list it belongs to, and imported by every gate
+ * that tests for it — the audit halt that offers it, and the scaffold and
+ * app-spec gates that must let it through. It was a bare string literal in
+ * four places; a rename would have left those gates silently not matching,
+ * and an inert scaffold gate returns SUCCESS, so picking option 4 would have
+ * scaffolded nothing with no error anywhere.
+ */
+export const GRANULARITY_CONVENTION = 'granularity_convention';
+
+/** Raised when a state payload violates the v1 contract. */
 export class SchemaError extends Error {
     constructor(message: string) {
         super(message);
@@ -557,7 +574,7 @@ function _validate_stack(stack: JsonValue): void {
  * skill returns but before findings land; the gate treats it the
  * same as `null`. Once populated, `greenfield` (when present)
  * must be a bool, and `greenfield_decision` (when present) must
- * be one of the three documented choices. Other keys (`components`,
+ * be one of `GREENFIELD_DECISIONS`. Other keys (`components`,
  * `patterns`, ...) are validated by the audit handler against the
  * skill contract — the schema only enforces shape, not content.
  */
