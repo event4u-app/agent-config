@@ -453,6 +453,33 @@ false at the merge base** — a merge had brought in one more switch — so
 `check_kill_switch_table` now compares the two sets on every run rather than a
 reader recounting by hand.
 
+## Cost this branch added, measured rather than asserted
+
+**The hook-latency gate's `pre_tool_use` cap is red on this branch's CI, and the
+budget's own `revisit_if` trigger has fired.** Recorded here and in
+`src/config/hook-latency-budget.json` because that budget was pre-registered
+precisely so it could not be spent silently.
+
+- Three consecutive CI runs: p50 **172 / 175 / 176 ms**, p95 **179 / 176 / 176
+  ms** against a 175 ms cap. The budget's `revisit_if` reads *"the p50 — not the
+  p95 — of a green run rises above 160 ms"*, and the historical p50 range it
+  cites is 111-148. So this is not simply runner variance by the file's own
+  discriminator.
+- **What this branch contributed**: `npm run build:hooks` produces 1,443,442
+  bytes here against 1,424,332 at the merge base — **+19,110 B, +1.34%**. Every
+  concern shares one bundle, so that is paid by every slot including
+  `pre_tool_use`, which none of this branch's six changed files is bound on. At
+  ~149 ms of non-spawn work the proportional share is **~2 ms**: real, and far
+  short of the 24-64 ms by which the p50 exceeds its historical range. The
+  branch is a contributor, not the cause.
+- **`--legal-comments=none` was measured as a mitigation and recovers 635
+  bytes.** The growth is code, not prose, so it cannot be given back without
+  removing the feature.
+- **The cap is NOT raised.** The budget block states that raising it again
+  without a measured distribution beside it is the config-bending the block
+  exists to make visible. Its own routing sends a fired trigger to
+  `road-to-per-turn-hook-economy` D-2 and to the maintainer.
+
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-29 | reviewer: claude/host -->
 
