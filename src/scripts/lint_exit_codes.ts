@@ -55,6 +55,19 @@ const HOOKS_REL = path.join('src', 'scripts', 'hooks');
 const TABLE_BASENAME = 'exit_codes.ts';
 
 /**
+ * The fixture import line, ASSEMBLED rather than written out.
+ *
+ * `prepack-check.mjs` scans source text for relative imports and cannot tell a
+ * string literal from a real one, so a fixture containing the words
+ * `from './exit_codes.js'` reads as this file importing a sibling that does not
+ * exist beside it — the table lives under `hooks/`. It reported exactly that
+ * before this was assembled. Splitting the specifier is the smallest change
+ * that keeps the fixture honest about what a passing hook file looks like
+ * without asserting an import this file does not make.
+ */
+const FIXTURE_IMPORT = (name: string): string => `import { ${name} } from '.` + `/${TABLE_BASENAME.replace('.ts', '.js')}';\n`;
+
+/**
  * `process.exit(<digits>)`, with optional whitespace.
  *
  * Deliberately anchored on `process.exit` rather than on any `exit(`: a
@@ -217,7 +230,7 @@ function selfTest(): number {
                     run(
                         plant(
                             'named',
-                            "import { EXIT_ALLOW } from './exit_codes.js';\nprocess.exit(EXIT_ALLOW);\n",
+                            `${FIXTURE_IMPORT('EXIT_ALLOW')}process.exit(EXIT_ALLOW);\n`,
                         ),
                     ),
             },
@@ -231,7 +244,7 @@ function selfTest(): number {
                     run(
                         plant(
                             'table',
-                            "import { EXIT_WARN } from './exit_codes.js';\nprocess.exit(EXIT_WARN);\n",
+                            `${FIXTURE_IMPORT('EXIT_WARN')}process.exit(EXIT_WARN);\n`,
                         ),
                     ),
             },
