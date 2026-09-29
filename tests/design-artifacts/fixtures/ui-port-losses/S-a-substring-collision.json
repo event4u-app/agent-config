@@ -1,0 +1,13 @@
+{
+  "_planted": "S-a — the declared interaction `tab` is accounted for by nothing. Its only match is the substring collision inside the unrelated entry `table sort order — honoured`, because \"table sort order\".includes(\"tab\") is true. Every other declared item is named exactly, so this arm isolates one gap and one only.",
+  "_expected_after": "blocked / apply_coverage_missing naming `interactions`: `tab`",
+  "ui_apply": {
+    "rendered": { "panel.html": "Release notes" },
+    "files": ["tests/design-artifacts/fixtures/ui-port-losses/written/faithful/panel.html"],
+    "coverage": {
+      "honoured": ["table sort order — honoured", "disclosure toggle", "subscribe submit"],
+      "translated": ["rule-draw"],
+      "flagged": ["mark.svg"]
+    }
+  }
+}

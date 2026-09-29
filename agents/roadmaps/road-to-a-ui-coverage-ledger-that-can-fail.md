@@ -45,7 +45,7 @@ and by a pre-registered count of what today's gates catch, recorded before any g
 
 ## Phase 1 — A fixture at the scale where ports lose things, and today's catch count first
 
-- [ ] **1.1 Build a port fixture with four planted losses** under
+- [x] **1.1 Build a port fixture with four planted losses** under
       `tests/design-artifacts/fixtures/ui-port-losses/`: `S-a` a declared item whose only
       "coverage" is a short-name substring collision (`nav` covered by `canvas`), `S-b` every
       declared item placed in `flagged`, `S-c` a lorem string in a written file that
@@ -53,9 +53,49 @@ and by a pre-registered count of what today's gates catch, recorded before any g
       Content entirely invented — no project or company material.
       verify: a test asserts each of the four arms exists and that each planted loss carries the
       marker comment naming it.
-- [ ] **1.2 Record what today's gates catch, before changing any of them.**
+      Done 2026-09-29. Four arms + `_artifact.json` + `written/` + `probe.ts` + `README.md`
+      under `tests/design-artifacts/fixtures/ui-port-losses/`; registered as `daf-port-losses`
+      in `eval-fixtures.md` (`lint_eval_fixture_citations` → `40 fixture id(s), all cited.`).
+      Test `tests/scripts/work_engine/ui_port_losses.test.ts`, 4 tests green: each arm carries a
+      `_planted` marker (the JSON form of the marker comment), the S-c written file carries the
+      comment `PLANTED LOSS S-c` at the planted line, and the faithful arm's marker reads
+      `NOTHING IS PLANTED`. **Sensitivity proven:** `_planted` deleted from `S-a` and its
+      collision entry shortened to `sort order — honoured` → exactly the two expected tests
+      failed (`has no _planted marker`; `expected false to be true` on the collision
+      assertion), 2 failed / 2 passed; restored from `/tmp` copy, 4/4 green again.
+      · **FINDING — the step's own illustration does not reproduce.** `"canvas".includes("nav")`
+      is **false**: `canvas` yields `can`, `anv`, `nva`, `vas`, and no `nav`. Written as
+      specified, `S-a` would have been an ordinary uncovered item that today's containment
+      matching already catches, so the arm would have measured nothing. Measurement unit
+      published before the substitute: a collision is a pair `(item, entry)` where
+      `entry.toLowerCase().includes(item.toLowerCase())` is true and
+      `entry.toLowerCase() === item.toLowerCase()` is false. Substitute used: `tab` inside
+      `table sort order`. Both limbs are asserted in the test rather than described in prose,
+      and the roadmap's own pair is pinned there as `expect('canvas'.includes('nav')).toBe(false)`
+      so the finding cannot quietly decay. No figure from the original illustration is carried
+      forward.
+- [x] **1.2 Record what today's gates catch, before changing any of them.**
       verify: the fixture README records `caught N of 3` with the exact command that produced it,
       committed in this phase's change so the first-add ancestry is checkable.
+      Done 2026-09-29. `README.md` § Pre-registered catch count carries the command and its
+      verbatim output, and the test asserts both strings are present so the number cannot be
+      edited out of the README without a red.
+
+      ```
+      $ npx tsx tests/design-artifacts/fixtures/ui-port-losses/probe.ts
+      S-a  MISS   outcome=success
+      S-b  MISS   outcome=success
+      S-c  MISS   outcome=success
+      caught 0 of 3
+      faithful arm: 0 false red(s), outcome=success
+      ```
+
+      **caught 0 of 3** — not a weak signal but no signal: all three arms return `success`.
+      Recorded in the same commit that first adds the directory, checkable with
+      `git log --diff-filter=A -- tests/design-artifacts/fixtures/ui-port-losses/`. The probe's
+      catch predicates are deliberately phrased over what reached the operator (outcome plus
+      emitted text) rather than over a code path, so the identical command is runnable before
+      and after and the two numbers are comparable.
 
 ## Phase 2 — An id, not a substring
 
