@@ -47,12 +47,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { EDIT_TOOLS } from '../minimal_safe_diff_hook.js';
 import { readHookStdin } from './hook_stdin.js';
+import { EXIT_ALLOW, EXIT_BLOCK, EXIT_WARN } from './exit_codes.js';
 
 const _HERE = fileURLToPath(import.meta.url);
-
-const EXIT_ALLOW = 0;
-const EXIT_BLOCK = 1;
-const EXIT_WARN = 2;
 
 /**
  * The stated cap from `autonomous-execution` § Antipattern. Crossing it in one

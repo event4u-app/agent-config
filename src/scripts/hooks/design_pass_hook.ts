@@ -60,9 +60,8 @@ import { appendDischarge, stamp } from '../_lib/obligations.js';
 import { isUiPath, isUiTreePath } from '../_lib/ui_surface.js';
 import { loadDesignContext, scanFile } from '../lint_design_slop.js';
 import { readHookStdin } from './hook_stdin.js';
+import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
 
-const EXIT_ALLOW = 0;
-const EXIT_WARN = 2;
 const SETTINGS_FILE = '.agent-settings.yml';
 const STATE_REL = path.join('agents', 'runtime', 'state', 'design-pass-hook.json');
 const AUDIT_REL = path.join('agents', 'runtime', 'state', 'ui-audit.json');

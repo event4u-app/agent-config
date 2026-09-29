@@ -51,8 +51,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { unwrap } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
 import { humanTypedThisTurn } from '../_lib/machine_wake.js';
+import { EXIT_ALLOW } from './exit_codes.js';
 
-const EXIT_ALLOW = 0;
 const SETTINGS_FILE = '.agent-settings.yml';
 const SINK_REL = path.join('agents', 'runtime', 'state', 'audit', 'suggestion-capture.jsonl');
 const LATCH_REL = path.join('agents', 'runtime', 'state', 'suggestion-latch.json');

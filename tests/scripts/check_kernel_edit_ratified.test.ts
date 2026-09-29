@@ -113,6 +113,50 @@ describe('classifyPaths', () => {
     it('normalises Windows separators rather than missing the path', () => {
         expect(classifyPaths(['src\\rules\\commit-policy.md']).kernelRules).toHaveLength(1);
     });
+
+    /**
+     * 1.1 — the plumbing SOURCES.
+     *
+     * Both directions, because a set that matched everything under
+     * `src/scripts/hooks/` would satisfy the accepting half while making every
+     * concern edit in the tree carry a ratification artifact. The rejecting
+     * half below is what pins the boundary: an ordinary concern script, a
+     * non-dispatcher shell helper in the same directory, and a budget file
+     * that is not a hook budget all stay out.
+     */
+    it('matches every hook-plumbing source, and requires ratification for each', () => {
+        for (const p of [
+            'src/scripts/hook_manifest.yaml',
+            'src/scripts/hooks/host_lowering.yaml',
+            'src/scripts/hooks/augment-dispatcher.sh',
+            'src/scripts/hooks/windsurf-dispatcher.sh',
+            'src/config/hook-token-budget.json',
+            'src/config/hook-latency-budget.json',
+        ]) {
+            expect(classifyPaths([p]).plumbing, p).toEqual([p]);
+            expect(requiresRatification(classifyPaths([p])), p).toBe(true);
+        }
+    });
+
+    it('does NOT match a neighbour that merely lives beside the plumbing', () => {
+        for (const p of [
+            'src/scripts/hooks/chain_nudge_hook.ts',
+            'src/scripts/hooks/prepush_metadata_sources.sh',
+            'src/scripts/hooks/augment-chat-history.sh',
+            'src/config/gate-coverage.yml',
+            'src/config/placeholder-drift-budget.json',
+            'docs/contracts/hook_manifest.yaml',
+        ]) {
+            expect(classifyPaths([p]).plumbing, p).toEqual([]);
+            expect(requiresRatification(classifyPaths([p])), p).toBe(false);
+        }
+    });
+
+    it('a governance hook is counted once, as a hook and not also as plumbing', () => {
+        const gated = classifyPaths(['src/scripts/hooks/block_no_verify.ts']);
+        expect(gated.governanceHooks).toHaveLength(1);
+        expect(gated.plumbing).toEqual([]);
+    });
 });
 
 describe('ratificationArtifactsIn', () => {
@@ -137,6 +181,18 @@ describe('evaluate — G15', () => {
         const r = evaluate(['src/rules/commit-policy.md'], root, 2);
         expect(r.exitCode).toBe(1);
         expect(r.lines.join('\n')).toContain('no ratification artifact');
+    });
+
+    it('a plumbing-source edit with NO artifact is refused, and passes with one', () => {
+        // 1.1's own `verify:` line, as a pair over one and the same diff.
+        const diff = ['src/scripts/hook_manifest.yaml'];
+        const red = evaluate(diff, root, 2);
+        expect(red.exitCode).toBe(1);
+        expect(red.lines.join('\n')).toContain('hook-plumbing source src/scripts/hook_manifest.yaml');
+
+        const rel = writeArtifact('plumbing.md', GOOD, ['anthropic', 'openai']);
+        const green = evaluate([...diff, rel], root, 2);
+        expect(green.exitCode).toBe(0);
     });
 
     it('a kernel edit WITH a valid ratified artifact passes', () => {

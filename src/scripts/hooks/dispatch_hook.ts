@@ -59,6 +59,8 @@ import { _py_json_dumps } from './py_json_dumps.js';
 import { _fallback_yaml } from './fallback_yaml.js';
 import { detectSurface } from '../_lib/surface.js';
 import { recordCapture, recordOpportunity } from "../_lib/collector_denominator.js";
+import { EXIT_ALLOW, EXIT_BLOCK, EXIT_WARN } from './exit_codes.js';
+export { EXIT_ALLOW, EXIT_BLOCK, EXIT_WARN };
 export { _fallback_yaml } from './fallback_yaml.js';
 
 // Free-form JSON values flow through every helper here; a documented
@@ -83,10 +85,6 @@ const REPO_ROOT = path.resolve(
   ...(_IN_BUNDLE ? ["..", ".."] : ["..", "..", ".."]),
 );
 const MANIFEST_PATH = path.join(REPO_ROOT, "src", "scripts", "hook_manifest.yaml");
-
-export const EXIT_ALLOW = 0;
-export const EXIT_BLOCK = 1;
-export const EXIT_WARN = 2;
 
 // Per Council Round 2 (Q3): `agent_error` covers agent-level crashes
 // that are not concern-triggered, so chat-history can checkpoint
@@ -251,11 +249,9 @@ export function _load_yaml(p: string): JsonObject {
   return _isObject(data) ? data : {};
 }
 
-
 interface ConcernDef extends JsonObject {
   name: string;
 }
-
 
 /**
  * Per-concern tool filter — the `tools:` key.
@@ -423,7 +419,6 @@ export function _resolve_concerns(
   }
   return out;
 }
-
 
 /**
  * Write the raw stdin payload to a capture directory when
@@ -1458,7 +1453,6 @@ function _sortedRepr(s: ReadonlySet<string>): string {
  * policy and for why the two broader options were refused.
  */
 let _stdin_read_failed: string | null = null;
-
 
 // Bundle-safety: never auto-run when inlined into an esbuild bundle, where
 // every module shares the bundle's `import.meta.url` (declare at top of file).

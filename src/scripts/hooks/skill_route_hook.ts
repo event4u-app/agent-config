@@ -143,10 +143,9 @@ import { isSyntheticPrompt } from "../_lib/prompt_shape.js";
 import { OBSERVATION_LOG, readObservationLog, resolveSkillCatalogueRoots } from "../_lib/skill_catalogue.js";
 import { knownBareNames } from "../_lib/skill_catalogue_series.js";
 import { _tokenize, rank, type RankRow } from "../skill_tools/score_skill_relevance.js";
+import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
 
-const EXIT_ALLOW = 0;
 /** See the header: reduced to a real exit of 0 by `emitFor`'s warn branch. */
-const EXIT_WARN = 2;
 
 /**
  * Minimum top-1 ranker score before this concern speaks.

@@ -57,8 +57,7 @@ import {
 } from '../../agent-src/templates/scripts/telemetry/transport.js';
 import { is_replay_mode } from './state_io.js';
 import { readHookStdin } from './hook_stdin.js';
-
-const EXIT_ALLOW = 0;
+import { EXIT_ALLOW } from './exit_codes.js';
 
 /** The tool name Phase 0 spike 1 confirmed for a skill invocation. */
 export const SKILL_TOOL_NAME = 'Skill';

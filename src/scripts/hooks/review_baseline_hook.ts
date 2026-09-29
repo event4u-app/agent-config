@@ -49,8 +49,7 @@ import { deriveSessionKey, totalNonDocMutatedLinesWithMeasure } from './end_revi
 import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
 import { atomic_write_json } from './state_io.js';
-
-const EXIT_OK = 0;
+import { EXIT_ALLOW as EXIT_OK } from './exit_codes.js';
 
 export function buildBaseline(workspaceRoot: string, now: Date = new Date()): ReviewBaseline {
     const measured = totalNonDocMutatedLinesWithMeasure(workspaceRoot);

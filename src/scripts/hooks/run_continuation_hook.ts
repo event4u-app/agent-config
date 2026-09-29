@@ -153,9 +153,7 @@ import {
 } from '../_lib/turn_end_refusals.js';
 import { phaseLines } from '../_lib/roadmap_checkboxes.js';
 
-const EXIT_ALLOW = 0;
 /** Dispatcher-internal block code; the dispatcher maps stop-slot 1 → host 2. */
-const EXIT_BLOCK = 1;
 
 /**
  * The gate's cap, IMPORTED rather than restated — the two must agree by
@@ -194,6 +192,7 @@ import {
     WALL_CLOCK_CAP_MS,
     type LadderAction,
 } from '../_lib/continuation_ladder.js';
+import { EXIT_ALLOW, EXIT_BLOCK } from './exit_codes.js';
 
 /**
  * DECLARED in `_lib/continuation_ladder.ts`, re-exported here: one declaration,
@@ -1258,7 +1257,6 @@ export function main(): number {
     } catch {
         return EXIT_ALLOW;
     }
-
 
     // The two-tree provenance, carried on every event this run emits. See
     // `provenance()` for the six fields and why none of them is a boolean.

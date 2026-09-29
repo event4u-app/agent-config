@@ -69,12 +69,11 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
 import { atomic_write_json } from './state_io.js';
+import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
 
-const EXIT_ALLOW = 0;
 // Severity is taken from the EXIT CODE, not from the `decision` field — see
 // the file header for why this never blocks on `claude`. This concern never
 // returns exit 1 on any path.
-const EXIT_WARN = 2;
 
 /**
  * Committed exemption list — deliberately duplicated from

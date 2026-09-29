@@ -1026,6 +1026,11 @@ tasks:
     desc: Foreign in-prose placeholder syntaxes may shrink, never grow (road-to-an-invocation-contract-that-reaches-the-wire 1.2). Seeded at the measured counts in src/config/placeholder-drift-budget.json; never fails on the absolute number or on the plurality form, so holding at the seed is permanently green and no working body is under pressure to be rewritten.
     cmd: ./scripts-run src/scripts/check_placeholder_drift
 
+  lint-deny-text:
+    silent: true
+    desc: "A blocking concern's refusal message never names its own kill switch (road-to-a-kernel-that-guards-its-plumbing 1.3). The switch may exist and may be documented; it may not appear in the text printed to the party that was just refused."
+    cmd: ./scripts-run src/scripts/lint_deny_text
+
   check-input-references:
     silent: true
     desc: "Every in-body placeholder on an artifact that declares an inputs block is backed by a declaration (2.2). Scoped to declaring artifacts, so it arrives with zero findings and grows only with adoption."

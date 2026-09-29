@@ -402,6 +402,55 @@ change the dispatcher's exit code. The directory is gitignored and
 consumed by `task hooks-status` (Phase 7.11). Added in Round 2
 (2026-05-04) per Q1 of `tmp/council_round2/q1_feedback_channel.md`.
 
+## Plumbing — one mechanism per file class
+
+The files that decide **which** concern runs, on **which** host, under **which**
+budget are the hook plumbing. They are governed, and they are governed in two
+different ways, because they fail in two different ways.
+
+```
+A PLUMBING SOURCE CARRIES A RECORD. A PLUMBING BUILD OUTPUT CARRIES A DENY.
+NEVER A DENY ON A FILE PEOPLE EDIT ON PURPOSE — THAT IS A WEDGE.
+NEVER A RECORD ON A FILE WHOSE EVERY HAND EDIT IS A MISTAKE — THAT IS
+A RECORD OF A MISTAKE.
+```
+
+**Sources** — edited legitimately, so a diff to one carries a ratification
+artifact per [`ratification-artifact.md`](ratification-artifact.md), enforced in
+CI by `check_kernel_edit_ratified.ts` (`PLUMBING_SOURCE_RE`):
+
+| File | What it decides |
+|---|---|
+| `src/scripts/hook_manifest.yaml` | which concerns exist, their severity and `fail_closed`, and which host binds which slot |
+| `src/scripts/hooks/host_lowering.yaml` | how a verdict is lowered onto each host's native exit contract |
+| `src/scripts/hooks/*-dispatcher.sh` | the per-host trampolines that reach the dispatcher at all |
+| `src/config/hook-token-budget.json` | the per-concern injection ceiling |
+| `src/config/hook-latency-budget.json` | the per-slot latency ceiling the bench gate enforces |
+
+The asymmetry this closes: a concern **deleted** from the manifest is a refusal
+that stops happening, which is the same authority change as loosening the rule
+behind it — reached one file earlier, and until 2026-09-29 it carried no record
+while a typo in that rule did.
+
+**Build outputs** — no legitimate hand edit exists, so they are refused at
+tool-call time by `block_plumbing_writes.ts` (`PLUMBING_BUILD_OUTPUTS`):
+
+| File | Written by | Why a hand edit is never legitimate |
+|---|---|---|
+| `dist/hooks/dispatch.js` | `npm run build:hooks` | every concern is inlined here; an edit survives until the next build, reaches every dispatch meanwhile, and is invisible in a source review |
+| `hooks/hooks.json` | `condense.ts` via `task sync` | the host binding file; an edit here silently unbinds a guard |
+
+The guard refuses edit-tool envelopes and the shell write shapes in
+`_lib/shell_write_shapes.ts`. The legitimate builds pass because they reach
+these files through a build tool rather than through a redirect, an in-place
+`sed`, or a `tee`/`mv`/`cp` naming the path. Its declared residual — a write
+built inside an interpreter's own argument is not detected — is stated in the
+guard's header and pinned by its tests in both directions.
+
+Adding a file to either list is itself a governance change and carries its own
+ratification: the source list is watched by the gate that reads it, and the
+guard is a `src/scripts/hooks/block_*.ts` and therefore already gated.
+
 ## Manifest schema — `scripts/hook_manifest.yaml`
 
 ```yaml

@@ -46,8 +46,7 @@ import { appendShadow, readDelivered, readDischarged, stamp } from '../_lib/obli
 import { loadRouter, matchTierRules } from '../_lib/rule_injection.js';
 import { gitNumstatRows, isDocPath, untrackedNonDocFiles } from './end_review_nudge_hook.js';
 import { openRecordStats } from './subagent_ledger_hook.js';
-
-const EXIT_ALLOW = 0;
+import { EXIT_ALLOW } from './exit_codes.js';
 
 /**
  * Every non-doc path this turn wrote, tracked or not.
