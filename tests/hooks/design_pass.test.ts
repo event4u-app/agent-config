@@ -9,13 +9,17 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
+import * as yaml from 'js-yaml';
 import { describe, expect, it } from 'vitest';
 
 import {
+    HANDOVER_TRIGGERS,
     P0_FLOOR_IDS,
     conformanceVerdict,
     decide,
+    handoverTouched,
     isUiSurface,
     isUiTrivial,
     recordAuditDischarge,
@@ -23,7 +27,10 @@ import {
     targetPath,
     type Finding,
 } from '../../src/scripts/hooks/design_pass_hook.js';
+import { collectInputs } from '../../src/scripts/_lib/probe_inputs.js';
 import { readDischarged } from '../../src/scripts/_lib/obligations.js';
+
+const ROOT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 const f = (severity: Finding['severity'], catalogId = 'Q1', line = 1, file = 'components/A.tsx'): Finding => ({
     file,
@@ -306,6 +313,20 @@ describe('the ui-conformance shadow mount', () => {
         expect(v.line).toMatch(/unreadable/);
     });
 
+    it('an absent artefact becomes noteworthy when a handover was touched this turn', () => {
+        // 3.1. The same absence, two readings: unremarkable on an ordinary UI
+        // write, worth one line on a turn that actually ported a handover.
+        const root = emptyRoot();
+        const quiet = conformanceVerdict(root);
+        const loud = conformanceVerdict(root, { handoverDetected: true });
+        expect(quiet.noteworthy).toBe(false);
+        expect(loud.noteworthy).toBe(true);
+        // "exactly one" — the absent verdict stays a single line either way.
+        expect(loud.line.split('\n')).toHaveLength(1);
+        expect(loud.line).toMatch(/handover/i);
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
     it('appends the verdict to the render without reaching any decision', () => {
         // 5.2, first half: the block path stays unreachable. The verdict renders
         // alongside a P0 stop verdict and changes neither `blocked` nor anything
@@ -317,5 +338,204 @@ describe('the ui-conformance shadow mount', () => {
         expect(text.indexOf('ui-conformance')).toBeGreaterThan(text.indexOf('verification:'));
         // And it is strictly opt-in at the call site: no verdict, no line.
         expect(render(result).includes('ui-conformance')).toBe(false);
+    });
+});
+
+/**
+ * Phase 2 and Phase 3 of `road-to-probe-evidence-that-knows-its-inputs`.
+ *
+ * The reader recomputes the digests the probe recorded and reports `stale` when
+ * they moved. Every assertion here runs on a host with no browser binaries, and
+ * one of them says so explicitly — deciding staleness is a file comparison, and
+ * a reader that needed a browser to make it would be useless in exactly the
+ * session that wants the answer.
+ */
+describe('the reader says stale, and says nothing else', () => {
+    const SURFACE = path.join(ROOT_DIR, 'tests', 'design-artifacts', 'fixtures', 'ui-conformance');
+
+    /** A root carrying a copy of the fixture surfaces and an artefact over them. */
+    function rootWithProbeRun(overrides: Record<string, unknown> = {}): {
+        root: string;
+        target: string;
+    } {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'design-pass-inputs-'));
+        for (const variant of ['reference', 'variant-defects']) {
+            fs.cpSync(path.join(SURFACE, variant), path.join(root, 'ui', variant), { recursive: true });
+        }
+        const targetEntry = path.join(root, 'ui', 'variant-defects', 'index.html');
+        const inputs = collectInputs(targetEntry, path.join(root, 'ui', 'reference', 'index.html'));
+        const state = path.join(root, 'agents', 'runtime', 'state');
+        fs.mkdirSync(state, { recursive: true });
+        fs.writeFileSync(
+            path.join(state, 'ui-conformance.json'),
+            JSON.stringify({
+                schema: 'ui-conformance/v1',
+                inputs,
+                structure_gate: 'passed',
+                findings: [{ dimension: 'interaction' }, { dimension: 'interaction' }, { dimension: 'structure' }],
+                dimensions: [
+                    { dimension: 'interaction', status: 'exercised', findings: 2 },
+                    { dimension: 'structure', status: 'exercised', findings: 1 },
+                ],
+                ...overrides,
+            }),
+        );
+        return { root, target: targetEntry };
+    }
+
+    it('unmoved inputs read as unchanged, and the findings count is still reported', () => {
+        const { root } = rootWithProbeRun();
+        try {
+            const v = conformanceVerdict(root);
+            expect(v.line).toMatch(/3 behavioural finding/);
+            expect(v.line).toMatch(/inputs: unchanged/);
+            expect(v.line).not.toMatch(/stale/);
+        } finally {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    });
+
+    it('2.1 — an edited target makes the line read stale, and withholds the count', () => {
+        const { root, target } = rootWithProbeRun();
+        try {
+            const css = path.join(path.dirname(target), 'styles.css');
+            fs.writeFileSync(css, `${fs.readFileSync(css, 'utf-8')}\n/* edited after the probe ran */\n`);
+            const v = conformanceVerdict(root);
+            expect(v.noteworthy).toBe(true);
+            expect(v.line).toMatch(/stale/);
+            expect(v.line).toMatch(/target/);
+            // THE OTHER HALF, and the reason the step names it: a count measured
+            // against inputs that have since moved is the misleading part, so the
+            // pre-change behaviour is asserted ABSENT rather than merely
+            // accompanied by a warning.
+            expect(v.line).not.toMatch(/behavioural finding/);
+        } finally {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    });
+
+    it('a touch that changes no byte does not report stale — decision D1', () => {
+        const { root, target } = rootWithProbeRun();
+        try {
+            const future = new Date(Date.now() + 60_000);
+            fs.utimesSync(target, future, future);
+            const v = conformanceVerdict(root);
+            expect(v.line).not.toMatch(/stale/);
+            expect(v.line).toMatch(/3 behavioural finding/);
+        } finally {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    });
+
+    it('resolves a recorded relative path against the root it is reading', () => {
+        const { root, target } = rootWithProbeRun();
+        try {
+            // Rewrite the recorded paths to root-relative, which is the shape a
+            // probe run from the project root actually writes.
+            const artefact = path.join(root, 'agents', 'runtime', 'state', 'ui-conformance.json');
+            const a = JSON.parse(fs.readFileSync(artefact, 'utf-8')) as Record<string, never>;
+            const inputs = a['inputs'] as unknown as Record<string, { path: string | null }>;
+            for (const key of ['target', 'reference', 'declarations']) {
+                const rec = inputs[key]!;
+                if (rec.path) rec.path = path.relative(root, rec.path);
+            }
+            fs.writeFileSync(artefact, JSON.stringify(a));
+
+            expect(conformanceVerdict(root).line).toMatch(/inputs: unchanged/);
+            const css = path.join(path.dirname(target), 'styles.css');
+            fs.writeFileSync(css, `${fs.readFileSync(css, 'utf-8')}\n/* moved */\n`);
+            expect(conformanceVerdict(root).line).toMatch(/stale/);
+        } finally {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    });
+
+    it('2.2 — an artefact predating the inputs field reads unknown, not stale and not fresh', () => {
+        const { root } = rootWithProbeRun({ inputs: undefined });
+        try {
+            const artefact = path.join(root, 'agents', 'runtime', 'state', 'ui-conformance.json');
+            const a = JSON.parse(fs.readFileSync(artefact, 'utf-8')) as Record<string, unknown>;
+            delete a['inputs'];
+            fs.writeFileSync(artefact, JSON.stringify(a));
+
+            const v = conformanceVerdict(root);
+            expect(v.line).toMatch(/inputs: unknown/);
+            expect(v.line).not.toMatch(/stale/);
+            expect(v.line).not.toMatch(/inputs: unchanged/);
+            // Risk 1: treating absence as a mismatch would report stale for every
+            // artefact that existed before this change.
+            expect(v.line).toMatch(/3 behavioural finding/);
+        } finally {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    });
+
+    it('2.3 — no browser runtime is reachable from the reader', () => {
+        // The roadmap's own verify line. Asserted over the source of the reader
+        // and of the module it delegates the hashing to, because an import added
+        // to either would put a browser on the stale path.
+        for (const rel of [
+            path.join('src', 'scripts', 'hooks', 'design_pass_hook.ts'),
+            path.join('src', 'scripts', '_lib', 'probe_inputs.ts'),
+        ]) {
+            const src = fs.readFileSync(path.join(ROOT_DIR, rel), 'utf-8');
+            const imports = [...src.matchAll(/^\s*import\s[^;]*?from\s+'([^']+)'/gm)].map((m) => m[1]!);
+            for (const spec of imports) {
+                expect(spec, `${rel} imports ${spec}`).not.toMatch(/playwright|puppeteer|chromium|webdriver/i);
+            }
+        }
+    });
+
+    it('2.3 — the stale decision runs with no browser binaries installed', () => {
+        // Positive half: not "no import exists" but "the verdict is reached".
+        // This process installs no browser, so reaching a verdict IS the evidence.
+        const { root, target } = rootWithProbeRun();
+        try {
+            fs.writeFileSync(target, `${fs.readFileSync(target, 'utf-8')}\n<!-- moved -->\n`);
+            expect(conformanceVerdict(root).line).toMatch(/stale/);
+        } finally {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    });
+
+    it('3.2 — a stale verdict changes nothing the pass decides', () => {
+        const { root, target } = rootWithProbeRun();
+        try {
+            fs.writeFileSync(target, `${fs.readFileSync(target, 'utf-8')}\n<!-- moved -->\n`);
+            const v = conformanceVerdict(root);
+            // `decide` takes no conformance argument at all — the block path
+            // cannot consult it, which is stronger than asserting it does not.
+            const result = decide('stop', [f('P0')], [], none, true);
+            expect(result.blocked).toHaveLength(1);
+            expect(render(result, v.line)).toMatch(/stale/);
+            expect(decide.length).toBe(5);
+        } finally {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    });
+});
+
+describe('3.1 — the handover trigger decides, and it is the shipped one', () => {
+    it('matches the handover filenames the design-fidelity rule declares', () => {
+        expect(handoverTouched(['src/pages/Home.tsx'])).toBe(false);
+        expect(handoverTouched(['design.html'])).toBe(true);
+        expect(handoverTouched(['handoff/2026-09-checkout.design.html'])).toBe(true);
+        expect(handoverTouched(['ToDo.dc.html'])).toBe(true);
+        // A near miss in the direction the pattern opens: `*design.html` must not
+        // become "any html", which would fire on every UI turn.
+        expect(handoverTouched(['components/Card.html'])).toBe(false);
+        expect(handoverTouched([])).toBe(false);
+    });
+
+    it('the trigger set is the rule\'s own, not a second copy that may drift', () => {
+        const rule = fs.readFileSync(path.join(ROOT_DIR, 'src', 'rules', 'design-fidelity.md'), 'utf-8');
+        const fm = /^---\n([\s\S]*?)\n---\n/.exec(rule);
+        expect(fm, 'design-fidelity.md carries frontmatter').toBeTruthy();
+        const declared = (yaml.load(fm![1]!) as { triggers?: Record<string, string>[] }).triggers ?? [];
+        const fileBased = declared.filter((t) => 'file_pattern' in t || 'path_prefix' in t);
+        // Equality in both directions: a trigger added to the rule and not here
+        // is a handover this carrier goes silent on; one added here and not there
+        // is a matcher this package does not actually ship.
+        expect(HANDOVER_TRIGGERS).toStrictEqual(fileBased);
     });
 });
