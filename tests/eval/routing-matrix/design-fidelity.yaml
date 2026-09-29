@@ -1,9 +1,14 @@
 rule: design-fidelity
 positives:
   - prompt: "Here's the Figma export - build this design exactly as shown."
+    expected_skills: [fe-design, existing-ui-audit]
   - prompt: "Setz die Seite bitte genau so um wie in der Übergabedatei."
+    expected_skills: [fe-design, existing-ui-audit]
     open_files: ["handover/checkout-design.html"]
   - prompt: "Bau das nach, bitte exakt wie im Prototyp."
+    expected_skills: [fe-design, existing-ui-audit]
 near_misses:
   - prompt: "Improve the layout of the settings page - feel free to explore variants."
+    expected_skills: [design-variations, fe-design]
   - prompt: "Make the dashboard cards visually consistent with each other."
+    expected_skills: [existing-ui-audit, fe-design]

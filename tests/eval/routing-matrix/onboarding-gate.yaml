@@ -1,10 +1,16 @@
 rule: onboarding-gate
 positives:
   - prompt: "Does the onboarding wizard have to run before I can use any commands?"
+    expected_skills: []
   - prompt: "What should happen on the first turn in a freshly cloned project?"
+    expected_skills: []
   - prompt: "Muss ich das Onboarding erst abschließen, bevor der Agent loslegt?"
+    expected_skills: []
   - prompt: "Why is this flag still set to false?"
+    expected_skills: []
     open_files: [".agent-settings.yml"]
 near_misses:
   - prompt: "How do I set up the project for a new teammate?"
+    expected_skills: []
   - prompt: "Run the setup wizard again so I can change my defaults."
+    expected_skills: []

@@ -1,10 +1,16 @@
 rule: doc-screenshot-hygiene
 positives:
   - prompt: "Add a screenshot of the settings page to the README."
+    expected_skills: [screenshot-hygiene, readme-writing]
   - prompt: "Generate a docs site for the package with Starlight."
+    expected_skills: []
   - prompt: "Häng bitte einen Screenshot vom Admin-Panel in die Doku."
+    expected_skills: [screenshot-hygiene]
   - prompt: "Is this image safe to ship as-is?"
+    expected_skills: [screenshot-hygiene]
     open_files: ["docs/media/wizard-step-2.png"]
 near_misses:
   - prompt: "Add an architecture diagram to the deployment guide."
+    expected_skills: []
   - prompt: "Embed the logo SVG in the README header."
+    expected_skills: []

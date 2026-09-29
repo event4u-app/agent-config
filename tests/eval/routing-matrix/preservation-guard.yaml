@@ -1,8 +1,13 @@
 rule: preservation-guard
 positives:
   - prompt: "Don't drop the Iron Law section when you merge these two skills."
+    expected_skills: [skill-management, skill-writing]
   - prompt: "Does the condensed rule still keep every Iron Law heading verbatim?"
+    expected_skills: [skill-management]
   - prompt: "Achte beim Zusammenführen darauf, dass die Iron Law Blöcke erhalten bleiben."
+    expected_skills: [rule-refactor, skill-management]
 near_misses:
   - prompt: "Merge the two overlapping skills into one and keep the strongest examples."
+    expected_skills: [skill-management]
   - prompt: "Condense this guideline without losing the validation steps."
+    expected_skills: [skill-management, guideline-writing]

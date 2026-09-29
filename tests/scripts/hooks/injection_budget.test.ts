@@ -286,8 +286,15 @@ describe("resolveVolumeCap — the three preconditions", () => {
     expect(resolveVolumeCap(base)).toBeGreaterThan(0);
   });
 
-  it("is null on an unverified platform — its emission carries nothing", () => {
-    expect(resolveVolumeCap({ ...base, platform: "cursor" })).toBeNull();
+  it("is null on a platform whose emission carries nothing", () => {
+    // Was worded "unverified". Dating every row on 2026-09-29 made that word
+    // stop selecting these hosts while the reason it named — nothing reaches
+    // the host — stayed true of all of them. The precondition reads
+    // `usesNativeEmission`, so the test asserts over the set that predicate
+    // actually excludes rather than over the one it used to coincide with.
+    for (const platform of ["cursor", "cline", "windsurf", "gemini", "augment", "copilot"]) {
+      expect(resolveVolumeCap({ ...base, platform })).toBeNull();
+    }
   });
 
   it("is null without a real session_id — the fallback key is unreadable", () => {
@@ -308,11 +315,38 @@ describe("resolveVolumeCap — the three preconditions", () => {
   });
 
   it("is null when the platform does not bind the turn-start event", () => {
-    // windsurf has no `user_prompt_submit` row, so the counter would never reset
-    // and every droppable advisory would be suppressed for the rest of the
-    // session. Guarded here because this precondition is read from the compiled
-    // manifest rather than through the dispatcher's resolver.
-    expect(resolveVolumeCap({ ...base, platform: "windsurf" })).toBeNull();
+    // WITHOUT a turn-start binding the counter never resets, so every droppable
+    // advisory stays suppressed for the rest of the session — fail-open means
+    // null here, not a ceiling.
+    //
+    // This used to point at `windsurf` "because it has no `user_prompt_submit`
+    // row". It binds seven; the case was passing on the FIRST precondition and
+    // this one had never run. There is no shipped host that clears
+    // `usesNativeEmission` and lacks the binding — so the only honest way to
+    // reach this branch is a package root whose compiled manifest omits it.
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "no-turn-start-"));
+    try {
+      const scripts = path.join(root, "src", "scripts");
+      fs.mkdirSync(scripts, { recursive: true });
+      fs.mkdirSync(path.join(root, "src", "config"), { recursive: true });
+      fs.copyFileSync(
+        path.join(PACKAGE_ROOT, "src", "config", "hook-token-budget.json"),
+        path.join(root, "src", "config", "hook-token-budget.json"),
+      );
+      const compiled = JSON.parse(
+        fs.readFileSync(path.join(PACKAGE_ROOT, "src", "scripts", "hook_manifest.json"), "utf-8"),
+      ) as { manifest: { platforms: Record<string, Record<string, unknown>> } };
+      // Precondition of the precondition: the unstripped root must resolve a
+      // cap, or the strip below proves nothing.
+      fs.writeFileSync(path.join(scripts, "hook_manifest.json"), JSON.stringify(compiled));
+      expect(resolveVolumeCap({ ...base, packageRoot: root })).toBeGreaterThan(0);
+
+      delete compiled.manifest.platforms["claude"]?.["user_prompt_submit"];
+      fs.writeFileSync(path.join(scripts, "hook_manifest.json"), JSON.stringify(compiled));
+      expect(resolveVolumeCap({ ...base, packageRoot: root })).toBeNull();
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
   });
 });
 

@@ -7,35 +7,49 @@
  * the corpus's expected skill per line". Building it surfaced two defects in
  * that premise, and this file is written around them rather than over them.
  *
- * DEFECT A — the 496-line corpus has no expected SKILL. `tests/eval/routing-matrix/`
- * is keyed by `rule:` and every prompt is labelled with the RULE it should
- * activate. Scoring a skill ranker against it would need a skill label that
- * does not exist there, so a "hit rate" over it would be invented.
+ * DEFECT A — the routing matrix had no expected SKILL. `tests/eval/routing-matrix/`
+ * is keyed by `rule:` and every prompt was labelled with the RULE it should
+ * activate. Scoring a skill ranker against it would need a skill label that did
+ * not exist there, so a "hit rate" over it would be invented.
  *
- * DEFECT B — 496 is stale. The matrix holds 499 prompts today
- * (`grep -h "^\s*- prompt:" tests/eval/routing-matrix/*.yaml | wc -l`), and 496
- * is still published in six places including `hook-token-budget.json`.
+ * **Defect A is CLOSED as of `road-to-a-menu-whose-precision-is-measured` 1.1.**
+ * Every case in the matrix now carries an `expected_skills` list, hand-written
+ * by seats that had not read this ranker's scoring (the protocol is in
+ * `tests/eval/routing-matrix/README.md`). An EMPTY list is a first-class value
+ * meaning "deliberately no skill expectation", and such a row is excluded from
+ * the accuracy denominator rather than counted as a miss. So the matrix arm now
+ * has ground truth; `--corpus routing-matrix` scores against it.
  *
- * So the baseline is measured against the corpus that DOES carry expected
- * skills — `tests/eval/corpus-{dev,non-dev}.yaml`, 26 labelled prompts — and
- * the routing matrix is reported alongside it as what it can honestly be: a
- * COVERAGE measurement (does the ranker return anything at all, and how
- * confident) with no ground truth and therefore no accuracy.
+ * DEFECT B — the published size is stale, repeatedly. 496 was published while
+ * the matrix held 499, and 499 is still published in several sites while the
+ * matrix holds more than that again. The size is therefore MEASURED on every run
+ * and printed, never asserted from a constant.
  *
- * Both halves are emitted in one JSON object so a later ranker revision can be
- * compared on the same two axes in one run:
+ * THE INTERVAL, AND THE REFUSAL TO PRINT A VERDICT UNDER n = 100.
+ * A hit rate over 26 prompts
+ * moves ~4 points per prompt; quoting it as "61.5 %" invites a comparison the
+ * sample cannot carry. Both arms therefore report a 95 % Wilson score interval
+ * (`_lib/capture_rate.ts` — Wilson rather than the normal approximation for the
+ * same reason stated there: near p = 1 the normal one produces bounds above 1).
  *
- *   ./scripts-run src/scripts/measure_skill_ranker_baseline --json
- *   ./scripts-run src/scripts/measure_skill_ranker_baseline --ranker keyword-v2 --json
+ * Below {@link MIN_POWERED_N} labelled rows the arm's `verdict` is
+ * `underpowered`. That is not a failure and not an exit code — the point
+ * estimate and the interval are still printed, because suppressing them would
+ * replace a wide measurement with no measurement. It is a label that travels
+ * with the number so a later reader cannot quote the point estimate alone.
  *
- * A 26-prompt denominator is small and is stated as such in the output. It is
- * the whole labelled ground truth this repository has.
+ * Usage:
+ *     ./scripts-run src/scripts/measure_skill_ranker_baseline
+ *     ./scripts-run src/scripts/measure_skill_ranker_baseline --corpus routing-matrix
+ *     ./scripts-run src/scripts/measure_skill_ranker_baseline --corpus all
+ *     ./scripts-run src/scripts/measure_skill_ranker_baseline --ranker keyword-v2
  */
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { wilsonInterval } from './_lib/capture_rate.js';
 import { rank } from './skill_tools/score_skill_relevance.js';
 import type { RankOptions } from '../shared/skillRanking.js';
 
@@ -44,6 +58,20 @@ const LABELLED_CORPORA = ['tests/eval/corpus-dev.yaml', 'tests/eval/corpus-non-d
 const MATRIX_DIR = 'tests/eval/routing-matrix';
 /** Where the projected skills live in this checkout. */
 export const SKILLS_DIR = path.join(REPO, 'src', 'skills');
+
+/**
+ * The smallest labelled corpus this report will call powered.
+ *
+ * 100 is the roadmap's number, not a derived optimum, and it is stated as such:
+ * at n = 100 a point estimate near 0.7 carries a 95 % Wilson half-width of
+ * roughly ±9 points, which is wide but no longer moves on a single prompt the
+ * way a 26-row denominator does. Raise it with a dated reason if a decision
+ * ever needs a tighter bound than that.
+ */
+export const MIN_POWERED_N = 100;
+
+export type CorpusName = 'labelled' | 'routing-matrix' | 'all';
+export const CORPUS_NAMES: readonly CorpusName[] = ['labelled', 'routing-matrix', 'all'];
 
 export interface LabelledPrompt {
     id: string;
@@ -94,38 +122,193 @@ export function readLabelledPrompts(repo = REPO): LabelledPrompt[] {
     return out;
 }
 
-/** Every `- prompt:` string in the rule routing matrix. No skill label exists. */
-export function readMatrixPrompts(repo = REPO): string[] {
+export interface MatrixCase {
+    rule: string;
+    section: 'positives' | 'near_misses';
+    ordinal: number;
+    prompt: string;
+    /** `undefined` = the key is missing (a defect the lint catches); `[]` = deliberately unlabelled. */
+    expected?: string[];
+}
+
+/**
+ * Every case in the rule routing matrix, with its `expected_skills` label when
+ * one is present.
+ *
+ * Line-oriented for the same reason as the reader above, and because a YAML
+ * round-trip through this directory would reformat 100+ hand-kept fixtures.
+ * A case is `prompt:` plus the keys indented under it up to the next `- `.
+ */
+export function readMatrixCases(repo = REPO): MatrixCase[] {
     const dir = path.join(repo, MATRIX_DIR);
     if (!fs.existsSync(dir)) return [];
-    const out: string[] = [];
+    const out: MatrixCase[] = [];
     for (const name of fs.readdirSync(dir).sort()) {
         if (!name.endsWith('.yaml')) continue;
+        const rule = name.replace(/\.yaml$/, '');
+        let section: MatrixCase['section'] = 'positives';
+        let ordinal = 0;
+        let current: MatrixCase | undefined;
         for (const raw of fs.readFileSync(path.join(dir, name), 'utf8').split('\n')) {
-            const m = /^\s*-?\s*prompt:\s*"(.*)"\s*$/.exec(raw.replace(/\r$/, ''));
-            if (m && m[1]) out.push(m[1]);
+            const line = raw.replace(/\r$/, '');
+            if (/^positives:\s*$/.test(line)) {
+                section = 'positives';
+                ordinal = 0;
+                current = undefined;
+                continue;
+            }
+            if (/^near_misses:\s*$/.test(line)) {
+                section = 'near_misses';
+                ordinal = 0;
+                current = undefined;
+                continue;
+            }
+            const mPrompt = /^\s*-?\s*prompt:\s*"(.*)"\s*$/.exec(line);
+            if (mPrompt && mPrompt[1] !== undefined) {
+                current = { rule, section, ordinal: ordinal++, prompt: mPrompt[1] };
+                out.push(current);
+                continue;
+            }
+            const mExp = /^\s*expected_skills:\s*\[(.*)\]\s*$/.exec(line);
+            if (mExp && current) {
+                current.expected = mExp[1]!
+                    .split(',')
+                    .map((s) => s.trim())
+                    .filter(Boolean);
+            }
         }
     }
     return out;
 }
 
+/** Every `- prompt:` string in the rule routing matrix, label or no label. */
+export function readMatrixPrompts(repo = REPO): string[] {
+    return readMatrixCases(repo).map((c) => c.prompt);
+}
+
+/** The matrix rows that carry a NON-EMPTY label — the accuracy denominator. */
+export function readMatrixLabelledPrompts(repo = REPO): LabelledPrompt[] {
+    return readMatrixCases(repo)
+        .filter((c) => (c.expected?.length ?? 0) > 0)
+        .map((c) => ({
+            id: `${c.rule}#${c.section}[${c.ordinal}]`,
+            corpus: 'routing-matrix',
+            prompt: c.prompt,
+            expected: c.expected!,
+        }));
+}
+
+export function promptsForCorpus(corpus: CorpusName, repo = REPO): LabelledPrompt[] {
+    if (corpus === 'labelled') return readLabelledPrompts(repo);
+    if (corpus === 'routing-matrix') return readMatrixLabelledPrompts(repo);
+    return [...readLabelledPrompts(repo), ...readMatrixLabelledPrompts(repo)];
+}
+
+/**
+ * The packs a skill declares, read from its own `packs:` frontmatter block.
+ *
+ * Line-oriented, and deliberately NOT read from `src/packs/*\/pack.yaml`: those
+ * manifests are generated FROM this frontmatter, and four of them
+ * (`analytics`, `core`, `memory`, `product-reasoning`) carry no skill at all.
+ * A pack with no skill can never own a labelled prompt, so a census over the
+ * manifest set would state a floor nothing could ever meet.
+ */
+export function packsForSkill(skillsDir: string, name: string): string[] {
+    const file = path.join(skillsDir, name, 'SKILL.md');
+    if (!fs.existsSync(file)) return [];
+    const text = fs.readFileSync(file, 'utf8');
+    if (!text.startsWith('---')) return [];
+    const end = text.indexOf('\n---', 3);
+    if (end === -1) return [];
+    const lines = text.slice(3, end).split('\n');
+    const at = lines.findIndex((l) => /^packs:/u.test(l));
+    if (at === -1) return [];
+    const out: string[] = [];
+    for (let i = at + 1; i < lines.length; i += 1) {
+        const m = /^\s+-\s+(\S+)\s*$/u.exec(lines[i] as string);
+        if (!m) break;
+        out.push(m[1] as string);
+    }
+    return out;
+}
+
+/** Every pack id that at least one shipped skill declares. The census domain. */
+export function allPacks(skillsDir: string): string[] {
+    const packs = new Set<string>();
+    for (const entry of fs.readdirSync(skillsDir, { withFileTypes: true })) {
+        if (!entry.isDirectory()) continue;
+        for (const p of packsForSkill(skillsDir, entry.name)) packs.add(p);
+    }
+    return [...packs].sort();
+}
+
+/**
+ * How many labelled prompts each pack owns, via the packs of its expected skills.
+ *
+ * A prompt counts ONCE per pack however many of that pack's skills it expects —
+ * otherwise a single prompt naming three `laravel` skills would satisfy a
+ * three-prompt floor on its own, which is the shape of coverage this census
+ * exists to refuse.
+ */
+export function packCensus(prompts: readonly LabelledPrompt[], skillsDir: string): Record<string, number> {
+    const out: Record<string, number> = {};
+    for (const p of allPacks(skillsDir)) out[p] = 0;
+    for (const prompt of prompts) {
+        const packs = new Set<string>();
+        for (const skill of prompt.expected) for (const pack of packsForSkill(skillsDir, skill)) packs.add(pack);
+        for (const pack of packs) out[pack] = (out[pack] ?? 0) + 1;
+    }
+    return out;
+}
+
+/** Packs owning fewer than `floor` labelled prompts, sorted by pack id. */
+export function packsBelow(census: Record<string, number>, floor: number): string[] {
+    return Object.keys(census)
+        .filter((p) => (census[p] ?? 0) < floor)
+        .sort();
+}
+
+/** The per-pack floor `road-to-a-menu-whose-precision-is-measured` 1.1 states. */
+export const MIN_PROMPTS_PER_PACK = 3;
+
+export interface Interval {
+    lower: number;
+    upper: number;
+}
+
 export interface AccuracyArm {
+    corpus: CorpusName;
     corpus_prompts: number;
     top1: number;
+    top1_ci95: Interval;
     top3: number;
+    top3_ci95: Interval;
+    /** `underpowered` below MIN_POWERED_N labelled rows; `measured` at or above. */
+    verdict: 'underpowered' | 'measured';
+    min_powered_n: number;
     misses: string[];
     denominator_note: string;
+    /** Pack ids at least one shipped skill declares — the census domain. */
+    packs_total: number;
+    min_prompts_per_pack: number;
+    /** Packs this corpus leaves under the floor. Empty is the passing shape. */
+    packs_below_floor: string[];
+    /** Full census, so a reader can see the distribution and not just the failures. */
+    pack_census: Record<string, number>;
 }
 
 export interface CoverageArm {
     corpus_prompts: number;
+    labelled_prompts: number;
+    unlabelled_prompts: number;
+    missing_label_key: number;
     prompts_with_any_result: number;
     mean_top_score: number;
     note: string;
 }
 
 export interface RankerBaseline {
-    schema: 1;
+    schema: 2;
     ranker: string;
     commit: string;
     skills_dir: string;
@@ -139,28 +322,85 @@ function hitAt(rows: readonly (readonly [string, number, string[]])[], n: number
     return expected.some((e) => top.includes(e));
 }
 
-export function measure(opts: { ranker: string; commit: string; skillsDir?: string; repo?: string }): RankerBaseline {
+function round3(n: number): number {
+    return Math.round(n * 1000) / 1000;
+}
+
+function ci(successes: number, trials: number): Interval {
+    const raw = wilsonInterval(successes, trials);
+    return { lower: round3(raw.lower), upper: round3(raw.upper) };
+}
+
+const DENOMINATOR_NOTES: Record<CorpusName, string> = {
+    labelled:
+        'tests/eval/corpus-dev.yaml + corpus-non-dev.yaml — the two hand-written eval corpora. ' +
+        'Small; a single prompt moves each rate by ~4 points, which is why the interval is ' +
+        'printed beside the point estimate and not instead of it.',
+    'routing-matrix':
+        'tests/eval/routing-matrix/ rows whose expected_skills list is NON-EMPTY. A row with an ' +
+        'empty list is a deliberate "no skill expectation" and is excluded from the ' +
+        'denominator — never counted as a miss.',
+    all:
+        'Both labelled sources pooled. The two were written under different protocols, so a ' +
+        'pooled rate is a convenience reading and the per-corpus arms are the citable ones.',
+};
+
+export function measureAccuracy(opts: {
+    corpus: CorpusName;
+    repo: string;
+    skillsDir: string;
+    rankOpts: RankOptions;
+}): AccuracyArm {
+    const labelled = promptsForCorpus(opts.corpus, opts.repo);
+    let top1 = 0;
+    let top3 = 0;
+    const misses: string[] = [];
+    for (const p of labelled) {
+        const rows = rank(p.prompt, opts.skillsDir, opts.rankOpts);
+        if (hitAt(rows, 1, p.expected)) top1++;
+        if (hitAt(rows, 3, p.expected)) top3++;
+        else misses.push(p.id);
+    }
+    const n = labelled.length;
+    const census = packCensus(labelled, opts.skillsDir);
+    return {
+        corpus: opts.corpus,
+        corpus_prompts: n,
+        top1: n ? round3(top1 / n) : 0,
+        top1_ci95: ci(top1, n),
+        top3: n ? round3(top3 / n) : 0,
+        top3_ci95: ci(top3, n),
+        verdict: n >= MIN_POWERED_N ? 'measured' : 'underpowered',
+        min_powered_n: MIN_POWERED_N,
+        misses,
+        denominator_note: DENOMINATOR_NOTES[opts.corpus],
+        packs_total: Object.keys(census).length,
+        min_prompts_per_pack: MIN_PROMPTS_PER_PACK,
+        packs_below_floor: packsBelow(census, MIN_PROMPTS_PER_PACK),
+        pack_census: census,
+    };
+}
+
+export function measure(opts: {
+    ranker: string;
+    commit: string;
+    corpus?: CorpusName;
+    skillsDir?: string;
+    repo?: string;
+}): RankerBaseline {
     const repo = opts.repo ?? REPO;
     const skillsDir = opts.skillsDir ?? SKILLS_DIR;
     // `keyword-v2` is Phase 3.1: the same formula with `triggers:` prose folded
     // into each skill's term source. Any other label measures v1.
     const rankOpts: RankOptions = opts.ranker === 'keyword-v2' ? { includeTriggers: true } : {};
-    const labelled = readLabelledPrompts(repo);
-    let top1 = 0;
-    let top3 = 0;
-    const misses: string[] = [];
-    for (const p of labelled) {
-        const rows = rank(p.prompt, skillsDir, rankOpts);
-        if (hitAt(rows, 1, p.expected)) top1++;
-        if (hitAt(rows, 3, p.expected)) top3++;
-        else misses.push(p.id);
-    }
+    const corpus = opts.corpus ?? 'labelled';
+    const accuracy = measureAccuracy({ corpus, repo, skillsDir, rankOpts });
 
-    const matrix = readMatrixPrompts(repo);
+    const cases = readMatrixCases(repo);
     let withResult = 0;
     let scoreSum = 0;
-    for (const prompt of matrix) {
-        const rows = rank(prompt, skillsDir, rankOpts);
+    for (const c of cases) {
+        const rows = rank(c.prompt, skillsDir, rankOpts);
         if (rows.length > 0) {
             withResult++;
             scoreSum += rows[0]![1];
@@ -172,37 +412,51 @@ export function measure(opts: { ranker: string; commit: string; skillsDir?: stri
         : 0;
 
     return {
-        schema: 1,
+        schema: 2,
         ranker: opts.ranker,
         commit: opts.commit,
         skills_dir: path.relative(repo, skillsDir),
         skills_indexed: skillsIndexed,
-        accuracy: {
-            corpus_prompts: labelled.length,
-            top1: labelled.length ? Math.round((top1 / labelled.length) * 1000) / 1000 : 0,
-            top3: labelled.length ? Math.round((top3 / labelled.length) * 1000) / 1000 : 0,
-            misses,
-            denominator_note:
-                'tests/eval/corpus-dev.yaml + corpus-non-dev.yaml — the only expected-skill ground ' +
-                'truth in this tree. Small; a single prompt moves each rate by ~4 points.',
-        },
+        accuracy,
         matrix_coverage: {
-            corpus_prompts: matrix.length,
+            corpus_prompts: cases.length,
+            labelled_prompts: cases.filter((c) => (c.expected?.length ?? 0) > 0).length,
+            unlabelled_prompts: cases.filter((c) => c.expected?.length === 0).length,
+            missing_label_key: cases.filter((c) => c.expected === undefined).length,
             prompts_with_any_result: withResult,
             mean_top_score: withResult ? Math.round((scoreSum / withResult) * 100) / 100 : 0,
             note:
-                'tests/eval/routing-matrix/ is labelled with the expected RULE, never a skill, so ' +
-                'this arm carries no accuracy — only whether the ranker answers at all and how ' +
-                'confident its top answer is. Its size is measured here, not assumed: the roadmap ' +
-                'and five other sites still publish 496.',
+                'Coverage over EVERY matrix case, labelled or not: whether the ranker answers at ' +
+                'all and how confident its top answer is. Accuracy over the labelled subset is ' +
+                'the `accuracy` arm under `--corpus routing-matrix`. Size is measured here, never ' +
+                'asserted: 496 and 499 are both published elsewhere and both stale.',
         },
     };
+}
+
+function parseCorpus(argv: readonly string[]): CorpusName {
+    const i = argv.indexOf('--corpus');
+    if (i === -1) return 'labelled';
+    const raw = argv[i + 1];
+    if (!raw || !CORPUS_NAMES.includes(raw as CorpusName)) {
+        throw new Error(
+            `measure_skill_ranker_baseline: --corpus expects one of ${CORPUS_NAMES.join(' | ')}, got ${raw ?? '(nothing)'}`,
+        );
+    }
+    return raw as CorpusName;
 }
 
 export function main(argv: readonly string[]): number {
     const ranker = argv.includes('--ranker') ? (argv[argv.indexOf('--ranker') + 1] ?? 'keyword-v1') : 'keyword-v1';
     const commit = argv.includes('--commit') ? (argv[argv.indexOf('--commit') + 1] ?? 'unknown') : 'unknown';
-    const out = measure({ ranker, commit });
+    let corpus: CorpusName;
+    try {
+        corpus = parseCorpus(argv);
+    } catch (err) {
+        process.stderr.write(`${(err as Error).message}\n`);
+        return 2;
+    }
+    const out = measure({ ranker, commit, corpus });
     process.stdout.write(`${JSON.stringify(out, null, 2)}\n`);
     return 0;
 }

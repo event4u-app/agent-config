@@ -1,8 +1,13 @@
 rule: fast-path-marker-visibility
 positives:
   - prompt: "Why was the fast-path marker missing from your last reply?"
+    expected_skills: []
   - prompt: "The low-impact council resolved this - where is the verbatim marker line?"
+    expected_skills: []
   - prompt: "Warum fehlt der Fast-Path Marker in deiner letzten Antwort?"
+    expected_skills: []
 near_misses:
   - prompt: "Can the council take a second look at this design decision?"
+    expected_skills: [ai-council]
   - prompt: "You skipped the transparency banner on that verdict - please explain."
+    expected_skills: []

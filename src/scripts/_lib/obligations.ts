@@ -44,7 +44,9 @@ import {
     session_state_file,
     update_json_under_lock,
 } from '../hooks/state_io.js';
+import { manifest_path } from './installed_tools.js';
 import { type EnforcementClass, is_enforcement_class } from './obligation_frequency.js';
+import { hasSentinel } from './repo_root.js';
 
 /**
  * Directory holding one ledger file per session.
@@ -62,6 +64,77 @@ export function statePathFor(session_id: string): string {
 }
 
 /**
+ * WHICH KIND OF TREE WROTE A ROW — the whole vocabulary, and nothing else.
+ *
+ * `obligation-settle-shadow-bar` is read off `agents/runtime/state/obligations/`,
+ * which is one machine's gitignored runtime state. That scope bound lives in the
+ * claim's prose and in a roadmap paragraph, and in nothing a reader of the rows
+ * can compute. A reading that clears the pre-registered floor would therefore be
+ * quotable as evidence about a population nobody separated. This field makes the
+ * separation a property of the DATA, so the split is computable from the ledger
+ * alone rather than asserted beside it.
+ *
+ * THREE VALUES, CLOSED, AND A UNION OF LITERALS ON PURPOSE. The record gains one
+ * enumerated field and no `payload`, `notes` or `extra` slot, so the privacy
+ * property is the SHAPE and not a scrubber somebody has to keep correct — the
+ * same by-construction posture `artifact-engagement-recording` states for the
+ * telemetry event. A type that cannot hold a path cannot leak one.
+ *
+ * WHAT IT DELIBERATELY IS NOT. Not a path, not a username, not a hostname, not a
+ * machine id, not a git remote. The obvious implementation of "which tree wrote
+ * this" is the resolved root's filesystem path, which on a developer machine
+ * carries an account name — and because the bar is read by QUOTING rows, one such
+ * field would make every row already written unquotable rather than scrubbable.
+ * So the field carries a ROLE: what kind of tree this is, never which one.
+ */
+export type WriterRole =
+    /** The tree carries this package's own `package.json` sentinel — a maintainer checkout. */
+    | 'package'
+    /** Not the package, but an install manifest is present — a consumer project. */
+    | 'consumer'
+    /** Neither marker resolved. An honest absence, never a default. */
+    | 'unknown';
+
+/** The closed set, in one place, so a reader and a writer cannot disagree. */
+export const WRITER_ROLES: readonly WriterRole[] = ['package', 'consumer', 'unknown'];
+
+/** Narrowing guard for a value read back off disk. */
+export function isWriterRole(value: unknown): value is WriterRole {
+    return typeof value === 'string' && (WRITER_ROLES as readonly string[]).includes(value);
+}
+
+/**
+ * Classify the root this ledger lives under.
+ *
+ * ORDER IS THE CONTRACT. `package` is tested FIRST, because a maintainer checkout
+ * routinely also carries the install artifacts a consumer has — this repository
+ * installs itself — and a consumer-first test would label the maintainer tree
+ * `consumer` on exactly the machine the bar is being read from. The sentinel is
+ * `hasSentinel` from `repo_root.ts` rather than a second `package.json` reader:
+ * the sentinel name lives in one place or it drifts.
+ *
+ * `consumer` keys on the INSTALL MANIFEST (`agents/installed-tools.lock`, via the
+ * canonical `manifest_path` so the `AGENT_CONFIG_INSTALLED_TOOLS` override is
+ * honoured) and not on `.agent-settings.yml`. The settings file is something a
+ * human writes by hand; the lock is written by the installer and by nothing else.
+ * A weaker marker would buy coverage by guessing, which is the one thing this
+ * field may not do.
+ *
+ * NEVER THROWS. A probe that cannot stat returns `unknown`, which is a real
+ * answer — the ledger's contract is that an instrument missing a reading is
+ * cheaper than a refused turn, and a classifier is no exception.
+ */
+export function resolveWriterRole(root: string): WriterRole {
+    try {
+        if (hasSentinel(root)) return 'package';
+        if (fs.existsSync(manifest_path(root))) return 'consumer';
+    } catch {
+        return 'unknown';
+    }
+    return 'unknown';
+}
+
+/**
  * One rule delivered into this session, with the class its frontmatter declares.
  *
  * `cls` rather than `class` because `class` is a reserved word, and a field
@@ -75,7 +148,20 @@ export interface DeliveredRow {
     readonly cls: EnforcementClass;
     /** ISO-8601, second precision. */
     readonly at: string;
+    /** Which kind of tree wrote this. Stamped here, never supplied — see {@link WriterInput}. */
+    readonly writer: WriterRole;
 }
+
+/**
+ * What a CALLER offers, for every row type: the stored shape minus its writer.
+ *
+ * The writer is stamped by the append functions from the `root` they were
+ * already given, and is deliberately not part of any caller's input. A caller
+ * that could supply it could supply the wrong one — and a provenance field a
+ * caller can set is a provenance field, not provenance. Making it unsettable is
+ * cheaper than any check that it was set correctly.
+ */
+export type WriterInput<T> = Omit<T, 'writer'>;
 
 /**
  * One obligation discharged this session.
@@ -92,6 +178,8 @@ export interface DischargeRow {
     /** What observed it — a concern name, so a reader can go and check. */
     readonly by: string;
     readonly at: string;
+    /** Which kind of tree wrote this. Stamped, never supplied. */
+    readonly writer: WriterRole;
 }
 
 /**
@@ -109,6 +197,14 @@ export interface ShadowRow {
     readonly attempt: number;
     /** Always true today: a row is only written when the detector would refuse. */
     readonly would_refuse: boolean;
+    /**
+     * Which kind of tree wrote this. Stamped, never supplied.
+     *
+     * The shadow array is the one the pre-registered bar actually counts, so
+     * this is the field that turns "the corpus is one machine" from a sentence
+     * in a claim into something a reader can compute off the rows.
+     */
+    readonly writer: WriterRole;
 }
 
 /** The on-disk shape of one session's ledger. */
@@ -125,10 +221,11 @@ interface SerialisedRow {
     rule: string;
     class: string;
     at: string;
+    writer: WriterRole;
 }
 
 function serialise(row: DeliveredRow): SerialisedRow {
-    return { rule: row.rule, class: row.cls, at: row.at };
+    return { rule: row.rule, class: row.cls, at: row.at, writer: row.writer };
 }
 
 /**
@@ -139,6 +236,16 @@ function serialise(row: DeliveredRow): SerialisedRow {
  * whose class is outside the closed set must not enter the ledger wearing a
  * value the vocabulary denies — `is_enforcement_class` is the gate, so a
  * future widening of the schema cannot leak in through the state file.
+ *
+ * THE WRITER IS TREATED THE OTHER WAY ROUND, and the asymmetry is deliberate. A
+ * row whose CLASS is outside the vocabulary is dropped, because the class is the
+ * row's subject matter and a row wearing a denied class is a false statement
+ * about what was delivered. A row whose WRITER is absent or unrecognised is KEPT
+ * and reads `unknown`, because the writer is provenance ABOUT a delivery that
+ * genuinely happened — dropping the row would destroy a real record to punish a
+ * missing label, and every row written before this field existed is exactly that
+ * case. `unknown` is the honest reading of both, which is why one value covers
+ * absent and unresolvable alike.
  */
 export function parseRows(loaded: unknown): DeliveredRow[] {
     if (typeof loaded !== 'object' || loaded === null) return [];
@@ -154,7 +261,8 @@ export function parseRows(loaded: unknown): DeliveredRow[] {
         if (typeof rule !== 'string' || rule === '') continue;
         if (typeof at !== 'string' || at === '') continue;
         if (!is_enforcement_class(cls)) continue;
-        out.push({ rule, cls, at });
+        const writer = e['writer'];
+        out.push({ rule, cls, at, writer: isWriterRole(writer) ? writer : 'unknown' });
     }
     return out;
 }
@@ -185,13 +293,14 @@ export function stamp(now: Date = new Date()): string {
 export function appendDelivered(
     root: string,
     session_id: string,
-    rows: readonly DeliveredRow[],
+    rows: readonly WriterInput<DeliveredRow>[],
 ): number {
     if (rows.length === 0) return 0;
     if (is_replay_mode()) return 0;
     if (session_id.trim() === '') return 0;
 
     const target = path.join(root, statePathFor(session_id));
+    const writer = resolveWriterRole(root);
     let added = 0;
     try {
         update_json_under_lock<LedgerFile>(target, (loaded) => {
@@ -201,7 +310,7 @@ export function appendDelivered(
             for (const row of rows) {
                 if (seen.has(row.rule)) continue;
                 seen.add(row.rule);
-                merged.push(serialise(row));
+                merged.push(serialise({ ...row, writer }));
                 added += 1;
             }
             if (added === 0) return null; // deliberate no-write
@@ -245,24 +354,25 @@ function carryOver(loaded: Partial<LedgerFile>): Pick<LedgerFile, 'discharged' |
 export function appendDischarge(
     root: string,
     session_id: string,
-    rows: readonly DischargeRow[],
+    rows: readonly WriterInput<DischargeRow>[],
 ): number {
     if (rows.length === 0) return 0;
     if (is_replay_mode()) return 0;
     if (session_id.trim() === '') return 0;
 
     const target = path.join(root, statePathFor(session_id));
+    const writer = resolveWriterRole(root);
     let added = 0;
     try {
         update_json_under_lock<LedgerFile>(target, (loaded) => {
             const existing = Array.isArray(loaded.discharged) ? loaded.discharged : [];
-            const key = (r: DischargeRow): string => `${r.rule}::${r.by}`;
+            const key = (r: WriterInput<DischargeRow>): string => `${r.rule}::${r.by}`;
             const seen = new Set(existing.map(key));
             const merged = [...existing];
             for (const row of rows) {
                 if (seen.has(key(row))) continue;
                 seen.add(key(row));
-                merged.push(row);
+                merged.push({ ...row, writer });
                 added += 1;
             }
             if (added === 0) return null;
@@ -320,6 +430,7 @@ export function appendShadow(
 
     const fingerprint = [...missing].sort().join('::');
     const target = path.join(root, statePathFor(session_id));
+    const writer = resolveWriterRole(root);
     let attempt = 0;
     try {
         update_json_under_lock<LedgerFile>(target, (loaded) => {
@@ -334,7 +445,7 @@ export function appendShadow(
                 discharged: Array.isArray(loaded.discharged) ? loaded.discharged : [],
                 shadow: [
                     ...existing,
-                    { at: now, missing: [...missing], attempt, would_refuse: true },
+                    { at: now, missing: [...missing], attempt, would_refuse: true, writer },
                 ],
             };
         });

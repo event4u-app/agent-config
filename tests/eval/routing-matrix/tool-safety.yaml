@@ -1,8 +1,13 @@
 rule: tool-safety
 positives:
   - prompt: "Add Bash to the allowed_tools of this skill."
+    expected_skills: [skill-writing]
   - prompt: "Is the jira integration listed in the tool registry?"
+    expected_skills: []
   - prompt: "Welche allowed_tools braucht das neue Deployment-Skill?"
+    expected_skills: [skill-writing]
 near_misses:
   - prompt: "Grant the CI runner permission to write the coverage report."
+    expected_skills: [github-ci]
   - prompt: "Which MCP servers are configured for this project?"
+    expected_skills: [mcp]

@@ -10871,6 +10871,7 @@ function _parse(text) {
         verified = {
           docs_at: _asString(verifiedRaw["docs_at"]),
           docs_url: _asString(verifiedRaw["docs_url"]),
+          docs_digest: _asString(verifiedRaw["docs_digest"]),
           probe_at: _asString(verifiedRaw["probe_at"]),
           host_version: _asString(verifiedRaw["host_version"]),
           expires
@@ -10884,7 +10885,9 @@ function _parse(text) {
         const be = rv["block_exit"];
         const row = {
           native,
-          block_exit: typeof be === "number" ? be : null
+          block_exit: typeof be === "number" ? be : null,
+          answered_at: _asString(rv["answered_at"]),
+          docs_url: _asString(rv["docs_url"])
         };
         if (typeof rv["matcher"] === "string") row.matcher = rv["matcher"];
         slots.set(slot, row);

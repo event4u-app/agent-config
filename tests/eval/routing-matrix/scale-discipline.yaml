@@ -1,8 +1,13 @@
 rule: scale-discipline
 positives:
   - prompt: "Review this migration for the audit log table before it ships."
+    expected_skills: [schema-review, history-design]
   - prompt: "The orders list endpoint has an N+1 - can you add pagination?"
+    expected_skills: [performance, database]
   - prompt: "Braucht die neue Spalte einen index für die Filterabfragen?"
+    expected_skills: [database, schema-review]
 near_misses:
   - prompt: "Speed up the CSV export by streaming rows to the client."
+    expected_skills: [performance]
   - prompt: "Profile the slow dashboard render and cache the summary counts."
+    expected_skills: [performance-analysis, performance]

@@ -1,8 +1,13 @@
 rule: legal-safety-floor
 positives:
   - prompt: "Please review this contract before we send it back to the vendor."
+    expected_skills: [contract-review, contracts-cognition]
   - prompt: "Is clause 7 of this NDA acceptable for a small supplier?"
+    expected_skills: [nda-triage, contract-review]
   - prompt: "Prüfe bitte, ob diese DPA-Anlage mit der GDPR vereinbar ist."
+    expected_skills: [dpa-review, privacy-review]
 near_misses:
   - prompt: "Add a terms-of-service link to the footer component."
+    expected_skills: []
   - prompt: "The invoice PDF renders with the wrong date format."
+    expected_skills: []

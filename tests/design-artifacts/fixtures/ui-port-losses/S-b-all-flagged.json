@@ -1,0 +1,13 @@
+{
+  "_planted": "S-b — every declared item sits in `flagged`. The port carried nothing over and handed all five back, which is the opposite of an implementation. Today the run still reports SUCCESS, because `coverage_gaps` is empty and emptiness is all the outcome reads.",
+  "_expected_after": "not success — the enumerated unflagged-nothing case, with all five ids named",
+  "ui_apply": {
+    "rendered": { "panel.html": "Release notes" },
+    "files": ["tests/design-artifacts/fixtures/ui-port-losses/written/faithful/panel.html"],
+    "coverage": {
+      "honoured": [],
+      "translated": [],
+      "flagged": ["tab", "disclosure toggle", "subscribe submit", "rule-draw", "mark.svg"]
+    }
+  }
+}

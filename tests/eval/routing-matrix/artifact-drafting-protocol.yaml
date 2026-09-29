@@ -1,8 +1,13 @@
 rule: artifact-drafting-protocol
 positives:
   - prompt: "Please create a new skill for handling Stripe webhooks."
+    expected_skills: [skill-writing, skill-management]
   - prompt: "We need a new rule that stops the agent from committing secrets."
+    expected_skills: [rule-writing]
   - prompt: "Bau mir ein Skill für die Rechnungsprüfung."
+    expected_skills: [skill-writing]
 near_misses:
   - prompt: "Improve the wording of the existing linting skill's description."
+    expected_skills: [description-assist]
   - prompt: "Which guidelines cover error handling in this repo?"
+    expected_skills: [project-docs]

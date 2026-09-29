@@ -1,8 +1,13 @@
 rule: autonomous-execution
 positives:
   - prompt: "What does personal.autonomy control in the agent settings?"
+    expected_skills: []
   - prompt: "Switch to autonomy mode and finish the migration without asking me."
+    expected_skills: []
   - prompt: "Bitte aktiviere den Autonomy Mode für diese Session."
+    expected_skills: []
 near_misses:
   - prompt: "Just keep working without asking me about trivial steps."
+    expected_skills: []
   - prompt: "Does the agent have to ask before every routine workflow decision?"
+    expected_skills: []

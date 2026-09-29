@@ -1,8 +1,13 @@
 rule: playbook-precedence
 positives:
   - prompt: "Add a component to the web package the way this repo normally does it."
+    expected_skills: [playbook-authoring, existing-ui-audit]
   - prompt: "Does our own generator handle a new package, or do I scaffold it by hand?"
+    expected_skills: [playbook-authoring, monorepo-workspace]
   - prompt: "Is there a playbook for adding a route in this codebase?"
+    expected_skills: [playbook-authoring]
 near_misses:
   - prompt: "Explain what a factory pattern is in plain terms."
+    expected_skills: [learning-tutor]
   - prompt: "Rename the build output directory in the bundler config."
+    expected_skills: []

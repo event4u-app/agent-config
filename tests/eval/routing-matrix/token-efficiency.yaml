@@ -1,8 +1,13 @@
 rule: token-efficiency
 positives:
   - prompt: "Please minimize tool calls while scanning the repo."
+    expected_skills: [token-optimizer]
   - prompt: "You're fetching logs into context again - redirect them to a file first."
+    expected_skills: [token-optimizer, rtk-output-filtering]
   - prompt: "Bitte minimize tool calls, das Kontingent ist fast aufgebraucht."
+    expected_skills: [token-optimizer]
 near_misses:
   - prompt: "Reduce the verbosity of your replies for the rest of the session."
+    expected_skills: []
   - prompt: "Read the error tail from the CI run instead of the whole output."
+    expected_skills: [rtk-output-filtering, token-optimizer]

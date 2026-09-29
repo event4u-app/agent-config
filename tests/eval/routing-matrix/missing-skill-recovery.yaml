@@ -1,8 +1,13 @@
 rule: missing-skill-recovery
 positives:
   - prompt: "Which skill covers writing a migration for this table?"
+    expected_skills: [laravel-migration, migration-architect]
   - prompt: "You said skill not found - is there really nothing for this?"
+    expected_skills: []
   - prompt: "The catalogue shows no such skill for threat modelling, right?"
+    expected_skills: [threat-modeling]
 near_misses:
   - prompt: "Add a new skill directory for the payments domain."
+    expected_skills: [skill-writing, skill-management]
   - prompt: "List the files under the skills source tree."
+    expected_skills: []

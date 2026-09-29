@@ -1,8 +1,13 @@
 rule: question-not-instruction
 positives:
   - prompt: "Why did you only implement one phase of the roadmap?"
+    expected_skills: []
   - prompt: "What do you think about splitting this class into two?"
+    expected_skills: [code-refactoring]
   - prompt: "Warum hast du die Tests nicht mit angepasst?"
+    expected_skills: []
 near_misses:
   - prompt: "Explain the difference between the two caching strategies."
+    expected_skills: []
   - prompt: "Bitte erkläre mir den Unterschied zwischen den beiden Ansätzen."
+    expected_skills: []

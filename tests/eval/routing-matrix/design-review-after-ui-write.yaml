@@ -11,10 +11,13 @@ rule: design-review-after-ui-write
 # file_pattern on *.vue, *.blade.php and *.tsx.
 positives:
   - prompt: "Add a stats tile to the events dashboard and wire it to the summary endpoint."
+    expected_skills: [existing-ui-audit, fe-design]
     open_files: ["resources/js/dashboard/StatsTile.vue"]
   - prompt: "Bitte überarbeite dieses Blade-Template für die mobile Ansicht."
+    expected_skills: [blade-ui, fe-design]
     open_files: ["resources/views/events/show.blade.php"]
   - prompt: "Refactor the ticket picker into a reusable widget with its own props."
+    expected_skills: [ui-component-architect, existing-ui-audit]
     open_files: ["src/components/tickets/TicketPicker.tsx"]
   # This was authored as a FILE-LESS positive on 2026-08-17, reaching the rule
   # through the "component" keyword alone. Phase 2's amendment (option (b),
@@ -28,6 +31,7 @@ positives:
   # which is exactly what the amendment claims. Deleting it would have shrunk the
   # corpus to hide the change.
   - prompt: "Build a component for the seating plan legend."
+    expected_skills: [existing-ui-audit, ui-component-architect, fe-design]
     open_files: ["resources/js/seating/SeatingLegend.vue"]
 # Each near-miss avoids every declared trigger: no "component" or "design token"
 # substring in the prompt, no path under resources/views/, resources/js/,
@@ -36,8 +40,11 @@ positives:
 # because *.blade.php would match it if the pattern were merely "*.php".
 near_misses:
   - prompt: "Adjust the JSON response shape for the dashboard summary endpoint."
+    expected_skills: [api-design]
     open_files: ["app/Http/Controllers/DashboardSummaryController.php"]
   - prompt: "Bitte optimiere die Datenbankabfrage für die Teilnehmerliste."
+    expected_skills: [database, performance]
     open_files: ["app/Models/Attendee.php"]
   - prompt: "Rotate the storage credentials and update the deployment secret."
+    expected_skills: [secrets-management]
     open_files: ["config/filesystems.php"]

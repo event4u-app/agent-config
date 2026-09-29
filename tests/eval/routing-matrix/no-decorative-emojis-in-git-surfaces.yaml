@@ -1,9 +1,15 @@
 rule: no-decorative-emojis-in-git-surfaces
 positives:
   - prompt: "Run gh pr create with a title that summarizes the refactor."
+    expected_skills: [requesting-code-review, git-workflow]
   - prompt: "Can you git commit the staged changes with a fitting message?"
+    expected_skills: [conventional-commits-writing, git-workflow]
   - prompt: "Bitte führe git commit mit einer Conventional-Commit-Message aus."
+    expected_skills: [conventional-commits-writing, git-workflow]
   - prompt: "Use the PR title 'feat: 🚀 ship the setup wizard' for this branch."
+    expected_skills: [conventional-commits-writing, requesting-code-review]
 near_misses:
   - prompt: "Open a pull request for the current branch with a clean title."
+    expected_skills: [requesting-code-review, git-workflow]
   - prompt: "Commit the staged files once the checks pass."
+    expected_skills: [conventional-commits-writing, git-workflow]

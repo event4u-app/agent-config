@@ -14,11 +14,15 @@ rule: settings-ask-protocol
 # half is the incidental path trigger, not the keywords.
 positives:
   - prompt: "Run agent-config settings:set personal.canary_name for me."
+    expected_skills: []
   - prompt: "Soll ich rich_skills für dieses Projekt aktivieren?"
+    expected_skills: []
   - prompt: "I need to ask about a setting before I can finish this step."
+    expected_skills: []
   # The lone path-shaped trigger, exercised so the matrix covers every declared
   # shape rather than only the ones that carry the obligation.
   - prompt: "Walk me through how the A/B/C classes decide where an answer goes."
+    expected_skills: []
     open_files: ["docs/contracts/settings-classes.md"]
 # Each near-miss matches zero declared triggers. The traps avoided, because
 # matching is unanchored substring: bare "settings" is not a trigger but
@@ -28,8 +32,11 @@ positives:
 # open_edited_files may appear even inside a longer identifier.
 near_misses:
   - prompt: "Update the install instructions in the project readme."
+    expected_skills: [readme-writing]
     open_files: ["README.md"]
   - prompt: "Bitte dokumentiere die Cache-Konfiguration im Handbuch."
+    expected_skills: []
     open_files: ["docs/guides/caching.md"]
   - prompt: "Add a migration that drops the unused audit column."
+    expected_skills: [migration-architect, schema-review]
     open_files: ["database/migrations/2026_08_17_000000_drop_audit_column.php"]

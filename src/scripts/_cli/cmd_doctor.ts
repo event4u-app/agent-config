@@ -115,6 +115,7 @@ import {
     type TraceRecord,
 } from '../_lib/agent_settings.js';
 import { executionJson, forgeProtectionJson, UNREAD_FORGE } from './doctor_execution.js';
+import { checkOfflineReadiness, trafficEnvironmentJson } from './doctor_network_posture.js';
 import * as ai_council_clients from '../ai_council/clients.js';
 import * as ai_council_config from '../ai_council/config.js';
 import {
@@ -1450,23 +1451,7 @@ function _check_mcp_mode(project_root: string): Dict {
     };
 }
 
-function _check_offline_readiness(): Dict {
-    const script = path.join(_package_root(), 'src', 'scripts', 'hermetic-install.sh');
-    if (!pathExists(script)) {
-        return {
-            id: 'offline-readiness',
-            status: 'warn',
-            message: 'src/scripts/hermetic-install.sh not found in package',
-            remedy: 'reinstall @event4u/agent-config or pull missing files',
-        };
-    }
-    return {
-        id: 'offline-readiness',
-        status: 'ok',
-        message: 'verified-offline install entrypoint present',
-        remedy: '',
-    };
-}
+const _check_offline_readiness = (): Dict => checkOfflineReadiness(_package_root());
 
 function _check_stale_orphans(): Dict {
     const gdi = global_deploy_inventory;
@@ -3078,6 +3063,7 @@ function _emit_json(
     if (origin !== null) payload['project_root_origin'] = origin;
     payload['execution'] = executionJson(() => iter_setting_overrides({ cwd: project_root }));
     payload['forge_protection'] = forgeProtectionJson(UNREAD_FORGE); // 3.2
+    payload['traffic_environment'] = trafficEnvironmentJson(process.env);
     if (checks !== null) {
         payload['checks'] = checks;
         const drift = missing.length + modified.length + foreign.length + tag_drift.length;

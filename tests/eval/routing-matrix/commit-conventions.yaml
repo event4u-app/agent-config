@@ -1,8 +1,13 @@
 rule: commit-conventions
 positives:
   - prompt: "Write a commit message for these staged changes."
+    expected_skills: [conventional-commits-writing]
   - prompt: "What should I name the branch for this bugfix?"
+    expected_skills: [conventional-commits-writing, git-workflow]
   - prompt: "Wie formuliere ich die Commit-Message nach Conventional Commits?"
+    expected_skills: [conventional-commits-writing]
 near_misses:
   - prompt: "Summarize the diff between the two release tags."
+    expected_skills: []
   - prompt: "Push the tag v1.4.0 to the remote, please."
+    expected_skills: [git-workflow]

@@ -1,10 +1,15 @@
 rule: roadmap-ci-steps-policy
 positives:
   - prompt: "Should this plan schedule a full quality gate at the end of each phase?"
+    expected_skills: [roadmap-writing]
     open_files: ["agents/roadmaps/road-to-faster-ci.md"]
   - prompt: "Add a step that runs task ci before opening the PR."
+    expected_skills: [roadmap-writing]
   - prompt: "Soll ich am Ende der Phase task ci lokal laufen lassen?"
+    expected_skills: []
 near_misses:
   - prompt: "Run the unit suite for the touched files only."
+    expected_skills: []
   - prompt: "Document the CI stages in the contributor guide."
+    expected_skills: [github-ci]
     open_files: ["docs/contributing.md"]

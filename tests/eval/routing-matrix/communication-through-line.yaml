@@ -1,8 +1,13 @@
 rule: communication-through-line
 positives:
   - prompt: "What's the best cadence for reporting progress during a long migration?"
+    expected_skills: []
   - prompt: "Keep reporting progress after each phase so I can follow along."
+    expected_skills: []
   - prompt: "Beim Reporting Progress bitte kurz bleiben und nach jedem Meilenstein melden."
+    expected_skills: []
 near_misses:
   - prompt: "Give me a status update when the build finishes."
+    expected_skills: []
   - prompt: "Summarize what changed since yesterday's standup."
+    expected_skills: []
