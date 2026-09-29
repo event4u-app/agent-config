@@ -1,10 +1,16 @@
 rule: linked-projects-onboarding-gate
 positives:
   - prompt: "The IDE attached a sibling repo — should the agent include it in scope?"
+    expected_skills: []
   - prompt: "How do we handle cross-repo impact when the API package changes?"
+    expected_skills: [blast-radius-analyzer, monorepo-workspace]
   - prompt: "Das linked project taucht plötzlich in meinen Suchen auf — ist das gewollt?"
+    expected_skills: []
   - prompt: "Check what changed in the workspace module configuration."
+    expected_skills: []
     open_files: [".idea/modules.xml"]
 near_misses:
   - prompt: "Clone the template repository and start a fresh project."
+    expected_skills: []
   - prompt: "Merge the release branch back into develop."
+    expected_skills: [git-workflow]

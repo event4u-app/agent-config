@@ -9,12 +9,17 @@ rule: ui-audit-gate
 # than being deleted.
 positives:
   - prompt: "Add a stats tile component to the dashboard."
+    expected_skills: [existing-ui-audit, fe-design, ui-component-architect]
     open_files: ["resources/js/dashboard/StatsTile.vue"]
   - prompt: "Restyle this header partial to match the new branding."
+    expected_skills: [existing-ui-audit, fe-design]
     open_files: ["resources/views/partials/header.blade.php"]
   - prompt: "Bitte überarbeite dieses Blade-Partial für die mobile Ansicht."
+    expected_skills: [blade-ui, existing-ui-audit, fe-design]
     open_files: ["resources/views/events/show.blade.php"]
 near_misses:
   - prompt: "Adjust the API response shape for the dashboard widgets."
+    expected_skills: [api-design]
   - prompt: "Tweak the button colors in the marketing site stylesheet."
+    expected_skills: [fe-design]
     open_files: ["public/css/site.css"]

@@ -1,8 +1,13 @@
 rule: domain-safety-retention
 positives:
   - prompt: "How long should we keep closed support tickets?"
+    expected_skills: [data-handling-judgment]
   - prompt: "We received a DSAR - what do we need to produce and by when?"
+    expected_skills: [data-handling-judgment, privacy-review]
   - prompt: "Wie setzen wir eine Data Retention Policy für die Kundendaten auf?"
+    expected_skills: [data-handling-judgment]
 near_misses:
   - prompt: "Archive last year's invoices to cold storage."
+    expected_skills: []
   - prompt: "Set up automatic cleanup of temporary build artifacts after seven days."
+    expected_skills: []

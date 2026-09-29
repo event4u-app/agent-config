@@ -1,16 +1,29 @@
 rule: security-sensitive-stop
 positives:
   - prompt: "Add a password reset flow to the auth module."
+    expected_skills: [threat-modeling, security]
   - prompt: "Change the webhook signature validation for the Stripe integration."
+    expected_skills: [threat-modeling, security]
   - prompt: "Bitte passe die Billing-Logik für Plan-Upgrades an."
+    expected_skills: []
   - prompt: "add a file upload endpoint"
+    expected_skills: [threat-modeling, api-endpoint]
   - prompt: "wire up the SSRF allow-list"
+    expected_skills: [security, threat-modeling]
   - prompt: "expose a public status endpoint"
+    expected_skills: [api-endpoint, threat-modeling]
   - prompt: "add a field to the API resource"
+    expected_skills: [api-design]
 near_misses:
   - prompt: "Restyle the invoice PDF layout for the new template."
+    expected_skills: [pdf-tools]
   - prompt: "Harden the input validation on the search filter."
+    expected_skills: [defense-in-depth, security]
   - prompt: "Upload the roadmap to the shared drive."
+    expected_skills: []
   - prompt: "Rename the apiResource variable in the seeder."
+    expected_skills: [code-refactoring]
   - prompt: "Document the API endpoint parameter in the reference page."
+    expected_skills: [openapi]
   - prompt: "Refactor the internal endpoint helper for readability."
+    expected_skills: [code-refactoring]

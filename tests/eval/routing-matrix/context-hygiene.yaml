@@ -1,8 +1,13 @@
 rule: context-hygiene
 positives:
   - prompt: "Does the 3-failure rule still apply when every attempt hits a different error?"
+    expected_skills: []
   - prompt: "This has turned into a long conversation - should we start a fresh session?"
+    expected_skills: []
   - prompt: "Greift die 3-Failure-Regel auch, wenn jeder Versuch anders fehlschlägt?"
+    expected_skills: []
 near_misses:
   - prompt: "The chat feels slow, can you summarize where we currently stand?"
+    expected_skills: []
   - prompt: "I failed three times to fix this test, what should we try next?"
+    expected_skills: [systematic-debugging, project-analysis-hypothesis-driven]

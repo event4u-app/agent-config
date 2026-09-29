@@ -1,8 +1,13 @@
 rule: external-code-graph-interop
 positives:
   - prompt: "Who calls the InvoiceService::finalize method?"
+    expected_skills: [code-intelligence]
   - prompt: "Use the SCIP index to find references to this symbol."
+    expected_skills: [code-intelligence]
   - prompt: "Wo liegt der Code Graph in diesem Repo und wie frage ich ihn ab?"
+    expected_skills: [code-intelligence]
 near_misses:
   - prompt: "Show me the inheritance hierarchy for the payment module."
+    expected_skills: [code-intelligence]
   - prompt: "Grep for every usage of the old namespace prefix."
+    expected_skills: []
