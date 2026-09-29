@@ -313,6 +313,17 @@ jobs:
         # hardening landed. A missing class fails.
         run: ./scripts-run src/scripts/check_detector_corpus
 
+      - name: Kill-switch table — one row per switch the hook layer reads
+        # road-to-a-stop-that-holds 1.4, hardened after an independent review.
+        # The table published an equality between a hand-written row set and a
+        # grep over a growing tree, and a merge falsified it within a day. A set
+        # comparison rather than a count: one added switch plus one stale row
+        # cancel in a count and leave a reader chasing a variable nothing reads.
+        run: ./scripts-run src/scripts/check_kill_switch_table
+
+      - name: Kill-switch table — self-test
+        run: ./scripts-run src/scripts/check_kill_switch_table --self-test
+
       - name: Eval specifications — a gate on the measurement inputs
         # road-to-skill-ecosystem-eval-integrity Phase 1 Step 7. Promoted to a
         # PR-blocking gate on day one rather than landing advisory: the

@@ -991,6 +991,15 @@ grep -rhoE "AGENT_CONFIG_[A-Z_]+" src/scripts/hooks src/scripts/_lib \
   | grep -vE '^AGENT_CONFIG_(BUNDLE|CLI_DELEGATE)__$' | sort -u | wc -l
 ```
 
+**A gate keeps this equal, and it did not before.** `check_kill_switch_table`
+compares the SET of switches in the tree against the SET of rows here on every
+run — a set and not a count, because one switch added plus one row left behind
+for a deleted switch is the pair a count cannot see, and it is the pair that
+leaves a reader chasing a variable nothing reads. The table shipped at 28 == 28
+and was stale within a day: a merge brought in one hook carrying one new switch,
+and an independent review found it rather than a check. That is the argument for
+the gate.
+
 The two excluded names are esbuild `--define` identifiers
 (`__AGENT_CONFIG_BUNDLE__`, `__AGENT_CONFIG_CLI_DELEGATE__`, see
 `package.json`'s `build:*` scripts), not environment variables: nothing can set
@@ -1032,6 +1041,7 @@ configuration. `orphan` — the name survives only in prose; nothing reads it.
 | `AGENT_CONFIG_SESSION_ID` | harness | Package-side session id, ahead of the host's own | `_lib/collector_denominator.ts:519` |
 | `AGENT_CONFIG_SESSION_ROLE` | harness | Marks a spawn `worker`; unset, empty or unknown fails open to `orchestrator` | `_lib/session_role.ts:28` |
 | `AGENT_CONFIG_SKIP_METADATA_GATE` | maintainer | Bypasses the pre-push metadata gate | `hooks/prepush_metadata_sources.sh:29` |
+| `AGENT_CONFIG_TOOL_BYTE_CENSUS` | maintainer | `=1` opts a consumer into the tool-result byte census, which is otherwise written only inside the maintainer workspace | `hooks/tool_result_bytes_hook.ts:218` |
 | `AGENT_CONFIG_SURFACE` | harness | Explicit surface, for a caller that already knows it | `_lib/surface.ts:47` |
 | `AGENT_CONFIG_TRANSCRIPT_HOME` | orphan | Nothing reads it. The name survives in one comment in `hooks/turn_end_gate_hook.ts:1314` recording a widening this switch used to cause, and the switch itself is gone. Kept as a row so the count above stays reproducible, and marked so nobody sets it expecting an effect | — |
 
