@@ -71,18 +71,6 @@ Push, merge, rebase, branch creation, PR operations, and tags
 remain permission-gated by
 [`scope-control § git-operations`](../../rules/scope-control.md#git-operations--permission-gated).
 
-**This section used to restate all three, and the restatement was
-removed rather than re-synced.** It was the third carrier of one
-obligation, it was the only one nothing linked to, and it had already
-gone incomplete: it named the pre-scan ask as "the **only** permitted
-commit-related question" without the clause in `commit-mechanics`
-that retires that ask entirely when a roadmap declares
-`execution.mode`. A reader who followed the copy would have asked a
-question the execution contract had already covered. Incompleteness,
-not contradiction, is what a redundant copy decays into first — it
-reads as authoritative right up to the case it was never updated for.
-The pointer above cannot decay that way.
-
 ## Opt-in detection — rule-level summary
 
 (Migrated from the [`autonomous-execution`](../../rules/autonomous-execution.md)
