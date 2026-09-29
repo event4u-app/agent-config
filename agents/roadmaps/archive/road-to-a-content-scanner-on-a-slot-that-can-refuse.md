@@ -80,15 +80,20 @@ published table rather than a downgrade of the concern.
       `docs/enforcement-by-host.md` § "The slot rows are not a statement about
       any concern" carries the reading.
       **An honest note on what B had to correct.** The published claims were
-      ALREADY right: `docs/CLAIMS.md`, `docs/proof.md` and the
-      `untrusted-input-defense` rule all read `warn-only` / "cannot refuse" /
-      "neither figure is a claim that anything is blocked", and every
+      ALREADY right: `docs/CLAIMS.md`, `docs/proof.md`, `docs/settings-reference.md`
+      and the `untrusted-input-defense` rule all read `warn-only` / "cannot
+      refuse" / "neither figure is a claim that anything is blocked", and every
       `post_tool_use` row in the enforcement table already reads `warning` ·
-      `block_exit: null`. Nothing overclaimed a denial. What was missing was the
-      CONCERN layer: no published surface said which concern sits on which slot,
-      so the slot→concern reasoning existed only in whoever had last done the
-      hand comparison. That gap is what this change closes, and saying so is
-      more useful than reporting a correction that was not needed.
+      `block_exit: null`. Nothing overclaimed a denial. **Corrected after
+      review:** an earlier draft of this note said no published surface named
+      the concern-to-slot relation, and that was too strong —
+      `docs/guidelines/agent-infra/untrusted-input-spotlighting.md` § The
+      content-scanning hook already said the hook "binds to `post_tool_use`,
+      reads tool output". What was missing is narrower and still worth closing:
+      no surface tied that binding to the slot's *deny capability*, and nothing
+      recomputed the relation, so it could drift back silently. The same review
+      struck "`post_tool_use` is `block_exit: null` everywhere" as unverifiable
+      for `cowork`, which carries the binding and has no slot row at all.
 
 ## Phase 2 — Close the reporter's loop
 
@@ -101,24 +106,44 @@ published table rather than a downgrade of the concern.
       names any concern bound to a null-block slot
       Done 2026-09-29. `concernSlotAudit` + `renderConcernAudit` in
       `src/scripts/check_enforcement_matrix.ts`, printed on every read-only run.
-      Output, verbatim for two hosts: `claude  3/9 lowerable slot(s) deny · 0
-      blocking + 45 non-blocking binding(s) on null-block slots` and `augment
-      0/5 lowerable slot(s) deny · 5 blocking + 47 non-blocking binding(s)`.
-      **It found a second, unrelated instance on its first run** — on `augment`,
-      `block-no-verify`, `block-kernel-rule-writes`, `block-config-weakening`,
-      `block-speaking-inbox-dir` and `evidence-independence` are all
-      `severity: blocking` on a `pre_tool_use` that is `block_exit: null` ·
-      `fail_policy: discard`. Individual rules admit this in prose; nothing
-      counted it. `injection-scan` is correctly absent from the blocking list:
-      it is advisory, so it appears in the non-blocking count.
+      Output, verbatim for three hosts: `claude  3/9 lowerable slot(s) can deny
+      · 9 verdict-bearing slot(s) bound · 0 blocking + 45 non-blocking
+      binding(s) cannot refuse`; `augment 0/5 ... 5 verdict-bearing ... 5
+      blocking + 47 non-blocking`; `cowork 0/0 ... 8 verdict-bearing ... 5
+      blocking + 59 non-blocking`.
+      **It found two unrelated instances** — the same five guards
+      (`block-no-verify`, `block-kernel-rule-writes`, `block-config-weakening`,
+      `block-speaking-inbox-dir`, `evidence-independence`) cannot refuse on
+      `augment` (row exists, `block_exit: null` · `fail_policy: discard`) nor on
+      `cowork` (no row at all — `slots: {}` against eight bound slots). Rules
+      admit this in prose; nothing counted it. `injection-scan` is correctly
+      absent from the blocking list: it is advisory, so it lands in the
+      non-blocking count.
+      **The `cowork` half was a defect in THIS step, found by review and fixed
+      here.** The first version skipped any bound slot with no lowering row,
+      which printed `cowork 0/0 · 0 blocking` — byte-identical to `copilot`,
+      which binds nothing — i.e. a false green on the host with the largest gap.
+      The audit now classifies three reasons (`unlowerable`, `null-block`,
+      `stale-proof`), publishes a bound-slot denominator beside the lowerable
+      count, and drops nothing bound. The same review caught the deny count
+      reading `effective` rather than `literal`, which would have printed
+      "cannot deny" for a slot whose `block_exit` is `2` as soon as claude's
+      `verified` block expired — asserting the host fact `host_lowering.yaml`
+      explicitly disclaims. Both are corrected, and `stale-proof` is worded as a
+      lapsed citation rather than a host limit.
       **Prints, never fails — deliberately.** The exit code is untouched.
       Failing would redden the tree on bindings that predate the check, which is
       the reason the estate and continuity ratchets report distance rather than
-      gate on it. Tests: `tests/scripts/enforcement_concern_audit.test.ts`, 8
-      passed, over a two-host fixture where the SAME blocking concern is bound on
-      a denying and a discarding host — so the test can tell "names the right
-      one" from "names every one". **Sensitivity checked:** removing the
-      `block_exit` filter turned exactly those two asymmetry tests red.
+      gate on it. Tests: `tests/scripts/enforcement_concern_audit.test.ts`, 17
+      passed, over a FOUR-host fixture binding the same blocking concern on a
+      denying host, a null-block host, a host with no slot rows, and a host whose
+      `verified` block has expired — so each assertion separates "classified this
+      host correctly" from "flagged everything". **Sensitivity checked twice:**
+      re-introducing the skip for a missing lowering row, and switching the deny
+      count back to `effective`, together turn five tests red. The previous
+      iteration also carried a tautological test — it asserted a guard clause
+      that a later `!== null` already covered, so deleting the clause changed
+      nothing; review caught it and it is gone.
 - [x] **2.2 Confirm the published table matches the reporter's output.** One
       reading, two sources, no difference.
       verify: the reporter's per-host line and the published row agree for

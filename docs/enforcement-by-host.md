@@ -255,13 +255,23 @@ a reader looking only at the rows above would get them wrong:
   exists to inspect. The published claims elsewhere in this repository already
   read `warn-only` / `detected, not blocked`; this paragraph is where the slot
   reason is written down rather than re-derived by hand.
-- **On `augment`, five `blocking` guards sit on a slot that discards their
-  verdict.** `block-no-verify`, `block-kernel-rule-writes`,
+- **The same five `blocking` guards cannot refuse on `augment` or on `cowork`,
+  for two different reasons.** `block-no-verify`, `block-kernel-rule-writes`,
   `block-config-weakening`, `block-speaking-inbox-dir` and
-  `evidence-independence` are bound to `pre_tool_use`, which is
-  `block_exit: null` · `fail_policy: discard` there. They run and are ignored.
-  Individual rules already say so in prose; the audit is what makes it a number
-  that moves when a binding or a slot moves.
+  `evidence-independence` are bound to `pre_tool_use` on both. On `augment` a
+  lowering row exists and reads `block_exit: null` · `fail_policy: discard`, so
+  they run and are ignored. On `cowork` there is **no row at all** —
+  `host_lowering.yaml` gives it `slots: {}` against eight declared binding
+  slots — so nothing is lowered natively in the first place. The audit reports
+  those as distinct reasons (`null-block` versus `unlowerable`) and prints a
+  bound-slot count beside the lowerable one, which is what keeps `cowork` from
+  reading like `copilot`, the host that genuinely binds nothing.
+
+A third class exists and is worded deliberately. When a row's literal
+`block_exit` *can* deny but its `verified` block has expired, the audit says the
+**proof** has lapsed and never that the host cannot deny — `host_lowering.yaml`
+states in its own header that an absent `verified` "does NOT mean the host
+cannot enforce", and the deny count is therefore taken from the literal.
 
 ## `destructive:` — which layer guards a typed op, per host
 
