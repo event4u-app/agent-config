@@ -36,10 +36,23 @@ files in this diff are touched in exactly one direction each:
   `no_canary_reason` is rewritten. Verified by
   `git diff origin/main...HEAD -- src/config/gate-coverage.yml`: the diff is
   additive, 6 lines, one block.
-- **`.github/workflows/consistency.yml`** gains two steps, both invoking the new
-  gate (once plain, once `--self-test`). No existing step is removed, reordered,
-  or made conditional. No permission block, no `on:` trigger, no concurrency
-  group and no job-level setting is touched.
+- **`.github/workflows/rule-backstops.yml`** gains two steps, both invoking the
+  new gate (once plain, once `--self-test`). No existing step is removed,
+  reordered, or made conditional. No permission block, no `on:` trigger, no
+  concurrency group and no job-level setting is touched.
+
+  **`consistency.yml` is deliberately NOT the home, and the reason is stated
+  rather than left to be inferred.** That file is `WORKFLOW_PATH` in
+  `check_kernel_edit_ratified`, so an edit to it demands a `verdict: ratified`
+  artifact with two distinct providers — a council bar that exists because that
+  workflow decides whether the gates run at all. An ordinary new-gate step does
+  not warrant it, and this artifact does not claim to clear it: its verdict is
+  `confirmed-non-expanding` and its `providers` list names one. The step went to
+  `rule-backstops.yml`, which already triggers on both `src/scripts/**` and
+  `docs/**` — the exact pair that can put the table and the tree out of step, so
+  it is also the better home on the merits. If a maintainer would rather the step
+  sat in `consistency.yml`, that move needs the two-provider council this
+  artifact does not stand in for.
 
 No kernel rule is in the diff: `src/rules/` is untouched, and
 `block_kernel_rule_writes` is neither retired, weakened nor rebound —

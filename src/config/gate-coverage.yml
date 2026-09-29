@@ -1420,6 +1420,7 @@ gates:
 
   - id: check_kill_switch_table
     argv: []
+    ci_invocation: .github/workflows/rule-backstops.yml
     min_scanned: 3
     corpus: "the three ledger targets this gate resolves — the tree enumeration over `src/scripts/hooks/` and `src/scripts/_lib/` (419 files, 29 switches at registration), the table's row set in `docs/contracts/hook-architecture-v1.md` § Kill switches (29 rows), and the set comparison between them. The FILE count is separately floored by `assertScanned`, which refuses a run that read zero source files, so a moved root fails rather than reporting an empty tree as agreement with an empty table."
     status: enforced
