@@ -180,6 +180,14 @@ import { statePathFor as ciStatePathFor } from '../before_complete_hook.js';
 // Re-exported so every existing importer of this module is unchanged.
 import { detectDroppedDecision } from '../_lib/dropped_decision.js';
 import { isVerificationCommand } from '../_lib/verification_command.js';
+// Round 8 — the record path detector C prefers over its own regex. The regex
+// reads a command's TEXT and `echo test` matches it; these read what the run
+// exited with and what it printed.
+import {
+    readRunEvidence,
+    type InvalidRunReason,
+    type TurnRunState,
+} from '../_lib/verification_evidence.js';
 
 export { detectDroppedDecision };
 import { isSafeTranscriptPath } from './end_review_nudge_hook.js';
@@ -228,6 +236,16 @@ export interface Finding {
     /** The span that triggered it — quoted back so the refusal is actionable. */
     evidence: string;
     reason: string;
+    /**
+     * Which evidence path produced this finding, where a detector has two.
+     *
+     * Only detector C sets it. `record` means a persisted run record was read;
+     * `transcript` means the recorder left nothing for this turn and the
+     * command-text scan answered instead — the mode a replay through
+     * `measure_turn_end_gate` / `check_detector_corpus` always runs in, so a
+     * corpus reading stays reproducible after the record path landed.
+     */
+    mode?: 'record' | 'transcript';
 }
 
 // ---------------------------------------------------------------------------
@@ -489,6 +507,50 @@ export function readCiSettled(
 }
 
 /**
+ * The turn's recorded verification runs, or `null` when the recorder is not live.
+ *
+ * WHY THE LIVENESS TEST IS `edits_this_turn >= 1` AND NOT "the file exists".
+ * The obvious predicate — a state file with a `verification_runs` key — is
+ * wrong in a way that would refuse honest work on entire platforms. That key is
+ * present in the recorder's EMPTY state, so a host whose `post_tool_use` slot
+ * the manifest does not bind still has a file carrying `[]`, written by the
+ * prompt and stop events alone. Reading that as "this turn ran nothing" would
+ * refuse every editing turn on such a host, whatever the operator actually ran.
+ *
+ * `edits_this_turn` is the one field only a `post_tool_use` event can raise. The
+ * detector reaches here having already found an edit in the transcript, so a
+ * recorder that saw none of this turn's tool events is exactly the case this
+ * returns `null` for — and `null` means the transcript path answers, which is
+ * the behavior that predates the record path.
+ *
+ * The ownership check is the same one detector D applies to `ci_last`, for the
+ * same reason: a FOREIGN file's passing record would vouch for a run this
+ * session never made.
+ */
+export function readTurnRunState(
+    workspaceRoot: string,
+    session_id: string,
+): TurnRunState | null {
+    if (!hasStableSessionId(session_id)) return null;
+    try {
+        const raw = fs.readFileSync(path.join(workspaceRoot, ciStatePathFor(session_id)), 'utf-8');
+        const decoded: unknown = JSON.parse(raw);
+        if (!ownsSessionState(decoded, session_id)) return null;
+        if (typeof decoded !== 'object' || decoded === null || Array.isArray(decoded)) return null;
+        const state = decoded as Record<string, unknown>;
+        const runs = state['verification_runs'];
+        const edits = state['edits_this_turn'];
+        if (!Array.isArray(runs)) return null;
+        if (typeof edits !== 'number' || !Number.isFinite(edits) || edits < 1) return null;
+        return { runs: runs as readonly unknown[], edits_this_turn: edits };
+    } catch {
+        // Absent, unreadable or malformed — the recorder said nothing, so the
+        // transcript answers. Never a refusal of its own.
+        return null;
+    }
+}
+
+/**
  * A completion claim in the delivered reply. Deliberately narrow: the German and
  * English closings the corpus actually produced, anchored to a line so a mid-reply
  * "fertig" inside a sentence about something else does not fire.
@@ -681,29 +743,88 @@ export { isVerificationCommand };
  * no claim to verify, and refusing one would make the gate fire on the majority
  * of turns, which is how a guard gets disabled.
  */
-export function detectUnverifiedEdit(toolCalls: readonly ToolCall[]): Finding | null {
+export function detectUnverifiedEdit(
+    toolCalls: readonly ToolCall[],
+    runState: TurnRunState | null = null,
+): Finding | null {
     let lastEdit = -1;
     for (let i = 0; i < toolCalls.length; i += 1) {
         if (_EDIT_TOOLS.has(toolCalls[i]!.name)) lastEdit = i;
     }
     if (lastEdit === -1) return null;
+    const edited = toolCalls[lastEdit]!.path ?? toolCalls[lastEdit]!.name;
+
+    // THE RECORD PATH. Preferred whenever the recorder demonstrably witnessed
+    // this turn — see `readTurnRunState`, which returns null otherwise. The
+    // regex path below stays reachable and is not deprecated: it is the only
+    // path a transcript replay has, and it is what a host that binds no
+    // `post_tool_use` slot keeps.
+    if (runState !== null) {
+        const reading = readRunEvidence(runState);
+        if (reading.passed) return null;
+        // An instrument gap is never refused on (Risk 1 of the plan): the host
+        // surfaced no exit code, or wrote a record nothing can place, and
+        // neither is a fact about the operator's work. The transcript answer
+        // stands in, which is exactly the behavior before this path existed.
+        if (!reading.instrumentGap) {
+            return {
+                detector: 'verification',
+                evidence: edited,
+                reason: recordReason(reading.failed, reading.reasons),
+                mode: 'record',
+            };
+        }
+    }
+
     for (let i = lastEdit + 1; i < toolCalls.length; i += 1) {
         const c = toolCalls[i]!;
         if (c.name === 'Bash' && c.command !== undefined && isVerificationCommand(c.command)) {
             return null;
         }
     }
-    const edited = toolCalls[lastEdit]!.path;
     return {
         detector: 'verification',
         // The path, never the diff: the evidence span is quoted into a refusal,
         // and `ToolCall` is shaped so a file body cannot reach it.
-        evidence: edited ?? toolCalls[lastEdit]!.name,
+        evidence: edited,
         reason:
             'this turn changed a file and then ran no verification command — ' +
             'no test, type-check, lint or build call follows the last edit ' +
             '(verify-before-complete: a claim without a fresh run is unverified)',
+        mode: 'transcript',
     };
+}
+
+/**
+ * The refusal text for a record-path finding.
+ *
+ * It names the VERDICT rather than restating the rule, because the operator's
+ * next action differs per reason: a failed run means fix the code, a zero-test
+ * run means the filter matched nothing, and `not_a_verification_command` means
+ * the thing that ran could not have checked anything. A single sentence for all
+ * three would send every one of them to re-read the rule instead.
+ */
+function recordReason(failed: boolean, reasons: readonly InvalidRunReason[]): string {
+    const tail =
+        ' (verify-before-complete: no verification command run in this message → ' +
+        'you cannot claim it passes)';
+    if (failed) {
+        return (
+            'this turn changed a file and its verification run FAILED — a recorded ' +
+            'run after the last edit reports failing tests' + tail
+        );
+    }
+    if (reasons.length === 0) {
+        return (
+            'this turn changed a file and no verification run was recorded after ' +
+            'the last edit' + tail
+        );
+    }
+    return (
+        'this turn changed a file and no recorded run after the last edit proves ' +
+        `anything — the runs seen classify as ${[...new Set(reasons)].join(', ')}` +
+        tail
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -1268,7 +1389,7 @@ export function main(): number {
         // excused by anything about a dispatch and run unchanged.
         dispatchOpen ? null : detectPromissory(lastAssistant),
         detectLanguage(lastAssistant, readLanguagePin(workspaceRoot, rawSessionId)),
-        detectUnverifiedEdit(toolCalls),
+        detectUnverifiedEdit(toolCalls, readTurnRunState(workspaceRoot, rawSessionId)),
         // Round 7 § Phase 1 — detector D. It is NOT unconditional, and this
         // comment said it was while sitting one line above the `dispatchOpen`
         // ternary that conditions it: A and D are both excused by an open

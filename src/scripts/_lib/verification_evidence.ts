@@ -378,3 +378,92 @@ export function runnerOf(command: string): string {
     }
     return 'other';
 }
+
+/**
+ * One turn's recorded runs, as the recorder left them.
+ *
+ * `edits_this_turn` is the recorder's OWN total, not a count taken from a
+ * transcript. Both numbers in the placement comparison below therefore come
+ * from the same counter in the same file, so the comparison cannot be thrown
+ * off by a transcript reader and the recorder disagreeing about what an edit is.
+ */
+export interface TurnRunState {
+    readonly runs: readonly unknown[];
+    readonly edits_this_turn: number;
+}
+
+/**
+ * What the records say about the turn, and whether they may be refused on.
+ *
+ * Three fields rather than a boolean because the three answers are genuinely
+ * different: a pass allows, a failure refuses, and a gap in the INSTRUMENT
+ * allows while saying so. Collapsing the third into either of the others is
+ * Risk 1 of the plan realised — "a passing run classifies INVALID_RUN" and the
+ * turn is refused for the recorder's shortcoming.
+ */
+export interface RecordReading {
+    /** A `PASS_EVIDENCE_OK` record placed after the turn's last edit. */
+    readonly passed: boolean;
+    /** A `FAIL_EVIDENCE` record placed after the turn's last edit. */
+    readonly failed: boolean;
+    /** Nothing judgeable, and the reason is the recorder's — never refuse on this. */
+    readonly instrumentGap: boolean;
+    /** Every non-passing verdict in the window, for the finding text. Advisory. */
+    readonly reasons: readonly InvalidRunReason[];
+}
+
+/**
+ * Where in the turn's edit sequence a record sits, or `null` when unplaceable.
+ *
+ * `after_edits` is the recorder's edit counter as it stood when the command ran.
+ * A record carrying no number cannot be placed at all, and an unplaceable record
+ * is treated below as an instrument gap rather than as either evidence — which
+ * is the direction that under-refuses.
+ */
+function placeRecord(raw: unknown): number | null {
+    if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return null;
+    const v = (raw as Record<string, unknown>)['after_edits'];
+    if (typeof v !== 'number' || !Number.isFinite(v)) return null;
+    return v;
+}
+
+/**
+ * Read the turn's records for evidence that its LAST edit was verified.
+ *
+ * A record qualifies only when `after_edits >= edits_this_turn` — nothing was
+ * edited after the command ran. That is the same freshness clause the transcript
+ * path applies by scanning only after the last edit, and keeping it is the
+ * difference between this being a stricter reading of the same rule and being a
+ * different, weaker rule wearing the same name.
+ */
+export function readRunEvidence(state: TurnRunState): RecordReading {
+    const reasons: InvalidRunReason[] = [];
+    let passed = false;
+    let failed = false;
+    let gap = false;
+
+    for (const raw of state.runs) {
+        const placed = placeRecord(raw);
+        if (placed === null) {
+            gap = true;
+            reasons.push('unreadable_record');
+            continue;
+        }
+        if (placed < state.edits_this_turn) continue; // an edit followed this run
+        const verdict = classifyRun(raw);
+        if (verdict.kind === 'PASS_EVIDENCE_OK') {
+            passed = true;
+            continue;
+        }
+        if (verdict.kind === 'FAIL_EVIDENCE') {
+            failed = true;
+            continue;
+        }
+        reasons.push(verdict.reason);
+        if (isInstrumentGap(verdict)) gap = true;
+    }
+
+    // A pass or a failure is a reading of the RUN, and either one settles the
+    // question; the gap only matters when nothing judgeable was found at all.
+    return { passed, failed, instrumentGap: gap && !passed && !failed, reasons };
+}

@@ -34,6 +34,7 @@ import {
     isVerificationCommand,
     readCiSettled,
     readLanguagePin,
+    readTurnRunState,
     readTranscriptTail,
     visibleProse,
     type ToolCall,
@@ -1424,13 +1425,119 @@ describe('detectUnverifiedEdit', () => {
         expect(f).not.toBeNull();
     });
 
-    it('is silent when a verification run follows the edit', () => {
+    it('is silent when a verification run follows the edit (transcript mode)', () => {
+        // Rewritten by `road-to-a-stop-that-holds` step 1.3. The assertion is
+        // unchanged and the MODE is now pinned: with no run state, the
+        // command-text scan is what answers, and that path must keep working
+        // because a transcript replay has no other.
         expect(
             detectUnverifiedEdit([
                 call('Write', { path: 'src/a.ts' }),
                 call('Bash', { command: 'task test -- --filter=a' }),
             ]),
         ).toBeNull();
+        const f = detectUnverifiedEdit([call('Write', { path: 'src/a.ts' })]);
+        expect(f?.mode).toBe('transcript');
+    });
+
+    describe('record mode — step 1.3', () => {
+        const pass = (after: number) => ({
+            command: 'npx vitest run tests/a.test.ts',
+            exit_code: 0,
+            stdout_tail: ' Tests  4 passed (4)\n',
+            after_edits: after,
+        });
+
+        it('is silent when a PASSING record sits after the last edit', () => {
+            expect(
+                detectUnverifiedEdit([call('Edit', { path: 'src/a.ts' })], {
+                    runs: [pass(1)],
+                    edits_this_turn: 1,
+                }),
+            ).toBeNull();
+        });
+
+        it('refuses `echo test` — the record path reads the run, not the word', () => {
+            // The whole defect the record path closes. The transcript scan
+            // ALLOWS this turn, because `test` is in the selector's pattern;
+            // the same tool calls with a record refuse it.
+            const calls = [
+                call('Edit', { path: 'src/a.ts' }),
+                call('Bash', { command: 'echo test' }),
+            ];
+            expect(detectUnverifiedEdit(calls)).toBeNull();
+            const f = detectUnverifiedEdit(calls, {
+                runs: [{ command: 'echo test', exit_code: 0, after_edits: 1 }],
+                edits_this_turn: 1,
+            });
+            expect(f?.mode).toBe('record');
+            expect(f?.reason).toContain('not_a_verification_command');
+        });
+
+        it('refuses a turn whose record is a FAILING run', () => {
+            const f = detectUnverifiedEdit([call('Edit', { path: 'src/a.ts' })], {
+                runs: [
+                    {
+                        command: 'npx vitest run',
+                        exit_code: 1,
+                        stdout_tail: ' Tests  2 failed | 3 passed (5)\n',
+                        after_edits: 1,
+                    },
+                ],
+                edits_this_turn: 1,
+            });
+            expect(f?.mode).toBe('record');
+            expect(f?.reason).toContain('FAILED');
+        });
+
+        it('refuses edit → pass → edit: the proof predates the final mutation', () => {
+            const f = detectUnverifiedEdit(
+                [
+                    call('Edit', { path: 'src/a.ts' }),
+                    call('Bash', { command: 'npx vitest run' }),
+                    call('Edit', { path: 'src/b.ts' }),
+                ],
+                { runs: [pass(1)], edits_this_turn: 2 },
+            );
+            expect(f?.mode).toBe('record');
+            expect(f?.evidence).toBe('src/b.ts');
+        });
+
+        it('refuses a turn the recorder saw run nothing at all', () => {
+            const f = detectUnverifiedEdit([call('Edit', { path: 'src/a.ts' })], {
+                runs: [],
+                edits_this_turn: 1,
+            });
+            expect(f?.mode).toBe('record');
+        });
+
+        it('falls back to the transcript when the host surfaced no exit code', () => {
+            // Risk 1 of the plan: an instrument gap must never refuse honest
+            // work. The transcript answer stands in — allowed here, because a
+            // real verification command follows the edit.
+            const calls = [
+                call('Edit', { path: 'src/a.ts' }),
+                call('Bash', { command: 'npx vitest run' }),
+            ];
+            expect(
+                detectUnverifiedEdit(calls, {
+                    runs: [{ command: 'npx vitest run', exit_code: null, after_edits: 1 }],
+                    edits_this_turn: 1,
+                }),
+            ).toBeNull();
+            // ... and still refuses when the transcript ALSO shows nothing.
+            const f = detectUnverifiedEdit([call('Edit', { path: 'src/a.ts' })], {
+                runs: [{ command: 'npx vitest run', exit_code: null, after_edits: 1 }],
+                edits_this_turn: 1,
+            });
+            expect(f?.mode).toBe('transcript');
+        });
+
+        it('stays silent on a turn that edited nothing, whatever the records say', () => {
+            expect(
+                detectUnverifiedEdit([call('Read')], { runs: [], edits_this_turn: 3 }),
+            ).toBeNull();
+        });
     });
 
     it('fires when the verification ran BEFORE the last edit', () => {
@@ -1461,6 +1568,76 @@ describe('detectUnverifiedEdit', () => {
         const f = detectUnverifiedEdit([call('Edit', { path: 'src/a.ts' })]);
         expect(Object.keys({ ...call('Edit', { path: 'x' }) }).sort()).toEqual(['name', 'path']);
         expect(f?.evidence).not.toContain('\n');
+    });
+});
+
+describe('readTurnRunState — step 1.3, the recorder-liveness predicate', () => {
+    function writeState(dir: string, state: Record<string, unknown>): void {
+        const target = path.join(dir, ciStatePathFor(GATE_SESSION_ID));
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(
+            target,
+            JSON.stringify({ schema_version: 1, session_id: GATE_SESSION_ID, ...state }),
+        );
+    }
+
+    it('returns the runs and the edit total when the recorder witnessed the turn', () => {
+        const dir = makeWorkspace();
+        writeState(dir, {
+            verification_runs: [{ command: 'npx vitest run', exit_code: 0, after_edits: 2 }],
+            edits_this_turn: 2,
+        });
+        expect(readTurnRunState(dir, GATE_SESSION_ID)).toEqual({
+            runs: [{ command: 'npx vitest run', exit_code: 0, after_edits: 2 }],
+            edits_this_turn: 2,
+        });
+    });
+
+    it('returns null when no state file exists — the transcript answers', () => {
+        expect(readTurnRunState(makeWorkspace(), GATE_SESSION_ID)).toBeNull();
+    });
+
+    it('returns null on `edits_this_turn: 0` — the post-tool slot is not bound here', () => {
+        // THE CASE THIS PREDICATE EXISTS FOR. `verification_runs: []` is present
+        // in the recorder's EMPTY state, so a host binding no `post_tool_use`
+        // slot still has a file carrying it. Reading that as "the turn ran
+        // nothing" would refuse every editing turn on such a host.
+        const dir = makeWorkspace();
+        writeState(dir, { verification_runs: [], edits_this_turn: 0 });
+        expect(readTurnRunState(dir, GATE_SESSION_ID)).toBeNull();
+    });
+
+    it('returns null when the key is absent or not an array', () => {
+        const a = makeWorkspace();
+        writeState(a, { edits_this_turn: 1 });
+        expect(readTurnRunState(a, GATE_SESSION_ID)).toBeNull();
+        const b = makeWorkspace();
+        writeState(b, { verification_runs: 'nope', edits_this_turn: 1 });
+        expect(readTurnRunState(b, GATE_SESSION_ID)).toBeNull();
+    });
+
+    it('refuses a FOREIGN state file — a stranger cannot vouch for this session', () => {
+        const dir = makeWorkspace();
+        const target = path.join(dir, ciStatePathFor(GATE_SESSION_ID));
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(
+            target,
+            JSON.stringify({
+                schema_version: 1,
+                session_id: 'somebody-else',
+                verification_runs: [{ command: 'npx vitest run', exit_code: 0, after_edits: 1 }],
+                edits_this_turn: 1,
+            }),
+        );
+        expect(readTurnRunState(dir, GATE_SESSION_ID)).toBeNull();
+    });
+
+    it('returns null on a malformed file', () => {
+        const dir = makeWorkspace();
+        const target = path.join(dir, ciStatePathFor(GATE_SESSION_ID));
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(target, '{ not json');
+        expect(readTurnRunState(dir, GATE_SESSION_ID)).toBeNull();
     });
 });
 

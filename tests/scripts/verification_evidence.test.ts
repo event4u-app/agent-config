@@ -18,6 +18,7 @@ import {
     classifyRun,
     isInstrumentGap,
     parseSummary,
+    readRunEvidence,
     runnerOf,
     type RunRecord,
     type VerificationVerdict,
@@ -334,5 +335,78 @@ describe('the classifier is pure', () => {
         const before = JSON.stringify(r);
         classifyRun(r);
         expect(JSON.stringify(r)).toBe(before);
+    });
+});
+
+describe('readRunEvidence — placement in the turn, step 1.3', () => {
+    const PASS = { command: 'npx vitest run', exit_code: 0, stdout_tail: ' Tests  4 passed (4)\n' };
+
+    it('accepts a pass placed at or after the turn edit total', () => {
+        expect(readRunEvidence({ runs: [{ ...PASS, after_edits: 2 }], edits_this_turn: 2 }).passed).toBe(
+            true,
+        );
+        expect(readRunEvidence({ runs: [{ ...PASS, after_edits: 3 }], edits_this_turn: 2 }).passed).toBe(
+            true,
+        );
+    });
+
+    it('ignores a pass an edit followed — the freshness clause', () => {
+        const r = readRunEvidence({ runs: [{ ...PASS, after_edits: 1 }], edits_this_turn: 2 });
+        expect(r.passed).toBe(false);
+        expect(r.failed).toBe(false);
+        // Out of window, so it contributes no reason at all — a reader must not
+        // be told a stale pass was unjudgeable.
+        expect(r.reasons).toEqual([]);
+        expect(r.instrumentGap).toBe(false);
+    });
+
+    it('reports a failure in the window as a failure, never as a gap', () => {
+        const r = readRunEvidence({
+            runs: [
+                { command: 'npx vitest run', exit_code: null, after_edits: 1 },
+                {
+                    command: 'npx vitest run',
+                    exit_code: 1,
+                    stdout_tail: ' Tests  1 failed | 1 passed (2)\n',
+                    after_edits: 1,
+                },
+            ],
+            edits_this_turn: 1,
+        });
+        expect(r.failed).toBe(true);
+        expect(r.instrumentGap).toBe(false);
+    });
+
+    it('a pass in the window outranks an instrument gap beside it', () => {
+        const r = readRunEvidence({
+            runs: [
+                { command: 'npx vitest run', exit_code: null, after_edits: 1 },
+                { ...PASS, after_edits: 1 },
+            ],
+            edits_this_turn: 1,
+        });
+        expect(r.passed).toBe(true);
+        expect(r.instrumentGap).toBe(false);
+    });
+
+    it('treats an unplaceable record as a gap, the direction that under-refuses', () => {
+        const r = readRunEvidence({ runs: [{ ...PASS }], edits_this_turn: 1 });
+        expect(r.passed).toBe(false);
+        expect(r.instrumentGap).toBe(true);
+        expect(r.reasons).toContain('unreadable_record');
+    });
+
+    it('an empty run list is no gap — the recorder saw the turn and saw nothing run', () => {
+        const r = readRunEvidence({ runs: [], edits_this_turn: 1 });
+        expect(r).toEqual({ passed: false, failed: false, instrumentGap: false, reasons: [] });
+    });
+
+    it('names `not_a_verification_command` for a recorded `echo test`', () => {
+        const r = readRunEvidence({
+            runs: [{ command: 'echo test', exit_code: 0, after_edits: 1 }],
+            edits_this_turn: 1,
+        });
+        expect(r.reasons).toEqual(['not_a_verification_command']);
+        expect(r.instrumentGap).toBe(false);
     });
 });
