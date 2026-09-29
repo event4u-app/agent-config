@@ -172,9 +172,22 @@ describe('one parser — nothing may parse the arrow a second time', () => {
      * source literal is exported and the tree is swept for any other file
      * carrying an arrow-shaped `verify:` matcher.
      */
-    it('exports its grammar source so a duplicate is detectable at all', () => {
-        expect(VERIFY_ARROW_SOURCE.length).toBeGreaterThan(0);
-        expect(() => new RegExp(VERIFY_ARROW_SOURCE)).not.toThrow();
+    it('the exported grammar source is the one the parser actually applies', () => {
+        // The previous version asserted only that the constant was non-empty
+        // and compiled, which passes for `VERIFY_ARROW_SOURCE = 'x'` — a
+        // tautology guarding the one constant a duplicate would be compared
+        // against. Pin the DECISIONS instead, in both directions.
+        const re = new RegExp(`^${VERIFY_ARROW_SOURCE}`);
+        for (const accept of ['-> 0', '-> 2', '→ 0', '-> /[1-9]/', '-> /a\\/b/']) {
+            expect(re.test(accept), `${accept} must be an expectation`).toBe(true);
+        }
+        for (const refuse of ['-> green', '-> -1', '-> ', '0', '/re/']) {
+            expect(re.test(refuse), `${refuse} must not be an expectation`).toBe(false);
+        }
+        // And it is load-bearing: what the constant accepts is what the parser
+        // returns, so a change to one without the other is visible here.
+        expect(parseExpectation('-> 2')).toEqual({ kind: 'exit', code: 2 });
+        expect(parseExpectation('-> green')).toBeNull();
     });
 
     it('is the only file under src/scripts that parses a verify arrow', () => {
@@ -234,5 +247,75 @@ describe('renderVerifyLine — the oracle reaches the re-engagement, not just th
 
     it('renders nothing for an absent clause, so the message gains no empty line', () => {
         expect(renderVerifyLine(null)).toBe('');
+    });
+});
+
+describe('the clause body is the clause, never the step', () => {
+    /**
+     * The defect this pins cost 46 false positives in `unfalsifiable-verify`.
+     * A step block reaches this parser joined into one line by `units()`, so
+     * "to end of line" silently meant "to the end of the step" and a manual
+     * clause inherited every digit in the evidence block written beneath it.
+     */
+    const STEP = [
+        '- [x] **2.2 Publish the share.**',
+        '      verify: the evidence page names the command that produced it',
+        '',
+        '      **Evidence 2026-09-29.** 22 roadmaps, 230 clauses, 93 commands,',
+        '      and a baseline lowered 243 -> 148.',
+    ].join('\n');
+
+    it('stops at the blank line, so evidence written under a clause is not part of it', () => {
+        const clause = parseVerifyClause(STEP);
+        expect(clause?.command).toBeNull();
+        expect(clause?.raw).toBe('the evidence page names the command that produced it');
+        expect(clause?.raw).not.toMatch(/\d/);
+    });
+
+    it('still keeps a clause that WRAPS, which is why it is a paragraph and not a line', () => {
+        const wrapped = [
+            '- [ ] **1.0** do it',
+            '      verify: the page carries both figures and the',
+            '      command that produced them, 2 of them',
+            '',
+            '      **Evidence.** unrelated prose.',
+        ].join('\n');
+        const clause = parseVerifyClause(wrapped);
+        expect(clause?.raw).toBe('the page carries both figures and the command that produced them, 2 of them');
+    });
+
+    it('degrades to the whole string when the caller already joined the block', () => {
+        // Not an endorsement of that caller — a statement that this parser does
+        // not silently truncate at a boundary the input no longer contains.
+        const joined = '- [ ] x verify: the page names its command and the evidence says 230';
+        expect(parseVerifyClause(joined)?.raw).toBe('the page names its command and the evidence says 230');
+    });
+});
+
+describe('the two forms and the one space-bearing expectation they disagree on', () => {
+    /**
+     * Stated as a pinned LIMIT rather than left to be discovered. The backticked
+     * form caps its tail at one non-space token, so a regex containing a space
+     * loses its arrow; the annotation form is `$`-anchored and keeps it. The
+     * module docstring presented the cap as a uniform property of the grammar,
+     * which it is not. Pinned here so that closing the gap is a deliberate act
+     * with a failing test, rather than a silent drift nobody notices.
+     */
+    it('the annotation form keeps a space-bearing regex', () => {
+        const clause = parseVerifyClause('- [ ] x <!-- verify: cmd -> /a b/ -->');
+        expect(clause?.expect).toEqual({ kind: 'regex', source: 'a b' });
+    });
+
+    it('the backticked form does not — it loses the arrow rather than half-matching', () => {
+        const clause = parseVerifyClause('- [ ] x\n      verify: `cmd` -> /a b/');
+        expect(clause?.expect).toBeNull();
+    });
+
+    it('both forms agree on every space-free expectation, which is every one in the tree', () => {
+        for (const tail of ['-> 0', '-> 2', '-> /[1-9]/', '-> /unfalsifiable-verify/']) {
+            const html = parseVerifyClause(`- [ ] x <!-- verify: cmd ${tail} -->`);
+            const tick = parseVerifyClause(`- [ ] x\n      verify: \`cmd\` ${tail}`);
+            expect(tick?.expect, tail).toEqual(html?.expect);
+        }
     });
 });

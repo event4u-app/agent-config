@@ -79,7 +79,7 @@ export function shareOf(file: string, text: string): FileShare {
     let withExpectation = 0;
     for (const u of units(text.split('\n'))) {
         if (!u.hasVerify) continue;
-        const clause = parseVerifyClause(u.text);
+        const clause = parseVerifyClause(u.blockText);
         if (clause === null) continue;
         clauses += 1;
         if (clause.command !== null) withCommand += 1;

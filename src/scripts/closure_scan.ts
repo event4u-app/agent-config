@@ -51,7 +51,8 @@
  *
  * The figure is the MEASURED one, not the commissioning roadmap's. That
  * roadmap asserted zero expectations tree-wide; a reading refuted it — six
- * exist, three of them written before the grammar was legal. The producing
+ * exist, all six written before the grammar was legal, and three of them are
+ * that roadmap's own verify lines. The producing
  * command is `./scripts-run src/scripts/roadmap_verify_share`, so the number
  * above is re-derivable rather than remembered.
  */
@@ -226,6 +227,17 @@ export interface Unit {
     /** 1-based line of the unit's first line. */
     readonly line: number;
     readonly text: string;
+    /**
+     * The same block with its NEWLINES intact.
+     *
+     * `text` is joined with spaces so a wrapped pattern still matches across
+     * the wrap, and that is right for the line patterns. It is wrong for the
+     * `verify:` clause: with no newline left, "to end of line" means "to end of
+     * the step", so a manual clause inherited every digit in the evidence block
+     * written under it. Measured before this field existed: 46 of 50
+     * `unfalsifiable-verify` hits fired on a quantity the clause never wrote.
+     */
+    readonly blockText: string;
     readonly inAcceptance: boolean;
     readonly isOpenStep: boolean;
     readonly hasVerify: boolean;
@@ -269,6 +281,7 @@ export function units(lines: readonly string[]): Unit[] {
                 // written with single spaces stops matching across the wrap —
                 // which is the case this unit exists to catch.
                 text: block.join(' ').replace(/\s+/g, ' '),
+                blockText: block.join('\n'),
                 inAcceptance,
                 isOpenStep: OPEN_STEP_RE.test(line),
                 hasVerify: /(?:^|\s)verify:/m.test(block.join('\n')),
@@ -279,6 +292,7 @@ export function units(lines: readonly string[]): Unit[] {
         out.push({
             line: i + 1,
             text: line,
+            blockText: line,
             inAcceptance,
             isOpenStep: false,
             hasVerify: false,
@@ -313,7 +327,7 @@ export function scan(text: string): Finding[] {
         // could not fail is the defect in its completed form, and restricting
         // this to open steps would hide every instance that already landed.
         if (matched === null && u.hasVerify && !u.inAcceptance) {
-            const clause = parseVerifyClause(u.text);
+            const clause = parseVerifyClause(u.blockText);
             if (clause !== null && unfalsifiableReason(clause) !== null) matched = 'unfalsifiable-verify';
         }
         if (matched === null) continue;

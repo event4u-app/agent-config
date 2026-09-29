@@ -14,11 +14,13 @@
  * between, and the count of EXPECTATIONS did not move. That is why the ratio
  * carries and the raw totals do not.
  *
- * Three of those six predate this parser and were written by an author nobody
- * prompted, in `road-to-one-verification-classifier.md`. This grammar therefore
- * DOCUMENTS a form already in use; it does not introduce one. The roadmap that
- * commissioned the work asserted zero, which is why the number here is the
- * measured one and carries its producing command:
+ * ALL SIX predate this parser, and the split is the interesting part. Three sit
+ * in an unrelated roadmap and were written by an author nobody prompted. The
+ * other three are the verify lines of the roadmap that commissioned this work —
+ * which asserted, in the same document, that ZERO clauses carried an
+ * expectation. It was carrying three of them. This grammar therefore DOCUMENTS
+ * a form already in use; it does not introduce one, and the number here is the
+ * measured one so that it carries its producing command:
  * `./scripts-run src/scripts/roadmap_verify_share`.
  *
  * THE GRAMMAR. The expectation half is OPTIONAL and attaches with the arrow
@@ -60,7 +62,12 @@ export interface VerifyClause {
     readonly command: string | null;
     /** The `-> 0` / `-> /re/` half, or `null` where the clause carries none. */
     readonly expect: Expectation | null;
-    /** The clause body as written, whitespace-normalised. For excerpts. */
+    /**
+     * The clause body, whitespace-normalised — the clause, never the step.
+     *
+     * For the prose form that is the clause's own paragraph: a detector reading
+     * this must not see text the clause did not write.
+     */
     readonly raw: string;
 }
 
@@ -119,19 +126,48 @@ function lastMatch(re: RegExp, text: string): RegExpExecArray | null {
  * carries `(?!`)`: a label followed by a backtick is the delimited form, which
  * branch one already owns.
  *
- * The tail is capped at a single non-space token on purpose. Readers hand this
- * parser a whole step BLOCK, joined and whitespace-normalised, so "the rest of
- * the line" is really "the rest of the step" — and a step that continues after
+ * The tail is capped at a single non-space token on purpose. A caller may hand
+ * this parser a whole step BLOCK already joined into one line, so "the rest of
+ * the line" can mean "the rest of the step" — and a step that continues after
  * its verify clause would then push the expectation away from the end anchor
- * and lose it silently. The cost is that a regex expectation may not contain a
- * space; `/[1-9]/` and `/unfalsifiable-verify/` are the shapes in use, and a
- * space-bearing expectation loses its arrow loudly (it parses as no
+ * and lose it silently. The cost is that a regex expectation here may not
+ * contain a space; `/[1-9]/` and `/unfalsifiable-verify/` are the shapes in
+ * use, and a space-bearing expectation loses its arrow loudly (it parses as no
  * expectation) rather than half-matching.
+ *
+ * THE CAP IS THIS FORM'S, NOT THE GRAMMAR'S — said plainly because an earlier
+ * revision of this comment implied otherwise. The annotation form is
+ * `$`-anchored through {@link VERIFY_ARROW_SOURCE} and DOES keep `-> /a b/`;
+ * this form does not. The two agree on every space-free expectation, which is
+ * every expectation in the tree. Both directions are pinned by test, so closing
+ * the gap is a deliberate act against a failing assertion rather than a silent
+ * drift — which is the failure the WHY ONE PARSER note above exists to prevent,
+ * and it applies to this module's own two readers first.
  */
 const BACKTICKED_RE = /(?:`verify:`|verify:(?!`))\s*`([^`]+)`[ \t]*((?:->|→)[ \t]*\S+)?/g;
 
-/** Prose after the label, to end of line. The MANUAL form. */
-const PROSE_RE = /(?:`verify:`|verify:(?!`))[ \t]*([^\n]*)/g;
+/** Prose after the label. The MANUAL form; the body is bounded separately. */
+const PROSE_RE = /(?:`verify:`|verify:(?!`))[ \t]*/g;
+
+/**
+ * A prose clause runs to the end of its PARAGRAPH — never to the end of the step.
+ *
+ * "To end of line" is too little: a prose clause wraps, and the quantity it
+ * asserts can sit on the wrap. The rest of the step is far too much, and that
+ * was the live defect — a step's evidence block sits under its clause, so a
+ * clause that named no number inherited every number written beneath it, and
+ * `unfalsifiable-verify` reported 46 hits on quantities no clause had written.
+ *
+ * A blank line is the boundary because that is what separates a clause from the
+ * evidence recorded under it in this tree. Input with no newlines at all — a
+ * caller that already joined the block — degrades to the whole string, which is
+ * the previous behaviour and keeps such a caller working rather than silently
+ * truncating it at a boundary that is not there.
+ */
+function proseBody(rest: string): string {
+    const end = rest.search(/\n[ \t]*(?:\r?\n|$)/);
+    return (end === -1 ? rest : rest.slice(0, end)).replace(/\s+/g, ' ').trim();
+}
 
 /** Build an expectation from the already-isolated arrow value. */
 function fromValue(value: string): Expectation | null {
@@ -181,9 +217,14 @@ export function parseVerifyClause(stepText: string): VerifyClause | null {
     const html = lastMatch(HTML_RE, stepText);
     if (html !== null) {
         const body = (html[1] as string).trim();
-        if (body === '') return null;
-        const { command, expect } = splitBody(body);
-        return { command: command === '' ? null : command, expect, raw: body };
+        // An EMPTY annotation is not a clause and must not mask one. Returning
+        // null here — the inherited behaviour — let `<!-- verify: -->` hide a
+        // real backticked clause further along the same step, and now that two
+        // readers consume this parser it would hide it from the share too.
+        if (body !== '') {
+            const { command, expect } = splitBody(body);
+            return { command: command === '' ? null : command, expect, raw: body };
+        }
     }
 
     const backticked = lastMatch(BACKTICKED_RE, stepText);
@@ -197,9 +238,9 @@ export function parseVerifyClause(stepText: string): VerifyClause | null {
 
     const prose = lastMatch(PROSE_RE, stepText);
     if (prose === null) return null;
-    const body = (prose[1] as string).trim();
+    const body = proseBody(stepText.slice(prose.index + prose[0].length));
     if (body === '') return null;
-    return { command: null, expect: null, raw: body.replace(/\s+/g, ' ') };
+    return { command: null, expect: null, raw: body };
 }
 
 /**

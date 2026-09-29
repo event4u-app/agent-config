@@ -190,11 +190,17 @@ describe('closure_scan — fixture F5, the unfalsifiable-verify family', () => {
         expect(unfalsifiable).toHaveLength(4);
     });
 
-    it('fires on none of the three controls', () => {
+    it('fires on none of the four controls', () => {
         // Phase 2 holds the controls. A family that also fires on a real
         // command with a real expectation is measuring the PRESENCE of a
         // verify line, not its oracle — which is the detector being useless
         // in the direction that matters.
+        //
+        // Control 2.4 is the one this fixture was missing, and its absence is
+        // why the manual-quantity rule shipped reading the whole step: a clause
+        // that writes no number, followed by the evidence block written under
+        // it. It is the commonest clause shape in the live tree and it produced
+        // 46 findings on quantities no clause had written.
         const phase2 = text.split('\n').findIndex((l) => /^## Phase 2/.test(l)) + 1;
         for (const f of unfalsifiable) expect(f.line).toBeLessThan(phase2);
     });

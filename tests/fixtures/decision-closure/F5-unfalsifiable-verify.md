@@ -43,3 +43,12 @@ that having one is not the same as having an oracle.
 - [x] **2.3 A manual clause with no quantity in it.** Prose is MANUAL, not
       unfalsifiable — a human reads it, and that is a declared oracle.
       verify: a reviewer confirms the page names its producing command
+- [x] **2.4 A manual clause whose STEP carries numbers it did not write.** The
+      commonest shape in the live tree, and the one that was missing here: a
+      clause with no quantity, followed by the evidence block recorded under it.
+      The clause runs to the end of its paragraph, so the numbers below are not
+      its own — reading them as its own produced 46 false positives.
+      verify: a reviewer confirms the page names its producing command
+
+      **Evidence 2026-09-19.** 12 sabotage probes, 15/15 cases green, baseline
+      lowered 243 -> 148, and 318 gate-open fires recorded.
