@@ -1,0 +1,8 @@
+{
+  "_note": "The declared inventory every arm is scored against. Invented content: a release-notes panel. No project or company material.",
+  "path": "tests/design-artifacts/fixtures/ui-port-losses/written/faithful/panel.html",
+  "interactions": ["tab", "disclosure toggle", "subscribe submit"],
+  "keyframes": ["rule-draw"],
+  "assets": ["mark.svg"],
+  "loss_acknowledged": true
+}

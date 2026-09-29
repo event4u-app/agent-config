@@ -10,6 +10,9 @@
  * rejection, or change recording. Apply validates the output against the
  * brief's microcopy lock so a mid-loop hallucination is caught at the boundary.
  */
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+
 import {
     type Any,
     type DeliveryState,
@@ -124,15 +127,27 @@ export function run(state: DeliveryState): StepResult {
     }
 
     const provided = provided_artifact(state.ui_design as Record<string, Any> | null);
+    const notes: string[] = [];
     if (provided !== null) {
-        const gaps = coverage_gaps(provided, envelope['coverage']);
-        if (gaps.length > 0) {
-            return _halt_coverage(state, provided, gaps);
+        const report = coverage_report(provided, envelope['coverage']);
+        if (report.gaps.length > 0) {
+            return _halt_coverage(state, provided, report.gaps);
+        }
+        notes.push(...report.fallbacks);
+        // 3.1 — reported in shadow: the outcome value is unchanged for one
+        // release, so a caller branching on it is found by the line rather
+        // than by the breakage.
+        const handed_back = _handed_back_line(report);
+        if (handed_back !== null) {
+            notes.push(handed_back);
         }
     }
 
     _record_changes(state, envelope);
-    return new StepResult({ outcome: Outcome.SUCCESS });
+    return new StepResult({
+        outcome: Outcome.SUCCESS,
+        message: notes.join('\n'),
+    });
 }
 
 /** Buckets the coverage report must sort every declared item into. */
@@ -145,8 +160,73 @@ export const COVERED_INVENTORIES: ReadonlyArray<string> = [
     'assets',
 ];
 
+/** What the coverage report said, split into what halts and what only warns. */
+export interface CoverageReport {
+    /** Reasons the report fails to account for the artifact. A halt. */
+    gaps: string[];
+    /** Items carried only by the deprecated containment fallback. A warning. */
+    fallbacks: string[];
+    /** Every declared item, in report order. */
+    declared: string[];
+    /** Declared items whose only account is in `flagged` — work handed back. */
+    handed_back: string[];
+}
+
 /**
- * Return every reason the coverage report fails to account for the artifact.
+ * Did the port hand back everything it was given?
+ *
+ * True only when there is a declared inventory and **every** item in it is
+ * accounted for solely by `flagged`. Deliberately narrow: flagging one dropped
+ * handler is the ledger working exactly as designed, and reporting that as a
+ * hand-back would make the signal worthless within a week. What this catches
+ * is the envelope that accounted for everything and carried none of it — which
+ * `coverage_gaps` cannot see, because a complete report and a complete
+ * surrender are the same empty gap list.
+ */
+export function carried_nothing(report: CoverageReport): boolean {
+    return report.declared.length > 0 && report.handed_back.length === report.declared.length;
+}
+
+/** The line that says a port handed its work back, or `null`. */
+function _handed_back_line(report: CoverageReport): string | null {
+    if (!carried_nothing(report)) return null;
+    return (
+        `the port carried nothing over — all ${report.declared.length} declared ` +
+        `item(s) are in \`flagged\`: ${report.handed_back.join(', ')}`
+    );
+}
+
+/** Characters that make a containment hit part of a longer word. */
+function _is_word_char(ch: string): boolean {
+    return (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9');
+}
+
+/**
+ * Does `entry` mention `needle` as its own token rather than by accident?
+ *
+ * The deprecated fallback's boundary. Both arguments are already lower-cased.
+ * `submit handler — translated` mentions `submit handler`; `table sort order`
+ * does not mention `tab`, even though it contains those three letters. The
+ * discriminator is whether the hit is delimited on both sides, which is
+ * exactly the difference between an entry carrying its own explanation — the
+ * one thing containment was documented as buying — and a short name colliding
+ * with the inside of a longer word.
+ */
+function _mentions(entry: string, needle: string): boolean {
+    let from = 0;
+    for (;;) {
+        const at = entry.indexOf(needle, from);
+        if (at < 0) return false;
+        const before = at === 0 ? '' : (entry[at - 1] as string);
+        const after_at = at + needle.length;
+        const after = after_at >= entry.length ? '' : (entry[after_at] as string);
+        if (!_is_word_char(before) && !_is_word_char(after)) return true;
+        from = at + 1;
+    }
+}
+
+/**
+ * Return what the coverage report fails to account for, and what it only warns on.
  *
  * The fidelity ledger the port case never had. `apply` used to validate its
  * output with a single placeholder substring scan and nothing else, so a
@@ -155,22 +235,45 @@ export const COVERED_INVENTORIES: ReadonlyArray<string> = [
  * appear in exactly one bucket turns that silence into a halt: a handler the
  * port could not carry has to be written down in `flagged`.
  *
- * Matching is substring containment against the bucket entries, so an entry
- * may carry its own explanation ("submit handler — translated to a form
- * action") and still count as accounting for `submit handler`.
+ * **Matching is equality, not containment.** Containment was chosen so an
+ * entry could carry its own explanation ("submit handler — translated to a
+ * form action") and still account for `submit handler`. It also accounted for
+ * a declared `tab` with an entry about `table sort order`, which is the same
+ * rule doing the opposite of its job: the shorter the declared name, the more
+ * likely some unrelated entry contains it, so the gate grew weakest exactly
+ * where the inventory was tersest.
+ *
+ * `allow_annotated_fallback` keeps the explanation case working for one
+ * release, as a **warning** rather than a silent pass, so an envelope written
+ * against the old rule does not halt without notice. It is narrower than the
+ * containment it replaces: the mention has to be delimited
+ * ({@link _mentions}), which is the property the explanation case always had
+ * and the collision case never did.
  */
-export function coverage_gaps(
+export function coverage_report(
     provided: Record<string, Any>,
     coverage: Any,
-): string[] {
+    allow_annotated_fallback = true,
+): CoverageReport {
     const gaps: string[] = [];
+    const fallbacks: string[] = [];
+    const declared_all: string[] = [];
+    const handed_back: string[] = [];
     if (!_isDict(coverage)) {
-        return [
-            'no `coverage` report in the apply envelope — a provided artifact ' +
-                'requires one',
-        ];
+        return {
+            gaps: [
+                'no `coverage` report in the apply envelope — a provided artifact ' +
+                    'requires one',
+            ],
+            fallbacks,
+            declared: declared_all,
+            handed_back,
+        };
     }
-    const entries: string[] = [];
+    // Kept per-bucket, not flattened: which bucket accounted for an item is
+    // what separates a port that translated its work from one that handed it
+    // back, and a flat list of entries cannot answer that.
+    const by_bucket = new Map<string, string[]>();
     for (const bucket of COVERAGE_BUCKETS) {
         const value = coverage[bucket];
         if (value === undefined) {
@@ -181,26 +284,75 @@ export function coverage_gaps(
             gaps.push(`\`coverage.${bucket}\` must be a list of strings`);
             continue;
         }
+        const kept: string[] = [];
         for (const item of value) {
             if (typeof item === 'string' && item !== '') {
-                entries.push(item.toLowerCase());
+                kept.push(item.toLowerCase());
             }
         }
+        by_bucket.set(bucket, kept);
+    }
+    /** The buckets that account for `needle`, by either rule. */
+    function _accounting_buckets(needle: string): string[] {
+        const hit: string[] = [];
+        for (const [bucket, entries] of by_bucket) {
+            if (entries.some((entry) => entry === needle)) {
+                hit.push(bucket);
+            } else if (
+                allow_annotated_fallback &&
+                entries.some((entry) => _mentions(entry, needle))
+            ) {
+                hit.push(bucket);
+            }
+        }
+        return hit;
     }
     for (const inventory of COVERED_INVENTORIES) {
         const declared = provided[inventory];
         if (!Array.isArray(declared)) continue;
         for (const item of declared) {
             if (typeof item !== 'string' || item === '') continue;
+            declared_all.push(item);
             const needle = item.toLowerCase();
-            if (!entries.some((entry) => entry.includes(needle))) {
+            const buckets = _accounting_buckets(needle);
+            if (buckets.length === 0) {
                 gaps.push(
                     `\`${inventory}\`: \`${item}\` appears in no coverage bucket`,
+                );
+                continue;
+            }
+            if (buckets.length === 1 && buckets[0] === 'flagged') {
+                handed_back.push(item);
+            }
+            const exact = [...by_bucket.values()].some((entries) =>
+                entries.some((entry) => entry === needle),
+            );
+            if (exact) continue;
+            const mention = [...by_bucket.values()]
+                .flat()
+                .find((entry) => _mentions(entry, needle));
+            if (mention !== undefined) {
+                fallbacks.push(
+                    `\`${inventory}\`: \`${item}\` matched only by containment ` +
+                        `against \`${mention}\``,
                 );
             }
         }
     }
-    return gaps;
+    return { gaps, fallbacks, declared: declared_all, handed_back };
+}
+
+/**
+ * Every reason the coverage report fails to account for the artifact.
+ *
+ * The halting half of {@link coverage_report}, kept as its own name because
+ * that is what callers and the port tests already ask for.
+ */
+export function coverage_gaps(
+    provided: Record<string, Any>,
+    coverage: Any,
+): string[] {
+    return coverage_report(provided, coverage).gaps;
 }
 
 /** BLOCKED halt — the port did not account for what the artifact declared. */
@@ -299,7 +451,53 @@ function _resolve_directive(state: DeliveryState): string {
  * exactly the same inputs.
  */
 function _placeholder_violations_in_output(envelope: Record<string, Any>): string[] {
-    return placeholder_paths(envelope['rendered']);
+    return [...placeholder_paths(envelope['rendered']), ...written_file_placeholders(envelope)];
+}
+
+/**
+ * Return the written files whose text carries a placeholder pattern.
+ *
+ * `rendered` is the porter's own report of what it wrote. The files are what
+ * it actually wrote, and nothing made the two agree — a placeholder that never
+ * entered the report was invisible to a gate that only read the report. This
+ * reads the other side of that pair.
+ *
+ * **Only `envelope['files']`** — the set the port declares it changed. Never a
+ * tree sweep: the directive has no business reading files this run did not
+ * touch, and a sweep would grow with the repository rather than with the port.
+ *
+ * A path that does not resolve to a readable file is **skipped, not reported**.
+ * `apply` runs at points where a declared file may not be on disk yet, and
+ * halting a correct port because a path failed to resolve would be a worse
+ * failure than the one this closes. The cost is real and worth naming: a
+ * placeholder inside a file the engine cannot read stays unseen.
+ *
+ * `root` defaults to the working directory, which is the consumer project root
+ * when the engine runs — the same convention as `scaffold`'s token lookup.
+ */
+export function written_file_placeholders(
+    envelope: Record<string, Any>,
+    root: string | null = null,
+): string[] {
+    const files = envelope['files'];
+    if (!Array.isArray(files)) return [];
+    const base = root !== null ? root : process.cwd();
+    const hits: string[] = [];
+    for (const rel of files as Any[]) {
+        if (typeof rel !== 'string' || rel === '') continue;
+        let text: string;
+        try {
+            const full = path.resolve(base, rel);
+            if (!fs.statSync(full).isFile()) continue;
+            text = fs.readFileSync(full, 'utf8');
+        } catch {
+            continue;
+        }
+        if (placeholder_paths(text, rel).length > 0) {
+            hits.push(rel);
+        }
+    }
+    return hits;
 }
 
 /** First-pass halt — emit the stack-specific apply directive. */
@@ -366,9 +564,10 @@ function _halt_placeholders(state: DeliveryState, violations: string[]): StepRes
     const directive = _resolve_directive(state);
     const lines: string[] = [
         agent_directive(directive),
-        '> Apply rejected: rendered output contains placeholder strings. ' +
+        '> Apply rejected: the port output contains placeholder strings. ' +
             'The design-brief microcopy lock failed mid-loop.',
-        '> Affected paths in `ui_apply.rendered`:',
+        '> Affected paths, in `ui_apply.rendered` and in the files the ' +
+            'envelope declares it wrote:',
     ];
     for (const p of violations) {
         lines.push(`> - \`${p}\``);

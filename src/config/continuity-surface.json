@@ -404,8 +404,8 @@
             "id": "tool-result-census.jsonl",
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",
-            "locus": "src/scripts/hooks/tool_result_bytes_hook.ts:92",
-            "reason": "Tool-result byte census. Measurement output."
+            "locus": "src/scripts/hooks/tool_result_bytes_hook.ts",
+            "reason": "Tool-result byte census (raw_bytes / delivered_bytes). Measurement output, written only where the maintainer workspace resolves."
         },
         {
             "id": "turn-end-gate",

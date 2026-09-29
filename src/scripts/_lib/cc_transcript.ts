@@ -82,6 +82,16 @@ export interface TranscriptRecord {
     /** Raw `timestamp` field from the record, or null when absent. */
     timestamp: string | null;
     usage: TokenCounts;
+    /**
+     * UTF-8 byte length of this record's own `message.content`, or `null` when
+     * the scan did not ask for it ({@link ScanOptions.measureBytes}) or the
+     * record carries no serialisable content.
+     *
+     * `null` is NOT zero. A record whose content was never measured and a
+     * record whose content is empty are different facts, and a ratio built
+     * over the first would divide by a denominator it never observed.
+     */
+    content_bytes: number | null;
 }
 
 export interface ScanOptions {
@@ -98,6 +108,17 @@ export interface ScanOptions {
     maxAgeDays?: number;
     /** Clock used to evaluate `maxAgeDays` — injectable for tests. */
     now?: Date;
+    /**
+     * Also measure each record's `message.content` byte length
+     * ({@link TranscriptRecord.content_bytes}).
+     *
+     * OPT-IN, because it costs a second serialisation of content the scan
+     * otherwise never touches, and the existing callers — `cost_summary`,
+     * `preamble_byte_census`, the bench harness — want token sums only. A
+     * caller that does not ask gets `content_bytes: null` on every record and
+     * pays nothing.
+     */
+    measureBytes?: boolean;
 }
 
 export interface ScanResult {
@@ -161,7 +182,7 @@ interface RawUsage {
 
 interface RawAssistantRecord {
     type?: unknown;
-    message?: { id?: unknown; model?: unknown; usage?: RawUsage };
+    message?: { id?: unknown; model?: unknown; usage?: RawUsage; content?: unknown };
     requestId?: unknown;
     agentId?: unknown;
     isSidechain?: unknown;
@@ -178,6 +199,29 @@ function toTokenCounts(raw: RawUsage | undefined): TokenCounts {
         ephemeral_5m_input_tokens: numOr0(cc.ephemeral_5m_input_tokens),
         ephemeral_1h_input_tokens: numOr0(cc.ephemeral_1h_input_tokens),
     };
+}
+
+/**
+ * UTF-8 byte length of one record's `message.content`, or `null` when there is
+ * nothing serialisable to measure.
+ *
+ * Bytes, never characters: a multibyte block costs what it costs, and
+ * `String.length` would under-report it. Content is what this reader can
+ * actually SEE — the request's system prompt, tool definitions and prior turns
+ * are not in the transcript at all (`preamble_byte_census` records the same
+ * limitation), so a ratio built from this is a ratio over assistant output and
+ * is labelled as such wherever it surfaces.
+ */
+export function measureContentBytes(raw: RawAssistantRecord): number | null {
+    const content = raw.message?.content;
+    if (content === undefined || content === null) return null;
+    if (typeof content === 'string') return Buffer.byteLength(content, 'utf8');
+    try {
+        return Buffer.byteLength(JSON.stringify(content), 'utf8');
+    } catch {
+        // Circular or otherwise unserialisable — unmeasurable, not zero.
+        return null;
+    }
 }
 
 /** Subagent iff a non-empty top-level `agentId` OR `isSidechain === true` — see module doc comment. */
@@ -285,6 +329,7 @@ export function scanTranscripts(opts: ScanOptions = {}): ScanResult {
                 model: typeof raw.message.model === 'string' ? raw.message.model : 'unknown',
                 timestamp: typeof raw.timestamp === 'string' ? raw.timestamp : null,
                 usage: toTokenCounts(raw.message.usage),
+                content_bytes: opts.measureBytes === true ? measureContentBytes(raw) : null,
             });
         }
     }
@@ -295,6 +340,92 @@ export function scanTranscripts(opts: ScanOptions = {}): ScanResult {
         totalSeen,
         dedupedCount,
         dedup_ratio: totalSeen > 0 ? (totalSeen - dedupedCount) / totalSeen : 0,
+    };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Bytes — measured on the corpus, never assumed                               */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * A bytes-per-token ratio, together with the two sums it was divided from and
+ * the population it was measured over.
+ *
+ * The sums travel WITH the ratio on purpose. A bare ratio is the shape that
+ * becomes a constant: somebody copies the number, it outlives the corpus that
+ * produced it, and the next reader cannot tell what it measured. Carrying
+ * `content_bytes` and `output_tokens` means the division is re-derivable from
+ * the record itself.
+ */
+export interface BytesPerToken {
+    /** Always `'measured'` — this value is a division of two counted sums. */
+    basis: 'measured';
+    /** Summed `content_bytes` over the records that carried one. */
+    content_bytes: number;
+    /** Summed `output_tokens` over those same records. */
+    output_tokens: number;
+    /** `content_bytes / output_tokens`. */
+    bytes_per_token: number;
+    /** Records that contributed — `content_bytes !== null` and `output_tokens > 0`. */
+    records: number;
+}
+
+/**
+ * Measure a bytes-per-token ratio ON THE GIVEN RECORDS. Returns `null` when
+ * nothing in the corpus can supply one.
+ *
+ * `null` is the honest outcome and callers must render it as such rather than
+ * substituting a default: a ratio invented where none was measured is exactly
+ * the constant this function exists to make unnecessary. There is deliberately
+ * no fallback value anywhere in this module — the factor is a property of the
+ * corpus, and a corpus that cannot supply one has not supplied one.
+ */
+export function measureBytesPerToken(records: readonly TranscriptRecord[]): BytesPerToken | null {
+    let bytes = 0;
+    let tokens = 0;
+    let n = 0;
+    for (const rec of records) {
+        if (rec.content_bytes === null || rec.usage.output_tokens <= 0) continue;
+        bytes += rec.content_bytes;
+        tokens += rec.usage.output_tokens;
+        n += 1;
+    }
+    if (n === 0 || tokens <= 0) return null;
+    return {
+        basis: 'measured',
+        content_bytes: bytes,
+        output_tokens: tokens,
+        bytes_per_token: bytes / tokens,
+        records: n,
+    };
+}
+
+/** A byte figure obtained by multiplying a token count by a measured ratio. */
+export interface DerivedBytes {
+    /** Always `'derived'`. Never `'measured'` — nothing counted these bytes. */
+    basis: 'derived';
+    /** The token count that was multiplied. */
+    tokens: number;
+    /** The ratio used, carried so the arithmetic sits beside its result. */
+    factor: BytesPerToken;
+    /** `tokens * factor.bytes_per_token`, rounded to a whole byte. */
+    bytes: number;
+}
+
+/**
+ * Multiply a token count by a ratio measured on the same corpus.
+ *
+ * The result carries `basis: 'derived'` and the factor that produced it, so a
+ * derived figure and a counted one can never be read as the same number — the
+ * failure this whole path is shaped to prevent. `null` factor in, `null` out.
+ */
+export function derivedBytes(tokens: number, factor: BytesPerToken | null): DerivedBytes | null {
+    if (factor === null) return null;
+    return {
+        basis: 'derived',
+        tokens,
+        factor,
+        bytes: Math.round(tokens * factor.bytes_per_token),
     };
 }
 

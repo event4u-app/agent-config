@@ -39,3 +39,4 @@ This surfaces every registration across all six tools and flags `DUPLICATE` / `D
 - [`docs/contracts/install-scopes.md`](../../docs/contracts/install-scopes.md) — when to use project-local vs user-global.
 - [`docs/customization.md` § Troubleshooting](../../docs/customization.md#troubleshooting) — the troubleshooting front door.
 - [`agents/reference/docs/onboarding.md`](../../agents/reference/docs/onboarding.md) — the longer, package-side onboarding doc.
+- [`docs/setup/host-traffic-environment.md`](../../docs/setup/host-traffic-environment.md) — which host environment variables suppress non-essential network traffic, and which only look as if they do; `agent-config doctor --json` reports their observed state.

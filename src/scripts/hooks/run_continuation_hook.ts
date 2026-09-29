@@ -152,6 +152,7 @@ import {
     sessionRefusalFile,
 } from '../_lib/turn_end_refusals.js';
 import { phaseLines } from '../_lib/roadmap_checkboxes.js';
+import { commandBearing, renderVerifyLine, type VerifyClause } from '../_lib/verify_clause.js';
 
 const EXIT_ALLOW = 0;
 /** Dispatcher-internal block code; the dispatcher maps stop-slot 1 → host 2. */
@@ -375,8 +376,8 @@ export function isDuplicateFire(
 export interface NextStep {
     /** The step's own line, checkbox stripped, truncated for the message. */
     text: string;
-    /** The step's `verify:` command, when its line carries one. */
-    verify: string | null;
+    /** The step's `verify:` clause — command plus optional expectation. */
+    verify: VerifyClause | null;
 }
 
 export interface ScanResult {
@@ -481,15 +482,15 @@ export function scanOpenSteps(text: string): ScanResult {
  * The comment form wins when both are present: it is the machine-readable one,
  * and a step carrying both has a human-facing line and a tooling-facing line
  * rather than two commands.
+ *
+ * The hook's narrowing only — a prose clause is not a command, and the
+ * continuation message renders commands. It parses nothing itself: a second
+ * copy of the arrow grammar is how this hook and `closure_scan` would drift,
+ * and a drifted grammar stops reading expectations without failing anything.
+ * `_lib/verify_clause.ts` owns the grammar and the sweep that keeps it single.
  */
-export function extractVerify(stepText: string): string | null {
-    const html = /<!--\s*verify:\s*(.*?)\s*-->/.exec(stepText);
-    if (html !== null) return (html[1] as string).trim() || null;
-    // `verify:` then the command, both backticked. The label's own backticks
-    // are optional because the tree carries `verify:` and `` `verify:` ``.
-    const backticked = /`?verify:`?\s*`([^`]+)`/.exec(stepText);
-    if (backticked !== null) return (backticked[1] as string).trim() || null;
-    return null;
+export function extractVerify(stepText: string): VerifyClause | null {
+    return commandBearing(stepText);
 }
 
 /**
@@ -1487,8 +1488,7 @@ export function main(): number {
 
 function _continuationText(slug: string, scan: ScanResult, iteration: number): string {
     const stepLine = scan.next
-        ? `Next step: ${scan.next.text}` +
-          (scan.next.verify ? `\n  verify: ${scan.next.verify}` : '')
+        ? `Next step: ${scan.next.text}${renderVerifyLine(scan.next.verify)}`
         : 'Next step: (first open checkbox in the roadmap)';
     return (
         `run-continuation: the contracted roadmap \`${slug}\` has ${scan.open} open ` +

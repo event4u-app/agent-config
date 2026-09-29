@@ -1,8 +1,13 @@
 rule: reviewer-awareness
 positives:
   - prompt: "Suggest reviewers for this change to the permission checks."
+    expected_skills: [review-routing]
   - prompt: "Who is the right reviewer for the payment module rewrite?"
+    expected_skills: [review-routing]
   - prompt: "Wer wäre ein guter Reviewer für diese Änderung am Abrechnungsmodul?"
+    expected_skills: [review-routing]
 near_misses:
   - prompt: "Review the caching layer design before we start building it."
+    expected_skills: []
   - prompt: "Assign the ticket to whoever owns the search service."
+    expected_skills: [jira-integration]

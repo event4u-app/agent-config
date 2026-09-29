@@ -18,7 +18,17 @@ import { fileURLToPath } from 'node:url';
 import { captureVariant, chromiumAvailable } from '../../../../src/scripts/ui_conformance_probe.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const VARIANTS = ['reference', 'variant-defects', 'variant-renamed'] as const;
+export const VARIANTS = [
+    'reference',
+    'variant-defects',
+    'variant-renamed',
+    // Added by `road-to-a-probe-that-cannot-report-a-false-green`. The first
+    // captures zero nodes on purpose — it is the empty observation the probe
+    // used to report as a clean comparison; the second carries one handle the
+    // reference does not.
+    'reference-no-handles',
+    'variant-added',
+] as const;
 
 async function main(): Promise<number> {
     if (!chromiumAvailable()) {

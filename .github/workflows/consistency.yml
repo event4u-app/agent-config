@@ -199,6 +199,13 @@ jobs:
       - name: Verify the per-slot enforcement table matches host_lowering.yaml
         run: ./scripts-run src/scripts/check_enforcement_matrix --quiet
 
+      # The format column of the same document, against the emitters rather than
+      # against the lowering file. Same reason this step sits here rather than
+      # only in `task ci`: no workflow invokes `task ci`, so a gate registered
+      # only there cannot fail a pull request.
+      - name: Verify the host table's format column names only emitted paths
+        run: ./scripts-run src/scripts/check_host_format_column --quiet
+
       - name: Verify README size, word and time-to-first-command budgets
         run: ./scripts-run src/scripts/lint_readme_size --quiet
 

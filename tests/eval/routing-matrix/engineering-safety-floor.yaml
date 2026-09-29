@@ -1,8 +1,13 @@
 rule: engineering-safety-floor
 positives:
   - prompt: "Deploy the current release to production tonight."
+    expected_skills: [launch-readiness, operational-readiness]
   - prompt: "Run the schema change migration on the primary database."
+    expected_skills: [migration-architect, schema-review]
   - prompt: "Bitte mach den Rollback des letzten Deployments."
+    expected_skills: []
 near_misses:
   - prompt: "Run the smoke tests against the staging environment."
+    expected_skills: []
   - prompt: "Bump the version number in the package manifest."
+    expected_skills: []

@@ -1,8 +1,13 @@
 rule: upstream-proposal
 positives:
   - prompt: "Should we upstream this new skill to the shared package?"
+    expected_skills: [upstream-contribute]
   - prompt: "After creating the guideline, do we propose it to the package repo?"
+    expected_skills: [upstream-contribute]
   - prompt: "Sollen wir die neue Regel ins upstream Paket übernehmen?"
+    expected_skills: [upstream-contribute]
 near_misses:
   - prompt: "Publish the release notes for the new package version."
+    expected_skills: [release-comms]
   - prompt: "Share the new lint check with the platform team via the wiki."
+    expected_skills: []

@@ -1,8 +1,13 @@
 rule: domain-safety-pii
 positives:
   - prompt: "Draft a ticket response for this angry customer email."
+    expected_skills: []
   - prompt: "Log the user id and email when checkout fails."
+    expected_skills: [privacy-review]
   - prompt: "Schreib eine Rejection Email für den Kandidaten aus der zweiten Runde."
+    expected_skills: []
 near_misses:
   - prompt: "Anonymize the seeder data before the demo."
+    expected_skills: [privacy-review]
   - prompt: "Mask the API keys in the sample configuration files."
+    expected_skills: [secrets-management]

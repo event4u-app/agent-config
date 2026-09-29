@@ -1,9 +1,14 @@
 rule: persona-governance
 positives:
   - prompt: "Add a persona for database performance reviews."
+    expected_skills: [persona-writing]
   - prompt: "Tighten the scope section of this review lens."
+    expected_skills: [persona-writing]
     open_files: ["src/agent-src/personas/perf-hawk.md"]
   - prompt: "Brauchen wir eine neue Persona für Security-Reviews?"
+    expected_skills: [persona-writing]
 near_misses:
   - prompt: "Update the code-owner rotation for the backend team."
+    expected_skills: [review-routing]
   - prompt: "Refine the tone-of-voice guidelines for the marketing copy."
+    expected_skills: [voice-and-tone-design]

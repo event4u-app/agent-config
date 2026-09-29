@@ -1,8 +1,15 @@
 rule: finance-safety-floor
 positives:
   - prompt: "How much runway do we have at the current burn?"
+    expected_skills: [runway-cognition]
   - prompt: "Build a DCF valuation for the acquisition target."
+    expected_skills: [dcf-modeling]
   - prompt: "Sollten wir jetzt fundraisen? Modelliere bitte die Dilution."
+    expected_skills: [runway-cognition, scenario-modeling]
+  - prompt: "The board wants a number for what the Hamburg subsidiary is worth on a five-year hold. Walk me through building that valuation."
+    expected_skills: [dcf-modeling]
 near_misses:
   - prompt: "Reconcile last month's bank statement with the ledger."
+    expected_skills: []
   - prompt: "Categorize these expenses for the quarterly report."
+    expected_skills: []

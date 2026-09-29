@@ -1,8 +1,13 @@
 rule: artifact-engagement-recording
 positives:
   - prompt: "Run /implement-ticket for PROJ-123 and make sure engagement gets recorded."
+    expected_skills: [command-routing, jira-integration]
   - prompt: "Is telemetry recording enabled for phase-steps in this project?"
+    expected_skills: []
   - prompt: "Kannst du prüfen, ob die Telemetry-Events nach jedem Schritt geschrieben werden?"
+    expected_skills: []
 near_misses:
   - prompt: "How do I record a screencast of the app for the demo?"
+    expected_skills: []
   - prompt: "Please implement the ticket PROJ-99 changes manually."
+    expected_skills: [jira-integration]
