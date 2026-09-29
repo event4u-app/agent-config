@@ -210,9 +210,38 @@ describe('menuForProfile', () => {
         expect(menuForProfile(profRoot, 'minimal').declaredCatalogueTokens).toBe(4242);
     });
 
-    it('finds no skill-selecting key in any shipped preset — the equality is measured, not assumed', () => {
+    it('names a declared skill-selecting key rather than swallowing it', () => {
+        // The tripwire's only job. It cannot change the byte count — nothing
+        // here knows what such a key would mean — so what it must do is make
+        // the key visible and withhold the equality note. A version that
+        // computed `selectingKeys` and never read it would pass a test that
+        // only asserted the empty case.
         skill('alpha', '');
-        for (const p of PROFILES) expect(menuForProfile(profRoot, p).selectingKeys).toEqual([]);
+        put('src/config/profiles/minimal.ini', 'pretend_selector=packs\n');
+        const withKey: ProfileMenu = { ...menuForProfile(profRoot, 'minimal'), selectingKeys: ['pretend_selector'] };
+        const lines = renderProfileMenus([withKey, menuForProfile(profRoot, 'full')]);
+        expect(lines.join('\n')).toContain('pretend_selector');
+        expect(lines.join('\n')).not.toContain('SAME menu_bytes');
+    });
+});
+
+describe('the SHIPPED presets, not a fixture', () => {
+    it('PROFILES names every preset file that exists — a fourth would be uncovered in silence', () => {
+        const dir = path.join(REPO_ROOT, 'src', 'config', 'profiles');
+        const onDisk = fs
+            .readdirSync(dir)
+            .filter((f) => f.endsWith('.ini'))
+            .map((f) => f.replace(/\.ini$/u, ''))
+            .sort();
+        expect(onDisk).toEqual([...PROFILES].sort());
+    });
+
+    it('no shipped preset declares a skill-selecting key — this is what the fixture test cannot say', () => {
+        for (const p of PROFILES) expect(menuForProfile(REPO_ROOT, p).selectingKeys).toEqual([]);
+    });
+
+    it('decodes an escaped quote in a description instead of counting the backslash', () => {
+        expect(frontmatterDescription('---\ndescription: "say \\"hi\\" now"\n---\n')).toBe('say "hi" now');
     });
 });
 
@@ -254,6 +283,12 @@ describe('the profile CLI', () => {
             return { status: err.status ?? 1, out: `${err.stdout ?? ''}${err.stderr ?? ''}` };
         }
     };
+
+    it('refuses --profile together with --emit rather than skipping the write', () => {
+        const r = run(['--profile', 'all', '--emit']);
+        expect(r.status).toBe(2);
+        expect(r.out).toContain('separate runs');
+    });
 
     it('refuses an unknown profile rather than falling back to all', () => {
         const r = run(['--profile', 'enterprise']);

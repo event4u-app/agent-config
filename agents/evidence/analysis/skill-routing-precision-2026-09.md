@@ -58,6 +58,11 @@ quoted comes with an interval of ±4 points rather than ±18.
 | packs with at least one shipped skill | 27 |
 | packs below the 3-prompt floor | 0 |
 
+An independent review re-derived every figure in this report against the tools
+and found them all identical, including by an independent YAML parse of the 102
+fixture files. A parity test now pins the line-oriented reader to a real YAML
+parse, so the two cannot diverge silently.
+
 The deliberate empties are the half a reader is most likely to misread. They are
 not unlabelled rows: they are rows a seat judged to have no skill answer — most
 of them prompts about the agent's own conduct, settings, or reply format, where

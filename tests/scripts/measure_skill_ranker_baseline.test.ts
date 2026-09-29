@@ -23,6 +23,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { parse as parseYaml } from 'yaml';
 
 import {
     MIN_POWERED_N,
@@ -266,6 +267,39 @@ describe('the live routing matrix carries its labels', () => {
         const a = live();
         expect(a.packs_below_floor, 'packs under the per-pack floor').toEqual([]);
         expect(a.packs_total).toBeGreaterThan(0);
+    });
+
+    it('the line reader and a real YAML parse agree, case for case', () => {
+        // Two readers over one corpus is a blind spot, not a redundancy. The
+        // line reader only matches a double-quoted single-line `prompt:`; a
+        // single-quoted or folded prompt would be dropped silently, and because
+        // `missing_label_key` is computed with the SAME reader, a dropped case
+        // can never be reported as unlabelled. The other reader
+        // (`routing_matrix.test.ts`) would accept it and stay green. This pins
+        // the two together so the divergence is a red test rather than a hole.
+        const dir = path.join(REPO, 'tests', 'eval', 'routing-matrix');
+        interface Case { prompt: string; expected_skills?: string[] }
+        let cases = 0;
+        let labelled = 0;
+        let empty = 0;
+        let missing = 0;
+        for (const f of fs.readdirSync(dir).filter((n) => n.endsWith('.yaml'))) {
+            const doc = parseYaml(fs.readFileSync(path.join(dir, f), 'utf-8')) as {
+                positives?: Case[];
+                near_misses?: Case[];
+            };
+            for (const c of [...(doc.positives ?? []), ...(doc.near_misses ?? [])]) {
+                cases += 1;
+                if (c.expected_skills === undefined) missing += 1;
+                else if (c.expected_skills.length > 0) labelled += 1;
+                else empty += 1;
+            }
+        }
+        const read = readMatrixCases(REPO);
+        expect(read.length, 'case count').toBe(cases);
+        expect(read.filter((c) => (c.expected?.length ?? 0) > 0).length, 'labelled').toBe(labelled);
+        expect(read.filter((c) => c.expected?.length === 0).length, 'deliberately empty').toBe(empty);
+        expect(read.filter((c) => c.expected === undefined).length, 'missing key').toBe(missing);
     });
 
     it('labels only skills that exist — a label naming nothing can never be hit', () => {

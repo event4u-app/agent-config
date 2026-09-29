@@ -183,12 +183,36 @@ tested on one consumer before anyone argues about routers or byte budgets.
       ✅  touching a skill that DOES carry a corpus is accepted (exit 0)
       ✅  a corpus-less skill the diff did NOT touch is accepted (exit 0)
       ✅  a NEW corpus-less skill added by the diff is rejected before its first commit (exit 1)
-      check_routing_coverage --self-test: 11/11 case(s) behaved (7 rejecting, floor 11)
+      ✅  a skill edited in a COMMIT, not the working tree, is rejected — the arm CI uses (exit 1)
+      ✅  an UNDIFFABLE base still rejects a dirty uncovered skill (exit 1)
+      check_routing_coverage --self-test: 13/13 case(s) behaved (9 rejecting, floor 13)
 
-      $ ./scripts-run src/scripts/check_routing_coverage --census | head -4
+      $ ./scripts-run src/scripts/check_routing_coverage --census
       Skills with no `evals/triggers.json`: **198 of 299**.
-      | Pack | Uncovered | Skills |
       ```
+
+      **AMENDED after an independent review, and the amendment matters more
+      than the original step.** The first implementation shipped exactly the
+      silent green this step exists to refuse, and the guard's own comment
+      claimed otherwise. `baseResolvable` probed ref EXISTENCE, but the branch
+      arm needs a MERGE BASE: in a shallow clone `git rev-parse origin/main`
+      exits 0 while `git diff origin/main...HEAD` exits 128 with `no merge
+      base`, the failure was swallowed as an empty path list, and the gate
+      passed over a committed corpus-less skill with a `✅`. Reproduced by the
+      reviewer against a real shallow clone.
+
+      Three repairs, each with a test that goes red without it. The probe is
+      now the diff itself (`baseUsable`), not the ref. The local arms — working
+      tree, index, untracked — need no base and are measured even when the
+      branch arm cannot be, so an unresolvable base narrows the CLAIM rather
+      than switching the scope off. And the verdict line no longer asserts
+      "every touched skill carries a corpus" when the branch arm did not run;
+      it names what was skipped.
+
+      The review also found that every fixture in the first round left its edit
+      UNCOMMITTED, so the one arm CI actually uses had zero coverage — which is
+      why the defect survived a green suite. Two committed-fixture cases were
+      added to the self-test and four to the unit tests.
 
       The census section is appended to `docs/SKILL_CENSUS.md` and regenerates
       from `--census`. Sensitivity probe: dropping the `(no pack declared)`
@@ -285,6 +309,22 @@ tested on one consumer before anyone argues about routers or byte budgets.
       reds exactly `stays silent about equality when the numbers differ` and
       `says nothing about equality for a single profile`. Restored from
       `/tmp/bak`.
+
+      **AMENDED after an independent review, on two overclaims.** The first
+      version computed `selectingKeys` and then never read it, so "a preset that
+      gains such a key changes the number instead of the prose" was false — the
+      number could not move, and the prose printed regardless. The list is now
+      documented as what it is, a TRIPWIRE: it cannot change the byte count,
+      because nothing here knows what such a key would mean, but a declared key
+      is NAMED in the output and the equality note is withheld. The claim is
+      narrowed to what holds.
+
+      And `frontmatterDescription` counted `\"` as two characters, over-reporting
+      by 56 B across 13 skills — the same class of defect as the 17.1 % one its
+      own docstring cites as fixed. Escapes are decoded; the figures above are
+      the corrected ones (59,076 B, and the full-population delta is 311 B, not
+      315). Two tests were also found to assert less than their names promised
+      and now run against the shipped presets rather than a fixture.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-29 | reviewer: claude/host -->

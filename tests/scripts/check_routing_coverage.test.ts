@@ -16,6 +16,9 @@ import {
     main,
     measureRules,
     measureSkills,
+    baseResolvable,
+    baseUsable,
+    localPaths,
     measureTouchedSkills,
     r4,
     readSeed,
@@ -194,13 +197,18 @@ describe('the live tree', () => {
 // diff-shaped — and whose risk is that an unresolvable base ref reads as
 // "nothing touched" and passes while checking nothing.
 
-function gitInit(at: string, edit: () => void): void {
+function gitAt(at: string): (...args: string[]) => string {
     const env = { ...process.env };
     for (const k of ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_COMMON_DIR']) delete env[k];
-    const git = (...args: string[]): void => {
+    return (...args: string[]): string => {
         const r = spawnSync('git', args, { cwd: at, encoding: 'utf-8', env });
         if (r.status !== 0) throw new Error(`git ${args.join(' ')}: ${r.stderr}`);
+        return r.stdout;
     };
+}
+
+function gitInit(at: string, edit: () => void): void {
+    const git = gitAt(at);
     git('init', '--quiet', '--initial-branch=base');
     git('config', 'user.email', 'test@example.invalid');
     git('config', 'user.name', 'test');
@@ -208,6 +216,16 @@ function gitInit(at: string, edit: () => void): void {
     git('add', '--all');
     git('commit', '--quiet', '-m', 'baseline');
     edit();
+}
+
+/** Commit `edit` onto a feature branch, so the change lives in HEAD and not the tree. */
+function gitCommitOnBranch(at: string, edit: () => void): void {
+    gitInit(at, () => undefined);
+    const git = gitAt(at);
+    git('checkout', '--quiet', '-b', 'feature');
+    edit();
+    git('add', '--all');
+    git('commit', '--quiet', '-m', 'the change');
 }
 
 describe('check_routing_coverage — the touched-skill scope', () => {
@@ -299,5 +317,89 @@ describe('check_routing_coverage --census', () => {
     it('--census exits 0 and prints the table without running the ratchet', () => {
         fixture({ rules: 0.99, skills: 0.99 });
         expect(main(['--census'], root)).toBe(0);
+    });
+});
+
+// The BRANCH arm — the one CI actually uses, and the one the first round of
+// tests never exercised because every fixture left its edit uncommitted. A
+// shallow clone is its failure mode: `git rev-parse origin/main` succeeds while
+// `git diff origin/main...HEAD` exits 128 with `no merge base`, so a gate that
+// probes ref existence reads zero changed paths and passes over a corpus it
+// never saw.
+describe('check_routing_coverage — the branch arm, committed rather than dirty', () => {
+    it('sees a corpus-less skill changed in a COMMIT, not only in the working tree', () => {
+        fixture();
+        gitCommitOnBranch(root, () => write('src/skills/s4/SKILL.md', '---\nname: s4\nedited: true\n---\n'));
+        const t = measureTouchedSkills(root, 'base');
+        expect(t.measured).toBe(true);
+        expect(t.touched).toEqual(['s4']);
+        expect(t.uncovered).toEqual(['s4']);
+    });
+
+    it('main exits 1 on a committed uncovered skill', () => {
+        fixture();
+        gitCommitOnBranch(root, () => write('src/skills/s4/SKILL.md', '---\nname: s4\nedited: true\n---\n'));
+        expect(main(['--base', 'base', '--quiet'], root)).toBe(1);
+    });
+
+    it('baseUsable is false when the ref RESOLVES but cannot be diffed', () => {
+        // Two unrelated histories: `other` exists as a ref and shares no commit
+        // with HEAD, which is the same `no merge base` git reports in a shallow
+        // clone. Ref existence alone would call this usable.
+        fixture();
+        gitCommitOnBranch(root, () => write('src/skills/s4/SKILL.md', '---\nname: s4\nedited: true\n---\n'));
+        const git = gitAt(root);
+        // Built with plumbing rather than `checkout --orphan`: the orphan
+        // checkout would have to unstage the whole fixture first, and what this
+        // test needs is only a ref with no common ancestor.
+        const emptyTree = git('mktree').trim();
+        const orphan = git('commit-tree', emptyTree, '-m', 'unrelated root').trim();
+        git('update-ref', 'refs/heads/other', orphan);
+        expect(baseResolvable(root, 'other')).toBe(true);
+        expect(baseUsable(root, 'other')).toBe(false);
+    });
+
+    it('an undiffable base still fails on a DIRTY uncovered skill — the local arms need no base', () => {
+        // The half a bare early-return threw away: working tree, index and
+        // untracked need no merge base, so an unresolvable base must narrow the
+        // claim rather than switch the scope off.
+        fixture();
+        gitInit(root, () => write('src/skills/s4/SKILL.md', '---\nname: s4\nedited: true\n---\n'));
+        const t = measureTouchedSkills(root, 'no-such-ref');
+        expect(t.measured).toBe(false);
+        expect(t.uncovered).toEqual(['s4']);
+        expect(main(['--base', 'no-such-ref', '--quiet'], root)).toBe(1);
+    });
+
+    it('localPaths reads dirty, staged and untracked without any base at all', () => {
+        fixture();
+        gitInit(root, () => undefined);
+        write('src/skills/s2/SKILL.md', '---\nname: s2\nedited: true\n---\n');
+        write('src/skills/brand-new/SKILL.md', '---\nname: brand-new\n---\n');
+        const paths = localPaths(root);
+        expect(paths).toContain('src/skills/s2/SKILL.md');
+        expect(paths).toContain('src/skills/brand-new/SKILL.md');
+    });
+});
+
+describe('check_routing_coverage — the verdict never claims an unmeasured scope', () => {
+    it('a clean run with an undiffable base exits 0 and says the branch arm did NOT run', () => {
+        const log: string[] = [];
+        const write_ = process.stdout.write.bind(process.stdout);
+        process.stdout.write = ((c: string) => {
+            log.push(String(c));
+            return true;
+        }) as typeof process.stdout.write;
+        try {
+            fixture({ rules: 0.5, skills: 0.25 });
+            gitInit(root, () => undefined);
+            write('src/skills/s1/evals/triggers.json', '{}');
+            expect(main(['--base', 'no-such-ref'], root)).toBe(0);
+        } finally {
+            process.stdout.write = write_;
+        }
+        const out = log.join('');
+        expect(out).toContain('did NOT run');
+        expect(out).not.toContain('every touched skill carries a corpus');
     });
 });

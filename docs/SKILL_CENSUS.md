@@ -360,7 +360,13 @@ the HOW MANY.
 
 Why a pack grouping and not a flat list: a flat list of 198 names is not actionable
 by anyone, while a pack column is a unit one owner can take. A skill declaring several
-packs appears under each, so the column counts sum to more than the total.
+packs would appear under each, so the column counts CAN exceed the total; measured
+2026-09-29 they do not, because no skill in this tree declares more than one pack —
+the columns sum to exactly 198.
+
+Nothing in CI compares this table with `--census` output, so it is a dated snapshot
+like the rest of this file and will drift as skills gain corpora. Regenerate it rather
+than trusting it.
 
 The touched-skill scope of `check_routing_coverage` closes this table from the other
 end: a PR that CHANGES a skill listed here fails until that skill gains its corpus, so

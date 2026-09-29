@@ -179,7 +179,7 @@ categories:
       on it, so no current claim is made about the score.
     closing_path: "Frozen routing corpus (precision / recall / conflict / unnecessary activation) plus the narrowed router-consumer question"
     mechanism_evidence:
-      - agents/evidence/analysis/skill-routing-precision-2026-09.md#top-1
+      - agents/evidence/analysis/skill-routing-precision-2026-09.md#routing matrix (labelled) | 390
       - src/scripts/measure_skill_ranker_baseline.ts#MIN_POWERED_N
       - tests/eval/routing-matrix/README.md#the labelling protocol
     adoption_evidence: []

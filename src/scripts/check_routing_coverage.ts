@@ -136,7 +136,10 @@ export function measureSkills(root: string): ScopeReading {
  * says HOW MANY are uncovered; this says WHICH, in the grouping a contributor
  * can act on — a pack owner can take their own column without reading the other
  * twenty-six. A skill declaring several packs appears under each, so the column
- * sums exceed the total; that is the grouping working, not double counting.
+ * sums CAN exceed the total. Measured 2026-09-29 they do not: no skill in this
+ * tree declares more than one pack, so the columns sum to exactly the total.
+ * Stated as a property of the renderer rather than of today's tree, because a
+ * reader checking the arithmetic against the table needs to know which it is.
  *
  * A skill declaring no pack lands under `(no pack declared)` rather than being
  * dropped, because a silently omitted skill is exactly the coverage hole this
@@ -218,38 +221,75 @@ export function readSeed(root: string): Seed {
 /** The ref the touched-skill scope diffs against when `--base` is not given. */
 export const TOUCHED_BASE_DEFAULT = 'origin/main';
 
+/** One git invocation: the lines it printed, and whether it actually ran. */
+interface GitRead {
+    lines: string[];
+    ok: boolean;
+}
+
+function gitLines(root: string, args: string[]): GitRead {
+    const r = spawnSync('git', args, { cwd: root, encoding: 'utf-8', env: gitEnv() });
+    return { lines: r.status === 0 ? r.stdout.split('\n') : [], ok: r.status === 0 };
+}
+
 /**
- * Paths this working tree changed against `base` — committed, staged and dirty.
+ * Paths the BRANCH added or changed against `base`.
+ *
+ * `ok` is separate from the path list and that separation is the whole point: a
+ * failed `git diff` and a diff that changed nothing both print zero lines, and
+ * reading the first as the second is how a gate reports green over a corpus it
+ * never saw. `ok: false` means the branch arm was not measured, never that it
+ * was measured and found empty.
  *
  * `ACMR` and not `D`: a DELETED skill cannot be asked for a corpus, and reading
  * a deletion as an uncovered touch would make removing a skill impossible.
- * Untracked files are included so a brand-new skill counts as touched before
- * its first commit.
  */
-export function changedPaths(root: string, base: string): string[] {
-    const env = gitEnv();
-    const run = (args: string[]): string[] => {
-        const r = spawnSync('git', args, { cwd: root, encoding: 'utf-8', env });
-        return r.status === 0 ? r.stdout.split('\n') : [];
-    };
+export function branchPaths(root: string, base: string): GitRead {
+    return gitLines(root, ['diff', '--name-only', '--diff-filter=ACMR', `${base}...HEAD`]);
+}
+
+/**
+ * Paths changed in this checkout with no base ref involved — dirty, staged and
+ * untracked.
+ *
+ * Measured even when the branch arm cannot be: these three need no merge base,
+ * so discarding them because a base ref is unresolvable throws away the
+ * coverage that WAS available. Untracked is included so a brand-new skill
+ * counts as touched before its first commit.
+ */
+export function localPaths(root: string): string[] {
     return [
         ...new Set([
-            ...run(['diff', '--name-only', '--diff-filter=ACMR', `${base}...HEAD`]),
-            ...run(['diff', '--name-only', '--diff-filter=ACMR']),
-            ...run(['diff', '--name-only', '--diff-filter=ACMR', '--cached']),
-            ...run(['ls-files', '--others', '--exclude-standard']),
+            ...gitLines(root, ['diff', '--name-only', '--diff-filter=ACMR']).lines,
+            ...gitLines(root, ['diff', '--name-only', '--diff-filter=ACMR', '--cached']).lines,
+            ...gitLines(root, ['ls-files', '--others', '--exclude-standard']).lines,
         ]),
     ].filter((f) => f.trim().length > 0);
 }
 
-/** True when `base` names something git can resolve in `root`. */
+/** Every path the diff touched, branch arm included when it could be read. */
+export function changedPaths(root: string, base: string): string[] {
+    const branch = baseUsable(root, base) ? branchPaths(root, base).lines : [];
+    return [...new Set([...branch, ...localPaths(root)])].filter((f) => f.trim().length > 0);
+}
+
+/**
+ * True when `base` can actually be diffed against, not merely named.
+ *
+ * Ref existence is NOT the question, and assuming it was is the defect this
+ * function is named after. In a shallow clone `git rev-parse origin/main` exits
+ * 0 while `git diff origin/main...HEAD` exits 128 with `no merge base`, because
+ * the common ancestor was never fetched. The only honest probe is the diff
+ * itself, so that is what this runs.
+ */
+export function baseUsable(root: string, base: string): boolean {
+    if (!gitLines(root, ['rev-parse', '--verify', '--quiet', `${base}^{commit}`]).ok) return false;
+    return branchPaths(root, base).ok;
+}
+
+/** Retained name for the ref-existence half alone. Prefer {@link baseUsable}. */
 export function baseResolvable(root: string, base: string): boolean {
-    const r = spawnSync('git', ['rev-parse', '--verify', '--quiet', `${base}^{commit}`], {
-        cwd: root,
-        encoding: 'utf-8',
-        env: gitEnv(),
-    });
-    return r.status === 0;
+    return gitLines(root, ['rev-parse', '--verify', '--quiet', `${base}^{commit}`]).ok;
 }
 
 export interface TouchedReading {
@@ -257,7 +297,12 @@ export interface TouchedReading {
     touched: string[];
     /** Of those, the ones with no `evals/triggers.json`, sorted. */
     uncovered: string[];
-    /** False when the base ref does not resolve — the scope is then not measured. */
+    /**
+     * False when the BRANCH arm could not be read — an unresolvable base, or a
+     * shallow clone with no merge base. The local arms below are still measured
+     * and can still fail the run; `measured: false` narrows what the run may
+     * CLAIM, it does not switch the scope off.
+     */
     measured: boolean;
     base: string;
 }
@@ -271,11 +316,10 @@ export interface TouchedReading {
  * written against. It reports `measured: false` and the caller says so out loud.
  */
 export function measureTouchedSkills(root: string, base: string): TouchedReading {
-    if (!baseResolvable(root, base)) {
-        return { touched: [], uncovered: [], measured: false, base };
-    }
+    const measured = baseUsable(root, base);
+    const rels = measured ? changedPaths(root, base) : localPaths(root);
     const names = new Set<string>();
-    for (const rel of changedPaths(root, base)) {
+    for (const rel of rels) {
         const m = /^src\/skills\/([^/]+)\//.exec(rel.replace(/\\/g, '/'));
         if (m?.[1] !== undefined) names.add(m[1]);
     }
@@ -285,7 +329,7 @@ export function measureTouchedSkills(root: string, base: string): TouchedReading
             fs.existsSync(path.join(root, 'src', 'skills', n, 'SKILL.md')) &&
             !fs.existsSync(path.join(root, 'src', 'skills', n, 'evals', 'triggers.json')),
     );
-    return { touched, uncovered, measured: true, base };
+    return { touched, uncovered, measured, base };
 }
 
 export interface Verdict {
@@ -338,10 +382,13 @@ export function evaluate(root = REPO_ROOT, base = TOUCHED_BASE_DEFAULT): Verdict
         }
     }
     const touched = measureTouchedSkills(root, base);
-    if (!touched.measured) {
-        ledger.skip('touched', 'precondition_unmet');
-    } else if (touched.uncovered.length > 0) {
+    if (touched.uncovered.length > 0) {
         ledger.fail('touched', `${String(touched.uncovered.length)} touched skill(s) with no corpus`);
+    } else if (!touched.measured) {
+        // A finding outranks the precondition: the local arms need no base ref,
+        // so an uncovered skill they found is a real failure even though the
+        // branch arm did not run. Only a CLEAN unmeasured run is a skip.
+        ledger.skip('touched', 'precondition_unmet');
     } else {
         ledger.complete('touched');
     }
@@ -413,6 +460,27 @@ function gitBaseline(root: string, edit: (root: string) => void): string {
     git('add', '--all');
     git('commit', '--quiet', '-m', 'baseline');
     edit(root);
+    return root;
+}
+
+/**
+ * Like {@link gitBaseline}, but the edit is COMMITTED on a feature branch.
+ *
+ * The arm CI actually uses is `git diff <base>...HEAD`, and every case that
+ * leaves its edit in the working tree exercises the other three arms instead.
+ * A committed fixture is the only one that can fail when the branch arm breaks.
+ */
+function gitBranchCommit(root: string, edit: (root: string) => void): string {
+    gitBaseline(root, () => undefined);
+    const env = gitEnv();
+    const git = (...args: string[]): void => {
+        const r = spawnSync('git', args, { cwd: root, encoding: 'utf-8', env });
+        if (r.status !== 0) throw new Error(`git ${args.join(' ')} failed: ${r.stderr}`);
+    };
+    git('checkout', '--quiet', '-b', 'feature');
+    edit(root);
+    git('add', '--all');
+    git('commit', '--quiet', '-m', 'the change');
     return root;
 }
 
@@ -526,13 +594,33 @@ export function selfTest(): number {
                 return run(root, ['--base', 'base']);
             },
         },
+        {
+            name: 'a skill edited in a COMMIT, not the working tree, is rejected — the arm CI uses',
+            expect: 'reject',
+            run: () => {
+                const root = gitBranchCommit(selfTestRoot(tmp, { r: 10, rc: 8, s: 10, sc: 5 }), (r) => {
+                    fs.appendFileSync(path.join(r, 'src', 'skills', 'st-skill-9', 'SKILL.md'), '\nedited\n');
+                });
+                return run(root, ['--base', 'base']);
+            },
+        },
+        {
+            name: 'an UNDIFFABLE base still rejects a dirty uncovered skill — the local arms need no base',
+            expect: 'reject',
+            run: () => {
+                const root = gitBaseline(selfTestRoot(tmp, { r: 10, rc: 8, s: 10, sc: 5 }), (r) => {
+                    fs.appendFileSync(path.join(r, 'src', 'skills', 'st-skill-9', 'SKILL.md'), '\nedited\n');
+                });
+                return run(root, ['--base', 'no-such-ref-at-all']);
+            },
+        },
     ];
     try {
         return runSelfTest({
             gate: 'check_routing_coverage',
             cases,
-            minCases: 11,
-            minRejectCases: 7,
+            minCases: 13,
+            minRejectCases: 9,
         });
     } finally {
         fs.rmSync(tmp, { recursive: true, force: true });
@@ -579,7 +667,10 @@ export function main(argv: string[] = process.argv.slice(2), root = REPO_ROOT): 
     }
     if (!v.touched.measured) {
         process.stdout.write(
-            `  · touched skills NOT measured — base ref ${v.touched.base} does not resolve here.\n`,
+            `  · touched ${String(v.touched.touched.length).padStart(4)} skill(s) from the working ` +
+                `tree only — base ${v.touched.base} is not diffable here (missing ref, or a shallow ` +
+                `clone with no merge base), so the branch arm did NOT run. ` +
+                `${String(v.touched.uncovered.length)} without evals/triggers.json.\n`,
         );
     } else {
         process.stdout.write(
@@ -588,7 +679,16 @@ export function main(argv: string[] = process.argv.slice(2), root = REPO_ROOT): 
         );
     }
     if (v.fallen.length === 0 && v.touched.uncovered.length === 0) {
-        process.stdout.write('✅  routing coverage at or above seed, and every touched skill carries a corpus.\n');
+        // The claim is narrowed to what actually ran. A single affirmative line
+        // covering an unmeasured scope is the silent green this scope exists to
+        // refuse, and it would be this gate committing it.
+        process.stdout.write(
+            v.touched.measured
+                ? '✅  routing coverage at or above seed, and every touched skill carries a corpus.\n'
+                : '✅  routing coverage at or above seed. ⚠️  The branch arm of the touched-skill ' +
+                      `scope did NOT run (base ${v.touched.base} is not diffable here), so nothing ` +
+                      'is claimed about skills this branch changed in a commit.\n',
+        );
         return 0;
     }
     if (v.touched.uncovered.length > 0) {

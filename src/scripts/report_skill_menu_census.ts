@@ -55,11 +55,15 @@
  *
  * THE PER-PROFILE MENU, added by `road-to-a-menu-whose-precision-is-measured`
  * 4.1. `--profile minimal|balanced|full|all` prints the menu byte count each
- * shipped install profile delivers. The number is COMPUTED from the profile's
- * own preset rather than asserted, which matters because the answer is that all
- * three are equal: no shipped preset declares a key that selects skills, so each
- * one ships the whole menu. Computing it leaves the equality falsifiable — a
- * preset that gains such a key changes the number instead of the prose.
+ * shipped install profile delivers. Each profile's preset is read from its own
+ * file, and the answer is that all three are equal: no shipped preset declares
+ * a key that selects skills, so each one ships the whole menu.
+ *
+ * The equality note is WITHHELD when any profile carries a key listed in
+ * {@link SKILL_SELECTING_INI_KEYS}, and the key is named instead. That is the
+ * whole falsifiability claim, stated no wider than it holds: the byte count
+ * would not move — nothing here knows what such a key means — but the report
+ * stops asserting a conclusion whose premise has changed.
  *
  * Usage:
  *     ./scripts-run src/scripts/report_skill_menu_census                # stdout summary
@@ -334,9 +338,15 @@ export type Profile = (typeof PROFILES)[number];
  * EMPTY, and the emptiness is the finding rather than a stub. A preset selects
  * `rule_loading_tier`, `discipline_profile` and `chat_history_frequency`; which
  * SKILLS are written is decided by `packs:` frontmatter against the active pack
- * set, which no preset names. The list exists so that adding such a key is a
- * deliberate edit here — and so the equal numbers below are a computed result
- * rather than a claim a reader has to take on trust.
+ * set, which no preset names.
+ *
+ * It is a TRIPWIRE, not a selector, and the distinction is worth stating
+ * plainly because the first version of this comment overclaimed it. Nothing
+ * here knows what such a key would MEAN, so nothing here can apply one: the
+ * byte count would not move. What the list buys is that a preset carrying a
+ * listed key is NAMED in the output and the equality note is withheld — so the
+ * report stops asserting a conclusion whose premise has changed, instead of
+ * printing the same prose over a different tree.
  */
 export const SKILL_SELECTING_INI_KEYS: readonly string[] = [];
 
@@ -378,7 +388,7 @@ export interface ProfileMenu {
  * this one drops a skill carrying `user-invocable: false` or
  * `disable-model-invocation: true`, because a menu is what the MODEL may pick
  * from. Two skills carry such a flag today, so over the same tree and the same
- * line shape this report reads 315 B below the full-population sum. Expect the
+ * line shape this report reads 311 B below the full-population sum. Expect the
  * two to differ; a reader who finds them equal has found a defect in one.
  */
 export function menuForProfile(root: string, profile: Profile): ProfileMenu {
@@ -416,6 +426,11 @@ export function menuForProfile(root: string, profile: Profile): ProfileMenu {
  * A `[^\n]+` capture was measured 17.1 % low elsewhere in this tree because it
  * truncates every folded multi-line description; this reads to the next
  * top-level key instead.
+ *
+ * A double-quoted value has its escapes DECODED. Leaving them encoded counted
+ * `\"` as two characters and over-reported the menu by 56 B across 13 skills —
+ * small, but the same class of defect as the 17.1 % one above, and a function
+ * whose docstring cites that fix should not carry a second instance of it.
  */
 export function frontmatterDescription(text: string): string {
     if (!text.startsWith('---')) return '';
@@ -430,7 +445,14 @@ export function frontmatterDescription(text: string): string {
         if (/^\S/u.test(l)) break;
         parts.push(l.trim());
     }
-    return parts.join(' ').trim().replace(/^["']|["']$/gu, '');
+    const joined = parts.join(' ').trim();
+    if (joined.length >= 2 && joined.startsWith('"') && joined.endsWith('"')) {
+        return joined.slice(1, -1).replace(/\\(["\\])/gu, '$1');
+    }
+    if (joined.length >= 2 && joined.startsWith("'") && joined.endsWith("'")) {
+        return joined.slice(1, -1).replace(/''/gu, "'");
+    }
+    return joined;
 }
 
 /** Render the per-profile menu table. Returns the lines, so tests read them. */
@@ -444,6 +466,14 @@ export function renderProfileMenus(menus: readonly ProfileMenu[]): string[] {
                 `${String(m.menuBytes).padStart(12)} ${String(m.tokensEstimate).padStart(9)} ` +
                 `${(m.declaredCatalogueTokens === null ? '—' : String(m.declaredCatalogueTokens)).padStart(10)}`,
         );
+    }
+    const flagged = menus.filter((m) => m.selectingKeys.length > 0);
+    if (flagged.length > 0) {
+        L.push('');
+        L.push('  A preset declares a key that could select skills, so the equality below is NOT');
+        L.push('  asserted — the premise it rested on has changed. Keys found:');
+        for (const m of flagged) L.push(`    ${m.profile}: ${m.selectingKeys.join(', ')}`);
+        return L;
     }
     const distinct = new Set(menus.map((m) => m.menuBytes));
     if (menus.length > 1 && distinct.size === 1) {
@@ -479,6 +509,14 @@ export function main(argv: readonly string[]): number {
             process.stderr.write(
                 `report_skill_menu_census: --profile expects ${PROFILES.join(' | ')} | all, got ${want}\n`,
             );
+            return 2;
+        }
+        if (argv.includes('--emit')) {
+            // Refused rather than ignored: `--emit` writes the census artifact,
+            // `--profile` prints a table and writes nothing, and silently doing
+            // the second when the caller asked for both is how an artifact goes
+            // un-refreshed without anyone noticing.
+            process.stderr.write('report_skill_menu_census: --profile and --emit are separate runs\n');
             return 2;
         }
         const menus = chosen.map((p) => menuForProfile(root, p));
