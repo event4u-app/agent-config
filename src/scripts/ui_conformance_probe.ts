@@ -36,12 +36,23 @@
  * `conformance.declared.json` and suppressed with its reason retained, so an
  * approved change is not re-litigated on every run.
  *
+ * THE ARTEFACT KNOWS WHAT IT READ. `generated_at` alone made a run before the
+ * last UI edit indistinguishable from one after it, so every artefact carries an
+ * `inputs` block: a content digest of the target surface, of the reference, and
+ * of the declarations file, plus the probe build that wrote them. The design-pass
+ * reader recomputes those digests and reports `stale` when they moved — a file
+ * comparison, no browser. The vocabulary is shared rather than duplicated
+ * (`_lib/probe_inputs.ts`), because a producer and a consumer with separate
+ * copies of a hash rule agree only until one of them is edited.
+ *
  * Exit codes: 0 written (with or without findings) · 1 usage error.
  */
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+
+import { collectInputs, declarationsPathFor, type ProbeInputs } from './_lib/probe_inputs.js';
 
 // Type-only, and that is load-bearing rather than stylistic: these are erased
 // at compile time, so they add no second runtime path to a module that refuses
@@ -149,6 +160,12 @@ export interface SuppressedDeviation {
 export interface ProbeArtefact {
     schema: 'ui-conformance/v1';
     generated_at: string;
+    /**
+     * What this run read, by content. Beside `generated_at` rather than instead
+     * of it: the timestamp says when, the digests say against what — and only
+     * the second question can be re-asked later.
+     */
+    inputs: ProbeInputs;
     host_class: 'A' | 'B' | 'C' | 'unknown';
     target: string;
     reference: string | null;
@@ -358,6 +375,7 @@ export function evaluate(
     return {
         schema: 'ui-conformance/v1',
         generated_at: new Date().toISOString(),
+        inputs: collectInputs(target.source, reference.source),
         host_class: resolveHostClass(),
         target: target.source,
         reference: reference.source,
@@ -373,10 +391,14 @@ export function evaluate(
  * The artefact a host that cannot run the probe must still produce. Emitting
  * nothing is indistinguishable from a clean run to everything downstream.
  */
-export function unavailableArtefact(target: string, reason: string): ProbeArtefact {
+export function unavailableArtefact(target: string, reason: string, reference: string | null = null): ProbeArtefact {
     return {
         schema: 'ui-conformance/v1',
         generated_at: new Date().toISOString(),
+        // A degraded run still records what it WOULD have compared. An artefact
+        // with no inputs block reads as a version skew to the reader, which is a
+        // different and less useful statement than "this host has no browser".
+        inputs: collectInputs(target, reference),
         host_class: 'unknown',
         target,
         reference: null,
@@ -596,14 +618,14 @@ async function main(): Promise<number> {
 
     let artefact: ProbeArtefact;
     if (!chromiumAvailable()) {
-        artefact = unavailableArtefact(target, 'no Chromium binary resolved from @playwright/test');
+        artefact = unavailableArtefact(target, 'no Chromium binary resolved from @playwright/test', referencePath ?? null);
     } else if (!referencePath) {
         artefact = unavailableArtefact(target, 'no --reference given; a comparison needs an intended implementation');
         for (const row of artefact.dimensions) {
             row.reason = `${row.dimension} needs a --reference to compare against; none was given`;
         }
     } else {
-        artefact = evaluate(await captureVariant(referencePath), await captureVariant(target), loadDeclarations(path.join(path.dirname(target), 'conformance.declared.json')));
+        artefact = evaluate(await captureVariant(referencePath), await captureVariant(target), loadDeclarations(declarationsPathFor(target)));
     }
 
     fs.mkdirSync(path.dirname(out), { recursive: true });
