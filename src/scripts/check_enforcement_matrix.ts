@@ -55,6 +55,8 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
+
+import * as yaml from 'js-yaml';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -394,6 +396,143 @@ function _read(root: string, rel: string): string | null {
 /** Flags this gate understands. `--root` is the only one taking a value. */
 const KNOWN_FLAGS: ReadonlySet<string> = new Set(['--self-test', '--root', '--write', '--quiet']);
 
+/** Where the concern→slot bindings and per-concern severities live. */
+export const MANIFEST_REL = path.join('src', 'scripts', 'hook_manifest.yaml');
+
+/** One concern bound to a slot whose `block_exit` is null. */
+export interface NullBlockBinding {
+    readonly host: string;
+    readonly slot: string;
+    readonly concern: string;
+    /** The concern's declared `severity`, or `(undeclared)`. */
+    readonly severity: string;
+}
+
+/** What {@link concernSlotAudit} establishes for one host. */
+export interface HostConcernAudit {
+    readonly host: string;
+    /** Lowerable slots carrying a non-null `block_exit`. */
+    readonly denySlots: number;
+    /** Lowerable slots in total. */
+    readonly lowerableSlots: number;
+    /**
+     * Bindings on a slot that cannot deny, severity `blocking` first.
+     *
+     * An `advisory` concern here is CONSISTENT, not a defect — most concerns
+     * are advisory and belong on a reporting slot. The row that matters is a
+     * `blocking` severity on a null-block slot: a concern declared to refuse,
+     * bound where a refusal has nowhere to go.
+     */
+    readonly nullBlock: readonly NullBlockBinding[];
+}
+
+/**
+ * Cross-reference the manifest's concern bindings against the lowering table's
+ * per-slot `block_exit`.
+ *
+ * road-to-a-content-scanner-on-a-slot-that-can-refuse 2.1. The gate above
+ * compares published host-SLOT rows against the configuration and is green
+ * whenever those agree — it never asks whether a CONCERN is bound to a slot
+ * that can carry its severity. That question was answered once, by an external
+ * reader comparing two files by hand, which is why it drifted back: a hand
+ * comparison leaves no number behind. This makes it a printed count.
+ *
+ * DELIBERATELY NOT A FAILURE. It prints; the exit code is unchanged. Failing
+ * would red the tree on bindings that predate this check — the same reason the
+ * continuity and estate ratchets report distance-to-target instead of gating on
+ * it. What a reader gets is a number that moves when a binding or a slot moves.
+ */
+export function concernSlotAudit(root: string, lowering: HostLowering): HostConcernAudit[] {
+    const manifestText = _read(root, MANIFEST_REL);
+    if (manifestText === null) return [];
+    let manifest: unknown;
+    try {
+        manifest = yaml.load(manifestText);
+    } catch {
+        return [];
+    }
+    if (manifest === null || typeof manifest !== 'object') return [];
+    const m = manifest as Record<string, unknown>;
+
+    const severities = new Map<string, string>();
+    const concerns = m['concerns'];
+    if (concerns !== null && typeof concerns === 'object') {
+        for (const [name, spec] of Object.entries(concerns as Record<string, unknown>)) {
+            const sev =
+                spec !== null && typeof spec === 'object'
+                    ? (spec as Record<string, unknown>)['severity']
+                    : undefined;
+            severities.set(name, typeof sev === 'string' ? sev : '(undeclared)');
+        }
+    }
+
+    const platforms = m['platforms'];
+    if (platforms === null || typeof platforms !== 'object') return [];
+
+    const out: HostConcernAudit[] = [];
+    for (const [host, blockRaw] of Object.entries(platforms as Record<string, unknown>)) {
+        const reading = readSlots(lowering, host);
+        const blockExit = new Map<string, number | null>(
+            reading.slots.map((s: SlotReading) => [s.slot, s.effective]),
+        );
+        const denySlots = reading.slots.filter((s: SlotReading) => s.effective !== null).length;
+
+        const nullBlock: NullBlockBinding[] = [];
+        if (blockRaw !== null && typeof blockRaw === 'object') {
+            for (const [slot, value] of Object.entries(blockRaw as Record<string, unknown>)) {
+                if (!Array.isArray(value)) continue;
+                // A slot the lowering table does not carry is not a null-block
+                // slot — it is an unlowerable one, which is a different finding
+                // and belongs to the gate above, not here.
+                if (!blockExit.has(slot)) continue;
+                if (blockExit.get(slot) !== null) continue;
+                for (const concern of value) {
+                    if (typeof concern !== 'string') continue;
+                    nullBlock.push({
+                        host,
+                        slot,
+                        concern,
+                        severity: severities.get(concern) ?? '(unknown concern)',
+                    });
+                }
+            }
+        }
+        nullBlock.sort((a, b) => {
+            const rank = (s: string): number => (s === 'blocking' ? 0 : s === 'advisory' ? 2 : 1);
+            return (
+                rank(a.severity) - rank(b.severity) ||
+                a.slot.localeCompare(b.slot) ||
+                a.concern.localeCompare(b.concern)
+            );
+        });
+        out.push({ host, denySlots, lowerableSlots: reading.slots.length, nullBlock });
+    }
+    return out;
+}
+
+/** Render the audit as the lines the reporter prints. */
+export function renderConcernAudit(audit: readonly HostConcernAudit[]): string[] {
+    const lines: string[] = [];
+    lines.push('');
+    lines.push(`${GATE} · concerns bound to slots that cannot deny`);
+    lines.push(
+        '  A blocking severity on a null-block slot is a concern declared to refuse, bound',
+    );
+    lines.push('  where a refusal has nowhere to go. An advisory one there is consistent.');
+    for (const h of audit) {
+        const blocking = h.nullBlock.filter((b) => b.severity === 'blocking');
+        const others = h.nullBlock.length - blocking.length;
+        lines.push(
+            `  ${h.host.padEnd(10)} ${String(h.denySlots)}/${String(h.lowerableSlots)} lowerable slot(s) deny · ` +
+                `${String(blocking.length)} blocking + ${String(others)} non-blocking binding(s) on null-block slots`,
+        );
+        for (const b of blocking) {
+            lines.push(`    ⚠️  ${b.concern} (${b.severity}) on ${b.slot} — cannot deny here`);
+        }
+    }
+    return lines;
+}
+
 export function main(argv?: readonly string[]): number {
     const args = argv ?? process.argv.slice(2);
     // An unrecognised flag is refused rather than ignored. Both ratification
@@ -516,6 +655,13 @@ export function main(argv?: readonly string[]): number {
         roots: [LOWERING_REL],
     });
     ledger.report();
+
+    // The concern-vs-slot audit prints on every read-only run, before the
+    // verdict, so it is visible whether the row comparison passed or failed.
+    // It never changes the exit code — see `concernSlotAudit`.
+    for (const line of renderConcernAudit(concernSlotAudit(root, lowering))) {
+        process.stdout.write(`${line}\n`);
+    }
 
     if (findings.length > 0) {
         for (const f of findings) process.stdout.write(`❌  ${GATE}: ${f}\n`);
