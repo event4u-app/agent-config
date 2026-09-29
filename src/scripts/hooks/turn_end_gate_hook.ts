@@ -179,6 +179,7 @@ import { statePathFor as ciStatePathFor } from '../before_complete_hook.js';
 // Detector E, extracted to `_lib` where its prose costs no ratchet debt.
 // Re-exported so every existing importer of this module is unchanged.
 import { detectDroppedDecision } from '../_lib/dropped_decision.js';
+import { isVerificationCommand } from '../_lib/verification_command.js';
 
 export { detectDroppedDecision };
 import { isSafeTranscriptPath } from './end_review_nudge_hook.js';
@@ -656,62 +657,14 @@ export function detectLanguage(reply: string, pinned: Verdict): Finding | null {
 const _EDIT_TOOLS = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
 
 /**
- * Shell commands that count as verification.
+ * Re-exported, not re-derived: the selector moved to `_lib/verification_command.ts`
+ * so the evidence classifier can read it without a hook<->lib import cycle.
  *
- * A positive list, and deliberately narrow. The alternative — treating any
- * `Bash` call as verification — was rejected because `ls` would then clear an
- * unverified edit, which is the failure mode `verify-before-complete` names
- * ("relying on partial verification"). The cost of narrowness is a MISSED
- * detection when a project verifies by some command not listed here, and that is
- * the safe direction for a gate that can refuse a turn: a false negative costs
- * one unguarded turn, a false positive teaches the user to switch the gate off.
- *
- * ## Audited 2026-08-17 — `road-to-stop-gate-honesty` step 2.2
- *
- * 52 commands this project's own surface actually produces (its `package.json`
- * scripts, its `Taskfile` targets, `./scripts-run`, `./agent-config`, and the
- * PHP / Python / Go / Rust toolchains) were run through
- * `isVerificationCommand`. The table of every one, with its verdict, is
- * `turn_end_verify_allowlist.test.ts`; that file is the fixture step 2.2
- * requires, and every addition below has its own row in it.
- *
- * The draft that opened the roadmap expected to add `phpunit` and `pest`. Claim
- * 4 had already overtaken that — both matched before this audit, as did
- * `composer test` and `php artisan test` — so what the audit actually found was
- * two different gaps:
- *
- *   · `phpstan` — a static analyser of exactly the class already listed
- *     (`mypy`, `pyright`, `clippy`). Added.
- *   · `lint` followed by a WORD character — `lint_persistence`,
- *     `lint_provenance`, and every other `lint_*` script in `src/scripts/`
- *     missed, because `\blint\b` needs a boundary and `_` is a word character.
- *     `lint[-_:a-z]*` is the exact mirror of the `check[-_:a-z]*` this list
- *     already carried, which is why it is the narrow fix rather than a new idea.
- *
- * Four further misses were found and deliberately NOT added, because Risk 2 of
- * that roadmap is that every addition is a way to satisfy the gate without
- * verifying anything:
- *
- *   · `npm run prepack` — a lifecycle hook whose content is per-project. Here it
- *     validates; elsewhere it copies files. Recognising it would clear an
- *     unverified edit in any repo whose prepack is a build step.
- *   · `task sync` / `task generate-tools` / `agent-config roadmap:progress` —
- *     GENERATORS. They rewrite the tree; they check nothing. A generator that
- *     cleared the gate would be the rubber stamp in its purest form.
- *   · `agent-config gates --all` — enumerates gates, runs none.
- *   · `vendor/bin/rector process --dry-run` — a refactoring tool. Its dry run
- *     prints a diff; it does not assert anything holds.
- *
- * `psalm` is the obvious sibling of `phpstan` and is also NOT added: nothing in
- * the audited surface runs it, and "the team actually runs" is the step's own
- * standard. It is named here so the next audit does not re-derive the question.
+ * The name stays exported HERE because two test files pin it at this path and
+ * because a reader arriving at detector C should find the selector where the
+ * detector uses it, not have to know it was relocated.
  */
-const _VERIFY_RE =
-    /\b(test|tests|vitest|jest|pytest|phpunit|pest|tsc|eslint|ruff|mypy|pyright|clippy|phpstan|typecheck|lint[-_:a-z]*|build|ci|preflight|smoke[-_:a-z]*|check[-_:a-z]*|validate[-_:a-z]*)\b|\b(task|npm|pnpm|yarn|composer|cargo|go|make|php artisan|bun)\s+(run\s+)?\S*(test|check|lint|build|ci|typecheck)/i;
-
-export function isVerificationCommand(command: string): boolean {
-    return _VERIFY_RE.test(command);
-}
+export { isVerificationCommand };
 
 /**
  * Fire when the turn changed a file and then ran nothing that could have
