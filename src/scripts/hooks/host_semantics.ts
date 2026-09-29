@@ -60,6 +60,34 @@ export interface Emission {
  */
 export const VERIFIED_PLATFORMS: ReadonlySet<string> = verifiedPlatforms();
 
+/**
+ * Does this platform have a NATIVE emission shape this package can produce?
+ *
+ * WHY THIS IS A SECOND PREDICATE AND NOT JUST `VERIFIED_PLATFORMS`. The set
+ * above answers "has anyone dated this row", and until 2026-09-29 exactly one
+ * host carried a `verified` block, so the two questions had the same answer and
+ * one predicate served both. Dating the other seven rows separated them: those
+ * rows are cited now, and every one of them declares `json_shape: none` —
+ * this package has no structured envelope for them. Gating `emitFor` on
+ * verified-ness alone would therefore have started writing Claude Code's
+ * `hookSpecificOutput` JSON onto hosts that parse no such thing, as a side
+ * effect of a documentation read. That is precisely the "speculative mapping"
+ * this module's header calls the same class of bug it exists to remove.
+ *
+ * So the emission branch reads the shape, and the shape is what the table says.
+ * Both halves are required: an expired citation falls back exactly as an absent
+ * one does, and a row with no envelope falls back however current its citation.
+ */
+export function usesNativeEmission(platform: string): boolean {
+    if (!VERIFIED_PLATFORMS.has(platform)) return false;
+    // An ABSENT row reads as no envelope, not as one. The optional chain must
+    // not fall through to `undefined !== "none"`, which is true and would make
+    // a missing row the most permissive answer in the function — the inversion
+    // this module's header calls speculative mapping.
+    const shape = surfaceRow(platform, DEFAULT_SURFACE, loadHostLowering())?.json_shape ?? "none";
+    return shape !== "none";
+}
+
 /** Internal event name -> host-native event name, for structured output. */
 function nativeEventName(platform: string, event: string): string {
     return surfaceRow(platform, DEFAULT_SURFACE, loadHostLowering())?.slots.get(event)?.native[0] ?? event;
@@ -187,7 +215,7 @@ export function claudePermissionDecision(
  * copy one module away is a copy that drifts.
  */
 export function emissionCarriesReasons(platform: string, severity: Severity): boolean {
-    if (!VERIFIED_PLATFORMS.has(platform)) return false;
+    if (!usesNativeEmission(platform)) return false;
     return severity !== "allow";
 }
 
@@ -219,7 +247,7 @@ export function emitFor(
     legacyExit: number,
     permission?: PermissionEmission | null,
 ): Emission {
-    if (!VERIFIED_PLATFORMS.has(platform)) {
+    if (!usesNativeEmission(platform)) {
         return { exit: legacyExit, stdout: "", stderr: "" };
     }
     const reason = _joinReasons(reasons);

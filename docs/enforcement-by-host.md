@@ -190,44 +190,44 @@ stated above, in the Codex paragraph, and is not the lowering file's to record.
 Projected from `src/scripts/hooks/host_lowering.yaml` — **configured behavior, not observed behavior.**
 A cell says what this package has written down about a host, never what the host does.
 
-**Configured: 3 of 32 host-slot pairs configure a refusal — `claude` on 3 of its 9 (`stop`, `user_prompt_submit`, `pre_tool_use`). 19 are `warning`, 10 are `unenforced`, 0 are `halt-by-state`. 1 of 8 modelled hosts configures a refusal on any slot; 0 configure one on every slot it binds.**
+**Configured: 3 of 32 host-slot pairs configure a refusal — `claude` on 3 of its 9 (`stop`, `user_prompt_submit`, `pre_tool_use`). 19 are `warning`, 10 are `unenforced`, 0 are `halt-by-state`. 1 of 9 modelled hosts configures a refusal on any slot; 0 configure one on every slot it binds.**
 
-| Host | Slot | Configured outcome | Backing |
-|---|---|---|---|
-| `claude` | `session_start` | `warning` | `block_exit: null` · `fail_policy: propagate` |
-| `claude` | `session_end` | `warning` | `block_exit: null` · `fail_policy: propagate` |
-| `claude` | `stop` | `refusal` | `block_exit: 2` · `fail_policy: propagate` |
-| `claude` | `user_prompt_submit` | `refusal` | `block_exit: 2` · `fail_policy: propagate` |
-| `claude` | `pre_tool_use` | `refusal` | `block_exit: 2` · `fail_policy: propagate` |
-| `claude` | `post_tool_use` | `warning` | `block_exit: null` · `fail_policy: propagate` |
-| `claude` | `pre_compact` | `warning` | `block_exit: null` · `fail_policy: propagate` |
-| `claude` | `subagent_start` | `warning` | `block_exit: null` · `fail_policy: propagate` |
-| `claude` | `subagent_stop` | `warning` | `block_exit: null` · `fail_policy: propagate` |
-| `augment` | `session_start` | `unenforced` | `block_exit: null` · `fail_policy: discard` |
-| `augment` | `session_end` | `unenforced` | `block_exit: null` · `fail_policy: discard` |
-| `augment` | `stop` | `unenforced` | `block_exit: null` · `fail_policy: discard` |
-| `augment` | `pre_tool_use` | `unenforced` | `block_exit: null` · `fail_policy: discard` |
-| `augment` | `post_tool_use` | `unenforced` | `block_exit: null` · `fail_policy: discard` |
-| `cursor` | `session_start` | `warning` | `block_exit: null` · `fail_policy: propagate` |
-| `cursor` | `session_end` | `warning` | `block_exit: null` · `fail_policy: propagate` |
-| `cursor` | `stop` | `warning` | `block_exit: null` · `fail_policy: propagate` |
-| `cursor` | `user_prompt_submit` | `warning` | `block_exit: null` · `fail_policy: propagate` |
-| `cursor` | `post_tool_use` | `warning` | `block_exit: null` · `fail_policy: propagate` |
-| `cline` | `session_start` | `unenforced` | `block_exit: null` · `fail_policy: discard` |
-| `cline` | `session_end` | `unenforced` | `block_exit: null` · `fail_policy: discard` |
-| `cline` | `stop` | `unenforced` | `block_exit: null` · `fail_policy: discard` |
-| `cline` | `user_prompt_submit` | `unenforced` | `block_exit: null` · `fail_policy: discard` |
-| `cline` | `post_tool_use` | `unenforced` | `block_exit: null` · `fail_policy: discard` |
-| `windsurf` | `session_start` | `warning` | `block_exit: null` · `fail_policy: propagate` |
-| `windsurf` | `user_prompt_submit` | `warning` | `block_exit: null` · `fail_policy: propagate` |
-| `windsurf` | `stop` | `warning` | `block_exit: null` · `fail_policy: propagate` |
-| `gemini` | `session_start` | `warning` | `block_exit: null` · `fail_policy: propagate` |
-| `gemini` | `session_end` | `warning` | `block_exit: null` · `fail_policy: propagate` |
-| `gemini` | `stop` | `warning` | `block_exit: null` · `fail_policy: propagate` |
-| `gemini` | `user_prompt_submit` | `warning` | `block_exit: null` · `fail_policy: propagate` |
-| `gemini` | `post_tool_use` | `warning` | `block_exit: null` · `fail_policy: propagate` |
+| Host | Slot | Configured outcome | Backing | Answered |
+|---|---|---|---|---|
+| `claude` | `session_start` | `warning` | `block_exit: null` · `fail_policy: propagate` | 2026-09-29 |
+| `claude` | `session_end` | `warning` | `block_exit: null` · `fail_policy: propagate` | 2026-09-29 |
+| `claude` | `stop` | `refusal` | `block_exit: 2` · `fail_policy: propagate` | 2026-09-29 |
+| `claude` | `user_prompt_submit` | `refusal` | `block_exit: 2` · `fail_policy: propagate` | 2026-09-29 |
+| `claude` | `pre_tool_use` | `refusal` | `block_exit: 2` · `fail_policy: propagate` | 2026-09-29 |
+| `claude` | `post_tool_use` | `warning` | `block_exit: null` · `fail_policy: propagate` | 2026-09-29 |
+| `claude` | `pre_compact` | `warning` | `block_exit: null` · `fail_policy: propagate` | 2026-09-29 |
+| `claude` | `subagent_start` | `warning` | `block_exit: null` · `fail_policy: propagate` | 2026-09-29 |
+| `claude` | `subagent_stop` | `warning` | `block_exit: null` · `fail_policy: propagate` | 2026-09-29 |
+| `augment` | `session_start` | `unenforced` | `block_exit: null` · `fail_policy: discard` | 2026-09-29 |
+| `augment` | `session_end` | `unenforced` | `block_exit: null` · `fail_policy: discard` | 2026-09-29 |
+| `augment` | `stop` | `unenforced` | `block_exit: null` · `fail_policy: discard` | 2026-09-29 |
+| `augment` | `pre_tool_use` | `unenforced` | `block_exit: null` · `fail_policy: discard` | 2026-09-29 |
+| `augment` | `post_tool_use` | `unenforced` | `block_exit: null` · `fail_policy: discard` | 2026-09-29 |
+| `cursor` | `session_start` | `warning` | `block_exit: null` · `fail_policy: propagate` | 2026-09-29 |
+| `cursor` | `session_end` | `warning` | `block_exit: null` · `fail_policy: propagate` | 2026-09-29 |
+| `cursor` | `stop` | `warning` | `block_exit: null` · `fail_policy: propagate` | 2026-09-29 |
+| `cursor` | `user_prompt_submit` | `warning` | `block_exit: null` · `fail_policy: propagate` | 2026-09-29 |
+| `cursor` | `post_tool_use` | `warning` | `block_exit: null` · `fail_policy: propagate` | 2026-09-29 |
+| `cline` | `session_start` | `unenforced` | `block_exit: null` · `fail_policy: discard` | 2026-09-29 |
+| `cline` | `session_end` | `unenforced` | `block_exit: null` · `fail_policy: discard` | 2026-09-29 |
+| `cline` | `stop` | `unenforced` | `block_exit: null` · `fail_policy: discard` | 2026-09-29 |
+| `cline` | `user_prompt_submit` | `unenforced` | `block_exit: null` · `fail_policy: discard` | 2026-09-29 |
+| `cline` | `post_tool_use` | `unenforced` | `block_exit: null` · `fail_policy: discard` | 2026-09-29 |
+| `windsurf` | `session_start` | `warning` | `block_exit: null` · `fail_policy: propagate` | 2026-09-29 |
+| `windsurf` | `user_prompt_submit` | `warning` | `block_exit: null` · `fail_policy: propagate` | 2026-09-29 |
+| `windsurf` | `stop` | `warning` | `block_exit: null` · `fail_policy: propagate` | 2026-09-29 |
+| `gemini` | `session_start` | `warning` | `block_exit: null` · `fail_policy: propagate` | 2026-09-29 |
+| `gemini` | `session_end` | `warning` | `block_exit: null` · `fail_policy: propagate` | 2026-09-29 |
+| `gemini` | `stop` | `warning` | `block_exit: null` · `fail_policy: propagate` | 2026-09-29 |
+| `gemini` | `user_prompt_submit` | `warning` | `block_exit: null` · `fail_policy: propagate` | 2026-09-29 |
+| `gemini` | `post_tool_use` | `warning` | `block_exit: null` · `fail_policy: propagate` | 2026-09-29 |
 
-**No row above for `cowork`, `copilot`** — modelled in the configuration with an empty `slots:` map, so there is no host-slot pair to carry an outcome. That is an absence of bindings, not an outcome of `unenforced`.
+**No row above for `cowork`, `copilot`, `codex`** — modelled in the configuration with an empty `slots:` map, so there is no host-slot pair to carry an outcome. That is an absence of bindings, not an outcome of `unenforced`.
 <!-- END GENERATED: enforcement-configured-by-slot -->
 
 ### The slot rows are not a statement about any concern
