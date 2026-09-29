@@ -29,6 +29,37 @@
  * `not_applicable` with a reason and carries `findings: null` — never 0, which
  * would read as "ran and found nothing".
  *
+ * TWO CAUSES OF `not_applicable`, NOT ONE. The clause above was written for a
+ * host with no browser and then violated by the other empty input:
+ * `evaluate()` used to stamp all five dimensions `exercised` with `findings: 0`
+ * and return `structure_gate: 'passed'` for a reference that collected ZERO
+ * nodes — which is what every design handover in this tree produces, since none
+ * carries a `data-probe-id`. A comparison that never happened reported as a
+ * clean one. Since `road-to-a-probe-that-cannot-report-a-false-green` an empty
+ * reference takes the not-applicable path too, and its reason names the
+ * HANDOVER rather than the host, so the two causes stay tellable apart in the
+ * one field a reader looks at.
+ *
+ * THE ARTEFACT CARRIES ITS DENOMINATOR. `reference_nodes` and `target_nodes`
+ * are how many handled nodes each side actually held — `null` where nothing was
+ * observed at all, on the same never-0 contract as `findings`. Without them a
+ * zero-node run and a fully-matched run were indistinguishable in the JSON, so
+ * the cause above was readable only from prose.
+ *
+ * STRUCTURE IS SYMMETRIC. A handle present only in the target is a finding
+ * (`expected: 'absent'`, `observed: 'present'`), mirroring the reference-side
+ * one. `design-fidelity`'s Iron Law is "never omit or add an element" and the
+ * add half was unobservable while the loop read `reference.nodes` alone; a
+ * rename consequently reported one finding where it now reports two. The
+ * finding keys on the handle, never on the DOM node, so the wrapper and portal
+ * nodes a legitimate framework port inserts produce nothing.
+ *
+ * WHAT THIS DOES NOT FIX, said plainly because the fix is easy to over-read:
+ * no design handover in this tree carries a `data-probe-id` at all, so every
+ * real run still lands in the not-applicable branch. What changed is that the
+ * run now SAYS so. The correspondence problem — getting handles into a handover
+ * — is untouched, and nothing here promotes the probe out of shadow.
+ *
  * THE NOISE CONTROL. Computed-style comparison over every property fires on
  * font fallbacks and token indirection nobody cares about, so the compared set
  * is curated (`COMPARED_PROPERTIES`) to the properties a design token actually
@@ -169,7 +200,15 @@ export interface ProbeArtefact {
     host_class: 'A' | 'B' | 'C' | 'unknown';
     target: string;
     reference: string | null;
+    /**
+     * The denominator each side actually had. `null` where nothing was observed
+     * at all — the same contract `findings` carries, and for the same reason: a
+     * 0 would read as "looked and saw none", which the no-browser path did not.
+     */
+    reference_nodes: number | null;
+    target_nodes: number | null;
     structure_gate: 'passed' | 'stopped';
+    /** Reference-side only: the nodes whose STYLE comparison was skipped. */
     unmatched_nodes: string[];
     dimensions: DimensionRow[];
     findings: Finding[];
@@ -218,11 +257,61 @@ const STATE_BASELINE: Record<(typeof INTERACTION_STATES)[number], 'base' | 'hove
     keyboard: 'base',
 };
 
+/**
+ * The second cause of `not_applicable`, and it is deliberately worded to be
+ * unmistakable for the first.
+ *
+ * A handover carrying no `data-probe-id` and a host carrying no browser both
+ * end in five not-applicable rows, so the reason string is the one field a
+ * reader can tell them apart by. An operator who reads "no browser" goes
+ * looking for a missing binary instead of fixing the handover — so this text
+ * names the handover and never the host, and `reference_nodes: 0` makes the
+ * same cause readable from the data without the prose being read at all.
+ */
+const EMPTY_REFERENCE_REASON =
+    'the reference observation carries no data-probe-id handles, so there was nothing to ' +
+    'compare against. The capture ran and collected zero nodes: this is a property of the ' +
+    'handover, not of this machine.';
+
 export function evaluate(
     reference: Observation,
     target: Observation,
     declarations: readonly Declaration[],
 ): ProbeArtefact {
+    // AN EMPTY COMPARISON IS NOT A CLEAN ONE.
+    // Keyed on the REFERENCE only, and that asymmetry is the whole point: a
+    // target that collected nothing is a real comparison in which every node is
+    // missing, and four real structure findings must not be collapsed into a
+    // shrug. A reference that collected nothing has no question to ask, so no
+    // dimension was entered and none may report a count.
+    if (reference.nodes.length === 0) {
+        return {
+            schema: 'ui-conformance/v1',
+            generated_at: new Date().toISOString(),
+            host_class: resolveHostClass(),
+            target: target.source,
+            reference: reference.source,
+            reference_nodes: 0,
+            target_nodes: target.nodes.length,
+            // The empty-reference path READ both sources — it found no handles
+            // in the reference, which is a property of the handover, not a
+            // failure to look. So it records the same digests the normal path
+            // does; omitting them would make a stopped run indistinguishable
+            // from one whose inputs were never seen.
+            inputs: collectInputs(target.source, reference.source),
+            structure_gate: 'stopped',
+            unmatched_nodes: [],
+            dimensions: DIMENSIONS.map((d) => ({
+                dimension: d,
+                status: 'not_applicable' as const,
+                findings: null,
+                reason: `${d} was never entered: ${EMPTY_REFERENCE_REASON}`,
+            })),
+            findings: [],
+            declared_suppressed: [],
+        };
+    }
+
     const targetById = new Map(target.nodes.map((n) => [n.probe_id, n]));
     const findings: Finding[] = [];
     const suppressed: SuppressedDeviation[] = [];
@@ -366,6 +455,37 @@ export function evaluate(
         }
     }
 
+    // --- structure, from the TARGET side. `design-fidelity`'s Iron Law is
+    // "never omit or add an element" and only the omit half was observable: the
+    // loop above reads `reference.nodes`, so a handle present only in the target
+    // reached nothing.
+    //
+    // KEYED ON THE HANDLE, NEVER ON THE DOM NODE, and that is what keeps this
+    // from reddening correct work. A faithful port into a component framework
+    // inserts wrapper and portal nodes the handover never had; none of them
+    // carries a `data-probe-id`, so none of them is observed here. Excluding the
+    // false-positive class by construction, rather than by a heuristic, is the
+    // difference between a dimension that gets acted on and one that gets muted.
+    const referenceIds = new Set(reference.nodes.map((n) => n.probe_id));
+    const addedIds = target.nodes
+        .map((n) => n.probe_id)
+        .filter((id) => !referenceIds.has(id))
+        .sort();
+    for (const id of addedIds) {
+        findings.push({
+            dimension: 'structure',
+            probe_id: id,
+            state: null,
+            property: null,
+            expected: 'absent',
+            observed: 'present',
+            detail:
+                `a node carries data-probe-id="${id}" in the target and no node carries it in ` +
+                'the reference. There is nothing to compare its style against, so it is reported ' +
+                'and then left alone — the mirror of the missing-node case above.',
+        });
+    }
+
     const dimensions: DimensionRow[] = DIMENSIONS.map((d) => ({
         dimension: d,
         status: 'exercised',
@@ -379,7 +499,13 @@ export function evaluate(
         host_class: resolveHostClass(),
         target: target.source,
         reference: reference.source,
-        structure_gate: unmatched.length ? 'stopped' : 'passed',
+        reference_nodes: reference.nodes.length,
+        target_nodes: target.nodes.length,
+        // Both directions stop the gate, because both describe a node that was
+        // never style-compared. `unmatched_nodes` keeps its narrower meaning —
+        // the reference-side nodes whose comparison was SKIPPED — so a reader of
+        // that list still learns exactly what it always said.
+        structure_gate: unmatched.length || addedIds.length ? 'stopped' : 'passed',
         unmatched_nodes: unmatched,
         dimensions,
         findings,
@@ -402,6 +528,10 @@ export function unavailableArtefact(target: string, reason: string, reference: s
         host_class: 'unknown',
         target,
         reference: null,
+        // Null, never 0 — nothing was observed on either side, and a 0 would
+        // read as "looked and saw none".
+        reference_nodes: null,
+        target_nodes: null,
         structure_gate: 'stopped',
         unmatched_nodes: [],
         dimensions: DIMENSIONS.map((d) => ({

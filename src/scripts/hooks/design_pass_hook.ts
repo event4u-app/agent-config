@@ -221,7 +221,7 @@ export function conformanceVerdict(root: string, opts: ConformanceOptions = {}):
             structure_gate?: string;
             inputs?: unknown;
             dimensions?: { dimension: string; status: string; findings: number | null; reason?: string }[];
-            findings?: unknown[];
+            findings?: { dimension?: string; probe_id?: string; expected?: string; observed?: string }[];
         };
 
         // Before anything is counted. A finding count measured against inputs
@@ -256,6 +256,20 @@ export function conformanceVerdict(root: string, opts: ConformanceOptions = {}):
         }
         if (a.structure_gate === 'stopped') {
             parts.push('  · structure gate stopped on at least one node — style comparison was skipped for it');
+        }
+        // The added-element half. This line already said "Absent is not clean"
+        // about a missing artefact; the probe's structure dimension could only
+        // ever show the omit half of "never omit or add an element", so this is
+        // the one number the verdict could not print. Derived from the findings
+        // the probe already writes — no new artefact field is read.
+        const addedElements = (a.findings ?? []).filter(
+            (f) => f.dimension === 'structure' && f.expected === 'absent' && f.observed === 'present',
+        );
+        if (addedElements.length) {
+            parts.push(
+                `  · ${addedElements.length} element(s) present in the target and absent from the reference: ` +
+                    `${addedElements.map((f) => f.probe_id ?? '?').join(', ')} — added, not ported`,
+            );
         }
         parts.push(
             inputs.verdict === 'unchanged'

@@ -307,6 +307,42 @@ describe('the ui-conformance shadow mount', () => {
         expect(v.line).not.toMatch(/interaction=0/);
     });
 
+    it('names the elements the target added and the reference never had', () => {
+        // Phase 3.2 of `road-to-a-probe-that-cannot-report-a-false-green`. This
+        // line already said "Absent is not clean" about a missing artefact; the
+        // added half of "never omit or add an element" was the one number it
+        // could not print.
+        const v = conformanceVerdict(
+            withArtefact({
+                structure_gate: 'stopped',
+                findings: [
+                    { dimension: 'structure', probe_id: 'extra-badge', expected: 'absent', observed: 'present' },
+                ],
+                dimensions: [{ dimension: 'structure', status: 'exercised', findings: 1 }],
+            }),
+        );
+        expect(v.noteworthy).toBe(true);
+        expect(v.line).toMatch(/1 element\(s\) present in the target and absent from the reference/);
+        expect(v.line).toMatch(/extra-badge/);
+    });
+
+    it('does not read a missing element as an added one', () => {
+        // Sensitivity: the two structure findings differ only in the direction of
+        // `expected`/`observed`. A filter on the dimension alone would print the
+        // omission as an addition, which is the opposite defect.
+        const v = conformanceVerdict(
+            withArtefact({
+                structure_gate: 'stopped',
+                findings: [
+                    { dimension: 'structure', probe_id: 'status-badge', expected: 'present', observed: 'absent' },
+                ],
+                dimensions: [{ dimension: 'structure', status: 'exercised', findings: 1 }],
+            }),
+        );
+        expect(v.line).not.toMatch(/present in the target and absent from the reference/);
+        expect(v.line).toMatch(/structure gate stopped/);
+    });
+
     it('reports an unreadable artefact rather than ignoring it', () => {
         const v = conformanceVerdict(withArtefact('{ not json'));
         expect(v.noteworthy).toBe(true);
