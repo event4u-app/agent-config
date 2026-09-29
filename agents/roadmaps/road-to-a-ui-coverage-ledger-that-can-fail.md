@@ -146,12 +146,26 @@ and by a pre-registered count of what today's gates catch, recorded before any g
 
 ## Phase 3 — Handing work back is not success
 
-- [ ] **3.1 An all-`flagged` port stops returning `Outcome.SUCCESS`.** `run` returns
+- [x] **3.1 An all-`flagged` port stops returning `Outcome.SUCCESS`.** `run` returns
       `Outcome.SUCCESS` at `apply.ts:129` whenever `coverage_gaps` is empty, and an envelope that
       puts every declared item in `flagged` produces exactly that. Report the outcome in shadow
       first — the step result carries the enumerated unflagged-nothing case in its message without
       changing the outcome value.
       verify: arm `S-b` produces the shadow line; the faithful arm does not.
+      Done 2026-09-29. `CoverageReport` now carries `declared` and `handed_back`, and
+      `carried_nothing(report)` is true only when there is a declared inventory and **every**
+      item in it is accounted for solely by `flagged`. `run` appends the line to
+      `StepResult.message`; the outcome stays `SUCCESS`, asserted explicitly so the shadow
+      release is a recorded state rather than an intention. Narrowness is the design point and
+      is tested: a port that flags three of five is NOT the carried-nothing case. Probe after
+      this step: **`caught 2 of 3`** — and `S-b` reads `CATCH outcome=success`, which is the
+      shadow working. **Red first:** the S-b assertion failed with `expected '' to contain
+      'carried nothing'` before the edit. **Sensitivity proven twice**, because two of the four
+      assertions are absence-assertions that would otherwise pass vacuously: (A) condition
+      disabled → only the S-b test failed; (B) `carried_nothing` widened from
+      `handed_back.length === declared.length` to `> 0` → exactly the two absence-assertions
+      failed (faithful arm, and flagged-some-but-not-all), 2 failed / 35 passed. Restored from
+      `/tmp` copy after each, 37/37.
 - [ ] **3.2 Flip the shadow to a non-SUCCESS outcome**, with the affected item ids enumerated in
       the message.
       verify: arm `S-b` is not `SUCCESS` after the flip; the faithful arm still is. The flip lands

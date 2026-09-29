@@ -222,3 +222,34 @@ describe('2.2 — containment survives one release as a warned fallback', () => 
         expect(warned.message).toContain('tab');
     });
 });
+
+describe('3.1 — handing work back is reported', () => {
+    const ALL = ['tab', 'disclosure toggle', 'subscribe submit', 'rule-draw', 'mark.svg'];
+
+    it('S-b produces the shadow line naming every handed-back item', () => {
+        const said = saidBy(applyRun(stateFor('S-b-all-flagged.json')));
+        expect(said).toContain('carried nothing');
+        for (const id of ALL) expect(said, `${id} not enumerated`).toContain(id);
+    });
+
+    it('the faithful arm does not produce it', () => {
+        expect(saidBy(applyRun(stateFor('faithful.json')))).not.toContain('carried nothing');
+    });
+
+    it('a port that flagged some but not all is not the carried-nothing case', () => {
+        // The narrow condition matters: flagging one dropped handler is the
+        // ledger working as designed, and must not be reported as a hand-back.
+        const st = stateFor('faithful.json');
+        const cov = (st.ticket['ui_apply'] as Json)['coverage'] as Json;
+        cov['honoured'] = ['tab', 'disclosure toggle'];
+        cov['translated'] = [];
+        cov['flagged'] = ['subscribe submit', 'rule-draw', 'mark.svg'];
+        expect(saidBy(applyRun(st))).not.toContain('carried nothing');
+    });
+
+    it('3.1 deliberately does not change the outcome value', () => {
+        // Superseded by the 3.2 assertion once the flip lands; kept until then
+        // so the shadow release is a recorded state rather than an intention.
+        expect(applyRun(stateFor('S-b-all-flagged.json')).outcome).toBe('success');
+    });
+});

@@ -125,6 +125,13 @@ export function run(state: DeliveryState): StepResult {
             return _halt_coverage(state, provided, report.gaps);
         }
         notes.push(...report.fallbacks);
+        // 3.1 — reported in shadow: the outcome value is unchanged for one
+        // release, so a caller branching on it is found by the line rather
+        // than by the breakage.
+        const handed_back = _handed_back_line(report);
+        if (handed_back !== null) {
+            notes.push(handed_back);
+        }
     }
 
     _record_changes(state, envelope);
@@ -150,6 +157,34 @@ export interface CoverageReport {
     gaps: string[];
     /** Items carried only by the deprecated containment fallback. A warning. */
     fallbacks: string[];
+    /** Every declared item, in report order. */
+    declared: string[];
+    /** Declared items whose only account is in `flagged` — work handed back. */
+    handed_back: string[];
+}
+
+/**
+ * Did the port hand back everything it was given?
+ *
+ * True only when there is a declared inventory and **every** item in it is
+ * accounted for solely by `flagged`. Deliberately narrow: flagging one dropped
+ * handler is the ledger working exactly as designed, and reporting that as a
+ * hand-back would make the signal worthless within a week. What this catches
+ * is the envelope that accounted for everything and carried none of it — which
+ * `coverage_gaps` cannot see, because a complete report and a complete
+ * surrender are the same empty gap list.
+ */
+export function carried_nothing(report: CoverageReport): boolean {
+    return report.declared.length > 0 && report.handed_back.length === report.declared.length;
+}
+
+/** The line that says a port handed its work back, or `null`. */
+function _handed_back_line(report: CoverageReport): string | null {
+    if (!carried_nothing(report)) return null;
+    return (
+        `the port carried nothing over — all ${report.declared.length} declared ` +
+        `item(s) are in \`flagged\`: ${report.handed_back.join(', ')}`
+    );
 }
 
 /** Characters that make a containment hit part of a longer word. */
@@ -213,6 +248,8 @@ export function coverage_report(
 ): CoverageReport {
     const gaps: string[] = [];
     const fallbacks: string[] = [];
+    const declared_all: string[] = [];
+    const handed_back: string[] = [];
     if (!_isDict(coverage)) {
         return {
             gaps: [
@@ -220,9 +257,14 @@ export function coverage_report(
                     'requires one',
             ],
             fallbacks,
+            declared: declared_all,
+            handed_back,
         };
     }
-    const entries: string[] = [];
+    // Kept per-bucket, not flattened: which bucket accounted for an item is
+    // what separates a port that translated its work from one that handed it
+    // back, and a flat list of entries cannot answer that.
+    const by_bucket = new Map<string, string[]>();
     for (const bucket of COVERAGE_BUCKETS) {
         const value = coverage[bucket];
         if (value === undefined) {
@@ -233,35 +275,62 @@ export function coverage_report(
             gaps.push(`\`coverage.${bucket}\` must be a list of strings`);
             continue;
         }
+        const kept: string[] = [];
         for (const item of value) {
             if (typeof item === 'string' && item !== '') {
-                entries.push(item.toLowerCase());
+                kept.push(item.toLowerCase());
             }
         }
+        by_bucket.set(bucket, kept);
+    }
+    /** The buckets that account for `needle`, by either rule. */
+    function _accounting_buckets(needle: string): string[] {
+        const hit: string[] = [];
+        for (const [bucket, entries] of by_bucket) {
+            if (entries.some((entry) => entry === needle)) {
+                hit.push(bucket);
+            } else if (
+                allow_annotated_fallback &&
+                entries.some((entry) => _mentions(entry, needle))
+            ) {
+                hit.push(bucket);
+            }
+        }
+        return hit;
     }
     for (const inventory of COVERED_INVENTORIES) {
         const declared = provided[inventory];
         if (!Array.isArray(declared)) continue;
         for (const item of declared) {
             if (typeof item !== 'string' || item === '') continue;
+            declared_all.push(item);
             const needle = item.toLowerCase();
-            if (entries.some((entry) => entry === needle)) continue;
-            const mention = allow_annotated_fallback
-                ? entries.find((entry) => _mentions(entry, needle))
-                : undefined;
+            const buckets = _accounting_buckets(needle);
+            if (buckets.length === 0) {
+                gaps.push(
+                    `\`${inventory}\`: \`${item}\` appears in no coverage bucket`,
+                );
+                continue;
+            }
+            if (buckets.length === 1 && buckets[0] === 'flagged') {
+                handed_back.push(item);
+            }
+            const exact = [...by_bucket.values()].some((entries) =>
+                entries.some((entry) => entry === needle),
+            );
+            if (exact) continue;
+            const mention = [...by_bucket.values()]
+                .flat()
+                .find((entry) => _mentions(entry, needle));
             if (mention !== undefined) {
                 fallbacks.push(
                     `\`${inventory}\`: \`${item}\` matched only by containment ` +
                         `against \`${mention}\``,
                 );
-                continue;
             }
-            gaps.push(
-                `\`${inventory}\`: \`${item}\` appears in no coverage bucket`,
-            );
         }
     }
-    return { gaps, fallbacks };
+    return { gaps, fallbacks, declared: declared_all, handed_back };
 }
 
 /**
