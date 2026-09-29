@@ -53,8 +53,17 @@
  * `command-only` and `flow-only` name a CANDIDATE for `user-invocable: false`,
  * never a decision — see the sole-entry limit above.
  *
+ * THE PER-PROFILE MENU, added by `road-to-a-menu-whose-precision-is-measured`
+ * 4.1. `--profile minimal|balanced|full|all` prints the menu byte count each
+ * shipped install profile delivers. The number is COMPUTED from the profile's
+ * own preset rather than asserted, which matters because the answer is that all
+ * three are equal: no shipped preset declares a key that selects skills, so each
+ * one ships the whole menu. Computing it leaves the equality falsifiable — a
+ * preset that gains such a key changes the number instead of the prose.
+ *
  * Usage:
  *     ./scripts-run src/scripts/report_skill_menu_census                # stdout summary
+ *     ./scripts-run src/scripts/report_skill_menu_census --profile all
  *     ./scripts-run src/scripts/report_skill_menu_census --emit         # write the artifact
  *     ./scripts-run src/scripts/report_skill_menu_census --emit --pin <sha>
  *
@@ -313,8 +322,169 @@ function headSha(root: string): string {
     return execFileSync('git', ['-C', root, 'rev-parse', 'HEAD'], { encoding: 'utf-8' }).trim();
 }
 
+// ── per-profile menu bytes (road-to-a-menu-whose-precision-is-measured 4.1) ──
+
+/** The shipped install presets, mirroring `install.ts` SUPPORTED_PROFILES. */
+export const PROFILES = ['minimal', 'balanced', 'full'] as const;
+export type Profile = (typeof PROFILES)[number];
+
+/**
+ * Preset keys that would narrow the skill menu.
+ *
+ * EMPTY, and the emptiness is the finding rather than a stub. A preset selects
+ * `rule_loading_tier`, `discipline_profile` and `chat_history_frequency`; which
+ * SKILLS are written is decided by `packs:` frontmatter against the active pack
+ * set, which no preset names. The list exists so that adding such a key is a
+ * deliberate edit here — and so the equal numbers below are a computed result
+ * rather than a claim a reader has to take on trust.
+ */
+export const SKILL_SELECTING_INI_KEYS: readonly string[] = [];
+
+/** Flat `key=value` read of a profile preset; `;` comments and blanks dropped. */
+export function readProfileIni(root: string, profile: Profile): Record<string, string> {
+    const p = path.join(root, 'src', 'config', 'profiles', `${profile}.ini`);
+    const out: Record<string, string> = {};
+    for (const raw of fs.readFileSync(p, 'utf-8').split('\n')) {
+        const line = raw.trim();
+        if (line === '' || line.startsWith(';') || line.startsWith('#') || line.startsWith('[')) continue;
+        const eq = line.indexOf('=');
+        if (eq === -1) continue;
+        out[line.slice(0, eq).trim()] = line.slice(eq + 1).trim();
+    }
+    return out;
+}
+
+export interface ProfileMenu {
+    readonly profile: Profile;
+    /** Skills this profile writes onto the model menu. */
+    readonly menuSkills: number;
+    /** Bytes of `- <name>: <description>\n`, the shape `censusSkillsCatalog` sums. */
+    readonly menuBytes: number;
+    /** chars/4, the estimator the payload budget uses. */
+    readonly tokensEstimate: number;
+    /** `declared_skill_catalogue_tokens` from the preset, or null when absent. */
+    readonly declaredCatalogueTokens: number | null;
+    /** Preset keys found that would narrow the menu. Empty today, by measurement. */
+    readonly selectingKeys: readonly string[];
+}
+
+/**
+ * One profile's menu, computed from its preset plus the skill tree.
+ *
+ * The catalogue LINE is the same shape `preamble_byte_census.censusSkillsCatalog`
+ * sums — `- <name>: <description>\n`. The POPULATION deliberately is not, and the
+ * difference is stated rather than smoothed over: that census sums every
+ * `SKILL.md`, because the payload bucket it feeds is about what the host lists;
+ * this one drops a skill carrying `user-invocable: false` or
+ * `disable-model-invocation: true`, because a menu is what the MODEL may pick
+ * from. Two skills carry such a flag today, so over the same tree and the same
+ * line shape this report reads 315 B below the full-population sum. Expect the
+ * two to differ; a reader who finds them equal has found a defect in one.
+ */
+export function menuForProfile(root: string, profile: Profile): ProfileMenu {
+    const ini = readProfileIni(root, profile);
+    const selectingKeys = SKILL_SELECTING_INI_KEYS.filter((k) => k in ini);
+    const skillsDir = path.join(root, 'src', 'skills');
+    let menuSkills = 0;
+    let menuBytes = 0;
+    for (const entry of fs.readdirSync(skillsDir, { withFileTypes: true })) {
+        if (!entry.isDirectory()) continue;
+        const skillMd = path.join(skillsDir, entry.name, 'SKILL.md');
+        if (!fs.existsSync(skillMd)) continue;
+        const text = fs.readFileSync(skillMd, 'utf-8');
+        const flags = menuFlags(text);
+        if (flags.userInvocable === false || flags.disableModel === true) continue;
+        const name = /^name:\s*(\S.*?)\s*$/mu.exec(text.slice(0, 4000))?.[1] ?? entry.name;
+        const description = frontmatterDescription(text);
+        menuSkills += 1;
+        menuBytes += `- ${name}: ${description}\n`.length;
+    }
+    const declared = ini['declared_skill_catalogue_tokens'];
+    return {
+        profile,
+        menuSkills,
+        menuBytes,
+        tokensEstimate: Math.round(menuBytes / 4),
+        declaredCatalogueTokens: declared === undefined ? null : Number(declared),
+        selectingKeys,
+    };
+}
+
+/**
+ * The `description:` value, folded lines included.
+ *
+ * A `[^\n]+` capture was measured 17.1 % low elsewhere in this tree because it
+ * truncates every folded multi-line description; this reads to the next
+ * top-level key instead.
+ */
+export function frontmatterDescription(text: string): string {
+    if (!text.startsWith('---')) return '';
+    const end = text.indexOf('\n---', 3);
+    if (end === -1) return '';
+    const lines = text.slice(3, end).split('\n');
+    const at = lines.findIndex((l) => /^description:/u.test(l));
+    if (at === -1) return '';
+    const parts = [(lines[at] as string).replace(/^description:\s*/u, '')];
+    for (let i = at + 1; i < lines.length; i += 1) {
+        const l = lines[i] as string;
+        if (/^\S/u.test(l)) break;
+        parts.push(l.trim());
+    }
+    return parts.join(' ').trim().replace(/^["']|["']$/gu, '');
+}
+
+/** Render the per-profile menu table. Returns the lines, so tests read them. */
+export function renderProfileMenus(menus: readonly ProfileMenu[]): string[] {
+    const L: string[] = [];
+    L.push('menu bytes per install profile (name + description, the catalogue shape):');
+    L.push('  profile    skills   menu_bytes   ~tokens   declared');
+    for (const m of menus) {
+        L.push(
+            `  ${m.profile.padEnd(10)} ${String(m.menuSkills).padStart(6)} ` +
+                `${String(m.menuBytes).padStart(12)} ${String(m.tokensEstimate).padStart(9)} ` +
+                `${(m.declaredCatalogueTokens === null ? '—' : String(m.declaredCatalogueTokens)).padStart(10)}`,
+        );
+    }
+    const distinct = new Set(menus.map((m) => m.menuBytes));
+    if (menus.length > 1 && distinct.size === 1) {
+        L.push('');
+        L.push(
+            '  All profiles report the SAME menu_bytes, and that is a measurement, not a',
+        );
+        L.push(
+            '  placeholder: no preset declares a key that selects skills, so each ships the',
+        );
+        L.push(
+            '  whole menu. The preset chooses which RULES activate; which SKILLS are written',
+        );
+        L.push(
+            '  is decided by `packs:` frontmatter against the active pack set. A menu-bytes',
+        );
+        L.push(
+            '  lever therefore has to move packs or the menu flags — changing profile does',
+        );
+        L.push('  nothing. The three presets already record this in their own comments.');
+    }
+    return L;
+}
+
 export function main(argv: readonly string[]): number {
     const root = REPO_ROOT;
+    const profIdx = argv.indexOf('--profile');
+    if (profIdx !== -1) {
+        const want = argv[profIdx + 1] ?? 'all';
+        const chosen: Profile[] =
+            want === 'all' ? [...PROFILES] : PROFILES.includes(want as Profile) ? [want as Profile] : [];
+        if (chosen.length === 0) {
+            process.stderr.write(
+                `report_skill_menu_census: --profile expects ${PROFILES.join(' | ')} | all, got ${want}\n`,
+            );
+            return 2;
+        }
+        const menus = chosen.map((p) => menuForProfile(root, p));
+        process.stdout.write(`${renderProfileMenus(menus).join('\n')}\n`);
+        return 0;
+    }
     const emit = argv.includes('--emit');
     const pinIdx = argv.indexOf('--pin');
     const pin = pinIdx !== -1 && pinIdx + 1 < argv.length ? (argv[pinIdx + 1] as string) : headSha(root);

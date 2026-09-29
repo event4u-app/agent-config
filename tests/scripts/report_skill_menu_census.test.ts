@@ -114,3 +114,156 @@ describe('tally reconciles to the row count', () => {
         expect(t).toEqual({ both: 1, 'command-only': 1, 'flow-only': 1, 'model-routed': 1, orphan: 1 });
     });
 });
+
+// The per-profile menu arm. Its answer is that all three profiles are equal, and
+// an equal number is exactly the shape that could also be produced by a stub —
+// so the tests below pin the computation rather than the result: a preset whose
+// keys differ still reads its own file, a skill off the menu contributes nothing,
+// and the equality note appears only when the numbers are in fact equal.
+import { execFileSync } from 'node:child_process';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+
+import { afterEach, beforeEach } from 'vitest';
+
+import {
+    PROFILES,
+    frontmatterDescription,
+    menuForProfile,
+    readProfileIni,
+    renderProfileMenus,
+    type ProfileMenu,
+} from '../../src/scripts/report_skill_menu_census.js';
+
+const REPO_ROOT = path.resolve(__dirname, '..', '..');
+
+let profRoot: string;
+
+function put(rel: string, body: string): void {
+    const p = path.join(profRoot, rel);
+    fs.mkdirSync(path.dirname(p), { recursive: true });
+    fs.writeFileSync(p, body);
+}
+
+beforeEach(() => {
+    profRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'menu-prof-'));
+    for (const p of PROFILES) put(`src/config/profiles/${p}.ini`, `; comment\n\nrule_loading_tier=${p}\n`);
+});
+afterEach(() => {
+    fs.rmSync(profRoot, { recursive: true, force: true });
+});
+
+describe('readProfileIni', () => {
+    it('drops comments, blanks and section headers, keeps key=value', () => {
+        put('src/config/profiles/minimal.ini', '; note\n# hash\n[section]\n\na=1\nb = two \nnoequals\n');
+        expect(readProfileIni(profRoot, 'minimal')).toEqual({ a: '1', b: 'two' });
+    });
+
+    it('reads each profile its OWN file — a shared answer must not come from a shared read', () => {
+        // If the three numbers below are ever equal, this is the test that says
+        // they were computed three times rather than once and copied.
+        expect(readProfileIni(profRoot, 'minimal')['rule_loading_tier']).toBe('minimal');
+        expect(readProfileIni(profRoot, 'full')['rule_loading_tier']).toBe('full');
+    });
+});
+
+describe('frontmatterDescription', () => {
+    it('joins a folded multi-line description', () => {
+        const text = '---\nname: x\ndescription: first part\n  second part\npacks:\n  - meta\n---\n\nbody\n';
+        expect(frontmatterDescription(text)).toBe('first part second part');
+    });
+
+    it('stops at the next top-level key, so a following key is never absorbed', () => {
+        const text = '---\ndescription: only this\nname: x\n---\n';
+        expect(frontmatterDescription(text)).toBe('only this');
+    });
+
+    it('returns empty for a file with no frontmatter at all', () => {
+        expect(frontmatterDescription('# just a heading\n')).toBe('');
+    });
+});
+
+describe('menuForProfile', () => {
+    const skill = (name: string, extra: string, description = 'A description.'): void =>
+        put(`src/skills/${name}/SKILL.md`, `---\nname: ${name}\ndescription: ${description}\n${extra}---\n`);
+
+    it('counts the catalogue line shape, name and description included', () => {
+        skill('alpha', '');
+        const m = menuForProfile(profRoot, 'minimal');
+        expect(m.menuSkills).toBe(1);
+        expect(m.menuBytes).toBe('- alpha: A description.\n'.length);
+        expect(m.tokensEstimate).toBe(Math.round(m.menuBytes / 4));
+    });
+
+    it('drops a skill the model may not pick — both flags, and only those', () => {
+        skill('alpha', '');
+        skill('hidden-a', 'user-invocable: false\n');
+        skill('hidden-b', 'disable-model-invocation: true\n');
+        expect(menuForProfile(profRoot, 'minimal').menuSkills).toBe(1);
+    });
+
+    it('reports a declared catalogue-token figure when the preset carries one, else null', () => {
+        skill('alpha', '');
+        expect(menuForProfile(profRoot, 'minimal').declaredCatalogueTokens).toBeNull();
+        put('src/config/profiles/minimal.ini', 'declared_skill_catalogue_tokens=4242\n');
+        expect(menuForProfile(profRoot, 'minimal').declaredCatalogueTokens).toBe(4242);
+    });
+
+    it('finds no skill-selecting key in any shipped preset — the equality is measured, not assumed', () => {
+        skill('alpha', '');
+        for (const p of PROFILES) expect(menuForProfile(profRoot, p).selectingKeys).toEqual([]);
+    });
+});
+
+describe('renderProfileMenus', () => {
+    const menu = (profile: ProfileMenu['profile'], menuBytes: number): ProfileMenu => ({
+        profile,
+        menuSkills: 1,
+        menuBytes,
+        tokensEstimate: Math.round(menuBytes / 4),
+        declaredCatalogueTokens: null,
+        selectingKeys: [],
+    });
+
+    it('explains the equality when every profile reports the same bytes', () => {
+        const lines = renderProfileMenus([menu('minimal', 100), menu('balanced', 100), menu('full', 100)]);
+        expect(lines.join('\n')).toContain('SAME menu_bytes');
+    });
+
+    it('stays silent about equality when the numbers differ — the note is a finding, not a fixture', () => {
+        const lines = renderProfileMenus([menu('minimal', 100), menu('balanced', 101), menu('full', 100)]);
+        expect(lines.join('\n')).not.toContain('SAME menu_bytes');
+    });
+
+    it('says nothing about equality for a single profile, where there is nothing to compare', () => {
+        expect(renderProfileMenus([menu('minimal', 100)]).join('\n')).not.toContain('SAME menu_bytes');
+    });
+});
+
+describe('the profile CLI', () => {
+    const run = (args: string[]): { status: number; out: string } => {
+        try {
+            const out = execFileSync('./scripts-run', ['src/scripts/report_skill_menu_census', ...args], {
+                cwd: REPO_ROOT,
+                encoding: 'utf-8',
+            });
+            return { status: 0, out };
+        } catch (e) {
+            const err = e as { status?: number; stdout?: string; stderr?: string };
+            return { status: err.status ?? 1, out: `${err.stdout ?? ''}${err.stderr ?? ''}` };
+        }
+    };
+
+    it('refuses an unknown profile rather than falling back to all', () => {
+        const r = run(['--profile', 'enterprise']);
+        expect(r.status).toBe(2);
+        expect(r.out).toContain('--profile expects');
+    });
+
+    it('prints one row per shipped profile under --profile all', () => {
+        const r = run(['--profile', 'all']);
+        expect(r.status).toBe(0);
+        for (const p of PROFILES) expect(r.out).toContain(p);
+    });
+});
