@@ -55,6 +55,8 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
+
+import * as yaml from 'js-yaml';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -394,6 +396,220 @@ function _read(root: string, rel: string): string | null {
 /** Flags this gate understands. `--root` is the only one taking a value. */
 const KNOWN_FLAGS: ReadonlySet<string> = new Set(['--self-test', '--root', '--write', '--quiet']);
 
+/** Where the concern→slot bindings and per-concern severities live. */
+export const MANIFEST_REL = path.join('src', 'scripts', 'hook_manifest.yaml');
+
+/**
+ * Why a bound concern's verdict cannot leave its slot.
+ *
+ * Three states, not two, and the third is the one an earlier version of this
+ * audit got wrong by skipping it. They are ordered worst-first:
+ *
+ *   - `unlowerable`  — the lowering table carries NO row for this slot on this
+ *                      host, so the installer writes no native binding at all.
+ *                      `cowork` is the worked case: `slots: {}` against sixty-odd
+ *                      declared bindings. Skipping it printed `0/0 · 0 blocking`,
+ *                      byte-identical to a host that binds nothing — a false
+ *                      green on the host with the largest gap.
+ *   - `null-block`   — a row exists and its literal `block_exit` is null. The
+ *                      slot is wired and a refusal has nowhere to go.
+ *   - `stale-proof`  — the literal `block_exit` CAN deny, but the row's
+ *                      `verified` block has expired, so `effective` reads null.
+ *                      This is a statement about this package's provenance, NOT
+ *                      about the host: `host_lowering.yaml` says in its own
+ *                      header that an absent `verified` "does NOT mean the host
+ *                      cannot enforce". Printing "cannot deny" here would
+ *                      assert exactly the host fact that file disclaims, so it
+ *                      is reported as its own class and worded differently.
+ */
+export type NoDenyReason = 'unlowerable' | 'null-block' | 'stale-proof';
+
+/** One concern bound where its verdict cannot produce a refusal. */
+export interface NullBlockBinding {
+    readonly host: string;
+    readonly slot: string;
+    readonly concern: string;
+    /** The concern's declared `severity`, or `(undeclared)`. */
+    readonly severity: string;
+    readonly reason: NoDenyReason;
+}
+
+/** What {@link concernSlotAudit} establishes for one host. */
+export interface HostConcernAudit {
+    readonly host: string;
+    /** Lowerable slots whose literal `block_exit` can deny. */
+    readonly denySlots: number;
+    /** Lowerable slots in total. */
+    readonly lowerableSlots: number;
+    /** Distinct slots this host binds a concern to, whether lowerable or not. */
+    readonly boundSlots: number;
+    /**
+     * Bindings whose verdict cannot become a refusal, worst reason first and
+     * `blocking` severity ahead of the rest within a reason.
+     *
+     * An `advisory` concern here is CONSISTENT, not a defect — most concerns are
+     * advisory and belong on a reporting slot. The row that matters is a
+     * `blocking` severity: a concern declared to refuse, bound where a refusal
+     * has nowhere to go.
+     */
+    readonly noDeny: readonly NullBlockBinding[];
+}
+
+/** Slots that carry a dispatcher verdict. `ask` is a UI affordance, not one. */
+const NON_VERDICT_SLOTS: ReadonlySet<string> = new Set(['ask']);
+
+/**
+ * Cross-reference the manifest's concern bindings against the lowering table's
+ * per-slot `block_exit`.
+ *
+ * road-to-a-content-scanner-on-a-slot-that-can-refuse 2.1. The gate above
+ * compares published host-SLOT rows against the configuration and is green
+ * whenever those agree — it never asks whether a CONCERN is bound to a slot
+ * that can carry its severity. That question was answered once, by an external
+ * reader comparing two files by hand, which is why it drifted back: a hand
+ * comparison leaves no number behind. This makes it a printed count.
+ *
+ * DELIBERATELY NOT A FAILURE. It prints; the exit code is unchanged. Failing
+ * would red the tree on bindings that predate this check — the same reason the
+ * continuity and estate ratchets report distance-to-target instead of gating on
+ * it. What a reader gets is a number that moves when a binding or a slot moves.
+ *
+ * NOTHING BOUND IS SILENTLY DROPPED. Every bound slot lands in exactly one of
+ * {can deny, one of the three {@link NoDenyReason} classes, non-verdict}, and
+ * `boundSlots` publishes the denominator so a reader can check the arithmetic
+ * rather than trust it. That is the correction the first version needed: it
+ * skipped any slot missing from the lowering table, which is precisely the
+ * largest gap in the tree.
+ */
+export function concernSlotAudit(root: string, lowering: HostLowering): HostConcernAudit[] {
+    const manifestText = _read(root, MANIFEST_REL);
+    if (manifestText === null) return [];
+    let manifest: unknown;
+    try {
+        manifest = yaml.load(manifestText);
+    } catch {
+        return [];
+    }
+    if (manifest === null || typeof manifest !== 'object') return [];
+    const m = manifest as Record<string, unknown>;
+
+    const severities = new Map<string, string>();
+    const concerns = m['concerns'];
+    if (concerns !== null && typeof concerns === 'object') {
+        for (const [name, spec] of Object.entries(concerns as Record<string, unknown>)) {
+            const sev =
+                spec !== null && typeof spec === 'object'
+                    ? (spec as Record<string, unknown>)['severity']
+                    : undefined;
+            severities.set(name, typeof sev === 'string' ? sev : '(undeclared)');
+        }
+    }
+
+    const platforms = m['platforms'];
+    if (platforms === null || typeof platforms !== 'object') return [];
+
+    const out: HostConcernAudit[] = [];
+    for (const [host, blockRaw] of Object.entries(platforms as Record<string, unknown>)) {
+        const reading = readSlots(lowering, host);
+        const rows = new Map<string, SlotReading>(reading.slots.map((s: SlotReading) => [s.slot, s]));
+        const denySlots = reading.slots.filter((s: SlotReading) => s.literal !== null).length;
+
+        const noDeny: NullBlockBinding[] = [];
+        let boundSlots = 0;
+        if (blockRaw !== null && typeof blockRaw === 'object') {
+            for (const [slot, value] of Object.entries(blockRaw as Record<string, unknown>)) {
+                if (!Array.isArray(value)) continue;
+                if (NON_VERDICT_SLOTS.has(slot)) continue;
+                boundSlots += 1;
+                const row = rows.get(slot);
+                // The literal decides whether a refusal can leave the slot; the
+                // `verified` currency decides only whether this package has
+                // cited its proof. Reading `effective` here would turn an
+                // expired citation into a claim that the host cannot enforce.
+                const reason: NoDenyReason | null =
+                    row === undefined
+                        ? 'unlowerable'
+                        : row.literal === null
+                          ? 'null-block'
+                          : row.effective === null
+                            ? 'stale-proof'
+                            : null;
+                if (reason === null) continue;
+                for (const concern of value) {
+                    if (typeof concern !== 'string') continue;
+                    noDeny.push({
+                        host,
+                        slot,
+                        concern,
+                        severity: severities.get(concern) ?? '(unknown concern)',
+                        reason,
+                    });
+                }
+            }
+        }
+        const reasonRank = (r: NoDenyReason): number =>
+            r === 'unlowerable' ? 0 : r === 'null-block' ? 1 : 2;
+        const sevRank = (s: string): number => (s === 'blocking' ? 0 : s === 'advisory' ? 2 : 1);
+        noDeny.sort(
+            (a, b) =>
+                reasonRank(a.reason) - reasonRank(b.reason) ||
+                sevRank(a.severity) - sevRank(b.severity) ||
+                a.slot.localeCompare(b.slot) ||
+                a.concern.localeCompare(b.concern),
+        );
+        out.push({
+            host,
+            denySlots,
+            lowerableSlots: reading.slots.length,
+            boundSlots,
+            noDeny,
+        });
+    }
+    return out;
+}
+
+/** How each {@link NoDenyReason} is worded. `stale-proof` never says "cannot". */
+const REASON_TEXT: Readonly<Record<NoDenyReason, string>> = {
+    unlowerable: 'no lowering row for this slot — nothing is bound natively at all',
+    'null-block': 'block_exit is null — a refusal has nowhere to go',
+    'stale-proof': 'block_exit can deny, but this row’s `verified` proof has expired',
+};
+
+/** Render the audit as the lines the reporter prints. */
+export function renderConcernAudit(audit: readonly HostConcernAudit[]): string[] {
+    const lines: string[] = [];
+    lines.push('');
+    lines.push(`${GATE} · concerns bound where a verdict cannot become a refusal`);
+    lines.push(
+        '  A blocking severity here is a concern declared to refuse, bound where a refusal',
+    );
+    lines.push('  cannot happen. An advisory one is consistent and is counted, not flagged.');
+    lines.push('  `stale-proof` is a statement about this package’s citation, never about the host.');
+    for (const h of audit) {
+        const blocking = h.noDeny.filter((b) => b.severity === 'blocking');
+        const others = h.noDeny.length - blocking.length;
+        lines.push(
+            `  ${h.host.padEnd(10)} ${String(h.denySlots)}/${String(h.lowerableSlots)} lowerable slot(s) can deny · ` +
+                `${String(h.boundSlots)} verdict-bearing slot(s) bound · ` +
+                `${String(blocking.length)} blocking + ${String(others)} non-blocking binding(s) cannot refuse`,
+        );
+        // One line per (reason, slot) rather than per concern: a host with an
+        // empty `slots:` map has sixty-odd bindings and the reason is the fact,
+        // not the roster.
+        const seen = new Set<string>();
+        for (const b of h.noDeny) {
+            if (b.severity !== 'blocking') continue;
+            const key = `${b.reason}/${b.slot}`;
+            if (!seen.has(key)) {
+                seen.add(key);
+                lines.push(`    ⚠️  ${b.slot} — ${REASON_TEXT[b.reason]}`);
+            }
+            lines.push(`        ${b.concern} (${b.severity})`);
+        }
+    }
+    return lines;
+}
+
 export function main(argv?: readonly string[]): number {
     const args = argv ?? process.argv.slice(2);
     // An unrecognised flag is refused rather than ignored. Both ratification
@@ -516,6 +732,13 @@ export function main(argv?: readonly string[]): number {
         roots: [LOWERING_REL],
     });
     ledger.report();
+
+    // The concern-vs-slot audit prints on every read-only run, before the
+    // verdict, so it is visible whether the row comparison passed or failed.
+    // It never changes the exit code — see `concernSlotAudit`.
+    for (const line of renderConcernAudit(concernSlotAudit(root, lowering))) {
+        process.stdout.write(`${line}\n`);
+    }
 
     if (findings.length > 0) {
         for (const f of findings) process.stdout.write(`❌  ${GATE}: ${f}\n`);

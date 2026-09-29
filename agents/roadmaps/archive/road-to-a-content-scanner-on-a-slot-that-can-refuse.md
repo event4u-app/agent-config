@@ -44,33 +44,119 @@ published table rather than a downgrade of the concern.
 
 ## Phase 1 — Decide which of the two moves
 
-- [ ] **1.1 State what a refusing content scan would cost.** Moving the concern
+- [x] **1.1 State what a refusing content scan would cost.** Moving the concern
       to `pre_tool_use` puts a scan on the hottest slot, ahead of the tool call
       rather than after it, and changes what it can see: the input, not the
       result. Write down which of the two inputs the scan actually needs before
       the slot is chosen — a scanner that needs the result cannot move.
       verify: the concern's header names the input it reads, and the note says
       whether that input exists on `pre_tool_use`
-- [ ] **1.2 Take one of the two options and record the other as rejected.**
+      Done 2026-09-29. **The scan needs the tool RESULT, so it cannot move.**
+      Both limbs: · **header names the input** — `hook_manifest.yaml` declares
+      `needs_payload_bodies: [input, result]` for `injection-scan`, and
+      `injection_scan_hook.ts`'s own header says it "scans the tool output (file
+      reads, web fetches, MCP / tool responses)". A new header block on the
+      concern now states the input and the consequence in the same place. ·
+      **does that input exist on `pre_tool_use`** — no. The `result` body class
+      resolves to `tool_response` / `toolResponse` / `tool_result` /
+      `toolUseResult` (`hooks/payload_stub.ts:111`), none of which exist before
+      the call runs. Rebinding would leave the scanner reading call arguments it
+      was never written to inspect: more enforcing-looking and strictly less
+      detecting, which is Risk 1 exactly. Option A is therefore refused AT 1.1,
+      on evidence rather than preference — which is what this step is for.
+- [x] **1.2 Take one of the two options and record the other as rejected.**
       (A) rebind to a block-capable slot, with the cost from 1.1 named; or
       (B) correct every published enforcement claim for this concern to
       `detected, not blocked`, and leave the binding where it is.
       verify: the chosen option lands as a diff; the rejected one is named with
       its reason in the same change
+      Done 2026-09-29. **Chosen: (B).** The binding stays on `post_tool_use` and
+      the claim is stated as `detected, not blocked`. **Rejected: (A) rebind to
+      a block-capable slot** — refused at 1.1 because the only block-capable
+      slot on this host is `pre_tool_use` and the scan's `result` input does not
+      exist there; the deny it gained would fire on a payload without the
+      fetched content it exists to inspect. Both land in this change: the
+      concern's header carries the reason, and
+      `docs/enforcement-by-host.md` § "The slot rows are not a statement about
+      any concern" carries the reading.
+      **An honest note on what B had to correct.** The published claims were
+      ALREADY right: `docs/CLAIMS.md`, `docs/proof.md`, `docs/settings-reference.md`
+      and the `untrusted-input-defense` rule all read `warn-only` / "cannot
+      refuse" / "neither figure is a claim that anything is blocked", and every
+      `post_tool_use` row in the enforcement table already reads `warning` ·
+      `block_exit: null`. Nothing overclaimed a denial. **Corrected after
+      review:** an earlier draft of this note said no published surface named
+      the concern-to-slot relation, and that was too strong —
+      `docs/guidelines/agent-infra/untrusted-input-spotlighting.md` § The
+      content-scanning hook already said the hook "binds to `post_tool_use`,
+      reads tool output". What was missing is narrower and still worth closing:
+      no surface tied that binding to the slot's *deny capability*, and nothing
+      recomputed the relation, so it could drift back silently. The same review
+      struck "`post_tool_use` is `block_exit: null` everywhere" as unverifiable
+      for `cowork`, which carries the binding and has no slot row at all.
 
 ## Phase 2 — Close the reporter's loop
 
-- [ ] **2.1 Make the mismatch count the assertion, not the prose.** The
+- [x] **2.1 Make the mismatch count the assertion, not the prose.** The
       enforcement reporter already computes the strict comparison. Have it
       state, per host, how many lowerable slots deny and which concerns bind to
       slots that cannot — so the next drift is a number that moved rather than
       a sentence someone has to re-verify by hand.
       verify: run the reporter read-only; it prints the per-host slot count and
       names any concern bound to a null-block slot
-- [ ] **2.2 Confirm the published table matches the reporter's output.** One
+      Done 2026-09-29. `concernSlotAudit` + `renderConcernAudit` in
+      `src/scripts/check_enforcement_matrix.ts`, printed on every read-only run.
+      Output, verbatim for three hosts: `claude  3/9 lowerable slot(s) can deny
+      · 9 verdict-bearing slot(s) bound · 0 blocking + 45 non-blocking
+      binding(s) cannot refuse`; `augment 0/5 ... 5 verdict-bearing ... 5
+      blocking + 47 non-blocking`; `cowork 0/0 ... 8 verdict-bearing ... 5
+      blocking + 59 non-blocking`.
+      **It found two unrelated instances** — the same five guards
+      (`block-no-verify`, `block-kernel-rule-writes`, `block-config-weakening`,
+      `block-speaking-inbox-dir`, `evidence-independence`) cannot refuse on
+      `augment` (row exists, `block_exit: null` · `fail_policy: discard`) nor on
+      `cowork` (no row at all — `slots: {}` against eight bound slots). Rules
+      admit this in prose; nothing counted it. `injection-scan` is correctly
+      absent from the blocking list: it is advisory, so it lands in the
+      non-blocking count.
+      **The `cowork` half was a defect in THIS step, found by review and fixed
+      here.** The first version skipped any bound slot with no lowering row,
+      which printed `cowork 0/0 · 0 blocking` — byte-identical to `copilot`,
+      which binds nothing — i.e. a false green on the host with the largest gap.
+      The audit now classifies three reasons (`unlowerable`, `null-block`,
+      `stale-proof`), publishes a bound-slot denominator beside the lowerable
+      count, and drops nothing bound. The same review caught the deny count
+      reading `effective` rather than `literal`, which would have printed
+      "cannot deny" for a slot whose `block_exit` is `2` as soon as claude's
+      `verified` block expired — asserting the host fact `host_lowering.yaml`
+      explicitly disclaims. Both are corrected, and `stale-proof` is worded as a
+      lapsed citation rather than a host limit.
+      **Prints, never fails — deliberately.** The exit code is untouched.
+      Failing would redden the tree on bindings that predate the check, which is
+      the reason the estate and continuity ratchets report distance rather than
+      gate on it. Tests: `tests/scripts/enforcement_concern_audit.test.ts`, 17
+      passed, over a FOUR-host fixture binding the same blocking concern on a
+      denying host, a null-block host, a host with no slot rows, and a host whose
+      `verified` block has expired — so each assertion separates "classified this
+      host correctly" from "flagged everything". **Sensitivity checked twice:**
+      re-introducing the skip for a missing lowering row, and switching the deny
+      count back to `effective`, together turn five tests red. The previous
+      iteration also carried a tautological test — it asserted a guard clause
+      that a later `!== null` already covered, so deleting the clause changed
+      nothing; review caught it and it is gone.
+- [x] **2.2 Confirm the published table matches the reporter's output.** One
       reading, two sources, no difference.
       verify: the reporter's per-host line and the published row agree for
       every host it covers
+      Done 2026-09-29. `check_enforcement_matrix` is green — `32 host-slot
+      row(s) in docs/enforcement-by-host.md match
+      src/scripts/hooks/host_lowering.yaml` — and its `--self-test` reports
+      `5/5 case(s) behaved (4 rejecting, floor 5)`. The prose added by 1.2 is
+      checked against the same run rather than written beside it: the five
+      `augment` blocking concerns, the `injection-scan` slot, and
+      `post_tool_use` being `block_exit: null` on every host that carries it all
+      come from the audit output quoted in 2.1 and from the generated slot rows
+      directly above the new section.
 
 ## Acceptance criteria
 

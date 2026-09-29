@@ -230,6 +230,49 @@ A cell says what this package has written down about a host, never what the host
 **No row above for `cowork`, `copilot`** — modelled in the configuration with an empty `slots:` map, so there is no host-slot pair to carry an outcome. That is an absence of bindings, not an outcome of `unenforced`.
 <!-- END GENERATED: enforcement-configured-by-slot -->
 
+### The slot rows are not a statement about any concern
+
+A row above answers *can a refusal leave this slot on this host*. It does not
+answer *is the concern bound here able to refuse*, and the two come apart in
+both directions. `check_enforcement_matrix` prints that second reading on every
+read-only run — per host, how many lowerable slots deny, and every concern bound
+to a slot whose `block_exit` is null. It is a printed count and never an exit
+code, for the same reason the estate and continuity ratchets report distance
+instead of gating on it: these bindings predate the check, and reddening the
+tree on them would punish whichever change added the reading.
+
+An **advisory** concern on a null-block slot is consistent — most concerns are
+advisory and belong on a reporting slot. Two readings are worth naming because
+a reader looking only at the rows above would get them wrong:
+
+- **`injection-scan` detects; it does not block, and nothing here claims it
+  does.** It is bound to `post_tool_use` on all six hosts that carry it, and
+  `post_tool_use` is `block_exit: null` everywhere. That is not a downgrade: the
+  concern declares `severity: advisory`, its own header states it warns and
+  never blocks, and it must read the tool *result* —
+  `needs_payload_bodies: [input, result]` — which does not exist on a pre-call
+  slot. So it cannot be moved to a slot that denies without losing the input it
+  exists to inspect. The published claims elsewhere in this repository already
+  read `warn-only` / `detected, not blocked`; this paragraph is where the slot
+  reason is written down rather than re-derived by hand.
+- **The same five `blocking` guards cannot refuse on `augment` or on `cowork`,
+  for two different reasons.** `block-no-verify`, `block-kernel-rule-writes`,
+  `block-config-weakening`, `block-speaking-inbox-dir` and
+  `evidence-independence` are bound to `pre_tool_use` on both. On `augment` a
+  lowering row exists and reads `block_exit: null` · `fail_policy: discard`, so
+  they run and are ignored. On `cowork` there is **no row at all** —
+  `host_lowering.yaml` gives it `slots: {}` against eight declared binding
+  slots — so nothing is lowered natively in the first place. The audit reports
+  those as distinct reasons (`null-block` versus `unlowerable`) and prints a
+  bound-slot count beside the lowerable one, which is what keeps `cowork` from
+  reading like `copilot`, the host that genuinely binds nothing.
+
+A third class exists and is worded deliberately. When a row's literal
+`block_exit` *can* deny but its `verified` block has expired, the audit says the
+**proof** has lapsed and never that the host cannot deny — `host_lowering.yaml`
+states in its own header that an absent `verified` "does NOT mean the host
+cannot enforce", and the deny count is therefore taken from the literal.
+
 ## `destructive:` — which layer guards a typed op, per host
 
 `road-to-adversarial-verification-and-long-runs` 7.2. The eleven typed ops need a
