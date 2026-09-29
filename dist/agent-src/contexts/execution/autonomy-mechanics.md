@@ -62,18 +62,26 @@ Ask.
 
 Committing is governed by the canonical
 [`commit-policy`](../../rules/commit-policy.md) rule, which applies
-regardless of `personal.autonomy`:
-
-- NEVER commit unless user said so this turn, a commit command was
-  invoked, a standing instruction is active, or the roadmap
-  authorizes it.
-- NEVER ask about committing. The user invokes a command or says so.
-- In autonomous mode, the **only** permitted commit-related question
-  is the one-shot pre-scan ask at the start of roadmap execution.
+regardless of `personal.autonomy`. Its Iron Law, its four exceptions
+and the never-ask clause live there; the mechanics — the Hard-Floor
+diff triggers and the one-shot roadmap pre-scan ask — live in
+[`commit-mechanics`](../authority/commit-mechanics.md).
 
 Push, merge, rebase, branch creation, PR operations, and tags
 remain permission-gated by
 [`scope-control § git-operations`](../../rules/scope-control.md#git-operations--permission-gated).
+
+**This section used to restate all three, and the restatement was
+removed rather than re-synced.** It was the third carrier of one
+obligation, it was the only one nothing linked to, and it had already
+gone incomplete: it named the pre-scan ask as "the **only** permitted
+commit-related question" without the clause in `commit-mechanics`
+that retires that ask entirely when a roadmap declares
+`execution.mode`. A reader who followed the copy would have asked a
+question the execution contract had already covered. Incompleteness,
+not contradiction, is what a redundant copy decays into first — it
+reads as authoritative right up to the case it was never updated for.
+The pointer above cannot decay that way.
 
 ## Opt-in detection — rule-level summary
 
