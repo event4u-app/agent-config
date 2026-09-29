@@ -58,7 +58,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { load as yamlLoad } from 'js-yaml';
 
-import { CARRIED_KEYS, PARTIAL_KEYS } from './_lib/body_portable.js';
+import { CARRIED_KEYS, PARTIAL_KEYS, classifyPortability } from './_lib/body_portable.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -124,18 +124,18 @@ export function classify(schemaProperties: readonly string[]): FieldRow[] {
     return rows;
 }
 
-/** Top-level frontmatter keys of one `SKILL.md`, or `[]` when it carries none. */
-export function frontmatterKeys(text: string): string[] {
+/** Parsed top-level frontmatter of one `SKILL.md`, or `{}` when it carries none. */
+export function frontmatterRecord(text: string): Record<string, unknown> {
     const m = /^---\n([\s\S]*?)\n---/.exec(text);
-    if (m === null) return [];
+    if (m === null) return {};
     let doc: unknown;
     try {
         doc = yamlLoad(m[1]!);
     } catch {
-        return [];
+        return {};
     }
-    if (doc === null || typeof doc !== 'object' || Array.isArray(doc)) return [];
-    return Object.keys(doc as Record<string, unknown>);
+    if (doc === null || typeof doc !== 'object' || Array.isArray(doc)) return {};
+    return doc as Record<string, unknown>;
 }
 
 export function census(root: string): Census {
@@ -144,8 +144,6 @@ export function census(root: string): Census {
         properties?: Record<string, unknown>;
     };
     const fields = classify(Object.keys(schema.properties ?? {}));
-
-    const byColumn = new Map<string, Column>(fields.map((r) => [r.field, r.column]));
 
     const skillsDir = path.join(root, SKILLS_REL);
     const dirs = fs.existsSync(skillsDir)
@@ -164,17 +162,21 @@ export function census(root: string): Census {
         const file = path.join(skillsDir, dir, 'SKILL.md');
         if (!fs.existsSync(file)) continue;
         scanned += 1;
-        const keys = frontmatterKeys(fs.readFileSync(file, 'utf8'));
-        const dropped: string[] = [];
-        const partial: string[] = [];
-        for (const key of keys) {
-            const col = byColumn.get(key);
-            if (col === 'dropped') dropped.push(key);
-            else if (col === 'partial') partial.push(key);
-            else continue;
+        // The per-skill pass calls the PREDICATE rather than re-deriving the
+        // classification from the schema. An earlier version looked the key up
+        // in the schema-derived column map and skipped what it did not find,
+        // which made the census fail OPEN on an unknown key while the predicate
+        // failed CLOSED on the same key — two numbers presented as one
+        // measurement, disagreeing on exactly the case the predicate's own
+        // documentation calls its most important. Sharing the function removes
+        // the divergence class instead of correcting this instance of it.
+        const { dropped, partial } = classifyPortability(
+            frontmatterRecord(fs.readFileSync(file, 'utf8')),
+        );
+        for (const key of [...dropped, ...partial]) {
             perField[key] = (perField[key] ?? 0) + 1;
         }
-        skills.push({ skill: dir, dropped: dropped.sort(), partial: partial.sort() });
+        skills.push({ skill: dir, dropped, partial });
     }
 
     return { fields, skills, perField, scanned };
@@ -288,7 +290,7 @@ export function main(argv: readonly string[]): number {
         return 0;
     }
     if (write) {
-        const target = path.join(REPO_ROOT, out ?? DEFAULT_OUT);
+        const target = path.resolve(REPO_ROOT, out ?? DEFAULT_OUT);
         fs.mkdirSync(path.dirname(target), { recursive: true });
         fs.writeFileSync(target, render(c, pin(REPO_ROOT)), 'utf8');
         process.stdout.write(

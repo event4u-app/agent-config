@@ -1,5 +1,5 @@
 <!-- evidence-type: analysis -->
-<!-- semantic-parity-census: v1 | commit: 3671542d087f87de19a9077b0fdfc5b6fefdfb9c | commit-date: 2026-09-29T09:46:52+02:00 -->
+<!-- semantic-parity-census: v1 | commit: 35e37a64d0236eb423f2a2c1c5869741c545b754 | commit-date: 2026-09-29T10:03:03+02:00 -->
 
 # Semantic-parity census — MCP-lite `ContentEntry`
 
@@ -11,7 +11,7 @@ script's module header for the classification before reading a number here.
 This report states coverage only. It marks no skill, excludes none, and is not a
 verdict about which skills matter.
 
-- **Commit pin:** `3671542d087f87de19a9077b0fdfc5b6fefdfb9c` (2026-09-29T09:46:52+02:00)
+- **Commit pin:** `35e37a64d0236eb423f2a2c1c5869741c545b754` (2026-09-29T10:03:03+02:00)
 - **Schema:** `src/scripts/schemas/skill.schema.json`
 - **Corpus:** `src/skills/*/SKILL.md` — 299 file(s)
 

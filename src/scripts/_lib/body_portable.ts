@@ -36,6 +36,8 @@
  * widened reading of this one.
  */
 
+import { INDEXED_TRIGGER_KEYS } from '../../shared/skillRanking.js';
+
 /**
  * Frontmatter keys `buildEntry` reads and transports whole
  * (`src/cli/mcp/content.ts` — `fm.name`, `fm.description`, `fm.source`,
@@ -47,11 +49,16 @@
 export const CARRIED_KEYS: readonly string[] = ['name', 'description', 'source', 'personas'];
 
 /**
- * Keys the carrier reads but truncates, with the sub-keys that actually travel
- * (`triggerText()` keeps `INDEXED_TRIGGER_KEYS`).
+ * Keys the carrier reads but truncates, with the sub-keys that actually travel.
+ *
+ * The sub-key list is IMPORTED from `INDEXED_TRIGGER_KEYS` rather than restated.
+ * Restating it was the first version of this file and it is a silent-lie shape:
+ * add a third indexed key and a hand-copied literal keeps reporting the old two
+ * while the carrier transports three, so the census `travels` column would be
+ * wrong with every test still green.
  */
 export const PARTIAL_KEYS: Readonly<Record<string, readonly string[]>> = {
-    triggers: ['keyword', 'phrase'],
+    triggers: INDEXED_TRIGGER_KEYS,
 };
 
 /** Why a skill is not body-portable. Empty when it is. */
@@ -78,7 +85,7 @@ export function classifyPortability(frontmatter: Readonly<Record<string, unknown
 
     for (const key of Object.keys(frontmatter).sort()) {
         if (CARRIED_KEYS.includes(key)) continue;
-        if (key in PARTIAL_KEYS) {
+        if (Object.hasOwn(PARTIAL_KEYS, key)) {
             partial.push(key);
             continue;
         }

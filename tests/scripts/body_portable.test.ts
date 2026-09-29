@@ -11,6 +11,7 @@ import {
     classifyPortability,
     isBodyPortable,
 } from '../../src/scripts/_lib/body_portable.js';
+import { INDEXED_TRIGGER_KEYS } from '../../src/shared/skillRanking.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURES = path.join(HERE, 'fixtures', 'body-portable');
@@ -82,5 +83,47 @@ describe('isBodyPortable — the carried set', () => {
         const fm: Record<string, unknown> = { domain: 'engineering' };
         for (const key of CARRIED_KEYS) fm[key] = 'value';
         expect(isBodyPortable(fm)).toBe(false);
+    });
+});
+
+/**
+ * The drift guard.
+ *
+ * `CARRIED_KEYS` and `PARTIAL_KEYS` are a hand-maintained mirror of what
+ * `buildEntry` reads, and every other test in this file takes them as given —
+ * including the "only carried keys is portable" case, which builds its input
+ * FROM the constant and so cannot see the constant going wrong. That leaves the
+ * failure the predicate exists to prevent completely uncovered: drop a field
+ * from the carrier, and `isBodyPortable` keeps returning true for skills that
+ * now arrive stripped, with the whole suite green.
+ *
+ * So this reads the carrier source and asserts the mirror still matches it. It
+ * is deliberately a source scan rather than a behavioural probe: `buildEntry`
+ * is not exported, and importing the MCP module to introspect it would couple
+ * this test to a server bootstrap it has no business starting.
+ */
+describe('the carrier constants still match the carrier', () => {
+    const CARRIER = path.resolve(HERE, '..', '..', 'src', 'cli', 'mcp', 'content.ts');
+
+    /** Every `fm.<key>` the carrier source reads. */
+    function carrierReads(): Set<string> {
+        const src = fs.readFileSync(CARRIER, 'utf8');
+        const out = new Set<string>();
+        for (const m of src.matchAll(/\bfm\.([A-Za-z_][A-Za-z0-9_]*)/g)) out.add(m[1]!);
+        return out;
+    }
+
+    it('reads exactly the keys the constants declare — no more, no fewer', () => {
+        const declared = new Set([...CARRIED_KEYS, ...Object.keys(PARTIAL_KEYS)]);
+        expect([...carrierReads()].sort()).toEqual([...declared].sort());
+    });
+
+    it('every carried key is actually read by the carrier', () => {
+        const reads = carrierReads();
+        for (const key of CARRIED_KEYS) expect(reads.has(key)).toBe(true);
+    });
+
+    it('the partial sub-keys are the carrier indexed set, not a copy of it', () => {
+        expect(PARTIAL_KEYS.triggers).toBe(INDEXED_TRIGGER_KEYS);
     });
 });
