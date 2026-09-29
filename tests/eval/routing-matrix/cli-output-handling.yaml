@@ -1,8 +1,13 @@
 rule: cli-output-handling
 positives:
   - prompt: "Run phpstan on the changed files and summarize the errors."
+    expected_skills: [quality-tools]
   - prompt: "npm run build keeps failing - can you check the output?"
+    expected_skills: [systematic-debugging]
   - prompt: "Führe bitte die vitest-Suite aus und zeig mir nur die Fehler."
+    expected_skills: [rtk-output-filtering]
 near_misses:
   - prompt: "Summarize the failing checks from the CI run on the PR."
+    expected_skills: [github-ci]
   - prompt: "Trim the verbose console noise before pasting it into the summary."
+    expected_skills: [rtk-output-filtering, token-optimizer]

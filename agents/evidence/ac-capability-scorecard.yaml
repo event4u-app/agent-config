@@ -171,15 +171,23 @@ categories:
     status: missing-mechanism
   - category: skill-routing
     baseline: 9.2
-    claim: "Baseline 9.2 from the external review, carried as HISTORICAL INPUT. No current claim is made."
+    claim: >-
+      Baseline 9.2 from the external review, carried as HISTORICAL INPUT and NOT
+      supported by the mechanism below. A labelled 390-prompt corpus now measures
+      the shipped ranker at top-1 0.208 (95% CI 0.170-0.251) and top-3 0.338
+      (0.293-0.387). The mechanism exists; nothing yet shows a consumer routing
+      on it, so no current claim is made about the score.
     closing_path: "Frozen routing corpus (precision / recall / conflict / unnecessary activation) plus the narrowed router-consumer question"
-    mechanism_evidence: []
+    mechanism_evidence:
+      - agents/evidence/analysis/skill-routing-precision-2026-09.md#routing matrix (labelled) | 390
+      - src/scripts/measure_skill_ranker_baseline.ts#MIN_POWERED_N
+      - tests/eval/routing-matrix/README.md#the labelling protocol
     adoption_evidence: []
     negative_control_evidence: []
     production_window: null
     outcome_evidence: []
     non_regression_evidence: []
-    status: missing-mechanism
+    status: missing-adoption
   - category: hook-runtime-economy
     baseline: 8.8
     claim: "Baseline 8.8 from the external review, carried as HISTORICAL INPUT. No current claim is made."

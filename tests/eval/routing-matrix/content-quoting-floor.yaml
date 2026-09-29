@@ -1,8 +1,13 @@
 rule: content-quoting-floor
 positives:
   - prompt: "Quote the key passage from that article in the summary."
+    expected_skills: []
   - prompt: "Can you include a short excerpt from the interview transcript?"
+    expected_skills: []
   - prompt: "Übernimm den Absatz bitte verbatim in den Entwurf."
+    expected_skills: []
 near_misses:
   - prompt: "Paraphrase the main argument of the article in two sentences."
+    expected_skills: []
   - prompt: "Cite the sources at the end of the report."
+    expected_skills: []

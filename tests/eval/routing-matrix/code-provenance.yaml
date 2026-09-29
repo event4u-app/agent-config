@@ -1,8 +1,13 @@
 rule: code-provenance
 positives:
   - prompt: "I found this on GitHub - can we port this rate limiter into our codebase?"
+    expected_skills: [license-compliance-borrow-check]
   - prompt: "Can we borrow the retry algorithm from that blog post?"
+    expected_skills: [license-compliance-borrow-check]
   - prompt: "Dieser Code ist vendored aus einem Apache-Projekt - müssen wir die Lizenz nennen?"
+    expected_skills: [license-compliance-credits, license-compliance-borrow-check]
 near_misses:
   - prompt: "Write a rate limiter from scratch using a token bucket."
+    expected_skills: []
   - prompt: "Which license does our own package ship under?"
+    expected_skills: []

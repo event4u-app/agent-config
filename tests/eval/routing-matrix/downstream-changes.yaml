@@ -1,8 +1,13 @@
 rule: downstream-changes
 positives:
   - prompt: "I renamed the service - find all callers and update them."
+    expected_skills: [code-refactoring, blast-radius-analyzer, code-intelligence]
   - prompt: "Fix the broken imports after the namespace move."
+    expected_skills: [code-refactoring]
   - prompt: "Prüfe bitte alle Downstream-Effekte der Umbenennung."
+    expected_skills: [blast-radius-analyzer, code-intelligence, code-refactoring]
 near_misses:
   - prompt: "Rename the class and update its unit test."
+    expected_skills: [code-refactoring]
   - prompt: "Does anything else break if I change this method signature?"
+    expected_skills: [blast-radius-analyzer, code-intelligence]

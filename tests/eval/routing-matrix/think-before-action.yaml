@@ -1,8 +1,13 @@
 rule: think-before-action
 positives:
   - prompt: "Implement the bulk archive feature for old tickets."
+    expected_skills: [developer-like-execution]
   - prompt: "Fix the flaky date parsing before the release."
+    expected_skills: [systematic-debugging]
   - prompt: "Vor dem Refactor bitte erst die Datenflüsse analysieren."
+    expected_skills: [data-flow-mapper, blast-radius-analyzer]
 near_misses:
   - prompt: "Summarize the architecture of the notification service."
+    expected_skills: [context-document]
   - prompt: "List the open tickets tagged for the next milestone."
+    expected_skills: [jira-integration]

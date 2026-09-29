@@ -1,8 +1,13 @@
 rule: git-history-discipline
 positives:
   - prompt: "Can you git rebase this feature onto the tip of main?"
+    expected_skills: [git-workflow]
   - prompt: "The branch diverged from origin - what now?"
+    expected_skills: [git-workflow]
   - prompt: "Mach bitte ein fixup auf den letzten Commit und dann force-push."
+    expected_skills: [git-workflow]
 near_misses:
   - prompt: "Merge the feature branch into develop once CI is green."
+    expected_skills: [git-workflow, finishing-a-development-branch]
   - prompt: "Show me the last ten commits with their authors."
+    expected_skills: []

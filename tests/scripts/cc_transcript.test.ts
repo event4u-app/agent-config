@@ -19,9 +19,13 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
     aggregateByBucket,
     billableInputTokens,
+    derivedBytes,
     listTranscriptFiles,
+    measureBytesPerToken,
+    measureContentBytes,
     scanTranscripts,
     weightedInputUnits,
+    type TranscriptRecord,
 } from '../../src/scripts/_lib/cc_transcript.js';
 
 const _tmpDirs: string[] = [];
@@ -254,5 +258,138 @@ describe('listTranscriptFiles — root / projectDir / maxAgeDays', () => {
         const files = listTranscriptFiles({ root, maxAgeDays: 7, now });
         expect(files).not.toContain(staleFile);
         expect(files).toContain(path.join(projectDir, 'session1', 'subagents', 'agent-x.jsonl'));
+    });
+});
+
+// -- Byte measurement (road-to-a-bytes-row-that-exists, Phase 2) -------
+//
+// The whole point of these is that NO ratio is hardcoded anywhere: every
+// expected value below is computed from the fixture's own content, which is
+// what "measured on the fixture, never assumed" has to mean to be checkable.
+
+function rec(outputTokens: number, contentBytes: number | null): TranscriptRecord {
+    return {
+        bucket: 'main',
+        agentId: null,
+        model: 'm',
+        timestamp: null,
+        usage: {
+            input_tokens: 0,
+            cache_read_input_tokens: 0,
+            cache_creation_input_tokens: 0,
+            output_tokens: outputTokens,
+            ephemeral_5m_input_tokens: 0,
+            ephemeral_1h_input_tokens: 0,
+        },
+        content_bytes: contentBytes,
+    };
+}
+
+describe('measureContentBytes - bytes, not characters, and null is not zero', () => {
+    it('measures an array content block as its serialised UTF-8 length', () => {
+        const content = [{ type: 'text', text: 'hello' }];
+        expect(measureContentBytes({ message: { content } })).toBe(
+            Buffer.byteLength(JSON.stringify(content), 'utf8'),
+        );
+    });
+
+    it('measures a bare-string content directly', () => {
+        expect(measureContentBytes({ message: { content: 'abc' } })).toBe(3);
+    });
+
+    it('counts BYTES for a multibyte payload - a char count would under-report', () => {
+        const text = '\u{1F642} Gr\u00fc\u00dfe';
+        const got = measureContentBytes({ message: { content: text } });
+        expect(got).toBe(Buffer.byteLength(text, 'utf8'));
+        expect(got).toBeGreaterThan(text.length);
+    });
+
+    it('returns null - never 0 - when the record carries no content', () => {
+        expect(measureContentBytes({ message: { usage: {} } })).toBeNull();
+    });
+});
+
+describe('scanTranscripts - byte measurement is OPT-IN', () => {
+    it('leaves content_bytes null when measureBytes is not asked for', () => {
+        const root = mkTmp();
+        appendJsonl(path.join(root, 'proj', 's.jsonl'), [REC_A]);
+        const { records } = scanTranscripts({ root });
+        expect(records).toHaveLength(1);
+        expect(records[0]?.content_bytes).toBeNull();
+    });
+
+    it('fills content_bytes from the record itself when asked', () => {
+        const root = mkTmp();
+        const content = [{ type: 'text', text: 'measured, not assumed' }];
+        appendJsonl(path.join(root, 'proj', 's.jsonl'), [
+            { ...REC_A, message: { ...REC_A.message, content } },
+        ]);
+        const { records } = scanTranscripts({ root, measureBytes: true });
+        expect(records[0]?.content_bytes).toBe(Buffer.byteLength(JSON.stringify(content), 'utf8'));
+    });
+
+    it('leaves the token columns byte-identical whether or not bytes are measured', () => {
+        const root = mkTmp();
+        const content = [{ type: 'text', text: 'x'.repeat(97) }];
+        appendJsonl(path.join(root, 'proj', 's.jsonl'), [
+            { ...REC_A, message: { ...REC_A.message, content } },
+            REC_C,
+        ]);
+        const plain = scanTranscripts({ root });
+        const withBytes = scanTranscripts({ root, measureBytes: true });
+        expect(JSON.stringify(withBytes.records.map((r) => r.usage))).toBe(
+            JSON.stringify(plain.records.map((r) => r.usage)),
+        );
+    });
+});
+
+describe('measureBytesPerToken - the factor is a division of two counted sums', () => {
+    it('divides summed content bytes by summed output tokens', () => {
+        const got = measureBytesPerToken([rec(10, 40), rec(30, 80)]);
+        expect(got).not.toBeNull();
+        expect(got?.content_bytes).toBe(120);
+        expect(got?.output_tokens).toBe(40);
+        expect(got?.bytes_per_token).toBe(120 / 40);
+        expect(got?.records).toBe(2);
+        expect(got?.basis).toBe('measured');
+    });
+
+    it('skips records with no measured bytes rather than counting them as zero', () => {
+        // The unmeasured record would drag the ratio down if it were folded in
+        // as 0 bytes; it must not contribute to either sum.
+        const got = measureBytesPerToken([rec(10, 40), rec(1000, null)]);
+        expect(got?.output_tokens).toBe(10);
+        expect(got?.bytes_per_token).toBe(4);
+    });
+
+    it('returns null - the honest null - when nothing in the corpus supplies a ratio', () => {
+        expect(measureBytesPerToken([])).toBeNull();
+        expect(measureBytesPerToken([rec(0, 40)])).toBeNull();
+        expect(measureBytesPerToken([rec(10, null)])).toBeNull();
+    });
+});
+
+describe('derivedBytes - a derived figure can never be read as a counted one', () => {
+    it('multiplies and labels the result derived, carrying the factor with it', () => {
+        const factor = measureBytesPerToken([rec(10, 45)]);
+        const got = derivedBytes(1000, factor);
+        expect(got?.basis).toBe('derived');
+        expect(got?.bytes).toBe(Math.round(1000 * 4.5));
+        expect(got?.factor.basis).toBe('measured');
+        expect(got?.factor.content_bytes).toBe(45);
+    });
+
+    it('propagates the honest null instead of substituting a default factor', () => {
+        expect(derivedBytes(1000, null)).toBeNull();
+    });
+
+    it('uses the fixture ratio, not a constant - a different corpus gives a different answer', () => {
+        // The guard against a hardcoded bytes-per-token literal: two corpora
+        // with the same token count and different content must not produce the
+        // same byte figure.
+        const thin = derivedBytes(100, measureBytesPerToken([rec(10, 20)]));
+        const fat = derivedBytes(100, measureBytesPerToken([rec(10, 200)]));
+        expect(thin?.bytes).not.toBe(fat?.bytes);
+        expect(fat?.bytes).toBe((thin?.bytes ?? 0) * 10);
     });
 });

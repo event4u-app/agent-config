@@ -1,8 +1,13 @@
 rule: command-suggestion-policy
 positives:
   - prompt: "When a free-form prompt matches a slash command, what is supposed to happen?"
+    expected_skills: [command-routing]
   - prompt: "Does the command suggestion block always keep the run-as-is escape hatch?"
+    expected_skills: []
   - prompt: "Wie funktioniert die Command Suggestion, wenn mein Prompt zu einem Befehl passt?"
+    expected_skills: [command-routing]
 near_misses:
   - prompt: "Suggest a better name for this helper script."
+    expected_skills: []
   - prompt: "Which slash commands are available in this repository?"
+    expected_skills: [command-routing]

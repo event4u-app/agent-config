@@ -96,7 +96,7 @@ describe('scanOpenSteps', () => {
         const r = scanOpenSteps(text);
         expect(r.open).toBe(2);
         expect(r.next!.text).toBe('first open');
-        expect(r.next!.verify).toBe('./scripts-run src/scripts/a');
+        expect(r.next!.verify?.command).toBe('./scripts-run src/scripts/a');
     });
 
     it('a blocked-by step neither counts nor becomes the pick', () => {
@@ -502,7 +502,7 @@ describe('extractVerify — both forms the tree actually writes', () => {
             '- [ ] **1.0** do the thing',
             '      `verify:` `./scripts-run src/scripts/lint_thing`',
         ].join('\n');
-        expect(scanOpenSteps(md).next?.verify).toBe('./scripts-run src/scripts/lint_thing');
+        expect(scanOpenSteps(md).next?.verify?.command).toBe('./scripts-run src/scripts/lint_thing');
     });
 
     it('still reads the HTML-comment form, and it wins when both are present', () => {
@@ -513,7 +513,7 @@ describe('extractVerify — both forms the tree actually writes', () => {
             '- [ ] **1.0** do it <!-- verify: machine-readable -->',
             '      `verify:` `human-facing`',
         ].join('\n');
-        expect(scanOpenSteps(md).next?.verify).toBe('machine-readable');
+        expect(scanOpenSteps(md).next?.verify?.command).toBe('machine-readable');
     });
 
     it('does not absorb the NEXT step\'s verify line', () => {
@@ -531,6 +531,22 @@ describe('extractVerify — both forms the tree actually writes', () => {
 
     it('a step with no verify line reports null, not an empty string', () => {
         expect(scanOpenSteps('## Phase 1\n- [ ] **1.0** bare\n').next?.verify).toBeNull();
+    });
+
+    it('carries the expectation half through to the hook, not just the command', () => {
+        // The narrowing kept the hook's contract (prose is not a command) while
+        // the grammar moved to `_lib/verify_clause.ts`. What is new is that the
+        // oracle travels with the command: a re-engagement handed only the
+        // command can run it, see exit 0 and flip the box regardless.
+        const md = ['## Phase 1', '- [ ] **1.0** do it', '      verify: `grep -c thing f.md` -> /[1-9]/'].join('\n');
+        const verify = scanOpenSteps(md).next?.verify;
+        expect(verify?.command).toBe('grep -c thing f.md');
+        expect(verify?.expect).toEqual({ kind: 'regex', source: '[1-9]' });
+    });
+
+    it('a prose clause is still not a command, so the hook reports null', () => {
+        const md = ['## Phase 1', '- [ ] **1.0** do it', '      verify: a human reads the evidence page'].join('\n');
+        expect(scanOpenSteps(md).next?.verify).toBeNull();
     });
 
     it('parses a verify line taken from the real roadmap tree, not a fixture of one', () => {

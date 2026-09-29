@@ -1,8 +1,13 @@
 rule: domain-safety-disclaimer
 positives:
   - prompt: "Draft a privacy policy for our SaaS."
+    expected_skills: [privacy-review]
   - prompt: "Put together an investment memo for the seed round."
+    expected_skills: [fundraising-narrative]
   - prompt: "Kannst du die Terms of Service für die App entwerfen?"
+    expected_skills: []
 near_misses:
   - prompt: "Summarize the new GDPR enforcement actions from last year."
+    expected_skills: []
   - prompt: "Draft the internal runbook for handling refund requests."
+    expected_skills: []

@@ -150,6 +150,25 @@ function changedFiles(baseRef: string, cwd: string = REPO_ROOT): string[] {
  * about that path deserves.
  */
 export function rangeDeletions(baseRef: string, cwd: string = REPO_ROOT): Set<string> {
+    return parseDeletions(nameStatusText(baseRef, cwd));
+}
+
+/**
+ * The paths the range MODIFIES, adds, or renames TO — everything it touched
+ * that still has a path afterwards.
+ *
+ * The complement of `rangeDeletions` over the same `--name-status` output, and
+ * the input `contradictedByTree` needs to tell "the range did not touch this"
+ * from "the range changed the inside of this". Unfiltered for the same reason
+ * `rangeDeletions` is: the question is what the RANGE did, not what the
+ * reviewer was sent.
+ */
+export function rangeModifications(baseRef: string, cwd: string = REPO_ROOT): Set<string> {
+    return parseModifications(nameStatusText(baseRef, cwd));
+}
+
+/** One `--name-status` read, shared by both parses so the range is read once. */
+function nameStatusText(baseRef: string, cwd: string = REPO_ROOT): string {
     const r = spawnSync('git', ['-c', 'core.quotePath=false', 'diff', '--name-status', `${baseRef}...HEAD`], {
         cwd,
         encoding: 'utf8',
@@ -157,7 +176,7 @@ export function rangeDeletions(baseRef: string, cwd: string = REPO_ROOT): Set<st
     if (r.status !== 0) {
         throw new Error(`git diff --name-status failed: ${(r.stderr ?? '').toString().slice(0, 300)}`);
     }
-    return parseDeletions(r.stdout ?? '');
+    return r.stdout ?? '';
 }
 
 /** Pure core of `rangeDeletions`, so the parse is testable without a repo. */
@@ -170,6 +189,27 @@ export function parseDeletions(nameStatus: string): Set<string> {
         if (status === 'D' && cols[1]) out.add(cols[1].trim());
         // A rename removes its OLD path; `R100\told\tnew` puts it in column 1.
         if (status.startsWith('R') && cols[1]) out.add(cols[1].trim());
+    }
+    return out;
+}
+
+/**
+ * Pure core of `rangeModifications` — every path the range left standing.
+ *
+ * A `D` row contributes nothing. A rename contributes its NEW path (column 2),
+ * never its old one: the old path is a deletion and is parsed as such. Every
+ * other status (`M`, `A`, `C`, `T`, and the `U` of an unmerged path) has its
+ * path in column 1 and that path exists after the range.
+ */
+export function parseModifications(nameStatus: string): Set<string> {
+    const out = new Set<string>();
+    for (const line of nameStatus.split('\n')) {
+        const cols = line.split('\t');
+        const status = (cols[0] ?? '').trim();
+        if (status === '' || status === 'D') continue;
+        // `R<score>\told\tnew` / `C<score>\tsrc\tdest` — the surviving path is column 2.
+        const col = status.startsWith('R') || status.startsWith('C') ? cols[2] : cols[1];
+        if (col) out.add(col.trim());
     }
     return out;
 }
@@ -216,18 +256,45 @@ export function assertsDeletion(f: Pick<Finding, 'title' | 'detail'>): boolean {
  *
  * The test is conservative in the direction that matters: a disproof needs a
  * named artifact that is BOTH absent from the range's deletion set AND present
- * in the tree. A genuine deletion satisfies neither half, so it is untouched.
+ * in the tree AND untouched by the range.
+ *
+ * THE THIRD HALF, AND WHY IT WAS MISSING. The first two were written against
+ * WHOLE-FILE deletion, where "a genuine deletion satisfies neither half" is
+ * true. It is false for a removal asserted INSIDE a file: "digest verification
+ * was removed in `install.ts`" names a path the range MODIFIED, so the path is
+ * absent from the deletion set and present in the tree, and the finding was
+ * de-blocked as though it had been checked. A path the range modified is
+ * evidence the range touched that artifact — the opposite of this disproof's
+ * premise — so it can no longer carry one.
+ *
+ * WHAT THIS GATE STILL CANNOT DECIDE, and says nothing about. The disproof is
+ * built entirely out of PATHS: the deletion set, the modification set, and the
+ * working tree. A claim about something that has no path of its own — a
+ * symbol, an export, a config key, a behaviour, a sentence inside a surviving
+ * file — cannot be resolved to a candidate, so no half of the test applies and
+ * the finding is returned unannotated. That is the intended reading: the gate
+ * cannot decide such a claim, it is not asserting the claim is true, and an
+ * operator adjudicating the block is reading an UNCHECKED finding rather than
+ * an unrefuted one. Widening the test to cover that class would mean deciding
+ * a claim from the same partition the reviewer had, which is the fabrication
+ * this mechanism exists to absorb.
  */
 export function contradictedByTree(
     f: Pick<Finding, 'title' | 'detail' | 'file'>,
     deleted: ReadonlySet<string>,
     exists: (p: string) => boolean,
+    modified: ReadonlySet<string> = new Set<string>(),
 ): string | null {
     if (!assertsDeletion(f)) return null;
     for (const name of namedArtifacts(f)) {
         // Any deletion whose path mentions the token leaves the claim standing.
         if ([...deleted].some((d) => d === name || d.includes(name))) continue;
         const candidates = [name, `src/skills/${name}/SKILL.md`, `src/rules/${name}.md`, `src/scripts/${name}`];
+        // The range touched something this token resolves to — a whole-artifact
+        // disproof cannot be read off a path the range changed. Checked over
+        // EVERY candidate, not only the one `exists` happens to hit first: the
+        // conservative direction is fewer disproofs, never more.
+        if (candidates.some((c) => modified.has(c))) continue;
         const hit = candidates.find((c) => exists(c));
         if (hit !== undefined) {
             return (
@@ -239,14 +306,97 @@ export function contradictedByTree(
     return null;
 }
 
+/**
+ * The two counts road-to-a-fact-plane Step 2.3 pre-registers as its falsifier,
+ * written into the findings artifact so the next cut can be read rather than
+ * recomputed.
+ *
+ * `asserting_removal` is the population — findings that make a checkable
+ * factual claim of the deletion class. `disproved_by_tree` is how many of them
+ * the range and the tree refuted. The premise of the fact block is that
+ * supplying the range's facts lowers the first and, with it, the second; a
+ * `disproved_by_tree` that does not fall after the block ships is the honest
+ * null, and the roadmap records that result rather than widening the mechanism
+ * to chase it.
+ *
+ * Every recorded cut so far reports `disproved_by_tree` as 0 for a reason that
+ * is not a measurement: the annotation pass landed after the last of them, so
+ * the number was never produced. The baseline is "never observed", not
+ * "observed as zero", and the first cut after this change is the first reading.
+ */
+export function factClaimCounts(findings: readonly Finding[]): {
+    asserting_removal: number;
+    disproved_by_tree: number;
+} {
+    return {
+        asserting_removal: findings.filter((f) => assertsDeletion(f)).length,
+        disproved_by_tree: findings.filter((f) => (f.contradicted ?? '').trim() !== '').length,
+    };
+}
+
+/** Render one list of the fact block, or an explicit `(none)`. */
+function factList(label: string, paths: readonly string[]): string {
+    const head = `${label} — ${String(paths.length)}:`;
+    return paths.length === 0 ? `${head}\n  (none)` : `${head}\n${paths.map((p) => `  ${p}`).join('\n')}`;
+}
+
+/**
+ * The range's facts, serialised for the reviewer.
+ *
+ * WHY THE REVIEWER IS HANDED THESE RATHER THAN LEFT TO INFER THEM. The review
+ * runs over a per-file PARTITION of the span and, on a large release, over only
+ * part of it — 202 of 401 files at the 16.1.0 cut. From inside one chunk, "this
+ * path is not in front of me" and "this path was deleted" are the same
+ * observation, and on that cut the model resolved the ambiguity the wrong way
+ * twice, in `critical security` findings that each cost an adjudication cycle.
+ * `contradictedByTree` catches that class AFTER the spend; this block removes
+ * the inference that produces it.
+ *
+ * Exactly three lists, all of them already computed by this gate: the paths the
+ * range deleted, the paths it changed and left standing, and the working tree's
+ * presence check over both — reported by its EXCEPTIONS, because the normal
+ * case is empty and a third full copy of the same paths would spend budget on
+ * a line the reviewer can derive. Nothing else is added: the block is paths, so
+ * it scales with file count and not with change size, and the six-request
+ * ceiling stays a budget question this does not reopen.
+ */
+export function factBlock(
+    deleted: ReadonlySet<string>,
+    modified: ReadonlySet<string>,
+    exists: (p: string) => boolean,
+): string {
+    const del = [...deleted].sort();
+    const mod = [...modified].sort();
+    return [
+        '=== RANGE FACTS (AUTHORITATIVE) ===',
+        'Read from `git diff --name-status <base>...HEAD` and from the working tree,',
+        'NOT from the diff below. The diff below is ONE PARTITION of this range: a',
+        'path missing from it is a path outside your chunk, never a deleted path.',
+        'A claim that contradicts these lists is a defect in the finding, not a',
+        'finding about the tree — do not report it.',
+        '',
+        factList('DELETED BY THIS RANGE', del),
+        '',
+        factList('CHANGED BY THIS RANGE, AND THE TREE HOLDS THEM', mod),
+        '',
+        'PRESENCE CHECK (exceptions to the two lists above):',
+        factList('  deleted, yet still present in the working tree', del.filter((p) => exists(p))),
+        factList('  changed, yet absent from the working tree', mod.filter((p) => !exists(p))),
+        '=== END RANGE FACTS ===',
+        '',
+        '',
+    ].join('\n');
+}
+
 /** Annotate every finding the tree disproves. Pure given `deleted` + `exists`. */
 export function annotateContradicted(
     findings: readonly Finding[],
     deleted: ReadonlySet<string>,
     exists: (p: string) => boolean,
+    modified: ReadonlySet<string> = new Set<string>(),
 ): Finding[] {
     return findings.map((f) => {
-        const why = contradictedByTree(f, deleted, exists);
+        const why = contradictedByTree(f, deleted, exists, modified);
         return why === null ? f : { ...f, contradicted: why };
     });
 }
@@ -590,6 +740,14 @@ export interface ReviewPlan {
      * it thrown away.
      */
     partition: DiffPartition;
+    /**
+     * The range facts prepended to EVERY request — see `factBlock`.
+     *
+     * Computed in the plan rather than at send time so `--dry-run` can print
+     * the request the live run would send, and so the partition budget can
+     * reserve the block's length instead of discovering it after the split.
+     */
+    facts: string;
     /** Model calls the live run will make — one per budgeted chunk. */
     requests: number;
     /** Files no request will carry, with the reason. */
@@ -630,22 +788,33 @@ export function buildPlan(baseRef: string, cwd: string = REPO_ROOT): ReviewPlan 
     // REQUEST COUNT rather than only a token estimate. This gate spends money
     // per request, and a plan that reports "~N tokens" without saying how many
     // calls that becomes hides the number the maintainer is deciding about.
-    const partition = partitionDiff(perFileDiffs(analysisBase, files, cwd));
+    // The facts ride on every request, so the per-request diff budget has to
+    // pay for them. Reserving here rather than at send time is what keeps the
+    // block from silently pushing a chunk over the provider's cap — the exact
+    // failure four consecutive releases already spent a review on.
+    const facts = factBlock(rangeDeletions(analysisBase, cwd), rangeModifications(analysisBase, cwd), (p) =>
+        existsSync(path.join(cwd, p)),
+    );
+    const partition = partitionDiff(
+        perFileDiffs(analysisBase, files, cwd),
+        Math.max(1, PROMPT_BUDGET_CHARS - facts.length),
+    );
     return {
         partition,
+        facts,
         requests: partition.chunks.length,
         unreviewed: partition.unreviewed,
         skills: [...REVIEW_SKILLS],
         files,
         analysisBase,
         ...(release ? { release } : {}),
-        promptChars: systemPrompt.length + diff.length,
+        promptChars: systemPrompt.length + facts.length + diff.length,
         escalation,
         note:
             files.length === 0
                 ? 'No reviewable (non-generated) files changed — the live review would no-op.'
                 : `${files.length} reviewable file(s); live review would send ~${Math.ceil(
-                      (systemPrompt.length * Math.max(1, partition.chunks.length) + diff.length) /
+                      ((systemPrompt.length + facts.length) * Math.max(1, partition.chunks.length) + diff.length) /
                           BUDGET_CHARS_PER_TOKEN,
                   )} input tokens across ${partition.chunks.length} request(s)` +
                   (partition.unreviewed.length > 0
@@ -852,6 +1021,16 @@ export function main(argv: string[]): 0 | 2 {
 
     const plan = buildPlan(baseRef);
 
+    // The request the live run would send, verbatim and unspent. A summary
+    // would be this script's description of the request rather than the
+    // request, and the whole point of the fact block is that what the reviewer
+    // is handed can be read rather than inferred — including by a maintainer.
+    if (argv.includes('--print-request')) {
+        const first = plan.partition.chunks[0];
+        process.stdout.write(plan.facts + (first?.text ?? '(no chunk — nothing to review in this range)\n'));
+        return 0;
+    }
+
     if (dryRun) {
         process.stdout.write(
             `self-review-gate (dry-run — no spend, advisory):\n` +
@@ -964,7 +1143,10 @@ export function main(argv: string[]): 0 | 2 {
         let reviewedChunks = 0;
         let filesRead = 0;
         for (const [i, chunk] of partition.chunks.entries()) {
-            const resp = client.ask(systemPrompt, chunk.text, 4096);
+            // Facts FIRST, then the partition. The reviewer reads what the
+            // range did before it reads the fragment it was given, so "absent
+            // from my chunk" can no longer be mistaken for "deleted".
+            const resp = client.ask(systemPrompt, plan.facts + chunk.text, 4096);
             if (resp.error) {
                 process.stdout.write(
                     `::warning::self-review-gate — chunk ${String(i + 1)}/` +
@@ -1014,6 +1196,7 @@ export function main(argv: string[]): 0 | 2 {
             dedupeFindings(findings),
             rangeDeletions(baseRef),
             (p) => existsSync(path.join(REPO_ROOT, p)),
+            rangeModifications(baseRef),
         );
         const outIdx = argv.indexOf('--findings-out');
         if (outIdx >= 0 && argv[outIdx + 1]) {
@@ -1030,6 +1213,11 @@ export function main(argv: string[]): 0 | 2 {
                         schema_version: 1,
                         ...independenceFields(['anthropic']),
                         coverage,
+                        // Readable, not recomputable: the falsifier for the
+                        // supplied-facts change is a count over the NEXT cut,
+                        // and a number a reader has to re-derive from 50
+                        // findings is a number nobody checks.
+                        fact_claims: factClaimCounts(reviewed),
                         findings: reviewed.map((f) => ({
                             finding_id: findingId(f),
                             ...f,

@@ -1,8 +1,13 @@
 rule: invite-challenge
 positives:
   - prompt: "Here is my plan for the checkout rewrite — start with phase one."
+    expected_skills: []
   - prompt: "What architecture should the notification service use?"
+    expected_skills: []
   - prompt: "Welcher Plan ist besser für das Caching — Redis oder In-Memory?"
+    expected_skills: [decision-record]
 near_misses:
   - prompt: "Rename the helper function to something clearer."
+    expected_skills: [code-refactoring]
   - prompt: "Bump the dependency to the latest patch release."
+    expected_skills: [dependency-upgrade]
