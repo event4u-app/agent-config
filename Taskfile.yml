@@ -163,6 +163,10 @@ tasks:
       - task: lint-missions
       - task: check-token-optimizer-freshness
       - task: check-portability
+      - task: check-placeholder-drift
+      - task: check-input-references
+      - task: check-argument-hint
+      - task: check-inputs-parity
       - task: check-no-external-sources
       - task: check-source-pointer-freshness
       - task: check-module-management-neutral

@@ -2882,6 +2882,74 @@ gates:
         A projected rule routing to a guideline body the projection does not
         contain. The gate must fail on this and pass once it is removed.
 
+  - id: check_placeholder_drift
+    argv: []
+    ci_invocation: .github/workflows/consistency.yml
+    min_scanned: 400
+    corpus: "every projected command and skill source — 502 at baseline; the ratchet reads their PROSE, per the unit published in report_invocation_surface.ts"
+    status: enforced
+    no_canary_reason: >-
+      a create-only canary CAN plant a skill, and a planted body carrying a
+      foreign placeholder is exactly what this gate rejects — so the plant is
+      not impossible, it is redundant. `--self-test` already runs that plant as
+      one of five cases over a fixture root, and doing it in-tree would drop a
+      stray SKILL.md into a projected directory, reddening unrelated generator
+      and count gates before this one is reached. Discrimination is proven by
+      that self-test (5 cases, 3 rejecting) covering both directions the ratchet
+      has to separate: at the seed and BELOW it, green — it must never fail on
+      the absolute number; one occurrence over a ceiling, and a first occurrence
+      against a zero ceiling, red; and an unreadable budget refusing with exit 2
+      rather than certifying a green it could not compute.
+
+  - id: check_input_references
+    argv: []
+    ci_invocation: .github/workflows/consistency.yml
+    min_scanned: 400
+    corpus: "projected commands and skill sources — 502 at baseline. Only artifacts that DECLARE an inputs block are checked, so the finding population is a subset that grows with adoption"
+    status: enforced
+    no_canary_reason: >-
+      the finding population is empty by construction until artifacts adopt the
+      optional block, so a create-only canary would have to plant a DECLARING
+      artifact carrying an unbacked reference — which is precisely what the
+      self-test plants, over a fixture root instead of into src/skills/.
+      Discrimination is proven there (3 cases, 1 rejecting) across the
+      distinction that actually matters for this gate: a backed reference
+      passes, an unbacked one fails, and an artifact with NO declaration passes
+      however it references — the scope rule that lets the gate ship green.
+
+  - id: check_argument_hint
+    argv: []
+    ci_invocation: .github/workflows/consistency.yml
+    min_scanned: 200
+    corpus: "command sources under src/domains — 203 at baseline. Commands only, because argument-hint is a key of command.schema.json and of no other schema"
+    status: enforced
+    no_canary_reason: >-
+      every violation is a DISAGREEMENT between two fields of one file — a
+      hand-written hint contradicting a declaration, or a declaration with no
+      hint. A created file is a legitimate corpus member unless it carries that
+      disagreement, so the useful plant is a content plant, which the self-test
+      performs over a fixture root (4 cases, 2 rejecting): a matching hint
+      passes, a contradicting one fails, a declaration with no hint fails, and
+      an artifact with no declaration keeps its free-text hint untouched. The
+      conflict case was also reproduced by hand against the real tree on
+      2026-09-29 by planting a wrong hint on a declaring command, which exits 1.
+
+  - id: check_inputs_parity
+    argv: []
+    ci_invocation: .github/workflows/consistency.yml
+    min_scanned: 400
+    corpus: "command sources, skill sources and projected commands — 705 at baseline; only those declaring an inputs block can diverge"
+    status: enforced
+    no_canary_reason: >-
+      a violation is a DIFFERENCE between two readings of one file, so nothing
+      about a file's existence can produce it — only its content can. The
+      self-test plants that content over a fixture root (5 cases, 4 rejecting),
+      one per way the stdlib-only MCP reader and a real YAML parse can part
+      company: the flow form, a nested mapping under an item key, a block
+      scalar, and a dash on its own line. The accepting case is the supported
+      block form, because a suite that only proves failures proves a gate that
+      refuses everything.
+
   - id: check_enforcement_matrix
     argv: ["--quiet"]
     ci_invocation: .github/workflows/consistency.yml

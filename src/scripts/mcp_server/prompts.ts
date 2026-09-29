@@ -69,6 +69,22 @@ export interface SkillPrompt {
     readonly kind: PromptKind;
     readonly recommended_for_user_types: readonly string[];
     readonly user_type_match: UserTypeMatch;
+    /**
+     * Declared parameters, from the frontmatter `inputs:` block.
+     *
+     * Empty for every artifact that declares none, which is the whole corpus
+     * today — so `arguments: []` on the wire stays the behaviour for an
+     * undeclared prompt rather than becoming a special case
+     * (road-to-an-invocation-contract-that-reaches-the-wire 3.2).
+     */
+    readonly inputs: readonly PromptInput[];
+}
+
+/** One declared parameter, reduced to what the MCP `arguments` shape carries. */
+export interface PromptInput {
+    readonly name: string;
+    readonly description: string;
+    readonly required: boolean;
 }
 
 /** Walk up from this file to the repo root (parent of `scripts/`). */
@@ -92,6 +108,124 @@ export function _project_root(): string {
  * Avoids a YAML dependency for Phase 1; the frontmatter shape is
  * enforced by `task lint-skills` upstream.
  */
+/** The raw frontmatter block of a document, or `''` when it has none. */
+export function _frontmatter_text(text: string): string {
+    if (!text.startsWith('---\n')) return '';
+    const parts = _splitMax(text, '---\n', 2);
+    return parts.length < 3 ? '' : (parts[1] as string);
+}
+
+/**
+ * Parse the frontmatter `inputs:` block out of raw frontmatter text.
+ *
+ * WHY THIS EXISTS RATHER THAN A YAML CALL. `_strip_frontmatter` is a flat
+ * `key: value` line scanner and cannot represent a nested list — `inputs:`
+ * would land as an empty string and its `- name: x` lines as stray keys. The
+ * MCP server is deliberately stdlib-only and is bundled for the wire, so
+ * pulling a YAML parser in to read one optional block would pay a dependency
+ * on every install for a block almost nothing declares yet.
+ *
+ * IT READS ONE SHAPE AND REFUSES THE REST. Accepted:
+ *
+ *     inputs:
+ *       - name: target
+ *         type: string
+ *         required: true
+ *         description: What to act on.
+ *
+ * Refused, by yielding NOTHING for the whole block: the flow form
+ * (`inputs: [{name: a}]`), a block scalar (`description: >`), and any nested
+ * mapping under an item key. Refusing is not silent — `check_inputs_parity`
+ * compares this reader against a real YAML parse for every declaring artifact
+ * and FAILS the build on any difference, so an unsupported form is a red gate
+ * with a named remedy rather than a wrong argument on the wire.
+ *
+ * That gate is the answer to the defect an independent review found here: the
+ * key scan used to run at any depth, so a `default:` MAPPING whose first child
+ * was `name:` overwrote the parameter's own name and the server offered a host
+ * an argument that did not exist. The header promised "no guessed input" while
+ * the code guessed. Depth is now tracked, and where this reader cannot be sure
+ * it declines and the parity gate makes the decline visible.
+ */
+export function _parse_inputs(fm: string): PromptInput[] {
+    const lines = fm.split('\n');
+    let i = lines.findIndex((l) => /^inputs:/.test(l));
+    if (i === -1) return [];
+    // The flow form carries its payload on the `inputs:` line itself. This
+    // reader does not parse it; the parity gate turns that into a failure.
+    if (!/^inputs:\s*$/.test(lines[i] as string)) return [];
+
+    const out: PromptInput[] = [];
+    let current: { name?: string; description?: string; required?: boolean } | null = null;
+    /** Indent of the key lines belonging to the item being read. */
+    let keyIndent: number | null = null;
+    let refused = false;
+
+    const flush = (): void => {
+        if (current?.name !== undefined) {
+            out.push({
+                name: current.name,
+                description: current.description ?? '',
+                required: current.required === true,
+            });
+        }
+        current = null;
+    };
+
+    const clean = (raw: string): string => {
+        const v = raw.trim();
+        // An unquoted trailing comment is not part of the value — the same strip
+        // `_strip_frontmatter` applies, kept consistent deliberately.
+        const hashed = /^(?!["'])([^#]*?)\s+#.*$/.exec(v);
+        return _stripQuotes((hashed === null ? v : (hashed[1] ?? '')).trim());
+    };
+
+    for (i += 1; i < lines.length && !refused; i += 1) {
+        const line = lines[i] as string;
+        if (line.trim() === '') continue;
+        // A comment at any column is not block content and does not end the block.
+        if (/^\s*#/.test(line)) continue;
+        // A non-indented line ends the block.
+        if (!/^\s/.test(line)) break;
+
+        const indent = (/^(\s*)/.exec(line) as RegExpExecArray)[1]!.replace(/\t/g, '    ').length;
+
+        const item = /^\s*-\s+([A-Za-z_]\w*):\s*(.*)$/.exec(line);
+        if (item !== null) {
+            flush();
+            current = {};
+            keyIndent = line.indexOf('-') + 2;
+            if (item[1] === 'name') current.name = clean(item[2] ?? '');
+            continue;
+        }
+
+        const kv = /^\s+([A-Za-z_]\w*):\s*(.*)$/.exec(line);
+        if (kv === null || current === null || keyIndent === null) continue;
+        // Deeper than the item's own keys: a nested mapping or sequence this
+        // reader does not model. Decline the whole block rather than absorb it.
+        if (indent > keyIndent) {
+            refused = true;
+            break;
+        }
+        const key = kv[1] as string;
+        const rawValue = (kv[2] ?? '').trim();
+        // A block scalar or an empty value means the real content is on the
+        // following lines, which this reader does not join.
+        if (rawValue === '' || rawValue === '>' || rawValue === '|') {
+            refused = true;
+            break;
+        }
+        const value = clean(rawValue);
+        if (key === 'name') current.name = value;
+        else if (key === 'description') current.description = value;
+        else if (key === 'required') current.required = value.toLowerCase() === 'true';
+    }
+
+    if (refused) return [];
+    flush();
+    return out;
+}
+
 export function _strip_frontmatter(text: string): [Record<string, string>, string] {
     if (!text.startsWith('---\n')) {
         return [{}, text];
@@ -365,6 +499,7 @@ function _load_file(p: string, kind: PromptKind, fallback_name: string): SkillPr
         kind,
         recommended_for_user_types: _parse_inline_array(meta.recommended_for_user_types ?? ''),
         user_type_match: '',
+        inputs: _parse_inputs(_frontmatter_text(text)),
     };
 }
 
@@ -548,7 +683,13 @@ export function to_mcp_prompt_meta(prompt: SkillPrompt): Record<string, unknown>
         name: wire,
         title: prompt.name,
         description: prompt.description,
-        arguments: [],
+        // Derived from the declaration, never invented. An artifact that
+        // declares nothing still serves `[]` — see `_parse_inputs`.
+        arguments: prompt.inputs.map((i) => ({
+            name: i.name,
+            description: i.description,
+            required: i.required,
+        })),
         _meta: meta,
     };
 }

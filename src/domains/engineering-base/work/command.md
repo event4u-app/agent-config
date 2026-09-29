@@ -9,6 +9,10 @@ visibility: visible
 skills: [refine-prompt, command-routing]
 description: Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over `work_engine`, confidence-band gated, no auto-git, test-first.
 argument-hint: "[prompt]"
+inputs:
+  - name: prompt
+    type: string
+    description: What to work on. Absent means resume the current task.
 suggestion:
   eligible: true
   trigger_description: "build this, implement this, drive this end-to-end"

@@ -1,6 +1,10 @@
 ---
 model_tier: medium
 name: markitdown
+inputs:
+  - name: source
+    type: string
+    description: "URI of the document to convert — file:, https: or data: (http: is refused). Absent means the skill is being read for its scheme discipline rather than invoked."
 description: "Convert PDF, DOCX, XLSX, PPTX, EPUB, images, or audio to Markdown via the markitdown-mcp server — 'extract this PDF', 'OCR this image', 'transcribe this audio'."
 status: active
 tier: senior

@@ -1,0 +1,10 @@
+{
+  "owner": "maintainer",
+  "review_by": "2027-09-29",
+  "seeded_at": "2026-09-29",
+  "note": "Shrink-only ceilings on FOREIGN placeholder syntaxes in prose, per road-to-an-invocation-contract-that-reaches-the-wire 1.2. The unit is a token outside fenced blocks, indented blocks and inline code spans — defined and argued in src/scripts/report_invocation_surface.ts's module header, with the per-file breakdown in agents/evidence/analysis/invocation-surface-census.md. Seeded at what this tree measures, not at the roadmap's figures: those counted tokens inside demonstrated code (JS template literals, HCL, a table-cell marker the prose talks about) and do not reproduce. The plurality form is deliberately ungated. Raising a ceiling is a reviewable diff, and the reason belongs in it.",
+  "ceilings": {
+    "angle-upper": 3,
+    "double-brace": 0
+  }
+}
