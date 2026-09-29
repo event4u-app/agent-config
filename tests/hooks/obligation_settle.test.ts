@@ -25,6 +25,7 @@ import { clearHookStdinOverride, setHookStdinOverride } from '../../src/scripts/
 import {
     computeVerdict,
     main as settleMain,
+    runSettle,
     resolveSettleContext,
     resolveSettleContextPreFix,
     shouldContinue,
@@ -289,7 +290,7 @@ describe('the settle hook resolves the session the way the injector does', () =>
         // missing export, which is not the defect.
         seedUndischargedTurn();
         setHookStdinOverride(envelope());
-        expect(settleMain(resolveSettleContextPreFix)).toBe(0);
+        expect(runSettle(resolveSettleContextPreFix)).toBe(0);
         expect(readShadow(root, SESSION)).toHaveLength(0);
 
         // Same ledger, same envelope, same turn: only the resolver differs.

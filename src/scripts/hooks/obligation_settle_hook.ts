@@ -268,13 +268,23 @@ export function resolveSettleContextPreFix(
     return { root: process.cwd(), session: (env['CLAUDE_CODE_SESSION_ID'] ?? '').trim() };
 }
 
-export function main(
-    resolve: (
-        envelope: Record<string, unknown>,
-        payload: Record<string, unknown>,
-        env: Record<string, string | undefined>,
-    ) => { root: string; session: string } = resolveSettleContext,
-): number {
+/**
+ * Which context resolver this reading uses — the seam the pre-fix fixture needs.
+ *
+ * It is NOT a parameter of `main()`, and that is a contract rather than a
+ * preference: `concern_main_signature` requires every concern's `main()` to take
+ * argv first or nothing, because the dispatcher calls `main(argv)` — so a
+ * resolver in first position would receive an argv array at runtime and resolve
+ * a session from it. Caught by that test, which is the reason this indirection
+ * exists instead of the obvious default parameter.
+ */
+export type SettleResolver = (
+    envelope: Record<string, unknown>,
+    payload: Record<string, unknown>,
+    env: Record<string, string | undefined>,
+) => { root: string; session: string };
+
+export function runSettle(resolve: SettleResolver = resolveSettleContext): number {
     const { envelope, payload } = readEnvelope();
     const { root, session } = resolve(envelope, payload, process.env);
     if (session === '') return EXIT_ALLOW;
@@ -306,6 +316,11 @@ export function main(
             + `${shouldContinue(attempt) ? '' : ' — unchanged since the last reading; still open'}\n`,
     );
     return EXIT_ALLOW;
+}
+
+/** The dispatcher entry point. Argv-shaped, per `concern_main_signature`. */
+export function main(_argv: readonly string[] = process.argv.slice(2)): number {
+    return runSettle();
 }
 
 // Bundle-safety: never auto-run when inlined into an esbuild bundle.
