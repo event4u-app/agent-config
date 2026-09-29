@@ -722,6 +722,17 @@ before the record is signed.
 - **Recommendation:** `manual-only`. Refusing autonomy outright on a host that cannot be
   watched is the stricter reading, and it costs the owner the hosts they actually use; the
   column makes the weaker guarantee visible instead of silent.
+- **Input now available, and deliberately NOT a resolution:**
+  `docs/contracts/hook-architecture-v1.md` § Kill switches enumerates all 28
+  `AGENT_CONFIG_*` switches the hook layer reads, with an owner class each
+  (`road-to-a-stop-that-holds` 1.4). That plan's 1.4 instructed an agent to resolve
+  THIS blocker by pointing the `Resolved when` below at that table. **Refused, and
+  the refusal is the finding**: the table inventories environment switches, while
+  this blocker asks a maintainer to DECIDE the autonomy fallback for a host with no
+  process-level stop. Redirecting the condition at a document that does not answer
+  the question would close a `Class: 3 — human-only` blocker on evidence about a
+  different subject. The table is one input to the decision; the decision is
+  untaken. `Resolved when` is unchanged.
 - **If you do nothing:** the daemon ships observation-only and never enforces, which is the
   honest state and also means the eleven typed ops carry no mechanical guard on seven of eight
   hosts.

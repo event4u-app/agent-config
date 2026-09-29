@@ -975,6 +975,72 @@ maintainer / dev workflows. On `return None` the resolver writes a
 `prerequisite_missing` so the user can discover the gap via
 `./agent-config hooks:doctor`.
 
+## Kill switches
+
+Every `AGENT_CONFIG_*` identifier the hook layer reads from the process
+environment, with the class of party that is expected to set it. One table so an
+operator disabling one behavior does not have to grep for the name, and so a
+reviewer can see at a glance which of these a human may legitimately set.
+
+**The measurement unit, stated because the count is the contract.** One distinct
+`AGENT_CONFIG_*` token appearing in a file under `src/scripts/hooks/` or
+`src/scripts/_lib/`. Reproduce it with:
+
+```bash
+grep -rhoE "AGENT_CONFIG_[A-Z_]+" src/scripts/hooks src/scripts/_lib \
+  | grep -vE '^AGENT_CONFIG_(BUNDLE|CLI_DELEGATE)__$' | sort -u | wc -l
+```
+
+The two excluded names are esbuild `--define` identifiers
+(`__AGENT_CONFIG_BUNDLE__`, `__AGENT_CONFIG_CLI_DELEGATE__`, see
+`package.json`'s `build:*` scripts), not environment variables: nothing can set
+one at runtime, so neither is a switch. The naive filter `grep -v
+__AGENT_CONFIG_BUNDLE__` does **not** remove the first of them — `grep -o` emits
+the match without its leading underscores — which is why the exclusion above is
+anchored on the emitted token instead.
+
+**Owner classes.** `maintainer` — a bypass a human may set knowingly, one
+command or one run. `harness` — set by this package's own wrapper, dispatcher or
+installer; a human setting it by hand is a debugging act, not a supported
+configuration. `orphan` — the name survives only in prose; nothing reads it.
+
+| Switch | Owner | What it does | Read at |
+|---|---|---|---|
+| `AGENT_CONFIG_ALLOW_SPEAKING_INBOX` | maintainer | Lets a write into the speaking-inbox directory through the PreToolUse block | `hooks/block_speaking_inbox_dir.ts:79` |
+| `AGENT_CONFIG_DEPLOY_INVENTORY` | harness | Path override for the global deploy inventory | `_lib/global_deploy_inventory.ts:61` |
+| `AGENT_CONFIG_DEV_MODE` | maintainer | Maintainer dev mode; forces `--scope=project` and is captured into the corpus manifest | `_lib/corpus_manifest.ts:89` |
+| `AGENT_CONFIG_DISABLE_HOOKS` | maintainer | Bypasses every shim for one command | `_lib/runtime_wiring_checks.ts:315` |
+| `AGENT_CONFIG_EXEC_EVIDENCE` | maintainer | One-run opt-in to execution-evidence collection | `_lib/exec_evidence.ts:199` |
+| `AGENT_CONFIG_HOOKS_ISOLATED` | maintainer | `=1` forces every concern into a child process instead of the in-process fast path | `hooks/dispatch_hook.ts:690` |
+| `AGENT_CONFIG_INSTALLED_LOCK` | harness | Path override for the installed lockfile | `_lib/installed_lock.ts:56` |
+| `AGENT_CONFIG_INSTALLED_TOOLS` | harness | Path override for the installed-tools manifest | `_lib/installed_tools.ts:46` |
+| `AGENT_CONFIG_LEGACY_ANCHOR` | maintainer | Opts a settings read back onto the legacy anchor | `_lib/agent_settings.ts:449` |
+| `AGENT_CONFIG_MEMORY_DIR` | harness | Directory override for memory recall | `hooks/memory_recall_hook.ts:309` |
+| `AGENT_CONFIG_NO_EVENTS_LOG` | maintainer | Short-circuits council / team event-log appends to a no-op | `_lib/env_kill_switch.ts` names it; the readers are `ai_council/events_log.ts:109` and `ai_team/review_gate.ts:56`, both outside the two directories the unit covers |
+| `AGENT_CONFIG_NO_PIN_REEXEC` | maintainer | Suppresses the pin re-exec | `_lib/pin_resolver.ts:43` |
+| `AGENT_CONFIG_NO_RUN_CONTINUATION` | maintainer | `=1` makes the run-continuation concern allow unconditionally | `hooks/run_continuation_hook.ts:1018` |
+| `AGENT_CONFIG_NO_UPDATE_CHECK` | maintainer | `=1` suppresses the update-availability check | `_lib/update_check.ts:239` |
+| `AGENT_CONFIG_PACKAGE_ROOT` | harness | The package root the dispatcher hands each concern | `hooks/dispatch_hook.ts:647` |
+| `AGENT_CONFIG_PACKAGE_VERSION` | harness | Version stamped into telemetry | `hooks/telemetry_usage_hook.ts:177` |
+| `AGENT_CONFIG_PHP_SERVICE` | maintainer | Compose service the `php` shim runs in (default `php`) | `hooks/shims/php:84` |
+| `AGENT_CONFIG_PIN_REEXEC_DEPTH` | harness | Re-exec depth counter, set by the re-exec itself | `_lib/pin_resolver.ts:44` |
+| `AGENT_CONFIG_PROJECTION_MODE` | maintainer | Projection mode, captured into the corpus manifest | `_lib/corpus_manifest.ts:91` |
+| `AGENT_CONFIG_PROJECT_ROOT` | harness | Wrapper-pinned project root for the settings cascade | `_lib/agent_settings.ts:699` |
+| `AGENT_CONFIG_REPLAY` | maintainer | `=1` replay mode — state writes and emitters stand down | `hooks/replay_hook.ts:61` |
+| `AGENT_CONFIG_ROOT_OVERRIDE` | maintainer | Overrides the resolved root for a settings read | `_lib/agent_settings.ts:700` |
+| `AGENT_CONFIG_SCOPE` | maintainer | Install scope, captured into the corpus manifest | `_lib/corpus_manifest.ts:90` |
+| `AGENT_CONFIG_SESSION_ID` | harness | Package-side session id, ahead of the host's own | `_lib/collector_denominator.ts:519` |
+| `AGENT_CONFIG_SESSION_ROLE` | harness | Marks a spawn `worker`; unset, empty or unknown fails open to `orchestrator` | `_lib/session_role.ts:28` |
+| `AGENT_CONFIG_SKIP_METADATA_GATE` | maintainer | Bypasses the pre-push metadata gate | `hooks/prepush_metadata_sources.sh:29` |
+| `AGENT_CONFIG_SURFACE` | harness | Explicit surface, for a caller that already knows it | `_lib/surface.ts:47` |
+| `AGENT_CONFIG_TRANSCRIPT_HOME` | orphan | Nothing reads it. The name survives in one comment in `hooks/turn_end_gate_hook.ts:1314` recording a widening this switch used to cause, and the switch itself is gone. Kept as a row so the count above stays reproducible, and marked so nobody sets it expecting an effect | — |
+
+**What this table is not.** It is not an authorization list: a switch being
+`maintainer`-class says a human is the expected setter, never that setting it is
+free. A bypass of a safety floor stays governed by
+[`non-destructive-by-default`](../../src/rules/non-destructive-by-default.md)
+whichever variable spells it.
+
 ## Stability
 
 Beta. Breaking changes between v1 and v2 are allowed in a minor
