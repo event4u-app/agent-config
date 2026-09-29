@@ -293,6 +293,12 @@ export function evaluate(
             reference: reference.source,
             reference_nodes: 0,
             target_nodes: target.nodes.length,
+            // The empty-reference path READ both sources — it found no handles
+            // in the reference, which is a property of the handover, not a
+            // failure to look. So it records the same digests the normal path
+            // does; omitting them would make a stopped run indistinguishable
+            // from one whose inputs were never seen.
+            inputs: collectInputs(target.source, reference.source),
             structure_gate: 'stopped',
             unmatched_nodes: [],
             dimensions: DIMENSIONS.map((d) => ({
