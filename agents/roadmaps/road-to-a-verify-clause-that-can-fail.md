@@ -18,7 +18,8 @@ A `verify:` clause names a command and never names what the command must produce
 step can be flipped on a command that cannot fail. It asserted, when written: 155 `verify:`
 lines across the 8 active roadmaps, 51 opening with a backticked command, and **zero**
 carrying a machine-decidable expectation. **None of those three reproduced.** Measured
-2026-09-29 at `7efe4c2e8` with `./scripts-run src/scripts/roadmap_verify_share`: 22 active
+2026-09-29 with `./scripts-run src/scripts/roadmap_verify_share`, against this branch's
+base `7efe4c2e8` and re-derived unchanged after a later merge of `main`: 22 active
 roadmaps, 230 step blocks carrying a clause, 93 naming a command, and **6** naming an
 expectation — three of them written before the grammar was legal. The zero was false, not
 merely stale, and it had already been copied into two docstrings before the measurement

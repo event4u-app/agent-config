@@ -2,8 +2,11 @@
 
 # The runnable and falsifiable share of `verify:` clauses
 
-> Measured 2026-09-29 at `7efe4c2e8`, on the 22 active roadmaps in
-> `agents/roadmaps/` (flat — `archive/`, `later/` and `skipped/` excluded).
+> Measured 2026-09-29 against `7efe4c2e8` — this branch's base, not a commit
+> where the producing command exists; run it from the branch. On the 22 active
+> roadmaps in `agents/roadmaps/` (flat — `archive/`, `later/` and `skipped/`
+> excluded). Re-derived unchanged after a later merge of `main`, which moved the
+> base and neither of the two headline rows.
 >
 > Producing command, which is the point of this page:
 >
