@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest';
 import {
     OWNERSHIP_BY_KIND,
     OWNER_ROUTED,
+    main,
     ownerQuestionCount,
     renderRows,
     scan,
@@ -177,5 +178,60 @@ describe('closure_scan — unit boundaries', () => {
         expect(u).toHaveLength(2);
         expect(u[0]?.line).toBe(1);
         expect(u[0]?.text).toContain('two');
+    });
+});
+
+describe('closure_scan — fixture F5, the unfalsifiable-verify family', () => {
+    const text = fixture('F5-unfalsifiable-verify.md');
+    const findings = scan(text);
+    const unfalsifiable = findings.filter((f) => f.kind === 'unfalsifiable-verify');
+
+    it('finds the four shapes that cannot say no', () => {
+        expect(unfalsifiable).toHaveLength(4);
+    });
+
+    it('fires on none of the three controls', () => {
+        // Phase 2 holds the controls. A family that also fires on a real
+        // command with a real expectation is measuring the PRESENCE of a
+        // verify line, not its oracle — which is the detector being useless
+        // in the direction that matters.
+        const phase2 = text.split('\n').findIndex((l) => /^## Phase 2/.test(l)) + 1;
+        for (const f of unfalsifiable) expect(f.line).toBeLessThan(phase2);
+    });
+
+    it('classifies to a deterministic class, reaching no owner', () => {
+        for (const f of unfalsifiable) expect(f.ownership).toBe('deterministic');
+        expect(ownerQuestionCount(unfalsifiable)).toBe(0);
+    });
+
+    it('is not a missing-verify — every step in the fixture carries a clause', () => {
+        expect(findings.filter((f) => f.kind === 'missing-verify')).toEqual([]);
+    });
+});
+
+describe('closure_scan — the family reports, and never gates', () => {
+    it('exits 0 on an entirely unfalsifiable corpus even under --strict', () => {
+        expect(main(['--strict', path.join(FIXTURES, 'F5-unfalsifiable-verify.md')])).toBe(0);
+    });
+
+    it('still exits 1 under --strict when a blocking family is present', () => {
+        // The exemption is a property of the family, not a softening of
+        // `--strict`: a TBD in the same corpus must still be able to go red.
+        expect(main(['--strict', path.join(FIXTURES, 'F1-technical-ambiguities.md')])).toBe(1);
+    });
+
+    it('names the family in --json, which is what a reader greps for', () => {
+        const chunks: string[] = [];
+        const orig = process.stdout.write.bind(process.stdout);
+        (process.stdout as unknown as { write: (s: string) => boolean }).write = (s: string): boolean => {
+            chunks.push(s);
+            return true;
+        };
+        try {
+            main(['--json', path.join(FIXTURES, 'F5-unfalsifiable-verify.md')]);
+        } finally {
+            (process.stdout as unknown as { write: unknown }).write = orig;
+        }
+        expect(chunks.join('')).toContain('unfalsifiable-verify');
     });
 });
