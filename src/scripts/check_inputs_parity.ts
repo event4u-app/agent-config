@@ -40,7 +40,7 @@ import * as yaml from 'js-yaml';
 
 import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
-import { reportScanned } from './_lib/scan_scope.js';
+import { assertScanned, reportScanned } from './_lib/scan_scope.js';
 import { _frontmatter_text, _parse_inputs, type PromptInput } from './mcp_server/prompts.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -136,6 +136,12 @@ export function main(argv: readonly string[]): number {
         ledger.fail(f.file, `server read ${String(f.server.length)}, YAML read ${String(f.yaml.length)}`);
     }
 
+    // A gate that read nothing has not passed. This fires BEFORE the verdict,
+    // because certifying against an empty corpus is the false green the coverage
+    // manifest exists to refuse — named by the provider-diverse ratification
+    // review as one condition that would have flipped its verdict.
+    assertScanned({ gate: GATE, scanned: scanned, units: 'artifact(s)', roots: ['src/domains', 'src/skills', 'dist/agent-src/commands'] });
+
     reportScanned({
         gate: GATE,
         scanned,
@@ -185,9 +191,14 @@ function selfTest(): number {
 
     return runSelfTest({
         gate: GATE,
-        minCases: 5,
-        minRejectCases: 4,
+        minCases: 6,
+        minRejectCases: 5,
         cases: [
+            {
+                name: 'an empty corpus is refused, not certified green',
+                expect: 'reject',
+                run: () => run(fs.mkdtempSync(path.join(os.tmpdir(), 'inputs-parity-empty-'))),
+            },
             {
                 name: 'the supported block form agrees',
                 expect: 'accept',

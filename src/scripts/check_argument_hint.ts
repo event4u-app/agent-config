@@ -42,7 +42,7 @@ import * as yaml from 'js-yaml';
 
 import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
-import { reportScanned } from './_lib/scan_scope.js';
+import { assertScanned, reportScanned } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -187,6 +187,12 @@ export function main(argv: readonly string[]): number {
     ledger.plan(findings.map((f) => f.file));
     for (const f of findings) ledger.fail(f.file, f.kind);
 
+    // A gate that read nothing has not passed. This fires BEFORE the verdict,
+    // because certifying against an empty corpus is the false green the coverage
+    // manifest exists to refuse — named by the provider-diverse ratification
+    // review as one condition that would have flipped its verdict.
+    assertScanned({ gate: GATE, scanned: scanned, units: 'artifact(s)', roots: ['src/domains'] });
+
     reportScanned({
         gate: GATE,
         scanned,
@@ -242,9 +248,14 @@ function selfTest(): number {
 
     return runSelfTest({
         gate: GATE,
-        minCases: 4,
-        minRejectCases: 2,
+        minCases: 5,
+        minRejectCases: 3,
         cases: [
+            {
+                name: 'an empty corpus is refused, not certified green',
+                expect: 'reject',
+                run: () => run(fs.mkdtempSync(path.join(os.tmpdir(), 'arg-hint-empty-'))),
+            },
             {
                 name: 'a hint matching its declaration passes',
                 expect: 'accept',

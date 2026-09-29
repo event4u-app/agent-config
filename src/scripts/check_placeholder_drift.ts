@@ -43,7 +43,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
-import { reportScanned } from './_lib/scan_scope.js';
+import { assertScanned, reportScanned } from './_lib/scan_scope.js';
 import { SYNTAXES, type SyntaxId, census } from './report_invocation_surface.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -117,6 +117,12 @@ export function main(argv: readonly string[]): number {
         if (f === undefined) ledger.complete(s.id);
         else ledger.fail(s.id, `${String(f.measured)} occurrence(s) against a ceiling of ${String(f.ceiling)}`);
     }
+
+    // A gate that read nothing has not passed. This fires BEFORE the verdict,
+    // because certifying against an empty corpus is the false green the coverage
+    // manifest exists to refuse — named by the provider-diverse ratification
+    // review as one condition that would have flipped its verdict.
+    assertScanned({ gate: GATE, scanned: c.rows.length, units: 'artifact(s)', roots: [BUDGET_REL, 'dist/agent-src/commands', 'src/skills'] });
 
     reportScanned({
         gate: GATE,
