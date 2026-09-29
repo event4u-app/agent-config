@@ -83,7 +83,7 @@ component goes.** The audit (§ 1b of
   not invent a tier for it — picking one would need exactly the per-tier rule
   the measurement below shows is not derivable.
 - **`none`** → behave exactly as you would without this paragraph. A project
-  that organises its components some other way must not be able to tell that
+  that organizes its components some other way must not be able to tell that
   this step exists. Never propose a taxonomy to a project that has one you did
   not recognise, and never propose one mid-task to a project that has none —
   the single offer is made once, at the greenfield halt, and a decline there is
