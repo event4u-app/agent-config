@@ -240,7 +240,9 @@ export interface Finding {
     /**
      * Which evidence path produced this finding, where a detector has two.
      *
-     * Only detector C sets it. `record` means a persisted run record was read;
+     * Detectors C and F set it — the sentence here read "Only detector C" while
+     * F set it two functions below, which an independent review caught.
+     * `record` means a persisted run record was read;
      * `transcript` means the recorder left nothing for this turn and the
      * command-text scan answered instead — the mode a replay through
      * `measure_turn_end_gate` / `check_detector_corpus` always runs in, so a
@@ -926,8 +928,23 @@ export function detectUntestedChange(
     // the last edit. Without records it stays exactly as it was, because the
     // transcript cannot see an exit code and a detector that refused on a
     // transcript-only host would refuse every honest turn there.
+    // A NEW test file, not any test edit. Step 5.1 says "accepts a NEW test file
+    // only with that pair present", and `edited.some(_isTestPath)` is any
+    // test-path edit — so adjusting an assertion in an existing test alongside a
+    // production change and running it green once was refused. New-vs-existing
+    // is not decidable from a transcript; `Write` on a test path is the usable
+    // proxy, because `Edit` and `MultiEdit` presuppose a file that already
+    // existed. Narrowing here can only ALLOW turns the previous line refused.
+    const wroteNewTest = toolCalls.some(
+        (c) => c.name === 'Write' && c.path !== undefined && _isTestPath(c.path),
+    );
     let noRedEvidence = false;
     if (edited.some(_isTestPath)) {
+        // An EXISTING test adjusted alongside a production change keeps the old
+        // escape untouched — `Edit` and `MultiEdit` presuppose a file that was
+        // already there, so nothing new was claimed and there is no new
+        // assertion whose sensitivity is unknown.
+        if (!wroteNewTest) return null;
         if (runState === null) return null;
         if (hasRedThenGreen(runState)) return null;
         // An instrument gap is not a missing red. Same rule as detector C: the
@@ -959,9 +976,13 @@ export function detectUntestedChange(
                 'fail for the intended reason, then fix and re-run',
         };
     }
+    // `transcript` unconditionally: no record contributed to THIS verdict — it
+    // is reached because the turn touched no test file at all, which is read off
+    // the tool calls. Labelling it `record` because a run state happened to be
+    // available would misattribute the evidence.
     return {
         detector: 'untested',
-        mode: runState === null ? 'transcript' : 'record',
+        mode: 'transcript',
         evidence: shown + (source.length > 3 ? ` (+${String(source.length - 3)} more)` : ''),
         reason:
             'a completion claim over production code this turn changed, with NO test file ' +
@@ -1410,11 +1431,13 @@ export function main(): number {
     );
     const rawSessionId = str(envelope['session_id'] as JsonValue | undefined) || '';
     const sessionKey = deriveSessionKey(rawSessionId || 'unknown-session');
+    if (alreadyRefusedTurn(workspaceRoot, sessionKey, turnOrdinal)) return EXIT_ALLOW;
+
     // ONE read of the recorder's state, shared by detectors C and F. Two reads
     // would be two file opens on the stop slot for one answer, and — worse —
-    // could disagree if a post-tool event landed between them.
+    // could disagree if a post-tool event landed between them. Placed AFTER the
+    // re-entrancy allow, so a retry pays no file read it immediately discards.
     const runState = readTurnRunState(workspaceRoot, rawSessionId);
-    if (alreadyRefusedTurn(workspaceRoot, sessionKey, turnOrdinal)) return EXIT_ALLOW;
 
     // B and C run on every turn-end; A and D run only when no dispatch is open
     // (the ternaries below). For the detectors that DO run, the gating is INSIDE

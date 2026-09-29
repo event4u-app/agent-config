@@ -1573,8 +1573,11 @@ describe('detectUnverifiedEdit', () => {
 
 describe('detector F — RED_THEN_GREEN in the record, step 5.1', () => {
     const edit = (p: string): ToolCall => ({ name: 'Edit', path: p });
+    const write = (p: string): ToolCall => ({ name: 'Write', path: p });
     const DONE = 'Fertig. Die Liste rendert jetzt.';
-    const CALLS = [edit('src/feature.ts'), edit('tests/feature.test.ts')];
+    // A `Write` on the test path: the step says "a NEW test file", and `Write`
+    // is the usable proxy for new — `Edit` presupposes a file that existed.
+    const CALLS = [edit('src/feature.ts'), write('tests/feature.test.ts')];
 
     const run = (
         over: Record<string, unknown>,
@@ -1661,6 +1664,19 @@ describe('detector F — RED_THEN_GREEN in the record, step 5.1', () => {
         });
         expect(f?.reason).toContain('NO test file');
         expect(f?.reason).not.toContain('no_red_evidence');
+    });
+
+    it('leaves an EXISTING test adjusted alongside production code alone', () => {
+        // The narrowing an independent review asked for. `edited.some(_isTestPath)`
+        // is any test edit, so tightening an assertion in a test that already
+        // existed and running it green once was refused with `no_red_evidence`.
+        // Step 5.1 authorises the clause for a NEW test file only.
+        expect(
+            detectUntestedChange(DONE, [edit('src/feature.ts'), edit('tests/feature.test.ts')], {
+                runs: [GREEN],
+                edits_this_turn: 2,
+            }),
+        ).toBeNull();
     });
 
     it('is still silent without a completion claim, records or not', () => {
