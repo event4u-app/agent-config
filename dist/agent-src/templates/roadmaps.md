@@ -578,8 +578,9 @@ that was never a judgement call.
     **The expectation half — say what the command must produce.** A command
     alone names no oracle. `` verify: `cat notes.md` `` is a conforming step
     field that cannot say no, so the box gets flipped on a command that was
-    never able to fail. Measured 2026-09-29 across the 22 active roadmaps:
-    230 clauses, 93 naming a command, **6** naming an expectation. A clause
+    never able to fail. In practice the great majority of clauses in a
+    roadmap tree state no oracle at all — run the share command below on
+    your own tree rather than trusting a number written here. A clause
     MAY therefore state what the command must produce, using the arrow
     `exec:` evidence already carries — not a new symbol:
 

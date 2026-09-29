@@ -38,7 +38,8 @@ share per roadmap is a published number rather than an impression.
       `-> /regex/`, in `src/agent-src/templates/roadmaps.md`. The arrow is the one `exec:`
       evidence already carries — not a new symbol. Prose after `verify:` stays legal and
       reads as MANUAL, because forbidding it would silently invalidate the 137 measured
-      clauses that carry no command at all, plus the 87 that carry one and no expectation.
+      clauses that carry no command at all — measured, against a drafted 104 that came from
+      the refuted baseline.
       verify: `grep -c 'verify:.*->' src/agent-src/templates/roadmaps.md` -> /[1-9]/
 
       **Evidence 2026-09-29.** `grep -c 'verify:.*->' src/agent-src/templates/roadmaps.md`
@@ -51,7 +52,7 @@ share per roadmap is a published number rather than an impression.
       verify: fixture G4 — one step each of `-> 0`, `-> /regex/`, prose — yields three distinct shapes
 
       **Evidence 2026-09-29.** `npx vitest run tests/scripts/_lib/verify_clause.test.ts`
-      → `19 passed`, including *the three shapes are mutually distinct*, which asserts
+      → `23 passed`, including *the three shapes are mutually distinct*, which asserts
       `new Set(shapes).size === 3`. `extractVerify` now returns the shared clause and
       parses nothing itself. A sweep of `src/scripts` asserts one arrow parser exists.
 
@@ -148,9 +149,14 @@ share per roadmap is a published number rather than an impression.
 
 - The arrow form is legal in rule 23 and parsed in exactly one place.
 - `closure_scan` reports the unfalsifiable family and exits 0 on a corpus that is entirely
-  unfalsifiable, proven by running it against today's 8 roadmaps.
-- The 51-of-155 baseline is committed with the command that produced it, before any fix
-  moves the number.
+  unfalsifiable. **Met, with the proof narrowed and the narrowing stated:** exit 0 under
+  `--strict` is proven against fixture F5, which IS entirely unfalsifiable. The live corpus
+  is not — 6 of 230 clauses carry an expectation — so it cannot prove this criterion, and
+  "today's 8 roadmaps" did not reproduce either; there are 22.
+- The baseline is committed with the command that produced it, before any fix moves the
+  number. **Met, and this criterion's own figure was the first casualty:** 51-of-155 did
+  not reproduce. What is committed is the measured 93-of-230, with
+  `./scripts-run src/scripts/roadmap_verify_share` named on the page that carries it.
 - No existing `verify:` line is invalidated by this change; prose stays legal.
 - No ratchet, no gate, no CI-blocking step lands in this roadmap.
 
@@ -160,7 +166,7 @@ share per roadmap is a published number rather than an impression.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | The arrow grammar is ceremony nobody writes, and the runnable share never moves | product | Step 1.1 makes the expectation half optional, because forbidding prose would invalidate 104 existing lines. Optional syntax in an authoring template is routinely skipped: the arrow costs the author a decision about what the command must print, and writing nothing stays legal and green. The baseline asserted here was 0 of 155 lines carrying an expectation; the measurement refuted it — 6 of 230, and **three of the six were written before the grammar was legal**, which is direct evidence against this very risk. The null hypothesis is weakened accordingly, not confirmed. | Step 2.2 publishes the runnable share per roadmap with the command that produced it and its date, which makes the next reading a delta rather than an impression. The retirement condition is stated in advance: if the share has not moved over two quarters of new roadmaps, 1.1 is retired and only the listing from 2.1 is kept. | Phase 1 — The grammar, and one parser for it |
+| 1 | The arrow grammar is ceremony nobody writes, and the runnable share never moves | product | Step 1.1 makes the expectation half optional, because forbidding prose would invalidate 104 existing lines. Optional syntax in an authoring template is routinely skipped: the arrow costs the author a decision about what the command must print, and writing nothing stays legal and green. (The "104 existing lines" figure below came from the refuted baseline; the measured count of clauses carrying no command is 137.) The baseline asserted here was 0 of 155 lines carrying an expectation; the measurement refuted it — 6 of 230, and **all six were written before the grammar was legal, three of them in this roadmap's own steps**. The document asserting that zero clauses carried an expectation was carrying three. That is direct evidence against this very risk. The null hypothesis is weakened accordingly, not confirmed. | Step 2.2 publishes the runnable share per roadmap with the command that produced it and its date, which makes the next reading a delta rather than an impression. The retirement condition is stated in advance: if the share has not moved over two quarters of new roadmaps, 1.1 is retired and only the listing from 2.1 is kept. | Phase 1 — The grammar, and one parser for it |
 | 2 | The listing becomes a gate by accretion and reds CI on a corpus it was never calibrated against | implementation | A `closure_scan` family that reliably finds unfalsifiable verify lines looks one flag away from useful enforcement, and the corpus is almost entirely unfalsifiable — 6 of 230 clauses carry an expectation, measured, where this row asserted 0 of 155. Promoting the listing before a false-positive rate is measured turns every existing roadmap red at once, and the cheapest repair for a gate that reds on everything is to weaken it until it finds nothing. | Step 2.1 fixes exit 0 unconditionally as a property of the family rather than as a flag, following the reason `check_requirements_trace.ts`'s own header records about promoting a young reader. Step 2.4 stays deferred behind two readings and a measured false-positive rate, and the acceptance criteria state that no ratchet, gate or CI-blocking step lands in this roadmap. | Phase 2 — Report the share; never gate on it |
 | 3 | Two roadmaps edit `templates/roadmaps.md` in the same window and one silently drops the other's rules | implementation | `road-to-release-holds-that-refuse` writes six rules into the same numbered rule list this roadmap's 1.1 extends. Git auto-merges additions to adjacent list items without a conflict marker, so one set of rules can disappear into a clean merge that nobody reviews — and a rule that vanished from a template fails no test, because the template is prose. | Step 1.3 serialises the two edits explicitly rather than trusting the merge: rebase onto whichever lands first and never merge both in one pass. Its verify reads `git log --oneline` on that one file and requires the two touches to appear ordered, so an unordered merge is visible in the step's own evidence. | Phase 1 — The grammar, and one parser for it |
-| 4 | The grammar lands optional and changes nothing on its own | product | Because prose after `verify:` stays legal and reads as MANUAL, Phase 1 is a pure addition — no existing line is invalidated, no author is obliged to do anything differently, and the tree looks improved while 224 of the 230 measured clauses can still be flipped on a command that cannot fail. Shipping the syntax and stopping there would leave the actual defect untouched behind a green diff. | Step 1.1 keeps prose legal deliberately and labels it MANUAL so the unfalsifiable lines are named rather than hidden, and the value is carried by Step 2.2's published reading rather than by the syntax. The acceptance criteria require the 51-of-155 baseline to be committed with its producing command before any fix moves the number. | Phase 1 — The grammar, and one parser for it |
+| 4 | The grammar lands optional and changes nothing on its own | product | Because prose after `verify:` stays legal and reads as MANUAL, Phase 1 is a pure addition — no existing line is invalidated, no author is obliged to do anything differently, and the tree looks improved while 224 of the 230 measured clauses can still be flipped on a command that cannot fail. Shipping the syntax and stopping there would leave the actual defect untouched behind a green diff. | Step 1.1 keeps prose legal deliberately and labels it MANUAL so the unfalsifiable lines are named rather than hidden, and the value is carried by Step 2.2's published reading rather than by the syntax. The acceptance criteria require the baseline to be committed with its producing command before any fix moves the number — which is exactly what caught the refuted 51-of-155 and replaced it with the measured 93-of-230. | Phase 1 — The grammar, and one parser for it |

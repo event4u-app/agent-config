@@ -46,6 +46,12 @@ backlog as shrinking every time someone closed one.
 
 ### Per roadmap
 
+Emitted verbatim by the command above, header row included — an earlier
+revision of this page transcribed only the body rows, so it was not a table at
+all on the one page that says not to hand-edit it.
+
+| roadmap | clauses | command | expectation |
+|---|---:|---:|---:|
 | `road-to-a-bytes-row-that-exists.md` | 9 | 4 | 0 |
 | `road-to-a-component-taxonomy-we-follow-but-never-force.md` | 6 | 0 | 0 |
 | `road-to-a-kernel-that-guards-its-plumbing.md` | 8 | 4 | 0 |
@@ -88,8 +94,8 @@ and 4: *"155 `verify:` lines across the 8 active roadmaps, 51 opening with a
 backticked command, and **zero** carrying a machine-decidable expectation."*
 
 None of the three reproduces at this head. The first two are re-derivations over
-a differently-sized tree — the roadmap says 8 active roadmaps where 27 exist, so
-the denominators are not comparable and no ratio carries forward. The third is
+a differently-sized tree — the roadmap says 8 active roadmaps where 22 exist at
+this head, so the denominators are not comparable and no ratio carries forward. The third is
 not a scale difference and matters on its own:
 
 | Claim | At this head | Status |
@@ -105,9 +111,10 @@ directory (22 files), not `status: ready` alone (16 at this head), and not a raw
 unreproducible rather than reconciled — the denominator that produced them is
 not recoverable, so no ratio in that roadmap carries forward.
 
-**Three of the six predate this work and were written by an author nobody
-prompted.** `road-to-one-verification-classifier.md` already carries the arrow
-form, three times, unaided by any rule permitting it:
+**All six predate this work, and the split is the finding.** Three sit in an
+unrelated roadmap and were written by an author nobody prompted —
+`road-to-one-verification-classifier.md` already carries the arrow form three
+times, unaided by any rule permitting it:
 
 ```
 verify: `npx vitest run tests/scripts/turn_end_verify_allowlist` -> 0
@@ -115,10 +122,15 @@ verify: `grep -c "'ls tests', false" tests/scripts/turn_end_verify_allowlist.tes
 verify: `npx vitest run tests/scripts/before_complete_hook` -> 0
 ```
 
-The remaining three are this roadmap's own verify lines. So rule 23's arrow
-clause documents a grammar already in use rather than introducing one — which
-is the single strongest piece of evidence against the roadmap's Risk 1 (*"the
-arrow grammar is ceremony nobody writes"*). It was written before it was legal.
+The other three are the commissioning roadmap's OWN verify lines, present in
+its steps 1.1, 2.1 and 2.3 at `dbf1c9179` — before any work on this branch. The
+document asserting that zero clauses carried an expectation was carrying three
+of them, in the steps that commissioned the fix.
+
+So rule 23's arrow clause documents a grammar already in use rather than
+introducing one, and the evidence against the roadmap's Risk 1 (*"the arrow
+grammar is ceremony nobody writes"*) is six lines, not three. It was written
+before it was legal, including by the author who said nobody writes it.
 
 **What the zero-claim cost.** Nothing was built on it, because it was checked
 before it was used — but it very nearly was: the claim had already been copied
@@ -132,9 +144,11 @@ that was already being adopted would have read as one nobody wrote.
 
 ## A parser defect the measurement surfaced
 
-The first reading reported 103 commands and 4 expectations. Both were wrong, and
-the reason is worth recording because it had been latent in `extractVerify`
-since that function was written.
+The first reading reported 103 commands and 4 expectations. **Those two numbers
+are NOT re-derivable** — the pre-fix parser no longer exists in the tree, so
+nothing here can reproduce them, and they are recorded as a note about what
+happened rather than as a measurement. The reason is worth keeping because the
+defect had been latent in `extractVerify` since that function was written.
 
 The inherited label pattern was ``` `?verify:`? ```, with the two backticks
 independent and both optional. On a step whose prose contains `` `verify:` ``
@@ -153,6 +167,25 @@ alternation plus a lookahead (`` (?:`verify:`|verify:(?!`)) ``), and — separat
 — taking the step's **last** clause rather than its first, so a step that
 *illustrates* the grammar does not have its illustration parsed as its oracle.
 Both are covered by tests that were shown red first.
+
+## A false-positive rate, measured and then removed
+
+An independent review of this branch ran the new `unfalsifiable-verify` family
+over the 22 live roadmaps and found **50 candidates, 46 of which fired on a
+quantity the clause never wrote**. The cause was not the rule but its input: a
+step block reaches the parser joined into one line, so the prose form's
+"to end of line" meant "to the end of the step", and a clause inherited every
+number in the evidence block recorded beneath it.
+
+The clause body is now bounded to its own paragraph. Re-measured after the fix:
+**41 candidates, and 0 of them fire on a quantity absent from the clause.** The
+two published headline rows did not move — 230 / 93 / 6 before and after — so
+this was a precision fix in the listing, not a change to the share.
+
+The control that would have caught it (a clause with no quantity, followed by an
+evidence block full of them) was the commonest clause shape in the live tree and
+was the one shape missing from fixture F5. It is now case 2.4 there, and
+reverting the fix reds it with `expected 46 to be less than 35`.
 
 ## Reading this page next time
 
