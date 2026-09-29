@@ -80,6 +80,7 @@ function mkPrompt(over: Partial<SkillPrompt>): SkillPrompt {
         kind: 'skill',
         recommended_for_user_types: [],
         user_type_match: '',
+        inputs: [],
         ...over,
     };
 }

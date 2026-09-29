@@ -69,6 +69,22 @@ export interface SkillPrompt {
     readonly kind: PromptKind;
     readonly recommended_for_user_types: readonly string[];
     readonly user_type_match: UserTypeMatch;
+    /**
+     * Declared parameters, from the frontmatter `inputs:` block.
+     *
+     * Empty for every artifact that declares none, which is the whole corpus
+     * today — so `arguments: []` on the wire stays the behaviour for an
+     * undeclared prompt rather than becoming a special case
+     * (road-to-an-invocation-contract-that-reaches-the-wire 3.2).
+     */
+    readonly inputs: readonly PromptInput[];
+}
+
+/** One declared parameter, reduced to what the MCP `arguments` shape carries. */
+export interface PromptInput {
+    readonly name: string;
+    readonly description: string;
+    readonly required: boolean;
 }
 
 /** Walk up from this file to the repo root (parent of `scripts/`). */
@@ -92,6 +108,76 @@ export function _project_root(): string {
  * Avoids a YAML dependency for Phase 1; the frontmatter shape is
  * enforced by `task lint-skills` upstream.
  */
+/** The raw frontmatter block of a document, or `''` when it has none. */
+export function _frontmatter_text(text: string): string {
+    if (!text.startsWith('---\n')) return '';
+    const parts = _splitMax(text, '---\n', 2);
+    return parts.length < 3 ? '' : (parts[1] as string);
+}
+
+/**
+ * Parse the frontmatter `inputs:` block out of raw frontmatter text.
+ *
+ * WHY THIS EXISTS RATHER THAN A YAML CALL. `_strip_frontmatter` is a flat
+ * `key: value` line scanner and cannot represent a nested list — `inputs:`
+ * would land as an empty string and its `- name: x` lines as stray keys. The
+ * MCP server is deliberately stdlib-only and is bundled for the wire, so
+ * pulling a YAML parser in to read one optional block would pay a dependency
+ * on every install for a block almost nothing declares yet.
+ *
+ * The grammar accepted is exactly the one the schema permits, and no more:
+ *
+ *     inputs:
+ *       - name: target
+ *         type: string
+ *         required: true
+ *         description: What to act on.
+ *
+ * Anything it cannot read yields NO input rather than a guessed one. An
+ * undeclared or unreadable block must serve `arguments: []` — the shape an
+ * undeclared prompt has always had — because inventing an argument a host then
+ * prompts a user for is strictly worse than declaring none.
+ */
+export function _parse_inputs(fm: string): PromptInput[] {
+    const lines = fm.split('\n');
+    let i = lines.findIndex((l) => /^inputs:\s*$/.test(l));
+    if (i === -1) return [];
+    const out: PromptInput[] = [];
+    let current: { name?: string; description?: string; required?: boolean } | null = null;
+    const flush = (): void => {
+        if (current?.name !== undefined) {
+            out.push({
+                name: current.name,
+                description: current.description ?? '',
+                required: current.required === true,
+            });
+        }
+        current = null;
+    };
+    for (i += 1; i < lines.length; i += 1) {
+        const line = lines[i] as string;
+        if (line.trim() === '') continue;
+        // A non-indented line ends the block.
+        if (!/^\s/.test(line)) break;
+        const item = /^\s*-\s+(\w+):\s*(.*)$/.exec(line);
+        if (item !== null) {
+            flush();
+            current = {};
+            if (item[1] === 'name') current.name = _stripQuotes((item[2] ?? '').trim());
+            continue;
+        }
+        const kv = /^\s+(\w+):\s*(.*)$/.exec(line);
+        if (kv === null || current === null) continue;
+        const key = kv[1] as string;
+        const value = _stripQuotes((kv[2] ?? '').trim());
+        if (key === 'name') current.name = value;
+        else if (key === 'description') current.description = value;
+        else if (key === 'required') current.required = value === 'true';
+    }
+    flush();
+    return out;
+}
+
 export function _strip_frontmatter(text: string): [Record<string, string>, string] {
     if (!text.startsWith('---\n')) {
         return [{}, text];
@@ -365,6 +451,7 @@ function _load_file(p: string, kind: PromptKind, fallback_name: string): SkillPr
         kind,
         recommended_for_user_types: _parse_inline_array(meta.recommended_for_user_types ?? ''),
         user_type_match: '',
+        inputs: _parse_inputs(_frontmatter_text(text)),
     };
 }
 
@@ -548,7 +635,13 @@ export function to_mcp_prompt_meta(prompt: SkillPrompt): Record<string, unknown>
         name: wire,
         title: prompt.name,
         description: prompt.description,
-        arguments: [],
+        // Derived from the declaration, never invented. An artifact that
+        // declares nothing still serves `[]` — see `_parse_inputs`.
+        arguments: prompt.inputs.map((i) => ({
+            name: i.name,
+            description: i.description,
+            required: i.required,
+        })),
         _meta: meta,
     };
 }
