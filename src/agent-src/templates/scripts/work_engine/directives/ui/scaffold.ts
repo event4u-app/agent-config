@@ -307,9 +307,13 @@ export function run(state: DeliveryState): StepResult {
 function _is_greenfield_scaffold(state: DeliveryState): boolean {
     const audit = state.ui_audit;
     if (!_isDict(audit)) return false;
+    // `granularity_convention` is option 4 — a scaffold that additionally
+    // organises what it creates under a named convention. It has to reach the
+    // scaffold gate, or picking 4 would scaffold nothing at all.
     return (
         audit['greenfield'] === true &&
-        audit['greenfield_decision'] === 'scaffold'
+        (audit['greenfield_decision'] === 'scaffold' ||
+            audit['greenfield_decision'] === 'granularity_convention')
     );
 }
 

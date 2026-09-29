@@ -17,6 +17,12 @@ import {
     StepResult,
     agent_directive,
 } from '../../delivery_state.js';
+import { NO_TAXONOMY } from '../../taxonomy/detect.js';
+import {
+    type ComponentRequest,
+    conformance_lines,
+    plan_component_placement,
+} from '../../taxonomy/place.js';
 import { has_design_system, placeholder_paths, provided_artifact } from './design.js';
 import { _playbook_lines, _scaffold_playbooks } from './scaffold.js';
 import {
@@ -243,6 +249,34 @@ function _apply_envelope(state: DeliveryState): Record<string, Any> | null {
     return null;
 }
 
+/**
+ * Conformance lines for the taxonomy the audit detected, or nothing.
+ *
+ * Empty whenever `state.ui_audit.component_taxonomy` is absent or
+ * {@link NO_TAXONOMY} — which is every project that has not chosen a
+ * granularity taxonomy, and is the case whose output must stay exactly as it
+ * was. Holding to the project's own structures is the standing rule; this step
+ * only ever conforms to a taxonomy the project itself evidences.
+ */
+export function taxonomy_lines(state: DeliveryState): string[] {
+    const audit = _isDict(state.ui_audit) ? (state.ui_audit as Record<string, Any>) : {};
+    const taxonomy = audit['component_taxonomy'];
+    if (typeof taxonomy !== 'string' || taxonomy === '' || taxonomy === NO_TAXONOMY) {
+        return [];
+    }
+    const root = typeof audit['component_root'] === 'string' ? audit['component_root'] : '';
+    const design = _isDict(state.ui_design) ? (state.ui_design as Record<string, Any>) : {};
+    const raw = design['components'];
+    const components: ComponentRequest[] = Array.isArray(raw)
+        ? raw.filter((c): c is Record<string, Any> => _isDict(c))
+        : [];
+    return conformance_lines(
+        taxonomy,
+        root,
+        plan_component_placement(taxonomy, root, components),
+    );
+}
+
 /** Pick the agent directive for the project's frontend stack. */
 function _resolve_directive(state: DeliveryState): string {
     const stack = _pyTruthy(state.stack) ? state.stack : {};
@@ -298,6 +332,7 @@ function _delegate_to_stack_skill(state: DeliveryState): StepResult {
         '> Microcopy is locked — every button label, empty-state ' +
             'message, and validation message must come verbatim from ' +
             '`state.ui_design.microcopy`.',
+        ...taxonomy_lines(state),
     ];
     if (provided !== null) {
         lines.push(

@@ -11,8 +11,9 @@
  *
  * The gate is **scoped to the greenfield-scaffold path only**. It acts only
  * when `state.ui_audit` records `greenfield == True` and
- * `greenfield_decision == "scaffold"`. Every other UI flow sees this slot as a
- * clean `SUCCESS` no-op, so those flows stay byte-identical.
+ * `greenfield_decision` ∈ `{scaffold, granularity_convention}`. Every other
+ * UI flow sees this slot as a clean `SUCCESS` no-op, so those flows stay
+ * byte-identical.
  */
 import {
     type Any,
@@ -112,14 +113,18 @@ export function run(state: DeliveryState): StepResult {
  * The gate is inert for every other flow: improve-existing, the `bare` /
  * `external_reference` greenfield picks, and the `diff` / `file` envelopes all
  * leave `ui_audit` without the `greenfield == True` +
- * `greenfield_decision == "scaffold"` pair.
+ * `greenfield_decision` ∈ `{scaffold, granularity_convention}` pair.
  */
 function _is_greenfield_scaffold(state: DeliveryState): boolean {
     const audit = state.ui_audit;
     if (!_isDict(audit)) return false;
+    // `granularity_convention` is option 4 — a scaffold that additionally
+    // organises what it creates under a named convention, so it takes the same
+    // grounding pass. Kept in step with the identical guard in `scaffold`.
     return (
         audit['greenfield'] === true &&
-        audit['greenfield_decision'] === 'scaffold'
+        (audit['greenfield_decision'] === 'scaffold' ||
+            audit['greenfield_decision'] === 'granularity_convention')
     );
 }
 

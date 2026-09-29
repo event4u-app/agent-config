@@ -27,7 +27,10 @@
  *   `existing-ui-audit` skill (R3 Phase 2). `null` while the audit
  *   has not run; populated dict once the skill returns. `greenfield`
  *   flag plus `greenfield_decision` carry the user's scaffolding
- *   pick. The audit gate (`work_engine.directives.ui.audit`)
+ *   pick; `component_taxonomy` and `component_root` carry the
+ *   granularity taxonomy the project itself evidences, or `'none'`.
+ *   `'none'` is the value that leaves every downstream step behaving
+ *   exactly as it did before detection existed. The audit gate (`work_engine.directives.ui.audit`)
  *   refuses to advance to design/apply while the slot is empty or
  *   while `greenfield` is set without a recorded decision.
  * - `app_spec` — optional greenfield grounding artifact written by
@@ -173,6 +176,25 @@ export const KNOWN_DIRECTIVE_SETS: ReadonlySet<string> = new Set([
 ]);
 
 /** Raised when a state payload violates the v1 contract. */
+/**
+ * Every value `state.ui_audit.greenfield_decision` may carry.
+ *
+ * One list, read by the schema here and by the halt that offers the options
+ * (`directives/ui/audit.ts`), so an option the user can pick and a value the
+ * schema accepts cannot drift apart.
+ *
+ * `granularity_convention` is option 4: scaffold, and organise what is
+ * scaffolded under a named granularity convention. It is a fourth value of the
+ * same single-number question rather than a second axis — one number still
+ * answers the block, which is what the reply-shape rule requires.
+ */
+export const GREENFIELD_DECISIONS: ReadonlyArray<string> = [
+    'scaffold',
+    'bare',
+    'external_reference',
+    'granularity_convention',
+];
+
 export class SchemaError extends Error {
     constructor(message: string) {
         super(message);
@@ -559,14 +581,25 @@ function _validate_ui_audit(ui_audit: JsonValue): void {
         : null;
     if (
         decision !== null &&
-        decision !== 'scaffold' &&
-        decision !== 'bare' &&
-        decision !== 'external_reference'
+        !(typeof decision === 'string' && GREENFIELD_DECISIONS.includes(decision))
     ) {
         throw new SchemaError(
             `state.ui_audit.greenfield_decision must be one of ` +
-                `'scaffold', 'bare', 'external_reference', or null; ` +
+                `${GREENFIELD_DECISIONS.map((d) => `'${d}'`).join(', ')}, or null; ` +
                 `got ${pyRepr(decision)}`,
+        );
+    }
+    const taxonomy = 'component_taxonomy' in ui_audit ? ui_audit['component_taxonomy'] : null;
+    if (taxonomy !== null && typeof taxonomy !== 'string') {
+        throw new SchemaError(
+            'state.ui_audit.component_taxonomy must be a string when present ' +
+                "— the project's own tiers joined with '/', or 'none'",
+        );
+    }
+    const root = 'component_root' in ui_audit ? ui_audit['component_root'] : null;
+    if (root !== null && typeof root !== 'string') {
+        throw new SchemaError(
+            'state.ui_audit.component_root must be a string when present',
         );
     }
     if (

@@ -19,6 +19,20 @@ import {
     agent_directive,
 } from '../../delivery_state.js';
 
+/**
+ * The greenfield pick that adopts a component-granularity convention.
+ *
+ * Offered only on the greenfield halt, and only as an OFFER: a project that
+ * already exists is never asked, and a user who picks any other number has
+ * declined it for good — the halt is a no-op once a decision is recorded, so
+ * declining costs one number and is never raised again.
+ *
+ * Must appear in the schema's `GREENFIELD_DECISIONS`; a test pins the two
+ * together, because an option the user can pick that the schema then rejects
+ * is a halt with a dead exit.
+ */
+export const GRANULARITY_CONVENTION = 'granularity_convention';
+
 /** Similarity threshold for a "strong reusable match". */
 export const STRONG_SIMILARITY = 0.7;
 
@@ -42,8 +56,9 @@ export const AMBIGUITIES: ReadonlyArray<Record<string, string>> = [
             'state.ui_audit.greenfield is True but greenfield_decision ' +
             'is unset — user has not picked a scaffolding direction',
         resolution:
-            'user picks scaffold / bare / external_reference; ' +
-            'agent records the choice in state.ui_audit.greenfield_decision',
+            'user picks scaffold / bare / external_reference / ' +
+            'granularity_convention; agent records the choice in ' +
+            'state.ui_audit.greenfield_decision',
     },
     {
         code: 'shadcn_version_mismatch',
@@ -198,6 +213,9 @@ function _halt_greenfield(state: DeliveryState, audit: Record<string, Any>): Ste
         '> 1. Scaffold — minimal token set + base component primitive folder',
         '> 2. Bare — proceed with Tailwind defaults, no scaffolding',
         '> 3. External reference — point me at a design-system URL or file',
+        '> 4. Scaffold + a granularity convention — as 1, and new components ' +
+            'go into named granularity folders you pick the names for; ' +
+            'rename or drop it later and nothing here objects',
         '',
         '**Recommendation: 1 — Scaffold tokens + primitives** ' +
             '— even one extra screen benefits from a shared base; the ' +
