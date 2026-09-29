@@ -1571,6 +1571,108 @@ describe('detectUnverifiedEdit', () => {
     });
 });
 
+describe('detector F — RED_THEN_GREEN in the record, step 5.1', () => {
+    const edit = (p: string): ToolCall => ({ name: 'Edit', path: p });
+    const DONE = 'Fertig. Die Liste rendert jetzt.';
+    const CALLS = [edit('src/feature.ts'), edit('tests/feature.test.ts')];
+
+    const run = (
+        over: Record<string, unknown>,
+    ): Record<string, unknown> => ({
+        command: 'npx vitest run tests/feature.test.ts',
+        after_edits: 2,
+        ...over,
+    });
+    const RED = run({
+        exit_code: 1,
+        stdout_tail: ' Tests  1 failed | 0 passed (1)\n',
+        after_edits: 1,
+    });
+    const GREEN = run({ exit_code: 0, stdout_tail: ' Tests  1 passed (1)\n' });
+
+    it('allows a red→green pair over the same target', () => {
+        expect(
+            detectUntestedChange(DONE, CALLS, { runs: [RED, GREEN], edits_this_turn: 2 }),
+        ).toBeNull();
+    });
+
+    it('refuses green→green with a new test file, naming no_red_evidence', () => {
+        const f = detectUntestedChange(DONE, CALLS, {
+            runs: [run({ exit_code: 0, stdout_tail: ' Tests  1 passed (1)\n', after_edits: 1 }), GREEN],
+            edits_this_turn: 2,
+        });
+        expect(f?.detector).toBe('untested');
+        expect(f?.reason).toContain('no_red_evidence');
+        expect(f?.mode).toBe('record');
+    });
+
+    it('refuses when the green predates the last edit', () => {
+        // The pair exists but the proof is stale: the fix came after the green.
+        const f = detectUntestedChange(DONE, CALLS, {
+            runs: [RED, run({ exit_code: 0, stdout_tail: ' Tests  1 passed (1)\n', after_edits: 1 })],
+            edits_this_turn: 2,
+        });
+        expect(f?.reason).toContain('no_red_evidence');
+    });
+
+    it('refuses a red and a green over DIFFERENT targets', () => {
+        const f = detectUntestedChange(DONE, CALLS, {
+            runs: [
+                { ...RED, command: 'npx vitest run tests/other.test.ts' },
+                GREEN,
+            ],
+            edits_this_turn: 2,
+        });
+        expect(f?.reason).toContain('no_red_evidence');
+    });
+
+    it('pairs a whole-suite red with a whole-suite green', () => {
+        expect(
+            detectUntestedChange(DONE, CALLS, {
+                runs: [
+                    { command: 'task test', exit_code: 1, stdout_tail: ' Tests  1 failed | 2 passed (3)\n', after_edits: 1 },
+                    { command: 'task test', exit_code: 0, stdout_tail: ' Tests  3 passed (3)\n', after_edits: 2 },
+                ],
+                edits_this_turn: 2,
+            }),
+        ).toBeNull();
+    });
+
+    it('keeps the pre-record behavior when no records exist', () => {
+        // A transcript-only host cannot see an exit code, so the old escape —
+        // a test file was touched — stands. Refusing there would refuse every
+        // honest turn on that host.
+        expect(detectUntestedChange(DONE, CALLS)).toBeNull();
+    });
+
+    it('does not refuse on an instrument gap', () => {
+        expect(
+            detectUntestedChange(DONE, CALLS, {
+                runs: [run({ exit_code: null })],
+                edits_this_turn: 2,
+            }),
+        ).toBeNull();
+    });
+
+    it('leaves the no-test-file case exactly as it was', () => {
+        const f = detectUntestedChange(DONE, [edit('src/feature.ts')], {
+            runs: [GREEN],
+            edits_this_turn: 1,
+        });
+        expect(f?.reason).toContain('NO test file');
+        expect(f?.reason).not.toContain('no_red_evidence');
+    });
+
+    it('is still silent without a completion claim, records or not', () => {
+        expect(
+            detectUntestedChange('Ich arbeite weiter.', CALLS, {
+                runs: [GREEN],
+                edits_this_turn: 2,
+            }),
+        ).toBeNull();
+    });
+});
+
 describe('readTurnRunState — step 1.3, the recorder-liveness predicate', () => {
     function writeState(dir: string, state: Record<string, unknown>): void {
         const target = path.join(dir, ciStatePathFor(GATE_SESSION_ID));

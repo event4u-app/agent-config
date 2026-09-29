@@ -467,3 +467,66 @@ export function readRunEvidence(state: TurnRunState): RecordReading {
     // question; the gap only matters when nothing judgeable was found at all.
     return { passed, failed, instrumentGap: gap && !passed && !failed, reasons };
 }
+
+/**
+ * The test files a command names, or the empty string when it names none.
+ *
+ * The key groups records so that a red and a green about the SAME target can be
+ * paired. A command with no explicit target — `npx vitest run`, `task test` —
+ * gets the empty key, which is its own group: a whole-suite red followed by a
+ * whole-suite green is a legitimate red-then-green, and pairing it with a
+ * single-file run would claim a sequence nobody observed.
+ *
+ * Sorted and joined so argument ORDER cannot split one target set into two
+ * groups.
+ */
+export function testTargetKey(command: string): string {
+    const targets = new Set<string>();
+    for (const token of command.split(/\s+/)) {
+        const bare = token.replace(/^['"]|['"]$/g, '');
+        if (/[./]\w*(?:test|spec)\w*\.[a-z]+$/i.test(bare) || /(?:Test|Spec)\.php$/.test(bare)) {
+            targets.add(bare);
+        }
+    }
+    return [...targets].sort().join('|');
+}
+
+/**
+ * Whether the turn's records show a red run turning green over the same target.
+ *
+ * WHY THIS IS EVIDENCE AND A NEW TEST FILE ALONE IS NOT. Detector F's escape
+ * hatch is "a test file was touched somewhere in the turn", which a file
+ * containing `it('works', () => expect(true).toBe(true))` satisfies. A test
+ * never seen red has unknown sensitivity: it may assert nothing the change
+ * could break. A red-then-green pair over one target is the cheapest observable
+ * proof that the assertion discriminates — it failed, the code changed, it
+ * passed.
+ *
+ * ORDER COMES FROM THE ARRAY, not from a timestamp. The recorder appends, so
+ * index order IS run order, and it survives a host whose clock is coarse or
+ * whose records share a second. Only records at or after the turn's edit total
+ * count for the GREEN half, for the same freshness reason `readRunEvidence`
+ * applies; the RED half is deliberately unbounded, because a red necessarily
+ * predates the edit that fixed it.
+ */
+export function hasRedThenGreen(state: TurnRunState): boolean {
+    const reddened = new Set<string>();
+    for (let i = 0; i < state.runs.length; i += 1) {
+        const raw = state.runs[i];
+        const verdict = classifyRun(raw);
+        const key = testTargetKey(
+            typeof raw === 'object' && raw !== null && !Array.isArray(raw)
+                ? String((raw as Record<string, unknown>)['command'] ?? '')
+                : '',
+        );
+        if (verdict.kind === 'FAIL_EVIDENCE') {
+            reddened.add(key);
+            continue;
+        }
+        if (verdict.kind !== 'PASS_EVIDENCE_OK') continue;
+        const placed = placeRecord(raw);
+        if (placed === null || placed < state.edits_this_turn) continue;
+        if (reddened.has(key)) return true;
+    }
+    return false;
+}

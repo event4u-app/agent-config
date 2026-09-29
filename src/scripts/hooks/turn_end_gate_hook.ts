@@ -184,6 +184,7 @@ import { isVerificationCommand } from '../_lib/verification_command.js';
 // reads a command's TEXT and `echo test` matches it; these read what the run
 // exited with and what it printed.
 import {
+    hasRedThenGreen,
     readRunEvidence,
     type InvalidRunReason,
     type TurnRunState,
@@ -901,13 +902,40 @@ function _isProductionSource(p: string): boolean {
  * turn; drop the second and it fires on a turn that did its job; drop the third
  * and it fires mid-cycle on the red step of red-green-refactor.
  */
-export function detectUntestedChange(reply: string, toolCalls: readonly ToolCall[]): Finding | null {
+export function detectUntestedChange(
+    reply: string,
+    toolCalls: readonly ToolCall[],
+    runState: TurnRunState | null = null,
+): Finding | null {
     const edited = toolCalls
         .filter((c) => _EDIT_TOOLS.has(c.name) && c.path !== undefined)
         .map((c) => c.path as string);
     const source = edited.filter(_isProductionSource);
     if (source.length === 0) return null;
-    if (edited.some(_isTestPath)) return null;
+
+    // THE TEST-FILE ESCAPE, and why step 5.1 narrowed it rather than removed it.
+    //
+    // "A test file was touched somewhere in the turn" is satisfied by a file
+    // containing `it('works', () => expect(true).toBe(true))`. A test never seen
+    // red has unknown sensitivity — it may assert nothing the change could
+    // break — so the escape as written accepted the shape of evidence instead of
+    // evidence.
+    //
+    // With records available, the escape asks for the cheapest observable proof
+    // that the assertion discriminates: the same target red, then green after
+    // the last edit. Without records it stays exactly as it was, because the
+    // transcript cannot see an exit code and a detector that refused on a
+    // transcript-only host would refuse every honest turn there.
+    let noRedEvidence = false;
+    if (edited.some(_isTestPath)) {
+        if (runState === null) return null;
+        if (hasRedThenGreen(runState)) return null;
+        // An instrument gap is not a missing red. Same rule as detector C: the
+        // host surfaced no exit code, so nothing about the operator's work is
+        // known, and the pre-record behavior stands in.
+        if (readRunEvidence(runState).instrumentGap) return null;
+        noRedEvidence = true;
+    }
 
     // The claim gate, reusing detector D's pair rather than a second dialect of
     // "done" — two lists of completion phrasings would drift, and the negation
@@ -918,8 +946,22 @@ export function detectUntestedChange(reply: string, toolCalls: readonly ToolCall
     if (_NEGATED_CLAIM_RE.test(_lineAround(prose, m.index))) return null;
 
     const shown = source.slice(0, 3).join(', ');
+    if (noRedEvidence) {
+        return {
+            detector: 'untested',
+            evidence: shown + (source.length > 3 ? ` (+${String(source.length - 3)} more)` : ''),
+            mode: 'record',
+            reason:
+                'a completion claim over production code this turn changed, with a test ' +
+                'file touched but `no_red_evidence` — no recorded run shows that test ' +
+                'target failing and then passing after the last edit. A test never seen ' +
+                'red has unknown sensitivity: run it against the unfixed code, watch it ' +
+                'fail for the intended reason, then fix and re-run',
+        };
+    }
     return {
         detector: 'untested',
+        mode: runState === null ? 'transcript' : 'record',
         evidence: shown + (source.length > 3 ? ` (+${String(source.length - 3)} more)` : ''),
         reason:
             'a completion claim over production code this turn changed, with NO test file ' +
@@ -1368,6 +1410,10 @@ export function main(): number {
     );
     const rawSessionId = str(envelope['session_id'] as JsonValue | undefined) || '';
     const sessionKey = deriveSessionKey(rawSessionId || 'unknown-session');
+    // ONE read of the recorder's state, shared by detectors C and F. Two reads
+    // would be two file opens on the stop slot for one answer, and — worse —
+    // could disagree if a post-tool event landed between them.
+    const runState = readTurnRunState(workspaceRoot, rawSessionId);
     if (alreadyRefusedTurn(workspaceRoot, sessionKey, turnOrdinal)) return EXIT_ALLOW;
 
     // B and C run on every turn-end; A and D run only when no dispatch is open
@@ -1389,7 +1435,7 @@ export function main(): number {
         // excused by anything about a dispatch and run unchanged.
         dispatchOpen ? null : detectPromissory(lastAssistant),
         detectLanguage(lastAssistant, readLanguagePin(workspaceRoot, rawSessionId)),
-        detectUnverifiedEdit(toolCalls, readTurnRunState(workspaceRoot, rawSessionId)),
+        detectUnverifiedEdit(toolCalls, runState),
         // Round 7 § Phase 1 — detector D. It is NOT unconditional, and this
         // comment said it was while sitting one line above the `dispatchOpen`
         // ternary that conditions it: A and D are both excused by an open
@@ -1418,7 +1464,9 @@ export function main(): number {
         // on a completion CLAIM, and a turn waiting on a subagent has not
         // finished — so its closing is not the claim F is about. Same slot,
         // opposite trigger, opposite treatment of `dispatchOpen`.
-        dispatchOpen ? null : detectUntestedChange(lastAssistant, toolCalls),
+        dispatchOpen
+            ? null
+            : detectUntestedChange(lastAssistant, toolCalls, runState),
     ]) {
         if (f) findings.push(f);
     }
