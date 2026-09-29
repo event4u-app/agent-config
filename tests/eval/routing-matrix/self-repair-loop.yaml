@@ -1,8 +1,13 @@
 rule: self-repair-loop
 positives:
   - prompt: "You ignored the rule about committing without permission - that was wrong."
+    expected_skills: []
   - prompt: "Check the self-repair queue and tell me what is open."
+    expected_skills: []
   - prompt: "Du hast das falsch gemacht, die Sprache stimmt wieder nicht."
+    expected_skills: []
 near_misses:
   - prompt: "Repair the broken symlink in the projection directory."
+    expected_skills: []
   - prompt: "What does the self-hosted runner do in this workflow?"
+    expected_skills: [github-ci]

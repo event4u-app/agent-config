@@ -1,8 +1,13 @@
 rule: session-canary
 positives:
   - prompt: "Why did you stop greeting me with my canary name this task?"
+    expected_skills: []
   - prompt: "Set personal.canary_name in my settings so I can spot context decay."
+    expected_skills: []
   - prompt: "Der canary Gruß fehlt in deiner letzten Antwort - Session neu starten?"
+    expected_skills: []
 near_misses:
   - prompt: "The conversation feels degraded - should we start a fresh chat?"
+    expected_skills: []
   - prompt: "Add my nickname to the profile settings."
+    expected_skills: []

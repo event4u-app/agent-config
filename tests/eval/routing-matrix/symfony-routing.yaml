@@ -1,8 +1,21 @@
 rule: symfony-routing
 positives:
   - prompt: "Add a Doctrine entity for the invoice with a matching repository."
+    expected_skills: [symfony-workflow]
   - prompt: "Render the totals table in the Twig template for the report page."
+    expected_skills: [symfony-workflow]
   - prompt: "Wie registriere ich einen Symfony Console Command im DI-Container?"
+    expected_skills: [symfony-workflow]
 near_misses:
   - prompt: "Add a new PHP entity class with a repository for invoices."
+    expected_skills: [php-coder, php-service]
   - prompt: "Dispatch the confirmation email through the queue worker."
+    expected_skills: [jobs-events, laravel-mail]
+  - prompt: "Write the checkout route so the cart total is computed on the server and the form submits without a client-side fetch call."
+    expected_skills: [nextjs-patterns]
+  - prompt: "I want the dashboard header to render immediately while the slow analytics widget streams in afterwards on our App Router setup."
+    expected_skills: [nextjs-patterns]
+  - prompt: "Our Next app ships 800kb of JS to the browser. Go through the routes and tell me which ones are needlessly rendered on the client."
+    expected_skills: [project-analysis-nextjs]
+  - prompt: "Hydration mismatch warnings on three routes since last Thursdays release — work out where the server and browser output diverge."
+    expected_skills: [project-analysis-nextjs]

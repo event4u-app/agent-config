@@ -1,8 +1,13 @@
 rule: delegation-policy
 positives:
   - prompt: "Delegate the lint fixes to a subagent while you work on the tests."
+    expected_skills: [subagent-orchestration]
   - prompt: "Can you run these three independent fixes in parallel?"
+    expected_skills: [subagent-orchestration, using-git-worktrees]
   - prompt: "Bitte mach eine Analyse pro Modul und fasse die Ergebnisse zusammen."
+    expected_skills: [subagent-orchestration]
 near_misses:
   - prompt: "Split the migration into three commits so review is easier."
+    expected_skills: [git-workflow]
   - prompt: "Run the whole test suite and report the failures."
+    expected_skills: []

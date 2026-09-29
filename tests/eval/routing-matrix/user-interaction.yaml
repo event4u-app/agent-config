@@ -1,8 +1,13 @@
 rule: user-interaction
 positives:
   - prompt: "Give me the options for migrating the queue and pick one."
+    expected_skills: [decision-record, migration-architect]
   - prompt: "What do you recommend for structuring the new test suite?"
+    expected_skills: []
   - prompt: "Was empfiehlst du für die Aufteilung der Migrationen?"
+    expected_skills: [migration-architect]
 near_misses:
   - prompt: "Which of the two approaches do you prefer here?"
+    expected_skills: [decision-record]
   - prompt: "Pick the best path forward and just do it."
+    expected_skills: []

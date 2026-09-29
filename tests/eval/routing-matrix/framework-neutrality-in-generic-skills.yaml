@@ -1,11 +1,24 @@
 rule: framework-neutrality-in-generic-skills
 positives:
   - prompt: "This generic skill mandates php artisan directly - neutralize it."
+    expected_skills: [skill-management, skill-writing]
   - prompt: "Why does the testing skill hardcode Pest instead of naming a procedure?"
+    expected_skills: [skill-reviewer, skill-writing]
     open_files: ["src/skills/api-testing/SKILL.md"]
   - prompt: "Die Regel erwähnt Eloquent direkt - ist das ein Leak?"
+    expected_skills: [rule-writing]
     open_files: ["src/rules/architecture.md"]
 near_misses:
   - prompt: "Write the Laravel carve-out doc for request validation."
+    expected_skills: [guideline-writing, laravel-validation]
     open_files: ["docs/guidelines/php/php-coding-patterns.md"]
   - prompt: "Does the stack detection pick the right adapter for a Symfony project?"
+    expected_skills: [module-detect-on-the-fly]
+  - prompt: "Our dashboard re-renders the entire tree on every keystroke. Go through the component hierarchy and tell me where the state actually lives."
+    expected_skills: [project-analysis-react]
+  - prompt: "Neue Kollegin faengt Montag an — geh bitte unsere React-App durch und schreib die Komponentenstruktur samt Datenfluss auf."
+    expected_skills: [project-analysis-react]
+  - prompt: "Fresh clone of our Expo app and the iOS build dies at the pod install step on my M3 laptop — what do I still need installed?"
+    expected_skills: [react-native-setup]
+  - prompt: "Add a settings page with a tabbed layout and a save form, reusing the components we already have in components/ui and our Tailwind classes."
+    expected_skills: [react-shadcn-ui]

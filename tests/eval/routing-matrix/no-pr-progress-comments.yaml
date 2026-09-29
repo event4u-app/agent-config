@@ -1,8 +1,13 @@
 rule: no-pr-progress-comments
 positives:
   - prompt: "Run gh pr comment to tell the reviewer that CI is green now."
+    expected_skills: []
   - prompt: "Should I post a status comment after each CI fix iteration?"
+    expected_skills: []
   - prompt: "Poste bitte per gh pr comment ein kurzes Update in den PR."
+    expected_skills: []
 near_misses:
   - prompt: "Reply to the inline review feedback on the open pull request."
+    expected_skills: [receiving-code-review]
   - prompt: "Summarize the CI progress here in chat instead of on GitHub."
+    expected_skills: []

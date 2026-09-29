@@ -1,8 +1,13 @@
 rule: token-budget-discipline
 positives:
   - prompt: "Mark design-intelligence as a rich skill with the required justification."
+    expected_skills: [skill-writing, skill-management]
   - prompt: "What does token_budget_class: rich require in the frontmatter?"
+    expected_skills: [skill-writing]
   - prompt: "Braucht dieses Skill die Kennzeichnung token_budget_class rich?"
+    expected_skills: [skill-writing]
 near_misses:
   - prompt: "Shorten this skill so it loads with fewer tokens."
+    expected_skills: [skill-management, skill-writing]
   - prompt: "Why is the context so large in this session?"
+    expected_skills: [token-optimizer]

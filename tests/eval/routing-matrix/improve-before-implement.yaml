@@ -1,8 +1,23 @@
 rule: improve-before-implement
 positives:
   - prompt: "Please implement the new export feature for the reporting module."
+    expected_skills: [developer-like-execution]
   - prompt: "Refactor the settings loader so it supports layered overrides."
+    expected_skills: [code-refactoring, developer-like-execution]
   - prompt: "Schreib mir eine Migration, die die Spalte tenant_id ergänzt."
+    expected_skills: [laravel-migration, multi-tenancy]
 near_misses:
   - prompt: "What does this error message in the console mean?"
+    expected_skills: []
   - prompt: "Fix the typo in the README heading."
+    expected_skills: []
+  - prompt: "We have 400 open GitHub issues and two years of support tickets — pull out the themes people actually keep complaining about."
+    expected_skills: [voc-extract]
+  - prompt: "Ich habe fuenf Interview-Transkripte liegen — hilf mir, daraus belastbare Erkenntnisse zu ziehen statt nur Bauchgefuehl."
+    expected_skills: [discovery-interview]
+  - prompt: "Half our signups never reach the point where the product clicks for them. How do I define that moment so it predicts whether they stay?"
+    expected_skills: [activation-design]
+  - prompt: "Six features, one quarter, and every stakeholder says theirs is critical. Help me rank them with something I can defend."
+    expected_skills: [rice-prioritization]
+  - prompt: "1200 visitors a week, 90 signups, 11 of them pay. Where in that chain are we losing the most and what is worth fixing first?"
+    expected_skills: [funnel-analysis]

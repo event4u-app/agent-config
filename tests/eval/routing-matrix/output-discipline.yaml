@@ -1,8 +1,13 @@
 rule: output-discipline
 positives:
   - prompt: "You wrote // rest of component again - emit the full file this time."
+    expected_skills: []
   - prompt: "Don't truncate the class body for brevity, write everything out."
+    expected_skills: []
   - prompt: "Schreib den Code komplett aus, nicht nur 'similar pattern' als Kommentar."
+    expected_skills: []
 near_misses:
   - prompt: "Shorten the changelog entry to a single paragraph."
+    expected_skills: []
   - prompt: "The generated file is too long - split it into two modules."
+    expected_skills: [code-refactoring]

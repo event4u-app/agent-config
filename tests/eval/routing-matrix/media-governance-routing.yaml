@@ -1,8 +1,13 @@
 rule: media-governance-routing
 positives:
   - prompt: "Generate a clip with /video:scene showing our mascot on a concert stage."
+    expected_skills: [scene-expander, video-director]
   - prompt: "Can we use the CEO's likeness in the AI-generated launch teaser?"
+    expected_skills: []
   - prompt: "Darf ich eine voice cloning Demo mit der Stimme unseres Moderators bauen?"
+    expected_skills: []
 near_misses:
   - prompt: "Render a product demo animation from our own 3D assets."
+    expected_skills: []
   - prompt: "Add subtitles to the recorded webinar footage before publishing."
+    expected_skills: []

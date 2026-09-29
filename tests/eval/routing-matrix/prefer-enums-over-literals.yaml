@@ -1,8 +1,13 @@
 rule: prefer-enums-over-literals
 positives:
   - prompt: "The status field takes 'active' or 'archived' - model it properly."
+    expected_skills: []
   - prompt: "Should the priority column be an enum or a plain integer?"
+    expected_skills: []
   - prompt: "Bitte modelliere den Status der Bestellung als festen Wertesatz."
+    expected_skills: []
 near_misses:
   - prompt: "Replace the magic numbers in the retry backoff with named constants."
+    expected_skills: [code-refactoring]
   - prompt: "Extract the hardcoded URLs into a config file."
+    expected_skills: [code-refactoring]

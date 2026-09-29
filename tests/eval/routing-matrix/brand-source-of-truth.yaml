@@ -3,13 +3,23 @@ rule: brand-source-of-truth
 # merged (rule hygiene); every positive of the old gate must route here.
 positives:
   - prompt: "Where do our brand tokens live and which file wins on conflict?"
+    expected_skills: [brand-to-tokens, design-tokens]
   - prompt: "The corpus suggests a different palette than our brand guide - which one applies?"
+    expected_skills: [brand, brand-identity]
   - prompt: "Unser Brand Profile definiert Blau als Primärfarbe - übernimm das bitte."
+    expected_skills: [brand-identity, brand-to-tokens]
   - prompt: "Is this landing page copy on-brand for us?"
+    expected_skills: [brand-audit, voice-and-tone-design]
   - prompt: "Check the new banner against our brand tokens before it ships."
+    expected_skills: [brand-audit]
   - prompt: "Passt dieser Social-Post zu unserer Brand Voice?"
+    expected_skills: [voice-and-tone-design, brand-audit]
 near_misses:
   - prompt: "Which color palette should the new dashboard use?"
+    expected_skills: [design-intelligence, design-tokens]
   - prompt: "Apply the corporate design colors to the pricing page."
+    expected_skills: [design-tokens, brand-to-tokens]
   - prompt: "Make the marketing site color palette consistent across all pages."
+    expected_skills: [brand-audit, design-tokens]
   - prompt: "The tone of this newsletter feels off compared to our usual style."
+    expected_skills: [voice-and-tone-design, brand-audit]

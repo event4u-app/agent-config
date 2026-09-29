@@ -1,8 +1,13 @@
 rule: no-attribution-footers
 positives:
   - prompt: "Should the commit message include a Co-Authored-By trailer?"
+    expected_skills: [conventional-commits-writing]
   - prompt: "Strip the co-authored footer from the last commit message."
+    expected_skills: [git-workflow, conventional-commits-writing]
   - prompt: "Warum steht ein Co-Authored-Trailer in der Commit-Message?"
+    expected_skills: [conventional-commits-writing]
 near_misses:
   - prompt: "Add the reviewer's name to the PR description."
+    expected_skills: [review-routing]
   - prompt: "Check who authored this commit in the git history."
+    expected_skills: []

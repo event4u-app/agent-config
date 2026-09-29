@@ -1,8 +1,13 @@
 rule: history-discipline
 positives:
   - prompt: "Add an audit log for edits to the contract records."
+    expected_skills: [history-design]
   - prompt: "Do we need event sourcing here or is a row-level history table enough?"
+    expected_skills: [history-design]
   - prompt: "Wer hat was am Vertrag geändert? Wir brauchen Nachvollziehbarkeit."
+    expected_skills: [history-design]
 near_misses:
   - prompt: "Record the timestamp of the last successful sync per account."
+    expected_skills: []
   - prompt: "Add soft deletes so removed records can be restored."
+    expected_skills: []

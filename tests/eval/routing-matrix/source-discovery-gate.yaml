@@ -1,8 +1,21 @@
 rule: source-discovery-gate
 positives:
   - prompt: "Which fields does the orders endpoint actually return?"
+    expected_skills: [source-discovery]
   - prompt: "Check the schema before writing the filter for the report."
+    expected_skills: [source-discovery]
   - prompt: "Prüfe zuerst das Schema der Tabelle, bevor du den Filter baust."
+    expected_skills: [source-discovery]
 near_misses:
   - prompt: "Add retries to the outbound HTTP client."
+    expected_skills: [error-handling-patterns]
   - prompt: "Document the request flow between the two services."
+    expected_skills: [context-document]
+  - prompt: "Before we cut 3.2, show me which files in this repo have churned hardest and carry the most defect risk."
+    expected_skills: [forensics-report]
+  - prompt: "Which parts of the codebase always get edited together? I suspect payments and invoicing are coupled and nobody wrote that down."
+    expected_skills: [forensics-report]
+  - prompt: "Zieh mir aus der Git-Historie, welche Dateien in den letzten sechs Monaten am haeufigsten angefasst wurden und wo das Risiko sitzt."
+    expected_skills: [forensics-report]
+  - prompt: "Release review for 2.9: I want evidence out of the commit history, not opinions, on where the risky areas of the tree are."
+    expected_skills: [forensics-report]

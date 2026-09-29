@@ -1,8 +1,13 @@
 rule: devcontainer-routing
 positives:
   - prompt: "Add a devcontainer.json so every teammate gets the same environment."
+    expected_skills: [devcontainer]
   - prompt: "Our Codespaces prebuild takes ten minutes - can we speed it up?"
+    expected_skills: [devcontainer]
   - prompt: "Kannst du den Devcontainer um PHP 8.3 und Node 22 erweitern?"
+    expected_skills: [devcontainer]
 near_misses:
   - prompt: "Set up a local Docker environment for the development database."
+    expected_skills: [docker]
   - prompt: "The VS Code remote SSH session keeps disconnecting from the build box."
+    expected_skills: []

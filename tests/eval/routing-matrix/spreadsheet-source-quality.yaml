@@ -1,8 +1,21 @@
 rule: spreadsheet-source-quality
 positives:
   - prompt: "Pull the numbers for Q3 revenue into the board sheet."
+    expected_skills: [spreadsheet-authoring]
   - prompt: "Add the latest stock price of our competitor to the comparison tab."
+    expected_skills: [spreadsheet-authoring]
   - prompt: "Übernimm die revenue figures aus dem Quartalsbericht in die Tabelle."
+    expected_skills: [spreadsheet-authoring]
 near_misses:
   - prompt: "Format the budget spreadsheet with conditional highlighting."
+    expected_skills: [spreadsheet-authoring]
   - prompt: "Sum the quarterly totals per region in the pivot table."
+    expected_skills: [spreadsheet-authoring]
+  - prompt: "Kicktipp Spieltag 12 steht an — rechne mir aus, welche Ergebnisse ich tippen soll, damit die erwarteten Punkte maximal sind."
+    expected_skills: [prediction-pool-optimizer]
+  - prompt: "My office pool pays 4 points for the exact score and 2 for the right tendency. What should I enter for the eight matches this weekend?"
+    expected_skills: [prediction-pool-optimizer]
+  - prompt: "There is also a bonus question on top scorer and the champion — help me fill those in so my expected points come out highest."
+    expected_skills: [prediction-pool-optimizer]
+  - prompt: "The books have Bayern at 1.2 to win. Given the scoring rules of our pool, which exact score should I enter for that match?"
+    expected_skills: [prediction-pool-optimizer]
