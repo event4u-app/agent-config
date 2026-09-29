@@ -90,12 +90,28 @@ export const CONFIGURED_OUTCOMES = ['refusal', 'halt-by-state', 'warning', 'unen
 
 export type ConfiguredOutcome = (typeof CONFIGURED_OUTCOMES)[number];
 
+/**
+ * What the `Answered` column prints for a pair the configuration never dated.
+ *
+ * A word rather than an empty cell, because an empty cell in a rendered table
+ * is indistinguishable from a rendering bug, and this one is the finding.
+ * `lint_hook_manifest._check_slot_answers` is what actually refuses it; this
+ * gate's job is to make sure the published document cannot hide it.
+ */
+export const UNDATED = '`undated`';
+
 export interface MatrixRow {
     host: string;
     slot: string;
     outcome: ConfiguredOutcome;
     /** The configuration values the outcome was read off, quoted for the table. */
     backing: string;
+    /**
+     * `answered_at` for this pair, or `undated` when the configuration carries
+     * none. Printed LAST so the outcome stays in column three and
+     * {@link committedCells} keeps reading the same index it always did.
+     */
+    answered: string;
 }
 
 export interface BuildResult {
@@ -194,6 +210,7 @@ export function buildRows(lowering: HostLowering): BuildResult {
                 slot: reading.slot,
                 outcome,
                 backing: backingFor(reading, surface.fail_policy),
+                answered: surface.slots.get(reading.slot)?.answered_at ?? UNDATED,
             });
         }
     }
@@ -297,10 +314,12 @@ export function renderRegion(lowering: HostLowering): string {
     out.push('');
     out.push(summaryLine(lowering, rows));
     out.push('');
-    out.push('| Host | Slot | Configured outcome | Backing |');
-    out.push('|---|---|---|---|');
+    out.push('| Host | Slot | Configured outcome | Backing | Answered |');
+    out.push('|---|---|---|---|---|');
     for (const r of rows) {
-        out.push(`| \`${r.host}\` | \`${r.slot}\` | \`${r.outcome}\` | ${r.backing} |`);
+        out.push(
+            `| \`${r.host}\` | \`${r.slot}\` | \`${r.outcome}\` | ${r.backing} | ${r.answered} |`,
+        );
     }
     out.push('');
     if (slotlessHosts.length === 0) {
