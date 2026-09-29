@@ -26,6 +26,26 @@
 # that is a review judgement — so the honest claim is that the lint makes the
 # OMISSION impossible, not that it makes the answer true. Stated here rather
 # than discovered by someone who trusted it further than it goes.
+#
+# ## `unit` and `basis` — how the number was obtained, beside the number
+#
+# An entry MAY carry `unit:` and MUST carry `basis:` when its unit is `bytes`.
+# `basis` is one of:
+#
+#   measured     — something counted it. A length, a sum, a row count.
+#   derived      — arithmetic over a measured quantity. Never a count.
+#   proxy        — a different quantity standing in for the one named.
+#   unavailable  — not observable from this package. No figure is produced.
+#
+# The field exists because a derived byte figure and a counted one look
+# identical in a cell, and this tree has already been burned by a number quoted
+# onward without the conditions that produced it. `git count-objects -v` is the
+# standing example of the confusion: it measures a LOCAL object store and is
+# never a transfer figure, whatever the unit says.
+#
+# An `unavailable` entry declares a term that is out of reach, so that a total
+# built without it is visibly incomplete rather than quietly wrong. It produces
+# no value and must never be estimated into a sum.
 
 metrics:
   - id: attribution-shape-block-count
@@ -122,3 +142,97 @@ metrics:
       assumption that widening helped -- which is the assumption the whole
       roadmap exists to test rather than to make. Without it the estate grows
       and nothing can say whether it should have.
+
+  # ── Bytes ───────────────────────────────────────────────────────────────
+  #
+  # `road-to-a-bytes-row-that-exists`. Before these, a statement of the form
+  # "this change moved N bytes" could not be made at all: the tree measured
+  # tokens well and bytes not at all, and no row here could have held one.
+
+  - id: tool-raw-bytes
+    unit: bytes
+    basis: measured
+    producer: src/scripts/hooks/tool_result_bytes_hook.ts (`raw_bytes`, per post_tool_use dispatch)
+    consumer: >-
+      the `tool_result_bytes` stream registered in `src/config/hook-token-budget.json`,
+      and the maintainer reading `agents/runtime/state/tool-result-census.jsonl`
+      before a tool-result distribution is published.
+    decision: >-
+      whether a cap on tool-result size is worth introducing, and at what
+      value. The distribution has never been observed, so the threshold stays
+      uncommitted until this counter has written one.
+    absent: >-
+      every context-cost claim this package makes is computed against a
+      denominator that excludes its own dominant term — the hook-injection
+      census measures what this suite puts into context and nothing measures
+      what the host's tools do.
+
+  - id: tool-delivered-bytes
+    unit: bytes
+    basis: measured
+    producer: src/scripts/hooks/tool_result_bytes_hook.ts (`delivered_bytes`, same record)
+    consumer: >-
+      the same census reader, comparing it against `tool-raw-bytes` on the same
+      line. Equal by construction today, because nothing in this tree rewrites
+      a tool result on its way to the model.
+    decision: >-
+      whether a result-rewriting mechanism, if one ever lands, reduced anything.
+      A non-zero gap between the two columns is the reduction; no gap is no
+      reduction.
+    absent: >-
+      a later release that starts trimming tool results has no before-figure
+      and can only assert an improvement. The two columns exist now precisely
+      so that claim is a measured delta later rather than a story.
+
+  - id: transcript-bytes-per-token
+    unit: bytes_per_token
+    basis: measured
+    producer: src/scripts/_lib/cc_transcript.ts (`measureBytesPerToken`)
+    consumer: >-
+      `cache_realization_report` and `session_eol_report`, which multiply a
+      token column by it, and any reader checking that division — the two sums
+      it was divided from travel with it on every emitted value.
+    decision: >-
+      whether a byte figure may be derived from this corpus at all. A corpus
+      that supplies no ratio produces no byte figure, rather than borrowing one
+      measured somewhere else.
+    absent: >-
+      the only remaining way to turn a token count into bytes is a constant in
+      a script, which is correct for the content that produced it and silently
+      wrong for everything else — the third conflicting figure this tree has
+      already paid to learn about twice.
+
+  - id: provider-bytes-per-call
+    unit: bytes
+    basis: derived
+    producer: >-
+      src/scripts/_lib/cc_transcript.ts (`derivedBytes`), surfaced as
+      `provider_bytes` by `cache_realization_report` and `session_eol_report`.
+    consumer: >-
+      the maintainer sizing what a round re-sends, and `check_claims`, which
+      refuses a public byte figure whose metric marker resolves to no entry here.
+    decision: >-
+      whether the volume a stateless chat round re-sends is large enough to act
+      on. Every existing reading of that cost is a token count; this is the
+      first one in the unit a network is billed in.
+    absent: >-
+      the re-send cost has no byte figure at all, so any statement about it is
+      either a token count wearing the wrong unit or an estimate with nothing
+      behind it. That is the state this metric was added to end.
+
+  - id: host-fetch-and-transport-bytes
+    unit: bytes
+    basis: unavailable
+    producer: >-
+      none — the host's own fetch tool and the model transport are not
+      observable from inside this package, and no producer is planned.
+    consumer: >-
+      any reader of a byte total, who needs to see which terms the total does
+      NOT contain. The entry is the disclosure; there is no value to read.
+    decision: >-
+      whether a byte total may be published as complete. It may not: these
+      terms are out of reach, so every total is a partial one and says so.
+    absent: >-
+      the two unreachable terms get estimated into a sum to make it look whole,
+      and the estimate becomes the figure everybody quotes. Declaring them
+      unavailable is what stops a guess from entering a total.

@@ -60,6 +60,7 @@ function baseReport(): Report {
             subagent: { ...emptyBucket, bucket: 'subagent' as const },
         },
         subagent_cold_start: computeColdStarts([]),
+        provider_bytes: { factor: null, main: null, subagent: null },
         by_agent: [],
         duplicate_scope: {
             duplicated_rule_names: [],
@@ -111,7 +112,9 @@ function usage(over: Partial<TokenCounts>): TokenCounts {
 }
 
 function rec(agentId: string, timestamp: string, u: Partial<TokenCounts>): TranscriptRecord {
-    return { bucket: 'subagent', agentId, model: 'claude-sonnet-4-5', timestamp, usage: usage(u) };
+    // `content_bytes: null` is the not-measured state, not a zero: these
+    // fixtures exercise the token columns, and a 0 would be a measured value.
+    return { bucket: 'subagent', agentId, model: 'claude-sonnet-4-5', timestamp, usage: usage(u), content_bytes: null };
 }
 
 // ── median / mean ────────────────────────────────────────────────────────
@@ -179,7 +182,7 @@ describe('computeColdStarts', () => {
     });
 
     it('non-subagent (main) records are never grouped into legs', () => {
-        const records: TranscriptRecord[] = [{ bucket: 'main', agentId: null, model: 'claude-sonnet-4-5', timestamp: '2026-07-30T10:00:00.000Z', usage: usage({ input_tokens: 500 }) }];
+        const records: TranscriptRecord[] = [{ bucket: 'main', agentId: null, model: 'claude-sonnet-4-5', timestamp: '2026-07-30T10:00:00.000Z', usage: usage({ input_tokens: 500 }), content_bytes: null }];
         const stats = computeColdStarts(records);
         expect(stats.legs).toBe(0);
         expect(stats.cold_start_share_of_write_volume).toBe(0); // zero-write-volume guard, never NaN
@@ -626,5 +629,39 @@ describe('prefix stability — road-to-runtime-context-floors step 1.3', () => {
         expect(text).toContain('stable cohort:');
         expect(text).toContain('unstable cohort:');
         expect(text).toContain('read_share=insufficient data');
+    });
+});
+
+// -- Derived provider bytes (road-to-a-bytes-row-that-exists, Phase 2) --
+
+describe('provider bytes are derived and say so - never a counted wire figure', () => {
+    it('renders the unavailable basis rather than a figure when no factor exists', () => {
+        const text = renderText(baseReport());
+        expect(text).toContain('Provider bytes (DERIVED');
+        expect(text).toContain('basis: unavailable');
+        // A fabricated 0 bytes for "nothing was measured" is the failure the
+        // null factor exists to prevent.
+        expect(text).not.toMatch(/main: 0 bytes/);
+    });
+
+    it('labels every emitted figure derived and prints the factor beside it', () => {
+        const factor = {
+            basis: 'measured' as const,
+            content_bytes: 400,
+            output_tokens: 100,
+            bytes_per_token: 4,
+            records: 2,
+        };
+        const text = renderText({
+            ...baseReport(),
+            provider_bytes: {
+                factor,
+                main: { basis: 'derived' as const, tokens: 1000, factor, bytes: 4000 },
+                subagent: null,
+            },
+        });
+        expect(text).toContain('4.0000 bytes/token');
+        expect(text).toContain('main: 4000 bytes (basis: derived');
+        expect(text).toContain('subagent: basis: unavailable');
     });
 });
