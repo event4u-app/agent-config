@@ -137,7 +137,7 @@ describe('block_config_weakening — bump_session', () => {
     });
 });
 
-// ── Class C: the key is the unit, never the file ────────────────────────────
+// Class C: the key is the unit, never the file.
 //
 // road-to-a-kernel-that-guards-its-plumbing 2.1. The guard fences a POLICY DIAL
 // inside a settings file and leaves every other key in the same file writable,
@@ -227,7 +227,7 @@ describe('block_config_weakening — class-c', () => {
     });
 });
 
-// ── The three defects an independent review found before this landed ────────
+// The three defects an independent review found before this landed.
 describe('block_config_weakening — class-c, the reviewed defects', () => {
     const REAL_CONTRACT = path.resolve(__dirname, '..', '..', '..', 'docs', 'contracts', 'settings-classes.md');
     const index = buildSettingsClassIndex(parseSettingsClassRows(fs.readFileSync(REAL_CONTRACT, 'utf-8')));

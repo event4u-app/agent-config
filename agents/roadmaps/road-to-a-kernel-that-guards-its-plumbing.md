@@ -4,6 +4,7 @@ status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "lane 2 of road-to-leading-every-row; the set's offset is lane 1's in-diff supersession"
+estate_growth_exempt: "The concern estate grows by exactly one — `block-plumbing-writes` — and the growth is the deliverable rather than a side effect. Step 1.2 exists because `dist/hooks/dispatch.js` and `hooks/hooks.json` are generated files with no legitimate hand edit and, until this change, no guard: an edit to either survived until the next build, reached every dispatch meanwhile, and was invisible in a source review. There is no concern to trade against it. The two nearest candidates are `block_kernel_rule_writes` and `block_config_weakening`, and both cover DIFFERENT file classes that this one deliberately does not touch — the roadmap's whole subject is one mechanism per class, so folding the new guard into either would recreate the conflation it was written to end. Retiring an unrelated concern to buy the slot would remove a live refusal to pay for a new one, which is the trade the ratchet exists to make visible rather than a way to satisfy it."
 relates:
   - slug: road-to-adversarial-verification-and-long-runs
     relation: extends
