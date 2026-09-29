@@ -716,6 +716,59 @@ export function _check_host_lowering(
       }
     }
   }
+  _check_slot_answers(table, errors);
+}
+
+/**
+ * Every (host, slot) pair carries a date, and a citation to go with it.
+ *
+ * WHY AN ERROR AND NOT A WARNING. `block_exit: null` is the value the table
+ * carries on 29 of its 32 pairs, and until this check it meant two different
+ * things at once: "read the host's contract, it honours no refusal here" and
+ * "nobody has ever looked at this pair". Those are opposite epistemic states
+ * printed as the same byte, and the file's own header promises the first one
+ * ("`verified: null` means nobody established anything") without giving the
+ * per-slot layer any way to say it. `answered_at` is that way, and a soft
+ * warning would let the ambiguity back in one undated slot at a time — the
+ * exact drift the row-level `verified` gate was added to stop one level up.
+ *
+ * THE CITATION MAY BE INHERITED. A host publishes ONE hooks page, so requiring
+ * a per-slot `docs_url` would mean five copies of the same URL per host and
+ * five places for it to rot. The row's `verified.docs_url` is the citation
+ * unless the slot overrides it; what the check refuses is a dated answer with
+ * no reachable citation at all.
+ *
+ * A slot on a row with NO `verified` block is exempt from the citation half
+ * and not from the date: an undated row is already an error wherever it carries
+ * a blocking binding, and demanding a URL from a row that has none would report
+ * the same missing provenance twice in different words.
+ */
+export function _check_slot_answers(table: HostLowering, errors: string[]): void {
+  for (const [host, surfaces] of table) {
+    for (const [surface, row] of surfaces) {
+      for (const [slot, s] of row.slots) {
+        const where = `host_lowering ${host}/${surface}/${slot}`;
+        if (s.answered_at === null) {
+          errors.push(
+            `${where}: no \`answered_at\`. Every host-slot pair carries the date it was ` +
+              "last answered, so that a `block_exit: null` is a finding with a date on it " +
+              "rather than a slot nobody looked at.",
+          );
+          continue;
+        }
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(s.answered_at)) {
+          errors.push(`${where}: \`answered_at: ${s.answered_at}\` is not an ISO \`YYYY-MM-DD\` date.`);
+        }
+        if (s.docs_url === null && (row.verified === null || row.verified.docs_url === null)) {
+          errors.push(
+            `${where}: dated \`${s.answered_at}\` with no citation — the slot carries no ` +
+              "`docs_url` and the row's `verified.docs_url` is absent. Cite the page the " +
+              "answer was read off, on the slot or on the row.",
+          );
+        }
+      }
+    }
+  }
 }
 
 export function lint(
