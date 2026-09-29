@@ -5,6 +5,8 @@ review_by: 2026-09-25
 
 # Stub: road to the batch-elicitation kernel delta
 
+> **Arrivals:** 13 (at least) — latest `inbox-2026-09-ab` (2026-09-29); earlier rounds not enumerated here.
+
 > **Stub — not active work.** A **drain-run transfer**, not a demand-gated
 > stub. Created 2026-08-20 when
 > [`road-to-user-out-of-the-loop.md`](../archive/road-to-user-out-of-the-loop.md) was

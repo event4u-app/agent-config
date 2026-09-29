@@ -5,6 +5,8 @@ review_by: 2026-12-24
 
 # Stub: road to subagent payload capture
 
+> **Arrivals:** 1 — latest `inbox-2026-09-ab` (2026-09-29).
+
 > **Stub — not active work.** Drain-run transfer, 2026-08-20, from
 > [`road-to-subagent-lifecycle-integrity.md`](../road-to-subagent-lifecycle-integrity.md).
 > Council disposition **B**, outcome state **transferred**, per the framework of

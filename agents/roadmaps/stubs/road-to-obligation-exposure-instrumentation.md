@@ -5,6 +5,8 @@ review_by: 2026-09-30
 
 # Road to obligation-exposure instrumentation
 
+> **Arrivals:** 5 — latest `inbox-2026-09-ab` (2026-09-29); earlier rounds not enumerated here.
+
 > **Drain-run transfer**, created 2026-08-31 when
 > `road-to-obligation-delivery-verification` closed as BLOCKED-BY-ARCHITECTURE.
 > It carries that roadmap's AC-1 forward unweakened, plus the redesign

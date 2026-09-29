@@ -8,7 +8,8 @@ blocker_opened: 2026-08-27
 
 # Road to a runtime orchestration substrate — stub
 
-> **Arrivals:** 11 (at least) - latest `inbox-2026-09-aa` (2026-09-12), a round of
+> **Arrivals:** 12 (at least) - latest `inbox-2026-09-ab` (2026-09-29); earlier:
+> `inbox-2026-09-aa` (2026-09-12), a round of
 > fourteen independent external reviews of which two reach this subject: one names a
 > shared runtime-state substrate as P0.2 over five named state owners (review baseline,
 > refusal state, continuity, session index, code-graph), the other reads this stub
@@ -20,7 +21,7 @@ blocker_opened: 2026-08-27
 > Read `(at least)` strictly: a broad keyword sweep returns a larger set that includes
 > incidental mentions, so this is the subject-matched floor.
 
-> **The posed owner question — 11 arrivals, no recommended answer.** None of the eight
+> **The posed owner question — 12 arrivals, no recommended answer.** None of the eight
 > tracks below has been adopted. **Re-cut 2026-09-13:** the common gate this block used
 > to cite — "Phase 1's ADR, which does not exist" — closed on 2026-08-27 when ADR-249
 > was accepted, so option 2 below is answered and is struck rather than deleted. What

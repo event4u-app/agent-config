@@ -5,6 +5,8 @@ review_by: 2026-12-27
 
 # Stub: road to an executable specification adapter (and the mutation half)
 
+> **Arrivals:** 17 (at least) — latest `inbox-2026-09-ab` (2026-09-29); earlier rounds not enumerated here.
+
 > **Stub — not active work.** Descoped out of
 > `road-to-executable-specification-layer` on 2026-08-27 by a two-round AI
 > council (anthropic + openai, 2/2 convergent in both rounds). The parent
