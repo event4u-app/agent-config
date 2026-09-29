@@ -597,3 +597,51 @@ function RED_VERDICTS(verdict: VerificationVerdict): boolean {
         || verdict.reason === 'zero_tests_discovered'
     );
 }
+
+/**
+ * The refusal text for a record-path finding.
+ *
+ * It lives HERE, beside the verdicts it names, rather than in the detector that
+ * emits it: this module owns the vocabulary (`not_a_verification_command`,
+ * `zero_tests_discovered`, …), so a sentence quoting one of those words has to
+ * change whenever the vocabulary does. Splitting the two is how a refusal comes
+ * to name a reason the classifier stopped producing.
+ *
+ * It names the VERDICT rather than restating the rule, because the operator's
+ * next action differs per reason: a failed run means fix the code, a zero-test
+ * run means the filter matched nothing, and `not_a_verification_command` means
+ * the thing that ran could not have checked anything.
+ */
+export function describeRecordFinding(
+    failed: boolean,
+    reasons: readonly InvalidRunReason[],
+): string {
+    const tail =
+        ' (verify-before-complete: no verification command run in this message → '
+        + 'you cannot claim it passes)';
+    if (failed) {
+        return (
+            'this turn changed a file and its verification run FAILED — a recorded '
+            + 'run after the last edit reports failing tests' + tail
+        );
+    }
+    if (reasons.length === 0) {
+        return (
+            'this turn changed a file and no verification run was recorded after '
+            + 'the last edit' + tail
+        );
+    }
+    return (
+        'this turn changed a file and no recorded run after the last edit proves '
+        + `anything — the runs seen classify as ${[...new Set(reasons)].join(', ')}`
+        + tail
+    );
+}
+
+/** The refusal text when a new test file arrived with no red it passed. */
+export const NO_RED_EVIDENCE_REASON =
+    'a completion claim over production code this turn changed, with a test '
+    + 'file touched but `no_red_evidence` — no recorded run shows that test '
+    + 'target failing and then passing after the last edit. A test never seen '
+    + 'red has unknown sensitivity: run it against the unfixed code, watch it '
+    + 'fail for the intended reason, then fix and re-run';

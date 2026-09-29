@@ -163,7 +163,15 @@ import {
 // write" is only true while the two agree, and importing a constant made that
 // agreement invisible when the producer's layout moved. A builder makes the move
 // a type error.
-import { statePathFor as ciStatePathFor } from '../before_complete_hook.js';
+import {
+    statePathFor as ciStatePathFor,
+    readTurnRunState,
+    type TurnRunState,
+} from '../before_complete_hook.js';
+// Re-exported: two test files address `readTurnRunState` at this path, and a
+// reader arriving at detector C should find the reader where the detector uses
+// it. The DEFINITION lives with the producer of the shape it reads.
+export { readTurnRunState };
 // The spec-backed options-block reading, imported rather than re-derived:
 // `user-interaction` Iron Law 1's definition of an ask — a block PLUS its
 // recommendation line — lives in exactly one place and detector E reads it from
@@ -184,10 +192,10 @@ import { isVerificationCommand } from '../_lib/verification_command.js';
 // reads a command's TEXT and `echo test` matches it; these read what the run
 // exited with and what it printed.
 import {
+    NO_RED_EVIDENCE_REASON,
+    describeRecordFinding as recordReason,
     hasRedThenGreen,
     readRunEvidence,
-    type InvalidRunReason,
-    type TurnRunState,
 } from '../_lib/verification_evidence.js';
 
 export { detectDroppedDecision };
@@ -509,49 +517,6 @@ export function readCiSettled(
     return { seen: false, settled: false };
 }
 
-/**
- * The turn's recorded verification runs, or `null` when the recorder is not live.
- *
- * WHY THE LIVENESS TEST IS `edits_this_turn >= 1` AND NOT "the file exists".
- * The obvious predicate — a state file with a `verification_runs` key — is
- * wrong in a way that would refuse honest work on entire platforms. That key is
- * present in the recorder's EMPTY state, so a host whose `post_tool_use` slot
- * the manifest does not bind still has a file carrying `[]`, written by the
- * prompt and stop events alone. Reading that as "this turn ran nothing" would
- * refuse every editing turn on such a host, whatever the operator actually ran.
- *
- * `edits_this_turn` is the one field only a `post_tool_use` event can raise. The
- * detector reaches here having already found an edit in the transcript, so a
- * recorder that saw none of this turn's tool events is exactly the case this
- * returns `null` for — and `null` means the transcript path answers, which is
- * the behavior that predates the record path.
- *
- * The ownership check is the same one detector D applies to `ci_last`, for the
- * same reason: a FOREIGN file's passing record would vouch for a run this
- * session never made.
- */
-export function readTurnRunState(
-    workspaceRoot: string,
-    session_id: string,
-): TurnRunState | null {
-    if (!hasStableSessionId(session_id)) return null;
-    try {
-        const raw = fs.readFileSync(path.join(workspaceRoot, ciStatePathFor(session_id)), 'utf-8');
-        const decoded: unknown = JSON.parse(raw);
-        if (!ownsSessionState(decoded, session_id)) return null;
-        if (typeof decoded !== 'object' || decoded === null || Array.isArray(decoded)) return null;
-        const state = decoded as Record<string, unknown>;
-        const runs = state['verification_runs'];
-        const edits = state['edits_this_turn'];
-        if (!Array.isArray(runs)) return null;
-        if (typeof edits !== 'number' || !Number.isFinite(edits) || edits < 1) return null;
-        return { runs: runs as readonly unknown[], edits_this_turn: edits };
-    } catch {
-        // Absent, unreadable or malformed — the recorder said nothing, so the
-        // transcript answers. Never a refusal of its own.
-        return null;
-    }
-}
 
 /**
  * A completion claim in the delivered reply. Deliberately narrow: the German and
@@ -798,38 +763,6 @@ export function detectUnverifiedEdit(
     };
 }
 
-/**
- * The refusal text for a record-path finding.
- *
- * It names the VERDICT rather than restating the rule, because the operator's
- * next action differs per reason: a failed run means fix the code, a zero-test
- * run means the filter matched nothing, and `not_a_verification_command` means
- * the thing that ran could not have checked anything. A single sentence for all
- * three would send every one of them to re-read the rule instead.
- */
-function recordReason(failed: boolean, reasons: readonly InvalidRunReason[]): string {
-    const tail =
-        ' (verify-before-complete: no verification command run in this message → ' +
-        'you cannot claim it passes)';
-    if (failed) {
-        return (
-            'this turn changed a file and its verification run FAILED — a recorded ' +
-            'run after the last edit reports failing tests' + tail
-        );
-    }
-    if (reasons.length === 0) {
-        return (
-            'this turn changed a file and no verification run was recorded after ' +
-            'the last edit' + tail
-        );
-    }
-    return (
-        'this turn changed a file and no recorded run after the last edit proves ' +
-        `anything — the runs seen classify as ${[...new Set(reasons)].join(', ')}` +
-        tail
-    );
-}
-
 // ---------------------------------------------------------------------------
 // Detector F — a completion claim over production code no test accompanies
 // ---------------------------------------------------------------------------
@@ -968,12 +901,7 @@ export function detectUntestedChange(
             detector: 'untested',
             evidence: shown + (source.length > 3 ? ` (+${String(source.length - 3)} more)` : ''),
             mode: 'record',
-            reason:
-                'a completion claim over production code this turn changed, with a test ' +
-                'file touched but `no_red_evidence` — no recorded run shows that test ' +
-                'target failing and then passing after the last edit. A test never seen ' +
-                'red has unknown sensitivity: run it against the unfixed code, watch it ' +
-                'fail for the intended reason, then fix and re-run',
+            reason: NO_RED_EVIDENCE_REASON,
         };
     }
     // `transcript` unconditionally: no record contributed to THIS verdict — it
