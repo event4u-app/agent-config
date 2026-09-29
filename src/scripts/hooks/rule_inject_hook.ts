@@ -102,7 +102,12 @@ import {
     resolveLeanProjectionHosts,
 } from '../_lib/lean_projection_mode.js';
 import { enforcement_class_from_frontmatter } from '../_lib/obligation_frequency.js';
-import { appendDelivered, stamp, type DeliveredRow } from '../_lib/obligations.js';
+import {
+    appendDelivered,
+    stamp,
+    type DeliveredRow,
+    type WriterInput,
+} from '../_lib/obligations.js';
 import {
     loadRuleBody,
     loadRouter,
@@ -268,7 +273,7 @@ export interface Injection {
 export function recordDelivered(root: string, session: string, ruleIds: string[]): number {
     try {
         const now = stamp();
-        const rows: DeliveredRow[] = ruleIds.map((id) => {
+        const rows: WriterInput<DeliveredRow>[] = ruleIds.map((id) => {
             const body = loadRuleBody(root, id);
             return {
                 rule: id,
