@@ -759,7 +759,9 @@ export function _check_slot_answers(table: HostLowering, errors: string[]): void
         if (!/^\d{4}-\d{2}-\d{2}$/.test(s.answered_at)) {
           errors.push(`${where}: \`answered_at: ${s.answered_at}\` is not an ISO \`YYYY-MM-DD\` date.`);
         }
-        if (s.docs_url === null && (row.verified === null || row.verified.docs_url === null)) {
+        // The row-level exemption the block comment above states: a row with no
+        // `verified` block already reports its missing provenance once, at row level.
+        if (row.verified !== null && s.docs_url === null && row.verified.docs_url === null) {
           errors.push(
             `${where}: dated \`${s.answered_at}\` with no citation — the slot carries no ` +
               "`docs_url` and the row's `verified.docs_url` is absent. Cite the page the " +

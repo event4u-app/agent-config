@@ -80,7 +80,12 @@ export const VERIFIED_PLATFORMS: ReadonlySet<string> = verifiedPlatforms();
  */
 export function usesNativeEmission(platform: string): boolean {
     if (!VERIFIED_PLATFORMS.has(platform)) return false;
-    return surfaceRow(platform, DEFAULT_SURFACE, loadHostLowering())?.json_shape !== "none";
+    // An ABSENT row reads as no envelope, not as one. The optional chain must
+    // not fall through to `undefined !== "none"`, which is true and would make
+    // a missing row the most permissive answer in the function — the inversion
+    // this module's header calls speculative mapping.
+    const shape = surfaceRow(platform, DEFAULT_SURFACE, loadHostLowering())?.json_shape ?? "none";
+    return shape !== "none";
 }
 
 /** Internal event name -> host-native event name, for structured output. */
