@@ -33,37 +33,73 @@ must pass it.
 
 ## Phase 1 — Census the gap
 
-- [ ] **1.1 Enumerate the declared-but-uncarried semantic set.** Diff the
+- [x] **1.1 Enumerate the declared-but-uncarried semantic set.** Diff the
       `ContentEntry` field list against the skill frontmatter schema's declared
       properties, and emit the difference as a generated report under
       `agents/evidence/analysis/`. No verdict, no threshold — the report states
       per field whether the MCP-lite carrier transports it.
       verify: `diff` of the report against a re-run is byte-equal; every field
       in `src/scripts/schemas/skill.schema.json` appears in exactly one column
+      Done 2026-09-29. Generator: `src/scripts/semantic_parity_census.ts`, report
+      `agents/evidence/analysis/semantic-parity-census.md`, pinned to `3671542d0`. Both
+      limbs, with output: · **byte-equal** — written twice, `diff run1 run2` returns
+      nothing; the report pins the commit and carries no wall-clock date, so re-runs at
+      one commit cannot differ. · **exactly one column** — 38 declared properties split
+      4 carried / 1 partial / 33 dropped, and 4+1+33 = 38. The split is derived from the
+      carrier source (`buildEntry` reads `fm.name`, `fm.description`, `fm.source`,
+      `fm.personas`; `triggerText` keeps only `INDEXED_TRIGGER_KEYS`), never from the
+      schema, so `dropped` is the remainder and the three are total and disjoint by
+      construction. Per Risk 2 the report header names the one carrier it measured.
 
-- [ ] **1.2 Count the corpus against that set.** Per skill, which uncarried
+- [x] **1.2 Count the corpus against that set.** Per skill, which uncarried
       semantics it actually declares today. This is the number that says whether
       the gap is theoretical or live.
       verify: the report's total equals `ls src/skills/*/SKILL.md | wc -l`; the
       per-field counts reproduce under a second run
+      Done 2026-09-29. Both limbs, with output: · **total** — the report reads
+      `299 file(s)` and `ls src/skills/*/SKILL.md | wc -l` returns 299. · **reproduce** —
+      the second run is byte-equal to the first, per-field counts included. The gap is
+      **live, not theoretical**: `domain`, `model_tier`, `packs` and `workspaces` are each
+      declared by all 299 skills, and **299 of 299 declare at least one semantic the
+      carrier does not transport whole**.
 
 ## Phase 2 — Make it an eligibility predicate, not a paragraph
 
-- [ ] **2.1 Add a `body-portable` predicate over the census.** A skill is
+- [x] **2.1 Add a `body-portable` predicate over the census.** A skill is
       body-portable when it declares no semantic the carrier drops. The
       predicate is a pure function over parsed frontmatter, with a fixture
       directory holding one portable and one non-portable case. It decides
       eligibility only; it marks nothing and excludes nothing.
       verify: the non-portable fixture returns false and the portable one true;
       a fixture declaring an unknown key returns false, not true
+      Done 2026-09-29. Predicate: `isBodyPortable` in `src/scripts/_lib/body_portable.ts`
+      — pure, reads nothing, depends only on its argument and the two carrier constants.
+      Fixtures: `tests/scripts/fixtures/body-portable/{portable,non-portable,unknown-key}/SKILL.md`.
+      Tests: `tests/scripts/body_portable.test.ts`, 10 passed. Every limb: · **portable →
+      true**, · **non-portable → false** (and `classifyPortability` names `execution` and
+      `model_tier` rather than only refusing), · **unknown key → false, not true** — it
+      falls to the dropped branch, which is the fail-closed direction; asserting
+      portability for a key whose carrier behaviour is unestablished would be a claim from
+      ignorance. `triggers` is `partial`, so declaring it alone already fails.
+      **Sensitivity checked, not assumed:** neutralising the fail-closed branch turned
+      exactly the two unknown-key tests red (2 failed / 8 passed) and the predicate was
+      restored from a copy, not from `git checkout`. The predicate decides eligibility
+      only: it marks nothing, excludes nothing, and nothing in the tree consumes it as an
+      exclusion trigger (Risk 1).
 
-- [ ] **2.2 Bind the predicate into the parked roadmap's completeness verify.**
+- [x] **2.2 Bind the predicate into the parked roadmap's completeness verify.**
       `agents/roadmaps/later/road-to-skill-menu-economy.md` records that
       byte-equality is necessary and not sufficient, and names this predicate as
       the missing limb. Text-only edit to a parked file; no step is added and no
       plan changes.
       verify: the parked file's completeness verify cites the predicate by path;
       `lint_roadmap_*` stays green
+      Done 2026-09-29. Text-only edit to `agents/roadmaps/later/road-to-skill-menu-economy.md`,
+      under owner ruling E5 where the completeness invariant ("no skill leaves the
+      install") is asserted. The added paragraph records that byte-equality is necessary
+      and **not** sufficient, cites `src/scripts/_lib/body_portable.ts` by path and the
+      census by path, and carries the measured 4/1/33 split and the 299-of-299 figure. No
+      step was added, no checkbox moved, and no plan changed.
 
 ## Acceptance criteria
 

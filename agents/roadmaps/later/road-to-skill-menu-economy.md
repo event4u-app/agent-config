@@ -190,6 +190,22 @@ labelled trigger corpus, its hit rate ≥ the catalog's and its standing bytes �
 after Phase 1 — both numbers pre-registered before the comparison runs. The completeness
 invariant holds either way: no skill leaves the install.
 
+**Completeness is not discharged by byte-equality alone, and the missing limb now exists.**
+"No skill leaves the install" is a claim about what *arrives*, and a body that arrives
+byte-equal can still arrive stripped of the semantics that decide how it executes. Measured
+at `3671542d0` (`agents/evidence/analysis/semantic-parity-census.md`): the MCP-lite carrier
+`ContentEntry` reads 4 of the 38 properties the skill schema declares, truncates `triggers`
+to `keyword` and `phrase`, and drops the other 33 — and **299 of 299 skills declare at least
+one semantic it does not transport whole**. So a delivery proof of the form "`read_skill`
+returns a body byte-equal to the projected file" can pass over a skill whose `model_tier`,
+`execution` or path triggers never left the disk. Byte-equality is necessary and **not**
+sufficient: the second limb is `isBodyPortable` in
+`src/scripts/_lib/body_portable.ts`, which returns true only when every key a skill declares
+is one the carrier transports whole, and fails closed on a key the schema does not know. It
+decides eligibility only — it marks nothing and excludes nothing, and nothing here consumes
+it as an exclusion trigger. No step below changes; this records what a completeness proof
+must show before the E5 comparison can claim it.
+
 ## Phase 1: Menu census and marking
 
 - [x] **1.1 Census every skill's entry paths:** model-routed (description match),
