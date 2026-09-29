@@ -99,16 +99,50 @@ and by a pre-registered count of what today's gates catch, recorded before any g
 
 ## Phase 2 — An id, not a substring
 
-- [ ] **2.1 Replace containment with exact matching** in `coverage_gaps`
+- [x] **2.1 Replace containment with exact matching** in `coverage_gaps`
       (`…/work_engine/directives/ui/apply.ts:190`, today
       `entries.some((entry) => entry.includes(needle))`). A declared item is accounted for when a
       bucket entry equals it, not when some entry contains it.
       verify: arm `S-a` halts with `apply_coverage_missing` after the change and passes before it —
       both asserted in the same test, so the arm is proven red-first.
-- [ ] **2.2 Keep containment as a warned fallback for one release**, so an existing consumer
+      Done 2026-09-29. `coverage_gaps` is now the halting half of a new `coverage_report`, which
+      returns `{gaps, fallbacks}`; the wrapper keeps the old name and signature so the existing
+      port tests and the CLI pinning test are untouched. Matching is `entry === needle`.
+      **Both limbs in one test** (`2.1 — an id, not a substring`): the pre-change rule is
+      reproduced in the test as `legacyContainmentGaps` and asserted to return `[]` for `S-a`,
+      so the "passed before" half stays checkable at every future commit instead of only at the
+      branch point; the post-change half asserts `blocked` plus `` `tab` appears in no coverage
+      bucket `` and asserts the four accounted-for items are NOT reported. Table case pins
+      `tab`/`tab` and `tab`/`TAB` as accounted, `tab`/`table sort order` and `tab`/`the stab
+      wound` as gaps. Red first: all 5 Phase-2 tests failed before the edit, the S-a one with
+      `expected 'success' to be 'blocked'`. **Sensitivity proven:** `entry === needle` reverted
+      to `entry.includes(needle)` → exactly those 5 failed, Phase 1's 4 stayed green; restored
+      from `/tmp` copy, 9/9.
+- [x] **2.2 Keep containment as a warned fallback for one release**, so an existing consumer
       envelope written against the old matching does not halt without warning.
       verify: an envelope that only matches by containment emits the fallback warning and does not
       halt; the same envelope halts once the fallback is removed.
+      Done 2026-09-29. `coverage_report(provided, coverage, allow_annotated_fallback = true)`.
+      A non-exact entry that *mentions* the item is a `fallbacks` entry, not a gap, and the
+      warning reaches the operator in `StepResult.message` on an otherwise-successful port.
+      Removal is a one-line default flip, and the third argument is what makes the second limb
+      of the verify a direct assertion rather than an edit: the same envelope yields
+      `fallbacks: 1, gaps: 0` with the fallback on and `gaps: 1` with it off.
+      · **FINDING — 2.1's verify and 2.2's verify are jointly unsatisfiable as written.** Under
+      *plain* containment as the fallback, `S-a` matches (`"table sort order".includes("tab")`)
+      and therefore warns instead of halting, contradicting 2.1's "halts with
+      `apply_coverage_missing`". One of the two had to be narrowed, so the narrowing was taken
+      from the code's own stated reason for containment — the docstring at `apply.ts:152-154`
+      says it exists so "an entry may carry its own explanation". Measurement unit published
+      before the rule: an entry **mentions** an item when the item occurs in it delimited on
+      both sides by a non-`[a-z0-9]` character or a string edge. `subscribe submit — dropped`
+      mentions `subscribe submit`; `table sort order` does not mention `tab`. That is strictly
+      narrower than the containment it replaces and strictly wider than equality, it preserves
+      every case containment was documented as buying, and it drops exactly the case this
+      roadmap exists to catch. Both verifies then hold, and the two existing envelope shapes in
+      `provided_artifact_port.test.ts` (`subscribe submit — translated to a form action`,
+      `rule-draw — keyframe dropped, …`) keep passing — now as warnings rather than silence,
+      which is what "does not halt without warning" asks for.
 
 ## Phase 3 — Handing work back is not success
 

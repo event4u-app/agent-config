@@ -118,15 +118,20 @@ export function run(state: DeliveryState): StepResult {
     }
 
     const provided = provided_artifact(state.ui_design as Record<string, Any> | null);
+    const notes: string[] = [];
     if (provided !== null) {
-        const gaps = coverage_gaps(provided, envelope['coverage']);
-        if (gaps.length > 0) {
-            return _halt_coverage(state, provided, gaps);
+        const report = coverage_report(provided, envelope['coverage']);
+        if (report.gaps.length > 0) {
+            return _halt_coverage(state, provided, report.gaps);
         }
+        notes.push(...report.fallbacks);
     }
 
     _record_changes(state, envelope);
-    return new StepResult({ outcome: Outcome.SUCCESS });
+    return new StepResult({
+        outcome: Outcome.SUCCESS,
+        message: notes.join('\n'),
+    });
 }
 
 /** Buckets the coverage report must sort every declared item into. */
@@ -139,8 +144,45 @@ export const COVERED_INVENTORIES: ReadonlyArray<string> = [
     'assets',
 ];
 
+/** What the coverage report said, split into what halts and what only warns. */
+export interface CoverageReport {
+    /** Reasons the report fails to account for the artifact. A halt. */
+    gaps: string[];
+    /** Items carried only by the deprecated containment fallback. A warning. */
+    fallbacks: string[];
+}
+
+/** Characters that make a containment hit part of a longer word. */
+function _is_word_char(ch: string): boolean {
+    return (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9');
+}
+
 /**
- * Return every reason the coverage report fails to account for the artifact.
+ * Does `entry` mention `needle` as its own token rather than by accident?
+ *
+ * The deprecated fallback's boundary. Both arguments are already lower-cased.
+ * `submit handler — translated` mentions `submit handler`; `table sort order`
+ * does not mention `tab`, even though it contains those three letters. The
+ * discriminator is whether the hit is delimited on both sides, which is
+ * exactly the difference between an entry carrying its own explanation — the
+ * one thing containment was documented as buying — and a short name colliding
+ * with the inside of a longer word.
+ */
+function _mentions(entry: string, needle: string): boolean {
+    let from = 0;
+    for (;;) {
+        const at = entry.indexOf(needle, from);
+        if (at < 0) return false;
+        const before = at === 0 ? '' : (entry[at - 1] as string);
+        const after_at = at + needle.length;
+        const after = after_at >= entry.length ? '' : (entry[after_at] as string);
+        if (!_is_word_char(before) && !_is_word_char(after)) return true;
+        from = at + 1;
+    }
+}
+
+/**
+ * Return what the coverage report fails to account for, and what it only warns on.
  *
  * The fidelity ledger the port case never had. `apply` used to validate its
  * output with a single placeholder substring scan and nothing else, so a
@@ -149,20 +191,36 @@ export const COVERED_INVENTORIES: ReadonlyArray<string> = [
  * appear in exactly one bucket turns that silence into a halt: a handler the
  * port could not carry has to be written down in `flagged`.
  *
- * Matching is substring containment against the bucket entries, so an entry
- * may carry its own explanation ("submit handler — translated to a form
- * action") and still count as accounting for `submit handler`.
+ * **Matching is equality, not containment.** Containment was chosen so an
+ * entry could carry its own explanation ("submit handler — translated to a
+ * form action") and still account for `submit handler`. It also accounted for
+ * a declared `tab` with an entry about `table sort order`, which is the same
+ * rule doing the opposite of its job: the shorter the declared name, the more
+ * likely some unrelated entry contains it, so the gate grew weakest exactly
+ * where the inventory was tersest.
+ *
+ * `allow_annotated_fallback` keeps the explanation case working for one
+ * release, as a **warning** rather than a silent pass, so an envelope written
+ * against the old rule does not halt without notice. It is narrower than the
+ * containment it replaces: the mention has to be delimited
+ * ({@link _mentions}), which is the property the explanation case always had
+ * and the collision case never did.
  */
-export function coverage_gaps(
+export function coverage_report(
     provided: Record<string, Any>,
     coverage: Any,
-): string[] {
+    allow_annotated_fallback = true,
+): CoverageReport {
     const gaps: string[] = [];
+    const fallbacks: string[] = [];
     if (!_isDict(coverage)) {
-        return [
-            'no `coverage` report in the apply envelope — a provided artifact ' +
-                'requires one',
-        ];
+        return {
+            gaps: [
+                'no `coverage` report in the apply envelope — a provided artifact ' +
+                    'requires one',
+            ],
+            fallbacks,
+        };
     }
     const entries: string[] = [];
     for (const bucket of COVERAGE_BUCKETS) {
@@ -187,14 +245,36 @@ export function coverage_gaps(
         for (const item of declared) {
             if (typeof item !== 'string' || item === '') continue;
             const needle = item.toLowerCase();
-            if (!entries.some((entry) => entry.includes(needle))) {
-                gaps.push(
-                    `\`${inventory}\`: \`${item}\` appears in no coverage bucket`,
+            if (entries.some((entry) => entry === needle)) continue;
+            const mention = allow_annotated_fallback
+                ? entries.find((entry) => _mentions(entry, needle))
+                : undefined;
+            if (mention !== undefined) {
+                fallbacks.push(
+                    `\`${inventory}\`: \`${item}\` matched only by containment ` +
+                        `against \`${mention}\``,
                 );
+                continue;
             }
+            gaps.push(
+                `\`${inventory}\`: \`${item}\` appears in no coverage bucket`,
+            );
         }
     }
-    return gaps;
+    return { gaps, fallbacks };
+}
+
+/**
+ * Every reason the coverage report fails to account for the artifact.
+ *
+ * The halting half of {@link coverage_report}, kept as its own name because
+ * that is what callers and the port tests already ask for.
+ */
+export function coverage_gaps(
+    provided: Record<string, Any>,
+    coverage: Any,
+): string[] {
+    return coverage_report(provided, coverage).gaps;
 }
 
 /** BLOCKED halt — the port did not account for what the artifact declared. */
