@@ -1,5 +1,5 @@
 <!-- evidence-type: analysis -->
-<!-- invocation-surface-census: v1 | commit: 57006781a7fffd74a426c1b6fdf37a7044442559 | commit-date: 2026-09-29T11:30:44+02:00 -->
+<!-- invocation-surface-census: v1 | commit: 98da5a7ae5c95f6413fd0826734134116321ecc2 | commit-date: 2026-09-29T13:46:02+02:00 -->
 
 # Invocation-surface census
 
@@ -12,7 +12,7 @@ code blocks and inline code spans. A skill teaching Terraform contains `${local.
 skill teaching Playwright contains `${viewport.name}`. Counting those measures how many
 skills teach a templating language, not how this package declares invocation.
 
-- **Commit pin:** `57006781a7fffd74a426c1b6fdf37a7044442559` (2026-09-29T11:30:44+02:00)
+- **Commit pin:** `98da5a7ae5c95f6413fd0826734134116321ecc2` (2026-09-29T13:46:02+02:00)
 - **Corpus:** `dist/agent-src/commands/**/*.md` — 203 command(s); `src/skills/*/SKILL.md` — 299 skill(s)
 
 ## Declaration coverage

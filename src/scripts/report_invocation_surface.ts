@@ -85,16 +85,81 @@ export type SyntaxId = (typeof SYNTAXES)[number]['id'];
  * Remove every region where a placeholder token belongs to demonstrated code
  * rather than to this package's own invocation surface.
  *
- * Order matters: fenced blocks first (they may contain indented lines and
- * backticks), then indented blocks, then inline spans.
+ * FENCES ARE SCANNED, NOT REGEX-MATCHED. An earlier version used one regex
+ * requiring the closing fence at the opener's own indent, and independent
+ * review found three ways real markdown leaks through it: an UNCLOSED fence
+ * (the rest of the file then counts as prose), a closing fence indented one to
+ * three spaces (legal CommonMark), and a four-backtick fence wrapping a
+ * three-backtick one. The `{{…}}` ceiling of zero rests on this stripper, so a
+ * leak here is a ratchet that silently stops guarding. The scanner below
+ * follows the CommonMark rules that matter: a closing fence uses the same
+ * character, is at least as long as the opener, and an unclosed fence runs to
+ * end of file.
+ *
+ * INDENTED CODE IS NOT JUST "FOUR SPACES". The same review measured the naive
+ * rule blanking 217 non-fence prose lines across the skill corpus, 74 of them
+ * list continuations — a nested bullet is indented exactly like a code block
+ * and is prose. So an indented run counts as code only when it is NOT inside a
+ * list: a list is open while indented content follows a bullet, and closes at
+ * the first non-indented, non-blank line.
  */
 export function proseOnly(text: string): string {
-    const withoutFences = text.replace(/^([ \t]*)(```|~~~)[\s\S]*?^\1?\2[^\n]*$/gm, '');
-    const withoutIndented = withoutFences
-        .split('\n')
-        .map((line) => (/^(?: {4}|\t)/.test(line) ? '' : line))
-        .join('\n');
-    return withoutIndented.replace(/`[^`\n]*`/g, '');
+    const lines = text.split('\n');
+    const out: string[] = [];
+
+    let fence: { char: string; len: number } | null = null;
+    let listIndent: number | null = null;
+    let prevBlank = true;
+
+    for (const line of lines) {
+        const fenceOpen = /^(\s*)(`{3,}|~{3,})/.exec(line);
+
+        if (fence !== null) {
+            // Inside a fence: only a matching closer ends it. Everything is dropped.
+            if (
+                fenceOpen !== null &&
+                fenceOpen[2]!.startsWith(fence.char) &&
+                fenceOpen[2]!.length >= fence.len &&
+                line.slice(fenceOpen[1]!.length + fenceOpen[2]!.length).trim() === ''
+            ) {
+                fence = null;
+            }
+            out.push('');
+            continue;
+        }
+
+        if (fenceOpen !== null) {
+            fence = { char: fenceOpen[2]![0]!, len: fenceOpen[2]!.length };
+            out.push('');
+            continue;
+        }
+
+        const blank = line.trim() === '';
+        if (blank) {
+            out.push(line);
+            prevBlank = true;
+            continue;
+        }
+
+        const indent = /^(\s*)/.exec(line)![1]!.replace(/\t/g, '    ').length;
+        const bullet = /^\s*([-*+]|\d+[.)])\s/.test(line);
+
+        if (bullet) {
+            listIndent = indent;
+        } else if (listIndent !== null && indent <= listIndent) {
+            listIndent = null;
+        }
+
+        // An indented run is code only outside a list, and only when it starts
+        // after a blank line — the CommonMark precondition for indented code.
+        const inList = listIndent !== null && indent > listIndent;
+        const indentedCode = indent >= 4 && !inList && prevBlank;
+
+        out.push(indentedCode ? '' : line);
+        prevBlank = false;
+    }
+
+    return out.join('\n').replace(/`[^`\n]*`/g, '');
 }
 
 export interface ArtifactRow {

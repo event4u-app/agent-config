@@ -125,7 +125,7 @@ export function _frontmatter_text(text: string): string {
  * pulling a YAML parser in to read one optional block would pay a dependency
  * on every install for a block almost nothing declares yet.
  *
- * The grammar accepted is exactly the one the schema permits, and no more:
+ * IT READS ONE SHAPE AND REFUSES THE REST. Accepted:
  *
  *     inputs:
  *       - name: target
@@ -133,17 +133,34 @@ export function _frontmatter_text(text: string): string {
  *         required: true
  *         description: What to act on.
  *
- * Anything it cannot read yields NO input rather than a guessed one. An
- * undeclared or unreadable block must serve `arguments: []` — the shape an
- * undeclared prompt has always had — because inventing an argument a host then
- * prompts a user for is strictly worse than declaring none.
+ * Refused, by yielding NOTHING for the whole block: the flow form
+ * (`inputs: [{name: a}]`), a block scalar (`description: >`), and any nested
+ * mapping under an item key. Refusing is not silent — `check_inputs_parity`
+ * compares this reader against a real YAML parse for every declaring artifact
+ * and FAILS the build on any difference, so an unsupported form is a red gate
+ * with a named remedy rather than a wrong argument on the wire.
+ *
+ * That gate is the answer to the defect an independent review found here: the
+ * key scan used to run at any depth, so a `default:` MAPPING whose first child
+ * was `name:` overwrote the parameter's own name and the server offered a host
+ * an argument that did not exist. The header promised "no guessed input" while
+ * the code guessed. Depth is now tracked, and where this reader cannot be sure
+ * it declines and the parity gate makes the decline visible.
  */
 export function _parse_inputs(fm: string): PromptInput[] {
     const lines = fm.split('\n');
-    let i = lines.findIndex((l) => /^inputs:\s*$/.test(l));
+    let i = lines.findIndex((l) => /^inputs:/.test(l));
     if (i === -1) return [];
+    // The flow form carries its payload on the `inputs:` line itself. This
+    // reader does not parse it; the parity gate turns that into a failure.
+    if (!/^inputs:\s*$/.test(lines[i] as string)) return [];
+
     const out: PromptInput[] = [];
     let current: { name?: string; description?: string; required?: boolean } | null = null;
+    /** Indent of the key lines belonging to the item being read. */
+    let keyIndent: number | null = null;
+    let refused = false;
+
     const flush = (): void => {
         if (current?.name !== undefined) {
             out.push({
@@ -154,26 +171,57 @@ export function _parse_inputs(fm: string): PromptInput[] {
         }
         current = null;
     };
-    for (i += 1; i < lines.length; i += 1) {
+
+    const clean = (raw: string): string => {
+        const v = raw.trim();
+        // An unquoted trailing comment is not part of the value — the same strip
+        // `_strip_frontmatter` applies, kept consistent deliberately.
+        const hashed = /^(?!["'])([^#]*?)\s+#.*$/.exec(v);
+        return _stripQuotes((hashed === null ? v : (hashed[1] ?? '')).trim());
+    };
+
+    for (i += 1; i < lines.length && !refused; i += 1) {
         const line = lines[i] as string;
         if (line.trim() === '') continue;
+        // A comment at any column is not block content and does not end the block.
+        if (/^\s*#/.test(line)) continue;
         // A non-indented line ends the block.
         if (!/^\s/.test(line)) break;
-        const item = /^\s*-\s+(\w+):\s*(.*)$/.exec(line);
+
+        const indent = (/^(\s*)/.exec(line) as RegExpExecArray)[1]!.replace(/\t/g, '    ').length;
+
+        const item = /^\s*-\s+([A-Za-z_]\w*):\s*(.*)$/.exec(line);
         if (item !== null) {
             flush();
             current = {};
-            if (item[1] === 'name') current.name = _stripQuotes((item[2] ?? '').trim());
+            keyIndent = line.indexOf('-') + 2;
+            if (item[1] === 'name') current.name = clean(item[2] ?? '');
             continue;
         }
-        const kv = /^\s+(\w+):\s*(.*)$/.exec(line);
-        if (kv === null || current === null) continue;
+
+        const kv = /^\s+([A-Za-z_]\w*):\s*(.*)$/.exec(line);
+        if (kv === null || current === null || keyIndent === null) continue;
+        // Deeper than the item's own keys: a nested mapping or sequence this
+        // reader does not model. Decline the whole block rather than absorb it.
+        if (indent > keyIndent) {
+            refused = true;
+            break;
+        }
         const key = kv[1] as string;
-        const value = _stripQuotes((kv[2] ?? '').trim());
+        const rawValue = (kv[2] ?? '').trim();
+        // A block scalar or an empty value means the real content is on the
+        // following lines, which this reader does not join.
+        if (rawValue === '' || rawValue === '>' || rawValue === '|') {
+            refused = true;
+            break;
+        }
+        const value = clean(rawValue);
         if (key === 'name') current.name = value;
         else if (key === 'description') current.description = value;
-        else if (key === 'required') current.required = value === 'true';
+        else if (key === 'required') current.required = value.toLowerCase() === 'true';
     }
+
+    if (refused) return [];
     flush();
     return out;
 }

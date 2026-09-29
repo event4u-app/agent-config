@@ -34,12 +34,14 @@
  */
 
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import * as yaml from 'js-yaml';
 
 import { GateLedger } from './_lib/gate_ledger.js';
+import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { reportScanned } from './_lib/scan_scope.js';
 import { proseOnly } from './report_invocation_surface.js';
 
@@ -126,6 +128,7 @@ export function scan(root: string): { findings: Unbacked[]; scanned: number; dec
 }
 
 export function main(argv: readonly string[]): number {
+    if (argv.includes('--self-test')) return selfTest();
     const rootIdx = argv.indexOf('--root');
     const root = rootIdx === -1 ? ROOT : (argv[rootIdx + 1] ?? ROOT);
 
@@ -164,6 +167,49 @@ export function main(argv: readonly string[]): number {
             `(${String(declaring)} of ${String(scanned)} artifact(s) declare \`inputs:\`).\n`,
     );
     return 0;
+}
+
+/**
+ * A self-test is what proves a gate DISCRIMINATES. An enforced scan floor only
+ * proves it read something; the verdict has to move.
+ */
+function selfTest(): number {
+    const plant = (name: string, body: string): string => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), `input-refs-${name}-`));
+        const skills = path.join(dir, 'src', 'skills', 'probe');
+        fs.mkdirSync(skills, { recursive: true });
+        fs.writeFileSync(path.join(skills, 'SKILL.md'), body, 'utf-8');
+        return dir;
+    };
+    const declaring = (ref: string): string =>
+        `---\nname: probe\ninputs:\n  - name: a\n    type: string\n---\n\nUses ${ref} here.\n`;
+
+    const run = (root: string): number =>
+        runGateCli(ROOT, path.join('src', 'scripts', 'check_input_references.ts'), ['--root', root], ROOT);
+
+    return runSelfTest({
+        gate: GATE,
+        minCases: 3,
+        minRejectCases: 1,
+        cases: [
+            {
+                name: 'a reference the declaration backs passes',
+                expect: 'accept',
+                run: () => run(plant('backed', declaring('${a}'))),
+            },
+            {
+                name: 'a reference nothing declares fails',
+                expect: 'reject',
+                run: () => run(plant('unbacked', declaring('${b}'))),
+            },
+            {
+                name: 'an artifact with no declaration is out of scope, however it references',
+                expect: 'accept',
+                run: () =>
+                    run(plant('noblock', '---\nname: probe\n---\n\nUses ${anything} here.\n')),
+            },
+        ],
+    });
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {

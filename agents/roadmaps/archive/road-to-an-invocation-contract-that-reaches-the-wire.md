@@ -177,6 +177,60 @@ but no hint acquires one without anybody typing it.
       **Sensitivity checked:** reverting the projection to a literal `[]` turns
       four tests red, including both corpus-level ones.
 
+## Independent review — four defect classes, all in this change
+
+An independent review of this branch found four classes of defect in the work
+above. All four were real, all four reproduced, and all four are fixed here.
+Recorded because the first of them makes two acceptance criteria below false as
+originally shipped, and a closed roadmap that hides that is worse than an open
+one.
+
+1. **The gates ran nowhere.** `check_placeholder_drift`,
+   `check_input_references` and `check_argument_hint` were registered in no
+   Taskfile, no workflow and no coverage manifest. So "a hand-written hint
+   contradicting a declaration is a **build failure**" and "the ratchet is
+   **red** on one added occurrence" were claims about code nothing executed.
+   They are now defined in `taskfiles/ci-fast.yml`, called in the `consistency`
+   workflow, chained from `Taskfile.yml`, and registered in
+   `src/config/gate-coverage.yml` — **called as scripts rather than through
+   `task`**, because `check_gate_coverage` compares the manifest's argv against
+   CI's literally, and a manifest that probes a gate differently from CI is a
+   coverage claim about a run that never happened.
+2. **The MCP reader invented an argument.** Its key scan ran at any depth, so a
+   schema-valid `default:` MAPPING whose first child was `name:` overwrote the
+   parameter's own name — the server offering a host an argument nobody
+   declared, while the module header promised "no guessed input". It also
+   misread `required: True` as optional, the flow form as empty, a block scalar
+   as the literal `">"`, and truncated the block at a column-zero comment. Every
+   one of those is schema-valid. Fixed at the root rather than case by case: the
+   reader tracks depth, declines what it cannot model, and a NEW gate —
+   `check_inputs_parity` — compares it against a real YAML parse for every
+   declaring artifact, so a decline is a red gate with a named remedy instead of
+   a wrong argument on the wire.
+3. **The prose stripper leaked and over-stripped.** Its single regex needed the
+   closing fence at the opener's own indent, so an unclosed fence, a fence closed
+   at one-to-three spaces (legal CommonMark) and a four-backtick fence wrapping a
+   three-backtick one all leaked — and the `{{…}}` ceiling of zero rests on it.
+   In the other direction, blanking every four-space line removed **217**
+   non-fence prose lines across the skill corpus, **74** of them list
+   continuations, so a placeholder in a nested bullet was invisible. Replaced
+   with a line scanner that follows the fence rules that matter and treats an
+   indented run as code only outside a list. Both directions are now pinned by
+   `tests/scripts/prose_only.test.ts` (14 cases, one per named leak).
+4. **Two assertions could not fail, and one declaration was untrue.** A test
+   asserted a guard clause a later null check already covered; another compared
+   both sides of one `.map`, proving the map is the identity rather than that the
+   declaration was read. Both replaced — the second now reads the frontmatter off
+   disk. And `markitdown` declared `type: path` for what the skill's own body
+   documents as a **URI** with four schemes; it is `string` with the schemes
+   named, and no longer `required`, since the skill is also read for its
+   scheme discipline rather than only invoked.
+
+The round-trip gap the same review found is closed in the schema rather than in
+the renderer: `enum` values may no longer contain `|`, `]` or `>`, the three
+delimiters of the derived hint, so the property the hint gate asserts is true
+for every declaration the schema accepts instead of for most of them.
+
 ## Acceptance criteria
 
 - `prompts/list` declares arguments derived from a declaration for at least one

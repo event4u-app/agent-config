@@ -36,7 +36,12 @@
           "enum": {
             "type": "array",
             "minItems": 1,
-            "items": { "type": "string" },
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[^|\\]>]+$",
+              "description": "A value. `|`, `]` and `>` are excluded because they are the delimiters of the derived argument-hint — permitting them would make the hint ambiguous and break the round-trip the hint gate asserts."
+            },
             "description": "Allowed values. Only meaningful when `type` is `enum`."
           },
           "description": {

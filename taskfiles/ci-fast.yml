@@ -1021,6 +1021,26 @@ tasks:
     desc: Check package portability (no project-specific references)
     cmd: ./scripts-run src/scripts/check_portability
 
+  check-placeholder-drift:
+    silent: true
+    desc: Foreign in-prose placeholder syntaxes may shrink, never grow (road-to-an-invocation-contract-that-reaches-the-wire 1.2). Seeded at the measured counts in src/config/placeholder-drift-budget.json; never fails on the absolute number or on the plurality form, so holding at the seed is permanently green and no working body is under pressure to be rewritten.
+    cmd: ./scripts-run src/scripts/check_placeholder_drift
+
+  check-input-references:
+    silent: true
+    desc: "Every in-body placeholder on an artifact that declares an inputs block is backed by a declaration (2.2). Scoped to declaring artifacts, so it arrives with zero findings and grows only with adoption."
+    cmd: ./scripts-run src/scripts/check_input_references
+
+  check-argument-hint:
+    silent: true
+    desc: "Where a command declares an inputs block, its argument-hint is derived from that declaration and a hand-written hint that disagrees is a build failure (3.1) — one authority for what an artifact takes, not two that drift."
+    cmd: ./scripts-run src/scripts/check_argument_hint
+
+  check-inputs-parity:
+    silent: true
+    desc: "What the stdlib-only MCP reader gets from an inputs block equals what a real YAML parser gets. The reader declines forms it cannot model; this is what makes a decline a red gate instead of a wrong argument on the wire."
+    cmd: ./scripts-run src/scripts/check_inputs_parity
+
   check-no-external-sources:
     silent: true
     desc: Block readable external inspiration/harvest source names from the tracked tree (source-confidentiality rule + 2026-06-13 sweep); --report retains the warn tier, per the how-loud-the-slug-heuristic-is decision

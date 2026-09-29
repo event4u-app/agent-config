@@ -252,12 +252,28 @@ describe('prompts/list over the real corpus', () => {
         expect(empty.length).toBe(all.length - all.filter((m) => (m.arguments as unknown[]).length > 0).length);
     });
 
-    it('each derived argument names a parameter the artifact actually declares', () => {
+    it('each derived argument traces to the frontmatter on disk, not to the projection', () => {
+        // The earlier version compared the projection's argument names against
+        // `prompt.inputs` — both sides of one `.map`, so it proved the map is
+        // the identity and nothing about whether the declaration was READ
+        // correctly. Review called it tautological, and it was. This reads the
+        // file instead.
         const [prompts] = load_all_prompts();
-        for (const p of prompts) {
+        const declaring = prompts.filter((p) => p.inputs.length > 0);
+        expect(declaring.length).toBeGreaterThan(0);
+
+        for (const p of declaring) {
             const meta = to_mcp_prompt_meta(p);
-            const args = (meta.arguments as { name: string }[]) ?? [];
-            expect(args.map((a) => a.name)).toEqual(p.inputs.map((i) => i.name));
+            const wire = (meta.arguments as { name: string }[]).map((a) => a.name);
+            const file = [
+                path.join(REPO, 'src', 'skills', p.name, 'SKILL.md'),
+                path.join(REPO, 'src', 'domains', 'engineering-base', p.name, 'command.md'),
+            ].find((f) => fs.existsSync(f));
+            expect(file, `no source found for ${p.name}`).toBeDefined();
+
+            const fm = /^---\n([\s\S]*?)\n---/.exec(fs.readFileSync(file as string, 'utf8'))![1]!;
+            const onDisk = [...fm.matchAll(/^\s*-\s+name:\s*(\S+)/gm)].map((m) => m[1]);
+            expect(wire).toEqual(onDisk);
         }
     });
 });

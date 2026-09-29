@@ -37,10 +37,12 @@
  */
 
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { GateLedger } from './_lib/gate_ledger.js';
+import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { reportScanned } from './_lib/scan_scope.js';
 import { SYNTAXES, type SyntaxId, census } from './report_invocation_surface.js';
 
@@ -91,6 +93,7 @@ export function findings(
 }
 
 export function main(argv: readonly string[]): number {
+    if (argv.includes('--self-test')) return selfTest();
     const rootIdx = argv.indexOf('--root');
     const root = rootIdx === -1 ? ROOT : (argv[rootIdx + 1] ?? ROOT);
 
@@ -145,6 +148,66 @@ export function main(argv: readonly string[]): number {
             `(${foreign.map((s) => `${s.label} ${String(c.occurrences[s.id])}/${String(budget.ceilings[s.id] ?? 0)}`).join(' · ')}).\n`,
     );
     return 0;
+}
+
+/**
+ * A ratchet that cannot be shown to move is a number, not a gate. Each rejecting
+ * case is one occurrence over a ceiling; the accepting cases are the seed itself
+ * and a shrink, because a suite that only proves failures proves a gate that is
+ * merely loud.
+ */
+function selfTest(): number {
+    const plant = (name: string, bodies: readonly string[], ceilings: Record<string, number>): string => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), `drift-${name}-`));
+        fs.mkdirSync(path.join(dir, 'src', 'config'), { recursive: true });
+        fs.writeFileSync(
+            path.join(dir, 'src', 'config', 'placeholder-drift-budget.json'),
+            JSON.stringify({ seeded_at: '2026-09-29', note: 'fixture', ceilings }, null, 2),
+            'utf-8',
+        );
+        bodies.forEach((body, i) => {
+            const d = path.join(dir, 'src', 'skills', `probe-${String(i)}`);
+            fs.mkdirSync(d, { recursive: true });
+            fs.writeFileSync(path.join(d, 'SKILL.md'), `---\nname: probe-${String(i)}\n---\n\n${body}\n`, 'utf-8');
+        });
+        return dir;
+    };
+    const run = (root: string): number =>
+        runGateCli(ROOT, path.join('src', 'scripts', 'check_placeholder_drift.ts'), ['--root', root], ROOT);
+
+    return runSelfTest({
+        gate: GATE,
+        minCases: 5,
+        minRejectCases: 3,
+        cases: [
+            {
+                name: 'at the seed it is green',
+                expect: 'accept',
+                run: () => run(plant('seed', ['Uses {{a}} once.'], { 'double-brace': 1, 'angle-upper': 0 })),
+            },
+            {
+                name: 'below the seed it stays green — it never fails on the absolute number',
+                expect: 'accept',
+                run: () => run(plant('shrink', ['no placeholders'], { 'double-brace': 1, 'angle-upper': 0 })),
+            },
+            {
+                name: 'one occurrence over the ceiling fails',
+                expect: 'reject',
+                run: () => run(plant('grow', ['Uses {{a}} and {{b}}.'], { 'double-brace': 1, 'angle-upper': 0 })),
+            },
+            {
+                name: 'a zero ceiling makes the first occurrence growth',
+                expect: 'reject',
+                run: () => run(plant('zero', ['Uses <NAME> here.'], { 'double-brace': 0, 'angle-upper': 0 })),
+            },
+            {
+                name: 'an unreadable budget refuses rather than certifying a green',
+                expect: 'reject',
+                run: () => runGateCli(ROOT, path.join('src', 'scripts', 'check_placeholder_drift.ts'),
+                    ['--root', fs.mkdtempSync(path.join(os.tmpdir(), 'drift-nobudget-'))], ROOT),
+            },
+        ],
+    });
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {

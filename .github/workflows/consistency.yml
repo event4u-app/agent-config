@@ -214,6 +214,17 @@ jobs:
       # warning. Their condition for accepting that risk was that warnings be
       # "visible and RETAINED in CI artifacts", so a warn-tier hit is auditable
       # after the run instead of scrolling away in a log.
+      # Called as scripts rather than through `task`, so the argv CI runs is the
+      # argv src/config/gate-coverage.yml declares — check_gate_coverage compares
+      # the two literally, and a manifest that probes a gate differently from CI
+      # is a coverage claim about a run that never happened.
+      - name: Invocation contract — declaration, derivation and reader parity
+        run: |
+          ./scripts-run src/scripts/check_placeholder_drift
+          ./scripts-run src/scripts/check_input_references
+          ./scripts-run src/scripts/check_argument_hint
+          ./scripts-run src/scripts/check_inputs_parity
+
       - name: Block readable external inspiration/harvest source names
         run: task check-no-external-sources
 

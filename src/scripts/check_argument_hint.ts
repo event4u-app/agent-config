@@ -34,12 +34,14 @@
  */
 
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import * as yaml from 'js-yaml';
 
 import { GateLedger } from './_lib/gate_ledger.js';
+import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { reportScanned } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -176,6 +178,7 @@ export function scan(root: string): { findings: Finding[]; scanned: number; decl
 }
 
 export function main(argv: readonly string[]): number {
+    if (argv.includes('--self-test')) return selfTest();
     const rootIdx = argv.indexOf('--root');
     const root = rootIdx === -1 ? ROOT : (argv[rootIdx + 1] ?? ROOT);
 
@@ -219,6 +222,53 @@ export function main(argv: readonly string[]): number {
             `(${String(declaring)} of ${String(scanned)} artifact(s) declare \`inputs:\`).\n`,
     );
     return 0;
+}
+
+/**
+ * A self-test is what proves a gate DISCRIMINATES. An enforced scan floor only
+ * proves it read something; the verdict has to move.
+ */
+function selfTest(): number {
+    const plant = (name: string, fm: string): string => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), `arg-hint-${name}-`));
+        const cmd = path.join(dir, 'src', 'domains', 'probe-pack', 'probe');
+        fs.mkdirSync(cmd, { recursive: true });
+        fs.writeFileSync(path.join(cmd, 'command.md'), `---\nname: probe\n${fm}---\n\nbody\n`, 'utf-8');
+        return dir;
+    };
+
+    const run = (root: string): number =>
+        runGateCli(ROOT, path.join('src', 'scripts', 'check_argument_hint.ts'), ['--root', root], ROOT);
+
+    return runSelfTest({
+        gate: GATE,
+        minCases: 4,
+        minRejectCases: 2,
+        cases: [
+            {
+                name: 'a hint matching its declaration passes',
+                expect: 'accept',
+                run: () =>
+                    run(plant('match', 'argument-hint: "<a>"\ninputs:\n  - name: a\n    type: string\n    required: true\n')),
+            },
+            {
+                name: 'a hand-written hint contradicting the declaration fails',
+                expect: 'reject',
+                run: () =>
+                    run(plant('conflict', 'argument-hint: "[other]"\ninputs:\n  - name: a\n    type: string\n    required: true\n')),
+            },
+            {
+                name: 'a declaration with no hint at all fails',
+                expect: 'reject',
+                run: () => run(plant('missing', 'inputs:\n  - name: a\n    type: string\n')),
+            },
+            {
+                name: 'an artifact with no declaration keeps its free-text hint',
+                expect: 'accept',
+                run: () => run(plant('nodecl', 'argument-hint: "[free text]"\n')),
+            },
+        ],
+    });
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {

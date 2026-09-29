@@ -706,7 +706,18 @@ describe('golden structure on the real repo', () => {
         for (const meta of metas) {
             expect(meta.name).toMatch(/^(skill|command)\./);
             expect((meta.description as string).trim()).toBeTruthy();
-            expect(meta.arguments).toEqual([]);
+            // `arguments` was a hardcoded `[]` and this line asserted that
+            // literal. It is derived from the frontmatter `inputs:` block now,
+            // so the invariant this golden test can still hold is the wire
+            // SHAPE: always an array, and every entry a well-formed argument.
+            // Asserting `[]` again would re-encode the defect the derivation
+            // fixed; dropping the line would lose the envelope check.
+            expect(Array.isArray(meta.arguments)).toBe(true);
+            for (const arg of meta.arguments as Record<string, unknown>[]) {
+                expect(arg.name).toMatch(/^[a-z][a-z0-9_]*$/);
+                expect(typeof arg.description).toBe('string');
+                expect(typeof arg.required).toBe('boolean');
+            }
             const inner = meta._meta as Record<string, unknown>;
             expect(['package', 'project']).toContain(inner.source);
             expect(['skill', 'command']).toContain(inner.kind);
