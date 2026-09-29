@@ -58,8 +58,32 @@ import { readHookStdin } from './hook_stdin.js';
 import { EXIT_ALLOW, EXIT_BLOCK, EXIT_WARN } from './exit_codes.js';
 
 const _HERE = fileURLToPath(import.meta.url);
-/** This package's own root — where the shipped class contract lives. */
-const PACKAGE_ROOT = path.resolve(path.dirname(_HERE), '..', '..', '..');
+
+/**
+ * This package's own root — where the shipped class contract lives.
+ *
+ * RESOLVED BY SEARCH, not by counting `..` segments. This file runs from three
+ * layouts: the source tree, an installed `node_modules/@event4u/agent-config/`,
+ * and inlined into `dist/hooks/dispatch.js`, where every module shares the
+ * BUNDLE's `import.meta.url` and a fixed hop count lands somewhere else
+ * entirely. A review flagged the fixed-hop version as resolving a different
+ * root from the one the package occupies; walking up to the nearest directory
+ * that actually carries the contract answers the question the guard is asking
+ * ("where is the contract") instead of a proxy for it.
+ *
+ * `null` when no ancestor carries it — which is the fail-closed input to
+ * `readClassIndex`, not a silent default root.
+ */
+export function findPackageRoot(from: string): string | null {
+    let dir = path.dirname(from);
+    for (let i = 0; i < 12; i++) {
+        if (fs.existsSync(path.join(dir, SETTINGS_CLASSES_RELATIVE))) return dir;
+        const up = path.dirname(dir);
+        if (up === dir) break;
+        dir = up;
+    }
+    return null;
+}
 
 /**
  * The stated cap from `autonomous-execution` § Antipattern. Crossing it in one
@@ -313,7 +337,22 @@ export function classCVerdict(
         afterText = content;
     } else if (typeof oldStr === 'string' && typeof newStr === 'string' && on_disk !== null) {
         if (!on_disk.includes(oldStr)) return null; // the edit will not apply
-        afterText = on_disk.replace(oldStr, newStr);
+        // `replace_all` is the host's own flag and it changes WHICH text the
+        // edit produces. Modelling only the first occurrence let a
+        // `replace_all` edit whose SECOND occurrence is the Class C one pass
+        // this guard while the real edit changed it — the guard evaluating a
+        // different edit from the one executed. Reported by an independent
+        // review before this landed.
+        const all = ti['replace_all'];
+        if (all !== undefined && typeof all !== 'boolean') {
+            return (
+                `${rel_path}: this edit carries a \`replace_all\` value the guard cannot ` +
+                'interpret, so the text it would produce is unknown and no key can be ' +
+                'cleared. Re-send it as a plain edit, or write the change through ' +
+                '`agent-config settings:set`.'
+            );
+        }
+        afterText = all === true ? on_disk.split(oldStr).join(newStr) : on_disk.replace(oldStr, newStr);
     }
     if (afterText === null) return null;
 
@@ -471,7 +510,8 @@ export function main(): number {
         }
         if (kind === 'class-c') {
             const rel_c = path.relative(root, abs) || p;
-            const verdict = classCVerdict(ti, on_disk, rel_c, readClassIndex(PACKAGE_ROOT));
+            const pkg = findPackageRoot(_HERE);
+            const verdict = classCVerdict(ti, on_disk, rel_c, pkg === null ? null : readClassIndex(pkg));
             if (verdict === null) continue;
             process.stderr.write(`block-config-weakening: BLOCKED — ${verdict}\n`);
             return EXIT_BLOCK;

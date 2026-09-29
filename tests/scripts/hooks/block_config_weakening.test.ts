@@ -18,6 +18,7 @@ import {
     classify_target,
     changedKeys,
     classCVerdict,
+    findPackageRoot,
     count_entries,
     decide,
 } from '../../../src/scripts/hooks/block_config_weakening.js';
@@ -223,5 +224,75 @@ describe('block_config_weakening — class-c', () => {
     it('diffs leaves, not interior nodes — a changed child reports the child', () => {
         expect(changedKeys({ a: { b: 1, c: 2 } }, { a: { b: 9, c: 2 } })).toEqual(['a.b']);
         expect(changedKeys({ a: { b: 1 } }, {})).toEqual(['a.b']);
+    });
+});
+
+// ── The three defects an independent review found before this landed ────────
+describe('block_config_weakening — class-c, the reviewed defects', () => {
+    const REAL_CONTRACT = path.resolve(__dirname, '..', '..', '..', 'docs', 'contracts', 'settings-classes.md');
+    const index = buildSettingsClassIndex(parseSettingsClassRows(fs.readFileSync(REAL_CONTRACT, 'utf-8')));
+
+    // The guard must evaluate the edit that will actually run. Modelling only
+    // the first occurrence let a `replace_all` edit whose SECOND occurrence is
+    // the Class C one pass while the real edit changed it.
+    it('models replace_all — a later occurrence being the Class C one is caught', () => {
+        const before = [
+            'personal:',
+            '  play_by_play: false',
+            'hooks:',
+            '  injection_scan:',
+            '    enabled: false',
+            '',
+        ].join('\n');
+        const ti = { old_string: 'false', new_string: 'true', replace_all: true };
+        const reason = classCVerdict(ti, before, '.agent-settings.yml', index);
+        expect(reason).not.toBeNull();
+        expect(reason).toContain('hooks.injection_scan.enabled');
+
+        // Without the flag only the first occurrence changes, and the first is
+        // a Class A key — so the same strings must be ALLOWED. This pair is
+        // what makes the case about `replace_all` rather than about the keys.
+        expect(
+            classCVerdict({ old_string: 'false', new_string: 'true' }, before, '.agent-settings.yml', index),
+        ).toBeNull();
+    });
+
+    it('refuses a replace_all value it cannot interpret', () => {
+        const reason = classCVerdict(
+            { old_string: 'false', new_string: 'true', replace_all: 'yes' as unknown as boolean },
+            'personal:\n  play_by_play: false\n',
+            '.agent-settings.yml',
+            index,
+        );
+        expect(reason).not.toBeNull();
+        expect(reason).toContain('cannot interpret');
+    });
+
+    // The guard reads the contract out of the package it is running from. A
+    // fixed `..` hop count resolves a different root from every layout but the
+    // source tree — and the bundle is one of those layouts.
+    it('finds the package root by the contract it carries, not by a hop count', () => {
+        const here = path.resolve(__dirname, '..', '..', '..', 'src', 'scripts', 'hooks', 'x.ts');
+        const root = findPackageRoot(here);
+        expect(root).not.toBeNull();
+        expect(fs.existsSync(path.join(root as string, 'docs', 'contracts', 'settings-classes.md'))).toBe(true);
+    });
+
+    it('returns null rather than a default root when no ancestor carries the contract', () => {
+        const empty = fs.mkdtempSync(path.join(os.tmpdir(), 'no-contract-'));
+        try {
+            expect(findPackageRoot(path.join(empty, 'a', 'b', 'c.ts'))).toBeNull();
+        } finally {
+            fs.rmSync(empty, { recursive: true, force: true });
+        }
+    });
+
+    // Packaging regression: the fence is only reachable in a consumer install
+    // while the contract ships. Dropping it from `files[]` would leave the
+    // guard permanently fail-closed there — refusing every settings edit.
+    it('ships the class contract, so a consumer install can read it', () => {
+        const pkgPath = path.resolve(__dirname, '..', '..', '..', 'package.json');
+        const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8')) as { files: string[] };
+        expect(pkg.files).toContain('docs/contracts/settings-classes.md');
     });
 });

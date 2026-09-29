@@ -111,14 +111,27 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
 
     const files = hookFiles(root);
     const findings: ExitFinding[] = [];
+    // A file the gate cannot READ is not a file it cleared. The first version
+    // of this loop skipped it and then counted it complete, which is a false
+    // green with a number behind it — the exact shape `assertScanned` exists to
+    // refuse one level up, reintroduced inside the loop. Reported by an
+    // independent review before this landed.
+    const unreadable: string[] = [];
     for (const rel of files) {
         let text: string;
         try {
             text = fs.readFileSync(path.join(root, rel), 'utf-8');
         } catch {
+            unreadable.push(rel);
             continue;
         }
         findings.push(...findBareExits(rel, text));
+    }
+    if (unreadable.length > 0) {
+        for (const rel of unreadable) {
+            process.stderr.write(`❌  ${GATE}: cannot read ${rel} — the corpus is incomplete.\n`);
+        }
+        return 2;
     }
 
     // Before the verdict: a corpus of zero is a gate that read nothing, and a
