@@ -150,6 +150,21 @@ concerns:
   # Warn-in-context (exit 2), never blocks. Default-OFF: no-ops unless
   # hooks.injection_scan.enabled is true in .agent-settings.yml. The runtime
   # backstop layered on the always-on untrusted-input-defense rule.
+  #
+  # THE INPUT IT READS, AND WHY IT CANNOT MOVE TO A BLOCKING SLOT
+  # (road-to-a-content-scanner-on-a-slot-that-can-refuse 1.1). It scans the
+  # tool RESULT -- fetched pages, file reads, MCP/tool responses -- which is
+  # why it declares `result` below. `pre_tool_use` is the only slot on this
+  # host with a non-null `block_exit`, and a pre-call payload has no tool
+  # response in it: the `result` body class resolves to `tool_response` /
+  # `toolResponse` / `tool_result` / `toolUseResult` (hooks/payload_stub.ts),
+  # none of which exist before the call runs. So rebinding for the deny would
+  # leave the scanner reading the arguments it was never written to inspect --
+  # more enforcing-looking and strictly less detecting. It stays on
+  # `post_tool_use` and the published claims say `detected, not blocked`;
+  # `docs/enforcement-by-host.md` § "The slot rows are not a statement about
+  # any concern" carries the reasoning, and `check_enforcement_matrix` prints
+  # the per-host binding audit that keeps it from drifting back.
   injection-scan:
     script: src/scripts/injection_scan_hook.ts
     args: []
