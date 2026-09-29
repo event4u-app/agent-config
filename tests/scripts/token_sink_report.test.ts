@@ -25,6 +25,9 @@ function rec(
         agentId,
         model,
         timestamp,
+        // Not measured, which is not the same as zero — these fixtures are
+        // about the token columns.
+        content_bytes: null,
         usage: {
             input_tokens: input,
             cache_read_input_tokens: cacheRead,

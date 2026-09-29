@@ -44,6 +44,10 @@ import {
     DEFAULT_PROJECTS_ROOT,
     projectStoreSlug,
     scanTranscripts,
+    measureBytesPerToken,
+    derivedBytes,
+    type BytesPerToken,
+    type DerivedBytes,
     type BucketAggregate,
     type TranscriptBucket,
     type TranscriptRecord,
@@ -764,11 +768,38 @@ export interface Report {
     council_mispricing: CouncilMispricingResult;
     worktree_fragmentation: WorktreeFragmentationResult;
     prefix_stability: PrefixStabilityResult;
+    /**
+     * Provider bytes per bucket — DERIVED, and labelled so on every value
+     * (`road-to-a-bytes-row-that-exists` Phase 2, metric
+     * `provider-bytes-per-call`).
+     *
+     * `null` when this corpus supplies no bytes-per-token factor. That is the
+     * honest outcome and it is emitted as `null` rather than as a figure from
+     * some other corpus: the factor is a property of the content it was
+     * measured on, and no constant lives in this file or in
+     * `_lib/cc_transcript.ts` for it to fall back to.
+     *
+     * LIMIT, stated where the number is rather than only in the registry: the
+     * factor is measured over ASSISTANT OUTPUT content, which is the only text
+     * a transcript carries. The request's system prompt, tool definitions and
+     * prior turns are not in the transcript at all (the same limitation
+     * `preamble_byte_census` records), so the factor is an output-side ratio
+     * applied to an input-side token count. That is why the value is `derived`
+     * and not `measured`, and why it must never be quoted as a wire figure.
+     */
+    provider_bytes: {
+        factor: BytesPerToken | null;
+        main: DerivedBytes | null;
+        subagent: DerivedBytes | null;
+    };
     claims: Claim[];
 }
 
 export function buildReport(opts: Options): Report {
-    const scan = scanTranscripts({ root: opts.root, maxAgeDays: opts.maxAgeDays });
+    // `measureBytes` is the only change to this scan: the token columns below
+    // are computed from the same `usage` blocks as before and are unaffected.
+    const scan = scanTranscripts({ root: opts.root, maxAgeDays: opts.maxAgeDays, measureBytes: true });
+    const bytesFactor = measureBytesPerToken(scan.records);
     const buckets = aggregateByBucket(scan.records);
     const subagentColdStart = computeColdStarts(scan.records);
     const byAgent = aggregateByAgent(scan.records);
@@ -822,6 +853,11 @@ export function buildReport(opts: Options): Report {
         council_mispricing: councilMispricing,
         worktree_fragmentation: worktreeFragmentation,
         prefix_stability: prefixStability,
+        provider_bytes: {
+            factor: bytesFactor,
+            main: derivedBytes(billableInputTokens(buckets.main), bytesFactor),
+            subagent: derivedBytes(billableInputTokens(buckets.subagent), bytesFactor),
+        },
         claims,
     };
 }
@@ -849,6 +885,30 @@ export function renderText(r: Report): string {
     out.push(`  stable cohort:   n=${ps.stable_cohort.n} read_share=${share(ps.stable_cohort.read_share)}`);
     out.push(`  unstable cohort: n=${ps.unstable_cohort.n} read_share=${share(ps.unstable_cohort.read_share)}`);
     out.push(`  ${ps.reason}`);
+    out.push('');
+
+    const pb = r.provider_bytes;
+    out.push('Provider bytes (DERIVED - never a counted wire figure):');
+    if (pb.factor === null) {
+        out.push('  basis: unavailable - this corpus supplied no bytes-per-token factor');
+        out.push('  no figure is emitted; a ratio from another corpus would not be this one');
+    } else {
+        out.push(
+            `  factor: ${pb.factor.bytes_per_token.toFixed(4)} bytes/token (basis: ${pb.factor.basis},`
+                + ` ${pb.factor.content_bytes} content bytes / ${pb.factor.output_tokens} output tokens`
+                + ` over ${pb.factor.records} records)`,
+        );
+        for (const bucket of ['main', 'subagent'] as const) {
+            const d = pb[bucket];
+            out.push(
+                d === null
+                    ? `  ${bucket}: basis: unavailable`
+                    : `  ${bucket}: ${d.bytes} bytes (basis: ${d.basis}, from ${d.tokens} billable input tokens)`,
+            );
+        }
+        out.push('  the factor is measured over assistant OUTPUT content; the request payload is');
+        out.push('  not in any transcript, so this is an estimate of volume, not a wire measurement');
+    }
     out.push('');
 
     out.push('By bucket:');
