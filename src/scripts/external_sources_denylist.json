@@ -1,5 +1,5 @@
 {
-  "_README": "Denylist for check_no_external_sources.py — blocks readable inspiration/harvest/comparison source names from re-entering the tracked tree. See rule source-confidentiality + the 2026-06-13 source-confidentiality sweep. Recommending an integrated tool is allowed; recording that we copied/derived/were-inspired-by an external source is not. To intentionally retain a source link, encrypt it via src/scripts/_lib/link_crypto.py.",
+  "_README": "Denylist for check_no_external_sources.ts — blocks readable inspiration/harvest/comparison source names from re-entering the tracked tree. See rule source-confidentiality + the 2026-06-13 source-confidentiality sweep. Recommending an integrated tool is allowed; recording that we copied/derived/were-inspired-by an external source is not. To intentionally retain a source link, encrypt it via src/scripts/_lib/link_crypto.ts. A COMPARISON CORPUS IS A PRODUCER OF THIS FILE: every subject a comparison / scorecard round audits owes at least one `deny` pattern here, and the `subjects` registry at the bottom of this file is that binding made machine-checkable — tests/scripts/external_source_subject_registry.test.ts reds when a registry row is not matched by any pattern above. Adding a subject without a row is the defect that produced the 2026-09-29 reading recorded in that test. (Both filenames above read `.py` until 2026-09-29; the Python originals were retired in the ADR-200 teardown, so the pointers named files that no longer exist.)",
   "deny": [
     "kdcllc",
     "nidhinjs",
@@ -65,7 +65,17 @@
     "book-to-skill",
     "project-codeguard",
     "\\bcodeguard\\b",
-    "\\bcosai\\b"
+    "\\bcosai\\b",
+    "\\bqoderai\\b",
+    "\\bbetter-harness\\b",
+    "\\bshanraisshan\\b",
+    "claude-code-best-practice",
+    "\\boraios\\b",
+    "oraios/serena",
+    "\\bopen-gsd\\b",
+    "\\bgsd-core\\b",
+    "\\bgsd-build\\b",
+    "\\bget-shit-done\\b"
   ],
   "_deny_digests_README": "DORMANT (road-to-source-silence Phase 1.1). HMAC-SHA256 digests of the deny set, derived from the gitignored private master by src/scripts/build_source_digests.ts. It is EMPTY on purpose: the plaintext `deny` array above stays in force and is not deleted. Provisioning the CI secret SOURCE_DENY_KEY, generating production digests, removing the plaintext array and switching CI to strict mode are ONE ATOMIC MAINTAINER CHANGE (AI council 2026-08-28, blocker `where-the-key-lives`, 2/2) — splitting them leaves the gate either failing every run for want of a key or silently degraded to warn mode, which is the failure this whole programme exists to remove. Recipe: docs/maintainers/source-deny-digests.md",
   "deny_digests": [],
@@ -103,6 +113,21 @@
   },
   "_excluded_tokens": {
     "agent-os": "collides with our own coined 'Agent-OS primitive' term (universal-skills) — too FP-prone to auto-deny; scrub external 'agent-os' mentions by review.",
-    "telegraph-shrink / telegraph-condense": "collide with our own 'telegraph'/'telegraph-condensed' feature vocabulary; the telegraph upstream is guarded via 'caveman' + 'juliusbrussee' instead."
-  }
+    "telegraph-shrink / telegraph-condense": "collide with our own 'telegraph'/'telegraph-condensed' feature vocabulary; the telegraph upstream is guarded via 'caveman' + 'juliusbrussee' instead.",
+    "serena": "S8's repo half. A common given name — a bare \\bserena\\b would turn a confidentiality gate into a ban on a person's name in any example or persona. The subject is guarded by the owner token \\boraios\\b plus the owner-qualified 'oraios/serena' instead, which is exactly the standard the pre-existing 'obra/superpowers' row already meets. Measured 2026-09-29: 0 occurrences in 11,598 tracked files, so the exclusion is a policy choice about future prose, not a reaction to a live collision.",
+    "gsd": "S9/S10's shared stem. A three-letter acronym is too collision-prone to deny bare. The two subjects are guarded by the four qualified rows \\bopen-gsd\\b, \\bgsd-core\\b, \\bgsd-build\\b and \\bget-shit-done\\b instead. Note the last one is hyphenated on purpose: the spaced English phrase is ordinary prose and is deliberately NOT denied."
+  },
+  "_subjects_README": "Registry of the comparison / scorecard subject set, added 2026-09-29 by road-to-a-denylist-that-sees-every-subject. It exists so that 'a subject was audited' and 'a subject is denied' cannot drift apart again: tests/scripts/external_source_subject_registry.test.ts asserts every `slug` below is matched by at least one `deny` pattern above, and reds when a row is added without its pattern. The slugs live HERE and nowhere else in the tracked tree — this file is the one path skip_paths exempts from its own scan, and it already had to hold these tokens as deny data, so the registry discloses nothing the array above did not. A fixture that named them would be a tracked file publishing exactly what the gate exists to hide, so the test synthesises its corpus from this registry at run time and never commits a resolved name. `id` values are the S1..S10 identifiers the maintainer-held source map uses; they are deliberately opaque here.",
+  "subjects": [
+    { "id": "S1", "slug": "graphify-labs/graphify" },
+    { "id": "S2", "slug": "ruvnet/ruflo" },
+    { "id": "S3", "slug": "affaan-m/everything-claude-code" },
+    { "id": "S4", "slug": "obra/superpowers" },
+    { "id": "S5", "slug": "qoderai/better-harness", "note": "Added 2026-09-29. Owner and repo both denied; the repo half is a hyphenated compound, so the ordinary word 'harness' — which this tree uses constantly — is untouched." },
+    { "id": "S6", "slug": "github/spec-kit" },
+    { "id": "S7", "slug": "shanraisshan/claude-code-best-practice", "note": "Added 2026-09-29. The repo half is denied unanchored because the hyphenated triple is distinctive on its own; the spaced phrase 'claude code best practice' is ordinary prose and stays allowed." },
+    { "id": "S8", "slug": "oraios/serena", "note": "Added 2026-09-29. Owner-qualified on purpose — see _excluded_tokens.serena." },
+    { "id": "S9", "slug": "open-gsd/gsd-core", "note": "Added 2026-09-29. Both halves denied with \\b anchors; the bare stem is excluded — see _excluded_tokens.gsd." },
+    { "id": "S10", "slug": "gsd-build/get-shit-done", "note": "Added 2026-09-29. Archived predecessor of S9. Not re-audited, but a name is a name: it is denied on the same terms." }
+  ]
 }
