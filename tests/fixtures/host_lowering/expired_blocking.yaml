@@ -17,4 +17,4 @@ hosts:
           host_version: "0.0.1"
           expires: __YESTERDAY__
         slots:
-          pre_tool_use: { native: PreToolUse, block_exit: 2 }
+          pre_tool_use: { native: PreToolUse, block_exit: 2, answered_at: "2026-01-01" }

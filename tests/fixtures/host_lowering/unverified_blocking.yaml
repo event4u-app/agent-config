@@ -12,4 +12,4 @@ hosts:
         timeout_default: null
         verified: null
         slots:
-          pre_tool_use: { native: PreToolUse, block_exit: 2 }
+          pre_tool_use: { native: PreToolUse, block_exit: 2, answered_at: "2026-01-01" }

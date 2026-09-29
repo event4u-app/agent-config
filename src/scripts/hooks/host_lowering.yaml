@@ -23,11 +23,21 @@
 #   - src/scripts/hooks/host_semantics.ts   (VERIFIED_PLATFORMS, isBlockCapable, emission shape)
 #   - src/scripts/_lib/host_bindings.ts     (per-host bridge bindings + the install smoke probe)
 #   - src/scripts/lint_hook_manifest.ts     (schema + expiry gate)
+#   - src/scripts/check_host_docs_digest.ts (docs-drift watcher over `verified.docs_digest`)
 #
 # COLUMNS
 #   block_exit       exit code this host honours as a refusal on that slot;
 #                    `null` = this tree has not established that it honours one.
+#   answered_at      the date the pair above was last answered — REQUIRED on
+#                    every slot. A `block_exit: null` with no date is
+#                    indistinguishable from a slot nobody looked at, and that
+#                    ambiguity is what this column removes. The citation for the
+#                    answer is the row's `verified.docs_url` unless the slot
+#                    carries its own `docs_url:`.
 #   json_shape       structured-output envelope the dispatcher may emit.
+#                    `none` means this package has no native envelope for the
+#                    host, so `emitFor` keeps the legacy pass-through even when
+#                    the row is verified — see host_semantics.usesNativeEmission.
 #   entry_shape      shape of the bridge entry the installer writes.
 #   fail_policy      `propagate` = the dispatcher's exit code reaches the host;
 #                    `discard`   = the trampoline exits 0 regardless.
@@ -35,10 +45,23 @@
 #   timeout_default  host default for that timeout. `null` = not established here.
 #   verified         provenance of the row, or `null`. `expires` is mandatory
 #                    when the block is present — see lint_hook_manifest.
+#                    `docs_digest` is the sha256 of the `docs_url` body as
+#                    fetched on `docs_at`; `check_host_docs_digest --fetch`
+#                    re-reads it and flags a change.
 #   slots            ORDERED. Bridge entries are written in this order, so the
 #                    order is part of the generated output and must not be
 #                    sorted. `native` may be a list where one slot has two
 #                    native events (cline session_start).
+#
+# THE `expires` POLICY, STATED RATHER THAN IMPLIED. No host this package
+# supports publishes a documentation cadence, so no `expires` here is a vendor
+# commitment — each one is a review-by date this package chose. Rows established
+# by a dated documentation read carry `docs_at` + 1 year. `claude` keeps its
+# committed 2027-09-06 because that value predates this policy and nothing in
+# this change gives a reason to move it. The real drift signal is
+# `docs_digest`: when the watcher sees a changed body it sets `expires` to the
+# day BEFORE the detection date, because `lint_hook_manifest` tests `expires <
+# today` — "valid through yesterday" is how a row stops being current today.
 schema_version: 1
 
 hosts:
@@ -52,24 +75,32 @@ hosts:
         timeout_default: null
         # Transcribed from the behaviour host_semantics.ts already implements —
         # this row is a description of the status quo, not a new claim.
-        # docs_at/host_version are null because the original read was never
-        # dated; that absence is the record, and the lint reports it.
+        # `docs_at` / `host_version` were null until 2026-09-29: the original
+        # read was never dated, and the absence was the record. Both are filled
+        # now from sources this tree already carries — the 2026-09-06 live probe
+        # recorded in `host_semantics.ts` (Claude Code 2.1.263) and a fresh
+        # documentation read on 2026-09-29. `expires` is deliberately unchanged.
+        #
+        # The committed `docs_url` was `https://docs.claude.com/en/docs/claude-code/hooks`,
+        # which answers 301 and lands on the URL below. Recording the redirect
+        # target is what makes a digest reproducible.
         verified:
-          docs_at: null
-          docs_url: https://docs.claude.com/en/docs/claude-code/hooks
-          probe_at: null
-          host_version: null
+          docs_at: 2026-09-29
+          docs_url: https://code.claude.com/docs/en/hooks.md
+          docs_digest: null
+          probe_at: 2026-09-06
+          host_version: 2.1.263
           expires: 2027-09-06
         slots:
-          session_start:      { native: SessionStart,      block_exit: null }
-          session_end:        { native: SessionEnd,        block_exit: null }
-          stop:               { native: Stop,              block_exit: 2 }
-          user_prompt_submit: { native: UserPromptSubmit,  block_exit: 2 }
-          pre_tool_use:       { native: PreToolUse,        block_exit: 2 }
-          post_tool_use:      { native: PostToolUse,       block_exit: null }
-          pre_compact:        { native: PreCompact,        block_exit: null }
-          subagent_start:     { native: SubagentStart,     block_exit: null }
-          subagent_stop:      { native: SubagentStop,      block_exit: null }
+          session_start:      { native: SessionStart,      block_exit: null, answered_at: 2026-09-29 }
+          session_end:        { native: SessionEnd,        block_exit: null, answered_at: 2026-09-29 }
+          stop:               { native: Stop,              block_exit: 2,    answered_at: 2026-09-29 }
+          user_prompt_submit: { native: UserPromptSubmit,  block_exit: 2,    answered_at: 2026-09-29 }
+          pre_tool_use:       { native: PreToolUse,        block_exit: 2,    answered_at: 2026-09-29 }
+          post_tool_use:      { native: PostToolUse,       block_exit: null, answered_at: 2026-09-29 }
+          pre_compact:        { native: PreCompact,        block_exit: null, answered_at: 2026-09-29 }
+          subagent_start:     { native: SubagentStart,     block_exit: null, answered_at: 2026-09-29 }
+          subagent_stop:      { native: SubagentStop,      block_exit: null, answered_at: 2026-09-29 }
 
   augment:
     surfaces:
@@ -81,13 +112,30 @@ hosts:
         fail_policy: discard
         timeout_unit: unknown
         timeout_default: null
-        verified: null
+        # Established by a documentation read on 2026-09-29, not by a live
+        # probe — `probe_at` stays null and says so.
+        verified:
+          docs_at: 2026-09-29
+          docs_url: https://docs.augmentcode.com/cli/hooks.md
+          docs_digest: null
+          probe_at: null
+          host_version: null
+          expires: 2027-09-29
+        # THE FINDING THIS ROW CARRIES. Augment's own documentation states that
+        # `PreToolUse` can block tool execution and shows `exit 2` doing it. The
+        # `block_exit: null` below is therefore NOT a claim that the host cannot
+        # refuse — this file's header says a row never makes that claim. It is a
+        # fact about this package: `augment-dispatcher.sh` exits 0
+        # unconditionally (`fail_policy: discard`), so no verdict this package
+        # produces can reach the host at all. Arming it means changing the
+        # trampoline, which is an enforcement expansion and belongs to its own
+        # change with its own ratification — not to a dating pass.
         slots:
-          session_start:  { native: SessionStart,  block_exit: null }
-          session_end:    { native: SessionEnd,    block_exit: null }
-          stop:           { native: Stop,          block_exit: null }
-          pre_tool_use:   { native: PreToolUse,    block_exit: null }
-          post_tool_use:  { native: PostToolUse,   block_exit: null }
+          session_start:  { native: SessionStart,  block_exit: null, answered_at: 2026-09-29 }
+          session_end:    { native: SessionEnd,    block_exit: null, answered_at: 2026-09-29 }
+          stop:           { native: Stop,          block_exit: null, answered_at: 2026-09-29 }
+          pre_tool_use:   { native: PreToolUse,    block_exit: null, answered_at: 2026-09-29 }
+          post_tool_use:  { native: PostToolUse,   block_exit: null, answered_at: 2026-09-29 }
 
   cursor:
     surfaces:
@@ -97,13 +145,19 @@ hosts:
         fail_policy: propagate
         timeout_unit: unknown
         timeout_default: null
-        verified: null
+        verified:
+          docs_at: 2026-09-29
+          docs_url: https://cursor.com/docs/hooks.md
+          docs_digest: null
+          probe_at: null
+          host_version: null
+          expires: 2027-09-29
         slots:
-          session_start:      { native: sessionStart,        block_exit: null }
-          session_end:        { native: sessionEnd,          block_exit: null }
-          stop:               { native: stop,                block_exit: null }
-          user_prompt_submit: { native: beforeSubmitPrompt,  block_exit: null }
-          post_tool_use:      { native: postToolUse,         block_exit: null }
+          session_start:      { native: sessionStart,        block_exit: null, answered_at: 2026-09-29 }
+          session_end:        { native: sessionEnd,          block_exit: null, answered_at: 2026-09-29 }
+          stop:               { native: stop,                block_exit: null, answered_at: 2026-09-29 }
+          user_prompt_submit: { native: beforeSubmitPrompt,  block_exit: null, answered_at: 2026-09-29 }
+          post_tool_use:      { native: postToolUse,         block_exit: null, answered_at: 2026-09-29 }
 
   cline:
     surfaces:
@@ -115,13 +169,27 @@ hosts:
         fail_policy: discard
         timeout_unit: unknown
         timeout_default: null
-        verified: null
+        # SECOND FINDING FROM THE 2026-09-29 READ. `docs.cline.bot`'s hooks page
+        # is now a one-line pointer to its SDK-plugins page and names none of
+        # the `TaskStart` / `TaskResume` / `TaskComplete` / `TaskCancel` events
+        # the slots below bind. The row is dated against the page that exists,
+        # and the digest watcher is what will surface the next move; re-deriving
+        # the event names from a page that no longer lists them is a separate
+        # piece of work, and inventing a citation for them here would be the
+        # defect this file was built to remove.
+        verified:
+          docs_at: 2026-09-29
+          docs_url: https://docs.cline.bot/customization/hooks.md
+          docs_digest: null
+          probe_at: null
+          host_version: null
+          expires: 2027-09-29
         slots:
-          session_start:      { native: [TaskStart, TaskResume], block_exit: null }
-          session_end:        { native: TaskComplete,            block_exit: null }
-          stop:               { native: TaskCancel,              block_exit: null }
-          user_prompt_submit: { native: UserPromptSubmit,        block_exit: null }
-          post_tool_use:      { native: PostToolUse,             block_exit: null }
+          session_start:      { native: [TaskStart, TaskResume], block_exit: null, answered_at: 2026-09-29 }
+          session_end:        { native: TaskComplete,            block_exit: null, answered_at: 2026-09-29 }
+          stop:               { native: TaskCancel,              block_exit: null, answered_at: 2026-09-29 }
+          user_prompt_submit: { native: UserPromptSubmit,        block_exit: null, answered_at: 2026-09-29 }
+          post_tool_use:      { native: PostToolUse,             block_exit: null, answered_at: 2026-09-29 }
 
   windsurf:
     surfaces:
@@ -131,11 +199,20 @@ hosts:
         fail_policy: propagate
         timeout_unit: unknown
         timeout_default: null
-        verified: null
+        # THIRD FINDING FROM THE 2026-09-29 READ. `docs.windsurf.com` now
+        # redirects to `docs.devin.ai`; the redirect target is recorded so the
+        # digest is reproducible.
+        verified:
+          docs_at: 2026-09-29
+          docs_url: https://docs.devin.ai/desktop/cascade/hooks.md
+          docs_digest: null
+          probe_at: null
+          host_version: null
+          expires: 2027-09-29
         slots:
-          session_start:      { native: post_setup_worktree,   block_exit: null }
-          user_prompt_submit: { native: pre_user_prompt,       block_exit: null }
-          stop:               { native: post_cascade_response, block_exit: null }
+          session_start:      { native: post_setup_worktree,   block_exit: null, answered_at: 2026-09-29 }
+          user_prompt_submit: { native: pre_user_prompt,       block_exit: null, answered_at: 2026-09-29 }
+          stop:               { native: post_cascade_response, block_exit: null, answered_at: 2026-09-29 }
 
   gemini:
     surfaces:
@@ -149,14 +226,21 @@ hosts:
         # 0.50.0 in an isolated scratch workspace and could not run: the CLI
         # aborts with IneligibleTierError before any turn begins, so no tool
         # call and therefore no BeforeTool hook is reachable. An unrunnable
-        # probe establishes nothing, so this stays null.
-        verified: null
+        # probe establishes nothing, which is why `probe_at` is still null —
+        # the block below rests on the 2026-09-29 documentation read alone.
+        verified:
+          docs_at: 2026-09-29
+          docs_url: https://geminicli.com/docs/hooks/reference.md
+          docs_digest: null
+          probe_at: null
+          host_version: null
+          expires: 2027-09-29
         slots:
-          session_start:      { native: SessionStart, block_exit: null, matcher: "" }
-          session_end:        { native: SessionEnd,   block_exit: null, matcher: "" }
-          stop:               { native: AfterAgent,   block_exit: null, matcher: "" }
-          user_prompt_submit: { native: BeforeAgent,  block_exit: null, matcher: "" }
-          post_tool_use:      { native: AfterTool,    block_exit: null, matcher: ".*" }
+          session_start:      { native: SessionStart, block_exit: null, answered_at: 2026-09-29, matcher: "" }
+          session_end:        { native: SessionEnd,   block_exit: null, answered_at: 2026-09-29, matcher: "" }
+          stop:               { native: AfterAgent,   block_exit: null, answered_at: 2026-09-29, matcher: "" }
+          user_prompt_submit: { native: BeforeAgent,  block_exit: null, answered_at: 2026-09-29, matcher: "" }
+          post_tool_use:      { native: AfterTool,    block_exit: null, answered_at: 2026-09-29, matcher: ".*" }
 
   cowork:
     surfaces:
@@ -168,7 +252,18 @@ hosts:
         fail_policy: discard
         timeout_unit: unknown
         timeout_default: null
-        verified: null
+        # `docs_url` is null and that is the answer, not a gap: the 2026-09-29
+        # sweep found no public hook documentation for this host to cite. What
+        # the row records is this tree's own finding, restated above the
+        # `slots: {}` below — nothing is bound, so there is no pair to date.
+        # `docs_digest` is null for the same reason: there is no body to hash.
+        verified:
+          docs_at: 2026-09-29
+          docs_url: null
+          docs_digest: null
+          probe_at: null
+          host_version: null
+          expires: 2027-09-29
         slots: {}
 
   copilot:
@@ -181,5 +276,52 @@ hosts:
         timeout_default: null
         # `fallback_only: true` in hook_manifest.yaml. This package binds
         # nothing here and has measured nothing here.
-        verified: null
+        #
+        # THE PHASE-2 FINDING, RECORDED WHERE IT IS READ. The 2026-09-29
+        # documentation check found that the host DOES document lifecycle hooks
+        # — `sessionStart`, `sessionEnd`, `userPromptSubmitted`, `preToolUse`,
+        # `postToolUse`, `agentStop`, `subagentStop`, `errorOccurred` — at
+        # `~/.copilot/hooks/*.json`, with `preToolUse` fail-closed on exit 2.
+        # So the roadmap's dated zero does NOT apply to this host, and the row
+        # below is a dated statement about this package, not about the host:
+        # nothing is bound, so `slots:` stays empty. Binding it is the work
+        # `road-to-hooks-on-copilot-and-codex` carries.
+        verified:
+          docs_at: 2026-09-29
+          docs_url: https://docs.github.com/en/copilot/concepts/agents/hooks.md
+          docs_digest: null
+          probe_at: null
+          host_version: null
+          expires: 2027-09-29
+        slots: {}
+
+  codex:
+    surfaces:
+      any:
+        entry_shape: none
+        json_shape: none
+        fail_policy: discard
+        timeout_unit: unknown
+        timeout_default: null
+        # THE OTHER HALF OF THE PHASE-2 FINDING. Until 2026-09-29 this file had
+        # no `codex` row at all, and `docs/enforcement-by-host.md` called that
+        # "the third kind of absence" — no row because no `platforms:` key. The
+        # documentation check replaced the absence with an answer: Codex
+        # documents `SessionStart`, `SessionEnd`, `SubagentStart`,
+        # `SubagentStop`, `PreToolUse`, `PermissionRequest`, `PostToolUse`,
+        # `PreCompact`, `PostCompact`, `UserPromptSubmit`, `Stop` and
+        # `Interrupt` at `~/.codex/hooks.json`, in a config shape and with an
+        # `exit 2` + `hookSpecificOutput` contract that match Claude Code's.
+        #
+        # The row exists so the fact is dated and citable. `slots: {}` is the
+        # honest state of THIS package: no `platforms.codex` block, no
+        # trampoline, nothing installed. A row with slots the installer does
+        # not write would be the claim-without-evidence this file refuses.
+        verified:
+          docs_at: 2026-09-29
+          docs_url: https://developers.openai.com/codex/hooks.md
+          docs_digest: null
+          probe_at: null
+          host_version: null
+          expires: 2027-09-29
         slots: {}
