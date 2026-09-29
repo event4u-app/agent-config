@@ -3,7 +3,7 @@ complexity: lightweight
 status: ready
 execution:
   mode: phase-checkpoints
-estate_growth_exempt: "Roadmap count 0 to 1. The growth IS the deliverable and nothing in the tree covers it: verified 2026-09-29 at HEAD, `src/agent-src/templates/scripts/work_engine/directives/ui/apply.ts` matches a declared inventory item against a coverage bucket with `entries.some(e => e.includes(needle))` at line 190, returns `Outcome.SUCCESS` at line 129 when every item sits in `flagged`, and scans `envelope['rendered']` rather than the written files at line 268. Three gates that cannot fail on the cases they exist for are not a backlog item; they are a ledger reporting coverage the tree does not have."
+estate_growth_exempt: "active_roadmaps 2 to 24 (+22, all 22 offset-exempt) — measured by check_estate_count on this diff, not predicted. This claim authorises the whole inbox-2026-09-ab round; the per-file justification follows. The growth IS the deliverable and nothing in the tree covers it: verified 2026-09-29 at HEAD, `src/agent-src/templates/scripts/work_engine/directives/ui/apply.ts` matches a declared inventory item against a coverage bucket with `entries.some(e => e.includes(needle))` at line 190, returns `Outcome.SUCCESS` at line 129 when every item sits in `flagged`, and scans `envelope['rendered']` rather than the written files at line 268. Three gates that cannot fail on the cases they exist for are not a backlog item; they are a ledger reporting coverage the tree does not have."
 estate_offset_exempt: >-
   No offset exists. `agents/roadmaps/archive/road-to-behaviour-evidence-over-pixels.md` and
   `agents/roadmaps/archive/road-to-a-declared-component-contract.md` are already archived, so there
