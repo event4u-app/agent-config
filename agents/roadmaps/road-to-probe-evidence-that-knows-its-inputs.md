@@ -3,14 +3,7 @@ complexity: lightweight
 status: ready
 execution:
   mode: phase-checkpoints
-estate_growth_exempt: >-
-  Roadmap count +1. Verified 2026-09-29 at HEAD: `grep -c 'sha256\|createHash\|digest'`
-  over `src/scripts/ui_conformance_probe.ts` returns 0, so `ui-conformance.json` records
-  `generated_at` and nothing about what it looked at, and `conformanceVerdict` in
-  `src/scripts/hooks/design_pass_hook.ts` prints a findings count with no freshness comparison —
-  while the same file applies an mtime freshness rule to the audit artefact and states in its own
-  comment that a stale artefact is worse than a missing one. The asymmetry is inside one file and
-  nothing else in the tree reads it.
+estate_growth_exempt: "Roadmap count +1. Verified 2026-09-29 at HEAD: `grep -c 'sha256\|createHash\|digest'` over `src/scripts/ui_conformance_probe.ts` returns 0, so `ui-conformance.json` records `generated_at` and nothing about what it looked at, and `conformanceVerdict` in `src/scripts/hooks/design_pass_hook.ts` prints a findings count with no freshness comparison — while the same file applies an mtime freshness rule to the audit artefact and states in its own comment that a stale artefact is worse than a missing one. The asymmetry is inside one file and nothing else in the tree reads it."
 estate_offset_exempt: >-
   This work was scoped as a defect fix inside `road-to-behaviour-evidence-over-pixels`, which
   archived before it landed, so the intended host no longer exists and there is nothing to retire
