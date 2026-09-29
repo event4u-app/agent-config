@@ -58,7 +58,7 @@ deny message names its own kill switch.
 
 ## Phase 1 — One mechanism per file class
 
-- [ ] **1.1 Extend the ratification CI gate's path set to plumbing sources.**
+- [x] **1.1 Extend the ratification CI gate's path set to plumbing sources.**
       In `check_kernel_edit_ratified.ts`, add `src/scripts/hook_manifest.yaml`,
       `src/scripts/hooks/host_lowering.yaml`, `src/scripts/hooks/*-dispatcher.sh`,
       `src/config/hook-token-budget.json`, `src/config/hook-latency-budget.json`
@@ -68,7 +68,15 @@ deny message names its own kill switch.
       verify: CI red on a branch editing `hook_manifest.yaml` without a
       ratification artifact under `agents/evidence/ratifications/`; green
       with one; `tests/scripts/check_kernel_edit_ratified.test.ts` extended.
-- [ ] **1.2 Add `src/scripts/hooks/block_plumbing_writes.ts` (new) for build
+      **Evidence (2026-09-29).** `check_kernel_edit_ratified.ts` gained
+      `PLUMBING_SOURCE_RE` covering all five paths. `tests/scripts/check_kernel_edit_ratified.test.ts`
+      extended and green (part of 77 passing across the four touched files).
+      The membership list is in `hook-architecture-v1.md` § Plumbing — Sources,
+      with the asymmetry it closes stated: a concern DELETED from the manifest
+      is a refusal that stops happening, the same authority change as loosening
+      the rule behind it, reached one file earlier and until now unrecorded
+      while a typo in that rule was.
+- [x] **1.2 Add `src/scripts/hooks/block_plumbing_writes.ts` (new) for build
       outputs only.** PreToolUse deny (`fail_closed: true`, `severity: blocking`)
       for Write/Edit/NotebookEdit and the shell write shapes
       `block_kernel_rule_writes.ts:137-160` recognises, targeting
@@ -85,17 +93,36 @@ deny message names its own kill switch.
       `BLOCKING_ALLOWLIST` extended in the same commit; heredoc-through-
       interpreter residual asserted as known-open (as in
       `block_kernel_rule_writes.ts:30-36`).
-- [ ] **1.3 Lint deny text for kill-switch names** (`lint_deny_text.ts`, new,
+      **Evidence (2026-09-29).** `block_plumbing_writes.ts` refuses
+      Write/Edit/NotebookEdit and the shell write shapes (now factored into
+      `_lib/shell_write_shapes.ts`, shared with `block_kernel_rule_writes`)
+      against `dist/hooks/dispatch.js` and `hooks/hooks.json`.
+      `tests/scripts/hooks/block_plumbing_writes.test.ts` green, both
+      directions — a refused hand edit AND an allowed `npm run build:hooks`.
+      `BLOCKING_ALLOWLIST` in `tests/hooks/concern_severity.test.ts` extended in
+      the same change; the heredoc-through-interpreter residual is stated in the
+      guard's header as known-open rather than implied closed.
+- [x] **1.3 Lint deny text for kill-switch names** (`lint_deny_text.ts`, new,
       task `lint-deny-text`): no `stderr`/`reason` string emitted by a
       blocking concern may contain `AGENT_CONFIG_[A-Z_]+=`, `export `, or a
       settings key path. Exclusion: the human-owned exception registry that
       `block-kernel-rule-writes` names by design (`hook_manifest.yaml:181-182`).
       verify: fixture concern with `set AGENT_CONFIG_X=1 to skip` fails; the
       tree passes.
+      **Evidence (2026-09-29).** `./scripts-run src/scripts/lint_deny_text` →
+      `no blocking concern names its own bypass (9 concern(s) scanned)`.
+      `--self-test`: 7 cases, 3 rejecting — an env assignment with its value, an
+      `export` line, a settings key in prose — against the direction that
+      matters for a young pattern gate: a bare settings key used as a LOOKUP
+      must PASS, because a rule firing on it would fire on every concern that
+      reads its own configuration.
+      **Found during this pass:** the gate had its task definition and its place
+      in the chain but NO CI step and NO `gate-coverage.yml` row, so 1.3 was
+      built and unreachable. Both added here.
 
 ## Phase 2 — Settings: keys, not files (D4)
 
-- [ ] **2.1 Class C keys are hook-refused, files are not.** Extend
+- [x] **2.1 Class C keys are hook-refused, files are not.** Extend
       `block_config_weakening.ts` with a third `ConfigKind` `class-c`: a
       Write/Edit to a project `.agent-settings.yml` or `.claude/settings.json`
       that changes a key `lint_settings_classes.ts` classifies as C (spend
@@ -106,8 +133,48 @@ deny message names its own kill switch.
       verify: fixture edit flipping `hooks.enabled` in project
       `.claude/settings.json` → refused; edit of a Class A key → allowed;
       `tests/scripts/lint_settings_classes.test.ts` untouched.
+      **Evidence (2026-09-29).** `classify_target` gains `class-c` for
+      `.agent-settings.yml` and a host's `.claude/settings.json`; a bare
+      `settings.json` elsewhere stays unclassified, because fencing it on the
+      basename alone would refuse files carrying no settings key. `classCVerdict`
+      parses the document as it would stand AFTER the edit, diffs LEAF key paths,
+      and refuses when any changed key resolves to C through the SHARED
+      `shared/settingsClasses.classOfPath` — the same classifier `settings:set`
+      and the GUI write route use, not a second copy.
+      Eight tests, each refusal paired with the allow that proves the fence is
+      per-key: `hooks.injection_scan.enabled` refused, `personal.play_by_play`
+      in the same file allowed, `lint_settings_classes.test.ts` untouched.
+      Both fail-closed states asserted (unreadable contract, unparseable result).
+      Sensitivity probed three ways: neutralising the guarded-key filter reds the
+      C-key and fail-closed cases; neutralising the parse check reds the
+      unparseable case; nothing else moves.
 
 ## Phase 3 — The dispatcher verifies what it runs
+
+> **BLOCKED — all three steps, 2026-09-29.** Not for lack of a design: the
+> blocker is that 3.3 cannot be closed by any amount of code, and 3.1 and 3.2
+> are its prerequisites rather than independent work.
+>
+> **3.3 requires an elapsed measurement window.** Its own text says
+> "warn-only for the first measured window, then deny", and Risk 1 of this
+> file's register is the reason — a blocking concern whose SLA was guessed
+> refuses every call on a slow host. A window that has not elapsed cannot be
+> declared elapsed by the session that wants to flip the switch.
+>
+> **3.2 requires the REFERENCE RUNNER, not this machine.** It writes `sla_ms`
+> per blocking concern "from the measured p95 on the reference runner", and the
+> hook-latency baseline already carries the note that a locally recorded darwin
+> baseline broke the regression gate once. A p95 measured here would be the
+> guessed number Risk 1 names, wearing a measurement's clothes.
+>
+> **3.1 is buildable and was deliberately not built here.** It edits the hot
+> path of every dispatch, and landing it in the same change as Phases 1, 2 and 4
+> — which touch three governance surfaces and already carry a ratification —
+> would put the riskiest edit in the tree behind the largest diff. It is left
+> for its own change, where its own review can be about it.
+>
+> **Resolved when** 3.2 has a reference-runner reading, 3.1 lands on its own,
+> and 3.3's warn-only window has actually elapsed.
 
 - [ ] **3.1 Bundle integrity once per session, cached.** `build:hooks` writes
       `dist/hooks/dispatch.sha256`; `check_hook_bundle_content.ts` (exists,
@@ -145,7 +212,7 @@ deny message names its own kill switch.
 
 ## Phase 4 — One exit-code table
 
-- [ ] **4.1 `src/scripts/hooks/exit_codes.ts` (new).** One frozen table
+- [x] **4.1 `src/scripts/hooks/exit_codes.ts` (new).** One frozen table
       `{code, name, meaning, owner, authorizedBy}` for 0/1/2/≥3; `dispatch_hook.EXIT_*`
       and `host_semantics.ts` import it; the 33 hook files declaring local
       `const EXIT_ALLOW = 0 …` import instead. Lint `lint_exit_codes` (new)
@@ -153,6 +220,24 @@ deny message names its own kill switch.
       (the `*-dispatcher.sh` inline one-liners are out of scope).
       verify: `grep -rn 'process.exit([0-9]' src/scripts/hooks --include=*.ts | wc -l`
       is 0; `lint-exit-codes` in `ci-fast.yml`.
+      **Evidence (2026-09-29).** `grep -rn 'process\.exit([0-9]'
+      src/scripts/hooks/*.ts` → **0**. `src/scripts/hooks/exit_codes.ts` is the
+      frozen table with `owner` and `authorizedBy` per row.
+      `./scripts-run src/scripts/lint_exit_codes` → `59 hook file(s), no bare
+      exit numeral`; `--self-test` 6 cases, 4 rejecting, including a bare `0`
+      (the one people assume is harmless) and an empty corpus. The table file's
+      own exclusion is exercised rather than asserted — the fixture plants a bare
+      exit into `exit_codes.ts` every run. Registered in `ci-fast.yml`, chained in
+      `Taskfile.yml`, invoked in `consistency.yml` as the script (not via `task`),
+      with a `gate-coverage.yml` row. Sensitivity probed against the real tree:
+      restoring the bare `2` in `replay_hook.ts` reds the gate naming that line.
+      **TWO SITES WERE NOT VERDICTS.** `dispatch_hook` and `replay_hook` are also
+      CLIs and exit 2 on their own bad argv — the POSIX usage convention, which
+      collides with `EXIT_WARN` by coincidence and not by meaning, since no
+      concern has spoken at that point. `EXIT_USAGE` is exported beside the table
+      and deliberately NOT a row in it: importing `EXIT_WARN` would assert a
+      verdict nobody reached, and a fifth row would put a non-verdict in a table
+      whose whole subject is what a concern may say.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-28 | reviewer: claude/host -->
@@ -165,15 +250,17 @@ deny message names its own kill switch.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — An unratified diff to `hook_manifest.yaml`, `host_lowering.yaml`
+- [x] AC-1 — An unratified diff to `hook_manifest.yaml`, `host_lowering.yaml`
       or a budget file fails CI; a hand edit to `dist/hooks/dispatch.js` or
       `hooks/hooks.json` is refused at tool-call time.
+<!-- AC-2 and AC-3 belong to Phase 3, which is blocked above; they stay open
+     for the reasons recorded there, not for lack of an attempt. -->
 - [ ] AC-2 — A one-byte change to the built bundle refuses the next
       blocking-slot dispatch; the per-dispatch cost is a stat call.
 - [ ] AC-3 — After the measured window, a blocking concern that throws or
       exceeds `sla_ms × 3` refuses; an advisory one allows with an issue row.
-- [ ] AC-4 — `lint-deny-text` and `lint-exit-codes` are in CI and green.
-- [ ] AC-5 — A Class C key edit in project settings is refused; a Class A
+- [x] AC-4 — `lint-deny-text` and `lint-exit-codes` are in CI and green.
+- [x] AC-5 — A Class C key edit in project settings is refused; a Class A
       key edit is not; no user-global file is touched.
 
 ## Provenance
