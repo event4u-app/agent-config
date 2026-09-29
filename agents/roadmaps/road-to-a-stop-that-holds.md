@@ -408,6 +408,51 @@ its pre-registered bar can be read — armed only by that reading.
       and the placement — failed exactly 3 (green→green, stale green, mismatched
       targets) and no others; restored from a copy. -->
 
+## Review round — 2026-09-30
+
+An independent review was dispatched to a fresh subagent on the pushed branch
+with a neutral prompt. **Its verdict was `do not merge on the current
+evidence`, and it was right.** Findings and dispositions:
+`agents/evidence/reviews/stop-that-holds.findings.md` (20 findings — 2 critical,
+7 medium, 11 low; 17 fixed here, 2 accepted, 3 deferred with reasons).
+
+**The two critical findings were reproduced independently before being acted
+on**, against 1,077 object-shaped and 11 string-shaped tool results in this
+machine's own Claude Code transcripts, and they change what several closed steps
+above may be read as claiming:
+
+1. **Step 1.2's verify line was satisfied by a payload shape no host sends.**
+   Claude Code's Bash result carries NO exit-code field: success is an object
+   `{stdout, stderr, interrupted, isImage, noOutputExpected}`, failure is the
+   bare string `Error: Exit code N\n…`. So on the only host that binds the
+   turn-end gate, every recorded run carried `exit_code: null`, classified
+   `exit_code_unavailable`, became an instrument gap, and the turn ended
+   normally — **including a turn whose vitest run had just reported two
+   failures, with that count sitting parseable in the record**. The Goal at the
+   top of this file was false as first shipped. Fixed in `728259377`: three
+   readings with provenance on the row.
+2. **The recorder JSON-stringified an object response**, and every parser here
+   is line-anchored, so no summary could ever be parsed from the success shape.
+   Latent behind finding 1 and live the moment it was fixed — where it would
+   have turned detector F into a refusal of honest TDD. Fixed in the same commit.
+
+**Why both were invisible to a green suite, which is the durable lesson.** Every
+gate-side fixture hand-wrote `stdout_tail` with real newlines and an explicit
+`exit_code`; every recorder-side test asserted only that the stored string
+CONTAINED a summary. Nothing crossed the producer/consumer seam, and nothing used
+a real host payload shape. `tests/scripts/verification_record_roundtrip.test.ts`
+now does: 16 cases through the real recorder into the real classifier, and **13
+of them fail against the pre-fix recorder** — which is the measurement of how
+much the hand-written fixtures were hiding.
+
+Three further findings were false-refusal paths on a BLOCKING gate, each now a
+fixture: a load-failure phrase overriding a clean summary, the canonical TDD
+first red (`Cannot find module`) not counting as a red, and detector F firing on
+any test edit rather than a new test file. And **AC-5's "28 == 28" was already
+false at the merge base** — a merge had brought in one more switch — so
+`check_kill_switch_table` now compares the two sets on every run rather than a
+reader recounting by hand.
+
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-29 | reviewer: claude/host -->
 
