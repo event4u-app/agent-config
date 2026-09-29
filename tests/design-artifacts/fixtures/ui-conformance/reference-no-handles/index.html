@@ -1,0 +1,35 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>UI conformance fixture — reference with no handles</title>
+<link rel="stylesheet" href="styles.css">
+<!-- D6 (handle-less reference, Phase 1.1 of
+     `road-to-a-probe-that-cannot-report-a-false-green`): identical to
+     `reference/index.html` except that every `data-probe-id` attribute is
+     removed. This is what a design handover carrying no probe handles looks
+     like, and it is the state every real handover in this tree is in — none
+     carries a `data-probe-id` at all.
+
+     The capture therefore collects ZERO nodes, which is the input the probe had
+     never been given. Before Phase 2 `evaluate()` stamped all five dimensions
+     `status: "exercised"` with `findings: 0` and returned
+     `structure_gate: "passed"` for it — a run that entered no dimension
+     reporting as a clean comparison. The fixture exists so that reading is a
+     test failure rather than an argument.
+
+     EXPECTED READING AFTER PHASE 2: five rows of
+     `status: "not_applicable"`, `findings: null`, each carrying a reason that
+     names the handover rather than the host, and `structure_gate: "stopped"`.
+     `reference_nodes: 0` and `target_nodes: 0` on the artefact. -->
+<main class="card">
+  <header class="toolbar">
+    <h1 class="title">Conformance reference</h1>
+    <span class="badge">ready</span>
+  </header>
+  <p class="body">
+    The reference implementation. Every planted defect in a sibling variant is a
+    deliberate removal from this file or its stylesheet.
+  </p>
+  <button class="action" aria-expanded="false">Toggle details</button>
+  <section class="panel" hidden>Details panel content.</section>
+</main>
+<script src="app.js"></script>
