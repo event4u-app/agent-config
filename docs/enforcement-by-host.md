@@ -399,7 +399,7 @@ host and host version observed, the exact page and section with its URL, the
 date it was read, and — for the part that is a runtime claim rather than a
 documentation claim — a session in which the timeout was actually reached and
 its effect on the thirteen concerns recorded. Until one exists, this document
-says the tables do not cover slot-failure behaviour, which is true, rather than
+says the tables do not cover slot-failure behavior, which is true, rather than
 covering it from an unpinnable source.
 
 **Two things this tree does know about that slot, and they are measurements.**
@@ -410,7 +410,7 @@ And `docs/hook-latency.json` records `user_prompt_submit` at **p95 81 ms** over
 
 **No conclusion is drawn from those two numbers, and the refusal is
 deliberate.** A low p95 beside any timeout invites the reading that the timeout
-is unreachable and slot-failure behaviour therefore does not matter. A p95 is
+is unreachable and slot-failure behavior therefore does not matter. A p95 is
 the 95th percentile of a synthetic bench on an idle runner; it is silent about
 the tail, and the tail is the only part of the distribution a timeout ever
 meets. Thirteen concerns sharing one process is a failure mode to be designed

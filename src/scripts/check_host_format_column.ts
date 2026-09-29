@@ -528,7 +528,7 @@ function selfTest(): number {
                 // carried with its limitation stated: it does NOT discriminate.
                 // The coalescing code set `root = '--quiet'`, found no document
                 // under it, and also exited 2 — so this case pins the branch's
-                // behaviour and documents the motivating shape, while the three
+                // behavior and documents the motivating shape, while the three
                 // cases above are the ones that would have caught the defect.
                 // Labelled rather than quietly counted, because a self-test
                 // suite whose cases are not all discriminating should say which.
