@@ -191,7 +191,11 @@ describe('2.x — comparison is a file-hash question and answers three ways', ()
 
     it('no inputs block at all is unknown — never stale, never fresh', () => {
         const c = compareInputs(undefined, same);
-        expect(c.verdict).toBe('unknown');
+        // `reason` lives only on the `unknown` arm of the union, and an
+        // `expect` does not narrow it. Throwing on the wrong verdict narrows
+        // AND fails loudly — an `if` would let the reason assertion be skipped
+        // silently on a regression, which is the opposite of what it is for.
+        if (c.verdict !== 'unknown') throw new Error(`expected unknown, got ${c.verdict}`);
         expect(c.reason).toBeTruthy();
     });
 
