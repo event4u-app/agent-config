@@ -52,14 +52,24 @@
 #                of them.
 #   canary       optional mutation recipe (Phase 7) — see CANARY below
 #
-# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-09-13)
+# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-09-29)
 # ----------------------------------------------------------
-# 330 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 341 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
 # re-run on the tree carrying these rows.)
-# **97 rows are listed below**, so the manifest covers 97/332 = 29.2 % of the
+# **103 rows are listed below**, so the manifest covers 103/341 = 30.2 % of the
 # population, and is complete for every gate that can carry a floor. The row
 # count is `grep -c '^  - id:'`, recomputed here rather than incremented.
+#
+# RECOUNTED 2026-09-29, on the change that adds `check_host_format_column`, and
+# BOTH figures had already drifted — which is the block below predicting itself.
+# The header read 330 scripts against a measured 341 (drift 11, against the
+# tolerance of 15 in `check_gate_coverage.test.ts` § states an honest
+# denominator) and 97 rows against a measured 102 before this change. Neither
+# was red and neither would have been for another four arrivals. Both are
+# recomputed on this tree rather than incremented, for the reason the 2026-09-13
+# block gives: an incremented figure inherits whatever error it started from,
+# and the drift above is what that inheritance looks like after sixteen days.
 #
 # RECOUNTED 2026-09-13, on a change that adds NO gate script — and that is the
 # point of this block rather than an aside. Every recount below was triggered by
@@ -2972,6 +2982,35 @@ gates:
       from the generator's own output, so a sabotaged mapping was self-backing
       and the phantom value wrote through; the backing set now reads the raw
       configuration fields and the same sabotage exits 1.
+
+  - id: check_host_format_column
+    argv: ["--quiet"]
+    ci_invocation: .github/workflows/consistency.yml
+    min_scanned: 8
+    corpus: "rows of the host table in docs/enforcement-by-host.md, found by its exact header line (9 at baseline — the nine hosts the file lists)"
+    status: enforced
+    no_canary_reason: >-
+      the corpus is the one table in ONE document at a fixed path, and the
+      canary contract is create-only. A planted second `enforcement-by-host.md`
+      would have to overwrite the real one to land in scope, and every violation
+      this gate can have is a MODIFICATION — a format cell hand-edited to name a
+      path no emitter writes. Discrimination is proven by `--self-test` instead
+      (5 cases, 4 rejecting: the historical `.cursorrules` defect planted back
+      into the Cursor cell, the near-miss `.cursor/rules.mdc`, an invented
+      surface on a correct neighbouring row, and a document whose table header
+      is gone — which must fail on the scope assertion rather than pass over an
+      empty corpus). The self-test earned that list rather than being written to
+      match: on its first run it reported the near-miss case as NOT behaving,
+      twice and for two different real defects. The first was in the matcher —
+      `USER_SCOPE_PATHS`' bare `~/.cursor/` anchor was being treated as a root
+      anything could refine, so `.cursor/rules.mdc` passed on an anchor no
+      emitter writes into; anchors are exact-match only now. The second was in
+      the fixture — it replaced the token rather than the whole row, and the
+      same token appears in the prose paragraph above the table, which this gate
+      does not scan, so `String.replace` mutated the prose and the case asserted
+      nothing. End to end by hand on 2026-09-29: restoring `.cursorrules` into
+      the committed Cursor row exits 1 naming that row and that token, and the
+      restore exits 0.
 
   - id: check_release_holds
     argv: ['--lint']
