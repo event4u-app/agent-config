@@ -52,7 +52,7 @@ otherwise.
 
 | | |
 |---|---|
-| **Governs** | Set to any non-empty value, the host's traffic posture resolves to `essential-traffic`, and that one posture gates several separate behaviours: telemetry and analytics, crash/error reporting, the `/bug` and `/feedback` commands (which refuse with a message naming this variable), plugin-archive downloads, and `/design-sync` and Projects. **It also disables background auto-updates** — the host's update-disabled-reason resolver returns this variable as its third rung, after `DISABLE_UPDATES` and `DISABLE_AUTOUPDATER`. |
+| **Governs** | Set to any non-empty value, the host's traffic posture resolves to `essential-traffic`, and that one posture gates several separate behaviors: telemetry and analytics, crash/error reporting, the `/bug` and `/feedback` commands (which refuse with a message naming this variable), plugin-archive downloads, and `/design-sync` and Projects. **It also disables background auto-updates** — the host's update-disabled-reason resolver returns this variable as its third rung, after `DISABLE_UPDATES` and `DISABLE_AUTOUPDATER`. |
 | **Does NOT govern** | Request *size*. It leaves `BASH_MAX_OUTPUT_LENGTH` and `MAX_MCP_OUTPUT_TOKENS` at their defaults, so the payload of a model request is unchanged. It does not block an explicitly invoked `claude update`; only the background update path is affected. It is not a proxy, offline or airplane mode — essential traffic, the model API calls themselves, still goes out. |
 | **Checked against** | Claude Code 2.1.284 · 2026-09-29 |
 
@@ -96,7 +96,7 @@ retraction would set the blanket variable to quiet telemetry on a metered link
 and would, without being told, also stop receiving background updates.
 
 **What to do about it, whichever reading later turns out to hold on your host:**
-set each behaviour's own narrow variable explicitly rather than relying on one
+set each behavior's own narrow variable explicitly rather than relying on one
 variable's fan-out. If you want telemetry off and updates on, do not assume the
 blanket variable leaves updates alone — check `agent-config doctor --json`
 against your own host, and prefer `DISABLE_TELEMETRY` for the narrow effect.
@@ -115,7 +115,7 @@ and every settings file byte-identical.
 ## What this package deliberately does not do
 
 It does not write any of these variables into a consumer environment. Doing so
-would change behaviour the consumer never asked to change and — under the
+would change behavior the consumer never asked to change and — under the
 mapping measured above — could switch off their background security updates as
 a side effect of a telemetry preference. Whether a settings profile may ever
 write them is an owner decision, recorded as the open blocker
@@ -125,4 +125,4 @@ of this page.
 ## See also
 
 - [`enterprise-and-offline.md`](enterprise-and-offline.md) — installing where the public registry is unreachable.
-- [`../contracts/harness-expectations.md`](../contracts/harness-expectations.md) — other host behaviours that look like bugs and are not.
+- [`../contracts/harness-expectations.md`](../contracts/harness-expectations.md) — other host behaviors that look like bugs and are not.
