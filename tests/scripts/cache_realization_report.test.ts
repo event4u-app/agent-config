@@ -112,7 +112,9 @@ function usage(over: Partial<TokenCounts>): TokenCounts {
 }
 
 function rec(agentId: string, timestamp: string, u: Partial<TokenCounts>): TranscriptRecord {
-    return { bucket: 'subagent', agentId, model: 'claude-sonnet-4-5', timestamp, usage: usage(u) };
+    // `content_bytes: null` is the not-measured state, not a zero: these
+    // fixtures exercise the token columns, and a 0 would be a measured value.
+    return { bucket: 'subagent', agentId, model: 'claude-sonnet-4-5', timestamp, usage: usage(u), content_bytes: null };
 }
 
 // ── median / mean ────────────────────────────────────────────────────────
@@ -180,7 +182,7 @@ describe('computeColdStarts', () => {
     });
 
     it('non-subagent (main) records are never grouped into legs', () => {
-        const records: TranscriptRecord[] = [{ bucket: 'main', agentId: null, model: 'claude-sonnet-4-5', timestamp: '2026-07-30T10:00:00.000Z', usage: usage({ input_tokens: 500 }) }];
+        const records: TranscriptRecord[] = [{ bucket: 'main', agentId: null, model: 'claude-sonnet-4-5', timestamp: '2026-07-30T10:00:00.000Z', usage: usage({ input_tokens: 500 }), content_bytes: null }];
         const stats = computeColdStarts(records);
         expect(stats.legs).toBe(0);
         expect(stats.cold_start_share_of_write_volume).toBe(0); // zero-write-volume guard, never NaN
