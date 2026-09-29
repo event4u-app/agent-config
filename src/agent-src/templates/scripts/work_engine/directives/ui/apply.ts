@@ -20,7 +20,6 @@ import {
     StepResult,
     agent_directive,
 } from '../../delivery_state.js';
-import { NO_TAXONOMY } from '../../taxonomy/detect.js';
 import {
     type ComponentRequest,
     conformance_lines,
@@ -404,16 +403,22 @@ function _apply_envelope(state: DeliveryState): Record<string, Any> | null {
 /**
  * Conformance lines for the taxonomy the audit detected, or nothing.
  *
- * Empty whenever `state.ui_audit.component_taxonomy` is absent or
- * {@link NO_TAXONOMY} — which is every project that has not chosen a
- * granularity taxonomy, and is the case whose output must stay exactly as it
- * was. Holding to the project's own structures is the standing rule; this step
- * only ever conforms to a taxonomy the project itself evidences.
+ * Empty whenever `state.ui_audit.component_taxonomy` is absent or names no
+ * tiers — which is every project that has not chosen a granularity taxonomy,
+ * and is the case whose output must stay exactly as it was. Holding to the
+ * project's own structures is the standing rule; this step only ever conforms
+ * to a taxonomy the project itself evidences.
+ *
+ * The `'none'` case is NOT re-checked here. `conformance_lines` owns that
+ * invariant and says so in its own contract, and a second copy of the check
+ * here would mask a regression in the first: with both present, either one
+ * could be deleted and every AC-2 test would still pass. One owner, one test
+ * that fails when it breaks.
  */
 export function taxonomy_lines(state: DeliveryState): string[] {
     const audit = _isDict(state.ui_audit) ? (state.ui_audit as Record<string, Any>) : {};
     const taxonomy = audit['component_taxonomy'];
-    if (typeof taxonomy !== 'string' || taxonomy === '' || taxonomy === NO_TAXONOMY) {
+    if (typeof taxonomy !== 'string' || taxonomy === '') {
         return [];
     }
     const root = typeof audit['component_root'] === 'string' ? audit['component_root'] : '';

@@ -102,6 +102,50 @@ describe('Phase 1.2 — the false-positive direction is pinned', () => {
         expect(MIN_TIERS).toBeGreaterThanOrEqual(2);
         expect(TIER_MAJORITY).toBeGreaterThan(0.5);
     });
+
+    // The `collision` fixture above pins the two floors TOGETHER and neither
+    // one alone: at 1 hit in 3 buckets, relaxing MIN_TIERS still leaves the
+    // majority test refusing, and relaxing TIER_MAJORITY still leaves the
+    // tier-count floor refusing. Each floor therefore gets a fixture built so
+    // that it, and only it, stands between the tree and a wrong taxonomy.
+
+    it('a lone tier-shaped bucket records `none` — the MIN_TIERS floor alone', () => {
+        // One bucket, one lexicon hit: the majority share is 1.0, so the
+        // majority rule clears this tree completely. Only the two-tier floor
+        // refuses it. Drop MIN_TIERS to 1 and this fixture reports `atoms`.
+        const r = detect('single-tier');
+        expect(r.taxonomy).toBe(NO_TAXONOMY);
+        expect(r.tiers).toEqual([]);
+    });
+
+    it('a tier-shaped minority among domain folders records `none` — the majority floor alone', () => {
+        // Two lexicon hits in five buckets clears MIN_TIERS outright, so the
+        // 0.4 share is the only thing refusing. Relax TIER_MAJORITY below 0.4
+        // and this fixture reports `atoms/molecules` for a project whose
+        // components are organised by domain.
+        const r = detect('domain-heavy');
+        expect(r.taxonomy).toBe(NO_TAXONOMY);
+        expect(r.tiers).toEqual([]);
+    });
+
+    it('each floor fixture really has the shape its name claims', () => {
+        // Guards the fixtures themselves: renaming a folder away would make
+        // both tests above pass for the wrong reason.
+        const buckets = (f: string) =>
+            fs
+                .readdirSync(path.join(FIX, f, 'src', 'components'), { withFileTypes: true })
+                .filter((e) => e.isDirectory())
+                .map((e) => e.name)
+                .sort();
+        expect(buckets('single-tier')).toEqual(['atoms']);
+        expect(buckets('domain-heavy')).toEqual([
+            'atoms',
+            'billing',
+            'checkout',
+            'molecules',
+            'shipping',
+        ]);
+    });
 });
 
 describe('AC-4 — nothing here hard-codes a five-level taxonomy or a per-tier cap', () => {
