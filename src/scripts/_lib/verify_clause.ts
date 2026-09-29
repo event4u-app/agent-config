@@ -219,3 +219,21 @@ export function commandBearing(stepText: string): VerifyClause | null {
 export function formatExpectation(expect: Expectation): string {
     return expect.kind === 'exit' ? `-> ${String(expect.code)}` : `-> /${expect.source}/`;
 }
+
+/**
+ * The clause as a continuation-message line, empty when there is nothing to say.
+ *
+ * The expectation rides along with the command, and that is the point rather
+ * than a formatting nicety: a re-engagement told only the command can run it,
+ * see exit 0, and flip the box regardless — the whole defect the arrow exists
+ * to close. Told the expectation too, it has an oracle.
+ *
+ * Lives beside the grammar rather than at the one call site so that one module
+ * owns how a clause is read AND how it is written back, which is also what
+ * keeps the over-cap hook from paying these lines.
+ */
+export function renderVerifyLine(clause: VerifyClause | null): string {
+    if (clause === null) return '';
+    const expect = clause.expect === null ? '' : ` ${formatExpectation(clause.expect)}`;
+    return `\n  verify: ${clause.command ?? ''}${expect}`;
+}

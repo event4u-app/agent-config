@@ -1,7 +1,16 @@
 ---
-complexity: lightweight
 status: draft
+execution:
+  mode: autonomous
 ---
+<!-- A detector FIXTURE, not a plan. It carries `## Phase` headings and
+     checkbox steps because the detector reads step blocks, and it carries no
+     `complexity:` tier because it is not a roadmap and has no work to size.
+     The tier was present in the first draft and `check_agent_artifact_location`
+     classified this file as a roadmap misfiled outside `agents/roadmaps/` —
+     frontmatter tier plus a `## Phase` heading plus a checkbox is exactly its
+     three-signal test. -->
+
 # F5 — verify clauses whose oracle cannot say no
 
 Fixture for the `unfalsifiable-verify` family. Every step below carries a

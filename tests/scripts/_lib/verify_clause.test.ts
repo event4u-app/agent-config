@@ -14,7 +14,12 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
-import { parseExpectation, parseVerifyClause, VERIFY_ARROW_SOURCE } from '../../../src/scripts/_lib/verify_clause.js';
+import {
+    parseExpectation,
+    parseVerifyClause,
+    renderVerifyLine,
+    VERIFY_ARROW_SOURCE,
+} from '../../../src/scripts/_lib/verify_clause.js';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 
@@ -200,5 +205,34 @@ describe('one parser — nothing may parse the arrow a second time', () => {
         };
         walk(path.join(REPO_ROOT, 'src', 'scripts'));
         expect(offenders, `a second verify-arrow parser exists: ${offenders.join(', ')}`).toEqual([]);
+    });
+});
+
+describe('renderVerifyLine — the oracle reaches the re-engagement, not just the command', () => {
+    /**
+     * The failure this guards is silent and was the original defect in its
+     * message form: a continuation that names the command and drops the
+     * expectation lets the next agent run it, see exit 0, and flip the box.
+     * Asserting `toContain(command)` alone would pass on exactly that bug, so
+     * every case below pins the FULL rendered line.
+     */
+    it('renders an exit expectation after the command', () => {
+        const clause = parseVerifyClause('- [ ] x\n      verify: `task test` -> 0');
+        expect(renderVerifyLine(clause)).toBe('\n  verify: task test -> 0');
+    });
+
+    it('renders a regex expectation in its written form', () => {
+        const clause = parseVerifyClause('- [ ] x\n      verify: `grep -c thing f.md` -> /[1-9]/');
+        expect(renderVerifyLine(clause)).toBe('\n  verify: grep -c thing f.md -> /[1-9]/');
+    });
+
+    it('renders a command with no expectation, and appends no arrow', () => {
+        const clause = parseVerifyClause('- [ ] x\n      verify: `task test`');
+        expect(renderVerifyLine(clause)).toBe('\n  verify: task test');
+        expect(renderVerifyLine(clause)).not.toContain('->');
+    });
+
+    it('renders nothing for an absent clause, so the message gains no empty line', () => {
+        expect(renderVerifyLine(null)).toBe('');
     });
 });

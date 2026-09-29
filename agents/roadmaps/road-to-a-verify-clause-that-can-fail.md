@@ -54,11 +54,23 @@ share per roadmap is a published number rather than an impression.
       `new Set(shapes).size === 3`. `extractVerify` now returns the shared clause and
       parses nothing itself. A sweep of `src/scripts` asserts one arrow parser exists.
 
-      **Shown red.** Neutering the expectation parser (`fromValue` → `null`) reds 9 of 19,
+      **Shown red.** Neutering the expectation parser (`fromValue` → `null`) reds 9 of 23,
       precisely the shape-distinguishing ones. Planting a second arrow matcher in
       `closure_scan.ts` reds the sweep with the offender named:
-      `a second verify-arrow parser exists: src/scripts/closure_scan.ts`. Both restored
-      from a pre-probe copy and re-run green.
+      `a second verify-arrow parser exists: src/scripts/closure_scan.ts`. Dropping the
+      expectation from `renderVerifyLine` reds 2 — the oracle must reach the continuation
+      message, not only the command, or a re-engagement flips the box on exit 0 regardless.
+      All three restored from a pre-probe copy and re-run green.
+
+      **Two defects this step surfaced, both fixed here.** `check_agent_artifact_location`
+      classified fixture F5 as a roadmap misfiled outside `agents/roadmaps/` — frontmatter
+      tier plus a `## Phase` heading plus a checkbox is its three-signal test, and the
+      sibling fixtures avoid it by carrying no `complexity:` tier; F5 now follows that
+      convention with the reason written in the file. And the hook edit pushed an
+      already-over-cap file 16 lines further over, moving the `check_source_size_budget`
+      live total off its recorded baseline. The baseline was NOT raised: the rendering
+      moved into `_lib/verify_clause.ts`, where the grammar lives and the file is under
+      cap, leaving the hook at exactly its prior 1526 lines and the total at 17748.
 - [x] **1.3 Serialise the template edit.** `road-to-release-holds-that-refuse` writes six
       rules into the same file. Rebase onto whichever lands first; never merge both in one
       pass.
