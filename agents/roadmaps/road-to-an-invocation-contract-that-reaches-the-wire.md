@@ -31,51 +31,151 @@ but no hint acquires one without anybody typing it.
 
 ## Phase 1 — Measure the surface before changing it
 
-- [ ] **1.1 Emit a one-shot invocation-surface census.** Per projected command
+- [x] **1.1 Emit a one-shot invocation-surface census.** Per projected command
       and skill: whether it declares inputs, whether it carries an
       `argument-hint`, and which placeholder syntaxes its body uses. Report
       only — no threshold, `report_` prefix so the gate population classifies
       it out.
       verify: the census totals reproduce `find dist/agent-src/commands -name
       '*.md' | wc -l` and the three placeholder greps in this Goal
+      Done 2026-09-29. `src/scripts/report_invocation_surface.ts` →
+      `agents/evidence/analysis/invocation-surface-census.md`, pinned, byte-equal
+      on a re-run at one commit. · **First limb holds:** the census reads 203
+      commands and `find dist/agent-src/commands -name '*.md' | wc -l` returns
+      203; hint coverage reads 160/203, so 43 carry none, exactly as the Goal
+      states. · **Second limb does NOT hold, and that is the finding.** None of
+      the three placeholder figures reproduces: measured 5 `${…}` occurrences in
+      2 files, 3 `<UPPER>` in 1, and 0 `{{…}}` — against 11 / 4 / 2 skills in the
+      Goal. The cause is the same one each time: a natural grep counts tokens
+      inside CODE. `${viewport.name}` in `playwright-testing` is a JS template
+      literal, `${local.env.aws_account_id}` in `terragrunt` is HCL, `${user.id}`
+      in `testing-anti-patterns` is another JS literal, and `` `<TBD>` `` in
+      `livewire-architect` is a marker the prose is TALKING ABOUT ("no `<TBD>`
+      cells"). So the census defines its unit before counting — **an occurrence
+      in PROSE**, outside fenced blocks, indented blocks and inline code spans —
+      publishes that definition above any number, prints the per-file breakdown
+      so the definition is arguable, and carries NO figure forward from the
+      Goal. Same discipline `ask_block_census` applies to its own subject, and
+      the opposite fence decision, for the stated reason: there a fence IS the
+      subject, here it is foreign territory.
 
-- [ ] **1.2 Seed a shrink-only placeholder-drift ratchet.** Foreign syntaxes
+- [x] **1.2 Seed a shrink-only placeholder-drift ratchet.** Foreign syntaxes
       only, seeded at the measured 4 and 2. It fails on growth, never on the
       absolute number, and never on the plurality form.
       verify: gate green at seed; a synthetic skill adding one `{{...}}` body
       reference fails it; removing one keeps it green
+      Done 2026-09-29. `src/scripts/check_placeholder_drift.ts` +
+      `src/config/placeholder-drift-budget.json`. Seeded at what this tree
+      MEASURES — `<UPPER>` 3, `{{…}}` 0 — not at the Goal's 4 and 2, per 1.1;
+      the step text says "the measured" and the budget file records why the
+      source figures were not copied. All three limbs, with output: ·
+      **green at seed** — `✅ foreign placeholder syntaxes within their ratchet
+      (<UPPER> 3/3 · {{…}} 0/0)`. · **growth fails** — a synthetic skill with one
+      `{{placeholder}}` in prose gives `❌ `{{…}}` grew to 1 prose occurrence(s),
+      ceiling 0`. · **removal restores green** — exit 0, worktree clean. The
+      plurality form is deliberately ungated and the gate never fails on the
+      absolute number, so holding at the seed is permanently green and no body
+      is under pressure to be rewritten (Risk 2).
 
 ## Phase 2 — Declare inputs once, structurally
 
-- [ ] **2.1 Add an optional `inputs:` frontmatter block.** Name, type,
+- [x] **2.1 Add an optional `inputs:` frontmatter block.** Name, type,
       required, default, enum. Optional on every artifact, so nothing existing
       breaks and no migration is owed. Schema plus fixture.
       verify: an artifact with a well-formed block validates; one with an
       unknown input type fails; one with no block validates unchanged
+      Done 2026-09-29. `inputs:` added to BOTH `command.schema.json` and
+      `skill.schema.json` — both carry `additionalProperties: false`, so the key
+      had to be declared in each. Inserted textually as pure additions (+39 lines
+      each, zero deletions): a `json.dump` round-trip reformatted both files and
+      was reverted, because 274 changed lines to add one block is the drive-by
+      churn `minimal-safe-diff` forbids. Tests:
+      `tests/scripts/inputs_declaration.test.ts`, 16 passed, run against BOTH
+      schemas. Every limb: · well-formed block across all five types validates ·
+      unknown type `regexp` fails · **no block validates unchanged**, which is
+      the property that makes the block optional and the migration zero. Also
+      constrained: a missing `name` or `type` fails, a non-snake_case name fails
+      (it must be safe both as a wire key and as a `${ref}`), an unknown key
+      inside a declaration fails, and an empty list fails. **Sensitivity
+      checked:** replacing the `type` enum with a bare string turns exactly the
+      unknown-type test red. Corpus: 451 artefacts, 0 failing.
 
-- [ ] **2.2 Fail an in-body reference that no declaration backs.** A `${x}`
+- [x] **2.2 Fail an in-body reference that no declaration backs.** A `${x}`
       with no `inputs.x` is an error on an artifact that declares `inputs:` at
       all. Artifacts with no block are untouched, so the check arrives with
       zero findings and grows only with adoption.
       verify: a fixture declaring `inputs.a` and referencing `${b}` fails; the
       same fixture referencing `${a}` passes; the corpus stays green
+      Done 2026-09-29. `src/scripts/check_input_references.ts`, fixtures under
+      `tests/scripts/fixtures/input-references/`, 11 tests passing. All three
+      limbs: · `unbacked.md` declares `inputs.a`, references `${b}` → one
+      finding · `backed.md` references `${a}` → none · corpus `✅ every in-body
+      reference is backed`. Scoped to artifacts that declare `inputs:` at all,
+      so it arrived with zero findings over a corpus where nothing declared
+      anything, and grows only with adoption. It imports `proseOnly` from the
+      census rather than restating it — one definition, one place, because two
+      copies of the counting rule is the drift this phase exists to prevent. The
+      consequence is stated rather than hidden and has its own fixture
+      (`fenced-foreign.md`): a `${…}` inside a fence is NOT checked, which is the
+      conservative direction — reporting a skill's HCL example against a
+      declaration it never claimed to satisfy is the false positive that gets a
+      young gate switched off.
 
 ## Phase 3 — Derive every downstream form
 
-- [ ] **3.1 Generate `argument-hint` from `inputs:`.** Where a declaration
+- [x] **3.1 Generate `argument-hint` from `inputs:`.** Where a declaration
       exists, the hint is generated and hand-written hints on the same artifact
       are a conflict, not a merge. The 43 hintless commands become a generation
       gap that closes as declarations land, rather than 43 prose edits.
       verify: round-trip — generate, re-parse, compare; an artifact with a
       declaration and a conflicting hand-written hint fails
+      Done 2026-09-29. `src/scripts/check_argument_hint.ts`. Form: `<name>`
+      required · `[name]` optional · `:a|b` for an enum — the shape the corpus
+      already writes (`[path]`, `[--force]`), so the derived hint is not a new
+      dialect. Both limbs: · **round-trip** — `parseHint(hintFor(x))` recovers
+      name, requiredness and enum over four cases, asserted rather than assumed,
+      because a generator whose own parser cannot read its output would make the
+      conflict check unfalsifiable. · **conflict fails** — a declaration of `a`
+      beside a hand-written `[something-else]` returns `kind: 'conflict'`. An
+      artifact with no declaration is untouched, hint or not.
+      **Scoped to COMMANDS, and the reason is structural rather than a
+      preference:** `argument-hint` is a key of `command.schema.json` and of no
+      other schema, so reporting a SKILL that declares `inputs:` as "missing its
+      hint" would demand a field the schema forbids. Skills reach the wire
+      through 3.2 instead, which needs no hint at all. Found by running the gate
+      after the first adopter landed, not by reading the schema first.
 
-- [ ] **3.2 Derive MCP `arguments` at `prompts.ts:551`.** Replace the hardcoded
+- [x] **3.2 Derive MCP `arguments` at `prompts.ts:551`.** Replace the hardcoded
       empty list with the declared set. Substitution, if any, happens at the
       `prompts/get` boundary only — a body delivered to a host as a file is
       never regex-rewritten, because the host executes it natively.
       verify: `prompts/list` carries a non-empty argument set for at least one
       artifact; an artifact with no declaration still serves `arguments: []`;
       no code path substitutes into a file-delivered body
+      Done 2026-09-29. `src/scripts/mcp_server/prompts.ts`: `arguments: []` at
+      the projection is now `prompt.inputs.map(...)`, fed by a new
+      `_parse_inputs` and an `inputs` field on `SkillPrompt`.
+      **A dedicated parser was required, not a shortcut.** `_strip_frontmatter`
+      is a flat `key: value` line scanner, so a nested `inputs:` list cannot pass
+      through it — `inputs:` would land as an empty string and its `- name:`
+      lines as stray keys. The MCP server is deliberately stdlib-only and is
+      bundled for the wire, so pulling in a YAML parser to read one optional
+      block would pay a dependency on every install. `_parse_inputs` accepts
+      exactly the grammar the schema permits and yields NO input rather than a
+      guessed one, because inventing an argument a host then prompts a user for
+      is strictly worse than declaring none.
+      All three limbs, against the REAL corpus rather than a fixture: ·
+      **non-empty set** — `command.work` serves
+      `[{name: prompt, required: false}]` and `skill.markitdown` serves
+      `[{name: source, required: true}]`, both derived from declarations on
+      disk. · **undeclared still `[]`** — 500 of 502 prompts, and every one
+      carries an array rather than an absent key. · **no substitution** —
+      asserted as a negative over the module source (no write to `body`, no
+      `${…}` near it) plus a byte-identity check on a declaring prompt's body,
+      because Risk 3 fails in exactly that direction.
+      Tests: `tests/scripts/invocation_derivation.test.ts`, 26 passed.
+      **Sensitivity checked:** reverting the projection to a literal `[]` turns
+      four tests red, including both corpus-level ones.
 
 ## Acceptance criteria
 
