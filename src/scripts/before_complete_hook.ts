@@ -377,39 +377,158 @@ const EDIT_TOOLS: ReadonlySet<string> = new Set([
  */
 export const MAX_VERIFICATION_RUNS_PER_TURN = 24;
 
-/** Bytes of tool output retained per record — enough for any runner's summary. */
+/**
+ * Characters of tool output retained per stream per record.
+ *
+ * CHARACTERS, not bytes, and the name is kept for its existing importers: the
+ * slice is applied to a JS string. Multibyte output can therefore exceed this
+ * many bytes, which is a bound on the state file rather than a promise about
+ * it, and 4,096 characters is far more than any runner's summary needs.
+ */
 export const RUN_OUTPUT_TAIL_BYTES = 4096;
 
 /**
- * The exit code a post-tool payload carries, or `null` when it carries none.
+ * Apply the per-turn cap, keeping the newest AND the earliest failing record.
  *
- * `null` is a REAL value here and is never normalised to 0. Several hosts do not
- * surface an exit status on this event at all, and a recorder that wrote 0 for
- * "the host said nothing" would manufacture the strongest possible evidence out
- * of silence — the classifier's `exit_code_unavailable` verdict exists precisely
- * so that this gap stays visible downstream instead of becoming a pass.
+ * Two detectors read this array and they ask opposite-ended questions. Detector
+ * C asks whether a pass follows the last edit — always answered by the tail.
+ * Detector F asks whether a red preceded the green — answered by the head. A
+ * plain `slice(-N)` serves the first and can silently drop the evidence the
+ * second needs, turning a turn that did honest red-green work into a
+ * `no_red_evidence` refusal once the run count passes the cap.
  */
-function _extract_exit_code(payload: StateDict): number | null {
-  const sources: unknown[] = [payload];
-  for (const key of ["tool_response", "toolResponse", "result"]) {
-    const v = payload[key];
-    if (v !== null && typeof v === "object" && !Array.isArray(v)) {
-      sources.push(v);
-    }
+function _cap_runs(runs: unknown[]): unknown[] {
+  if (runs.length <= MAX_VERIFICATION_RUNS_PER_TURN) return runs;
+  const tail = runs.slice(-(MAX_VERIFICATION_RUNS_PER_TURN - 1));
+  const head = runs.find((r) => {
+    if (r === null || typeof r !== "object" || Array.isArray(r)) return false;
+    const rec = r as StateDict;
+    const code = rec["exit_code"];
+    return typeof code === "number" && code !== 0;
+  });
+  if (head === undefined || tail.includes(head)) {
+    return runs.slice(-MAX_VERIFICATION_RUNS_PER_TURN);
   }
-  for (const src of sources) {
-    const obj = src as StateDict;
-    for (const key of ["exit_code", "exitCode", "returncode", "returnCode", "status_code"]) {
-      const v = obj[key];
-      if (typeof v === "number" && Number.isFinite(v)) {
-        return Math.trunc(v);
-      }
-      if (typeof v === "string" && v.trim() !== "" && Number.isFinite(Number(v))) {
-        return Math.trunc(Number(v));
-      }
+  return [head, ...tail];
+}
+
+/**
+ * The prefix a host puts on a FAILED shell result when it carries no exit field.
+ *
+ * Claude Code's Bash tool does exactly this: a failing call's whole tool
+ * response is the string `Error: Exit code 1\n<output>`. Measured over 1,077
+ * object-shaped and 11 string-shaped tool results in this machine's own
+ * transcripts (2026-09-29): every string-shaped result carried this prefix, and
+ * no shape of either kind carried any of the numeric field names below.
+ */
+const _ERROR_EXIT_PREFIX = /^Error:\s*Exit code\s*(\d+)/i;
+
+/** The status a post-tool payload actually reports, and HOW it reported it. */
+interface ExitReading {
+  readonly code: number | null;
+  /** Provenance, recorded so a reader can tell an observed code from a derived one. */
+  readonly source: "field" | "error_prefix" | "response_shape" | null;
+  /** The host said the call was interrupted — a kill, not a verdict on the work. */
+  readonly interrupted: boolean;
+}
+
+const _NO_EXIT: ExitReading = { code: null, source: null, interrupted: false };
+
+function _numeric_exit_field(obj: StateDict): number | null {
+  for (const key of ["exit_code", "exitCode", "returncode", "returnCode", "status_code"]) {
+    const v = obj[key];
+    if (typeof v === "number" && Number.isFinite(v)) return Math.trunc(v);
+    if (typeof v === "string" && v.trim() !== "" && Number.isFinite(Number(v))) {
+      return Math.trunc(Number(v));
     }
   }
   return null;
+}
+
+/**
+ * What the host said about how the command ended.
+ *
+ * `null` is a REAL value and is never normalised to 0: several hosts surface no
+ * exit status at all, and writing 0 for "the host said nothing" would
+ * manufacture the strongest possible evidence out of silence. The classifier's
+ * `exit_code_unavailable` verdict exists so that gap stays visible.
+ *
+ * THREE SOURCES, in descending directness, and the third is the one that took a
+ * measurement rather than a guess.
+ *
+ *   · `field` — a numeric exit field, wherever a host provides one.
+ *   · `error_prefix` — the `Error: Exit code N` string form above. This is a
+ *     real non-zero code, stated by the host in the only place it states it.
+ *   · `response_shape` — an OBJECT response carrying `interrupted: false`
+ *     alongside a `stdout` or `stderr` key. On Claude Code that is the success
+ *     form, and the discriminator is deliberately the PRESENCE of
+ *     `interrupted: false` rather than the ABSENCE of an error prefix: a
+ *     positive signal from the host, not an inference from silence. A shape
+ *     that carries neither reads as `null` and stays an instrument gap.
+ *
+ * Without the second and third readings this recorder wrote `exit_code: null`
+ * for every command on the one host that binds the turn-end gate, so the whole
+ * record path was inert — found by an independent review of the branch that
+ * introduced it, against 1,077 real tool results.
+ */
+function _extract_exit_reading(payload: StateDict): ExitReading {
+  const direct = _numeric_exit_field(payload);
+  if (direct !== null) return { code: direct, source: "field", interrupted: false };
+
+  for (const key of ["tool_response", "toolResponse", "result", "output"]) {
+    const v = payload[key];
+    if (typeof v === "string") {
+      const m = _ERROR_EXIT_PREFIX.exec(v);
+      if (m?.[1] !== undefined) {
+        return { code: Number(m[1]), source: "error_prefix", interrupted: false };
+      }
+      continue;
+    }
+    if (v === null || typeof v !== "object" || Array.isArray(v)) continue;
+    const obj = v as StateDict;
+    const nested = _numeric_exit_field(obj);
+    if (nested !== null) return { code: nested, source: "field", interrupted: false };
+    if (obj["interrupted"] === true) return { code: null, source: null, interrupted: true };
+    const hasStream = typeof obj["stdout"] === "string" || typeof obj["stderr"] === "string";
+    if (obj["interrupted"] === false && hasStream) {
+      return { code: 0, source: "response_shape", interrupted: false };
+    }
+  }
+  return _NO_EXIT;
+}
+
+/**
+ * The command's stdout and stderr as REAL strings, never as a stringified blob.
+ *
+ * Separate from `_extract_output` above, which feeds the pre-existing `vacuous`
+ * counters and whose behavior must not move: that one returns
+ * `JSON.stringify(v)` for an object response, and every parser in
+ * `verification_evidence.ts` is line-anchored (`/^[ \t]*Tests:?.../m` and
+ * friends). JSON escapes a newline as the two characters `\` and `n`, so a
+ * stringified response can never match any of them — the classifier was blind
+ * to every summary on the host's success shape. Found by the same review.
+ */
+function _extract_run_streams(payload: StateDict): { stdout: string; stderr: string } {
+  for (const key of ["tool_response", "toolResponse", "result", "output"]) {
+    const v = payload[key];
+    if (typeof v === "string") return { stdout: v, stderr: "" };
+    if (v === null || typeof v !== "object" || Array.isArray(v)) continue;
+    const obj = v as StateDict;
+    const out = obj["stdout"] ?? obj["output"];
+    const err = obj["stderr"];
+    if (typeof out === "string" || typeof err === "string") {
+      return {
+        stdout: typeof out === "string" ? out : "",
+        stderr: typeof err === "string" ? err : "",
+      };
+    }
+  }
+  const topOut = payload["stdout"] ?? payload["output"];
+  const topErr = payload["stderr"];
+  return {
+    stdout: typeof topOut === "string" ? topOut : "",
+    stderr: typeof topErr === "string" ? topErr : "",
+  };
 }
 
 function _reset_turn(state: StateDict, session_id: string): StateDict {
@@ -560,20 +679,35 @@ function _update(state: StateDict, event: string, envelope: StateDict): StateDic
     // coarse or absent, and it degrades toward under-refusing when the reader's
     // own count is short.
     if (cmd && isVerificationCommand(cmd)) {
-      const run_output = _extract_output(pl);
+      const streams = _extract_run_streams(pl);
+      const exit = _extract_exit_reading(pl);
       const runs = Array.isArray(state["verification_runs"])
         ? [...(state["verification_runs"] as unknown[])]
         : [];
       runs.push({
         command: cmd.slice(0, 512),
         tool,
-        exit_code: _extract_exit_code(pl),
-        stdout_tail: run_output === null ? "" : run_output.slice(-RUN_OUTPUT_TAIL_BYTES),
+        exit_code: exit.code,
+        // Provenance, not decoration: `response_shape` is a code this recorder
+        // DERIVED from the host's success form, and a reader disputing a verdict
+        // needs to know which of the three readings produced it.
+        exit_source: exit.source,
+        interrupted: exit.interrupted,
+        stdout_tail: streams.stdout.slice(-RUN_OUTPUT_TAIL_BYTES),
+        // Written, and previously not: `RunRecord.stderr_tail` was declared and
+        // read by the classifier's `output()` while nothing populated it, so
+        // stderr reached a parser only by accident inside a stringified blob.
+        stderr_tail: streams.stderr.slice(-RUN_OUTPUT_TAIL_BYTES),
         runner: runnerOf(cmd),
         after_edits: _asInt(state["edits_this_turn"]),
         at: _now(),
       });
-      state["verification_runs"] = runs.slice(-MAX_VERIFICATION_RUNS_PER_TURN);
+      // The NEWEST are kept for detector C, which asks whether a pass follows
+      // the last edit. Detector F asks a question the head answers — was there a
+      // red before the green — so the cap keeps the FIRST failing record too,
+      // ahead of the tail, rather than letting a chatty turn drop the red half
+      // of its own red-then-green pair.
+      state["verification_runs"] = _cap_runs(runs);
     }
   } else if (event === "stop") {
     state["last_stop_at"] = _now();

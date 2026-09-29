@@ -64,6 +64,10 @@ export interface RunRecord {
     readonly stdout_tail?: string;
     readonly stderr_tail?: string;
     readonly runner?: string;
+    /** The host reported the call interrupted — a kill, never a verdict on the work. */
+    readonly interrupted?: boolean;
+    /** How the recorder obtained `exit_code`. Advisory; nothing branches on it. */
+    readonly exit_source?: 'field' | 'error_prefix' | 'response_shape' | null;
 }
 
 /**
@@ -317,22 +321,53 @@ export function classifyRun(record: unknown): VerificationVerdict {
     if (!canVerify(r.command)) {
         return { kind: 'INVALID_RUN', reason: 'not_a_verification_command' };
     }
-    if (r.exit_code === null || r.exit_code === undefined) {
-        return { kind: 'INVALID_RUN', reason: 'exit_code_unavailable' };
-    }
-    if (typeof r.exit_code !== 'number' || !Number.isFinite(r.exit_code)) {
+    if (
+        r.exit_code !== null
+        && r.exit_code !== undefined
+        && (typeof r.exit_code !== 'number' || !Number.isFinite(r.exit_code))
+    ) {
         return { kind: 'INVALID_RUN', reason: 'unreadable_record' };
     }
 
     const text = output(r as RunRecord);
     const summary = parseSummary(text);
 
-    if (KILLED_EXIT_CODES.has(r.exit_code)) {
+    // A KILL is read before anything the process printed: a reaped runner's
+    // partial output can carry a passing summary for the files it reached. A
+    // summary that reports FAILURES still wins, because those failures happened.
+    if (r.interrupted === true || (typeof r.exit_code === 'number' && KILLED_EXIT_CODES.has(r.exit_code))) {
         if (summary !== null && summary.failed > 0) return { kind: 'FAIL_EVIDENCE' };
         return { kind: 'INVALID_RUN', reason: 'timeout_or_killed' };
     }
 
-    if (LOAD_FAILURE_PATTERNS.some((re) => re.test(text))) {
+    // A RUN THAT PRINTED ITS OWN FAILURES IS A FAILURE, exit code or not. This
+    // sits above the missing-exit-code gap deliberately, and the order was the
+    // other way round until an independent review measured what it cost: on
+    // Claude Code the success shape carries no exit field at all, so a failing
+    // run whose summary said `2 failed` classified `exit_code_unavailable`,
+    // became an instrument gap, and ended the turn normally. The evidence of
+    // failure was in the record, was parseable, and was thrown away. A host's
+    // silence about an exit status tells us nothing about the operator's work;
+    // a runner's own failure count tells us plenty.
+    if (summary !== null && summary.failed > 0) return { kind: 'FAIL_EVIDENCE' };
+
+    if (r.exit_code === null || r.exit_code === undefined) {
+        return { kind: 'INVALID_RUN', reason: 'exit_code_unavailable' };
+    }
+
+    // A LOAD FAILURE, and only where it is not contradicted by a clean summary.
+    // The patterns are broad on purpose — `fatal error`, `cannot find module` —
+    // and a passing run that merely PRINTS one is common: vitest echoes a
+    // `stderr |` block verbatim, so any test exercising an error path can carry
+    // the words. Checking this above a summary reporting passes refused honest
+    // work, which is the expensive direction for a gate that can block a turn.
+    // The case the original ordering was defending — "a suite that never loaded
+    // can still print a summary of the zero tests it ran" — is already covered
+    // by `zero_tests_discovered` below, and by the `passed === 0` clause here.
+    if (
+        (summary === null || summary.passed === 0)
+        && LOAD_FAILURE_PATTERNS.some((re) => re.test(text))
+    ) {
         return { kind: 'INVALID_RUN', reason: 'fixture_or_load_failure' };
     }
 
@@ -510,6 +545,7 @@ export function testTargetKey(command: string): string {
  * predates the edit that fixed it.
  */
 export function hasRedThenGreen(state: TurnRunState): boolean {
+    let reddenedAnywhere = false;
     const reddened = new Set<string>();
     for (let i = 0; i < state.runs.length; i += 1) {
         const raw = state.runs[i];
@@ -519,14 +555,45 @@ export function hasRedThenGreen(state: TurnRunState): boolean {
                 ? String((raw as Record<string, unknown>)['command'] ?? '')
                 : '',
         );
-        if (verdict.kind === 'FAIL_EVIDENCE') {
+        if (RED_VERDICTS(verdict)) {
             reddened.add(key);
+            reddenedAnywhere = true;
             continue;
         }
         if (verdict.kind !== 'PASS_EVIDENCE_OK') continue;
         const placed = placeRecord(raw);
         if (placed === null || placed < state.edits_this_turn) continue;
-        if (reddened.has(key)) return true;
+        // A WHOLE-SUITE green (the empty key) settles any reddened target: it is
+        // strictly stronger evidence than a single-file green, and "red on the
+        // file, then the whole suite" is the common honest sequence. A targeted
+        // green still only settles its own target.
+        if (key === '' ? reddenedAnywhere : reddened.has(key)) return true;
     }
     return false;
+}
+
+/**
+ * Which verdicts count as the RED half of a red-then-green pair.
+ *
+ * Deliberately wider than `FAIL_EVIDENCE`, and the canonical TDD first red is
+ * why: a new test importing a module that does not exist yet prints `Cannot
+ * find module`, which classifies `fixture_or_load_failure`. Requiring a parsed
+ * failure COUNT for the red half would refuse exactly the discipline this
+ * detector exists to encourage — including the shape of work that introduced
+ * this module.
+ *
+ * The red half needs to show the target NOT PASSING, which is a weaker bar than
+ * showing how many assertions failed. The green half carries the placement and
+ * freshness checks, so the pair is still anchored to the turn's last edit.
+ * `exit_code_unavailable` and `unreadable_record` are excluded: those say the
+ * instrument failed, not that the target did.
+ */
+function RED_VERDICTS(verdict: VerificationVerdict): boolean {
+    if (verdict.kind === 'FAIL_EVIDENCE') return true;
+    if (verdict.kind !== 'INVALID_RUN') return false;
+    return (
+        verdict.reason === 'fixture_or_load_failure'
+        || verdict.reason === 'nonzero_exit_without_test_failure'
+        || verdict.reason === 'zero_tests_discovered'
+    );
 }
