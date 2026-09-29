@@ -4,8 +4,10 @@ import { DeliveryState } from '../../../src/agent-src/templates/scripts/work_eng
 import { run as applyRun } from '../../../src/agent-src/templates/scripts/work_engine/directives/ui/apply.js';
 import { NO_TAXONOMY } from '../../../src/agent-src/templates/scripts/work_engine/taxonomy/detect.js';
 import {
+    MISSING_ROOT_GAP,
     conformance_lines,
     plan_component_placement,
+    read_tiers,
 } from '../../../src/agent-src/templates/scripts/work_engine/taxonomy/place.js';
 
 const TIERED = 'atoms/molecules/organisms';
@@ -92,6 +94,29 @@ describe('AC-2 — a project evidencing none behaves exactly as it does today', 
     it('an unset audit slot changes nothing either', () => {
         expect(applyQuestions(null, [{ name: 'Button' }]).join('\n')).not.toContain('taxonomy');
     });
+
+    it('a case variant of the sentinel is still no taxonomy', () => {
+        // The field is written by an agent following the skill, so `None` is
+        // reachable. An exact comparison read it as a one-element tier list,
+        // and a project with NO taxonomy then got a "conforming to `None`"
+        // banner plus a gap line per component — the output AC-2 forbids.
+        for (const spelling of ['None', 'NONE', ' none ']) {
+            expect(read_tiers(spelling)).toEqual([]);
+            const plans = plan_component_placement(spelling, ROOT, [{ name: 'B' }]);
+            expect(plans[0]?.gap).toBeNull();
+            expect(conformance_lines(spelling, ROOT, plans)).toEqual([]);
+        }
+    });
+
+    it('a case variant changes the apply output no more than `none` does', () => {
+        expect(
+            applyQuestions({ components: [{ name: 'X' }], component_taxonomy: 'None' }, [
+                { name: 'Button', tier: 'atoms' },
+            ]),
+        ).toEqual(applyQuestions({ components: [{ name: 'X' }] }, [
+            { name: 'Button', tier: 'atoms' },
+        ]));
+    });
 });
 
 describe('Phase 2.2 — an unplaceable component is a named gap, not a silent divergence', () => {
@@ -110,6 +135,24 @@ describe('Phase 2.2 — an unplaceable component is a named gap, not a silent di
         const [plan] = plan_component_placement(TIERED, ROOT, [{ name: 'Mystery' }]);
         expect(plan?.directory).toBeNull();
         expect(plan?.gap).toContain('Mystery');
+    });
+
+    it('a taxonomy with no recorded root is a gap, not a guessed directory', () => {
+        // Defaulting the root is the same failure as placing into a tier the
+        // project does not have, at the other end of the path: a project
+        // rooted at `app/components` would have been handed `src/components`
+        // with no gap and no warning.
+        const [plan] = plan_component_placement(TIERED, '', [{ name: 'Button', tier: 'atoms' }]);
+        expect(plan?.directory).toBeNull();
+        expect(plan?.gap).toContain(MISSING_ROOT_GAP);
+        expect(plan?.gap).toContain('Button');
+    });
+
+    it('the no-root banner does not assert a directory either', () => {
+        const plans = plan_component_placement(TIERED, '', [{ name: 'Button', tier: 'atoms' }]);
+        const joined = conformance_lines(TIERED, '', plans).join('\n');
+        expect(joined).toContain('an unrecorded component root');
+        expect(joined).not.toContain('src/components');
     });
 
     it('a gap is never placed somewhere else instead', () => {

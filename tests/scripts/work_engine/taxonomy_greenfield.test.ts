@@ -91,23 +91,42 @@ describe('Phase 3.1 — the greenfield halt offers the convention as a fourth op
 });
 
 describe('Phase 3.2 — declining is cheap and terminal', () => {
-    it('a recorded decline ends the question; a second run emits no halt', () => {
+    it('a recorded decline ends the question — no halt, no options at all', () => {
+        // A recorded decision makes the halt a no-op, which is the whole
+        // property: `questions` is EMPTY, so there is nothing for a re-run to
+        // re-offer. An earlier version called `auditRun` twice on the same
+        // state and called the second call "the load-bearing half" — but
+        // `auditRun` mutates nothing the halt reads, so that was the same
+        // assertion twice, and it is not restored here. The re-run property is
+        // covered below, where the state is genuinely rebuilt.
         for (const decision of ['bare', 'external_reference', 'scaffold']) {
-            const st = greenfield(decision);
-            const first = auditRun(st);
-            expect(first.outcome).toBe('success');
-            expect(first.questions ?? []).toEqual([]);
-            // The re-run is the load-bearing half: the offer must not come back.
-            const second = auditRun(st);
-            expect(second.outcome).toBe('success');
-            expect((second.questions ?? []).join('\n')).not.toContain('granularity');
+            const result = auditRun(greenfield(decision));
+            expect(result.outcome).toBe('success');
+            expect(result.questions ?? []).toEqual([]);
+        }
+    });
+
+    it('a re-run over the recorded state re-offers nothing', () => {
+        // The genuine re-run: the decision is serialised and a FRESH state is
+        // built from it, the way a second invocation against the same
+        // state-file would see it.
+        for (const decision of ['bare', 'external_reference', GRANULARITY_CONVENTION]) {
+            const recorded = JSON.parse(
+                JSON.stringify({ components: [], greenfield: true, greenfield_decision: decision }),
+            ) as Record<string, unknown>;
+            const rebuilt = new DeliveryState({
+                ticket: { title: 'new app' },
+                ui_audit: recorded,
+            } as never);
+            const result = auditRun(rebuilt);
+            expect(result.outcome).toBe('success');
+            expect((result.questions ?? []).join('\n')).not.toContain('granularity');
         }
     });
 
     it('accepting is equally terminal', () => {
-        const st = greenfield(GRANULARITY_CONVENTION);
-        auditRun(st);
-        expect((auditRun(st).questions ?? []).join('\n')).not.toContain('granularity');
+        expect((auditRun(greenfield(GRANULARITY_CONVENTION)).questions ?? []).join('\n'))
+            .not.toContain('granularity');
     });
 
     it('a non-greenfield project is never offered the convention at all', () => {
