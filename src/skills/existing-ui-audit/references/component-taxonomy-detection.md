@@ -17,8 +17,9 @@ tiers records three, and a project whose tiers are called
 ## Three properties, each pinned by a test
 
 - **Declared outranks inferred.** A `## Component taxonomy` section in the
-  project's `DESIGN.md` (or `docs/DESIGN.md`) listing backticked directory
-  names as list items wins, provided at least two of those directories exist
+  consumer project's own `DESIGN.md`, at its root or under `docs/`, listing
+  backticked directory names as list items wins, provided at least two of
+  those directories exist
   under the component root. The name may be bolded — `- **\`atoms\`** — ...`
   is read exactly like `` - `atoms` — ... ``. Grounding the declaration against
   the tree keeps a stale doc from declaring a taxonomy the tree does not have,
