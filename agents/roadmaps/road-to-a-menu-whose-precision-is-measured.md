@@ -287,12 +287,37 @@ tested on one consumer before anyone argues about routers or byte budgets.
       `/tmp/bak`.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-28 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-09-29 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | Labels written by the ranker's author encode the ranker | product | Precision looks high because labels agree with lexical matches | Labelling protocol excludes anyone who read the ranker's scoring; a 10 % blind relabel by a second seat is recorded | Phase 1 — A corpus that can carry a number |
 | 2 | Path-scoped rules hide a rule a session needed | product | A rule absent when a touched path fell outside its glob | Default off; measured once; flip only on the report | Phase 3 — Path-scoped delivery, measured once |
+| 3 | A corpus-less skill is edited under a base ref git cannot resolve | implementation | The touched-skill scope reads "nothing touched" and passes while checking nothing — a silent green, which is worse than a red | The scope reports `measured: false` rather than an empty touch set, the ledger records `precondition_unmet`, the run says so on stdout, and a test asserts the distinction; the CI job checks out at `fetch-depth: 0` and fetches `origin/main` explicitly | Phase 2 — Coverage to 299 |
+
+**Re-review, 2026-09-29, on the closure of 1.1-1.3, 2.1 and 4.1.**
+
+Risk 1 **materialised in the direction predicted, and the mitigation caught
+it.** The 26-prompt corpus reads top-1 0.615; the independently labelled
+390-prompt corpus reads 0.208, and the two intervals do not overlap. The
+mitigation was carried out as written — six seats given the catalogue and the
+bare prompt text with the ranker's scoring off limits, plus a blind 10 %
+relabel whose agreement is recorded in
+`tests/eval/routing-matrix/README.md`. What the mitigation does NOT establish
+is which of the two explanations for the gap holds (an optimistic small
+corpus, or two corpora asking different questions), and that is left open in
+`agents/evidence/analysis/skill-routing-precision-2026-09.md` rather than
+resolved by assertion. Risk stays live for any future relabel.
+
+Risk 2 is **unchanged and now blocking**: 3.1 stays open, nothing is
+default-on, and the risk cannot be retired until its measurement is possible
+at all. See 3.1's blocker.
+
+Risk 3 is **new**, added by the scope 2.1 shipped. It is the risk the
+implementation created, so it belongs here rather than in the step's prose: a
+gate whose precondition fails silently is a gate that reports green while
+measuring nothing, which is the shape this repository's gate contract exists
+to refuse.
 
 ## Acceptance Criteria
 
