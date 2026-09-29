@@ -16,9 +16,16 @@ import {
     added_entries,
     bump_session,
     classify_target,
+    changedKeys,
+    classCVerdict,
     count_entries,
     decide,
 } from '../../../src/scripts/hooks/block_config_weakening.js';
+import {
+    buildSettingsClassIndex,
+    classOfPath,
+    parseSettingsClassRows,
+} from '../../../src/shared/settingsClasses.js';
 
 describe('block_config_weakening — classify_target', () => {
     it('classifies allowlists as the blocking surface', () => {
@@ -126,5 +133,95 @@ describe('block_config_weakening — bump_session', () => {
         fs.mkdirSync(path.dirname(f), { recursive: true });
         fs.writeFileSync(f, 'not json', 'utf-8');
         expect(bump_session(root, 's1', 'a.json', 2)).toBe(2);
+    });
+});
+
+// ── Class C: the key is the unit, never the file ────────────────────────────
+//
+// road-to-a-kernel-that-guards-its-plumbing 2.1. The guard fences a POLICY DIAL
+// inside a settings file and leaves every other key in the same file writable,
+// which is why every case below pairs a refusal with the allow that proves the
+// fence is per-key and not per-file.
+describe('block_config_weakening — class-c', () => {
+    const REAL_CONTRACT = path.resolve(__dirname, '..', '..', '..', 'docs', 'contracts', 'settings-classes.md');
+    const index = buildSettingsClassIndex(parseSettingsClassRows(fs.readFileSync(REAL_CONTRACT, 'utf-8')));
+
+    it('classifies project settings files and nothing that merely shares a basename', () => {
+        expect(classify_target('.agent-settings.yml')).toBe('class-c');
+        expect(classify_target('some/project/.claude/settings.json')).toBe('class-c');
+        // A bare `settings.json` is a common filename; fencing it on the
+        // basename alone would refuse files carrying no settings key at all.
+        expect(classify_target('src/server/settings.json')).toBeNull();
+        expect(classify_target('README.md')).toBeNull();
+    });
+
+    it('refuses an edit that flips a Class C key', () => {
+        const before = 'hooks:\n  injection_scan:\n    enabled: false\n';
+        const reason = classCVerdict(
+            { old_string: 'enabled: false', new_string: 'enabled: true' },
+            before,
+            '.agent-settings.yml',
+            index,
+        );
+        expect(reason).not.toBeNull();
+        expect(reason).toContain('hooks.injection_scan.enabled');
+    });
+
+    it('allows an edit that changes only a Class A key in the same file', () => {
+        const before = 'personal:\n  play_by_play: false\n  minimal_output: true\n';
+        expect(
+            classCVerdict(
+                { old_string: 'play_by_play: false', new_string: 'play_by_play: true' },
+                before,
+                '.agent-settings.yml',
+                index,
+            ),
+        ).toBeNull();
+    });
+
+    it('resolves a child of a Class C map through its nearest classified ancestor', () => {
+        // `personal.autonomy` is C; a leaf under a C map has no row of its own
+        // and must still resolve to C rather than to "unclassified".
+        expect(classOfPath(index, 'personal.autonomy')).toBe('C');
+    });
+
+    // Fail-closed, both shapes. Each would otherwise be a bypass that needs no
+    // authorisation: make one file unreadable for the length of one tool call.
+    it('refuses every changed key when the class contract cannot be read', () => {
+        const reason = classCVerdict(
+            { old_string: 'play_by_play: false', new_string: 'play_by_play: true' },
+            'personal:\n  play_by_play: false\n',
+            '.agent-settings.yml',
+            null,
+        );
+        expect(reason).not.toBeNull();
+        expect(reason).toContain('fail-closed');
+    });
+
+    it('refuses an edit whose result does not parse as settings', () => {
+        const reason = classCVerdict(
+            { old_string: 'enabled: false', new_string: 'enabled: [unclosed' },
+            'hooks:\n  injection_scan:\n    enabled: false\n',
+            '.agent-settings.yml',
+            index,
+        );
+        expect(reason).not.toBeNull();
+        expect(reason).toContain('does not parse');
+    });
+
+    it('allows when the edit would not apply at all', () => {
+        expect(
+            classCVerdict(
+                { old_string: 'not present anywhere', new_string: 'x' },
+                'personal:\n  play_by_play: false\n',
+                '.agent-settings.yml',
+                index,
+            ),
+        ).toBeNull();
+    });
+
+    it('diffs leaves, not interior nodes — a changed child reports the child', () => {
+        expect(changedKeys({ a: { b: 1, c: 2 } }, { a: { b: 9, c: 2 } })).toEqual(['a.b']);
+        expect(changedKeys({ a: { b: 1 } }, {})).toEqual(['a.b']);
     });
 });

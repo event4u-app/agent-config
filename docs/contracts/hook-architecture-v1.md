@@ -451,6 +451,52 @@ Adding a file to either list is itself a governance change and carries its own
 ratification: the source list is watched by the gate that reads it, and the
 guard is a `src/scripts/hooks/block_*.ts` and therefore already gated.
 
+### Settings: the key is the unit, never the file
+
+A third file class sits beside the two above and takes a third mechanism, for a
+reason the split makes visible: a project settings file is edited legitimately
+many times a day AND carries a handful of keys that are policy dials. A deny on
+the file would wedge ordinary work; a record on the file would be a record of
+routine. So the fence is per KEY.
+
+```
+A CLASS C KEY IS REFUSED AT TOOL-CALL TIME. EVERY OTHER KEY IN THE SAME
+FILE STAYS AGENT-WRITABLE. USER-GLOBAL FILES ARE NEVER IN REACH.
+```
+
+`block_config_weakening.ts` classifies `.agent-settings.yml` and a host's
+`.claude/settings.json` as `class-c`, parses the document as it would stand
+AFTER the edit, diffs the leaf key paths, and refuses when any changed key
+resolves to C through `shared/settingsClasses.classOfPath` — the same shared
+classifier `settings:set` and the GUI write route already use, rather than a
+second copy of the rule. Class C is defined in
+[`settings-classes.md`](settings-classes.md), which ships in `files[]` and is
+therefore readable from a consumer install.
+
+Two states fail closed, both because the alternative is a bypass with no
+authorisation step in it: a class contract the guard cannot read leaves it
+unable to tell a C key from an A key, and a post-edit document it cannot parse
+leaves it with no key list at all. Either one refuses.
+
+What it does not see: an edit applied through a shell redirect rather than an
+edit tool. That is `block_plumbing_writes`' subject and its shapes are
+`_lib/shell_write_shapes.ts`; this guard's corpus is `EDIT_TOOLS`.
+
+### One exit-code table
+
+`src/scripts/hooks/exit_codes.ts` is the single definition of 0 / 1 / 2 / ≥3,
+with `owner` and `authorizedBy` per row — who decides a concern emits the code,
+and what authorises the dispatcher to act on it. Thirty-three files previously
+declared their own copies, and the numbers are not interchangeable across the
+boundary: 1 and 2 mean the opposite things on Claude Code from what they mean
+in this tree's internal language, which is why `host_semantics.ts` exists.
+`lint_exit_codes` refuses a bare numeral in `src/scripts/hooks/*.ts`.
+
+`EXIT_USAGE` sits beside the table and deliberately outside it: `dispatch_hook`
+and `replay_hook` are also CLIs, and exit 2 on their own bad argv by POSIX
+convention — a number that collides with `EXIT_WARN` by coincidence, not by
+meaning, since no concern has spoken at that point.
+
 ## Manifest schema — `scripts/hook_manifest.yaml`
 
 ```yaml
