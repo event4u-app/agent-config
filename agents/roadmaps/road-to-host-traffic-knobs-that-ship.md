@@ -41,7 +41,7 @@ change and stays with the owner.
 
 ## Phase 1 — Get the mapping right before writing it anywhere
 
-- [ ] **1.1 Record one variable per line with what it actually controls.** In a
+- [x] **1.1 Record one variable per line with what it actually controls.** In a
       documentation surface under `docs/setup/`, one row per variable: the variable, the
       behaviour it governs, the behaviour it does **not** govern, and the dated host
       version the row was checked against. The blanket non-essential-traffic variable and
@@ -49,30 +49,221 @@ change and stays with the owner.
       interchangeable.
       verify: the new rows exist and each carries a dated `checked against` field;
       `grep -c 'DISABLE_AUTOUPDATER' docs/setup` is at least 1
-- [ ] **1.2 State where the mapping came from and how stale it can go.** These are
+
+      <!-- done 2026-09-29: `docs/setup/host-traffic-environment.md`, four rows, each a
+      `Governs` / `Does NOT govern` / `Checked against` table. Blanket variable and
+      auto-updater variable are separate `###` sections.
+
+      $ grep -rc 'DISABLE_AUTOUPDATER' docs/setup/host-traffic-environment.md
+      docs/setup/host-traffic-environment.md:2
+      $ grep -c 'Checked against' docs/setup/host-traffic-environment.md
+      5
+      $ grep -o 'Claude Code 2.1.284 · 2026-09-29' docs/setup/host-traffic-environment.md | wc -l
+             4
+
+      (`grep -c` counts LINES, not occurrences: 2 lines mention `DISABLE_AUTOUPDATER` —
+      its own section heading and the blanket row that names it as a neighbouring rung.
+      `Checked against` is 5 = four row fields plus the one intro sentence that states the
+      default. The dated string appears exactly 4 times, once per row, which is the count
+      the step actually cares about.)
+
+      ROADMAP CLAIM THAT DID NOT REPRODUCE — this is the step's main finding.
+      The roadmap's header and its Risk-1 row both assert a "corrected mapping" in which
+      the blanket non-essential-traffic variable does NOT disable the host's auto-updater,
+      the updater having "its own separate variable". Measured against the shipped host,
+      that is FALSE and the retraction it came from is the error, not the fix.
+
+      Measurement unit, published before the number it produces: one row = one named
+      environment variable whose effect was traced to at least one named branch in the
+      SHIPPED HOST BINARY at a pinned version, by locating the code that reads
+      `process.env.<NAME>` and following the branch that value controls. Not a vendor
+      document, not recall. Reproduction:
+
+      $ claude --version
+      2.1.284 (Claude Code)
+      $ strings -n 6 "$(npm root -g)/@anthropic-ai/claude-code/node_modules/@anthropic-ai/claude-code-darwin-arm64/claude" > /tmp/cc.strings
+      $ grep -oaE '.{260}DISABLE_AUTOUPDATER.{260}' /tmp/cc.strings
+
+      The update-disabled-reason resolver reads, in order: `DISABLE_UPDATES`, then
+      `DISABLE_AUTOUPDATER`, then a helper that returns the literal string
+      `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` when that variable is set. The blanket
+      variable is therefore the resolver's THIRD rung — setting it does stop background
+      auto-updates. The same posture also gates telemetry, error reporting, `/bug` and
+      `/feedback`, plugin-archive downloads, `/design-sync` and Projects.
+
+      NEITHER number is carried forward as received: the doc ships the MEASURED mapping,
+      names the discrepancy in its own `A correction this page carries` section, and tells
+      a reader to set each behaviour's narrow variable explicitly rather than rely on any
+      one variable's fan-out. The acceptance criterion "neither row claims the other's
+      effect" is met in substance — each row describes only its own variable — and is not
+      allowed to suppress a verified fact about the blanket variable's own reach, because
+      the direction of the roadmap's error is the dangerous one: a reader who believed the
+      retraction would silently stop receiving updates while believing only telemetry was
+      touched. That is exactly the outcome Risk 1 exists to prevent.
+
+      Two further rows corrected against the same binary: `BASH_MAX_OUTPUT_LENGTH`
+      (default 30000, non-positive falls back, above 150000 is capped) and
+      `MAX_MCP_OUTPUT_TOKENS` (default 25000) are output-SIZE caps, not traffic switches —
+      they bound request size, never request count, and the doc says so under
+      `Does NOT govern` because treating them as traffic knobs is the available mistake. -->
+
+- [x] **1.2 State where the mapping came from and how stale it can go.** These are
       third-party behaviours; a row with no date is a claim with no expiry.
       verify: every row carries a date, and the surface states that an undated row is
       to be treated as unverified
 
+      <!-- done 2026-09-29: the surface carries a `How these rows were established — the
+      measurement unit` section giving the method and a three-command reproduction, and an
+      Iron-Law block immediately under the intro:
+
+      $ sed -n '/A ROW WITH NO/,/OWN HOST/p' docs/setup/host-traffic-environment.md
+      A ROW WITH NO `CHECKED AGAINST` DATE IS UNVERIFIED AND MUST BE TREATED AS
+      UNVERIFIED — NOT AS A FACT THAT SIMPLY LOST ITS DATE. RE-CHECK IT AGAINST YOUR
+      OWN HOST BEFORE ACTING ON IT.
+
+      Every row carries the date (verified in 1.1: 4 occurrences, one per row). The method
+      section also states its own limit rather than implying completeness — it establishes
+      what a variable is WIRED to, not that the branch is reached in a given
+      configuration. The date is carried in the code too: `TRAFFIC_VARIABLES` in
+      `src/scripts/_cli/doctor_network_posture.ts` stamps each row's `checked_against`,
+      and a test asserts the field ends in a `YYYY-MM-DD`, so an undated row reds rather
+      than shipping as a fact (sensitivity probe recorded under 2.2). -->
+
+
 ## Phase 2 — Report the observed state, change nothing
 
-- [ ] **2.1 Add a traffic-environment section to `doctor --json`.** For each
+- [x] **2.1 Add a traffic-environment section to `doctor --json`.** For each
       documented variable: set or unset, and the value if set. Read-only; `doctor`
       reports, it does not write.
       verify: `agent-config doctor --json` emits the section, and running it twice
       leaves the environment and every settings file byte-identical
-- [ ] **2.2 Report unknown rather than guess.** On a host where the variable has no
+
+      <!-- done 2026-09-29: `src/scripts/_cli/doctor_network_posture.ts` supplies
+      `trafficEnvironmentJson(env)`; `cmd_doctor.ts` wires it in one line beside the
+      existing `execution` and `forge_protection` blocks.
+
+      $ ./agent-config doctor --json | python3 -c "import json,sys; print(json.dumps(json.load(sys.stdin)['traffic_environment'], indent=2))"
+      {
+        "host": "claude-code",
+        "host_observed": true,
+        "doc": "docs/setup/host-traffic-environment.md",
+        "read_only": true,
+        "rows": [
+          { "variable": "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC", "state": "unset", "value": null, "checked_against": "claude-code 2.1.284 · 2026-09-29" },
+          { "variable": "DISABLE_AUTOUPDATER",                     "state": "unset", "value": null, "checked_against": "claude-code 2.1.284 · 2026-09-29" },
+          { "variable": "BASH_MAX_OUTPUT_LENGTH",                  "state": "unset", "value": null, "checked_against": "claude-code 2.1.284 · 2026-09-29" },
+          { "variable": "MAX_MCP_OUTPUT_TOKENS",                   "state": "unset", "value": null, "checked_against": "claude-code 2.1.284 · 2026-09-29" }
+        ]
+      }
+
+      (rows re-indented here for width; the `·` escape is `cmd_doctor`'s documented
+      `ensure_ascii=True` JSON parity, not a defect in this section.)
+
+      Byte-identity across two consecutive runs — the property, not the intent:
+
+      $ ./agent-config doctor --json > doc1.json          # + git status --porcelain, shasum of every .agent-settings.yml
+      $ ./agent-config doctor --json > doc2.json          # + the same two snapshots again
+      $ diff doc1.json doc2.json    && echo "JSON IDENTICAL"
+      JSON IDENTICAL
+      $ diff st_before.txt st_after.txt && echo "TREE IDENTICAL"
+      TREE IDENTICAL
+      $ diff set_before.txt set_after.txt && echo "SETTINGS IDENTICAL"
+      SETTINGS IDENTICAL
+
+      Read-only is also structural, not only observed: the function's whole input is an
+      injected `env` map and its whole output is a fresh object — it opens no socket,
+      resolves no path and holds no reference to a settings file, so there is no write
+      for a later convenience to grow out of. A unit test asserts both that two calls are
+      deep-equal and that the env map handed in is unmutated.
+
+      SOURCE-SIZE RATCHET, paid rather than raised. Wiring cost 2 lines in
+      `cmd_doctor.ts`, which sits ~2,100 lines past the 1,500 cap where every added line
+      is an added violation, and `check_source_size_budget` sat at its baseline with zero
+      headroom. So `_check_offline_readiness` (17 lines) moved into the new module as a
+      PURE MOVE — same id, status, message and remedy, asserted by two tests — leaving a
+      1-line delegate in the style of the `_check_python_runtime` precedent.
+      cmd_doctor.ts 3,618 -> 3,604; total excess 17,762 -> 17,748, exit 0.
+
+      The baseline is deliberately NOT lowered to 17,748: this is a local reading on a
+      branch, and the committed number has to be the gate's reading on the MERGED tree.
+      The gain is real and the gate is green with headroom; a later lowering commit
+      measured after merge can bank it. -->
+
+- [x] **2.2 Report unknown rather than guess.** On a host where the variable has no
       documented meaning, the row reads `not applicable on this host` rather than being
       omitted — an omitted row reads as "fine" and is the failure this whole surface
       exists to stop.
       verify: on a non-Claude host fixture the section is present and every row reads
       `not applicable on this host`
 
+      <!-- done 2026-09-29: `trafficEnvironmentJson(env, hostOverride?)` takes the host as
+      an injectable seam; `tests/scripts/doctor_network_posture.test.ts` drives it with the
+      non-Claude fixture `{ host: 'cursor', observed: true }`, and with an unidentified
+      host, which resolves to `unknown` — a host that documents nothing, so every row reads
+      the literal. A guessed host is never reported: `host_observed` carries the same
+      observed-vs-assumed distinction `routing:doctor` draws for its platform field.
+
+      $ npx vitest run tests/scripts/doctor_network_posture.test.ts
+       ✓ tests/scripts/doctor_network_posture.test.ts (12 tests) 64ms
+       Test Files  1 passed (1)
+            Tests  12 passed (12)
+
+      SENSITIVITY — the tests were shown red against the exact bug they guard, twice, and
+      the module was restored from a `/tmp` copy each time, never by `git checkout`.
+
+      Probe A, the omission bug (row list filtered to applicable variables — the "obvious
+      implementation" this step names):
+
+       × ... > emits every row, and every row reads the literal not-applicable state
+       × ... > still reports the value of a variable that is set but not read here
+       × ... > resolves an unidentified host the same way, with host_observed false
+       Tests  3 failed | 9 passed (12)
+
+      The FIRST run of probe A failed only 2 of those 3 — and that is a finding about the
+      test, not about the code. The third assertion was a `for` loop over the row array,
+      which an omitting implementation leaves EMPTY, so it passed vacuously: the test that
+      existed to catch omission was itself blind to omission. A `toHaveLength` assertion
+      was added ahead of the loop and probe A was re-run, giving the 3-failure result
+      above. Without the probe that hole would have shipped looking like coverage.
+
+      Probe B, an undated row (the `checked_against` date stripped), confirming 1.2's
+      guard is sensitive too:
+
+       × the documented variable set > carries the four variables the roadmap names, each with a dated check
+       Tests  1 failed | 11 passed (12)
+
+      $ cp /tmp/.../dnp.bak.ts src/scripts/_cli/doctor_network_posture.ts   # restore, both times
+      $ npx vitest run tests/scripts/doctor_network_posture.test.ts
+       Tests  12 passed (12) -->
+
+
 ## Phase 3 — Say it once, in the place a reader is already looking
 
-- [ ] **3.1 Point `ONBOARDING.md` at the new surface in one line.** No second copy of
+- [x] **3.1 Point `ONBOARDING.md` at the new surface in one line.** No second copy of
       the table; a pointer, per this repo's thin-root discipline.
       verify: `ONBOARDING.md` gains exactly one pointer line and no table
+
+      <!-- done 2026-09-29: the pointer went into
+      `src/templates/consumer-settings/ONBOARDING.md` § See also.
+
+      $ git diff --stat src/templates/consumer-settings/ONBOARDING.md
+       src/templates/consumer-settings/ONBOARDING.md | 1 +
+       1 file changed, 1 insertion(+)
+      $ git diff src/templates/consumer-settings/ONBOARDING.md | grep "^+" | grep -c "^+.*|.*|"
+      0
+
+      Exactly one added line, zero added table rows.
+
+      WHICH `ONBOARDING.md` — the roadmap names the file without a path and the tree holds
+      two. The root `ONBOARDING.md` is an internal subagent / role / persona integration
+      map; `src/templates/consumer-settings/ONBOARDING.md` is the consumer-facing tour
+      that ships to a project. The phase title is "say it once, in the place a reader is
+      already looking", and a developer on a metered link is looking at the consumer
+      onboarding, not at a subagent composition map — so the pointer went there. It is
+      also the only one of the two in `src/`, which is the source of truth this repo
+      edits. The choice is recorded rather than assumed because a reader checking the
+      acceptance criteria against the root file would otherwise find nothing. -->
+
 
 ## Phase 4 — Deferred, owner-reserved
 
