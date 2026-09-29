@@ -24,7 +24,9 @@ import {
     COVERED_INVENTORIES,
     coverage_report,
     run as applyRun,
+    written_file_placeholders,
 } from '../../../src/agent-src/templates/scripts/work_engine/directives/ui/apply.js';
+import { placeholder_paths } from '../../../src/agent-src/templates/scripts/work_engine/directives/ui/design.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, '..', '..', '..');
@@ -251,5 +253,46 @@ describe('3.1 — handing work back is reported', () => {
         // Superseded by the 3.2 assertion once the flip lands; kept until then
         // so the shadow release is a recorded state rather than an intention.
         expect(applyRun(stateFor('S-b-all-flagged.json')).outcome).toBe('success');
+    });
+});
+
+describe('4.1 — the placeholder scan reads the files', () => {
+    it('S-c halts naming the written file', () => {
+        const r = applyRun(stateFor('S-c-placeholder-in-file.json'));
+        expect(r.outcome).toBe('blocked');
+        const said = saidBy(r);
+        expect(said).toContain('written/S-c/panel.html');
+        expect(said).toContain('placeholder');
+    });
+
+    it('the rendered-only scan does not see it — the sensitivity control', () => {
+        // "Removing the file-side scan makes the same arm pass", asserted
+        // permanently rather than demonstrated once: the report the porter
+        // wrote is clean, and only the file it wrote is not.
+        const env = arm('S-c-placeholder-in-file.json')['ui_apply'] as Json;
+        expect(placeholder_paths(env['rendered'])).toEqual([]);
+        expect(written_file_placeholders(env as never, REPO).length).toBe(1);
+    });
+
+    it('the faithful arm raises nothing from either side', () => {
+        const env = arm('faithful.json')['ui_apply'] as Json;
+        expect(placeholder_paths(env['rendered'])).toEqual([]);
+        expect(written_file_placeholders(env as never, REPO)).toEqual([]);
+        expect(applyRun(stateFor('faithful.json')).outcome).toBe('success');
+    });
+
+    it('an unreadable or absent path is not a finding', () => {
+        // Risk 4's false-positive guard: apply runs at points where a declared
+        // file may not be on disk, and halting a correct port because a path
+        // did not resolve would be a worse failure than the one being fixed.
+        const env = { rendered: {}, files: ['does/not/exist.tsx', 'tests'] };
+        expect(written_file_placeholders(env as never, REPO)).toEqual([]);
+    });
+
+    it('only the declared changed set is read, never a tree sweep', () => {
+        // The planted file is inside the repo and would be found by a sweep.
+        // An envelope that does not name it must stay silent.
+        const env = { rendered: {}, files: [] };
+        expect(written_file_placeholders(env as never, REPO)).toEqual([]);
     });
 });
