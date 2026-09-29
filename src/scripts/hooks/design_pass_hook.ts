@@ -57,6 +57,8 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { appendDischarge, stamp } from '../_lib/obligations.js';
+import { compareInputs } from '../_lib/probe_inputs.js';
+import { trigger_matches, type Trigger } from '../_lib/router_match.js';
 import { isUiPath, isUiTreePath } from '../_lib/ui_surface.js';
 import { loadDesignContext, scanFile } from '../lint_design_slop.js';
 import { readHookStdin } from './hook_stdin.js';
@@ -150,27 +152,94 @@ export interface ConformanceVerdict {
      * write is the noise that gets a carrier switched off — Risk 1 of the parent
      * roadmap. Absent is still reported honestly whenever the pass speaks for
      * another reason.
+     *
+     * The ONE exception is a turn that actually touched a provided design
+     * handover. There, the probe is the evidence the turn was supposed to
+     * produce, and its absence is the noteworthy kind.
      */
     noteworthy: boolean;
     line: string;
 }
 
-export function conformanceVerdict(root: string): ConformanceVerdict {
+export interface ConformanceOptions {
+    /**
+     * Whether a provided design handover was among the files this turn wrote.
+     * Decided by `handoverTouched` from the shipped routing triggers, never by a
+     * matcher invented here.
+     */
+    handoverDetected?: boolean;
+}
+
+/**
+ * The file-based half of `src/rules/design-fidelity.md`'s `triggers:` set — the
+ * shipped answer to "is this file a provided design handover?".
+ *
+ * COPIED AS A CONSTANT, MATCHED BY THE SHIPPED MATCHER. Reading and parsing the
+ * rule's frontmatter here would put a YAML load on `post_tool_use`, the hottest
+ * slot this concern binds, and would depend on a rule path that differs between
+ * this repository and an installed consumer. The drift that a constant invites
+ * is closed by a test instead: `design_pass.test.ts` asserts this list equals the
+ * rule's file-based triggers in BOTH directions, so a trigger added to the rule
+ * and not here fails CI.
+ *
+ * THE HONEST REACH. Only the two HTML patterns are reachable through this
+ * carrier. `.claude/design-system/` names JSON and token files, which
+ * `isUiSurface` does not admit, so `main` returns before the verdict is
+ * computed. Widening `isUiSurface` to admit them would change the UI-turn
+ * denominator that the consultation-rate measurement is defined against, which
+ * is a different decision than this one. The prefix stays for parity with the
+ * rule and is stated as unreachable rather than quietly dropped.
+ */
+export const HANDOVER_TRIGGERS: readonly Trigger[] = [
+    { file_pattern: '*design.html' },
+    { file_pattern: '*.dc.html' },
+    { path_prefix: '.claude/design-system/' },
+];
+
+/** True when any of the paths this turn wrote is a provided design handover. */
+export function handoverTouched(paths: readonly string[]): boolean {
+    if (!paths.length) return false;
+    return HANDOVER_TRIGGERS.some((t) => trigger_matches(t, '', paths, null));
+}
+
+export function conformanceVerdict(root: string, opts: ConformanceOptions = {}): ConformanceVerdict {
     let raw: string;
     try {
         raw = fs.readFileSync(path.join(root, CONFORMANCE_REL), 'utf-8');
     } catch {
-        return {
-            noteworthy: false,
-            line: 'ui-conformance: absent — no probe artefact for this change (run `ui_conformance_probe --target <file> --reference <file>`). Absent is not clean.',
-        };
+        const base =
+            'ui-conformance: absent — no probe artefact for this change (run `ui_conformance_probe --target <file> --reference <file>`). Absent is not clean.';
+        return opts.handoverDetected
+            ? {
+                  noteworthy: true,
+                  line: `${base} A provided design handover was touched this turn, so this is the absence worth naming.`,
+              }
+            : { noteworthy: false, line: base };
     }
     try {
         const a = JSON.parse(raw) as {
             structure_gate?: string;
+            inputs?: unknown;
             dimensions?: { dimension: string; status: string; findings: number | null; reason?: string }[];
             findings?: { dimension?: string; probe_id?: string; expected?: string; observed?: string }[];
         };
+
+        // Before anything is counted. A finding count measured against inputs
+        // that have since moved is the misleading half of a stale artefact, so
+        // the count is withheld rather than printed beside a warning.
+        const inputs = compareInputs(a.inputs, (p) => (path.isAbsolute(p) ? p : path.join(root, p)));
+        if (inputs.verdict === 'moved') {
+            return {
+                noteworthy: true,
+                line: [
+                    `ui-conformance: stale — ${inputs.moved.join(', ')} changed since the probe ran, so its findings ` +
+                        'describe inputs that no longer exist. The count is withheld rather than reported against ' +
+                        'them; re-run `ui_conformance_probe --target <file> --reference <file>`.',
+                    '  (shadow verdict: reported, never enforced — this pass does not block on it)',
+                ].join('\n'),
+            };
+        }
+
         const rows = a.dimensions ?? [];
         const exercised = rows.filter((r) => r.status === 'exercised');
         const notApplicable = rows.filter((r) => r.status !== 'exercised');
@@ -202,6 +271,15 @@ export function conformanceVerdict(root: string): ConformanceVerdict {
                     `${addedElements.map((f) => f.probe_id ?? '?').join(', ')} — added, not ported`,
             );
         }
+        parts.push(
+            inputs.verdict === 'unchanged'
+                ? '  · inputs: unchanged since the probe ran'
+                : // Unknown is a version skew, not evidence of movement — and
+                  // equally not evidence of freshness. Saying so is the whole
+                  // point: an artefact from before the digests existed must read
+                  // neither stale nor fresh.
+                  `  · inputs: unknown — ${inputs.reason}`,
+        );
         parts.push('  (shadow verdict: reported, never enforced — this pass does not block on it)');
         return {
             noteworthy: (a.findings ?? []).length > 0 || a.structure_gate === 'stopped' || notApplicable.length > 0,
@@ -470,7 +548,7 @@ function main(): number {
     // be silent — a behavioural finding is exactly the thing no static scan can
     // see — but it cannot make it refuse. `result.blocked` above is computed
     // without it and the exit code below is unchanged.
-    const conformance = conformanceVerdict(root);
+    const conformance = conformanceVerdict(root, { handoverDetected: handoverTouched(targets) });
 
     if (
         !result.findings.length &&

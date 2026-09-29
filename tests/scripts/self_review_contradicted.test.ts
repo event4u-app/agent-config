@@ -174,3 +174,65 @@ describe('the two gates agree', () => {
         expect(isBlocking({ ...FABRICATED, contradicted: '  ' })).toBe(true);
     });
 });
+
+/**
+ * THE IN-FILE REMOVAL CLASS (road-to-a-fact-plane Phase 1).
+ *
+ * The disproof was written against whole-file deletion and its header claims
+ * "a genuine deletion satisfies neither half". That holds only when the
+ * artifact IS a file. A finding saying "digest verification was removed in
+ * `install.ts`" asserts a removal INSIDE a file the range modified: the path is
+ * absent from the deletion set (nothing was deleted) and present in the tree
+ * (the file still exists), so both halves are satisfied and a claim the gate
+ * cannot check was de-blocked as though it had been checked.
+ *
+ * A path the range MODIFIED is evidence the range touched the artifact, which
+ * is the opposite of the disproof's premise. These cases pin that.
+ */
+describe('contradictedByTree — in-file removal is not a whole-artifact deletion', () => {
+    /** A removal asserted INSIDE a file the range modified. */
+    const IN_FILE: Finding = {
+        severity: 'critical',
+        kind: 'security',
+        title: 'digest verification removed from the installer',
+        detail: 'The digest check in `src/scripts/install.ts` was removed, so a tampered bundle installs silently.',
+        file: 'src/scripts/install.ts',
+    };
+
+    it('does NOT disprove a removal asserted inside a file the range modified', () => {
+        expect(
+            contradictedByTree(
+                IN_FILE,
+                new Set(['agents/roadmaps/road-to-gone.md']),
+                exists(['src/scripts/install.ts']),
+                new Set(['src/scripts/install.ts']),
+            ),
+        ).toBeNull();
+    });
+
+    it('leaves that finding merge-blocking through the annotation pass', () => {
+        const [annotated] = annotateContradicted(
+            [IN_FILE],
+            new Set(['agents/roadmaps/road-to-gone.md']),
+            exists(['src/scripts/install.ts']),
+            new Set(['src/scripts/install.ts']),
+        );
+        expect(annotated!.contradicted).toBeUndefined();
+        expect(classifyBlocking(annotated!)).toBe(true);
+        expect(isBlocking(annotated!)).toBe(true);
+    });
+
+    it('still disproves the whole-file fabrication when the range modified OTHER files', () => {
+        // The direction a too-wide narrowing breaks: the 16.1.0 fabrication
+        // names a skill the range never touched, so a modification set that
+        // does not contain it must leave the disproof standing.
+        const why = contradictedByTree(
+            FABRICATED,
+            new Set(['agents/roadmaps/road-to-gone.md']),
+            exists(['src/skills/adversarial-review/SKILL.md']),
+            new Set(['src/scripts/self_review_gate.ts', 'docs/CLAIMS.md']),
+        );
+        expect(why).toContain('adversarial-review');
+        expect(why).toContain('present in the tree');
+    });
+});
