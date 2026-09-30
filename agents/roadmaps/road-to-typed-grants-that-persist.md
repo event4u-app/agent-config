@@ -719,7 +719,7 @@ item. Phases 1-6 may run once 0.2 is chosen.
   So limb 1 is **not met** and the gate reports three findings again — all three intended.
   What it now waits on is the in-repository half: a structured, evidence-carrying exemption
   rather than a lowered floor, per
-  `agents/roadmaps/road-to-bounded-approval-floor-waiver.md`. Verify with
+  `agents/roadmaps/archive/road-to-bounded-approval-floor-waiver.md`. Verify with
   `gh api repos/event4u-app/agent-config/rulesets/17749383/history` rather than from any
   paragraph here.
 
@@ -839,7 +839,7 @@ item. Phases 1-6 may run once 0.2 is chosen.
   assumption that 15:18 had been a side effect and `49277135` at 16:06 returned it to
   `false` once the owner stated the intent.
 
-  **`agents/roadmaps/road-to-bounded-approval-floor-waiver.md` is superseded for the
+  **`agents/roadmaps/archive/road-to-bounded-approval-floor-waiver.md` is superseded for the
   approval half.** It plans a bounded waiver over `minimum_approving_reviews` and
   `require_last_push_approval`; a later ruling removed both dimensions instead, and a
   dimension outside the trust model is not a waived rule. Its mechanism did land — as
