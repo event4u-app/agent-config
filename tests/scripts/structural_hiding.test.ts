@@ -220,6 +220,9 @@ describe('structural hiding — adversarial markup the review named', () => {
         const result = strip_structural_hiding(`</div><p>${VISIBLE}</p>`);
 
         expect(result.text).toContain(VISIBLE);
+        // Without this, a stripper that reads a stray close as the end of a
+        // hidden element passes by emitting a removal that describes nothing.
+        expect(result.removals).toHaveLength(0);
     });
 
     it('terminates on malformed input that starts no tag', () => {
@@ -291,5 +294,113 @@ describe('structural hiding — tokenizer invariants', () => {
         for (const r of result.removals) {
             expect(removalSentinel(r.channel)).not.toContain(SECRET);
         }
+    });
+});
+
+describe('structural hiding — branches the code executes and the fixtures did not', () => {
+    // Every case here is a branch `strip_structural_hiding` already took
+    // correctly; what was missing was a fixture that FAILS when it stops. A
+    // correct branch with no discriminating test is a silent regression
+    // waiting for a refactor.
+
+    it('hidden="until-found" survives end-to-end, not only in the predicate', () => {
+        // The predicate case is asserted above. This is the same claim made
+        // end-to-end, because a stripper that misreads the predicate's return
+        // deletes visible text while the unit test stays green — which is
+        // exactly how the aria-hidden defect shipped the first time.
+        const html = `<p>${VISIBLE}</p><div hidden="until-found">${VISIBLE} searchable</div>`;
+        const result = strip_structural_hiding(html);
+
+        expect(result.text).toContain('searchable');
+        expect(result.removals).toHaveLength(0);
+    });
+
+    it('an unterminated END tag leaves its hidden element unclosed, and fails closed', () => {
+        // The payload sits in a HIDDEN element whose close tag runs to EOF
+        // without its `>`. The first version of this fixture put it in a
+        // VISIBLE div and asserted it was stripped — which the code rightly
+        // refused, because visible text is not this module's to delete. The
+        // assertion was wrong, not the behaviour.
+        const result = strip_structural_hiding(`<p>${VISIBLE}</p><div style="display:none">${SECRET}</div`);
+
+        expect(result.text).not.toContain(SECRET);
+        expect(result.text).toContain(VISIBLE);
+        expect(result.truncated).toBe(true);
+    });
+
+    it('an unterminated END tag on a VISIBLE element keeps its text and still reports truncation', () => {
+        const result = strip_structural_hiding(`<p>${VISIBLE}</p><b>kept text</b`);
+
+        expect(result.text).toContain('kept text');
+        expect(result.text).toContain(VISIBLE);
+        expect(result.truncated).toBe(true);
+    });
+
+    it('resets between hidden siblings rather than swallowing the visible one', () => {
+        const html =
+            `<div style="display:none">${SECRET} one</div>` +
+            `<div>${VISIBLE}</div>` +
+            `<div style="display:none">${SECRET} two</div>`;
+        const result = strip_structural_hiding(html);
+
+        expect(result.text).toContain(VISIBLE);
+        expect(result.text).not.toContain(SECRET);
+        expect(result.removals).toHaveLength(2);
+    });
+
+    it('an orphan `=` in a tag neither spins nor swallows the element', () => {
+        const result = strip_structural_hiding(`<div =>${VISIBLE}</div>`);
+
+        expect(result.text).toContain(VISIBLE);
+        expect(result.removals).toHaveLength(0);
+    });
+
+    it('a bogus comment is a comment, not a tag — its payload is removed', () => {
+        // `<!doctype html …>` is a bogus comment per the spec. A tokenizer that
+        // read it as a start tag would leak whatever it carries.
+        const result = strip_structural_hiding(`<p>${VISIBLE}</p><!doctype html ${SECRET}>`);
+
+        expect(result.text).not.toContain(SECRET);
+        expect(result.text).toContain(VISIBLE);
+        expect(result.removals.map((r) => r.channel)).toContain('html-comment');
+    });
+
+    it('an unterminated bogus comment drops its tail and reports truncation', () => {
+        const result = strip_structural_hiding(`<p>${VISIBLE}</p><!incomplete ${SECRET}`);
+
+        expect(result.text).not.toContain(SECRET);
+        expect(result.text).toContain(VISIBLE);
+        expect(result.truncated).toBe(true);
+    });
+
+    it('a hidden void element is removed without swallowing what follows', () => {
+        const html = `<p>${VISIBLE}</p><img hidden src="x.png"><p>${VISIBLE} after</p>`;
+        const result = strip_structural_hiding(html);
+
+        expect(result.text).toContain(VISIBLE);
+        expect(result.text).toContain('after');
+        expect(result.removals).toHaveLength(1);
+        expect(result.removals[0]?.channel).toBe('hidden-attribute');
+    });
+
+    it('tag-like text inside <textarea> is character data — and stays VISIBLE', () => {
+        // A textarea's content is a form field's value: the user sees it. So
+        // the correct outcome is that the markup inside is inert AND the text
+        // survives. Asserting both directions is what distinguishes "RAWTEXT
+        // handled" from "element skipped".
+        const html = `<textarea><div style="display:none">${SECRET}</div></textarea><p>${VISIBLE}</p>`;
+        const result = strip_structural_hiding(html);
+
+        expect(result.text).toContain(SECRET);
+        expect(result.text).toContain(VISIBLE);
+        expect(result.removals).toHaveLength(0);
+    });
+
+    it('tag-like text inside <title> is character data', () => {
+        const html = `<title><div style="display:none"></title><p>${VISIBLE}</p>`;
+        const result = strip_structural_hiding(html);
+
+        expect(result.text).toContain(VISIBLE);
+        expect(result.removals).toHaveLength(0);
     });
 });

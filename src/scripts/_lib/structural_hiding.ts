@@ -68,7 +68,17 @@
  * tree. The covered-channel list and the gap register are the honest statement
  * of what this does; a number would be an invented denominator. The absence is
  * machine-checked — `check_read_surface_coverage` refuses a percentage token in
- * this file and in the surfaces that cite it.
+ * this file, and refuses any surface that claims this coverage without citing
+ * the gap register.
+ *
+ * WHAT THE MISSING CORPUS MEANS, since "none exists" reads two ways. It is not
+ * "we could build one and have not got to it". The space of hiding techniques
+ * is adversarial and not enumerable: a corpus would fix a denominator that the
+ * next technique invalidates, and the number computed against it would outlive
+ * its own validity. A corpus is a research artefact, not a module dependency,
+ * and none is in scope for this layer. What the module can honestly state is
+ * the list of channels it declares, which is enumerable, and what it knows it
+ * misses, which is the register — so that is what it states.
  */
 
 /**
