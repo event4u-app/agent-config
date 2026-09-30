@@ -1,0 +1,333 @@
+diff --git a/agents/roadmaps/road-to-a-ui-coverage-ledger-that-can-fail.md b/agents/roadmaps/road-to-a-ui-coverage-ledger-that-can-fail.md
+index bef6006ce685cd7d394b3da07a749d5b21be0fdd..ed712cd3458866c4c3108b965081c09861980754 100644
+--- a/agents/roadmaps/road-to-a-ui-coverage-ledger-that-can-fail.md
++++ b/agents/roadmaps/road-to-a-ui-coverage-ledger-that-can-fail.md
+@@ -3,15 +3,29 @@ complexity: lightweight
+ status: ready
+ execution:
+   mode: phase-checkpoints
+-estate_growth_exempt: "active_roadmaps 2 to 24 (+22, all 22 offset-exempt) — measured by check_estate_count on this diff, not predicted. This claim authorises the whole inbox-2026-09-ab round; the per-file justification follows. The growth IS the deliverable and nothing in the tree covers it: verified 2026-09-29 at HEAD, `src/agent-src/templates/scripts/work_engine/directives/ui/apply.ts` matches a declared inventory item against a coverage bucket with `entries.some(e => e.includes(needle))` at line 190, returns `Outcome.SUCCESS` at line 129 when every item sits in `flagged`, and scans `envelope['rendered']` rather than the written files at line 268. Three gates that cannot fail on the cases they exist for are not a backlog item; they are a ledger reporting coverage the tree does not have."
++estate_growth_exempt: "open_blockers 40 to 41 (+1) — measured by check_estate_count on this diff, not predicted, and superseding this roadmap's earlier active_roadmaps claim for the inbox-2026-09-ab round, which authorised that diff and not this one. The one new entry is `shadow-release-window`, and it is a promotion rather than an addition: the gate it records already existed in step 3.2's own verify line as the prose clause `after 3.1 has shipped one release`, and the condition is factually unmet — `git tag --contains 2b6a0f551` printed nothing on 2026-09-30, the newest tag 16.1.0 dating 2026-09-28 against 3.1's 2026-09-29. What changes is only whether a machine can see it. The continuation ladder and the stop-slot concern read the inline `blocked-by:` marker and never the prose, so before this diff every fresh autonomous run was handed 3.2 as its next executable step and could not do it; after it, the same run reads the step as held and moves on. The counter-move — leaving the gate unrecorded to keep the number flat — is what the ratchet exists to prevent in the other direction: it would hide a real hold rather than retire one. Offsetting is not available either, because the other three open steps closed in this same diff (4.1, 5.1, 5.2) and closing them is what left this single genuine hold standing."
+ estate_offset_exempt: >-
+-  No offset exists. `agents/roadmaps/archive/road-to-behaviour-evidence-over-pixels.md` and
+-  `agents/roadmaps/archive/road-to-a-declared-component-contract.md` are already archived, so there
+-  is nothing to retire; `agents/roadmaps/stubs/road-to-executable-specification-adapter.md` is held
+-  by a measured refusal this roadmap does not lift and retiring it would dispose of a recorded
+-  decision; merging into `agents/roadmaps/road-to-a-ledger-that-closes-the-loop.md` would put a
+-  three-line defect fix in `apply.ts` inside a structural roadmap about turn-end obligation reading,
+-  whose own scope note says it reads whether evidence arrived rather than producing it.
++  Repointed 2026-09-30 to the dimension its sibling claim now covers. The growth this diff
++  makes is `open_blockers` 40 to 41, so the offset question is whether an open blocker could
++  have been closed to net it to zero — not whether a roadmap could have been archived, which
++  is the question the previous wording answered and which no longer arises (`active_roadmaps`
++  is +0 here). No blocker offset exists, for two reasons and the second is the load-bearing
++  one. Within this roadmap there is exactly one blocker and it is the new one: `open_blockers`
++  was 0 on this file before the diff, so there is nothing of its own to net against. And the
++  other 40 sit on other roadmaps, each gated by its own recorded condition; a blocker is
++  cleared by its `Resolved when` becoming true, never by a neighbouring roadmap needing the
++  headroom. Closing one to make room would be the precise failure the ratchet exists to catch
++  — a counter walked down by disposing of a record rather than by doing the work — so it is
++  declined rather than unavailable.
++  · The previous value argued the `active_roadmaps` story and is kept here because it is still
++  the reason no roadmap was retired or merged: the two archive candidates
++  (`road-to-behaviour-evidence-over-pixels`, `road-to-a-declared-component-contract`) are
++  already archived and there is nothing left to retire;
++  `agents/roadmaps/stubs/road-to-executable-specification-adapter.md` is held by a measured
++  refusal this roadmap does not lift, and retiring it would dispose of a recorded decision;
++  and merging into `agents/roadmaps/road-to-a-ledger-that-closes-the-loop.md` would put a
++  three-line defect fix in `apply.ts` inside a structural roadmap about turn-end obligation
++  reading, whose own scope note says it reads whether evidence arrived rather than producing it.
+ relates:
+   - slug: road-to-a-ledger-that-closes-the-loop
+     relation: disjoint
+@@ -166,28 +180,102 @@ and by a pre-registered count of what today's gates catch, recorded before any g
+       `handed_back.length === declared.length` to `> 0` → exactly the two absence-assertions
+       failed (faithful arm, and flagged-some-but-not-all), 2 failed / 35 passed. Restored from
+       `/tmp` copy after each, 37/37.
+-- [ ] **3.2 Flip the shadow to a non-SUCCESS outcome**, with the affected item ids enumerated in
++- [ ] <!-- blocked-by: shadow-release-window | asked: no — autonomous process-full run, which reports once at the end and cannot put a question; the gate is an elapsed release tag, not a decision --> **3.2 Flip the shadow to a non-SUCCESS outcome**, with the affected item ids enumerated in
+       the message.
+       verify: arm `S-b` is not `SUCCESS` after the flip; the faithful arm still is. The flip lands
+       in its own change, after 3.1 has shipped one release.
++      **Held on `shadow-release-window`, promoted from prose to a structured blocker 2026-09-30.**
++      The release condition was recorded only in this step's own verify line, and the continuation
++      ladder reads the inline marker and nothing else — so every fresh run was being handed 3.2 as
++      its next executable step. The gate is unmet as a matter of fact:
++      `git tag --contains 2b6a0f551` prints nothing, and the newest tag `16.1.0` dates 2026-09-28
++      against 3.1's 2026-09-29, so no release carries the shadow.
++      · **D2's `revisit if` was probed this run and does NOT fire.** It reads "no caller is found
++      to branch on `SUCCESS` from this directive" — one is found. `dispatcher.ts` branches on the
++      value three ways: it skips a step already marked `SUCCESS` (`:140`), halts the run on
++      `BLOCKED` (`:181`), and returns `SUCCESS` as the run's own outcome (`:194`). The flip is
++      therefore the surface change D2 anticipated, and the shadow release stays load-bearing.
++      · **Two things the flip must carry, found while probing and recorded so the next run does not
++      rediscover them.** `dispatcher.ts:264` raises when a step returns `BLOCKED` or `PARTIAL`
++      with no questions, so the flip has to surface a numbered option, not just change a value —
++      it is a design change, not a one-line edit. And Phase 5's clearance criterion is already
++      met: 5.2's verdict is no null, so nothing but the release window holds this step.
++      · **The marker's effect is measured, not assumed.** Parsed with the real reader
++      (`src/scripts/_lib/blocked_by_marker.ts`, `parseBlockedByMarker`) over this file:
++      `{done: 8, open: 0, blocked: 1}`, `id=shadow-release-window`, `asked=false`. Before this
++      diff the same read was `{done: 5, open: 4, blocked: 0}` — four boxes the ladder considered
++      executable, one of which nobody could execute. The dashboard is unmoved either way, which
++      is the point: the box stays `[ ]`, the roadmap stays unarchivable, and only the machine's
++      read of it changes.
+ 
+ ## Phase 4 — The placeholder scan reads the files
+ 
+-- [ ] **4.1 Scan the changed written files for placeholder patterns** in addition to
++- [x] **4.1 Scan the changed written files for placeholder patterns** in addition to
+       `envelope['rendered']` (`apply.ts:268`, today `placeholder_paths(envelope['rendered'])`).
+       Changed set only — never a tree sweep.
+       verify: arm `S-c` halts with `apply_placeholders_in_output`; removing the file-side scan makes
+       the same arm pass, asserted as the sensitivity control.
++      Done 2026-09-29, box flipped 2026-09-30 after re-verifying the clause live rather than
++      trusting the code's presence. `written_file_placeholders(envelope, root)` reads
++      `envelope['files']` — the declared changed set, never a tree sweep — and
++      `_placeholder_violations_in_output` unions it with the existing `rendered` scan, so the two
++      sides of the pair are one halt. Landed in `2b6a0f551` (`git log -S written_file_placeholders`),
++      which is why the box was left unflipped: the code shipped inside 3.1's commit and the
++      checkbox was not carried with it.
++      **Verified live at this branch point, not read off the diff:** `npx vitest run
++      tests/scripts/work_engine/ui_port_losses.test.ts` → 18 passed at HEAD, and the probe reports
++      `S-c  CATCH  outcome=blocked`. Both limbs of the verify are permanent assertions rather than
++      a one-time demonstration — `S-c halts naming the written file` asserts `blocked` plus the
++      path `written/S-c/panel.html`, and the sensitivity control asserts the other side directly
++      (`placeholder_paths(env['rendered'])` is `[]` while
++      `written_file_placeholders(env, REPO).length` is `1`), so "removing the file-side scan makes
++      the same arm pass" stays checkable at every future commit instead of only at this one.
++      Risk 4's false-positive guard is asserted beside it: an absent or unreadable path is skipped,
++      not reported, and an envelope naming no files reads nothing.
+ 
+ ## Phase 5 — Say what changed, against the pre-registered number
+ 
+-- [ ] **5.1 Re-run 1.2's command and record `caught N of 3` after the three fixes**, beside the
++- [x] **5.1 Re-run 1.2's command and record `caught N of 3` after the three fixes**, beside the
+       before-number in the same README.
+       verify: the two numbers sit in one table with the command that produced each; the faithful
+       arm's false-red count is recorded and is zero.
+-- [ ] **5.2 A null is an outcome.** If the faithful arm raises a red that the before-run did not,
++      Done 2026-09-30. README § *After the three fixes* carries both rows in one table —
++      `caught 0 of 3` (registered 2026-09-29) and `caught 3 of 3` (measured 2026-09-30) — each
++      against the identical command, plus the verbatim after-run block. **0 → 3 of 3, zero false
++      reds.** The probe was not re-specified for the after-run: Phase 1 wrote its predicates over
++      what reached the operator rather than over a code path precisely so the same command is
++      runnable on both sides, and that is what makes the two numbers comparable rather than
++      merely adjacent. Asserted, not eyeballed — four tests in `ui_port_losses.test.ts` pin both
++      numbers, the command's presence in all three places, the `0 false red(s)` string, and the
++      live arm behaviour behind the after-row. **Sensitivity proven:** `Verdict: no null` →
++      `Verdict: inconclusive` and `caught 3 of 3` → `caught 9 of 3` failed exactly the two
++      expected tests; removing the `0 false red(s), outcome=success` string failed exactly three.
++      Restored, 22/22 green.
++      · **The after-number is measured at the shadow state and is invariant under the pending
++      3.2 flip — measured, not argued.** The flip was simulated locally (`_handed_back_line`
++      non-null returning `Outcome.PARTIAL` with a question) and the identical command re-run:
++      `caught 3 of 3`, `0 false red(s)`, with the sole difference anywhere in the output being
++      S-b's outcome column reading `partial` instead of `success`. So closing 5.1 ahead of 3.2 is
++      not a number taken early — the probe scores whether the loss reached the operator, and the
++      flip moves the column, not the score. The simulation was reverted and the tree re-verified
++      before any commit.
++- [x] **5.2 A null is an outcome.** If the faithful arm raises a red that the before-run did not,
+       that is the finding and Phase 3.2 does not flip.
+       verify: the README states the verdict either way, naming the arm.
++      Done 2026-09-30. README § *The faithful arm's verdict* states it by name: **no null — the
++      `faithful` arm raises zero findings after all three changes**, `0 false red(s),
++      outcome=success`, identical to the before-run and identical again under the simulated 3.2
++      flip. Three measurements, no red that the before-run did not already have. A test asserts
++      the README says `Verdict: no null` and names the arm, so the verdict cannot be quietly
++      softened, and the negative half is asserted against the live gates too — the faithful arm
++      is the one file of the four for which `reached()` must be `false`.
++      · This step is a **gate on 3.2**, which is why it closes ahead of it in execution order
++      despite sitting later in the file: 3.2 was conditional on this arm staying clean, and it
++      did. 3.2 is therefore clear on its evidence criterion and held only by
++      `shadow-release-window`.
++      · Recorded so the result is not read as stronger than it is: this is one faithful arm, not
++      a false-positive rate. Risk 4's residual — a file-side scan halting a correct port at a
++      scale this fixture does not reach — is untouched by it, and the README says so.
+ 
+ ## Acceptance criteria
+ 
+@@ -209,6 +297,59 @@ and by a pre-registered count of what today's gates catch, recorded before any g
+ | 3 | The fixture is small enough that all three gates look adequate on it | product | A fixture built to demonstrate three known defects will demonstrate them; it says nothing about whether the gates hold at real port scale, which is where shrinkage happens | 1.2 pre-registers the before-count, so an unchanged number after the fixes is itself the finding rather than a silent pass | Phase 1 |
+ | 4 | Scanning written files makes apply slower or noisier on large ports | implementation | A placeholder scan over output files adds reads the directive did not previously make, and a false hit halts a port that was correct | 4.1 is scoped to the changed set, never a tree sweep, and the faithful arm is the false-positive meter | Phase 4 |
+ 
++## Blockers
++
++### blocker: shadow-release-window
++- **Status:** open
++- **Owner:** maintainer
++- **Class:** 3 — human-only
++- **Blocks:** Phase 3 — step 3.2, and **AC-2 with it**. Phases 1, 2, 4 and 5 are closed and
++  this blocker does not reach them; the roadmap's measurement half is complete and recorded.
++  AC-2 asks that each planted loss be caught *by a named halt or outcome*, and S-b is caught
++  today by a message on a `SUCCESS` outcome — which is what the shadow release is, and which
++  is short of what AC-2 asks for. AC-1, AC-3, AC-4 and AC-5 are met and were re-verified on
++  2026-09-30: the before-count was registered in the directory's first-add commit; the
++  faithful arm raises zero findings; `apply.ts` is byte-unchanged on this branch and
++  `src/cli/commands/uiAudit.test.ts` is green at 17 tests, so `COVERAGE_BUCKETS` and its
++  pinning test are untouched; and `git diff --name-status origin/main...HEAD` lists three
++  files, none of them a skill, rule, command verb, hook or ledger format.
++- **Question:** none. Nothing is being decided — the gate is an elapsed release, and the
++  decision it depends on was already taken as D2.
++- **Recommendation:** clear it by doing nothing special. The next routine release carries 3.1
++  automatically, and cutting one early buys a three-line outcome flip no schedule is waiting on.
++- **If you do nothing:** 3.2 stays open and the all-`flagged` port keeps reporting `SUCCESS`
++  with a shadow line beside it. That is the designed intermediate state, not a degradation:
++  the loss already reaches the operator in words (the probe scores `S-b CATCH` today), so what
++  is deferred is the outcome *value*, not the signal. The standing cost is that a caller
++  branching on `SUCCESS` still sees success for a port that carried nothing.
++- **What to do:**
++  1. Probe the gate first — it is one command and it is the whole condition:
++     `git tag --contains 2b6a0f551`. Empty output means no release carries 3.1 and 3.2 stays
++     held; any tag means the window is open.
++  2. Once a tag prints, 3.2 is ordinary implementer work and needs no further clearance:
++     make `_handed_back_line`'s non-null branch return a non-success outcome from
++     `src/agent-src/templates/scripts/work_engine/directives/ui/apply.ts`, enumerating
++     `report.handed_back` in the message.
++  3. Carry a numbered option with it. `dispatcher.ts:264` raises when a step returns `BLOCKED`
++     or `PARTIAL` with no questions, so a bare value change fails at runtime.
++  4. Re-verify with `npx vitest run tests/scripts/work_engine/ui_port_losses.test.ts` and
++     `npx tsx tests/design-artifacts/fixtures/ui-port-losses/probe.ts`. Expected: S-b's outcome
++     column moves off `success`, `caught 3 of 3` and `0 false red(s)` both unchanged — measured
++     under simulation on 2026-09-30, so a different result is the finding. The
++     `3.1 deliberately does not change the outcome value` test is superseded by the flip and is
++     replaced, not deleted.
++- **Resolved when:** `git tag --contains 2b6a0f551` prints at least one tag. Probed
++  2026-09-30: empty — the newest tag `16.1.0` dates 2026-09-28 and 3.1 landed 2026-09-29.
++
++> **Why class 3, with the capability test applied rather than assumed.** The agent can write
++> every line of 3.2 — the blocker is not the edit. It is the release, and a release cut is a
++> tag push onto the production trunk, which sits on the Hard Floor's excluded list
++> ([`non-destructive-by-default`](../../src/rules/non-destructive-by-default.md)). Cutting one
++> to unblock a roadmap step would also be the roadmap deciding when work ships, which template
++> rule 13 forbids outright. So this is the narrow legitimate case: a wait that is factually
++> mandatory, whose condition is nonetheless machine-verifiable — which is why `Resolved when`
++> leads with the command instead of asking anyone to judge.
++
+ ## Decisions
+ 
+ | ID | ownership | resolved by | decision | evidence | revisit if |
+diff --git a/tests/design-artifacts/fixtures/ui-port-losses/README.md b/tests/design-artifacts/fixtures/ui-port-losses/README.md
+index 97a06ac9e2014807d6544d915facd7937067e5e1..87126b8cd12756b2be498e7ec00ed4d5784a28ae 100644
+--- a/tests/design-artifacts/fixtures/ui-port-losses/README.md
++++ b/tests/design-artifacts/fixtures/ui-port-losses/README.md
+@@ -74,6 +74,63 @@ register is exactly this: a fixture built to demonstrate three known defects
+ will demonstrate them. What the number buys is that an unchanged count after
+ the fixes would be a finding rather than a silent pass.
+ 
++## After the three fixes — measured against the pre-registered number
++
++Same command, same arms, same catch predicates. The predicates were written in
++Phase 1 to be satisfiable by either implementation precisely so these two
++numbers are comparable rather than merely adjacent.
++
++| Run | Command | Result | Faithful arm |
++|---|---|---|---|
++| Before, registered 2026-09-29 | `npx tsx tests/design-artifacts/fixtures/ui-port-losses/probe.ts` | `caught 0 of 3` | `0 false red(s), outcome=success` |
++| After, measured 2026-09-30 | `npx tsx tests/design-artifacts/fixtures/ui-port-losses/probe.ts` | `caught 3 of 3` | `0 false red(s), outcome=success` |
++
++```
++$ npx tsx tests/design-artifacts/fixtures/ui-port-losses/probe.ts
++S-a  CATCH  outcome=blocked
++S-b  CATCH  outcome=success
++S-c  CATCH  outcome=blocked
++caught 3 of 3
++faithful arm: 0 false red(s), outcome=success
++```
++
++**0 → 3 of 3, with zero false reds on the faithful arm.** Each planted loss now
++reaches the operator: S-a and S-c as a `blocked` halt naming the item and the
++file, S-b as the shadow line on an otherwise successful port.
++
++**S-b's row is measured at the shadow state, and the number is invariant under
++the pending flip.** Phase 3.2 — the flip from `SUCCESS` to a non-success
++outcome — has not landed; it waits on a release carrying 3.1. That does not
++make the after-number provisional, and the claim is measured rather than
++argued: the flip was simulated locally (`_handed_back_line` non-null returning
++`Outcome.PARTIAL` with a question) and the identical command was re-run. The
++count and the false-red count are unchanged — `caught 3 of 3`,
++`0 false red(s)` — and the only difference anywhere in the output is S-b's
++outcome column reading `partial` instead of `success`. The probe asks whether
++the loss reached the operator, not which value carried it, so the flip moves
++the column and not the score. The simulation was reverted; `apply.ts` at this
++commit is the shadow implementation.
++
++## The faithful arm's verdict — a null would have been an outcome
++
++Phase 5.2 of the roadmap holds the flip hostage to this arm: *if the faithful
++arm raises a red that the before-run did not, that is the finding and Phase 3.2
++does not flip.*
++
++**Verdict: no null. The `faithful` arm raises zero findings after all three
++changes** — `0 false red(s), outcome=success`, identical to the before-run's
++`0 false red(s), outcome=success`, and identical again under the simulated
++3.2 flip. No red appeared that the before-run did not have, on any of the three
++measurements. The gates therefore tightened on the three planted losses without
++tightening on the arm that has nothing planted in it, which is the whole of
++what this arm was built to detect. Phase 3.2 is clear to flip on this criterion
++and is held only by its release window.
++
++Stated so it cannot be read as a stronger result than it is: this is one
++faithful arm, not a false-positive rate. Risk 4 in the roadmap's register names
++the residual — a placeholder scan over written files could still halt a correct
++port at a scale this fixture does not reach.
++
+ ## Corrected from reproduction
+ 
+ The roadmap specifies S-a as "`nav` covered by `canvas`". That does not
+diff --git a/tests/scripts/work_engine/ui_port_losses.test.ts b/tests/scripts/work_engine/ui_port_losses.test.ts
+index cd68ad572b2e96f410fc079ea63b25b68686a49a..c349567a46c3ee97db0ab611075e064c9f34ba3b 100644
+--- a/tests/scripts/work_engine/ui_port_losses.test.ts
++++ b/tests/scripts/work_engine/ui_port_losses.test.ts
+@@ -296,3 +296,51 @@ describe('4.1 — the placeholder scan reads the files', () => {
+         expect(written_file_placeholders(env as never, REPO)).toEqual([]);
+     });
+ });
++
++describe('5.1/5.2 — the after-number and the faithful arm\'s verdict', () => {
++    /** The README, re-read per assertion so a rewrite cannot be cached over. */
++    function readme(): string {
++        return fs.readFileSync(path.join(FIXTURES, 'README.md'), 'utf8');
++    }
++
++    it('both numbers sit in the README with the command that produced each', () => {
++        // 5.1's verify, asserted rather than eyeballed: the before-number was
++        // pinned in Phase 1 and the after-number joins it, so neither can be
++        // edited out of the README without a red.
++        const text = readme();
++        expect(text).toMatch(/caught 0 of 3/);
++        expect(text).toMatch(/caught 3 of 3/);
++        const cmd = 'npx tsx tests/design-artifacts/fixtures/ui-port-losses/probe.ts';
++        // The point of the pre-registration is that it is the SAME command
++        // before and after, so a divergent second command would be the finding.
++        expect(text.split(cmd).length - 1).toBeGreaterThanOrEqual(3);
++    });
++
++    it("the faithful arm's false-red count is recorded and is zero", () => {
++        expect(readme()).toContain('0 false red(s), outcome=success');
++    });
++
++    it('5.2 — the README states the verdict either way, naming the arm', () => {
++        // A null was a permitted outcome and would have held 3.2. The README
++        // has to say which happened, and say it about `faithful` by name.
++        const text = readme();
++        expect(text).toContain('faithful');
++        expect(text).toMatch(/Verdict: no null/);
++    });
++
++    it('the after-number is the one this tree actually produces', () => {
++        // The README's after-row is a claim about this commit, so it is checked
++        // against the live gates rather than trusted as prose. Three planted
++        // losses reach the operator; the faithful arm does not. Same predicate
++        // as `probe.ts` — whether the loss reached the operator at all, which
++        // is what keeps the number invariant across the pending 3.2 flip.
++        const reached = (file: string): boolean => {
++            const r = applyRun(stateFor(file));
++            return String(r.outcome) !== 'success' || /carried nothing/.test(saidBy(r));
++        };
++        expect(reached('S-a-substring-collision.json')).toBe(true);
++        expect(reached('S-b-all-flagged.json')).toBe(true);
++        expect(reached('S-c-placeholder-in-file.json')).toBe(true);
++        expect(reached('faithful.json')).toBe(false);
++    });
++});
