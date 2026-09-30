@@ -323,7 +323,7 @@ cost argument is a given rather than a proposal.
       Session files are gitignored and pruned after the retention window, so the
       findings are restated above in full rather than cited by path.
 
-- [ ] **0.2 Establish the administrator recovery path, tested.**
+- [ ] <!-- blocked-by: recovery-rehearsal-hard-floor | asked: no — non-interactive drain run instructed to work autonomously and put no question to the owner; the rehearsal is a Hard-Floor admin write on repository protection settings, which needs explicit this-turn confirmation a headless run cannot obtain --> **0.2 Establish the administrator recovery path, tested.**
       Both seats raised it and neither proposed one; the earlier draft of this
       roadmap declared it discharged, which it is not. With `bypass_actors: []`
       a future ruleset mistake re-locks the sole maintainer out of the PR path,
@@ -765,6 +765,70 @@ DIFFERENCE IS STATED PER STEP RATHER THAN AVERAGED AWAY.
 | 3 | A second lockout with no way back | implementation | With `bypass_actors: []` another ruleset mistake re-locks the sole maintainer out of the PR path, as 12:51 did. `admin: true` is a capability, not a rehearsed procedure | 0.2 requires a written procedure executed once against a non-default-branch ruleset. Until that exists this risk is open, and both council seats raised it | Phase 0 — answer the two questions, then sequence |
 | 4 | The remaining protection is weaker than assumed | implementation | **CORRECTED 2026-09-14 in the reassuring direction, which is why it is corrected rather than left:** approvals are *removed* from the trust model rather than suspended, and M16 measured **two** required contexts, not one — so more carries the load than this row assumed. The residual it names is untouched: a required context pins a job name, never the steps inside it. *Original:* "With approvals suspended and merge-freshness off, one required context carries the load." | M11 records that an empty context set is already refused. The job-name residual is recorded in `platform-anchor.json`'s own note and is **not** closed here | Phase 1 — the exemption, fail-closed |
 
+## Blockers
+
+### blocker: recovery-rehearsal-hard-floor
+- **Status:** open
+- **Owner:** maintainer
+- **Ownership:** `destructive-owned`
+- **Class:** 3 — human-only
+- **Blocks:** step 0.2 and AC-7, and nothing else in this file. Every other step and every
+  other criterion is closed, so this entry is the whole of what keeps the roadmap open.
+- **Question:** may the maintainer rehearse the written recovery procedure once, against a
+  throwaway non-default-branch ruleset, so that AC-7's load-bearing word — *tested* —
+  becomes true?
+- **Recommendation:** rehearse it, via route (a) only. The procedure is written and its
+  commands are the right ones; what nobody has is a run in which they were watched working.
+  The narrowest form creates a ruleset for the rehearsal and deletes it afterwards, so the
+  default-branch ruleset `17749383` is never touched and the blast radius is a branch nobody
+  works on.
+- **If you do nothing:** the recovery procedure stays a documented hypothesis, and the gap is
+  paid at the worst possible moment — during an outage of the merge path, by the sole
+  maintainer reading five untested commands for the first time. That this is not hypothetical
+  is measured: the 2026-09-10 12:51 lockout happened, and `bypass_actors: []` is still live
+  (re-measured 2026-09-30), so there is still no escape hatch.
+- **What to do:**
+  1. Create a throwaway ruleset targeting a non-default branch —
+     `gh api -X POST repos/event4u-app/agent-config/rulesets --input rehearsal-ruleset.json`
+     with `enforcement: active`, a `pull_request` rule, and
+     `conditions.ref_name.include: ["refs/heads/rehearsal-lockout"]`. Capture the returned id.
+  2. Confirm the lockout shape per step 1 of the procedure —
+     `gh api repos/event4u-app/agent-config/rulesets/<NEW_ID> --jq '{enforcement, current_user_can_bypass}'`.
+  3. Walk steps 2-5 of [`branch-protection-policy`](../../docs/contracts/branch-protection-policy.md)
+     § Administrator recovery from a lockout against `<NEW_ID>`, preferring route (a)
+     (`-f enforcement=evaluate`, then back to `active`). Note what each command actually
+     returned, including the `.state` nesting on the history read.
+  4. Delete the throwaway — `gh api -X DELETE repos/event4u-app/agent-config/rulesets/<NEW_ID>`
+     — and re-read `17749383` to confirm it was never touched.
+  5. Replace that section's closing paragraph — the one reading *"nobody has watched them
+     work"* — with the rehearsal date, the ruleset id and what was observed; then flip 0.2
+     and AC-7 and flip this blocker to `Status: resolved`.
+- **Resolved when:** `grep -c 'NOT yet rehearsed' docs/contracts/branch-protection-policy.md`
+  returns `0` and the same section carries a dated rehearsal record naming the ruleset id the
+  procedure was executed against.
+
+**Why this is a blocker and not work, stated rather than assumed, because the capability
+screen says a `Class: 3` label on an action an agent can perform is a defect in the roadmap
+rather than a reason to stop.** The agent can issue these API calls — `admin: true` is
+measured (M13) — so the bar is not capability. It is that every step is a write on
+repository protection settings, which is the `IAM / role / policy` row of
+[`non-destructive-by-default`](../../dist/agent-src/rules/non-destructive-by-default.md)'s
+Hard-Floor table; that floor is explicitly not lifted by an autonomy setting, a roadmap step
+or a standing instruction, and `branch-protection-policy.md` records the same reservation in
+its own text. Under the capability screen this is an EXCLUDED action, which makes it a halt
+carrying an owner confirmation rather than an impossibility — the distinction is recorded
+here so the next run does not have to re-derive it, and does not mistake *the owner has not
+been asked* for *the agent could not have done it*.
+
+**This entry is new on 2026-09-30, and its absence is the finding.** Three earlier runs
+(2026-09-13, 2026-09-14, 2026-09-27) each re-verified this step, each correctly refused to
+close it, and none of them wrote the marker. The loop's own contract says an externally
+impossible step carries an inline `blocked-by:` marker because `run-continuation` reads
+blockedness from that marker and never from prose — so without it, a fully-diagnosed
+owner-reserved step reads to every fresh run as ordinary open work. This roadmap was then
+re-processed four times. The marker is the fix; the fourth arrival is the evidence that prose
+was not one.
+
 ## Acceptance Criteria
 
 ```
@@ -925,7 +989,7 @@ INSTRUCTION SHOULD BE LEFT LYING.
       not because the 2026-09-13 sweep was complete — and the miss is recorded
       here rather than quietly patched, since a self-applied criterion that
       cannot see its own file is the one failure mode worth leaving legible.
-- [ ] AC-7 — A **tested** administrator recovery procedure exists for a lockout
+- [ ] <!-- blocked-by: recovery-rehearsal-hard-floor | asked: no — non-interactive drain run instructed to work autonomously and put no question to the owner; the rehearsal is a Hard-Floor admin write on repository protection settings, which needs explicit this-turn confirmation a headless run cannot obtain --> AC-7 — A **tested** administrator recovery procedure exists for a lockout
       with `bypass_actors: []`.
       **NOT MET, and this is the roadmap's one open item.** The procedure is
       written (`branch-protection-policy.md` § Administrator recovery from a
