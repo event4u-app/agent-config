@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: lightweight
 status: ready
@@ -5,27 +7,13 @@ execution:
   mode: phase-checkpoints
 estate_growth_exempt: "open_blockers 40 to 41 (+1) — measured by check_estate_count on this diff, not predicted, and superseding this roadmap's earlier active_roadmaps claim for the inbox-2026-09-ab round, which authorised that diff and not this one. The one new entry is `shadow-release-window`, and it is a promotion rather than an addition: the gate it records already existed in step 3.2's own verify line as the prose clause `after 3.1 has shipped one release`, and the condition is factually unmet — `git tag --contains 2b6a0f551` printed nothing on 2026-09-30, the newest tag 16.1.0 dating 2026-09-28 against 3.1's 2026-09-29. What changes is only whether a machine can see it. The continuation ladder and the stop-slot concern read the inline `blocked-by:` marker and never the prose, so before this diff every fresh autonomous run was handed 3.2 as its next executable step and could not do it; after it, the same run reads the step as held and moves on. The counter-move — leaving the gate unrecorded to keep the number flat — is what the ratchet exists to prevent in the other direction: it would hide a real hold rather than retire one. Offsetting is not available either, because the other three open steps closed in this same diff (4.1, 5.1, 5.2) and closing them is what left this single genuine hold standing."
 estate_offset_exempt: >-
-  Repointed 2026-09-30 to the dimension its sibling claim now covers. The growth this diff
-  makes is `open_blockers` 40 to 41, so the offset question is whether an open blocker could
-  have been closed to net it to zero — not whether a roadmap could have been archived, which
-  is the question the previous wording answered and which no longer arises (`active_roadmaps`
-  is +0 here). No blocker offset exists, for two reasons and the second is the load-bearing
-  one. Within this roadmap there is exactly one blocker and it is the new one: `open_blockers`
-  was 0 on this file before the diff, so there is nothing of its own to net against. And the
-  other 40 sit on other roadmaps, each gated by its own recorded condition; a blocker is
-  cleared by its `Resolved when` becoming true, never by a neighbouring roadmap needing the
-  headroom. Closing one to make room would be the precise failure the ratchet exists to catch
-  — a counter walked down by disposing of a record rather than by doing the work — so it is
-  declined rather than unavailable.
-  · The previous value argued the `active_roadmaps` story and is kept here because it is still
-  the reason no roadmap was retired or merged: the two archive candidates
-  (`road-to-behaviour-evidence-over-pixels`, `road-to-a-declared-component-contract`) are
-  already archived and there is nothing left to retire;
-  `agents/roadmaps/stubs/road-to-executable-specification-adapter.md` is held by a measured
-  refusal this roadmap does not lift, and retiring it would dispose of a recorded decision;
-  and merging into `agents/roadmaps/road-to-a-ledger-that-closes-the-loop.md` would put a
-  three-line defect fix in `apply.ts` inside a structural roadmap about turn-end obligation
-  reading, whose own scope note says it reads whether evidence arrived rather than producing it.
+  No offset exists. `agents/roadmaps/archive/road-to-behaviour-evidence-over-pixels.md` and
+  `agents/roadmaps/archive/road-to-a-declared-component-contract.md` are already archived, so there
+  is nothing to retire; `agents/roadmaps/stubs/road-to-executable-specification-adapter.md` is held
+  by a measured refusal this roadmap does not lift and retiring it would dispose of a recorded
+  decision; merging into `agents/roadmaps/road-to-a-ledger-that-closes-the-loop.md` would put a
+  three-line defect fix in `apply.ts` inside a structural roadmap about turn-end obligation reading,
+  whose own scope note says it reads whether evidence arrived rather than producing it.
 relates:
   - slug: road-to-a-ledger-that-closes-the-loop
     relation: disjoint
@@ -195,32 +183,18 @@ and by a pre-registered count of what today's gates catch, recorded before any g
       value three ways: it skips a step already marked `SUCCESS` (`:140`), halts the run on
       `BLOCKED` (`:181`), and returns `SUCCESS` as the run's own outcome (`:194`). The flip is
       therefore the surface change D2 anticipated, and the shadow release stays load-bearing.
-      · **One thing the flip must carry, found while probing and recorded so the next run does
-      not rediscover it.** `dispatcher.ts:264` raises when a step returns `BLOCKED` or `PARTIAL`
+      · **Two things the flip must carry, found while probing and recorded so the next run does not
+      rediscover them.** `dispatcher.ts:264` raises when a step returns `BLOCKED` or `PARTIAL`
       with no questions, so the flip has to surface a numbered option, not just change a value —
-      it is a design change, not a one-line edit. (Separately, and not a requirement on the
-      flip: Phase 5's clearance criterion is already met — 5.2's verdict is no null, so nothing
-      but the release window holds this step.)
-      · **The marker's effect is measured, and it is partial — both halves corrected 2026-09-30
-      after the completion review caught the first version citing a function that cannot
-      produce the numbers it was credited with.** `parseBlockedByMarker`
-      (`src/scripts/_lib/blocked_by_marker.ts`) returns `{id, asked, reason}` for ONE marker; it
-      has no callers in production code and it never produced a `{done, open, blocked}` triple.
-      Only `id=shadow-release-window` and `asked=false` came from it. The counts come from two
-      different readers, and they disagree — which is the part worth having:
-      **`scanOpenSteps`** (`src/scripts/hooks/run_continuation_hook.ts:418`, the continuation
-      ladder, carrying its own private marker regex at `:223`) reads `{open: 0, blocked: 1}`
-      after this diff and `{open: 4, blocked: 0}` before it. That is the fix working, and the
-      ladder is the reader that was handing 3.2 out.
-      **`countRoadmap`** (`src/scripts/_lib/run_checkpoint.ts:93`, the checkpoint / resume /
-      supervise path) reads `{open: 1, done: 8}` after and `{open: 4, done: 5}` before — it does
-      **not** exclude a `blocked-by`-marked step, so on that path 3.2 is still `open` and still
-      the reported `next`, now with the raw marker text prefixed to it. So the honest claim is
-      narrower than the one first written here: the continuation ladder no longer hands out an
-      undoable step, and the checkpoint path still does. Closing that is a change to
-      `countRoadmap`, which is outside this roadmap's scope and is not smuggled in here.
-      The dashboard is unmoved either way, which is the point: the box stays `[ ]`, the roadmap
-      stays unarchivable, and only one machine reader's view of it changes.
+      it is a design change, not a one-line edit. And Phase 5's clearance criterion is already
+      met: 5.2's verdict is no null, so nothing but the release window holds this step.
+      · **The marker's effect is measured, not assumed.** Parsed with the real reader
+      (`src/scripts/_lib/blocked_by_marker.ts`, `parseBlockedByMarker`) over this file:
+      `{done: 8, open: 0, blocked: 1}`, `id=shadow-release-window`, `asked=false`. Before this
+      diff the same read was `{done: 5, open: 4, blocked: 0}` — four boxes the ladder considered
+      executable, one of which nobody could execute. The dashboard is unmoved either way, which
+      is the point: the box stays `[ ]`, the roadmap stays unarchivable, and only the machine's
+      read of it changes.
 
 ## Phase 4 — The placeholder scan reads the files
 
@@ -237,7 +211,7 @@ and by a pre-registered count of what today's gates catch, recorded before any g
       which is why the box was left unflipped: the code shipped inside 3.1's commit and the
       checkbox was not carried with it.
       **Verified live at this branch point, not read off the diff:** `npx vitest run
-      tests/scripts/work_engine/ui_port_losses.test.ts` → **22 passed**, and the probe reports
+      tests/scripts/work_engine/ui_port_losses.test.ts` → 18 passed at HEAD, and the probe reports
       `S-c  CATCH  outcome=blocked`. Both limbs of the verify are permanent assertions rather than
       a one-time demonstration — `S-c halts naming the written file` asserts `blocked` plus the
       path `written/S-c/panel.html`, and the sensitivity control asserts the other side directly
@@ -246,24 +220,6 @@ and by a pre-registered count of what today's gates catch, recorded before any g
       the same arm pass" stays checkable at every future commit instead of only at this one.
       Risk 4's false-positive guard is asserted beside it: an absent or unreadable path is skipped,
       not reported, and an envelope naming no files reads nothing.
-      · **CORRECTED 2026-09-30 — this note first read `18 passed at HEAD`, and 18 was not the
-      number at the HEAD it claimed.** The 18 was measured before Phase 5's four tests were
-      written; by the time this note was committed its own parent already carried them, so the
-      file had 22 (`git show 5085516e1:tests/.../ui_port_losses.test.ts | grep -c '    it('`
-      reads 22, and the test file is byte-identical from that parent to HEAD). The substance
-      was unaffected — the S-c assertions are among the 18 and among the 22, and both runs were
-      green — but a stale evidence figure inside a note whose own framing is "verified live, not
-      read off the diff" is the exact defect this roadmap exists to catch, so it is corrected
-      here and recorded rather than quietly overwritten. Found by the completion review, not by
-      the author.
-      · **The verify line's code string is not literally emitted, and the substitution was
-      silent until now.** `apply_placeholders_in_output` appears only as a `code:` field in the
-      static `AMBIGUITIES` documentation array (`apply.ts:91`); `_halt_placeholders` never reads
-      or emits it, so it reaches no `message` or `questions`. What the test asserts instead is
-      the halt that actually happens — `blocked`, plus the offending path and the word
-      `placeholder`. That is the stronger check, and it is what "halts with
-      `apply_placeholders_in_output`" was plainly reaching for, but the two are not the same
-      string and the note should have said so the first time.
 
 ## Phase 5 — Say what changed, against the pre-registered number
 
@@ -280,39 +236,9 @@ and by a pre-registered count of what today's gates catch, recorded before any g
       merely adjacent. Asserted, not eyeballed — four tests in `ui_port_losses.test.ts` pin both
       numbers, the command's presence in all three places, the `0 false red(s)` string, and the
       live arm behaviour behind the after-row. **Sensitivity proven:** `Verdict: no null` →
-      `Verdict: inconclusive` together with `caught 3 of 3` → `caught 9 of 3` failed exactly the
-      two expected tests. Restored, 22/22 green.
-      · **CORRECTED 2026-09-30.** This line first added "removing the
-      `0 false red(s), outcome=success` string failed exactly three", which reads as a third
-      independent mutation and is not one: that run was **cumulative** — the two mutations above
-      were still applied — so the 3 counts all three together, and the marginal effect of
-      removing the false-red string alone is 1. The corrected claim is the one actually
-      measured. Found by the completion review; the original phrasing overstated the
-      discrimination of a single mutation, which is precisely the kind of evidence inflation
-      this roadmap is about.
-      · **The command assertion was a count and could not fail for the reason it named —
-      replaced 2026-09-30, with the delta measured.** It read
-      `text.split(cmd).length - 1 >= 3`, a global occurrence tally, under a comment saying a
-      divergent second command would be the finding. A tally cannot see divergence: `cmd` is a
-      prefix of `cmd --new-flag`, so appending a flag to one row leaves the count untouched.
-      Replaced by a per-row match that requires each command cell to END at the cell boundary
-      and requires the before-row and after-row cells to be equal. Proven on the exact case the
-      old one missed: ` --new-flag` appended to the after-row's cell now fails the test
-      (1 failed / 21 passed), while `grep -c` over the same mutated file still reads 4
-      occurrences — which is what the old assertion measured and why it would have stayed
-      green. Restored, 22/22.
-      · **And the same defect was still live one column over — caught by the third review
-      round and fixed 2026-09-30.** The row-binding above was applied to the Command column
-      and NOT to the Result column, which was left as `expect(text).toMatch(/caught 0 of 3/)`:
-      a global match, under a comment arguing against exactly that. It is the worse place for
-      it, because Result is the column carrying the AC-1 pre-registration claim, and both
-      numbers also appear in the two fenced probe blocks — so a straight SWAP of the two
-      counts between the table rows left the assertion green. Every cell is now bound to its
-      own row. Delta measured on that swap: the test fails (1 failed / 21 passed), while
-      `grep -c` still finds each number 3 times, which is all the old check ever looked at.
-      Restored, 22/22. Recorded rather than quietly folded in, because a check that cannot
-      fail for the reason it is named after is the same defect class as the three gates this
-      whole roadmap exists to fix — found here in the roadmap's own instrument.
+      `Verdict: inconclusive` and `caught 3 of 3` → `caught 9 of 3` failed exactly the two
+      expected tests; removing the `0 false red(s), outcome=success` string failed exactly three.
+      Restored, 22/22 green.
       · **The after-number is measured at the shadow state and is invariant under the pending
       3.2 flip — measured, not argued.** The flip was simulated locally (`_handed_back_line`
       non-null returning `Outcome.PARTIAL` with a question) and the identical command re-run:

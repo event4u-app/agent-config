@@ -296,3 +296,79 @@ describe('4.1 — the placeholder scan reads the files', () => {
         expect(written_file_placeholders(env as never, REPO)).toEqual([]);
     });
 });
+
+describe('5.1/5.2 — the after-number and the faithful arm\'s verdict', () => {
+    /** The README, re-read per assertion so a rewrite cannot be cached over. */
+    function readme(): string {
+        return fs.readFileSync(path.join(FIXTURES, 'README.md'), 'utf8');
+    }
+
+    it('both numbers sit in the README with the command that produced each', () => {
+        // 5.1's verify, asserted rather than eyeballed: the before-number was
+        // pinned in Phase 1 and the after-number joins it, so neither can be
+        // edited out of the README without a red.
+        const text = readme();
+        const cmd = 'npx tsx tests/design-artifacts/fixtures/ui-port-losses/probe.ts';
+        // EVERY cell is bound to its own row, never matched globally. A global
+        // check cannot see divergence, in either column and for two different
+        // reasons. Command: `cmd` is a prefix of `cmd --new-flag`, so appending
+        // a flag to one row leaves any tally unchanged. Result: `caught 0 of 3`
+        // and `caught 3 of 3` both also appear in the two fenced probe blocks,
+        // so a global `toMatch` stays green even if the two numbers are SWAPPED
+        // between the table rows — and the Result column is the one carrying
+        // the AC-1 pre-registration claim, so it is the last place to accept a
+        // check that cannot fail for the reason it is named after.
+        const cells = (label: string): string[] => {
+            const m = new RegExp(`^\\|[^|\\n]*${label}[^|\\n]*\\|(.*)$`, 'im').exec(text);
+            expect(m, `no table row for ${label}`).not.toBeNull();
+            return ((m as RegExpExecArray)[1] as string)
+                .split('|')
+                .map((c) => c.trim().replace(/^`|`$/g, ''));
+        };
+        const before = cells('Before');
+        const after = cells('After');
+        // [0] command, [1] result, [2] faithful arm.
+        expect(before[0]).toBe(cmd);
+        expect(after[0]).toBe(cmd);
+        expect(after[0]).toBe(before[0]);
+        expect(before[1]).toBe('caught 0 of 3');
+        expect(after[1]).toBe('caught 3 of 3');
+        expect(before[2]).toBe('0 false red(s), outcome=success');
+        expect(after[2]).toBe('0 false red(s), outcome=success');
+    });
+
+    it("the faithful arm's false-red count is recorded and is zero", () => {
+        expect(readme()).toContain('0 false red(s), outcome=success');
+    });
+
+    it('5.2 — the README states the verdict either way, naming the arm', () => {
+        // A null was a permitted outcome and would have held 3.2. The README
+        // has to say which happened, and say it about `faithful` by name.
+        const text = readme();
+        expect(text).toContain('faithful');
+        expect(text).toMatch(/Verdict: no null/);
+    });
+
+    it('the after-number is the one this tree actually produces', () => {
+        // The README's after-row is a claim about this commit, so it is checked
+        // against the live gates rather than trusted as prose. Three planted
+        // losses reach the operator; the faithful arm does not.
+        //
+        // This is `probe.ts`'s S-b predicate applied to all four arms, NOT a
+        // copy of its per-arm ones: S-a and S-c there additionally require the
+        // message to name the item and the file. So this is deliberately the
+        // WEAKER, generic check — it asks only whether the loss reached the
+        // operator at all, which is the property that stays true across the
+        // pending 3.2 flip and is therefore what the after-number rests on.
+        // The message content S-a and S-c must carry is pinned by the 2.1 and
+        // 4.1 cases above, and is not re-asserted here.
+        const reached = (file: string): boolean => {
+            const r = applyRun(stateFor(file));
+            return String(r.outcome) !== 'success' || /carried nothing/.test(saidBy(r));
+        };
+        expect(reached('S-a-substring-collision.json')).toBe(true);
+        expect(reached('S-b-all-flagged.json')).toBe(true);
+        expect(reached('S-c-placeholder-in-file.json')).toBe(true);
+        expect(reached('faithful.json')).toBe(false);
+    });
+});
