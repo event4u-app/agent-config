@@ -168,18 +168,21 @@ deny message names its own kill switch.
 > one: the bench measured whole SLOTS and the per-concern distribution was
 > unreadable — the feedback dir overwrites one file per concern per dispatch,
 > and the bench runs in replay mode where that write is skipped entirely. The
-> measurement path is built now and the reading came from this branch's own CI
-> run on `ubuntu-latest`, which is the reference runner `hardware_reference`
-> names.
+> measurement path is built now. The READING is still owed, and deliberately
+> so: building it surfaced that replay mode times several blocking concerns at
+> a fraction of their real cost (3.2's evidence carries the A/B), so the first
+> correct measurement path exists only as of this change and a bound taken
+> from one run of it would repeat the mistake that A/B just caught.
 >
 > **3.3's condition is the one that holds.** Its text says "warn-only for the
 > first measured window, then deny", and Risk 1 is why: a blocking concern
 > whose SLA was guessed refuses every call on a slow host. A window that has
 > not elapsed cannot be declared elapsed by the session that wants to flip the
 > switch — that is a wait that is factually mandatory and cannot be simulated,
-> which is the one externally-impossible shape on this list. The number it
-> waits to validate now exists (`concern_sla_ms`), so what remains is time, not
-> work.
+> which is the one externally-impossible shape on this list. Note that the
+> number the window would validate does NOT yet exist — `concern_sla_ms` is
+> unwritten — so 3.3 is blocked twice over: on readings it does not have, and
+> then on a window that cannot be hurried. The second is the impossible one.
 >
 > **A ninth concern cannot be measured by this harness at all, and 3.3 owns
 > that too.** `one-question-per-ask` is `severity: blocking` on
