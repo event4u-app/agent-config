@@ -3,6 +3,15 @@ complexity: lightweight
 status: ready
 execution:
   mode: phase-checkpoints
+estate_growth_exempt: "open_blockers rises 39 -> 40 and NOTHING WAS ADDED — the
+  census is finding a pre-existing open blocker, not the estate growing. The
+  obstacle this entry names was authored open in step 3.1 on 2026-09-29, as
+  prose under a phase heading rather than under a `## Blockers` H2, which is the
+  only place check_estate_count and lint_roadmap_blockers look. So the roadmap
+  advertised zero blockers while carrying a live one, and step 3.1 could not
+  hold the inline blocked-by marker a continuation run reads open-vs-blocked
+  from. Offsetting the +1 would mean closing a real blocker to pay for making an
+  existing one visible, which inverts what the ratchet protects."
 estate_offset_exempt: "lane 5 of road-to-leading-every-row"
 relates:
   - slug: road-to-skill-menu-economy
@@ -223,7 +232,7 @@ tested on one consumer before anyone argues about routers or byte budgets.
 
 ## Phase 3 — Path-scoped delivery, measured once
 
-- [ ] **3.1 Emit `paths:` frontmatter on projected `type: auto` rules for the
+- [ ] <!-- blocked-by: e3-witness-set-is-empty-here --> **3.1 Emit `paths:` frontmatter on projected `type: auto` rules for the
       hosts whose rule loader honours it**, behind a setting default off;
       measure on one consumer with `report_host_injection_effect` using the
       `observed-true` row shape `later/road-to-delivery-on-hook-hosts.md:817`
@@ -327,7 +336,7 @@ tested on one consumer before anyone argues about routers or byte budgets.
       and now run against the shipped presets rather than a fixture.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-29 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-09-30 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -359,6 +368,36 @@ gate whose precondition fails silently is a gate that reports green while
 measuring nothing, which is the shape this repository's gate contract exists
 to refuse.
 
+**Re-review, 2026-09-30, on making the Phase 3 blocker machine-readable.**
+Triggered by an Acceptance-Criteria edit, and the three rows are re-read rather
+than re-dated.
+
+Risk 1 is **unchanged and dormant**. Phase 1 is closed, no relabel has been
+taken since, and nothing in this change touches the corpus or the protocol. It
+stays live for any future relabel on the terms already written.
+
+Risk 2 is **unchanged in likelihood and materially better contained.** Nothing
+is default-on and 3.1 is still open, so the hazard itself has not moved. What
+moved is the containment: the reason it stays off was prose under a phase
+heading, which no gate reads, and the dashboard consequently advertised zero
+blockers for this file. It is now a parsed `## Blockers` entry with an
+agent-checkable `Resolved when`, and both open boxes carry the inline
+`blocked-by:` marker. The mitigation no longer depends on a reader noticing a
+paragraph.
+
+Risk 3 is **unchanged**. Phase 2 shipped the distinction it asks for and the
+tests that pin it; nothing here touches `check_routing_coverage`.
+
+**No fourth row is added, and that is a decision rather than an omission.** The
+defect this change repairs — a live blocker invisible to every gate that reads
+blockedness — was real, and it is now closed in the same change, so a register
+row for it would record history rather than exposure. Its residual is that a
+later run reads this file's prose instead of running the probe the blocker
+names and concludes "still blocked" without measuring. That residual is
+addressed where it can act: the `Resolved when` field leads with the command
+and says in its own words that the state column is the authority, not the
+prose around it.
+
 ## Acceptance Criteria
 
 - [x] AC-1 — The routing matrix carries ≥ 100 labelled prompts with a written
@@ -370,8 +409,67 @@ to refuse.
       `check_score_contract` green.
 - [x] AC-3 — A PR touching a corpus-less skill fails the coverage ratchet.
       `check_routing_coverage --self-test` 11/11, four of them on the new scope.
-- [ ] AC-4 — One path-scoping effect report exists and the setting default
+- [ ] <!-- blocked-by: e3-witness-set-is-empty-here --> AC-4 — One path-scoping effect report exists and the setting default
       matches its conclusion. **Open** — blocked with 3.1; see its blocker.
+
+## Blockers
+
+### blocker: e3-witness-set-is-empty-here
+- **Status:** open
+- **Owner:** implementer
+- **Blocks:** 3.1, and AC-4
+- **What to do:** nothing is decidable here yet, and the honest move is to
+  re-probe rather than to choose. In order —
+  (a) re-run the probe named under `Resolved when`
+      (`./scripts-run src/scripts/report_host_injection_effect`) at the wake
+      condition below and read the state column, not this prose;
+  (b) if an `observed-true` row has landed, build 3.1's emission half
+      (`paths:` frontmatter behind a default-off setting) and take the
+      before/after reading the step's verify line asks for;
+  (c) if the boundary in `later/road-to-delivery-on-hook-hosts.md`
+      § `Resolved when` is reached with no witness, that roadmap's own
+      disposition escalates to descope — pre-authorised there, so it is not a
+      question this roadmap has to put — and 3.1 and AC-4 are re-cut against
+      whatever Phase 2 of that roadmap becomes.
+- **Resolved when:** at least one row in `src/config/host-injection-effect.json`
+  reads `"state": "observed-true"` with a full citation (host version,
+  transcript pointer, date), and `report_host_injection_effect` regenerates the
+  census with that row admissible. Agent-checkable, per template rule 20: the
+  probe is a command, not a person. Measured on this branch — 9 hosts scanned,
+  1 `observed-false`, 8 `unobserved`, 0 `observed-true` — so the condition is
+  live-unmet rather than assumed unmet.
+- **Recommendation:** leave it open and re-probe at the wake condition. The
+  emission half is buildable today and is deliberately not built: its enabling
+  condition provably cannot be evaluated in this environment, so shipping it
+  would add a setting and a projection surface that nothing can ever flip —
+  a named blocker converted into dead code. That call was taken on 2026-09-29
+  in 3.1's own prose and is recorded here rather than re-derived.
+- **If you do nothing:** the roadmap reads 80 % with two open boxes and — until
+  this entry existed — advertised zero blockers, so every continuation run
+  re-engages 3.1, re-discovers the same confound, and re-declines it. The
+  marker on the two checkboxes is what stops that loop.
+
+**Why this is not the agent's to close, in one paragraph.** The obstacle is not
+that the emission is hard. It is that 3.1's verify line makes the MEASUREMENT
+the deliverable, and the measurement is invalid in this repository by a finding
+the delivery roadmap recorded on 2026-09-11: 106 of 106 `type: auto` rules
+already carry a byte-equivalent obligation body in the same session
+unconditionally — 89 in the user-global `~/.claude/rules/` layer, 3 differing by
+a single blank line, 14 inline in the system prompt. The intervention therefore
+varies *one copy versus two*, never *absent versus present*, and the council's
+binding terms of that date require injection to be the sole source of the tested
+body. The residual measurable set here is empty; a qualifying observation needs
+a clean environment or a rule that exists only in the delivery channel, neither
+of which this repository can produce. The stopping boundary is 12 eligible
+opportunities or 2026-12-08, whichever comes first — an elapsed observation
+window, not work.
+
+**Why not `[-]`.** 3.1's verify line offers `[-]` with the report cited, and
+there is no report to cite. `[-]` is CANCELLED and owner-reserved; using it here
+would record a decision nobody took. `[~]` is equally wrong: a deferral needs a
+`deferred-resolution:` receiver, and the receiver would be a parked roadmap
+whose own blocker is this one. The boxes stay `[ ]`, which is why this roadmap
+does not archive.
 
 ## Provenance
 

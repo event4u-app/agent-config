@@ -29,14 +29,35 @@ capability_gap: none
 ---
 # Road to decision closure
 
-> **Status, 2026-09-14 — 17 of 22 landed, 5 open, and every open one is blocked on a cause
-> reproduced on this tree rather than inferred from the last run's note.** Open: steps 3.1,
-> 4.1 and 5.1, and acceptance criteria AC-5 and AC-6; each carries its own dated
-> re-verification. Three distinct causes hold them: the kernel-write deny on
-> `src/rules/ask-when-uncertain.md` (3.1, and AC-6's first clause), the grant object that
-> `road-to-typed-grants-that-persist` Phase 2 has not built (4.1's `F5`), and this file's 5.1
-> being word-for-word that sibling's step 3.2. AC-5 and AC-6's first clause are transcript
-> claims on top, so neither closes on a static probe alone.
+> **Status, 2026-09-30 — 17 of 22 landed, 5 open, every open one blocked on a cause
+> reproduced a third time on this tree, and the three blocked steps are now machine-readable
+> as blocked.** Open: steps 3.1, 4.1 and 5.1, and acceptance criteria AC-5 and AC-6; each
+> carries its own dated re-verification. Three distinct causes hold them: the kernel-write
+> deny on `src/rules/ask-when-uncertain.md` (3.1, and AC-6's first clause), the grant object
+> that `road-to-typed-grants-that-persist` Phase 2 has not built (4.1's interrupt fixture),
+> and this file's 5.1 being word-for-word that sibling's step 3.2. AC-5 and AC-6's first
+> clause are transcript claims on top, so neither closes on a static probe alone.
+>
+> **What this run changed, and it is not a status flip.** Until now the three causes were
+> recorded only in prose, so `scanOpenSteps` read this file as `open=3, blocked=0` and the
+> continuation ladder picked **3.1** as the next runnable step — the one whose write is
+> denied at tool-call time. Every run that engaged it was guaranteed to stall. The three
+> steps now carry the `<!-- blocked-by: … | asked: no — … -->` annotation the tooling already
+> defines, each resolving to a blocker declared below, so the scan reads `open=0, blocked=3`
+> and `decideLadderAction` returns `blocked` — ADR-235's terminal outcome for exhausted
+> runnable work, which is what this file actually is. The boxes stay `- [ ]`: nothing was
+> deferred, cancelled or closed, and the treatment is the one
+> `road-to-typed-grants-that-persist` already received for the same condition.
+>
+> **The interrupt fixture is renamed `F8` because `F5` collides.**
+> `tests/fixtures/decision-closure/F5-unfalsifiable-verify.md` already exists in the exact
+> directory this file numbers its fixtures in, belongs to the archived
+> `road-to-a-verify-clause-that-can-fail`, and is asserted by `tests/scripts/closure_scan.test.ts`
+> — the same test file that asserts this roadmap's `F0`, `F1`, `F2` and `F4`. A reader
+> checking whether this file's `F5` ships sees that file and can close 4.1 or 5.1 against the
+> wrong fixture. Renaming the not-yet-written fixture costs nothing and removes the
+> mis-resolve before it happens; renaming the existing file would touch a green test and
+> another roadmap's artifact. `F6`, `F7` and `F8` are unreferenced anywhere in the tree.
 >
 > **The paragraphs below are the 2026-09-10 screening record.** They were written when the
 > file stood at 0 of 22 and are kept because their reading of the dependency is still the live
@@ -222,7 +243,7 @@ owner-owned residue remains, closure completes with zero owner interaction.
 
 ## Phase 3 — Host-native, one at a time
 
-- [ ] **3.1 Asks use the host's own primitive where one exists.** `user-interaction.md` and
+- [ ] <!-- blocked-by: kernel-write-deny-ask-when-uncertain | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question; the deny was reproduced at tool-call time on this tree and only a maintainer can lift it --> **3.1 Asks use the host's own primitive where one exists.** `user-interaction.md` and
       `ask-when-uncertain.md` name the native tool per host — Claude Code's `AskUserQuestion`,
       and the equivalent elsewhere — with the numbered text block as the fallback. Iron Law 1's
       recommendation becomes the native default option; each ask carries the agent's or the
@@ -260,6 +281,17 @@ owner-owned residue remains, closure completes with zero owner interaction.
       `dist/agent-src/rules/` projections — and all deny, while a plain read is allowed, which
       is what makes the probe sensitive rather than uniformly red. The cause has not dissolved
       and the step stays open.
+      **Re-verified 2026-09-30, third reproduction, by executing the guard rather than reading
+      this note.** `block_kernel_rule_writes.ts` was fed an `Edit` envelope targeting
+      `src/rules/ask-when-uncertain.md` and returned
+      `BLOCKED — kernel rule ask-when-uncertain is immutable — tighten-only via the override
+      exception registry`. `ask-when-uncertain` is still in `KERNEL_RULE_IDS`
+      (`src/scripts/_lib/kernel_rules.ts`), and the guard's own header states the position
+      plainly: *"The human-owned exception registry named in the denial message is the only
+      LEGITIMATE bypass; it is not the only reachable one."* Reachable-but-illegitimate paths
+      are not an agent option, so this is external impossibility and not a role excuse. The
+      sibling's `kernel-guard-first-crossing` blocker also still reads `Status: open`. The step
+      now carries the `blocked-by:` annotation so the continuation ladder stops picking it.
 - [x] **3.2 The host manifest records which shape each host has.** `hook_manifest.yaml` host
       rows gain `ask: native | text`, and `hooks:status` prints it.
       verify: `agent-config hooks:status` prints the ask shape for the current host.
@@ -270,13 +302,13 @@ owner-owned residue remains, closure completes with zero owner interaction.
 
 ## Phase 4 — Mid-run residue
 
-- [ ] **4.1 The same table governs mid-run.** Technical residue resolves inline through agent,
+- [ ] <!-- blocked-by: grant-object-undelivered | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question; the missing object is another roadmap's deliverable and no owner decision is pending on it --> **4.1 The same table governs mid-run.** Technical residue resolves inline through agent,
       independent session, council or team and is appended to `## Decisions` with the step id.
       Owner-owned residue triggers a native ask only if the step cannot progress; otherwise the
       step is parked, independent phases continue, and the run returns to it. Mission-level
       `BLOCKED` only per ADR-268 § 7.
       verify: fixture `F4` — a mid-run architecture choice resolves without an ask; fixture
-      `F5` — an interrupt leaves the grant and every closed decision intact.
+      `F8` — an interrupt leaves the grant and every closed decision intact.
       **NOT LANDED — half of it is the sibling roadmap's, 2026-09-13.** `F4` ships and is
       asserted (`tests/fixtures/decision-closure/F4-midrun-architecture-choice.md`: one
       finding, `contested-technical`, zero owner questions), and the mid-run ownership table
@@ -284,15 +316,24 @@ owner-owned residue remains, closure completes with zero owner interaction.
       is appended to `## Decisions` with the step id, owner-owned residue asks only when the
       step cannot progress and otherwise parks while independent phases continue, and `[~]` is
       forbidden for a parked step.
-      `F5` cannot be written here. It asserts *the grant* survives an interrupt, and the grant
+      `F8` cannot be written here. It asserts *the grant* survives an interrupt, and the grant
       object is `road-to-typed-grants-that-persist`'s — ADR-260's
       `{op, target, scope, granted_by, span, expires}`, built by that roadmap's Phase 2 and
-      given `expires` / `revoked_by` by its 3.1. Neither exists in the tree. Writing `F5`
+      given `expires` / `revoked_by` by its 3.1. Neither exists in the tree. Writing `F8`
       against an object that does not exist would assert nothing; writing the object here
       would be implementing the sibling roadmap.
       **Re-verified 2026-09-14:** the sibling's 2.1, 2.2 and 3.1 all still read `[ ]`, and
       `grep -rln granted_by src tests` returns nothing — the identifier exists only in
       ADR-260, ADR-266 and ADR-268, as a specification. The cause has not dissolved.
+      **Re-verified 2026-09-30, third reproduction.** `grep -rln granted_by src tests` still
+      returns nothing, and the sibling's 2.1, 2.2 and 3.1 still read `[ ]` at
+      `origin/main@4429b1d3d` — which is today's head, so this is a reading of the current
+      tree and not of a stale checkout. The fixture is also **renamed `F5` → `F8`** in this
+      run: the `F5-` slot in `tests/fixtures/decision-closure/` is already held by
+      `F5-unfalsifiable-verify.md`, an archived roadmap's fixture asserted by the same
+      `closure_scan.test.ts` that asserts this file's `F0`/`F1`/`F2`/`F4`. The collision was a
+      live mis-close hazard — `ls` on that directory shows an `F5-*` and says nothing about
+      whose it is. Nothing else about the step changed; the cause has not dissolved.
 - [x] **4.2 The ask census gains four axes.** `phase` (planning, execution, delivery),
       `ownership`, `avoidable`, `resolver_attempted`. Targets: zero technical owner asks in
       execution; zero commit, push, CI or conflict asks; zero repeats of an already-answered
@@ -309,12 +350,12 @@ owner-owned residue remains, closure completes with zero owner interaction.
 
 ## Phase 5 — Interrupts
 
-- [ ] **5.1 Closure records the mission id and the interrupt rule reads it.** A clarification
+- [ ] <!-- blocked-by: interrupt-classes-owned-by-sibling | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question; the rule file has a declared owner elsewhere and executing it here would create the second owner the step exists to avoid --> **5.1 Closure records the mission id and the interrupt rule reads it.** A clarification
       is incorporated; a side task is paused, executed and auto-resumed; only stop, replace or
       revoke changes mission state. Grants, the delivery target and closed decisions survive an
       interrupt. Recognised state-changing words include the owner's own — *stop*, *abort*,
       *nicht weiter*, *stattdessen*, *ersetze die Roadmap*. <!-- md-language-check: ignore -->
-      verify: fixture `F5` again — the side task completes, the mission resumes, and no
+      verify: fixture `F8` again — the side task completes, the mission resumes, and no
       *continue?* question is emitted.
       **NOT LANDED — this step IS the sibling roadmap's step 3.2, 2026-09-13.** That step
       reads: *"`user-interrupt-priority.md` gains three interrupt classes. A clarification is
@@ -330,6 +371,16 @@ owner-owned residue remains, closure completes with zero owner interaction.
       **Re-verified 2026-09-14:** the sibling's 3.2 still reads `[ ]` and
       `src/rules/user-interrupt-priority.md` still carries none of the three classes, so the
       two-owners hazard is live rather than historical. The cause has not dissolved.
+      **Re-verified 2026-09-30, third reproduction.** The sibling's 3.2 still reads `[ ]` at
+      today's head and `src/rules/user-interrupt-priority.md` still carries none of the three
+      classes. Note the asymmetry with 3.1, because it is the reason this step is `blocked`
+      rather than merely unstarted: `user-interrupt-priority.md` is **not** a kernel rule, so
+      no guard denies the write and the agent is technically capable of landing this step. It
+      is held by ownership, not capability — the same rule file, the same three classes and
+      the same fixture are the sibling's step 3.2, and writing them here would give one rule
+      two owners, which is the defect the step's own note names. That is a real constraint on
+      a shared artifact rather than a role preference, so it is recorded as a blocker and put
+      to the maintainer rather than resolved unilaterally.
 
 ## Phase 6 — Scope-growth ownership
 
@@ -386,16 +437,91 @@ owner-owned residue remains, closure completes with zero owner interaction.
   longer owner-locked, which is ADR-268 § 10, and the direction it may not be moved back in is
   § 0's table.
 - **Resolved when:** `grep -m1 '^status:' docs/decisions/ADR-268-*.md` reads `accepted` — it
-  does, verified 2026-09-08.
+  does, verified 2026-09-08, re-executed 2026-09-30 and still `accepted`. This entry is read
+  by executing its condition, never by trusting this field.
+
+### blocker: kernel-write-deny-ask-when-uncertain
+- **Status:** open
+- **Owner:** maintainer
+- **Class:** 3 — human-only
+- **Blocks:** step 3.1's remaining paragraph, and through it AC-6's first clause. Nothing
+  else — the non-kernel half of 3.1's contract landed on 2026-09-13 in
+  `user-interaction-mechanics.md`.
+- **What to do:** write one paragraph into `src/rules/ask-when-uncertain.md` naming the
+  host's native ask primitive alongside its Iron Law, using a route an agent does not hold:
+  the human-owned override exception registry named in the denial message, or removal of the
+  `block-kernel-rule-writes` entry from `src/scripts/hook_manifest.yaml`. Both are maintainer
+  acts outside an agent session. Do **not** reach for `--no-verify` or a `core.hooksPath`
+  override; `block-no-verify` denies those separately and they are not bypasses.
+- **Recommendation:** leave it until the sibling's `kernel-guard-first-crossing` is settled.
+  That blocker governs the same guard across five kernel rules and is still `open`; crossing
+  it once for this one paragraph would spend the first crossing on the smallest of the six.
+- **If you do nothing:** 3.1 and AC-6's first clause stay open. Nothing regresses — the
+  contract the paragraph would point at already ships and is already pointed at from
+  `ask-when-uncertain.md` § Mechanics, so the gap is a naming line, not a missing obligation.
+- **Resolved when:** an `Edit` envelope targeting `src/rules/ask-when-uncertain.md`, fed to
+  `src/scripts/hooks/block_kernel_rule_writes.ts`, no longer prints
+  `BLOCKED — kernel rule ask-when-uncertain is immutable`; or that file's paragraph naming the
+  per-host native primitive exists. Reproduced as BLOCKED on 2026-09-13, 2026-09-14 and
+  2026-09-30.
+
+### blocker: grant-object-undelivered
+- **Status:** open
+- **Owner:** maintainer
+- **Class:** 3 — human-only
+- **Blocks:** step 4.1's fixture `F8` only. 4.1's other half — the mid-run ownership table and
+  fixture `F4` — landed 2026-09-13.
+- **What to do:** nothing in this file. The grant object
+  `{op, target, scope, granted_by, span, expires}` is ADR-260's and is built by
+  `road-to-typed-grants-that-persist` Phase 2, with `expires` / `revoked_by` added by its 3.1.
+  Those steps are themselves held by that roadmap's `kernel-guard-first-crossing` and
+  `ratification-platform-anchor` blockers. Drain that roadmap, not this one.
+- **Recommendation:** treat 4.1 as closed-pending-sibling rather than as work. Writing `F8`
+  against an object that does not exist would assert nothing, and building the object here
+  would implement the sibling roadmap under this file's name.
+- **If you do nothing:** 4.1 stays open and correctly so. No behaviour is missing today,
+  because the grant it would protect does not exist to be lost.
+- **Resolved when:** `grep -rln granted_by src tests` returns at least one path. It returned
+  nothing on 2026-09-13, 2026-09-14 and 2026-09-30.
+
+### blocker: interrupt-classes-owned-by-sibling
+- **Status:** open
+- **Owner:** maintainer
+- **Class:** 3 — human-only
+- **Blocks:** step 5.1. The half this roadmap genuinely owns — that a closed decision survives
+  an interrupt — landed 2026-09-13 in `roadmap-process-loop.md` § 3-0.
+- **What to do:** decide which file owns the three interrupt classes in
+  `src/rules/user-interrupt-priority.md`, then land them once. This roadmap's 5.1 and
+  `road-to-typed-grants-that-persist`'s 3.2 specify the same rule file, the same three classes
+  and the same fixture. The likely disposition is to let the sibling land it and close 5.1
+  here by reference, but that is an ownership call and not an agent's to take.
+- **Recommendation:** close 5.1 as a duplicate of the sibling's 3.2 when that step lands,
+  rather than executing it in either place twice.
+- **If you do nothing:** 5.1 stays open. Note this blocker is **not** a capability limit —
+  `user-interrupt-priority.md` is not a kernel rule and no guard denies the write. An agent
+  could land it and would thereby create the second owner the step exists to prevent, so the
+  constraint is real but it is governance, not tooling.
+- **Resolved when:** `road-to-typed-grants-that-persist`'s step 3.2 reads `[x]`, or a
+  maintainer records here which of the two files owns the classes. Neither held on
+  2026-09-13, 2026-09-14 or 2026-09-30.
 
 ## Fixtures
 
 `F1` twelve seeded technical ambiguities → zero owner questions, twelve `## Decisions` rows ·
 `F2` two valid product semantics → exactly one native ask carrying a recommendation ·
 `F3` council non-convergence on a product trade-off → the owner confirms the council's
-proposal · `F4` a mid-run architecture choice → resolved without an ask · `F5` an interrupt →
-resumed with the grant and decisions intact · `F6` an API ceiling → pause and report ·
-`F7` a producer without closure → the lint is red.
+proposal · `F4` a mid-run architecture choice → resolved without an ask · `F6` an API ceiling
+→ pause and report · `F7` a producer without closure → the lint is red · `F8` an interrupt →
+resumed with the grant and decisions intact.
+
+> **`F5` is deliberately absent from this list, 2026-09-30.** This roadmap's interrupt fixture
+> was numbered `F5` until this run. `tests/fixtures/decision-closure/F5-unfalsifiable-verify.md`
+> already occupies that slot in the one directory this file's fixtures live in; it belongs to
+> the archived `road-to-a-verify-clause-that-can-fail` and is asserted by
+> `tests/scripts/closure_scan.test.ts`, which is also where `F0`, `F1`, `F2` and `F4` of this
+> roadmap are asserted. Two owners in one namespace under one label is a mis-close waiting to
+> happen, so the unwritten fixture moved to `F8` rather than the written one moving out of the
+> way. Do not reintroduce `F5` here.
 
 ## Acceptance Criteria
 
@@ -434,6 +560,18 @@ resumed with the grant and decisions intact · `F6` an API ceiling → pause and
       `tests/fixtures/decision-closure/F1-technical-ambiguities.md` ships and
       `src/scripts/ask_block_census.ts` still reports its two measurable targets — and the
       missing half is still a run, which nothing in this tree produces. Unchanged, not stalled.
+      **Re-verified 2026-09-30, and the gap is now named precisely rather than as "a run".**
+      The census header states where a transcript figure legitimately enters: carried IN via
+      `--native-asks` / `--unblocked-asks` / `--native-source`, produced by
+      `probe_unblocked_ask --limit N --store …`. So the tree does have a transcript intake —
+      it simply has no producer for *this* measurement, which is the behaviour of a
+      `process-full` execution over `F1`. Two things would have to be true to close it and
+      neither is: `F1` is a detector fixture rather than a roadmap under `agents/roadmaps/`,
+      so `process-full` has nothing to execute over it; and the only agent that could run it
+      is the one that would then report its own result, which
+      [`evaluator-independence`](../../src/rules/evaluator-independence.md) forbids as
+      self-commissioned evidence. Closing AC-5 needs a harness that runs the fixture and a
+      party other than the runner that reads the transcript. Neither is this file's to build.
 - [ ] AC-6 — on a host with a native ask primitive, every owner ask used it; on a host without
       one, `hooks:status` says so.
       **HALF PROVEN, 2026-09-13.** The second clause holds: `ask: native | text` is a manifest
@@ -445,3 +583,10 @@ resumed with the grant and decisions intact · `F6` an API ceiling → pause and
       still carries an `ask:` row on every host block, one `native` and the rest `text`. The
       first clause is blocked twice over, by the reproduced deny recorded on 3.1 and by being
       a transcript claim, so discharging either alone would not close it.
+      **Re-verified 2026-09-30.** Second clause still holds and was re-counted, not re-read:
+      `src/scripts/hook_manifest.yaml` carries eight host `ask:` rows, exactly one `native`
+      and seven `text`. First clause unchanged and still blocked twice over — the deny was
+      reproduced for a third time against the guard itself (see 3.1), and the transcript half
+      fails for the same two reasons AC-5 does, so it is bounded by
+      `kernel-write-deny-ask-when-uncertain` plus the missing harness rather than by either
+      alone.
