@@ -7,8 +7,8 @@ inputs:
   diff_sha: 179626ec0525db9016f5821ba39a5e6cd82c753e
   scope_hash: 9294c58e0e1168878ff2dae2e53ac50f331ec8a8de1941a8ff529039ba9e2609
   roadmap: agents/roadmaps/road-to-a-kernel-that-guards-its-plumbing.md
-  roadmap_hash: 06a248d762d230ba0cee02848d772c258c5a6d807b90221b0d10945aced57220
-  ac_hash: c6faf4446ab8e030d0752ba765ef32eff93c7cfa84620705bb0fc1e3073587ab
+  roadmap_hash: 96c0308bb11bacd391af06539f69d0e8ff70e28e3e5efc522ef593aa828c714d
+  ac_hash: add0feae13d9c6f2863a9743def3d88840ecd7a5f51e80da3db416e017a982ca
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
 dispatched: 2026-09-30T18:24:00Z
