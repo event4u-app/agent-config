@@ -161,7 +161,7 @@ is caught by a check rather than by an external reader.
       marker may not be strengthened without a session.
       **The protocol link was broken and is repaired in the same change.** It
       read `(contracts/host-capability-manifest.md)`, which resolves to
-      `docs/contracts/host-capability-manifest.md` — a path that does not exist;
+      `docs/contracts/host-capability-manifest.md` — a path that does not exist; <!-- ref-ignore -->
       the file is at `src/agent-src/contexts/execution/`. Probed rather than
       assumed: with the broken form restored, `check_references` still reports
       `No broken references found`, so **the gate is blind to this class**.
