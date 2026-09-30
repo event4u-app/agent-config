@@ -364,7 +364,27 @@ export interface WouldRefuseAgainRow {
     layer: ShadowLayer;
 }
 
-export type ShadowLayer = 'stop_hook_active' | 'refused_turn';
+/**
+ * The two allow paths a shadow read can run on, in the order `main()` reaches
+ * them.
+ *
+ * A LIST rather than a bare union, and the counter below is derived from it,
+ * for the reason `emptyCounts` gives one screen up: a hand-written counter
+ * object satisfied `Record<Union, number>` on the day it was typed and read
+ * back `undefined` the moment a member was added, so every `+=` over it
+ * produced `NaN` and the whole rollup went quiet. Adding a third layer here
+ * cannot repeat that.
+ */
+export const SHADOW_LAYERS = ['stop_hook_active', 'refused_turn'] as const;
+
+export type ShadowLayer = (typeof SHADOW_LAYERS)[number];
+
+/** A zeroed retry counter per layer, DERIVED from `SHADOW_LAYERS`. */
+export function emptyRetryCounts(): Record<ShadowLayer, number> {
+    const out = {} as Record<ShadowLayer, number>;
+    for (const l of SHADOW_LAYERS) out[l] = 0;
+    return out;
+}
 
 /**
  * Per-session shadow state, in its own file beside the refusal record.
@@ -383,19 +403,50 @@ export type ShadowLayer = 'stop_hook_active' | 'refused_turn';
  * already gives about the pruner: a directory with two writers each holding
  * their own idea of where the files are is how a reader and a writer end up
  * disagreeing.
+ *
+ * Two limits bound what a reading of this record may claim.
+ *
+ * **It counts retries with a READABLE TRANSCRIPT, not all retries.** A retry
+ * whose transcript is absent, over `TRANSCRIPT_READ_MAX_BYTES`, or carries no
+ * assistant text records nothing at all — the gate's input assembly returns
+ * null and there is no detector verdict to shadow. The numerator is unaffected
+ * and the denominator shrinks, so the bias is UPWARD: a Q1 read off this
+ * record is an upper bound, never a point estimate.
+ *
+ * **On a host that sends no `session_id` it pools across sessions.** The key
+ * is `deriveSessionKey(rawSessionId || 'unknown-session')`, so every such
+ * session shares one file and one counter. The gate documents the same
+ * collision for the re-entrancy marker and argues it degrades safely, toward
+ * under-refusing. That argument does NOT transfer here: a merged measurement
+ * does not under-report, it reports one number for several sessions and a
+ * reader takes it for one. Named rather than inherited, because the two
+ * failures are opposite in kind.
  */
 export interface ShadowRecord {
     /** Newest last. Bounded by `SHADOW_MAX_ROWS`. */
     would_refuse_again: WouldRefuseAgainRow[];
     /**
-     * Retries observed on an allow path in this session, refusing or NOT.
+     * Retries observed on an allow path in this session, refusing or NOT,
+     * SPLIT BY LAYER.
      *
      * Kept because a shadow row array alone cannot distinguish "no retry
      * happened" from "every retry came back clean", and those are opposite
-     * readings of the same empty list. Q1's denominator is the refusal record's
-     * own count; this is the sanity check on it.
+     * readings of the same empty list.
+     *
+     * Split because pooling it made a per-layer Q1 uncomputable, which the
+     * first version shipped and an independent review caught before any row
+     * accumulated. `layer` is on every ROW for a stated reason — a
+     * `stop_hook_active` retry follows ANY stop concern's block, not only this
+     * gate's — so a pooled numerator would read another concern's retries
+     * against this gate's refusals. A pooled DENOMINATOR has the same defect
+     * one level down, and worse: a CLEAN retry adds no row at all, so it left
+     * no layer trace anywhere. The numerator could be split and the
+     * denominator could not, which is not a sanity check on anything.
+     *
+     * Keyed rather than two fields so a third layer, if one is ever added,
+     * cannot silently land in neither bucket.
      */
-    retries_observed: number;
+    retries_observed: Record<ShadowLayer, number>;
     /** Rows dropped to the cap. A non-zero value makes the array a sample. */
     dropped: number;
     first_at: string;
@@ -457,9 +508,16 @@ export function parseShadowRecord(raw: string): ShadowRecord | null {
     }
     const num = (v: unknown): number =>
         typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : 0;
+    const observed = o['retries_observed'];
+    const byLayer = emptyRetryCounts();
+    if (typeof observed === 'object' && observed !== null && !Array.isArray(observed)) {
+        for (const l of SHADOW_LAYERS) {
+            byLayer[l] = num((observed as Record<string, unknown>)[l]);
+        }
+    }
     return {
         would_refuse_again: rows,
-        retries_observed: num(o['retries_observed']),
+        retries_observed: byLayer,
         dropped: num(o['dropped']),
         first_at: typeof o['first_at'] === 'string' ? o['first_at'] : '',
         last_at: typeof o['last_at'] === 'string' ? o['last_at'] : '',
@@ -470,8 +528,8 @@ export function parseShadowRecord(raw: string): ShadowRecord | null {
  * Fold one retry observation into a shadow record. Pure — the caller writes.
  *
  * `detectors` EMPTY is a real and load-bearing input: a retry whose detectors
- * all came back silent raises `retries_observed` and adds no row, which is the
- * only way Q1 can ever read below 1.
+ * all came back silent raises `retries_observed` for its layer and adds no
+ * row, which is the only way Q1 can ever read below 1.
  */
 export function foldShadow(
     prev: ShadowRecord | null,
@@ -491,9 +549,12 @@ export function foldShadow(
         dropped += rows.length - SHADOW_MAX_ROWS;
         rows.splice(0, rows.length - SHADOW_MAX_ROWS);
     }
+    const retries = emptyRetryCounts();
+    for (const l of SHADOW_LAYERS) retries[l] = prev?.retries_observed[l] ?? 0;
+    retries[input.layer] += 1;
     return {
         would_refuse_again: rows,
-        retries_observed: (prev?.retries_observed ?? 0) + 1,
+        retries_observed: retries,
         dropped,
         first_at: prev?.first_at !== undefined && prev.first_at !== '' ? prev.first_at : input.at,
         last_at: input.at,
@@ -526,8 +587,9 @@ export function readShadowRecord(workspaceRoot: string, sessionKey: string): Sha
  * LIVENESS and this bounds EVIDENCE — pruning evidence on a liveness clock would
  * delete the corpus this roadmap exists to read.
  *
- * *Revisit-if:* a rollup window longer than 90 days is needed to read a rate, or
- * the directory's file count becomes a measured cost rather than a projected one.
+ * Two things would show 90 is the wrong number: a rollup window longer than it
+ * being needed to read a rate, or the directory's file count becoming a
+ * measured cost rather than a projected one.
  */
 export const REFUSAL_STATE_MAX_AGE_DAYS = 90;
 
@@ -578,7 +640,29 @@ export function pruneAgedRefusalState(
                 shadow = null;
             }
             const shadowAt = shadow === null ? NaN : Date.parse(shadow.last_at);
-            if (!Number.isFinite(shadowAt) || shadowAt >= cutoffMs) {
+            // KEEP-ON-UNPARSEABLE IS NOT INHERITED, and the asymmetry with the
+            // branch below is the point. A refusal record that will not parse
+            // may still carry the wedge marker, so deleting it is the one
+            // irreversible move available and it is refused. A shadow record
+            // is pure measurement with nothing to protect — keeping one whose
+            // `last_at` cannot be read means it never ages out at all, which
+            // is the unbounded growth this pruner exists to stop, surviving
+            // for exactly the subset nobody can read. An unreadable one is
+            // pruned on the filesystem mtime, which is the weaker clock this
+            // function refuses for refusal records precisely because they are
+            // evidence; for a corrupt measurement it is the only clock left.
+            if (!Number.isFinite(shadowAt)) {
+                let mtime = NaN;
+                try {
+                    mtime = fs.statSync(file).mtimeMs;
+                } catch {
+                    mtime = NaN;
+                }
+                if (!Number.isFinite(mtime) || mtime >= cutoffMs) {
+                    result.kept += 1;
+                    continue;
+                }
+            } else if (shadowAt >= cutoffMs) {
                 result.kept += 1;
                 continue;
             }

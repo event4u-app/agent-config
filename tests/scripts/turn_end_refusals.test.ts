@@ -308,7 +308,7 @@ describe('step 1.2 — the TTL the header admitted was missing', () => {
         fs.mkdirSync(path.dirname(file), { recursive: true });
         fs.writeFileSync(
             file,
-            `${JSON.stringify({ would_refuse_again: [], retries_observed: 1, dropped: 0, first_at: lastAt, last_at: lastAt }, null, 2)}\n`,
+            `${JSON.stringify({ would_refuse_again: [], retries_observed: { stop_hook_active: 1, refused_turn: 0 }, dropped: 0, first_at: lastAt, last_at: lastAt }, null, 2)}\n`,
         );
         return file;
     }
@@ -323,7 +323,15 @@ describe('step 1.2 — the TTL the header admitted was missing', () => {
         expect(fs.existsSync(fresh)).toBe(true);
     });
 
-    it('keeps a shadow record whose last_at is unreadable', () => {
+    /**
+     * Keep-on-unparseable is NOT inherited from the refusal branch, and the
+     * asymmetry is the point. A refusal record that will not parse may still
+     * carry the wedge marker, so deleting it is refused. A shadow record is
+     * pure measurement with nothing to protect — keeping a corrupt one means
+     * it never ages out at all, i.e. the unbounded growth this pruner exists
+     * to stop, surviving for exactly the subset nobody can read.
+     */
+    it('keeps a FRESH shadow record whose last_at is unreadable', () => {
         const dir = refusalStateDir(root);
         fs.mkdirSync(dir, { recursive: true });
         const file = path.join(dir, 'deadbeef.shadow.json');
@@ -332,7 +340,42 @@ describe('step 1.2 — the TTL the header admitted was missing', () => {
         expect(fs.existsSync(file)).toBe(true);
     });
 
-    it('a shadow record contributes nothing to the refusal rollup', () => {
+    it('prunes an AGED shadow record whose last_at is unreadable, on the mtime', () => {
+        const dir = refusalStateDir(root);
+        fs.mkdirSync(dir, { recursive: true });
+        const file = path.join(dir, 'cafebabe.shadow.json');
+        fs.writeFileSync(file, '{not json');
+        const old = new Date(Date.parse(daysAgo(REFUSAL_STATE_MAX_AGE_DAYS + 5)));
+        fs.utimesSync(file, old, old);
+        expect(pruneAgedRefusalState(root).pruned).toBe(1);
+        expect(fs.existsSync(file)).toBe(false);
+    });
+
+    it('a corrupt REFUSAL record of the same age is still kept', () => {
+        // The other half of the asymmetry, asserted rather than argued: an
+        // unreadable refusal record may carry the wedge marker.
+        const dir = refusalStateDir(root);
+        fs.mkdirSync(dir, { recursive: true });
+        const file = path.join(dir, 'f00dface.json');
+        fs.writeFileSync(file, '{not json');
+        const old = new Date(Date.parse(daysAgo(REFUSAL_STATE_MAX_AGE_DAYS + 5)));
+        fs.utimesSync(file, old, old);
+        expect(pruneAgedRefusalState(root).pruned).toBe(0);
+        expect(fs.existsSync(file)).toBe(true);
+    });
+
+    /**
+     * NAMED FOR WHAT IT COVERS, after a review found the previous name
+     * overpromised. It pins the OUTCOME — a shadow record moves no rollup
+     * number — and it does NOT cover the explicit `SHADOW_SUFFIX` skip in
+     * `collectRefusalStats`, which can be deleted with this file still green
+     * because `parseRecord` rejects the shape anyway. That skip is
+     * defence-in-depth against a future loosening of the parser, its own
+     * comment says so, and a test cannot observe a guard whose removal changes
+     * nothing today. Calling this coverage of the skip would be the tautology
+     * this suite exists to avoid.
+     */
+    it('a shadow record moves no number in the refusal rollup', () => {
         writeShadow('counted-nowhere', daysAgo(1));
         const stats = collectRefusalStats(root);
         expect(stats.sessionsWithRefusals).toBe(0);

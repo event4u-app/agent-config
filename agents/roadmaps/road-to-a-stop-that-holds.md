@@ -4,7 +4,7 @@ status: ready
 parent_roadmap: road-to-a-ledger-that-closes-the-loop
 execution:
   mode: phase-checkpoints
-estate_growth_exempt: "open_blockers rises by five, and every one of them existed before this change as prose inside a closed-step HTML comment. Steps 1.4, 2.2, 2.3, 3.3, 3.4 and 4.1 each recorded a real obstacle in a paragraph no gate reads: scanOpenSteps counted open=7 blocked=0 at the merge base, so the continuation ladder re-proposed a step waiting on a maintainer decision and two waiting on elapsed calendar time. Promoting them to structured entries under ## Blockers with inline blocked-by markers makes the same five obstacles machine-readable; it creates no new debt and disposes of none, which is why neither an archive nor a park is available as the offset. The five are not one: they gate different steps, carry different owners (one maintainer decision, four agent-probeable windows) and come due on four different dates, so merging them would hold an acceptance criterion closed for three weeks past its own condition."
+estate_growth_exempt: "open_blockers rises by five, and every one of them existed before this change as prose inside an HTML comment under its own step. Steps 1.4, 2.2, 2.3, 3.3, 3.4 and 4.1 each recorded a real obstacle in a paragraph no gate reads: scanOpenSteps counted open=7 blocked=0 at the merge base, so the continuation ladder re-proposed a step waiting on a maintainer decision and two waiting on elapsed calendar time. Promoting them to structured entries under ## Blockers with inline blocked-by markers makes the same five obstacles machine-readable; it creates no new debt and disposes of none, which is why neither an archive nor a park is available as the offset. The five are not one: they gate different steps, carry different owners (one maintainer decision, four agent-probeable windows) and come due on four different dates, so merging them would hold an acceptance criterion closed for three weeks past its own condition."
 estate_offset_exempt: "Supersedes road-to-a-ledger-that-closes-the-loop, but does not dispose of it: that file is active and ready, and archiving it executes the supersession rather than declaring it. Disposing of it in the same diff that merely adds the plan would retire live work on an inbox round's authority."
 relates:
   - slug: road-to-a-ledger-that-closes-the-loop
@@ -265,27 +265,25 @@ its pre-registered bar can be read — armed only by that reading.
       UNIT AND LIMIT: these are local darwin readings, not the CI runner's, and
       CI is the authoritative leg — see § Cost this branch added, whose readings
       were CI's. Bundle delta, measured by building `dist/hooks/dispatch.js` at
-      the merge base and at HEAD in the same worktree: 1,555,324 -> 1,559,266
-      bytes, +3,942 B / +0.253 %, against the +19,110 B / +1.34 % the previous
-      pass of this roadmap added.
+      the merge base and at HEAD in the same worktree: 1,555,324 -> 1,560,056
+      bytes, **+4,732 B / +0.304 %**, against the +19,110 B / +1.34 % the
+      previous pass of this roadmap added.
 
-      THAT NUMBER WENT STALE TWICE BEFORE IT WAS RIGHT, and both are recorded
-      rather than silently overwritten, because a measured figure that ages is
-      indistinguishable from a fresh one to every reader.
+      THAT NUMBER WENT STALE THREE TIMES BEFORE IT WAS RIGHT, and all three are
+      recorded rather than silently overwritten, because a measured figure that
+      ages is indistinguishable from a fresh one to every reader. +3,288 B, read
+      mid-change before the pruner fix landed. +3,856 B, aged within the hour
+      when CI's source-size ratchet forced the transcript extraction. +3,942 B,
+      aged again when the independent review's two structural findings were
+      fixed. Each reading was correct when taken and wrong by the time anyone
+      could act on it.
 
-      It was first written **+3,288 B / +0.211 %**, read mid-change before the
-      pruner fix and the `SHADOW_SUFFIX` constant landed. Corrected to **+3,856
-      B / +0.248 %** — and that reading aged the same way within the hour, when
-      CI's source-size ratchet forced the transcript extraction and the extra
-      module boundary cost 86 more bytes. Final: **+3,942 B / +0.253 %**, both
-      sides rebuilt from `origin/main` and HEAD in one worktree after the last
-      source edit in the branch.
-
-      What caught it each time was a gate about something else — the pre-push
-      bundle-content check refusing a stale `dist/hooks/dispatch.js`. Nothing in
-      this tree compares a number in a roadmap against the thing it measures, so
-      the discipline that actually works is to take the reading last, not to
-      take it carefully.
+      THE LESSON IS ABOUT WHEN, NOT ABOUT CARE, and it is the durable half.
+      What caught every one of them was a gate on a different subject — the
+      pre-push bundle-content check refusing a stale `dist/hooks/dispatch.js`.
+      Nothing in this tree compares a number written in a roadmap against the
+      thing it measures, and no amount of diligence closes that gap for a figure
+      taken before the last edit. Take it last.
 
       The non-retry path pays NOTHING new — the same
       reads in the same order, relocated — and a retry now pays what a non-retry
@@ -296,6 +294,20 @@ its pre-registered bar can be read — armed only by that reading.
       no others. Making the fold append a row even when no detector fired — the
       change that would make Q1 read 1 forever — failed exactly 2, the clean
       retry and its pure-fold sibling. Restored from copies both times.
+
+      INDEPENDENTLY REVIEWED, and the review changed the shipped record. A
+      fresh subagent on a neutral prompt (committed at
+      `agents/evidence/reviews/stop-that-holds-shadow-read.review-input/prompt.md`)
+      reviewed the whole branch diff and returned *"mergeable on the code, I
+      would not merge the record as it stands"*, with 12 findings. It
+      reproduced six sabotages independently and every published number. Two
+      of its findings were structural and are fixed here rather than noted:
+      `retries_observed` was a POOLED counter, which made the per-layer Q1 the
+      rows are shaped for uncomputable — a clean retry adds no row, so it left
+      no layer trace anywhere — and step 2.2 instructed exactly the pooling the
+      `layer` field exists to prevent. The counter is now keyed by layer and
+      2.2 says so. Full dispositions:
+      `agents/evidence/reviews/stop-that-holds-shadow-read.findings.md`.
 
       Q1 IS STILL INERT, and shipping the producer did not change that. Its
       reader is 2.2. `docs/contracts/turn-end-detector-demotion.md` is corrected
@@ -309,6 +321,21 @@ its pre-registered bar can be read — armed only by that reading.
       the contract's § Q1 loses the word "inert" and names the reader.
       verify: report shows a non-null Q1 after one week of sessions; contract
       diff in the same PR.
+      <!-- PER LAYER, NOT POOLED — a constraint the step's own wording does not
+      carry, added 2026-09-30 after an independent review found that following
+      this line literally writes the defect the record is shaped to prevent.
+      `would_refuse_again` rows carry a `layer`, because a `stop_hook_active`
+      retry follows ANY stop concern's block and not only this gate's; dividing
+      pooled rows by "eligible initial refusals" reads another concern's
+      retries against this gate's refusals. Group by `layer` first, then by
+      detector. `retries_observed` is keyed the same way so the denominator can
+      be split too.
+      TWO BOUNDS ON WHATEVER THIS PRINTS, both properties of the instrument
+      rather than of the reading: a retry with an unreadable or oversized
+      transcript records nothing, so the denominator shrinks and Q1 is an UPPER
+      bound; and on a host that sends no `session_id` every session shares one
+      record. Both are stated on `ShadowRecord` and belong beside the number
+      when 2.3 publishes it. -->
       <!-- OPEN — NOT AGENT-CLOSABLE. The verify demands an elapsed measurement
       window ("after one week of sessions") over rows 2.1 does not yet write. No
       amount of work inside one session produces it, and printing a Q1 whose
@@ -579,12 +606,24 @@ dashboard and the archival sweep can act on.
 - **What to do:**
   1. Read `docs/contracts/hook-architecture-v1.md` § Kill switches — one
      input to the decision, not the decision.
-  2. Fill `docs/enforcement-by-host.md`'s `destructive:` column for all eight
-     hosts, from measurement, and record each `manual-only` as a decision
-     rather than an unmeasured default.
+  2. **Already done — do not redo it.** `docs/enforcement-by-host.md`'s
+     `destructive:` column is filled for all eight hosts from measurement,
+     each row carrying a `Measured from` cell (verified 2026-09-30; see
+     `Resolved when` below). What remains is the other half: recording each
+     `manual-only` as a DECISION rather than leaving it as the default the
+     measurement produced.
   3. Flip `daemon-host-kill-switch` in
      `road-to-adversarial-verification-and-long-runs.md` to
      `Status: resolved`, then this entry.
+- **Today's reading, so nobody re-derives it:** `check_kill_switch_table`
+  reports **30 == 30** across 430 files (2026-09-30). AC-5 closed on 28 == 28
+  and that number stays as the dated reading it was — two switches arrived by
+  merge since, and the count moved WITHOUT anyone touching the criterion,
+  which is the gate the review round added doing exactly its job. The
+  EQUALITY is what AC-5 asserts, not the number. Recorded here rather than
+  under AC-5 because the Acceptance-Criteria body is a tracked feature of
+  `lint_plan_risk_register`'s staleness check, and a freshness note does not
+  justify re-reviewing the whole register.
 - **Recommendation:** `manual-only`, which is the recommendation that blocker
   already carries. Not re-argued here — a second file restating it would give
   one opinion the appearance of two.
@@ -638,9 +677,14 @@ dashboard and the archival sweep can act on.
      2.1 landed, and there is nothing to read yet.
   2. When rows exist and the date is on or after 2026-10-07, do 2.2: teach
      `measure_turn_end_gate.ts` to divide `would_refuse_again` rows by
-     eligible initial refusals per detector, reading the shadow records
-     through `readShadowRecord` / `parseShadowRecord`
-     (`src/scripts/_lib/turn_end_refusals.ts`).
+     eligible initial refusals, **grouped by `layer` first and then by
+     detector**, reading the shadow records through `readShadowRecord` /
+     `parseShadowRecord` (`src/scripts/_lib/turn_end_refusals.ts`). Pooling
+     the two layers reads another stop concern's retries against this gate's
+     refusals — `retries_observed` is keyed by layer so the denominator
+     splits the same way. Publish the two instrument bounds beside the number:
+     an unreadable transcript records nothing (so Q1 is an upper bound), and a
+     host with no `session_id` pools sessions into one record.
   3. Then 2.3 publishes the reading and opens `d1-stop-ladder-after-reading`.
 - **Recommendation:** read it once the window closes and publish whatever it
   says, including a Q1 of zero. A zero here is a finding about the gate, not
@@ -801,9 +845,9 @@ closed rather than left standing:
   green is a necessary condition and not the authoritative one; CI is. The
   comparable number that IS portable is the bundle delta, measured by building
   `dist/hooks/dispatch.js` at the merge base and at HEAD in one worktree:
-  +3,942 B / +0.253 %, against +19,110 B / +1.34 % for the previous pass.
-  (Recorded twice before it was right — step 2.1's note carries both stale
-  readings and what caught them.)
+  +4,732 B / +0.304 %, against +19,110 B / +1.34 % for the previous pass.
+  (Recorded three times before it was right — step 2.1's note carries every
+  stale reading and what caught them.)
 
   **The risk does not close, it narrows.** Its refusing direction — a shadow
   read wedging a turn — is closed by construction and by fixture: both layers

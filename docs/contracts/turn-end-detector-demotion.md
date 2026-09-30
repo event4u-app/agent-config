@@ -226,10 +226,31 @@ A detector's bar may not be read until **all four** hold for that detector:
    **Carve-out, or condition 4 eats its own enabler:** a change that only ADDS a
    field or a counter, leaving every existing count and every allow path
    untouched, does not reset. Without this, shipping instrument 1 would reset all
-   five windows — it writes `would_refuse_again` onto the session record, which is
-   the refusal instrumentation — and no window accumulated before it lands would
-   ever be readable. That would contradict this file's own claim that Q2 is
-   measurable today.
+   five windows and no window accumulated before it lands would ever be readable.
+   That would contradict this file's own claim that Q2 is measurable today.
+
+   **What instrument 1 actually did, weighed against this condition rather than
+   assumed to fit the carve-out.** This clause said it "writes
+   `would_refuse_again` onto the session record, which is the refusal
+   instrumentation", and that was written before the instrument existed. It is
+   false: the rows live in a sibling file (§ The two instruments, below). The
+   shipped change is also wider than "only ADDS a field" — it added a second
+   record shape in the refusal state directory, a branch in
+   `pruneAgedRefusalState` and a skip in `collectRefusalStats`, i.e. it touched
+   the RETENTION and the ROLLUP of that directory, which condition 4's own
+   wording ("anything that alters … the recording of its refusals") reaches.
+
+   **The carve-out's conclusion survives, and the evidence is what survives on,
+   not the premise.** No window resets, because what condition 4 protects is the
+   comparability of accumulated counts and neither number moved: every verdict
+   is unchanged on every path (both re-entrancy layers still return
+   `EXIT_ALLOW`), and the rollup is unchanged — `collectRefusalStats` skips the
+   new shape and `parseRecord` rejected it anyway, so deleting the skip moves no
+   number. The pruner's new branch only ages the new shape; it cannot delete a
+   refusal record. Recorded this way, with the premise corrected rather than
+   quietly restated, because the next reader deciding whether a reset is owed
+   would otherwise decide it from a description of something that did not
+   happen.
 
 At 100 observations a proportion near 30 % still carries roughly a ±9-point 95 %
 interval, so this is a defensible minimum and not precision. Condition 4 replaces

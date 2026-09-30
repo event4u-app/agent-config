@@ -1151,7 +1151,10 @@ describe('the shadow read on the allow path — step 2.1', () => {
 
         const rec = shadowOf(dir);
         expect(rec, 'no shadow record was written on the layer-1 allow').not.toBeNull();
-        expect(rec?.retries_observed).toBe(1);
+        expect(rec?.retries_observed.stop_hook_active).toBe(1);
+        // The other layer stays at zero: a pooled counter would make a per-layer
+        // Q1 uncomputable, which is the defect the split fixed.
+        expect(rec?.retries_observed.refused_turn).toBe(0);
         expect(rec?.would_refuse_again).toHaveLength(1);
         expect(rec?.would_refuse_again[0]?.detector).toBe('promissory');
         expect(rec?.would_refuse_again[0]?.layer).toBe('stop_hook_active');
@@ -1196,7 +1199,7 @@ describe('the shadow read on the allow path — step 2.1', () => {
         expect(r.status, r.stderr).toBe(0);
         const rec = shadowOf(dir);
         expect(rec, 'a clean retry still has to be counted').not.toBeNull();
-        expect(rec?.retries_observed).toBe(1);
+        expect(rec?.retries_observed.stop_hook_active).toBe(1);
         expect(rec?.would_refuse_again).toHaveLength(0);
     });
 
@@ -1248,10 +1251,55 @@ describe('the shadow read on the allow path — step 2.1', () => {
         expect(runHook(dir, env(), home).status).toBe(0);
 
         const rec = shadowOf(dir);
-        expect(rec?.retries_observed).toBe(2);
+        expect(rec?.retries_observed.stop_hook_active).toBe(2);
         expect(rec?.would_refuse_again).toHaveLength(2);
         expect(rec?.first_at).not.toBe('');
         expect(rec?.last_at).not.toBe('');
+    });
+
+    /**
+     * The finding that made the denominator worth splitting, as a fixture.
+     *
+     * `layer` was already on every row, because a `stop_hook_active` retry
+     * follows ANY stop concern's block and pooling the numerator would read
+     * another concern's retries against this gate's refusals. The denominator
+     * had the same defect one level down and worse: a CLEAN retry adds no row
+     * at all, so it left no layer trace anywhere. A pooled counter therefore
+     * made a per-layer Q1 uncomputable on the very axis the rows preserve.
+     */
+    it('counts each layer separately — a per-layer Q1 needs a per-layer denominator', () => {
+        const { dir, home } = makeGateWorkspace();
+
+        // One layer-1 retry that still promises.
+        expect(
+            runHook(
+                dir,
+                envelopeJson(dir, writeTranscript(home, ['mach weiter'], PROMISE), {
+                    stop_hook_active: true,
+                }),
+                home,
+            ).status,
+        ).toBe(0);
+
+        // A refusal, then a layer-2 retry of the same turn.
+        expect(
+            runHook(dir, envelopeJson(dir, writeTranscript(home, ['mach weiter'], PROMISE)), home)
+                .status,
+        ).toBe(1);
+        expect(
+            runHook(
+                dir,
+                envelopeJson(dir, writeTranscript(home, ['mach weiter'], 'Ok.\n\nIch melde mich gleich.')),
+                home,
+            ).status,
+        ).toBe(0);
+
+        const rec = shadowOf(dir);
+        expect(rec?.retries_observed.stop_hook_active).toBe(1);
+        expect(rec?.retries_observed.refused_turn).toBe(1);
+        const layers = rec?.would_refuse_again.map((r) => r.layer) ?? [];
+        expect(layers).toContain('stop_hook_active');
+        expect(layers).toContain('refused_turn');
     });
 
     it('a retry with an unreadable transcript is allowed and records nothing', () => {
@@ -1273,7 +1321,8 @@ describe('foldShadow — the pure half of step 2.1', () => {
 
     it('an empty detector list counts the retry and adds no row', () => {
         const rec = foldShadow(null, { detectors: [], turnOrdinal: 3, at, layer: 'refused_turn' });
-        expect(rec.retries_observed).toBe(1);
+        expect(rec.retries_observed.refused_turn).toBe(1);
+        expect(rec.retries_observed.stop_hook_active).toBe(0);
         expect(rec.would_refuse_again).toHaveLength(0);
         expect(rec.first_at).toBe(at);
     });
@@ -1286,7 +1335,7 @@ describe('foldShadow — the pure half of step 2.1', () => {
             layer: 'stop_hook_active',
         });
         expect(rec.would_refuse_again.map((r) => r.detector)).toEqual(['promissory', 'language']);
-        expect(rec.retries_observed).toBe(1);
+        expect(rec.retries_observed.stop_hook_active).toBe(1);
     });
 
     it('caps the array at SHADOW_MAX_ROWS and counts what it dropped', () => {
@@ -1304,7 +1353,7 @@ describe('foldShadow — the pure half of step 2.1', () => {
         // Oldest dropped first: Q1 is a rate and the recent rows are the ones
         // a reader decides on.
         expect(rec?.would_refuse_again[0]?.turn).toBe(5);
-        expect(rec?.retries_observed).toBe(SHADOW_MAX_ROWS + 5);
+        expect(rec?.retries_observed.refused_turn).toBe(SHADOW_MAX_ROWS + 5);
     });
 
     it('first_at survives a fold and last_at moves', () => {
@@ -1337,11 +1386,12 @@ describe('parseShadowRecord — fail-open on the Stop path', () => {
                     { detector: 'not-a-detector', turn: 1, at: 'x', layer: 'refused_turn' },
                     { detector: 'language', turn: 1, at: 'x', layer: 'invented-layer' },
                 ],
-                retries_observed: 3,
+                retries_observed: { stop_hook_active: 3, refused_turn: 1 },
             }),
         );
         expect(rec?.would_refuse_again).toHaveLength(1);
-        expect(rec?.retries_observed).toBe(3);
+        expect(rec?.retries_observed.stop_hook_active).toBe(3);
+        expect(rec?.retries_observed.refused_turn).toBe(1);
     });
 });
 
