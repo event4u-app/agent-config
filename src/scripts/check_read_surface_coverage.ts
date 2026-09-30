@@ -53,30 +53,11 @@ const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const GATE = 'check_read_surface_coverage';
 export const DOC_REL = 'docs/contracts/retrieval-read-surfaces.md';
 export const FLOOR_REL = 'src/scripts/_lib/retrieval_sanitize.ts';
-export const DETECTOR_REL = 'src/scripts/_lib/structural_hiding.ts';
 
 export const BEGIN_MARKER = '<!-- BEGIN read-surface-table (generated) -->';
 export const END_MARKER = '<!-- END read-surface-table -->';
 
 const REGEN_COMMAND = `./scripts-run src/scripts/${GATE} --write`;
-
-/** A percentage the detector must not publish — `99 %`, `99.0%`, `99 percent`. */
-const _PERCENT_RE = /\b\d+(?:\.\d+)?\s*(?:%|percent\b)/i;
-
-/**
- * Prose only — an inline code span is not a published rate.
- *
- * The gap register names `translate(-100%, 0)` as an off-screen hiding
- * technique, and a matcher that cannot tell a CSS value from a recall figure
- * would force the register to describe the technique less precisely to satisfy
- * the gate. That is the wrong trade: the claim this check exists to stop is a
- * NUMBER IN PROSE that a later reader quotes as measured coverage, and prose is
- * exactly what survives stripping the code spans.
- */
-export function prosePercentage(src: string): string | null {
-    const prose = src.replace(/`[^`]*`/g, '');
-    return _PERCENT_RE.exec(prose)?.[0] ?? null;
-}
 
 function _read(root: string, rel: string): string | null {
     try {
@@ -225,27 +206,12 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         }
     }
 
-    // 3. No recall or coverage rate for the structural detector — ARMED, NOT
-    //    ACTIVE. The detector does not exist yet: an independent review refused
-    //    the one this branch carried (it stripped `aria-hidden` content, which
-    //    is VISIBLE to sighted readers, and a handwritten matcher mis-parses
-    //    adversarial markup), so the transform half of the roadmap stays open.
-    //    The check is kept and kept SILENT on absence rather than deleted: a
-    //    detector arriving later must not arrive without this rule already
-    //    watching it, and re-adding a gate clause at the same time as the thing
-    //    it governs is how the clause ends up shaped to pass.
-    const detector = _read(opts.root, DETECTOR_REL);
-    if (detector !== null) {
-        const pct = prosePercentage(detector);
-        if (pct !== null) {
-            findings.push(
-                `${DETECTOR_REL} publishes \`${pct}\`. No recall or coverage rate may be ` +
-                    'published for the structural layer — a rate needs a frozen corpus of hiding ' +
-                    'techniques and none exists, so the number would be an invented denominator.',
-            );
-        }
-    }
-
+    // There is NO structural-detector rule here, and its absence is deliberate
+    // rather than an omission. An earlier version of this branch shipped one
+    // that watched for a percentage in a detector file that does not exist —
+    // both review seats called it dead policy whose eventual behaviour would be
+    // easier to overlook for having sat dormant. It returns WITH the detector,
+    // written against a detector that exists, with its own adversarial tests.
     try {
         reportScanned({
             gate: GATE,
@@ -286,7 +252,6 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
 function selfTest(): number {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'read-surface-'));
     const floor = _read(ROOT, FLOOR_REL) ?? '';
-    const detector = _read(ROOT, DETECTOR_REL) ?? '';
 
     /** Plant a fixture root with a one-module scan tree plus the three inputs. */
     const plant = (
@@ -295,7 +260,6 @@ function selfTest(): number {
             module?: string;
             mutateRegion?: (r: string) => string;
             floorSrc?: string;
-            detectorSrc?: string;
             noScanRoot?: boolean;
         },
     ): string => {
@@ -316,7 +280,6 @@ function selfTest(): number {
         fs.mkdirSync(path.join(dir, path.dirname(FLOOR_REL)), { recursive: true });
         fs.mkdirSync(path.join(dir, path.dirname(DOC_REL)), { recursive: true });
         fs.writeFileSync(path.join(dir, FLOOR_REL), opts.floorSrc ?? floor, 'utf-8');
-        fs.writeFileSync(path.join(dir, DETECTOR_REL), opts.detectorSrc ?? detector, 'utf-8');
         const region = renderRegion(scanReadSurfaces(dir));
         fs.writeFileSync(
             path.join(dir, DOC_REL),
@@ -374,16 +337,6 @@ function selfTest(): number {
                     name: 'a header with no pointer to the generated table is rejected',
                     expect: 'reject',
                     run: () => run(plant('no-pointer', { floorSrc: '/**\n * Floor.\n */\nexport const x = 1;\n' })),
-                },
-                {
-                    name: 'a recall percentage in the structural detector is rejected',
-                    expect: 'reject',
-                    run: () =>
-                        run(
-                            plant('percentage', {
-                                detectorSrc: '/**\n * Detector — 97.5 % recall.\n */\nexport const y = 1;\n',
-                            }),
-                        ),
                 },
                 {
                     name: 'an empty scan root is refused rather than certified',

@@ -108,13 +108,42 @@ export function _toRowsFromLitellm(
         // drop the row, turning an injection attempt into a silent data loss.
         // The fetched payload itself is never written anywhere — only this
         // rendering is transformed.
-        const provider = sanitize_text(String((entry.litellm_provider as Json) ?? '')).toLowerCase();
+        const rawProvider = String((entry.litellm_provider as Json) ?? '').toLowerCase();
         // LiteLLM keys are sometimes "provider/model"; strip the prefix.
         const slash = key.indexOf('/');
-        const model = sanitize_text(slash !== -1 ? key.slice(slash + 1) : key);
-        if (!ALLOW_LIST.has(`${provider} ${model}`)) {
+        const rawModel = slash !== -1 ? key.slice(slash + 1) : key;
+
+        // THE ALLOW LIST IS MATCHED ON THE RAW IDENTIFIER. An earlier version
+        // sanitized first and compared after, on the reasoning that a vector
+        // inside a model name would otherwise fail the lookup and drop the row
+        // — turning an injection attempt into silent data loss. An independent
+        // review named the cost of that order and it is the worse one: the
+        // transform is lossy, so a remote name carrying a vector can NORMALISE
+        // ONTO a listed name and be admitted as it. That converts an injection
+        // attempt into an admitted row wearing a trusted identifier, which is
+        // strictly worse than dropping it.
+        //
+        // The row is dropped either way; what changes is that a collision is
+        // now AUDIBLE. A raw miss whose sanitized form would have matched is
+        // reported rather than skipped with every other miss, because those two
+        // are opposite events printed as the same silence.
+        if (!ALLOW_LIST.has(`${rawProvider} ${rawModel}`)) {
+            const normalised = `${sanitize_text(rawProvider).toLowerCase()} ${sanitize_text(rawModel)}`;
+            if (ALLOW_LIST.has(normalised)) {
+                process.stderr.write(
+                    `update_prices: DROPPED a remote row whose raw identifier is not allow-listed ` +
+                        `but normalises onto \`${normalised}\`. A fetched name that sanitizes onto a ` +
+                        'listed one is an admission attempt, not a typo.\n',
+                );
+            }
             continue;
         }
+
+        // Only now, and only for the rendering: the row reaches a tracked
+        // markdown file that agents read, so the model-facing copy carries the
+        // floor. The fetched payload itself is never written anywhere.
+        const provider = sanitize_text(rawProvider).toLowerCase();
+        const model = sanitize_text(rawModel);
         const inCost = entry.input_cost_per_token;
         const outCost = entry.output_cost_per_token;
         if (!_isNumber(inCost) || !_isNumber(outCost)) {

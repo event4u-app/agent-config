@@ -32,26 +32,55 @@ afterEach(() => {
 });
 
 describe('update_prices — fetched rows reach the tracked doc sanitized', () => {
-    it('renders a zero-width-joined model name with the vector stripped', () => {
-        // `gpt-4o` carrying a joiner: invisible to a reader of the markdown
-        // table, a different byte string to anything that reads it back.
-        const poisoned = `openai/gpt${ZWJ}-4o`;
-        const payload = {
-            [poisoned]: {
-                litellm_provider: `open${ZWJ}ai`,
+    it('renders a clean row with no vector reaching the tracked doc', () => {
+        // The rendering is the model-facing copy and carries the floor. The
+        // identifier here is allow-listed and clean; the vector cases below own
+        // the poisoned direction.
+        const rows = _toRowsFromLitellm({
+            'openai/gpt-4o': {
+                litellm_provider: 'openai',
                 input_cost_per_token: 0.0000025,
                 output_cost_per_token: 0.00001,
             },
-        };
-
-        const rows = _toRowsFromLitellm(payload);
+        });
         expect(rows).toHaveLength(1);
-        expect(rows[0][0]).toBe('openai');
-        expect(rows[0][1]).toBe('gpt-4o');
 
         const rendered = _render_markdown('2026-01-01', 'litellm-github', rows);
         expect(rendered).not.toContain(ZWJ);
         expect(rendered).toContain('gpt-4o');
+    });
+
+    // REPLACES a test that asserted the opposite and was right about the wrong
+    // risk. It read: 'sanitizes BEFORE the allow-list compare, so a vector is
+    // stripped rather than dropping the row', on the reasoning that dropping is
+    // silent data loss. An independent review named the cost of that order and
+    // it is the worse one: sanitizing is lossy, so a poisoned remote name can
+    // NORMALISE ONTO an allow-listed one and be admitted wearing a trusted
+    // identifier. Dropping an injection attempt is the correct outcome; being
+    // admitted as `claude-sonnet-4-5` is not.
+    it('does NOT admit a poisoned name that normalises onto an allow-listed one', () => {
+        const rows = _toRowsFromLitellm({
+            [`anthropic/claude-sonnet-4${ZWJ}-5`]: {
+                litellm_provider: 'anthropic',
+                input_cost_per_token: 0.000003,
+                output_cost_per_token: 0.000015,
+            },
+        });
+        expect(rows).toHaveLength(0);
+    });
+
+    it('still admits the same identifier when it arrives clean', () => {
+        // The pair is what makes the case about the ORDER rather than about the
+        // name: identical allow-list entry, one poisoned arrival and one clean.
+        const rows = _toRowsFromLitellm({
+            'anthropic/claude-sonnet-4-5': {
+                litellm_provider: 'anthropic',
+                input_cost_per_token: 0.000003,
+                output_cost_per_token: 0.000015,
+            },
+        });
+        expect(rows).toHaveLength(1);
+        expect(rows[0][1]).toBe('claude-sonnet-4-5');
     });
 
     it('leaves the fetched payload on disk byte-exact', () => {
@@ -76,23 +105,30 @@ describe('update_prices — fetched rows reach the tracked doc sanitized', () =>
         expect(fs.readFileSync(fixturePath, 'utf-8')).toContain(ZWJ);
     });
 
-    it('sanitizes BEFORE the allow-list compare, so a vector is stripped rather than dropping the row', () => {
-        // Sanitizing after the compare would turn an injection attempt into a
-        // silent data loss: the poisoned key would miss the allow-list and the
-        // row would vanish with no signal.
-        expect(_toRowsFromLitellm({
-            [`anthropic/claude-sonnet-4${ZWJ}-5`]: {
-                litellm_provider: 'anthropic',
-                input_cost_per_token: 0.000003,
-                output_cost_per_token: 0.000015,
-            },
-        }).length + _toRowsFromLitellm({
-            'anthropic/claude-sonnet-4-5': {
-                litellm_provider: 'anthropic',
-                input_cost_per_token: 0.000003,
-                output_cost_per_token: 0.000015,
-            },
-        }).length).toBe(2);
+    it('reports the collision rather than dropping it with every other miss', () => {
+        // A raw miss whose sanitized form WOULD have matched is a different
+        // event from an ordinary unlisted name, and printing both as the same
+        // silence is what would hide an admission attempt.
+        const errs: string[] = [];
+        const orig = process.stderr.write.bind(process.stderr);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (process.stderr as any).write = (c: string): boolean => {
+            errs.push(String(c));
+            return true;
+        };
+        try {
+            _toRowsFromLitellm({
+                [`anthropic/claude-sonnet-4${ZWJ}-5`]: {
+                    litellm_provider: 'anthropic',
+                    input_cost_per_token: 0.000003,
+                    output_cost_per_token: 0.000015,
+                },
+            });
+        } finally {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (process.stderr as any).write = orig;
+        }
+        expect(errs.join('')).toContain('normalises onto');
     });
 
     it('drops a model genuinely outside the allow-list', () => {

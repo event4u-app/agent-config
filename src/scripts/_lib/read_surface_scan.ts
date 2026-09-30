@@ -172,16 +172,32 @@ const _EXCLUDE_RE = /(?:^|\/)(?:__tests__|node_modules)\/|\.test\.ts$/;
 const _SELF_MODULES: ReadonlySet<string> = new Set([
     '_lib/retrieval_sanitize.ts',
     '_lib/read_surface_scan.ts',
-    '_lib/structural_hiding.ts',
     'check_read_surface_coverage.ts',
 ]);
+
+/**
+ * Raised when a directory under the scan root cannot be read.
+ *
+ * The walk used to swallow the error and return, which made an INCOMPLETE scan
+ * indistinguishable from a complete one: a permission error on one subtree
+ * silently removed every module under it from the table, and the gate then
+ * reported the shortened list as matching the tree. An independent review named
+ * it; the direction is the same one `assertScanned` enforces at the corpus
+ * level, applied to the traversal that builds the corpus.
+ */
+export class ScanTraversalError extends Error {
+    constructor(readonly dir: string, cause: unknown) {
+        super(`read_surface_scan: cannot read ${dir} — the scan is incomplete, not clean (${String(cause)})`);
+        this.name = 'ScanTraversalError';
+    }
+}
 
 function _walk(dir: string, base: string, out: string[]): void {
     let entries: fs.Dirent[];
     try {
         entries = fs.readdirSync(dir, { withFileTypes: true });
-    } catch {
-        return;
+    } catch (exc) {
+        throw new ScanTraversalError(dir, exc);
     }
     for (const e of entries) {
         const abs = path.join(dir, e.name);

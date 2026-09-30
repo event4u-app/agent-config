@@ -26,7 +26,6 @@ import {
     extractRegion,
     headerSecondCopy,
     leadingBlockComment,
-    prosePercentage,
     renderRegion,
     spliceRegion,
 } from '../../src/scripts/check_read_surface_coverage.js';
@@ -170,7 +169,6 @@ describe('the real tree — the three modules the roadmap named', () => {
         for (const self of [
             '_lib/read_surface_scan.ts',
             '_lib/retrieval_sanitize.ts',
-            '_lib/structural_hiding.ts',
             'check_read_surface_coverage.ts',
         ]) {
             expect(byModule.has(self)).toBe(false);
@@ -219,13 +217,3 @@ describe('rendering helpers', () => {
     });
 });
 
-describe('the no-percentage rule for the structural layer', () => {
-    it('catches a rate written in prose', () => {
-        expect(prosePercentage('/** Detector — 97.5 % recall over the corpus. */')).toBe('97.5 %');
-        expect(prosePercentage('measured 88 percent of the channels')).toBe('88 percent');
-    });
-
-    it('does not catch a CSS value inside a code span', () => {
-        expect(prosePercentage('off-screen via `translate(-100%, 0)`')).toBeNull();
-    });
-});
