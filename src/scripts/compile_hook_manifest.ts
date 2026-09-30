@@ -44,23 +44,66 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
-import { _manifest_fingerprint } from './hooks/dispatch_hook.js';
+import { tableFingerprint } from './hooks/table_fingerprint.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const YAML_PATH = path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml');
-const JSON_PATH = path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.json');
 
-export function compile(yamlText: string): string {
-    return JSON.stringify({
-        fingerprint: _manifest_fingerprint(yamlText),
-        manifest: parseYaml(yamlText, { version: '1.1' }) as unknown,
-    });
+/**
+ * The plumbing tables that carry a compiled sibling, keyed by `--table`.
+ *
+ * `key` is the wrapper field the reader looks under, and it differs per table
+ * because each reader already had one: `dispatch_hook._load_yaml` reads
+ * `manifest`, `host_lowering.loadHostLowering` reads `table`. Renaming either
+ * would be a plumbing change for cosmetics, so the writer follows the readers.
+ *
+ * `yamlVersion` is 1.1 for the manifest and default for the lowering table,
+ * again because that is what each READER passes. A compiler that parsed with
+ * different settings than the fallback path would produce a fast path that
+ * disagrees with its own slow path on `yes`/`no`/`on`/`off` scalars — a
+ * divergence no fingerprint can catch, because both files would be current.
+ */
+const TABLES = {
+    manifest: {
+        yaml: path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml'),
+        json: path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.json'),
+        key: 'manifest',
+        yamlVersion: '1.1' as const,
+    },
+    'host-lowering': {
+        yaml: path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'host_lowering.yaml'),
+        json: path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'host_lowering.json'),
+        key: 'table',
+        yamlVersion: undefined,
+    },
+} as const;
+
+export type TableName = keyof typeof TABLES;
+
+export function compile(yamlText: string, table: TableName = 'manifest'): string {
+    const spec = TABLES[table];
+    const doc = (spec.yamlVersion === undefined
+        ? parseYaml(yamlText)
+        : parseYaml(yamlText, { version: spec.yamlVersion })) as unknown;
+    return JSON.stringify({ fingerprint: tableFingerprint(yamlText), [spec.key]: doc });
 }
 
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
     let outPath: string | null = null;
+    let table: TableName = 'manifest';
     for (let i = 0; i < argv.length; i += 1) {
         const a = argv[i] as string;
+        if (a === '--table') {
+            const next = argv[i + 1];
+            if (next === undefined || !(next in TABLES)) {
+                process.stderr.write(
+                    `compile_hook_manifest: --table needs one of ${Object.keys(TABLES).join(', ')}\n`,
+                );
+                return 2;
+            }
+            table = next as TableName;
+            i += 1;
+            continue;
+        }
         if (a === '--out') {
             const next = argv[i + 1];
             if (next === undefined || next.startsWith('--')) {
@@ -73,13 +116,14 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         }
         process.stderr.write(
             `compile_hook_manifest: unknown argument ${JSON.stringify(a)}\n` +
-                'usage: compile_hook_manifest [--out <path>]\n',
+                `usage: compile_hook_manifest [--table ${Object.keys(TABLES).join('|')}] [--out <path>]\n`,
         );
         return 2;
     }
 
-    const text = fs.readFileSync(YAML_PATH, 'utf-8');
-    const next = compile(text);
+    const spec = TABLES[table];
+    const text = fs.readFileSync(spec.yaml, 'utf-8');
+    const next = compile(text, table);
 
     if (outPath !== null) {
         // Comparison copy. No `already current` short-circuit: the caller asked
@@ -89,15 +133,15 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         return 0;
     }
 
-    const current = fs.existsSync(JSON_PATH) ? fs.readFileSync(JSON_PATH, 'utf-8') : null;
+    const current = fs.existsSync(spec.json) ? fs.readFileSync(spec.json, 'utf-8') : null;
     if (current === next) {
-        process.stdout.write('compile_hook_manifest: already current\n');
+        process.stdout.write(`compile_hook_manifest: ${table} already current\n`);
         return 0;
     }
-    fs.writeFileSync(JSON_PATH, next);
+    fs.writeFileSync(spec.json, next);
     process.stdout.write(
-        `compile_hook_manifest: wrote ${path.relative(REPO_ROOT, JSON_PATH)} ` +
-            `(${String(next.length)} bytes, fingerprint ${_manifest_fingerprint(text)})\n`,
+        `compile_hook_manifest: wrote ${path.relative(REPO_ROOT, spec.json)} ` +
+            `(${String(next.length)} bytes, fingerprint ${tableFingerprint(text)})\n`,
     );
     return 0;
 }

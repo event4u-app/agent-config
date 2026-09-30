@@ -10884,12 +10884,25 @@ var import_yaml2 = __toESM(require_dist(), 1);
 import * as fs17 from "node:fs";
 import * as path16 from "node:path";
 import { fileURLToPath as fileURLToPath2 } from "node:url";
+
+// src/scripts/hooks/table_fingerprint.ts
+function tableFingerprint(text) {
+  let h = 2166136261;
+  for (let i = 0; i < text.length; i += 1) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  return `${h.toString(16)}:${String(text.length)}`;
+}
+
+// src/scripts/hooks/host_lowering.ts
 var _IN_BUNDLE = true;
 var _REPO_ROOT = path16.resolve(
   path16.dirname(fileURLToPath2(import.meta.url)),
   ..._IN_BUNDLE ? ["..", ".."] : ["..", "..", ".."]
 );
 var HOST_LOWERING_PATH = path16.join(_REPO_ROOT, "src", "scripts", "hooks", "host_lowering.yaml");
+var HOST_LOWERING_JSON_PATH = path16.join(_REPO_ROOT, "src", "scripts", "hooks", "host_lowering.json");
 var DEFAULT_SURFACE = "any";
 function _asString(v) {
   if (v === null || v === void 0) return null;
@@ -10897,7 +10910,9 @@ function _asString(v) {
   return String(v);
 }
 function _parse(text) {
-  const raw = (0, import_yaml2.parse)(text);
+  return _structure((0, import_yaml2.parse)(text));
+}
+function _structure(raw) {
   const hostsRaw = raw?.["hosts"];
   if (typeof hostsRaw !== "object" || hostsRaw === null) {
     throw new Error("host_lowering.yaml: missing `hosts:` map");
@@ -10958,8 +10973,29 @@ function _parse(text) {
 }
 var _cache = null;
 function loadHostLowering() {
-  if (_cache === null) _cache = _parse(fs17.readFileSync(HOST_LOWERING_PATH, "utf-8"));
+  if (_cache !== null) return _cache;
+  const text = fs17.readFileSync(HOST_LOWERING_PATH, "utf-8");
+  let compiled;
+  try {
+    compiled = fs17.readFileSync(HOST_LOWERING_JSON_PATH, "utf-8");
+  } catch {
+    compiled = null;
+  }
+  _cache = resolveTable(text, compiled);
   return _cache;
+}
+function resolveTable(yamlText, compiledText) {
+  if (compiledText !== null) {
+    try {
+      const raw = JSON.parse(compiledText);
+      const table = raw["table"];
+      if (raw["fingerprint"] === tableFingerprint(yamlText) && typeof table === "object" && table !== null) {
+        return _structure(table);
+      }
+    } catch {
+    }
+  }
+  return _parse(yamlText);
 }
 function surfaceRow(host, surface = DEFAULT_SURFACE, table = loadHostLowering()) {
   return table.get(host)?.get(surface) ?? table.get(host)?.get(DEFAULT_SURFACE) ?? null;

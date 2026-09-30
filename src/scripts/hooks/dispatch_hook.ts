@@ -34,6 +34,8 @@ import * as tty from "node:tty";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parse as parseYaml } from "yaml";
 
+import { tableFingerprint } from "./table_fingerprint.js";
+
 import { hardenedSpawnEnv } from "../_lib/spawn_env.js";
 import {
   atomic_write_json,
@@ -204,12 +206,7 @@ export function _parse_concern_stdout(stdout_text: string): JsonObject {
  * correctness.
  */
 export function _manifest_fingerprint(text: string): string {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < text.length; i += 1) {
-    h ^= text.charCodeAt(i);
-    h = Math.imul(h, 0x01000193) >>> 0;
-  }
-  return `${h.toString(16)}:${String(text.length)}`;
+  return tableFingerprint(text);
 }
 
 export function _load_yaml(p: string): JsonObject {

@@ -476,10 +476,81 @@ const HOOK_MANIFEST_TRIPLE: Triple = {
     },
 };
 
+const HOST_LOWERING_YAML = 'src/scripts/hooks/host_lowering.yaml';
+const HOST_LOWERING_JSON = 'src/scripts/hooks/host_lowering.json';
+
+/**
+ * The second compiled plumbing table, and it is here for the reason the first
+ * one is: the fingerprint hashes the YAML TEXT, so a comment-only edit to
+ * `host_lowering.yaml` invalidates the committed JSON while every parsed field
+ * stays byte-identical. That file is mostly comments — 16.8 kB of source
+ * compiling to 5.9 kB of data — so the comment-only case is the LIKELY one
+ * here, not the corner case.
+ *
+ * A stale sibling is slow, never wrong: `loadHostLowering` falls through to the
+ * YAML source on a fingerprint mismatch. So what this row protects is the
+ * measured 9 ms per dispatch, which would otherwise be given back silently and
+ * would surface only as the hook-latency gate flapping again.
+ */
+const HOST_LOWERING_TRIPLE: Triple = {
+    id: 'host-lowering-compiled',
+    output: HOST_LOWERING_JSON,
+    remedy: './scripts-run src/scripts/compile_hook_manifest --table host-lowering',
+    why:
+        'the compiled lowering table carries a fingerprint hashed over the YAML TEXT, so even a ' +
+        'comment-only edit to the source invalidates it — and no `task` target regenerates it',
+    sourcesOf() {
+        return { ok: true, sources: [{ kind: 'file', value: HOST_LOWERING_YAML }] };
+    },
+    regenerate(root, workDir) {
+        const outFile = path.join(workDir, 'host_lowering.json');
+        const tsx = path.join(
+            root,
+            'node_modules',
+            '.bin',
+            process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
+        );
+        if (!fs.existsSync(tsx)) {
+            return {
+                ok: false,
+                reason: `no tsx at ${path.relative(root, tsx)} — run \`npm ci\` before this gate`,
+            };
+        }
+        const res = spawnSync(
+            tsx,
+            [
+                path.join(root, 'src', 'scripts', 'compile_hook_manifest.ts'),
+                '--table',
+                'host-lowering',
+                '--out',
+                outFile,
+            ],
+            { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 },
+        );
+        if (res.status !== 0) {
+            return {
+                ok: false,
+                reason:
+                    `compile_hook_manifest --table host-lowering exited ${String(res.status)}: ` +
+                    `${(res.stderr ?? '').trim()}`,
+            };
+        }
+        try {
+            return { ok: true, text: fs.readFileSync(outFile, 'utf8') };
+        } catch (e) {
+            return {
+                ok: false,
+                reason: `compile_hook_manifest reported success but wrote no readable file (${String(e)})`,
+            };
+        }
+    },
+};
+
 export const REGISTRY: readonly Triple[] = [
     CENSUS_TRIPLE,
     INSTALL_BUNDLE_TRIPLE,
     HOOK_MANIFEST_TRIPLE,
+    HOST_LOWERING_TRIPLE,
 ];
 
 // ---------------------------------------------------------------------------

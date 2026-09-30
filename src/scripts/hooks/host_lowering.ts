@@ -21,6 +21,8 @@ import { fileURLToPath } from 'node:url';
 
 import { parse as parseYaml } from 'yaml';
 
+import { tableFingerprint } from './table_fingerprint.js';
+
 declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
 const _IN_BUNDLE = typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__;
 const _REPO_ROOT = path.resolve(
@@ -29,6 +31,23 @@ const _REPO_ROOT = path.resolve(
 );
 
 export const HOST_LOWERING_PATH = path.join(_REPO_ROOT, 'src', 'scripts', 'hooks', 'host_lowering.yaml');
+
+/**
+ * Compiled sibling of the table above — the same data with comments stripped.
+ *
+ * WHY IT EXISTS, measured rather than assumed. The dispatcher consults this
+ * table on EVERY dispatch (`emitFor` needs `blockExitFor`), and since
+ * `hook_manifest.json` landed it is the ONLY remaining YAML reader on that
+ * path — so it pays both its own parse and the cold load of the `yaml` module
+ * nothing else pulls in any more. Measured on one developer machine: the
+ * 16.8 kB source parses in 3.1-7.0 ms and the `yaml` module costs a further
+ * 8.1 ms to load, against `JSON.parse` of the 5.9 kB compiled form at 0.03 ms.
+ *
+ * Exactly the shape `compile_hook_manifest` already established for the
+ * manifest, including the content fingerprint — see `table_fingerprint` for
+ * why freshness is decided by content and never by mtime.
+ */
+export const HOST_LOWERING_JSON_PATH = path.join(_REPO_ROOT, 'src', 'scripts', 'hooks', 'host_lowering.json');
 
 /** Provenance of a row. Every field may be null; `expires` may not. */
 export interface VerifiedBlock {
@@ -98,7 +117,18 @@ function _asString(v: unknown): string | null {
 }
 
 function _parse(text: string): HostLowering {
-    const raw = parseYaml(text) as Record<string, unknown> | null;
+    return _structure(parseYaml(text) as Record<string, unknown> | null);
+}
+
+/**
+ * Build the table from an ALREADY-PARSED document.
+ *
+ * Split out of `_parse` so the compiled-JSON fast path below reaches exactly
+ * the same validation on exactly the same shape — the YAML step is the only
+ * thing it skips. A second structuring function would be a second thing to
+ * drift; there is one, and both paths call it.
+ */
+function _structure(raw: Record<string, unknown> | null): HostLowering {
     const hostsRaw = raw?.['hosts'];
     if (typeof hostsRaw !== 'object' || hostsRaw === null) {
         throw new Error('host_lowering.yaml: missing `hosts:` map');
@@ -160,10 +190,55 @@ function _parse(text: string): HostLowering {
 
 let _cache: HostLowering | null = null;
 
-/** Parse the table once per process. Throws on a missing or malformed file. */
+/**
+ * Parse the table once per process. Throws on a missing or malformed file.
+ *
+ * Tries the compiled sibling first and falls through to the YAML source on
+ * anything unexpected — missing, unreadable, malformed, or a fingerprint that
+ * does not match the live source. A stale or absent compiled file is therefore
+ * SLOW and never WRONG, which is the property that lets the optimisation ship
+ * without a second correctness argument.
+ */
 export function loadHostLowering(): HostLowering {
-    if (_cache === null) _cache = _parse(fs.readFileSync(HOST_LOWERING_PATH, 'utf-8'));
+    if (_cache !== null) return _cache;
+    // Reading the YAML unconditionally costs ~0.03 ms — it is the PARSE that is
+    // expensive — so the fast path still skips the whole 11-15 ms.
+    const text = fs.readFileSync(HOST_LOWERING_PATH, 'utf-8');
+    let compiled: string | null;
+    try {
+        compiled = fs.readFileSync(HOST_LOWERING_JSON_PATH, 'utf-8');
+    } catch {
+        compiled = null;
+    }
+    _cache = resolveTable(text, compiled);
     return _cache;
+}
+
+/**
+ * Pick the path and build the table — the whole decision, with no I/O.
+ *
+ * Split from `loadHostLowering` so the FALLBACK semantics are testable. They
+ * are the half that carries the risk: the fast path is easy to verify and a
+ * mis-shaped fallback would be a wrong table rather than a slow one. A test
+ * that could only reach the happy path would be watching the safe half.
+ */
+export function resolveTable(yamlText: string, compiledText: string | null): HostLowering {
+    if (compiledText !== null) {
+        try {
+            const raw = JSON.parse(compiledText) as Record<string, unknown>;
+            const table = raw['table'];
+            if (
+                raw['fingerprint'] === tableFingerprint(yamlText) &&
+                typeof table === 'object' &&
+                table !== null
+            ) {
+                return _structure(table as Record<string, unknown>);
+            }
+        } catch {
+            // Malformed JSON → the source below. Never fail on the optimisation.
+        }
+    }
+    return _parse(yamlText);
 }
 
 /** Test seam — drop the memoized table so a fixture can be loaded instead. */
