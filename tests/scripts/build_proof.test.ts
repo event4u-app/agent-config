@@ -37,9 +37,18 @@ let _proof: string | undefined;
 const proof = (): string => (_proof ??= render());
 
 describe('build_proof — render()', () => {
+    // 60 s, not the 10 s default, and NOT because anything is spawned — this
+    // test calls `render()` twice IN-PROCESS, which is the whole point of the
+    // determinism check. `render()` walks the entire claims ledger and the file
+    // header records ~54 s a call as measured on 2026-08-11; it measures 241 s
+    // on this author's machine under plain `tsx`, with Vitest out of the
+    // picture entirely, so that slowdown is neither Vitest 5's nor this
+    // branch's. CI is evidently far faster, since `main` is green at the 10 s
+    // default — but it crossed 10 s once Vitest 5 raised the worker count, which
+    // is what this timeout answers. Targeted rather than a global raise.
     it('is deterministic (no timestamp / stable ordering)', () => {
         expect(render()).toBe(proof());
-    });
+    }, 60_000);
 
     it('emits the required proof structure', () => {
         const out = proof();

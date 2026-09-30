@@ -418,6 +418,11 @@ describe('the host reading is additive and never moves the ratchet', () => {
         expect(after.buckets).toStrictEqual(before.buckets);
     });
 
+    // 60 s, not the 10 s default. This test runs a repo-wide CLI in a spawned
+    // subprocess, and Vitest 5 raised the default worker count the 10 s was
+    // calibrated under — every one of the 18 CI failures on that upgrade was a
+    // timeout, never an assertion. Targeted rather than a global raise: the 10 s
+    // default still guards ~24k fast tests, and a real hang here still fails.
     it('a host tree far SMALLER than the source does not make the gate pass', () => {
         // The sabotage direction, and the one test here with PROVEN sensitivity.
         // Verified 2026-09-09 by neutralising the mechanism: routing the host
@@ -451,7 +456,7 @@ describe('the host reading is additive and never moves the ratchet', () => {
         // the gated verdict, this tiny tree would drag the run under the ceiling
         // and the exit code would drop to 0.
         expect(main(['--repo-root', root, '--host', 'claude-code'])).toBe(overBudget);
-    });
+    }, 60_000);
 
     it('a host id whose tree was never projected REFUSES rather than reporting zero', () => {
         // The property that makes the branch above safe: an unprojected tree is

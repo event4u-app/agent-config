@@ -26,9 +26,14 @@ function runTs() {
 }
 
 describe('lint_pack_dependencies — CLI contract', () => {
+    // 60 s, not the 10 s default. This test runs a repo-wide CLI in a spawned
+    // subprocess, and Vitest 5 raised the default worker count the 10 s was
+    // calibrated under — every one of the 18 CI failures on that upgrade was a
+    // timeout, never an assertion. Targeted rather than a global raise: the 10 s
+    // default still guards ~24k fast tests, and a real hang here still fails.
     it('default run passes cleanly over the repo (exit 0, deterministic)', () => {
         const a = runTs();
         expect(a.status, a.stderr).toBe(0);
         expect(runTs().stdout).toBe(a.stdout);
-    });
+    }, 60_000);
 });

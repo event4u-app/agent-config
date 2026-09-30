@@ -126,6 +126,12 @@ delta, and promotes only once the invariant checker signs off on the merge.`;
         expect(main(['--changed', ...rel, '--quiet'])).toBe(1);
     });
 
+    // 60 s, not the 10 s default. This test runs the gate's `main()` over the
+    // REAL repo IN-PROCESS — no subprocess, so the cost is the whole-tree walk
+    // itself. Vitest 5 raised the default worker count the 10 s was calibrated
+    // under, and every one of the 18 CI failures on that upgrade was a timeout,
+    // never an assertion. Targeted rather than a global raise: the 10 s default
+    // still guards ~24k fast tests, and a real hang here still fails.
     it('stays closed under --base: files absent at the base contribute no scaffold', () => {
         // The guard must not depend on which form resolves "established". These
         // files exist nowhere in git, so their shared shingles cannot enter the
@@ -138,7 +144,7 @@ delta, and promotes only once the invariant checker signs off on the merge.`;
             rel.push(`src/domains/__origtest_batch/c${i}/command.md`);
         }
         expect(main(['--base', 'HEAD', '--changed', ...rel, '--quiet'])).toBe(1);
-    });
+    }, 60_000);
 });
 
 describe('lint_originality — whole-class change sets do not fabricate overlap', () => {
@@ -164,11 +170,17 @@ describe('lint_originality — whole-class change sets do not fabricate overlap'
         return out.sort();
     };
 
+    // 60 s, not the 10 s default. This test runs the gate's `main()` over the
+    // REAL repo IN-PROCESS — no subprocess, so the cost is the whole-tree walk
+    // itself. Vitest 5 raised the default worker count the 10 s was calibrated
+    // under, and every one of the 18 CI failures on that upgrade was a timeout,
+    // never an assertion. Targeted rather than a global raise: the 10 s default
+    // still guards ~24k fast tests, and a real hang here still fails.
     it('the entire command class as the change set passes with --base', () => {
         // HEAD is the committed state of these same files, so the established
         // corpus is non-empty and the scores match the full audit's.
         expect(main(['--base', 'HEAD', '--changed', ...ALL_COMMANDS(), '--quiet'])).toBe(0);
-    });
+    }, 60_000);
 
     it('the full audit agrees — no pair is genuinely above FAIL', () => {
         // The pin above is only meaningful if the corpus really is clean; this
