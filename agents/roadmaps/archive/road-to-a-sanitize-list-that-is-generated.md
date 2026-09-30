@@ -117,7 +117,7 @@ content in fetched markup.
       **Evidence (2026-09-30).** `src/scripts/_lib/structural_hiding.ts` is a
       TOKENIZER (`tokenize`) plus a tree walk over an explicit open-element
       stack, not a forward scanner. `npx vitest run
-      tests/scripts/structural_hiding.test.ts` → **50 passed**. The per-channel
+      tests/scripts/structural_hiding.test.ts` → **60 passed**. The per-channel
       suite is driven off `STRUCTURAL_HIDING_CHANNELS` itself, so a channel
       added without a fixture fails rather than passing silently, and each
       channel asserts BOTH directions — the hidden span is lost and the visible
@@ -128,7 +128,9 @@ content in fetched markup.
       channel and shapes 1, 1b and 4 fail (6 failed / 44 passed); nesting depth
       untracked inside a hidden subtree → shape 3 fails (1 failed / 49 passed);
       `aria-hidden` restored as a channel → both aria-hidden retention tests
-      fail (2 failed / 48 passed). The first probe also caught a WEAK FIXTURE of
+      fail (2 failed / 48 passed); and, after the council round, removing the
+      `hidden="until-found"` exemption reds both the predicate case and the new
+      end-to-end one (2 failed / 58 passed). The first probe also caught a WEAK FIXTURE of
       mine: shape 2 passed for the wrong reason, because escaped quotes made the
       payload not-a-tag under any parser. The fixture was rewritten and now
       discriminates.
@@ -228,8 +230,14 @@ content in fetched markup.
   exits 0 with a fixture per declared channel AND per named adversarial shape,
   `./scripts-run src/scripts/check_read_surface_coverage --self-test` exits 0,
   and `aria-hidden` is absent from `STRUCTURAL_HIDING_CHANNELS`.
-  **Met 2026-09-30** — 50 passed; 11/11 self-test cases; `aria-hidden` is in
+  **Met 2026-09-30** — 60 passed; 11/11 self-test cases; `aria-hidden` is in
   `STRUCTURAL_HIDING_NON_CHANNELS` with a test asserting its content SURVIVES.
+  An independent two-provider council review of the landed branch returned
+  REQUEST_CHANGES on fixture discriminating power — not on the tokenizer, which
+  it found correct for every case it examined — and all nine findings were
+  taken, which is the 50 → 60 delta. Recorded in
+  `agents/evidence/ratifications/drain-sanitize-structural-detector.md`,
+  including what the round did NOT see.
 
   **Not claimed:** detection adequacy for the class. Both review seats were
   explicit that a frozen corpus is required before such a claim, and none
