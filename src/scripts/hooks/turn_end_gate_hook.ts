@@ -216,10 +216,9 @@ import {
     sessionRefusalFile,
     type RefusalRecord,
 } from '../_lib/turn_end_refusals.js';
+import { EXIT_ALLOW, EXIT_BLOCK } from './exit_codes.js';
 
 /** Dispatcher-internal block code. Pinned to 1 by `concern_block_exit_parity`. */
-const EXIT_BLOCK = 1;
-const EXIT_ALLOW = 0;
 
 /**
  * Transcript-read ceiling for this hook, passed at the call site in `main()`.

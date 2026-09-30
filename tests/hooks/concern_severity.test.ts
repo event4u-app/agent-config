@@ -29,6 +29,31 @@ const MANIFEST = path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml');
 const BLOCKING_ALLOWLIST = new Set([
     'block-no-verify',
     'block-kernel-rule-writes',
+    // road-to-a-kernel-that-guards-its-plumbing 1.2. The three questions this
+    // allowlist exists to have answered, on this concern's own terms:
+    //
+    //   · SCOPE. Two generated files, `dist/hooks/dispatch.js` and
+    //     `hooks/hooks.json`, matched on their trailing path segments so a
+    //     consumer tree is covered as well as this one. Not a directory, not a
+    //     prefix: a bare `dispatch.js`, or one under `src/hooks/`, passes. The
+    //     plumbing SOURCES beside them are deliberately NOT here — they are
+    //     edited on purpose and carry the ADR-268 § 4 ratification record
+    //     instead, which is what "one mechanism per file class" means.
+    //   · fail_closed: TRUE, like its two neighbours above and unlike
+    //     block-config-weakening. The guarantee is about a DETECTED write; a
+    //     malformed envelope with no target at all ALLOWS, because a guard
+    //     that blocks what it cannot read turns a shape defect into a wedged
+    //     session. The legitimate writers — `npm run build:hooks`, `task sync`
+    //     — reach these files through a build tool and carry none of the
+    //     recognised shell write shapes, so they pass by construction.
+    //   · WHY REFUSAL RATHER THAN A NUDGE. There is no legitimate hand edit to
+    //     refuse the wrong half of. A hand-edited bundle survives until the
+    //     next build, reaches every dispatch in the meantime, and is invisible
+    //     in a source review — the one class where a warning buys nothing
+    //     because nobody was going to do it on purpose anyway.
+    //
+    // No kill switch, deliberately: the fix is to rebuild the file.
+    'block-plumbing-writes',
     'block-config-weakening',
     // road-to-source-silence Phase 4.2. It refuses ONE thing: the creation of a
     // NEW first-level directory under agents/tmp(.old)/ whose name is not an

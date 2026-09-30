@@ -402,6 +402,101 @@ change the dispatcher's exit code. The directory is gitignored and
 consumed by `task hooks-status` (Phase 7.11). Added in Round 2
 (2026-05-04) per Q1 of `tmp/council_round2/q1_feedback_channel.md`.
 
+## Plumbing — one mechanism per file class
+
+The files that decide **which** concern runs, on **which** host, under **which**
+budget are the hook plumbing. They are governed, and they are governed in two
+different ways, because they fail in two different ways.
+
+```
+A PLUMBING SOURCE CARRIES A RECORD. A PLUMBING BUILD OUTPUT CARRIES A DENY.
+NEVER A DENY ON A FILE PEOPLE EDIT ON PURPOSE — THAT IS A WEDGE.
+NEVER A RECORD ON A FILE WHOSE EVERY HAND EDIT IS A MISTAKE — THAT IS
+A RECORD OF A MISTAKE.
+```
+
+**Sources** — edited legitimately, so a diff to one carries a ratification
+artifact per [`ratification-artifact.md`](ratification-artifact.md), enforced in
+CI by `check_kernel_edit_ratified.ts` (`PLUMBING_SOURCE_RE`):
+
+| File | What it decides |
+|---|---|
+| `src/scripts/hook_manifest.yaml` | which concerns exist, their severity and `fail_closed`, and which host binds which slot |
+| `src/scripts/hooks/host_lowering.yaml` | how a verdict is lowered onto each host's native exit contract |
+| `src/scripts/hooks/*-dispatcher.sh` | the per-host trampolines that reach the dispatcher at all |
+| `src/config/hook-token-budget.json` | the per-concern injection ceiling |
+| `src/config/hook-latency-budget.json` | the per-slot latency ceiling the bench gate enforces |
+
+The asymmetry this closes: a concern **deleted** from the manifest is a refusal
+that stops happening, which is the same authority change as loosening the rule
+behind it — reached one file earlier, and until 2026-09-29 it carried no record
+while a typo in that rule did.
+
+**Build outputs** — no legitimate hand edit exists, so they are refused at
+tool-call time by `block_plumbing_writes.ts` (`PLUMBING_BUILD_OUTPUTS`):
+
+| File | Written by | Why a hand edit is never legitimate |
+|---|---|---|
+| `dist/hooks/dispatch.js` | `npm run build:hooks` | every concern is inlined here; an edit survives until the next build, reaches every dispatch meanwhile, and is invisible in a source review |
+| `hooks/hooks.json` | `condense.ts` via `task sync` | the host binding file; an edit here silently unbinds a guard |
+
+The guard refuses edit-tool envelopes and the shell write shapes in
+`_lib/shell_write_shapes.ts`. The legitimate builds pass because they reach
+these files through a build tool rather than through a redirect, an in-place
+`sed`, or a `tee`/`mv`/`cp` naming the path. Its declared residual — a write
+built inside an interpreter's own argument is not detected — is stated in the
+guard's header and pinned by its tests in both directions.
+
+Adding a file to either list is itself a governance change and carries its own
+ratification: the source list is watched by the gate that reads it, and the
+guard is a `src/scripts/hooks/block_*.ts` and therefore already gated.
+
+### Settings: the key is the unit, never the file
+
+A third file class sits beside the two above and takes a third mechanism, for a
+reason the split makes visible: a project settings file is edited legitimately
+many times a day AND carries a handful of keys that are policy dials. A deny on
+the file would wedge ordinary work; a record on the file would be a record of
+routine. So the fence is per KEY.
+
+```
+A CLASS C KEY IS REFUSED AT TOOL-CALL TIME. EVERY OTHER KEY IN THE SAME
+FILE STAYS AGENT-WRITABLE. USER-GLOBAL FILES ARE NEVER IN REACH.
+```
+
+`block_config_weakening.ts` classifies `.agent-settings.yml` and a host's
+`.claude/settings.json` as `class-c`, parses the document as it would stand
+AFTER the edit, diffs the leaf key paths, and refuses when any changed key
+resolves to C through `shared/settingsClasses.classOfPath` — the same shared
+classifier `settings:set` and the GUI write route already use, rather than a
+second copy of the rule. Class C is defined in
+[`settings-classes.md`](settings-classes.md), which ships in `files[]` and is
+therefore readable from a consumer install.
+
+Two states fail closed, both because the alternative is a bypass with no
+authorisation step in it: a class contract the guard cannot read leaves it
+unable to tell a C key from an A key, and a post-edit document it cannot parse
+leaves it with no key list at all. Either one refuses.
+
+What it does not see: an edit applied through a shell redirect rather than an
+edit tool. That is `block_plumbing_writes`' subject and its shapes are
+`_lib/shell_write_shapes.ts`; this guard's corpus is `EDIT_TOOLS`.
+
+### One exit-code table
+
+`src/scripts/hooks/exit_codes.ts` is the single definition of 0 / 1 / 2 / ≥3,
+with `owner` and `authorizedBy` per row — who decides a concern emits the code,
+and what authorises the dispatcher to act on it. Thirty-three files previously
+declared their own copies, and the numbers are not interchangeable across the
+boundary: 1 and 2 mean the opposite things on Claude Code from what they mean
+in this tree's internal language, which is why `host_semantics.ts` exists.
+`lint_exit_codes` refuses a bare numeral in `src/scripts/hooks/*.ts`.
+
+`EXIT_USAGE` sits beside the table and deliberately outside it: `dispatch_hook`
+and `replay_hook` are also CLIs, and exit 2 on their own bad argv by POSIX
+convention — a number that collides with `EXIT_WARN` by coincidence, not by
+meaning, since no concern has spoken at that point.
+
 ## Manifest schema — `scripts/hook_manifest.yaml`
 
 ```yaml

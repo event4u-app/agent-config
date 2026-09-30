@@ -30,6 +30,8 @@
  *
  * Gated: a diff touching a kernel rule under `src/rules/` (the nine of
  * `_lib/kernel_rules.ts`), a governance hook (`src/scripts/hooks/block_*.ts`),
+ * a hook-plumbing SOURCE (`hook_manifest.yaml`, `host_lowering.yaml`, a
+ * `*-dispatcher.sh`, either hook budget file — see `PLUMBING_SOURCE_RE`),
  * or this gate itself — so it cannot be weakened without its own record. Such
  * a diff must carry a ratification artifact under
  * the ratifications directory with `verdict: ratified`, valid per the
@@ -123,6 +125,31 @@ export const ANCHOR_PATHS: readonly string[] = [
 const GOVERNANCE_HOOK_RE = /^src\/scripts\/hooks\/block_[a-z0-9_]+\.ts$/;
 
 /**
+ * Hook-plumbing SOURCES — the files that decide which concern runs, on which
+ * host, under which budget.
+ *
+ * `road-to-a-kernel-that-guards-its-plumbing` 1.1. The nine kernel rules were
+ * governed and the plumbing that decides whether a guard runs at all was not,
+ * so a diff deleting `block-no-verify` from the manifest carried no record
+ * while a typo in the rule it enforces carried one. The asymmetry was the
+ * defect: a concern removed from `hook_manifest.yaml` is a refusal that stops
+ * happening, which is the same authority change as loosening the rule behind
+ * it, reached one file earlier.
+ *
+ * This is the ADR-268 § 4 mechanism EXTENDED, not a second deny. Nothing new
+ * refuses a tool call here; the same CI gate simply reads a wider path set,
+ * and every property the gate already had — base-revision code, in-repo quorum
+ * policy, the whole diff as its unit — carries over unchanged.
+ *
+ * Sources only. `dist/hooks/dispatch.js` and `hooks/hooks.json` are BUILD
+ * OUTPUTS with no legitimate hand edit at all, so they are refused at tool-call
+ * time by `block_plumbing_writes.ts` rather than ratified here — a record for a
+ * file whose every hand edit is illegitimate would be a record of a mistake.
+ */
+const PLUMBING_SOURCE_RE =
+    /^(?:src\/scripts\/hook_manifest\.yaml|src\/scripts\/hooks\/host_lowering\.yaml|src\/scripts\/hooks\/[a-z0-9-]+-dispatcher\.sh|src\/config\/hook-(?:token|latency)-budget\.json)$/;
+
+/**
  * A kernel rule, in the source tree or in any projection.
  *
  * The reach is deliberately the same as the retired hook's: any path whose
@@ -141,6 +168,8 @@ const KERNEL_RULE_PATH_RE = /(?:^|\/)rules\/([a-z0-9-]+)\.md$/;
 export interface GatedPaths {
     kernelRules: string[];
     governanceHooks: string[];
+    /** Hook-plumbing sources — manifest, host lowering, dispatchers, budgets. */
+    plumbing: string[];
     self: boolean;
 }
 
@@ -148,6 +177,7 @@ export interface GatedPaths {
 export function classifyPaths(files: readonly string[]): GatedPaths {
     const kernelRules: string[] = [];
     const governanceHooks: string[] = [];
+    const plumbing: string[] = [];
     let self = false;
     for (const raw of files) {
         const p = raw.replace(/\\/g, '/').trim();
@@ -171,14 +201,23 @@ export function classifyPaths(files: readonly string[]): GatedPaths {
         }
         if (GOVERNANCE_HOOK_RE.test(p)) {
             governanceHooks.push(p);
+            continue;
+        }
+        if (PLUMBING_SOURCE_RE.test(p)) {
+            plumbing.push(p);
         }
     }
-    return { kernelRules, governanceHooks, self };
+    return { kernelRules, governanceHooks, plumbing, self };
 }
 
 /** True when anything in the diff requires a ratification artifact. */
 export function requiresRatification(gated: GatedPaths): boolean {
-    return gated.kernelRules.length > 0 || gated.governanceHooks.length > 0 || gated.self;
+    return (
+        gated.kernelRules.length > 0 ||
+        gated.governanceHooks.length > 0 ||
+        gated.plumbing.length > 0 ||
+        gated.self
+    );
 }
 
 /** Ratification artifacts present in the diff, as repo-relative paths. */
@@ -253,6 +292,7 @@ export function evaluate(
     const gatedSet = new Set<string>([
         ...gated.kernelRules,
         ...gated.governanceHooks,
+        ...gated.plumbing,
         ...(gated.self ? [SELF_PATH] : []),
     ]);
     const artifactSet = new Set(ratificationArtifactsIn(files));
@@ -286,7 +326,8 @@ export function evaluate(
 
     if (!requiresRatification(gated)) {
         lines.push(
-            '✅  no kernel rule, governance hook or self edit in the diff — nothing to ratify',
+            '✅  no kernel rule, governance hook, hook-plumbing source or self edit in the ' +
+                'diff — nothing to ratify',
         );
         close(true);
         return { exitCode: 0, lines, scanned };
@@ -295,6 +336,7 @@ export function evaluate(
     const touched = [
         ...gated.kernelRules.map((p) => `kernel rule ${p}`),
         ...gated.governanceHooks.map((p) => `governance hook ${p}`),
+        ...gated.plumbing.map((p) => `hook-plumbing source ${p}`),
         ...(gated.self ? ['the ratification mechanism itself (gate, reader, policy or workflow)'] : []),
     ];
     lines.push(`Gated surfaces in this diff (${touched.length}):`);
@@ -446,8 +488,8 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         roots: ['<the diff against the base ref>'],
         allowEmpty:
             'EMPTY_VALID: the corpus is one diff. A commit range that changed nothing is a ' +
-            'real state, and there is then no kernel rule, governance hook or mechanism file ' +
-            'to ratify — the gate has read everything there was.',
+            'real state, and there is then no kernel rule, governance hook, plumbing source or ' +
+            'mechanism file to ratify — the gate has read everything there was.',
     });
     if (!quiet || result.exitCode !== 0) {
         for (const l of result.lines) {

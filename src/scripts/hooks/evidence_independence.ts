@@ -52,8 +52,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { atomic_write_json } from "./state_io.js";
 import { readHookStdin } from "./hook_stdin.js";
 import { isCodePath, isTestPath } from "../_lib/test_delta.js";
+import { EXIT_ALLOW, EXIT_BLOCK } from './exit_codes.js';
 
-const EXIT_ALLOW = 0;
 // MUST equal dispatch_hook.EXIT_BLOCK. The dispatcher's internal ladder is
 // 0 allow / 1 block / 2 warn — NOT the 2-means-block shape a PreToolUse guard
 // reads naturally from Claude's own native contract. This constant was 2 when
@@ -61,7 +61,6 @@ const EXIT_ALLOW = 0;
 // and the gate emitted advisory context while the operation went through.
 // Pinned against the dispatcher's export by
 // tests/hooks/concern_block_exit_parity.test.ts.
-const EXIT_BLOCK = 1;
 
 export const STATE_FILE = path.join("agents", "state", "evidence-dispatch.json");
 

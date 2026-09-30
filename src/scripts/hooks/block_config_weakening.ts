@@ -45,14 +45,45 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import * as yaml from 'js-yaml';
+
+import {
+    buildSettingsClassIndex,
+    classOfPath,
+    parseSettingsClassRows,
+    type SettingsClass,
+} from '../../shared/settingsClasses.js';
 import { EDIT_TOOLS } from '../minimal_safe_diff_hook.js';
 import { readHookStdin } from './hook_stdin.js';
+import { EXIT_ALLOW, EXIT_BLOCK, EXIT_WARN } from './exit_codes.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
-const EXIT_ALLOW = 0;
-const EXIT_BLOCK = 1;
-const EXIT_WARN = 2;
+/**
+ * This package's own root — where the shipped class contract lives.
+ *
+ * RESOLVED BY SEARCH, not by counting `..` segments. This file runs from three
+ * layouts: the source tree, an installed `node_modules/@event4u/agent-config/`,
+ * and inlined into `dist/hooks/dispatch.js`, where every module shares the
+ * BUNDLE's `import.meta.url` and a fixed hop count lands somewhere else
+ * entirely. A review flagged the fixed-hop version as resolving a different
+ * root from the one the package occupies; walking up to the nearest directory
+ * that actually carries the contract answers the question the guard is asking
+ * ("where is the contract") instead of a proxy for it.
+ *
+ * `null` when no ancestor carries it — which is the fail-closed input to
+ * `readClassIndex`, not a silent default root.
+ */
+export function findPackageRoot(from: string): string | null {
+    let dir = path.dirname(from);
+    for (let i = 0; i < 12; i++) {
+        if (fs.existsSync(path.join(dir, SETTINGS_CLASSES_RELATIVE))) return dir;
+        const up = path.dirname(dir);
+        if (up === dir) break;
+        dir = up;
+    }
+    return null;
+}
 
 /**
  * The stated cap from `autonomous-execution` § Antipattern. Crossing it in one
@@ -81,7 +112,18 @@ const _PATH_KEYS: readonly string[] = ['file_path', 'path', 'target_file', 'file
  * where "weakening" needs context a tool call does not carry (a baseline count
  * may legitimately reset after a refactor); those warn and never block.
  */
-export type ConfigKind = 'allowlist' | 'advisory' | null;
+export type ConfigKind = 'allowlist' | 'advisory' | 'class-c' | null;
+
+/**
+ * Project settings files whose keys this guard fences. User-global files are
+ * never in reach — the hook only sees a path a tool call named, and the writes
+ * that reach `~/.event4u/` go through `settings:set`, which applies its own
+ * per-key refusal.
+ */
+const CLASS_C_BASENAMES: readonly string[] = ['.agent-settings.yml', '.agent-settings.yaml', 'settings.json'];
+
+/** Where the class contract lives, relative to the package root. */
+export const SETTINGS_CLASSES_RELATIVE = 'docs/contracts/settings-classes.md';
 
 /** Classify a target path into a config surface, or null for everything else. */
 export function classify_target(p: string): ConfigKind {
@@ -96,7 +138,98 @@ export function classify_target(p: string): ConfigKind {
     if (/-budget(s)?\.(json|ya?ml)$/.test(base) || base === 'budgets.yml') {
         return 'advisory';
     }
+    // `settings.json` only under a host directory: the bare name is common
+    // enough elsewhere that classifying it on the basename alone would fence
+    // files that carry no settings key at all.
+    if (base === 'settings.json') {
+        return /(^|\/)\.(claude|cursor|augment|windsurf)\/settings\.json$/.test(posix) ? 'class-c' : null;
+    }
+    if (CLASS_C_BASENAMES.includes(base)) {
+        return 'class-c';
+    }
     return null;
+}
+
+/**
+ * Leaf key paths of a parsed settings document, dotted.
+ *
+ * LEAVES ONLY, and the choice is load-bearing in both directions. A class-C key
+ * whose value is a MAP (`hooks`, say) has children that never appear as their
+ * own rows in the contract, so emitting only leaves and letting `classOfPath`
+ * walk up to the nearest classified ancestor is what makes `hooks.enabled`
+ * resolve to C. Emitting the interior nodes as well would double-count the same
+ * change and report a parent that nothing edited.
+ */
+export function leafPaths(value: unknown, prefix = ''): Map<string, string> {
+    const out = new Map<string, string>();
+    if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+        if (prefix !== '') out.set(prefix, JSON.stringify(value ?? null));
+        return out;
+    }
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+        const key = prefix === '' ? k : `${prefix}.${k}`;
+        for (const [ck, cv] of leafPaths(v, key)) out.set(ck, cv);
+    }
+    return out;
+}
+
+/**
+ * Parse a settings document, or `null` when it is not parseable.
+ *
+ * `null` is NOT "no keys changed" — the caller treats it as an unreadable
+ * corpus and refuses, because a guard that allows whatever it cannot parse is
+ * bypassed by making the file unparseable for one call.
+ */
+export function parseSettingsDoc(text: string, rel: string): unknown | null {
+    try {
+        return rel.endsWith('.json') ? (JSON.parse(text) as unknown) : yaml.load(text);
+    } catch {
+        return null;
+    }
+}
+
+/** Dotted paths whose value differs between two settings documents. */
+export function changedKeys(before: unknown, after: unknown): string[] {
+    const a = leafPaths(before);
+    const b = leafPaths(after);
+    const out = new Set<string>();
+    for (const [k, v] of b) if (a.get(k) !== v) out.add(k);
+    for (const k of a.keys()) if (!b.has(k)) out.add(k);
+    return [...out].sort();
+}
+
+/**
+ * The class index, read from the shipped contract. `null` when it cannot be
+ * read AT ALL, which the caller treats as fail-closed.
+ *
+ * Not cached: the file is small, and a cache would keep a stale fence alive
+ * across an upgrade that reclassified a key — the same reasoning the server's
+ * own reader states for the same file.
+ */
+export function readClassIndex(packageRoot: string): Map<string, SettingsClass> | null {
+    try {
+        const text = fs.readFileSync(path.join(packageRoot, SETTINGS_CLASSES_RELATIVE), 'utf-8');
+        const index = buildSettingsClassIndex(parseSettingsClassRows(text));
+        return index.size === 0 ? null : index;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * The guarded subset of a change list.
+ *
+ * A key is guarded when its nearest classified ancestor is C, and ALSO when
+ * nothing on its path is classified at all — the same per-key refusal
+ * `settings:set` and the GUI write route already apply, reached here through
+ * the same shared classifier rather than a second copy of the rule.
+ */
+export function guardedKeys(index: ReadonlyMap<string, SettingsClass> | null, keys: readonly string[]): string[] {
+    if (index === null) return [...keys];
+    return keys.filter((k) => {
+        const cls = classOfPath(index, k);
+        return cls === 'C' || cls === undefined;
+    });
 }
 
 /**
@@ -167,6 +300,89 @@ export interface Decision {
 }
 
 /** Decide from the cumulative session total for one allowlist file. */
+/**
+ * The refusal reason for a class-C settings edit, or `null` to allow.
+ *
+ * WHAT THIS FENCES, and what it deliberately does not. The unit is the KEY, not
+ * the file: a Class A key stays agent-writable through this path exactly as it
+ * is through `settings:set`, and fencing the whole file would make an ordinary
+ * preference edit need a human. Only a key the contract classifies C — or one
+ * nothing on its path classifies at all, which is the same fail-closed default
+ * the CLI writer applies — is refused.
+ *
+ * THE UNPARSEABLE CASES REFUSE, both of them, and for the same reason. A
+ * contract this guard cannot read leaves it with no way to tell a C key from an
+ * A key; a resulting document it cannot parse leaves it with no key list at
+ * all. Allowing either would mean the fence is lifted by making one file
+ * unreadable for the length of one tool call, which is a bypass with no
+ * authorisation step in it.
+ *
+ * WHAT IT CANNOT SEE: an edit applied through a shell redirect rather than an
+ * edit tool — `EDIT_TOOLS` is the corpus, and the shell shapes are
+ * `block_plumbing_writes`' subject, not this one.
+ */
+export function classCVerdict(
+    ti: JsonObject,
+    on_disk: string | null,
+    rel_path: string,
+    index: ReadonlyMap<string, SettingsClass> | null,
+): string | null {
+    const before = on_disk === null ? null : parseSettingsDoc(on_disk, rel_path);
+
+    const content = ti['content'];
+    const oldStr = ti['old_string'];
+    const newStr = ti['new_string'];
+    let afterText: string | null = null;
+    if (typeof content === 'string') {
+        afterText = content;
+    } else if (typeof oldStr === 'string' && typeof newStr === 'string' && on_disk !== null) {
+        if (!on_disk.includes(oldStr)) return null; // the edit will not apply
+        // `replace_all` is the host's own flag and it changes WHICH text the
+        // edit produces. Modelling only the first occurrence let a
+        // `replace_all` edit whose SECOND occurrence is the Class C one pass
+        // this guard while the real edit changed it — the guard evaluating a
+        // different edit from the one executed. Reported by an independent
+        // review before this landed.
+        const all = ti['replace_all'];
+        if (all !== undefined && typeof all !== 'boolean') {
+            return (
+                `${rel_path}: this edit carries a \`replace_all\` value the guard cannot ` +
+                'interpret, so the text it would produce is unknown and no key can be ' +
+                'cleared. Re-send it as a plain edit, or write the change through ' +
+                '`agent-config settings:set`.'
+            );
+        }
+        afterText = all === true ? on_disk.split(oldStr).join(newStr) : on_disk.replace(oldStr, newStr);
+    }
+    if (afterText === null) return null;
+
+    const after = parseSettingsDoc(afterText, rel_path);
+    if (after === null) {
+        return (
+            `${rel_path}: the result of this edit does not parse as settings, so no key ` +
+            'list can be derived and no key can be cleared. Fix the syntax, or write the ' +
+            'change through `agent-config settings:set`, which refuses a Class C key by name.'
+        );
+    }
+
+    const guarded = guardedKeys(index, changedKeys(before, after));
+    if (guarded.length === 0) return null;
+
+    const unreadable =
+        index === null
+            ? ' The class contract could not be read, so EVERY changed key is treated as ' +
+              'guarded — that is the fail-closed direction, not a classification.'
+            : '';
+    return (
+        `${rel_path}: this edit changes ${String(guarded.length)} guarded settings key(s) — ` +
+        `${guarded.slice(0, 5).join(', ')}${guarded.length > 5 ? ', …' : ''}.` +
+        unreadable +
+        ' A Class C key is a policy dial (spend ceiling, allowlist, gate switch, hooks) and ' +
+        'is a human edit by contract: docs/contracts/settings-classes.md. Every other key in ' +
+        'this file stays writable.'
+    );
+}
+
 export function decide(kind: ConfigKind, rel_path: string, session_total: number, added: number): Decision {
     if (kind === null || added <= 0) {
         return { action: 'allow', reason: '' };
@@ -292,6 +508,15 @@ export function main(): number {
         } catch {
             on_disk = null;
         }
+        if (kind === 'class-c') {
+            const rel_c = path.relative(root, abs) || p;
+            const pkg = findPackageRoot(_HERE);
+            const verdict = classCVerdict(ti, on_disk, rel_c, pkg === null ? null : readClassIndex(pkg));
+            if (verdict === null) continue;
+            process.stderr.write(`block-config-weakening: BLOCKED — ${verdict}\n`);
+            return EXIT_BLOCK;
+        }
+
         const added = added_entries(ti, on_disk);
         if (added <= 0) {
             continue;

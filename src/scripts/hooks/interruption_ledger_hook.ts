@@ -60,8 +60,7 @@ import { derive_session_tag } from '../chat_history.js';
 import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
 import { HANDBACK, finalParagraph, readTranscriptTail } from './turn_end_gate_hook.js';
-
-const EXIT_OK = 0;
+import { EXIT_ALLOW as EXIT_OK } from './exit_codes.js';
 
 /** Same cap the turn-end gate reads its tail under. */
 const TRANSCRIPT_READ_MAX_BYTES = 2 * 1024 * 1024;

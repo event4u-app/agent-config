@@ -115,8 +115,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { countContractFields, validateResponse } from '../_lib/subagent_response.js';
 import { atomic_write_json, is_replay_mode } from './state_io.js';
 import { readHookStdin } from './hook_stdin.js';
-
-const EXIT_ALLOW = 0;
+import { EXIT_ALLOW } from './exit_codes.js';
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
 type JsonObject = { [k: string]: JsonValue };

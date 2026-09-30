@@ -41,9 +41,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { type GraphState, graphState } from '../code_graph/detect.js';
 import { readHookStdin } from './hook_stdin.js';
+import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
 
-const EXIT_ALLOW = 0;
-const EXIT_WARN = 2;
 const CODE_EXT = /\.(php|ts|tsx|mts|cts|js|jsx|mjs|cjs)$/i;
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };

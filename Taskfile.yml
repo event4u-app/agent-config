@@ -164,6 +164,8 @@ tasks:
       - task: check-token-optimizer-freshness
       - task: check-portability
       - task: check-placeholder-drift
+      - task: lint-deny-text
+      - task: lint-exit-codes
       - task: check-input-references
       - task: check-argument-hint
       - task: check-inputs-parity

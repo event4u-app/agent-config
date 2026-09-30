@@ -48,9 +48,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { hookSectionEnabled } from '../_lib/hook_settings.js';
 import { isUiPath, isUiTreePath } from '../_lib/ui_surface.js';
 import { readHookStdin } from './hook_stdin.js';
+import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
 
-const EXIT_ALLOW = 0;
-const EXIT_WARN = 2;
 /** Nudges per session before the valve goes silent. */
 export const MAX_NUDGES = 2;
 

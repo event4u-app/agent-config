@@ -49,6 +49,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as path from 'node:path';
 
 import { is_kernel_rule } from '../_lib/kernel_rules.js';
+import { shellWriteTarget } from '../_lib/shell_write_shapes.js';
 import { EDIT_TOOLS } from '../minimal_safe_diff_hook.js';
 import { COMMAND_TOOLS } from '../before_complete_hook.js';
 import { readHookStdin } from './hook_stdin.js';
@@ -133,87 +134,17 @@ export function targets_kernel_rule(filePath: string): string | null {
     return basename.replace(/\.md$/, '');
 }
 
-/** In-place mutators that name their target as a plain argument. */
-const _MUTATOR_VERBS: ReadonlySet<string> = new Set([
-    'sed',
-    'tee',
-    'truncate',
-    'rm',
-    'shred',
-]);
-/** Verbs whose LAST positional argument is the destination. */
-const _DEST_LAST_VERBS: ReadonlySet<string> = new Set(['mv', 'cp', 'install', 'rsync']);
-
 /**
- * Shell tokens that, in a command naming a kernel rule path, mean the path is
- * being WRITTEN rather than read. Reads (`cat`, `grep`, `head`, `diff`,
- * `git show`) carry none of these and stay allowed — a kernel rule is
- * immutable, not secret.
+ * The kernel rule a command WRITES, or null.
+ *
+ * The shape catalogue moved to `_lib/shell_write_shapes.ts` when
+ * `block_plumbing_writes.ts` needed the same shapes over a different file set
+ * (road-to-a-kernel-that-guards-its-plumbing 1.2). Behaviour here is unchanged:
+ * the narrowness, the reads-stay-allowed rule and the known-open interpreter
+ * residual are all properties of that shared module now, stated in its header.
  */
 function _bash_targets_kernel_rule(command: string): string | null {
-    // Cheap reject first: no kernel-rule path in the string at all.
-    const tokens = command.split(/\s+/).filter((t) => t.length > 0);
-    const stripped = tokens.map((t) => t.replace(/^['"]|['"]$/g, ''));
-    const ruleOf = (t: string): string | null => targets_kernel_rule(t);
-    if (!stripped.some((t) => ruleOf(t) !== null)) {
-        return null;
-    }
-
-    // 1. Redirection into the path: `> p`, `>> p`, `>p`, `>>p`.
-    for (let i = 0; i < stripped.length; i += 1) {
-        const tok = stripped[i] as string;
-        const inline = /^>{1,2}(.+)$/.exec(tok);
-        if (inline) {
-            const r = ruleOf(inline[1] as string);
-            if (r !== null) {
-                return r;
-            }
-        }
-        if (tok === '>' || tok === '>>') {
-            const next = stripped[i + 1];
-            if (typeof next === 'string') {
-                const r = ruleOf(next);
-                if (r !== null) {
-                    return r;
-                }
-            }
-        }
-    }
-
-    // 2. A mutator verb anywhere in the pipeline, with the path as an argument.
-    //    `sed` only counts in its in-place form — `sed 's/x/y/' file` prints.
-    const verbs = new Set<string>();
-    let prevWasSeparator = true;
-    for (const tok of stripped) {
-        if (['&&', '||', ';', '|'].includes(tok)) {
-            prevWasSeparator = true;
-            continue;
-        }
-        if (prevWasSeparator && !tok.startsWith('-')) {
-            verbs.add(path.basename(tok));
-            prevWasSeparator = false;
-        }
-    }
-    const sedInPlace = verbs.has('sed') && stripped.some((t) => /^-i/.test(t));
-    for (const verb of verbs) {
-        if (verb === 'sed' && !sedInPlace) {
-            continue;
-        }
-        if (_MUTATOR_VERBS.has(verb)) {
-            const hit = stripped.map(ruleOf).find((r) => r !== null);
-            if (hit !== undefined && hit !== null) {
-                return hit;
-            }
-        }
-        if (_DEST_LAST_VERBS.has(verb)) {
-            const last = stripped[stripped.length - 1] as string;
-            const r = ruleOf(last);
-            if (r !== null) {
-                return r;
-            }
-        }
-    }
-    return null;
+    return shellWriteTarget(command, targets_kernel_rule);
 }
 
 /**

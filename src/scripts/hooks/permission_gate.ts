@@ -20,6 +20,7 @@ import {
   type PermissionDecision,
   type PermissionEmission,
 } from "./host_semantics.js";
+import { EXIT_ALLOW, EXIT_BLOCK } from './exit_codes.js';
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
 type JsonObject = { [k: string]: JsonValue };
@@ -29,8 +30,6 @@ function _isObject(v: unknown): v is JsonObject {
 }
 
 /** Mirrors `dispatch_hook.EXIT_ALLOW` / `EXIT_BLOCK`; imported would be a cycle. */
-const EXIT_ALLOW = 0;
-const EXIT_BLOCK = 1;
 
 /** The host's `tool_name`, or `""` when the event carries none. */
 export function _payload_tool_name(envelope: JsonObject): string {
