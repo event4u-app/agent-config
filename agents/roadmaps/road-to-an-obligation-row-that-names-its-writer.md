@@ -277,6 +277,35 @@ tree produced it.
         src/scripts/report_obligation_writer_split --root <checkout>`.
       - Its first reading is in 2.1 above: 8 ledgers, 179 `delivered` rows, **0
         shadow rows** against a pre-registered floor of 100, every row `absent`.
+      - **That reading is SUPERSEDED on its qualification half, by a change that
+        landed after Phase 2 ran.** `docs/CLAIMS.md` clause (9), filed
+        2026-09-29 by `road-to-a-stop-that-holds` step 3.1 and confirmed live
+        here (`git merge-base --is-ancestor 5c9415258 origin/main` exits 0),
+        RESET the window at that commit: until it, the settle hook resolved its
+        session from `CLAUDE_CODE_SESSION_ID`, which the dispatcher never sets,
+        so every dispatched stop event was a non-reading. The sample is empty as
+        of the reset, and the zero-shadow half of every earlier reading is
+        explained by that defect rather than by clean turns. Neither 2.1's
+        figures nor the "Why now" section's may be cited as a base rate.
+      - **RE-READ 2026-09-30, same unit as 2.1** — one row in one `*.json`
+        ledger under `<root>/agents/runtime/state/obligations/`, `--root` the
+        maintainer checkout, counted per row array:
+
+        ```
+        rows          package consumer  unknown   absent    total
+        delivered          13        0        0      190      203
+        discharged          0        0        0        0        0
+        shadow              0        0        0        0        0
+        ```
+
+        The field is producing rows: **13 `package`** where 2.1 read 0 and
+        called every row `absent`. So the split the step promised is now
+        non-trivially readable rather than only computable. **`consumer` is 0**,
+        and that is the observation the blocker's question is about — it is a
+        reading and not a property of the corpus, which is live, gitignored and
+        janitor-pruned and grows between any two readings. The number the bar
+        counts is unchanged in every reading taken so far: **shadow rows = 0**.
+        Nothing here is a verdict on (a), (b) or (c).
       - **A finding for whoever decides:** option (a) is smaller than it looks.
         Clause (7) of `obligation-settle-shadow-bar` ALREADY says the corpus "is
         one machine's gitignored runtime state … and measures THIS install rather
