@@ -127,6 +127,8 @@ stays legible. M14-M16 are new on 2026-09-13.**
 | M16 | The live ruleset now requires **two** contexts, not one: `Sync + Generate Tools Consistency` and `Standing payload delta + budget gate`. The expectation names only the first, and that is not a finding — `minimum_required_contexts` is a floor, so a forge requiring more than the expectation satisfies it | `gh api …/rulesets/17749383`; `check_platform_anchor` output |
 | M17 | **The gate passes today.** `check_platform_anchor --files src/config/platform-anchor.json` reports `PASS_WITH_ACCEPTED_RISK`, ledger `planned 3 · completed 1 · failed 0`, exit 0. The frontmatter's "blocking drift" premise is therefore spent | run 2026-09-13 |
 | M18 | **Corrected 2026-09-27: the gate no longer passes, on a dimension this roadmap never touched.** `check_platform_anchor --files src/config/platform-anchor.json` now exits 1 — the live ruleset has `required_review_thread_resolution` off, a `NEVER_WAIVABLE` dimension unrelated to the approval-floor waiver. M17 was true on 2026-09-13 and is not true today; the drift is out of this roadmap's scope and is not remediated here (see AC-1) | run 2026-09-27 |
+| M19 | **Corrected 2026-09-30: the gate passes again, so M18 is spent in its turn.** `check_platform_anchor --files src/config/platform-anchor.json` exits **0** with `PASS_WITH_ACCEPTED_RISK`; live, `required_review_thread_resolution` reads `true`, `bypass_actors` reads `[]` and `enforcement` reads `active`. The forge-side drift M18 recorded was repaired between 2026-09-27 and 2026-09-30 by something outside this roadmap, which is exactly how M18 scoped it. Recorded here rather than by editing M18, because a measurement that was true on its date stays true on its date | run 2026-09-30; `gh api …/rulesets/17749383` |
+| M20 | The ledger line moved with it: M17 read `planned 3 · completed 1 · failed 0` and the same command now reads `planned 1 · completed 1 · failed 0`. Named because a reader comparing the two would otherwise take it for a regression; it is the planned-check count for the one file passed on `--files`, not a count of dimensions that stopped being checked | run 2026-09-30 |
 
 ## What the council actually said
 
@@ -382,6 +384,23 @@ cost argument is a given rather than a proposal.
       rehearsal itself is not attempted. This run did not touch the sibling
       blocker on `road-to-typed-grants-that-persist.md`, which still carries
       the remainder.
+      **RE-VERIFIED 2026-09-30, the fourth arrival, and this one changes what the step
+      leaves behind rather than only re-reading it.** The three facts, re-measured:
+      `branch-protection-policy.md` § Administrator recovery from a lockout is present
+      with its five steps and its closing paragraph still reads *NOT yet rehearsed*; the
+      rehearsal is unchanged in kind, an admin API write on repository protection
+      settings; and `bypass_actors` is still `[]` live, so the lockout this guards
+      against is still reachable. **One measurement moved in the reassuring direction
+      and it is M18's, not this step's:** the gate exits 0 again (M19), so AC-1's
+      2026-09-27 live-state note now describes a superseded reading and is dated in this
+      same change per AC-6. **What this run added that the three before it did not:** the
+      step now carries an inline `blocked-by: recovery-rehearsal-hard-floor` marker and a
+      structured `## Blockers` entry. Its absence — not any disagreement about the
+      step — is why this file has been re-processed four times: `run-continuation`
+      reads blockedness from the marker and never from prose, so three correct diagnoses
+      written as paragraphs were invisible to the mechanism that decides whether a step
+      is live work. The `[~]` carry is refused again, on the 2026-09-14 reasoning
+      unchanged; the marker is the move that was actually available and was missed.
 
 - [x] **0.3 Record that the council's safe sequence was already violated, and
       what follows from that.** The sequence is ratify → deploy reader → test →
@@ -755,6 +774,13 @@ DIFFERENCE IS STATED PER STEP RATHER THAN AVERAGED AWAY.
       the new field present; `check_ci_local_parity` exits 0. Both run
       2026-09-13.
 
+## Decisions
+
+| ID | ownership | resolved by | decision | evidence | revisit if |
+|---|---|---|---|---|---|
+| D1 | reversible-technical | agent | `status` stays `draft`; the file is NOT promoted to `ready` | template rule 31 lists *waiting for upstream decisions* as a draft ground, and the sole open item is an owner-reserved Hard-Floor rehearsal. Promoting would also read `active_roadmaps 13` against a floor of 12 and `open_blockers 39` against 38, and the only way to clear that is to archive an unrelated roadmap — the gate-gaming this file's own `estate_offset_exempt` key exists to refuse | `recovery-rehearsal-hard-floor` resolves, or the file gains a step an agent can execute |
+| D2 | reversible-technical | agent | NOT parked under `later/` and NOT archived | the obligation stays reachable where the estate already carries it: `road-to-typed-grants-that-persist.md`'s `ratification-platform-anchor` blocker is active, marked, and its own text says it *now carries the remainder*. `later/` would remove this file from drain selection at the cost of the only durable record of the reasoning; archiving would file AC-7 as met when its load-bearing word is *tested*. Three prior runs reached the same disposition and this one adds no evidence against it — what it adds is the marker they missed | the sibling blocker closes or is retired without absorbing the remainder |
+
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-14 | reviewer: claude/host -->
 
@@ -790,7 +816,7 @@ DIFFERENCE IS STATED PER STEP RATHER THAN AVERAGED AWAY.
 - **What to do:**
   1. Create a throwaway ruleset targeting a non-default branch —
      `gh api -X POST repos/event4u-app/agent-config/rulesets --input rehearsal-ruleset.json`
-     with `enforcement: active`, a `pull_request` rule, and
+     with `enforcement: active`, a rule of type `pull_request`, and
      `conditions.ref_name.include: ["refs/heads/rehearsal-lockout"]`. Capture the returned id.
   2. Confirm the lockout shape per step 1 of the procedure —
      `gh api repos/event4u-app/agent-config/rulesets/<NEW_ID> --jq '{enforcement, current_user_can_bypass}'`.
@@ -860,6 +886,15 @@ INSTRUCTION SHOULD BE LEFT LYING.
       live claim it no longer is. Not remediated here: fixing it is an admin
       write on the live ruleset, the same Hard-Floor class as 0.2 and AC-7,
       and outside what this run is authorized to touch.
+      **Superseded 2026-09-30, and the criterion is unaffected in both directions.** The
+      finding the note above records is gone: the gate exits 0 with
+      `PASS_WITH_ACCEPTED_RISK` and `required_review_thread_resolution` reads `true`
+      live (M19). The drift was repaired outside this roadmap between 2026-09-27 and
+      2026-09-30, which is how the note scoped it. Dated rather than deleted, because
+      AC-6 forbids an undated present-tense sentence about a superseded platform
+      measurement and a note that silently vanishes teaches the next reader nothing
+      about how fast this dimension moves — three readings in twenty days, two of them
+      disagreeing.
 - [x] AC-2 — **CORRECTED 2026-09-13. Reads now:** `NON_NEGOTIABLE_FLOOR` carries
       *neither* `minimum_approving_reviews` nor `require_last_push_approval`,
       and that absence is deliberate, recorded, and pinned by a test so a future
@@ -1011,3 +1046,10 @@ INSTRUCTION SHOULD BE LEFT LYING.
       explicit this-turn confirmation. See 0.2 for the 2026-09-27 pass, the
       unrelated live-ruleset finding it surfaced, and why a `[~]` carry is
       refused rather than overlooked.
+      **Re-verified 2026-09-30: still not met, and now correctly marked.** The written
+      half is unchanged and the word *tested* is still the one that is not satisfied.
+      What changed is the bookkeeping, not the verdict: this criterion and step 0.2 now
+      carry an inline `blocked-by: recovery-rehearsal-hard-floor` marker pointing at a
+      structured `## Blockers` entry that names the owner, the exact rehearsal commands,
+      and the `grep` that closes it. The 2026-09-27 live-ruleset finding referenced above
+      is itself superseded — the gate passes again (M19).
