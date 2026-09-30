@@ -47,9 +47,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { isScannable, scanText, type CommentFinding } from '../lint_code_comments.js';
 import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
-
-const EXIT_ALLOW = 0;
-const EXIT_WARN = 2;
+import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
 
 /** Findings named in the advisory line. The rest are counted, never listed. */
 export const MAX_REPORTED = 3;

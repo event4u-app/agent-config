@@ -115,9 +115,7 @@ import {
     selectForInjection,
 } from '../_lib/rule_injection.js';
 import { readHookStdin } from './hook_stdin.js';
-
-const EXIT_ALLOW = 0;
-const EXIT_WARN = 2;
+import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
 
 /**
  * Per-prompt injection ceiling, in UTF-8 BYTES.

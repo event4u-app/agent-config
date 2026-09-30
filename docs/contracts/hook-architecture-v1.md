@@ -402,6 +402,101 @@ change the dispatcher's exit code. The directory is gitignored and
 consumed by `task hooks-status` (Phase 7.11). Added in Round 2
 (2026-05-04) per Q1 of `tmp/council_round2/q1_feedback_channel.md`.
 
+## Plumbing — one mechanism per file class
+
+The files that decide **which** concern runs, on **which** host, under **which**
+budget are the hook plumbing. They are governed, and they are governed in two
+different ways, because they fail in two different ways.
+
+```
+A PLUMBING SOURCE CARRIES A RECORD. A PLUMBING BUILD OUTPUT CARRIES A DENY.
+NEVER A DENY ON A FILE PEOPLE EDIT ON PURPOSE — THAT IS A WEDGE.
+NEVER A RECORD ON A FILE WHOSE EVERY HAND EDIT IS A MISTAKE — THAT IS
+A RECORD OF A MISTAKE.
+```
+
+**Sources** — edited legitimately, so a diff to one carries a ratification
+artifact per [`ratification-artifact.md`](ratification-artifact.md), enforced in
+CI by `check_kernel_edit_ratified.ts` (`PLUMBING_SOURCE_RE`):
+
+| File | What it decides |
+|---|---|
+| `src/scripts/hook_manifest.yaml` | which concerns exist, their severity and `fail_closed`, and which host binds which slot |
+| `src/scripts/hooks/host_lowering.yaml` | how a verdict is lowered onto each host's native exit contract |
+| `src/scripts/hooks/*-dispatcher.sh` | the per-host trampolines that reach the dispatcher at all |
+| `src/config/hook-token-budget.json` | the per-concern injection ceiling |
+| `src/config/hook-latency-budget.json` | the per-slot latency ceiling the bench gate enforces |
+
+The asymmetry this closes: a concern **deleted** from the manifest is a refusal
+that stops happening, which is the same authority change as loosening the rule
+behind it — reached one file earlier, and until 2026-09-29 it carried no record
+while a typo in that rule did.
+
+**Build outputs** — no legitimate hand edit exists, so they are refused at
+tool-call time by `block_plumbing_writes.ts` (`PLUMBING_BUILD_OUTPUTS`):
+
+| File | Written by | Why a hand edit is never legitimate |
+|---|---|---|
+| `dist/hooks/dispatch.js` | `npm run build:hooks` | every concern is inlined here; an edit survives until the next build, reaches every dispatch meanwhile, and is invisible in a source review |
+| `hooks/hooks.json` | `condense.ts` via `task sync` | the host binding file; an edit here silently unbinds a guard |
+
+The guard refuses edit-tool envelopes and the shell write shapes in
+`_lib/shell_write_shapes.ts`. The legitimate builds pass because they reach
+these files through a build tool rather than through a redirect, an in-place
+`sed`, or a `tee`/`mv`/`cp` naming the path. Its declared residual — a write
+built inside an interpreter's own argument is not detected — is stated in the
+guard's header and pinned by its tests in both directions.
+
+Adding a file to either list is itself a governance change and carries its own
+ratification: the source list is watched by the gate that reads it, and the
+guard is a `src/scripts/hooks/block_*.ts` and therefore already gated.
+
+### Settings: the key is the unit, never the file
+
+A third file class sits beside the two above and takes a third mechanism, for a
+reason the split makes visible: a project settings file is edited legitimately
+many times a day AND carries a handful of keys that are policy dials. A deny on
+the file would wedge ordinary work; a record on the file would be a record of
+routine. So the fence is per KEY.
+
+```
+A CLASS C KEY IS REFUSED AT TOOL-CALL TIME. EVERY OTHER KEY IN THE SAME
+FILE STAYS AGENT-WRITABLE. USER-GLOBAL FILES ARE NEVER IN REACH.
+```
+
+`block_config_weakening.ts` classifies `.agent-settings.yml` and a host's
+`.claude/settings.json` as `class-c`, parses the document as it would stand
+AFTER the edit, diffs the leaf key paths, and refuses when any changed key
+resolves to C through `shared/settingsClasses.classOfPath` — the same shared
+classifier `settings:set` and the GUI write route already use, rather than a
+second copy of the rule. Class C is defined in
+[`settings-classes.md`](settings-classes.md), which ships in `files[]` and is
+therefore readable from a consumer install.
+
+Two states fail closed, both because the alternative is a bypass with no
+authorisation step in it: a class contract the guard cannot read leaves it
+unable to tell a C key from an A key, and a post-edit document it cannot parse
+leaves it with no key list at all. Either one refuses.
+
+What it does not see: an edit applied through a shell redirect rather than an
+edit tool. That is `block_plumbing_writes`' subject and its shapes are
+`_lib/shell_write_shapes.ts`; this guard's corpus is `EDIT_TOOLS`.
+
+### One exit-code table
+
+`src/scripts/hooks/exit_codes.ts` is the single definition of 0 / 1 / 2 / ≥3,
+with `owner` and `authorizedBy` per row — who decides a concern emits the code,
+and what authorises the dispatcher to act on it. Thirty-three files previously
+declared their own copies, and the numbers are not interchangeable across the
+boundary: 1 and 2 mean the opposite things on Claude Code from what they mean
+in this tree's internal language, which is why `host_semantics.ts` exists.
+`lint_exit_codes` refuses a bare numeral in `src/scripts/hooks/*.ts`.
+
+`EXIT_USAGE` sits beside the table and deliberately outside it: `dispatch_hook`
+and `replay_hook` are also CLIs, and exit 2 on their own bad argv by POSIX
+convention — a number that collides with `EXIT_WARN` by coincidence, not by
+meaning, since no concern has spoken at that point.
+
 ## Manifest schema — `scripts/hook_manifest.yaml`
 
 ```yaml
@@ -974,6 +1069,82 @@ maintainer / dev workflows. On `return None` the resolver writes a
 `dispatch-issues.jsonl` entry (Phase 1 contract) with
 `prerequisite_missing` so the user can discover the gap via
 `./agent-config hooks:doctor`.
+
+## Kill switches
+
+Every `AGENT_CONFIG_*` identifier the hook layer reads from the process
+environment, with the class of party that is expected to set it. One table so an
+operator disabling one behavior does not have to grep for the name, and so a
+reviewer can see at a glance which of these a human may legitimately set.
+
+**The measurement unit, stated because the count is the contract.** One distinct
+`AGENT_CONFIG_*` token appearing in a file under `src/scripts/hooks/` or
+`src/scripts/_lib/`. Reproduce it with:
+
+```bash
+grep -rhoE "AGENT_CONFIG_[A-Z_]+" src/scripts/hooks src/scripts/_lib \
+  | grep -vE '^AGENT_CONFIG_(BUNDLE|CLI_DELEGATE)__$' | sort -u | wc -l
+```
+
+**A gate keeps this equal, and it did not before.** `check_kill_switch_table`
+compares the SET of switches in the tree against the SET of rows here on every
+run — a set and not a count, because one switch added plus one row left behind
+for a deleted switch is the pair a count cannot see, and it is the pair that
+leaves a reader chasing a variable nothing reads. The table shipped at 28 == 28
+and was stale within a day: a merge brought in one hook carrying one new switch,
+and an independent review found it rather than a check. That is the argument for
+the gate.
+
+The two excluded names are esbuild `--define` identifiers
+(`__AGENT_CONFIG_BUNDLE__`, `__AGENT_CONFIG_CLI_DELEGATE__`, see
+`package.json`'s `build:*` scripts), not environment variables: nothing can set
+one at runtime, so neither is a switch. The naive filter `grep -v
+__AGENT_CONFIG_BUNDLE__` does **not** remove the first of them — `grep -o` emits
+the match without its leading underscores — which is why the exclusion above is
+anchored on the emitted token instead.
+
+**Owner classes.** `maintainer` — a bypass a human may set knowingly, one
+command or one run. `harness` — set by this package's own wrapper, dispatcher or
+installer; a human setting it by hand is a debugging act, not a supported
+configuration. `orphan` — the name survives only in prose; nothing reads it.
+
+| Switch | Owner | What it does | Read at |
+|---|---|---|---|
+| `AGENT_CONFIG_ALLOW_SPEAKING_INBOX` | maintainer | Lets a write into the speaking-inbox directory through the PreToolUse block | `hooks/block_speaking_inbox_dir.ts:79` |
+| `AGENT_CONFIG_DEPLOY_INVENTORY` | harness | Path override for the global deploy inventory | `_lib/global_deploy_inventory.ts:61` |
+| `AGENT_CONFIG_DEV_MODE` | maintainer | Maintainer dev mode; forces `--scope=project` and is captured into the corpus manifest | `_lib/corpus_manifest.ts:89` |
+| `AGENT_CONFIG_DISABLE_HOOKS` | maintainer | Bypasses every shim for one command | `_lib/runtime_wiring_checks.ts:315` |
+| `AGENT_CONFIG_EXEC_EVIDENCE` | maintainer | One-run opt-in to execution-evidence collection | `_lib/exec_evidence.ts:199` |
+| `AGENT_CONFIG_HOOKS_ISOLATED` | maintainer | `=1` forces every concern into a child process instead of the in-process fast path | `hooks/dispatch_hook.ts:690` |
+| `AGENT_CONFIG_INSTALLED_LOCK` | harness | Path override for the installed lockfile | `_lib/installed_lock.ts:56` |
+| `AGENT_CONFIG_INSTALLED_TOOLS` | harness | Path override for the installed-tools manifest | `_lib/installed_tools.ts:46` |
+| `AGENT_CONFIG_LEGACY_ANCHOR` | maintainer | Opts a settings read back onto the legacy anchor | `_lib/agent_settings.ts:449` |
+| `AGENT_CONFIG_MEMORY_DIR` | harness | Directory override for memory recall | `hooks/memory_recall_hook.ts:309` |
+| `AGENT_CONFIG_NO_EVENTS_LOG` | maintainer | Short-circuits council / team event-log appends to a no-op | `_lib/env_kill_switch.ts` names it; the readers are `ai_council/events_log.ts:109` and `ai_team/review_gate.ts:56`, both outside the two directories the unit covers |
+| `AGENT_CONFIG_NO_PIN_REEXEC` | maintainer | Suppresses the pin re-exec | `_lib/pin_resolver.ts:43` |
+| `AGENT_CONFIG_NO_RUN_CONTINUATION` | maintainer | `=1` makes the run-continuation concern allow unconditionally | `hooks/run_continuation_hook.ts:1018` |
+| `AGENT_CONFIG_NO_UPDATE_CHECK` | maintainer | `=1` suppresses the update-availability check | `_lib/update_check.ts:239` |
+| `AGENT_CONFIG_PACKAGE_ROOT` | harness | The package root the dispatcher hands each concern | `hooks/dispatch_hook.ts:647` |
+| `AGENT_CONFIG_PACKAGE_VERSION` | harness | Version stamped into telemetry | `hooks/telemetry_usage_hook.ts:177` |
+| `AGENT_CONFIG_PHP_SERVICE` | maintainer | Compose service the `php` shim runs in (default `php`) | `hooks/shims/php:84` |
+| `AGENT_CONFIG_PIN_REEXEC_DEPTH` | harness | Re-exec depth counter, set by the re-exec itself | `_lib/pin_resolver.ts:44` |
+| `AGENT_CONFIG_PROJECTION_MODE` | maintainer | Projection mode, captured into the corpus manifest | `_lib/corpus_manifest.ts:91` |
+| `AGENT_CONFIG_PROJECT_ROOT` | harness | Wrapper-pinned project root for the settings cascade | `_lib/agent_settings.ts:699` |
+| `AGENT_CONFIG_REPLAY` | maintainer | `=1` replay mode — state writes and emitters stand down | `hooks/replay_hook.ts:61` |
+| `AGENT_CONFIG_ROOT_OVERRIDE` | maintainer | Overrides the resolved root for a settings read | `_lib/agent_settings.ts:700` |
+| `AGENT_CONFIG_SCOPE` | maintainer | Install scope, captured into the corpus manifest | `_lib/corpus_manifest.ts:90` |
+| `AGENT_CONFIG_SESSION_ID` | harness | Package-side session id, ahead of the host's own | `_lib/collector_denominator.ts:519` |
+| `AGENT_CONFIG_SESSION_ROLE` | harness | Marks a spawn `worker`; unset, empty or unknown fails open to `orchestrator` | `_lib/session_role.ts:28` |
+| `AGENT_CONFIG_SKIP_METADATA_GATE` | maintainer | Bypasses the pre-push metadata gate | `hooks/prepush_metadata_sources.sh:29` |
+| `AGENT_CONFIG_TOOL_BYTE_CENSUS` | maintainer | `=1` opts a consumer into the tool-result byte census, which is otherwise written only inside the maintainer workspace | `hooks/tool_result_bytes_hook.ts:218` |
+| `AGENT_CONFIG_SURFACE` | harness | Explicit surface, for a caller that already knows it | `_lib/surface.ts:47` |
+| `AGENT_CONFIG_TRANSCRIPT_HOME` | orphan | Nothing reads it. The name survives in one comment in `hooks/turn_end_gate_hook.ts:1314` recording a widening this switch used to cause, and the switch itself is gone. Kept as a row so the count above stays reproducible, and marked so nobody sets it expecting an effect | — |
+
+**What this table is not.** It is not an authorization list: a switch being
+`maintainer`-class says a human is the expected setter, never that setting it is
+free. A bypass of a safety floor stays governed by
+[`non-destructive-by-default`](../../src/rules/non-destructive-by-default.md)
+whichever variable spells it.
 
 ## Stability
 

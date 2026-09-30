@@ -41,13 +41,19 @@
 import path from 'node:path';
 import process from 'node:process';
 
+import { readHookStdin } from './hook_stdin.js';
+// The WRITER's own root resolver, imported rather than re-derived. A second
+// spelling of "which tree is this" is how a reader comes to address a ledger
+// the writer never wrote — which is the defect this whole file is repairing,
+// one field over.
+import { workspaceRoot as writerWorkspaceRoot } from './rule_inject_hook.js';
+
 import { may_refuse_on } from '../_lib/obligation_frequency.js';
 import { appendShadow, readDelivered, readDischarged, stamp } from '../_lib/obligations.js';
 import { loadRouter, matchTierRules } from '../_lib/rule_injection.js';
 import { gitNumstatRows, isDocPath, untrackedNonDocFiles } from './end_review_nudge_hook.js';
 import { openRecordStats } from './subagent_ledger_hook.js';
-
-const EXIT_ALLOW = 0;
+import { EXIT_ALLOW } from './exit_codes.js';
 
 /**
  * Every non-doc path this turn wrote, tracked or not.
@@ -142,9 +148,144 @@ export function shouldContinue(attempt: number): boolean {
     return attempt <= 1;
 }
 
-export function main(): number {
-    const root = process.cwd();
-    const session = (process.env['CLAUDE_CODE_SESSION_ID'] ?? '').trim();
+/**
+ * The session and root this reading is about, resolved the way the WRITER does.
+ *
+ * THE DEFECT THIS EXISTS TO CLOSE. This hook used to read
+ * `CLAUDE_CODE_SESSION_ID` out of the process environment and return allow when
+ * it was empty. The dispatcher sets no such variable — it hands each concern
+ * the envelope on stdin and `AGENT_CONFIG_PACKAGE_ROOT` in the environment,
+ * nothing else — so on every dispatched stop event the reader looked for a
+ * ledger under a key the writer never used. Measured 2026-09-29 on this
+ * machine's own ledgers: 187 delivered rows, 0 shadow rows, across 8 sessions.
+ *
+ * WHY THE ORDER IS ENVELOPE-THEN-ENVIRONMENT AND NOT THE REVERSE. The envelope
+ * id is the key `rule_inject_hook.ts` wrote the delivered rows under, so it is
+ * not merely the better source — it is the ONLY one that can find them. The
+ * environment fallback survives for a raw invocation that carries no envelope
+ * at all (a maintainer piping nothing, a host shim that skips the dispatcher),
+ * which is a case where guessing wrong costs a missing reading rather than a
+ * wrong one.
+ *
+ * THE ROOT IS PART OF THE SAME JOIN, not a second change riding along. A ledger
+ * is addressed by root AND session; reading the session from the envelope while
+ * taking the root from `process.cwd()` would leave the pair half-joined, and the
+ * two disagree exactly on the hosts whose shim does not chdir. `cwd` stays the
+ * fallback because that is what the dispatcher sets it to.
+ *
+ * Both spellings of each key are accepted because the injector accepts both.
+ */
+export function resolveSettleContext(
+    envelope: Record<string, unknown>,
+    payload: Record<string, unknown>,
+    env: Record<string, string | undefined>,
+): { root: string; session: string } {
+    const str = (...values: unknown[]): string => {
+        for (const v of values) {
+            if (typeof v === 'string' && v.trim() !== '') return v.trim();
+        }
+        return '';
+    };
+    return {
+        // `workspaceRoot` is the INJECTOR's function, not a copy of it. It reads
+        // `workspace` / `cwd` / `project_dir`; this file used to read
+        // `workspace_root` / `workspace` / `cwd`, so the two key sets overlapped
+        // without matching and the pair was joined on the session only. It
+        // happened to agree on both real envelope shapes — the dispatcher sets
+        // `workspace_root` and chdirs concerns to it, a native wiring passes
+        // `cwd` — which made the asymmetry a property of today's envelopes
+        // rather than of the code. `workspace_root` is appended ahead of the
+        // shared resolver because the dispatcher is the only producer that sets
+        // it and nothing else reads it.
+        root:
+            str(envelope['workspace_root'])
+            || writerWorkspaceRoot(envelope as Parameters<typeof writerWorkspaceRoot>[0]),
+        session: str(
+            envelope['session_id'],
+            envelope['sessionId'],
+            payload['session_id'],
+            payload['sessionId'],
+            // The one pre-existing source, kept as the last resort and NOT
+            // joined by siblings: adding a name the writer never keys on
+            // would address a ledger that cannot exist.
+            env['CLAUDE_CODE_SESSION_ID'],
+        ),
+    };
+}
+
+/**
+ * The session id the WRITER would have used, for the ledger nobody reads.
+ *
+ * `rule_inject_hook.ts` defaults an unnamed session to the literal `unknown`
+ * and writes delivered rows there; this reader used to return `''` and allow, so
+ * that population was invisible to every reading of the bar. Reported rather
+ * than silently joined: a shared `unknown` bucket aggregates unrelated sessions,
+ * so reading it as one session's turn would be worse than not reading it. The
+ * constant is exported so a future census can count what is sitting there.
+ */
+export const WRITER_UNNAMED_SESSION = 'unknown';
+
+/** The envelope on stdin, or an empty object when there is none to read. */
+function readEnvelope(): { envelope: Record<string, unknown>; payload: Record<string, unknown> } {
+    let envelope: Record<string, unknown> = {};
+    try {
+        const raw = readHookStdin();
+        const parsed: unknown = raw.trim() === '' ? {} : JSON.parse(raw);
+        if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+            envelope = parsed as Record<string, unknown>;
+        }
+    } catch {
+        // A malformed envelope is not a reason to refuse, and this concern
+        // refuses nothing anyway. It is a reason to read nothing from it.
+    }
+    const nested = envelope['payload'];
+    const payload =
+        typeof nested === 'object' && nested !== null && !Array.isArray(nested)
+            ? (nested as Record<string, unknown>)
+            : envelope;
+    return { envelope, payload };
+}
+
+/**
+ * The resolver as it stood BEFORE the join fix, kept reachable for one test.
+ *
+ * A reproduction that cannot run the old code is not a reproduction — it is an
+ * assertion about the new function's behavior on inputs nobody sends, and
+ * `tests/hooks/obligation_settle.test.ts` carried exactly that until an
+ * independent review named it. This function is dead on every production path
+ * (nothing but the fixture calls it) and exists so the defect stays executable:
+ * environment-only resolution, allow when empty, root from the cwd.
+ */
+export function resolveSettleContextPreFix(
+    _envelope: Record<string, unknown>,
+    _payload: Record<string, unknown>,
+    env: Record<string, string | undefined>,
+): { root: string; session: string } {
+    // Same arity as the live resolver ON PURPOSE. A narrower signature would let
+    // the fixture pass the envelope in as `env`, where the lookup misses for the
+    // wrong reason and the test goes green without exercising the defect.
+    return { root: process.cwd(), session: (env['CLAUDE_CODE_SESSION_ID'] ?? '').trim() };
+}
+
+/**
+ * Which context resolver this reading uses — the seam the pre-fix fixture needs.
+ *
+ * It is NOT a parameter of `main()`, and that is a contract rather than a
+ * preference: `concern_main_signature` requires every concern's `main()` to take
+ * argv first or nothing, because the dispatcher calls `main(argv)` — so a
+ * resolver in first position would receive an argv array at runtime and resolve
+ * a session from it. Caught by that test, which is the reason this indirection
+ * exists instead of the obvious default parameter.
+ */
+export type SettleResolver = (
+    envelope: Record<string, unknown>,
+    payload: Record<string, unknown>,
+    env: Record<string, string | undefined>,
+) => { root: string; session: string };
+
+export function runSettle(resolve: SettleResolver = resolveSettleContext): number {
+    const { envelope, payload } = readEnvelope();
+    const { root, session } = resolve(envelope, payload, process.env);
     if (session === '') return EXIT_ALLOW;
 
     let verdict: SettleVerdict;
@@ -174,6 +315,11 @@ export function main(): number {
             + `${shouldContinue(attempt) ? '' : ' — unchanged since the last reading; still open'}\n`,
     );
     return EXIT_ALLOW;
+}
+
+/** The dispatcher entry point. Argv-shaped, per `concern_main_signature`. */
+export function main(_argv: readonly string[] = process.argv.slice(2)): number {
+    return runSettle();
 }
 
 // Bundle-safety: never auto-run when inlined into an esbuild bundle.

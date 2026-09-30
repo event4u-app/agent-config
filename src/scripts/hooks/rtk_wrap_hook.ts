@@ -63,10 +63,9 @@ import {
 } from "./block_no_verify.js";
 import { readHookStdin } from "./hook_stdin.js";
 import { detectRtkCached } from "../../install/rtkDetection.js";
+import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
 
 const SETTINGS_FILE = ".agent-settings.yml";
-const EXIT_ALLOW = 0;
-const EXIT_WARN = 2;
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
 type JsonObject = { [k: string]: JsonValue };

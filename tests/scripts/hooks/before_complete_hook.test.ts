@@ -4,7 +4,12 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { run, statePathFor } from '../../../src/scripts/before_complete_hook.js';
+import {
+    MAX_VERIFICATION_RUNS_PER_TURN,
+    RUN_OUTPUT_TAIL_BYTES,
+    run,
+    statePathFor,
+} from '../../../src/scripts/before_complete_hook.js';
 
 /**
  * Read one SESSION's state, through the producer's own path builder.
@@ -279,5 +284,191 @@ describe('verify_before_complete — ci_last (round 7)', () => {
         const ci = state(tmp)['ci_last'] as Record<string, unknown>;
         expect(ci['settled']).toBe(false);
         expect(ci['command']).toContain('gh pr checks');
+    });
+});
+
+/**
+ * The run records a stop gate reads instead of the command text.
+ *
+ * `last_verification` already answered "what was the most recent verification".
+ * These assert the thing it cannot: EVERY run of the turn, each with the exit
+ * code the host reported and its position in the turn's edit sequence. The
+ * position is what makes "a pass followed the last edit" answerable without a
+ * clock.
+ */
+describe('verify_before_complete — verification_runs (round 8)', () => {
+    function post(command: string, response: Record<string, unknown>): string {
+        return envelope('claude', 'post_tool_use', {
+            tool_name: 'Bash',
+            tool_input: { command },
+            tool_response: response,
+        });
+    }
+
+    function edit(path_: string): string {
+        return envelope('claude', 'post_tool_use', {
+            tool_name: 'Edit',
+            tool_input: { file_path: path_ },
+            tool_response: { stdout: '' },
+        });
+    }
+
+    function runs(root: string): Record<string, unknown>[] {
+        return state(root)['verification_runs'] as Record<string, unknown>[];
+    }
+
+    it('records one entry with exit_code 0 and runner vitest for a passing vitest run', () => {
+        run(envelope('claude', 'user_prompt_submit', {}), { consumer_root: tmp });
+        run(
+            post('npx vitest run tests/scripts/verification_evidence.test.ts', {
+                exit_code: 0,
+                stdout: ' Tests  36 passed (36)\n',
+            }),
+            { consumer_root: tmp },
+        );
+
+        const r = runs(tmp);
+        expect(r).toHaveLength(1);
+        expect(r[0]!['exit_code']).toBe(0);
+        expect(r[0]!['runner']).toBe('vitest');
+        expect(r[0]!['stdout_tail']).toContain('36 passed');
+        expect(r[0]!['command']).toContain('vitest');
+    });
+
+    it('leaves last_verification and its counters in place beside the run record', () => {
+        run(envelope('claude', 'user_prompt_submit', {}), { consumer_root: tmp });
+        run(post('npm test', { exit_code: 0, stdout: ' Tests  4 passed (4)\n' }), {
+            consumer_root: tmp,
+        });
+
+        const s = state(tmp);
+        expect((s['last_verification'] as Record<string, unknown>)['counted']).toBe(true);
+        expect(s['verifications_this_turn']).toBe(1);
+        expect(s['verification_runs']).toHaveLength(1);
+    });
+
+    it('records a run the legacy counter selector does not recognise, and leaves the counter alone', () => {
+        // The two selectors differ, deliberately. `npx vitest run` is outside
+        // `_VERIFICATION_RE` — the recorder's counter pattern knows `npm test`
+        // and `pytest`, not a bare runner behind `npx` — while the gate's
+        // selector admits it. Widening the counter pattern would silently move
+        // `verifications_this_turn` and the FC-3b `ci_last` discrimination,
+        // which have pinned meanings; widening only the RECORD path moves
+        // nothing, because a record decides nothing until `classifyRun` judges it.
+        run(envelope('claude', 'user_prompt_submit', {}), { consumer_root: tmp });
+        run(post('npx vitest run', { exit_code: 0, stdout: ' Tests  4 passed (4)\n' }), {
+            consumer_root: tmp,
+        });
+
+        const s = state(tmp);
+        expect(s['verification_runs']).toHaveLength(1);
+        expect(s['last_verification']).toBeNull();
+        expect(s['verifications_this_turn']).toBe(0);
+    });
+
+    it('records a command the classifier will reject, so the gate can tell it from silence', () => {
+        // `echo test` matches the gate's selector (the word `test` is in it).
+        // The record exists precisely so a reader can distinguish "the turn ran
+        // a non-verification command" from "the turn ran nothing".
+        run(envelope('claude', 'user_prompt_submit', {}), { consumer_root: tmp });
+        run(post('echo test', { exit_code: 0, stdout: 'test\n' }), { consumer_root: tmp });
+
+        expect(runs(tmp)).toHaveLength(1);
+        expect(runs(tmp)[0]!['command']).toBe('echo test');
+    });
+
+    it('writes exit_code null when the host surfaces none, never 0', () => {
+        // The single most dangerous normalisation available here: a recorder
+        // that wrote 0 for "the host said nothing" would manufacture the
+        // strongest possible evidence out of silence.
+        run(envelope('claude', 'user_prompt_submit', {}), { consumer_root: tmp });
+        run(post('npx vitest run', { stdout: ' Tests  4 passed (4)\n' }), { consumer_root: tmp });
+
+        expect(runs(tmp)[0]!['exit_code']).toBeNull();
+    });
+
+    it('reads a nonzero exit code out of the tool response', () => {
+        run(envelope('claude', 'user_prompt_submit', {}), { consumer_root: tmp });
+        run(post('npx vitest run', { exit_code: 1, stdout: ' Tests  1 failed (1)\n' }), {
+            consumer_root: tmp,
+        });
+
+        expect(runs(tmp)[0]!['exit_code']).toBe(1);
+    });
+
+    it('places each run after the edits that preceded it', () => {
+        run(envelope('claude', 'user_prompt_submit', {}), { consumer_root: tmp });
+        run(edit('/work/a.ts'), { consumer_root: tmp });
+        run(post('npx vitest run', { exit_code: 0, stdout: ' Tests  4 passed (4)\n' }), {
+            consumer_root: tmp,
+        });
+        run(edit('/work/b.ts'), { consumer_root: tmp });
+        run(post('npx tsc --noEmit', { exit_code: 0, stdout: '' }), { consumer_root: tmp });
+
+        const r = runs(tmp);
+        expect(r).toHaveLength(2);
+        expect(r[0]!['after_edits']).toBe(1);
+        expect(r[1]!['after_edits']).toBe(2);
+        expect(state(tmp)['edits_this_turn']).toBe(2);
+    });
+
+    it('resets the runs and the edit counter at a turn boundary', () => {
+        run(envelope('claude', 'user_prompt_submit', {}), { consumer_root: tmp });
+        run(edit('/work/a.ts'), { consumer_root: tmp });
+        run(post('npx vitest run', { exit_code: 0, stdout: ' Tests  4 passed (4)\n' }), {
+            consumer_root: tmp,
+        });
+        expect(runs(tmp)).toHaveLength(1);
+
+        run(envelope('claude', 'user_prompt_submit', {}), { consumer_root: tmp });
+        expect(runs(tmp)).toHaveLength(0);
+        expect(state(tmp)['edits_this_turn']).toBe(0);
+    });
+
+    it('keeps the newest records when a turn runs more than the cap', () => {
+        run(envelope('claude', 'user_prompt_submit', {}), { consumer_root: tmp });
+        for (let i = 0; i < MAX_VERIFICATION_RUNS_PER_TURN + 3; i += 1) {
+            run(post(`npx vitest run case-${i}`, { exit_code: 0, stdout: ' Tests  1 passed (1)\n' }), {
+                consumer_root: tmp,
+            });
+        }
+        const r = runs(tmp);
+        expect(r).toHaveLength(MAX_VERIFICATION_RUNS_PER_TURN);
+        expect(r[r.length - 1]!['command']).toContain(`case-${MAX_VERIFICATION_RUNS_PER_TURN + 2}`);
+    });
+
+    it('truncates a very long tool output to the record tail budget', () => {
+        run(envelope('claude', 'user_prompt_submit', {}), { consumer_root: tmp });
+        const noise = 'x'.repeat(RUN_OUTPUT_TAIL_BYTES * 3);
+        run(post('npx vitest run', { exit_code: 0, stdout: `${noise}\n Tests  4 passed (4)\n` }), {
+            consumer_root: tmp,
+        });
+
+        const tail = runs(tmp)[0]!['stdout_tail'] as string;
+        expect(tail.length).toBeLessThanOrEqual(RUN_OUTPUT_TAIL_BYTES);
+        // The SUMMARY survives — it is at the end, which is why the tail is kept
+        // rather than the head.
+        expect(tail).toContain('4 passed');
+    });
+
+    it('records nothing for a tool call that is not a verification command', () => {
+        run(envelope('claude', 'user_prompt_submit', {}), { consumer_root: tmp });
+        run(post('git status --short', { exit_code: 0, stdout: '' }), { consumer_root: tmp });
+        expect(runs(tmp)).toHaveLength(0);
+    });
+
+    it('counts an edit under each platform name for the same three tools', () => {
+        run(envelope('claude', 'user_prompt_submit', {}), { consumer_root: tmp });
+        for (const tool of ['str-replace-editor', 'save-file', 'write_to_file']) {
+            run(
+                envelope('augment', 'post_tool_use', {
+                    tool_name: tool,
+                    tool_input: { path: '/work/a.ts' },
+                    tool_response: { stdout: '' },
+                }),
+                { consumer_root: tmp },
+            );
+        }
+        expect(state(tmp)['edits_this_turn']).toBe(3);
     });
 });

@@ -1428,6 +1428,14 @@ gates:
     status: enforced
     no_canary_reason: "The gate carries its own `--self-test` (5 cases, 3 rejecting) — so this row is an adopter, not an exemption; the reason field states why a PLANTED canary is additionally unavailable. Beyond the self-test the negative controls are the 30 mechanism tests in tests/scripts/check_claims.test.ts (17) and tests/scripts/check_claims_retired_phrasings.test.ts (13), each building a throwaway tree and running the real script in it. Twenty-one assert a REJECTION, and one publishes the LITERAL historical string (`zero runtime daemon`) that shipped in package.json and .github/about.yml while claim:no-runtime-daemon was already withdrawn. A planted canary here would mean committing a retired phrasing to a real publish surface and removing it again, and a forgotten one is precisely the defect this gate exists to catch."
 
+  - id: check_kill_switch_table
+    argv: []
+    ci_invocation: .github/workflows/rule-backstops.yml
+    min_scanned: 3
+    corpus: "the three ledger targets this gate resolves — the tree enumeration over `src/scripts/hooks/` and `src/scripts/_lib/` (419 files, 29 switches at registration), the table's row set in `docs/contracts/hook-architecture-v1.md` § Kill switches (29 rows), and the set comparison between them. The FILE count is separately floored by `assertScanned`, which refuses a run that read zero source files, so a moved root fails rather than reporting an empty tree as agreement with an empty table."
+    status: enforced
+    no_canary_reason: "The gate carries its own `--self-test` (6 cases, 4 rejecting), run as its own CI step: a switch with no row, a row with no switch, one-added-plus-one-stale (which a COUNT comparison would pass and a set comparison must not), and a missing section — plus two ACCEPT cases pinning that the two esbuild `--define` identifiers stay excluded, so a gate that started rejecting everything would not pass either. A planted canary would mean committing a fake `AGENT_CONFIG_*` read into a real hook file and removing it again, and a forgotten one is an environment variable in the shipped hook layer that nothing reads — the exact defect this gate exists to catch, left behind by its own canary."
+
   - id: check_rule_evidence_declaration
     argv: []
     min_scanned: 10
@@ -3011,6 +3019,48 @@ gates:
       nothing. End to end by hand on 2026-09-29: restoring `.cursorrules` into
       the committed Cursor row exits 1 naming that row and that token, and the
       restore exits 0.
+
+  - id: lint_deny_text
+    argv: []
+    ci_invocation: .github/workflows/consistency.yml
+    min_scanned: 5
+    corpus: "the `severity: blocking` concerns in src/scripts/hook_manifest.yaml, read from the manifest rather than listed in the gate (9 at baseline)"
+    status: enforced
+    no_canary_reason: >-
+      the corpus is derived from one manifest at a fixed path and the canary
+      contract is create-only. A planted extra concern file is out of scope
+      unless the manifest also names it, and every violation this gate can have
+      is a MODIFICATION — a refusal message edited to name the switch that
+      turns the guard off. Discrimination is proven by `--self-test` instead
+      (7 cases, 3 rejecting: an env assignment with its value, an `export`
+      line, a settings key in prose, and — the direction that matters for a
+      young pattern gate — a bare settings key used as a LOOKUP, which must
+      pass, because a rule that fired on it would fire on every concern that
+      reads its own configuration). An empty corpus is refused by
+      `assertScanned` before the verdict, so a manifest whose `severity:` key
+      was renamed fails rather than certifying zero concerns clean.
+
+  - id: lint_exit_codes
+    argv: []
+    ci_invocation: .github/workflows/consistency.yml
+    min_scanned: 40
+    corpus: "every `.ts` under src/scripts/hooks/ except `exit_codes.ts` itself, which is where the numerals are defined (59 at baseline)"
+    status: enforced
+    no_canary_reason: >-
+      the canary contract is create-only, and a planted hook file carrying a
+      bare `process.exit(1)` WOULD be a legitimate violation the gate is right
+      to report — so a create-only canary here proves detection, not
+      discrimination, and the interesting direction is the opposite one: an
+      imported name must PASS. Discrimination is proven by `--self-test`
+      instead (6 cases, 4 rejecting: a bare deny numeral, a bare allow numeral
+      — `0` is the one people assume is harmless — a call with whitespace
+      inside it, and an empty corpus; against two accepting cases, an imported
+      name and the table file, whose fixture plants a bare exit into
+      `exit_codes.ts` every run so the one exclusion is exercised rather than
+      asserted). What a green does NOT cover is stated in the gate's header: it
+      accepts an identifier without resolving where the identifier came from, so
+      a local `const EXIT_BLOCK = 1` shadowing the import passes this gate and
+      is caught in review as a duplicate declaration.
 
   - id: check_release_holds
     argv: ['--lint']
