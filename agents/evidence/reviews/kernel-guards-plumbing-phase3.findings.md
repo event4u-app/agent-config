@@ -87,7 +87,7 @@ risk in the ledger that the evidence says is not there.
 `docs/contracts/hook-architecture-v1.md § Kill switches` in `4bd8345` — by the
 pre-push gate refusing the first push over exactly this — and
 `check_kill_switch_table` reports `30 switch(es) in 426 file(s), 30 table
-row(s), sets equal`. The seat inferred a `src/config/dispatch-killswitches.json`
+row(s), sets equal`. The seat inferred a `src/config/dispatch-killswitches.json` <!-- ref-ignore -->
 that does not exist in this tree.
 
 **The stamp cache should be keyed by Node version**
