@@ -335,23 +335,42 @@ consecutive refusals from the same detector on one turn**, allow the turn to end
 record a detector-fault record, and keep the other detectors armed. It does not
 demote the detector and contributes nothing to Q1 or Q2.
 
-On today's gate this valve is unreachable for the same reason Q1 is — the
-re-entrancy layers cap a turn at one refusal — so it is registered against the
-instrumented gate the next clause describes, and is stated as unreachable rather
-than implied to be live.
+On today's gate this valve is unreachable — the re-entrancy layers cap a turn
+at one refusal — so it is registered against the instrumented gate the next
+clause describes, and is stated as unreachable rather than implied to be live.
+This used to read "unreachable for the same reason Q1 is", and the two reasons
+parted company on 2026-09-30: the shadow read now records what a retry *would*
+have been refused for, so Q1's obstacle is a missing reader while this valve's
+is still the cap itself. A shadow row is not a refusal and cannot reach three
+of them.
 
 ## The two instruments this standard is waiting on
 
-Neither ships here; both are named so the standard is falsifiable rather than
-aspirational.
+Both are named so the standard is falsifiable rather than aspirational. The
+first now ships; the second does not, and Q1 is still inert because a producer
+without a reader is not a measurement.
 
-1. **A shadow read on the allow path.** On layers 1 and 2, run the detectors
-   without acting on them and record which *would* have fired again, as
-   `would_refuse_again` counts on the session record. The verdict stays
-   `EXIT_ALLOW`, so it cannot wedge a turn — this is the `would_fire` shadow
-   mechanism [`concern-activation-policy`](concern-activation-policy.md)
+1. **A shadow read on the allow path — SHIPPED 2026-09-30**
+   (`road-to-a-stop-that-holds` step 2.1). On layers 1 and 2 the gate runs the
+   detectors without acting on them and records which *would* have fired again.
+   The verdict stays `EXIT_ALLOW`, so it cannot wedge a turn — this is the
+   `would_fire` shadow mechanism
+   [`concern-activation-policy`](concern-activation-policy.md)
    § *Deriving a threshold* already prescribes, applied to a gate that shipped
-   before it. Without this, Q1 stays inert.
+   before it.
+
+   **Two facts a reader of the paragraph above would otherwise get wrong.**
+   The rows do NOT live "on the session record": they live in a sibling file,
+   `agents/runtime/state/turn-end-gate/<key>.shadow.json`, because
+   `refused_turn` on the refusal record is the re-entrancy wedge guard and a
+   Layer-1 retry can occur with no refusal by this gate at all — writing there
+   would have meant synthesising that field or loosening the parser that
+   protects it. And the record carries `retries_observed` beside the rows,
+   because an empty row list cannot otherwise be told apart from "no retry
+   happened", which are opposite readings of the same file.
+
+   **Q1 is still inert**, and shipping the producer did not change that. Its
+   reader is instrument 2, and a numerator nothing prints is not a number.
 2. **A per-detector rollup over eligible records**, reporting Q2 with its
    affected-session denominator and its sample-floor status per detector, so a
    reading is a command's output rather than a hand count. It carries three

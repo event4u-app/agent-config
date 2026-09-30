@@ -40,6 +40,14 @@ import {
     type ToolCall,
 } from '../../src/scripts/hooks/turn_end_gate_hook.js';
 import {
+    foldShadow,
+    parseShadowRecord,
+    readShadowRecord,
+    sessionRefusalFile,
+    SHADOW_MAX_ROWS,
+    type ShadowRecord,
+} from '../../src/scripts/_lib/turn_end_refusals.js';
+import {
     run as beforeCompleteRun,
     statePathFor as ciStatePathFor,
 } from '../../src/scripts/before_complete_hook.js';
@@ -1113,6 +1121,229 @@ function runDispatcher(workspace: string, transcriptPath: string, home: string):
     );
     return { status: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
 }
+
+/**
+ * The Q1 instrument — `road-to-a-stop-that-holds` step 2.1.
+ *
+ * `turn-end-detector-demotion.md` § Q1 asks what share of the turns the gate
+ * ALLOWS on a re-entrancy layer would have been refused again. Before this
+ * step the answer was structurally unobtainable: both layers returned
+ * `EXIT_ALLOW` and left no trace, so a detector that fired twice and one
+ * satisfied on the second pass produced byte-identical state.
+ *
+ * The verdict half is asserted in every case below, because the instrument is
+ * only safe while it changes nothing: a shadow read that could turn an allow
+ * into a refusal would be a SECOND refusal, which is exactly what the two
+ * layers exist to prevent.
+ */
+describe('the shadow read on the allow path — step 2.1', () => {
+    function shadowOf(dir: string): ShadowRecord | null {
+        return readShadowRecord(dir, deriveSessionKey(GATE_SESSION_ID));
+    }
+
+    it('LAYER 1: a retry that still promises is allowed AND leaves a would_refuse_again row', () => {
+        const { dir, home } = makeGateWorkspace();
+        const t = writeTranscript(home, ['mach weiter'], PROMISE);
+        const r = runHook(dir, envelopeJson(dir, t, { stop_hook_active: true }), home);
+
+        expect(r.status, r.stderr).toBe(0);
+        expect(r.stderr).toBe('');
+
+        const rec = shadowOf(dir);
+        expect(rec, 'no shadow record was written on the layer-1 allow').not.toBeNull();
+        expect(rec?.retries_observed).toBe(1);
+        expect(rec?.would_refuse_again).toHaveLength(1);
+        expect(rec?.would_refuse_again[0]?.detector).toBe('promissory');
+        expect(rec?.would_refuse_again[0]?.layer).toBe('stop_hook_active');
+        expect(rec?.would_refuse_again[0]?.turn).toBe(1);
+    });
+
+    it('LAYER 2: the second stop of a refused turn is allowed AND recorded', () => {
+        const { dir, home } = makeGateWorkspace();
+        const first = runHook(dir, envelopeJson(dir, writeTranscript(home, ['mach weiter'], PROMISE)), home);
+        expect(first.status, first.stderr).toBe(1);
+        // The initial refusal is not a retry and must leave no shadow row —
+        // otherwise Q1's numerator counts the refusal it is measured against.
+        expect(shadowOf(dir)).toBeNull();
+
+        // `stop_hook_active` deliberately absent: layer 2 alone.
+        const second = runHook(
+            dir,
+            envelopeJson(dir, writeTranscript(home, ['mach weiter'], 'Ok.\n\nIch melde mich gleich.')),
+            home,
+        );
+        expect(second.status, second.stderr).toBe(0);
+
+        const rec = shadowOf(dir);
+        expect(rec?.would_refuse_again).toHaveLength(1);
+        expect(rec?.would_refuse_again[0]?.layer).toBe('refused_turn');
+        expect(rec?.would_refuse_again[0]?.detector).toBe('promissory');
+    });
+
+    /**
+     * The case that makes Q1 a RATE rather than a tautology.
+     *
+     * A writer that appended a row on every retry would pass both tests above
+     * and report Q1 = 1 forever. A retry whose detectors all come back silent
+     * has to raise the denominator and add nothing — that is the only shape in
+     * which Q1 can read below 1, so it is the shape a sabotage would remove.
+     */
+    it('a retry that came back CLEAN raises retries_observed and adds no row', () => {
+        const { dir, home } = makeGateWorkspace();
+        const t = writeTranscript(home, ['mach weiter'], CLEAN);
+        const r = runHook(dir, envelopeJson(dir, t, { stop_hook_active: true }), home);
+
+        expect(r.status, r.stderr).toBe(0);
+        const rec = shadowOf(dir);
+        expect(rec, 'a clean retry still has to be counted').not.toBeNull();
+        expect(rec?.retries_observed).toBe(1);
+        expect(rec?.would_refuse_again).toHaveLength(0);
+    });
+
+    it('an ordinary refused turn writes NO shadow file — the instrument is retries only', () => {
+        const { dir, home } = makeGateWorkspace();
+        const r = runHook(dir, envelopeJson(dir, writeTranscript(home, ['mach weiter'], PROMISE)), home);
+        expect(r.status, r.stderr).toBe(1);
+        expect(shadowOf(dir)).toBeNull();
+    });
+
+    it('a clean FIRST stop writes no shadow file either', () => {
+        const { dir, home } = makeGateWorkspace();
+        const r = runHook(dir, envelopeJson(dir, writeTranscript(home, ['mach weiter'], CLEAN)), home);
+        expect(r.status, r.stderr).toBe(0);
+        expect(shadowOf(dir)).toBeNull();
+    });
+
+    /**
+     * The wedge guard is untouched, asserted rather than argued.
+     *
+     * The refusal record's `refused_turn` is what `alreadyRefusedTurn` reads,
+     * and a shadow row written into THAT file would have meant either
+     * synthesising a `refused_turn` this gate never wrote or loosening the
+     * parser protecting it. The separate file is the design; this is the test
+     * that the design holds at runtime.
+     */
+    it('the retry leaves the refusal record byte-identical', () => {
+        const { dir, home } = makeGateWorkspace();
+        runHook(dir, envelopeJson(dir, writeTranscript(home, ['mach weiter'], PROMISE)), home);
+        const refusalFile = sessionRefusalFile(dir, deriveSessionKey(GATE_SESSION_ID));
+        const before = fs.readFileSync(refusalFile, 'utf-8');
+
+        const retry = runHook(
+            dir,
+            envelopeJson(dir, writeTranscript(home, ['mach weiter'], PROMISE), { stop_hook_active: true }),
+            home,
+        );
+        expect(retry.status, retry.stderr).toBe(0);
+
+        expect(fs.readFileSync(refusalFile, 'utf-8')).toBe(before);
+        expect(shadowOf(dir)?.would_refuse_again).toHaveLength(1);
+    });
+
+    it('two retries of the same turn accumulate two rows and two observations', () => {
+        const { dir, home } = makeGateWorkspace();
+        const env = () =>
+            envelopeJson(dir, writeTranscript(home, ['mach weiter'], PROMISE), { stop_hook_active: true });
+        expect(runHook(dir, env(), home).status).toBe(0);
+        expect(runHook(dir, env(), home).status).toBe(0);
+
+        const rec = shadowOf(dir);
+        expect(rec?.retries_observed).toBe(2);
+        expect(rec?.would_refuse_again).toHaveLength(2);
+        expect(rec?.first_at).not.toBe('');
+        expect(rec?.last_at).not.toBe('');
+    });
+
+    it('a retry with an unreadable transcript is allowed and records nothing', () => {
+        const { dir, home } = makeGateWorkspace();
+        const missing = path.join(home, 'no-such-transcript.jsonl');
+        const r = runHook(dir, envelopeJson(dir, missing, { stop_hook_active: true }), home);
+        expect(r.status, r.stderr).toBe(0);
+        expect(shadowOf(dir)).toBeNull();
+    });
+});
+
+/**
+ * The fold is pure, so its bound and its empty-detector case are asserted here
+ * rather than through a spawned hook — a 200-retry session is not a fixture
+ * anybody should pay for at the process level.
+ */
+describe('foldShadow — the pure half of step 2.1', () => {
+    const at = '2026-09-30T00:00:00.000Z';
+
+    it('an empty detector list counts the retry and adds no row', () => {
+        const rec = foldShadow(null, { detectors: [], turnOrdinal: 3, at, layer: 'refused_turn' });
+        expect(rec.retries_observed).toBe(1);
+        expect(rec.would_refuse_again).toHaveLength(0);
+        expect(rec.first_at).toBe(at);
+    });
+
+    it('records every finding of one retry, not just the first', () => {
+        const rec = foldShadow(null, {
+            detectors: ['promissory', 'language'],
+            turnOrdinal: 3,
+            at,
+            layer: 'stop_hook_active',
+        });
+        expect(rec.would_refuse_again.map((r) => r.detector)).toEqual(['promissory', 'language']);
+        expect(rec.retries_observed).toBe(1);
+    });
+
+    it('caps the array at SHADOW_MAX_ROWS and counts what it dropped', () => {
+        let rec: ShadowRecord | null = null;
+        for (let i = 0; i < SHADOW_MAX_ROWS + 5; i++) {
+            rec = foldShadow(rec, {
+                detectors: ['promissory'],
+                turnOrdinal: i,
+                at,
+                layer: 'refused_turn',
+            });
+        }
+        expect(rec?.would_refuse_again).toHaveLength(SHADOW_MAX_ROWS);
+        expect(rec?.dropped).toBe(5);
+        // Oldest dropped first: Q1 is a rate and the recent rows are the ones
+        // a reader decides on.
+        expect(rec?.would_refuse_again[0]?.turn).toBe(5);
+        expect(rec?.retries_observed).toBe(SHADOW_MAX_ROWS + 5);
+    });
+
+    it('first_at survives a fold and last_at moves', () => {
+        const a = foldShadow(null, { detectors: [], turnOrdinal: 1, at, layer: 'refused_turn' });
+        const later = '2026-10-01T00:00:00.000Z';
+        const b = foldShadow(a, {
+            detectors: [],
+            turnOrdinal: 2,
+            at: later,
+            layer: 'refused_turn',
+        });
+        expect(b.first_at).toBe(at);
+        expect(b.last_at).toBe(later);
+    });
+});
+
+describe('parseShadowRecord — fail-open on the Stop path', () => {
+    it('returns null for anything that is not a record', () => {
+        expect(parseShadowRecord('not json')).toBeNull();
+        expect(parseShadowRecord('[]')).toBeNull();
+        expect(parseShadowRecord('{}')).toBeNull();
+        expect(parseShadowRecord('{"would_refuse_again": "nope"}')).toBeNull();
+    });
+
+    it('drops individual malformed rows without discarding the record', () => {
+        const rec = parseShadowRecord(
+            JSON.stringify({
+                would_refuse_again: [
+                    { detector: 'promissory', turn: 1, at: 'x', layer: 'refused_turn' },
+                    { detector: 'not-a-detector', turn: 1, at: 'x', layer: 'refused_turn' },
+                    { detector: 'language', turn: 1, at: 'x', layer: 'invented-layer' },
+                ],
+                retries_observed: 3,
+            }),
+        );
+        expect(rec?.would_refuse_again).toHaveLength(1);
+        expect(rec?.retries_observed).toBe(3);
+    });
+});
 
 describe('claude stop — the refusal actually reaches the host', () => {
     it('exits 2, not 1 — exit 1 on stop would let the turn end anyway', () => {
