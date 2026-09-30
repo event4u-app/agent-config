@@ -45,6 +45,35 @@ evidence the prompt did not steer.
 | 5 | low | src/scripts/hooks/dispatch_hook.ts:~501 | **`duration_ms` is now a float under an integer-sounding name.** One seat asked for a rename plus an integer accessor; the other called the risk real but low-probability. | accepted-risk | The field is internal to `RunResult` with two call sites, both in this diff, and both floor at the point of storage. A rename ripples through the feedback schema for a field no consumer outside this file reads. The header states the contract at the declaration. Recorded rather than silently declined. |
 | 6 | low | src/scripts/bench_hook_latency.ts:~1026 | **`concernSlaPass` runs unconditionally, not only under `--gate`.** One seat called the ~20 extra runs per event pure cost for a developer running the bench locally. | accepted-risk | Gating the report behind `--gate` is the mistake the `per_turn_composite` row in `hook-latency-budget.json` documents having made once: a row that appears only under `--gate` is unavailable exactly where it is cheapest to read. The pass is capped at `min(runs, 20)`; the default `--runs` is what a caller already chose to pay. |
 
+## A contract violation in this artifact's own commit order
+
+`check_completion_review` reports `fix-before-artifact` on the four `fixed`
+rows: `a3d85f4` (the fixes) predates `08dc6c8` (this artifact's first-add
+commit), and contract §2.5 requires the reverse so that findings cannot be
+retrofitted to match whatever was built.
+
+**The violation is real and it is mine.** The review genuinely ran before the
+fixes — the council response is timestamped `2026-09-30T18:24Z` and the fix
+commit is later — but the artifact was written up after the fixes were already
+committed, which is the ordering the gate can actually see. The gate is right
+to say so; a sequence that only the author can vouch for is exactly what §2.5
+exists not to accept.
+
+**It is recorded rather than repaired, and the reason is another rule.**
+Repairing it means reordering two local commits, and
+[`git-history-discipline`](../../../src/rules/git-history-discipline.md)'s Iron
+Law forbids a rebase, squash or amend that the user did not ask for this turn —
+local history included. Its three exceptions do not cover tidying a commit
+order.
+
+**The fix SHAs stay in the Reason/Ref cells.** Dropping them would silence the
+detector and take these rows out of the checkable set entirely, which is the
+omission-beats-substitution failure
+[`evaluator-independence`](../../../src/rules/evaluator-independence.md) names
+for its own prompt-binding gate. A visible advisory violation is worth more
+than an invisible clean sheet. The check is advisory in CI (exit 0), so this
+costs a warning and no build.
+
 ## Two claims checked and refuted
 
 Kept out of the table above on purpose: the status enum is
