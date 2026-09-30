@@ -919,7 +919,24 @@ describe('release --dry-run — era gate honours the newest-release exemption', 
         const ts = runTs(['--dry-run']);
         expect(ts.status, ts.stderr).toBe(0);
         expect(ts.stderr).not.toContain('split needs a minor/major bump');
-    });
+        // PER-TEST TIMEOUT, which is the move `vitest.config.ts` already named
+        // for this case rather than a new judgement: "if CI still times out at
+        // 50%, the next move is a per-test timeout on the spawn-bound files —
+        // named here so it is not re-derived as a global raise". The global
+        // 10 s guard is untouched and still applies to every other test.
+        //
+        // MEASURED, not guessed. This case spawns `tsx release.ts --dry-run`
+        // over the whole repository and read 8,170 ms on a darwin laptop —
+        // 82 % of its own budget — and 10,860 ms on a macos-latest runner,
+        // where it failed PR #2128 on a diff that touches neither this file
+        // nor `release.ts`. A test whose fast-machine runtime is four fifths
+        // of its timeout does not have a margin; it has a coin flip.
+        //
+        // 30 s is ~3.7x the observed local figure, chosen so the guard still
+        // catches a real regression (a doubling would breach it) while
+        // absorbing the ~33 % runner spread this repository's own hook-latency
+        // budget documents between runner classes.
+    }, 30_000);
 });
 
 // ─── resolve_split_decision — post-release view (2026-07-07 regression) ──────
