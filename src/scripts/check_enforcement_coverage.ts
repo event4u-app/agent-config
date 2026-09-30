@@ -260,13 +260,22 @@ function load_corpus(dirs: readonly string[], files: readonly string[] = []): st
  * whether or not anyone chooses to. Conflating the two is how a package ends up
  * believing an on-demand tool is a gate.
  */
-function reachable_scripts(wiring: string): Set<string> {
-    const scripts_dir = path.join(REPO_ROOT, 'src', 'scripts');
+/**
+ * Transitive closure of the scripts a wiring surface reaches.
+ *
+ * `roots` is a seam, not a feature: it defaults to the real tree, and a test
+ * passes a synthetic one. Without it the only way to exercise the fixed point
+ * is over ~650 real files, where a chain deep enough to catch a broken worklist
+ * cannot be constructed on purpose.
+ */
+export function reachable_scripts(wiring: string, roots?: { dir: string; base: string }): Set<string> {
+    const scripts_dir = roots?.dir ?? path.join(REPO_ROOT, 'src', 'scripts');
+    const base_dir = roots?.base ?? REPO_ROOT;
     const all: string[] = fs.existsSync(scripts_dir)
         ? walk(scripts_dir).filter((p) => p.endsWith('.ts'))
         : [];
 
-    const rel = (abs: string): string => path.relative(REPO_ROOT, abs);
+    const rel = (abs: string): string => path.relative(base_dir, abs);
     const stem = (abs: string): string => path.basename(abs).replace(/\.ts$/, '');
 
     const reached = new Set<string>();
@@ -298,7 +307,7 @@ function reachable_scripts(wiring: string): Set<string> {
     while (frontier.length > 0) {
         const bodies = frontier
             .map((r) => {
-                const abs = path.join(REPO_ROOT, r);
+                const abs = path.join(base_dir, r);
                 return fs.existsSync(abs) ? strip_comments(fs.readFileSync(abs, 'utf-8')) : '';
             })
             .join('\n');
