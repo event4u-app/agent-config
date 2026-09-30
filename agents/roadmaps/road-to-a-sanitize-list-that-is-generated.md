@@ -96,49 +96,46 @@ content in fetched markup.
 
 ## Phase 3 — The structural channel class gets a detector that publishes its gaps
 
-> **BLOCKED — all three steps. The detector was BUILT and then REFUSED**, on
-> 2026-09-29, by an independent two-provider council review of this branch. It
-> is reverted rather than patched, and the two findings are why:
->
-> - **`aria-hidden` is not a hiding channel.** Its content is VISIBLE to
->   sighted readers; it is a screen-reader affordance. Stripping it deletes
->   legitimate visible text, silently, leaving no trace in the output for anyone
->   debugging the corrupted result. That is a design error in the channel list,
->   not a bug in the matcher — Risk 2 of this register named over-stripping and
->   the per-channel fixtures did not catch it, because a fixture written from
->   the same wrong list agrees with it.
-> - **A handwritten matcher mis-parses adversarial markup.** Named by the
->   review: a comment containing a same-name opening tag, tag-like text inside
->   `<script>`/`<style>`, nested same-name hidden and visible elements,
->   unterminated markup. A stripper that can be confused by the content it is
->   defending against is worse than none, because it reports success.
->
-> The review's own recommendation was the split this change makes: land the
-> generated inventory gate, hold the transform. What it needs before returning
-> is named — a parser rather than a matcher, adversarial fixtures for each shape
-> above, an explicit removal policy (silent irreversible deletion leaves callers
-> unable to debug), and `aria-hidden` off the channel list. A frozen corpus is
-> NOT required to test declared channels, but the review was explicit that one
-> IS required before claiming detection adequacy for the class.
->
-> **What the tree says meanwhile:** `retrieval_sanitize.ts`'s header states that
-> structural hiding has no coverage anywhere in this package, rather than
-> leaving a reader to infer it from silence. The percentage rule in
-> `check_read_surface_coverage` is kept and made silent on the detector's
-> absence — a detector arriving later must not arrive without the rule already
-> watching it.
->
-> **Resolved when** a parser-backed detector lands with those fixtures.
+> **The 2026-09-29 refusal is CLEARED.** The detector was built, refused by an
+> independent two-provider council review, and reverted. Its four stated return
+> conditions are now met and the detector has landed: a real tokenizer instead
+> of a matcher, one adversarial fixture per shape the review named, an explicit
+> removal policy, and `aria-hidden` off the channel list. The refusal is kept as
+> a structured entry under `## Blockers` (`structural-detector-parser-backed`,
+> `Status: resolved`) rather than deleted, because the record of what the review
+> caught is the reason the replacement is shaped the way it is.
 
-- [ ] **3.1 Add a markup-aware pre-pass ahead of the codepoint floor.**
+- [x] **3.1 Add a markup-aware pre-pass ahead of the codepoint floor.**
       Cover HTML comments, inline-style hiding (`display:none`,
       `visibility:hidden`, `opacity:0`, `font-size:0`, zero width or height),
-      `aria-hidden`, and `<template>`. A grep for any of these in the sanitize
-      path returns zero today, so for fetched markdown and HTML the dominant
-      hiding class has no coverage at all.
+      and `<template>`. A grep for any of these in the sanitize path returned
+      zero before this, so for fetched markdown and HTML the dominant hiding
+      class had no coverage at all. `aria-hidden` is NOT on this list — see the
+      blocker entry.
       verify: one fixture per listed channel, each asserted to lose the hidden
       span and keep the visible text
-- [ ] **3.2 Ship a known-gap register in the same file as the detector.**
+      **Evidence (2026-09-30).** `src/scripts/_lib/structural_hiding.ts` is a
+      TOKENIZER (`tokenize`) plus a tree walk over an explicit open-element
+      stack, not a forward scanner. `npx vitest run
+      tests/scripts/structural_hiding.test.ts` → **50 passed**. The per-channel
+      suite is driven off `STRUCTURAL_HIDING_CHANNELS` itself, so a channel
+      added without a fixture fails rather than passing silently, and each
+      channel asserts BOTH directions — the hidden span is lost and the visible
+      text is kept.
+      **Sensitivity probed, not assumed.** Four mechanism-neutralisation runs,
+      each restored from a pristine copy: RAWTEXT state off → shapes 2 and 2b
+      fail (2 failed / 48 passed); comment tokenization off → the html-comment
+      channel and shapes 1, 1b and 4 fail (6 failed / 44 passed); nesting depth
+      untracked inside a hidden subtree → shape 3 fails (1 failed / 49 passed);
+      `aria-hidden` restored as a channel → both aria-hidden retention tests
+      fail (2 failed / 48 passed). The first probe also caught a WEAK FIXTURE of
+      mine: shape 2 passed for the wrong reason, because escaped quotes made the
+      payload not-a-tag under any parser. The fixture was rewritten and now
+      discriminates.
+      Composed into the floor by `retrieval_sanitize.sanitize_markup`, whose
+      ordering is pinned by five further tests (`retrieval_sanitize.test.ts`,
+      12 passed).
+- [x] **3.2 Ship a known-gap register in the same file as the detector.**
       Name what it does not catch — stylesheet-driven and class-driven hiding,
       off-screen positioning, background-coloured text, fragmentation and
       homoglyph obfuscation, image-borne text. An inline-style substring matcher
@@ -146,11 +143,41 @@ content in fetched markup.
       green.
       verify: the register exists in the detector's own file and is cited from
       every surface that claims the coverage
-- [ ] **3.3 Publish no recall or coverage percentage.**
+      **Evidence (2026-09-30).** `STRUCTURAL_HIDING_GAPS` is exported from the
+      detector's own file with nine entries, and a test asserts it lists ONLY
+      uncovered classes (no declared channel id appears in it). The citation
+      half is machine-checked rather than asserted: `check_read_surface_coverage`
+      now walks every surface that mentions `structural_hiding` — today
+      `retrieval_sanitize.ts` and `docs/contracts/retrieval-read-surfaces.md` —
+      and fails one that claims the coverage without naming the register. A
+      rejecting self-test case pins it.
+      A second register, `STRUCTURAL_HIDING_NON_CHANNELS`, records what is
+      deliberately NOT a channel and why. It exists because its first and only
+      entry was the shipped defect: without it, a later reader finds
+      `aria-hidden` missing, reads the omission as an oversight, and restores it.
+- [x] **3.3 Publish no recall or coverage percentage.**
       A number requires a frozen corpus, and none exists. State the covered
       channel list and the gap register instead.
       verify: no percentage appears in the detector, its header, or any surface
       citing it
+      **Evidence (2026-09-30).** The rule is back in
+      `check_read_surface_coverage`, which is what that gate's own comment
+      promised — it was removed in review round 3 for watching a detector file
+      that did not exist, and it returns "written against a detector that
+      exists, with its own adversarial tests". `--self-test` → **11/11 case(s)
+      behaved (8 rejecting, floor 10)**; the gate on the real tree → **24 read
+      surface(s) ... match the tree (6 covered, 15 uncovered, 3 unclassified)**.
+      **Both polarities are pinned, and the second one is not decoration.** The
+      first version of this rule RED on the tree — it read
+      `transform: translate(-100%, 0)` in the gap register as a published rate.
+      That is a precision defect in the rule, so the fix went into the predicate
+      (code spans are stripped before the test) rather than into the register's
+      wording: a gate that makes honest prose contort around it gets switched
+      off. A widened matcher that no longer catches what it was written for
+      fails silently, so both directions have a case — a rate in prose is
+      rejected, a CSS percentage in a code span is accepted.
+      The gate is silent when the detector is absent, so a future revert
+      reopens Phase 3 rather than reding the build.
 
 ## Acceptance criteria
 
@@ -163,6 +190,51 @@ content in fetched markup.
 - The raw fetched bytes are unchanged wherever they are archived; only the
   model-facing copy is transformed.
 - No recall or coverage percentage is published for the structural detector.
+
+## Blockers
+
+### blocker: structural-detector-parser-backed
+- **Status:** resolved
+- **Owner:** implementer
+- **Blocks:** Phase 3 — The structural channel class gets a detector that publishes its gaps
+- **Class:** 0
+- **Run:** `npx vitest run tests/scripts/structural_hiding.test.ts && ./scripts-run src/scripts/check_read_surface_coverage --self-test`
+- **Question:** May the structural-hiding transform return, and in what shape?
+- **Recommendation:** Return it parser-backed. The review refused a
+  SHAPE, not the capability — its own recommendation was the split that shipped
+  (land the inventory gate, hold the transform), and it named the four
+  conditions for the transform's return rather than closing the question.
+- **If you do nothing:** The dominant hiding class for fetched markup stays
+  uncovered. A codepoint floor cannot see an HTML comment, so an instruction in
+  one reaches the model intact on every fetched-markup read surface.
+- **What to do:**
+  1. Replace the matcher with a tokenizer — `src/scripts/_lib/structural_hiding.ts`,
+     `tokenize()` plus a tree walk over an explicit open-element stack. A scanner
+     cannot answer "is this `<` a tag?", because the answer depends on parser state.
+  2. Add one adversarial fixture per shape the review named, in
+     `tests/scripts/structural_hiding.test.ts`: a comment containing a same-name
+     tag, tag-like text inside `<script>`/`<style>`, nested same-name hidden and
+     visible elements, unterminated markup.
+  3. State an explicit removal policy — silent irreversible deletion leaves
+     callers unable to debug. Sentinel in place, structured removal records with
+     offsets into the input, closed sentinel vocabulary, fail-closed on
+     unterminated markup.
+  4. Take `aria-hidden` OFF the channel list and record WHY in
+     `STRUCTURAL_HIDING_NON_CHANNELS`, so the omission is not later read as an
+     oversight and restored.
+  5. Prove sensitivity: neutralise each mechanism, watch the matching fixtures go
+     red, restore. A test never seen red has unknown sensitivity.
+- **Resolved when:** `npx vitest run tests/scripts/structural_hiding.test.ts`
+  exits 0 with a fixture per declared channel AND per named adversarial shape,
+  `./scripts-run src/scripts/check_read_surface_coverage --self-test` exits 0,
+  and `aria-hidden` is absent from `STRUCTURAL_HIDING_CHANNELS`.
+  **Met 2026-09-30** — 50 passed; 11/11 self-test cases; `aria-hidden` is in
+  `STRUCTURAL_HIDING_NON_CHANNELS` with a test asserting its content SURVIVES.
+
+  **Not claimed:** detection adequacy for the class. Both review seats were
+  explicit that a frozen corpus is required before such a claim, and none
+  exists; Step 3.3 forbids the percentage that would imply one. What is claimed
+  is exactly the declared channel list, with its gap register beside it.
 
 ## Risk Register
 
