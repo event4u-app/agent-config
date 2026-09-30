@@ -34,6 +34,8 @@ import * as tty from "node:tty";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parse as parseYaml } from "yaml";
 
+import { runBundleIntegrityGate } from "./bundle_integrity.js";
+import { writeConcernTimings, type ConcernTimingSample } from "./concern_timings.js";
 import { tableFingerprint } from "./table_fingerprint.js";
 
 import { hardenedSpawnEnv } from "../_lib/spawn_env.js";
@@ -498,6 +500,7 @@ interface RunResult {
   rc: number;
   stderr: string;
   stdout: string;
+  /** Elapsed ms, NOT floored — floored where STORED. See `concern_timings.ts`. */
   duration_ms: number;
 }
 
@@ -672,8 +675,7 @@ function _run_concern_inproc(
     }
     clearHookStdinOverride();
   }
-  const elapsed = Math.floor(performance.now() - started);
-  return { rc, stderr: err, stdout: out, duration_ms: elapsed };
+  return { rc, stderr: err, stdout: out, duration_ms: performance.now() - started };
 }
 
 function _run_concern(concern: ConcernDef, envelope: JsonObject): RunResult {
@@ -728,7 +730,7 @@ function _run_concern(concern: ConcernDef, envelope: JsonObject): RunResult {
     env: concern_env,
     timeout: 30000,
   });
-  const elapsed = Math.floor(performance.now() - started);
+  const elapsed = performance.now() - started;
   if (proc.error) {
     // OSError / timeout equivalent — log execution-failed so the
     // never-block contract keeps a trace.
@@ -787,6 +789,7 @@ export function _reduce(rcs: number[]): number {
 interface FeedbackEntry extends JsonObject {
   concern: string;
 }
+
 
 /**
  * Write per-concern feedback files + summary rollup.
@@ -1243,6 +1246,15 @@ export function main(argv?: string[]): number {
     }
   }
 
+  // Step 3.1 — the bundle we execute must be the bundle the build produced.
+  // Beside `denyOnStdinFailure` for its reason: the verdict needs the resolved
+  // concern list. Rules: `bundle_integrity.ts`.
+  if (_IN_BUNDLE) {
+    const stop = runBundleIntegrityGate(fileURLToPath(import.meta.url), args.platform,
+      args.event, concerns.some((c) => !_is_advisory(c)));
+    if (stop !== null) return stop;
+  }
+
   const envelope = _build_envelope(args, payload_text);
   const session_id = _resolve_session_id(envelope);
   const started_at = _now_iso();
@@ -1278,6 +1290,7 @@ export function main(argv?: string[]): number {
   // classes are present, which any concern loses, the single measurement pass,
   // and the at-most-four envelope shapes — so the loop below reads a shape
   // rather than re-deriving one. Rationale and cost model: payload_stub.ts.
+  const timing_samples: ConcernTimingSample[] = [];
   const keep_by_concern = concerns.map(
     (c) => [c, _concern_body_classes(c)] as const,
   );
@@ -1300,6 +1313,7 @@ export function main(argv?: string[]): number {
     const concern_started = _now_iso();
     const { rc: rawRcResult, stderr: stderr_text, stdout: stdout_text, duration_ms } =
       _run_concern(concern, concern_envelope);
+    timing_samples.push({ concern: String(concern["name"]), duration_us: duration_ms * 1000 });
     let rc = rawRcResult;
     const raw_rc = rc;
     if (rc >= 3) {
@@ -1368,7 +1382,7 @@ export function main(argv?: string[]): number {
       severity: _severity_for(rc),
       decision: (reply["decision"] || _severity_for(rc)) as JsonValue,
       reason: (reply["reason"] ?? null) as JsonValue,
-      duration_ms,
+      duration_ms: Math.floor(duration_ms),
       started_at: concern_started,
       completed_at: _now_iso(),
       fail_closed: Boolean(concern["fail_closed"]),
@@ -1384,6 +1398,7 @@ export function main(argv?: string[]): number {
     });
   }
   const final_rc = _reduce(rcs);
+  writeConcernTimings(String(envelope["event"] ?? ""), String(envelope["platform"] ?? ""), timing_samples);
   _write_feedback(envelope, session_id, feedback_entries, final_rc, started_at);
   _record_rule_trips(envelope, feedback_entries);
   if (context_blocks.length > 0 && final_rc === EXIT_ALLOW) {

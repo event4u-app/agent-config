@@ -10886,13 +10886,10 @@ import * as path16 from "node:path";
 import { fileURLToPath as fileURLToPath2 } from "node:url";
 
 // src/scripts/hooks/table_fingerprint.ts
+import { createHash as createHash5 } from "node:crypto";
 function tableFingerprint(text) {
-  let h = 2166136261;
-  for (let i = 0; i < text.length; i += 1) {
-    h ^= text.charCodeAt(i);
-    h = Math.imul(h, 16777619) >>> 0;
-  }
-  return `${h.toString(16)}:${String(text.length)}`;
+  const digest = createHash5("sha256").update(text, "utf-8").digest("hex");
+  return `${digest}:${String(text.length)}`;
 }
 
 // src/scripts/hooks/host_lowering.ts
@@ -11740,7 +11737,7 @@ import * as fs21 from "node:fs";
 import * as os7 from "node:os";
 
 // src/install/hostLayerFingerprint.ts
-import { createHash as createHash5 } from "node:crypto";
+import { createHash as createHash6 } from "node:crypto";
 import * as fs20 from "node:fs";
 import * as path19 from "node:path";
 var FINGERPRINT_SCHEMA = 1;
@@ -11767,7 +11764,7 @@ function collectFiles(dir) {
   return out.sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
 }
 function fingerprintLayers(layers) {
-  const h = createHash5("sha256");
+  const h = createHash6("sha256");
   h.update(`v${FINGERPRINT_SCHEMA}\0`);
   for (const layer of layers) {
     h.update(`layer:${layer.label}\0`);

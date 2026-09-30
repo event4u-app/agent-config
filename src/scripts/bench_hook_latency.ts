@@ -53,6 +53,8 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parse as parseYaml } from 'yaml';
+
 import { build_claude_hook_matrix } from './_lib/claude_settings_hooks.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
@@ -188,6 +190,8 @@ export function benchEvent(
     runs: number,
     workspace: string,
     via: InvocationPath = 'bundle',
+    timingsSink?: string,
+    replay = true,
 ): EventResult {
     const durations: number[] = [];
     const payload = syntheticPayload(event, workspace);
@@ -211,7 +215,21 @@ export function benchEvent(
         const proc = spawnSync(command[0], command[1], {
             input: payload,
             encoding: 'utf-8',
-            env: { ...process.env, AGENT_CONFIG_REPLAY: '1', CLAUDE_PROJECT_DIR: workspace },
+            env: {
+                ...process.env,
+                // Replay is the DEFAULT and the gated slot numbers depend on it
+                // -- the pre-registered budget was measured with it on. The
+                // per-concern SLA pass below turns it OFF deliberately; see
+                // `concernSlaPass`.
+                ...(replay ? { AGENT_CONFIG_REPLAY: '1' } : {}),
+                CLAUDE_PROJECT_DIR: workspace,
+                // Step 3.2: arm the dispatcher's per-concern timings sink for the
+                // duration of the bench. Unset on a real dispatch, so this costs one
+                // `process.env` lookup outside the harness.
+                ...(timingsSink === undefined
+                    ? {}
+                    : { AGENT_CONFIG_HOOK_TIMINGS: timingsSink }),
+            },
             timeout: 60000,
         });
         const elapsed = performance.now() - started;
@@ -517,6 +535,252 @@ export function capFor(budget: Budget, event: string): number {
     return capsFor(budget, event)[0]?.cap_ms ?? Number.POSITIVE_INFINITY;
 }
 
+/**
+ * Per-concern latency (step 3.2 of `road-to-a-kernel-that-guards-its-plumbing`).
+ *
+ * This is deliberately not the slot number divided by the concern count.
+ * The slot rows above measure a whole dispatch: spawn + interpreter start +
+ * bundle load + the concern chain. Step 3.3 wants to give each BLOCKING
+ * concern its own timeout, and a timeout derived from a slot p95 would be a
+ * number about the runner, not about the concern — on a slow host every
+ * concern would inherit the same inflated bound, and on a fast one the
+ * slowest concern would be bounded by the average of its neighbours.
+ *
+ * So the dispatcher reports its own per-concern `duration_ms` into a JSONL
+ * sink (`_write_concern_timings`, armed by `AGENT_CONFIG_HOOK_TIMINGS`) and
+ * this reads the distribution back. The samples are the concern's own work,
+ * measured inside the process that ran it, with the spawn term already
+ * excluded by construction.
+ *
+ * The report says `not_measured`, never `0`.
+ * A blocking concern with no samples in the sink is reported `not_measured`.
+ * It is the whole point of the step's verify line and it is load-bearing in a
+ * way that is easy to lose: `0` is a legal p95 for a fast concern, so a
+ * zero-filled row for a concern that never ran is indistinguishable from a
+ * real measurement of the fastest possible one — and step 3.3 would then
+ * compute a timeout of `0 x 3` and refuse every call. The absence has to stay
+ * visible as an absence all the way to the report.
+ *
+ * A concern can be absent for ordinary reasons: it is bound to a slot this
+ * bench does not exercise, or its `tools:` filter skipped it on the synthetic
+ * payload. That is information, not a failure, which is why this reports and
+ * does not gate.
+ *
+ * ONE NUMBER PER CONCERN, AND IT IS THE MAX OVER EVENTS, NOT THE P95 OF THE
+ * UNION. A concern bound to several slots has a distribution per slot, and the
+ * first version of this took a p95 across all of them pooled — which is a
+ * number describing no slot in particular and is biased by whichever slot the
+ * bench happens to run most. Step 3.3 derives ONE timeout per concern
+ * (`sla_ms x 3`) and the dispatcher applies it wherever the concern runs, so
+ * the bound has to hold on the concern's WORST slot or it refuses there. The
+ * row therefore carries the max of the per-event p95s and names the event that
+ * produced it, so a reader can see which slot sets the bound.
+ */
+export interface ConcernLatencyRow {
+    concern: string;
+    fail_closed: boolean;
+    /** Sample count found in the sink. */
+    n: number;
+    /**
+     * p95 of the concern's own durations in MICROseconds, or null when it was
+     * never timed.
+     *
+     * Microseconds, not milliseconds, because the unit was a defect. Every
+     * concern in the static registry runs in-process and finishes in well
+     * under a millisecond, so the dispatcher's floored `duration_ms` reported
+     * exactly `0` for all nine blocking concerns on the first run of this
+     * report. A `0 ms` p95 is not a missing measurement and would not be
+     * caught by the `not_measured` branch below — it is a real-looking
+     * number that step 3.3 would multiply by three to get a timeout of zero.
+     */
+    p95_us: number | null;
+    /** Which event produced `p95_us` — the slowest slot this concern runs on. */
+    p95_event: string | null;
+    /** The registered SLA in milliseconds, or null when none is registered yet. */
+    sla_ms: number | null;
+    /** The budget carried a value for this concern that is not a number. */
+    sla_malformed: boolean;
+}
+
+/** Placeholder printed for a number the run could not establish. */
+export const NOT_MEASURED = 'not_measured';
+
+/**
+ * Every `severity: blocking` concern in the manifest, in declaration order.
+ *
+ * Read from the manifest rather than hardcoded: the step was written against
+ * eight blocking concerns and `block-plumbing-writes` (step 1.2) made it nine
+ * in the same roadmap. A list in this file would have been stale before the
+ * phase closed.
+ */
+export function blockingConcerns(manifestPath: string = MANIFEST_PATH): {
+    name: string;
+    fail_closed: boolean;
+}[] {
+    const raw = parseYaml(fs.readFileSync(manifestPath, 'utf-8'), { version: '1.1' }) as
+        | { concerns?: Record<string, { severity?: string; fail_closed?: boolean }> }
+        | null;
+    const concerns = raw?.concerns ?? {};
+    return Object.entries(concerns)
+        .filter(([, def]) => String(def?.severity ?? '').trim().toLowerCase() === 'blocking')
+        .map(([name, def]) => ({ name, fail_closed: Boolean(def?.fail_closed) }));
+}
+
+/**
+ * Read the JSONL sink into per-concern sample arrays.
+ *
+ * A malformed or unreadable line is skipped rather than fatal — the sink is a
+ * measurement aid, and a bench that dies on one bad row would convert an
+ * observation into an outage. A skipped line lowers `n`, which the report
+ * prints, so the reduction is visible rather than silent.
+ */
+export interface ConcernTimings {
+    /** concern -> event -> samples. Nested, never flattened; see below. */
+    byConcernEvent: Map<string, Map<string, number[]>>;
+    /** Lines present in the sink that could not be read as a sample. */
+    skipped: number;
+}
+
+export function readConcernTimings(sinkPath: string): ConcernTimings {
+    const byConcernEvent = new Map<string, Map<string, number[]>>();
+    let skipped = 0;
+    let text: string;
+    try {
+        text = fs.readFileSync(sinkPath, 'utf-8');
+    } catch {
+        return { byConcernEvent, skipped };
+    }
+    for (const line of text.split('\n')) {
+        const trimmed = line.trim();
+        if (trimmed === '') continue;
+        let row: { concern?: unknown; duration_us?: unknown; event?: unknown };
+        try {
+            row = JSON.parse(trimmed) as typeof row;
+        } catch {
+            skipped += 1;
+            continue;
+        }
+        const name = typeof row.concern === 'string' ? row.concern : '';
+        const us = row.duration_us;
+        if (name === '' || typeof us !== 'number' || !Number.isFinite(us)) {
+            skipped += 1;
+            continue;
+        }
+        const event = typeof row.event === 'string' && row.event !== '' ? row.event : 'unknown';
+        let perEvent = byConcernEvent.get(name);
+        if (perEvent === undefined) {
+            perEvent = new Map<string, number[]>();
+            byConcernEvent.set(name, perEvent);
+        }
+        const bucket = perEvent.get(event);
+        if (bucket === undefined) perEvent.set(event, [us]);
+        else bucket.push(us);
+    }
+    return { byConcernEvent, skipped };
+}
+
+/**
+ * One row per blocking concern — measured p95 beside the registered SLA.
+ *
+ * Both columns are independently nullable, and the two nulls mean different
+ * things: a null `p95_ms` is "this run did not time it", a null `sla_ms` is
+ * "no SLA is registered yet". Collapsing them would hide the state step 3.3
+ * needs to distinguish — a concern it may bound, versus one it may not.
+ */
+export function perConcernRows(
+    blocking: readonly { name: string; fail_closed: boolean }[],
+    samples: ReadonlyMap<string, ReadonlyMap<string, number[]>>,
+    sla: Readonly<Record<string, unknown>> = {},
+): ConcernLatencyRow[] {
+    return blocking.map(({ name, fail_closed }) => {
+        const perEvent = samples.get(name);
+        let n = 0;
+        let worst: number | null = null;
+        let worstEvent: string | null = null;
+        for (const [event, xs] of perEvent ?? []) {
+            n += xs.length;
+            if (xs.length === 0) continue;
+            const sorted = [...xs].sort((a, b) => a - b);
+            const p = Math.round(percentile(sorted, 95));
+            if (worst === null || p > worst) {
+                worst = p;
+                worstEvent = event;
+            }
+        }
+        const registered = sla[name];
+        // A value that is present but not a number is NOT silently `null`. The
+        // two states print differently and mean different things: `null` is a
+        // registered absence, a malformed entry is a typo in the budget file
+        // that would otherwise read as a missing measurement.
+        const slaMalformed =
+            registered !== undefined &&
+            registered !== null &&
+            (typeof registered !== 'number' || !Number.isFinite(registered));
+        return {
+            concern: name,
+            fail_closed,
+            n,
+            p95_us: worst,
+            p95_event: worstEvent,
+            sla_ms: typeof registered === 'number' && Number.isFinite(registered) ? registered : null,
+            sla_malformed: slaMalformed,
+        };
+    });
+}
+
+/**
+ * Collect per-concern samples with replay mode OFF.
+ *
+ * MEASURED, and the reason this is a separate pass rather than a read of the
+ * gated run. `AGENT_CONFIG_REPLAY=1` suppresses state writes (`state_io.ts`),
+ * and several blocking concerns do most of their work through state — so the
+ * gated bench, which needs replay on because the pre-registered slot budget
+ * was measured with it, times those concerns at a fraction of their real cost.
+ *
+ * A/B over this tree, n=25 per cell, 2026-09-30:
+ *
+ *     verify-before-complete   live 1249 us   replay  310 us   x4.03
+ *     run-continuation         live  431 us   replay  220 us   x1.96
+ *     journal-record           live  175 us   replay  141 us   x1.24
+ *     block-no-verify          live  779 us   replay  642 us   x1.21
+ *     (everything else within +/-10%, i.e. noise)
+ *
+ * Step 3.3 derives a timeout of `sla_ms x 3`. An SLA of 310 us for a concern
+ * whose real p95 is 1249 us yields a 930 us bound that the concern exceeds on
+ * an ORDINARY run — which is Risk 1 of the owning roadmap, reached through a
+ * measurement instead of through a guess. So the numbers step 3.3 will one day
+ * consume have to come from a pass that runs the concerns for real.
+ *
+ * It runs against a throwaway workspace, so the state writes it permits land in
+ * a temp dir and nothing in the repository is touched. It gates NOTHING and
+ * contributes to no budget row: it is an observation, and the slot rows above
+ * remain the only gated numbers.
+ */
+export function concernSlaPass(
+    runs: number,
+    workspace: string,
+    sinkPath: string,
+    events: readonly string[] = EVENTS,
+): void {
+    for (const event of events) {
+        benchEvent(event, runs, workspace, 'bundle', sinkPath, false);
+    }
+}
+
+/** Render one row. `null` prints `not_measured` — never `0`. */
+export function renderConcernRow(row: ConcernLatencyRow): string {
+    // Three decimals, because the numbers are microseconds and the whole point
+    // of the unit change is that rounding them to whole milliseconds produced
+    // nine zeroes.
+    const p95 = row.p95_us === null ? NOT_MEASURED : `${(row.p95_us / 1000).toFixed(3)} ms`;
+    const sla = row.sla_malformed ? 'MALFORMED' : row.sla_ms === null ? NOT_MEASURED : `${row.sla_ms} ms`;
+    const via = row.p95_event === null ? '' : `, worst on ${row.p95_event}`;
+    return (
+        `  ${row.concern.padEnd(26)} p95 ${p95.padStart(13)} · sla ${sla.padStart(13)} ` +
+        `(n=${row.n}${via}${row.fail_closed ? ', fail_closed' : ''})`
+    );
+}
+
 function loadJson<T>(p: string): T | null {
     try {
         return JSON.parse(fs.readFileSync(p, 'utf-8')) as T;
@@ -531,6 +795,14 @@ export interface Budget {
         any_hook_event: { p95_ci: number; blocking?: boolean };
     };
     regression_gate: { max_regression_pct: number };
+    /**
+     * Per-concern SLA in milliseconds, keyed by concern name (step 3.2).
+     *
+     * A `null` value is a registered ABSENCE — the concern is known and its
+     * bound has deliberately not been set yet. Step 3.3 may only bound a
+     * concern whose value here is a number.
+     */
+    concern_sla_ms?: Record<string, number | null>;
     gate_remeasure?: { attempts?: number };
     normalized?: {
         observe_only?: boolean;
@@ -770,6 +1042,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         }
     }
     const budget = loadJson<Budget>(BUDGET_PATH);
+    let concernRows: ConcernLatencyRow[] = [];
     if (budget === null) {
         process.stderr.write(`bench_hook_latency: budget file missing/invalid at ${BUDGET_PATH}\n`);
         return 2;
@@ -796,6 +1069,10 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     }
 
     const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'ac-hook-bench-'));
+    // Step 3.2's per-concern sink. Lives beside the workspace and is torn down
+    // with it, so a bench run leaves nothing behind and a stale file from an
+    // earlier run can never be read as this run's distribution.
+    const timingsSink = path.join(workspace, 'concern-timings.jsonl');
     const results: EventResult[] = [];
     let control: EventResult | null = null;
     try {
@@ -825,6 +1102,49 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         process.stdout.write(
             `${'control (node -e 0)'.padEnd(20)} p50 ${String(control.p50_ms).padStart(5)} ms · p95 ${String(control.p95_ms).padStart(5)} ms · max ${String(control.max_ms).padStart(5)} ms (n=${control.runs})\n`,
         );
+
+        // Step 3.2 — per-concern p95 beside the registered SLA, for every
+        // BLOCKING concern. Its own pass, with replay OFF: the gated slot runs
+        // above need replay on, and replay times several concerns at a
+        // fraction of their real cost. `concernSlaPass` carries the A/B.
+        //
+        // Printed on every run, gate or not: a row that appeared only under
+        // `--gate` would make the number step 3.3 depends on unavailable
+        // exactly where it is cheapest to read, which is the same mistake the
+        // composite row above documents having made once. It reports and never
+        // fails — the SLAs it feeds are not armed, and a measurement that can
+        // red a build before its bar exists is the guessed-threshold failure
+        // Risk 1 of the owning roadmap names.
+        concernSlaPass(Math.min(runs, 20), workspace, timingsSink);
+        const timings = readConcernTimings(timingsSink);
+        concernRows = perConcernRows(
+            blockingConcerns(),
+            timings.byConcernEvent,
+            budget?.concern_sla_ms ?? {},
+        );
+        if (timings.skipped > 0) {
+            // The CAUSE of a lowered `n`, not only its effect. An earlier
+            // version claimed the reduction was visible because `n` was
+            // printed; `n` shows that fewer samples arrived, never that some
+            // were unreadable.
+            process.stdout.write(
+                `  ⚠️  ${timings.skipped} unreadable line(s) in the timings sink — samples lost, n is lower than the run count\n`,
+            );
+        }
+        process.stdout.write(
+            `blocking concerns (${concernRows.length}) — per-concern p95 vs registered SLA:\n`,
+        );
+        for (const row of concernRows) {
+            process.stdout.write(`${renderConcernRow(row)}\n`);
+        }
+        const unmeasured = concernRows.filter((r) => r.p95_us === null).length;
+        if (unmeasured > 0) {
+            process.stdout.write(
+                `  ℹ️  ${unmeasured} of ${concernRows.length} not measured by this run — ` +
+                    'a concern bound to a slot this bench does not exercise, or skipped by its ' +
+                    "`tools:` filter, has no sample. Reported as an absence, never as 0.\n",
+            );
+        }
 
         // Breach re-measure (--gate only). A single p95 over the cap is not yet
         // evidence of a regression: a load spike inside one 50-run sample moves
