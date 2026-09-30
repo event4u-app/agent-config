@@ -16,24 +16,39 @@
  * Codepoint classes are shared with `lint_hidden_unicode` (one source of truth
  * for what counts as a hidden-instruction vector).
  *
- * WHERE IT ACTUALLY RUNS — measured end-to-end, not asserted. Keep this list
- * honest: an earlier version of this header named surfaces by intent, and the
- * legacy-envelope gap below went unnoticed for exactly that reason. Every
- * claim here is backed by a probe row in
- * `agents/evidence/reports/sanitize-floor-wiring.md`:
+ * WHERE IT ACTUALLY RUNS — read the table, which is GENERATED:
  *
- *   - `retrieve_v1()`     — yes (`memory_lookup.ts` calls `sanitize_entry`)
- *   - `memory_get_v1()`   — yes (same)
- *   - MCP `memory_lookup` / `memory_get` tools — inherited from the two above
- *   - `retrieve()` / `retrieve_with_meta()` — yes, since the S0.0 wiring fix;
- *     before it they emitted every vector intact, and so did the CLI default
- *     (`--envelope legacy`), which is the path the rules document
- *   - inter-agent channels (`ai_team` / `ai_council` model replies) — the
- *     inbound parse choke point only; the subagent boundary itself is a HOST
- *     primitive this package cannot reach (see the report, § S0.0b)
+ *     docs/contracts/retrieval-read-surfaces.md
  *
- * Anything not on that list is uncovered. Do not widen the list without a
- * probe row to back it.
+ * This header used to carry that list inline, and the list was wrong in BOTH
+ * directions: a path that reaches the outside world and IS sanitized was
+ * absent from it, and two paths carrying fetched bytes toward a model-facing
+ * surface were neither listed nor covered. An earlier version had already
+ * failed the same way — it named surfaces by intent, and the legacy-envelope
+ * gap went unnoticed for exactly that reason. Twice is a property of the
+ * mechanism, not of the entries, which is why the list is now derived from the
+ * import graph by `check_read_surface_coverage` and this header points at it
+ * instead of copying it. A divergence between the two FAILS that gate; two
+ * copies is how it went stale.
+ *
+ * Anything absent from the table is uncovered, and a module the generator
+ * cannot classify appears there as an `unclassified` ROW rather than being
+ * omitted — a missing row would read as no surface at all.
+ *
+ * One boundary the table cannot move: the subagent boundary itself is a HOST
+ * primitive this package cannot reach, so the inter-agent channels are covered
+ * at the inbound parse choke point and nowhere else.
+ *
+ * WHAT THIS FLOOR STILL DOES NOT SEE. Everything below is a CODEPOINT floor.
+ * Fetched markup also hides content STRUCTURALLY — an HTML comment, a
+ * `<template>` block, a `style="display:none"` span — which no codepoint
+ * predicate can see, and this package has no coverage for that class anywhere.
+ * A detector for it was written and REFUSED by an independent review on
+ * 2026-09-29: it stripped `aria-hidden` subtrees, whose content is visible to
+ * sighted readers, and a handwritten matcher mis-parses adversarial markup
+ * (a comment containing a same-name tag, tag-like text inside `<script>`).
+ * That work is open in `road-to-a-sanitize-list-that-is-generated` Phase 3 and
+ * the gap is stated here rather than left for a reader to infer from silence.
  */
 import { _classify } from '../lint_hidden_unicode.js';
 import { TOKEN_RE, classifyToken } from './confusables.js';

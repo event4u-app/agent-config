@@ -438,6 +438,7 @@ tasks:
       - task: lint-skill-trigger-contradiction
       - task: check-mcp-doc-drift
       - task: check-enforcement-matrix
+      - task: check-read-surface-coverage
       - task: check-host-format-column
       - task: lint-readme-size
       - task: lint-readme-jargon

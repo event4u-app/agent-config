@@ -23,6 +23,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { DEFAULT_PRICES, as_rows } from './ai_council/_default_prices.js';
+import { sanitize_text } from './_lib/retrieval_sanitize.js';
 import { PRICES_FILE, _render_markdown, is_stale, load_prices } from './ai_council/pricing.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -38,6 +39,40 @@ type Json = any;
 // Models we surface in the table. Anything not in this allow-list is dropped
 // from the LiteLLM payload. set(DEFAULT_PRICES.keys()) → "provider model" keys.
 const ALLOW_LIST: ReadonlySet<string> = new Set(DEFAULT_PRICES.keys());
+
+/**
+ * The only shape a remote identifier may have to be considered at all.
+ *
+ * Pure ASCII letters, digits and the punctuation real provider/model names use.
+ * Every allow-list entry is ASCII, so nothing outside this can be a member —
+ * and asserting it on the UNTOUCHED bytes is what makes the case fold below
+ * safe, because within ASCII folding is lossless. A Unicode character that
+ * folds onto an ASCII letter never reaches the comparison.
+ */
+const _CANONICAL_ID = /^[A-Za-z0-9._-]+$/;
+
+/** ASCII-only case fold — never `toLowerCase`, which folds Unicode too. */
+function _asciiLower(s: string): string {
+    return s.replace(/[A-Z]/g, (c) => String.fromCharCode(c.charCodeAt(0) + 32));
+}
+
+/**
+ * Report a rejected identifier that WOULD have matched after transformation.
+ *
+ * A raw miss whose normalised form hits the allow list is a different event
+ * from an ordinary unlisted name, and printing both as the same silence is what
+ * would hide an admission attempt. Ordinary misses stay silent — the fetched
+ * catalogue carries hundreds of models nobody here lists.
+ */
+function _reportCollision(rawProvider: string, rawModel: string): void {
+    const normalised = `${sanitize_text(rawProvider).toLowerCase()} ${sanitize_text(rawModel)}`;
+    if (!ALLOW_LIST.has(normalised)) return;
+    process.stderr.write(
+        'update_prices: DROPPED a remote row whose raw identifier is not allow-listed ' +
+            `but normalises onto \`${normalised}\`. A fetched name that folds or sanitizes ` +
+            'onto a listed one is an admission attempt, not a typo.\n',
+    );
+}
 
 /**
  * Synchronous HTTPS GET so the CLI stays a straight-line script (Python uses
@@ -99,13 +134,60 @@ export function _toRowsFromLitellm(
         if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) {
             continue;
         }
-        const provider = String((entry.litellm_provider as Json) ?? '').toLowerCase();
+        // Sanitize BEFORE the allow-list compare, not after. These two strings
+        // come off the wire and end up in a tracked markdown file that agents
+        // read, so they are the model-facing copy this floor exists for. Doing
+        // it before the compare is also the only order that works: a vector
+        // inside a model name would otherwise fail the allow-list lookup and
+        // drop the row, turning an injection attempt into a silent data loss.
+        // The fetched payload itself is never written anywhere — only this
+        // rendering is transformed.
+        const rawProvider = String((entry.litellm_provider as Json) ?? '');
         // LiteLLM keys are sometimes "provider/model"; strip the prefix.
         const slash = key.indexOf('/');
-        const model = slash !== -1 ? key.slice(slash + 1) : key;
-        if (!ALLOW_LIST.has(`${provider} ${model}`)) {
+        const rawModel = slash !== -1 ? key.slice(slash + 1) : key;
+
+        // THE ADMISSION BOUNDARY: a canonical ASCII grammar first, then a
+        // comparison on values nothing has transformed.
+        //
+        // Two earlier orders were both wrong and the second is the instructive
+        // one. The first sanitized before comparing, so a poisoned name could
+        // normalise onto a listed one and be admitted as it. The fix compared
+        // "raw" values — but `.toLowerCase()` ran before the compare, and THAT
+        // IS ITSELF A LOSSY UNICODE TRANSFORM: the Kelvin sign and the Turkish
+        // dotted capital both fold onto ASCII letters, so the provider field
+        // still carried the collision the model field no longer did. An
+        // independent review named it and was right; closing one field and
+        // calling the class closed is the failure mode, not the typo.
+        //
+        // The reachable fold is ONE character: `U+212A KELVIN SIGN -> k`.
+        // Measured, not recalled — U+212B ANGSTROM folds to `å`, which is not
+        // ASCII, and an earlier note here claimed otherwise. No provider in the
+        // current list carries a `k`, so this boundary guards nothing reachable
+        // TODAY; it guards the day one is added, which is the only time a
+        // boundary of this shape can be added without a migration.
+        //
+        // So the grammar is asserted on the UNTOUCHED bytes. Pure ASCII, with
+        // the punctuation real identifiers use. Nothing outside it can be an
+        // allow-list member, because every entry is ASCII — and within ASCII,
+        // case folding is lossless, which is what makes the fold below safe to
+        // apply after the gate rather than before it.
+        if (!_CANONICAL_ID.test(rawProvider) || !_CANONICAL_ID.test(rawModel)) {
+            _reportCollision(rawProvider, rawModel);
             continue;
         }
+        const provider = _asciiLower(rawProvider);
+        if (!ALLOW_LIST.has(`${provider} ${rawModel}`)) {
+            _reportCollision(rawProvider, rawModel);
+            continue;
+        }
+
+        // Only now, and only for the rendering: the row reaches a tracked
+        // markdown file that agents read, so the model-facing copy carries the
+        // floor. The fetched payload itself is never written anywhere. Both
+        // values are already canonical ASCII here, so this is a no-op in
+        // practice and a belt on the rendering in principle.
+        const model = sanitize_text(rawModel);
         const inCost = entry.input_cost_per_token;
         const outCost = entry.output_cost_per_token;
         if (!_isNumber(inCost) || !_isNumber(outCost)) {

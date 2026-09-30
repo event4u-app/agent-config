@@ -37,6 +37,10 @@
  * shape of an Apache-2.0 upstream — attribution in the repo-root NOTICE file.
  */
 import { spawnSync } from 'node:child_process';
+// read-surface: inter-agent-reply — a teammate's reply arrives through a HOST
+// primitive this package does not own, so no call site here spells the inbound
+// fetch. Declared rather than inferred; the coverage verdict is still read from
+// the import below.
 import { sanitize_text } from '../_lib/retrieval_sanitize.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';

@@ -695,6 +695,17 @@ tasks:
       agreement with the configuration and nothing about any host's runtime.
     cmd: ./scripts-run src/scripts/check_enforcement_matrix {{.QUIET_FLAG}}
 
+  check-read-surface-coverage:
+    silent: true
+    desc: |
+      The sanitize floor's read-surface table in
+      docs/contracts/retrieval-read-surfaces.md is GENERATED from the import
+      graph, and this fails when the committed copy and the tree disagree, when
+      retrieval_sanitize.ts's header restates the table instead of pointing at
+      it, or when the structural-hiding detector publishes a recall figure it
+      has no corpus for. Regenerate with `--write`; the list is derived, so a
+      correction belongs in the tree or the scanner, never in the table.
+    cmd: ./scripts-run src/scripts/check_read_surface_coverage {{.QUIET_FLAG}}
   check-host-format-column:
     silent: true
     desc: |

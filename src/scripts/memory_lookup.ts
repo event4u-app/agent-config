@@ -35,7 +35,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import YAML, { parseDocument } from 'yaml';
 
-import { sanitize_entry } from './_lib/retrieval_sanitize.js';
+import { sanitize_entry } from './_lib/retrieval_sanitize.js'; // read-surface: ingested-corpus
 import { LexicalIndex, tokenize as _lexTokenize } from './_lib/lexical_index.js';
 import {
     ensureIndex as _ftsEnsureIndex,
