@@ -240,8 +240,59 @@ describe('deployRestrictedFrom', () => {
         expect(deployRestrictedFrom([{ name: 'e', deployment_branch_policy: {} }])).toBe(false);
     });
 
-    it('is vacuously restricted with no environments', () => {
-        expect(deployRestrictedFrom([])).toBe(true);
+    it('returns null for an empty set — a failed fetch is not a satisfied row', () => {
+        // R2 finding 1: `true` here collapsed "confirmed zero environments" into
+        // "the fetch came back empty", which is the quiet false-positive the
+        // three-state row exists to prevent. `null` maps to `unread`.
+        expect(deployRestrictedFrom([])).toBeNull();
+    });
+
+    it('an empty set reaches the row as unread, never as satisfied', () => {
+        const rows = forgeProtectionRows({
+            rulesets: null,
+            defaultBranch: null,
+            allowAutoMerge: null,
+            deployRestricted: deployRestrictedFrom([]),
+        });
+        expect(rows.find((r) => r.id === 'deploy_via_pipeline_only')?.state).toBe('unread');
+    });
+
+    it('a wildcard custom policy restricts nothing, whatever the flag says', () => {
+        // R2 finding 2: the flag cannot distinguish a policy pinned to `main`
+        // from one whose pattern is `*`; the names come from a second call.
+        expect(deployRestrictedFrom([LIVE_PAGES], { 'github-pages': ['*'] })).toBe(false);
+        expect(deployRestrictedFrom([LIVE_PAGES], { 'github-pages': ['**'] })).toBe(false);
+    });
+
+    it('named patterns that are not wildcards stay restricted', () => {
+        expect(deployRestrictedFrom([LIVE_PAGES], { 'github-pages': ['main'] })).toBe(true);
+    });
+
+    it('an empty pattern list is not a restriction', () => {
+        expect(deployRestrictedFrom([LIVE_PAGES], { 'github-pages': [] })).toBe(false);
+    });
+
+    it('patterns supplied for a different environment do not silently apply', () => {
+        // Keyed by name: an unrelated entry leaves this environment on the
+        // flag-only path rather than borrowing another environment's patterns.
+        expect(deployRestrictedFrom([LIVE_PAGES], { other: ['*'] })).toBe(true);
+    });
+
+    it('a protected_branches environment ignores patterns entirely', () => {
+        expect(
+            deployRestrictedFrom(
+                [
+                    {
+                        name: 'prod',
+                        deployment_branch_policy: {
+                            protected_branches: true,
+                            custom_branch_policies: false,
+                        },
+                    },
+                ],
+                { prod: ['*'] },
+            ),
+        ).toBe(true);
     });
 
     it('feeds the row: the live environment makes deploy_via_pipeline_only satisfied', () => {

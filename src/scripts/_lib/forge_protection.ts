@@ -111,16 +111,39 @@ export interface EnvironmentPolicy {
  * precise restriction for one whose evaluation is exactly the ambiguity the
  * `forge-protection-settings` re-scope forbids relying on.
  *
- * An empty environment set is restricted **vacuously**: with no environment
- * there is no deployment surface to leave open. Stated rather than left to
- * fall out of `every`, because "no environments" and "all environments fine"
- * reaching the same answer is a coincidence a reader should not have to verify.
+ * **An empty environment set returns `null`, not `true`.** The first draft
+ * returned `true` on the reasoning that with no environment there is no
+ * deployment surface to leave open. That is sound about a *confirmed* empty
+ * set and wrong about the value actually reaching this function: an empty
+ * array is what a failed fetch, a truncated page, or a caller that never
+ * queried also produces, and collapsing those into `satisfied` is exactly the
+ * quiet false-positive the three-state row exists to prevent. `null` maps to
+ * `unread`, which is the state this module already reserves for a value nobody
+ * established. A caller that has genuinely confirmed zero environments can say
+ * so by passing `true` itself; it cannot be inferred from the array alone.
+ *
+ * **Wildcard patterns.** A custom policy's NAMES live behind a second call
+ * (`GET .../environments/{name}/deployment-branch-policies`) and accept globs,
+ * so `custom_branch_policies: true` alone cannot distinguish a policy pinned to
+ * `main` from one whose pattern is `*`. Pass `patternsByEnv` when those names
+ * have been read: an environment whose patterns admit everything is reported
+ * unrestricted. Omit it and the flag is trusted — the narrower guarantee was
+ * not checked, which is stated here rather than left for a reader to discover.
  */
-export function deployRestrictedFrom(environments: readonly EnvironmentPolicy[]): boolean {
+export function deployRestrictedFrom(
+    environments: readonly EnvironmentPolicy[],
+    patternsByEnv?: Readonly<Record<string, readonly string[]>>,
+): boolean | null {
+    if (environments.length === 0) return null;
     return environments.every((env) => {
         const policy = env.deployment_branch_policy;
         if (policy === null || policy === undefined) return false;
-        return policy.protected_branches === true || policy.custom_branch_policies === true;
+        if (policy.protected_branches === true) return true;
+        if (policy.custom_branch_policies !== true) return false;
+        const patterns = patternsByEnv?.[env.name];
+        if (patterns === undefined) return true;
+        // A policy admitting every ref restricts nothing, whatever the flag says.
+        return patterns.length > 0 && !patterns.some((p) => p === '*' || p === '**');
     });
 }
 
