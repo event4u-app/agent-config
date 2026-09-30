@@ -15,7 +15,8 @@ a claim made here.
 ## The frozen set
 
 Every `src/skills/*/evals/triggers.json` present on this tree at the moment of
-freezing: **101 files**, 18 holdout and 83 train (100 at the freeze; see § Growth 2026-09-19).
+freezing: **102 files**, 18 holdout and 84 train (100 at the freeze; see
+§ Growth 2026-09-19 and § Growth 2026-09-30).
 
 ## The partition rule — deterministic, name-derived, no discretion
 
@@ -43,7 +44,7 @@ prevent.
 ## The set hash
 
 ```
-SET-SHA256  6cac70513a26f48e37447c265d75777ff39f6e6ff67403976d5d8362f20e58f6
+SET-SHA256  034f791e368565b08d4cbd7498ffa7d32b41b5e4c513ed948df0e9933addf90b
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for all
@@ -228,6 +229,7 @@ open and which this file does not settle.
 | `test-case-discovery` | `ab3208cc89e8c4c18c4ad4886e6a8893a184d801c57699f6037dbf2bc9d46ef3` |
 | `typography-system` | `ab3dbde9a42077d682115a1707d6fa4686e5d3155eef0998f1e240b0b86bb73a` |
 | `ui-apply-generic` | `e3f02e3ba53fb96def30fca6752f400d15b6b63209072928bff9e239aaac7ec5` |
+| `ui-component-architect` | `a9b864a568aa32d2bccd96f524a69d24042f05cdd29b339d45bf9ff6b95b9da5` |
 | `verify-repair-loop` | `0e66da5e7daac823b400f9493cc2865f9521a40dc7a01bf74ed81702680cb47b` |
 | `wireframe` | `a8d5417a0cdc00557cbc7e55db8184943d971f60d279b4d68eb549cb2ab6a77a` |
 | `workspace-link` | `b4733d41b6460c62cfb91bbbdaf6e764124d115035ee6d780f782ca4e3aae675` |
@@ -274,6 +276,48 @@ undivided list, so it changes whenever the corpus grows on either side — it
 cannot distinguish "grew on train" from "edited a frozen file" on its own. What
 distinguishes them is the per-row diff above, which is why this section carries
 it rather than only the new number. A future growth owes the same check.
+
+## Growth 2026-09-30 — the corpus gained one TRAIN file; the seal did not move
+
+```
+THE CORPUS GREW. THE HOLDOUT DID NOT.
+ALL 18 SEALED ROWS ARE BYTE-IDENTICAL. THE RULE IS UNCHANGED.
+NO HOLDOUT RESULT IS VOIDED, BECAUSE NO HOLDOUT FILE WAS TOUCHED.
+```
+
+**What changed.** `road-to-a-component-taxonomy-we-follow-but-never-force`
+authored `src/skills/ui-component-architect/evals/triggers.json` — one file, ten
+cases. It was not a coverage push: that branch edits the skill's placement
+section, and `check_routing_coverage` requires a corpus for every skill a diff
+touches, so the file is that gate's remedy. The corpus is **102 files, 18
+holdout and 84 train**, and `SET-SHA256` is re-pinned to `034f791e…` from
+`6cac7051…`.
+
+**Recorded rather than re-pinned quietly**, per § The partition rule: *"A change
+is legal; a silent change is the compromise this step exists to prevent."*
+
+**What provably did NOT change, checked rather than asserted.** Re-running this
+file's own reproduce recipe and diffing every row against the published tables
+leaves **exactly one** row absent from the artefact — `ui-component-architect`,
+on the `train` side. All 18 holdout rows and all 83 pre-existing train rows
+reproduce byte-for-byte:
+
+- the partition **rule** is untouched — ceiling 51, name-derived, no discretion;
+- `sha256('ui-component-architect')[0:2]` is `0xde` = **222**, far above the
+  ceiling, so it lands in **train** and the holdout membership is the same 18
+  skills;
+- no holdout file's bytes moved, so no holdout result is voided.
+
+**The ordering claim is unaffected.** AC-6's claim is about the 18 holdout rows
+and the git history that carries them. Neither moved; a growth on the train side
+cannot retro-fit a holdout fixed before it.
+
+**The residual the 2026-09-19 section named is unchanged and was paid again.**
+`SET-SHA256` is computed over the undivided list, so it moves whenever the
+corpus grows on either side and cannot on its own distinguish "grew on train"
+from "edited a frozen file". The per-row diff above is what distinguishes them,
+which is why this section carries it rather than only the new number. That
+section said a future growth owes the same check; this is that check.
 
 ## What this freeze does NOT establish
 
