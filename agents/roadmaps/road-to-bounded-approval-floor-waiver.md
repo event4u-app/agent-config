@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: draft
+status: ready
 estate_offset_exempt: >-
   Nothing in the active estate can be offset against this. The two roadmaps the gate counts as
   active are road-to-delivery-for-every-host and road-to-delivery-on-hook-hosts, both host
@@ -325,7 +325,7 @@ cost argument is a given rather than a proposal.
       Session files are gitignored and pruned after the retention window, so the
       findings are restated above in full rather than cited by path.
 
-- [ ] <!-- blocked-by: recovery-rehearsal-hard-floor | asked: no — non-interactive drain run instructed to work autonomously and put no question to the owner; the rehearsal is a Hard-Floor admin write on repository protection settings, which needs explicit this-turn confirmation a headless run cannot obtain --> **0.2 Establish the administrator recovery path, tested.**
+- [x] **0.2 Establish the administrator recovery path, tested.**
       Both seats raised it and neither proposed one; the earlier draft of this
       roadmap declared it discharged, which it is not. With `bypass_actors: []`
       a future ruleset mistake re-locks the sole maintainer out of the PR path,
@@ -368,6 +368,23 @@ cost argument is a given rather than a proposal.
       record that its acceptance criteria were met. AC-7's load-bearing word is
       *tested*, and it is not. Leaving the box open costs a count; closing it
       would file a false completion.
+      **CLOSED 2026-09-30 — the rehearsal ran, on explicit this-turn owner
+      confirmation.** The Hard Floor was satisfied, not waived: the owner was
+      asked, answered, and the writes followed. Throwaway ruleset `24261766`
+      targeting `refs/heads/rehearsal-lockout` reproduced the lockout shape
+      (`bypass_actors: []`, `current_user_can_bypass: never`); steps 2-5 ran
+      against it by **both** routes; it was deleted; `17749383` was read before
+      and after and was identical on every field, having never been a write
+      target; `check_platform_anchor` passed afterwards. Three observations the
+      written procedure did not carry are now in it — the history read returns
+      `null` at top level rather than the empty list "reads empty" implied and
+      is therefore falsy in the same shell test a guard would use;
+      `current_user_can_bypass` does **not** track `enforcement`, so it reports
+      route (a) as failed while route (a) worked; and route (b) accepts the
+      `.state` payload with its read-only fields unedited, so no stripping step
+      is owed. What made the four earlier passes correct is unchanged and worth
+      keeping: none of them could have done this, and the difference today is
+      the confirmation, not the capability.
       **RE-VERIFIED 2026-09-27, thirteen days later, by the run that processed
       this roadmap end to end.** Same three facts re-measured, not re-read:
       `branch-protection-policy.md` § Administrator recovery from a lockout is
@@ -794,7 +811,7 @@ DIFFERENCE IS STATED PER STEP RATHER THAN AVERAGED AWAY.
 ## Blockers
 
 ### blocker: recovery-rehearsal-hard-floor
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Ownership:** `destructive-owned`
 - **Class:** 3 — human-only
@@ -832,6 +849,15 @@ DIFFERENCE IS STATED PER STEP RATHER THAN AVERAGED AWAY.
 - **Resolved when:** `grep -c 'NOT yet rehearsed' docs/contracts/branch-protection-policy.md`
   returns `0` and the same section carries a dated rehearsal record naming the ruleset id the
   procedure was executed against.
+- **Resolved 2026-09-30**, by executing that condition rather than asserting it: the `grep`
+  returns `0`, and § Administrator recovery from a lockout is retitled *rehearsed 2026-09-30*
+  and carries the record naming throwaway ruleset `24261766`. The owner gave the Hard-Floor
+  confirmation in the same turn the writes were made — satisfied, not waived. Both restore
+  routes ran; `17749383` was read before and after and never written; `check_platform_anchor`
+  passed. Three corrections to the procedure fell out of the run and are recorded there: the
+  history read returns `null` at top level rather than an empty list, `current_user_can_bypass`
+  does not track `enforcement` and will misreport route (a) as failed, and route (b) accepts
+  the `.state` payload unedited.
 
 **Why this is a blocker and not work, stated rather than assumed, because the capability
 screen says a `Class: 3` label on an action an agent can perform is a defect in the roadmap
@@ -1024,7 +1050,7 @@ INSTRUCTION SHOULD BE LEFT LYING.
       not because the 2026-09-13 sweep was complete — and the miss is recorded
       here rather than quietly patched, since a self-applied criterion that
       cannot see its own file is the one failure mode worth leaving legible.
-- [ ] <!-- blocked-by: recovery-rehearsal-hard-floor | asked: no — non-interactive drain run instructed to work autonomously and put no question to the owner; the rehearsal is a Hard-Floor admin write on repository protection settings, which needs explicit this-turn confirmation a headless run cannot obtain --> AC-7 — A **tested** administrator recovery procedure exists for a lockout
+- [x] AC-7 — A **tested** administrator recovery procedure exists for a lockout
       with `bypass_actors: []`.
       **NOT MET, and this is the roadmap's one open item.** The procedure is
       written (`branch-protection-policy.md` § Administrator recovery from a
@@ -1053,3 +1079,15 @@ INSTRUCTION SHOULD BE LEFT LYING.
       structured `## Blockers` entry that names the owner, the exact rehearsal commands,
       and the `grep` that closes it. The 2026-09-27 live-ruleset finding referenced above
       is itself superseded — the gate passes again (M19).
+      **MET 2026-09-30.** The owner was asked for the Hard-Floor confirmation, gave it,
+      and the rehearsal ran the same turn against throwaway ruleset `24261766` — both
+      restore routes, the default-branch ruleset never a write target and identical
+      before and after, `check_platform_anchor` green afterwards. The closing condition
+      is executed, not asserted: `grep -c 'NOT yet rehearsed'
+      docs/contracts/branch-protection-policy.md` returns **0**, and the section now
+      carries a dated record naming the ruleset id. The word *tested* is satisfied on
+      its own terms — the commands were watched working, and three things they do that
+      the written procedure did not say are now written down (§ the policy's rehearsal
+      record). The estate-level duplicate stands: `ratification-platform-anchor` on
+      `road-to-typed-grants-that-persist.md` still carries its half, and closing this
+      criterion does not close that blocker.
