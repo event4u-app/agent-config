@@ -3,6 +3,16 @@ complexity: lightweight
 status: ready
 execution:
   mode: phase-checkpoints
+estate_growth_exempt: >-
+  open_blockers rises 38 -> 39 and NOTHING WAS ADDED. The
+  shadow-corpus-is-one-machine blocker was authored open in this file's first
+  commit; it sat under a phase heading instead of a `## Blockers` H2, which is
+  the only place check_estate_count and lint_roadmap_blockers look, so the
+  counter never saw it. This change promotes it to that section so step 2.2 can
+  carry the inline blocked-by marker run-continuation reads blockedness from.
+  The +1 is the census finding a pre-existing open blocker, not the estate
+  growing - offsetting it would mean closing a real blocker to pay for making
+  an existing one visible, which is the opposite of what the ratchet protects.
 estate_offset_exempt: >-
   Nothing in the active estate can be archived to pay for this one. The receiver
   it would otherwise join, road-to-a-ledger-that-closes-the-loop, is the roadmap
@@ -249,7 +259,7 @@ tree produced it.
       making an absent directory report as an existing one failed exactly 2
       tests; folding `absent` into `unknown` failed exactly 2; dropping the
       `unreadable` count and the empty-directory wording failed exactly 2.
-- [ ] **2.2 Resolve the corpus blocker below.** The reporter makes the question
+- [ ] <!-- blocked-by: shadow-corpus-is-one-machine | asked: no — non-interactive process-full run: it reports once at the end and cannot put a question, and the decision amends a pre-registered public claim the claims register itself records as owner-reserved --> **2.2 Resolve the corpus blocker below.** The reporter makes the question
       answerable with a number; the answer is not an agent's to give.
       verify: the blocker's `Status` reads `resolved` with the chosen option named
 
@@ -267,6 +277,35 @@ tree produced it.
         src/scripts/report_obligation_writer_split --root <checkout>`.
       - Its first reading is in 2.1 above: 8 ledgers, 179 `delivered` rows, **0
         shadow rows** against a pre-registered floor of 100, every row `absent`.
+      - **That reading is SUPERSEDED on its qualification half, by a change that
+        landed after Phase 2 ran.** `docs/CLAIMS.md` clause (9), filed
+        2026-09-29 by `road-to-a-stop-that-holds` step 3.1 and confirmed live
+        here (`git merge-base --is-ancestor 5c9415258 origin/main` exits 0),
+        RESET the window at that commit: until it, the settle hook resolved its
+        session from `CLAUDE_CODE_SESSION_ID`, which the dispatcher never sets,
+        so every dispatched stop event was a non-reading. The sample is empty as
+        of the reset, and the zero-shadow half of every earlier reading is
+        explained by that defect rather than by clean turns. Neither 2.1's
+        figures nor the "Why now" section's may be cited as a base rate.
+      - **RE-READ 2026-09-30, same unit as 2.1** — one row in one `*.json`
+        ledger under `<root>/agents/runtime/state/obligations/`, `--root` the
+        maintainer checkout, counted per row array:
+
+        ```
+        rows          package consumer  unknown   absent    total
+        delivered          13        0        0      190      203
+        discharged          0        0        0        0        0
+        shadow              0        0        0        0        0
+        ```
+
+        The field is producing rows: **13 `package`** where 2.1 read 0 and
+        called every row `absent`. So the split the step promised is now
+        non-trivially readable rather than only computable. **`consumer` is 0**,
+        and that is the observation the blocker's question is about — it is a
+        reading and not a property of the corpus, which is live, gitignored and
+        janitor-pruned and grows between any two readings. The number the bar
+        counts is unchanged in every reading taken so far: **shadow rows = 0**.
+        Nothing here is a verdict on (a), (b) or (c).
       - **A finding for whoever decides:** option (a) is smaller than it looks.
         Clause (7) of `obligation-settle-shadow-bar` ALREADY says the corpus "is
         one machine's gitignored runtime state … and measures THIS install rather
@@ -278,12 +317,19 @@ tree produced it.
       - Nothing here recommends an option. The roadmap's own `Recommendation:`
         line stands as written and is the author's, not this execution's.
 
-### blocker: shadow-corpus-is-one-machine
+## Blockers
 
-**Status:** open
-**Owner:** maintainer
-**Blocks:** 2.2, and the arming decision in `road-to-a-ledger-that-closes-the-loop`
-**What to do:** exactly one of —
+### blocker: shadow-corpus-is-one-machine
+- **Status:** open
+- **Owner:** maintainer
+- **Ownership:** business-owned — the decision amends `obligation-settle-shadow-bar`,
+  a pre-registered claim in `docs/CLAIMS.md`, and clause (8) of that claim already
+  records the question as owner-reserved. Options (a) and (c) weaken a public
+  commitment; (b) requires a second real operator's tree. None is a technical
+  judgement the closure ladder could have closed, which is why it is filed here
+  rather than resolved as a `## Decisions` row.
+- **Blocks:** 2.2, and the arming decision in `road-to-a-ledger-that-closes-the-loop`
+- **What to do:** exactly one of —
   (a) accept the one-machine corpus, and amend the pre-registered bar to say in
       its own words that a passing reading describes this checkout's habits and
       is not evidence about a consumer;
@@ -292,14 +338,14 @@ tree produced it.
   (c) file the window `resolved-null` now on the ground that the population it
       needs does not exist, and require a new pre-registered claim before any
       arming.
-**Resolved when:** the chosen option is written into the claim in
-`docs/CLAIMS.md`, and the roadmap step that reads the bar cites it.
-**Recommendation:** (a) is the cheapest honest move and loses nothing that is
-not already lost — the bar's own sample floor is unreachable at the observed
-rate, and an amended bar that says so is a smaller claim than a green one.
-**If you do nothing:** the window keeps accumulating rows that cannot be
-separated by writer, and the first reading that clears the floor will be cited
-as evidence about a population it never measured.
+- **Resolved when:** the chosen option is written into the claim in
+  `docs/CLAIMS.md`, and the roadmap step that reads the bar cites it.
+- **Recommendation:** (a) is the cheapest honest move and loses nothing that is
+  not already lost — the bar's own sample floor is unreachable at the observed
+  rate, and an amended bar that says so is a smaller claim than a green one.
+- **If you do nothing:** the window keeps accumulating rows that cannot be
+  separated by writer, and the first reading that clears the floor will be cited
+  as evidence about a population it never measured.
 
 ## Acceptance criteria
 
