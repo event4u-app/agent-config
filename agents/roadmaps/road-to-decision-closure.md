@@ -38,6 +38,17 @@ capability_gap: none
 > being word-for-word that sibling's step 3.2. AC-5 and AC-6's first clause are transcript
 > claims on top, so neither closes on a static probe alone.
 >
+> **The three blocked steps are now machine-readable as blocked, 2026-09-30.** Until now the
+> three causes were recorded only in prose, so `scanOpenSteps` read this file as
+> `open=3, blocked=0` and the continuation ladder picked **3.1** as the next runnable step —
+> the one whose write is denied at tool-call time. Every run that engaged it was guaranteed
+> to stall. The three steps now carry the `<!-- blocked-by: … | asked: no — … -->` annotation
+> the tooling already defines, each resolving to a blocker declared below, so the scan reads
+> `open=0, blocked=3` and `decideLadderAction` returns `blocked` — ADR-235's terminal outcome
+> for exhausted runnable work, which is what this file actually is. The boxes stay `- [ ]`:
+> nothing was deferred, cancelled or closed, and the treatment is the one
+> `road-to-typed-grants-that-persist` already received for the same condition.
+>
 > **The paragraphs below are the 2026-09-10 screening record.** They were written when the
 > file stood at 0 of 22 and are kept because their reading of the dependency is still the live
 > one — but they are no longer the status, and this paragraph is.
@@ -222,7 +233,7 @@ owner-owned residue remains, closure completes with zero owner interaction.
 
 ## Phase 3 — Host-native, one at a time
 
-- [ ] **3.1 Asks use the host's own primitive where one exists.** `user-interaction.md` and
+- [ ] <!-- blocked-by: kernel-write-deny-ask-when-uncertain | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question; the deny was reproduced at tool-call time on this tree and only a maintainer can lift it --> **3.1 Asks use the host's own primitive where one exists.** `user-interaction.md` and
       `ask-when-uncertain.md` name the native tool per host — Claude Code's `AskUserQuestion`,
       and the equivalent elsewhere — with the numbered text block as the fallback. Iron Law 1's
       recommendation becomes the native default option; each ask carries the agent's or the
@@ -270,7 +281,7 @@ owner-owned residue remains, closure completes with zero owner interaction.
 
 ## Phase 4 — Mid-run residue
 
-- [ ] **4.1 The same table governs mid-run.** Technical residue resolves inline through agent,
+- [ ] <!-- blocked-by: grant-object-undelivered | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question; the missing object is another roadmap's deliverable and no owner decision is pending on it --> **4.1 The same table governs mid-run.** Technical residue resolves inline through agent,
       independent session, council or team and is appended to `## Decisions` with the step id.
       Owner-owned residue triggers a native ask only if the step cannot progress; otherwise the
       step is parked, independent phases continue, and the run returns to it. Mission-level
@@ -309,7 +320,7 @@ owner-owned residue remains, closure completes with zero owner interaction.
 
 ## Phase 5 — Interrupts
 
-- [ ] **5.1 Closure records the mission id and the interrupt rule reads it.** A clarification
+- [ ] <!-- blocked-by: interrupt-classes-owned-by-sibling | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question; the rule file has a declared owner elsewhere and executing it here would create the second owner the step exists to avoid --> **5.1 Closure records the mission id and the interrupt rule reads it.** A clarification
       is incorporated; a side task is paused, executed and auto-resumed; only stop, replace or
       revoke changes mission state. Grants, the delivery target and closed decisions survive an
       interrupt. Recognised state-changing words include the owner's own — *stop*, *abort*,
@@ -387,6 +398,71 @@ owner-owned residue remains, closure completes with zero owner interaction.
   § 0's table.
 - **Resolved when:** `grep -m1 '^status:' docs/decisions/ADR-268-*.md` reads `accepted` — it
   does, verified 2026-09-08.
+
+### blocker: kernel-write-deny-ask-when-uncertain
+- **Status:** open
+- **Owner:** maintainer
+- **Class:** 3 — human-only
+- **Blocks:** step 3.1's remaining paragraph, and through it AC-6's first clause. Nothing
+  else — the non-kernel half of 3.1's contract landed on 2026-09-13 in
+  `user-interaction-mechanics.md`.
+- **What to do:** write one paragraph into `src/rules/ask-when-uncertain.md` naming the
+  host's native ask primitive alongside its Iron Law, using a route an agent does not hold:
+  the human-owned override exception registry named in the denial message, or removal of the
+  `block-kernel-rule-writes` entry from `src/scripts/hook_manifest.yaml`. Both are maintainer
+  acts outside an agent session. Do **not** reach for `--no-verify` or a `core.hooksPath`
+  override; `block-no-verify` denies those separately and they are not bypasses.
+- **Recommendation:** leave it until the sibling's `kernel-guard-first-crossing` is settled.
+  That blocker governs the same guard across five kernel rules and is still `open`; crossing
+  it once for this one paragraph would spend the first crossing on the smallest of the six.
+- **If you do nothing:** 3.1 and AC-6's first clause stay open. Nothing regresses — the
+  contract the paragraph would point at already ships and is already pointed at from
+  `ask-when-uncertain.md` § Mechanics, so the gap is a naming line, not a missing obligation.
+- **Resolved when:** an `Edit` envelope targeting `src/rules/ask-when-uncertain.md`, fed to
+  `src/scripts/hooks/block_kernel_rule_writes.ts`, no longer prints
+  `BLOCKED — kernel rule ask-when-uncertain is immutable`; or that file's paragraph naming the
+  per-host native primitive exists. Reproduced as BLOCKED on 2026-09-13, 2026-09-14 and
+  2026-09-30.
+
+### blocker: grant-object-undelivered
+- **Status:** open
+- **Owner:** maintainer
+- **Class:** 3 — human-only
+- **Blocks:** step 4.1's interrupt fixture only. 4.1's other half — the mid-run ownership
+  table and fixture `F4` — landed 2026-09-13.
+- **What to do:** nothing in this file. The grant object
+  `{op, target, scope, granted_by, span, expires}` is ADR-260's and is built by
+  `road-to-typed-grants-that-persist` Phase 2, with `expires` / `revoked_by` added by its 3.1.
+  Those steps are themselves held by that roadmap's `kernel-guard-first-crossing` and
+  `ratification-platform-anchor` blockers. Drain that roadmap, not this one.
+- **Recommendation:** treat 4.1 as closed-pending-sibling rather than as work. Writing the
+  fixture against an object that does not exist would assert nothing, and building the object
+  here would implement the sibling roadmap under this file's name.
+- **If you do nothing:** 4.1 stays open and correctly so. No behaviour is missing today,
+  because the grant it would protect does not exist to be lost.
+- **Resolved when:** `grep -rln granted_by src tests` returns at least one path. It returned
+  nothing on 2026-09-13, 2026-09-14 and 2026-09-30.
+
+### blocker: interrupt-classes-owned-by-sibling
+- **Status:** open
+- **Owner:** maintainer
+- **Class:** 3 — human-only
+- **Blocks:** step 5.1. The half this roadmap genuinely owns — that a closed decision survives
+  an interrupt — landed 2026-09-13 in `roadmap-process-loop.md` § 3-0.
+- **What to do:** decide which file owns the three interrupt classes in
+  `src/rules/user-interrupt-priority.md`, then land them once. This roadmap's 5.1 and
+  `road-to-typed-grants-that-persist`'s 3.2 specify the same rule file, the same three classes
+  and the same fixture. The likely disposition is to let the sibling land it and close 5.1
+  here by reference, but that is an ownership call and not an agent's to take.
+- **Recommendation:** close 5.1 as a duplicate of the sibling's 3.2 when that step lands,
+  rather than executing it in either place twice.
+- **If you do nothing:** 5.1 stays open. Note this blocker is **not** a capability limit —
+  `user-interrupt-priority.md` is not a kernel rule and no guard denies the write. An agent
+  could land it and would thereby create the second owner the step exists to prevent, so the
+  constraint is real but it is governance, not tooling.
+- **Resolved when:** `road-to-typed-grants-that-persist`'s step 3.2 reads `[x]`, or a
+  maintainer records here which of the two files owns the classes. Neither held on
+  2026-09-13, 2026-09-14 or 2026-09-30.
 
 ## Fixtures
 
