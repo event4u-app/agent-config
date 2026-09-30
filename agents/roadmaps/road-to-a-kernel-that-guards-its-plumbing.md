@@ -181,10 +181,14 @@ deny message names its own kill switch.
 > waits to validate now exists (`concern_sla_ms`), so what remains is time, not
 > work.
 >
-> **Resolved when** the `sla_ms` values registered on 2026-09-30 have been
-> observed across a release cycle of CI runs without a blocking concern
-> exceeding `sla_ms × 3`, at which point 3.3 lands the severity-based
-> fail-closed switch with the window's readings behind it.
+> **Resolved when** `concern_sla_ms` has been registered in
+> `hook-latency-budget.json` from repeated readings of the replay-OFF pass on
+> the reference runner — not one, for the reason 3.2's evidence records — and
+> those values have then been observed across a warn-only window without a
+> blocking concern exceeding `sla_ms × 3`. 3.3 then lands the severity-based
+> fail-closed switch with the window's readings behind it. The registration is
+> carried here rather than under 3.2 because 3.3 is its only consumer and the
+> window that validates it is 3.3's own.
 
 - [x] **3.1 Bundle integrity once per session, cached.** `build:hooks` writes
       `dist/hooks/dispatch.sha256`; `check_hook_bundle_content.ts` (exists,
@@ -234,12 +238,51 @@ deny message names its own kill switch.
       that knows a bundle is being built now, and it is needed precisely because
       a missing sidecar is `unverifiable` and ALLOWS at runtime — deliberately,
       so a consumer predating the sidecar is not wedged.
-- [ ] **3.2 Measure per-concern p95 before any flip (D3).** Extend
+- [x] **3.2 Measure per-concern p95 before any flip (D3).** Extend
       `bench_hook_latency.ts` to report p95 per concern (today per slot,
       `hook-latency-budget.json`); write `sla_ms` per blocking concern into
       the budget file from the measured p95 on the reference runner.
       verify: report lists all 8 blocking concerns with p95 and `sla_ms`; a
       concern the bench could not time prints `not_measured`, never `0`.
+      **Evidence (2026-09-30) — the report is delivered; `sla_ms` is
+      deliberately still unwritten, and the second half of that sentence is the
+      finding rather than an omission.**
+      The verify line is met: `bench_hook_latency` prints one row per BLOCKING
+      concern — nine, not eight, because step 1.2 of this same roadmap added
+      `block-plumbing-writes`, which is why the list is read from the manifest
+      instead of hardcoded. A concern with no samples prints `not_measured`
+      (`one-question-per-ask` does, honestly: its slot is not exercised by the
+      synthetic payload).
+      **A second route to a false `0` was live and the step did not anticipate
+      it.** The first run printed `p95 0 ms` for ALL NINE concerns. Every
+      concern in the static registry runs in-process and finishes well under a
+      millisecond, and `duration_ms` is floored — so truncation produced a
+      real-looking zero that the `not_measured` branch cannot catch and that
+      3.3 would have multiplied by three to reach a timeout of zero. The
+      samples now carry microsecond resolution and both routes are pinned.
+      **WHY `sla_ms` IS NOT WRITTEN, measured rather than argued.** The samples
+      first came from the gated slot runs, which set `AGENT_CONFIG_REPLAY=1`.
+      Replay suppresses state writes, and several blocking concerns do most of
+      their work through state. A/B, n=25 per cell: `verify-before-complete`
+      live 1249 µs against replay 310 µs (**×4.03**), `run-continuation` 431
+      against 220 (×1.96), `journal-record` ×1.24, `block-no-verify` ×1.21,
+      everything else inside ±10 %. An `sla_ms` of 310 µs for a concern whose
+      real p95 is 1249 µs gives 3.3 a 930 µs bound that the concern exceeds on
+      an ORDINARY run — Risk 1 of this register, arriving through a measurement
+      instead of through a guess.
+      The per-concern samples now come from their own pass with replay OFF
+      (`concernSlaPass`), against a throwaway workspace. `run-continuation`
+      moved 0.240 → 0.399 ms after the change, matching the A/B's live figure.
+      Registering a bound from one reading of a path corrected in the same
+      commit is the over-confidence the A/B just caught, and nothing consumes
+      `sla_ms` until 3.3 — which is blocked on an elapsed window regardless. So
+      the registration rides with 3.3, where its consumer is, and the Phase 3
+      blocker names it.
+      **Honest gap:** the replay/live delta is measured, not pinned by a test.
+      Asserting it needs a spawn of the real bundle against a real state root —
+      slow and environment-dependent — and a mocked spawn would test the mock.
+      The A/B is recorded in `concernSlaPass`'s header where the next reader
+      meets it.
 - [ ] **3.3 Fail closed by severity, after 3.2.** Amend
       `hook-architecture-v1.md:125`: rc ≥ 3 or timeout on a
       `severity: blocking` concern → `EXIT_BLOCK` with `execution_failed`

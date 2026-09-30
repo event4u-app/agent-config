@@ -49,4 +49,26 @@ try {
 
 const digest = createHash('sha256').update(bytes).digest('hex');
 writeFileSync(sidecar, `${digest}  ${basename(bundle)}\n`, 'utf-8');
-stdout.write(`write_bundle_digest: ${digest}  ${basename(bundle)} (${String(bytes.length)} bytes)\n`);
+
+// Read back what was just written and confirm it describes the bundle beside
+// it. An independent review called a post-build verification the
+// highest-leverage addition here, and the reason is the runtime posture: a
+// MISSING or unreadable sidecar is `unverifiable` at dispatch time and ALLOWS,
+// deliberately, so that a consumer whose package predates the sidecar is not
+// wedged. That choice means a half-written or unreadable sidecar degrades the
+// check silently instead of failing anything.
+//
+// `prepack-check.mjs` catches it at packaging time, which covers the published
+// tarball and nothing else. This covers every path that produces a bundle at
+// all — local build, CI build, packaging — because it is part of producing one.
+// It costs one re-read of 78 bytes.
+const readBack = readFileSync(sidecar, 'utf-8');
+const claimed = /^([0-9a-f]{64})\s/u.exec(readBack.trim())?.[1] ?? null;
+if (claimed !== digest) {
+    stderr.write(
+        `write_bundle_digest: wrote ${sidecar} but read back ${claimed ?? '(unparseable)'} ` +
+            `instead of ${digest} — the sidecar does not describe the bundle it was written for.\n`,
+    );
+    exit(1);
+}
+stdout.write(`write_bundle_digest: ${digest}  ${basename(bundle)} (${String(bytes.length)} bytes, verified)\n`);

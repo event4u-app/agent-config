@@ -565,6 +565,16 @@ export function capFor(budget: Budget, event: string): number {
  * bench does not exercise, or its `tools:` filter skipped it on the synthetic
  * payload. That is information, not a failure, which is why this reports and
  * does not gate.
+ *
+ * ONE NUMBER PER CONCERN, AND IT IS THE MAX OVER EVENTS, NOT THE P95 OF THE
+ * UNION. A concern bound to several slots has a distribution per slot, and the
+ * first version of this took a p95 across all of them pooled — which is a
+ * number describing no slot in particular and is biased by whichever slot the
+ * bench happens to run most. Step 3.3 derives ONE timeout per concern
+ * (`sla_ms x 3`) and the dispatcher applies it wherever the concern runs, so
+ * the bound has to hold on the concern's WORST slot or it refuses there. The
+ * row therefore carries the max of the per-event p95s and names the event that
+ * produced it, so a reader can see which slot sets the bound.
  */
 export interface ConcernLatencyRow {
     concern: string;
@@ -584,8 +594,12 @@ export interface ConcernLatencyRow {
      * number that step 3.3 would multiply by three to get a timeout of zero.
      */
     p95_us: number | null;
+    /** Which event produced `p95_us` — the slowest slot this concern runs on. */
+    p95_event: string | null;
     /** The registered SLA in milliseconds, or null when none is registered yet. */
     sla_ms: number | null;
+    /** The budget carried a value for this concern that is not a number. */
+    sla_malformed: boolean;
 }
 
 /** Placeholder printed for a number the run could not establish. */
@@ -620,31 +634,49 @@ export function blockingConcerns(manifestPath: string = MANIFEST_PATH): {
  * observation into an outage. A skipped line lowers `n`, which the report
  * prints, so the reduction is visible rather than silent.
  */
-export function readConcernTimings(sinkPath: string): Map<string, number[]> {
-    const byConcern = new Map<string, number[]>();
+export interface ConcernTimings {
+    /** concern -> event -> samples. Nested, never flattened; see below. */
+    byConcernEvent: Map<string, Map<string, number[]>>;
+    /** Lines present in the sink that could not be read as a sample. */
+    skipped: number;
+}
+
+export function readConcernTimings(sinkPath: string): ConcernTimings {
+    const byConcernEvent = new Map<string, Map<string, number[]>>();
+    let skipped = 0;
     let text: string;
     try {
         text = fs.readFileSync(sinkPath, 'utf-8');
     } catch {
-        return byConcern;
+        return { byConcernEvent, skipped };
     }
     for (const line of text.split('\n')) {
         const trimmed = line.trim();
         if (trimmed === '') continue;
-        let row: { concern?: unknown; duration_us?: unknown };
+        let row: { concern?: unknown; duration_us?: unknown; event?: unknown };
         try {
             row = JSON.parse(trimmed) as typeof row;
         } catch {
+            skipped += 1;
             continue;
         }
         const name = typeof row.concern === 'string' ? row.concern : '';
         const us = row.duration_us;
-        if (name === '' || typeof us !== 'number' || !Number.isFinite(us)) continue;
-        const bucket = byConcern.get(name);
-        if (bucket === undefined) byConcern.set(name, [us]);
+        if (name === '' || typeof us !== 'number' || !Number.isFinite(us)) {
+            skipped += 1;
+            continue;
+        }
+        const event = typeof row.event === 'string' && row.event !== '' ? row.event : 'unknown';
+        let perEvent = byConcernEvent.get(name);
+        if (perEvent === undefined) {
+            perEvent = new Map<string, number[]>();
+            byConcernEvent.set(name, perEvent);
+        }
+        const bucket = perEvent.get(event);
+        if (bucket === undefined) perEvent.set(event, [us]);
         else bucket.push(us);
     }
-    return byConcern;
+    return { byConcernEvent, skipped };
 }
 
 /**
@@ -657,18 +689,41 @@ export function readConcernTimings(sinkPath: string): Map<string, number[]> {
  */
 export function perConcernRows(
     blocking: readonly { name: string; fail_closed: boolean }[],
-    samples: ReadonlyMap<string, number[]>,
-    sla: Readonly<Record<string, number | null>> = {},
+    samples: ReadonlyMap<string, ReadonlyMap<string, number[]>>,
+    sla: Readonly<Record<string, unknown>> = {},
 ): ConcernLatencyRow[] {
     return blocking.map(({ name, fail_closed }) => {
-        const observed = (samples.get(name) ?? []).slice().sort((a, b) => a - b);
+        const perEvent = samples.get(name);
+        let n = 0;
+        let worst: number | null = null;
+        let worstEvent: string | null = null;
+        for (const [event, xs] of perEvent ?? []) {
+            n += xs.length;
+            if (xs.length === 0) continue;
+            const sorted = [...xs].sort((a, b) => a - b);
+            const p = Math.round(percentile(sorted, 95));
+            if (worst === null || p > worst) {
+                worst = p;
+                worstEvent = event;
+            }
+        }
         const registered = sla[name];
+        // A value that is present but not a number is NOT silently `null`. The
+        // two states print differently and mean different things: `null` is a
+        // registered absence, a malformed entry is a typo in the budget file
+        // that would otherwise read as a missing measurement.
+        const slaMalformed =
+            registered !== undefined &&
+            registered !== null &&
+            (typeof registered !== 'number' || !Number.isFinite(registered));
         return {
             concern: name,
             fail_closed,
-            n: observed.length,
-            p95_us: observed.length === 0 ? null : Math.round(percentile(observed, 95)),
+            n,
+            p95_us: worst,
+            p95_event: worstEvent,
             sla_ms: typeof registered === 'number' && Number.isFinite(registered) ? registered : null,
+            sla_malformed: slaMalformed,
         };
     });
 }
@@ -718,10 +773,11 @@ export function renderConcernRow(row: ConcernLatencyRow): string {
     // of the unit change is that rounding them to whole milliseconds produced
     // nine zeroes.
     const p95 = row.p95_us === null ? NOT_MEASURED : `${(row.p95_us / 1000).toFixed(3)} ms`;
-    const sla = row.sla_ms === null ? NOT_MEASURED : `${row.sla_ms} ms`;
+    const sla = row.sla_malformed ? 'MALFORMED' : row.sla_ms === null ? NOT_MEASURED : `${row.sla_ms} ms`;
+    const via = row.p95_event === null ? '' : `, worst on ${row.p95_event}`;
     return (
         `  ${row.concern.padEnd(26)} p95 ${p95.padStart(13)} · sla ${sla.padStart(13)} ` +
-        `(n=${row.n}${row.fail_closed ? ', fail_closed' : ''})`
+        `(n=${row.n}${via}${row.fail_closed ? ', fail_closed' : ''})`
     );
 }
 
@@ -1060,11 +1116,21 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         // red a build before its bar exists is the guessed-threshold failure
         // Risk 1 of the owning roadmap names.
         concernSlaPass(Math.min(runs, 20), workspace, timingsSink);
+        const timings = readConcernTimings(timingsSink);
         concernRows = perConcernRows(
             blockingConcerns(),
-            readConcernTimings(timingsSink),
+            timings.byConcernEvent,
             budget?.concern_sla_ms ?? {},
         );
+        if (timings.skipped > 0) {
+            // The CAUSE of a lowered `n`, not only its effect. An earlier
+            // version claimed the reduction was visible because `n` was
+            // printed; `n` shows that fewer samples arrived, never that some
+            // were unreadable.
+            process.stdout.write(
+                `  ⚠️  ${timings.skipped} unreadable line(s) in the timings sink — samples lost, n is lower than the run count\n`,
+            );
+        }
         process.stdout.write(
             `blocking concerns (${concernRows.length}) — per-concern p95 vs registered SLA:\n`,
         );
