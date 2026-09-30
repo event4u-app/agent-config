@@ -37,31 +37,29 @@ let _proof: string | undefined;
 const proof = (): string => (_proof ??= render());
 
 describe('build_proof — render()', () => {
-    // 900 s, and the number is this large because MAIN ALREADY SPENDS IT.
+    // 300 s. The history behind the number matters more than the number.
     //
-    // Measured on main's own CI, ubuntu shard 3/4, run 36699591543: this test
-    // reports GREEN at 566,662 ms — nine minutes and 27 seconds — against a
-    // `testTimeout` of 10,000. Vitest 2 could not enforce a timeout against a
-    // synchronous CPU-bound body, because the deadline only fires when the event
-    // loop gets control and `render()` never yields. Vitest 5 enforces it, so
-    // the upgrade did not make this test slow: it stopped hiding that it always
-    // was. Two `render()` calls at ~283 s each, which matches 241 s measured
-    // locally under plain `tsx` with Vitest out of the picture.
+    // It was 10 s and unenforceable. Vitest 2 could not apply a timeout to a
+    // synchronous CPU-bound body — the deadline fires when the event loop gets
+    // control and `render()` never yields — so main's own CI reported this test
+    // GREEN at 566,662 ms on ubuntu shard 3/4 (run 36699591543) and 442,648 ms
+    // on macOS. Nine and seven minutes, under a ten-second budget, for months.
     //
-    // So this is not a guard being widened to fit a regression — it is an
-    // implicit cost becoming explicit at the value main already pays, and a
-    // genuine hang still fails. Capping it lower would turn a nine-minute test
-    // green-to-red without making anything faster.
+    // Vitest 5 enforces it, which is how the cost became visible at all. The
+    // cause was not this file: `reachable_scripts` in check_enforcement_coverage
+    // re-scanned every reached body on every round of its fixed point, and
+    // worklisting it took the gate 240 s -> 63 s and `render()` 241 s -> 62 s,
+    // measured under plain `tsx` with no test runner involved. That is back at
+    // the ~54 s a call this file's header recorded on 2026-08-11, so the two
+    // calls this determinism check needs cost ~124 s locally end to end.
     //
-    // THE REAL DEFECT IS NOT THIS NUMBER, and it does not belong to this branch:
-    // this file's own header records `render()` at ~54 s a call, measured
-    // 2026-08-11. It is ~283 s now — a 5x slowdown in a whole-tree claims walk,
-    // invisible for as long as the timeout was unenforceable. Lower this number
-    // again once `render()` is fast, or once the determinism check asserts over a
-    // bounded input instead of walking the whole ledger twice.
+    // 300 s is that measurement plus room for a macOS runner, which reads about
+    // 1.45x ubuntu on this shard. Deliberately not tightened further: the point
+    // of a timeout here is to catch a hang, not to re-litigate a wall-clock the
+    // ci-cost-budget contract governs. Lower it again if `render()` gets faster.
     it('is deterministic (no timestamp / stable ordering)', () => {
         expect(render()).toBe(proof());
-    }, 900_000);
+    }, 300_000);
 
     it('emits the required proof structure', () => {
         const out = proof();
