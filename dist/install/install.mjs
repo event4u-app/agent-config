@@ -10975,16 +10975,27 @@ var _cache = null;
 function loadHostLowering() {
   if (_cache !== null) return _cache;
   const text = fs17.readFileSync(HOST_LOWERING_PATH, "utf-8");
+  let compiled;
   try {
-    const raw = JSON.parse(fs17.readFileSync(HOST_LOWERING_JSON_PATH, "utf-8"));
-    if (raw["fingerprint"] === tableFingerprint(text) && typeof raw["table"] === "object" && raw["table"] !== null) {
-      _cache = _structure(raw["table"]);
-      return _cache;
-    }
+    compiled = fs17.readFileSync(HOST_LOWERING_JSON_PATH, "utf-8");
   } catch {
+    compiled = null;
   }
-  _cache = _parse(text);
+  _cache = resolveTable(text, compiled);
   return _cache;
+}
+function resolveTable(yamlText, compiledText) {
+  if (compiledText !== null) {
+    try {
+      const raw = JSON.parse(compiledText);
+      const table = raw["table"];
+      if (raw["fingerprint"] === tableFingerprint(yamlText) && typeof table === "object" && table !== null) {
+        return _structure(table);
+      }
+    } catch {
+    }
+  }
+  return _parse(yamlText);
 }
 function surfaceRow(host, surface = DEFAULT_SURFACE, table = loadHostLowering()) {
   return table.get(host)?.get(surface) ?? table.get(host)?.get(DEFAULT_SURFACE) ?? null;
