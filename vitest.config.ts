@@ -17,6 +17,19 @@ const BASE_ALIAS: Record<string, string> = {
 const COLLECTOR_ABSENT = process.env.AGENT_CONFIG_COLLECTOR_ABSENT === '1';
 const COLLECTOR_STUB = new URL('./tests/_lib/collector-absent-stub.ts', import.meta.url).pathname;
 
+// tests/golden/sandbox/repo/** is the golden-transcript toy-repo fixture — its
+// tests run only when the replay harness drives them in a temp workspace, never
+// in the outer suite (mirrors the retired conftest `collect_ignore_glob`).
+// Shared by both projects below: one list, so a new exclusion cannot be added
+// to one project and forgotten in the other.
+const SHARED_EXCLUDE = [
+    'node_modules/**',
+    'dist/**',
+    'dist/agent-src/**',
+    '.agent-src.uncondensed/**',
+    'tests/golden/sandbox/repo/**',
+];
+
 export default defineConfig({
     plugins: [preact()],
     resolve: {
@@ -31,17 +44,38 @@ export default defineConfig({
             : BASE_ALIAS,
     },
     test: {
-        include: ['tests/**/*.test.{ts,tsx}', 'src/**/*.test.{ts,tsx}'],
-        // tests/golden/sandbox/repo/** is the golden-transcript toy-repo
-        // fixture — its tests run only when the replay harness drives them in
-        // a temp workspace, never in the outer suite (mirrors the retired
-        // conftest `collect_ignore_glob`).
-        exclude: ['node_modules/**', 'dist/**', 'dist/agent-src/**', '.agent-src.uncondensed/**', 'tests/golden/sandbox/repo/**'],
-        environmentMatchGlobs: [
-            ['tests/ui/**', 'happy-dom'],
-            ['src/ui/**', 'happy-dom'],
+        // Two projects, not `environmentMatchGlobs`, which Vitest 5 REMOVED.
+        // It does not warn and it does not error — it is silently ignored, so
+        // every UI test ran under `environment: 'node'` and 104 of them failed
+        // on `window is not defined`. A config key that stops working quietly
+        // is the whole reason this migration is a topology change rather than a
+        // rename: the replacement has to be something the runner validates.
+        //
+        // `extends: true` inherits the plugins, aliases, setup files and
+        // timeouts above, so the two projects differ in exactly two fields —
+        // which files they claim and which environment they claim them in. The
+        // node project subtracts the UI globs, because a file matched by both
+        // would run twice and a flaky duplicate is worse than a missing one.
+        projects: [
+            {
+                extends: true,
+                test: {
+                    name: 'node',
+                    environment: 'node',
+                    include: ['tests/**/*.test.{ts,tsx}', 'src/**/*.test.{ts,tsx}'],
+                    exclude: [...SHARED_EXCLUDE, 'tests/ui/**', 'src/ui/**'],
+                },
+            },
+            {
+                extends: true,
+                test: {
+                    name: 'ui',
+                    environment: 'happy-dom',
+                    include: ['tests/ui/**/*.test.{ts,tsx}', 'src/ui/**/*.test.{ts,tsx}'],
+                    exclude: SHARED_EXCLUDE,
+                },
+            },
         ],
-        environment: 'node',
         // Runs before every test file. Strips the ambient locale variables the
         // hook layer reads through `process.env`, so a suite cannot pass on one
         // machine's `LANG` and fail on another's — the exact failure that made

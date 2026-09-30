@@ -208,7 +208,16 @@ jobs:
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
         with:
-          node-version: '20'
+          # 22, not 20, and ONLY on the jobs that run Vitest. Vitest 5 declares
+          # `engines: ^22.12.0 || ^24.0.0 || >=26.0.0`, so this job cannot run
+          # the suite on 20. Every other job here stays on 20 deliberately:
+          # `install-tests`, `install-aux-tests` and `static-checks` never
+          # invoke Vitest, and `consumer-matrix.yml` tests the packed tarball
+          # across node 20 and 22 without it — so the package's
+          # `engines: >=20.11.0` claim stays MEASURED rather than merely
+          # asserted. Bumping every pin would have quietly retired that
+          # evidence as a side effect of a test-runner upgrade.
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies (hoists installer toolchain)
@@ -495,7 +504,16 @@ jobs:
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
         with:
-          node-version: '20'
+          # 22, not 20, and ONLY on the jobs that run Vitest. Vitest 5 declares
+          # `engines: ^22.12.0 || ^24.0.0 || >=26.0.0`, so this job cannot run
+          # the suite on 20. Every other job here stays on 20 deliberately:
+          # `install-tests`, `install-aux-tests` and `static-checks` never
+          # invoke Vitest, and `consumer-matrix.yml` tests the packed tarball
+          # across node 20 and 22 without it — so the package's
+          # `engines: >=20.11.0` claim stays MEASURED rather than merely
+          # asserted. Bumping every pin would have quietly retired that
+          # evidence as a side effect of a test-runner upgrade.
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies (hoists installer toolchain)
@@ -659,7 +677,16 @@ jobs:
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
         with:
-          node-version: '20'
+          # 22, not 20, and ONLY on the jobs that run Vitest. Vitest 5 declares
+          # `engines: ^22.12.0 || ^24.0.0 || >=26.0.0`, so this job cannot run
+          # the suite on 20. Every other job here stays on 20 deliberately:
+          # `install-tests`, `install-aux-tests` and `static-checks` never
+          # invoke Vitest, and `consumer-matrix.yml` tests the packed tarball
+          # across node 20 and 22 without it — so the package's
+          # `engines: >=20.11.0` claim stays MEASURED rather than merely
+          # asserted. Bumping every pin would have quietly retired that
+          # evidence as a side effect of a test-runner upgrade.
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies (hoists installer toolchain)
