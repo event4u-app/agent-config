@@ -23,6 +23,7 @@
  * Skip with PREPACK_SKIP_BUILD_CHECK=1 only for local `npm pack` dry-runs
  * that intentionally test the failure mode.
  */
+import { createHash } from 'node:crypto';
 import { readFileSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { argv, env, exit } from 'node:process';
@@ -65,6 +66,58 @@ if (head !== SHEBANG) {
 }
 
 process.stderr.write(`prepack-check: ${BIN} OK\n`);
+
+// ---------------------------------------------------------------------------
+// Bundle-digest sidecar: `dist/hooks/dispatch.js` must ship with the
+// `dist/hooks/dispatch.sha256` its build wrote, and the digest must still
+// describe the bundle beside it.
+//
+// Risk 3 of road-to-a-kernel-that-guards-its-plumbing: the runtime integrity
+// check treats a MISSING sidecar as `unverifiable` and allows, deliberately,
+// so that a consumer install predating the sidecar is not wedged. That safety
+// property has a cost — a bundle shipped without its sidecar silently disables
+// the check for every consumer who installs it, and nothing at runtime can
+// tell that apart from the legitimate old-package case. The place to catch it
+// is here, in the one step that knows a bundle is being packaged NOW and
+// therefore had no excuse for the sidecar's absence.
+//
+// A stale digest is treated exactly like a missing one: both mean the two
+// files were not produced by the same `npm run build:hooks`.
+const HOOK_BUNDLE = resolve('dist/hooks/dispatch.js');
+const HOOK_SIDECAR = resolve('dist/hooks/dispatch.sha256');
+let hookBundleBytes = null;
+try {
+    hookBundleBytes = readFileSync(HOOK_BUNDLE);
+} catch {
+    // No hook bundle in this tree at all — `npm run build` builds it, and gate
+    // 1 above has already failed if the build did not run. Nothing to check.
+}
+if (hookBundleBytes !== null) {
+    let sidecarText;
+    try {
+        sidecarText = readFileSync(HOOK_SIDECAR, 'utf8');
+    } catch {
+        die(
+            `dist/hooks/dispatch.js ships without dist/hooks/dispatch.sha256. The runtime ` +
+                `integrity check reads a missing sidecar as "unverifiable" and ALLOWS, so ` +
+                `publishing this tarball would silently disable it for every consumer. Run ` +
+                `\`npm run build:hooks\`, which writes both.`,
+        );
+    }
+    const claimed = /^([0-9a-f]{64})\s/u.exec(sidecarText.trim())?.[1] ?? null;
+    if (claimed === null) {
+        die(`dist/hooks/dispatch.sha256 is malformed — expected "<64 hex>  dispatch.js".`);
+    }
+    const actual = createHash('sha256').update(hookBundleBytes).digest('hex');
+    if (actual !== claimed) {
+        die(
+            `dist/hooks/dispatch.sha256 does not describe dist/hooks/dispatch.js ` +
+                `(sidecar ${claimed.slice(0, 12)}…, bundle ${actual.slice(0, 12)}…). The two were ` +
+                `not produced by the same build. Run \`npm run build:hooks\`.`,
+        );
+    }
+    process.stderr.write(`prepack-check: dist/hooks/dispatch.sha256 OK (${actual.slice(0, 12)}…)\n`);
+}
 
 // ---------------------------------------------------------------------------
 // Import-completeness guard: every relative import reachable from the
