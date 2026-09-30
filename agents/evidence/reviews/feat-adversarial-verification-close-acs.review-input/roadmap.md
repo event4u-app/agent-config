@@ -931,7 +931,7 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       ADR-237 § 3c names a reversible repository setting as implied authority for a
       `process-full` run while the forbidden-non-halt list names "a GitHub setting must
       change" as work. Enabling the setting grants nothing: auto-merge still queues behind
-      the two required contexts and the `non_fast_forward` rule. The blocker's own
+      the two required contexts and the ruleset's `non_fast_forward` entry. The blocker's own
       recommendation was "enable all five".
       **`deploy_via_pipeline_only` — never a gap; the 2026-09-13 reading was wrong.** That
       table recorded "it accepts a deployment from any branch" from
@@ -949,9 +949,22 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       for the exact ambiguity this blocker was re-scoped over, with a live Pages deployment
       as the blast radius. A correct checker over a correct setting beats a riskier setting
       that flatters a naive checker.
-      Sensitivity proven rather than claimed: narrowing the derivation back to
-      `protected_branches` alone reds exactly 2 of 22 — the custom-policy case and the row
-      it feeds — and nothing else.
+      **An independent R2 review found two defects in that helper and both are fixed here.**
+      The review was dispatched through `dispatch_r2_reviewer`, so the reviewer's prompt was
+      assembled deterministically rather than written by the implementing session — the
+      property `evaluator-independence` requires and `prompt_hash` makes checkable. It found
+      (1) that an empty `environments` array returned `true`, collapsing *confirmed zero
+      environments* and *the fetch failed* into the same `satisfied` answer, which is the
+      quiet false-positive this module's own three-state row exists to prevent — it now
+      returns `null`, which maps to `unread`; and (2) that `custom_branch_policies: true`
+      was trusted without reading the policy NAMES, so a wildcard pattern would have read as
+      restricted — an optional `patternsByEnv` argument now refutes the row for a policy
+      admitting everything, and the flag-only path is documented as the narrower guarantee
+      it is. Neither was reachable on this repository; both were real.
+      Sensitivity proven on each fix separately, by deliberate sabotage and restore, at the
+      final state of 28 cases: restoring the empty-set `true` reds exactly the two empty-set
+      cases, and neutralising the wildcard check reds exactly the two pattern cases. One
+      pair each, no collateral, so neither is passing for an unrelated reason.
       Live re-read 2026-09-30: protection `satisfied` (active `~DEFAULT_BRANCH` ruleset) ·
       required checks `satisfied` (2 contexts) · force-push `satisfied` (`non_fast_forward`)
       · auto-merge `satisfied` · deploy `satisfied`. -->

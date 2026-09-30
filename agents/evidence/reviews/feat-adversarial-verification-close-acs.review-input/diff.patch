@@ -1,5 +1,5 @@
 diff --git a/agents/roadmaps/road-to-adversarial-verification-and-long-runs.md b/agents/roadmaps/road-to-adversarial-verification-and-long-runs.md
-index e4a8f361f40fef864fb96666f3b130ab651f40b1..62eefb978f7a7b20bfeaea13e820ee3376ac2d08 100644
+index e4a8f361f40fef864fb96666f3b130ab651f40b1..e4e8897a663b63dcbc159870d7e3bba528605f7e 100644
 --- a/agents/roadmaps/road-to-adversarial-verification-and-long-runs.md
 +++ b/agents/roadmaps/road-to-adversarial-verification-and-long-runs.md
 @@ -72,6 +72,26 @@ capability_gap: >-
@@ -79,7 +79,7 @@ index e4a8f361f40fef864fb96666f3b130ab651f40b1..62eefb978f7a7b20bfeaea13e820ee33
  - **Blocks:** Phase 3.2's acceptance only. Not a halt — `doctor` lists what is missing and the
    run continues.
  - **What to do:** run `agent-config doctor --json` once Phase 3.2 has landed and enable, on the
-@@ -845,22 +903,58 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op 
+@@ -845,22 +903,71 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op 
        cap could bind; what is left is a stale three characters in a file no agent may open.
        `T3`'s fixture asserts the offender set is EXACTLY `['verify-before-complete.md']`, which
        keeps the obligation live for every non-kernel rule and reds the moment another
@@ -121,7 +121,7 @@ index e4a8f361f40fef864fb96666f3b130ab651f40b1..62eefb978f7a7b20bfeaea13e820ee33
 +      ADR-237 § 3c names a reversible repository setting as implied authority for a
 +      `process-full` run while the forbidden-non-halt list names "a GitHub setting must
 +      change" as work. Enabling the setting grants nothing: auto-merge still queues behind
-+      the two required contexts and the `non_fast_forward` rule. The blocker's own
++      the two required contexts and the ruleset's `non_fast_forward` entry. The blocker's own
 +      recommendation was "enable all five".
 +      **`deploy_via_pipeline_only` — never a gap; the 2026-09-13 reading was wrong.** That
 +      table recorded "it accepts a deployment from any branch" from
@@ -139,9 +139,22 @@ index e4a8f361f40fef864fb96666f3b130ab651f40b1..62eefb978f7a7b20bfeaea13e820ee33
 +      for the exact ambiguity this blocker was re-scoped over, with a live Pages deployment
 +      as the blast radius. A correct checker over a correct setting beats a riskier setting
 +      that flatters a naive checker.
-+      Sensitivity proven rather than claimed: narrowing the derivation back to
-+      `protected_branches` alone reds exactly 2 of 22 — the custom-policy case and the row
-+      it feeds — and nothing else.
++      **An independent R2 review found two defects in that helper and both are fixed here.**
++      The review was dispatched through `dispatch_r2_reviewer`, so the reviewer's prompt was
++      assembled deterministically rather than written by the implementing session — the
++      property `evaluator-independence` requires and `prompt_hash` makes checkable. It found
++      (1) that an empty `environments` array returned `true`, collapsing *confirmed zero
++      environments* and *the fetch failed* into the same `satisfied` answer, which is the
++      quiet false-positive this module's own three-state row exists to prevent — it now
++      returns `null`, which maps to `unread`; and (2) that `custom_branch_policies: true`
++      was trusted without reading the policy NAMES, so a wildcard pattern would have read as
++      restricted — an optional `patternsByEnv` argument now refutes the row for a policy
++      admitting everything, and the flag-only path is documented as the narrower guarantee
++      it is. Neither was reachable on this repository; both were real.
++      Sensitivity proven on each fix separately, by deliberate sabotage and restore, at the
++      final state of 28 cases: restoring the empty-set `true` reds exactly the two empty-set
++      cases, and neutralising the wildcard check reds exactly the two pattern cases. One
++      pair each, no collateral, so neither is passing for an unrelated reason.
 +      Live re-read 2026-09-30: protection `satisfied` (active `~DEFAULT_BRANCH` ruleset) ·
 +      required checks `satisfied` (2 contexts) · force-push `satisfied` (`non_fast_forward`)
 +      · auto-merge `satisfied` · deploy `satisfied`. -->
@@ -152,10 +165,10 @@ index e4a8f361f40fef864fb96666f3b130ab651f40b1..62eefb978f7a7b20bfeaea13e820ee33
        <!-- OPEN 2026-09-14 — the MEASUREMENT half is complete, the DECISION half is
        owner-reserved and that is the whole remaining distance. All eight rows carry a value
 diff --git a/src/scripts/_lib/forge_protection.ts b/src/scripts/_lib/forge_protection.ts
-index 79864d3b398edd3b2c10d2422f56b3ff8508d0d9..207868f1b1df3f7eb532d94607d635650bef8933 100644
+index 79864d3b398edd3b2c10d2422f56b3ff8508d0d9..3bf7f2b11677dca4c2b30c963ba77275aec0af77 100644
 --- a/src/scripts/_lib/forge_protection.ts
 +++ b/src/scripts/_lib/forge_protection.ts
-@@ -73,6 +73,57 @@ export interface ForgeReading {
+@@ -73,6 +73,80 @@ export interface ForgeReading {
      readonly deployRestricted: boolean | null;
  }
  
@@ -197,16 +210,39 @@ index 79864d3b398edd3b2c10d2422f56b3ff8508d0d9..207868f1b1df3f7eb532d94607d63565
 + * precise restriction for one whose evaluation is exactly the ambiguity the
 + * `forge-protection-settings` re-scope forbids relying on.
 + *
-+ * An empty environment set is restricted **vacuously**: with no environment
-+ * there is no deployment surface to leave open. Stated rather than left to
-+ * fall out of `every`, because "no environments" and "all environments fine"
-+ * reaching the same answer is a coincidence a reader should not have to verify.
++ * **An empty environment set returns `null`, not `true`.** The first draft
++ * returned `true` on the reasoning that with no environment there is no
++ * deployment surface to leave open. That is sound about a *confirmed* empty
++ * set and wrong about the value actually reaching this function: an empty
++ * array is what a failed fetch, a truncated page, or a caller that never
++ * queried also produces, and collapsing those into `satisfied` is exactly the
++ * quiet false-positive the three-state row exists to prevent. `null` maps to
++ * `unread`, which is the state this module already reserves for a value nobody
++ * established. A caller that has genuinely confirmed zero environments can say
++ * so by passing `true` itself; it cannot be inferred from the array alone.
++ *
++ * **Wildcard patterns.** A custom policy's NAMES live behind a second call
++ * (`GET .../environments/{name}/deployment-branch-policies`) and accept globs,
++ * so `custom_branch_policies: true` alone cannot distinguish a policy pinned to
++ * `main` from one whose pattern is `*`. Pass `patternsByEnv` when those names
++ * have been read: an environment whose patterns admit everything is reported
++ * unrestricted. Omit it and the flag is trusted — the narrower guarantee was
++ * not checked, which is stated here rather than left for a reader to discover.
 + */
-+export function deployRestrictedFrom(environments: readonly EnvironmentPolicy[]): boolean {
++export function deployRestrictedFrom(
++    environments: readonly EnvironmentPolicy[],
++    patternsByEnv?: Readonly<Record<string, readonly string[]>>,
++): boolean | null {
++    if (environments.length === 0) return null;
 +    return environments.every((env) => {
 +        const policy = env.deployment_branch_policy;
 +        if (policy === null || policy === undefined) return false;
-+        return policy.protected_branches === true || policy.custom_branch_policies === true;
++        if (policy.protected_branches === true) return true;
++        if (policy.custom_branch_policies !== true) return false;
++        const patterns = patternsByEnv?.[env.name];
++        if (patterns === undefined) return true;
++        // A policy admitting every ref restricts nothing, whatever the flag says.
++        return patterns.length > 0 && !patterns.some((p) => p === '*' || p === '**');
 +    });
 +}
 +
@@ -214,7 +250,7 @@ index 79864d3b398edd3b2c10d2422f56b3ff8508d0d9..207868f1b1df3f7eb532d94607d63565
      rulesets: 'GET repos/{owner}/{repo}/rulesets + GET .../rulesets/{id}',
      repo: 'GET repos/{owner}/{repo} (allow_auto_merge)',
 diff --git a/tests/scripts/forge_protection.test.ts b/tests/scripts/forge_protection.test.ts
-index a7fe900fd1065506d9fa8c257817cdb2084fc95f..53fd8364a158721decf21faa888dcf0465bb1c5b 100644
+index a7fe900fd1065506d9fa8c257817cdb2084fc95f..e5bc31ff0f84e89068220d75edc4849a1d340031 100644
 --- a/tests/scripts/forge_protection.test.ts
 +++ b/tests/scripts/forge_protection.test.ts
 @@ -13,9 +13,11 @@ import { describe, expect, it } from 'vitest';
@@ -229,7 +265,7 @@ index a7fe900fd1065506d9fa8c257817cdb2084fc95f..53fd8364a158721decf21faa888dcf04
      type ForgeReading,
  } from '../../src/scripts/_lib/forge_protection.js';
  import type { RulesetDetail } from '../../src/scripts/_lib/platform_anchor.js';
-@@ -177,3 +179,79 @@ describe('unconditionalBypasses', () => {
+@@ -177,3 +179,130 @@ describe('unconditionalBypasses', () => {
          expect(unconditionalBypasses([rs], 'main')).toHaveLength(0);
      });
  });
@@ -294,8 +330,59 @@ index a7fe900fd1065506d9fa8c257817cdb2084fc95f..53fd8364a158721decf21faa888dcf04
 +        expect(deployRestrictedFrom([{ name: 'e', deployment_branch_policy: {} }])).toBe(false);
 +    });
 +
-+    it('is vacuously restricted with no environments', () => {
-+        expect(deployRestrictedFrom([])).toBe(true);
++    it('returns null for an empty set — a failed fetch is not a satisfied row', () => {
++        // R2 finding 1: `true` here collapsed "confirmed zero environments" into
++        // "the fetch came back empty", which is the quiet false-positive the
++        // three-state row exists to prevent. `null` maps to `unread`.
++        expect(deployRestrictedFrom([])).toBeNull();
++    });
++
++    it('an empty set reaches the row as unread, never as satisfied', () => {
++        const rows = forgeProtectionRows({
++            rulesets: null,
++            defaultBranch: null,
++            allowAutoMerge: null,
++            deployRestricted: deployRestrictedFrom([]),
++        });
++        expect(rows.find((r) => r.id === 'deploy_via_pipeline_only')?.state).toBe('unread');
++    });
++
++    it('a wildcard custom policy restricts nothing, whatever the flag says', () => {
++        // R2 finding 2: the flag cannot distinguish a policy pinned to `main`
++        // from one whose pattern is `*`; the names come from a second call.
++        expect(deployRestrictedFrom([LIVE_PAGES], { 'github-pages': ['*'] })).toBe(false);
++        expect(deployRestrictedFrom([LIVE_PAGES], { 'github-pages': ['**'] })).toBe(false);
++    });
++
++    it('named patterns that are not wildcards stay restricted', () => {
++        expect(deployRestrictedFrom([LIVE_PAGES], { 'github-pages': ['main'] })).toBe(true);
++    });
++
++    it('an empty pattern list is not a restriction', () => {
++        expect(deployRestrictedFrom([LIVE_PAGES], { 'github-pages': [] })).toBe(false);
++    });
++
++    it('patterns supplied for a different environment do not silently apply', () => {
++        // Keyed by name: an unrelated entry leaves this environment on the
++        // flag-only path rather than borrowing another environment's patterns.
++        expect(deployRestrictedFrom([LIVE_PAGES], { other: ['*'] })).toBe(true);
++    });
++
++    it('a protected_branches environment ignores patterns entirely', () => {
++        expect(
++            deployRestrictedFrom(
++                [
++                    {
++                        name: 'prod',
++                        deployment_branch_policy: {
++                            protected_branches: true,
++                            custom_branch_policies: false,
++                        },
++                    },
++                ],
++                { prod: ['*'] },
++            ),
++        ).toBe(true);
 +    });
 +
 +    it('feeds the row: the live environment makes deploy_via_pipeline_only satisfied', () => {

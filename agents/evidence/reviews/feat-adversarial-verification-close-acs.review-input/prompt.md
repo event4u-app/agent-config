@@ -21,8 +21,8 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 4c2c36bef361a755bef1a35c8dc2f11ac20fe4f1, review
-  artefacts excluded), scope hash `765df03e68f8c051444beec0caba666193704e006fbabdfb7ee71b1134305a85`
+- diff: `diff.patch` — the review scope (branch head 1e05ec3d14875540545214a4d62503de12af1d53, review
+  artefacts excluded), scope hash `604c2b2f9e9faec1158bf4d068009291ec789b62303c30a47ed1299118f1db27`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
@@ -51,7 +51,7 @@ Fill the findings table in `feat-adversarial-verification-close-acs.findings.md`
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 765df03e68f8c051444beec0caba666193704e006fbabdfb7ee71b1134305a85, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 604c2b2f9e9faec1158bf4d068009291ec789b62303c30a47ed1299118f1db27, reviewed <YYYY-MM-DD>
 ```
 
 ## Return channel
