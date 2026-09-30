@@ -268,7 +268,12 @@ describe('deployRestrictedFrom', () => {
         expect(deployRestrictedFrom([LIVE_PAGES], { 'github-pages': ['main'] })).toBe(true);
     });
 
-    it('an empty pattern list is not a restriction', () => {
+    it('a confirmed-empty pattern list yields false — a flag, not a blessing', () => {
+        // R2 round 2: zero named patterns is the OPPOSITE of a wildcard — nothing
+        // matches, so nothing deploys. It lands on the same `false` on purpose:
+        // the row feeds an ACTION line, and an environment that accepts no
+        // deployment at all is a misconfiguration worth surfacing. The direction
+        // under-reports satisfaction and never over-reports it.
         expect(deployRestrictedFrom([LIVE_PAGES], { 'github-pages': [] })).toBe(false);
     });
 

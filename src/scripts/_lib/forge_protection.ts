@@ -135,6 +135,18 @@ export interface EnvironmentPolicy {
  * have been read: an environment whose patterns admit everything is reported
  * unrestricted. Omit it and the flag is trusted — the narrower guarantee was
  * not checked, which is stated here rather than left for a reader to discover.
+ *
+ * **A confirmed-EMPTY pattern list also yields `false`, and it is NOT the same
+ * case as a wildcard.** With `custom_branch_policies: true` and zero named
+ * patterns nothing matches, so nothing can deploy — strictly the most
+ * restrictive posture there is, and the exact opposite of `*`. Both land on
+ * `false` deliberately, because this row feeds an ACTION line rather than a
+ * permission: an environment configured to accept no deployment at all is a
+ * misconfiguration worth a human look, and `false` surfaces it where `true`
+ * would silently bless it. The direction is the safe one — it can under-report
+ * satisfaction, never over-report it. Written down because the two states are
+ * genuinely opposite, and a reader deriving the behaviour from the expression
+ * alone would reasonably take it for a bug.
  */
 export function deployRestrictedFrom(
     environments: readonly EnvironmentPolicy[],
