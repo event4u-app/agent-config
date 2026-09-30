@@ -57,11 +57,19 @@ describe('mcp_parity_smoke — CLI contract (tsx twin)', () => {
     });
 
     describe('--node-stdio skip path (exit 0)', () => {
+        // 60 s, not the 10 s default. This resolves and probes the real CLI in a
+        // spawned subprocess, which is the same spawn-bound shape as the ten
+        // other tests this branch re-timed — every one of the Vitest 5 CI
+        // failures was a timeout, never an assertion. It read 10.6 s on a
+        // loaded macOS runner. Missed in the first pass because the list was
+        // rebuilt from one CI run's failures rather than from the shape, and a
+        // test that sits just under the line on one run sits just over it on the
+        // next. Targeted rather than a global raise.
         it('bare flag resolves the default cli, exit 0 (skip or parity-OK)', () => {
             // dist/cli/agent-config.js may or may not be built; both the skip
             // path and the parity-OK path exit 0.
             expect(runTs(['--node-stdio']).status).toBe(0);
-        });
+        }, 60_000);
 
         it('explicit (unbuilt) cli path also skips', () => {
             expect(runTs(['--node-stdio', '/tmp/agent-config-not-built.js']).status).toBe(0);
