@@ -191,6 +191,7 @@ export function benchEvent(
     workspace: string,
     via: InvocationPath = 'bundle',
     timingsSink?: string,
+    replay = true,
 ): EventResult {
     const durations: number[] = [];
     const payload = syntheticPayload(event, workspace);
@@ -216,7 +217,11 @@ export function benchEvent(
             encoding: 'utf-8',
             env: {
                 ...process.env,
-                AGENT_CONFIG_REPLAY: '1',
+                // Replay is the DEFAULT and the gated slot numbers depend on it
+                // -- the pre-registered budget was measured with it on. The
+                // per-concern SLA pass below turns it OFF deliberately; see
+                // `concernSlaPass`.
+                ...(replay ? { AGENT_CONFIG_REPLAY: '1' } : {}),
                 CLAUDE_PROJECT_DIR: workspace,
                 // Step 3.2: arm the dispatcher's per-concern timings sink for the
                 // duration of the bench. Unset on a real dispatch, so this costs one
@@ -668,6 +673,45 @@ export function perConcernRows(
     });
 }
 
+/**
+ * Collect per-concern samples with replay mode OFF.
+ *
+ * MEASURED, and the reason this is a separate pass rather than a read of the
+ * gated run. `AGENT_CONFIG_REPLAY=1` suppresses state writes (`state_io.ts`),
+ * and several blocking concerns do most of their work through state — so the
+ * gated bench, which needs replay on because the pre-registered slot budget
+ * was measured with it, times those concerns at a fraction of their real cost.
+ *
+ * A/B over this tree, n=25 per cell, 2026-09-30:
+ *
+ *     verify-before-complete   live 1249 us   replay  310 us   x4.03
+ *     run-continuation         live  431 us   replay  220 us   x1.96
+ *     journal-record           live  175 us   replay  141 us   x1.24
+ *     block-no-verify          live  779 us   replay  642 us   x1.21
+ *     (everything else within +/-10%, i.e. noise)
+ *
+ * Step 3.3 derives a timeout of `sla_ms x 3`. An SLA of 310 us for a concern
+ * whose real p95 is 1249 us yields a 930 us bound that the concern exceeds on
+ * an ORDINARY run — which is Risk 1 of the owning roadmap, reached through a
+ * measurement instead of through a guess. So the numbers step 3.3 will one day
+ * consume have to come from a pass that runs the concerns for real.
+ *
+ * It runs against a throwaway workspace, so the state writes it permits land in
+ * a temp dir and nothing in the repository is touched. It gates NOTHING and
+ * contributes to no budget row: it is an observation, and the slot rows above
+ * remain the only gated numbers.
+ */
+export function concernSlaPass(
+    runs: number,
+    workspace: string,
+    sinkPath: string,
+    events: readonly string[] = EVENTS,
+): void {
+    for (const event of events) {
+        benchEvent(event, runs, workspace, 'bundle', sinkPath, false);
+    }
+}
+
 /** Render one row. `null` prints `not_measured` — never `0`. */
 export function renderConcernRow(row: ConcernLatencyRow): string {
     // Three decimals, because the numbers are microseconds and the whole point
@@ -989,7 +1033,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
             fs.symlinkSync(path.join(REPO_ROOT, 'src', 'scripts', 'agent-config'), path.join(workspace, 'agent-config'));
         }
         for (const event of EVENTS) {
-            const r = benchEvent(event, runs, workspace, via, timingsSink);
+            const r = benchEvent(event, runs, workspace, via);
             results.push(r);
             process.stdout.write(
                 `${event.padEnd(20)} p50 ${String(r.p50_ms).padStart(5)} ms · p95 ${String(r.p95_ms).padStart(5)} ms · max ${String(r.max_ms).padStart(5)} ms (n=${r.runs}, via ${via}${PAYLOAD_BYTES > 0 ? `, payload ${PAYLOAD_BYTES}B` : ''}${BUNDLE_OVERRIDE === null ? '' : ` @ ${BUNDLE_OVERRIDE}`})\n`,
@@ -1004,13 +1048,18 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         );
 
         // Step 3.2 — per-concern p95 beside the registered SLA, for every
-        // BLOCKING concern. Printed on every run, gate or not: a row that
-        // appeared only under `--gate` would make the number step 3.3 depends
-        // on unavailable exactly where it is cheapest to read, which is the
-        // same mistake the composite row above documents having made once.
-        // This reports and never fails — the SLAs it feeds are not armed, and
-        // a measurement that can red a build before its bar exists is the
-        // guessed-threshold failure Risk 1 of the owning roadmap names.
+        // BLOCKING concern. Its own pass, with replay OFF: the gated slot runs
+        // above need replay on, and replay times several concerns at a
+        // fraction of their real cost. `concernSlaPass` carries the A/B.
+        //
+        // Printed on every run, gate or not: a row that appeared only under
+        // `--gate` would make the number step 3.3 depends on unavailable
+        // exactly where it is cheapest to read, which is the same mistake the
+        // composite row above documents having made once. It reports and never
+        // fails — the SLAs it feeds are not armed, and a measurement that can
+        // red a build before its bar exists is the guessed-threshold failure
+        // Risk 1 of the owning roadmap names.
+        concernSlaPass(Math.min(runs, 20), workspace, timingsSink);
         concernRows = perConcernRows(
             blockingConcerns(),
             readConcernTimings(timingsSink),

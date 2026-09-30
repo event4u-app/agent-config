@@ -152,32 +152,41 @@ deny message names its own kill switch.
 
 ## Phase 3 — The dispatcher verifies what it runs
 
-> **BLOCKED — all three steps, 2026-09-29.** Not for lack of a design: the
-> blocker is that 3.3 cannot be closed by any amount of code, and 3.1 and 3.2
-> are its prerequisites rather than independent work.
+> **BLOCKED — 3.3 only, narrowed 2026-09-30.** The 2026-09-29 note blocked all
+> three steps behind three conditions. Two of them were executed rather than
+> waived, and the record of what each one turned out to be is kept here because
+> a blocker that is merely deleted teaches nothing.
 >
-> **3.3 requires an elapsed measurement window.** Its own text says
-> "warn-only for the first measured window, then deny", and Risk 1 of this
-> file's register is the reason — a blocking concern whose SLA was guessed
-> refuses every call on a slow host. A window that has not elapsed cannot be
-> declared elapsed by the session that wants to flip the switch.
+> **3.1's condition was satisfiable, not impossible.** It read "landing it in
+> the same change as Phases 1, 2 and 4 would put the riskiest edit in the tree
+> behind the largest diff. It is left for its own change." Those phases have
+> merged; this IS its own change. Diff hygiene is a scheduling constraint, and
+> a scheduling constraint is met by scheduling, not by waiting.
 >
-> **3.2 requires the REFERENCE RUNNER, not this machine.** It writes `sla_ms`
-> per blocking concern "from the measured p95 on the reference runner", and the
-> hook-latency baseline already carries the note that a locally recorded darwin
-> baseline broke the regression gate once. A p95 measured here would be the
-> guessed number Risk 1 names, wearing a measurement's clothes.
+> **3.2's condition needed a mechanism before it needed a runner.** "A
+> reference-runner reading" could not be taken because nothing could produce
+> one: the bench measured whole SLOTS and the per-concern distribution was
+> unreadable — the feedback dir overwrites one file per concern per dispatch,
+> and the bench runs in replay mode where that write is skipped entirely. The
+> measurement path is built now and the reading came from this branch's own CI
+> run on `ubuntu-latest`, which is the reference runner `hardware_reference`
+> names.
 >
-> **3.1 is buildable and was deliberately not built here.** It edits the hot
-> path of every dispatch, and landing it in the same change as Phases 1, 2 and 4
-> — which touch three governance surfaces and already carry a ratification —
-> would put the riskiest edit in the tree behind the largest diff. It is left
-> for its own change, where its own review can be about it.
+> **3.3's condition is the one that holds.** Its text says "warn-only for the
+> first measured window, then deny", and Risk 1 is why: a blocking concern
+> whose SLA was guessed refuses every call on a slow host. A window that has
+> not elapsed cannot be declared elapsed by the session that wants to flip the
+> switch — that is a wait that is factually mandatory and cannot be simulated,
+> which is the one externally-impossible shape on this list. The number it
+> waits to validate now exists (`concern_sla_ms`), so what remains is time, not
+> work.
 >
-> **Resolved when** 3.2 has a reference-runner reading, 3.1 lands on its own,
-> and 3.3's warn-only window has actually elapsed.
+> **Resolved when** the `sla_ms` values registered on 2026-09-30 have been
+> observed across a release cycle of CI runs without a blocking concern
+> exceeding `sla_ms × 3`, at which point 3.3 lands the severity-based
+> fail-closed switch with the window's readings behind it.
 
-- [ ] **3.1 Bundle integrity once per session, cached.** `build:hooks` writes
+- [x] **3.1 Bundle integrity once per session, cached.** `build:hooks` writes
       `dist/hooks/dispatch.sha256`; `check_hook_bundle_content.ts` (exists,
       CI) already compares the bundle digest to source. At runtime, the
       `session_start` dispatch computes SHA-256 of the bundle once and caches
@@ -191,6 +200,40 @@ deny message names its own kill switch.
       change to the built bundle → next blocking-slot dispatch refused;
       rebuild → allowed; `bench_hook_latency --gate` green (per-dispatch cost
       is a stat call).
+      **Evidence (2026-09-30).** `build:hooks` writes `dist/hooks/dispatch.sha256`
+      in the same invocation; `bundle_integrity.ts` hashes once per build
+      identity and stats after. Measured on this tree: SHA-256 over the 1.5 MB
+      bundle 0.470 ms, `statSync` 0.0009 ms, `pre_tool_use` p50 63 ms before and
+      63 ms after.
+      **Proved live end-to-end, not only in unit tests**, and the probe had to
+      move to prove it: `block_plumbing_writes` REFUSED the tamper — step 1.2
+      working — so the probe corrupted the sidecar instead, which produces the
+      identical `mismatch` through the identical branch. Against the real
+      dispatcher: `pre_tool_use` (blocking concerns present) → exit 2 with
+      `plumbing-integrity`; `session_end` (advisory only) → exit 0 with the
+      warning; sidecar absent → exit 0 silent; restored → exit 0 silent.
+      21 unit tests, both polarities. Sensitivity probed by making a missing
+      sidecar return `mismatch`: exactly the two tests bounding the fail-open
+      direction go red, nothing else moves.
+      **THE FNV-1a CLAUSE WAS RE-MEASURED, NOT ASSUMED.** The step asks for the
+      manifest fingerprint to become SHA-256, and this file's own Source block
+      cites the 8 ms `node:crypto` startup as the reason FNV-1a was chosen —
+      the two are in tension, so the tension was measured rather than argued.
+      `dist/hooks/dispatch.js` already carries 23 top-level `node:crypto`
+      imports from elsewhere in the graph, so the 8 ms is paid either way, and
+      SHA-256 then measured FASTER than the interpreted loop (0.106 ms against
+      0.113 ms over the 99,792-byte manifest). The clause stands; the cost
+      argument behind the thing it replaced had gone stale.
+      **Deviation, stated:** the stamp caches in the OS temp dir, not in session
+      state. Session state is not written in replay mode — the mode
+      `bench_hook_latency` runs in — so a session-state cache would be skipped
+      in exactly the harness whose reading this step's verify line asks for, and
+      a host that never emits `session_start` would get no check at all.
+      **Risk 3 closed in the same change:** `prepack-check.mjs` refuses to
+      package a bundle whose sidecar is missing or stale. It is the one step
+      that knows a bundle is being built now, and it is needed precisely because
+      a missing sidecar is `unverifiable` and ALLOWS at runtime — deliberately,
+      so a consumer predating the sidecar is not wedged.
 - [ ] **3.2 Measure per-concern p95 before any flip (D3).** Extend
       `bench_hook_latency.ts` to report p95 per concern (today per slot,
       `hook-latency-budget.json`); write `sla_ms` per blocking concern into
@@ -256,10 +299,19 @@ deny message names its own kill switch.
 - [x] AC-1 — An unratified diff to `hook_manifest.yaml`, `host_lowering.yaml`
       or a budget file fails CI; a hand edit to `dist/hooks/dispatch.js` or
       `hooks/hooks.json` is refused at tool-call time.
-<!-- AC-2 and AC-3 belong to Phase 3, which is blocked above; they stay open
-     for the reasons recorded there, not for lack of an attempt. -->
-- [ ] AC-2 — A one-byte change to the built bundle refuses the next
+<!-- AC-3 belongs to 3.3, the one Phase-3 step still blocked above; it stays
+     open for the reason recorded there, not for lack of an attempt. -->
+- [x] AC-2 — A one-byte change to the built bundle refuses the next
       blocking-slot dispatch; the per-dispatch cost is a stat call.
+      Proved against the real dispatcher on 2026-09-30, both halves. Refusal:
+      `pre_tool_use` (blocking concerns present) exits 2 naming
+      `plumbing-integrity`, while `session_end` (advisory only) exits 0 with a
+      warning and an absent sidecar exits 0 silently. Cost: `statSync` measured
+      0.0009 ms against the 0.470 ms full hash it replaces, and `pre_tool_use`
+      p50 read 63 ms both before and after. The tamper had to be applied to the
+      sidecar rather than the bundle, because `block_plumbing_writes` refused
+      the bundle edit — step 1.2 working, and the same `mismatch` through the
+      same branch either way.
 - [ ] AC-3 — After the measured window, a blocking concern that throws or
       exceeds `sla_ms × 3` refuses; an advisory one allows with an issue row.
 - [x] AC-4 — `lint-deny-text` and `lint-exit-codes` are in CI and green.
