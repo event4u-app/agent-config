@@ -220,24 +220,21 @@ describe('rendering helpers', () => {
 });
 
 
-// The fail-closed traversal, as a DETERMINISTIC test.
+// The fail-closed traversal.
 //
-// An unreadable subtree used to remove every module under it from the result,
-// silently, and the gate then reported the shortened list as matching the tree.
+// An unreadable subtree used to be silently omitted from the result, and the
+// gate then reported the shortened list as matching the tree. This asserts the
+// traversal now throws instead.
 //
-// THE FIRST VERSION OF THIS TEST WAS THE REVIEW'S LAST BLOCKER, and it was
-// right about all three things. It chmod-000'd a real directory, which is not
-// portable — under root the mode is no barrier — and its capability check read
-// the PARENT directory rather than the locked one, so in that environment the
-// test FAILED instead of skipping: fragile in exactly the case it was written
-// to handle. Its precondition also asserted only a non-zero count, which does
-// not establish that the module behind the locked door was the one that
-// disappeared.
+// The failure is INJECTED rather than produced with real permissions, for two
+// measured reasons: ESM refuses to redefine `fs.readdirSync`, so `vi.spyOn` on
+// the namespace throws; and `chmod 000` is not portable — under root the mode
+// is no barrier, so the test would fail in exactly the environment it is
+// written to survive.
 //
-// So the error is INJECTED at the one path, with the shape the walk actually
-// classifies on — an `EACCES` error, not a bare `Error`, or the test would
-// prove that arbitrary exceptions propagate rather than that a traversal
-// failure becomes a `ScanTraversalError`.
+// The injected error carries the EACCES shape Node actually produces. `_walk`
+// wraps any reader exception, so the shape is documentation of the real case
+// rather than a branch condition.
 describe('the scan fails closed on an unreadable subtree', () => {
     let root: string;
     let locked: string;
@@ -259,13 +256,11 @@ describe('the scan fails closed on an unreadable subtree', () => {
     });
 
     it('throws rather than returning a list with the unreadable subtree missing', () => {
-        // Precondition on the SPECIFIC module, not on a count: this is what
-        // makes the throw below attributable to the injected failure.
+        // Precondition on the SPECIFIC module: this is what makes the throw
+        // below attributable to the injected failure rather than to an empty
+        // fixture.
         expect(scanReadSurfaces(root).map((r) => r.module)).toContain('_lib/locked/hidden_surface.ts');
 
-        // The injected failure carries the SHAPE the runtime produces — an
-        // `EACCES` with `path` and `syscall` — not a bare `Error`, which would
-        // prove only that arbitrary exceptions propagate.
         const readDir: ReadDir = (dir) => {
             if (dir === locked) {
                 const err = new Error(`EACCES: permission denied, scandir '${locked}'`) as NodeJS.ErrnoException;
