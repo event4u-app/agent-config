@@ -296,3 +296,51 @@ describe('4.1 — the placeholder scan reads the files', () => {
         expect(written_file_placeholders(env as never, REPO)).toEqual([]);
     });
 });
+
+describe('5.1/5.2 — the after-number and the faithful arm\'s verdict', () => {
+    /** The README, re-read per assertion so a rewrite cannot be cached over. */
+    function readme(): string {
+        return fs.readFileSync(path.join(FIXTURES, 'README.md'), 'utf8');
+    }
+
+    it('both numbers sit in the README with the command that produced each', () => {
+        // 5.1's verify, asserted rather than eyeballed: the before-number was
+        // pinned in Phase 1 and the after-number joins it, so neither can be
+        // edited out of the README without a red.
+        const text = readme();
+        expect(text).toMatch(/caught 0 of 3/);
+        expect(text).toMatch(/caught 3 of 3/);
+        const cmd = 'npx tsx tests/design-artifacts/fixtures/ui-port-losses/probe.ts';
+        // The point of the pre-registration is that it is the SAME command
+        // before and after, so a divergent second command would be the finding.
+        expect(text.split(cmd).length - 1).toBeGreaterThanOrEqual(3);
+    });
+
+    it("the faithful arm's false-red count is recorded and is zero", () => {
+        expect(readme()).toContain('0 false red(s), outcome=success');
+    });
+
+    it('5.2 — the README states the verdict either way, naming the arm', () => {
+        // A null was a permitted outcome and would have held 3.2. The README
+        // has to say which happened, and say it about `faithful` by name.
+        const text = readme();
+        expect(text).toContain('faithful');
+        expect(text).toMatch(/Verdict: no null/);
+    });
+
+    it('the after-number is the one this tree actually produces', () => {
+        // The README's after-row is a claim about this commit, so it is checked
+        // against the live gates rather than trusted as prose. Three planted
+        // losses reach the operator; the faithful arm does not. Same predicate
+        // as `probe.ts` — whether the loss reached the operator at all, which
+        // is what keeps the number invariant across the pending 3.2 flip.
+        const reached = (file: string): boolean => {
+            const r = applyRun(stateFor(file));
+            return String(r.outcome) !== 'success' || /carried nothing/.test(saidBy(r));
+        };
+        expect(reached('S-a-substring-collision.json')).toBe(true);
+        expect(reached('S-b-all-flagged.json')).toBe(true);
+        expect(reached('S-c-placeholder-in-file.json')).toBe(true);
+        expect(reached('faithful.json')).toBe(false);
+    });
+});
