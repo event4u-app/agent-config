@@ -69,6 +69,29 @@ still exists in the tree. Absent or empty → fall through to
 Then review existing components in the codebase for the same
 responsibility — extend rather than rebuild when a match is found.
 
+**Read `state.ui_audit.component_taxonomy` before you decide where the
+component goes.** The audit (§ 1b of
+[`existing-ui-audit`](../existing-ui-audit/SKILL.md)) records the project's
+**own** granularity tiers, joined with `/`, or `none`:
+
+- **It names tiers** → record the chosen tier on the component's
+  `state.ui_design.components[]` entry as `tier` (the apply step reads that
+  field and nothing else writes it), then place the component inside it and say
+  which:
+  *"conforming to the project's `primitives/patterns/features` taxonomy —
+  `Checkout` goes under `src/components/features/`"*. Match the tier by name;
+  there is no rule here that computes a tier, and there must not be one.
+- **A component fits no tier** → report it as a named conformance gap with the
+  reason, and leave it unplaced. Do not put it somewhere else quietly, and do
+  not invent a tier for it — picking one would need exactly the per-tier rule
+  the measurement below shows is not derivable.
+- **`none`** → behave exactly as you would without this paragraph. A project
+  that organizes its components some other way must not be able to tell that
+  this step exists. Never propose a taxonomy to a project that has one you did
+  not recognise, and never propose one mid-task to a project that has none —
+  the single offer is made once, at the greenfield halt, and a decline there is
+  terminal.
+
 **A new component's workshop is part of its design where the project has one —
 size-conditional, never a generic mandate.** The boundary is
 [`component-oriented-and-oop-development`](../../../docs/guidelines/component-oriented-and-oop-development.md)

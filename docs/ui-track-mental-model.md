@@ -73,7 +73,7 @@ A non-empty `state.ui_audit` carrying **at least one of**:
 
 - `components_found` — `[{path, name, kind, similarity?}]` from
   [`existing-ui-audit`](../dist/agent-src/skills/existing-ui-audit/SKILL.md).
-- `greenfield: true` plus `greenfield_decision ∈ {scaffold, bare, external_reference}`.
+- `greenfield: true` plus `greenfield_decision ∈ {scaffold, bare, external_reference, granularity_convention}`.
 - Legacy `components` alias — same shape.
 
 Empty dict, `null`, or a dict without those keys is **not** an audit.

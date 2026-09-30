@@ -97,6 +97,14 @@ nobody can test is how the previous mismatch happened.
 It reads zero in a JavaScript tree by construction, which is not the same as
 unused.
 
+### 1b. Detect the component-granularity taxonomy the project already chose
+
+```bash
+npx tsx scripts/work_engine/taxonomy/detect.ts   # or import detect_component_taxonomy(root)
+```
+
+Returns the project's **own** tier names joined with `/` — `atoms/molecules/organisms`, `primitives/patterns/features`, whatever it actually uses — or `none`. Record it as `state.ui_audit.component_taxonomy`, with `state.ui_audit.component_root` for where the components live. `none` is a real answer, and leaves every downstream step behaving exactly as it did before this detection existed. Never write a taxonomy the project does not evidence, and never "tidy" a layout into one — this step *finds* the project's structure, it never supplies one. Detection rules, the declared-beats-inferred precedence and the two collision floors: [`references/component-taxonomy-detection.md`](references/component-taxonomy-detection.md).
+
 ### 2. Identify the design system
 
 Detect markers, in order. **Stop at the first match** — projects rarely run more than one design system.
@@ -271,6 +279,9 @@ then set `state.ui_audit.greenfield = true` and emit a halt:
 >    before building (recommended for projects with >1 planned screen)
 > 2. Proceed bare with Tailwind defaults (recommended for one-off prototypes)
 > 3. Point me at an external design-system reference (URL or file)
+> 4. Scaffold + a granularity convention — as 1, and new components go into
+>    named granularity folders you pick the names for; rename or drop it later
+>    and nothing here objects
 
 **Recommendation: 1 — Scaffold tokens + primitives** — even one extra screen
 benefits from a shared base; the scaffold cost is ~10 min and saves
@@ -278,7 +289,9 @@ re-doing every primitive on screen 2. Caveat: flip to 2 if this is a
 demo or single-page prototype that will not grow.
 ```
 
-Record the user's pick in `state.ui_audit.greenfield_decision` (`scaffold` | `bare` | `external_reference`). Re-running the skill on the same state-file with `greenfield_decision` set is a no-op for the halt (audit findings stay).
+Option 4 is an **offer**, and the only one made anywhere: a project that already exists is never asked (§ 1b reads what it chose), and a greenfield project picking any other number has declined terminally, because the halt is a no-op once any decision is recorded. It stays one more number in the same block rather than a second question — a single number still answers it, which is what the reply-shape rule requires.
+
+Record the user's pick in `state.ui_audit.greenfield_decision` (`scaffold` | `bare` | `external_reference` | `granularity_convention`). Re-running the skill on the same state-file with `greenfield_decision` set is a no-op for the halt (audit findings stay). `granularity_convention` takes the same scaffold path as `scaffold` — it adds the convention, it does not replace the scaffolding.
 
 ### 8. (Optional) Capture an a11y baseline
 
@@ -332,6 +345,7 @@ violations will surface as new findings on every run.
 Load on demand once the audit needs the pitfall catalog:
 
 - [`references/anti-slop-cross-reference.md`](references/anti-slop-cross-reference.md) — Anti-slop cross-reference
+- [`references/component-taxonomy-detection.md`](references/component-taxonomy-detection.md) — Component-taxonomy detection rules
 
 - [`references/output-and-pitfalls.md`](references/output-and-pitfalls.md) — Output format · Gotcha · Anti-slop cross-reference
 
@@ -344,6 +358,7 @@ Load on demand once the audit needs the pitfall catalog:
 5. **`state.ui_audit.patterns`** — object with forms, tables, modals, empty_states, navigation, data_display arrays
 6. **`state.ui_audit.candidates`** — top-5 similarity matches for the current input (may be empty)
 7. **`state.ui_audit.greenfield`** — boolean; when true, `greenfield_decision` MUST also be set before the dispatcher advances
+7b. **`state.ui_audit.component_taxonomy`** / **`component_root`** — the project's own granularity tiers joined with `/` (or `none`), and where the components live relative to the project root. Never a canonical tier list — a project with three tiers records three; `none` is the value that leaves every downstream step unchanged.
 8. **`state.ui_audit.a11y_baseline`** *(optional)* — array of `{rule, selector, severity?}` entries documenting pre-existing a11y violations the review gate should treat as informational. Omit the key entirely when no baseline applies; do not write `[]` for "I checked and there are none" — that disables the gate's filter for every future run.
 
 **Design-system export (current-repo source):** when the goal is to seed

@@ -71,8 +71,7 @@ EXISTING-UI-AUDIT RUNS FIRST. ALWAYS.
 `state.ui_audit` is a non-empty dict carrying at least one of:
 
 - `components_found` — inventory entries from `existing-ui-audit`.
-- `greenfield: true` plus `greenfield_decision` ∈
-  `{scaffold, bare, external_reference}`.
+- `greenfield: true` plus a `greenfield_decision` ∈ `GREENFIELD_DECISIONS`.
 - Legacy `components` alias — back-compat.
 
 `null` or `{}` is **not** findings; empty dict is rejected on purpose.
