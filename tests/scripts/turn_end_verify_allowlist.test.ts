@@ -102,6 +102,24 @@ const AUDIT: ReadonlyArray<readonly [string, boolean]> = [
     ['gh pr view 1400', false],
     ['echo done', false],
     ['git diff --stat', false],
+
+    // ---- G1: the verify token is an ARGUMENT, not the command ---------------
+    // Added 2026-09-30. Not one of the seven negatives above puts a verify
+    // token in an argument position, which is exactly why this table passed
+    // for the whole time `ls tests` cleared detector C. All six returned
+    // `true` against the pre-fix selector; the table was not wrong, it was
+    // silent on the case that mattered.
+    ['ls tests', false],
+    ['cat build.log', false],
+    ['git checkout main', false],
+    ['mkdir build', false],
+    ['git commit -m "fix ci"', false],
+    ['true # test', false],
+
+    // ---- G1b: the shell discards the failure, so nothing was proven ---------
+    ['npm test || true', false],
+    ['npm test || :', false],
+    ['npm test ; true', false],
 ];
 
 describe('detector C — the verify allowlist, audited', () => {

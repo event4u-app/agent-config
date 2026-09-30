@@ -266,6 +266,23 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     }
     if (present.exitCode !== 0 || absent.exitCode !== 0) {
         process.stderr.write('❌  one of the two runs is red; parity over a red suite proves nothing\n');
+        // Name them. This branch used to print the sentence above and nothing
+        // else, while holding every per-test verdict in memory — so a red that
+        // reproduced only on the CI runner was undiagnosable from its log, and
+        // the only move left was to re-run and hope. Found 2026-09-30 by being
+        // on the receiving end of exactly that.
+        for (const [label, result] of [['present-but-off', present], ['absent', absent]] as const) {
+            const quiescent = new Set(['passed', 'pending', 'skipped', 'todo', 'disabled']);
+            const failed = result.verdicts.filter((v) => !quiescent.has(v.status));
+            if (failed.length === 0) continue;
+            process.stderr.write(`  ${label} — ${failed.length} not passing:\n`);
+            for (const v of failed.slice(0, 20)) {
+                process.stderr.write(`    · ${v.status}  ${v.name}\n`);
+            }
+            if (failed.length > 20) {
+                process.stderr.write(`    … and ${failed.length - 20} more\n`);
+            }
+        }
         return 1;
     }
     if (differences.length > 0) {

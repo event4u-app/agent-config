@@ -252,6 +252,38 @@ code, for the same reason the estate and continuity ratchets report distance
 instead of gating on it: these bindings predate the check, and reddening the
 tree on them would punish whichever change added the reading.
 
+### Detector C's record path — is a failed exit visible, per host
+
+Detector C refuses a turn that edited a file and then verified nothing. It has
+two inputs: the RECORD written on `post_tool_use`, which carries an exit code,
+and a transcript scan that sees only command names. Where the record is absent
+or carries no exit code, the detector degrades to the name match — so this table
+is the difference between a mechanism and its appearance.
+
+**No row is inferred. An unprobed host reads `unknown`**, and one probed host
+does not license a claim about its neighbours.
+
+| Host | Output on `post_tool_use` | Failed exit distinguishable | Observed field | Probed |
+|---|---|---|---|---|
+| `claude` | yes | **undetermined** — see below | `exit_code` · `exit_source` · `stdout_tail` | 2026-09-30 |
+| `augment` | unknown | unknown | — | never |
+| `cursor` | unknown | unknown | — | never |
+| `cline` | unknown | unknown | — | never |
+| `gemini` | unknown | unknown | — | never |
+| `windsurf` | unknown | unknown | — | never |
+| `copilot` | unknown | unknown | — | never |
+| `cowork` | unknown | unknown | — | never |
+
+The `claude` row is a live reading of a real session's witness file, not a
+fixture. Output is surfaced and the exit code arrives with its provenance
+recorded. The middle column nevertheless reads `undetermined`, because across 24
+records in that session **none carried a non-zero exit code** — including one
+command that genuinely failed and does not appear in the record at all. The
+per-turn cap does not explain it: `_cap_runs` preserves the earliest failing
+record by design. Cause unresolved; the measurement and why it was not rounded
+up to `yes` are in
+[`verification-classifier-before-after-2026-09-30`](../agents/evidence/analysis/verification-classifier-before-after-2026-09-30.md).
+
 An **advisory** concern on a null-block slot is consistent — most concerns are
 advisory and belong on a reporting slot. Two readings are worth naming because
 a reader looking only at the rows above would get them wrong:
