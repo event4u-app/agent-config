@@ -1,4 +1,4 @@
-#!/usr/bin/env -S node --import tsx
+#!/usr/bin/env tsx
 // Drive-loop era frozen per ADR-206 (2026-08-03): governing ADRs 068/070-084 are
 // superseded — subsystem is beta-internal, bugfix-only; no new capability work.
 /**

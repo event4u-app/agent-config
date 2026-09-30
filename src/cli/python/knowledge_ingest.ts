@@ -1,4 +1,4 @@
-#!/usr/bin/env -S node --import tsx
+#!/usr/bin/env tsx
 /**
  * Local knowledge ingestion — file walk, redaction, chunking, manifest.
  *
