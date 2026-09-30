@@ -13,9 +13,11 @@ import { describe, expect, it } from 'vitest';
 
 import {
     PROTECTION_ROW_IDS,
+    deployRestrictedFrom,
     forgeProtectionRows,
     protectionActions,
     unconditionalBypasses,
+    type EnvironmentPolicy,
     type ForgeReading,
 } from '../../src/scripts/_lib/forge_protection.js';
 import type { RulesetDetail } from '../../src/scripts/_lib/platform_anchor.js';
@@ -175,5 +177,81 @@ describe('unconditionalBypasses', () => {
             bypass_actors: [{ actor_type: 'RepositoryRole', bypass_mode: 'always' }],
         };
         expect(unconditionalBypasses([rs], 'main')).toHaveLength(0);
+    });
+});
+
+describe('deployRestrictedFrom', () => {
+    /**
+     * The live shape of this repository's only environment, read 2026-09-30.
+     * `protected_branches` is false and `custom_branch_policies` is true with a
+     * single policy, `main` — the exact payload that was written up as
+     * unrestricted on 2026-09-13 by consulting only the first flag.
+     */
+    const LIVE_PAGES: EnvironmentPolicy = {
+        name: 'github-pages',
+        deployment_branch_policy: { protected_branches: false, custom_branch_policies: true },
+    };
+
+    it('counts a custom branch policy as restricted — the 2026-09-13 misreading', () => {
+        expect(deployRestrictedFrom([LIVE_PAGES])).toBe(true);
+    });
+
+    it('counts protected_branches as restricted', () => {
+        expect(
+            deployRestrictedFrom([
+                {
+                    name: 'prod',
+                    deployment_branch_policy: {
+                        protected_branches: true,
+                        custom_branch_policies: false,
+                    },
+                },
+            ]),
+        ).toBe(true);
+    });
+
+    it('refutes the row for a null policy — GitHub encodes "any branch" that way', () => {
+        expect(deployRestrictedFrom([{ name: 'staging', deployment_branch_policy: null }])).toBe(
+            false,
+        );
+    });
+
+    it('refutes the row when both mechanisms are off', () => {
+        expect(
+            deployRestrictedFrom([
+                {
+                    name: 'staging',
+                    deployment_branch_policy: {
+                        protected_branches: false,
+                        custom_branch_policies: false,
+                    },
+                },
+            ]),
+        ).toBe(false);
+    });
+
+    it('is a property of the SET — one unrestricted environment refutes it', () => {
+        expect(
+            deployRestrictedFrom([LIVE_PAGES, { name: 'scratch', deployment_branch_policy: null }]),
+        ).toBe(false);
+    });
+
+    it('treats an absent flag as not-set rather than truthy', () => {
+        expect(deployRestrictedFrom([{ name: 'e', deployment_branch_policy: {} }])).toBe(false);
+    });
+
+    it('is vacuously restricted with no environments', () => {
+        expect(deployRestrictedFrom([])).toBe(true);
+    });
+
+    it('feeds the row: the live environment makes deploy_via_pipeline_only satisfied', () => {
+        const rows = forgeProtectionRows({
+            rulesets: null,
+            defaultBranch: null,
+            allowAutoMerge: null,
+            deployRestricted: deployRestrictedFrom([LIVE_PAGES]),
+        });
+        const row = rows.find((r) => r.id === 'deploy_via_pipeline_only');
+        expect(row?.state).toBe('satisfied');
     });
 });

@@ -73,6 +73,57 @@ export interface ForgeReading {
     readonly deployRestricted: boolean | null;
 }
 
+/**
+ * One environment's deployment-branch policy, in the shape
+ * `GET repos/{owner}/{repo}/environments` returns it.
+ *
+ * `null` is GitHub's encoding for *no restriction at all* — every branch may
+ * deploy. It is therefore the one shape that refutes the row.
+ */
+export interface EnvironmentPolicy {
+    readonly name: string;
+    readonly deployment_branch_policy: {
+        readonly protected_branches?: boolean;
+        readonly custom_branch_policies?: boolean;
+    } | null;
+}
+
+/**
+ * Derive `deployRestricted` from the environments payload.
+ *
+ * **Both restriction mechanisms count, and reading only one is the defect this
+ * function exists to close.** GitHub restricts deployment branches two ways:
+ * `protected_branches` (whatever the forge currently treats as protected) and
+ * `custom_branch_policies` (an explicit named list). A checker that reads only
+ * the first reports "accepts a deployment from any branch" for an environment
+ * pinned to exactly one named branch — which is the opposite of what the
+ * payload says, and is precisely the misreading recorded against this
+ * repository on 2026-09-13: `github-pages` carried
+ * `custom_branch_policies: true` with a single policy, `main`, and was written
+ * up as unrestricted because only `protected_branches` was consulted.
+ *
+ * The named-list mechanism is also the STRICTER of the two here, which is why
+ * the row is satisfied without changing the forge: `protected_branches` widens
+ * with the protected set, while a custom list names one branch and stays there.
+ * On a ruleset-protected repository it is additionally the safer mechanism —
+ * `protected_branches` resolves against a notion of protection whose classic
+ * endpoint 404s here (see the module header), so switching to it would trade a
+ * precise restriction for one whose evaluation is exactly the ambiguity the
+ * `forge-protection-settings` re-scope forbids relying on.
+ *
+ * An empty environment set is restricted **vacuously**: with no environment
+ * there is no deployment surface to leave open. Stated rather than left to
+ * fall out of `every`, because "no environments" and "all environments fine"
+ * reaching the same answer is a coincidence a reader should not have to verify.
+ */
+export function deployRestrictedFrom(environments: readonly EnvironmentPolicy[]): boolean {
+    return environments.every((env) => {
+        const policy = env.deployment_branch_policy;
+        if (policy === null || policy === undefined) return false;
+        return policy.protected_branches === true || policy.custom_branch_policies === true;
+    });
+}
+
 const SOURCE = {
     rulesets: 'GET repos/{owner}/{repo}/rulesets + GET .../rulesets/{id}',
     repo: 'GET repos/{owner}/{repo} (allow_auto_merge)',
