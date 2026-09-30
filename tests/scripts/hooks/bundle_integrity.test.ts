@@ -16,6 +16,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
     hashFile,
+    integrityAction,
     parseSidecar,
     readStamp,
     sidecarPathFor,
@@ -183,5 +184,31 @@ describe('stamp helpers', () => {
         expect(readStamp(p)).toBeNull();
         writeStamp(p, { sha: 'a', size: 1, mtimeMs: 2 });
         expect(readStamp(p)).toEqual({ sha: 'a', size: 1, mtimeMs: 2 });
+    });
+});
+
+describe('integrityAction — severity decides, not the slot name', () => {
+    const mismatch = { state: 'mismatch', expected: 'a'.repeat(64), actual: 'b'.repeat(64) } as const;
+
+    it('blocks a mismatch when the slot carries a blocking concern', () => {
+        const a = integrityAction(mismatch, true);
+        expect(a.action).toBe('block');
+        if (a.action === 'allow') throw new Error('unreachable');
+        expect(a.detail).toContain('build:hooks');
+    });
+
+    it('only WARNS on an advisory-only slot', () => {
+        // The paired half: a slot that could not have refused anything must
+        // not be wedged by a stale digest.
+        expect(integrityAction(mismatch, false).action).toBe('warn');
+    });
+
+    it('allows ok and unverifiable, whatever the slot carries', () => {
+        for (const blocking of [true, false]) {
+            expect(integrityAction({ state: 'ok', sha: 'x' }, blocking).action).toBe('allow');
+            expect(integrityAction({ state: 'unverifiable', reason: 'no sidecar' }, blocking).action).toBe(
+                'allow',
+            );
+        }
     });
 });

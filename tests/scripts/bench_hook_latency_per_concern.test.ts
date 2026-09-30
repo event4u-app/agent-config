@@ -29,7 +29,7 @@ import {
     readConcernTimings,
     renderConcernRow,
 } from '../../src/scripts/bench_hook_latency.js';
-import { _write_concern_timings } from '../../src/scripts/hooks/dispatch_hook.js';
+import { writeConcernTimings } from '../../src/scripts/hooks/concern_timings.js';
 
 let tmp: string;
 
@@ -146,29 +146,36 @@ describe('blockingConcerns', () => {
     });
 });
 
-describe('_write_concern_timings — the dispatcher sink', () => {
-    const envelope = { event: 'pre_tool_use', platform: 'claude' };
-
+describe('writeConcernTimings — the dispatcher sink', () => {
     it('writes nothing when the sink is unarmed', () => {
         const p = sink();
-        _write_concern_timings(envelope, [{ concern: 'a', duration_us: 10 }], undefined);
+        writeConcernTimings('pre_tool_use', 'claude', [{ concern: 'a', duration_us: 10 }], undefined);
         expect(fs.existsSync(p)).toBe(false);
     });
 
     it('APPENDS across calls — the property the feedback dir cannot provide', () => {
         const p = sink();
-        _write_concern_timings(envelope, [{ concern: 'a', duration_us: 10 }], p);
-        _write_concern_timings(envelope, [{ concern: 'a', duration_us: 20 }], p);
+        writeConcernTimings('pre_tool_use', 'claude', [{ concern: 'a', duration_us: 10 }], p);
+        writeConcernTimings('pre_tool_use', 'claude', [{ concern: 'a', duration_us: 20 }], p);
         // The feedback dir keeps one file per concern and overwrites it every
         // dispatch, so a p95 taken from it would be a p95 of one sample. This
         // assertion is the whole reason the sink is a separate mechanism.
         expect(readConcernTimings(p).get('a')).toEqual([10, 20]);
     });
 
+    it('rounds the float the dispatcher hands it, without rounding it to zero', () => {
+        const p = sink();
+        // 0.197 ms as the dispatcher measures it -- the reading that printed
+        // `0 ms` before the unit changed.
+        writeConcernTimings('pre_tool_use', 'claude', [{ concern: 'a', duration_us: 197.4 }], p);
+        expect(readConcernTimings(p).get('a')).toEqual([197]);
+    });
+
     it('omits a sample whose duration is not finite', () => {
         const p = sink();
-        _write_concern_timings(
-            envelope,
+        writeConcernTimings(
+            'pre_tool_use',
+            'claude',
             [
                 { concern: 'a', duration_us: Number.NaN },
                 { concern: 'b', duration_us: 7 },
@@ -182,8 +189,9 @@ describe('_write_concern_timings — the dispatcher sink', () => {
 
     it('never throws on an unwritable sink', () => {
         expect(() =>
-            _write_concern_timings(
-                envelope,
+            writeConcernTimings(
+                'pre_tool_use',
+                'claude',
                 [{ concern: 'a', duration_us: 1 }],
                 path.join(tmp, 'no', 'such', 'dir', 'x.jsonl'),
             ),
