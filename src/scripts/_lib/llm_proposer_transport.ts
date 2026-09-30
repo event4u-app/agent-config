@@ -37,6 +37,7 @@
  */
 
 import { load_anthropic_key } from '../ai_council/clients.js';
+import { sanitize_text } from './retrieval_sanitize.js';
 import type {
     GenerationRequest,
     GenerationResult,
@@ -140,10 +141,19 @@ export function anthropicGenerator(keyPath: string | null = null): TextGenerator
             );
         }
         const data = (await resp.json()) as AnthropicResponse;
-        const text = (data.content ?? [])
-            .filter((b) => b.type === 'text')
-            .map((b) => b.text ?? '')
-            .join('');
+        // Sanitize AT THE TRANSPORT, which is the choke point and one call site.
+        // A flag every caller has to remember is the instruction-only
+        // enforcement this package diagnoses in itself, and a partially
+        // sanitized world — some callers filtered, some not — is worse than
+        // either end state. The floor is a no-op on ordinary text, so what
+        // changes here is only a response that carries a hidden-instruction
+        // vector; see `docs/contracts/retrieval-read-surfaces.md`.
+        const text = sanitize_text(
+            (data.content ?? [])
+                .filter((b) => b.type === 'text')
+                .map((b) => b.text ?? '')
+                .join(''),
+        );
         // An empty body is returned AS an empty body rather than repaired here.
         // The arm's own output contract refuses it and classifies the refusal;
         // repairing it in the transport would move a decision into the layer

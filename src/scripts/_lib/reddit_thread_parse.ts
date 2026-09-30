@@ -62,6 +62,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { sanitize_text } from './retrieval_sanitize.js';
+import { strip_structural_hiding } from './structural_hiding.js';
 
 /** Header fields of the submission itself. `null` for anything not present. */
 export interface ThreadHeader {
@@ -499,7 +500,15 @@ function _detectLoginWall(html: string, commentCount: number): boolean {
  * `comments` array (never a fabricated one) when the page carries no comment
  * nodes.
  */
-export function parseThread(html: string): ParsedThread {
+export function parseThread(rawHtml: string): ParsedThread {
+    // Structural hiding is stripped BEFORE anything is extracted, so hidden
+    // content never reaches the codepoint floor or the text extractor at all.
+    // `_clean` below is the codepoint layer and cannot see this class: a
+    // `display:none` span holding an instruction is ordinary text to every
+    // predicate it has. Coverage is `STRUCTURAL_HIDING_CHANNELS` and the gaps
+    // are `STRUCTURAL_HIDING_GAPS`, both in `_lib/structural_hiding.ts` — the
+    // register travels with the claim, and no recall rate exists for it.
+    const html = strip_structural_hiding(rawHtml);
     const nodes = _collectComments(html);
     const loginWall = _detectLoginWall(html, nodes.length);
 

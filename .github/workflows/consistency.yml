@@ -199,6 +199,13 @@ jobs:
       - name: Verify the per-slot enforcement table matches host_lowering.yaml
         run: ./scripts-run src/scripts/check_enforcement_matrix --quiet
 
+      # Registered here as well as in `task ci` for the reason above: no
+      # workflow invokes `task ci`. The sanitize floor's coverage list is
+      # generated from the import graph; this fails when the committed table,
+      # the module header, or the structural detector disagree with the tree.
+      - name: Verify the generated read-surface table matches the tree
+        run: ./scripts-run src/scripts/check_read_surface_coverage --quiet
+
       - name: Verify README size, word and time-to-first-command budgets
         run: ./scripts-run src/scripts/lint_readme_size --quiet
 

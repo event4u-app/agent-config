@@ -23,6 +23,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { DEFAULT_PRICES, as_rows } from './ai_council/_default_prices.js';
+import { sanitize_text } from './_lib/retrieval_sanitize.js';
 import { PRICES_FILE, _render_markdown, is_stale, load_prices } from './ai_council/pricing.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -99,10 +100,18 @@ export function _toRowsFromLitellm(
         if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) {
             continue;
         }
-        const provider = String((entry.litellm_provider as Json) ?? '').toLowerCase();
+        // Sanitize BEFORE the allow-list compare, not after. These two strings
+        // come off the wire and end up in a tracked markdown file that agents
+        // read, so they are the model-facing copy this floor exists for. Doing
+        // it before the compare is also the only order that works: a vector
+        // inside a model name would otherwise fail the allow-list lookup and
+        // drop the row, turning an injection attempt into a silent data loss.
+        // The fetched payload itself is never written anywhere — only this
+        // rendering is transformed.
+        const provider = sanitize_text(String((entry.litellm_provider as Json) ?? '')).toLowerCase();
         // LiteLLM keys are sometimes "provider/model"; strip the prefix.
         const slash = key.indexOf('/');
-        const model = slash !== -1 ? key.slice(slash + 1) : key;
+        const model = sanitize_text(slash !== -1 ? key.slice(slash + 1) : key);
         if (!ALLOW_LIST.has(`${provider} ${model}`)) {
             continue;
         }

@@ -52,14 +52,23 @@
 #                of them.
 #   canary       optional mutation recipe (Phase 7) — see CANARY below
 #
-# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-09-13)
+# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-09-29)
 # ----------------------------------------------------------
-# 330 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 341 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
 # re-run on the tree carrying these rows.)
-# **97 rows are listed below**, so the manifest covers 97/332 = 29.2 % of the
+# **103 rows are listed below**, so the manifest covers 103/341 = 30.2 % of the
 # population, and is complete for every gate that can carry a floor. The row
 # count is `grep -c '^  - id:'`, recomputed here rather than incremented.
+#
+# RECOUNTED 2026-09-29, on the change that adds `check_read_surface_coverage`.
+# The header said 97 rows against an actual 102 and 330 scripts against an
+# actual 341 — drift of 5 and 11 against the tolerance of 15 in
+# `check_gate_coverage.test.ts` § states an honest denominator, so nothing was
+# red and the 341st arrival would not have redded it either. Corrected on the
+# way past, which the block below says is exactly how this figure keeps ending
+# up a function of who happened to look. Both numbers are computed here, not
+# incremented: 341 from `count_gate_scripts`, 103 from `grep -c '^  - id:'`.
 #
 # RECOUNTED 2026-09-13, on a change that adds NO gate script — and that is the
 # point of this block rather than an aside. Every recount below was triggered by
@@ -2949,6 +2958,37 @@ gates:
       scalar, and a dash on its own line. The accepting case is the supported
       block form, because a suite that only proves failures proves a gate that
       refuses everything.
+
+  - id: check_read_surface_coverage
+    argv: ["--quiet"]
+    ci_invocation: .github/workflows/consistency.yml
+    min_scanned: 12
+    corpus: >
+      modules under `src/scripts/` that both bring outside bytes in through a
+      recognised inbound shape (`await fetch`, a `node:http(s)` request, a
+      subprocess of curl/wget/gh, a parse of markup on stdin, or a shape the
+      module declares at its own site) and hand a string onward — 24 at
+      baseline. The floor sits at 12 because the shape set is narrow and the
+      corpus moves by ones as a network call is added or removed; a reading
+      below it means a detector stopped matching or the walk lost `src/scripts/`,
+      not that half this repository's network calls were deleted.
+    status: enforced
+    no_canary_reason: >-
+      the canary contract is create-only, and a planted module carrying a fetch
+      would be a legitimate corpus member — the gate would emit a row for it and
+      be right to. Every violation this gate has is a DIFFERENCE between two
+      readings: the committed table against the regenerated one, the floor's
+      header against the table, the detector's text against the no-percentage
+      rule. None of those can be produced by a file's existence, only by its
+      content. Discrimination is proven by `--self-test` instead (7 cases, 6
+      rejecting: a seeded unsanitized fetch-derived emit the table does not
+      carry, a hand-flipped coverage cell, a header restating a module path the
+      table lists, a header with no pointer at all, a recall percentage in the
+      structural detector, and an empty scan root). That last case is the
+      scan-scope collapse `assertScanned` exists for, observed red on
+      2026-09-29 by planting a fixture root with no `src/scripts/` at all: it
+      exits 1 with "scanned 0 read surface(s)" rather than certifying a table it
+      never compared.
 
   - id: check_enforcement_matrix
     argv: ["--quiet"]

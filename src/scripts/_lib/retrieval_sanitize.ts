@@ -16,27 +16,43 @@
  * Codepoint classes are shared with `lint_hidden_unicode` (one source of truth
  * for what counts as a hidden-instruction vector).
  *
- * WHERE IT ACTUALLY RUNS — measured end-to-end, not asserted. Keep this list
- * honest: an earlier version of this header named surfaces by intent, and the
- * legacy-envelope gap below went unnoticed for exactly that reason. Every
- * claim here is backed by a probe row in
- * `agents/evidence/reports/sanitize-floor-wiring.md`:
+ * WHERE IT ACTUALLY RUNS — the list is GENERATED, and this header points at it:
  *
- *   - `retrieve_v1()`     — yes (`memory_lookup.ts` calls `sanitize_entry`)
- *   - `memory_get_v1()`   — yes (same)
- *   - MCP `memory_lookup` / `memory_get` tools — inherited from the two above
- *   - `retrieve()` / `retrieve_with_meta()` — yes, since the S0.0 wiring fix;
- *     before it they emitted every vector intact, and so did the CLI default
- *     (`--envelope legacy`), which is the path the rules document
- *   - inter-agent channels (`ai_team` / `ai_council` model replies) — the
- *     inbound parse choke point only; the subagent boundary itself is a HOST
- *     primitive this package cannot reach (see the report, § S0.0b)
+ *     docs/contracts/retrieval-read-surfaces.md
  *
- * Anything not on that list is uncovered. Do not widen the list without a
- * probe row to back it.
+ * This header used to carry the list itself. It went wrong in both directions —
+ * a path that reaches the outside world and IS sanitized was missing from it,
+ * and two paths carrying fetched bytes toward a model-facing surface were
+ * neither listed nor covered — and the version before that had already recorded
+ * the same failure once, noting that it "named surfaces by intent, and the
+ * legacy-envelope gap went unnoticed for exactly that reason". A list a human
+ * maintains records what its author meant; the tree records what the code does.
+ *
+ * So the list moved to `_lib/read_surface_scan.ts`, which derives it from the
+ * imports, and `check_read_surface_coverage` fails when the published table and
+ * the tree disagree. That gate also fails when THIS header starts restating the
+ * table again, because two copies is how the list went stale twice.
+ *
+ * A table row is a claim about imports, never about safety: `covered` means the
+ * floor is in scope in that module, not that it is applied to the right string.
+ *
+ * TWO LAYERS, AND THE ONE THIS FILE DOES NOT OWN
+ * ----------------------------------------------
+ * Everything below is a CODEPOINT floor. Fetched markup also hides content
+ * structurally — an HTML comment, an `aria-hidden` subtree, a `<template>`
+ * block, a `style="display:none"` span — which no codepoint predicate can see.
+ * That pre-pass is `_lib/structural_hiding.ts`; {@link sanitize_markup}
+ * composes the two. Its `STRUCTURAL_HIDING_GAPS` register is part of its
+ * contract and travels with every claim of that coverage, including this one.
+ *
+ * No recall or coverage rate is published for the structural layer, anywhere —
+ * it has no frozen corpus, so a rate would be an invented denominator. The
+ * percentages further down this file are the CODEPOINT pipeline's, measured
+ * over a corpus that does exist; they say nothing about the structural layer.
  */
 import { _classify } from '../lint_hidden_unicode.js';
 import { TOKEN_RE, classifyToken } from './confusables.js';
+import { strip_structural_hiding } from './structural_hiding.js';
 
 /** Hard per-field length cap — bounds a runaway/adversarial body. */
 export const MAX_FIELD_CHARS = 8192;
@@ -83,6 +99,29 @@ export function sanitize_text(s: string): string {
         out += ch;
     }
     return out.length > MAX_FIELD_CHARS ? out.slice(0, MAX_FIELD_CHARS) : out;
+}
+
+/**
+ * The markup pre-pass, then the codepoint floor — in that order.
+ *
+ * Use this wherever the incoming string is MARKUP the model will read: fetched
+ * HTML, fetched markdown carrying inline HTML. The order is load-bearing.
+ * Stripping hidden spans first means their contents never reach the codepoint
+ * pass at all, so a payload hidden twice — an instruction in a
+ * `display:none` span written in zero-width characters — is removed by the
+ * layer that can see it rather than half-handled by the one that cannot.
+ *
+ * It is the WRONG function for a plain-text field. Removing `<!-- … -->` from
+ * a rule body or a code snippet that legitimately contains markup corrupts it,
+ * which is why {@link sanitize_text} stays the default and this is the opt-in.
+ *
+ * Coverage is exactly `STRUCTURAL_HIDING_CHANNELS`, and what it misses is
+ * `STRUCTURAL_HIDING_GAPS` — both in `_lib/structural_hiding.ts`, cited here
+ * because a caveat that stays in one file is not a caveat. No recall or
+ * coverage rate exists for this layer.
+ */
+export function sanitize_markup(s: string): string {
+    return sanitize_text(strip_structural_hiding(s));
 }
 
 /**
