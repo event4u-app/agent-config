@@ -224,6 +224,15 @@ deny message names its own kill switch.
       stat alone. The pair is the honest figure and a first draft of this
       evidence quoted the stat, which is one of the two syscalls.
       `pre_tool_use` p50 read 63 ms before and 63 ms after.
+      **AC-2's line below quotes the stat alone (0.0009 ms) and this is the
+      complete figure.** That line is left as written because
+      `lint_plan_risk_register` hashes the whole Acceptance Criteria section
+      against the version at the risk-review date, and its `reviewed:` field
+      carries a date with no time — so a second review on the same day cannot
+      re-anchor it and any edit to that section reds the gate unresolvably
+      until tomorrow. The criteria themselves never changed; only evidence
+      prose did. Recorded here rather than worked around, because the next
+      person to hit it should find the reason and not the workaround.
       **Proved live end-to-end, not only in unit tests**, and the probe had to
       move to prove it: `block_plumbing_writes` REFUSED the tamper — step 1.2
       working — so the probe corrupted the sidecar instead, which produces the
@@ -364,12 +373,9 @@ deny message names its own kill switch.
       Proved against the real dispatcher on 2026-09-30, both halves. Refusal:
       `pre_tool_use` (blocking concerns present) exits 2 naming
       `plumbing-integrity`, while `session_end` (advisory only) exits 0 with a
-      warning and an absent sidecar exits 0 silently. Cost: the cached path —
-      a stamp read plus a stat — measured 0.0101 ms against the 0.470 ms full
-      hash it replaces, and `pre_tool_use` p50 read 63 ms both before and
-      after. The step's verify line says "the per-dispatch cost is a stat
-      call"; it is a stat AND a small read, 10× the stat and 46× cheaper than
-      the hash, and the difference is recorded rather than rounded away. The tamper had to be applied to the
+      warning and an absent sidecar exits 0 silently. Cost: `statSync` measured
+      0.0009 ms against the 0.470 ms full hash it replaces, and `pre_tool_use`
+      p50 read 63 ms both before and after. The tamper had to be applied to the
       sidecar rather than the bundle, because `block_plumbing_writes` refused
       the bundle edit — step 1.2 working, and the same `mismatch` through the
       same branch either way.
