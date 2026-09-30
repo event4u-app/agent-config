@@ -289,8 +289,16 @@ and by a pre-registered count of what today's gates catch, recorded before any g
 - **Status:** open
 - **Owner:** maintainer
 - **Class:** 3 — human-only
-- **Blocks:** Phase 3 — step 3.2 only. Phases 1, 2, 4 and 5 are closed and this blocker does
-  not reach them; the roadmap's measurement half is complete and recorded.
+- **Blocks:** Phase 3 — step 3.2, and **AC-2 with it**. Phases 1, 2, 4 and 5 are closed and
+  this blocker does not reach them; the roadmap's measurement half is complete and recorded.
+  AC-2 asks that each planted loss be caught *by a named halt or outcome*, and S-b is caught
+  today by a message on a `SUCCESS` outcome — which is what the shadow release is, and which
+  is short of what AC-2 asks for. AC-1, AC-3, AC-4 and AC-5 are met and were re-verified on
+  2026-09-30: the before-count was registered in the directory's first-add commit; the
+  faithful arm raises zero findings; `apply.ts` is byte-unchanged on this branch and
+  `src/cli/commands/uiAudit.test.ts` is green at 17 tests, so `COVERAGE_BUCKETS` and its
+  pinning test are untouched; and `git diff --name-status origin/main...HEAD` lists three
+  files, none of them a skill, rule, command verb, hook or ledger format.
 - **Question:** none. Nothing is being decided — the gate is an elapsed release, and the
   decision it depends on was already taken as D2.
 - **Recommendation:** clear it by doing nothing special. The next routine release carries 3.1
