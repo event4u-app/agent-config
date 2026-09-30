@@ -308,26 +308,33 @@ describe('5.1/5.2 — the after-number and the faithful arm\'s verdict', () => {
         // pinned in Phase 1 and the after-number joins it, so neither can be
         // edited out of the README without a red.
         const text = readme();
-        expect(text).toMatch(/caught 0 of 3/);
-        expect(text).toMatch(/caught 3 of 3/);
         const cmd = 'npx tsx tests/design-artifacts/fixtures/ui-port-losses/probe.ts';
-        // The point of the pre-registration is that it is the SAME command
-        // before and after, so a divergent second command is the finding — and
-        // it has to be checked PER ROW, not as a global occurrence count. A
-        // count cannot see divergence: `cmd` is a prefix of `cmd --new-flag`,
-        // so appending a flag to one row leaves every tally unchanged. Each
-        // table row is therefore matched whole, and the command cell is
-        // required to END at the cell boundary.
-        const row = (label: string): string => {
-            const m = new RegExp(`^\\|[^|\\n]*${label}[^|\\n]*\\|([^|\\n]*)\\|`, 'im').exec(text);
+        // EVERY cell is bound to its own row, never matched globally. A global
+        // check cannot see divergence, in either column and for two different
+        // reasons. Command: `cmd` is a prefix of `cmd --new-flag`, so appending
+        // a flag to one row leaves any tally unchanged. Result: `caught 0 of 3`
+        // and `caught 3 of 3` both also appear in the two fenced probe blocks,
+        // so a global `toMatch` stays green even if the two numbers are SWAPPED
+        // between the table rows — and the Result column is the one carrying
+        // the AC-1 pre-registration claim, so it is the last place to accept a
+        // check that cannot fail for the reason it is named after.
+        const cells = (label: string): string[] => {
+            const m = new RegExp(`^\\|[^|\\n]*${label}[^|\\n]*\\|(.*)$`, 'im').exec(text);
             expect(m, `no table row for ${label}`).not.toBeNull();
-            return (m as RegExpExecArray)[1] as string;
+            return ((m as RegExpExecArray)[1] as string)
+                .split('|')
+                .map((c) => c.trim().replace(/^`|`$/g, ''));
         };
-        const beforeCmd = row('Before').trim().replace(/^`|`$/g, '');
-        const afterCmd = row('After').trim().replace(/^`|`$/g, '');
-        expect(beforeCmd).toBe(cmd);
-        expect(afterCmd).toBe(cmd);
-        expect(afterCmd).toBe(beforeCmd);
+        const before = cells('Before');
+        const after = cells('After');
+        // [0] command, [1] result, [2] faithful arm.
+        expect(before[0]).toBe(cmd);
+        expect(after[0]).toBe(cmd);
+        expect(after[0]).toBe(before[0]);
+        expect(before[1]).toBe('caught 0 of 3');
+        expect(after[1]).toBe('caught 3 of 3');
+        expect(before[2]).toBe('0 false red(s), outcome=success');
+        expect(after[2]).toBe('0 false red(s), outcome=success');
     });
 
     it("the faithful arm's false-red count is recorded and is zero", () => {

@@ -301,6 +301,18 @@ and by a pre-registered count of what today's gates catch, recorded before any g
       (1 failed / 21 passed), while `grep -c` over the same mutated file still reads 4
       occurrences — which is what the old assertion measured and why it would have stayed
       green. Restored, 22/22.
+      · **And the same defect was still live one column over — caught by the third review
+      round and fixed 2026-09-30.** The row-binding above was applied to the Command column
+      and NOT to the Result column, which was left as `expect(text).toMatch(/caught 0 of 3/)`:
+      a global match, under a comment arguing against exactly that. It is the worse place for
+      it, because Result is the column carrying the AC-1 pre-registration claim, and both
+      numbers also appear in the two fenced probe blocks — so a straight SWAP of the two
+      counts between the table rows left the assertion green. Every cell is now bound to its
+      own row. Delta measured on that swap: the test fails (1 failed / 21 passed), while
+      `grep -c` still finds each number 3 times, which is all the old check ever looked at.
+      Restored, 22/22. Recorded rather than quietly folded in, because a check that cannot
+      fail for the reason it is named after is the same defect class as the three gates this
+      whole roadmap exists to fix — found here in the roadmap's own instrument.
       · **The after-number is measured at the shadow state and is invariant under the pending
       3.2 flip — measured, not argued.** The flip was simulated locally (`_handed_back_line`
       non-null returning `Outcome.PARTIAL` with a question) and the identical command re-run:
