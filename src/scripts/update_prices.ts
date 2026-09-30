@@ -41,6 +41,40 @@ type Json = any;
 const ALLOW_LIST: ReadonlySet<string> = new Set(DEFAULT_PRICES.keys());
 
 /**
+ * The only shape a remote identifier may have to be considered at all.
+ *
+ * Pure ASCII letters, digits and the punctuation real provider/model names use.
+ * Every allow-list entry is ASCII, so nothing outside this can be a member —
+ * and asserting it on the UNTOUCHED bytes is what makes the case fold below
+ * safe, because within ASCII folding is lossless. A Unicode character that
+ * folds onto an ASCII letter never reaches the comparison.
+ */
+const _CANONICAL_ID = /^[A-Za-z0-9._-]+$/;
+
+/** ASCII-only case fold — never `toLowerCase`, which folds Unicode too. */
+function _asciiLower(s: string): string {
+    return s.replace(/[A-Z]/g, (c) => String.fromCharCode(c.charCodeAt(0) + 32));
+}
+
+/**
+ * Report a rejected identifier that WOULD have matched after transformation.
+ *
+ * A raw miss whose normalised form hits the allow list is a different event
+ * from an ordinary unlisted name, and printing both as the same silence is what
+ * would hide an admission attempt. Ordinary misses stay silent — the fetched
+ * catalogue carries hundreds of models nobody here lists.
+ */
+function _reportCollision(rawProvider: string, rawModel: string): void {
+    const normalised = `${sanitize_text(rawProvider).toLowerCase()} ${sanitize_text(rawModel)}`;
+    if (!ALLOW_LIST.has(normalised)) return;
+    process.stderr.write(
+        'update_prices: DROPPED a remote row whose raw identifier is not allow-listed ' +
+            `but normalises onto \`${normalised}\`. A fetched name that folds or sanitizes ` +
+            'onto a listed one is an admission attempt, not a typo.\n',
+    );
+}
+
+/**
  * Synchronous HTTPS GET so the CLI stays a straight-line script (Python uses
  * a blocking urlopen). Returns parsed JSON dict, or null on any failure
  * (network / timeout / non-dict / parse), printing the Python-shaped stderr
@@ -108,41 +142,44 @@ export function _toRowsFromLitellm(
         // drop the row, turning an injection attempt into a silent data loss.
         // The fetched payload itself is never written anywhere — only this
         // rendering is transformed.
-        const rawProvider = String((entry.litellm_provider as Json) ?? '').toLowerCase();
+        const rawProvider = String((entry.litellm_provider as Json) ?? '');
         // LiteLLM keys are sometimes "provider/model"; strip the prefix.
         const slash = key.indexOf('/');
         const rawModel = slash !== -1 ? key.slice(slash + 1) : key;
 
-        // THE ALLOW LIST IS MATCHED ON THE RAW IDENTIFIER. An earlier version
-        // sanitized first and compared after, on the reasoning that a vector
-        // inside a model name would otherwise fail the lookup and drop the row
-        // — turning an injection attempt into silent data loss. An independent
-        // review named the cost of that order and it is the worse one: the
-        // transform is lossy, so a remote name carrying a vector can NORMALISE
-        // ONTO a listed name and be admitted as it. That converts an injection
-        // attempt into an admitted row wearing a trusted identifier, which is
-        // strictly worse than dropping it.
+        // THE ADMISSION BOUNDARY: a canonical ASCII grammar first, then a
+        // comparison on values nothing has transformed.
         //
-        // The row is dropped either way; what changes is that a collision is
-        // now AUDIBLE. A raw miss whose sanitized form would have matched is
-        // reported rather than skipped with every other miss, because those two
-        // are opposite events printed as the same silence.
-        if (!ALLOW_LIST.has(`${rawProvider} ${rawModel}`)) {
-            const normalised = `${sanitize_text(rawProvider).toLowerCase()} ${sanitize_text(rawModel)}`;
-            if (ALLOW_LIST.has(normalised)) {
-                process.stderr.write(
-                    `update_prices: DROPPED a remote row whose raw identifier is not allow-listed ` +
-                        `but normalises onto \`${normalised}\`. A fetched name that sanitizes onto a ` +
-                        'listed one is an admission attempt, not a typo.\n',
-                );
-            }
+        // Two earlier orders were both wrong and the second is the instructive
+        // one. The first sanitized before comparing, so a poisoned name could
+        // normalise onto a listed one and be admitted as it. The fix compared
+        // "raw" values — but `.toLowerCase()` ran before the compare, and THAT
+        // IS ITSELF A LOSSY UNICODE TRANSFORM: the Kelvin sign and the Turkish
+        // dotted capital both fold onto ASCII letters, so the provider field
+        // still carried the collision the model field no longer did. An
+        // independent review named it and was right; closing one field and
+        // calling the class closed is the failure mode, not the typo.
+        //
+        // So the grammar is asserted on the UNTOUCHED bytes. Pure ASCII, with
+        // the punctuation real identifiers use. Nothing outside it can be an
+        // allow-list member, because every entry is ASCII — and within ASCII,
+        // case folding is lossless, which is what makes the fold below safe to
+        // apply after the gate rather than before it.
+        if (!_CANONICAL_ID.test(rawProvider) || !_CANONICAL_ID.test(rawModel)) {
+            _reportCollision(rawProvider, rawModel);
+            continue;
+        }
+        const provider = _asciiLower(rawProvider);
+        if (!ALLOW_LIST.has(`${provider} ${rawModel}`)) {
+            _reportCollision(rawProvider, rawModel);
             continue;
         }
 
         // Only now, and only for the rendering: the row reaches a tracked
         // markdown file that agents read, so the model-facing copy carries the
-        // floor. The fetched payload itself is never written anywhere.
-        const provider = sanitize_text(rawProvider).toLowerCase();
+        // floor. The fetched payload itself is never written anywhere. Both
+        // values are already canonical ASCII here, so this is a no-op in
+        // practice and a belt on the rendering in principle.
         const model = sanitize_text(rawModel);
         const inCost = entry.input_cost_per_token;
         const outCost = entry.output_cost_per_token;

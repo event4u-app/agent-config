@@ -105,17 +105,55 @@ describe('update_prices — fetched rows reach the tracked doc sanitized', () =>
         expect(fs.readFileSync(fixturePath, 'utf-8')).toContain(ZWJ);
     });
 
+    // THE PROVIDER FIELD. Round 3 found that round 2's fix compared a provider
+    // that had already been through `.toLowerCase()`, which folds Unicode as
+    // well as ASCII — so the field the fix claimed to close was still open in
+    // principle. The grammar closes it.
+    //
+    // HONEST SCOPE, and it cost two attempts to establish, so it is recorded
+    // rather than implied: NO TEST HERE DISCRIMINATES, because for this allow
+    // list nothing does. The only Unicode characters that case-fold ONTO an
+    // ASCII letter are the Kelvin sign (-> `k`) and the Angstrom sign (-> `å`),
+    // and no provider in the current list contains either letter — `anthropic
+    // openai gemini xai perplexity`. Every other non-ASCII provider already
+    // missed a pure-ASCII allow list under plain `.toLowerCase()`. So the
+    // grammar is DEFENCE IN DEPTH WITH NO CURRENTLY REACHABLE EXPLOIT: it is
+    // the right shape — the boundary refuses before transforming, instead of
+    // transforming into the comparison — and it starts mattering the day
+    // someone adds a provider with a `k` in it. The case below pins the
+    // behaviour and is labelled non-discriminating in its own name, because a
+    // reader counting green ticks should not read it as proof of a fix.
+    it('refuses non-ASCII in the provider field (pins the boundary; does not discriminate)', () => {
+        const rows = _toRowsFromLitellm({
+            'anthropic/claude-sonnet-4-5': {
+                litellm_provider: `anthropic${ZWJ}`,
+                input_cost_per_token: 0.000003,
+                output_cost_per_token: 0.000015,
+            },
+        });
+        expect(rows).toHaveLength(0);
+    });
+
+    it('still folds ASCII case, which is lossless and is why the gate runs first', () => {
+        const rows = _toRowsFromLitellm({
+            'anthropic/claude-sonnet-4-5': {
+                litellm_provider: 'Anthropic',
+                input_cost_per_token: 0.000003,
+                output_cost_per_token: 0.000015,
+            },
+        });
+        expect(rows).toHaveLength(1);
+        expect(rows[0][0]).toBe('anthropic');
+    });
+
     it('reports the collision rather than dropping it with every other miss', () => {
         // A raw miss whose sanitized form WOULD have matched is a different
         // event from an ordinary unlisted name, and printing both as the same
         // silence is what would hide an admission attempt.
-        const errs: string[] = [];
-        const orig = process.stderr.write.bind(process.stderr);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (process.stderr as any).write = (c: string): boolean => {
-            errs.push(String(c));
-            return true;
-        };
+        // `vi.spyOn` rather than a hand swap: the earlier version restored a
+        // NEWLY BOUND wrapper instead of the original function object, leaking
+        // altered global state into every later test in the process.
+        const spy = vi.spyOn(process.stderr, 'write').mockReturnValue(true);
         try {
             _toRowsFromLitellm({
                 [`anthropic/claude-sonnet-4${ZWJ}-5`]: {
@@ -124,11 +162,10 @@ describe('update_prices — fetched rows reach the tracked doc sanitized', () =>
                     output_cost_per_token: 0.000015,
                 },
             });
+            expect(spy.mock.calls.map((c) => String(c[0])).join('')).toContain('normalises onto');
         } finally {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (process.stderr as any).write = orig;
+            spy.mockRestore();
         }
-        expect(errs.join('')).toContain('normalises onto');
     });
 
     it('drops a model genuinely outside the allow-list', () => {

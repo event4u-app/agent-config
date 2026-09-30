@@ -12,10 +12,11 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
     SCAN_ROOT,
+    ScanTraversalError,
     renderTable,
     scanReadSurfaces,
     tally,
@@ -217,3 +218,53 @@ describe('rendering helpers', () => {
     });
 });
 
+
+// The fail-closed traversal, as a DURABLE test rather than a hand probe.
+// Round 3 asked for exactly this: the fix was verified interactively against a
+// chmod-000 subtree and nothing stopped it regressing. An unreadable subtree
+// used to remove every module under it from the result, silently, and the gate
+// then reported the shortened list as matching the tree.
+describe('the scan fails closed on an unreadable subtree', () => {
+    let root: string;
+
+    beforeEach(() => {
+        root = fs.mkdtempSync(path.join(os.tmpdir(), 'scan-fail-closed-'));
+        fs.mkdirSync(path.join(root, 'src', 'scripts', '_lib', 'locked'), { recursive: true });
+        fs.writeFileSync(
+            path.join(root, 'src', 'scripts', '_lib', 'locked', 'hidden_surface.ts'),
+            'export async function pull(u: string): Promise<string> {\n' +
+                '    const r = await fetch(u);\n    return await r.text();\n}\n',
+            'utf-8',
+        );
+    });
+
+    afterEach(() => {
+        try {
+            fs.chmodSync(path.join(root, 'src', 'scripts', '_lib', 'locked'), 0o755);
+        } catch {
+            // already restored
+        }
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('throws rather than returning a shortened list', () => {
+        // Precondition: the same tree readable returns the module, so the
+        // throw below is caused by the permission and not by an empty fixture.
+        expect(scanReadSurfaces(root).length).toBeGreaterThan(0);
+
+        fs.chmodSync(path.join(root, 'src', 'scripts', '_lib', 'locked'), 0o000);
+        if (fs.readdirSync(path.join(root, 'src', 'scripts', '_lib'), { withFileTypes: true }).length === 0) {
+            // Running as a user for whom 0o000 is not a barrier (root in some
+            // containers). Skipping is honest; asserting would pass vacuously.
+            return;
+        }
+        let threw: unknown = null;
+        try {
+            scanReadSurfaces(root);
+        } catch (exc) {
+            threw = exc;
+        }
+        expect(threw).toBeInstanceOf(ScanTraversalError);
+        expect(String((threw as Error).message)).toContain('the scan is incomplete');
+    });
+});
