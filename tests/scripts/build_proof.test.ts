@@ -56,10 +56,9 @@ describe('build_proof — render()', () => {
     // THE REAL DEFECT IS NOT THIS NUMBER, and it does not belong to this branch:
     // this file's own header records `render()` at ~54 s a call, measured
     // 2026-08-11. It is ~283 s now — a 5x slowdown in a whole-tree claims walk,
-    // invisible for as long as the timeout was unenforceable. That wants its own
-    // investigation, with `revisit-if: render() drops back under 60 s, or the
-    // determinism check is restructured to assert on a bounded input rather than
-    // the whole ledger twice`.
+    // invisible for as long as the timeout was unenforceable. Lower this number
+    // again once `render()` is fast, or once the determinism check asserts over a
+    // bounded input instead of walking the whole ledger twice.
     it('is deterministic (no timestamp / stable ordering)', () => {
         expect(render()).toBe(proof());
     }, 900_000);
