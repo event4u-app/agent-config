@@ -127,6 +127,8 @@ stays legible. M14-M16 are new on 2026-09-13.**
 | M16 | The live ruleset now requires **two** contexts, not one: `Sync + Generate Tools Consistency` and `Standing payload delta + budget gate`. The expectation names only the first, and that is not a finding — `minimum_required_contexts` is a floor, so a forge requiring more than the expectation satisfies it | `gh api …/rulesets/17749383`; `check_platform_anchor` output |
 | M17 | **The gate passes today.** `check_platform_anchor --files src/config/platform-anchor.json` reports `PASS_WITH_ACCEPTED_RISK`, ledger `planned 3 · completed 1 · failed 0`, exit 0. The frontmatter's "blocking drift" premise is therefore spent | run 2026-09-13 |
 | M18 | **Corrected 2026-09-27: the gate no longer passes, on a dimension this roadmap never touched.** `check_platform_anchor --files src/config/platform-anchor.json` now exits 1 — the live ruleset has `required_review_thread_resolution` off, a `NEVER_WAIVABLE` dimension unrelated to the approval-floor waiver. M17 was true on 2026-09-13 and is not true today; the drift is out of this roadmap's scope and is not remediated here (see AC-1) | run 2026-09-27 |
+| M19 | **Corrected 2026-09-30: the gate passes again, so M18 is spent in its turn.** `check_platform_anchor --files src/config/platform-anchor.json` exits **0** with `PASS_WITH_ACCEPTED_RISK`; live, `required_review_thread_resolution` reads `true`, `bypass_actors` reads `[]` and `enforcement` reads `active`. The forge-side drift M18 recorded was repaired between 2026-09-27 and 2026-09-30 by something outside this roadmap, which is exactly how M18 scoped it. Recorded here rather than by editing M18, because a measurement that was true on its date stays true on its date | run 2026-09-30; `gh api …/rulesets/17749383` |
+| M20 | The ledger line moved with it: M17 read `planned 3 · completed 1 · failed 0` and the same command now reads `planned 1 · completed 1 · failed 0`. Named because a reader comparing the two would otherwise take it for a regression; it is the planned-check count for the one file passed on `--files`, not a count of dimensions that stopped being checked | run 2026-09-30 |
 
 ## What the council actually said
 
@@ -323,7 +325,7 @@ cost argument is a given rather than a proposal.
       Session files are gitignored and pruned after the retention window, so the
       findings are restated above in full rather than cited by path.
 
-- [ ] **0.2 Establish the administrator recovery path, tested.**
+- [ ] <!-- blocked-by: recovery-rehearsal-hard-floor | asked: no — non-interactive drain run instructed to work autonomously and put no question to the owner; the rehearsal is a Hard-Floor admin write on repository protection settings, which needs explicit this-turn confirmation a headless run cannot obtain --> **0.2 Establish the administrator recovery path, tested.**
       Both seats raised it and neither proposed one; the earlier draft of this
       roadmap declared it discharged, which it is not. With `bypass_actors: []`
       a future ruleset mistake re-locks the sole maintainer out of the PR path,
@@ -382,6 +384,23 @@ cost argument is a given rather than a proposal.
       rehearsal itself is not attempted. This run did not touch the sibling
       blocker on `road-to-typed-grants-that-persist.md`, which still carries
       the remainder.
+      **RE-VERIFIED 2026-09-30, the fourth arrival, and this one changes what the step
+      leaves behind rather than only re-reading it.** The three facts, re-measured:
+      `branch-protection-policy.md` § Administrator recovery from a lockout is present
+      with its five steps and its closing paragraph still reads *NOT yet rehearsed*; the
+      rehearsal is unchanged in kind, an admin API write on repository protection
+      settings; and `bypass_actors` is still `[]` live, so the lockout this guards
+      against is still reachable. **One measurement moved in the reassuring direction
+      and it is M18's, not this step's:** the gate exits 0 again (M19), so AC-1's
+      2026-09-27 live-state note now describes a superseded reading and is dated in this
+      same change per AC-6. **What this run added that the three before it did not:** the
+      step now carries an inline `blocked-by: recovery-rehearsal-hard-floor` marker and a
+      structured `## Blockers` entry. Its absence — not any disagreement about the
+      step — is why this file has been re-processed four times: `run-continuation`
+      reads blockedness from the marker and never from prose, so three correct diagnoses
+      written as paragraphs were invisible to the mechanism that decides whether a step
+      is live work. The `[~]` carry is refused again, on the 2026-09-14 reasoning
+      unchanged; the marker is the move that was actually available and was missed.
 
 - [x] **0.3 Record that the council's safe sequence was already violated, and
       what follows from that.** The sequence is ratify → deploy reader → test →
@@ -755,6 +774,13 @@ DIFFERENCE IS STATED PER STEP RATHER THAN AVERAGED AWAY.
       the new field present; `check_ci_local_parity` exits 0. Both run
       2026-09-13.
 
+## Decisions
+
+| ID | ownership | resolved by | decision | evidence | revisit if |
+|---|---|---|---|---|---|
+| D1 | reversible-technical | agent | `status` stays `draft`; the file is NOT promoted to `ready` | template rule 31 lists *waiting for upstream decisions* as a draft ground, and the sole open item is an owner-reserved Hard-Floor rehearsal. Promoting would also read `active_roadmaps 13` against a floor of 12 and `open_blockers 39` against 38, and the only way to clear that is to archive an unrelated roadmap — the gate-gaming this file's own `estate_offset_exempt` key exists to refuse | `recovery-rehearsal-hard-floor` resolves, or the file gains a step an agent can execute |
+| D2 | reversible-technical | agent | NOT parked under `later/` and NOT archived | the obligation stays reachable where the estate already carries it: `road-to-typed-grants-that-persist.md`'s `ratification-platform-anchor` blocker is active, marked, and its own text says it *now carries the remainder*. `later/` would remove this file from drain selection at the cost of the only durable record of the reasoning; archiving would file AC-7 as met when its load-bearing word is *tested*. Three prior runs reached the same disposition and this one adds no evidence against it — what it adds is the marker they missed | the sibling blocker closes or is retired without absorbing the remainder |
+
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-14 | reviewer: claude/host -->
 
@@ -764,6 +790,70 @@ DIFFERENCE IS STATED PER STEP RATHER THAN AVERAGED AWAY.
 | 2 | The waiver becomes a general escape | implementation | A later edit widens the waivable set to a threshold or a selector, hollowing out the floor through the door built here | **CORRECTED 2026-09-14 — the closed two-element list was never built, and a reader auditing this mitigation would have grepped for one and found nothing.** The shipped boundary is `NEVER_WAIVABLE` (**seven** dimensions, measured 2026-09-14 — see AC-3) plus `WAIVER_AUTHORITIES`, and a waiver scoped to any of the seven is refused by a test that iterates the exported constant rather than a literal list. `platform-anchor.json` is on `ANCHOR_PATHS`, so the widening attempt still needs its own ratification. *Original:* "The suspended set is validated against a closed two-element list with a test asserting rejection." | Phase 1 — the exemption, fail-closed |
 | 3 | A second lockout with no way back | implementation | With `bypass_actors: []` another ruleset mistake re-locks the sole maintainer out of the PR path, as 12:51 did. `admin: true` is a capability, not a rehearsed procedure | 0.2 requires a written procedure executed once against a non-default-branch ruleset. Until that exists this risk is open, and both council seats raised it | Phase 0 — answer the two questions, then sequence |
 | 4 | The remaining protection is weaker than assumed | implementation | **CORRECTED 2026-09-14 in the reassuring direction, which is why it is corrected rather than left:** approvals are *removed* from the trust model rather than suspended, and M16 measured **two** required contexts, not one — so more carries the load than this row assumed. The residual it names is untouched: a required context pins a job name, never the steps inside it. *Original:* "With approvals suspended and merge-freshness off, one required context carries the load." | M11 records that an empty context set is already refused. The job-name residual is recorded in `platform-anchor.json`'s own note and is **not** closed here | Phase 1 — the exemption, fail-closed |
+
+## Blockers
+
+### blocker: recovery-rehearsal-hard-floor
+- **Status:** open
+- **Owner:** maintainer
+- **Ownership:** `destructive-owned`
+- **Class:** 3 — human-only
+- **Blocks:** step 0.2 and AC-7, and nothing else in this file. Every other step and every
+  other criterion is closed, so this entry is the whole of what keeps the roadmap open.
+- **Question:** may the maintainer rehearse the written recovery procedure once, against a
+  throwaway non-default-branch ruleset, so that AC-7's load-bearing word — *tested* —
+  becomes true?
+- **Recommendation:** rehearse it, via route (a) only. The procedure is written and its
+  commands are the right ones; what nobody has is a run in which they were watched working.
+  The narrowest form creates a ruleset for the rehearsal and deletes it afterwards, so the
+  default-branch ruleset `17749383` is never touched and the blast radius is a branch nobody
+  works on.
+- **If you do nothing:** the recovery procedure stays a documented hypothesis, and the gap is
+  paid at the worst possible moment — during an outage of the merge path, by the sole
+  maintainer reading five untested commands for the first time. That this is not hypothetical
+  is measured: the 2026-09-10 12:51 lockout happened, and `bypass_actors: []` is still live
+  (re-measured 2026-09-30), so there is still no escape hatch.
+- **What to do:**
+  1. Create a throwaway ruleset targeting a non-default branch —
+     `gh api -X POST repos/event4u-app/agent-config/rulesets --input rehearsal-ruleset.json`
+     with `enforcement: active`, a rule of type `pull_request`, and
+     `conditions.ref_name.include: ["refs/heads/rehearsal-lockout"]`. Capture the returned id.
+  2. Confirm the lockout shape per step 1 of the procedure —
+     `gh api repos/event4u-app/agent-config/rulesets/<NEW_ID> --jq '{enforcement, current_user_can_bypass}'`.
+  3. Walk steps 2-5 of [`branch-protection-policy`](../../docs/contracts/branch-protection-policy.md)
+     § Administrator recovery from a lockout against `<NEW_ID>`, preferring route (a)
+     (`-f enforcement=evaluate`, then back to `active`). Note what each command actually
+     returned, including the `.state` nesting on the history read.
+  4. Delete the throwaway — `gh api -X DELETE repos/event4u-app/agent-config/rulesets/<NEW_ID>`
+     — and re-read `17749383` to confirm it was never touched.
+  5. Replace that section's closing paragraph — the one reading *"nobody has watched them
+     work"* — with the rehearsal date, the ruleset id and what was observed; then flip 0.2
+     and AC-7 and flip this blocker to `Status: resolved`.
+- **Resolved when:** `grep -c 'NOT yet rehearsed' docs/contracts/branch-protection-policy.md`
+  returns `0` and the same section carries a dated rehearsal record naming the ruleset id the
+  procedure was executed against.
+
+**Why this is a blocker and not work, stated rather than assumed, because the capability
+screen says a `Class: 3` label on an action an agent can perform is a defect in the roadmap
+rather than a reason to stop.** The agent can issue these API calls — `admin: true` is
+measured (M13) — so the bar is not capability. It is that every step is a write on
+repository protection settings, which is the `IAM / role / policy` row of
+[`non-destructive-by-default`](../../dist/agent-src/rules/non-destructive-by-default.md)'s
+Hard-Floor table; that floor is explicitly not lifted by an autonomy setting, a roadmap step
+or a standing instruction, and `branch-protection-policy.md` records the same reservation in
+its own text. Under the capability screen this is an EXCLUDED action, which makes it a halt
+carrying an owner confirmation rather than an impossibility — the distinction is recorded
+here so the next run does not have to re-derive it, and does not mistake *the owner has not
+been asked* for *the agent could not have done it*.
+
+**This entry is new on 2026-09-30, and its absence is the finding.** Three earlier runs
+(2026-09-13, 2026-09-14, 2026-09-27) each re-verified this step, each correctly refused to
+close it, and none of them wrote the marker. The loop's own contract says an externally
+impossible step carries an inline `blocked-by:` marker because `run-continuation` reads
+blockedness from that marker and never from prose — so without it, a fully-diagnosed
+owner-reserved step reads to every fresh run as ordinary open work. This roadmap was then
+re-processed four times. The marker is the fix; the fourth arrival is the evidence that prose
+was not one.
 
 ## Acceptance Criteria
 
@@ -796,6 +886,15 @@ INSTRUCTION SHOULD BE LEFT LYING.
       live claim it no longer is. Not remediated here: fixing it is an admin
       write on the live ruleset, the same Hard-Floor class as 0.2 and AC-7,
       and outside what this run is authorized to touch.
+      **Superseded 2026-09-30, and the criterion is unaffected in both directions.** The
+      finding the note above records is gone: the gate exits 0 with
+      `PASS_WITH_ACCEPTED_RISK` and `required_review_thread_resolution` reads `true`
+      live (M19). The drift was repaired outside this roadmap between 2026-09-27 and
+      2026-09-30, which is how the note scoped it. Dated rather than deleted, because
+      AC-6 forbids an undated present-tense sentence about a superseded platform
+      measurement and a note that silently vanishes teaches the next reader nothing
+      about how fast this dimension moves — three readings in twenty days, two of them
+      disagreeing.
 - [x] AC-2 — **CORRECTED 2026-09-13. Reads now:** `NON_NEGOTIABLE_FLOOR` carries
       *neither* `minimum_approving_reviews` nor `require_last_push_approval`,
       and that absence is deliberate, recorded, and pinned by a test so a future
@@ -925,7 +1024,7 @@ INSTRUCTION SHOULD BE LEFT LYING.
       not because the 2026-09-13 sweep was complete — and the miss is recorded
       here rather than quietly patched, since a self-applied criterion that
       cannot see its own file is the one failure mode worth leaving legible.
-- [ ] AC-7 — A **tested** administrator recovery procedure exists for a lockout
+- [ ] <!-- blocked-by: recovery-rehearsal-hard-floor | asked: no — non-interactive drain run instructed to work autonomously and put no question to the owner; the rehearsal is a Hard-Floor admin write on repository protection settings, which needs explicit this-turn confirmation a headless run cannot obtain --> AC-7 — A **tested** administrator recovery procedure exists for a lockout
       with `bypass_actors: []`.
       **NOT MET, and this is the roadmap's one open item.** The procedure is
       written (`branch-protection-policy.md` § Administrator recovery from a
@@ -947,3 +1046,10 @@ INSTRUCTION SHOULD BE LEFT LYING.
       explicit this-turn confirmation. See 0.2 for the 2026-09-27 pass, the
       unrelated live-ruleset finding it surfaced, and why a `[~]` carry is
       refused rather than overlooked.
+      **Re-verified 2026-09-30: still not met, and now correctly marked.** The written
+      half is unchanged and the word *tested* is still the one that is not satisfied.
+      What changed is the bookkeeping, not the verdict: this criterion and step 0.2 now
+      carry an inline `blocked-by: recovery-rehearsal-hard-floor` marker pointing at a
+      structured `## Blockers` entry that names the owner, the exact rehearsal commands,
+      and the `grep` that closes it. The 2026-09-27 live-ruleset finding referenced above
+      is itself superseded — the gate passes again (M19).
