@@ -1,0 +1,47 @@
+{
+    "skill": "ui-component-architect",
+    "last_eval": "2026-09-30",
+    "description": "5 should-trigger + 5 should-not-trigger queries for the component-shape decision. Should-trigger covers the five shapes this skill decides — splitting an over-loaded component, the composition-vs-inheritance call, a slot/children contract, the controlled-vs-uncontrolled axis, and where a new component belongs under a project's own granularity taxonomy (§ Read state.ui_audit.component_taxonomy). Should-not-trigger covers the near misses whose vocabulary overlaps hardest: styling a component that already exists, auditing what the project owns (that is existing-ui-audit, which runs first and feeds this one), a backend shape question that borrows the same composition words, a one-line prop rename, and general React knowledge with no component to shape.",
+    "queries": [
+        {
+            "q": "this Table component has grown to 19 props — how should I split it?",
+            "trigger": true
+        },
+        {
+            "q": "should the Dialog share behaviour by composition or by extending a base class?",
+            "trigger": true
+        },
+        {
+            "q": "design the slot contract for our Card so consumers can replace the header",
+            "trigger": true
+        },
+        {
+            "q": "should this Combobox be controlled or uncontrolled, and what is the prop API?",
+            "trigger": true
+        },
+        {
+            "q": "we organize components as primitives/patterns/features — where does a new Checkout shell belong?",
+            "trigger": true
+        },
+        {
+            "q": "make the primary button's hover state a bit darker",
+            "trigger": false
+        },
+        {
+            "q": "inventory which components this project already owns before we build anything",
+            "trigger": false
+        },
+        {
+            "q": "should this service compose its collaborators or extend an abstract base repository?",
+            "trigger": false
+        },
+        {
+            "q": "rename the isOpen prop to open across the codebase",
+            "trigger": false
+        },
+        {
+            "q": "explain when React re-renders a memoized child",
+            "trigger": false
+        }
+    ]
+}
