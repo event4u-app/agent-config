@@ -147,6 +147,12 @@ describe('forensics_report — live git path smoke (hermetic synthetic repo)', (
     // Deliberately NOT this repo's own history: CI checkouts are shallow
     // (HEAD~1 unresolvable) and a merge-commit HEAD makes any HEAD~1..HEAD
     // range span the whole merged PR. A throwaway repo pins both.
+    // 60 s, not the 10 s default. This test builds a synthetic git repo and
+    // runs the real `git log` path over it, so it pays several git subprocesses
+    // plus the tree walk. It read 21.5 s on a loaded macOS runner against the
+    // 10 s default that Vitest 5 now enforces under a higher worker count.
+    // Targeted rather than a global raise: the default still guards ~24k fast
+    // tests, and a genuine hang here still fails.
     it('runs the real git-log path over a synthetic two-commit repo', () => {
         const dir = mkdtempSync(join(tmpdir(), 'forensics-git-'));
         const git = (...args: string[]): string =>
@@ -167,5 +173,5 @@ describe('forensics_report — live git path smoke (hermetic synthetic repo)', (
         );
         expect(r.status).toBe(0);
         expect(r.stdout).toMatch(/"commits": 1/);
-    });
+    }, 60_000);
 });

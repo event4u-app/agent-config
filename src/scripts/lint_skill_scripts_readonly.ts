@@ -1,4 +1,4 @@
-#!/usr/bin/env -S node --import tsx
+#!/usr/bin/env tsx
 /**
  * lint_skill_scripts_readonly — read-only-by-default script convention
  * (ecosystem-harvest skill-quality-gates, Phase 3).

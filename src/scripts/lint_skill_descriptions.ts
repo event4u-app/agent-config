@@ -1,4 +1,4 @@
-#!/usr/bin/env -S node --import tsx
+#!/usr/bin/env tsx
 /**
  * lint_skill_descriptions — description-quality gate (ecosystem-harvest
  * skill-quality-gates, Phase 1).

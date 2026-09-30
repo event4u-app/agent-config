@@ -257,17 +257,29 @@ describe('the live routing matrix carries its labels', () => {
         ).toEqual([]);
     });
 
+    // 60 s, not the 10 s default. This test runs the gate's `main()` over the
+    // REAL repo IN-PROCESS — no subprocess, so the cost is the whole-tree walk
+    // itself. Vitest 5 raised the default worker count the 10 s was calibrated
+    // under, and every one of the 18 CI failures on that upgrade was a timeout,
+    // never an assertion. Targeted rather than a global raise: the 10 s default
+    // still guards ~24k fast tests, and a real hang here still fails.
     it(`carries at least ${String(MIN_POWERED_N)} labelled rows, so the arm reports measured`, () => {
         const a = live();
         expect(a.corpus_prompts).toBeGreaterThanOrEqual(MIN_POWERED_N);
         expect(a.verdict).toBe('measured');
-    });
+    }, 60_000);
 
+    // 60 s, not the 10 s default. This test runs the gate's `main()` over the
+    // REAL repo IN-PROCESS — no subprocess, so the cost is the whole-tree walk
+    // itself. Vitest 5 raised the default worker count the 10 s was calibrated
+    // under, and every one of the 18 CI failures on that upgrade was a timeout,
+    // never an assertion. Targeted rather than a global raise: the 10 s default
+    // still guards ~24k fast tests, and a real hang here still fails.
     it(`gives every declared pack at least ${String(MIN_PROMPTS_PER_PACK)} labelled prompts`, () => {
         const a = live();
         expect(a.packs_below_floor, 'packs under the per-pack floor').toEqual([]);
         expect(a.packs_total).toBeGreaterThan(0);
-    });
+    }, 60_000);
 
     it('the line reader and a real YAML parse agree, case for case', () => {
         // Two readers over one corpus is a blind spot, not a redundancy. The

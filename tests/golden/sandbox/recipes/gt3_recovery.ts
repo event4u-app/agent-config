@@ -38,9 +38,20 @@ const REAL_FIX = `    if (a < 0 && b % 2 === 1) {
     }
     return Math.abs(a) ** b;`;
 
+// NO `import { power }` HERE, and the omission is load-bearing. This block is
+// APPENDED to `tests/calculator.test.ts`, whose line 16 already imports
+// `{ add, power, subtract }` — so a second import of the same binding is a
+// redeclaration. Vite 5's esbuild transformer tolerated it; Vite 8's oxc
+// transformer rejects it as a parse error, which made the re-run after the real
+// fix fail for a reason unrelated to the code and sent the engine back into
+// `onBadVerdict` with `FIRST_ATTEMPT` already gone. A fixture defect the old
+// transformer masked, not a Vitest 5 behaviour change.
+//
+// Counted rather than assumed: four recipes inject an import of a calculator
+// symbol (gt1 `multiply`, gt3 `power`, gt5 `negate`, gt_p1 `modulo`) and only
+// `power` appears in the fixture's own import, so this is the one collision of
+// the four. The discriminator is that line 16, not the shape of the injection.
 const NEGATIVE_TEST = `
-
-import { power } from '../src/calculator.js';
 
 it('power negative base', () => {
     expect(power(-2, 3)).toBe(-8);

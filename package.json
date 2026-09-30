@@ -122,8 +122,8 @@
         "tree-sitter-wasms": "0.1.13",
         "tsx": "^4.23.1",
         "typescript": "^5.9.3",
-        "vite": "^5.4.21",
-        "vitest": "^2.1.9"
+        "vite": "^8.3.1",
+        "vitest": "^5.0.2"
     },
     "dependencies": {
         "@fastify/static": "^10.1.2",

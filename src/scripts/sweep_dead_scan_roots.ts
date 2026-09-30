@@ -1,4 +1,4 @@
-#!/usr/bin/env -S node --import tsx
+#!/usr/bin/env tsx
 /**
  * sweep_dead_scan_roots — which gate scripts walk a root that does not exist?
  *

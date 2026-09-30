@@ -71,15 +71,25 @@ function plantGate(work: string): void {
 // --- Layer 1: CLI contract on the real repo --------------------------------
 
 describe('check_no_external_sources — CLI contract (real repo)', () => {
+    // 60 s, not the 10 s default. This test runs a repo-wide CLI in a spawned
+    // subprocess, and Vitest 5 raised the default worker count the 10 s was
+    // calibrated under — every one of the 18 CI failures on that upgrade was a
+    // timeout, never an assertion. Targeted rather than a global raise: the 10 s
+    // default still guards ~24k fast tests, and a real hang here still fails.
     it('text report runs deterministically', () => {
         const a = spawnSync(TSX_BIN, [TS_SCRIPT], big(REPO_ROOT));
         expect(a.status).not.toBeNull();
-    });
+    }, 60_000);
 
+    // 60 s, not the 10 s default. This test runs a repo-wide CLI in a spawned
+    // subprocess, and Vitest 5 raised the default worker count the 10 s was
+    // calibrated under — every one of the 18 CI failures on that upgrade was a
+    // timeout, never an assertion. Targeted rather than a global raise: the 10 s
+    // default still guards ~24k fast tests, and a real hang here still fails.
     it('json report runs deterministically', () => {
         const a = spawnSync(TSX_BIN, [TS_SCRIPT, '--json'], big(REPO_ROOT));
         expect(a.status).not.toBeNull();
-    });
+    }, 60_000);
 });
 
 // --- Layer 2: synthetic hit fixture ----------------------------------------
