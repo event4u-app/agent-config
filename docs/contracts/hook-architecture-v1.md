@@ -1116,6 +1116,7 @@ configuration. `orphan` — the name survives only in prose; nothing reads it.
 | `AGENT_CONFIG_DISABLE_HOOKS` | maintainer | Bypasses every shim for one command | `_lib/runtime_wiring_checks.ts:315` |
 | `AGENT_CONFIG_EXEC_EVIDENCE` | maintainer | One-run opt-in to execution-evidence collection | `_lib/exec_evidence.ts:199` |
 | `AGENT_CONFIG_HOOKS_ISOLATED` | maintainer | `=1` forces every concern into a child process instead of the in-process fast path | `hooks/dispatch_hook.ts:690` |
+| `AGENT_CONFIG_HOOK_TIMINGS` | harness | Path to a JSONL sink the dispatcher APPENDS one per-concern timing row to per dispatch; unset, nothing is written and the cost is one `process.env` lookup. Set by `bench_hook_latency` for the length of a bench run. Not a kill switch — it disables nothing — and it is in this table anyway, because the table's contract is every `AGENT_CONFIG_*` the hook layer reads, and an operator who finds the name in a process listing needs a row to look it up in | `hooks/dispatch_hook.ts:860` |
 | `AGENT_CONFIG_INSTALLED_LOCK` | harness | Path override for the installed lockfile | `_lib/installed_lock.ts:56` |
 | `AGENT_CONFIG_INSTALLED_TOOLS` | harness | Path override for the installed-tools manifest | `_lib/installed_tools.ts:46` |
 | `AGENT_CONFIG_LEGACY_ANCHOR` | maintainer | Opts a settings read back onto the legacy anchor | `_lib/agent_settings.ts:449` |
