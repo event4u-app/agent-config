@@ -76,6 +76,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import type * as YamlModule from 'yaml';
 
 import { build_merge_entries } from './_lib/json_pointers.js';
+import { withHostEnv } from './_lib/host_env_write.js';
 import { jsonDumpsCompact, jsonDumpsIndent } from './_lib/json_python_parity.js';
 import { is_claude_builtin_name } from './_lib/claude_builtin_names.js';
 import * as installed_lock from './_lib/installed_lock.js';
@@ -996,10 +997,8 @@ function _heal_legacy_claude_plugin_ids(p: string): string[] {
 function ensure_claude_bridge(project_root: string, force: boolean): Record<string, unknown>[] {
     const target = path.join(project_root, '.claude', 'settings.json');
     const healed = _heal_legacy_claude_plugin_ids(target);
-    for (const pid of healed) {
-        success(`.claude/settings.json: removed stale plugin id \`${pid}\``);
-    }
-    const bridge = { enabledPlugins: { [CLAUDE_PLUGIN_ID]: true } };
+    for (const pid of healed) success(`.claude/settings.json: removed stale plugin id \`${pid}\``);
+    const bridge = withHostEnv({ enabledPlugins: { [CLAUDE_PLUGIN_ID]: true } }, project_root, success);
     return merge_json_file(target, bridge, force || healed.length > 0, '.claude/settings.json');
 }
 

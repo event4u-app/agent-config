@@ -112,15 +112,47 @@ section reads as a clean bill of health and would be exactly the wrong signal.
 `doctor` reports; it does not write. Two consecutive runs leave the environment
 and every settings file byte-identical.
 
-## What this package deliberately does not do
+## What this package writes, and what it can never write
 
-It does not write any of these variables into a consumer environment. Doing so
-would change behavior the consumer never asked to change and — under the
-mapping measured above — could switch off their background security updates as
-a side effect of a telemetry preference. Whether a settings profile may ever
-write them is an owner decision, recorded as the open blocker
-`traffic-profile-writes-consumer-environment` on the roadmap named at the top
-of this page.
+**Decided 2026-09-30, and the decision turned on the correction above.**
+
+This package may write exactly two of these four variables into
+`.claude/settings.json`'s `env` block, and only when you set a value:
+
+| Variable | Written by this package? | Settings key |
+|---|---|---|
+| `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` | **never** | — |
+| `DISABLE_AUTOUPDATER` | **never** | — |
+| `BASH_MAX_OUTPUT_LENGTH` | when you set it | `host_environment.request_size_caps.bash_max_output_length` |
+| `MAX_MCP_OUTPUT_TOKENS` | when you set it | `host_environment.request_size_caps.max_mcp_output_tokens` |
+
+Both keys are `null` by default, and `null` is the off switch — nothing is
+written, and a consumer who never sets one gets no `env` block at all. There is
+no separate enable flag, because a flag plus a value would be two ways to say
+off and one of them would drift.
+
+### Why the two traffic variables are never writable
+
+The option the owner chose was originally worded as *"a profile may write them,
+with the auto-updater variable excluded so security updates are never
+disabled"*. That wording rests on the two traffic variables being independent —
+which is exactly what the correction above refutes. The blanket variable is the
+**third rung** of the update-disabled resolver, so a profile that wrote it would
+stop background updates whether or not `DISABLE_AUTOUPDATER` was excluded.
+
+So the guarantee is held a different way: the writable set is an **allow table
+of two entries** in `install.ts` (`WRITABLE_HOST_ENV`), and the settings schema
+admits only those two keys. Neither traffic variable is *expressible* anywhere
+in the write path — not in the settings file, not in the installer. That is
+stronger than an exclusion list, which would have to stay complete as the host
+adds variables.
+
+Both writable variables bound request **size**, never request **count**. Setting
+either suppresses no telemetry, no update check and no download.
+
+`agent-config doctor --json` reports `writable_by_this_package` per row, so a
+consumer reading `set` on a traffic variable can tell that this package was not
+the one that set it.
 
 ## See also
 

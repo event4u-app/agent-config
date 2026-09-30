@@ -174,6 +174,35 @@ export const settingsSchema = z.object({
             'How a mission\'s work is shaped into pull requests. single (default) = one branch, one pull request. stacked = a dependent series. stacked is never chosen by the agent and never asked about at roadmap creation — the owner plans it or it does not happen.',
         ),
     }),
+    /**
+     * What this package may write into the HOST's own environment.
+     *
+     * THE GUARANTEE IS THE SHAPE, not a check. Only two keys exist here, and
+     * both are request-SIZE caps. Neither traffic variable is expressible —
+     * `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` and `DISABLE_AUTOUPDATER` both
+     * reach the host's update-disabled resolver (the blanket one as its third
+     * rung, measured on Claude Code 2.1.284), so a profile able to write either
+     * could disable a consumer's security updates. Owner-decided 2026-09-30:
+     * they are not writable through this package at all, and the strongest way
+     * to hold that is a schema that cannot say them rather than an exclusion
+     * list somebody has to maintain.
+     *
+     * `null` is the default on both, and it is the off switch: nothing is
+     * written. There is no separate enable flag, because a flag plus a value is
+     * two ways to say off and one of them would drift.
+     */
+    host_environment: z.object({
+        request_size_caps: z.object({
+            bash_max_output_length: z.number().int().positive().max(150_000).nullable().default(null).describe(
+                'Character cap on Bash tool output the host places inline into a model request. null (default) = this package writes nothing and the host default of 30000 applies. A number is written into the host env block. Values above 150000 are capped by the host itself, so the schema refuses them here rather than writing a value the host silently changes. Bounds request SIZE, never request COUNT: lowering it suppresses no telemetry, no update check and no download.',
+            ),
+            max_mcp_output_tokens: z.number().int().positive().nullable().default(null).describe(
+                'Token cap on a single MCP tool result the host places into a model request. null (default) = nothing written, host default 25000 applies. Same size-not-count caveat: it does not govern MCP connections, timeouts, or whether a tool runs.',
+            ),
+        }).describe(
+            'Request-size caps this package may write into the host env block. Both null by default. No traffic or auto-updater variable is expressible here, by construction — see the block comment.',
+        ),
+    }),
     augment: z.object({
         rules_use_symlinks: z.boolean().default(false).describe(
             'When true, .augment/rules/*.md are symlinks into dist/agent-src/rules/ — edits flow back to source on save. When false (default), they are copies — safer on Windows and shared volumes, but rule edits in .augment/ are lost on the next `task sync`.',

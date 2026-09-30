@@ -107,7 +107,16 @@ describe('trafficEnvironmentJson on the documenting host', () => {
         expect(payload['host']).toBe('claude-code');
         expect(payload['host_observed']).toBe(true);
         expect(payload['doc']).toBe(TRAFFIC_DOC);
-        expect(payload['read_only']).toBe(true);
+        // `read_only: true` until 2026-09-30, when the installer gained the
+        // ability to write the two size caps. The report is still read-only; the
+        // PACKAGE is not, so the old key was a true statement about the wrong
+        // subject. The assertion below is the one that would catch a regression:
+        // a traffic variable appearing in the writable set.
+        expect(payload['reporting_read_only']).toBe(true);
+        expect(payload['writable_by_this_package']).toEqual([
+            'BASH_MAX_OUTPUT_LENGTH',
+            'MAX_MCP_OUTPUT_TOKENS',
+        ]);
 
         const byName = new Map(rows(payload).map((r) => [r.variable, r]));
         expect(rows(payload)).toHaveLength(TRAFFIC_VARIABLES.length);
@@ -186,5 +195,23 @@ describe('checkOfflineReadiness — a pure move out of cmd_doctor', () => {
             message: 'src/scripts/hermetic-install.sh not found in package',
             remedy: 'reinstall @event4u/agent-config or pull missing files',
         });
+    });
+});
+
+describe('the writable set is the two size caps and nothing else', () => {
+    // The guarantee is structural — `install.ts`'s allow table has two rows and
+    // the settings schema admits only those two keys — so this asserts the
+    // REPORT agrees with it. A traffic variable turning writable here would mean
+    // the two surfaces had drifted apart, which is the only way the consumer's
+    // reading could become wrong without anyone editing the installer.
+    it('marks both traffic variables unwritable by this package', () => {
+        const byName = new Map(TRAFFIC_VARIABLES.map((v) => [v.variable, v]));
+        expect(byName.get('CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC')?.writable_by_this_package).toBe(false);
+        expect(byName.get('DISABLE_AUTOUPDATER')?.writable_by_this_package).toBe(false);
+    });
+
+    it('marks both size caps writable, and they are the only two', () => {
+        const writable = TRAFFIC_VARIABLES.filter((v) => v.writable_by_this_package).map((v) => v.variable);
+        expect(writable).toEqual(['BASH_MAX_OUTPUT_LENGTH', 'MAX_MCP_OUTPUT_TOKENS']);
     });
 });
