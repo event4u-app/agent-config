@@ -32,11 +32,11 @@
  *
  * TWO of the five are CONDITIONAL, and saying "unconditional" here would be the
  * same stale-header defect this block corrects below. A and D are the
- * completion-adjacent pair an open subagent dispatch excuses, so `main()` runs
- * them only when `dispatchOpen` is false; B, C and E run on every turn-end. That
- * narrowing is deliberate (Phase 3 Step 2, narrowed again by R2 round 2) and is
- * the third allow path, alongside the two re-entrancy layers — see the
- * per-detector list in `main()`.
+ * completion-adjacent pair an open subagent dispatch excuses, so `runDetectors()`
+ * runs them only when `dispatchOpen` is false; B, C and E run on every turn-end.
+ * That narrowing is deliberate (Phase 3 Step 2, narrowed again by R2 round 2) and
+ * is the third allow path, alongside the two re-entrancy layers — see the
+ * per-detector list in `runDetectors()`.
  *
  * This block said "Three" and listed A/B/C until 2026-08-18, while `DetectorId`
  * below has carried four since round 7. `DETECTOR_IDS` in
@@ -224,7 +224,8 @@ import { EXIT_ALLOW, EXIT_BLOCK } from './exit_codes.js';
 /** Dispatcher-internal block code. Pinned to 1 by `concern_block_exit_parity`. */
 
 /**
- * Transcript-read ceiling for this hook, passed at the call site in `main()`.
+ * Transcript-read ceiling for this hook, passed at its one production call
+ * site, `assembleDetectorInputs()`.
  * Deliberately well under `isSafeTranscriptPath`'s own 50 MB refusal: the
  * ordinal is a count over every entry, so the whole file is walked once per
  * turn-end, and a session file grows for the life of the session. Past this the
