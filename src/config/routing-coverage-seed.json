@@ -10,11 +10,11 @@
     },
     "seed": {
         "rules": 0.9623,
-        "skills": 0.3378
+        "skills": 0.3411
     },
     "seed_provenance": {
         "rules": "102 covered of 106 routed rules on 2026-09-13; was 101 of 105 on 2026-09-08 and 94 of 105 (tier-1 21/24, tier-2 73/81) on 2026-08-25.",
-        "skills": "101 of 299 skills carry evals/triggers.json on 2026-09-19; was 100 on 2026-08-30.",
+        "skills": "102 of 299 skills carry evals/triggers.json on 2026-09-30; was 101 on 2026-09-19 and 100 on 2026-08-30.",
         "finding": "The gap between the two seeds IS the roadmap defect D1, quantified. The rules surface is ~90% covered by a deterministic corpus that can fail a PR; the skills surface -- the one production routes on -- is 25%, covered only by a harness that is advisory only, never gating (rule_trigger_eval.ts:4)."
     },
     "history": [
@@ -51,7 +51,7 @@
             "scope": "rules",
             "from": 0.9619,
             "to": 0.9623,
-            "reason": "road-to-adversarial-verification-and-long-runs Phase 1.1 added `test-first` as a routed rule, which moved the DENOMINATOR from 105 to 106 -- the ratio-falls-two-ways case this file's own _comment names, and the one that is a defect to record rather than repair. The repair is the corpus file, not the seed: `tests/eval/routing-matrix/test-first.yaml` landed in the same change (101 -> 102 of 106), so the ratio ROSE across a denominator increase rather than merely holding. The rule is trigger-less by design, so its positives describe the situations it governs rather than strings that summon it, and its near-misses are its own \u00a7 Does NOT fire set. The seed follows the gain because this file's test asserts seed == live measurement in both directions; it may never be LOWERED."
+            "reason": "road-to-adversarial-verification-and-long-runs Phase 1.1 added `test-first` as a routed rule, which moved the DENOMINATOR from 105 to 106 -- the ratio-falls-two-ways case this file's own _comment names, and the one that is a defect to record rather than repair. The repair is the corpus file, not the seed: `tests/eval/routing-matrix/test-first.yaml` landed in the same change (101 -> 102 of 106), so the ratio ROSE across a denominator increase rather than merely holding. The rule is trigger-less by design, so its positives describe the situations it governs rather than strings that summon it, and its near-misses are its own § Does NOT fire set. The seed follows the gain because this file's test asserts seed == live measurement in both directions; it may never be LOWERED."
         },
         {
             "date": "2026-09-19",
@@ -59,6 +59,13 @@
             "from": 0.3344,
             "to": 0.3378,
             "reason": "road-to-release-holds-that-refuse step 1.4 authored one corpus file for `roadmap-writing` (100 -> 101 of 299) and removed its now-false entry from trigger_eval_grandfather.json. ONE file rather than a wave: the step asked for a single positive case whose expected output is a re-sequenced phase rather than a hold, and the eval set is where that expectation is pinned. The seed rises so the gain cannot be given back silently; it may never be LOWERED. Two published measurements moved with it and were re-taken in the same change -- routing-body-signal-verdict.json and the measure_delivery_sets record -- because the trigger corpus is their input, so any skill gaining an eval set re-takes both."
+        },
+        {
+            "date": "2026-09-30",
+            "scope": "skills",
+            "from": 0.3378,
+            "to": 0.3411,
+            "reason": "road-to-a-component-taxonomy-we-follow-but-never-force authored one corpus file for `ui-component-architect` (101 -> 102 of 299). Not a sought gain: the branch edits that skill's placement section, and check_routing_coverage requires a corpus for every skill a diff touches, so the file is the gate's own remedy rather than a coverage push. Five should-trigger cases, one per shape the skill decides, and five near misses whose vocabulary overlaps hardest -- styling an existing component, inventorying what the project owns (existing-ui-audit, which runs first and feeds this one), a backend composition question, a prop rename, and general React knowledge with no component to shape. The seed rises so the gain cannot be given back silently; it may never be LOWERED. The two published measurements the 2026-09-19 entry names -- routing-body-signal-verdict.json and the measure_delivery_sets record -- are re-taken in the same change, for the reason that entry gives: the trigger corpus is their input."
         }
     ]
 }

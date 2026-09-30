@@ -1,47 +1,61 @@
 {
     "skill": "ui-component-architect",
     "last_eval": "2026-09-30",
-    "description": "5 should-trigger + 5 should-not-trigger queries for the component-shape decision. Should-trigger covers the five shapes this skill decides — splitting an over-loaded component, the composition-vs-inheritance call, a slot/children contract, the controlled-vs-uncontrolled axis, and where a new component belongs under a project's own granularity taxonomy (§ Read state.ui_audit.component_taxonomy). Should-not-trigger covers the near misses whose vocabulary overlaps hardest: styling a component that already exists, auditing what the project owns (that is existing-ui-audit, which runs first and feeds this one), a backend shape question that borrows the same composition words, a one-line prop rename, and general React knowledge with no component to shape.",
+    "description": "5 exemplars (1 de) + 3 near-misses + 2 counterexamples. Authored under road-to-a-component-taxonomy-we-follow-but-never-force, whose diff edits this skill's placement section — check_routing_coverage requires a corpus for every skill a diff touches, so this file is the gate's own remedy rather than a coverage push. Exemplars cover the five shapes the skill decides: splitting an over-loaded component, composition vs inheritance, the slot contract, the controlled/uncontrolled axis, and where a new component belongs under a project's own granularity taxonomy. The near-misses are the three surfaces whose vocabulary overlaps hardest and each routes elsewhere; the counterexamples guard over-triggering on component words with no component to shape.",
     "queries": [
         {
             "q": "this Table component has grown to 19 props — how should I split it?",
-            "trigger": true
+            "trigger": true,
+            "class": "exemplar"
         },
         {
-            "q": "should the Dialog share behaviour by composition or by extending a base class?",
-            "trigger": true
+            "q": "should the Dialog share behavior by composition or by extending a base class?",
+            "trigger": true,
+            "class": "exemplar"
         },
         {
             "q": "design the slot contract for our Card so consumers can replace the header",
-            "trigger": true
+            "trigger": true,
+            "class": "exemplar"
         },
         {
             "q": "should this Combobox be controlled or uncontrolled, and what is the prop API?",
-            "trigger": true
+            "trigger": true,
+            "class": "exemplar"
         },
         {
-            "q": "we organize components as primitives/patterns/features — where does a new Checkout shell belong?",
-            "trigger": true
-        },
-        {
-            "q": "make the primary button's hover state a bit darker",
-            "trigger": false
+            "q": "wir gliedern Komponenten in primitives/patterns/features — wo gehört eine neue Checkout-Hülle hin?",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
         },
         {
             "q": "inventory which components this project already owns before we build anything",
-            "trigger": false
+            "trigger": false,
+            "class": "near-miss",
+            "note": "the step BEFORE this one, and the sharpest edge because it feeds this skill its findings and its component_taxonomy → existing-ui-audit"
+        },
+        {
+            "q": "make the primary button's hover state a bit darker",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "same component, but a styling edit on a shape already decided → the stack's UI skill, not a shape decision"
         },
         {
             "q": "should this service compose its collaborators or extend an abstract base repository?",
-            "trigger": false
+            "trigger": false,
+            "class": "near-miss",
+            "note": "borrows the composition-vs-inheritance vocabulary wholesale, on a backend object with no slot contract and no render tree → architecture"
         },
         {
             "q": "rename the isOpen prop to open across the codebase",
-            "trigger": false
+            "trigger": false,
+            "class": "counterexample"
         },
         {
             "q": "explain when React re-renders a memoized child",
-            "trigger": false
+            "trigger": false,
+            "class": "counterexample"
         }
     ]
 }
