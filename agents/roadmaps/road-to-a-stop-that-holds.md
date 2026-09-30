@@ -728,13 +728,27 @@ dashboard and the archival sweep can act on.
   seven-day condition.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-29 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-09-30 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | Parser misses a consumer's runner and refuses honest work | implementation | A passing run classifies `INVALID_RUN` | Only absence of any record or `FAIL_EVIDENCE` refuses; every `INVALID_RUN` reason is logged as a finding, never refused on | Phase 1 — Verification is a record, not a regex |
 | 2 | Shadow read on retries breaks the stop-slot budget | implementation | Extra transcript read per retry | Retries only; `bench_hook_latency --gate` in the PR | Phase 2 — Q1 becomes a number (the contract's instrument, no second refusal) |
 | 3 | The join fix changes the delivered-row semantics the bar was registered on | product | Window must restart | Clause (2) of the claim mandates exactly that; 3.2 does it | Phase 3 — The obligation ledger can refuse (carried) |
+
+**Re-reviewed 2026-09-30** — all three rows re-read against the 2.1 pass, not
+only the one it touched. Row 1's disposition is carried forward unchanged and
+that is a finding rather than an omission: 2.1 added no parser and no new
+`INVALID_RUN` reason, so nothing about its refusing or reporting direction
+moved. Row 3 stays discharged. Row 2 is rewritten below, from NOT YET INCURRED
+to incurred-and-measured.
+
+**NO FOURTH ROW WAS ADDED, and the candidate is named so the absence is
+readable.** 2.1 puts a second record shape in a directory whose pruner did not
+know about it — unbounded growth, which is exactly the shape row 1's sibling
+risks take. It is not a row because it was found and fixed inside the same
+change, with a test that fails when the fix is removed; a register entry for a
+closed defect reads as live risk and dilutes the three that are.
 
 **Disposition after the 2026-09-29 pass**, re-reviewed against the steps that
 closed rather than left standing:
