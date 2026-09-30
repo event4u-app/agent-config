@@ -53,6 +53,7 @@ const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const GATE = 'check_read_surface_coverage';
 export const DOC_REL = 'docs/contracts/retrieval-read-surfaces.md';
 export const FLOOR_REL = 'src/scripts/_lib/retrieval_sanitize.ts';
+export const DETECTOR_REL = 'src/scripts/_lib/structural_hiding.ts';
 
 export const BEGIN_MARKER = '<!-- BEGIN read-surface-table (generated) -->';
 export const END_MARKER = '<!-- END read-surface-table -->';
@@ -136,6 +137,44 @@ interface Options {
     quiet: boolean;
 }
 
+/**
+ * A published rate — `99 %`, `72.33%`, `recall: 0.98`.
+ *
+ * Scoped to the DETECTOR FILE and nothing else, deliberately. The codepoint
+ * floor next door publishes two real, corpus-backed percentages in its own
+ * docblock; a check that swept every citing surface would red on those and be
+ * switched off within a week. The claim this rule defends is narrow — the
+ * STRUCTURAL layer has no frozen corpus, so it has no denominator — and the
+ * check is scoped to exactly that claim.
+ */
+const PERCENTAGE_RE = /\b\d+(?:\.\d+)?\s*%|\brecall\s*[:=]\s*\d/i;
+
+/** The register's exported name, cited by every surface claiming the coverage. */
+export const GAP_REGISTER_SYMBOL = 'STRUCTURAL_HIDING_GAPS';
+
+/**
+ * True when a percentage or recall figure is PUBLISHED in the detector.
+ *
+ * Inline code spans are removed before the test, and that exclusion is the
+ * difference between a rule and a nuisance. The gap register names
+ * `transform: translate(-100%, 0)` as an off-screen hiding technique — a CSS
+ * literal inside backticks, not a claim about this detector's coverage. The
+ * first version of this check red on exactly that and the fix belongs here,
+ * in the predicate, rather than in the register's wording: a gate that makes
+ * honest prose contort around it gets switched off. Both directions are pinned
+ * by self-test cases, because a widened matcher that no longer catches the
+ * thing it was written for fails silently.
+ */
+export function publishesRate(detectorSrc: string): boolean {
+    for (const line of detectorSrc.split('\n')) {
+        // The rule states the prohibition in prose; the prose is not a breach.
+        if (line.includes('PERCENTAGE_RE') || line.includes('no recall or coverage')) continue;
+        const prose = line.replace(/`[^`]*`/g, '');
+        if (PERCENTAGE_RE.test(prose)) return true;
+    }
+    return false;
+}
+
 function parseArgs(argv: readonly string[]): Options {
     const out: Options = { root: ROOT, write: false, quiet: false };
     for (let i = 0; i < argv.length; i += 1) {
@@ -206,12 +245,45 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         }
     }
 
-    // There is NO structural-detector rule here, and its absence is deliberate
-    // rather than an omission. An earlier version of this branch shipped one
-    // that watched for a percentage in a detector file that does not exist —
-    // both review seats called it dead policy whose eventual behaviour would be
-    // easier to overlook for having sat dormant. It returns WITH the detector,
-    // written against a detector that exists, with its own adversarial tests.
+    // 3. NO PERCENTAGE, and the gap register travels with the claim.
+    //
+    // This rule was REMOVED once, correctly: it watched a detector file that
+    // did not exist, and both review seats called it dead policy. It returns
+    // here with the detector, written against a file that exists, with its own
+    // rejecting self-test cases. If the detector is absent the rule is silent
+    // rather than red — a missing detector is Phase 3 being open, not a breach.
+    const detector = _read(opts.root, DETECTOR_REL);
+    if (detector !== null) {
+        if (publishesRate(detector)) {
+            findings.push(
+                `${DETECTOR_REL} publishes a recall or coverage figure. A rate needs a frozen ` +
+                    'corpus of hiding techniques and none exists in this tree, so the number ' +
+                    'would be an invented denominator a later reader quotes as measured coverage. ' +
+                    'State the covered-channel list and the gap register instead.',
+            );
+        }
+        if (!detector.includes(GAP_REGISTER_SYMBOL)) {
+            findings.push(
+                `${DETECTOR_REL} does not define ${GAP_REGISTER_SYMBOL}. The register of what the ` +
+                    "detector does NOT catch belongs in the detector's own file — a detector " +
+                    'documented without its gaps is how the coverage claim becomes a false green.',
+            );
+        }
+        for (const [rel, src] of [
+            [FLOOR_REL, floor],
+            [DOC_REL, doc],
+        ] as const) {
+            if (src === null) continue;
+            if (!src.includes('structural_hiding')) continue; // claims nothing
+            if (src.includes(GAP_REGISTER_SYMBOL)) continue;
+            findings.push(
+                `${rel} claims the structural coverage without citing ${GAP_REGISTER_SYMBOL}. ` +
+                    'Every surface that claims this coverage cites the register alongside the ' +
+                    'claim, so the caveat travels with the claim rather than staying in one file.',
+            );
+        }
+    }
+
     try {
         reportScanned({
             gate: GATE,
@@ -260,6 +332,7 @@ function selfTest(): number {
             module?: string;
             mutateRegion?: (r: string) => string;
             floorSrc?: string;
+            detectorSrc?: string;
             noScanRoot?: boolean;
         },
     ): string => {
@@ -280,6 +353,12 @@ function selfTest(): number {
         fs.mkdirSync(path.join(dir, path.dirname(FLOOR_REL)), { recursive: true });
         fs.mkdirSync(path.join(dir, path.dirname(DOC_REL)), { recursive: true });
         fs.writeFileSync(path.join(dir, FLOOR_REL), opts.floorSrc ?? floor, 'utf-8');
+        // The detector is planted ONLY where a case needs it. Absent, rule 3 is
+        // silent — which is itself the behaviour the last case below pins.
+        if (opts.detectorSrc !== undefined) {
+            fs.mkdirSync(path.join(dir, path.dirname(DETECTOR_REL)), { recursive: true });
+            fs.writeFileSync(path.join(dir, DETECTOR_REL), opts.detectorSrc, 'utf-8');
+        }
         const region = renderRegion(scanReadSurfaces(dir));
         fs.writeFileSync(
             path.join(dir, DOC_REL),
@@ -295,8 +374,8 @@ function selfTest(): number {
     try {
         return runSelfTest({
             gate: GATE,
-            minCases: 6,
-            minRejectCases: 5,
+            minCases: 10,
+            minRejectCases: 7,
             cases: [
                 {
                     name: 'an unsanitized fetch-derived emit the committed table does not carry is rejected',
@@ -342,6 +421,67 @@ function selfTest(): number {
                     name: 'an empty scan root is refused rather than certified',
                     expect: 'reject',
                     run: () => run(plant('empty-root', { noScanRoot: true })),
+                },
+                {
+                    name: 'a detector publishing a coverage percentage is rejected',
+                    expect: 'reject',
+                    run: () =>
+                        run(
+                            plant('rate-published', {
+                                floorSrc: `/**\n * Floor. Coverage list: ${DOC_REL}.\n * Gaps: ${GAP_REGISTER_SYMBOL}.\n */\nexport const x = 1;\n`,
+                                detectorSrc:
+                                    `export const ${GAP_REGISTER_SYMBOL} = ['stylesheet-driven hiding'];\n` +
+                                    '/** Measured recall over the channel corpus: 94.2 %. */\n' +
+                                    'export const y = 1;\n',
+                            }),
+                        ),
+                },
+                {
+                    name: 'a detector with no gap register is rejected',
+                    expect: 'reject',
+                    run: () =>
+                        run(
+                            plant('no-register', {
+                                floorSrc: `/**\n * Floor. Coverage list: ${DOC_REL}.\n * Gaps: ${GAP_REGISTER_SYMBOL}.\n */\nexport const x = 1;\n`,
+                                detectorSrc: 'export const y = 1;\n',
+                            }),
+                        ),
+                },
+                {
+                    name: 'a floor claiming the coverage without citing the gap register is rejected',
+                    expect: 'reject',
+                    run: () =>
+                        run(
+                            plant('register-uncited', {
+                                floorSrc: `/**\n * Floor. Coverage list: ${DOC_REL}. Structural: structural_hiding.\n */\nexport const x = 1;\n`,
+                                detectorSrc: `export const ${GAP_REGISTER_SYMBOL} = ['stylesheet-driven hiding'];\n`,
+                            }),
+                        ),
+                },
+                {
+                    name: 'a CSS percentage inside a code span is NOT read as a published rate',
+                    expect: 'accept',
+                    run: () =>
+                        run(
+                            plant('rate-in-code-span', {
+                                floorSrc: `/**\n * Floor. Coverage list: ${DOC_REL}.\n * Gaps: ${GAP_REGISTER_SYMBOL}.\n */\nexport const x = 1;\n`,
+                                detectorSrc:
+                                    `export const ${GAP_REGISTER_SYMBOL} = [\n` +
+                                    "    'off-screen positioning — `transform: translate(-100%, 0)`',\n" +
+                                    '];\n',
+                            }),
+                        ),
+                },
+                {
+                    name: 'a detector that exists, publishes no rate and carries its register passes',
+                    expect: 'accept',
+                    run: () =>
+                        run(
+                            plant('detector-clean', {
+                                floorSrc: `/**\n * Floor. Coverage list: ${DOC_REL}.\n * Gaps: ${GAP_REGISTER_SYMBOL}.\n */\nexport const x = 1;\n`,
+                                detectorSrc: `export const ${GAP_REGISTER_SYMBOL} = ['stylesheet-driven hiding'];\n`,
+                            }),
+                        ),
                 },
                 {
                     name: 'a regenerated table over an intact tree passes',
