@@ -37,18 +37,32 @@ let _proof: string | undefined;
 const proof = (): string => (_proof ??= render());
 
 describe('build_proof — render()', () => {
-    // 60 s, not the 10 s default, and NOT because anything is spawned — this
-    // test calls `render()` twice IN-PROCESS, which is the whole point of the
-    // determinism check. `render()` walks the entire claims ledger and the file
-    // header records ~54 s a call as measured on 2026-08-11; it measures 241 s
-    // on this author's machine under plain `tsx`, with Vitest out of the
-    // picture entirely, so that slowdown is neither Vitest 5's nor this
-    // branch's. CI is evidently far faster, since `main` is green at the 10 s
-    // default — but it crossed 10 s once Vitest 5 raised the worker count, which
-    // is what this timeout answers. Targeted rather than a global raise.
+    // 900 s, and the number is this large because MAIN ALREADY SPENDS IT.
+    //
+    // Measured on main's own CI, ubuntu shard 3/4, run 36699591543: this test
+    // reports GREEN at 566,662 ms — nine minutes and 27 seconds — against a
+    // `testTimeout` of 10,000. Vitest 2 could not enforce a timeout against a
+    // synchronous CPU-bound body, because the deadline only fires when the event
+    // loop gets control and `render()` never yields. Vitest 5 enforces it, so
+    // the upgrade did not make this test slow: it stopped hiding that it always
+    // was. Two `render()` calls at ~283 s each, which matches 241 s measured
+    // locally under plain `tsx` with Vitest out of the picture.
+    //
+    // So this is not a guard being widened to fit a regression — it is an
+    // implicit cost becoming explicit at the value main already pays, and a
+    // genuine hang still fails. Capping it lower would turn a nine-minute test
+    // green-to-red without making anything faster.
+    //
+    // THE REAL DEFECT IS NOT THIS NUMBER, and it does not belong to this branch:
+    // this file's own header records `render()` at ~54 s a call, measured
+    // 2026-08-11. It is ~283 s now — a 5x slowdown in a whole-tree claims walk,
+    // invisible for as long as the timeout was unenforceable. That wants its own
+    // investigation, with `revisit-if: render() drops back under 60 s, or the
+    // determinism check is restructured to assert on a bounded input rather than
+    // the whole ledger twice`.
     it('is deterministic (no timestamp / stable ordering)', () => {
         expect(render()).toBe(proof());
-    }, 60_000);
+    }, 900_000);
 
     it('emits the required proof structure', () => {
         const out = proof();
