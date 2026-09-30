@@ -891,8 +891,7 @@ closed rather than left standing:
       the number in `docs/contracts/hook-architecture-v1.md` § Kill switches and
       the plan's own grep corrected there — it could not remove the token it
       named. See step 1.4's evidence for the three findings. AC-5 is about the
-      COUNT and is closed; step 1.4 stays open on its blocker half. The 28 is a
-      DATED reading; today's is under `kill-switch-owner-decision`. -->
+      COUNT and is closed; step 1.4 stays open on its blocker half. -->
 
 ## Provenance
 
