@@ -499,6 +499,23 @@ interface RunResult {
   stderr: string;
   stdout: string;
   duration_ms: number;
+  /**
+   * The same elapsed time in integer MICROseconds.
+   *
+   * `duration_ms` is floored, and since the in-process fast path landed every
+   * registry concern finishes in well under a millisecond — so the floored
+   * field reads exactly `0` for all of them. That was invisible while nothing
+   * consumed the number, and stops being invisible the moment step 3.2 reports
+   * a p95 and step 3.3 derives a timeout from it: a `0 ms` p95 yields a
+   * `0 x 3` bound that refuses every call.
+   *
+   * `duration_ms` keeps its type and its floor, because its consumers (the
+   * feedback record, `task hooks-status`) read it as an integer millisecond
+   * count and a fractional value there would be a schema change for no gain.
+   * This field is the measurement-grade one and is carried only to the
+   * timings sink.
+   */
+  duration_us: number;
 }
 
 /**
@@ -672,8 +689,14 @@ function _run_concern_inproc(
     }
     clearHookStdinOverride();
   }
-  const elapsed = Math.floor(performance.now() - started);
-  return { rc, stderr: err, stdout: out, duration_ms: elapsed };
+  const elapsedMs = performance.now() - started;
+  return {
+    rc,
+    stderr: err,
+    stdout: out,
+    duration_ms: Math.floor(elapsedMs),
+    duration_us: Math.round(elapsedMs * 1000),
+  };
 }
 
 function _run_concern(concern: ConcernDef, envelope: JsonObject): RunResult {
@@ -708,6 +731,7 @@ function _run_concern(concern: ConcernDef, envelope: JsonObject): RunResult {
       stderr: `${String(concern["name"])}: script missing: ${script}`,
       stdout: "",
       duration_ms: 0,
+      duration_us: 0,
     };
   }
 
@@ -728,7 +752,9 @@ function _run_concern(concern: ConcernDef, envelope: JsonObject): RunResult {
     env: concern_env,
     timeout: 30000,
   });
-  const elapsed = Math.floor(performance.now() - started);
+  const elapsedMs = performance.now() - started;
+  const elapsed = Math.floor(elapsedMs);
+  const elapsedUs = Math.round(elapsedMs * 1000);
   if (proc.error) {
     // OSError / timeout equivalent — log execution-failed so the
     // never-block contract keeps a trace.
@@ -747,6 +773,7 @@ function _run_concern(concern: ConcernDef, envelope: JsonObject): RunResult {
       stderr: `${String(concern["name"])}: ${err.message}`,
       stdout: "",
       duration_ms: elapsed,
+      duration_us: elapsedUs,
     };
   }
   return {
@@ -754,6 +781,7 @@ function _run_concern(concern: ConcernDef, envelope: JsonObject): RunResult {
     stderr: proc.stderr || "",
     stdout: proc.stdout || "",
     duration_ms: elapsed,
+    duration_us: elapsedUs,
   };
 }
 
@@ -786,6 +814,82 @@ export function _reduce(rcs: number[]): number {
 
 interface FeedbackEntry extends JsonObject {
   concern: string;
+}
+
+/**
+ * Environment variable naming a JSONL sink for per-concern timings.
+ *
+ * `road-to-a-kernel-that-guards-its-plumbing` 3.2. The dispatcher has always
+ * timed each concern — `_run_concern` returns `duration_ms` and the feedback
+ * record carries it — but nothing could READ that distribution: the feedback
+ * dir keeps one file per concern and every dispatch OVERWRITES it, so the only
+ * survivor is the last run. A p95 needs every sample, and the bench harness
+ * that produces the samples runs with `AGENT_CONFIG_REPLAY=1`, where
+ * `_write_feedback` returns before writing anything at all.
+ *
+ * So the sink is separate from the feedback dir on purpose, and deliberately
+ * not derived from it:
+ *
+ * - it APPENDS, so N runs leave N samples rather than one;
+ * - it is written in replay mode, because the measurement harness is the
+ *   caller that needs it;
+ * - it is off unless the variable is set, so the cost on a real dispatch is
+ *   one `process.env` lookup.
+ *
+ * It carries a concern name, a severity, an integer and an event name. There
+ * is no field that can hold a payload, a path or a prompt — the same
+ * shape-level privacy floor `payload_stubs` keeps one row up.
+ */
+const TIMINGS_SINK_ENV = "AGENT_CONFIG_HOOK_TIMINGS";
+
+/**
+ * Append one JSONL row per concern to the timings sink, when it is armed.
+ *
+ * Never throws and never blocks the dispatch: a measurement sink that can fail
+ * a hook would be a new way for the plumbing to refuse, which is the opposite
+ * of what this roadmap is for.
+ */
+export interface ConcernTimingSample {
+  concern: string;
+  duration_us: number;
+}
+
+export function _write_concern_timings(
+  envelope: JsonObject,
+  samples: readonly ConcernTimingSample[],
+  sinkPath: string | undefined = process.env[TIMINGS_SINK_ENV],
+): void {
+  if (!sinkPath) {
+    return;
+  }
+  try {
+    const event = String(envelope["event"] ?? "");
+    const platform = String(envelope["platform"] ?? "");
+    const lines: string[] = [];
+    for (const sample of samples) {
+      // A concern the dispatcher never timed is OMITTED rather than recorded
+      // as 0. A zero here would read as "instantaneous" and would be
+      // indistinguishable from a real sub-millisecond run — the exact
+      // substitution the step's `not_measured` requirement forbids one layer
+      // up, reintroduced at the source instead of at the report.
+      if (!Number.isFinite(sample.duration_us)) {
+        continue;
+      }
+      lines.push(
+        JSON.stringify({
+          concern: sample.concern,
+          duration_us: sample.duration_us,
+          event,
+          platform,
+        }),
+      );
+    }
+    if (lines.length > 0) {
+      fs.appendFileSync(sinkPath, lines.join("\n") + "\n", "utf-8");
+    }
+  } catch {
+    // Non-fatal by construction — see the header.
+  }
 }
 
 /**
@@ -1278,6 +1382,7 @@ export function main(argv?: string[]): number {
   // classes are present, which any concern loses, the single measurement pass,
   // and the at-most-four envelope shapes — so the loop below reads a shape
   // rather than re-deriving one. Rationale and cost model: payload_stub.ts.
+  const timing_samples: ConcernTimingSample[] = [];
   const keep_by_concern = concerns.map(
     (c) => [c, _concern_body_classes(c)] as const,
   );
@@ -1298,8 +1403,14 @@ export function main(argv?: string[]): number {
     // went to it untouched.
     const served_classes = shapes.servedBy(keep_classes);
     const concern_started = _now_iso();
-    const { rc: rawRcResult, stderr: stderr_text, stdout: stdout_text, duration_ms } =
-      _run_concern(concern, concern_envelope);
+    const {
+      rc: rawRcResult,
+      stderr: stderr_text,
+      stdout: stdout_text,
+      duration_ms,
+      duration_us,
+    } = _run_concern(concern, concern_envelope);
+    timing_samples.push({ concern: String(concern["name"]), duration_us });
     let rc = rawRcResult;
     const raw_rc = rc;
     if (rc >= 3) {
@@ -1384,6 +1495,7 @@ export function main(argv?: string[]): number {
     });
   }
   const final_rc = _reduce(rcs);
+  _write_concern_timings(envelope, timing_samples);
   _write_feedback(envelope, session_id, feedback_entries, final_rc, started_at);
   _record_rule_trips(envelope, feedback_entries);
   if (context_blocks.length > 0 && final_rc === EXIT_ALLOW) {
