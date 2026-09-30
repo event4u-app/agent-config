@@ -5,13 +5,27 @@ execution:
   mode: phase-checkpoints
 estate_growth_exempt: "open_blockers 40 to 41 (+1) — measured by check_estate_count on this diff, not predicted, and superseding this roadmap's earlier active_roadmaps claim for the inbox-2026-09-ab round, which authorised that diff and not this one. The one new entry is `shadow-release-window`, and it is a promotion rather than an addition: the gate it records already existed in step 3.2's own verify line as the prose clause `after 3.1 has shipped one release`, and the condition is factually unmet — `git tag --contains 2b6a0f551` printed nothing on 2026-09-30, the newest tag 16.1.0 dating 2026-09-28 against 3.1's 2026-09-29. What changes is only whether a machine can see it. The continuation ladder and the stop-slot concern read the inline `blocked-by:` marker and never the prose, so before this diff every fresh autonomous run was handed 3.2 as its next executable step and could not do it; after it, the same run reads the step as held and moves on. The counter-move — leaving the gate unrecorded to keep the number flat — is what the ratchet exists to prevent in the other direction: it would hide a real hold rather than retire one. Offsetting is not available either, because the other three open steps closed in this same diff (4.1, 5.1, 5.2) and closing them is what left this single genuine hold standing."
 estate_offset_exempt: >-
-  No offset exists. `agents/roadmaps/archive/road-to-behaviour-evidence-over-pixels.md` and
-  `agents/roadmaps/archive/road-to-a-declared-component-contract.md` are already archived, so there
-  is nothing to retire; `agents/roadmaps/stubs/road-to-executable-specification-adapter.md` is held
-  by a measured refusal this roadmap does not lift and retiring it would dispose of a recorded
-  decision; merging into `agents/roadmaps/road-to-a-ledger-that-closes-the-loop.md` would put a
-  three-line defect fix in `apply.ts` inside a structural roadmap about turn-end obligation reading,
-  whose own scope note says it reads whether evidence arrived rather than producing it.
+  Repointed 2026-09-30 to the dimension its sibling claim now covers. The growth this diff
+  makes is `open_blockers` 40 to 41, so the offset question is whether an open blocker could
+  have been closed to net it to zero — not whether a roadmap could have been archived, which
+  is the question the previous wording answered and which no longer arises (`active_roadmaps`
+  is +0 here). No blocker offset exists, for two reasons and the second is the load-bearing
+  one. Within this roadmap there is exactly one blocker and it is the new one: `open_blockers`
+  was 0 on this file before the diff, so there is nothing of its own to net against. And the
+  other 40 sit on other roadmaps, each gated by its own recorded condition; a blocker is
+  cleared by its `Resolved when` becoming true, never by a neighbouring roadmap needing the
+  headroom. Closing one to make room would be the precise failure the ratchet exists to catch
+  — a counter walked down by disposing of a record rather than by doing the work — so it is
+  declined rather than unavailable.
+  · The previous value argued the `active_roadmaps` story and is kept here because it is still
+  the reason no roadmap was retired or merged: the two archive candidates
+  (`road-to-behaviour-evidence-over-pixels`, `road-to-a-declared-component-contract`) are
+  already archived and there is nothing left to retire;
+  `agents/roadmaps/stubs/road-to-executable-specification-adapter.md` is held by a measured
+  refusal this roadmap does not lift, and retiring it would dispose of a recorded decision;
+  and merging into `agents/roadmaps/road-to-a-ledger-that-closes-the-loop.md` would put a
+  three-line defect fix in `apply.ts` inside a structural roadmap about turn-end obligation
+  reading, whose own scope note says it reads whether evidence arrived rather than producing it.
 relates:
   - slug: road-to-a-ledger-that-closes-the-loop
     relation: disjoint
