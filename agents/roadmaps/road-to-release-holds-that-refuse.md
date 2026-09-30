@@ -516,15 +516,23 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
 
 ## Phase 6 — Evaluate the claim after 30 tags, and accept the null if it comes
 
-> **Not started, and legitimately so: the measurement window has not opened.** Phase 4's
-> refusal is wired in this change and no release has been cut since, so the denominator
-> Phase 0.4 pre-registered — 30 consecutive tags counted from the first tag whose tree
-> carries a wired refusal — stands at **zero**. The claim row says what that means in its own
-> words: *"UNDERPOWERED is neither a pass nor a null: fewer than 30 post-Phase-4 tags settles
-> nothing and may be cited for neither direction."* Flipping the verdict now would be reading
-> a result that does not exist, and shortening the denominator after the mechanism shipped
-> would be fitting the threshold to the outcome the pre-registration was written to prevent.
-> Blocked on `measurement-window-not-open`.
+> **Not started, and legitimately so: the window is open and nowhere near full.** Phase 4's
+> refusal is wired and **one** tag has been cut against it — `16.1.0`, 2026-09-28 — so the
+> denominator Phase 0.4 pre-registered (30 consecutive tags counted from the first tag whose
+> tree carries a wired refusal) stands at **1 of 30**. That first cut was permitted, because
+> the corpus declares no hold, so both numerator arms read zero. The claim row says what that
+> means in its own words: *"UNDERPOWERED is neither a pass nor a null: fewer than 30
+> post-Phase-4 tags settles nothing and may be cited for neither direction."* Flipping the
+> verdict now would be reading a result that does not exist, and shortening the denominator
+> after the mechanism shipped would be fitting the threshold to the outcome the
+> pre-registration was written to prevent. Blocked on `measurement-window-not-open`.
+>
+> **Corrected 2026-09-30, and the correction is the point rather than the figure.** This note
+> read *"the measurement window has not opened … no release has been cut since … stands at
+> **zero**"*. It had been false since 2026-09-28 and would have stayed false silently, because
+> nothing re-reads a phase note whose steps are all blocked. Working:
+> `agents/evidence/analysis/release-holds-phase-0-2026-09-13.md` § "The measurement window
+> opened at `16.1.0`".
 
 - [ ] <!-- blocked-by: measurement-window-not-open | asked: no — there is no question to put: the block is 30 elapsed release tags, not a decision --> **6.1 Read the refusal log, the re-sequence log and a re-taken Phase 0 prose count**, then
       flip `release-hold-refuses-declared-state` to `backed` or `honest-null`.
@@ -663,6 +671,34 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
   tag has been cut since; `git tag --sort=-creatordate | head -1` reads `16.0.0`, whose tree
   predates the evaluator. The window opens at the first tag after this PR merges.
 
+- **Second reading, 2026-09-30 — the window OPENED, and the evidence above had gone stale in
+  the direction that hides it.** The line above reads *"the denominator is 0 … the window opens
+  at the first tag after this PR merges"*. That PR merged, and **`16.1.0` was cut on 2026-09-28**.
+  The entry was a prediction that came true and then kept reading as though it had not, which is
+  the same stale-record failure this file documents at length on `rule-13-amendment` — there it
+  cost four days of declined work, here it would have cost a future Phase 6 run the re-derivation
+  of its own starting ref.
+  - **Denominator: 1 of 30.** The counting snippet in `What to do` above, run against the first
+    commit carrying the evaluator (`3f342103168e56d0168655c12141829f5e1d6ca0`), returns exactly
+    `16.1.0`; `16.0.0`'s tree does not carry the evaluator. The anchor is now pinned as a **ref**,
+    so counting it later is one command rather than a reconstruction.
+  - **The cut counts, because the boundaries were wired at the tag itself** — verified at
+    `16.1.0` rather than inferred from `main`: the `release-holds` job in
+    `release-validation.yml:499`, both commands in `release-guard.yml:59-60`, and the
+    `release-gate-locality.yml:144` row. An unwired evaluator would have made this a tag the
+    window must not count.
+  - **First observation: a permitted stable cut.** Arm (a) stands at **0 refusals** — the corpus
+    declares nothing (a sweep for `### hold:` entries across `agents/roadmaps/` returns 0), so
+    there was nothing to refuse. Arm (b) stands at **0 logged re-sequences**. This is the
+    predicted shape and it settles nothing: one permitted cut over an empty corpus is the least
+    informative reading the window can produce, and the claim row forbids citing an underpowered
+    window in either direction.
+  - **`Status:` stays `open` and the denominator stays 30.** 1 is not 30, and shortening it now —
+    with the mechanism shipped and the first reading in hand — is precisely the fit-to-outcome
+    move the `Recommendation` field above was written to forbid. Full working:
+    `agents/evidence/analysis/release-holds-phase-0-2026-09-13.md` § "The measurement window
+    opened at `16.1.0`".
+
 ### blocker: zero-live-subjects
 - **Status:** open
 - **Owner:** maintainer
@@ -738,6 +774,23 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
     answers rule 28's authoring order would have told them to try first. That is evidence **for**
     the honest-null branch, and the first positive evidence about the ladder rather than about the
     population. It does not close this blocker, which stays a cost judgement and stays yours.
+
+  **Fourth reading, 2026-09-30, and it is reported because it changes nothing.** The grep this
+  entry names was re-run at `1f442155a`, extended to `later/` and `stubs/` as the third reading
+  was. The declaration count is **still zero**: three self-references inside this file, and the
+  one near-miss at `agents/roadmaps/stubs/road-to-main-protection-ruleset-changes.md:146`,
+  unchanged in wording and still resolving at the guard and re-sequence rungs rather than at a
+  hold. What DID move is exposure, and it moved in the opposite direction from last time — the
+  active corpus grew 10 → **18** as new roadmaps landed and saturation broke, **14 of 18**
+  mid-flight and **9 of 12** on the `ready` subset, against 10-of-10 and 6-of-6 on 2026-09-14.
+  That is the third reading's warning surviving its own strongest test: the population figure has
+  now swung 1-of-14 → 10-of-10 → 14-of-18 in seventeen days while the instance count never left
+  zero, which is about as direct a demonstration as the corpus can give that the two measure
+  different things. **The entry stays open and stays the owner's** — its `Resolved when` asks for
+  an *accepted* plan, the evidentiary half closed on 2026-09-14, and nothing here is new
+  information for the cost judgement that remains. Working:
+  `agents/evidence/analysis/release-holds-phase-0-2026-09-13.md` § "The measurement window
+  opened at `16.1.0`".
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-19 | reviewer: claude/host -->
