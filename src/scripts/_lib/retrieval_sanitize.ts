@@ -39,18 +39,24 @@
  * primitive this package cannot reach, so the inter-agent channels are covered
  * at the inbound parse choke point and nowhere else.
  *
- * WHAT THIS FLOOR STILL DOES NOT SEE. Everything below is a CODEPOINT floor.
- * Fetched markup also hides content STRUCTURALLY — an HTML comment, a
+ * THE STRUCTURAL LAYER IS A SEPARATE MODULE. Everything below is a CODEPOINT
+ * floor. Fetched markup also hides content STRUCTURALLY — an HTML comment, a
  * `<template>` block, a `style="display:none"` span — which no codepoint
- * predicate can see, and this package has no coverage for that class anywhere.
- * A detector for it was written and REFUSED by an independent review on
- * 2026-09-29: it stripped `aria-hidden` subtrees, whose content is visible to
- * sighted readers, and a handwritten matcher mis-parses adversarial markup
- * (a comment containing a same-name tag, tag-like text inside `<script>`).
- * That work is open in `road-to-a-sanitize-list-that-is-generated` Phase 3 and
- * the gap is stated here rather than left for a reader to infer from silence.
+ * predicate can see. That class is covered by `_lib/structural_hiding.ts`,
+ * composed with this floor by `sanitize_markup` below, and it is covered for
+ * fetched MARKUP only: a caller holding plain text needs nothing from it.
+ *
+ * WHAT THAT LAYER STILL DOES NOT SEE is a register in its own file —
+ * `STRUCTURAL_HIDING_GAPS` — and every surface claiming the coverage cites the
+ * register alongside the claim, because a detector cited without its gaps is
+ * how the claim becomes a false green. No recall or coverage percentage is
+ * published for it anywhere; a rate needs a frozen corpus and none exists.
+ * `aria-hidden` is deliberately NOT one of its channels
+ * (`STRUCTURAL_HIDING_NON_CHANNELS` says why).
  */
 import { _classify } from '../lint_hidden_unicode.js';
+import { strip_structural_hiding } from './structural_hiding.js';
+import type { StructuralRemoval } from './structural_hiding.js';
 import { TOKEN_RE, classifyToken } from './confusables.js';
 
 /** Hard per-field length cap — bounds a runaway/adversarial body. */
@@ -98,6 +104,35 @@ export function sanitize_text(s: string): string {
         out += ch;
     }
     return out.length > MAX_FIELD_CHARS ? out.slice(0, MAX_FIELD_CHARS) : out;
+}
+
+/**
+ * The fetched-markup floor: structural pre-pass, then the codepoint floor.
+ *
+ * ORDER IS LOAD-BEARING. The structural pass runs FIRST, because a codepoint
+ * floor applied first would sanitize text that is about to be discarded and,
+ * worse, would leave a hidden subtree looking clean. Running it second means
+ * every byte that survives the structural pass still clears the codepoint
+ * floor — including the text that was only reachable once markup was removed.
+ *
+ * Use this for fetched MARKUP. For plain text `sanitize_text` is the whole
+ * floor and this adds nothing but a parse.
+ *
+ * The removals are RETURNED, not logged and not swallowed: a caller debugging
+ * a corrupted result needs to know what went and where it was. See the removal
+ * policy in `structural_hiding.ts`.
+ */
+export function sanitize_markup(markup: string): {
+    text: string;
+    removals: readonly StructuralRemoval[];
+    truncated: boolean;
+} {
+    const stripped = strip_structural_hiding(markup);
+    return {
+        text: sanitize_text(stripped.text),
+        removals: stripped.removals,
+        truncated: stripped.truncated,
+    };
 }
 
 /**

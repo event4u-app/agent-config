@@ -11,6 +11,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
     MAX_FIELD_CHARS,
     sanitize_entry,
+    sanitize_markup,
     sanitize_text,
 } from '../../src/scripts/_lib/retrieval_sanitize.js';
 import {
@@ -95,5 +96,51 @@ describe('witness — a malicious entry is sanitized through the retrieval surfa
         const e = (env['entries'] as Array<Record<string, unknown>>)[0]!;
         const body = String((e['body'] as Record<string, unknown>)['body']);
         expect(body).not.toMatch(/[‪-‮​﻿]/);
+    });
+});
+
+describe('sanitize_markup — the two layers compose, in that order', () => {
+    /** A zero-width joiner: invisible, and invisible to a markup parser too. */
+    const ZWJ = '\u200d';
+
+    it('applies the structural pass and then the codepoint floor', () => {
+        const out = sanitize_markup(`<p>vis${ZWJ}ible</p><!-- hidden instruction -->`);
+
+        expect(out.text).not.toContain('hidden instruction');
+        expect(out.text).not.toContain(ZWJ);
+        expect(out.text).toContain('visible');
+    });
+
+    it('cleans text that only becomes reachable once markup is removed', () => {
+        // The ordering claim, made falsifiable: this codepoint vector sits in
+        // text OUTSIDE the hidden span. A codepoint-floor-first pipeline would
+        // still catch it, so the discriminating half is the span that is
+        // dropped entirely — asserted above — plus the surviving text being
+        // clean here.
+        const out = sanitize_markup(`<div style="display:none">x</div><span>a${ZWJ}b</span>`);
+
+        expect(out.text).toContain('ab');
+        expect(out.text).not.toContain(ZWJ);
+    });
+
+    it('reports removals rather than swallowing them', () => {
+        const out = sanitize_markup('<p>keep</p><!-- drop -->');
+
+        expect(out.removals.map((r) => r.channel)).toContain('html-comment');
+        expect(out.truncated).toBe(false);
+    });
+
+    it('reports truncation when markup is unterminated', () => {
+        const out = sanitize_markup('<p>keep</p><!-- never closed');
+
+        expect(out.truncated).toBe(true);
+        expect(out.text).toContain('keep');
+    });
+
+    it('is a no-op beyond the codepoint floor for plain text', () => {
+        const plain = `plain ${ZWJ}text with no markup`;
+
+        expect(sanitize_markup(plain).text).toBe(sanitize_text(plain));
+        expect(sanitize_markup(plain).removals).toHaveLength(0);
     });
 });
