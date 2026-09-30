@@ -211,10 +211,15 @@ import { openRecordStats } from './subagent_ledger_hook.js';
 import {
     deriveSessionKey,
     foldRefusal,
+    foldShadow,
     parseRecord,
+    parseShadowRecord,
     readInstallBoundary,
     sessionRefusalFile,
+    sessionShadowFile,
     type RefusalRecord,
+    type ShadowLayer,
+    type ShadowRecord,
 } from '../_lib/turn_end_refusals.js';
 import { EXIT_ALLOW, EXIT_BLOCK } from './exit_codes.js';
 
@@ -1250,18 +1255,41 @@ function str(v: JsonValue | undefined): string {
     return typeof v === 'string' ? v : '';
 }
 
-export function main(): number {
-    let envelope: JsonObject;
-    let payload: JsonObject;
-    try {
-        [envelope, payload] = unwrap(readHookStdin(), 'claude');
-    } catch {
-        return EXIT_ALLOW;
-    }
+/**
+ * Everything the detectors read, assembled once per stop event.
+ *
+ * Extracted for step 2.1 of `road-to-a-stop-that-holds`, and the extraction —
+ * not the shadow write — is the load-bearing half. The contract's Q1 asks how
+ * often a turn the gate ALLOWS on a re-entrancy layer would have been refused
+ * again, which needs the detectors to run on the allow path. There were two
+ * ways to get them there: call them from a second assembly written beside the
+ * first, or assemble once and call from both. `obligation_settle_hook.ts`'s
+ * header already rules out the first — "a detector whose shadow measurement
+ * and live behaviour come from different code measures nothing" — so this
+ * function exists so that there is exactly one assembly and exactly one
+ * detector list, read by the live verdict and by the shadow alike.
+ *
+ * `null` means the turn has no assistant text, which is `main()`'s existing
+ * allow and is not a detector input the shadow could have measured either.
+ */
+interface DetectorInputs {
+    workspaceRoot: string;
+    rawSessionId: string;
+    sessionKey: string;
+    turnOrdinal: number;
+    promptId: string;
+    lastAssistant: string;
+    toolCalls: ToolCall[];
+    turnTexts: string[];
+    closingFromPayload: boolean;
+    dispatchOpen: boolean;
+    runState: TurnRunState | null;
+}
 
-    // Layer 1 — the host's own answer to "did I already refuse this turn?".
-    if (payload['stop_hook_active'] === true) return EXIT_ALLOW;
-
+function assembleDetectorInputs(
+    envelope: JsonObject,
+    payload: JsonObject,
+): DetectorInputs | null {
     const workspaceRoot = str(envelope['workspace_root'] as JsonValue | undefined) || process.cwd();
 
     // Layer 1b — an open subagent dispatch is an EXPLICIT allow
@@ -1283,7 +1311,8 @@ export function main(): number {
     // suppressed ALL FOUR detectors. A pending dispatch explains a promissory
     // closing (A) and an unsettled completion claim (D); it explains nothing
     // about a language mismatch (B) or an unverified edit (C), and silencing
-    // those was scope Step 2 never asked for. Applied per detector below.
+    // those was scope Step 2 never asked for. Applied per detector in
+    // `runDetectors`.
     //
     // R2 round 2, finding 1: the count is TTL-filtered inside
     // `openRecordStats`. A leaked record from a dispatch that never returned
@@ -1316,7 +1345,7 @@ export function main(): number {
         transcriptPath,
         { maxBytes: TRANSCRIPT_READ_MAX_BYTES },
     );
-    if (!lastAssistant) return EXIT_ALLOW;
+    if (!lastAssistant) return null;
 
     // The closing reply comes from the field the host hands us when it supplies
     // one, not only from a file the host writes asynchronously. The transcript
@@ -1336,48 +1365,57 @@ export function main(): number {
         ? [...assistantTurnTexts, payloadClosing]
         : assistantTurnTexts;
 
-    // Layer 2 — keyed on the turn's ORDINAL, never on the prompt's text.
-    // A host that sends no `session_id` shares one bucket AND one small-integer
-    // ordinal namespace, so an unrelated session whose ordinal matches a stored
-    // `refused_turn` reads as already-refused and goes unguarded. R2 round 2,
-    // finding 16: the sibling hook documents its own bucket as degrading rather
-    // than colliding, and this one collides. It is named here rather than
-    // papered over — the degradation is toward UNDER-refusing, which is the safe
-    // direction, and layer 1 still covers the host that sends the flag.
+    // The host's own id for the prompt being processed. Recorded beside the
+    // ordinal in the refusal marker — never used as the guard key. The
+    // ordinal's drift is what both re-entrancy layers exist for, so a later
+    // reading needs the pair to tell a drifted ordinal from a second prompt.
+    const promptId = str((payload['prompt_id'] ?? payload['promptId']) as JsonValue | undefined);
     // RAW id, kept beside the derived key rather than replaced by it:
     // `readLanguagePin` addresses the producer's own per-session file, and the
-    // producer keys that on the raw `session_id`. Passing `sessionKey` here would
-    // read a path nothing writes — the same shape as the STATE_FILE break this
-    // parameter exists to close.
-    // The host's own id for the prompt being processed. Read here and recorded
-    // beside the ordinal in the refusal marker — never used as the guard key.
-    // The ordinal's drift is what both re-entrancy layers exist for, so a later
-    // reading needs the pair to tell a drifted ordinal from a second prompt.
-    const promptId = str(
-        (payload['prompt_id'] ?? payload['promptId']) as JsonValue | undefined,
-    );
+    // producer keys that on the raw `session_id`. Passing `sessionKey` there
+    // would read a path nothing writes — the same shape as the STATE_FILE break
+    // this pairing exists to close.
     const rawSessionId = str(envelope['session_id'] as JsonValue | undefined) || '';
     const sessionKey = deriveSessionKey(rawSessionId || 'unknown-session');
-    if (alreadyRefusedTurn(workspaceRoot, sessionKey, turnOrdinal)) return EXIT_ALLOW;
 
     // ONE read of the recorder's state, shared by detectors C and F. Two reads
     // would be two file opens on the stop slot for one answer, and — worse —
-    // could disagree if a post-tool event landed between them. Placed AFTER the
-    // re-entrancy allow, so a retry pays no file read it immediately discards.
+    // could disagree if a post-tool event landed between them.
+    //
+    // It used to sit AFTER the Layer-2 allow, with a comment saying "a retry
+    // pays no file read it immediately discards". Step 2.1 makes that false
+    // rather than leaving the comment to rot: a retry now RUNS the detectors
+    // to record whether it would have been refused again, so the read is
+    // consumed on that path too. The cost is one `readFileSync` per retry,
+    // which is the budget line 2.1 pre-registers.
     const runState = readTurnRunState(workspaceRoot, rawSessionId);
 
-    // B and C run on every turn-end; A and D run only when no dispatch is open
-    // (the ternaries below). For the detectors that DO run, the gating is INSIDE
-    // each one — no promise, no pin mismatch, no unverified edit, no unsettled
-    // completion claim ⇒ no finding ⇒ the turn ends. That is the whole of "fires
-    // when it is warranted"; there is no second, configurable notion of warranted
-    // layered on top of it.
-    //
-    // This said "Every detector runs on every turn-end" and enumerated three of
-    // four, three lines above the two `dispatchOpen` ternaries that refute it.
-    // Corrected 2026-08-19 with the header block at the top of this file: a reader
-    // arriving here met the false claim first, and the D comment below deferred to
-    // "the note at the top of this loop" — which was this sentence.
+    return {
+        workspaceRoot,
+        rawSessionId,
+        sessionKey,
+        turnOrdinal,
+        promptId,
+        lastAssistant,
+        toolCalls,
+        turnTexts,
+        closingFromPayload,
+        dispatchOpen,
+        runState,
+    };
+}
+
+/**
+ * Run every detector over one assembled input set.
+ *
+ * The one list, called by the live verdict and by the shadow read. Its
+ * ordering and its `dispatchOpen` ternaries are the gate's behaviour; nothing
+ * about the shadow may change them, which is why the shadow calls this rather
+ * than carrying a copy.
+ */
+function runDetectors(inputs: DetectorInputs): Finding[] {
+    const { dispatchOpen, lastAssistant, workspaceRoot, rawSessionId, toolCalls, runState } =
+        inputs;
     const findings: Finding[] = [];
     for (const f of [
         // A and D are the completion-adjacent pair a pending dispatch excuses
@@ -1386,16 +1424,13 @@ export function main(): number {
         dispatchOpen ? null : detectPromissory(lastAssistant),
         detectLanguage(lastAssistant, readLanguagePin(workspaceRoot, rawSessionId)),
         detectUnverifiedEdit(toolCalls, runState),
-        // Round 7 § Phase 1 — detector D. It is NOT unconditional, and this
-        // comment said it was while sitting one line above the `dispatchOpen`
-        // ternary that conditions it: A and D are both excused by an open
-        // dispatch, per the note at the top of this loop. Corrected 2026-08-18.
-        // It shipped with its own settings flag one commit earlier
-        // and that flag is gone: `hooks.turn_end_gate.*` was deleted on
-        // 2026-08-12 because a default-off safety gate is an absent one. Its
-        // gating is where the comment above says gating belongs — inside the
-        // detector: no CI observed, or a settled read, or no completion claim
-        // ⇒ no finding.
+        // Round 7 § Phase 1 — detector D. It is NOT unconditional: A and D are
+        // both excused by an open dispatch, per the note above. It shipped with
+        // its own settings flag one commit earlier and that flag is gone:
+        // `hooks.turn_end_gate.*` was deleted on 2026-08-12 because a
+        // default-off safety gate is an absent one. Its gating is where the
+        // note above says gating belongs — inside the detector: no CI observed,
+        // or a settled read, or no completion claim ⇒ no finding.
         dispatchOpen
             ? null
             : detectCompletionClaim(lastAssistant, readCiSettled(workspaceRoot, rawSessionId)),
@@ -1407,27 +1442,113 @@ export function main(): number {
         // that produced the measured failure — IS the continuation that drops
         // the decision, so narrowing E the same way would silence it in exactly
         // the case it exists for.
-        detectDroppedDecision(turnTexts, closingFromPayload),
+        detectDroppedDecision(inputs.turnTexts, inputs.closingFromPayload),
         // Detector F takes the OTHER side of that same question, and the two
         // sitting adjacent is the clearest place to say why. E fires on a
         // question already asked, which an open dispatch cannot excuse. F fires
         // on a completion CLAIM, and a turn waiting on a subagent has not
         // finished — so its closing is not the claim F is about. Same slot,
         // opposite trigger, opposite treatment of `dispatchOpen`.
-        dispatchOpen
-            ? null
-            : detectUntestedChange(lastAssistant, toolCalls, runState),
+        dispatchOpen ? null : detectUntestedChange(lastAssistant, toolCalls, runState),
     ]) {
         if (f) findings.push(f);
     }
+    return findings;
+}
+
+/**
+ * Record what this retry WOULD have been refused for, then let it end.
+ *
+ * Never changes a verdict: every caller returns `EXIT_ALLOW` whatever happens
+ * here, and the whole body is wrapped because a retry that crashed on its own
+ * instrument would be a new failure mode on a path that previously did no work
+ * at all. A retry with no findings still lands, as `retries_observed` without a
+ * row — that is the only way Q1 can read below 1.
+ */
+function recordShadow(inputs: DetectorInputs, layer: ShadowLayer): void {
+    if (is_replay_mode()) return;
+    try {
+        const findings = runDetectors(inputs);
+        const file = sessionShadowFile(inputs.workspaceRoot, inputs.sessionKey);
+        let prev: ShadowRecord | null = null;
+        try {
+            prev = parseShadowRecord(fs.readFileSync(file, 'utf-8'));
+        } catch {
+            // Absent or unreadable prior state starts a fresh record.
+        }
+        atomic_write_json(
+            file,
+            foldShadow(prev, {
+                detectors: findings.map((f) => f.detector),
+                turnOrdinal: inputs.turnOrdinal,
+                at: new Date().toISOString(),
+                layer,
+            }) as unknown as Record<string, unknown>,
+        );
+    } catch {
+        // An instrument is never a reason to change what the gate does.
+    }
+}
+
+export function main(): number {
+    let envelope: JsonObject;
+    let payload: JsonObject;
+    try {
+        [envelope, payload] = unwrap(readHookStdin(), 'claude');
+    } catch {
+        return EXIT_ALLOW;
+    }
+
+    // Layer 1 — the host's own answer to "did I already refuse this turn?".
+    //
+    // Still an unconditional allow. What changed in step 2.1 is that the turn
+    // is MEASURED on the way out: the detectors run once against the same
+    // inputs the live path would have built, and a finding becomes a
+    // `would_refuse_again` row. The verdict is byte-identical to the version
+    // that returned here immediately.
+    if (payload['stop_hook_active'] === true) {
+        try {
+            const retryInputs = assembleDetectorInputs(envelope, payload);
+            if (retryInputs !== null) recordShadow(retryInputs, 'stop_hook_active');
+        } catch {
+            // Assembly is throw-safe by construction today; the guard is here
+            // because this path did NO work before 2.1, so a regression in any
+            // reader it now calls must not turn a clean retry into a crash.
+        }
+        return EXIT_ALLOW;
+    }
+
+    const inputs = assembleDetectorInputs(envelope, payload);
+    if (inputs === null) return EXIT_ALLOW;
+
+    // Layer 2 — keyed on the turn's ORDINAL, never on the prompt's text.
+    // A host that sends no `session_id` shares one bucket AND one small-integer
+    // ordinal namespace, so an unrelated session whose ordinal matches a stored
+    // `refused_turn` reads as already-refused and goes unguarded. R2 round 2,
+    // finding 16: the sibling hook documents its own bucket as degrading rather
+    // than colliding, and this one collides. It is named here rather than
+    // papered over — the degradation is toward UNDER-refusing, which is the safe
+    // direction, and layer 1 still covers the host that sends the flag.
+    if (alreadyRefusedTurn(inputs.workspaceRoot, inputs.sessionKey, inputs.turnOrdinal)) {
+        recordShadow(inputs, 'refused_turn');
+        return EXIT_ALLOW;
+    }
+
+    // B and C run on every turn-end; A and D run only when no dispatch is open.
+    // For the detectors that DO run, the gating is INSIDE each one — no promise,
+    // no pin mismatch, no unverified edit, no unsettled completion claim ⇒ no
+    // finding ⇒ the turn ends. That is the whole of "fires when it is
+    // warranted"; there is no second, configurable notion of warranted layered
+    // on top of it.
+    const findings = runDetectors(inputs);
     if (findings.length === 0) return EXIT_ALLOW;
 
     markRefusedTurn(
-        workspaceRoot,
-        sessionKey,
-        turnOrdinal,
+        inputs.workspaceRoot,
+        inputs.sessionKey,
+        inputs.turnOrdinal,
         findings.map((f) => f.detector),
-        promptId,
+        inputs.promptId,
     );
 
     const lines = findings.map(
