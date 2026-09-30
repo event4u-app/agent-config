@@ -16,43 +16,42 @@
  * Codepoint classes are shared with `lint_hidden_unicode` (one source of truth
  * for what counts as a hidden-instruction vector).
  *
- * WHERE IT ACTUALLY RUNS — the list is GENERATED, and this header points at it:
+ * WHERE IT ACTUALLY RUNS — read the table, which is GENERATED:
  *
  *     docs/contracts/retrieval-read-surfaces.md
  *
- * This header used to carry the list itself. It went wrong in both directions —
- * a path that reaches the outside world and IS sanitized was missing from it,
- * and two paths carrying fetched bytes toward a model-facing surface were
- * neither listed nor covered — and the version before that had already recorded
- * the same failure once, noting that it "named surfaces by intent, and the
- * legacy-envelope gap went unnoticed for exactly that reason". A list a human
- * maintains records what its author meant; the tree records what the code does.
+ * This header used to carry that list inline, and the list was wrong in BOTH
+ * directions: a path that reaches the outside world and IS sanitized was
+ * absent from it, and two paths carrying fetched bytes toward a model-facing
+ * surface were neither listed nor covered. An earlier version had already
+ * failed the same way — it named surfaces by intent, and the legacy-envelope
+ * gap went unnoticed for exactly that reason. Twice is a property of the
+ * mechanism, not of the entries, which is why the list is now derived from the
+ * import graph by `check_read_surface_coverage` and this header points at it
+ * instead of copying it. A divergence between the two FAILS that gate; two
+ * copies is how it went stale.
  *
- * So the list moved to `_lib/read_surface_scan.ts`, which derives it from the
- * imports, and `check_read_surface_coverage` fails when the published table and
- * the tree disagree. That gate also fails when THIS header starts restating the
- * table again, because two copies is how the list went stale twice.
+ * Anything absent from the table is uncovered, and a module the generator
+ * cannot classify appears there as an `unclassified` ROW rather than being
+ * omitted — a missing row would read as no surface at all.
  *
- * A table row is a claim about imports, never about safety: `covered` means the
- * floor is in scope in that module, not that it is applied to the right string.
+ * One boundary the table cannot move: the subagent boundary itself is a HOST
+ * primitive this package cannot reach, so the inter-agent channels are covered
+ * at the inbound parse choke point and nowhere else.
  *
- * TWO LAYERS, AND THE ONE THIS FILE DOES NOT OWN
- * ----------------------------------------------
- * Everything below is a CODEPOINT floor. Fetched markup also hides content
- * structurally — an HTML comment, an `aria-hidden` subtree, a `<template>`
- * block, a `style="display:none"` span — which no codepoint predicate can see.
- * That pre-pass is `_lib/structural_hiding.ts`; {@link sanitize_markup}
- * composes the two. Its `STRUCTURAL_HIDING_GAPS` register is part of its
- * contract and travels with every claim of that coverage, including this one.
- *
- * No recall or coverage rate is published for the structural layer, anywhere —
- * it has no frozen corpus, so a rate would be an invented denominator. The
- * percentages further down this file are the CODEPOINT pipeline's, measured
- * over a corpus that does exist; they say nothing about the structural layer.
+ * WHAT THIS FLOOR STILL DOES NOT SEE. Everything below is a CODEPOINT floor.
+ * Fetched markup also hides content STRUCTURALLY — an HTML comment, a
+ * `<template>` block, a `style="display:none"` span — which no codepoint
+ * predicate can see, and this package has no coverage for that class anywhere.
+ * A detector for it was written and REFUSED by an independent review on
+ * 2026-09-29: it stripped `aria-hidden` subtrees, whose content is visible to
+ * sighted readers, and a handwritten matcher mis-parses adversarial markup
+ * (a comment containing a same-name tag, tag-like text inside `<script>`).
+ * That work is open in `road-to-a-sanitize-list-that-is-generated` Phase 3 and
+ * the gap is stated here rather than left for a reader to infer from silence.
  */
 import { _classify } from '../lint_hidden_unicode.js';
 import { TOKEN_RE, classifyToken } from './confusables.js';
-import { strip_structural_hiding } from './structural_hiding.js';
 
 /** Hard per-field length cap — bounds a runaway/adversarial body. */
 export const MAX_FIELD_CHARS = 8192;
@@ -99,29 +98,6 @@ export function sanitize_text(s: string): string {
         out += ch;
     }
     return out.length > MAX_FIELD_CHARS ? out.slice(0, MAX_FIELD_CHARS) : out;
-}
-
-/**
- * The markup pre-pass, then the codepoint floor — in that order.
- *
- * Use this wherever the incoming string is MARKUP the model will read: fetched
- * HTML, fetched markdown carrying inline HTML. The order is load-bearing.
- * Stripping hidden spans first means their contents never reach the codepoint
- * pass at all, so a payload hidden twice — an instruction in a
- * `display:none` span written in zero-width characters — is removed by the
- * layer that can see it rather than half-handled by the one that cannot.
- *
- * It is the WRONG function for a plain-text field. Removing `<!-- … -->` from
- * a rule body or a code snippet that legitimately contains markup corrupts it,
- * which is why {@link sanitize_text} stays the default and this is the opt-in.
- *
- * Coverage is exactly `STRUCTURAL_HIDING_CHANNELS`, and what it misses is
- * `STRUCTURAL_HIDING_GAPS` — both in `_lib/structural_hiding.ts`, cited here
- * because a caveat that stays in one file is not a caveat. No recall or
- * coverage rate exists for this layer.
- */
-export function sanitize_markup(s: string): string {
-    return sanitize_text(strip_structural_hiding(s));
 }
 
 /**

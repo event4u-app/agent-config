@@ -96,7 +96,41 @@ content in fetched markup.
 
 ## Phase 3 — The structural channel class gets a detector that publishes its gaps
 
-- [x] **3.1 Add a markup-aware pre-pass ahead of the codepoint floor.**
+> **BLOCKED — all three steps. The detector was BUILT and then REFUSED**, on
+> 2026-09-29, by an independent two-provider council review of this branch. It
+> is reverted rather than patched, and the two findings are why:
+>
+> - **`aria-hidden` is not a hiding channel.** Its content is VISIBLE to
+>   sighted readers; it is a screen-reader affordance. Stripping it deletes
+>   legitimate visible text, silently, leaving no trace in the output for anyone
+>   debugging the corrupted result. That is a design error in the channel list,
+>   not a bug in the matcher — Risk 2 of this register named over-stripping and
+>   the per-channel fixtures did not catch it, because a fixture written from
+>   the same wrong list agrees with it.
+> - **A handwritten matcher mis-parses adversarial markup.** Named by the
+>   review: a comment containing a same-name opening tag, tag-like text inside
+>   `<script>`/`<style>`, nested same-name hidden and visible elements,
+>   unterminated markup. A stripper that can be confused by the content it is
+>   defending against is worse than none, because it reports success.
+>
+> The review's own recommendation was the split this change makes: land the
+> generated inventory gate, hold the transform. What it needs before returning
+> is named — a parser rather than a matcher, adversarial fixtures for each shape
+> above, an explicit removal policy (silent irreversible deletion leaves callers
+> unable to debug), and `aria-hidden` off the channel list. A frozen corpus is
+> NOT required to test declared channels, but the review was explicit that one
+> IS required before claiming detection adequacy for the class.
+>
+> **What the tree says meanwhile:** `retrieval_sanitize.ts`'s header states that
+> structural hiding has no coverage anywhere in this package, rather than
+> leaving a reader to infer it from silence. The percentage rule in
+> `check_read_surface_coverage` is kept and made silent on the detector's
+> absence — a detector arriving later must not arrive without the rule already
+> watching it.
+>
+> **Resolved when** a parser-backed detector lands with those fixtures.
+
+- [ ] **3.1 Add a markup-aware pre-pass ahead of the codepoint floor.**
       Cover HTML comments, inline-style hiding (`display:none`,
       `visibility:hidden`, `opacity:0`, `font-size:0`, zero width or height),
       `aria-hidden`, and `<template>`. A grep for any of these in the sanitize
@@ -104,13 +138,7 @@ content in fetched markup.
       hiding class has no coverage at all.
       verify: one fixture per listed channel, each asserted to lose the hidden
       span and keep the visible text
-      **Evidence (2026-09-29).** `_lib/structural_hiding.ts` covers HTML
-      comments, inline-style hiding (`display:none`, `visibility:hidden`,
-      `opacity:0`, `font-size:0`, zero width/height), `aria-hidden` and
-      `<template>`. 51 tests green across the three new test files, one fixture
-      per listed channel asserting Risk 2's both-directions requirement: the
-      hidden span is lost AND the visible text is kept.
-- [x] **3.2 Ship a known-gap register in the same file as the detector.**
+- [ ] **3.2 Ship a known-gap register in the same file as the detector.**
       Name what it does not catch — stylesheet-driven and class-driven hiding,
       off-screen positioning, background-coloured text, fragmentation and
       homoglyph obfuscation, image-borne text. An inline-style substring matcher
@@ -118,25 +146,11 @@ content in fetched markup.
       green.
       verify: the register exists in the detector's own file and is cited from
       every surface that claims the coverage
-      **Evidence (2026-09-29).** The gap register sits in the detector's own
-      file and names what it does not catch — stylesheet- and class-driven
-      hiding, off-screen positioning, background-coloured text, fragmentation
-      and homoglyph obfuscation, image-borne text — with the reason stated in
-      the file: a register printed beside a working detector invites the reading
-      that the listed gaps are the only gaps.
-- [x] **3.3 Publish no recall or coverage percentage.**
+- [ ] **3.3 Publish no recall or coverage percentage.**
       A number requires a frozen corpus, and none exists. State the covered
       channel list and the gap register instead.
       verify: no percentage appears in the detector, its header, or any surface
       citing it
-      **Evidence (2026-09-29).** No recall or coverage percentage appears for
-      the structural layer, in the detector, its header, or any citing surface;
-      `retrieval_sanitize.ts:48` states that in those words. **One distinction
-      worth making rather than hiding behind a clean grep:** that file does
-      carry `99.00 %` and `72.33 %` at `:146-147`. Those are the CODEPOINT
-      stripping pipeline's, pre-date this branch, and the lines beside them say
-      which half each measures. 3.3 forbids a number for the structural
-      detector, and there is none.
 
 ## Acceptance criteria
 

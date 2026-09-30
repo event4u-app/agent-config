@@ -225,11 +225,17 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         }
     }
 
-    // 3. No recall or coverage rate for the structural detector.
+    // 3. No recall or coverage rate for the structural detector — ARMED, NOT
+    //    ACTIVE. The detector does not exist yet: an independent review refused
+    //    the one this branch carried (it stripped `aria-hidden` content, which
+    //    is VISIBLE to sighted readers, and a handwritten matcher mis-parses
+    //    adversarial markup), so the transform half of the roadmap stays open.
+    //    The check is kept and kept SILENT on absence rather than deleted: a
+    //    detector arriving later must not arrive without this rule already
+    //    watching it, and re-adding a gate clause at the same time as the thing
+    //    it governs is how the clause ends up shaped to pass.
     const detector = _read(opts.root, DETECTOR_REL);
-    if (detector === null) {
-        findings.push(`${DETECTOR_REL} is missing — the structural detector is gone.`);
-    } else {
+    if (detector !== null) {
         const pct = prosePercentage(detector);
         if (pct !== null) {
             findings.push(
