@@ -56,6 +56,18 @@
  *   - **Unterminated markup fails closed, and says so.** An unresolvable tail
  *     is dropped rather than emitted, and `truncated` is set.
  *
+ * loss_class: recoverable-lossy
+ * loss_recovery: StructuralStripResult.removals — one {channel, start, end}
+ *   record per removed span, whose offsets index the CALLER'S OWN input
+ *   string. The pre-pass is pure and stores nothing, so the caller already
+ *   holds the only copy it needs; the locator is the range, not a path.
+ *
+ * The class is `recoverable-lossy` and not `ephemeral-lossy` because that is
+ * the whole point of the removal policy: a reviewer refused the previous
+ * version partly for deleting content with no trace, and a caller that cannot
+ * reconstruct what went cannot debug a corrupted result. `ephemeral-lossy`
+ * would be the honest class for a version that returned only the string.
+ *
  * WHAT IT DOES NOT CATCH — see {@link STRUCTURAL_HIDING_GAPS}
  * ----------------------------------------------------------
  * The register below is part of this module's contract rather than a footnote.

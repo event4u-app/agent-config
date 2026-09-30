@@ -39,6 +39,17 @@
  * primitive this package cannot reach, so the inter-agent channels are covered
  * at the inbound parse choke point and nowhere else.
  *
+ * loss_class: ephemeral-lossy
+ *
+ * `sanitize_text` drops hidden-instruction codepoints, control-char noise and
+ * invisible fillers, and caps the result at MAX_FIELD_CHARS. None of that is
+ * reconstructible from the output, and for the dropped vectors the
+ * unrecoverability IS the guarantee — a retrieval path that could hand back
+ * the vector it stripped would not be a floor. So the class is
+ * `ephemeral-lossy` for the module, even though `sanitize_markup` below
+ * returns structured removals for the layer it composes: a class names what a
+ * caller can recover from the output, and `sanitize_text` returns a string.
+ *
  * THE STRUCTURAL LAYER IS A SEPARATE MODULE. Everything below is a CODEPOINT
  * floor. Fetched markup also hides content STRUCTURALLY — an HTML comment, a
  * `<template>` block, a `style="display:none"` span — which no codepoint
