@@ -80,7 +80,7 @@ describe('update_prices — fetched rows reach the tracked doc sanitized', () =>
             },
         });
         expect(rows).toHaveLength(1);
-        expect(rows[0][1]).toBe('claude-sonnet-4-5');
+        expect((rows[0] as NonNullable<typeof rows[0]>)[1]).toBe('claude-sonnet-4-5');
     });
 
     it('leaves the fetched payload on disk byte-exact', () => {
@@ -145,7 +145,7 @@ describe('update_prices — fetched rows reach the tracked doc sanitized', () =>
             },
         });
         expect(rows).toHaveLength(1);
-        expect(rows[0][0]).toBe('anthropic');
+        expect((rows[0] as NonNullable<typeof rows[0]>)[0]).toBe('anthropic');
     });
 
     it('reports the collision rather than dropping it with every other miss', () => {
@@ -213,7 +213,7 @@ describe('llm_proposer_transport — the provider response is sanitized at the c
         const { anthropicGenerator } = await import(
             '../../src/scripts/_lib/llm_proposer_transport.js'
         );
-        const out = await anthropicGenerator(keyPath)({ system: 's', prompt: 'p' });
+        const out = await anthropicGenerator(keyPath)({ tier: 'lite', system: 's', prompt: 'p' });
         return out.text;
     }
 

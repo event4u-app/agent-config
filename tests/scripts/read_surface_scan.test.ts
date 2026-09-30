@@ -59,7 +59,7 @@ describe('inbound shapes', () => {
                 '    const r = await fetch(u);\n    return await r.text();\n}\n',
         );
         expect(rows).toHaveLength(1);
-        expect(rows[0].inbound).toBe('network-fetch');
+        expect((rows[0] as NonNullable<typeof rows[0]>).inbound).toBe('network-fetch');
     });
 
     it('ignores a fetch named only inside a string literal', () => {
@@ -75,7 +75,7 @@ describe('inbound shapes', () => {
             "import * as https from 'node:https';\n" +
                 'export function g(): void {\n    https.get("https://x", () => undefined);\n}\n',
         );
-        expect(withImport[0].inbound).toBe('node-http-request');
+        expect((withImport[0] as NonNullable<typeof withImport[0]>).inbound).toBe('node-http-request');
 
         // `.get(` on something that is not node's HTTP client is not inbound.
         expect(scanFixture('export function g(): void {\n    https.get("x");\n}\n')).toEqual([]);
@@ -86,7 +86,7 @@ describe('inbound shapes', () => {
             "import { spawnSync } from 'node:child_process';\n" +
                 'export function g(): void {\n    spawnSync("curl", ["-s", "https://x"]);\n}\n',
         );
-        expect(remote[0].inbound).toBe('remote-subprocess');
+        expect((remote[0] as NonNullable<typeof remote[0]>).inbound).toBe('remote-subprocess');
 
         const local = scanFixture(
             "import { spawnSync } from 'node:child_process';\n" +
@@ -99,14 +99,14 @@ describe('inbound shapes', () => {
         const rows = scanFixture(
             '// read-surface: host-tool-result\nexport function g(): string {\n    return "";\n}\n',
         );
-        expect(rows[0].inbound).toBe('host-tool-result');
+        expect((rows[0] as NonNullable<typeof rows[0]>).inbound).toBe('host-tool-result');
     });
 
     it('declaring a surface cannot make it read covered', () => {
         const rows = scanFixture(
             '// read-surface: host-tool-result\nexport function g(): string {\n    return "";\n}\n',
         );
-        expect(rows[0].coverage).toBe('uncovered');
+        expect((rows[0] as NonNullable<typeof rows[0]>).coverage).toBe('uncovered');
     });
 });
 
@@ -117,8 +117,8 @@ describe('the unclassified row — a missing row is the worst failure', () => {
                 '    const r = await this._fetch(u);\n    void r;\n}\n',
         );
         expect(rows).toHaveLength(1);
-        expect(rows[0].inbound).toBe('indirect-fetch');
-        expect(rows[0].coverage).toBe('unclassified');
+        expect((rows[0] as NonNullable<typeof rows[0]>).inbound).toBe('indirect-fetch');
+        expect((rows[0] as NonNullable<typeof rows[0]>).coverage).toBe('unclassified');
     });
 
     it('inbound bytes with no recognised emit are unclassified, not dropped', () => {
@@ -126,8 +126,8 @@ describe('the unclassified row — a missing row is the worst failure', () => {
             "import { spawnSync } from 'node:child_process';\n" +
                 'const go = (): void => {\n    spawnSync("curl", ["https://x"]);\n};\nvoid go;\n',
         );
-        expect(rows[0].coverage).toBe('unclassified');
-        expect(rows[0].emit).toBe('undecided');
+        expect((rows[0] as NonNullable<typeof rows[0]>).coverage).toBe('unclassified');
+        expect((rows[0] as NonNullable<typeof rows[0]>).emit).toBe('undecided');
     });
 });
 
@@ -138,7 +138,7 @@ describe('coverage is read from the import, and only from the import', () => {
                 'export async function f(u: string): Promise<string> {\n' +
                 '    const r = await fetch(u);\n    return sanitize_text(await r.text());\n}\n',
         );
-        expect(rows[0].coverage).toBe('covered');
+        expect((rows[0] as NonNullable<typeof rows[0]>).coverage).toBe('covered');
     });
 
     it('a mention of the floor in a comment is not an import', () => {
@@ -147,7 +147,7 @@ describe('coverage is read from the import, and only from the import', () => {
                 'export async function f(u: string): Promise<string> {\n' +
                 '    const r = await fetch(u);\n    return await r.text();\n}\n',
         );
-        expect(rows[0].coverage).toBe('uncovered');
+        expect((rows[0] as NonNullable<typeof rows[0]>).coverage).toBe('uncovered');
     });
 });
 
