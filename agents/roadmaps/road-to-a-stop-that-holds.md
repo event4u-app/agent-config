@@ -265,9 +265,21 @@ its pre-registered bar can be read — armed only by that reading.
       UNIT AND LIMIT: these are local darwin readings, not the CI runner's, and
       CI is the authoritative leg — see § Cost this branch added, whose readings
       were CI's. Bundle delta, measured by building `dist/hooks/dispatch.js` at
-      the merge base and at HEAD in the same worktree: 1,555,324 -> 1,558,612
-      bytes, +3,288 B / +0.211 %, against the +19,110 B / +1.34 % the previous
-      pass of this roadmap added. The non-retry path pays NOTHING new — the same
+      the merge base and at HEAD in the same worktree: 1,555,324 -> 1,559,180
+      bytes, +3,856 B / +0.248 %, against the +19,110 B / +1.34 % the previous
+      pass of this roadmap added.
+
+      THAT NUMBER WAS FIRST WRITTEN AS +3,288 B / +0.211 % AND WAS WRONG, which
+      is recorded rather than silently overwritten because it is the failure
+      mode a measured figure has. The first reading was taken mid-change, before
+      the pruner fix and the `SHADOW_SUFFIX` constant landed; the source then
+      grew by 568 bytes of bundle and the number in the file did not. Nothing
+      caught it except the pre-push bundle-content gate refusing a stale
+      `dist/hooks/dispatch.js` — a freshness check on a different subject. Both
+      sides were re-measured from `origin/main` and HEAD in one worktree after
+      the last source edit.
+
+      The non-retry path pays NOTHING new — the same
       reads in the same order, relocated — and a retry now pays what a non-retry
       turn already paid, which this bench reads as 0.324 ms of `turn-end-gate`
       concern time.
@@ -751,7 +763,9 @@ closed rather than left standing:
   green is a necessary condition and not the authoritative one; CI is. The
   comparable number that IS portable is the bundle delta, measured by building
   `dist/hooks/dispatch.js` at the merge base and at HEAD in one worktree:
-  +3,288 B / +0.211 %, against +19,110 B / +1.34 % for the previous pass.
+  +3,856 B / +0.248 %, against +19,110 B / +1.34 % for the previous pass.
+  (First recorded as +3,288 B from a mid-change build; corrected after the
+  last source edit — step 2.1's note carries how that was caught.)
 
   **The risk does not close, it narrows.** Its refusing direction — a shadow
   read wedging a turn — is closed by construction and by fixture: both layers
