@@ -336,7 +336,7 @@ tested on one consumer before anyone argues about routers or byte budgets.
       and now run against the shipped presets rather than a fixture.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-29 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-09-30 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -367,6 +367,36 @@ implementation created, so it belongs here rather than in the step's prose: a
 gate whose precondition fails silently is a gate that reports green while
 measuring nothing, which is the shape this repository's gate contract exists
 to refuse.
+
+**Re-review, 2026-09-30, on making the Phase 3 blocker machine-readable.**
+Triggered by an Acceptance-Criteria edit, and the three rows are re-read rather
+than re-dated.
+
+Risk 1 is **unchanged and dormant**. Phase 1 is closed, no relabel has been
+taken since, and nothing in this change touches the corpus or the protocol. It
+stays live for any future relabel on the terms already written.
+
+Risk 2 is **unchanged in likelihood and materially better contained.** Nothing
+is default-on and 3.1 is still open, so the hazard itself has not moved. What
+moved is the containment: the reason it stays off was prose under a phase
+heading, which no gate reads, and the dashboard consequently advertised zero
+blockers for this file. It is now a parsed `## Blockers` entry with an
+agent-checkable `Resolved when`, and both open boxes carry the inline
+`blocked-by:` marker. The mitigation no longer depends on a reader noticing a
+paragraph.
+
+Risk 3 is **unchanged**. Phase 2 shipped the distinction it asks for and the
+tests that pin it; nothing here touches `check_routing_coverage`.
+
+**No fourth row is added, and that is a decision rather than an omission.** The
+defect this change repairs — a live blocker invisible to every gate that reads
+blockedness — was real, and it is now closed in the same change, so a register
+row for it would record history rather than exposure. Its residual is that a
+later run reads this file's prose instead of running the probe the blocker
+names and concludes "still blocked" without measuring. That residual is
+addressed where it can act: the `Resolved when` field leads with the command
+and says in its own words that the state column is the authority, not the
+prose around it.
 
 ## Acceptance Criteria
 
