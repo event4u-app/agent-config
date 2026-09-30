@@ -35,11 +35,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import YAML, { parseDocument } from 'yaml';
 
-// read-surface: ingested-corpus — user-ingested knowledge chunks reach this
-// module from disk, not from a call site the read-surface scanner can see, so
-// the surface is declared here rather than inferred. The coverage verdict is
-// still read from the import below.
-import { sanitize_entry } from './_lib/retrieval_sanitize.js';
+import { sanitize_entry } from './_lib/retrieval_sanitize.js'; // read-surface: ingested-corpus
 import { LexicalIndex, tokenize as _lexTokenize } from './_lib/lexical_index.js';
 import {
     ensureIndex as _ftsEnsureIndex,
