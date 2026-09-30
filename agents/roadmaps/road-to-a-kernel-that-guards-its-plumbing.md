@@ -181,6 +181,18 @@ deny message names its own kill switch.
 > waits to validate now exists (`concern_sla_ms`), so what remains is time, not
 > work.
 >
+> **A ninth concern cannot be measured by this harness at all, and 3.3 owns
+> that too.** `one-question-per-ask` is `severity: blocking` on
+> `claude/pre_tool_use` behind a `tools:` filter for `AskUserQuestion` and its
+> five aliases. The bench's synthetic payload names a different tool, so the
+> dispatcher skips the concern in-process and it reports `not_measured` —
+> correctly, and that is the honest output rather than a zero. But a blocking
+> concern with no measurable p95 cannot receive a bound from this path, so 3.3
+> needs either a payload shaped to trigger it or an explicit decision that an
+> unmeasured blocking concern keeps the current 30 s timeout rather than
+> `sla_ms × 3`. Recorded here because the measurement step is where it became
+> visible and the flip is where it bites.
+>
 > **Resolved when** `concern_sla_ms` has been registered in
 > `hook-latency-budget.json` from repeated readings of the replay-OFF pass on
 > the reference runner — not one, for the reason 3.2's evidence records — and
