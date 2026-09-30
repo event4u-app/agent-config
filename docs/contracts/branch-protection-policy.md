@@ -195,7 +195,7 @@ required list: their names encode shard counts and runner labels, so any
 matrix change silently breaks a pinned required-check name — the same class
 of drift this reconciliation just removed.
 
-## Administrator recovery from a lockout — written, NOT yet rehearsed
+## Administrator recovery from a lockout — rehearsed 2026-09-30
 
 ```
 WITH `bypass_actors: []` THERE IS NO ESCAPE HATCH. A RULESET MISTAKE LOCKS
@@ -260,16 +260,50 @@ gh api repos/event4u-app/agent-config/rulesets/17749383 --jq '{enforcement, bypa
 ./scripts-run src/scripts/check_platform_anchor --files src/config/platform-anchor.json
 ```
 
-**What this procedure does NOT yet have, stated plainly rather than implied
-away: a rehearsal.** Step 0.2 of `road-to-bounded-approval-floor-waiver.md`
-requires it to have been executed once against a non-default-branch ruleset
-before it may be called tested, and that has not been done. Every step above is
-an admin API **write on repository protection settings** — a Hard-Floor action
-under `non-destructive-by-default`, reserved for the maintainer with explicit
-this-turn confirmation, exactly like the Enforce half above. An agent may write
-this procedure; an agent may not rehearse it. Until a maintainer does, treat it
-as a documented hypothesis: the commands are the right ones, and nobody has
-watched them work.
+**Rehearsed 2026-09-30, against throwaway ruleset `24261766`.** Step 0.2 of
+`road-to-bounded-approval-floor-waiver.md` requires this procedure to have been
+executed once against a non-default-branch ruleset before it may be called
+tested. It now has been, on the maintainer's explicit this-turn confirmation —
+the Hard-Floor reservation below is unchanged and was **satisfied, not waived**.
+
+The rehearsal created a ruleset targeting `refs/heads/rehearsal-lockout` with
+`bypass_actors: []`, which reproduced the lockout shape exactly
+(`current_user_can_bypass: never`), walked steps 2-5 against it by **both**
+routes, then deleted it. The default-branch ruleset `17749383` was read before
+and after and was identical on every field (`enforcement: active`,
+`bypass_actors: []`, `current_user_can_bypass: never`); it was never a write
+target. `check_platform_anchor` passed afterwards
+(`PASS_WITH_ACCEPTED_RISK`, the standing `strict_required_status_checks` waiver).
+
+What the run observed — four things, three of which the text above did not say:
+
+- **Step 3's `.state` warning holds, and understates the hazard.** The history
+  payload's top-level keys are `actor`, `state`, `updated_at`, `version_id` and
+  nothing else, so a top-level `.bypass_actors` reads **`null`**, not the empty
+  list "reads empty" implies. `null` is the worse reading: it is falsy in a shell
+  test the same way `[]` is, so a guard written against *empty* passes on a value
+  that actually means *this field does not exist at this level*.
+- **Route (a)'s single-field PUT is non-destructive.** After
+  `-f enforcement=evaluate` the rule count and `conditions.ref_name.include` were
+  unchanged, and the round trip back to `active` left the ruleset id and its
+  history intact — three versions accumulated across the rehearsal, none lost.
+  The preference stated above is now measured rather than reasoned.
+- **`current_user_can_bypass` does NOT move when enforcement does.** It stayed
+  `never` throughout `evaluate`. In a real lockout that field is the obvious
+  thing to re-check, and it will report the repair as failed while the repair
+  worked. Confirm route (a) by reading `enforcement`, never that field.
+- **Route (b) tolerates the read-only fields.** The `.state` payload from step 3
+  carries `id`, `source`, `source_type`, `updated_at` and
+  `current_user_can_bypass`; `gh api -X PUT --input` accepted it unedited and
+  restored `enforcement: active` from `evaluate`. No stripping step is needed,
+  and none should be added on suspicion.
+
+Every step above remains an admin API **write on repository protection settings**
+— a Hard-Floor action under `non-destructive-by-default`, reserved for the
+maintainer with explicit this-turn confirmation, exactly like the Enforce half
+above. An agent may write this procedure and, on that confirmation, rehearse or
+execute it; an agent may never reach it through a roadmap step, an autonomy
+setting or a standing instruction.
 
 ## The path-filter trap on a required check
 
