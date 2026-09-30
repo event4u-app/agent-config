@@ -666,6 +666,25 @@ jobs:
       - name: Every roadmap producer ends in the closure pass
         run: ./scripts-run src/scripts/lint_roadmap_producers
 
+      - name: Kill-switch table — one row per switch the hook layer reads
+        # road-to-a-stop-that-holds 1.4, added after an independent review found
+        # the table already stale: it published 28 == 28 and a merge had brought
+        # in a 29th switch. A SET comparison rather than a count, because one
+        # switch added plus one row left behind for a deleted switch cancel in a
+        # count and leave a reader chasing a variable nothing reads.
+        #
+        # HERE rather than in consistency.yml, and the reason is stated because
+        # the alternative looks more natural: that file is `WORKFLOW_PATH` in
+        # `check_kernel_edit_ratified`, so editing it demands a `verdict:
+        # ratified` artifact with two distinct providers — an owner-reserved bar
+        # for an ordinary new-gate step. This workflow already triggers on both
+        # `src/scripts/**` and `docs/**`, which is exactly the pair that can put
+        # the table and the tree out of step, so it is also the better home.
+        run: ./scripts-run src/scripts/check_kill_switch_table
+
+      - name: Kill-switch table — self-test
+        run: ./scripts-run src/scripts/check_kill_switch_table --self-test
+
       # `check_platform_anchor` is NOT wired here, and the reason is a platform
       # capability rather than a choice.
       #

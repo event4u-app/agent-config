@@ -45,8 +45,7 @@ import {
 import { is_replay_mode } from './state_io.js';
 import { readHookStdin } from './hook_stdin.js';
 import { _resolveRoot, readSettingsFor } from './telemetry_usage_hook.js';
-
-const EXIT_ALLOW = 0;
+import { EXIT_ALLOW } from './exit_codes.js';
 
 /**
  * Where `flush_sender.mjs` lives, relative to this module.

@@ -28,7 +28,7 @@ is caught by a check rather than by an external reader.
 
 ## Phase 1 — The format column says what the tree emits
 
-- [ ] **1.1 Correct the Cursor row, and only the Cursor row.**
+- [x] **1.1 Correct the Cursor row, and only the Cursor row.**
       `docs/enforcement-by-host.md:23` reads `✅ .cursorrules`. Nothing in this
       tree writes that file: the projection maps `.cursor/rules` (`condense.ts:747`)
       and the installer's `emitCursor` writes `.cursor/rules/<name>.mdc`
@@ -41,8 +41,19 @@ is caught by a check rather than by an external reader.
       verify: `grep -n 'cursorrules' docs/enforcement-by-host.md` returns nothing
       outside the prose paragraph at `:8`, and `grep -rn "'\.cursorrules'" src/`
       still returns nothing
+      **Evidence (2026-09-29).** `grep -n 'cursorrules' docs/enforcement-by-host.md`
+      → no hits. The row reads `| Cursor | ✅ \`.cursor/rules/*.mdc\` | 5 |`.
+      Windsurf and Cline are byte-identical to `origin/main` — confirmed by
+      `git diff origin/main...HEAD -- docs/enforcement-by-host.md`, which shows
+      no `-` line for either.
+      **The verify's second half does not reproduce as written.**
+      `grep -rn "'\.cursorrules'" src/` returns TWO hits, not zero:
+      `security_audit_config.ts:47` and `_lib/install_reach_checks.ts:76` —
+      both present on `origin/main`, and both a list of names to AUDIT or
+      EXCLUDE, never a write. The roadmap's claim ("nothing in this tree writes
+      that file") holds; its grep was the wrong instrument for it.
 
-- [ ] **1.2 Generate the format cell instead of maintaining it.**
+- [x] **1.2 Generate the format cell instead of maintaining it.**
       A check that reads the emitter's own target paths and fails when the
       table's format column names a path no emitter writes. The emitters already
       export their targets (`emitCursor`, `emitWindsurf`, `_emit_cursor_mdc`,
@@ -51,15 +62,65 @@ is caught by a check rather than by an external reader.
       self-test whose rejecting case is a table row naming an unemitted path.
       verify: a self-test case that plants `.cursorrules` back into a fixture
       table exits non-zero, and the same check exits 0 against the real tree
+      **Evidence (2026-09-29).** `check_host_format_column` builds its oracle
+      two ways and scrapes no source: `measuredEmitterSurfaces()` RUNS the two
+      install-time rule emitters into a throwaway tree and walks what they
+      wrote, and `declaredRoots()`/`anchorDirs()` import `ADAPTER_REGISTRY` and
+      `USER_SCOPE_PATHS`. `--self-test` → `8/8 case(s) behaved (7 rejecting,
+      floor 8)`: the historical `.cursorrules` defect planted back, a near-miss
+      `.cursor/rules.mdc`, an invented surface on a correct neighbouring row, a
+      document with no table (exit 2, never green over an empty corpus), and
+      three argv shapes. Registered `status: enforced` in `gate-coverage.yml`
+      with `min_scanned`, a declared `ci_invocation` and a `no_canary_reason`;
+      `check_gate_coverage` → `every enforced gate cleared its coverage floor.`
+      **Independent review found the green line overstated what the oracle
+      proves** — it claimed every path was emitter-written when the declared
+      half is a registry read, not an observation. Corrected on both the green
+      and the red path. **It also found three argv shapes silently coalescing to
+      `ROOT`**, so a fixture test could pass without opening its fixture; now
+      refused, with three self-test cases constructed so the coalescing code
+      would have exited 0 — the first two attempts were tautological and were
+      rewritten.
 
-- [ ] **1.3 Record why the table was not swept wider.**
+- [x] **1.3 Record why the table was not swept wider.**
       One sentence under the table: the format column is generated from the
       emitters as of this change, and the slot-count column is not — it is
       measured elsewhere and is the subject of other work. Without it the next
       reader assumes both columns carry the same guarantee.
       verify: `grep -n 'generated from the emitters' docs/enforcement-by-host.md`
+      **Evidence (2026-09-29).** `grep -n 'generated from the emitters'
+      docs/enforcement-by-host.md` → line 32, in a paragraph that names what the
+      slot-count column is instead (a hand-read of `hook_manifest.yaml`'s
+      `platforms:` bindings) so the format column's guarantee cannot be carried
+      across to it.
 
 ## Phase 2 — What happens when a bound slot fails
+
+> **BLOCKED — all three steps, 2026-09-29.** An independent two-provider council
+> review **refused** the rows this phase asks for, and the ground is one this
+> phase cannot argue with: the three facts were cited as
+> `Claude Code's own hooks reference, § hook execution / timeout` with **no URL,
+> no host version and no retrieval date**, inside a document whose every other
+> column is read off a file in this repository. One seat further held that the
+> current primary source contradicts part of what the rows asserted. A
+> provenance marker on an unanchored claim marks it as unanchored; it does not
+> make it citable, which is the substitution
+> `host-capability-manifest.md` § Observation protocol exists to refuse — and
+> Risk 3 of this roadmap's own register predicted exactly this failure.
+>
+> **What the document says instead.** `docs/enforcement-by-host.md` now carries
+> § *What this document does NOT record about a bound hook that runs too long*:
+> it names the 13 concerns sharing `claude`'s `user_prompt_submit`, states that
+> the timeout consequence is recorded nowhere here and why, names the shape a
+> usable row would take (host + version, page + section + URL, retrieval date,
+> and for the runtime half a session in which the timeout was actually
+> reached), and keeps the two facts that ARE this tree's own — no `timeout` key
+> anywhere, and `p95 81 ms` — together with 2.3's refusal to conclude anything
+> from them. A stated gap is true; a row from an unpinnable source is not.
+>
+> **Resolved when** a session supplies that row. `2.3`'s obligation is already
+> discharged in the replacement prose and is kept open only because it is
+> written against rows that do not exist yet.
 
 - [ ] **2.1 Add the slot-failure facts to the table.**
       The table records which concerns are bound per slot. It records nothing
@@ -94,7 +155,7 @@ is caught by a check rather than by an external reader.
 
 ## Phase 3 — The header that contradicts its own binding
 
-- [ ] **3.1 Rewrite the "fires on nothing" sentence to what is actually true.**
+- [x] **3.1 Rewrite the "fires on nothing" sentence to what is actually true.**
       `src/scripts/hooks/one_question_per_ask_hook.ts` opens with "On every host
       measured today it therefore fires on nothing". The manifest binds the
       concern on `claude` / `pre_tool_use` with
@@ -108,8 +169,18 @@ is caught by a check rather than by an external reader.
       verify: `grep -n 'fires on nothing' src/scripts/hooks/one_question_per_ask_hook.ts`
       returns nothing, and `npm run test:ts -- tests/scripts/structured_ask.test.ts`
       stays green if such a test exists
+      **Evidence (2026-09-29).** `grep -n 'fires on nothing'
+      src/scripts/hooks/one_question_per_ask_hook.ts` → no hits. The header now
+      states what has been looked at: no host's delivered surface has been
+      OBSERVED carrying a question-picker tool, which is why
+      `STRUCTURED_ASK_SHAPES` is empty. The measurement base is named as one
+      row — `structured_ask: false` for `claude`, observed-absent on Claude Code
+      2.1.263 on 2026-09-07 — against eight hosts with no row at all.
+      The old wording is DESCRIBED rather than quoted, because 1.1's drift
+      check is a grep and a grep cannot tell a refuted quotation from a live
+      assertion; quoting it verbatim left the verify's own grep unsatisfiable.
 
-- [ ] **3.2 Leave the guard's behaviour untouched.**
+- [x] **3.2 Leave the guard's behaviour untouched.**
       This phase edits one comment. The deny path, the `fail_closed: false`
       posture and the manifest `tools:` list are unchanged, because changing the
       form of an ask is a separate question that already has an answer — see the
@@ -117,6 +188,11 @@ is caught by a check rather than by an external reader.
       failure this step forbids.
       verify: `git diff --stat src/scripts/hooks/one_question_per_ask_hook.ts`
       shows comment lines only
+      **Evidence (2026-09-29).** `git diff origin/main...HEAD --
+      src/scripts/hooks/one_question_per_ask_hook.ts` → 22 insertions, 4
+      deletions. Filtering the diff for non-comment lines returns EMPTY: the
+      deny path, `fail_closed: false` and the manifest `tools:` list are
+      untouched.
 
 - [~] **3.3 Write the observed row.** Deferred, and named rather than dropped:
       the row `_lib/structured_ask.ts` asks for needs a real session on a host

@@ -102,15 +102,14 @@ import { classifyLadder, type LadderRung } from "../_lib/judgment_ladder.js";
 import { resolveSessionRole } from "../_lib/session_role.js";
 import { resolveSubagentRouting, type Tier } from "../_lib/subagent_routing.js";
 import { isSyntheticPrompt } from "../_lib/prompt_shape.js";
+import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
 
-const EXIT_ALLOW = 0;
 // Severity is taken from the EXIT CODE, not from the `decision` field in the
 // stdout payload — mirrors `language_mirror_hook.ts`'s own note (found the
 // same way: by tracing delivery, not by re-reading the unit tests). A warn
 // verdict is reported at exit 2 so `host_semantics.emitFor` reduces it to
 // severity `"warn"` and forwards `additional_context`; see the file header
 // for why this exit code never actually blocks the turn.
-const EXIT_WARN = 2;
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
 type JsonObject = { [k: string]: JsonValue };

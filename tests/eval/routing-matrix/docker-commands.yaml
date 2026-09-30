@@ -1,8 +1,13 @@
 rule: docker-commands
 positives:
   - prompt: "Run php artisan migrate in the app container and show me the output."
+    expected_skills: [docker]
   - prompt: "Should composer install run on the host or inside the container?"
+    expected_skills: [docker]
   - prompt: "Führe bitte docker compose up aus und prüfe die Logs des App-Containers."
+    expected_skills: [docker]
 near_misses:
   - prompt: "Run the PHPUnit suite for the billing package and report failures."
+    expected_skills: []
   - prompt: "The container keeps restarting after deployment - can you find out what crashes?"
+    expected_skills: [docker, systematic-debugging]

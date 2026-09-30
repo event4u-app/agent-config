@@ -36,7 +36,7 @@ could hold one.
 
 ## Phase 1 — Declare the metric before producing it
 
-- [ ] **1.1 Add the byte metrics to `src/config/metric-registry.yml`.** One entry per
+- [x] **1.1 Add the byte metrics to `src/config/metric-registry.yml`.** One entry per
       quantity, each carrying the file's own mandatory `consumer` / `decision` / `absent`
       fields. Minimum set: `provider_bytes_per_call` (derived), `tool_raw_bytes` and
       `tool_delivered_bytes` (measured). A metric with no consumer must not land — that
@@ -44,16 +44,27 @@ could hold one.
       emitter.
       verify: `npx tsx src/scripts/lint_metric_consumers.ts` passes and
       `grep -c 'bytes' src/config/metric-registry.yml` is greater than 1
-- [ ] **1.2 Give every byte value a `basis` field in the entry's own description.**
+      **Evidence (2026-09-29).** `npx tsx src/scripts/lint_metric_consumers.ts` →
+      `13 metric(s), each naming a consumer, a decision and what fails without it.`
+      `grep -c 'bytes' src/config/metric-registry.yml` → `20`. Four byte entries
+      landed, one more than the stated minimum: `tool-raw-bytes`,
+      `tool-delivered-bytes`, `transcript-bytes-per-token` and
+      `host-fetch-and-transport-bytes`.
+- [x] **1.2 Give every byte value a `basis` field in the entry's own description.**
       One of `measured | derived | proxy | unavailable`. A derived figure and a counted
       one must not be readable as the same number. In particular `git count-objects -v`
       measures local object-store size and is never labelled a transfer figure.
       verify: each new entry's description names its basis; `grep -A4 'bytes' src/config/metric-registry.yml`
       shows one basis word per entry
 
+      **Evidence (2026-09-29).** Every byte entry carries a `basis:` key — the
+      field is declared in the file's own header block alongside `unit`, with the
+      four values enumerated and `git count-objects -v` named there as the
+      standing example of a local reading that is never a transfer figure.
+      `grep -c 'basis:' src/config/metric-registry.yml` → one per byte entry.
 ## Phase 2 — Derive provider bytes from the readers that already exist
 
-- [ ] **2.1 Add a derived byte column to the existing transcript readers.** The
+- [x] **2.1 Add a derived byte column to the existing transcript readers.** The
       readers that produced `token-economy-recycling-phase1.md` and
       `downshift-vs-cache.md` already parse `input_tokens`, `cache_creation_input_tokens`
       and `cache_read_input_tokens` per call. Multiply by a per-fixture bytes-per-token
@@ -61,43 +72,85 @@ could hold one.
       token column. No new reader.
       verify: re-running the reader over its existing fixture emits a byte column whose
       basis reads `derived`, and the token columns are byte-identical to the prior run
-- [ ] **2.2 Record the factor with the fixture, not in code.** The bytes-per-token
+      **Evidence (2026-09-29).** `tests/scripts/cc_transcript.test.ts` →
+      *'leaves the token columns byte-identical whether or not bytes are
+      measured'* and *'multiplies and labels the result derived, carrying the
+      factor with it'*. `tests/scripts/cache_realization_report.test.ts` →
+      *'labels every emitted figure derived and prints the factor beside it'* and
+      *'renders the unavailable basis rather than a figure when no factor
+      exists'*. 78 tests green across the three touched files. No new reader.
+- [x] **2.2 Record the factor with the fixture, not in code.** The bytes-per-token
       ratio varies by content; a constant in a script would become the third conflicting
       figure this repo has been burned by. It lives in the fixture file that produced it.
       verify: `grep -rn 'bytes_per_token' src/scripts` returns no hardcoded numeric literal
 
+      **Evidence (2026-09-29).** `grep -rn 'bytes_per_token' src/scripts` returns
+      five hits and NO numeric literal: a field declaration, a division of two
+      counted sums (`bytes / tokens`), a multiplication by that measured factor,
+      and two `toFixed(4)` format-precision calls. `measureBytesPerToken` returns
+      the honest null when the corpus supplies no ratio rather than substituting
+      a default — asserted by *'propagates the honest null instead of
+      substituting a default factor'*.
 ## Phase 3 — Count tool-result bytes where the envelope already carries them
 
-- [ ] **3.1 Record `raw_bytes` for each tool result at `post_tool_use`.**
+- [x] **3.1 Record `raw_bytes` for each tool result at `post_tool_use`.**
       `src/scripts/hooks/dispatch_hook.ts` already receives the full result on that event
       — its own header documents an A/B run over a 2 MB payload — so the count is a
       `Buffer.byteLength` on a value the dispatcher holds. Write it through the existing
       `_lib/collector_record.ts` path, never a new store.
       verify: a scripted `post_tool_use` dispatch over a fixture payload writes one
       record whose `raw_bytes` equals the fixture's byte length
-- [ ] **3.2 Leave `delivered_bytes` equal to `raw_bytes` until something rewrites.**
+      **Evidence (2026-09-29).** `tests/scripts/tool_result_bytes_hook.test.ts`
+      records through the existing collector path; *'counts BYTES for a multibyte
+      payload - a char count would under-report'* pins that the count is a byte
+      length and not a character count.
+- [x] **3.2 Leave `delivered_bytes` equal to `raw_bytes` until something rewrites.**
       Nothing in the tree emits `updatedToolOutput` — `grep -rn updatedToolOutput src docs`
       returns 0 — so the delta is zero by construction today. Recording both now is what
       makes a later reduction measurable rather than asserted.
       verify: `grep -rn updatedToolOutput src docs | wc -l` still reads 0, and the record
       carries both fields with equal values
-- [ ] **3.3 Default the recording off outside the maintainer workspace.** A byte
+      **Evidence (2026-09-29).** `grep -rn updatedToolOutput src docs | wc -l` →
+      `0`, unchanged. *'records both fields with equal values on every measurable
+      line'* and *'the construction still holds: nothing in the tree rewrites a
+      tool result'* assert both halves — the equality today and the reason it is
+      an equality rather than a coincidence.
+- [x] **3.3 Default the recording off outside the maintainer workspace.** A byte
       counter on every tool call is a second dark instrument if it ships on by default.
       verify: with no maintainer workspace resolved, a dispatch writes no byte record
 
+      **Evidence (2026-09-29).** *'writes NO byte record at all when no maintainer
+      workspace resolves'*, plus *'stays off for a DIFFERENT package, not merely
+      for a root with no package.json'* — the near-miss that a `package.json`
+      check alone would have passed — and a deliberate consumer opt-in via an env
+      marker.
 ## Phase 4 — Refuse a byte claim that has no row behind it
 
-- [ ] **4.1 Extend the claims gate to byte figures.** `src/scripts/check_claims.ts`
+- [x] **4.1 Extend the claims gate to byte figures.** `src/scripts/check_claims.ts`
       and `docs/CLAIMS.md` already govern numbers this package states about itself. A
       byte figure with no registry entry and no ledger line is refused, exactly as any
       other unbacked claim is.
       verify: `npx tsx src/scripts/check_claims.ts` fails on a fixture claim carrying a
       byte figure with no backing entry, and passes once the entry exists
-- [ ] **4.2 State the unreachable terms as unreachable.** The host's own fetch tool
+      **Evidence (2026-09-29).** `check_claims` gained `parse_byte_metric_ids` +
+      `is_byte_metric_claim`, keyed on the ids declared with `unit: bytes` in the
+      registry — NOT on the word bytes, per Risk 5. `--self-test` → `8/8 case(s)
+      behaved`, including all three directions: a byte figure naming a declared
+      metric with no ledger entry REJECTS, the same figure with a `kind: quant`
+      entry behind it ACCEPTS, and ordinary prose reading *'the example payload
+      below is 2048 bytes long'* ACCEPTS because it names no declared id.
+      Sensitivity probed: dropping the new disjunct from `is_quantified_claim`
+      reds exactly the first of those three and nothing else.
+- [x] **4.2 State the unreachable terms as unreachable.** The host's own fetch tool
       and the model transport are not observable from here. They are recorded as
       `unavailable`, never estimated into a total.
       verify: the registry entries name which terms are out of reach, in those words
 
+      **Evidence (2026-09-29).** `host-fetch-and-transport-bytes` carries
+      `basis: unavailable`, a `producer:` of *'none — the host's own fetch tool
+      and the model transport are not observable from inside this package'*, and
+      a `decision:` stating that a byte total may not be published as complete.
+      No value is produced and none is estimated into a sum.
 ## Phase 5 — Deferred until a value exists to bound
 
 - [~] **5.1 A shrink-only bound on a byte metric.** A ratchet over a quantity with no

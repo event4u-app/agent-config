@@ -1,8 +1,13 @@
 rule: senior-engineering-discipline
 positives:
   - prompt: "Implement the CSV import endpoint with proper validation."
+    expected_skills: [api-endpoint]
   - prompt: "Add a seeder for the demo workspace data."
+    expected_skills: [laravel]
   - prompt: "Schreib die Migration für die neue Spalte und den Seeder gleich dazu."
+    expected_skills: [laravel-migration, laravel]
 near_misses:
   - prompt: "Explain how the retry backoff in the mailer works."
+    expected_skills: []
   - prompt: "Rename the helper module to match the naming convention."
+    expected_skills: [code-refactoring, standards-from-config]

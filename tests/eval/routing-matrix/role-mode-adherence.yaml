@@ -1,8 +1,13 @@
 rule: role-mode-adherence
 positives:
   - prompt: "Set active_role to reviewer for this session."
+    expected_skills: []
   - prompt: "Why did the reply end with a role-mode marker?"
+    expected_skills: []
   - prompt: "Was bedeutet der role-mode Marker am Ende deiner Antwort?"
+    expected_skills: []
 near_misses:
   - prompt: "Switch to a stricter review posture for this diff."
+    expected_skills: [code-review, adversarial-review]
   - prompt: "Update the user roles table in the admin panel."
+    expected_skills: []

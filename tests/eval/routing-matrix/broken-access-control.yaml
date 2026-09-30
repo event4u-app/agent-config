@@ -1,8 +1,13 @@
 rule: broken-access-control
 positives:
   - prompt: "Add an endpoint that returns the current user's invoices."
+    expected_skills: [api-endpoint, authz-review]
   - prompt: "Users can pass any id into findById here - is that an IDOR?"
+    expected_skills: [authz-review, security-audit]
   - prompt: "Bitte prüfe die Authorization im neuen Admin-Controller."
+    expected_skills: [authz-review]
 near_misses:
   - prompt: "Harden the password hashing and bump the cost factor."
+    expected_skills: [security]
   - prompt: "Encrypt the backup archives before uploading them to S3."
+    expected_skills: [security]

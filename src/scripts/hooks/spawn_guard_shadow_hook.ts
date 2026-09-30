@@ -55,8 +55,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { appendLedgerLine, openRecordStats, resolveConsumerRoot } from './subagent_ledger_hook.js';
 import { readHookStdin } from './hook_stdin.js';
-
-const EXIT_ALLOW = 0;
+import { EXIT_ALLOW } from './exit_codes.js';
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
 type JsonObject = { [k: string]: JsonValue };

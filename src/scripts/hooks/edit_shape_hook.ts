@@ -86,11 +86,10 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
 import { atomic_write_json } from './state_io.js';
+import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
 
-const EXIT_ALLOW = 0;
 // Severity is taken from the EXIT CODE, not from the `decision` field in the
 // stdout payload — see the file header for why this never blocks on `claude`.
-const EXIT_WARN = 2;
 
 /** Committed threshold (roadmap 5.1): minimum current line count of the
  *  replaced file before this concern has anything to say. */

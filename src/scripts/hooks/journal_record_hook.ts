@@ -102,8 +102,7 @@ import {
 } from '../_lib/runtime_journal.js';
 import { readHookStdin } from './hook_stdin.js';
 import { is_replay_mode } from './state_io.js';
-
-const EXIT_ALLOW = 0;
+import { EXIT_ALLOW } from './exit_codes.js';
 
 /** The `.agent-settings.yml` section under `hooks:` that arms this concern. */
 export const SETTINGS_SECTION = 'runtime_journal';

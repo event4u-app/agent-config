@@ -1,10 +1,24 @@
 rule: php-coding
 positives:
   - prompt: "Run phpstan on the changed files and fix the level 8 errors."
+    expected_skills: [quality-tools]
   - prompt: "Run ecs --fix on the diff before pushing."
+    expected_skills: [quality-tools]
   - prompt: "Bitte behebe die phpstan-Fehler im Payment-Modul."
+    expected_skills: [quality-tools]
   - prompt: "Refactor this class to use early returns and strict types."
+    expected_skills: [php-coder, code-refactoring]
     open_files: ["app/Services/InvoiceService.php"]
 near_misses:
   - prompt: "Fix the type errors the TypeScript compiler reports in the CLI."
+    expected_skills: []
   - prompt: "Tighten the static analysis rules for our Python tooling."
+    expected_skills: []
+  - prompt: "Our FastAPI worker fires 40 HTTP calls one after another and takes 9 seconds — how do I run them concurrently with a 2s cap each?"
+    expected_skills: [async-python-patterns]
+  - prompt: "Ich habe drei Coroutinen, die parallel laufen sollen, aber wenn eine crasht, haengen die anderen fest. Wie raeume ich das sauber auf?"
+    expected_skills: [async-python-patterns]
+  - prompt: "I need to call a blocking psycopg2 query from inside an async request handler without freezing the event loop — what is the right way?"
+    expected_skills: [async-python-patterns]
+  - prompt: "Ctrl-C on my scraper leaves half the tasks running and the process hangs for 30 seconds before it dies. How do I get clean shutdown?"
+    expected_skills: [async-python-patterns]

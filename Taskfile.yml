@@ -164,6 +164,8 @@ tasks:
       - task: check-token-optimizer-freshness
       - task: check-portability
       - task: check-placeholder-drift
+      - task: lint-deny-text
+      - task: lint-exit-codes
       - task: check-input-references
       - task: check-argument-hint
       - task: check-inputs-parity
@@ -437,6 +439,7 @@ tasks:
       - task: check-mcp-doc-drift
       - task: check-enforcement-matrix
       - task: check-read-surface-coverage
+      - task: check-host-format-column
       - task: lint-readme-size
       - task: lint-readme-jargon
       - task: lint-readme-serial-comma

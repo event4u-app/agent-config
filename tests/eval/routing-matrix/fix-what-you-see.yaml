@@ -1,8 +1,13 @@
 rule: fix-what-you-see
 positives:
   - prompt: "CI is red on this branch and the failing test is not mine."
+    expected_skills: [github-ci, systematic-debugging]
   - prompt: "The type check fails after your last edit - whose test is that?"
+    expected_skills: [systematic-debugging]
   - prompt: "There is a regression in the export job and nobody owns that file."
+    expected_skills: [systematic-debugging, bug-analyzer]
 near_misses:
   - prompt: "Add a new integration test for the invoice exporter."
+    expected_skills: [test-case-discovery, test-driven-development]
   - prompt: "Explain how the CI pipeline is structured across the workflows."
+    expected_skills: [github-ci]

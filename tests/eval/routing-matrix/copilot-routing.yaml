@@ -1,8 +1,13 @@
 rule: copilot-routing
 positives:
   - prompt: "Can you tune how Copilot reviews our pull requests?"
+    expected_skills: [copilot-config]
   - prompt: "Update copilot-instructions.md so suggestions follow our commit rules."
+    expected_skills: [copilot-config, copilot-agents-optimization]
   - prompt: "Wie konfiguriere ich Copilot, damit es unsere Namenskonventionen vorschlägt?"
+    expected_skills: [copilot-config]
 near_misses:
   - prompt: "Configure the AI pair programmer plugin in VS Code."
+    expected_skills: [copilot-config]
   - prompt: "How do I tune inline completion behavior in my editor?"
+    expected_skills: [copilot-config]

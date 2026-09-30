@@ -16,9 +16,17 @@ import {
     added_entries,
     bump_session,
     classify_target,
+    changedKeys,
+    classCVerdict,
+    findPackageRoot,
     count_entries,
     decide,
 } from '../../../src/scripts/hooks/block_config_weakening.js';
+import {
+    buildSettingsClassIndex,
+    classOfPath,
+    parseSettingsClassRows,
+} from '../../../src/shared/settingsClasses.js';
 
 describe('block_config_weakening — classify_target', () => {
     it('classifies allowlists as the blocking surface', () => {
@@ -126,5 +134,165 @@ describe('block_config_weakening — bump_session', () => {
         fs.mkdirSync(path.dirname(f), { recursive: true });
         fs.writeFileSync(f, 'not json', 'utf-8');
         expect(bump_session(root, 's1', 'a.json', 2)).toBe(2);
+    });
+});
+
+// Class C: the key is the unit, never the file.
+//
+// road-to-a-kernel-that-guards-its-plumbing 2.1. The guard fences a POLICY DIAL
+// inside a settings file and leaves every other key in the same file writable,
+// which is why every case below pairs a refusal with the allow that proves the
+// fence is per-key and not per-file.
+describe('block_config_weakening — class-c', () => {
+    const REAL_CONTRACT = path.resolve(__dirname, '..', '..', '..', 'docs', 'contracts', 'settings-classes.md');
+    const index = buildSettingsClassIndex(parseSettingsClassRows(fs.readFileSync(REAL_CONTRACT, 'utf-8')));
+
+    it('classifies project settings files and nothing that merely shares a basename', () => {
+        expect(classify_target('.agent-settings.yml')).toBe('class-c');
+        expect(classify_target('some/project/.claude/settings.json')).toBe('class-c');
+        // A bare `settings.json` is a common filename; fencing it on the
+        // basename alone would refuse files carrying no settings key at all.
+        expect(classify_target('src/server/settings.json')).toBeNull();
+        expect(classify_target('README.md')).toBeNull();
+    });
+
+    it('refuses an edit that flips a Class C key', () => {
+        const before = 'hooks:\n  injection_scan:\n    enabled: false\n';
+        const reason = classCVerdict(
+            { old_string: 'enabled: false', new_string: 'enabled: true' },
+            before,
+            '.agent-settings.yml',
+            index,
+        );
+        expect(reason).not.toBeNull();
+        expect(reason).toContain('hooks.injection_scan.enabled');
+    });
+
+    it('allows an edit that changes only a Class A key in the same file', () => {
+        const before = 'personal:\n  play_by_play: false\n  minimal_output: true\n';
+        expect(
+            classCVerdict(
+                { old_string: 'play_by_play: false', new_string: 'play_by_play: true' },
+                before,
+                '.agent-settings.yml',
+                index,
+            ),
+        ).toBeNull();
+    });
+
+    it('resolves a child of a Class C map through its nearest classified ancestor', () => {
+        // `personal.autonomy` is C; a leaf under a C map has no row of its own
+        // and must still resolve to C rather than to "unclassified".
+        expect(classOfPath(index, 'personal.autonomy')).toBe('C');
+    });
+
+    // Fail-closed, both shapes. Each would otherwise be a bypass that needs no
+    // authorisation: make one file unreadable for the length of one tool call.
+    it('refuses every changed key when the class contract cannot be read', () => {
+        const reason = classCVerdict(
+            { old_string: 'play_by_play: false', new_string: 'play_by_play: true' },
+            'personal:\n  play_by_play: false\n',
+            '.agent-settings.yml',
+            null,
+        );
+        expect(reason).not.toBeNull();
+        expect(reason).toContain('fail-closed');
+    });
+
+    it('refuses an edit whose result does not parse as settings', () => {
+        const reason = classCVerdict(
+            { old_string: 'enabled: false', new_string: 'enabled: [unclosed' },
+            'hooks:\n  injection_scan:\n    enabled: false\n',
+            '.agent-settings.yml',
+            index,
+        );
+        expect(reason).not.toBeNull();
+        expect(reason).toContain('does not parse');
+    });
+
+    it('allows when the edit would not apply at all', () => {
+        expect(
+            classCVerdict(
+                { old_string: 'not present anywhere', new_string: 'x' },
+                'personal:\n  play_by_play: false\n',
+                '.agent-settings.yml',
+                index,
+            ),
+        ).toBeNull();
+    });
+
+    it('diffs leaves, not interior nodes — a changed child reports the child', () => {
+        expect(changedKeys({ a: { b: 1, c: 2 } }, { a: { b: 9, c: 2 } })).toEqual(['a.b']);
+        expect(changedKeys({ a: { b: 1 } }, {})).toEqual(['a.b']);
+    });
+});
+
+// The three defects an independent review found before this landed.
+describe('block_config_weakening — class-c, the reviewed defects', () => {
+    const REAL_CONTRACT = path.resolve(__dirname, '..', '..', '..', 'docs', 'contracts', 'settings-classes.md');
+    const index = buildSettingsClassIndex(parseSettingsClassRows(fs.readFileSync(REAL_CONTRACT, 'utf-8')));
+
+    // The guard must evaluate the edit that will actually run. Modelling only
+    // the first occurrence let a `replace_all` edit whose SECOND occurrence is
+    // the Class C one pass while the real edit changed it.
+    it('models replace_all — a later occurrence being the Class C one is caught', () => {
+        const before = [
+            'personal:',
+            '  play_by_play: false',
+            'hooks:',
+            '  injection_scan:',
+            '    enabled: false',
+            '',
+        ].join('\n');
+        const ti = { old_string: 'false', new_string: 'true', replace_all: true };
+        const reason = classCVerdict(ti, before, '.agent-settings.yml', index);
+        expect(reason).not.toBeNull();
+        expect(reason).toContain('hooks.injection_scan.enabled');
+
+        // Without the flag only the first occurrence changes, and the first is
+        // a Class A key — so the same strings must be ALLOWED. This pair is
+        // what makes the case about `replace_all` rather than about the keys.
+        expect(
+            classCVerdict({ old_string: 'false', new_string: 'true' }, before, '.agent-settings.yml', index),
+        ).toBeNull();
+    });
+
+    it('refuses a replace_all value it cannot interpret', () => {
+        const reason = classCVerdict(
+            { old_string: 'false', new_string: 'true', replace_all: 'yes' as unknown as boolean },
+            'personal:\n  play_by_play: false\n',
+            '.agent-settings.yml',
+            index,
+        );
+        expect(reason).not.toBeNull();
+        expect(reason).toContain('cannot interpret');
+    });
+
+    // The guard reads the contract out of the package it is running from. A
+    // fixed `..` hop count resolves a different root from every layout but the
+    // source tree — and the bundle is one of those layouts.
+    it('finds the package root by the contract it carries, not by a hop count', () => {
+        const here = path.resolve(__dirname, '..', '..', '..', 'src', 'scripts', 'hooks', 'x.ts');
+        const root = findPackageRoot(here);
+        expect(root).not.toBeNull();
+        expect(fs.existsSync(path.join(root as string, 'docs', 'contracts', 'settings-classes.md'))).toBe(true);
+    });
+
+    it('returns null rather than a default root when no ancestor carries the contract', () => {
+        const empty = fs.mkdtempSync(path.join(os.tmpdir(), 'no-contract-'));
+        try {
+            expect(findPackageRoot(path.join(empty, 'a', 'b', 'c.ts'))).toBeNull();
+        } finally {
+            fs.rmSync(empty, { recursive: true, force: true });
+        }
+    });
+
+    // Packaging regression: the fence is only reachable in a consumer install
+    // while the contract ships. Dropping it from `files[]` would leave the
+    // guard permanently fail-closed there — refusing every settings edit.
+    it('ships the class contract, so a consumer install can read it', () => {
+        const pkgPath = path.resolve(__dirname, '..', '..', '..', 'package.json');
+        const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8')) as { files: string[] };
+        expect(pkg.files).toContain('docs/contracts/settings-classes.md');
     });
 });

@@ -54,9 +54,7 @@ import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { readHookStdin } from "./hook_stdin.js";
-
-const EXIT_ALLOW = 0;
-const EXIT_WARN = 2;
+import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
 type JsonObject = { [k: string]: JsonValue };

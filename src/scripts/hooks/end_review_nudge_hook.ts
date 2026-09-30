@@ -253,6 +253,7 @@ import {
 import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
 import { atomic_write_json, is_replay_mode } from './state_io.js';
+import { EXIT_WARN } from './exit_codes.js';
 
 /** Default fire threshold — the council's high-risk shape (roadmap 5.1). */
 export const MUTATION_LINE_THRESHOLD = 50;
@@ -319,7 +320,6 @@ export function isSafeTranscriptPath(
 // reported at exit 2 so `host_semantics.emitFor` reduces it to severity
 // `"warn"` and forwards `additional_context`; see the file header for why
 // this exit code never actually blocks the turn on `claude`.
-const EXIT_WARN = 2;
 
 /** One `git diff --numstat` row: added/deleted line counts + the path. */
 export interface NumstatRow {

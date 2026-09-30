@@ -1,9 +1,14 @@
 rule: user-interrupt-priority
 positives:
   - prompt: "Stop that build and look at the production alert first."
+    expected_skills: [incident-commander]
   - prompt: "Mach stattdessen erst den Security-Patch fertig."
+    expected_skills: []
   - prompt: "Process the whole roadmap without pausing between phases."
+    expected_skills: [roadmap-management]
     command: "roadmap:process-full"
 near_misses:
   - prompt: "Pause the deployment until the database backup finishes."
+    expected_skills: []
   - prompt: "Prioritize the bug list for tomorrow's standup."
+    expected_skills: [rice-prioritization]

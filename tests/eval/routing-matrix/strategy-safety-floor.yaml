@@ -1,8 +1,29 @@
 rule: strategy-safety-floor
 positives:
   - prompt: "What's our moat against the incumbent platforms?"
+    expected_skills: [competitive-moat-analysis]
   - prompt: "Should we enter the DACH market next year or wait?"
+    expected_skills: [market-entry-analysis]
   - prompt: "Wie schärfen wir unser positioning gegenüber dem Marktführer?"
+    expected_skills: [positioning-strategy, competitive-moat-analysis]
 near_misses:
   - prompt: "Draft the quarterly board update on engineering velocity."
+    expected_skills: []
   - prompt: "Summarize the customer interviews from last week's research sprint."
+    expected_skills: [discovery-interview, voc-extract]
+  - prompt: "The 180k Acme deal has slipped two quarters and I still cannot name who signs it. Do we keep working it or drop it?"
+    expected_skills: [deal-qualification-meddic]
+  - prompt: "We have 60 accounts sitting on the starter tier. Help me work out which ones to move up and what signal should trigger that."
+    expected_skills: [expansion-playbook]
+  - prompt: "My commit number has missed by 30 percent three quarters running. How do I decide what genuinely belongs in commit?"
+    expected_skills: [forecast-accuracy]
+  - prompt: "Zwischen Demo und Angebot fallen uns 70 Prozent der Deals raus. Wo genau ist das Leck und wie definieren wir die Stufen sauber?"
+    expected_skills: [pipeline-strategy]
+  - prompt: "Two engineers quit this quarter and the rest are on call every other week. We still owe the roadmap — what do I cut?"
+    expected_skills: [throughput-vs-morale-tradeoff]
+  - prompt: "A senior backend dev just asked for a 15k raise and we have no levels defined at all. How do I build the bands before I answer him?"
+    expected_skills: [comp-banding]
+  - prompt: "I have 11 direct reports and keep cancelling the weekly 30-minute slots whenever a release gets tight. What should I change?"
+    expected_skills: [one-on-one-cadence]
+  - prompt: "Bau mir base, upside und downside fuer die naechsten acht Quartale — was passiert eigentlich, wenn sich das Wachstum halbiert?"
+    expected_skills: [scenario-modeling]

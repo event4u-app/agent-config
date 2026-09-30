@@ -90,6 +90,37 @@ behaviour only if it catches strictly more than 2 of 4 **and** raises zero
 findings for `DECL`. Anything less is a null, and a null is recorded as an
 outcome rather than as a failure of the roadmap.
 
+## Two cases the fixture had no directory for
+
+Added by `road-to-a-probe-that-cannot-report-a-false-green`, and written here
+**before** the probe changed, so the reading below is a prediction rather than a
+transcription of what the new code happened to do.
+
+| Directory | What it is | Pre-change reading, measured |
+|---|---|---|
+| `reference-no-handles/` | D6 — `reference/index.html` with every `data-probe-id` removed. The capture collects **zero** nodes. | Five rows of `status: "exercised"`, `findings: 0`, and `structure_gate: "passed"`. A comparison that never happened, reported as a clean one. |
+| `variant-added/` | D7 — the reference plus one handle it does not carry, `extra-badge`. Stylesheet and script byte-identical to the reference. | **Zero findings.** The evaluation loop iterated `reference.nodes` only, so a node present only in the target was unreachable. |
+
+Both pre-change readings were measured on the frozen observations at the branch
+point and are recorded in the roadmap's Phase 1 evidence. Neither is a bug in
+the fixture: they are the two states the probe's own header forbids and had
+never been given.
+
+- D6 — the expected reading after the change is five `status: "not_applicable"`
+  rows carrying `findings: null` and a reason naming the **handover** (no
+  `data-probe-id` in the reference) rather than the host, with
+  `structure_gate: "stopped"` and `reference_nodes: 0`. A row reading
+  `exercised` for this input is a test failure.
+- D7 — the expected reading after the change is exactly **one** `structure` finding on `extra-badge`, absent in the reference and present in the target,
+  with every other dimension still at zero and `structure_gate: "stopped"`. A
+  wrapper node a framework port inserts carries no handle and must still
+  produce nothing.
+
+`variant-renamed/` changes reading as a consequence, and the change is intended:
+a rename is an omission **and** an addition, so D5 now produces two `structure`
+findings — `status-badge` absent, `status-chip` added — where it previously
+produced one. The probe could see half of a rename; it can now see both halves.
+
 ## Measured baseline for the blocked demotion
 
 Phase 4 of the roadmap — demoting the mandatory screenshot step — is blocked on

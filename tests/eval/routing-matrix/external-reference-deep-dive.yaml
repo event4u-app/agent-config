@@ -1,8 +1,13 @@
 rule: external-reference-deep-dive
 positives:
   - prompt: "Analyze github.com/acme/agent-kit and tell me how their installer works."
+    expected_skills: []
   - prompt: "Treat this reference repo as the template for our layout."
+    expected_skills: []
   - prompt: "Schau dir github.com/foo/bar genauer an - wie lösen die das Routing?"
+    expected_skills: []
 near_misses:
   - prompt: "Compare our installer with the notes I pasted below."
+    expected_skills: []
   - prompt: "Summarize the README I've copied into the description."
+    expected_skills: []

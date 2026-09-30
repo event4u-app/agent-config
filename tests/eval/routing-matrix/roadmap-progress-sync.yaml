@@ -1,12 +1,17 @@
 rule: roadmap-progress-sync
 positives:
   - prompt: "Flip the checkbox for the step we just finished."
+    expected_skills: [roadmap-management]
     open_files: ["agents/roadmaps/archive/road-to-tested-routing.md"]
   - prompt: "Continue with the next open step of the plan."
+    expected_skills: [roadmap-management]
     command: "/roadmap:process-step"
   - prompt: "Bitte hake den erledigten Schritt in der Roadmap ab."
+    expected_skills: [roadmap-management]
     open_files: ["agents/roadmaps/road-to-renewal-foundation.md"]
 near_misses:
   - prompt: "Update the project plan document with the new milestones."
+    expected_skills: [roadmap-writing, roadmap-management]
   - prompt: "Regenerate the docs index after the restructuring."
+    expected_skills: []
     open_files: ["docs/roadmap-overview.md"]

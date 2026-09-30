@@ -102,7 +102,12 @@ import {
     resolveLeanProjectionHosts,
 } from '../_lib/lean_projection_mode.js';
 import { enforcement_class_from_frontmatter } from '../_lib/obligation_frequency.js';
-import { appendDelivered, stamp, type DeliveredRow } from '../_lib/obligations.js';
+import {
+    appendDelivered,
+    stamp,
+    type DeliveredRow,
+    type WriterInput,
+} from '../_lib/obligations.js';
 import {
     loadRuleBody,
     loadRouter,
@@ -110,9 +115,7 @@ import {
     selectForInjection,
 } from '../_lib/rule_injection.js';
 import { readHookStdin } from './hook_stdin.js';
-
-const EXIT_ALLOW = 0;
-const EXIT_WARN = 2;
+import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
 
 /**
  * Per-prompt injection ceiling, in UTF-8 BYTES.
@@ -268,7 +271,7 @@ export interface Injection {
 export function recordDelivered(root: string, session: string, ruleIds: string[]): number {
     try {
         const now = stamp();
-        const rows: DeliveredRow[] = ruleIds.map((id) => {
+        const rows: WriterInput<DeliveredRow>[] = ruleIds.map((id) => {
             const body = loadRuleBody(root, id);
             return {
                 rule: id,

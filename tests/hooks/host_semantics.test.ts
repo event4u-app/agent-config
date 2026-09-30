@@ -20,7 +20,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { claudeAdditionalContext, emitFor, VERIFIED_PLATFORMS } from '../../src/scripts/hooks/host_semantics.js';
+import { claudeAdditionalContext, emitFor, VERIFIED_PLATFORMS, usesNativeEmission } from '../../src/scripts/hooks/host_semantics.js';
 
 const REASON = 'anti-slop: aesthetic tell at Card.tsx:12';
 
@@ -113,10 +113,18 @@ describe('claude block-capable events other than PreToolUse', () => {
     });
 });
 
-describe('unverified platforms keep the legacy pass-through', () => {
-    it('augment is not in the verified set', () => {
-        expect(VERIFIED_PLATFORMS.has('augment')).toBe(false);
+describe('platforms with no native envelope keep the legacy pass-through', () => {
+    // Was 'unverified platforms …', asserting `!VERIFIED_PLATFORMS.has('augment')`.
+    // Dating every row on 2026-09-29 made augment verified without giving this
+    // package an envelope to emit there, which is exactly why the emission
+    // branch reads `usesNativeEmission` and not the verified set. The block
+    // below still asserts the pass-through; this case now asserts the two
+    // predicates DISAGREE on augment, which is the property that keeps it true.
+    it('augment is verified and still has no native emission', () => {
+        expect(VERIFIED_PLATFORMS.has('augment')).toBe(true);
+        expect(usesNativeEmission('augment')).toBe(false);
         expect(VERIFIED_PLATFORMS.has('claude')).toBe(true);
+        expect(usesNativeEmission('claude')).toBe(true);
     });
 
     for (const platform of ['augment', 'cursor', 'cline', 'windsurf', 'gemini', 'generic']) {

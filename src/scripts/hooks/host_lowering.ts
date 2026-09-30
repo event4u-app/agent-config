@@ -34,6 +34,17 @@ export const HOST_LOWERING_PATH = path.join(_REPO_ROOT, 'src', 'scripts', 'hooks
 export interface VerifiedBlock {
     docs_at: string | null;
     docs_url: string | null;
+    /**
+     * sha256 of the `docs_url` body as fetched on `docs_at`.
+     *
+     * Null where there is nothing to hash — a row whose `docs_url` is null —
+     * and null is also the pre-fill state `check_host_docs_digest --fetch
+     * --write` resolves. It is deliberately NOT part of the expiry test: a
+     * digest is evidence about the page, `expires` is this package's review-by
+     * date, and collapsing the two would make a vendor's CSS rebuild look like
+     * a lapsed citation.
+     */
+    docs_digest: string | null;
     probe_at: string | null;
     host_version: string | null;
     expires: string;
@@ -44,6 +55,21 @@ export interface SlotRow {
     native: string[];
     /** Exit code the host honours as a refusal here, or null if unestablished. */
     block_exit: number | null;
+    /**
+     * The date this pair was last answered, or null when it never was.
+     *
+     * `block_exit: null` alone cannot distinguish "looked, found none" from
+     * "nobody looked", and the whole point of this table is that a zero is a
+     * fact with a date on it. `lint_hook_manifest` requires the date; the
+     * parser keeps it nullable so a malformed table still parses into
+     * something the linter can report on rather than throwing first.
+     */
+    answered_at: string | null;
+    /**
+     * Citation for this pair, when it differs from the row's
+     * `verified.docs_url`. Absent means the row's URL is the citation.
+     */
+    docs_url: string | null;
     /** Entry-shape-specific extra (gemini's per-binding matcher). */
     matcher?: string;
 }
@@ -96,6 +122,7 @@ function _parse(text: string): HostLowering {
                 verified = {
                     docs_at: _asString(verifiedRaw['docs_at']),
                     docs_url: _asString(verifiedRaw['docs_url']),
+                    docs_digest: _asString(verifiedRaw['docs_digest']),
                     probe_at: _asString(verifiedRaw['probe_at']),
                     host_version: _asString(verifiedRaw['host_version']),
                     expires,
@@ -110,6 +137,8 @@ function _parse(text: string): HostLowering {
                 const row: SlotRow = {
                     native,
                     block_exit: typeof be === 'number' ? be : null,
+                    answered_at: _asString(rv['answered_at']),
+                    docs_url: _asString(rv['docs_url']),
                 };
                 if (typeof rv['matcher'] === 'string') row.matcher = rv['matcher'];
                 slots.set(slot, row);

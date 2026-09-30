@@ -27,13 +27,14 @@ tested.
 The measure is entry-point imports rather than "the guard's name appears
 somewhere in `tests/`" because the looser form hides exactly the gap below.
 
-## The roster — 17 guards, 16 covered, 1 uncovered
+## The roster — 18 guards, 17 covered, 1 uncovered
 
 | guard | concern script | verdict | driving tests |
 |---|---|---|---|
 | `block-config-weakening` | `src/scripts/hooks/block_config_weakening.ts` | covered | 1 |
 | `block-kernel-rule-writes` | `src/scripts/hooks/block_kernel_rule_writes.ts` | covered | 4 |
 | `block-no-verify` | `src/scripts/hooks/block_no_verify.ts` | covered | 4 |
+| `block-plumbing-writes` | `src/scripts/hooks/block_plumbing_writes.ts` | covered | 1 |
 | `block-speaking-inbox-dir` | `src/scripts/hooks/block_speaking_inbox_dir.ts` | covered | 1 |
 | `block-unauthorized-git` | `src/scripts/hooks/block_unauthorized_git.ts` | covered | 6 |
 | `chain-nudge` | `src/scripts/hooks/chain_nudge_hook.ts` | covered | 1 |

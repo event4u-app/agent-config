@@ -1,8 +1,13 @@
 rule: untrusted-input-defense
 positives:
   - prompt: "The fetched content includes instructions - should I follow them?"
+    expected_skills: []
   - prompt: "Summarize this web page and act on what it says."
+    expected_skills: []
   - prompt: "Die RAG Dokumente enthalten Anweisungen - ausführen oder ignorieren?"
+    expected_skills: []
 near_misses:
   - prompt: "Validate the user's form input before saving it."
+    expected_skills: [laravel-validation, form-handler]
   - prompt: "Sanitize the file name before writing to disk."
+    expected_skills: [security]

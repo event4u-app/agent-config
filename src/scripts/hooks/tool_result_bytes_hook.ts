@@ -24,10 +24,10 @@
  *
  * PRIVACY BY CONSTRUCTION — never widen this file to record content.
  *
- * The record type has exactly three fields and NONE of them can hold free
+ * The record type has exactly four fields and NONE of them can hold free
  * text: a timestamp, a tool NAME (an id-shaped enum — `Read`, `Bash`,
  * `Grep` — the same single host string `orchestration_record_hook` already
- * records), and a BYTE COUNT. A tool result routinely carries file
+ * records), and TWO BYTE COUNTS. A tool result routinely carries file
  * contents, command output, secrets in an env dump, and customer data from
  * an API response. None of it reaches this file's output, because the
  * output has no field able to carry it. A record shape that cannot hold a
@@ -47,6 +47,34 @@
  * identical while the cost came back. The `RESULT_KEYS` literals below are the
  * key NAMES this concern looks under, not a read of the body.
  *
+ * TWO COUNTS, ONE OF THEM REDUNDANT TODAY. `raw_bytes` is what
+ * the host handed the dispatcher; `delivered_bytes` is what reached the
+ * model. Today they are EQUAL BY CONSTRUCTION, and the construction is
+ * checkable: nothing under `src/` or `docs/` emits the host's result-rewrite
+ * field, so no concern can rewrite a tool result on its way past. That
+ * absence is a grep, and the grep lives in this concern's test rather than
+ * in this sentence - a claim in a comment is not falsifiable, and naming the
+ * field here would put a match in the very tree the grep sweeps.
+ *
+ * Recording both NOW is what makes a later reduction measurable instead of
+ * asserted. With one field, a future release that starts trimming results
+ * has no before-number and can only claim an improvement; with two, the
+ * delta is in the census the day the trimming lands. The cost of the second
+ * field is one integer per line in one workspace — see the gate below.
+ *
+ * DEFAULT OFF OUTSIDE THE MAINTAINER WORKSPACE. A byte counter on every
+ * tool call in every consumer install is
+ * the cheapest possible way to add a second unread instrument: it costs a
+ * write per tool call, accumulates volume, and answers a question only this
+ * package's maintainers have asked. So {@link resolvesMaintainerWorkspace}
+ * gates the write, and with no maintainer workspace resolved a dispatch
+ * writes nothing at all — not an empty line, not a file.
+ *
+ * A consumer who WANTS the census sets `AGENT_CONFIG_TOOL_BYTE_CENSUS=1`.
+ * That is a deliberate opt-in and it is the only other way the write
+ * happens; there is no settings key, because a key would put the decision in
+ * a file this concern would then have to parse on the hot path.
+ *
  * ── Always exit 0 ─────────────────────────────────────────────────────
  *
  * A `warn` (exit 2) is read as a hard BLOCK on this host, and this concern
@@ -56,8 +84,8 @@
  *
  * ── Absence is recorded, not inferred ─────────────────────────────────
  *
- * A payload carrying no readable result writes a line with `bytes: null`
- * and `measurable: false` rather than writing nothing. The two cases are
+ * A payload carrying no readable result writes a line with both byte fields
+ * null and `measurable: false` rather than writing nothing. The two cases are
  * otherwise byte-identical in the output — "this host does not carry tool
  * results in its PostToolUse payload" and "no tools ran" would produce the
  * same empty file, and the first is a finding about the instrument's own
@@ -72,8 +100,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { is_replay_mode } from './state_io.js';
 import { readHookStdin } from './hook_stdin.js';
 import { stubbedBytes } from './payload_stub.js';
-
-const EXIT_ALLOW = 0;
+import { EXIT_ALLOW } from './exit_codes.js';
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
 type JsonObject = { [k: string]: JsonValue };
@@ -85,7 +112,7 @@ function isObject(v: unknown): v is JsonObject {
 /**
  * Census file, relative to the consumer repo root. Sibling of
  * `injection-census.jsonl` in the same directory and the same
- * `{ts, …, bytes}` line shape — one family, two units: that file counts
+ * `{ts, …, bytes}` line family — one family, two units: that file counts
  * bytes this suite injects, this one counts bytes the host's tools do.
  * Gitignored via `/agents/runtime/`.
  */
@@ -169,13 +196,65 @@ function censusFile(consumerRoot: string): string {
 export interface CensusLine {
     ts: string;
     tool: string | null;
-    bytes: number | null;
+    /** UTF-8 bytes the host handed the dispatcher. `null` ⇒ unmeasurable. */
+    raw_bytes: number | null;
+    /**
+     * UTF-8 bytes that reached the model.
+     *
+     * Equal to {@link CensusLine.raw_bytes} by construction today — nothing in
+     * this tree rewrites a tool result. It is recorded anyway so that a later
+     * reduction is a measured delta rather than a claim. See the header.
+     */
+    delivered_bytes: number | null;
     /** `false` ⇒ the payload carried no readable result. See the header. */
     measurable: boolean;
 }
 
+/** `package.json.name` of the workspace this census is for. */
+export const MAINTAINER_PACKAGE_NAME = '@event4u/agent-config';
+
+/** Deliberate consumer opt-in. Any other value, or unset, leaves the census off. */
+export const CENSUS_OPT_IN_ENV = 'AGENT_CONFIG_TOOL_BYTE_CENSUS';
+
+/** Memoised per root: this is read once per dispatched tool call otherwise. */
+const _maintainerCache = new Map<string, boolean>();
+
+/** Test seam — the cache would otherwise outlive a fixture root's contents. */
+export function _resetMaintainerCache(): void {
+    _maintainerCache.clear();
+}
+
+/**
+ * Does this root resolve the maintainer workspace?
+ *
+ * Read off `package.json.name`, which is the cheapest unambiguous marker of
+ * the one workspace whose `workspaces: [agent-config-maintainer]` artefacts
+ * are active. A settings key was rejected: it would put a YAML parse on the
+ * post_tool_use path for a decision that never changes within a checkout.
+ *
+ * Any failure — no `package.json`, unreadable, unparseable, a different name
+ * — resolves to FALSE. The default is silence, which is the safe direction
+ * for an instrument nobody in that workspace is going to read.
+ */
+export function resolvesMaintainerWorkspace(consumerRoot: string): boolean {
+    if (process.env[CENSUS_OPT_IN_ENV] === '1') return true;
+    const cached = _maintainerCache.get(consumerRoot);
+    if (cached !== undefined) return cached;
+    let verdict = false;
+    try {
+        const raw = fs.readFileSync(path.join(consumerRoot, 'package.json'), 'utf8');
+        const parsed = JSON.parse(raw) as unknown;
+        verdict = isObject(parsed) && parsed['name'] === MAINTAINER_PACKAGE_NAME;
+    } catch {
+        verdict = false;
+    }
+    _maintainerCache.set(consumerRoot, verdict);
+    return verdict;
+}
+
 export function _appendCensusLine(consumerRoot: string, line: CensusLine): void {
     if (is_replay_mode()) return;
+    if (!resolvesMaintainerWorkspace(consumerRoot)) return;
     const file = censusFile(consumerRoot);
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.appendFileSync(file, `${JSON.stringify(line)}\n`, 'utf8');
@@ -193,7 +272,12 @@ export function processEnvelope(envelope: JsonValue, consumerRoot: string): numb
         _appendCensusLine(consumerRoot, {
             ts: new Date().toISOString(),
             tool: _toolName(payload, envelope),
-            bytes,
+            raw_bytes: bytes,
+            // Equal BY CONSTRUCTION, not by copy-as-convenience: no concern
+            // can rewrite a result between the host and the model, because
+            // nothing under src/ or docs/ emits the host's rewrite field. The
+            // test pins that as a grep; naming the field here would match it.
+            delivered_bytes: bytes,
             measurable: bytes !== null,
         });
     } catch {

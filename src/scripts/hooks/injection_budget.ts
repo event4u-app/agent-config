@@ -67,7 +67,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 
 import { log_dispatch_issue } from "./dispatch_issues.js";
-import { VERIFIED_PLATFORMS, emissionCarriesReasons, type Severity } from "./host_semantics.js";
+import { emissionCarriesReasons, usesNativeEmission, type Severity } from "./host_semantics.js";
 
 /**
  * The event that STARTS a turn, and therefore the one that resets the per-turn
@@ -605,7 +605,14 @@ function _sessionKey(ctx: ShapingContext): string | null {
  * whose turn boundary cannot be observed, must never become a budget of zero.
  */
 export function resolveVolumeCap(ctx: ShapingContext): number | null {
-    if (!VERIFIED_PLATFORMS.has(ctx.platform)) return null;
+    // NOT `VERIFIED_PLATFORMS`: a row being dated says someone read the host's
+    // page, never that this package has an envelope to put on it. Since
+    // 2026-09-29 every row is dated, so the verified set is no longer the set
+    // whose emission carries anything — `usesNativeEmission` is. Reading the
+    // wider set here would have started metering bytes on six hosts that
+    // receive none, and a ceiling charged for undelivered output drops the
+    // NEXT advisory, which does get delivered.
+    if (!usesNativeEmission(ctx.platform)) return null;
     if (_sessionKey(ctx) === null) return null;
     if (!_turnStartBound(ctx.packageRoot, ctx.platform)) return null;
     try {

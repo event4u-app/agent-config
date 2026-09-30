@@ -68,13 +68,12 @@ import { COMMAND_TOOLS } from '../before_complete_hook.js';
 import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
 import { atomic_write_json } from './state_io.js';
+import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
 
-const EXIT_ALLOW = 0;
 /**
  * Severity comes from the exit code, not from the `decision` field. See the
  * header: this never blocks, and never returns 1 on any path.
  */
-const EXIT_WARN = 2;
 
 /** Hard ceiling on `reason` + `additional_context`, matching the registered row. */
 export const CAP_BYTES = 768;

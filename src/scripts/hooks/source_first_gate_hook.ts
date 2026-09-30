@@ -95,8 +95,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { is_replay_mode } from './state_io.js';
 import { readHookStdin } from './hook_stdin.js';
 import { resolveConsumerRoot } from './subagent_ledger_hook.js';
-
-const EXIT_ALLOW = 0;
+import { EXIT_ALLOW } from './exit_codes.js';
 
 /** Would-warns per session before the valve goes silent — `MAX_NUDGES` shape. */
 export const MAX_SHADOW_WARNS = 2;

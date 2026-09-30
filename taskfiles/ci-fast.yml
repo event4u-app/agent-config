@@ -93,6 +93,8 @@ tasks:
       # classes AND every fixture behaves as its class says. Cheap (pure
       # functions over a 22-entry YAML corpus, no I/O beyond the one read).
       - ./scripts-run src/scripts/check_detector_corpus
+      # The kill-switch table's equality, which decayed within a day of shipping.
+      - ./scripts-run src/scripts/check_kill_switch_table
       # One artefact, one layer (ADR-236). Binds HERE and not in CI on a measured
       # fact rather than a preference: .claude/ is gitignored and no CI leg installs
       # at user scope, so a CI run of this check finds ZERO layers and reports on a
@@ -704,6 +706,17 @@ tasks:
       has no corpus for. Regenerate with `--write`; the list is derived, so a
       correction belongs in the tree or the scanner, never in the table.
     cmd: ./scripts-run src/scripts/check_read_surface_coverage {{.QUIET_FLAG}}
+  check-host-format-column:
+    silent: true
+    desc: |
+      The compile-time (format) column of the host table in
+      docs/enforcement-by-host.md may only name paths an emitter in this tree
+      actually writes. The Cursor cell read `.cursorrules` — a file nothing has
+      ever written — until an external reader found it. The gate runs the two
+      install-time rule emitters into a throwaway tree and reads what they left
+      on disk, rather than scraping emitter source, so an interpolated target
+      cannot be reported as drift.
+    cmd: ./scripts-run src/scripts/check_host_format_column {{.QUIET_FLAG}}
 
   check-mcp-doc-drift:
     silent: true
@@ -1037,6 +1050,16 @@ tasks:
     silent: true
     desc: Foreign in-prose placeholder syntaxes may shrink, never grow (road-to-an-invocation-contract-that-reaches-the-wire 1.2). Seeded at the measured counts in src/config/placeholder-drift-budget.json; never fails on the absolute number or on the plurality form, so holding at the seed is permanently green and no working body is under pressure to be rewritten.
     cmd: ./scripts-run src/scripts/check_placeholder_drift
+
+  lint-deny-text:
+    silent: true
+    desc: "A blocking concern's refusal message never names its own kill switch (road-to-a-kernel-that-guards-its-plumbing 1.3). The switch may exist and may be documented; it may not appear in the text printed to the party that was just refused."
+    cmd: ./scripts-run src/scripts/lint_deny_text
+
+  lint-exit-codes:
+    silent: true
+    desc: "A hook's exit code comes from hooks/exit_codes.ts, never from a numeral (road-to-a-kernel-that-guards-its-plumbing 4.1). 1 and 2 mean opposite things in this tree and on the host, and a bare numeral records neither dialect."
+    cmd: ./scripts-run src/scripts/lint_exit_codes
 
   check-input-references:
     silent: true
@@ -2372,6 +2395,17 @@ tasks:
       nichts falsch gemacht" — an absolution scored as a complaint. A detector
       missing any class is a failure, not a warning.
     cmd: ./scripts-run src/scripts/check_detector_corpus {{.CLI_ARGS}}
+
+  kill-switch-table:
+    silent: true
+    desc: |
+      `docs/contracts/hook-architecture-v1.md` § Kill switches carries one row
+      per `AGENT_CONFIG_*` identifier the hook layer reads, and publishes the
+      command that reproduces the count. This compares the two SETS — not the
+      counts, because one switch added plus one row left behind for a deleted
+      switch is the pair a count cannot see. The table shipped equal and was
+      stale within a day; a review found it, which is a worse way than a gate.
+    cmd: ./scripts-run src/scripts/check_kill_switch_table {{.CLI_ARGS}}
 
   smoke-host-loadability:
     silent: true

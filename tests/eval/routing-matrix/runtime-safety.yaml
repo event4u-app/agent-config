@@ -1,8 +1,13 @@
 rule: runtime-safety
 positives:
   - prompt: "Set the execution type of this skill to automated."
+    expected_skills: [skill-writing]
   - prompt: "Which handler values are allowed for assisted skills?"
+    expected_skills: [skill-writing]
   - prompt: "Darf dieses Skill den handler shell verwenden?"
+    expected_skills: [skill-writing]
 near_misses:
   - prompt: "Add a verification step to the deployment checklist."
+    expected_skills: [launch-readiness, operational-readiness]
   - prompt: "The scheduled cron entry never fires - check the syntax."
+    expected_skills: [systematic-debugging]

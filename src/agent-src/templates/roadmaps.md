@@ -575,6 +575,36 @@ that was never a judgement call.
     full CI pipeline — per `roadmap-ci-steps-policy` a `verify:` must not
     be a full-suite gate.
 
+    **The expectation half — say what the command must produce.** A command
+    alone names no oracle. `` verify: `cat notes.md` `` is a conforming step
+    field that cannot say no, so the box gets flipped on a command that was
+    never able to fail. In practice the great majority of clauses in a
+    roadmap tree state no oracle at all — run the share command below on
+    your own tree rather than trusting a number written here. A clause
+    MAY therefore state what the command must produce, using the arrow
+    `exec:` evidence already carries — not a new symbol:
+
+    - `` verify: `<cmd>` -> 0 `` — the command must exit with that code.
+    - `` verify: `<cmd>` -> /regex/ `` — its output must match.
+
+    Prose after `verify:` stays legal and reads as MANUAL. Forbidding it
+    would invalidate most clauses already in the tree at a stroke, and a
+    grammar that reds every producer gets weakened until it finds nothing.
+    One parser reads the arrow (`src/scripts/_lib/verify_clause.ts`) and
+    nothing parses it a second time. `closure_scan`'s `unfalsifiable-verify`
+    family reports the clauses whose oracle cannot say no, and exits 0
+    unconditionally — it is a listing, never a gate. The share per roadmap
+    is `./scripts-run src/scripts/roadmap_verify_share`.
+
+    **An absence check names its positive control.** A `verify:` asserting
+    that something is *absent* — no match, no occurrence, an empty diff —
+    passes identically when the property holds, when the check itself is
+    broken, when the path moved, and when the corpus is empty. Such a clause
+    MUST name the input on which it does fire: the positive control. A
+    fixture that plants the thing, a prior commit that carried it, or a
+    sabotage the step records. Without one it is a check nobody has seen
+    working, and its green means only that nothing ran.
+
 24. **Ready roadmaps carry a `## Risk Register` (Gate R1).** Every
     ready (non-draft) roadmap ends with a schema-valid Risk Register —
     marker line (`<!-- risk-review: v1 | reviewed: YYYY-MM-DD |

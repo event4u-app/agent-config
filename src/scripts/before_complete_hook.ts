@@ -62,8 +62,11 @@ import {
   prune_stale_session_states,
   session_state_file,
   update_json_under_lock,
+  owns_session_state,
 } from "./hooks/state_io.js";
 import { readHookStdin } from "./hooks/hook_stdin.js";
+import { isVerificationCommand } from "./_lib/verification_command.js";
+import { runnerOf } from "./_lib/verification_evidence.js";
 
 // NOTE: the Python docstring says `agents/runtime/state/`, but the code
 // constant is `agents/state/`. Replicated verbatim — latent docstring/code
@@ -193,6 +196,11 @@ function _empty_state(): StateDict {
     // has to survive it: the measured failure is a completion claim in a LATER
     // turn than the poll it rests on.
     ci_last: null,
+    // Round 8 — see `_reset_turn`. Present in the empty state so a freshly
+    // created file has the same shape as one that has seen a turn boundary;
+    // a reader must never have to distinguish "no runs yet" from "key absent".
+    verification_runs: [],
+    edits_this_turn: 0,
     checked_at: _now(),
   };
 }
@@ -334,11 +342,207 @@ function _extract_output(payload: StateDict): string | null {
   return null;
 }
 
+/**
+ * Tool names that CHANGE the tree, across the platforms this concern sees.
+ *
+ * The first four mirror `_EDIT_TOOLS` in the turn-end gate exactly; the rest are
+ * the same three tools under the names Augment, Cline and Cursor give them. The
+ * gate reads a Claude transcript and can afford four names; this recorder runs
+ * on every platform the manifest binds `post_tool_use` on, so it needs all of
+ * them — a missed edit name means `edits_this_turn` undercounts and a
+ * verification run looks LATER in the sequence than it was, which is the one
+ * direction that could clear an unverified edit.
+ */
+const EDIT_TOOLS: ReadonlySet<string> = new Set([
+  "Edit",
+  "Write",
+  "MultiEdit",
+  "NotebookEdit",
+  "str-replace-editor",
+  "save-file",
+  "str_replace_editor",
+  "create_file",
+  "write_to_file",
+  "replace_in_file",
+  "apply_diff",
+  "edit_file",
+]);
+
+/**
+ * How many run records one turn may keep.
+ *
+ * The state file is read by a stop-slot hook on every turn, so it is on the
+ * latency path and cannot grow without a ceiling. The NEWEST are kept because
+ * the only question asked of them is whether a passing run follows the LAST
+ * edit, which is always answered by the tail.
+ */
+export const MAX_VERIFICATION_RUNS_PER_TURN = 24;
+
+/**
+ * Characters of tool output retained per stream per record.
+ *
+ * CHARACTERS, not bytes, and the name is kept for its existing importers: the
+ * slice is applied to a JS string. Multibyte output can therefore exceed this
+ * many bytes, which is a bound on the state file rather than a promise about
+ * it, and 4,096 characters is far more than any runner's summary needs.
+ */
+export const RUN_OUTPUT_TAIL_BYTES = 4096;
+
+/**
+ * Apply the per-turn cap, keeping the newest AND the earliest failing record.
+ *
+ * Two detectors read this array and they ask opposite-ended questions. Detector
+ * C asks whether a pass follows the last edit — always answered by the tail.
+ * Detector F asks whether a red preceded the green — answered by the head. A
+ * plain `slice(-N)` serves the first and can silently drop the evidence the
+ * second needs, turning a turn that did honest red-green work into a
+ * `no_red_evidence` refusal once the run count passes the cap.
+ */
+function _cap_runs(runs: unknown[]): unknown[] {
+  if (runs.length <= MAX_VERIFICATION_RUNS_PER_TURN) return runs;
+  const tail = runs.slice(-(MAX_VERIFICATION_RUNS_PER_TURN - 1));
+  const head = runs.find((r) => {
+    if (r === null || typeof r !== "object" || Array.isArray(r)) return false;
+    const rec = r as StateDict;
+    const code = rec["exit_code"];
+    return typeof code === "number" && code !== 0;
+  });
+  if (head === undefined || tail.includes(head)) {
+    return runs.slice(-MAX_VERIFICATION_RUNS_PER_TURN);
+  }
+  return [head, ...tail];
+}
+
+/**
+ * The prefix a host puts on a FAILED shell result when it carries no exit field.
+ *
+ * Claude Code's Bash tool does exactly this: a failing call's whole tool
+ * response is the string `Error: Exit code 1\n<output>`. Measured over 1,077
+ * object-shaped and 11 string-shaped tool results in this machine's own
+ * transcripts (2026-09-29): every string-shaped result carried this prefix, and
+ * no shape of either kind carried any of the numeric field names below.
+ */
+const _ERROR_EXIT_PREFIX = /^Error:\s*Exit code\s*(\d+)/i;
+
+/** The status a post-tool payload actually reports, and HOW it reported it. */
+interface ExitReading {
+  readonly code: number | null;
+  /** Provenance, recorded so a reader can tell an observed code from a derived one. */
+  readonly source: "field" | "error_prefix" | "response_shape" | null;
+  /** The host said the call was interrupted — a kill, not a verdict on the work. */
+  readonly interrupted: boolean;
+}
+
+const _NO_EXIT: ExitReading = { code: null, source: null, interrupted: false };
+
+function _numeric_exit_field(obj: StateDict): number | null {
+  for (const key of ["exit_code", "exitCode", "returncode", "returnCode", "status_code"]) {
+    const v = obj[key];
+    if (typeof v === "number" && Number.isFinite(v)) return Math.trunc(v);
+    if (typeof v === "string" && v.trim() !== "" && Number.isFinite(Number(v))) {
+      return Math.trunc(Number(v));
+    }
+  }
+  return null;
+}
+
+/**
+ * What the host said about how the command ended.
+ *
+ * `null` is a REAL value and is never normalised to 0: several hosts surface no
+ * exit status at all, and writing 0 for "the host said nothing" would
+ * manufacture the strongest possible evidence out of silence. The classifier's
+ * `exit_code_unavailable` verdict exists so that gap stays visible.
+ *
+ * THREE SOURCES, in descending directness, and the third is the one that took a
+ * measurement rather than a guess.
+ *
+ *   · `field` — a numeric exit field, wherever a host provides one.
+ *   · `error_prefix` — the `Error: Exit code N` string form above. This is a
+ *     real non-zero code, stated by the host in the only place it states it.
+ *   · `response_shape` — an OBJECT response carrying `interrupted: false`
+ *     alongside a `stdout` or `stderr` key. On Claude Code that is the success
+ *     form, and the discriminator is deliberately the PRESENCE of
+ *     `interrupted: false` rather than the ABSENCE of an error prefix: a
+ *     positive signal from the host, not an inference from silence. A shape
+ *     that carries neither reads as `null` and stays an instrument gap.
+ *
+ * Without the second and third readings this recorder wrote `exit_code: null`
+ * for every command on the one host that binds the turn-end gate, so the whole
+ * record path was inert — found by an independent review of the branch that
+ * introduced it, against 1,077 real tool results.
+ */
+function _extract_exit_reading(payload: StateDict): ExitReading {
+  const direct = _numeric_exit_field(payload);
+  if (direct !== null) return { code: direct, source: "field", interrupted: false };
+
+  for (const key of ["tool_response", "toolResponse", "result", "output"]) {
+    const v = payload[key];
+    if (typeof v === "string") {
+      const m = _ERROR_EXIT_PREFIX.exec(v);
+      if (m?.[1] !== undefined) {
+        return { code: Number(m[1]), source: "error_prefix", interrupted: false };
+      }
+      continue;
+    }
+    if (v === null || typeof v !== "object" || Array.isArray(v)) continue;
+    const obj = v as StateDict;
+    const nested = _numeric_exit_field(obj);
+    if (nested !== null) return { code: nested, source: "field", interrupted: false };
+    if (obj["interrupted"] === true) return { code: null, source: null, interrupted: true };
+    const hasStream = typeof obj["stdout"] === "string" || typeof obj["stderr"] === "string";
+    if (obj["interrupted"] === false && hasStream) {
+      return { code: 0, source: "response_shape", interrupted: false };
+    }
+  }
+  return _NO_EXIT;
+}
+
+/**
+ * The command's stdout and stderr as REAL strings, never as a stringified blob.
+ *
+ * Separate from `_extract_output` above, which feeds the pre-existing `vacuous`
+ * counters and whose behavior must not move: that one returns
+ * `JSON.stringify(v)` for an object response, and every parser in
+ * `verification_evidence.ts` is line-anchored (`/^[ \t]*Tests:?.../m` and
+ * friends). JSON escapes a newline as the two characters `\` and `n`, so a
+ * stringified response can never match any of them — the classifier was blind
+ * to every summary on the host's success shape. Found by the same review.
+ */
+function _extract_run_streams(payload: StateDict): { stdout: string; stderr: string } {
+  for (const key of ["tool_response", "toolResponse", "result", "output"]) {
+    const v = payload[key];
+    if (typeof v === "string") return { stdout: v, stderr: "" };
+    if (v === null || typeof v !== "object" || Array.isArray(v)) continue;
+    const obj = v as StateDict;
+    const out = obj["stdout"] ?? obj["output"];
+    const err = obj["stderr"];
+    if (typeof out === "string" || typeof err === "string") {
+      return {
+        stdout: typeof out === "string" ? out : "",
+        stderr: typeof err === "string" ? err : "",
+      };
+    }
+  }
+  const topOut = payload["stdout"] ?? payload["output"];
+  const topErr = payload["stderr"];
+  return {
+    stdout: typeof topOut === "string" ? topOut : "",
+    stderr: typeof topErr === "string" ? topErr : "",
+  };
+}
+
 function _reset_turn(state: StateDict, session_id: string): StateDict {
   state["session_id"] = session_id || state["session_id"] || "";
   state["turn_started_at"] = _now();
   state["verifications_this_turn"] = 0;
   state["verified_this_turn"] = false;
+  // Round 8 — the run records the stop gate reads instead of the command text,
+  // and the edit counter that places them in the turn's sequence. Both are
+  // TURN-scoped: a run from the previous turn demonstrably did not exercise this
+  // turn's edits, which is the freshness argument `verify-before-complete` makes.
+  state["verification_runs"] = [];
+  state["edits_this_turn"] = 0;
   // FC-3b turn-scoped counters: a CI settle must be witnessed within the same
   // turn that claims it, so the in-flight observation does not survive a turn.
   state["ci_saw_pending"] = false;
@@ -386,6 +590,11 @@ function _update(state: StateDict, event: string, envelope: StateDict): StateDic
     state = _reset_turn(state, session_id);
   } else if (event === "post_tool_use") {
     const [tool, cmd] = _extract_command(pl);
+    // Counted BEFORE the verification branch, so a run recorded in this same
+    // event is placed after the edits that preceded it and never after itself.
+    if (tool !== null && EDIT_TOOLS.has(tool)) {
+      state["edits_this_turn"] = _asInt(state["edits_this_turn"]) + 1;
+    }
     if (cmd && _is_verification(cmd)) {
       const output = _extract_output(pl);
       // No readable output → the guard has nothing to judge, so behaviour is
@@ -439,6 +648,7 @@ function _update(state: StateDict, event: string, envelope: StateDict): StateDic
         vacuous,
         counted: counts,
       };
+
       if (counts) {
         state["verifications_this_turn"] = _asInt(state["verifications_this_turn"]) + 1;
         state["verifications_this_session"] =
@@ -447,6 +657,58 @@ function _update(state: StateDict, event: string, envelope: StateDict): StateDic
       } else {
         state["nonevidence_this_turn"] = _asInt(state["nonevidence_this_turn"]) + 1;
       }
+    }
+
+    // The RUN record, written beside `last_verification` and gated on a
+    // DIFFERENT, wider selector — the one the turn-end gate's detector C uses.
+    //
+    // Two selectors is a smell, so here is why it is not one. `_is_verification`
+    // above decides what enters this concern's COUNTERS, and those counters have
+    // pinned meanings (`verifications_this_turn`, the FC-3b `ci_last`
+    // discrimination) that a widening would silently change. The run record
+    // decides nothing by itself: it is raw evidence, and `classifyRun` is what
+    // judges it. So the record path wants every command the gate might read,
+    // including the ones the classifier will then reject —
+    // `not_a_verification_command` is a verdict the gate needs to SEE, and a
+    // recorder that filtered those out would leave the gate unable to tell "the
+    // turn ran `echo test`" from "the turn ran nothing at all".
+    //
+    // `after_edits` is the edit counter as it stood when the command ran. The
+    // reader compares it against the number of edits the turn made in total:
+    // equal or greater means nothing was edited afterwards. That is an ORDINAL
+    // comparison needing no clock, so it survives a host whose timestamps are
+    // coarse or absent, and it degrades toward under-refusing when the reader's
+    // own count is short.
+    if (cmd && isVerificationCommand(cmd)) {
+      const streams = _extract_run_streams(pl);
+      const exit = _extract_exit_reading(pl);
+      const runs = Array.isArray(state["verification_runs"])
+        ? [...(state["verification_runs"] as unknown[])]
+        : [];
+      runs.push({
+        command: cmd.slice(0, 512),
+        tool,
+        exit_code: exit.code,
+        // Provenance, not decoration: `response_shape` is a code this recorder
+        // DERIVED from the host's success form, and a reader disputing a verdict
+        // needs to know which of the three readings produced it.
+        exit_source: exit.source,
+        interrupted: exit.interrupted,
+        stdout_tail: streams.stdout.slice(-RUN_OUTPUT_TAIL_BYTES),
+        // Written, and previously not: `RunRecord.stderr_tail` was declared and
+        // read by the classifier's `output()` while nothing populated it, so
+        // stderr reached a parser only by accident inside a stringified blob.
+        stderr_tail: streams.stderr.slice(-RUN_OUTPUT_TAIL_BYTES),
+        runner: runnerOf(cmd),
+        after_edits: _asInt(state["edits_this_turn"]),
+        at: _now(),
+      });
+      // The NEWEST are kept for detector C, which asks whether a pass follows
+      // the last edit. Detector F asks a question the head answers — was there a
+      // red before the green — so the cap keeps the FIRST failing record too,
+      // ahead of the tail, rather than letting a chatty turn drop the red half
+      // of its own red-then-green pair.
+      state["verification_runs"] = _cap_runs(runs);
     }
   } else if (event === "stop") {
     state["last_stop_at"] = _now();
@@ -611,6 +873,74 @@ function _readStdin(): string {
 export function main(argv?: string[]): number {
   const args = parse_args(argv ?? process.argv.slice(2));
   return run(_readStdin(), { consumer_root: process.cwd(), verbose: args.verbose });
+}
+
+// ---------------------------------------------------------------------------
+// The consumer side of `verification_runs`, living with its producer
+// ---------------------------------------------------------------------------
+
+/**
+ * Why the turn-end gate's reader sits HERE and not in the gate.
+ *
+ * The shape of `verification_runs` and `edits_this_turn` is this file's; the
+ * reader is the only consumer of that shape, and the gate already imported this
+ * module's path BUILDER rather than a path constant for exactly the reason that
+ * applies here too — "the consumer cannot read a path the producer does not
+ * write" is only true while the two agree, and separating them made the
+ * agreement invisible when the layout moved. Keeping the reader beside the
+ * writer makes a shape change a type error in one file instead of a silent
+ * disagreement across two.
+ *
+ * It also keeps the gate under its source-size ceiling without deleting
+ * anything, which is the move the ratchet asks for rather than a trim.
+ */
+export interface TurnRunState {
+  readonly runs: readonly unknown[];
+  readonly edits_this_turn: number;
+}
+
+/**
+ * The turn's recorded verification runs, or `null` when the recorder is not live.
+ *
+ * WHY THE LIVENESS TEST IS `edits_this_turn >= 1` AND NOT "the file exists".
+ * The obvious predicate — a state file with a `verification_runs` key — is
+ * wrong in a way that would refuse honest work on entire platforms. That key is
+ * present in the recorder's EMPTY state, so a host whose `post_tool_use` slot
+ * the manifest does not bind still has a file carrying `[]`, written by the
+ * prompt and stop events alone. Reading that as "this turn ran nothing" would
+ * refuse every editing turn on such a host, whatever the operator actually ran.
+ *
+ * `edits_this_turn` is the one field only a `post_tool_use` event can raise. The
+ * detector reaches here having already found an edit in the transcript, so a
+ * recorder that saw none of this turn's tool events is exactly the case this
+ * returns `null` for — and `null` means the transcript path answers, which is
+ * the behavior that predates the record path.
+ *
+ * The ownership check is the same one detector D applies to `ci_last`, for the
+ * same reason: a FOREIGN file's passing record would vouch for a run this
+ * session never made.
+ */
+export function readTurnRunState(
+    workspaceRoot: string,
+    session_id: string,
+): TurnRunState | null {
+    if (!has_stable_session_id(session_id)) return null;
+    try {
+        const raw = fs.readFileSync(path.join(workspaceRoot, statePathFor(session_id)), 'utf-8');
+        const decoded: unknown = JSON.parse(raw);
+        if (!owns_session_state(decoded, session_id)) return null;
+        if (typeof decoded !== 'object' || decoded === null || Array.isArray(decoded)) return null;
+        const state = decoded as Record<string, unknown>;
+        const runs = state['verification_runs'];
+        const edits = state['edits_this_turn'];
+        if (!Array.isArray(runs)) return null;
+        if (typeof edits !== 'number' || !Number.isFinite(edits) || edits < 1) return null;
+        return { runs: runs as readonly unknown[], edits_this_turn: edits };
+    } catch {
+        // Absent, unreadable or malformed — the recorder said nothing, so the
+        // transcript answers. Never a refusal of its own.
+        return null;
+    }
 }
 
 // Bundle-safety: never auto-run when inlined into an esbuild bundle, where

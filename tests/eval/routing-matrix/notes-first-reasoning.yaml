@@ -1,8 +1,13 @@
 rule: notes-first-reasoning
 positives:
   - prompt: "Help me debug why the queue worker dies every night after midnight."
+    expected_skills: [systematic-debugging, laravel-horizon]
   - prompt: "My hypothesis is that the cache key collides - how do we verify it?"
+    expected_skills: [systematic-debugging, project-analysis-hypothesis-driven]
   - prompt: "Bitte starte eine Debug-Session für den fehlgeschlagenen Import und halte die Zwischenschritte fest."
+    expected_skills: [systematic-debugging]
 near_misses:
   - prompt: "Write the release notes for the sprint review meeting."
+    expected_skills: [release-comms]
   - prompt: "Format the log output as JSON for the monitoring dashboard."
+    expected_skills: [logging-monitoring]
