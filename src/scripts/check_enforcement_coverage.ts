@@ -260,13 +260,22 @@ function load_corpus(dirs: readonly string[], files: readonly string[] = []): st
  * whether or not anyone chooses to. Conflating the two is how a package ends up
  * believing an on-demand tool is a gate.
  */
-function reachable_scripts(wiring: string): Set<string> {
-    const scripts_dir = path.join(REPO_ROOT, 'src', 'scripts');
+/**
+ * Transitive closure of the scripts a wiring surface reaches.
+ *
+ * `roots` is a seam, not a feature: it defaults to the real tree, and a test
+ * passes a synthetic one. Without it the only way to exercise the fixed point
+ * is over ~650 real files, where a chain deep enough to catch a broken worklist
+ * cannot be constructed on purpose.
+ */
+export function reachable_scripts(wiring: string, roots?: { dir: string; base: string }): Set<string> {
+    const scripts_dir = roots?.dir ?? path.join(REPO_ROOT, 'src', 'scripts');
+    const base_dir = roots?.base ?? REPO_ROOT;
     const all: string[] = fs.existsSync(scripts_dir)
         ? walk(scripts_dir).filter((p) => p.endsWith('.ts'))
         : [];
 
-    const rel = (abs: string): string => path.relative(REPO_ROOT, abs);
+    const rel = (abs: string): string => path.relative(base_dir, abs);
     const stem = (abs: string): string => path.basename(abs).replace(/\.ts$/, '');
 
     const reached = new Set<string>();
@@ -274,24 +283,44 @@ function reachable_scripts(wiring: string): Set<string> {
         if (wiring.includes(rel(abs)) || wiring.includes(stem(abs))) reached.add(rel(abs));
     }
 
-    let grew = true;
-    while (grew) {
-        grew = false;
-        const frontier = [...reached];
+    // WORKLIST, not a re-scan of everything reached so far.
+    //
+    // The previous shape rebuilt `bodies` from EVERY reached file on every
+    // iteration and re-tested every unreached file against the whole thing. The
+    // corpus is ~650 scripts, `mentions_as_code` compiles and runs two regexes
+    // per candidate, and the concatenated body grows into the megabytes — so the
+    // cost was iterations x unreached x |all bodies so far|, with each iteration
+    // re-doing every comparison the previous ones had already made.
+    //
+    // Measured, because this was found by profile rather than by reading:
+    // `build_proof.render()` -- which calls this transitively -- took 241 s on a
+    // developer machine under plain `tsx`, and the CPU profile attributed
+    // essentially all of it to this function's regex sweep, spread over hundreds
+    // of per-name `RegExp` frames. The file's own header had recorded ~54 s.
+    //
+    // Re-testing an old body is provably redundant: a file that did not match a
+    // body in the iteration that body was added cannot match it later, because
+    // neither the body nor the test changes. So each round searches ONLY the
+    // bodies admitted in the previous round. Same fixed point, same result --
+    // the loop still runs until nothing new is reached.
+    let frontier = [...reached];
+    while (frontier.length > 0) {
         const bodies = frontier
             .map((r) => {
-                const abs = path.join(REPO_ROOT, r);
+                const abs = path.join(base_dir, r);
                 return fs.existsSync(abs) ? strip_comments(fs.readFileSync(abs, 'utf-8')) : '';
             })
             .join('\n');
+        const next: string[] = [];
         for (const abs of all) {
             const r = rel(abs);
             if (reached.has(r)) continue;
             if (mentions_as_code(bodies, path.basename(abs), stem(abs))) {
                 reached.add(r);
-                grew = true;
+                next.push(r);
             }
         }
+        frontier = next;
     }
     return reached;
 }
