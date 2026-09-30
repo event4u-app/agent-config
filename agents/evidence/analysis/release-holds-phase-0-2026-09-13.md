@@ -333,3 +333,95 @@ question needs, and it would not survive being quoted as a performance guarantee
 **No index is built in v1**, as the step requires: `collect()` reads and parses on every
 call. At 22 % of an accepted gate there is nothing an index would buy that would justify the
 staleness surface it adds.
+
+---
+
+## The measurement window opened at `16.1.0` (added 2026-09-30)
+
+Taken at `origin/main` `1f442155a`. This section exists because the
+`measurement-window-not-open` blocker's own evidence had gone stale in the direction that
+matters: it read *"the denominator is **0** … the window opens at the first tag after this PR
+merges"*, and the window had in fact opened two days earlier. The blocker is still open — 1 of
+30 is not 30 — but its record now names a ref instead of predicting one.
+
+### The anchor, and why it is a ref rather than a date
+
+The first commit carrying the evaluator is `3f342103168e56d0168655c12141829f5e1d6ca0`. Running
+the blocker's own counting snippet against it:
+
+```bash
+first=$(git log --reverse --format=%H -- src/scripts/check_release_holds.ts | head -1)
+git tag --contains "$first" --sort=creatordate     # -> 16.1.0
+```
+
+Exactly one tag. **`16.1.0`, cut 2026-09-28**, is the first tag whose tree carries the evaluator;
+`16.0.0` does not (`git ls-tree --name-only 16.0.0 src/scripts/check_release_holds.ts` is empty),
+which confirms the boundary rather than assuming it.
+
+**Denominator: 1 of 30.** Pinning the anchor as a tag is the useful half — a future Phase 6 run
+counts `git tag --contains 3f34210` and is done, instead of re-deriving which cut started the
+clock from a date that no longer maps cleanly onto the tag list.
+
+### The gate was wired at that cut, verified rather than assumed
+
+A tag whose tree carries the *evaluator* proves nothing on its own; the question is whether the
+*boundaries* were wired, because an unwired evaluator would make `16.1.0` a tag the window
+should not count. All three boundaries reproduce at the tag itself:
+
+| Boundary | At `16.1.0` |
+|---|---|
+| `release-validation.yml` | job `release-holds` at `:499`, running `--lint` (`:527`) and `--require-safe --channel all` (`:530`) |
+| `release-guard.yml` | both commands inside `assert-version-matches-tag`, `:59-60` |
+| `src/config/release-gate-locality.yml` | row `release-holds` at `:144` |
+
+So `16.1.0` counts: a declared hold would have had something to refuse it at.
+
+### What the first observation was: a permitted cut, and that is the expected shape
+
+`16.1.0` is a bare `X.Y.Z`, so it is a stable cut and the channel is `all` — the strictest
+reading, under which every open hold refuses. It was permitted, because the corpus declares
+nothing. Both numerator arms therefore stand at zero after one tag:
+
+- **arm (a), refusals logged: 0.** One cut passed the wired refusal and was permitted.
+  `grep -rn '^### hold:' agents/roadmaps/` returns **0** across the whole corpus — there was no
+  declaration for the cut to trip over.
+- **arm (b), logged re-sequences: 0.** The only `resequenced:` string anywhere under
+  `agents/roadmaps/` is this roadmap's own step 1.4 describing the eval fixture, not a live log
+  entry from an author who chose rung 1 over rung 3.
+
+This is the predicted shape, not a surprise — the claim row named the null as the expected
+outcome before the mechanism was buildable. It is recorded here so the reading is a measurement
+at a known n rather than an impression, and **n=1 settles nothing in either direction**: the
+claim row's own words forbid citing an underpowered window, and one permitted cut over an empty
+corpus is the least informative observation the window can produce.
+
+### Fourth reading of `zero-live-subjects` — exposure moved again, the finding did not
+
+Re-run of the blocker's own narrow grep at `1f442155a`, extended to `later/` and `stubs/` as the
+third reading did:
+
+| Reading | Active files | Mid-flight | Of the `ready` subset |
+|---|---:|---:|---|
+| `7182f5d07`, 2026-09-13 | 14 | 1 | 0 of 7 |
+| merged head, 2026-09-14 | 14 | 6 | 4 of 7 |
+| `aed1e94f6`, 2026-09-14 | 10 | 10 | 6 of 6 |
+| `16.1.0`, 2026-09-28 | 10 | 9 | — |
+| `1f442155a`, 2026-09-30 | **18** | **14** | **9 of 12** |
+
+The corpus nearly doubled as new roadmaps landed, and saturation broke — 14 of 18 rather than
+10 of 10. **The declaration count is unchanged at zero.** The grep returns three
+self-references inside `road-to-release-holds-that-refuse.md` (two non-goal sentences and the
+blocker's own quoted command) and one hit outside it:
+`agents/roadmaps/stubs/road-to-main-protection-ruleset-changes.md:146`, the same near-miss the
+third reading found, with the same wording and still resolving at the **guard** and
+**re-sequence** rungs rather than at a hold.
+
+The third reading's warning survives its own strongest test. Exposure went to saturation, then
+came back off it, and through both moves the number this decision turns on did not move at all.
+A population figure that swings from 1-of-14 to 10-of-10 to 14-of-18 in seventeen days while the
+instance count stays at zero is a fairly direct demonstration that the two are measuring
+different things.
+
+`zero-live-subjects` is unchanged and stays the owner's: its `Resolved when` asks for an
+*accepted* plan, and the evidentiary half has been closed since 2026-09-14. Nothing in this
+reading is new information for that decision — which is itself the point of taking it.
