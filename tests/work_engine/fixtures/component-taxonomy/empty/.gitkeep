@@ -1,0 +1,2 @@
+A project root with no component directory at all. Detection must record
+`none` and must not throw.

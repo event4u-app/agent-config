@@ -90,8 +90,15 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // 18 skills the freeze artefact lists. A new skill that hashed into
         // `holdout` would fail the line below rather than silently joining a
         // sealed partition.
+        // 101 -> 102: `ui-component-architect`'s eval set, authored under
+        // road-to-a-component-taxonomy-we-follow-but-never-force because
+        // check_routing_coverage requires a corpus for every skill a diff
+        // touches. `sha256('ui-component-architect')[0:2]` is 222, far above
+        // the ceiling of 51, so it lands in `train` and the holdout is STILL
+        // the same 18 skills. The second line is what checks that rather than
+        // assuming it, and it is why a growth is safe to record here at all.
         const all = corpusSkills(REPO);
-        expect(all.length).toBe(101);
+        expect(all.length).toBe(102);
         expect(all.filter((r) => r.partition === 'holdout').length).toBe(18);
     });
 });
@@ -101,8 +108,9 @@ describe('5.1 — the measurement is non-vacuous', () => {
         expect(loadCatalogue(REPO).length).toBeGreaterThan(200);
         const cases = loadTrainCases(REPO);
         expect(cases.length).toBeGreaterThan(500);
-        // 82 -> 83: `roadmap-writing`'s eval set, train partition (see above).
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(83);
+        // 82 -> 83 -> 84: `roadmap-writing`, then `ui-component-architect`,
+        // both on the train partition (see above).
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(84);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {

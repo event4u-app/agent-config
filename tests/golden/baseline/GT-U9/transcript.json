@@ -79,7 +79,7 @@
         ".implement-ticket-state.json"
       ],
       "exit_code": 1,
-      "stdout": "[halt] outcome=blocked step=refine\n> Input: Build the first marketing landing page for our brand-new SaaS product.\n> No existing UI surface detected — this looks like greenfield.\n> 1. Scaffold — minimal token set + base component primitive folder\n> 2. Bare — proceed with Tailwind defaults, no scaffolding\n> 3. External reference — point me at a design-system URL or file\n\n**Recommendation: 1 — Scaffold tokens + primitives** — even one extra screen benefits from a shared base; the scaffold cost is ~10 min and saves re-doing every primitive on screen 2. Caveat: flip to 2 if this is a demo or single-page prototype that will not grow.\n",
+      "stdout": "[halt] outcome=blocked step=refine\n> Input: Build the first marketing landing page for our brand-new SaaS product.\n> No existing UI surface detected — this looks like greenfield.\n> 1. Scaffold — minimal token set + base component primitive folder\n> 2. Bare — proceed with Tailwind defaults, no scaffolding\n> 3. External reference — point me at a design-system URL or file\n> 4. Scaffold + a granularity convention — as 1, and new components go into named granularity folders you pick the names for; rename or drop it later and nothing here objects\n\n**Recommendation: 1 — Scaffold tokens + primitives** — even one extra screen benefits from a shared base; the scaffold cost is ~10 min and saves re-doing every primitive on screen 2. Caveat: flip to 2 if this is a demo or single-page prototype that will not grow.\n",
       "stderr": "",
       "state_after": {
         "version": 1,
@@ -124,6 +124,7 @@
           "> 1. Scaffold — minimal token set + base component primitive folder",
           "> 2. Bare — proceed with Tailwind defaults, no scaffolding",
           "> 3. External reference — point me at a design-system URL or file",
+          "> 4. Scaffold + a granularity convention — as 1, and new components go into named granularity folders you pick the names for; rename or drop it later and nothing here objects",
           "",
           "**Recommendation: 1 — Scaffold tokens + primitives** — even one extra screen benefits from a shared base; the scaffold cost is ~10 min and saves re-doing every primitive on screen 2. Caveat: flip to 2 if this is a demo or single-page prototype that will not grow."
         ],
