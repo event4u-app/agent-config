@@ -86,3 +86,36 @@ reason `unclassified` exists and the reason this paragraph does.
 
 24 read surface(s): 6 covered, 15 uncovered, 3 unclassified.
 <!-- END read-surface-table -->
+## The second layer — structural hiding in fetched markup
+
+Every row above is about the CODEPOINT floor. It is a property of characters,
+and it cannot see content that markup hides: an HTML comment, a `<template>`
+block, a `style="display:none"` span are all ordinary text at the codepoint
+layer and invisible to a human reader.
+
+That class is covered by `src/scripts/_lib/structural_hiding.ts`, composed with
+the codepoint floor by `retrieval_sanitize.sanitize_markup`. It applies to
+fetched **markup** only, on the model-facing copy, and never to a repository
+file.
+
+Three things a reader of this table should carry with the claim:
+
+- **What it does not catch is a register in the detector's own file** —
+  `STRUCTURAL_HIDING_GAPS`. Stylesheet-driven and class-driven hiding,
+  off-screen positioning, background-coloured text, fragmentation, homoglyphs,
+  image-borne text and script-constructed content are all out of reach. The
+  register travels with the claim wherever the claim is made, and
+  `check_read_surface_coverage` fails a surface that claims the coverage
+  without citing it.
+- **No recall or coverage rate is published for it, anywhere.** A rate needs a
+  frozen corpus of hiding techniques and none exists in this tree; a number
+  would be an invented denominator. The same gate refuses one in the detector.
+- **`aria-hidden` is deliberately not a channel.** Its content is visible to
+  sighted readers — it is a screen-reader affordance, not a hiding technique —
+  and stripping it deletes legitimate text. It was on the channel list of a
+  version an independent review refused, and `STRUCTURAL_HIDING_NON_CHANNELS`
+  records why so the omission is not read as an oversight and restored.
+
+Removal is never silent: each removed span leaves a fixed
+`[removed: structural-hiding/<channel>]` sentinel, and the caller receives one
+structured record per removal with offsets into its own input.
