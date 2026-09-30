@@ -347,14 +347,26 @@ describe('verify_before_complete — verification_runs (round 8)', () => {
         expect(s['verification_runs']).toHaveLength(1);
     });
 
-    it('records a run the legacy counter selector does not recognise, and leaves the counter alone', () => {
-        // The two selectors differ, deliberately. `npx vitest run` is outside
-        // `_VERIFICATION_RE` — the recorder's counter pattern knows `npm test`
-        // and `pytest`, not a bare runner behind `npx` — while the gate's
-        // selector admits it. Widening the counter pattern would silently move
-        // `verifications_this_turn` and the FC-3b `ci_last` discrimination,
-        // which have pinned meanings; widening only the RECORD path moves
-        // nothing, because a record decides nothing until `classifyRun` judges it.
+    it('counts a bare runner behind npx, which the split selectors could not', () => {
+        // Changed 2026-09-30 from `verifications_this_turn === 0`. The old
+        // expectation pinned a FALSE NEGATIVE: `npx vitest run` exiting 0 with
+        // "Tests 4 passed" left the counter reading zero, so the state said a
+        // run happened (`verification_runs.length === 1`) and simultaneously
+        // that nothing was verified.
+        //
+        // The pin's comment gave two grounds and BOTH were measured before this
+        // changed. `ci_last` cannot move: it is written inside a nested
+        // `if (isCiPoll(cmd))`, reached through the second disjunct of
+        // `_is_verification` regardless of the first — see the sibling test
+        // below, which pins that independence. And no code path branches on
+        // `verifications_this_turn` at all: it is initialised, reset,
+        // incremented and printed, never compared.
+        //
+        // Not changed by the implementer alone, because the implementer is the
+        // party the passing test benefits: put to the AI council 2026-09-30,
+        // 2 of 2 seats, verdict "change the test expectation to 1 — legitimate
+        // semantic correction", conditional on exactly the branch measurement
+        // above, which is why that measurement is recorded here.
         run(envelope('claude', 'user_prompt_submit', {}), { consumer_root: tmp });
         run(post('npx vitest run', { exit_code: 0, stdout: ' Tests  4 passed (4)\n' }), {
             consumer_root: tmp,
@@ -362,8 +374,20 @@ describe('verify_before_complete — verification_runs (round 8)', () => {
 
         const s = state(tmp);
         expect(s['verification_runs']).toHaveLength(1);
-        expect(s['last_verification']).toBeNull();
-        expect(s['verifications_this_turn']).toBe(0);
+        expect((s['last_verification'] as Record<string, unknown>)['command']).toBe('npx vitest run');
+        expect(s['verifications_this_turn']).toBe(1);
+    });
+
+    it('a widened verification selector leaves ci_last untouched', () => {
+        // The independence the changed pin above rests on, asserted rather than
+        // argued: a non-CI verification writes no `ci_last`, because that field
+        // is written only under `isCiPoll`.
+        run(envelope('claude', 'user_prompt_submit', {}), { consumer_root: tmp });
+        run(post('npx vitest run', { exit_code: 0, stdout: ' Tests  4 passed (4)\n' }), {
+            consumer_root: tmp,
+        });
+
+        expect(state(tmp)['ci_last']).toBeNull();
     });
 
     it('records a command the classifier will reject, so the gate can tell it from silence', () => {

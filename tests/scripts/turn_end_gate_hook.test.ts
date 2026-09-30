@@ -1738,15 +1738,26 @@ describe('detectUnverifiedEdit', () => {
             ).toBeNull();
         });
 
-        it('refuses `echo test` — the record path reads the run, not the word', () => {
-            // The whole defect the record path closes. The transcript scan
-            // ALLOWS this turn, because `test` is in the selector's pattern;
-            // the same tool calls with a record refuse it.
+        it('refuses `echo test` on BOTH paths — the word alone never cleared an edit', () => {
+            // Changed 2026-09-30, and the change is the point of the roadmap
+            // this landed under. The first assertion used to read
+            // `expect(detectUnverifiedEdit(calls)).toBeNull()`, documenting
+            // that the transcript scan ALLOWED this turn because `test` was in
+            // the selector's pattern — the contrast that made the record path
+            // look necessary.
+            //
+            // That hole is closed at the source: the selector is head-anchored
+            // per shell segment now, so `echo test` fails it the same way
+            // `ls tests` does. The two paths no longer disagree, which is a
+            // stronger state than one path compensating for the other. The
+            // record path's own contribution is unchanged and still asserted
+            // below: it names WHY, where the transcript scan can only say that
+            // nothing verified.
             const calls = [
                 call('Edit', { path: 'src/a.ts' }),
                 call('Bash', { command: 'echo test' }),
             ];
-            expect(detectUnverifiedEdit(calls)).toBeNull();
+            expect(detectUnverifiedEdit(calls)?.mode).toBe('transcript');
             const f = detectUnverifiedEdit(calls, {
                 runs: [{ command: 'echo test', exit_code: 0, after_edits: 1 }],
                 edits_this_turn: 1,
