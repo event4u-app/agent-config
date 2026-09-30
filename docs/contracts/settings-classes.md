@@ -247,8 +247,8 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 26 |
 | B — consent | 3 |
-| C — guarded | 122 |
-| **Total** | **151** |
+| C — guarded | 124 |
+| **Total** | **153** |
 
 It rose again on 2026-09-13 when `road-to-adversarial-verification-and-long-runs`
 Phase 0 added three C keys: `quality.local_auto_run_in_mission` (`consent` — it
@@ -383,8 +383,8 @@ the template, which is the drift this contract exists to prevent.
 | derivable | 83 |
 | un-inferrable | 9 |
 | consent | 47 |
-| policy | 12 |
-| **Total** | **151** |
+| policy | 14 |
+| **Total** | **153** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -522,6 +522,8 @@ Rows follow template order, so a diff against the template reads straight down.
 | `delivery.merge` | C | `off` | C-test 1 — it is the configuration half of merge authority, resolved by ADR-268 section 3. An agent that could write it could grant itself the capability the key gates, which is the exact shape the C fence exists to refuse. `off` is today's behavior, so an install that never sets it is unchanged | consent |
 | `delivery.wait_for_ci` | C | `true` | C-test 1 — it authorises the run to keep spending time and tokens driving CI to a verdict rather than ending at push. A standing authorisation over the agent's own consumption is not a preference | consent |
 | `delivery.pr_topology` | C | `single` | C-test 4 — `stacked` is a plan the owner makes, never one the agent picks, and the roadmap surface that consumes it is written before execution. An agent-writable value here would let a run choose its own delivery shape mid-mission | policy |
+| `host_environment.request_size_caps.bash_max_output_length` | C | `null` | C-test 1 — it is written into the HOST's own environment, where it changes behavior the consumer did not ask for. An agent-writable value here would let a run reshape its own request budget in the consumer's settings file, which is the capability the key gates. `null` is today's behavior: nothing is written | policy |
+| `host_environment.request_size_caps.max_mcp_output_tokens` | C | `null` | C-test 1 — same surface and same reason as the row above; the pair is the whole writable set, and no traffic or auto-updater variable is expressible beside them by construction | policy |
 | `augment.rules_use_symlinks` | A | `false` | reversible install mechanics | derivable — dev-mode detection at install time plus a symlink-capability probe on the target filesystem |
 | `eloquent.access_style` | A | `getters_setters` | code convention | derivable — the convention the project's existing models already use; `standards-from-config` reads it off the tree |
 | `chat_history.enabled` | C | `true` | kill-switch over a path that writes conversation content to disk | consent |

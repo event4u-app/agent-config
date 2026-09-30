@@ -29,6 +29,9 @@ relates:
   - slug: road-to-a-bytes-row-that-exists
     relation: continues
     note: "receives its Phase 5 in full — 5.1 the shrink-only byte bound, 5.2 the first public network figure"
+  - slug: road-to-host-traffic-knobs-that-ship
+    relation: continues
+    note: "receives its 4.2 — a measured saving for the request-size caps; same evidence stream as 1.1 and 1.2, with a paired run on top"
 ---
 # Road to a byte bound and a public figure
 
@@ -68,11 +71,27 @@ active would mean carrying two steps nobody can work.
       both terms recorded `unavailable` — the host's own fetch tool and the model
       transport — so the total is visibly partial rather than quietly incomplete
 
+## Phase 2 — What the size caps actually save
+
+- [ ] **2.1 A measured saving for the request-size caps.** From
+      `road-to-host-traffic-knobs-that-ship` 4.2. That roadmap shipped the caps
+      and the settings key that writes them; it published no saving figure,
+      because when it was written no byte metric existed. One does now — which is
+      why this lands here and not in a third parked file: the condition is this
+      file's `entry_condition` PLUS a paired run, not a different evidence stream.
+      verify: two runs over the same fixture workload, one with both caps unset
+      and one with both set, reported as a delta with both absolute figures beside
+      it — never a percentage alone, and never a figure from a single run
+
 ## What this roadmap deliberately does not do
 
 It publishes no figure before its history exists, and it estimates neither
-unreachable term into a total. Both prohibitions are the parent's, carried rather
+unreachable term into a total. Both prohibitions are the parents', carried rather
 than restated as new policy.
+
+It also does not re-open whether this package may write a traffic variable. That
+was decided on 2026-09-30 — it may not, and the write path is an allow table of
+two size caps — and Phase 2 measures what those two caps save, nothing wider.
 
 ## Acceptance criteria
 

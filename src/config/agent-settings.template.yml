@@ -464,6 +464,35 @@ delivery:
   # that is why this key is Class C rather than a preference.
   pr_topology: single
 
+# --- What this package may write into the HOST's own environment ---
+#
+# THE GUARANTEE IS THE SHAPE, not a list. Only request-SIZE caps live here.
+# Neither `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` nor `DISABLE_AUTOUPDATER`
+# is expressible: both reach the host's update-disabled resolver -- the blanket
+# one as its THIRD RUNG, measured on Claude Code 2.1.284 -- so a profile able to
+# write either could disable a consumer's security updates. Owner-decided
+# 2026-09-30: this package never writes them, and a schema that cannot say them
+# holds that better than an exclusion list somebody has to keep true.
+#
+# Both keys are `null` by default, and null IS the off switch -- nothing is
+# written. There is deliberately no separate enable flag: a flag plus a value
+# would be two ways to say off, and one of them would drift.
+#
+# Size, never count. Lowering either cap suppresses no telemetry, no update
+# check and no download; it bounds how big a request is, not how many there are.
+# What each variable governs is in docs/setup/host-traffic-environment.md and is
+# not copied here.
+host_environment:
+  request_size_caps:
+    # Character cap on Bash tool output placed inline into a model request.
+    # null = not written, host default 30000 applies. Max 150000 -- above that
+    # the host caps it silently, so the schema refuses rather than writing a
+    # value the host changes behind you.
+    bash_max_output_length: null
+    # Token cap on a single MCP tool result. null = not written, host default
+    # 25000 applies.
+    max_mcp_output_tokens: null
+
 # --- Augment Code projection (.augment/) ---
 #
 # Controls how rule files are written into .augment/rules/ during

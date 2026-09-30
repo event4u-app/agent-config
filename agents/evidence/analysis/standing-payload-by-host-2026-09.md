@@ -44,7 +44,7 @@ would look identical here.
 | `cursor` | `.cursor/rules` | per-rule tree | 485458 | 121365 | `src/scripts/condense.ts:1190` |
 | `gemini` | `GEMINI.md` | single file | 2982 | 746 | `src/scripts/condense.ts:1494` |
 | `windsurf` | `.windsurfrules` | single file | 34160 | 8540 | `src/scripts/condense.ts:1238` |
-| `codex` | `.codex/agent-config.md` | single file | absent | absent | `src/scripts/install.ts:1432` |
+| `codex` | `.codex/agent-config.md` | single file | absent | absent | `src/scripts/install.ts:1431` |
 
 Notes per host:
 

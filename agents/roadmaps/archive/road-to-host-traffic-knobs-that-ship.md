@@ -265,19 +265,66 @@ change and stays with the owner.
       acceptance criteria against the root file would otherwise find nothing. -->
 
 
-## Phase 4 — Deferred, owner-reserved
+## Phase 4 — Owner-decided 2026-09-30; the saving figure stays deferred
 
-- [~] **4.1 A settings profile that writes these variables.** Writing a value into a
-      consumer's environment changes behaviour the consumer did not ask to change,
-      including possibly their security updates. Deferred to an owner decision; the
-      blocker below states it.
+- [x] **4.1 An opt-in profile that writes the two SIZE variables, and neither traffic
+      variable.** Owner-decided 2026-09-30: option (b), in the only reading that keeps
+      (b)'s own promise. The profile may write `BASH_MAX_OUTPUT_LENGTH` and
+      `MAX_MCP_OUTPUT_TOKENS`; it may never write `DISABLE_NONESSENTIAL_TRAFFIC` or
+      `DISABLE_AUTOUPDATER`. Both traffic variables reach the host's
+      update-disabled resolver — the blanket one as its third rung, measured on this
+      page — so excluding only the narrow variable, which is what (b) literally said,
+      would have disabled security updates anyway. The two size knobs reach the
+      updater through nothing, so "this package can never disable a consumer's
+      security updates" holds by construction rather than by a list.
+      Off by default: a consumer who never asks gets no written value.
+      verify: a fixture install with the key unset writes no `env` block at all, and
+      with the key set writes exactly the two size variables — asserted by name, with
+      a negative assertion naming both traffic variables
+
+      **Evidence (2026-09-30).** `tests/install/host_env_size_caps.test.ts` → 9
+      passed. The negative case is the load-bearing one: a settings document that
+      names both traffic variables — by their own names AND by plausible snake_case
+      keys — emits neither, asserted by name rather than by a count. Both
+      fail-quiet directions are pinned too: no section, no file, and both caps
+      `null` all yield `null` rather than an `env: {}` nobody asked for.
+
+      **The guarantee is structural in two places, not a check.**
+      `install.ts`'s `WRITABLE_HOST_ENV` is a two-row ALLOW table, and the settings
+      schema admits only those two keys — so neither traffic variable is
+      *expressible* anywhere in the write path. Sensitivity probed: rewriting the
+      allow-table loop as a deny-list pass-through (`if (k === 'disable_autoupdater')
+      continue`) — the exact refactor the decision's original wording invited —
+      reds 5 of 9 including the negative case. Restored from a copy.
+
+      **One thing this step had to correct on the way.**
+      `doctor --json` published `read_only: true` about the traffic block, and that
+      became a true statement about the wrong subject the moment the installer could
+      write: the REPORT is read-only, the PACKAGE no longer is. It now emits
+      `reporting_read_only` plus a `writable_by_this_package` list and a per-row
+      flag, so a consumer reading `set` on a traffic variable can tell this package
+      was not what set it. `tests/scripts/doctor_network_posture.test.ts` → 14
+      passed, with two new cases asserting both traffic variables are unwritable and
+      that the writable set is exactly the two size caps.
 - [~] **4.2 Any figure for what these variables save.** No byte metric exists in the
       tree yet, so any saving figure would be unbacked. Deferred until a byte metric
       lands and one paired run measures it.
+      <!-- deferred-resolution: merged-into=road-to-a-byte-bound-and-a-public-figure -->
+
+      **The premise above went stale on 2026-09-29 and the step did not.** A byte
+      metric DID land — `road-to-a-bytes-row-that-exists` declared
+      `tool-raw-bytes` and `tool-delivered-bytes` and shipped their recorder — so
+      "no byte metric exists in the tree yet" is now false. What remains is the
+      *second* half of the same sentence: one paired run, with and without the
+      caps set, to measure a saving. Carried rather than restored to `[ ]`,
+      because that condition needs census history exactly as the destination's
+      other two items do — it is the SAME evidence stream with one extra step,
+      which is why it goes to that file rather than a third one. Recorded here so
+      the next reader does not re-derive a premise the tree already refuted.
 
 ### blocker: traffic-profile-writes-consumer-environment
 
-**Status:** open
+**Status:** resolved
 **Owner:** maintainer
 **Blocks:** Phase 4.1
 **What to do:** pick exactly one — (a) ship documentation and the `doctor` report only,
@@ -294,6 +341,53 @@ should be able to do, and (b) keeps that specific outcome impossible by construc
 **If you do nothing:** Phases 1 to 3 still ship and are useful on their own — the
 mapping is documented and `doctor` reports it — and a consumer on a metered link sets
 the variables themselves. Nothing regresses; the automation simply does not arrive.
+
+**RESOLVED 2026-09-30 — (b), and the option list was stale when it was written.**
+The owner chose (b). Applying it literally was impossible: (b) promises that
+security updates are "impossible by construction" to disable *by excluding the
+auto-updater variable from every profile*, and that rests on the two traffic
+variables being independent. They are not. This roadmap's own Phase 1 measured
+the opposite and `docs/setup/host-traffic-environment.md` carries the correction
+in its own section: the blanket `DISABLE_NONESSENTIAL_TRAFFIC` is the THIRD RUNG
+of the host's update-disabled resolver, so writing it stops background updates
+whether or not `DISABLE_AUTOUPDATER` is in the profile. The blocker was drafted
+from the supplied proposal's retracted mapping, and the evidence that refuted it
+arrived in Phase 1 of the same roadmap — the blocker was never re-read against
+it.
+
+Surfaced to the owner as a contradiction rather than resolved by inference, per
+`cross-source-consistency`: two present sources disagreed and one of them was
+this roadmap's own delivered measurement. The owner then chose the reading that
+keeps (b)'s promise: **the profile writes only the two SIZE variables**
+(`BASH_MAX_OUTPUT_LENGTH`, `MAX_MCP_OUTPUT_TOKENS`) and never a traffic variable.
+Neither size knob reaches the updater resolver at all, so the guarantee holds by
+construction instead of by a maintained exclusion list — which is stronger than
+what (b) originally offered.
+
+Phase 4.1 is rewritten to that shape and is now open work rather than deferred.
+4.2 stays deferred on its own separate condition.
+
+## Deferred items — carried, not dropped
+
+Archived 2026-09-30. 4.1 was owner-decided and BUILT in the same change; 4.2 is
+carried to `later/road-to-a-byte-bound-and-a-public-figure.md`, which carries a
+`relates:` row naming this roadmap.
+
+| This roadmap's step | Outcome |
+|---|---|
+| 4.1 A settings profile that writes these variables | **built** — owner chose (b), narrowed to the two SIZE caps after the blocker's own option text was found to rest on a mapping this roadmap had already refuted |
+| 4.2 Any figure for what these variables save | **carried** → that file's 2.1, as a paired run |
+
+**Resolution record** (`roadmap-progress-sync` Iron Law 3). 4.2's disposition is
+carry — the council row, because the item stays live. Not merged into a third
+parked file: its condition is the destination's `entry_condition` plus a paired
+run, so it is the SAME evidence stream with one extra step, which is exactly the
+coupling test the council applied when it split the earlier two destinations. Its
+stated premise ("no byte metric exists in the tree yet") went stale on 2026-09-29
+when `road-to-a-bytes-row-that-exists` shipped one; that is recorded at the item
+rather than silently carried forward. What closes it: two runs over one fixture
+workload, caps unset and caps set, reported as a delta with both absolute figures
+beside it.
 
 ## Acceptance criteria
 

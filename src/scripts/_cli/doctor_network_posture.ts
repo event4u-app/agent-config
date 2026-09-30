@@ -72,6 +72,17 @@ export interface TrafficVariable {
     readonly hosts: readonly string[];
     /** Host build and date the row was read from, e.g. `claude-code 2.1.284 · 2026-09-29`. */
     readonly checked_against: string;
+    /**
+     * May THIS PACKAGE write the variable into the host env block?
+     *
+     * `false` on both traffic variables and it is not a policy setting — it is a
+     * structural fact: `install.ts`'s `WRITABLE_HOST_ENV` is a two-row allow
+     * table and the settings schema admits only those two keys, so neither
+     * traffic variable is expressible anywhere in the write path. Reported
+     * because a consumer reading `set` on a row deserves to know whether this
+     * package could have been the one that set it.
+     */
+    readonly writable_by_this_package: boolean;
 }
 
 /** The host build every row below was read from. One place to bump on a re-check. */
@@ -84,10 +95,15 @@ const CHECKED = 'claude-code 2.1.284 · 2026-09-29';
  * true, and this one would be the copy nobody re-reads.
  */
 export const TRAFFIC_VARIABLES: readonly TrafficVariable[] = [
-    { variable: 'CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC', hosts: ['claude-code'], checked_against: CHECKED },
-    { variable: 'DISABLE_AUTOUPDATER', hosts: ['claude-code'], checked_against: CHECKED },
-    { variable: 'BASH_MAX_OUTPUT_LENGTH', hosts: ['claude-code'], checked_against: CHECKED },
-    { variable: 'MAX_MCP_OUTPUT_TOKENS', hosts: ['claude-code'], checked_against: CHECKED },
+    // Both traffic variables reach the host's update-disabled resolver, the
+    // blanket one as its third rung, so neither is writable by this package —
+    // owner-decided 2026-09-30.
+    { variable: 'CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC', hosts: ['claude-code'], checked_against: CHECKED, writable_by_this_package: false },
+    { variable: 'DISABLE_AUTOUPDATER', hosts: ['claude-code'], checked_against: CHECKED, writable_by_this_package: false },
+    // Size caps. Neither reaches the updater resolver, and neither suppresses a
+    // call, an update check or a download.
+    { variable: 'BASH_MAX_OUTPUT_LENGTH', hosts: ['claude-code'], checked_against: CHECKED, writable_by_this_package: true },
+    { variable: 'MAX_MCP_OUTPUT_TOKENS', hosts: ['claude-code'], checked_against: CHECKED, writable_by_this_package: true },
 ];
 
 /** An environment map, in the shape `process.env` has. */
@@ -122,6 +138,7 @@ export interface TrafficRow {
     state: string;
     value: string | null;
     checked_against: string;
+    writable_by_this_package: boolean;
 }
 
 /**
@@ -137,6 +154,7 @@ function trafficRow(spec: TrafficVariable, env: EnvMap, host: string): TrafficRo
         state: applicable ? (present ? 'set' : 'unset') : NOT_APPLICABLE,
         value: present ? String(raw) : null,
         checked_against: spec.checked_against,
+        writable_by_this_package: spec.writable_by_this_package,
     };
 }
 
@@ -146,6 +164,13 @@ function trafficRow(spec: TrafficVariable, env: EnvMap, host: string): TrafficRo
  * Read-only by construction: the only input is the injected `env` map, and the
  * only output is a fresh object. `hostOverride` is the test seam Phase 2.2's
  * non-Claude fixture needs, and is never passed by the production call site.
+ *
+ * `reporting_read_only` replaced a flat `read_only: true` on 2026-09-30, and the
+ * rename is the point rather than cosmetics: this REPORT is still read-only, but
+ * the PACKAGE is no longer, so the old key had become a true statement about the
+ * wrong subject. Two of the four rows are now writable by the installer when the
+ * consumer sets a cap, and `writable_by_this_package` says which — a consumer
+ * reading `set` deserves to know whether we could have been the one who set it.
  */
 export function trafficEnvironmentJson(
     env: EnvMap,
@@ -156,7 +181,10 @@ export function trafficEnvironmentJson(
         host: resolved.host,
         host_observed: resolved.observed,
         doc: TRAFFIC_DOC,
-        read_only: true,
+        reporting_read_only: true,
+        writable_by_this_package: TRAFFIC_VARIABLES.filter((v) => v.writable_by_this_package).map(
+            (v) => v.variable,
+        ),
         rows: TRAFFIC_VARIABLES.map((spec) => trafficRow(spec, env, resolved.host)),
     };
 }
