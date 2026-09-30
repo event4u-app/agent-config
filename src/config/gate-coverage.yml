@@ -54,12 +54,22 @@
 #
 # COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-09-29)
 # ----------------------------------------------------------
-# 341 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 345 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
 # re-run on the tree carrying these rows.)
-# **103 rows are listed below**, so the manifest covers 103/341 = 30.2 % of the
+# **107 rows are listed below**, so the manifest covers 107/345 = 31.0 % of the
 # population, and is complete for every gate that can carry a floor. The row
 # count is `grep -c '^  - id:'`, recomputed here rather than incremented.
+#
+# RECOUNTED 2026-09-29 ON A MERGE, and this is the hazard the two blocks below
+# predicted arriving in the form they predicted. Two branches each recounted
+# CORRECTLY for their own tree — 341/103 here, 341/102-then-103 there — and
+# after the merge both rows exist, so NEITHER pair describes the file. Both
+# figures are recomputed on the MERGED tree rather than reconciled or
+# incremented: 345 from `count_gate_scripts`, 107 from `grep -c '^  - id:'`.
+# The same failure `.secret-allow` records for its own line pin, in a second
+# file, for the same structural reason: a figure about an append-heavy manifest
+# drifts per-branch, not only per-commit.
 #
 # RECOUNTED 2026-09-29, on the change that adds `check_read_surface_coverage`.
 # The header said 97 rows against an actual 102 and 330 scripts against an

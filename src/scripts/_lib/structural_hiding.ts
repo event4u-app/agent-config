@@ -166,7 +166,7 @@ function _matchingCloseEnd(html: string, open: OpenTag): number {
         if (lt === -1) break;
         const close = /^<\/([A-Za-z][A-Za-z0-9-]*)\s*>/.exec(html.slice(lt, lt + 70));
         if (close !== null) {
-            if (close[1].toLowerCase() === lower) {
+            if ((close[1] ?? '').toLowerCase() === lower) {
                 depth -= 1;
                 if (depth === 0) return lt + close[0].length;
             }

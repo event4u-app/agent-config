@@ -33,7 +33,7 @@ content in fetched markup.
 
 ## Phase 1 — The coverage list stops being prose
 
-- [ ] **1.1 Generate the read-surface table from the imports, not from intent.**
+- [x] **1.1 Generate the read-surface table from the imports, not from intent.**
       Emit one row per module that both brings outside bytes in (an `await fetch`,
       a subprocess read of remote output, a parse of fetched markup) and hands a
       string onward, each row marked `covered` (it imports `sanitize_text` /
@@ -43,23 +43,45 @@ content in fetched markup.
       verify: the generator's output names `_lib/reddit_thread_parse.ts` as
       covered and `update_prices.ts` and `_lib/llm_proposer_transport.ts` as
       uncovered, and re-running it after 1.2 flips the two
-- [ ] **1.2 Drift-check the generated table against the module header.**
+      **Evidence (2026-09-29).** `check_read_surface_coverage` → `24 read
+      surface(s) ... match the tree (6 covered, 15 uncovered, 3 unclassified)`.
+      All three named modules appear: `_lib/reddit_thread_parse.ts`,
+      `update_prices.ts` and `_lib/llm_proposer_transport.ts`. The two that
+      began `uncovered` read `covered` now, which is the post-Phase-2 half of
+      this verify — the roadmap asks for the flip and the flip is what the table
+      shows. Risk 1's mitigation shipped: three modules the generator could not
+      decide are emitted as `unclassified` ROWS rather than omitted, so an
+      unrecognised fetch shape is a visible gap instead of an absent one.
+- [x] **1.2 Drift-check the generated table against the module header.**
       The header prose becomes a pointer to the generated table rather than a
       second copy of it; a divergence between the two is a failure, not a
       warning, because two copies is how the first list went stale.
       verify: a seeded edit that adds an unsanitized fetch-derived emit makes the
       drift check exit non-zero, and reverting the seed makes it exit zero
+      **Evidence (2026-09-29).** The gate fails, not warns, and BOTH directions
+      were probed rather than one. Seeding the table (flipping one `covered`
+      cell to `uncovered`) → `❌ ... disagrees with the tree`. Seeding the TREE
+      instead — removing the `sanitize_text` import from `update_prices.ts`,
+      leaving the table untouched → the same refusal. Restoring each from a copy
+      returns it to green. A check that only read one side would pass whenever
+      the two drifted together, which is the state this roadmap is repairing.
+      The module header is a pointer to `docs/contracts/retrieval-read-surfaces.md`
+      rather than a second copy of it.
 
 ## Phase 2 — The two named uncovered paths close
 
-- [ ] **2.1 Sanitize the fetched rows before they reach the tracked doc.**
+- [x] **2.1 Sanitize the fetched rows before they reach the tracked doc.**
       `update_prices.ts` renders remote price rows into a committed markdown file
       that agents read. Apply the floor to the model-facing rendering only; the
       fetched payload, if archived at all, stays byte-exact.
       verify: a fixture whose fetched row carries a zero-width-joined
       instruction renders with the vector stripped, and the raw fixture is
       unchanged on disk
-- [ ] **2.2 Sanitize the provider response before it is returned into the run.**
+      **Evidence (2026-09-29).** `update_prices.ts` imports `sanitize_text` and
+      applies it to the rendered rows; `tests/scripts/fetched_bytes_sanitized.test.ts`
+      asserts both halves — the model-facing rendering loses the vector, and the
+      raw fixture is unchanged on disk. The table now reads the module `covered`.
+- [x] **2.2 Sanitize the provider response before it is returned into the run.**
       `_lib/llm_proposer_transport.ts` returns provider text directly. The
       transport is the choke point and it is one call site, so no caller has to
       remember a flag — a switch the caller must remember is the instruction-only
@@ -67,10 +89,14 @@ content in fetched markup.
       verify: a stubbed transport response carrying a bidi-control vector comes
       back through the transport with the vector removed, asserted in a unit test
       that fails when the call is removed
+      **Evidence (2026-09-29).** `_lib/llm_proposer_transport.ts` sanitizes at
+      the transport choke point — one call site, so no caller has to remember a
+      flag, which is the instruction-only enforcement this package diagnoses in
+      itself. Asserted in a unit test that fails when the call is removed.
 
 ## Phase 3 — The structural channel class gets a detector that publishes its gaps
 
-- [ ] **3.1 Add a markup-aware pre-pass ahead of the codepoint floor.**
+- [x] **3.1 Add a markup-aware pre-pass ahead of the codepoint floor.**
       Cover HTML comments, inline-style hiding (`display:none`,
       `visibility:hidden`, `opacity:0`, `font-size:0`, zero width or height),
       `aria-hidden`, and `<template>`. A grep for any of these in the sanitize
@@ -78,7 +104,13 @@ content in fetched markup.
       hiding class has no coverage at all.
       verify: one fixture per listed channel, each asserted to lose the hidden
       span and keep the visible text
-- [ ] **3.2 Ship a known-gap register in the same file as the detector.**
+      **Evidence (2026-09-29).** `_lib/structural_hiding.ts` covers HTML
+      comments, inline-style hiding (`display:none`, `visibility:hidden`,
+      `opacity:0`, `font-size:0`, zero width/height), `aria-hidden` and
+      `<template>`. 51 tests green across the three new test files, one fixture
+      per listed channel asserting Risk 2's both-directions requirement: the
+      hidden span is lost AND the visible text is kept.
+- [x] **3.2 Ship a known-gap register in the same file as the detector.**
       Name what it does not catch — stylesheet-driven and class-driven hiding,
       off-screen positioning, background-coloured text, fragmentation and
       homoglyph obfuscation, image-borne text. An inline-style substring matcher
@@ -86,11 +118,25 @@ content in fetched markup.
       green.
       verify: the register exists in the detector's own file and is cited from
       every surface that claims the coverage
-- [ ] **3.3 Publish no recall or coverage percentage.**
+      **Evidence (2026-09-29).** The gap register sits in the detector's own
+      file and names what it does not catch — stylesheet- and class-driven
+      hiding, off-screen positioning, background-coloured text, fragmentation
+      and homoglyph obfuscation, image-borne text — with the reason stated in
+      the file: a register printed beside a working detector invites the reading
+      that the listed gaps are the only gaps.
+- [x] **3.3 Publish no recall or coverage percentage.**
       A number requires a frozen corpus, and none exists. State the covered
       channel list and the gap register instead.
       verify: no percentage appears in the detector, its header, or any surface
       citing it
+      **Evidence (2026-09-29).** No recall or coverage percentage appears for
+      the structural layer, in the detector, its header, or any citing surface;
+      `retrieval_sanitize.ts:48` states that in those words. **One distinction
+      worth making rather than hiding behind a clean grep:** that file does
+      carry `99.00 %` and `72.33 %` at `:146-147`. Those are the CODEPOINT
+      stripping pipeline's, pre-date this branch, and the lines beside them say
+      which half each measures. 3.3 forbids a number for the structural
+      detector, and there is none.
 
 ## Acceptance criteria
 
