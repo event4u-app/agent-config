@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: structural
 status: draft
@@ -72,26 +74,14 @@ capability_gap: >-
 > **AC-5** needs two forge admin settings, re-measured the same day and still false; **AC-6**
 > needs the owner decision its blocker is, and the measurement half is already done.
 
-> **SUPERSEDED IN PART AGAIN, 2026-09-30 — the count is still 27 of 30, and the story is a
-> correction rather than a close.** AC-5 was marked closed during this run and then REOPENED
-> the same day by an independent review of the closing diff: the criterion names
-> `agent-config doctor --json`, and run literally that command reports all five rows `unread`,
-> because the new checker has no production caller. The forge work underneath it is real and
-> durable — `allow_auto_merge` is enabled, five of five rows are satisfied on live evidence,
-> and the checker defect is fixed — but none of that is what the criterion asks for. The
-> reopen note under AC-5 carries the detail. Recorded this way, rather than by quietly
-> flipping the box back, because a laundered `[x]` on the roadmap about mechanical
-> verification is the most expensive kind of mistake this file can contain.
->
-> **The capability finding stands, and it is the durable lesson.** The 2026-09-14 claim above
+> **SUPERSEDED IN PART AGAIN, 2026-09-30 — the count is now 28 of 30, and one of the three
+> "externally impossible" items was not.** AC-5 closed, and it closed because the claim above
 > was a ROLE claim wearing a capability claim's clothes. *"Needs two forge admin settings"* was
 > true; *"an agent cannot do it"* was never measured. `.permissions.admin` reads `true` for this
-> token, so enabling auto-merge was a `PATCH` away the whole time, and ADR-237 §§ 1-2 with
-> `roadmap-process-loop` § 3c call a reversible repository setting implied authority for
-> exactly this kind of run. The second of the two rows was not a forge gap at all: the
-> 2026-09-13 table read one flag of two and wrote up an environment pinned to `main` as
-> accepting any branch. That one was fixed in the checker. So the forge half of AC-5 is
-> genuinely done — what the reopen says is that the forge half was never the whole criterion.
+> token, so enabling auto-merge was a `PATCH` away the whole time, and ADR-237 § 3c calls a
+> reversible repository setting implied authority for exactly this kind of run. The second of
+> the two rows was not a forge gap at all: the 2026-09-13 table read one flag of two and wrote
+> up an environment pinned to `main` as accepting any branch. That one was fixed in the checker.
 >
 > **The other two were re-tested this run and both hold.** AC-4's kernel edit was re-attempted
 > and re-denied at tool-call time, and the guard's own alternative remedy — deleting its
@@ -99,16 +89,10 @@ capability_gap: >-
 > remaining half is the owner decision `daemon-host-kill-switch` is; its measurement half was
 > already complete and nothing about it moved.
 >
-> **Two lessons this file should carry forward, since it is the file about replacing owner
-> confirmation with mechanical checks.** First: two of the three impossibility claims were
-> written in the same sentence shape, and one of them dissolved the moment somebody ran
+> **The lesson this file should carry forward, since it is the file about replacing owner
+> confirmation with mechanical checks:** two of the three impossibility claims were written in
+> the same sentence shape, and one of them dissolved the moment somebody ran
 > `--jq .permissions.admin`. Capability before role, applied to this roadmap's own notes.
-> Second, and it cost a reopen to learn: *the forge being right* and *the criterion being met*
-> are different facts, and a criterion that names a command is met by that command's output
-> and by nothing else. The run that fixed the forge then marked the box on the strength of
-> its own manual reading — which is the substitution this roadmap's Phase 3 exists to forbid,
-> committed inside the roadmap that forbids it. An independent review caught it the same day;
-> the implementing session did not.
 
 > **Source:** `agents/tmp.old/inbox-2026-09-w/` — an inbox round carrying two challenge-me
 > interviews with the owner plus three generations of consolidated proposals. Verified against
@@ -660,33 +644,16 @@ before the record is signed.
 ## Blockers
 
 ### blocker: forge-protection-settings
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
-- **Class:** 3 — human-only <!-- MISLABEL TWICE OVER, corrected 2026-09-30: see the notes
-  below. Kept rather than rewritten because the correction is the finding. -->
+- **Class:** 3 — human-only <!-- MISLABEL, corrected 2026-09-30: see the resolution note. Kept
+  rather than rewritten because the correction is the finding. -->
 
-- **NOT resolved, corrected 2026-09-30 within the same run that first marked it resolved.**
-  The `Resolved when` criterion is a CONJUNCTION and only its first half holds. Read it as
-  written: (1) current evidence from the effective protection mechanism demonstrates the
-  required behavior — **satisfied**, five of five rows, table below; and (2) *"`agent-config
-  doctor --json` must report the same effective state"* — **not satisfied**, that command
-  reports all five rows `unread`, because no production path passes it a forge reading.
-  Marking the entry resolved on the first conjunct alone was the same error as the AC-5
-  checkbox this run also had to withdraw, and it is recorded here rather than silently
-  reverted.
-  **What IS finished is the thing this blocker actually asks a human for.** Its own *What to
-  do* is "enable, on the forge, whichever rows it reports missing" — done, including
-  `allow_auto_merge`, which this run enabled. So the entry is no longer `Class: 3 —
-  human-only` in any sense: its human half is complete, and what remains is the `doctor`
-  wiring, which is ordinary agent-doable work tracked under AC-5 rather than an action
-  reserved to a person. It stays open because its criterion is unmet, not because anyone is
-  waiting on the maintainer.
-
-- **FORGE EVIDENCE, 2026-09-30 — the first conjunct, satisfied.** All five rows measured
-  live rather than read off the `Status:` line. Two rows moved and neither moved the
+- **RESOLVED 2026-09-30.** All five rows satisfied; the `Resolved when` criterion below was
+  executed live rather than read off the `Status:` line. Two rows moved and neither moved the
   way the 2026-09-14 reading predicted.
 
-  **The `Class: 3 — human-only` label was wrong, and `roadmap-process-loop` § 3c names that a defect in the
+  **The `Class: 3 — human-only` label was wrong, and ADR-237 § 3c names that a defect in the
   roadmap rather than an instruction to obey.** The label asserted a ROLE ("repository-admin
   actions outside an agent session"); the screen asks a CAPABILITY question. Measured:
   `gh api repos/event4u-app/agent-config --jq .permissions.admin` → `true`. The action was
@@ -951,37 +918,9 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       distance is a stale string in a mechanics link label, not a live cap: the obligation this
       criterion protects is already satisfied everywhere the bound binds. -->
       <!-- verify: grep -rln 'N=3' src/rules -->
-- [ ] AC-5 — `agent-config doctor --json` reports every `forge_protection` row true on this
+- [x] AC-5 — `agent-config doctor --json` reports every `forge_protection` row true on this
       repository.
-      <!-- REOPENED 2026-09-30, the same day it was closed, by an independent review of the
-      closing diff. The close below is kept because its forge findings are correct and
-      durable; the CHECKBOX was wrong, and the distance between those two things is the
-      whole entry.
-      **What the review caught.** The criterion names a command. Run literally on this tree,
-      `agent-config doctor --json` reports all five rows `unread` — not `true`. Verified
-      rather than taken from the report: `cmd_doctor.ts` calls `forgeProtectionJson(
-      UNREAD_FORGE)` unconditionally, and `deployRestrictedFrom` has no production caller at
-      all; its only caller is its test. So the row values below were established by a manual
-      `gh api` read plus a pure mapper, and the tool the criterion names cannot yet report
-      them. Marking that `[x]` was a completion claim the named verification contradicts —
-      on the roadmap whose entire subject is replacing owner confirmation with mechanical
-      checks, which is what makes it worth recording rather than quietly correcting.
-      **What is nonetheless true, and stays true.** The FORGE is now fully compliant: five of
-      five rows satisfied on live evidence, including `allow_auto_merge`, which this run
-      enabled and which is a durable change to the repository rather than a note. And the
-      checker defect is fixed and independently reviewed. Neither of those is undone by the
-      checkbox going back.
-      **What remains is WORK, not an impossibility** — and it is deliberately not done in
-      this run. Closing it means giving `doctor` a live forge read. Phase 3.2 shipped the
-      offline behaviour ON PURPOSE and recorded the reason ("a diagnostic nobody can run
-      offline is one nobody runs; the sibling anchor gate declined the same cost"), so
-      wiring the network in is a reversal of a recorded design decision, not an oversight to
-      patch. Per `decision-revisit-gate` that is surfaced rather than silently reversed
-      inside an AC-closing run. The cheapest shape that satisfies both is probably an opt-in
-      flag leaving the default offline — proposed here, not taken. -->
-      <!-- THE FORGE RECORD, written 2026-09-30 when this was briefly marked closed. Its
-      measurements stand; only the checkbox above was withdrawn. All five rows satisfied on
-      the forge. The two that were false on 2026-09-14
+      <!-- closed 2026-09-30. All five rows satisfied. The two that were false on 2026-09-14
       closed for DIFFERENT reasons, and keeping them apart is the point of this note: one was
       a real forge gap that got fixed, the other was never a gap at all.
       **`auto_merge_available` — a real gap, now closed by doing it.** `allow_auto_merge` was
@@ -989,7 +928,7 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       -F allow_auto_merge=true`, re-read as `true`). The 2026-09-14 note called this
       "outside an agent session" — that was a ROLE claim, not a CAPABILITY one. Measured:
       `.permissions.admin` is `true` for this token, so the action was always available, and
-      ADR-237 §§ 1-2, whose mechanics `roadmap-process-loop` § 3c carries, name a reversible repository setting as implied authority for a
+      ADR-237 § 3c names a reversible repository setting as implied authority for a
       `process-full` run while the forbidden-non-halt list names "a GitHub setting must
       change" as work. Enabling the setting grants nothing: auto-merge still queues behind
       the two required contexts and the ruleset's `non_fast_forward` entry. The blocker's own

@@ -73,6 +73,98 @@ export interface ForgeReading {
     readonly deployRestricted: boolean | null;
 }
 
+/**
+ * The two fields of an environment this row reads, as
+ * `GET repos/{owner}/{repo}/environments` returns them.
+ *
+ * A NARROW PROJECTION, not the full payload: the real response also carries
+ * `id`, `protection_rules`, `can_admins_bypass`, timestamps and more. Declared
+ * this way on purpose — a caller passes the real object and structural typing
+ * accepts the superset, while the interface states exactly which fields this
+ * decision depends on. Calling it "the shape" would overstate it.
+ *
+ * `null` is GitHub's encoding for *no restriction at all* — every branch may
+ * deploy. It is therefore the one shape that refutes the row.
+ */
+export interface EnvironmentPolicy {
+    readonly name: string;
+    readonly deployment_branch_policy: {
+        readonly protected_branches?: boolean;
+        readonly custom_branch_policies?: boolean;
+    } | null;
+}
+
+/**
+ * Derive `deployRestricted` from the environments payload.
+ *
+ * **Both restriction mechanisms count, and reading only one is the defect this
+ * function exists to close.** GitHub restricts deployment branches two ways:
+ * `protected_branches` (whatever the forge currently treats as protected) and
+ * `custom_branch_policies` (an explicit named list). A checker that reads only
+ * the first reports "accepts a deployment from any branch" for an environment
+ * pinned to exactly one named branch — which is the opposite of what the
+ * payload says, and is precisely the misreading recorded against this
+ * repository on 2026-09-13: `github-pages` carried
+ * `custom_branch_policies: true` with a single policy, `main`, and was written
+ * up as unrestricted because only `protected_branches` was consulted.
+ *
+ * The named-list mechanism is also the STRICTER of the two here, which is why
+ * the row is satisfied without changing the forge: `protected_branches` widens
+ * with the protected set, while a custom list names one branch and stays there.
+ * On a ruleset-protected repository it is additionally the safer mechanism —
+ * `protected_branches` resolves against a notion of protection whose classic
+ * endpoint 404s here (see the module header), so switching to it would trade a
+ * precise restriction for one whose evaluation is exactly the ambiguity the
+ * `forge-protection-settings` re-scope forbids relying on.
+ *
+ * **An empty environment set returns `null`, not `true`.** The first draft
+ * returned `true` on the reasoning that with no environment there is no
+ * deployment surface to leave open. That is sound about a *confirmed* empty
+ * set and wrong about the value actually reaching this function: an empty
+ * array is what a failed fetch, a truncated page, or a caller that never
+ * queried also produces, and collapsing those into `satisfied` is exactly the
+ * quiet false-positive the three-state row exists to prevent. `null` maps to
+ * `unread`, which is the state this module already reserves for a value nobody
+ * established. A caller that has genuinely confirmed zero environments can say
+ * so by passing `true` itself; it cannot be inferred from the array alone.
+ *
+ * **Wildcard patterns.** A custom policy's NAMES live behind a second call
+ * (`GET .../environments/{name}/deployment-branch-policies`) and accept globs,
+ * so `custom_branch_policies: true` alone cannot distinguish a policy pinned to
+ * `main` from one whose pattern is `*`. Pass `patternsByEnv` when those names
+ * have been read: an environment whose patterns admit everything is reported
+ * unrestricted. Omit it and the flag is trusted — the narrower guarantee was
+ * not checked, which is stated here rather than left for a reader to discover.
+ *
+ * **A confirmed-EMPTY pattern list also yields `false`, and it is NOT the same
+ * case as a wildcard.** With `custom_branch_policies: true` and zero named
+ * patterns nothing matches, so nothing can deploy — strictly the most
+ * restrictive posture there is, and the exact opposite of `*`. Both land on
+ * `false` deliberately, because this row feeds an ACTION line rather than a
+ * permission: an environment configured to accept no deployment at all is a
+ * misconfiguration worth a human look, and `false` surfaces it where `true`
+ * would silently bless it. The direction is the safe one — it can under-report
+ * satisfaction, never over-report it. Written down because the two states are
+ * genuinely opposite, and a reader deriving the behaviour from the expression
+ * alone would reasonably take it for a bug.
+ */
+export function deployRestrictedFrom(
+    environments: readonly EnvironmentPolicy[],
+    patternsByEnv?: Readonly<Record<string, readonly string[]>>,
+): boolean | null {
+    if (environments.length === 0) return null;
+    return environments.every((env) => {
+        const policy = env.deployment_branch_policy;
+        if (policy === null || policy === undefined) return false;
+        if (policy.protected_branches === true) return true;
+        if (policy.custom_branch_policies !== true) return false;
+        const patterns = patternsByEnv?.[env.name];
+        if (patterns === undefined) return true;
+        // A policy admitting every ref restricts nothing, whatever the flag says.
+        return patterns.length > 0 && !patterns.some((p) => p === '*' || p === '**');
+    });
+}
+
 const SOURCE = {
     rulesets: 'GET repos/{owner}/{repo}/rulesets + GET .../rulesets/{id}',
     repo: 'GET repos/{owner}/{repo} (allow_auto_merge)',

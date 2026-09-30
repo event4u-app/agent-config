@@ -13,9 +13,11 @@ import { describe, expect, it } from 'vitest';
 
 import {
     PROTECTION_ROW_IDS,
+    deployRestrictedFrom,
     forgeProtectionRows,
     protectionActions,
     unconditionalBypasses,
+    type EnvironmentPolicy,
     type ForgeReading,
 } from '../../src/scripts/_lib/forge_protection.js';
 import type { RulesetDetail } from '../../src/scripts/_lib/platform_anchor.js';
@@ -175,5 +177,137 @@ describe('unconditionalBypasses', () => {
             bypass_actors: [{ actor_type: 'RepositoryRole', bypass_mode: 'always' }],
         };
         expect(unconditionalBypasses([rs], 'main')).toHaveLength(0);
+    });
+});
+
+describe('deployRestrictedFrom', () => {
+    /**
+     * The live shape of this repository's only environment, read 2026-09-30.
+     * `protected_branches` is false and `custom_branch_policies` is true with a
+     * single policy, `main` — the exact payload that was written up as
+     * unrestricted on 2026-09-13 by consulting only the first flag.
+     */
+    const LIVE_PAGES: EnvironmentPolicy = {
+        name: 'github-pages',
+        deployment_branch_policy: { protected_branches: false, custom_branch_policies: true },
+    };
+
+    it('counts a custom branch policy as restricted — the 2026-09-13 misreading', () => {
+        expect(deployRestrictedFrom([LIVE_PAGES])).toBe(true);
+    });
+
+    it('counts protected_branches as restricted', () => {
+        expect(
+            deployRestrictedFrom([
+                {
+                    name: 'prod',
+                    deployment_branch_policy: {
+                        protected_branches: true,
+                        custom_branch_policies: false,
+                    },
+                },
+            ]),
+        ).toBe(true);
+    });
+
+    it('refutes the row for a null policy — GitHub encodes "any branch" that way', () => {
+        expect(deployRestrictedFrom([{ name: 'staging', deployment_branch_policy: null }])).toBe(
+            false,
+        );
+    });
+
+    it('refutes the row when both mechanisms are off', () => {
+        expect(
+            deployRestrictedFrom([
+                {
+                    name: 'staging',
+                    deployment_branch_policy: {
+                        protected_branches: false,
+                        custom_branch_policies: false,
+                    },
+                },
+            ]),
+        ).toBe(false);
+    });
+
+    it('is a property of the SET — one unrestricted environment refutes it', () => {
+        expect(
+            deployRestrictedFrom([LIVE_PAGES, { name: 'scratch', deployment_branch_policy: null }]),
+        ).toBe(false);
+    });
+
+    it('treats an absent flag as not-set rather than truthy', () => {
+        expect(deployRestrictedFrom([{ name: 'e', deployment_branch_policy: {} }])).toBe(false);
+    });
+
+    it('returns null for an empty set — a failed fetch is not a satisfied row', () => {
+        // R2 finding 1: `true` here collapsed "confirmed zero environments" into
+        // "the fetch came back empty", which is the quiet false-positive the
+        // three-state row exists to prevent. `null` maps to `unread`.
+        expect(deployRestrictedFrom([])).toBeNull();
+    });
+
+    it('an empty set reaches the row as unread, never as satisfied', () => {
+        const rows = forgeProtectionRows({
+            rulesets: null,
+            defaultBranch: null,
+            allowAutoMerge: null,
+            deployRestricted: deployRestrictedFrom([]),
+        });
+        expect(rows.find((r) => r.id === 'deploy_via_pipeline_only')?.state).toBe('unread');
+    });
+
+    it('a wildcard custom policy restricts nothing, whatever the flag says', () => {
+        // R2 finding 2: the flag cannot distinguish a policy pinned to `main`
+        // from one whose pattern is `*`; the names come from a second call.
+        expect(deployRestrictedFrom([LIVE_PAGES], { 'github-pages': ['*'] })).toBe(false);
+        expect(deployRestrictedFrom([LIVE_PAGES], { 'github-pages': ['**'] })).toBe(false);
+    });
+
+    it('named patterns that are not wildcards stay restricted', () => {
+        expect(deployRestrictedFrom([LIVE_PAGES], { 'github-pages': ['main'] })).toBe(true);
+    });
+
+    it('a confirmed-empty pattern list yields false — a flag, not a blessing', () => {
+        // R2 round 2: zero named patterns is the OPPOSITE of a wildcard — nothing
+        // matches, so nothing deploys. It lands on the same `false` on purpose:
+        // the row feeds an ACTION line, and an environment that accepts no
+        // deployment at all is a misconfiguration worth surfacing. The direction
+        // under-reports satisfaction and never over-reports it.
+        expect(deployRestrictedFrom([LIVE_PAGES], { 'github-pages': [] })).toBe(false);
+    });
+
+    it('patterns supplied for a different environment do not silently apply', () => {
+        // Keyed by name: an unrelated entry leaves this environment on the
+        // flag-only path rather than borrowing another environment's patterns.
+        expect(deployRestrictedFrom([LIVE_PAGES], { other: ['*'] })).toBe(true);
+    });
+
+    it('a protected_branches environment ignores patterns entirely', () => {
+        expect(
+            deployRestrictedFrom(
+                [
+                    {
+                        name: 'prod',
+                        deployment_branch_policy: {
+                            protected_branches: true,
+                            custom_branch_policies: false,
+                        },
+                    },
+                ],
+                { prod: ['*'] },
+            ),
+        ).toBe(true);
+    });
+
+    it('feeds the row: the live environment makes deploy_via_pipeline_only satisfied', () => {
+        const rows = forgeProtectionRows({
+            rulesets: null,
+            defaultBranch: null,
+            allowAutoMerge: null,
+            deployRestricted: deployRestrictedFrom([LIVE_PAGES]),
+        });
+        const row = rows.find((r) => r.id === 'deploy_via_pipeline_only');
+        expect(row?.state).toBe('satisfied');
     });
 });
