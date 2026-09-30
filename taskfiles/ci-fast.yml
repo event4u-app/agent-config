@@ -93,6 +93,8 @@ tasks:
       # classes AND every fixture behaves as its class says. Cheap (pure
       # functions over a 22-entry YAML corpus, no I/O beyond the one read).
       - ./scripts-run src/scripts/check_detector_corpus
+      # The kill-switch table's equality, which decayed within a day of shipping.
+      - ./scripts-run src/scripts/check_kill_switch_table
       # One artefact, one layer (ADR-236). Binds HERE and not in CI on a measured
       # fact rather than a preference: .claude/ is gitignored and no CI leg installs
       # at user scope, so a CI run of this check finds ZERO layers and reports on a
@@ -2372,6 +2374,17 @@ tasks:
       nichts falsch gemacht" — an absolution scored as a complaint. A detector
       missing any class is a failure, not a warning.
     cmd: ./scripts-run src/scripts/check_detector_corpus {{.CLI_ARGS}}
+
+  kill-switch-table:
+    silent: true
+    desc: |
+      `docs/contracts/hook-architecture-v1.md` § Kill switches carries one row
+      per `AGENT_CONFIG_*` identifier the hook layer reads, and publishes the
+      command that reproduces the count. This compares the two SETS — not the
+      counts, because one switch added plus one row left behind for a deleted
+      switch is the pair a count cannot see. The table shipped equal and was
+      stale within a day; a review found it, which is a worse way than a gate.
+    cmd: ./scripts-run src/scripts/check_kill_switch_table {{.CLI_ARGS}}
 
   smoke-host-loadability:
     silent: true

@@ -163,7 +163,15 @@ import {
 // write" is only true while the two agree, and importing a constant made that
 // agreement invisible when the producer's layout moved. A builder makes the move
 // a type error.
-import { statePathFor as ciStatePathFor } from '../before_complete_hook.js';
+import {
+    statePathFor as ciStatePathFor,
+    readTurnRunState,
+    type TurnRunState,
+} from '../before_complete_hook.js';
+// Re-exported: two test files address `readTurnRunState` at this path, and a
+// reader arriving at detector C should find the reader where the detector uses
+// it. The DEFINITION lives with the producer of the shape it reads.
+export { readTurnRunState };
 // The spec-backed options-block reading, imported rather than re-derived:
 // `user-interaction` Iron Law 1's definition of an ask — a block PLUS its
 // recommendation line — lives in exactly one place and detector E reads it from
@@ -179,6 +187,16 @@ import { statePathFor as ciStatePathFor } from '../before_complete_hook.js';
 // Detector E, extracted to `_lib` where its prose costs no ratchet debt.
 // Re-exported so every existing importer of this module is unchanged.
 import { detectDroppedDecision } from '../_lib/dropped_decision.js';
+import { isVerificationCommand } from '../_lib/verification_command.js';
+// Round 8 — the record path detector C prefers over its own regex. The regex
+// reads a command's TEXT and `echo test` matches it; these read what the run
+// exited with and what it printed.
+import {
+    NO_RED_EVIDENCE_REASON,
+    describeRecordFinding as recordReason,
+    hasRedThenGreen,
+    readRunEvidence,
+} from '../_lib/verification_evidence.js';
 
 export { detectDroppedDecision };
 import { isSafeTranscriptPath } from './end_review_nudge_hook.js';
@@ -227,6 +245,18 @@ export interface Finding {
     /** The span that triggered it — quoted back so the refusal is actionable. */
     evidence: string;
     reason: string;
+    /**
+     * Which evidence path produced this finding, where a detector has two.
+     *
+     * Detectors C and F set it — the sentence here read "Only detector C" while
+     * F set it two functions below, which an independent review caught.
+     * `record` means a persisted run record was read;
+     * `transcript` means the recorder left nothing for this turn and the
+     * command-text scan answered instead — the mode a replay through
+     * `measure_turn_end_gate` / `check_detector_corpus` always runs in, so a
+     * corpus reading stays reproducible after the record path landed.
+     */
+    mode?: 'record' | 'transcript';
 }
 
 // ---------------------------------------------------------------------------
@@ -487,6 +517,7 @@ export function readCiSettled(
     return { seen: false, settled: false };
 }
 
+
 /**
  * A completion claim in the delivered reply. Deliberately narrow: the German and
  * English closings the corpus actually produced, anchored to a line so a mid-reply
@@ -656,62 +687,14 @@ export function detectLanguage(reply: string, pinned: Verdict): Finding | null {
 const _EDIT_TOOLS = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
 
 /**
- * Shell commands that count as verification.
+ * Re-exported, not re-derived: the selector moved to `_lib/verification_command.ts`
+ * so the evidence classifier can read it without a hook<->lib import cycle.
  *
- * A positive list, and deliberately narrow. The alternative — treating any
- * `Bash` call as verification — was rejected because `ls` would then clear an
- * unverified edit, which is the failure mode `verify-before-complete` names
- * ("relying on partial verification"). The cost of narrowness is a MISSED
- * detection when a project verifies by some command not listed here, and that is
- * the safe direction for a gate that can refuse a turn: a false negative costs
- * one unguarded turn, a false positive teaches the user to switch the gate off.
- *
- * ## Audited 2026-08-17 — `road-to-stop-gate-honesty` step 2.2
- *
- * 52 commands this project's own surface actually produces (its `package.json`
- * scripts, its `Taskfile` targets, `./scripts-run`, `./agent-config`, and the
- * PHP / Python / Go / Rust toolchains) were run through
- * `isVerificationCommand`. The table of every one, with its verdict, is
- * `turn_end_verify_allowlist.test.ts`; that file is the fixture step 2.2
- * requires, and every addition below has its own row in it.
- *
- * The draft that opened the roadmap expected to add `phpunit` and `pest`. Claim
- * 4 had already overtaken that — both matched before this audit, as did
- * `composer test` and `php artisan test` — so what the audit actually found was
- * two different gaps:
- *
- *   · `phpstan` — a static analyser of exactly the class already listed
- *     (`mypy`, `pyright`, `clippy`). Added.
- *   · `lint` followed by a WORD character — `lint_persistence`,
- *     `lint_provenance`, and every other `lint_*` script in `src/scripts/`
- *     missed, because `\blint\b` needs a boundary and `_` is a word character.
- *     `lint[-_:a-z]*` is the exact mirror of the `check[-_:a-z]*` this list
- *     already carried, which is why it is the narrow fix rather than a new idea.
- *
- * Four further misses were found and deliberately NOT added, because Risk 2 of
- * that roadmap is that every addition is a way to satisfy the gate without
- * verifying anything:
- *
- *   · `npm run prepack` — a lifecycle hook whose content is per-project. Here it
- *     validates; elsewhere it copies files. Recognising it would clear an
- *     unverified edit in any repo whose prepack is a build step.
- *   · `task sync` / `task generate-tools` / `agent-config roadmap:progress` —
- *     GENERATORS. They rewrite the tree; they check nothing. A generator that
- *     cleared the gate would be the rubber stamp in its purest form.
- *   · `agent-config gates --all` — enumerates gates, runs none.
- *   · `vendor/bin/rector process --dry-run` — a refactoring tool. Its dry run
- *     prints a diff; it does not assert anything holds.
- *
- * `psalm` is the obvious sibling of `phpstan` and is also NOT added: nothing in
- * the audited surface runs it, and "the team actually runs" is the step's own
- * standard. It is named here so the next audit does not re-derive the question.
+ * The name stays exported HERE because two test files pin it at this path and
+ * because a reader arriving at detector C should find the selector where the
+ * detector uses it, not have to know it was relocated.
  */
-const _VERIFY_RE =
-    /\b(test|tests|vitest|jest|pytest|phpunit|pest|tsc|eslint|ruff|mypy|pyright|clippy|phpstan|typecheck|lint[-_:a-z]*|build|ci|preflight|smoke[-_:a-z]*|check[-_:a-z]*|validate[-_:a-z]*)\b|\b(task|npm|pnpm|yarn|composer|cargo|go|make|php artisan|bun)\s+(run\s+)?\S*(test|check|lint|build|ci|typecheck)/i;
-
-export function isVerificationCommand(command: string): boolean {
-    return _VERIFY_RE.test(command);
-}
+export { isVerificationCommand };
 
 /**
  * Fire when the turn changed a file and then ran nothing that could have
@@ -728,28 +711,55 @@ export function isVerificationCommand(command: string): boolean {
  * no claim to verify, and refusing one would make the gate fire on the majority
  * of turns, which is how a guard gets disabled.
  */
-export function detectUnverifiedEdit(toolCalls: readonly ToolCall[]): Finding | null {
+export function detectUnverifiedEdit(
+    toolCalls: readonly ToolCall[],
+    runState: TurnRunState | null = null,
+): Finding | null {
     let lastEdit = -1;
     for (let i = 0; i < toolCalls.length; i += 1) {
         if (_EDIT_TOOLS.has(toolCalls[i]!.name)) lastEdit = i;
     }
     if (lastEdit === -1) return null;
+    const edited = toolCalls[lastEdit]!.path ?? toolCalls[lastEdit]!.name;
+
+    // THE RECORD PATH. Preferred whenever the recorder demonstrably witnessed
+    // this turn — see `readTurnRunState`, which returns null otherwise. The
+    // regex path below stays reachable and is not deprecated: it is the only
+    // path a transcript replay has, and it is what a host that binds no
+    // `post_tool_use` slot keeps.
+    if (runState !== null) {
+        const reading = readRunEvidence(runState);
+        if (reading.passed) return null;
+        // An instrument gap is never refused on (Risk 1 of the plan): the host
+        // surfaced no exit code, or wrote a record nothing can place, and
+        // neither is a fact about the operator's work. The transcript answer
+        // stands in, which is exactly the behavior before this path existed.
+        if (!reading.instrumentGap) {
+            return {
+                detector: 'verification',
+                evidence: edited,
+                reason: recordReason(reading.failed, reading.reasons),
+                mode: 'record',
+            };
+        }
+    }
+
     for (let i = lastEdit + 1; i < toolCalls.length; i += 1) {
         const c = toolCalls[i]!;
         if (c.name === 'Bash' && c.command !== undefined && isVerificationCommand(c.command)) {
             return null;
         }
     }
-    const edited = toolCalls[lastEdit]!.path;
     return {
         detector: 'verification',
         // The path, never the diff: the evidence span is quoted into a refusal,
         // and `ToolCall` is shaped so a file body cannot reach it.
-        evidence: edited ?? toolCalls[lastEdit]!.name,
+        evidence: edited,
         reason:
             'this turn changed a file and then ran no verification command — ' +
             'no test, type-check, lint or build call follows the last edit ' +
             '(verify-before-complete: a claim without a fresh run is unverified)',
+        mode: 'transcript',
     };
 }
 
@@ -827,13 +837,55 @@ function _isProductionSource(p: string): boolean {
  * turn; drop the second and it fires on a turn that did its job; drop the third
  * and it fires mid-cycle on the red step of red-green-refactor.
  */
-export function detectUntestedChange(reply: string, toolCalls: readonly ToolCall[]): Finding | null {
+export function detectUntestedChange(
+    reply: string,
+    toolCalls: readonly ToolCall[],
+    runState: TurnRunState | null = null,
+): Finding | null {
     const edited = toolCalls
         .filter((c) => _EDIT_TOOLS.has(c.name) && c.path !== undefined)
         .map((c) => c.path as string);
     const source = edited.filter(_isProductionSource);
     if (source.length === 0) return null;
-    if (edited.some(_isTestPath)) return null;
+
+    // THE TEST-FILE ESCAPE, and why step 5.1 narrowed it rather than removed it.
+    //
+    // "A test file was touched somewhere in the turn" is satisfied by a file
+    // containing `it('works', () => expect(true).toBe(true))`. A test never seen
+    // red has unknown sensitivity — it may assert nothing the change could
+    // break — so the escape as written accepted the shape of evidence instead of
+    // evidence.
+    //
+    // With records available, the escape asks for the cheapest observable proof
+    // that the assertion discriminates: the same target red, then green after
+    // the last edit. Without records it stays exactly as it was, because the
+    // transcript cannot see an exit code and a detector that refused on a
+    // transcript-only host would refuse every honest turn there.
+    // A NEW test file, not any test edit. Step 5.1 says "accepts a NEW test file
+    // only with that pair present", and `edited.some(_isTestPath)` is any
+    // test-path edit — so adjusting an assertion in an existing test alongside a
+    // production change and running it green once was refused. New-vs-existing
+    // is not decidable from a transcript; `Write` on a test path is the usable
+    // proxy, because `Edit` and `MultiEdit` presuppose a file that already
+    // existed. Narrowing here can only ALLOW turns the previous line refused.
+    const wroteNewTest = toolCalls.some(
+        (c) => c.name === 'Write' && c.path !== undefined && _isTestPath(c.path),
+    );
+    let noRedEvidence = false;
+    if (edited.some(_isTestPath)) {
+        // An EXISTING test adjusted alongside a production change keeps the old
+        // escape untouched — `Edit` and `MultiEdit` presuppose a file that was
+        // already there, so nothing new was claimed and there is no new
+        // assertion whose sensitivity is unknown.
+        if (!wroteNewTest) return null;
+        if (runState === null) return null;
+        if (hasRedThenGreen(runState)) return null;
+        // An instrument gap is not a missing red. Same rule as detector C: the
+        // host surfaced no exit code, so nothing about the operator's work is
+        // known, and the pre-record behavior stands in.
+        if (readRunEvidence(runState).instrumentGap) return null;
+        noRedEvidence = true;
+    }
 
     // The claim gate, reusing detector D's pair rather than a second dialect of
     // "done" — two lists of completion phrasings would drift, and the negation
@@ -844,8 +896,21 @@ export function detectUntestedChange(reply: string, toolCalls: readonly ToolCall
     if (_NEGATED_CLAIM_RE.test(_lineAround(prose, m.index))) return null;
 
     const shown = source.slice(0, 3).join(', ');
+    if (noRedEvidence) {
+        return {
+            detector: 'untested',
+            evidence: shown + (source.length > 3 ? ` (+${String(source.length - 3)} more)` : ''),
+            mode: 'record',
+            reason: NO_RED_EVIDENCE_REASON,
+        };
+    }
+    // `transcript` unconditionally: no record contributed to THIS verdict — it
+    // is reached because the turn touched no test file at all, which is read off
+    // the tool calls. Labelling it `record` because a run state happened to be
+    // available would misattribute the evidence.
     return {
         detector: 'untested',
+        mode: 'transcript',
         evidence: shown + (source.length > 3 ? ` (+${String(source.length - 3)} more)` : ''),
         reason:
             'a completion claim over production code this turn changed, with NO test file ' +
@@ -1296,6 +1361,12 @@ export function main(): number {
     const sessionKey = deriveSessionKey(rawSessionId || 'unknown-session');
     if (alreadyRefusedTurn(workspaceRoot, sessionKey, turnOrdinal)) return EXIT_ALLOW;
 
+    // ONE read of the recorder's state, shared by detectors C and F. Two reads
+    // would be two file opens on the stop slot for one answer, and — worse —
+    // could disagree if a post-tool event landed between them. Placed AFTER the
+    // re-entrancy allow, so a retry pays no file read it immediately discards.
+    const runState = readTurnRunState(workspaceRoot, rawSessionId);
+
     // B and C run on every turn-end; A and D run only when no dispatch is open
     // (the ternaries below). For the detectors that DO run, the gating is INSIDE
     // each one — no promise, no pin mismatch, no unverified edit, no unsettled
@@ -1315,7 +1386,7 @@ export function main(): number {
         // excused by anything about a dispatch and run unchanged.
         dispatchOpen ? null : detectPromissory(lastAssistant),
         detectLanguage(lastAssistant, readLanguagePin(workspaceRoot, rawSessionId)),
-        detectUnverifiedEdit(toolCalls),
+        detectUnverifiedEdit(toolCalls, runState),
         // Round 7 § Phase 1 — detector D. It is NOT unconditional, and this
         // comment said it was while sitting one line above the `dispatchOpen`
         // ternary that conditions it: A and D are both excused by an open
@@ -1344,7 +1415,9 @@ export function main(): number {
         // on a completion CLAIM, and a turn waiting on a subagent has not
         // finished — so its closing is not the claim F is about. Same slot,
         // opposite trigger, opposite treatment of `dispatchOpen`.
-        dispatchOpen ? null : detectUntestedChange(lastAssistant, toolCalls),
+        dispatchOpen
+            ? null
+            : detectUntestedChange(lastAssistant, toolCalls, runState),
     ]) {
         if (f) findings.push(f);
     }

@@ -1428,6 +1428,14 @@ gates:
     status: enforced
     no_canary_reason: "The gate carries its own `--self-test` (5 cases, 3 rejecting) — so this row is an adopter, not an exemption; the reason field states why a PLANTED canary is additionally unavailable. Beyond the self-test the negative controls are the 30 mechanism tests in tests/scripts/check_claims.test.ts (17) and tests/scripts/check_claims_retired_phrasings.test.ts (13), each building a throwaway tree and running the real script in it. Twenty-one assert a REJECTION, and one publishes the LITERAL historical string (`zero runtime daemon`) that shipped in package.json and .github/about.yml while claim:no-runtime-daemon was already withdrawn. A planted canary here would mean committing a retired phrasing to a real publish surface and removing it again, and a forgotten one is precisely the defect this gate exists to catch."
 
+  - id: check_kill_switch_table
+    argv: []
+    ci_invocation: .github/workflows/rule-backstops.yml
+    min_scanned: 3
+    corpus: "the three ledger targets this gate resolves — the tree enumeration over `src/scripts/hooks/` and `src/scripts/_lib/` (419 files, 29 switches at registration), the table's row set in `docs/contracts/hook-architecture-v1.md` § Kill switches (29 rows), and the set comparison between them. The FILE count is separately floored by `assertScanned`, which refuses a run that read zero source files, so a moved root fails rather than reporting an empty tree as agreement with an empty table."
+    status: enforced
+    no_canary_reason: "The gate carries its own `--self-test` (6 cases, 4 rejecting), run as its own CI step: a switch with no row, a row with no switch, one-added-plus-one-stale (which a COUNT comparison would pass and a set comparison must not), and a missing section — plus two ACCEPT cases pinning that the two esbuild `--define` identifiers stay excluded, so a gate that started rejecting everything would not pass either. A planted canary would mean committing a fake `AGENT_CONFIG_*` read into a real hook file and removing it again, and a forgotten one is an environment variable in the shipped hook layer that nothing reads — the exact defect this gate exists to catch, left behind by its own canary."
+
   - id: check_rule_evidence_declaration
     argv: []
     min_scanned: 10
