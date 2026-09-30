@@ -186,6 +186,13 @@ and by a pre-registered count of what today's gates catch, recorded before any g
       with no questions, so the flip has to surface a numbered option, not just change a value —
       it is a design change, not a one-line edit. And Phase 5's clearance criterion is already
       met: 5.2's verdict is no null, so nothing but the release window holds this step.
+      · **The marker's effect is measured, not assumed.** Parsed with the real reader
+      (`src/scripts/_lib/blocked_by_marker.ts`, `parseBlockedByMarker`) over this file:
+      `{done: 8, open: 0, blocked: 1}`, `id=shadow-release-window`, `asked=false`. Before this
+      diff the same read was `{done: 5, open: 4, blocked: 0}` — four boxes the ladder considered
+      executable, one of which nobody could execute. The dashboard is unmoved either way, which
+      is the point: the box stays `[ ]`, the roadmap stays unarchivable, and only the machine's
+      read of it changes.
 
 ## Phase 4 — The placeholder scan reads the files
 
