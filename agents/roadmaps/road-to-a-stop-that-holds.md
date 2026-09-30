@@ -615,6 +615,15 @@ dashboard and the archival sweep can act on.
   3. Flip `daemon-host-kill-switch` in
      `road-to-adversarial-verification-and-long-runs.md` to
      `Status: resolved`, then this entry.
+- **Today's reading, so nobody re-derives it:** `check_kill_switch_table`
+  reports **30 == 30** across 430 files (2026-09-30). AC-5 closed on 28 == 28
+  and that number stays as the dated reading it was — two switches arrived by
+  merge since, and the count moved WITHOUT anyone touching the criterion,
+  which is the gate the review round added doing exactly its job. The
+  EQUALITY is what AC-5 asserts, not the number. Recorded here rather than
+  under AC-5 because the Acceptance-Criteria body is a tracked feature of
+  `lint_plan_risk_register`'s staleness check, and a freshness note does not
+  justify re-reviewing the whole register.
 - **Recommendation:** `manual-only`, which is the recommendation that blocker
   already carries. Not re-argued here — a second file restating it would give
   one opinion the appearance of two.
@@ -882,14 +891,8 @@ closed rather than left standing:
       the number in `docs/contracts/hook-architecture-v1.md` § Kill switches and
       the plan's own grep corrected there — it could not remove the token it
       named. See step 1.4's evidence for the three findings. AC-5 is about the
-      COUNT and is closed; step 1.4 stays open on its blocker half.
-      RE-READ 2026-09-30: `check_kill_switch_table` now reports **30 == 30**
-      across 430 files. The 28 above is a dated reading and stays as one; two
-      switches arrived by merge since, and the count moved WITHOUT anyone
-      touching this criterion, which is the gate the review round added doing
-      exactly its job. Recorded because a bare `28 == 28` in a closed criterion
-      reads as the current state, and the equality — not the number — is what
-      AC-5 asserts. -->
+      COUNT and is closed; step 1.4 stays open on its blocker half. The 28 is a
+      DATED reading; today's is under `kill-switch-owner-decision`. -->
 
 ## Provenance
 
