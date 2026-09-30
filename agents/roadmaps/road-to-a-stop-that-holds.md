@@ -847,7 +847,14 @@ closed rather than left standing:
       the number in `docs/contracts/hook-architecture-v1.md` § Kill switches and
       the plan's own grep corrected there — it could not remove the token it
       named. See step 1.4's evidence for the three findings. AC-5 is about the
-      COUNT and is closed; step 1.4 stays open on its blocker half. -->
+      COUNT and is closed; step 1.4 stays open on its blocker half.
+      RE-READ 2026-09-30: `check_kill_switch_table` now reports **30 == 30**
+      across 430 files. The 28 above is a dated reading and stays as one; two
+      switches arrived by merge since, and the count moved WITHOUT anyone
+      touching this criterion, which is the gate the review round added doing
+      exactly its job. Recorded because a bare `28 == 28` in a closed criterion
+      reads as the current state, and the equality — not the number — is what
+      AC-5 asserts. -->
 
 ## Provenance
 
