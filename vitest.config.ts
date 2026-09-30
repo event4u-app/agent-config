@@ -94,6 +94,32 @@ export default defineConfig({
         // block to tsx-only intent tests, so no test needs the python3 shadow.
         // Per the teardown council D3 protocol the file itself is deleted in a
         // follow-up PR after this disable has soaked ≥1 CI cycle on main.
+        // PINNED, because an unpinned default is what broke this suite.
+        //
+        // WHAT IS VERIFIED: Vitest 5 defaults `maxWorkers` to
+        // `availableParallelism() - 1` — read out of the shipped
+        // `node_modules/vitest/dist/chunks/doctor.*.js`, not from the docs. And
+        // the failure: on the Vitest 5 upgrade, 7 of 61 CI checks went red and
+        // ALL 18 failures across the seven shards were `Test timed out in
+        // 10000ms` — counted per shard (2+4+2+1+2+1+6), with no assertion error
+        // anywhere in the set. Every one of the ten files is a CLI-contract test
+        // that SPAWNS a `tsx` subprocess over the whole repo, so they are the
+        // slowest and most contention-sensitive tests here.
+        //
+        // WHAT IS NOT VERIFIED: what Vitest 2's fork pool actually defaulted to.
+        // It is plausibly half, which would make `'50%'` a restoration — but
+        // that number was not read out of the old package, so this is NOT
+        // claimed as one. What it is: halving the worker count to halve the
+        // contention, on the reasoning that the tests are spawn-bound.
+        //
+        // WHY NOT RAISE `testTimeout`: it is a real guard on a CLI's wall-clock,
+        // and widening it to absorb a concurrency change would retire the guard
+        // to hide the cause. A percentage rather than an absolute count because
+        // the latter is not portable between a 4-core runner and an 18-core
+        // laptop. If CI still times out at 50%, the next move is a
+        // per-test timeout on the spawn-bound files — named here so it is not
+        // re-derived as a global raise.
+        maxWorkers: '50%',
         testTimeout: 10_000,
         hookTimeout: 10_000,
         reporters: process.env.CI ? ['default'] : ['default'],
