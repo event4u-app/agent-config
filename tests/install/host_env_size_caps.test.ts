@@ -15,6 +15,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { hostEnvBlock, readSettingsDoc } from '../../src/scripts/_lib/host_env_write.js';
+import { settingsSchema } from '../../src/server/schemas/settings.js';
 
 /** The two names that must never appear in an emitted env block. */
 const FORBIDDEN = ['CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC', 'DISABLE_AUTOUPDATER'] as const;
@@ -117,6 +118,51 @@ describe('hostEnvBlock — what may be written', () => {
             expect(hostEnvBlock(readSettingsDoc(root))).toBeNull();
         } finally {
             rmSync(root, { recursive: true, force: true });
+        }
+    });
+});
+
+// The schema's own default, which a fixture would not have caught.
+//
+// The section shipped WITHOUT `.default({})` first, and every settings document
+// predating it then failed to parse — 12 tests across two server suites, all of
+// them about migration and rejection paths that have nothing to do with host
+// env. "No section" and "both caps null" must be the same thing, because both
+// mean write nothing, and a settings file written before this section existed
+// is the overwhelmingly common case.
+describe('the schema treats an absent section as off', () => {
+    // The SECTION's own schema, not the whole document: `settingsSchema.parse({})`
+    // fails on `cost` and a dozen other required sections, so a whole-document
+    // assertion would have tested the schema's general strictness rather than
+    // this section's default. A first version of this test did exactly that and
+    // failed for the wrong reason.
+    const section = settingsSchema.shape.host_environment;
+
+    it('resolves an ABSENT section to the all-null shape', () => {
+        const parsed = section.parse(undefined);
+        expect(parsed.request_size_caps.bash_max_output_length).toBeNull();
+        expect(parsed.request_size_caps.max_mcp_output_tokens).toBeNull();
+        expect(hostEnvBlock({ host_environment: parsed })).toBeNull();
+    });
+
+    it('resolves an empty section, and an empty caps block, the same way', () => {
+        expect(section.parse({}).request_size_caps.bash_max_output_length).toBeNull();
+        expect(section.parse({ request_size_caps: {} }).request_size_caps.max_mcp_output_tokens).toBeNull();
+    });
+
+    it('refuses a cap above the host ceiling rather than writing one the host rewrites', () => {
+        // 150000 is the host's own cap; above it the host silently clamps, so a
+        // written value would not be the value in the settings file.
+        expect(() => section.parse({ request_size_caps: { bash_max_output_length: 150_001 } })).toThrow();
+        expect(
+            section.parse({ request_size_caps: { bash_max_output_length: 150_000 } }).request_size_caps
+                .bash_max_output_length,
+        ).toBe(150_000);
+    });
+
+    it('refuses a zero or negative cap', () => {
+        for (const bad of [0, -1]) {
+            expect(() => section.parse({ request_size_caps: { max_mcp_output_tokens: bad } })).toThrow();
         }
     });
 });

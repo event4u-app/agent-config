@@ -199,10 +199,12 @@ export const settingsSchema = z.object({
             max_mcp_output_tokens: z.number().int().positive().nullable().default(null).describe(
                 'Token cap on a single MCP tool result the host places into a model request. null (default) = nothing written, host default 25000 applies. Same size-not-count caveat: it does not govern MCP connections, timeouts, or whether a tool runs.',
             ),
-        }).describe(
+        }).default({}).describe(
             'Request-size caps this package may write into the host env block. Both null by default. No traffic or auto-updater variable is expressible here, by construction — see the block comment.',
         ),
-    }),
+    }).default({}).describe(
+        'What this package may write into the host environment. ABSENT resolves to the all-null shape, which is the same thing as off — a settings file predating this section must not fail to parse, and "no section" and "both caps null" both mean write nothing.',
+    ),
     augment: z.object({
         rules_use_symlinks: z.boolean().default(false).describe(
             'When true, .augment/rules/*.md are symlinks into dist/agent-src/rules/ — edits flow back to source on save. When false (default), they are copies — safer on Windows and shared volumes, but rule edits in .augment/ are lost on the next `task sync`.',
