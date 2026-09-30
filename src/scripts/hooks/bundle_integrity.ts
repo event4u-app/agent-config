@@ -56,7 +56,12 @@ export type IntegrityVerdict =
  * same-size edit at the same mtime is the one pair this cannot see. That pair
  * needs a deliberate timestamp forge, which is a strictly harder act than the
  * hand edit this defends against, and the honest statement is that the cache
- * trades that case for 0.0009 ms per dispatch against 0.470 ms.
+ * trades that case for 0.0101 ms per dispatch against 0.470 ms.
+ *
+ * 0.0101 ms is the WHOLE cached path measured — reading the stamp back plus
+ * the stat — not the stat alone, which is 0.0010 ms. The first version of this
+ * comment quoted the stat, which described one of the two syscalls the
+ * dispatcher actually pays.
  */
 export interface BundleStamp {
     sha: string;

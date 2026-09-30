@@ -490,8 +490,11 @@ to remove.
 
 **Cost**, measured on this tree rather than asserted: SHA-256 over the 1.5 MB
 bundle is 0.470 ms and is paid once per build identity; every dispatch after
-that is a `statSync` at 0.0009 ms comparing size and mtime. `pre_tool_use` p50
-measured 63 ms before and 63 ms after. The same measurement retired the
+that reads the cached stamp and stats the bundle, **0.0101 ms** for the pair
+(the stat alone is 0.0010 ms — the pair is what the dispatcher pays, and an
+earlier draft of this paragraph quoted the stat). `pre_tool_use` p50 measured
+63 ms before and 63 ms after, so the addition is inside the run-to-run noise
+of a single slot. The same measurement retired the
 FNV-1a table fingerprint in `table_fingerprint.ts`: its header refused a
 cryptographic hash because `node:crypto` costs 8 ms of process start, and the
 bundle now carries 23 top-level imports of `node:crypto` from elsewhere in the

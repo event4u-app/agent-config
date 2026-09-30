@@ -219,8 +219,11 @@ deny message names its own kill switch.
       **Evidence (2026-09-30).** `build:hooks` writes `dist/hooks/dispatch.sha256`
       in the same invocation; `bundle_integrity.ts` hashes once per build
       identity and stats after. Measured on this tree: SHA-256 over the 1.5 MB
-      bundle 0.470 ms, `statSync` 0.0009 ms, `pre_tool_use` p50 63 ms before and
-      63 ms after.
+      bundle 0.470 ms; the steady-state path — reading the cached stamp AND
+      stating the bundle — 0.0101 ms for the pair, against 0.0010 ms for the
+      stat alone. The pair is the honest figure and a first draft of this
+      evidence quoted the stat, which is one of the two syscalls.
+      `pre_tool_use` p50 read 63 ms before and 63 ms after.
       **Proved live end-to-end, not only in unit tests**, and the probe had to
       move to prove it: `block_plumbing_writes` REFUSED the tamper — step 1.2
       working — so the probe corrupted the sidecar instead, which produces the
@@ -361,9 +364,12 @@ deny message names its own kill switch.
       Proved against the real dispatcher on 2026-09-30, both halves. Refusal:
       `pre_tool_use` (blocking concerns present) exits 2 naming
       `plumbing-integrity`, while `session_end` (advisory only) exits 0 with a
-      warning and an absent sidecar exits 0 silently. Cost: `statSync` measured
-      0.0009 ms against the 0.470 ms full hash it replaces, and `pre_tool_use`
-      p50 read 63 ms both before and after. The tamper had to be applied to the
+      warning and an absent sidecar exits 0 silently. Cost: the cached path —
+      a stamp read plus a stat — measured 0.0101 ms against the 0.470 ms full
+      hash it replaces, and `pre_tool_use` p50 read 63 ms both before and
+      after. The step's verify line says "the per-dispatch cost is a stat
+      call"; it is a stat AND a small read, 10× the stat and 46× cheaper than
+      the hash, and the difference is recorded rather than rounded away. The tamper had to be applied to the
       sidecar rather than the bundle, because `block_plumbing_writes` refused
       the bundle edit — step 1.2 working, and the same `mismatch` through the
       same branch either way.
