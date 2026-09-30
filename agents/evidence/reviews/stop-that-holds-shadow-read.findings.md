@@ -59,10 +59,38 @@ failure each time: a measured number taken before the last edit. Nothing in this
 tree compares a figure in a roadmap against the thing it measures, so the
 discipline that works is ordering, not care.
 
-**Ordering note, stated rather than hidden.** This artifact was committed AFTER
-the fixes it records, so an ancestry check will report against it. That is the
-true history: the review was dispatched to a fresh subagent on the pushed
-branch, its report named two structural clusters, both were fixed with their own
-sabotage proofs, and the artifact was written last so its scope hash covers the
-fixed tree rather than the reviewed one. The reviewed head (`918c6131b`) and the
-recorded head (`1b2b8da78`) are both named above so the gap is readable.
+## Ordering — this artifact violates contract §2.5, and the violation is named
+
+`check_completion_review` reports `fix-before-artifact` on every `fixed` row
+here: the fix commit `1b2b8da78` predates this file's first-add commit. That is
+accurate and it is not worked around. Recorded rather than dressed up, because
+a review artifact that quietly failed the gate measuring review integrity would
+be the exact shape this whole branch is about.
+
+**What §2.5 protects, and whether it was actually lost.** The rule exists so an
+artifact cannot be authored to match fixes already made — the file's add-commit
+is the gate's proxy for "the review existed first". Here the REVIEW genuinely
+predates the fixes: the subagent was dispatched at 21:55, reported at ~22:14
+naming two structural clusters, and the fixes landed at ~22:40 in response. What
+postdates is the FILE, not the finding. The proxy is right in general and wrong
+about this instance, and saying so is not a claim that the rule should be
+weaker — it is a statement of what a reader can and cannot conclude from the
+red.
+
+**Why it is not fixed here.** The only remedy is to reorder two local commits,
+which is a history rewrite `git-history-discipline` forbids without the user
+asking for it this turn. So the honest options were a silent red or a named one.
+
+**This is the SECOND round in this lane to record the same thing**, and that is
+the finding worth carrying upward rather than the individual red. The sibling
+artifact `stop-that-holds.findings.md` closes with "this artifact was committed
+AFTER the fixes it records, so an ancestry check will report against it".
+A drain that dispatches a review on a pushed branch, receives findings, and
+fixes them structurally cannot commit the artifact first — the artifact does not
+exist until the review returns, and the review is dispatched against a branch
+that must already be pushed. Either the workflow needs an empty placeholder
+artifact committed at dispatch time, or §2.5 needs a clause for the
+review-after-push case. **Owner-reserved: it is a contract change.**
+
+The reviewed head (`918c6131b`) and the recorded head (`1b2b8da78`) are both
+named above so the gap is readable either way.
