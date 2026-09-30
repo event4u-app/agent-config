@@ -19,9 +19,11 @@
  * - `--dry-run` (MockRouter, no key, no spend) exercises the plumbing only;
  *   floors are REPORTED but never fail the run — mock routing says nothing
  *   about real trigger accuracy.
- * - Rotation is a pure function of (week index, batch size, sorted suite
- *   list): ~batch suites per week, wrapping so every suite is visited on a
- *   fixed cadence regardless of suite-count drift.
+ * - Rotation is a pure function of (week index, suite identity): a suite's
+ *   slot comes from a hash of its own name, so every suite is visited once per
+ *   `ROTATION_CYCLE_WEEKS` and adding one shifts nobody else. What floats is
+ *   how many run in a given week; `rotation_plan` reports that and the weekly
+ *   query cost it implies.
  *
  * Exit codes: 0 pass (always, in --dry-run) · 1 live floor breach ·
  * 2 usage / IO error.
@@ -48,7 +50,6 @@ const _HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(_HERE, '..', '..');
 const SKILLS_DIR = path.join(REPO_ROOT, 'src', 'skills');
 const DEFAULT_OUT_DIR = path.join(REPO_ROOT, 'internal', 'evals', 'results', 'rotation');
-const DEFAULT_BATCH = 5;
 
 /** Router that may expose an async route (fetch-based live routers). */
 type AsyncCapableRouter = TriggerRouter & {
@@ -64,23 +65,116 @@ export function week_index(d: Date): number {
 }
 
 /**
- * Deterministic rotation: batch consecutive suites starting at
- * `(week * batch) mod total`, wrapping. Every suite is visited within
- * ceil(total / batch) weeks; adding/removing suites shifts but never
- * starves the cycle.
+ * Weeks in one full rotation cycle. 12 × 7 = 84 days, inside the 90-day
+ * `MAX_AGE_DAYS` window `check_trigger_evals` enforces.
  */
-export function pick_rotation<T>(suites: readonly T[], week: number, batch: number): T[] {
-    if (suites.length === 0 || batch <= 0) {
+export const ROTATION_CYCLE_WEEKS = 12;
+
+/** Provider queries one suite's live pass costs, measured at ~9.5; rounded up. */
+export const QUERIES_PER_SUITE = 10;
+
+/**
+ * Stated weekly ceiling for the rotation's paid calls. Growth past it does not
+ * silently raise the bill — `rotation_plan` reports `withinCeiling: false` and
+ * a test asserts the live suite list stays under it, so crossing it is a red a
+ * human decides on rather than an invoice they discover.
+ *
+ * **Set from measurement, and the arithmetic is the point.** At 102 suites a
+ * full pass costs ~1020 queries; spread over a 12-week cycle that is ~85 a week
+ * on average and 140 in the busiest week (hash spread, measured 2026-09-30).
+ * 160 leaves headroom for that unevenness and reds at roughly 117 suites.
+ *
+ * The number nobody can lower by tuning: a 90-day window over N suites costs
+ * `N × QUERIES_PER_SUITE` every 90 days, whatever the schedule. The scheme this
+ * replaced looked cheaper only because it never completed a pass — `batch = 5`
+ * over 102 suites is a 21-week cycle, which misses the 90-day window by 57 days.
+ * Cheapness was the symptom of the defect, not a property worth preserving.
+ */
+export const MAX_WEEKLY_QUERIES = 160;
+
+/**
+ * FNV-1a over the suite id. Any stable hash works; what matters is that a
+ * suite's slot depends on the suite alone and on nothing about the list it
+ * sits in.
+ */
+function slot_of(id: string, cycleWeeks: number): number {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < id.length; i += 1) {
+        h ^= id.charCodeAt(i);
+        h = Math.imul(h, 0x01000193) >>> 0;
+    }
+    return h % cycleWeeks;
+}
+
+/**
+ * Deterministic rotation by suite identity: a suite is due in the weeks whose
+ * `week mod cycleWeeks` equals its own slot, so worst-case staleness is exactly
+ * `cycleWeeks` for any suite present across a cycle — independent of how many
+ * suites exist.
+ *
+ * **Why not the positional window this replaces.** It selected `batch`
+ * consecutive suites from `start = (week * batch) mod total`, and that start
+ * re-bases whenever `total` changes, so a region can be skipped repeatedly.
+ * Simulated against a list growing by one suite every eight weeks over five
+ * years, worst-case staleness reached **24 weeks against a 12-week window**;
+ * `trigger_eval_rotation_growth.test.ts` is that simulation, and it was
+ * observed red against the old scheme before this replaced it. A loop over
+ * static totals cannot see the defect, which is why the earlier test suite
+ * passed while the property was false.
+ *
+ * The cost of the fix is that the batch is no longer a knob: how many suites
+ * run in a given week follows from the hash distribution, and `rotation_plan`
+ * reports it rather than leaving it to be discovered on an invoice.
+ */
+export function pick_rotation<T>(
+    suites: readonly T[],
+    week: number,
+    cycleWeeks: number = ROTATION_CYCLE_WEEKS,
+): T[] {
+    if (suites.length === 0 || cycleWeeks <= 0) {
         return [];
     }
-    const n = Math.min(batch, suites.length);
-    const total = suites.length;
-    const start = ((((week * batch) % total) + total) % total);
-    const picked: T[] = [];
-    for (let i = 0; i < n; i += 1) {
-        picked.push(suites[(start + i) % total] as T);
+    const due = (((week % cycleWeeks) + cycleWeeks) % cycleWeeks);
+    return suites.filter((s) => slot_of(String(s), cycleWeeks) === due);
+}
+
+/** What a given suite list costs and promises, derivable without running it. */
+export interface RotationPlan {
+    total: number;
+    cycleWeeks: number;
+    /** Suites in the busiest week of the cycle. */
+    peakSuitesPerWeek: number;
+    /** Provider queries in that busiest week. */
+    peakWeeklyQueries: number;
+    /** Worst-case days between two visits of one suite. */
+    worstCaseStalenessDays: number;
+    withinCeiling: boolean;
+}
+
+/**
+ * Derive the cost and staleness a suite list implies. Pure, so the weekly bill
+ * is readable from the code rather than from a run.
+ */
+export function rotation_plan(
+    suites: readonly string[],
+    cycleWeeks: number = ROTATION_CYCLE_WEEKS,
+): RotationPlan {
+    const span = Math.max(cycleWeeks, 1);
+    const counts = new Array<number>(span).fill(0);
+    for (const s of suites) {
+        const slot = slot_of(s, span);
+        counts[slot] = (counts[slot] ?? 0) + 1;
     }
-    return picked;
+    const peakSuitesPerWeek = counts.length > 0 ? Math.max(...counts) : 0;
+    const peakWeeklyQueries = peakSuitesPerWeek * QUERIES_PER_SUITE;
+    return {
+        total: suites.length,
+        cycleWeeks,
+        peakSuitesPerWeek,
+        peakWeeklyQueries,
+        worstCaseStalenessDays: cycleWeeks * 7,
+        withinCeiling: peakWeeklyQueries <= MAX_WEEKLY_QUERIES,
+    };
 }
 
 /** Enumerate skills carrying `evals/triggers.json`, sorted for determinism. */
@@ -181,7 +275,8 @@ export async function run_eval_async(
 
 export interface RotationOptions {
     week?: number;
-    batch?: number;
+    /** Weeks in a full cycle; also the worst-case staleness. Default 12. */
+    cycleWeeks?: number;
     dryRun?: boolean;
     outDir?: string;
     model?: string;
@@ -202,7 +297,7 @@ export interface RotationSuiteOutcome {
 
 export interface RotationSummary {
     week: number;
-    batch: number;
+    cycle_weeks: number;
     total_suites: number;
     dry_run: boolean;
     outcomes: RotationSuiteOutcome[];
@@ -211,14 +306,14 @@ export interface RotationSummary {
 
 export async function run_rotation(opts: RotationOptions = {}): Promise<RotationSummary> {
     const dryRun = opts.dryRun ?? false;
-    const batch = opts.batch ?? DEFAULT_BATCH;
+    const cycleWeeks = opts.cycleWeeks ?? ROTATION_CYCLE_WEEKS;
     const week = opts.week ?? week_index(new Date());
     const outDir = opts.outDir ?? DEFAULT_OUT_DIR;
     const model = opts.model ?? DEFAULT_MODEL;
     const skillsDir = opts.skillsDir ?? SKILLS_DIR;
 
     const suites = list_trigger_suites(skillsDir);
-    const picked = pick_rotation(suites, week, batch);
+    const picked = pick_rotation(suites, week, cycleWeeks);
     const catalogue = load_skill_metas();
 
     const router: AsyncCapableRouter =
@@ -257,7 +352,7 @@ export async function run_rotation(opts: RotationOptions = {}): Promise<Rotation
 
     return {
         week,
-        batch,
+        cycle_weeks: cycleWeeks,
         total_suites: suites.length,
         dry_run: dryRun,
         outcomes,
@@ -278,7 +373,7 @@ function parse_args(argv: string[]): RotationOptions & { help?: boolean } {
             return v as string;
         };
         if (a === '--week') out.week = Number(take());
-        else if (a === '--batch') out.batch = Number(take());
+        else if (a === '--cycle-weeks') out.cycleWeeks = Number(take());
         else if (a === '--dry-run') out.dryRun = true;
         else if (a === '--out-dir') out.outDir = path.resolve(take());
         else if (a === '--model') out.model = take();
@@ -292,8 +387,8 @@ function parse_args(argv: string[]): RotationOptions & { help?: boolean } {
         process.stderr.write('trigger_eval_rotation: error: --week must be an integer\n');
         process.exit(2);
     }
-    if (out.batch !== undefined && (!Number.isInteger(out.batch) || out.batch <= 0)) {
-        process.stderr.write('trigger_eval_rotation: error: --batch must be a positive integer\n');
+    if (out.cycleWeeks !== undefined && (!Number.isInteger(out.cycleWeeks) || out.cycleWeeks <= 0)) {
+        process.stderr.write('trigger_eval_rotation: error: --cycle-weeks must be a positive integer\n');
         process.exit(2);
     }
     return out;
@@ -303,7 +398,7 @@ export async function main(argv?: string[]): Promise<number> {
     const opts = parse_args(argv ?? process.argv.slice(2));
     if (opts.help) {
         process.stdout.write(
-            'usage: trigger_eval_rotation [--week N] [--batch N] [--dry-run]\n' +
+            'usage: trigger_eval_rotation [--week N] [--cycle-weeks N] [--dry-run]\n' +
                 '                             [--out-dir DIR] [--model MODEL]\n',
         );
         return 0;
@@ -316,7 +411,7 @@ export async function main(argv?: string[]): Promise<number> {
         return 2;
     }
     process.stdout.write(
-        `trigger-eval rotation · week=${summary.week} · batch=${summary.batch} · ` +
+        `trigger-eval rotation · week=${summary.week} · cycle=${summary.cycle_weeks}w · ` +
             `${summary.outcomes.length}/${summary.total_suites} suites this run` +
             `${summary.dry_run ? ' · DRY-RUN (floors advisory)' : ''}\n`,
     );
