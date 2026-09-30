@@ -74,8 +74,14 @@ export interface ForgeReading {
 }
 
 /**
- * One environment's deployment-branch policy, in the shape
- * `GET repos/{owner}/{repo}/environments` returns it.
+ * The two fields of an environment this row reads, as
+ * `GET repos/{owner}/{repo}/environments` returns them.
+ *
+ * A NARROW PROJECTION, not the full payload: the real response also carries
+ * `id`, `protection_rules`, `can_admins_bypass`, timestamps and more. Declared
+ * this way on purpose — a caller passes the real object and structural typing
+ * accepts the superset, while the interface states exactly which fields this
+ * decision depends on. Calling it "the shape" would overstate it.
  *
  * `null` is GitHub's encoding for *no restriction at all* — every branch may
  * deploy. It is therefore the one shape that refutes the row.
