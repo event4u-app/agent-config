@@ -312,8 +312,22 @@ describe('5.1/5.2 — the after-number and the faithful arm\'s verdict', () => {
         expect(text).toMatch(/caught 3 of 3/);
         const cmd = 'npx tsx tests/design-artifacts/fixtures/ui-port-losses/probe.ts';
         // The point of the pre-registration is that it is the SAME command
-        // before and after, so a divergent second command would be the finding.
-        expect(text.split(cmd).length - 1).toBeGreaterThanOrEqual(3);
+        // before and after, so a divergent second command is the finding — and
+        // it has to be checked PER ROW, not as a global occurrence count. A
+        // count cannot see divergence: `cmd` is a prefix of `cmd --new-flag`,
+        // so appending a flag to one row leaves every tally unchanged. Each
+        // table row is therefore matched whole, and the command cell is
+        // required to END at the cell boundary.
+        const row = (label: string): string => {
+            const m = new RegExp(`^\\|[^|\\n]*${label}[^|\\n]*\\|([^|\\n]*)\\|`, 'im').exec(text);
+            expect(m, `no table row for ${label}`).not.toBeNull();
+            return (m as RegExpExecArray)[1] as string;
+        };
+        const beforeCmd = row('Before').trim().replace(/^`|`$/g, '');
+        const afterCmd = row('After').trim().replace(/^`|`$/g, '');
+        expect(beforeCmd).toBe(cmd);
+        expect(afterCmd).toBe(cmd);
+        expect(afterCmd).toBe(beforeCmd);
     });
 
     it("the faithful arm's false-red count is recorded and is zero", () => {
@@ -331,9 +345,16 @@ describe('5.1/5.2 — the after-number and the faithful arm\'s verdict', () => {
     it('the after-number is the one this tree actually produces', () => {
         // The README's after-row is a claim about this commit, so it is checked
         // against the live gates rather than trusted as prose. Three planted
-        // losses reach the operator; the faithful arm does not. Same predicate
-        // as `probe.ts` — whether the loss reached the operator at all, which
-        // is what keeps the number invariant across the pending 3.2 flip.
+        // losses reach the operator; the faithful arm does not.
+        //
+        // This is `probe.ts`'s S-b predicate applied to all four arms, NOT a
+        // copy of its per-arm ones: S-a and S-c there additionally require the
+        // message to name the item and the file. So this is deliberately the
+        // WEAKER, generic check — it asks only whether the loss reached the
+        // operator at all, which is the property that stays true across the
+        // pending 3.2 flip and is therefore what the after-number rests on.
+        // The message content S-a and S-c must carry is pinned by the 2.1 and
+        // 4.1 cases above, and is not re-asserted here.
         const reached = (file: string): boolean => {
             const r = applyRun(stateFor(file));
             return String(r.outcome) !== 'success' || /carried nothing/.test(saidBy(r));

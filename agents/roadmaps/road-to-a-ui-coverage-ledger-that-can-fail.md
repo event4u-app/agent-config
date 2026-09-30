@@ -195,18 +195,32 @@ and by a pre-registered count of what today's gates catch, recorded before any g
       value three ways: it skips a step already marked `SUCCESS` (`:140`), halts the run on
       `BLOCKED` (`:181`), and returns `SUCCESS` as the run's own outcome (`:194`). The flip is
       therefore the surface change D2 anticipated, and the shadow release stays load-bearing.
-      · **Two things the flip must carry, found while probing and recorded so the next run does not
-      rediscover them.** `dispatcher.ts:264` raises when a step returns `BLOCKED` or `PARTIAL`
+      · **One thing the flip must carry, found while probing and recorded so the next run does
+      not rediscover it.** `dispatcher.ts:264` raises when a step returns `BLOCKED` or `PARTIAL`
       with no questions, so the flip has to surface a numbered option, not just change a value —
-      it is a design change, not a one-line edit. And Phase 5's clearance criterion is already
-      met: 5.2's verdict is no null, so nothing but the release window holds this step.
-      · **The marker's effect is measured, not assumed.** Parsed with the real reader
-      (`src/scripts/_lib/blocked_by_marker.ts`, `parseBlockedByMarker`) over this file:
-      `{done: 8, open: 0, blocked: 1}`, `id=shadow-release-window`, `asked=false`. Before this
-      diff the same read was `{done: 5, open: 4, blocked: 0}` — four boxes the ladder considered
-      executable, one of which nobody could execute. The dashboard is unmoved either way, which
-      is the point: the box stays `[ ]`, the roadmap stays unarchivable, and only the machine's
-      read of it changes.
+      it is a design change, not a one-line edit. (Separately, and not a requirement on the
+      flip: Phase 5's clearance criterion is already met — 5.2's verdict is no null, so nothing
+      but the release window holds this step.)
+      · **The marker's effect is measured, and it is partial — both halves corrected 2026-09-30
+      after the completion review caught the first version citing a function that cannot
+      produce the numbers it was credited with.** `parseBlockedByMarker`
+      (`src/scripts/_lib/blocked_by_marker.ts`) returns `{id, asked, reason}` for ONE marker; it
+      has no callers in production code and it never produced a `{done, open, blocked}` triple.
+      Only `id=shadow-release-window` and `asked=false` came from it. The counts come from two
+      different readers, and they disagree — which is the part worth having:
+      **`scanOpenSteps`** (`src/scripts/hooks/run_continuation_hook.ts:418`, the continuation
+      ladder, carrying its own private marker regex at `:223`) reads `{open: 0, blocked: 1}`
+      after this diff and `{open: 4, blocked: 0}` before it. That is the fix working, and the
+      ladder is the reader that was handing 3.2 out.
+      **`countRoadmap`** (`src/scripts/_lib/run_checkpoint.ts:93`, the checkpoint / resume /
+      supervise path) reads `{open: 1, done: 8}` after and `{open: 4, done: 5}` before — it does
+      **not** exclude a `blocked-by`-marked step, so on that path 3.2 is still `open` and still
+      the reported `next`, now with the raw marker text prefixed to it. So the honest claim is
+      narrower than the one first written here: the continuation ladder no longer hands out an
+      undoable step, and the checkpoint path still does. Closing that is a change to
+      `countRoadmap`, which is outside this roadmap's scope and is not smuggled in here.
+      The dashboard is unmoved either way, which is the point: the box stays `[ ]`, the roadmap
+      stays unarchivable, and only one machine reader's view of it changes.
 
 ## Phase 4 — The placeholder scan reads the files
 
@@ -223,7 +237,7 @@ and by a pre-registered count of what today's gates catch, recorded before any g
       which is why the box was left unflipped: the code shipped inside 3.1's commit and the
       checkbox was not carried with it.
       **Verified live at this branch point, not read off the diff:** `npx vitest run
-      tests/scripts/work_engine/ui_port_losses.test.ts` → 18 passed at HEAD, and the probe reports
+      tests/scripts/work_engine/ui_port_losses.test.ts` → **22 passed**, and the probe reports
       `S-c  CATCH  outcome=blocked`. Both limbs of the verify are permanent assertions rather than
       a one-time demonstration — `S-c halts naming the written file` asserts `blocked` plus the
       path `written/S-c/panel.html`, and the sensitivity control asserts the other side directly
@@ -232,6 +246,24 @@ and by a pre-registered count of what today's gates catch, recorded before any g
       the same arm pass" stays checkable at every future commit instead of only at this one.
       Risk 4's false-positive guard is asserted beside it: an absent or unreadable path is skipped,
       not reported, and an envelope naming no files reads nothing.
+      · **CORRECTED 2026-09-30 — this note first read `18 passed at HEAD`, and 18 was not the
+      number at the HEAD it claimed.** The 18 was measured before Phase 5's four tests were
+      written; by the time this note was committed its own parent already carried them, so the
+      file had 22 (`git show 5085516e1:tests/.../ui_port_losses.test.ts | grep -c '    it('`
+      reads 22, and the test file is byte-identical from that parent to HEAD). The substance
+      was unaffected — the S-c assertions are among the 18 and among the 22, and both runs were
+      green — but a stale evidence figure inside a note whose own framing is "verified live, not
+      read off the diff" is the exact defect this roadmap exists to catch, so it is corrected
+      here and recorded rather than quietly overwritten. Found by the completion review, not by
+      the author.
+      · **The verify line's code string is not literally emitted, and the substitution was
+      silent until now.** `apply_placeholders_in_output` appears only as a `code:` field in the
+      static `AMBIGUITIES` documentation array (`apply.ts:91`); `_halt_placeholders` never reads
+      or emits it, so it reaches no `message` or `questions`. What the test asserts instead is
+      the halt that actually happens — `blocked`, plus the offending path and the word
+      `placeholder`. That is the stronger check, and it is what "halts with
+      `apply_placeholders_in_output`" was plainly reaching for, but the two are not the same
+      string and the note should have said so the first time.
 
 ## Phase 5 — Say what changed, against the pre-registered number
 
@@ -248,9 +280,27 @@ and by a pre-registered count of what today's gates catch, recorded before any g
       merely adjacent. Asserted, not eyeballed — four tests in `ui_port_losses.test.ts` pin both
       numbers, the command's presence in all three places, the `0 false red(s)` string, and the
       live arm behaviour behind the after-row. **Sensitivity proven:** `Verdict: no null` →
-      `Verdict: inconclusive` and `caught 3 of 3` → `caught 9 of 3` failed exactly the two
-      expected tests; removing the `0 false red(s), outcome=success` string failed exactly three.
-      Restored, 22/22 green.
+      `Verdict: inconclusive` together with `caught 3 of 3` → `caught 9 of 3` failed exactly the
+      two expected tests. Restored, 22/22 green.
+      · **CORRECTED 2026-09-30.** This line first added "removing the
+      `0 false red(s), outcome=success` string failed exactly three", which reads as a third
+      independent mutation and is not one: that run was **cumulative** — the two mutations above
+      were still applied — so the 3 counts all three together, and the marginal effect of
+      removing the false-red string alone is 1. The corrected claim is the one actually
+      measured. Found by the completion review; the original phrasing overstated the
+      discrimination of a single mutation, which is precisely the kind of evidence inflation
+      this roadmap is about.
+      · **The command assertion was a count and could not fail for the reason it named —
+      replaced 2026-09-30, with the delta measured.** It read
+      `text.split(cmd).length - 1 >= 3`, a global occurrence tally, under a comment saying a
+      divergent second command would be the finding. A tally cannot see divergence: `cmd` is a
+      prefix of `cmd --new-flag`, so appending a flag to one row leaves the count untouched.
+      Replaced by a per-row match that requires each command cell to END at the cell boundary
+      and requires the before-row and after-row cells to be equal. Proven on the exact case the
+      old one missed: ` --new-flag` appended to the after-row's cell now fails the test
+      (1 failed / 21 passed), while `grep -c` over the same mutated file still reads 4
+      occurrences — which is what the old assertion measured and why it would have stayed
+      green. Restored, 22/22.
       · **The after-number is measured at the shadow state and is invariant under the pending
       3.2 flip — measured, not argued.** The flip was simulated locally (`_handed_back_line`
       non-null returning `Outcome.PARTIAL` with a question) and the identical command re-run:
