@@ -929,7 +929,7 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       ADR-237 § 3c names a reversible repository setting as implied authority for a
       `process-full` run while the forbidden-non-halt list names "a GitHub setting must
       change" as work. Enabling the setting grants nothing: auto-merge still queues behind
-      the two required contexts and the `non_fast_forward` rule. The blocker's own
+      the two required contexts and the ruleset's `non_fast_forward` entry. The blocker's own
       recommendation was "enable all five".
       **`deploy_via_pipeline_only` — never a gap; the 2026-09-13 reading was wrong.** That
       table recorded "it accepts a deployment from any branch" from
