@@ -160,6 +160,13 @@ export function _toRowsFromLitellm(
         // independent review named it and was right; closing one field and
         // calling the class closed is the failure mode, not the typo.
         //
+        // The reachable fold is ONE character: `U+212A KELVIN SIGN -> k`.
+        // Measured, not recalled — U+212B ANGSTROM folds to `å`, which is not
+        // ASCII, and an earlier note here claimed otherwise. No provider in the
+        // current list carries a `k`, so this boundary guards nothing reachable
+        // TODAY; it guards the day one is added, which is the only time a
+        // boundary of this shape can be added without a migration.
+        //
         // So the grammar is asserted on the UNTOUCHED bytes. Pure ASCII, with
         // the punctuation real identifiers use. Nothing outside it can be an
         // allow-list member, because every entry is ASCII — and within ASCII,

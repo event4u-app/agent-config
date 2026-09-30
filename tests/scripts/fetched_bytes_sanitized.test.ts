@@ -110,13 +110,15 @@ describe('update_prices — fetched rows reach the tracked doc sanitized', () =>
     // well as ASCII — so the field the fix claimed to close was still open in
     // principle. The grammar closes it.
     //
-    // HONEST SCOPE, and it cost two attempts to establish, so it is recorded
-    // rather than implied: NO TEST HERE DISCRIMINATES, because for this allow
-    // list nothing does. The only Unicode characters that case-fold ONTO an
-    // ASCII letter are the Kelvin sign (-> `k`) and the Angstrom sign (-> `å`),
-    // and no provider in the current list contains either letter — `anthropic
-    // openai gemini xai perplexity`. Every other non-ASCII provider already
-    // missed a pure-ASCII allow list under plain `.toLowerCase()`. So the
+    // HONEST SCOPE, and it cost two attempts plus a corrected claim to
+    // establish, so it is recorded rather than implied: NO TEST HERE
+    // DISCRIMINATES, because for this allow list nothing does. Measured rather
+    // than recalled — an earlier version of this comment named the Angstrom
+    // sign alongside Kelvin and was WRONG: U+212B folds to `å`, which is not
+    // ASCII. `U+212A KELVIN SIGN -> k` is the only single-character fold onto
+    // an ASCII letter, and no provider in the current list contains a `k` —
+    // `anthropic openai gemini xai perplexity`. Every other non-ASCII provider
+    // already missed a pure-ASCII allow list under plain `.toLowerCase()`. So the
     // grammar is DEFENCE IN DEPTH WITH NO CURRENTLY REACHABLE EXPLOIT: it is
     // the right shape — the boundary refuses before transforming, instead of
     // transforming into the comparison — and it starts mattering the day

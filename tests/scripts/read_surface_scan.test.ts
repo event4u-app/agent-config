@@ -17,6 +17,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
     SCAN_ROOT,
     ScanTraversalError,
+    type ReadDir,
     renderTable,
     scanReadSurfaces,
     tally,
@@ -219,19 +220,34 @@ describe('rendering helpers', () => {
 });
 
 
-// The fail-closed traversal, as a DURABLE test rather than a hand probe.
-// Round 3 asked for exactly this: the fix was verified interactively against a
-// chmod-000 subtree and nothing stopped it regressing. An unreadable subtree
-// used to remove every module under it from the result, silently, and the gate
-// then reported the shortened list as matching the tree.
+// The fail-closed traversal, as a DETERMINISTIC test.
+//
+// An unreadable subtree used to remove every module under it from the result,
+// silently, and the gate then reported the shortened list as matching the tree.
+//
+// THE FIRST VERSION OF THIS TEST WAS THE REVIEW'S LAST BLOCKER, and it was
+// right about all three things. It chmod-000'd a real directory, which is not
+// portable — under root the mode is no barrier — and its capability check read
+// the PARENT directory rather than the locked one, so in that environment the
+// test FAILED instead of skipping: fragile in exactly the case it was written
+// to handle. Its precondition also asserted only a non-zero count, which does
+// not establish that the module behind the locked door was the one that
+// disappeared.
+//
+// So the error is INJECTED at the one path, with the shape the walk actually
+// classifies on — an `EACCES` error, not a bare `Error`, or the test would
+// prove that arbitrary exceptions propagate rather than that a traversal
+// failure becomes a `ScanTraversalError`.
 describe('the scan fails closed on an unreadable subtree', () => {
     let root: string;
+    let locked: string;
 
     beforeEach(() => {
         root = fs.mkdtempSync(path.join(os.tmpdir(), 'scan-fail-closed-'));
-        fs.mkdirSync(path.join(root, 'src', 'scripts', '_lib', 'locked'), { recursive: true });
+        locked = path.join(root, 'src', 'scripts', '_lib', 'locked');
+        fs.mkdirSync(locked, { recursive: true });
         fs.writeFileSync(
-            path.join(root, 'src', 'scripts', '_lib', 'locked', 'hidden_surface.ts'),
+            path.join(locked, 'hidden_surface.ts'),
             'export async function pull(u: string): Promise<string> {\n' +
                 '    const r = await fetch(u);\n    return await r.text();\n}\n',
             'utf-8',
@@ -239,32 +255,36 @@ describe('the scan fails closed on an unreadable subtree', () => {
     });
 
     afterEach(() => {
-        try {
-            fs.chmodSync(path.join(root, 'src', 'scripts', '_lib', 'locked'), 0o755);
-        } catch {
-            // already restored
-        }
         fs.rmSync(root, { recursive: true, force: true });
     });
 
-    it('throws rather than returning a shortened list', () => {
-        // Precondition: the same tree readable returns the module, so the
-        // throw below is caused by the permission and not by an empty fixture.
-        expect(scanReadSurfaces(root).length).toBeGreaterThan(0);
+    it('throws rather than returning a list with the unreadable subtree missing', () => {
+        // Precondition on the SPECIFIC module, not on a count: this is what
+        // makes the throw below attributable to the injected failure.
+        expect(scanReadSurfaces(root).map((r) => r.module)).toContain('_lib/locked/hidden_surface.ts');
 
-        fs.chmodSync(path.join(root, 'src', 'scripts', '_lib', 'locked'), 0o000);
-        if (fs.readdirSync(path.join(root, 'src', 'scripts', '_lib'), { withFileTypes: true }).length === 0) {
-            // Running as a user for whom 0o000 is not a barrier (root in some
-            // containers). Skipping is honest; asserting would pass vacuously.
-            return;
-        }
+        // The injected failure carries the SHAPE the runtime produces — an
+        // `EACCES` with `path` and `syscall` — not a bare `Error`, which would
+        // prove only that arbitrary exceptions propagate.
+        const readDir: ReadDir = (dir) => {
+            if (dir === locked) {
+                const err = new Error(`EACCES: permission denied, scandir '${locked}'`) as NodeJS.ErrnoException;
+                err.code = 'EACCES';
+                err.path = locked;
+                err.syscall = 'scandir';
+                throw err;
+            }
+            return fs.readdirSync(dir, { withFileTypes: true });
+        };
+
         let threw: unknown = null;
         try {
-            scanReadSurfaces(root);
+            scanReadSurfaces(root, readDir);
         } catch (exc) {
             threw = exc;
         }
         expect(threw).toBeInstanceOf(ScanTraversalError);
         expect(String((threw as Error).message)).toContain('the scan is incomplete');
+        expect(String((threw as Error).message)).toContain('EACCES');
     });
 });

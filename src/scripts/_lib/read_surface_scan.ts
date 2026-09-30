@@ -192,10 +192,24 @@ export class ScanTraversalError extends Error {
     }
 }
 
-function _walk(dir: string, base: string, out: string[]): void {
+/**
+ * Directory reader, injectable for one reason: to test the failure.
+ *
+ * The fail-closed branch below can only be exercised by a `readdirSync` that
+ * throws, and on ESM `vi.spyOn(fs, 'readdirSync')` cannot redefine the
+ * namespace property. The alternative — chmod-000 on a real directory — is not
+ * portable, because under root the mode is no barrier and the test then fails
+ * in exactly the environment it was written to survive. A narrow seam is the
+ * honest shape: production passes nothing and gets `fs.readdirSync`.
+ */
+export type ReadDir = (dir: string) => fs.Dirent[];
+
+const _defaultReadDir: ReadDir = (dir) => fs.readdirSync(dir, { withFileTypes: true });
+
+function _walk(dir: string, base: string, out: string[], readDir: ReadDir): void {
     let entries: fs.Dirent[];
     try {
-        entries = fs.readdirSync(dir, { withFileTypes: true });
+        entries = readDir(dir);
     } catch (exc) {
         throw new ScanTraversalError(dir, exc);
     }
@@ -203,7 +217,7 @@ function _walk(dir: string, base: string, out: string[]): void {
         const abs = path.join(dir, e.name);
         const rel = path.relative(base, abs).split(path.sep).join('/');
         if (e.isDirectory()) {
-            _walk(abs, base, out);
+            _walk(abs, base, out, readDir);
         } else if (e.isFile() && rel.endsWith('.ts') && !rel.endsWith('.d.ts') && !_EXCLUDE_RE.test(rel)) {
             out.push(rel);
         }
@@ -220,10 +234,10 @@ export const SCAN_ROOT = 'src/scripts';
  * Rows are sorted by module path so the rendered table is stable across
  * filesystems.
  */
-export function scanReadSurfaces(repoRoot: string): ReadSurfaceRow[] {
+export function scanReadSurfaces(repoRoot: string, readDir: ReadDir = _defaultReadDir): ReadSurfaceRow[] {
     const base = path.join(repoRoot, SCAN_ROOT);
     const files: string[] = [];
-    _walk(base, base, files);
+    _walk(base, base, files, readDir);
     files.sort();
 
     const rows: ReadSurfaceRow[] = [];
