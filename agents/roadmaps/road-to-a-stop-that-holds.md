@@ -265,19 +265,27 @@ its pre-registered bar can be read — armed only by that reading.
       UNIT AND LIMIT: these are local darwin readings, not the CI runner's, and
       CI is the authoritative leg — see § Cost this branch added, whose readings
       were CI's. Bundle delta, measured by building `dist/hooks/dispatch.js` at
-      the merge base and at HEAD in the same worktree: 1,555,324 -> 1,559,180
-      bytes, +3,856 B / +0.248 %, against the +19,110 B / +1.34 % the previous
+      the merge base and at HEAD in the same worktree: 1,555,324 -> 1,559,266
+      bytes, +3,942 B / +0.253 %, against the +19,110 B / +1.34 % the previous
       pass of this roadmap added.
 
-      THAT NUMBER WAS FIRST WRITTEN AS +3,288 B / +0.211 % AND WAS WRONG, which
-      is recorded rather than silently overwritten because it is the failure
-      mode a measured figure has. The first reading was taken mid-change, before
-      the pruner fix and the `SHADOW_SUFFIX` constant landed; the source then
-      grew by 568 bytes of bundle and the number in the file did not. Nothing
-      caught it except the pre-push bundle-content gate refusing a stale
-      `dist/hooks/dispatch.js` — a freshness check on a different subject. Both
-      sides were re-measured from `origin/main` and HEAD in one worktree after
-      the last source edit.
+      THAT NUMBER WENT STALE TWICE BEFORE IT WAS RIGHT, and both are recorded
+      rather than silently overwritten, because a measured figure that ages is
+      indistinguishable from a fresh one to every reader.
+
+      It was first written **+3,288 B / +0.211 %**, read mid-change before the
+      pruner fix and the `SHADOW_SUFFIX` constant landed. Corrected to **+3,856
+      B / +0.248 %** — and that reading aged the same way within the hour, when
+      CI's source-size ratchet forced the transcript extraction and the extra
+      module boundary cost 86 more bytes. Final: **+3,942 B / +0.253 %**, both
+      sides rebuilt from `origin/main` and HEAD in one worktree after the last
+      source edit in the branch.
+
+      What caught it each time was a gate about something else — the pre-push
+      bundle-content check refusing a stale `dist/hooks/dispatch.js`. Nothing in
+      this tree compares a number in a roadmap against the thing it measures, so
+      the discipline that actually works is to take the reading last, not to
+      take it carefully.
 
       The non-retry path pays NOTHING new — the same
       reads in the same order, relocated — and a retry now pays what a non-retry
@@ -589,6 +597,22 @@ dashboard and the archival sweep can act on.
   does not restate it, because two copies of a condition drift and the other
   file owns it.
 
+  **Executed live 2026-09-30, rather than read off that blocker's `Status:`,
+  and the reading moved.** A merge from `main` the same day filled
+  `docs/enforcement-by-host.md` § `destructive:` — eight hosts, eight rows,
+  each with a `Measured from` cell citing `src/scripts/hooks/host_lowering.yaml`.
+  So the condition's FIRST half is now met and nothing had recorded that.
+  The second half is not: it asks that each `manual-only` row be **a recorded
+  decision rather than an unmeasured default**, and every one of the seven is
+  derived from the absence of a `pre_tool_use` binding. That is a measurement
+  of what the configuration says, which the section states about itself — *"a
+  cell says what has been written down about a host, never what the host
+  does"*. The question the blocker asks is the other one: on a host that
+  cannot refuse, is autonomy permitted with the weaker guarantee made visible,
+  or refused outright? The table does not answer it, and reading `manual-only`
+  as the answer would be inferring a decision from a default — the exact
+  substitution the condition's own wording rules out.
+
   **Why this is not agent-closable, tested against capability rather than
   role.** The agent CAN edit both files, so the refusal is not "an agent may
   not write here". It is that the condition names a DECISION — which fallback —
@@ -777,9 +801,9 @@ closed rather than left standing:
   green is a necessary condition and not the authoritative one; CI is. The
   comparable number that IS portable is the bundle delta, measured by building
   `dist/hooks/dispatch.js` at the merge base and at HEAD in one worktree:
-  +3,856 B / +0.248 %, against +19,110 B / +1.34 % for the previous pass.
-  (First recorded as +3,288 B from a mid-change build; corrected after the
-  last source edit — step 2.1's note carries how that was caught.)
+  +3,942 B / +0.253 %, against +19,110 B / +1.34 % for the previous pass.
+  (Recorded twice before it was right — step 2.1's note carries both stale
+  readings and what caught them.)
 
   **The risk does not close, it narrows.** Its refusing direction — a shadow
   read wedging a turn — is closed by construction and by fixture: both layers
