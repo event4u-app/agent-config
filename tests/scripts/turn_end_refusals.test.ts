@@ -32,6 +32,7 @@ import {
     readSessionCounts,
     refusalStateDir,
     sessionRefusalFile,
+    sessionShadowFile,
     type RefusalRecord,
 } from '../../src/scripts/_lib/turn_end_refusals.js';
 
@@ -291,6 +292,51 @@ describe('step 1.2 — the TTL the header admitted was missing', () => {
 
     it('is a no-op on a workspace that never refused a turn', () => {
         expect(pruneAgedRefusalState(root)).toEqual({ scanned: 0, pruned: 0, kept: 0 });
+    });
+
+    /**
+     * Step 2.1 put a second record shape in this directory, and its filename
+     * ends `.json` like every other. `parseRecord` rejects it for lacking
+     * `refused_at`, and the unparseable branch above KEEPS what it cannot
+     * read — correct for a corrupt refusal record and exactly wrong here,
+     * because a shadow record is perfectly readable and would then never age
+     * out. That is the unbounded growth this pruner exists to prevent,
+     * reintroduced by the instrument.
+     */
+    function writeShadow(sessionId: string, lastAt: string): string {
+        const file = sessionShadowFile(root, deriveSessionKey(sessionId));
+        fs.mkdirSync(path.dirname(file), { recursive: true });
+        fs.writeFileSync(
+            file,
+            `${JSON.stringify({ would_refuse_again: [], retries_observed: 1, dropped: 0, first_at: lastAt, last_at: lastAt }, null, 2)}\n`,
+        );
+        return file;
+    }
+
+    it('prunes an aged SHADOW record on its own last_at clock', () => {
+        const aged = writeShadow('shadow-aged', daysAgo(REFUSAL_STATE_MAX_AGE_DAYS + 5));
+        const fresh = writeShadow('shadow-fresh', daysAgo(1));
+        const result = pruneAgedRefusalState(root);
+        expect(result.scanned).toBe(2);
+        expect(result.pruned).toBe(1);
+        expect(fs.existsSync(aged)).toBe(false);
+        expect(fs.existsSync(fresh)).toBe(true);
+    });
+
+    it('keeps a shadow record whose last_at is unreadable', () => {
+        const dir = refusalStateDir(root);
+        fs.mkdirSync(dir, { recursive: true });
+        const file = path.join(dir, 'deadbeef.shadow.json');
+        fs.writeFileSync(file, '{not json');
+        expect(pruneAgedRefusalState(root).pruned).toBe(0);
+        expect(fs.existsSync(file)).toBe(true);
+    });
+
+    it('a shadow record contributes nothing to the refusal rollup', () => {
+        writeShadow('counted-nowhere', daysAgo(1));
+        const stats = collectRefusalStats(root);
+        expect(stats.sessionsWithRefusals).toBe(0);
+        expect(stats.total).toBe(0);
     });
 });
 

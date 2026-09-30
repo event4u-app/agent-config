@@ -336,6 +336,182 @@ export function readInstallBoundary(): InstallBoundary {
 }
 
 // ---------------------------------------------------------------------------
+// The shadow read — road-to-a-stop-that-holds step 2.1
+// ---------------------------------------------------------------------------
+
+/**
+ * One observation of "this retry would still have been refused".
+ *
+ * `turn-end-detector-demotion.md` § Q1 asks what share of the turns the gate
+ * allows on a re-entrancy layer would have been refused again. Both layers
+ * return `EXIT_ALLOW` unconditionally, so that share is not derivable from the
+ * refusal record: a retry leaves no trace at all, and a detector that fired
+ * twice is indistinguishable from one that was satisfied on the second pass.
+ * This row is that trace.
+ *
+ * `layer` is which allow path produced it, because the two are not the same
+ * measurement. `stop_hook_active` is the HOST's answer and is set on any stop
+ * hook's block, including another concern's; `refused_turn` is this gate's own
+ * marker and therefore always follows a refusal by this gate. Pooling them
+ * would let another concern's retries inflate Q1's numerator against a
+ * denominator that only counts this gate's refusals.
+ */
+export interface WouldRefuseAgainRow {
+    detector: RefusalDetectorId;
+    /** The turn ordinal the shadow ran on — joins to `refused_turn`. */
+    turn: number;
+    at: string;
+    layer: ShadowLayer;
+}
+
+export type ShadowLayer = 'stop_hook_active' | 'refused_turn';
+
+/**
+ * Per-session shadow state, in its own file beside the refusal record.
+ *
+ * SEPARATE FILE, deliberately, and this is the one design decision in the step
+ * worth defending. The plan says "into the session state" and the refusal
+ * record is the obvious place — but `refused_turn` in that record is the
+ * re-entrancy wedge guard, `parseRecord` rejects any record lacking it, and a
+ * Layer-1 retry can occur with no refusal by this gate at all (another stop
+ * concern blocked). Writing a shadow row there would mean either synthesising
+ * a `refused_turn` this gate never wrote — corrupting the one field a wedge
+ * depends on — or loosening the parser that protects it. A sibling file costs
+ * one more path and touches neither.
+ *
+ * It lives in this module rather than in the gate for the reason the header
+ * already gives about the pruner: a directory with two writers each holding
+ * their own idea of where the files are is how a reader and a writer end up
+ * disagreeing.
+ */
+export interface ShadowRecord {
+    /** Newest last. Bounded by `SHADOW_MAX_ROWS`. */
+    would_refuse_again: WouldRefuseAgainRow[];
+    /**
+     * Retries observed on an allow path in this session, refusing or NOT.
+     *
+     * Kept because a shadow row array alone cannot distinguish "no retry
+     * happened" from "every retry came back clean", and those are opposite
+     * readings of the same empty list. Q1's denominator is the refusal record's
+     * own count; this is the sanity check on it.
+     */
+    retries_observed: number;
+    /** Rows dropped to the cap. A non-zero value makes the array a sample. */
+    dropped: number;
+    first_at: string;
+    last_at: string;
+}
+
+/**
+ * Row cap per session.
+ *
+ * A stated bound, not a measured optimum. A row is ~90 bytes and a session
+ * with 200 retries is already pathological, so the cap exists to keep an
+ * unbounded write off the Stop path rather than to fit a distribution. Oldest
+ * rows are dropped first: Q1 is a rate, and the most recent observations are
+ * the ones a reader is deciding on. A non-zero `dropped` on a real session is
+ * the signal that the number was chosen too low.
+ */
+export const SHADOW_MAX_ROWS = 200;
+
+/**
+ * The shadow file's suffix, named rather than inlined because TWO readers need
+ * to agree on it: the writer below and `pruneAgedRefusalState`, which scans the
+ * same directory for `*.json` and would otherwise keep every shadow record
+ * forever.
+ */
+export const SHADOW_SUFFIX = '.shadow.json';
+
+export function sessionShadowFile(workspaceRoot: string, sessionKey: string): string {
+    return path.join(refusalStateDir(workspaceRoot), `${sessionKey}${SHADOW_SUFFIX}`);
+}
+
+/**
+ * Parse one shadow record. `null` for anything unreadable — same fail-open
+ * contract as `parseRecord`, and for the same reason: this is the Stop path.
+ */
+export function parseShadowRecord(raw: string): ShadowRecord | null {
+    let decoded: unknown;
+    try {
+        decoded = JSON.parse(raw);
+    } catch {
+        return null;
+    }
+    if (typeof decoded !== 'object' || decoded === null || Array.isArray(decoded)) return null;
+    const o = decoded as Record<string, unknown>;
+    const rowsRaw = o['would_refuse_again'];
+    if (!Array.isArray(rowsRaw)) return null;
+    const rows: WouldRefuseAgainRow[] = [];
+    for (const r of rowsRaw) {
+        if (typeof r !== 'object' || r === null || Array.isArray(r)) continue;
+        const ro = r as Record<string, unknown>;
+        const det = ro['detector'];
+        const turn = ro['turn'];
+        const at = ro['at'];
+        const layer = ro['layer'];
+        if (!isDetector(det)) continue;
+        if (typeof turn !== 'number' || !Number.isFinite(turn)) continue;
+        if (typeof at !== 'string') continue;
+        if (layer !== 'stop_hook_active' && layer !== 'refused_turn') continue;
+        rows.push({ detector: det, turn, at, layer });
+    }
+    const num = (v: unknown): number =>
+        typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : 0;
+    return {
+        would_refuse_again: rows,
+        retries_observed: num(o['retries_observed']),
+        dropped: num(o['dropped']),
+        first_at: typeof o['first_at'] === 'string' ? o['first_at'] : '',
+        last_at: typeof o['last_at'] === 'string' ? o['last_at'] : '',
+    };
+}
+
+/**
+ * Fold one retry observation into a shadow record. Pure — the caller writes.
+ *
+ * `detectors` EMPTY is a real and load-bearing input: a retry whose detectors
+ * all came back silent raises `retries_observed` and adds no row, which is the
+ * only way Q1 can ever read below 1.
+ */
+export function foldShadow(
+    prev: ShadowRecord | null,
+    input: {
+        detectors: readonly RefusalDetectorId[];
+        turnOrdinal: number;
+        at: string;
+        layer: ShadowLayer;
+    },
+): ShadowRecord {
+    const rows = [...(prev?.would_refuse_again ?? [])];
+    for (const d of input.detectors) {
+        rows.push({ detector: d, turn: input.turnOrdinal, at: input.at, layer: input.layer });
+    }
+    let dropped = prev?.dropped ?? 0;
+    if (rows.length > SHADOW_MAX_ROWS) {
+        dropped += rows.length - SHADOW_MAX_ROWS;
+        rows.splice(0, rows.length - SHADOW_MAX_ROWS);
+    }
+    return {
+        would_refuse_again: rows,
+        retries_observed: (prev?.retries_observed ?? 0) + 1,
+        dropped,
+        first_at: prev?.first_at !== undefined && prev.first_at !== '' ? prev.first_at : input.at,
+        last_at: input.at,
+    };
+}
+
+/** This session's shadow record, or `null` when it has never retried. */
+export function readShadowRecord(workspaceRoot: string, sessionKey: string): ShadowRecord | null {
+    try {
+        return parseShadowRecord(
+            fs.readFileSync(sessionShadowFile(workspaceRoot, sessionKey), 'utf-8'),
+        );
+    } catch {
+        return null;
+    }
+}
+
+// ---------------------------------------------------------------------------
 // TTL — step 1.2
 // ---------------------------------------------------------------------------
 
@@ -389,6 +565,31 @@ export function pruneAgedRefusalState(
         if (!name.endsWith('.json')) continue;
         result.scanned += 1;
         const file = path.join(dir, name);
+        // A shadow record is a sibling in the same directory whose name also
+        // ends `.json`, and `parseRecord` rejects it for lacking `refused_at`.
+        // Left to the branch below it would land in `kept` FOREVER — the
+        // unbounded growth this pruner exists to stop, reintroduced by the
+        // instrument step 2.1 added. Its own clock is `last_at`.
+        if (name.endsWith(SHADOW_SUFFIX)) {
+            let shadow: ShadowRecord | null = null;
+            try {
+                shadow = parseShadowRecord(fs.readFileSync(file, 'utf-8'));
+            } catch {
+                shadow = null;
+            }
+            const shadowAt = shadow === null ? NaN : Date.parse(shadow.last_at);
+            if (!Number.isFinite(shadowAt) || shadowAt >= cutoffMs) {
+                result.kept += 1;
+                continue;
+            }
+            try {
+                fs.unlinkSync(file);
+                result.pruned += 1;
+            } catch {
+                result.kept += 1;
+            }
+            continue;
+        }
         let rec: RefusalRecord | null = null;
         try {
             rec = parseRecord(fs.readFileSync(file, 'utf-8'));
@@ -492,6 +693,12 @@ export function collectRefusalStats(workspaceRoot: string): RefusalStats {
     const versions = new Map<string, VersionBucket>();
     for (const name of entries) {
         if (!name.endsWith('.json')) continue;
+        // Shadow records share the directory and the extension. `parseRecord`
+        // would reject each one anyway, so this line changes no number — it is
+        // here because relying on another function's strictness for a
+        // correctness property is how the property disappears when that
+        // function is loosened.
+        if (name.endsWith(SHADOW_SUFFIX)) continue;
         let rec: RefusalRecord | null = null;
         try {
             rec = parseRecord(fs.readFileSync(path.join(dir, name), 'utf-8'));
