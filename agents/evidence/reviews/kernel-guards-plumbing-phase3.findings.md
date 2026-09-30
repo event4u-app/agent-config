@@ -1,11 +1,11 @@
 # Findings: kernel-guards-plumbing Phase 3 (steps 3.1, 3.2)
-<!-- completion-review: v1 | reviewed: 2026-09-30 | scope: 63a0d3e62defb0cc149fa9a2d2cc9c0220fc94f430015dfd1ffb2e78ce6d986d | diff: d326cb9f9311a225312eee0920d59123ae1632ff | reviewer: ai-council-2of2-anthropic-openai | author: claude-code session 97f38eee | prompt_hash: 223c1db92435b33aef4369a93170e39cd7739b405f579c3e13f1303b0ae532a9 -->
+<!-- completion-review: v1 | reviewed: 2026-09-30 | scope: d614f282d3f2efa6477116d2305a79cfb16f083a0d7b51ac787f361b17eb45df | diff: 46f60c44ad17ad9263e98ad726b96839888f038a | reviewer: ai-council-2of2-anthropic-openai | author: claude-code session 97f38eee | prompt_hash: 223c1db92435b33aef4369a93170e39cd7739b405f579c3e13f1303b0ae532a9 -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-09-30 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: d326cb9f9311a225312eee0920d59123ae1632ff
-  scope_hash: 63a0d3e62defb0cc149fa9a2d2cc9c0220fc94f430015dfd1ffb2e78ce6d986d
+  diff_sha: 46f60c44ad17ad9263e98ad726b96839888f038a
+  scope_hash: d614f282d3f2efa6477116d2305a79cfb16f083a0d7b51ac787f361b17eb45df
   roadmap: agents/roadmaps/road-to-a-kernel-that-guards-its-plumbing.md
   roadmap_hash: 06a248d762d230ba0cee02848d772c258c5a6d807b90221b0d10945aced57220
   ac_hash: c6faf4446ab8e030d0752ba765ef32eff93c7cfa84620705bb0fc1e3073587ab
