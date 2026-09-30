@@ -96,33 +96,16 @@ is caught by a check rather than by an external reader.
 
 ## Phase 2 — What happens when a bound slot fails
 
-> **BLOCKED — all three steps, 2026-09-29.** An independent two-provider council
-> review **refused** the rows this phase asks for, and the ground is one this
-> phase cannot argue with: the three facts were cited as
-> `Claude Code's own hooks reference, § hook execution / timeout` with **no URL,
-> no host version and no retrieval date**, inside a document whose every other
-> column is read off a file in this repository. One seat further held that the
-> current primary source contradicts part of what the rows asserted. A
-> provenance marker on an unanchored claim marks it as unanchored; it does not
-> make it citable, which is the substitution
-> `host-capability-manifest.md` § Observation protocol exists to refuse — and
-> Risk 3 of this roadmap's own register predicted exactly this failure.
->
-> **What the document says instead.** `docs/enforcement-by-host.md` now carries
-> § *What this document does NOT record about a bound hook that runs too long*:
-> it names the 13 concerns sharing `claude`'s `user_prompt_submit`, states that
-> the timeout consequence is recorded nowhere here and why, names the shape a
-> usable row would take (host + version, page + section + URL, retrieval date,
-> and for the runtime half a session in which the timeout was actually
-> reached), and keeps the two facts that ARE this tree's own — no `timeout` key
-> anywhere, and `p95 81 ms` — together with 2.3's refusal to conclude anything
-> from them. A stated gap is true; a row from an unpinnable source is not.
->
-> **Resolved when** a session supplies that row. `2.3`'s obligation is already
-> discharged in the replacement prose and is kept open only because it is
-> written against rows that do not exist yet.
+> **UNBLOCKED 2026-09-30 by meeting the return conditions the refusal named.**
+> The 2026-09-29 council refusal is recorded in full as
+> `### blocker: slot-failure-rows-cite-an-unpinnable-source` under `## Blockers`,
+> where it is now machine-readable instead of prose under this heading. Its
+> three documentation conditions are met and quoted there; its fourth — the
+> runtime observation — is not, and is carried forward as `2.4` rather than
+> closed. The second seat was right: the primary source does contradict part of
+> what 2.1 asserted, and the contradicted half is withdrawn rather than shipped.
 
-- [ ] **2.1 Add the slot-failure facts to the table.**
+- [x] **2.1 Add the slot-failure facts to the table.**
       The table records which concerns are bound per slot. It records nothing
       about the documented behaviour when a `user_prompt_submit` hook exceeds its
       timeout — that the hook is cancelled and its output, `additionalContext`
@@ -135,8 +118,33 @@ is caught by a check rather than by an external reader.
       named, never as a measurement this tree took.
       verify: `grep -n 'discard' docs/enforcement-by-host.md` returns a row about
       timeout semantics, distinct from the existing `fail_policy: discard` rows
+      **Evidence (2026-09-30).** `grep -n 'discard' docs/enforcement-by-host.md`
+      filtered against `fail_policy` → `:394` (row 2 of the new table) and
+      `:400`, both about timeout semantics. The section is retitled
+      § *What happens when a bound hook on this slot runs too long* — it no
+      longer describes its own absence. Three rows, each carrying
+      `read-from-host-documentation`, sourced to
+      `https://code.claude.com/docs/en/hooks` §§ Common fields / Timeouts /
+      Exit code 0, retrieved 2026-09-30 against Claude Code **2.1.286**.
+      **Two of this step's own assertions did not survive the source, and both
+      corrections are in the document.** (a) The cancel-and-discard half is
+      CONFIRMED verbatim — "Claude Code cancels a `command`, `http`, or
+      `mcp_tool` hook that reaches its `timeout`, discarding the hook's output"
+      — but carries a scope qualifier this step did not know: it excludes hooks
+      run with `async: true`. (b) The claim that neither channel "produces a
+      visible transcript entry" is **withdrawn**. § Exit code 0 names
+      `UserPromptSubmit` as one of four EXCEPTIONS where plain stdout is added
+      as context Claude can see and act on, which contradicts the stdout half;
+      and the page does not address transcript visibility in general terms at
+      all, so the other half is unstated rather than true.
+      **A third fact this step did not ask for changed the section's shape.**
+      The default timeout is not the generic 600 s: § Common fields records
+      that Claude Code **lowers it to 30 s on `UserPromptSubmit`**. With no
+      `timeout` key anywhere in `hook_manifest.yaml` (re-grepped 2026-09-30,
+      zero hits), all 13 concerns share that one 30 s budget and are discarded
+      together.
 
-- [ ] **2.2 Say which of the three facts this tree has observed, and which it has only read.**
+- [x] **2.2 Say which of the three facts this tree has observed, and which it has only read.**
       `host-capability-manifest.md` § Observation protocol already refuses a row
       written from a vendor's documentation. The same discipline applies here:
       each of the three facts is labelled read-from-host-documentation until a
@@ -144,14 +152,49 @@ is caught by a check rather than by an external reader.
       the defect this step exists to prevent, not a smaller version of it.
       verify: each added cell carries a provenance marker, and
       `grep -c 'observed' docs/enforcement-by-host.md` is unchanged by this step
+      **Evidence (2026-09-30).** All three rows carry
+      `read-from-host-documentation` in a dedicated Provenance column; no cell
+      carries a stronger marker, because no session in this tree has reached
+      the timeout. `grep -c 'observed' docs/enforcement-by-host.md` → **7**,
+      identical to the pre-change count on `origin/main`. The section states the
+      runtime gap explicitly and points at the Observation protocol for why the
+      marker may not be strengthened without a session.
+      **The protocol link was broken and is repaired in the same change.** It
+      read `(contracts/host-capability-manifest.md)`, which resolves to
+      `docs/contracts/host-capability-manifest.md` — a path that does not exist; <!-- ref-ignore -->
+      the file is at `src/agent-src/contexts/execution/`. Probed rather than
+      assumed: with the broken form restored, `check_references` still reports
+      `No broken references found`, so **the gate is blind to this class**.
+      Named here and not fixed — widening the reference gate is a separate
+      change with its own ratchet surface.
 
-- [ ] **2.3 Do not add a latency conclusion.**
+- [x] **2.3 Do not add a latency conclusion.**
       The tree measures p95 on that slot and the number is comfortably inside the
       documented timeout, which makes the risk look retired. It is not: the
       documented behaviour is total silent loss, and a p95 says nothing about the
       tail that matters. State the timeout; state the measured p95 beside it;
       draw no conclusion from the pair.
       verify: no sentence in the added rows asserts the timeout is not reached
+      **Evidence (2026-09-30).** The final paragraph states the pair — p95
+      **81 ms** over 50 CI invocations (`docs/hook-latency.json`, 2026-07-27)
+      against the **30 s** budget — and draws nothing from it. Grepping the new
+      section for `unreach|not reached|never reached|comfortably|safe|no risk`
+      returns exactly one line, and it is the sentence that REFUSES the
+      inference: "invites the reading that the timeout is unreachable ... and
+      that reading is refused here". The step is harder to honour now than when
+      it was written: 30 s against 81 ms is a ~370x margin, a far stronger
+      invitation than the 600 s default the step was drafted against, so the
+      refusal is stated more explicitly rather than less.
+
+- [~] **2.4 Observe a reached timeout on the slot.** Deferred, and named rather
+      than dropped: the fourth return condition the 2026-09-29 refusal set — a
+      session in which the `user_prompt_submit` timeout is actually reached and
+      its effect on the 13 concerns recorded. It is the only thing that turns
+      row 2's `read-from-host-documentation` into a measurement this tree holds,
+      and it cannot be manufactured from the tree: it needs a real session that
+      crosses 30 s on that slot, with host, host version, transcript reference
+      and date. Until then no cell in the new table may be cited as evidence
+      this package collected. Same shape as 3.3, and for the same reason.
 
 ## Phase 3 — The header that contradicts its own binding
 
@@ -229,12 +272,82 @@ is not reopened here.
 
 ## Risk Register
 
-<!-- risk-review: v1 | reviewed: 2026-09-29 | reviewer: agent -->
+<!-- risk-review: v1 | reviewed: 2026-09-30 | reviewer: agent -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | The format-column repair sweeps the correct neighbouring rows | implementation | The source that raised the Cursor cell named Windsurf in the same breath, and a reader repairing "the format column" will naturally correct both at once. But `emitWindsurf` really does write a concatenated `.windsurfrules` and `.clinerules` really is a projection target, so the sweep replaces two true cells with two false ones — a repair that leaves the table less accurate than it was. | Step 1.1 names both neighbours with their emitter line references and restricts the change to the Cursor row alone. An acceptance criterion requires the Windsurf and Cline cells to be byte-identical before and after, which turns the over-sweep into a failing criterion rather than a matter of judgement. | Phase 1 — The format column says what the tree emits |
 | 2 | The generated check reports drift that is not there | implementation | Some emitter targets are built by interpolation, so a check that compares table cells against literal strings scraped from the emitter source can conclude that a correct cell names an unemitted path. A gate that reds on a true row gets disabled, and the column returns to being hand-maintained — which is exactly what produced the Cursor error in the first place. | Step 1.2 requires the check to read the emitters' exported targets rather than scrape their source, and to be registered the way this repo registers a gate: with a self-test whose rejecting case plants `.cursorrules` back into a fixture table. It must be seen red on a planted bad row and green on the real tree before it is trusted. | Phase 1 — The format column says what the tree emits |
-| 3 | The slot-failure rows are read as facts this tree measured | product | The timeout and discard semantics come from the host's own documentation, not from a session observed here. Stated flatly in a table whose other columns are measured, they will later be cited as evidence this package collected — the exact substitution `host-capability-manifest.md` § Observation protocol exists to refuse, and it is harder to undo once quoted elsewhere. | Step 2.2 requires a provenance marker on each added cell labelling it read-from-host-documentation, and requires the file's `observed` count to be unchanged by the step. Step 2.3 forbids drawing any conclusion from the measured p95 that sits beside the documented timeout. | Phase 2 — What happens when a bound slot fails |
+| 3 | The slot-failure rows are read as facts this tree measured | product | The timeout and discard semantics come from the host's own documentation, not from a session observed here. Stated flatly in a table whose other columns are measured, they will later be cited as evidence this package collected — the exact substitution `host-capability-manifest.md` § Observation protocol exists to refuse, and it is harder to undo once quoted elsewhere. **Re-reviewed 2026-09-30 (v2 of this row), and the risk CHANGED SHAPE rather than retiring.** The rows now carry a real URL, host version and retrieval date, which removes the 2026-09-29 refusal's ground and adds a new hazard in its place: a citation that looks solid invites a later reader to upgrade `read-from-host-documentation` to a measurement without a session, because the provenance line now reads like proof. It is proof of a page, not of a run. | Step 2.2's marker is on every cell and the file's `observed` count is pinned at 7 by that step's own verify. Step 2.3 forbids any conclusion from the measured p95 beside the documented timeout. Against the new upgrade hazard: the blocker entry's **Recommendation** states in terms that conditions 1-3 are a citation and condition 4 is the measurement, and step `2.4` holds the unmet condition open as a checkbox so the gap is a tracked item rather than a paragraph. | Phase 2 — What happens when a bound slot fails |
 | 4 | The header repair is read as settling the ask-form question | product | `one_question_per_ask_hook.ts` sits on the boundary of a question the council declined on 2026-09-07 — whether a host's native multi-question block may carry batched consent asks. A comment rewrite that also touched the guard's `tools:` list or its deny path would look like that ruling being quietly reopened under cover of a documentation fix. | Step 3.2 restricts the diff to comment lines with `git diff --stat` as its verify, and an acceptance criterion requires the guard's runtime behaviour to be byte-identical. The "does not do" section names the declined ruling explicitly, so the boundary is stated rather than assumed. | Phase 3 — The header that contradicts its own binding |
 | 5 | Step 3.3 is deferred and quietly never returns | implementation | Step 3.1 replaces a false claim with a narrower true one — "not observed" — which stays honest only while somebody is still trying to observe. Dropped, the narrower claim becomes permanent, `STRUCTURED_ASK_SHAPES` stays empty with no record of why, and the absence reads to the next maintainer as a settled fact rather than a missing measurement. | The step is carried as a deferred checkbox inside the roadmap rather than as a prose note, so the file cannot close while it is open, and it states the exact inputs the observation needs — host, host version, transcript reference and date — so a future session can discharge it without re-deriving the requirement. | Phase 3 — The header that contradicts its own binding |
+| 6 | Step 2.4 is deferred and the 30 s budget is never witnessed | implementation | New at v2, and the sharper twin of Risk 5. Phase 2 now documents that 13 concerns share ONE 30 s budget on `claude`'s `user_prompt_submit` and are discarded together when it is reached — a failure mode this tree has never seen happen. Dropped, `2.4` leaves the tree holding a documented consequence with no witness, and the measured p95 of 81 ms sitting beside it makes the absence feel settled rather than open: a ~370x margin reads as safety to every reader who does not also read why that reading is refused. | The step is a deferred checkbox inside the roadmap rather than a prose note, so the file cannot close silently while it is open, and it names the exact inputs the observation needs — host, host version, transcript reference and date. The blocker entry quotes the condition verbatim as the fourth of four and marks it NOT MET, so a future reader sees which of the four is missing rather than a resolved entry that looks complete. | Phase 2 — What happens when a bound slot fails |
+
+## Blockers
+
+### blocker: slot-failure-rows-cite-an-unpinnable-source
+- **Status:** resolved 2026-09-30 by meeting the return conditions the refusal
+  itself named — see **Resolved when** below, condition by condition.
+- **Owner:** implementer
+- **Blocks:** 2.1, 2.2, 2.3, and AC-3 — all cleared. `2.4` carries the one
+  condition that is not met and is deferred rather than blocked.
+- **What to do:** it is done; this entry records how, so the next reader does
+  not re-derive it. The sequence was —
+  (a) `claude --version` → the host and version the row is written against;
+  (b) fetch `https://code.claude.com/docs/en/hooks` — note that the older
+      `docs.claude.com/en/docs/claude-code/hooks` **301-redirects** to it, and
+      the stale URL is the one a reader reconstructs from memory;
+  (c) read §§ *Common fields*, *Timeouts*, *Exit code 0* and write down what
+      each says, NOT what the step assumed it says;
+  (d) re-run the tree-side halves —
+      `grep -c timeout src/scripts/hook_manifest.yaml` (expect 0) and
+      `docs/hook-latency.json` `user_prompt_submit.p95_ms`;
+  (e) label every added cell `read-from-host-documentation` and confirm
+      `grep -c 'observed' docs/enforcement-by-host.md` is unchanged at 7.
+- **Resolved when:** the refusal set four conditions. Quoted from the
+  2026-09-29 record — "the host and host version observed, the exact page and
+  section with its URL, the date it was read, and — for the part that is a
+  runtime claim rather than a documentation claim — a session in which the
+  timeout was actually reached and its effect on the thirteen concerns
+  recorded." Three are met, one is not:
+  1. **Host and host version** — Claude Code **2.1.286**, from
+     `claude --version` on 2026-09-30. MET.
+  2. **Exact page and section with its URL** —
+     `https://code.claude.com/docs/en/hooks`, §§ *Common fields* (the 30 s
+     `UserPromptSubmit` default), *Timeouts* (cancel-and-discard), *Exit code 0*
+     (stdout as context on this event). MET.
+  3. **The date it was read** — 2026-09-30, recorded in the document beside the
+     URL rather than only here. MET.
+  4. **A session in which the timeout was actually reached** — **NOT MET**, and
+     deliberately not simulated. It is a runtime observation, it gates only the
+     runtime half, and it is carried as step `2.4`. No cell in the new table is
+     marked as measured here, which is exactly what condition 4 being unmet
+     requires.
+  The second seat's separate objection — "the current primary source
+  contradicts part of what the rows asserted" — was **correct and is
+  discharged by withdrawal, not by argument**: 2.1's claim that neither channel
+  produces a visible transcript entry is contradicted for stdout by § Exit code
+  0 and unaddressed for the rest, so it is withdrawn in the document.
+- **Recommendation:** treat conditions 1–3 as the standing bar for any future
+  host-documentation row in this file, and do not let condition 4's absence be
+  read as permission to strengthen a marker later without a session. The
+  cheapest failure available here is a reader seeing a URL and upgrading
+  `read-from-host-documentation` to a measurement because the citation now
+  looks solid. It is not a measurement; it is a citation.
+- **If you do nothing:** nothing regresses — the rows are in and the phase is
+  closed. The live residue is `2.4` and the 30 s budget it sits under: 13
+  concerns share one process on `claude`'s `user_prompt_submit`, and until a
+  session crosses that budget the effect of crossing it is documented but
+  unwitnessed here.
+
+**Why this entry exists at all, in one paragraph.** The refusal was real and was
+recorded as **prose under the Phase 2 heading**, which is the one place
+`check_estate_count` and `lint_roadmap_blockers` do not look. The file therefore
+advertised zero blockers while carrying a live one across three steps, and no
+continuation run could read those steps as blocked rather than merely open — the
+same defect `road-to-a-menu-whose-precision-is-measured` repaired on its own
+file. Promoting it to a parsed entry is worth doing even in the change that
+closes it: a resolved entry with its return conditions quoted is what stops the
+next reader from re-litigating a lock that was honoured, and it leaves the
+audit trail in the shape the gates read.
+
