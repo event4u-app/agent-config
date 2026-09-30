@@ -29,42 +29,127 @@ passes after, and a per-host row saying whether a failed exit is even distinguis
 
 ## Phase 1 — One predicate, proven sensitive both ways
 
-- [ ] **1.1 Extract the predicate into one module.** `src/scripts/_lib/verification_command.ts`
+- [x] **1.1 Extract the predicate into one module.** `src/scripts/_lib/verification_command.ts`
       owns it. Head-anchored per shell segment (split on `&&`, `;`, `|`), seeded from the
       union of both current lists minus every row that only matches on an argument. A
       segment whose failure is discarded (`|| true`, `|| :`, `; true`) does not count.
       Both hooks import it; both inline regexes are deleted.
       verify: `grep -rc '_VERIFY_RE\|_VERIFICATION_RE' src/scripts` reports 0 outside the new module
-- [ ] **1.2 Two negative fixtures, each proven red at the pin first.** G1 — `ls tests`,
+      **DONE 2026-09-30, and two things this step said were already stale.**
+      (a) The module already existed — a prior change moved the selector there
+      byte-identical to break an import cycle with `verification_evidence.ts`.
+      What did NOT exist was the fix: the predicate inside it was still the
+      unanchored regex. (b) The Goal's claim that the stricter selector's verdict
+      "is written and never read" is false at this head for the COUNTERS it
+      feeds: `ci_last` is read by `turn_end_gate_hook.ts` and
+      `measure_turn_end_gate.ts`. It is true only of `verified_this_turn`.
+      The predicate is structural now rather than a regex, because a
+      word-boundary pattern cannot express "the head of the segment" — which is
+      the property separating `npm test` from `ls tests`. Split on shell
+      separators, drop a segment whose failure the shell discards, classify each
+      remaining segment on its head.
+      **Two predicates remain in the one module, deliberately.**
+      `isVerificationCommand` answers *did this verify* and is narrow;
+      `mightBeVerification` answers *is this worth recording for `classifyRun`
+      to judge* and is wide. Collapsing them was tried and reverted on evidence:
+      a recorder that filters `echo test` out leaves the gate unable to tell a
+      non-verification command from silence, which a pinning test asserts. The
+      step's "zero surviving regexes" is met in the sense its own acceptance
+      criterion states — the grep finds nothing outside this module.
+- [x] **1.2 Two negative fixtures, each proven red at the pin first.** G1 — `ls tests`,
       `cat build.log`, `git checkout main`, `mkdir build`, `git commit -m "fix ci"`,
       `true # test` — must red against today's `_VERIFY_RE` before 1.1 lands. G2 —
       `npx vitest run x`, `tsc --noEmit`, `./scripts-run src/scripts/lint_thing` — must red
       against today's `_VERIFICATION_RE`. A fixture never seen red has unknown sensitivity.
       verify: `npx vitest run tests/scripts/turn_end_verify_allowlist` -> 0
-- [ ] **1.3 Add the missing negative rows to the audited fixture.** The current AUDIT array
+      **DONE 2026-09-30.** `tests/scripts/verification_command_anchoring.test.ts`.
+      G1 observed red first — all six rows returned `true` against the pre-fix
+      `_VERIFY_RE`, plus three `|| true` / `|| :` / `; true` rows and the
+      chained-head case, ten failures in all. G2 was proven red against
+      `_VERIFICATION_RE` by probing that expression directly, because the
+      permissive selector already accepted those three: the two directions
+      belong to two different classifiers and cannot be shown red by one run.
+      **One false negative was introduced and fixed here:** `node --test`
+      selects a runner by FLAG, so head-anchoring alone refused it. Neither
+      explicit list named it — the token-anywhere regex had been accepting it by
+      accident — so the union seeding missed it. Caught by
+      `verification_evidence.test.ts`, now pinned in the fixture. This is Risk 3
+      firing and being caught by an existing test rather than in production.
+- [x] **1.3 Add the missing negative rows to the audited fixture.** The current AUDIT array
       carries seven negatives (`tests/scripts/turn_end_verify_allowlist.test.ts:98-104`) and
       not one of them puts a verify token in an argument position — which is why the
       defect passed the audit. G1 becomes part of that array.
       verify: `grep -c "'ls tests', false" tests/scripts/turn_end_verify_allowlist.test.ts` -> 1
+      **DONE 2026-09-30 — returns 1.** Nine rows added: the six G1
+      argument-position cases and the three discarded-failure cases. The table
+      was not wrong before, it was SILENT on the case that mattered, which is
+      why it passed for the whole time `ls tests` cleared detector C.
 
 ## Phase 2 — The witness gets a reader, and says when it does not know
 
-- [ ] **2.1 Record the outcome, not only the name.** On `post_tool_use` the witness gains
+- [x] **2.1 Record the outcome, not only the name.** On `post_tool_use` the witness gains
       `last_edit_at` and, where the host surfaces a tool result, `last_verification.failed`.
       Unknown stays `null`, and a `null` never clears the gate.
       verify: `npx vitest run tests/scripts/before_complete_hook` -> 0
-- [ ] **2.2 Detector C reads the witness.** Cleared only by a verification recorded after
+      **ALREADY DONE when this run arrived, by a different mechanism than the
+      step describes, and the difference is an improvement worth recording.**
+      `verification_runs[]` carries `exit_code` (null when the host says
+      nothing), `exit_source`, `stdout_tail`, `runner` and `after_edits`. The
+      edit ordering is `after_edits` — an ORDINAL comparison against the turn's
+      total edit count — not the `last_edit_at` timestamp this step asked for,
+      and the ordinal survives a host whose clock is coarse or absent where a
+      timestamp would not. `verification_evidence.ts` classifies
+      `exit_code_unavailable` as an INSTRUMENT gap that may never refuse, which
+      is this step's "a `null` never clears the gate" stated from the other side.
+- [x] **2.2 Detector C reads the witness.** Cleared only by a verification recorded after
       `last_edit_at` and not `failed`. The transcript scan stays as the labelled fallback
       for hosts with no `post_tool_use` output.
       verify: fixture G3 — edit, then a `npm test` that exits 1, then stop, is refused
-- [ ] **2.3 One row per stop-binding host.** Is tool output surfaced on `post_tool_use`, and
+      **ALREADY DONE, and G3 exists and passes** — `turn_end_gate_hook.test.ts`
+      "refuses a turn whose record is a FAILING run", an `npx vitest run` with
+      `exit_code: 1`, executed 2026-09-30. The record path returns
+      `mode: 'record'` with a named reason; the transcript scan remains as the
+      labelled fallback, as the step requires.
+      **One thing this run changed here.** A sibling test asserted that the
+      transcript scan ALLOWED `echo test` — documenting the hole as the contrast
+      that justified the record path. Phase 1 closes that hole at the source, so
+      both paths now agree and the assertion is inverted rather than removed.
+- [x] **2.3 One row per stop-binding host.** Is tool output surfaced on `post_tool_use`, and
       is a failed exit distinguishable. A host where it is not reads "name-match only" in
       the enforcement-by-host page. No row may be inferred; an unprobed host reads `unknown`.
       verify: the evidence page names the observed payload field per row, with the probe date
-- [ ] **2.4 Re-measure before and after.** `measure_turn_end_gate` on the maintainer corpus
+      **DONE 2026-09-30 — eight rows, one probed, seven `unknown`.** The table is
+      in `docs/enforcement-by-host.md` § Detector C's record path and in the
+      evidence file. `claude` is a LIVE reading of a real session's witness, not
+      a fixture: output surfaced, `exit_code` present, `exit_source:
+      "response_shape"`, `after_edits` populated.
+      **Its middle column reads `undetermined`, not `yes`, and that is the
+      finding.** Across 24 records in that session none carried a non-zero exit
+      code — including a command that genuinely failed and is absent from the
+      record entirely. `_cap_runs` preserves the earliest failing record by
+      design, so eviction does not explain it. Cause unresolved. Writing `yes`
+      would have asserted about the HOST what was only shown about the parser,
+      which the fixtures do feed non-zero exits to and do classify correctly.
+      This is Risk 2's shape reaching further than Risk 2 described: it names a
+      host that surfaces NO output, and this is a host that surfaces output for
+      passing runs and possibly not for failing ones.
+- [x] **2.4 Re-measure before and after.** `measure_turn_end_gate` on the maintainer corpus
       at both ends, with corpus size and date. 1.1 and 2.2 are separate commits so either
       reverts alone.
       verify: both readings committed under `agents/evidence/` with their corpus sizes
+      **DONE 2026-09-30.** Same corpus, same instrument, same day, differing in
+      the selector and nothing else — the "before" was taken by restoring
+      `HEAD~1`'s two files into the working tree and restoring `HEAD` after.
+      **30 sessions · 184 turns · 43 of them edited a file.** Detector C:
+      **13 turns (7.1 %) → 18 turns (9.8 %)**. A, B, E and F are unchanged, which
+      is a check on the measurement rather than a finding — they read the reply
+      text and never the command list.
+      The sign is the intended one: C fires MORE, because five turns in this
+      corpus were clearing an unverified edit on a word match. Recorded with its
+      own limits in
+      `agents/evidence/analysis/verification-classifier-before-after-2026-09-30.md`
+      — it is a fire-rate delta, not a precision reading, and none of the five
+      newly-caught turns was hand-labelled.
 
 ## Acceptance criteria
 
@@ -72,8 +157,24 @@ passes after, and a per-host row saying whether a failed exit is even distinguis
   only the new module's own definition.
 - G1 and G2 each red at the pre-fix commit and pass at the head, demonstrated by the commit
   order, not asserted.
+  **MET for G1 by commit order; G2 differently, and the difference is real.**
+  G1's ten rows were run and observed red before the predicate changed. G2
+  could NOT be shown red the same way: the permissive selector already accepted
+  all three of its rows, so G2's red belongs to `_VERIFICATION_RE` — the other
+  classifier, in the other file. It was demonstrated by executing that
+  expression directly against the three commands (all `false`). Two directions
+  of disagreement cannot both be shown by one run against one selector, which
+  the criterion's wording did not anticipate.
 - A turn that edits a file, runs a verification command that exits non-zero, and stops is
   refused on every host whose 2.3 row says a failed exit is distinguishable.
+  **MET VACUOUSLY on 2026-09-30, and the vacuity is the point.** No row says
+  `yes`: seven hosts read `unknown` and `claude` reads `undetermined`. So the
+  criterion quantifies over an empty set and cannot fail. The mechanism itself
+  is proven — G3 refuses exactly that turn shape against a record — but it is
+  proven against a FIXTURE, and this criterion asks about hosts. Recorded as
+  vacuous rather than ticked, because a criterion that passes by having no
+  subjects is the failure `road-to-release-holds-that-refuse` spent a whole
+  phase naming elsewhere in this estate.
 - No new hook concern, no new per-session store, no new closed-vocabulary member.
 - Every number in this file was re-read at the execution head; a moved one is corrected in
   place with its date.
