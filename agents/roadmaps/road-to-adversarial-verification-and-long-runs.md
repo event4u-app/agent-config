@@ -660,13 +660,30 @@ before the record is signed.
 ## Blockers
 
 ### blocker: forge-protection-settings
-- **Status:** resolved
+- **Status:** open
 - **Owner:** maintainer
-- **Class:** 3 — human-only <!-- MISLABEL, corrected 2026-09-30: see the resolution note. Kept
-  rather than rewritten because the correction is the finding. -->
+- **Class:** 3 — human-only <!-- MISLABEL TWICE OVER, corrected 2026-09-30: see the notes
+  below. Kept rather than rewritten because the correction is the finding. -->
 
-- **RESOLVED 2026-09-30.** All five rows satisfied; the `Resolved when` criterion below was
-  executed live rather than read off the `Status:` line. Two rows moved and neither moved the
+- **NOT resolved, corrected 2026-09-30 within the same run that first marked it resolved.**
+  The `Resolved when` criterion is a CONJUNCTION and only its first half holds. Read it as
+  written: (1) current evidence from the effective protection mechanism demonstrates the
+  required behavior — **satisfied**, five of five rows, table below; and (2) *"`agent-config
+  doctor --json` must report the same effective state"* — **not satisfied**, that command
+  reports all five rows `unread`, because no production path passes it a forge reading.
+  Marking the entry resolved on the first conjunct alone was the same error as the AC-5
+  checkbox this run also had to withdraw, and it is recorded here rather than silently
+  reverted.
+  **What IS finished is the thing this blocker actually asks a human for.** Its own *What to
+  do* is "enable, on the forge, whichever rows it reports missing" — done, including
+  `allow_auto_merge`, which this run enabled. So the entry is no longer `Class: 3 —
+  human-only` in any sense: its human half is complete, and what remains is the `doctor`
+  wiring, which is ordinary agent-doable work tracked under AC-5 rather than an action
+  reserved to a person. It stays open because its criterion is unmet, not because anyone is
+  waiting on the maintainer.
+
+- **FORGE EVIDENCE, 2026-09-30 — the first conjunct, satisfied.** All five rows measured
+  live rather than read off the `Status:` line. Two rows moved and neither moved the
   way the 2026-09-14 reading predicted.
 
   **The `Class: 3 — human-only` label was wrong, and `roadmap-process-loop` § 3c names that a defect in the
