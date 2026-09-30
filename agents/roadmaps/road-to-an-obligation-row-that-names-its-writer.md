@@ -3,6 +3,16 @@ complexity: lightweight
 status: ready
 execution:
   mode: phase-checkpoints
+estate_growth_exempt: >-
+  open_blockers rises 38 -> 39 and NOTHING WAS ADDED. The
+  shadow-corpus-is-one-machine blocker was authored open in this file's first
+  commit; it sat under a phase heading instead of a `## Blockers` H2, which is
+  the only place check_estate_count and lint_roadmap_blockers look, so the
+  counter never saw it. This change promotes it to that section so step 2.2 can
+  carry the inline blocked-by marker run-continuation reads blockedness from.
+  The +1 is the census finding a pre-existing open blocker, not the estate
+  growing - offsetting it would mean closing a real blocker to pay for making
+  an existing one visible, which is the opposite of what the ratchet protects.
 estate_offset_exempt: >-
   Nothing in the active estate can be archived to pay for this one. The receiver
   it would otherwise join, road-to-a-ledger-that-closes-the-loop, is the roadmap
@@ -249,7 +259,7 @@ tree produced it.
       making an absent directory report as an existing one failed exactly 2
       tests; folding `absent` into `unknown` failed exactly 2; dropping the
       `unreadable` count and the empty-directory wording failed exactly 2.
-- [ ] **2.2 Resolve the corpus blocker below.** The reporter makes the question
+- [ ] <!-- blocked-by: shadow-corpus-is-one-machine | asked: no — non-interactive process-full run: it reports once at the end and cannot put a question, and the decision amends a pre-registered public claim the claims register itself records as owner-reserved --> **2.2 Resolve the corpus blocker below.** The reporter makes the question
       answerable with a number; the answer is not an agent's to give.
       verify: the blocker's `Status` reads `resolved` with the chosen option named
 
@@ -278,12 +288,19 @@ tree produced it.
       - Nothing here recommends an option. The roadmap's own `Recommendation:`
         line stands as written and is the author's, not this execution's.
 
-### blocker: shadow-corpus-is-one-machine
+## Blockers
 
-**Status:** open
-**Owner:** maintainer
-**Blocks:** 2.2, and the arming decision in `road-to-a-ledger-that-closes-the-loop`
-**What to do:** exactly one of —
+### blocker: shadow-corpus-is-one-machine
+- **Status:** open
+- **Owner:** maintainer
+- **Ownership:** business-owned — the decision amends `obligation-settle-shadow-bar`,
+  a pre-registered claim in `docs/CLAIMS.md`, and clause (8) of that claim already
+  records the question as owner-reserved. Options (a) and (c) weaken a public
+  commitment; (b) requires a second real operator's tree. None is a technical
+  judgement the closure ladder could have closed, which is why it is filed here
+  rather than resolved as a `## Decisions` row.
+- **Blocks:** 2.2, and the arming decision in `road-to-a-ledger-that-closes-the-loop`
+- **What to do:** exactly one of —
   (a) accept the one-machine corpus, and amend the pre-registered bar to say in
       its own words that a passing reading describes this checkout's habits and
       is not evidence about a consumer;
@@ -292,14 +309,14 @@ tree produced it.
   (c) file the window `resolved-null` now on the ground that the population it
       needs does not exist, and require a new pre-registered claim before any
       arming.
-**Resolved when:** the chosen option is written into the claim in
-`docs/CLAIMS.md`, and the roadmap step that reads the bar cites it.
-**Recommendation:** (a) is the cheapest honest move and loses nothing that is
-not already lost — the bar's own sample floor is unreachable at the observed
-rate, and an amended bar that says so is a smaller claim than a green one.
-**If you do nothing:** the window keeps accumulating rows that cannot be
-separated by writer, and the first reading that clears the floor will be cited
-as evidence about a population it never measured.
+- **Resolved when:** the chosen option is written into the claim in
+  `docs/CLAIMS.md`, and the roadmap step that reads the bar cites it.
+- **Recommendation:** (a) is the cheapest honest move and loses nothing that is
+  not already lost — the bar's own sample floor is unreachable at the observed
+  rate, and an amended bar that says so is a smaller claim than a green one.
+- **If you do nothing:** the window keeps accumulating rows that cannot be
+  separated by writer, and the first reading that clears the floor will be cited
+  as evidence about a population it never measured.
 
 ## Acceptance criteria
 
