@@ -368,7 +368,7 @@ files in this repository, not a fact about Cowork, and it passes CI only because
 `tests/scripts/install_snapshot.test.ts:175` loops over five hosts and omits
 `claude` and `cowork`.
 
-### What this document does NOT record about a bound hook that runs too long
+### What happens when a bound hook on this slot runs too long
 
 The tables above record which concerns are **bound** per slot. Binding is not
 delivery, and the gap between them has a name: what the host does when a bound
@@ -380,43 +380,71 @@ this tree, because `src/scripts/hook_manifest.yaml`'s
 `session-canary`, `self-repair`, `session-register`, `rule-inject`,
 `suggestion-capture`, `journal-record` — and they share one process.
 
-**The consequence of a timeout on that slot is stated nowhere here, and the
-omission is deliberate.** A draft of this section carried three rows describing
-the host's cancel-and-discard semantics, each marked
-`read-from-host-documentation`. An independent two-provider review refused them
-on 2026-09-29, on a ground this document cannot argue with: the citation was
-`Claude Code's own hooks reference, § hook execution / timeout` with no URL, no
-host version and no retrieval date, in a document whose every other column is
-read off a file in this repository. One seat further held that the current
-primary source contradicts part of what the rows asserted. A provenance marker
-on an unanchored claim marks it as unanchored; it does not make it usable, and a
-row nobody can re-derive is the substitution
-[`host-capability-manifest.md`](contracts/host-capability-manifest.md)
-§ Observation protocol exists to refuse.
+**Every row below is read from the host's documentation, not measured here.**
+The provenance is the same for all three and is stated once rather than per
+cell: host **Claude Code 2.1.286** (`claude --version`, 2026-09-30), page
+**`https://code.claude.com/docs/en/hooks`**, retrieved **2026-09-30**, sections
+named per row. The older path `docs.claude.com/en/docs/claude-code/hooks`
+**301-redirects** to it, which is worth recording because the stale URL is the
+one a reader reconstructs from memory.
 
-**What would fill the gap** is a row of the shape that file already demands: the
-host and host version observed, the exact page and section with its URL, the
-date it was read, and — for the part that is a runtime claim rather than a
-documentation claim — a session in which the timeout was actually reached and
-its effect on the thirteen concerns recorded. Until one exists, this document
-says the tables do not cover slot-failure behavior, which is true, rather than
-covering it from an unpinnable source.
+| # | What the host documents | Section | Provenance |
+|---|---|---|---|
+| 1 | The default `timeout` for a `command` hook is 600 s, but Claude Code **lowers it to 30 s on `UserPromptSubmit`**. | § Common fields | `read-from-host-documentation` |
+| 2 | A `command` hook that reaches its `timeout` is **cancelled and its output discarded**, "so on most events a timed-out hook renders no decision". The page scopes this to hooks not run with `async: true`. | § Timeouts | `read-from-host-documentation` |
+| 3 | `UserPromptSubmit` is one of four events where **plain stdout is added as context Claude can see and act on**, rather than written to the debug log as on most events. | § Exit code 0 | `read-from-host-documentation` |
 
-**Two things this tree does know about that slot, and they are measurements.**
-`hook_manifest.yaml` sets **no `timeout` key anywhere** — grepped on
-2026-09-29, zero hits — so every slot runs on whatever default the host applies.
-And `docs/hook-latency.json` records `user_prompt_submit` at **p95 81 ms** over
-50 CI invocations on 2026-07-27.
+**Read together, rows 1–3 say the loss is total for this slot and not silent to
+Claude in the ordinary case.** Because `hook_manifest.yaml` sets **no `timeout`
+key anywhere** — grepped 2026-09-30, zero hits — all 13 concerns run inside the
+one 30 s budget row 1 names, and row 2 discards the whole process output when it
+is reached, so the 13 fail together or not at all. Row 3 is the half that
+matters for the non-timeout path: this slot's stdout is a context channel, not a
+log, so what a timeout destroys here is context Claude would otherwise have
+acted on.
 
-**No conclusion is drawn from those two numbers, and the refusal is
-deliberate.** A low p95 beside any timeout invites the reading that the timeout
-is unreachable and slot-failure behavior therefore does not matter. A p95 is
-the 95th percentile of a synthetic bench on an idle runner; it is silent about
-the tail, and the tail is the only part of the distribution a timeout ever
-meets. Thirteen concerns sharing one process is a failure mode to be designed
-against on its shape, not dismissed on a median-adjacent statistic — and with
-the semantics unrecorded above, there is not even a documented consequence to
-weigh the number against.
+**Two things the page does not say, recorded as gaps rather than guessed.** It
+does not state whether other hooks continue after one times out; and it does not
+address transcript visibility in general terms — it distinguishes the debug log
+from "context Claude can see", and says nothing about what a reader sees in
+transcript mode. An earlier draft of this section asserted that neither the
+plain-stdout nor the `additionalContext` channel produces a visible transcript
+entry. **That claim does not reproduce against the page** and is withdrawn: for
+this slot the stdout half is contradicted by row 3, and the transcript half is
+simply unaddressed.
+
+**Why the rows exist now and did not on 2026-09-29.** An independent
+two-provider review refused an earlier draft on a ground this document could not
+argue with: the citation was `Claude Code's own hooks reference, § hook
+execution / timeout` with no URL, no host version and no retrieval date, in a
+document whose every other column is read off a file in this repository. One
+seat further held that the current primary source contradicts part of what the
+rows asserted — **it does, and the withdrawal two paragraphs up is that
+finding.** The refusal named its own return condition: the host and host version
+observed, the exact page and section with its URL, and the date it was read. All
+three are supplied above. A provenance marker on an unanchored claim marks it as
+unanchored; the marker on these rows points at a page a reader can open.
+
+**What is still not here, and it is the runtime half.** The same return
+condition also asked, for the part that is a runtime claim rather than a
+documentation claim, for a session in which the timeout was actually reached and
+its effect on the 13 concerns recorded. No such session exists in this tree, so
+no cell above is marked as measured here and none may be cited as one. The
+distinction is
+[`host-capability-manifest.md`](../src/agent-src/contexts/execution/host-capability-manifest.md)
+§ Observation protocol's, and it is the reason every row carries the same
+`read-from-host-documentation` marker instead of a stronger one.
+
+**One measurement this tree does hold, and no conclusion is drawn from it.**
+`docs/hook-latency.json` records `user_prompt_submit` at **p95 81 ms** over 50 CI
+invocations on 2026-07-27, against the 30 s budget in row 1. The pair is stated
+and left alone. A low p95 beside any timeout invites the reading that the
+timeout is unreachable and slot-failure behavior therefore does not matter, and
+that reading is refused here: a p95 is the 95th percentile of a synthetic bench
+on an idle runner, silent about the tail, and the tail is the only part of the
+distribution a timeout ever meets. Thirteen concerns sharing one process is a
+failure mode to be designed against on its shape, not dismissed on a
+median-adjacent statistic.
 
 ### Open internal inconsistency — `pre_compact` on cursor and cline
 
