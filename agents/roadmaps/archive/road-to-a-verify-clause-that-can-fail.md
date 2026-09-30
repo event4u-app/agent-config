@@ -155,6 +155,36 @@ share per roadmap is a published number rather than an impression.
       not in the behaviour — the falsifiable count did not move, five roadmaps archived.
       May bind only files created after this roadmap lands, and only after two quarters of
       data. Not agent-closable: the blocker is an elapsed measurement window.
+      <!-- deferred-resolution: merged-into=road-to-a-runnable-share-ratchet -->
+
+## Deferred items — carried, not dropped
+
+Archived 2026-09-30 with 2.4 deferred. The item was carried to
+`later/road-to-a-runnable-share-ratchet.md`, which carries a `relates:` row
+naming this roadmap, so the link is verifiable from both ends.
+
+| This roadmap's step | Lands as | Why it was not built here |
+|---|---|---|
+| 2.4 A ratchet on the runnable share | 1.1 | Needs two readings at least a quarter apart plus a measured false-positive rate. This roadmap's two readings were taken on the same day. |
+
+**Resolution record** (`roadmap-progress-sync` Iron Law 3). Disposition: carry
+into a follow-up created in the same change — the council row, because the item
+stays live in the estate. Options weighed: fix-now (impossible, the blocker is an
+elapsed window), merge into existing active work (nothing live covers the verify
+share), restore to `[ ]` (would block archival indefinitely), cancel as `[-]` or
+keep-in-archive (owner rows, not taken). Reviewed by the AI council 2026-09-30,
+2 of 2 seats (anthropic, openai): carry APPROVED with a required split from the
+sibling parent's items. **One correction the review forced, and it is about this
+roadmap's own wording:** 2.4 as written waits for a reading whose COUNT has
+moved. A seat named that as a defect and it is one — a runnable share holding
+steady across a quarter is a measurement, and requiring movement would make a
+stable system unqualifiable forever. What this roadmap actually established is
+that two readings on ONE DAY say nothing; the criterion is the separation, not
+the delta. The destination carries the corrected form. **Dissent recorded:** one
+seat preferred cancelling as `[-]` with a `revisit-if`, because nothing un-parks
+a `later/` roadmap — true, and recorded as a gap in the destination. Not taken:
+it is an owner row and the request was archival. What closes this item: the
+destination's `entry_condition`.
 
 ## Acceptance criteria
 

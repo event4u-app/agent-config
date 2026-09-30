@@ -156,9 +156,41 @@ could hold one.
 - [~] **5.1 A shrink-only bound on a byte metric.** A ratchet over a quantity with no
       recorded history is a number invented at its own baseline. Deferred until Phases 2
       and 3 have written values across at least one fixture set.
+      <!-- deferred-resolution: merged-into=road-to-a-byte-bound-and-a-public-figure -->
 - [~] **5.2 Any public statement of what this package moves over the network.**
       Deferred for the same reason: `README.md` carries one incidental hit and
       `ONBOARDING.md` none, and a first public figure should be a measured one.
+      <!-- deferred-resolution: merged-into=road-to-a-byte-bound-and-a-public-figure -->
+
+## Deferred items — carried, not dropped
+
+Archived 2026-09-30 with Phase 5 deferred. Both items were carried to
+`later/road-to-a-byte-bound-and-a-public-figure.md`, which carries a
+`relates:` row naming this roadmap, so the link is verifiable from both ends.
+
+| This roadmap's step | Lands as | Why it was not built here |
+|---|---|---|
+| 5.1 A shrink-only bound on a byte metric | 1.1 | A ratchet over a quantity with no recorded history is a number invented at its own baseline. No change supplies elapsed days. |
+| 5.2 Any public statement of what this package moves over the network | 1.2 | A first public figure should be a measured one, and the census had one day of values. |
+
+**Resolution record** (`roadmap-progress-sync` Iron Law 3). Disposition: carry
+into a follow-up created in the same change — the council row, not the owner row,
+because the items stay live in the estate. Options weighed: fix-now (impossible,
+both need elapsed time), merge into existing active work (nothing live covered
+byte ratchets; the only byte-metric roadmap was this one), restore to `[ ]`
+(would block archival on a condition nobody can meet today), cancel as `[-]` or
+keep-in-archive (owner rows, not taken). Reviewed by the AI council 2026-09-30,
+2 of 2 seats (anthropic, openai): carry APPROVED, and the single combined
+destination I proposed was REFUSED — both seats required a split, on the ground
+that one file coupling two independently maturing evidence streams would wake
+carrying half-unworkable steps. Split accordingly; the sibling item from
+`road-to-a-verify-clause-that-can-fail` went to its own file. **Dissent
+recorded:** one seat offered cancelling all three as `[-]` with a `revisit-if`
+as the safer alternative, on the ground that no mechanism un-parks a `later/`
+roadmap. That is true — nothing reads an expired `review_by` — and the
+destination files record it as a named gap. The disposition was not taken
+because it is an owner row and the user asked for archival, not cancellation.
+What closes these items: the destination's `entry_condition`.
 
 ## Acceptance criteria
 
