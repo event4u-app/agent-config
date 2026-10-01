@@ -16701,6 +16701,11 @@ var settingsSchema = external_exports.object({
         "When a hook exceeds hooks.concern_budget.max_per_event, fail the run (true) instead of warning and continuing (false, default). Turn on in CI when you want hook quality to gate merges."
       )
     }),
+    verify_before_complete: external_exports.object({
+      touched_file_quality: external_exports.enum(["off", "shadow", "warn"]).default("off").describe(
+        "Stop-slot pass that runs the project's OWN quality commands \u2014 the ones resolve_toolchain() already reports \u2014 over the files this turn edited. Default off. `shadow` records a per-run result and emits nothing; `warn` adds ONE advisory line of at most 200 bytes. Never blocks and never counts as verification: a command recorded here never reaches _lib/verification_command.ts, so a clean eslint run cannot let a turn claim it verified anything. A writing command runs only in its check form (pint --test) or not at all, and a command with no per-file form is skipped rather than run project-wide at every stop."
+      )
+    }).default({}),
     injection_scan: external_exports.object({
       enabled: external_exports.boolean().default(false).describe(
         "PostToolUse prompt-injection scanner (road-to-security-pillar.md P3.2). Default off. When on, scans tool output (file reads, web fetches, MCP responses) for injection signatures and WARNS in context (never blocks). Runtime backstop on top of the always-on untrusted-input-defense rule; detection is probabilistic."
