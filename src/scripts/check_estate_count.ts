@@ -154,6 +154,7 @@ import { resolveBaseRef } from './_lib/ratchet_base_ref.js';
 import { materialiseSubtree } from './_lib/base_tree.js';
 import { SKILLS_POSIX, measureSkillEstate } from './_lib/skill_estate.js';
 import { CONCERN_MANIFEST_POSIX, countConcerns } from './_lib/concern_estate.js';
+import { exemptionFindings, type ExemptionFinding } from './_lib/exemption_shape.js';
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
 
 const GATE = 'check_estate_count';
@@ -363,6 +364,23 @@ export interface EstateVerdict {
     offsetSkipReason: string | null;
     unpaid: number;
     /**
+     * Added exemptions whose reason names no rejected alternative, or repeats
+     * another added file's. Empty on every change that adds no exemption.
+     */
+    exemptionFindings: ExemptionFinding[];
+    /**
+     * Roadmaps carrying an unscheduled status — REPORTED, never gated.
+     *
+     * `collect()` excludes them by design, so a draft is invisible to every
+     * count above and adding one costs no slot. That is the right policy: a
+     * draft is not active work, and charging for one would make every parked
+     * idea cost a slot. What was wrong was that the number was invisible too, so
+     * a reader of `active_roadmaps 26` could not tell an estate of 26 from an
+     * estate of 26 with 14 drafts behind it. It contributes nothing to
+     * `withinBudget` — there is no floor for it and no claim path to it.
+     */
+    draftRoadmaps: number;
+    /**
      * The provisional-promotion path's state, reported and never acted on.
      *
      * Carried in the verdict so a `--json` consumer can tell a declined path
@@ -513,6 +531,45 @@ export function countEstate(repoRoot: string): EstateCounts {
     };
 }
 
+/**
+ * Top-level roadmaps `collect()` drops for an unscheduled status.
+ *
+ * Reported beside the count, never added to it. The exclusion in `collect()` is
+ * deliberate and stays: a draft is not active work, and counting one would make
+ * every parked idea cost a slot under one-in-one-out. What the exclusion also
+ * did, silently, was make the drafts unreadable — the estate report showed
+ * `active_roadmaps 26` whether 0 or 14 drafts sat beside them. This closes the
+ * reporting half and nothing else, so it has no floor, no allowance and no
+ * claim path: it cannot fail.
+ *
+ * `isUnscheduled` is the same predicate `collect()` filters on, so this count
+ * and that exclusion cannot disagree — a second status list here is how a
+ * reported number starts describing a different set from the one it explains.
+ */
+export function countDrafts(repoRoot: string): number {
+    const dir = path.join(repoRoot, ROADMAPS_REL);
+    let names: string[];
+    try {
+        names = fs.readdirSync(dir);
+    } catch {
+        return 0;
+    }
+    let n = 0;
+    for (const name of names) {
+        if (!name.endsWith('.md') || !isRoadmapCandidate(name)) continue;
+        const abs = path.join(dir, name);
+        let text: string;
+        try {
+            if (!fs.statSync(abs).isFile()) continue;
+            text = fs.readFileSync(abs, 'utf-8');
+        } catch {
+            continue;
+        }
+        if (isUnscheduled(parseFrontmatter(text))) n += 1;
+    }
+    return n;
+}
+
 /** Did the tokeniser resolve under `root`? A ratchet must not mix the two modes. */
 export function skillTokensExact(root: string): boolean {
     return measureSkillEstate(root).skill_description_tokens !== null;
@@ -554,8 +611,22 @@ function isParked(rel: string): boolean {
  * commit trailer, for the reason `RATCHET_RESET_KEY` gives for living inside the
  * baseline JSON: the claim then shows up in the diff of the change that makes
  * it, and a reviewer sees it without being told to look.
+ *
+ * THE BLOCK SCALAR IS READ HERE AND NOT BY `parseFrontmatter`, which is a flat
+ * line parser with no YAML block support: it returns the value as everything
+ * after the first colon. Measured 2026-10-01 across the three roadmap trees,
+ * **38 of 221 exemptions are written `estate_offset_exempt: >-` with the reason
+ * indented beneath**, and for every one of them this function used to return
+ * the literal two-character string `>-`. That is non-empty, so the gate
+ * accepted it — a key whose whole purpose is that a reviewer sees the claim was
+ * being checked against a YAML punctuation mark on one file in six. The fix
+ * belongs here rather than in the shared parser because every other caller of
+ * that parser reads single-token values (`status`, `complexity`) where block
+ * support buys nothing and a rewrite risks the dashboard.
  */
 export function exemptionReason(text: string): string | null {
+    const block = blockScalar(text, 'estate_offset_exempt');
+    if (block !== null) return block === '' ? null : block;
     const fm = parseFrontmatter(text);
     const raw = (fm as Record<string, unknown>)['estate_offset_exempt'];
     if (typeof raw !== 'string') {
@@ -563,6 +634,38 @@ export function exemptionReason(text: string): string | null {
     }
     const reason = raw.trim().replace(/^["']|["']$/g, '').trim();
     return reason === '' ? null : reason;
+}
+
+/**
+ * The folded body of `<key>: >-` / `<key>: |`, or `null` when not that form.
+ *
+ * Returns `''` — not `null` — for a block header with no body, so the caller can
+ * tell "declared and empty" from "not a block scalar". An empty block is the
+ * blank-reason case the key already refuses, and collapsing it into `null` here
+ * would send it back to the flat parser, which would hand back `>-` and accept it.
+ */
+function blockScalar(text: string, key: string): string | null {
+    const m = /^---\r?\n([\s\S]*?)\r?\n---/.exec(text);
+    if (m === null) return null;
+    const lines = (m[1] as string).split(/\r?\n/);
+    const head = new RegExp(`^${key}:[ \\t]*(.*)$`);
+    for (let i = 0; i < lines.length; i += 1) {
+        const hm = head.exec(lines[i] as string);
+        if (hm === null) continue;
+        // Only the block indicators. A quoted or bare value is the flat form and
+        // stays with the flat parser, which already handles it.
+        if (!/^[>|][-+]?\d*$/.test((hm[1] as string).trim())) return null;
+        const body: string[] = [];
+        for (let j = i + 1; j < lines.length; j += 1) {
+            const line = lines[j] as string;
+            if (line.trim() === '') continue;
+            // The first unindented line ends the block — the next key.
+            if (!/^[ \t]/.test(line)) break;
+            body.push(line.trim());
+        }
+        return body.join(' ').replace(/\s+/g, ' ').trim();
+    }
+    return null;
 }
 
 /**
@@ -816,6 +919,13 @@ export function evaluate(
         unpaid = Math.max(0, chargeable.length - offsets.offsets.length);
     }
 
+    // The SHAPE half, and it is deliberately not gated on `lintApplies`. The
+    // threshold decides whether an unoffset addition is charged; it says nothing
+    // about whether a claim an author chose to write has to mean something. An
+    // exemption below the threshold buys nothing anyway, so a shapeless one
+    // below it is a line that will be read as a reason later and is not one.
+    const findings = offsets === null ? [] : exemptionFindings(offsets.exempt);
+
     // The allowances, one metric at a time and never a blanket rule. An exempt
     // addition and a parked roadmap are the two increases the existing policy
     // already sanctions, and under an exact floor each needs its own headroom or
@@ -883,13 +993,15 @@ export function evaluate(
         offsets,
         offsetSkipReason,
         unpaid,
+        exemptionFindings: findings,
+        draftRoadmaps: countDrafts(repoRoot),
         provisionalPromotion,
         // No floor is a FAILURE, not a skip, and it is the one place this gate
         // convicts on a missing input. The other halves can report "unproven" and
         // still leave a meaningful verdict behind; the count half IS the verdict,
         // so with no floor a green here would assert something nothing measured.
         // A shrink-only gate whose floor is absent passes every possible tree.
-        withinBudget: floorSkipReason === null && growth.length === 0 && unpaid === 0,
+        withinBudget: floorSkipReason === null && growth.length === 0 && unpaid === 0 && findings.length === 0,
     };
 }
 
@@ -1104,8 +1216,42 @@ function selfTest(): number {
                         write(
                             dir,
                             'agents/roadmaps/road-to-new.md',
-                            '---\nestate_offset_exempt: fixture — the addition that cannot be offset\n---\n\n' + roadmap('N'),
+                            '---\nestate_offset_exempt: fixture — archiving road-to-0 was rejected, it is mid-flight\n---\n\n' +
+                                roadmap('N'),
                         ),
+                }),
+        },
+        {
+            // The shape half. The old reason here was "the addition that cannot
+            // be offset", which names no alternative and is exactly what this
+            // case now refuses — so the pair above and below are the same
+            // addition differing only in what its reason says.
+            name: 'exemption naming no rejected alternative → reject',
+            expect: 'reject',
+            run: () =>
+                fixture({
+                    roadmaps: 3,
+                    base: 'main',
+                    after: (dir) =>
+                        write(
+                            dir,
+                            'agents/roadmaps/road-to-new.md',
+                            '---\nestate_offset_exempt: fixture — lane 5 of road-to-parent\n---\n\n' + roadmap('N'),
+                        ),
+                }),
+        },
+        {
+            name: 'one exemption reason pasted into two added files → reject',
+            expect: 'reject',
+            run: () =>
+                fixture({
+                    roadmaps: 3,
+                    base: 'main',
+                    after: (dir) => {
+                        const fm = '---\nestate_offset_exempt: fixture — archiving road-to-0 was rejected, it is mid-flight\n---\n\n';
+                        write(dir, 'agents/roadmaps/road-to-n1.md', fm + roadmap('N1'));
+                        write(dir, 'agents/roadmaps/road-to-n2.md', fm + roadmap('N2'));
+                    },
                 }),
         },
         {
@@ -1319,7 +1465,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     }
 
     const ledger = new GateLedger(GATE);
-    ledger.plan([...METRICS, 'floor', 'one_in_one_out']);
+    ledger.plan([...METRICS, 'floor', 'one_in_one_out', 'exemption_shape']);
     for (const metric of METRICS) {
         // Round 2 finding 3, kept: a metric is recorded ONCE here, for whichever
         // way it actually failed, so the ledger cannot show a green completeness
@@ -1335,6 +1481,10 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     if (verdict.offsets === null) ledger.skip('one_in_one_out', 'precondition_unmet');
     else if (verdict.unpaid > 0) ledger.fail('one_in_one_out', `${String(verdict.unpaid)} unpaid addition(s)`);
     else ledger.complete('one_in_one_out');
+    if (verdict.offsets === null) ledger.skip('exemption_shape', 'precondition_unmet');
+    else if (verdict.exemptionFindings.length > 0)
+        ledger.fail('exemption_shape', `${String(verdict.exemptionFindings.length)} unshaped exemption(s)`);
+    else ledger.complete('exemption_shape');
 
     if (json) {
         // The ledger goes to stderr here so stdout stays parseable after the
@@ -1358,6 +1508,12 @@ export function main(argv: string[] = process.argv.slice(2)): number {
             `  ${metric.padEnd(18)} ${String(live).padStart(5)}  (floor ${String(base)} at ${verdict.floorRef ?? '?'}, ${sign}${String(delta)})\n`,
         );
     }
+    // Beside the gated counts, never among them: no floor line, no delta, and
+    // the label says what it is. A reader comparing two runs can see the drafts
+    // move without reading this as a ratchet that moved.
+    process.stdout.write(
+        `  ${'draft_roadmaps'.padEnd(18)} ${String(verdict.draftRoadmaps).padStart(5)}  (reported, not gated — excluded from active_roadmaps)\n`,
+    );
     if (verdict.offsets !== null) {
         const o = verdict.offsets;
         process.stdout.write(
@@ -1434,6 +1590,28 @@ export function main(argv: string[] = process.argv.slice(2)): number {
                 '    cannot be offset, add `estate_offset_exempt: <reason>` to its frontmatter —\n' +
                 '    that costs one reviewable line instead of a silent exception.\n',
         );
+    }
+
+    for (const f of verdict.exemptionFindings) {
+        if (f.kind === 'shapeless') {
+            process.stderr.write(
+                `❌  ${f.file}: estate_offset_exempt names no rejected alternative.\n` +
+                    `    reason: ${f.reason.slice(0, 160)}\n` +
+                    '    The exemption is the escape hatch from one-in-one-out, so its reason has to\n' +
+                    '    say what you considered INSTEAD of adding a file — archiving something,\n' +
+                    '    parking it in `later/`, merging into an existing roadmap — and why that was\n' +
+                    '    not available. Name the disposition you rejected. Measured over the existing\n' +
+                    '    221 exemptions, 43 name none; this check applies to ADDED files only, so\n' +
+                    '    nothing already in the tree is re-read.\n',
+            );
+        } else {
+            process.stderr.write(
+                `❌  ${f.file}: estate_offset_exempt repeats ${f.twin ?? '(another added file)'} verbatim.\n` +
+                    `    reason: ${f.reason.slice(0, 160)}\n` +
+                    '    One sentence pasted into every file a round adds is one claim, not N. Write\n' +
+                    '    the reason this FILE could not be offset, or offset the ones that could.\n',
+            );
+        }
     }
     ledger.report();
     if (verdict.withinBudget) {
