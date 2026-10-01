@@ -1,12 +1,12 @@
 # Findings: behavior-vocabulary-close
-<!-- completion-review: v1 | reviewed: 2026-10-01 | scope: 6aa403cd42937eedac809a6dec6f903aa3737e3fd0daff4e9ff268169015e0f6 | diff: 44b85bc5b25adde215870a0e0efd51d6894e49a1 | reviewer: r2-fresh-subagent-behavior-vocabulary-close | prompt_hash: 9cc607c5d57342eca6934149cda9373a2c34cd0a7612dc0e6f1609dce563ba23 -->
+<!-- completion-review: v1 | reviewed: 2026-10-01 | scope: 4c0752bd3f75076d29420f5d638bc18b46ff9e878559b069c5fa5c2ebe3da249 | diff: 84ed54ac76975cf6b512aa6f6a0be25bd729e949 | reviewer: r2-fresh-subagent-behavior-vocabulary-close | prompt_hash: 9cc607c5d57342eca6934149cda9373a2c34cd0a7612dc0e6f1609dce563ba23 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-behavior-vocabulary-close"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-10-01 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 44b85bc5b25adde215870a0e0efd51d6894e49a1
-  scope_hash: 6aa403cd42937eedac809a6dec6f903aa3737e3fd0daff4e9ff268169015e0f6
+  diff_sha: 84ed54ac76975cf6b512aa6f6a0be25bd729e949
+  scope_hash: 4c0752bd3f75076d29420f5d638bc18b46ff9e878559b069c5fa5c2ebe3da249
   roadmap: agents/roadmaps/road-to-behavior-vocabulary-and-runner-truth.md
   roadmap_hash: 164e41ee77d3257afdefcacdddefdd37bf96ccc67024194adbb4b960aac06527
   ac_hash: 01c83fedc353c1d9b154bba02bae3621956400a8f4049358f225c4d194b88931
@@ -61,3 +61,11 @@ The reviewer also states it did not run the test suite, so every row is a
 reading of the source rather than an observed failure.
 
 <!-- reviewer fills the table; 0 findings => replace the table with the exact honest-null line per docs/contracts/plan-review-gates.md §2.3 AND change the evidence-type to `honest-null` per docs/contracts/evidence-artifact-types.md §4 -->
+
+**Re-bind 2026-10-01 (§ 2.7 path 1).** Round 21 found two documentation
+overreaches in content this artefact had reviewed; fixing them (`62741f8c8`)
+moved the scope, which forces a re-review under contract § 2.1. All nine rows
+here are terminal, so the artefact is re-bound in place rather than archived as
+a closed round, and what it reviewed is the pre-round-21 state of that content.
+The two findings and their fixes are recorded in the round-21 artefact beside
+this one rather than appended here, so neither file claims the other's work.

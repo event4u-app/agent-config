@@ -1,12 +1,12 @@
 # Findings: behavior-vocabulary-close-round21
-<!-- completion-review: v1 | reviewed: 2026-10-01 | scope: c2c6f90f239983092c83075893b4c0a9af45cc85115af1d0155202e66311e92f | diff: 62741f8c8346412cb420b85b5418ca1a04e5c5f9 | reviewer: r2-fresh-subagent-behavior-vocabulary-close-round21 | prompt_hash: b9188047b33d8c0842d63f83230a69d1a74957104f08887aacc49163d93cd747 -->
+<!-- completion-review: v1 | reviewed: 2026-10-01 | scope: 4c0752bd3f75076d29420f5d638bc18b46ff9e878559b069c5fa5c2ebe3da249 | diff: 84ed54ac76975cf6b512aa6f6a0be25bd729e949 | reviewer: r2-fresh-subagent-behavior-vocabulary-close-round21 | prompt_hash: b9188047b33d8c0842d63f83230a69d1a74957104f08887aacc49163d93cd747 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-behavior-vocabulary-close-round21"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-10-01 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 62741f8c8346412cb420b85b5418ca1a04e5c5f9
-  scope_hash: c2c6f90f239983092c83075893b4c0a9af45cc85115af1d0155202e66311e92f
+  diff_sha: 84ed54ac76975cf6b512aa6f6a0be25bd729e949
+  scope_hash: 4c0752bd3f75076d29420f5d638bc18b46ff9e878559b069c5fa5c2ebe3da249
   roadmap: none
   roadmap_hash: none
   ac_hash: none
