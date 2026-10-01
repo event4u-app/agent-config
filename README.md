@@ -20,6 +20,22 @@
 
 ## Try it in 30 seconds
 
+**The whole suite — one command.** On a terminal with a display the browser
+wizard launches automatically; the same TypeScript installer runs the real
+install behind it. Flags, the headless path and the scope: [Quickstart ↓](#quickstart).
+
+```bash
+# 1. Install — on a terminal with a display, the browser wizard launches
+#    automatically; the same TypeScript installer runs the real install behind it.
+npx -y @event4u/agent-config init
+
+# 2. Pick your profile + tools in the wizard, click Finish.
+#    (Writes ~/.event4u/agent-config/, ~/.claude/, ~/.cursor/, …)
+
+# 3. First real task — agent refines, plans, verifies.
+/work "your first real task"
+```
+
 **Try one thing in 30 seconds** — before the full suite, drop in a single
 self-contained subagent and see the discipline on your own repo:
 
@@ -165,17 +181,7 @@ How *long* it takes is not: that is dominated by network and registry latency.
 CI measures the install → `doctor` wall-clock on every umbrella run and
 publishes it with its conditions, as evidence rather than as a promise.
 
-```bash
-# 1. Install — on a terminal with a display, the browser wizard launches
-#    automatically; the same TypeScript installer runs the real install behind it.
-npx -y @event4u/agent-config init
-
-# 2. Pick your profile + tools in the wizard, click Finish.
-#    (Writes ~/.event4u/agent-config/, ~/.claude/, ~/.cursor/, …)
-
-# 3. First real task — agent refines, plans, verifies.
-/work "your first real task"
-```
+**The one command is [above ↑](#try-it-in-30-seconds).** What follows is the flags, the headless path and the scope around it.
 
 **Headless / CI:** `init` skips the GUI on CI, a non-TTY, a headless host, or any CLI-mode flag, and runs the non-interactive installer instead. The GUI and the CLI share one installer (`src/scripts/install.ts`), so both produce identical results. Flags, the full opt-out set and `--dry-run`: [`docs/wizard.md`](docs/wizard.md) · [`gui-wizard` § When the GUI is skipped](docs/contracts/gui-wizard.md#when-the-gui-is-skipped).
 
