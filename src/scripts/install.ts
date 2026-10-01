@@ -78,6 +78,7 @@ import type * as YamlModule from 'yaml';
 import { build_merge_entries } from './_lib/json_pointers.js';
 import { deepMerge as deep_merge, isPlainObject as _isPlainObject, jsonEqual } from './_lib/json_merge.js';
 import { mergeHostConfig, HOOK_SIGNATURES } from './_lib/host_hook_merge.js';
+import { sweepReservedNames } from './_lib/reserved_name_sweep.js';
 import { withHostEnv } from './_lib/host_env_write.js';
 import { jsonDumpsCompact, jsonDumpsIndent } from './_lib/json_python_parity.js';
 import { is_claude_builtin_name } from './_lib/claude_builtin_names.js';
@@ -2904,26 +2905,12 @@ export function _apply_claude_flat_command_wrappers(
     anchor: string,
     package_root: string,
     current_files: Set<string>,
-): { wrapped: string[]; collisions: string[]; reserved: string[] } {
+    recorded_files: ReadonlySet<string> = new Set<string>(),
+): { wrapped: string[]; collisions: string[]; reserved: string[]; foreign: string[] } {
     const wrapped: string[] = [];
     const collisions: string[] = [];
-    const reserved: string[] = [];
-    // Reserved-name sweep over ALL flat command files (any tier): a name
-    // shadowing a Claude Code built-in never ships on the claude-code anchor.
     const commands_dir = path.join(anchor, 'commands');
-    let flat_entries: string[] = [];
-    try {
-        flat_entries = fs.readdirSync(commands_dir).filter((f) => f.endsWith('.md'));
-    } catch {
-        // No commands dir → nothing to sweep.
-    }
-    for (const fname of flat_entries.sort()) {
-        const slug = fname.slice(0, -'.md'.length);
-        if (!is_claude_builtin_name(slug)) continue;
-        fs.rmSync(path.join(commands_dir, fname), { force: true });
-        current_files.delete(`commands/${fname}`);
-        reserved.push(slug);
-    }
+    const { reserved, foreign } = sweepReservedNames(commands_dir, current_files, is_claude_builtin_name, recorded_files);
     // Visible command slugs from the locked discovery manifest. `visibility`
     // is the source of truth (ADR-090/092); the integer `tier` stays only as
     // the fallback for a manifest published before `visibility` was emitted,
@@ -2970,7 +2957,7 @@ export function _apply_claude_flat_command_wrappers(
         current_files.add(`skills/${slug}/SKILL.md`);
         wrapped.push(slug);
     }
-    return { wrapped, collisions, reserved };
+    return { wrapped, collisions, reserved, foreign };
 }
 
 function _deploy_global_content(
@@ -3043,7 +3030,7 @@ function _deploy_global_content(
         if (tool_id === 'claude-code') {
             // Rules land verbatim from the copy above; see the module. It also
             // renders the flat-command wrapper report, unchanged.
-            const res = _apply_claude_flat_command_wrappers(anchor, package_root, current_files);
+            const res = _apply_claude_flat_command_wrappers(anchor, package_root, current_files, global_deploy_inventory.recorded_rel_files(tool_id, anchor));
             claude_rule_rewrite.rewriteAndReport(
                 path.join(anchor, 'rules'),
                 state.QUIET,

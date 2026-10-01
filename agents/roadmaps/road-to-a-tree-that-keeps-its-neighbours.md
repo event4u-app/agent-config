@@ -50,7 +50,7 @@ neighbour's effect visible; it cannot make it run after ours.
 
 ## Phase 1 — Stop destroying what a neighbour wrote
 
-- [ ] **1.1 Per-event append with a per-platform signature on the seven hook writers.**
+- [x] **1.1 Per-event append with a per-platform signature on the seven hook writers.**
       One helper replacing the array branch for `hooks.<event>` at the seven sites only:
       keep every entry without this suite's signature, replace ours, append if absent.
       The signature is per platform (`dispatch:hook --platform <host>`), and the helper is
@@ -59,22 +59,22 @@ neighbour's effect visible; it cannot make it run after ours.
       `corrected-from-reproduction` — the supplied draft named thirteen sites and the
       Claude-only signature.
       verify: fixture — a `.cursor/hooks.json` with one foreign entry gains ours and keeps the foreign one byte-identical across install → upgrade → uninstall
-- [ ] **1.2 Ownership pointers stop owning the parent array.** `json_pointers.ts:202-203`
+- [x] **1.2 Ownership pointers stop owning the parent array.** `json_pointers.ts:202-203`
       records array values wholesale; record the managed entry's signature instead, so
       uninstall removes only it.
       verify: `npx vitest run tests/lib/json_pointers.test.ts -t 'foreign array entry survives'` -> 0
-- [ ] **1.3 `_cleanDir` deletes only files this package wrote.** Ownership comes from the
+- [x] **1.3 `_cleanDir` deletes only files this package wrote.** Ownership comes from the
       installed-tools lockfile's written paths, not from a frontmatter tag — the `.mdc`
       emitter (`src/scripts/condense.ts:1286-1304`) writes no package tag, so gating on one
       would never remove our own stale files. Foreign files are kept and listed once as
       `kept: <n> neighbour file(s)`; `.windsurfrules` is written only when absent or ours.
       `corrected-from-reproduction`.
       verify: fixture — a foreign `.cursor/rules/other.mdc` survives `emitCursor`; a stale file of ours is still removed
-- [ ] **1.4 The reserved-name sweep skips files it does not own.** `install.ts:2973-2978`
+- [x] **1.4 The reserved-name sweep skips files it does not own.** `install.ts:2973-2978`
       removes a builtin-named command only when the lockfile claims it; a foreign one is
       reported, not deleted.
       verify: fixture — a foreign `~/.claude/commands/review.md` survives install and appears in the doctor line
-- [ ] **1.5 The public claim matches the tree.** `docs/CLAIMS.md` `surgical-uninstall` gains
+- [x] **1.5 The public claim matches the tree.** `docs/CLAIMS.md` `surgical-uninstall` gains
       an evidence line pointing at 1.1's array fixture; until 1.1 lands its status reads
       `partial` with the install-side gap named.
       verify: `grep -A4 'claim: surgical-uninstall' docs/CLAIMS.md | grep -c 'hooks'` -> /[1-9]/
