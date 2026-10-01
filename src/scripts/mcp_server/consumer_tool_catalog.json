@@ -284,6 +284,59 @@
       }
     },
     {
+      "name": "graph_node",
+      "description": "One symbol in full: where it is declared, what reaches it, what it reaches, and how connected it is. Resolves EXACTLY (node id, then label) and refuses anything it cannot — it never scores free text, so an answer is always about the node you named.",
+      "side_effect": "ro",
+      "implemented_on": [
+        "stdio"
+      ],
+      "input_schema": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Node id `<relpath>#<sym>` or an exact label."
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "in",
+              "out",
+              "both"
+            ],
+            "default": "both",
+            "description": "Which edges to walk. `in` = who reaches it, `out` = what it reaches."
+          },
+          "depth": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3,
+            "default": 1,
+            "description": "Hop limit."
+          },
+          "relation": {
+            "type": "string",
+            "enum": [
+              "calls",
+              "imports",
+              "uses",
+              "inherits",
+              "member",
+              "tests"
+            ],
+            "description": "Restrict to one relation. Omit for all of them."
+          }
+        },
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true
+      }
+    },
+    {
       "name": "graph_path",
       "description": "The shortest relation chain between two symbols, direction preserved. Answers \"how does A reach B\" without reading the files between. `(no path found)` when unconnected is an answer.",
       "side_effect": "ro",

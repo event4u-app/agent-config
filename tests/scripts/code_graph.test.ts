@@ -21,7 +21,14 @@ import { buildFromRepo, buildGraph, serializeGraph, type SourceFile } from '../.
 import { pickSource, type SourceVerdict } from '../../src/scripts/code_graph/detect.js';
 import { extractFile } from '../../src/scripts/code_graph/extract.js';
 import { loadLanguage } from '../../src/scripts/code_graph/loader.js';
-import { affected, loadGraph, path as graphPath, query, resolveSeeds } from '../../src/scripts/code_graph/query.js';
+import {
+    affected,
+    loadGraph,
+    node as graphNode,
+    path as graphPath,
+    query,
+    resolveSeeds,
+} from '../../src/scripts/code_graph/query.js';
 import { sanitizeLabel } from '../../src/scripts/code_graph/sanitize.js';
 import { EXPECTED_GRAMMAR_ABI, type Lang } from '../../src/scripts/code_graph/types.js';
 import { validateGraph } from '../../src/scripts/code_graph/validate.js';
@@ -374,5 +381,98 @@ describe('2.4 — the MCP answers carry the new state', () => {
         expect(after['staleness']).toBe('edited');
 
         fs.rmSync(root, { recursive: true, force: true });
+    });
+});
+
+// ---------------------------------------------------------------------------
+// road-to-a-graph-that-feeds-the-gate — step 3.1, the graph_node view
+// ---------------------------------------------------------------------------
+
+describe('3.1 — graph_node answers about one node, or refuses', () => {
+    async function nodeFixture() {
+        const { graph } = await buildFixture();
+        const tmp = path.join(os.tmpdir(), `cg-node-${process.pid}-${graph.edges.length}.json`);
+        fs.writeFileSync(tmp, serializeGraph(graph));
+        return loadGraph(tmp, 'native:fixture');
+    }
+
+    it('reports location, in-edges, out-edges and degree for an exact id', async () => {
+        const g = await nodeFixture();
+        const r = graphNode(g, 'app/Base.php#Base::shared');
+        expect(r.refusal).toBeUndefined();
+        expect(r.id).toBe('app/Base.php#Base::shared');
+        expect(r.location?.path).toBe('app/Base.php');
+        // Foo::handle reaches it through $this-> up the hierarchy, so the
+        // in-edge list is the "who calls this" answer that needed two calls
+        // before.
+        expect(r.in.some((e) => e.id === 'app/Foo.php#Foo::handle' && e.relation === 'calls')).toBe(true);
+        expect(r.in_degree).toBe(r.in.filter((e) => e.hops === 1).length);
+        expect(r.out_degree).toBe(r.out.filter((e) => e.hops === 1).length);
+    });
+
+    it('resolves an exact LABEL as well as an id', async () => {
+        const g = await nodeFixture();
+        const r = graphNode(g, 'render');
+        expect(r.refusal).toBeUndefined();
+        expect(r.id).toBe('app/widget.ts#Widget::render');
+        expect(r.out.length).toBeGreaterThan(0);
+    });
+
+    it('refuses an AMBIGUOUS label and names the candidates instead of picking one', async () => {
+        const g = await nodeFixture();
+        // `shared` is a method on both the PHP and the TypeScript Base. Picking
+        // the first would be the silent guess the refusal exists to avoid.
+        const r = graphNode(g, 'shared');
+        expect(r.refusal).toContain('re-ask with one id');
+        expect(r.refusal).toContain('app/Base.php#Base::shared');
+        expect(r.refusal).toContain('app/base.ts#Base::shared');
+        expect(r.id).toBe('');
+    });
+
+    it('REFUSES free text rather than scoring it — D4', async () => {
+        const g = await nodeFixture();
+        // `query` happily BM25-matches this; a node view must not, because every
+        // field it returns is a statement about one specific node.
+        expect(query(g, 'handle foo').seeds.length).toBeGreaterThan(0);
+        const r = graphNode(g, 'handle foo');
+        expect(r.refusal).toBeDefined();
+        expect(r.refusal).toContain('does not score free text');
+        expect(r.id).toBe('');
+        expect(r.in).toStrictEqual([]);
+        expect(r.out).toStrictEqual([]);
+    });
+
+    it('honours direction, depth and the relation filter', async () => {
+        const g = await nodeFixture();
+        const outOnly = graphNode(g, 'app/Foo.php#Foo::handle', { direction: 'out' });
+        expect(outOnly.in).toStrictEqual([]);
+        expect(outOnly.out.length).toBeGreaterThan(0);
+
+        const inOnly = graphNode(g, 'app/Base.php#Base::shared', { direction: 'in' });
+        expect(inOnly.out).toStrictEqual([]);
+        expect(inOnly.in.length).toBeGreaterThan(0);
+
+        const callsOnly = graphNode(g, 'app/Foo.php#Foo::handle', { direction: 'out', relation: 'calls' });
+        expect(callsOnly.out.every((e) => e.relation === 'calls')).toBe(true);
+        expect(callsOnly.out.length).toBeGreaterThan(0);
+
+        // Depth is clamped to 1-3 rather than refused, and a deeper walk can
+        // only ever add lines.
+        const deep = graphNode(g, 'app/Foo.php#Foo::handle', { direction: 'out', depth: 99 });
+        expect(deep.out.length).toBeGreaterThanOrEqual(outOnly.out.length);
+        expect(deep.out.every((e) => e.hops >= 1 && e.hops <= 3)).toBe(true);
+    });
+
+    it('is registered as a read-only MCP tool whose relation enum IS the closed vocabulary', () => {
+        const t = GRAPH_TOOLS['graph_node'];
+        expect(t).toBeDefined();
+        expect(t?.side_effect).toBe('ro');
+        const props = (t as BuiltinTool).input_schema['properties'] as Record<string, { enum?: string[] }>;
+        // Pinned against the union in types.ts, which erases at compile time —
+        // an enum that silently lost a value would reject a legal filter.
+        const declared = fs.readFileSync(path.join(CODE_GRAPH_DIR, 'types.ts'), 'utf-8');
+        const union = /export type Relation = ([^;]+);/.exec(declared)?.[1] ?? '';
+        const vocab = [...union.matchAll(/'([a-z-]+)'/g)].map((m) => m[1] as string).sort();
+        expect([...(props['relation']?.enum ?? [])].sort()).toStrictEqual(vocab);
     });
 });
