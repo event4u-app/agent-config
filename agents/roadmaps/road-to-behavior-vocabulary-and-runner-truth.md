@@ -719,9 +719,9 @@ neither spends the ratchet early nor loses the trigger.
 
 ### Residue carried out of the review rounds
 
-Sixteen completion-review rounds produced 133 findings; 101 are fixed and 32
+Seventeen completion-review rounds produced 141 findings; 107 are fixed and 34
 are `accepted-risk`, each with a stated `revisit-if`. Nothing is `open`.
-Round 16 was the first with no critical, no high and no medium.
+Rounds 16 and 17 carried no critical and no high; 16 carried no medium either.
 
 **The dominant defect class was never the code.** Four highs across rounds 2–4
 and roughly a third of everything else were this branch asserting something

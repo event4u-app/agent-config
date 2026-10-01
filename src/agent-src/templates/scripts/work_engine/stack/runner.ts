@@ -14,10 +14,9 @@
  * renamed rather than quietly widened. Sibling of {@link "./detect"}, which
  * labels the *frontend* stack.
  *
- * Detection **never crashes**: a malformed manifest, a missing file or an
- * unknown stack degrades to a LOW-confidence empty result rather than raising.
- * EVERY filesystem helper here is guarded, which is what makes that true. It
- * is NOT free; the contract page states the cost.
+ * Detection **never crashes** — a malformed manifest, a missing file or an
+ * unknown stack degrades to a LOW-confidence empty result, and EVERY
+ * filesystem helper here is guarded, which is what makes that true.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -27,9 +26,8 @@ import * as path from 'node:path';
  *
  * Single source of truth: the fixtures validate against this set without
  * re-deriving it, and a membership test binds it to what the resolver emits —
- * without that binding it would assert set-equality with itself.
- * `agents/runtime/state/toolchain.json` has no schema and no reader outside
- * this module. Mirrors Python's `frozenset`.
+ * without that binding it would assert set-equality with itself. Nothing else
+ * validates against it. Mirrors Python's `frozenset`.
  */
 export const KNOWN_RUNNERS: ReadonlySet<string> = new Set([
     'pest',
@@ -49,12 +47,11 @@ export const KNOWN_RUNNERS: ReadonlySet<string> = new Set([
 /**
  * Every behavior-runner label the resolver can emit, plus the refusal.
  *
- * A **separate** set from {@link KNOWN_RUNNERS}, because the two answer
- * different questions — *what runs this repository's tests* versus *does it
- * already own a tool that reads a specification* — and merging them would put
- * a suite nobody asked to run into `selected`. {@link BEHAVIOR_UNKNOWN} is the
- * refusal label, emitted when one scope carries two — a finding its owner
- * settles, not a pick.
+ * A **separate** set from {@link KNOWN_RUNNERS}: the two answer different
+ * questions — *what runs this repository's tests* versus *does it already own
+ * a tool that reads a specification* — and merging them would put a suite
+ * nobody asked to run into `selected`. {@link BEHAVIOR_UNKNOWN} is the refusal
+ * label, emitted when one scope carries two — a finding its owner settles.
  */
 export const BEHAVIOR_UNKNOWN = 'unknown';
 
@@ -98,8 +95,7 @@ const _MANIFESTS = [
     'build.gradle.kts',
     // `settings.gradle[.kts]` is a Gradle signal `_jvm_build` acts on, so it
     // must be in the key: a settings-only multi-project root emits a junit row
-    // and would otherwise report `mtime: 0`, the greenfield sentinel, and
-    // never invalidate its cached config.
+    // and would otherwise report the greenfield `mtime: 0` forever.
     'settings.gradle',
     'settings.gradle.kts',
     'global.json',
@@ -109,16 +105,15 @@ const _MANIFESTS = [
 /**
  * .NET project / solution extensions, matched by a root listing.
  *
- * .NET is the one ecosystem whose marker has no fixed FILENAME — the project
- * file is `<whatever>.csproj` — so this is an extension list scanned over the
- * root rather than a `_MANIFESTS` entry.
+ * .NET is the one ecosystem whose marker has no fixed FILENAME (the project
+ * file is `<whatever>.csproj`), so this is an extension list over the root
+ * rather than a `_MANIFESTS` entry.
  *
  * **Residual cache gap.** {@link latest_manifest_mtime} stats fixed NAMES, so
- * a signal it does not list is invisible to the cache key: a project-only
- * .NET scope, `features/support/env.rb`, `spec/spec_helper.rb`, `setup.cfg`
- * and `pytest.ini` (the last two turn on all of python), and the `mvnw` /
- * `gradlew` wrappers, which change the JVM command without touching a
- * manifest. Known set, not closed.
+ * a signal it does not list is invisible to the cache key: a project-only .NET
+ * scope, `features/support/env.rb`, `spec/spec_helper.rb`, `setup.cfg` and
+ * `pytest.ini` (the last two turn on all of python), and the `mvnw` /
+ * `gradlew` wrappers. Known set, not closed.
  */
 const _DOTNET_PROJECT_EXTS = ['.sln', '.slnx', '.csproj', '.fsproj', '.vbproj'];
 
@@ -156,10 +151,9 @@ function _has_dotnet_solution(dir: string): boolean {
  * **The split is historical and no rule separates them.** `_MANIFESTS` was
  * once "what selects an ecosystem", but selection happens through individual
  * `_is_file` / `_read_text` calls, `Makefile` and `Taskfile.yml` name a
- * wrapper not an ecosystem, and `.rspec` is a native signal in THIS list.
- * Both are read in one place, {@link latest_manifest_mtime} — so **a new
- * fixed name goes in either; what matters is that it goes in ONE.** What
- * escapes the key: {@link _DOTNET_PROJECT_EXTS}.
+ * wrapper not an ecosystem, and `.rspec` is a native signal in THIS list. Both
+ * are read in one place — so **a new fixed name goes in either; what matters
+ * is that it goes in ONE.** What escapes: {@link _DOTNET_PROJECT_EXTS}.
  */
 const _BEHAVIOR_MARKERS = [
     'pnpm-workspace.yaml',
@@ -186,10 +180,9 @@ type Wrappers = { [role: string]: string };
  * One detected test runner for one ecosystem.
  *
  * `command` is the exact invocation (a wrapper like `make test` when one
- * exists, else the direct tool). `speed` is {@link SPEED_FAST} /
- * {@link SPEED_SLOW} / {@link SPEED_E2E}, which the monorepo guard filters on.
- * `basis` names the signal that matched, so the decision is auditable.
- * Mirrors the Python `@dataclass(frozen=True)`.
+ * exists, else the direct tool) and is ROOT-relative. `speed` is
+ * {@link SPEED_FAST} / {@link SPEED_SLOW} / {@link SPEED_E2E}, which the
+ * monorepo guard filters on. `basis` names the signal that matched.
  */
 export class RunnerResult {
     readonly ecosystem: string;
@@ -219,12 +212,16 @@ export class RunnerResult {
 /**
  * One behavior runner found in one scope — DETECTION ONLY.
  *
+ * **`command` is relative to `scope_root`, not the project root** — built from
+ * files inside the scope (`vendor/bin/behat`, `./gradlew test`), so a consumer
+ * runs it WITH `scope_root` as the working directory. Every native
+ * {@link RunnerResult} command is root-relative; this axis is the exception.
+ *
  * {@link RunnerResult}'s fields plus `scope_root`, because the axis is
  * **per-scope, not a repository-wide scalar**: one answer would erase which
- * package owns which runner, and would have to break the tie the refusal
- * exists to refuse. `scope_root` is POSIX-relative, `'.'` for the root;
- * `conflict` is non-empty only on a refusal row, sorted. **It never carries
- * an instruction to adopt anything** — choosing is owner-gated.
+ * package owns which runner, and would break the tie the refusal exists to
+ * refuse. `scope_root` is POSIX-relative, `'.'` for the root; `conflict` is
+ * non-empty only on a refusal row. **It never instructs adoption.**
  */
 export class BehaviorRunnerResult {
     constructor(
@@ -323,10 +320,10 @@ export class ToolchainResult {
  *   the scope, matching `detect.detect_stack`.
  * @param opts.include_slow @param opts.include_e2e Monorepo guard, off by
  *   default: `selected` carries only fast unit suites.
- * @param opts.php_only The `--php` narrowing — PHP only in `selected`, with
- *   the full inventory still in `runners`.
+ * @param opts.php_only The `--php` narrowing — PHP only in `selected`; the
+ *   full inventory stays in `runners`.
  * @returns A {@link ToolchainResult}. Never raises; no manifest or unknown
- *   stack → empty at `confidence == LOW`, so the caller can ask.
+ *   stack → empty at LOW confidence, so the caller can ask.
  */
 export function resolve_toolchain(
     project_root: string,
@@ -445,12 +442,11 @@ export function latest_manifest_mtime(
     const mtimes: number[] = [];
     const names = [..._MANIFESTS, ..._BEHAVIOR_MARKERS];
     // Every scope, not only the root: `behavior_runners` is cached per scope,
-    // so a root-only key cannot see Behat arriving in a package — stale
-    // forever in the common case. Widening only invalidates more often, the
-    // safe direction. Cost as a SHAPE, because the arithmetic has been
-    // published wrong once: both name lists stat-ed per scope, bounded by
-    // _MAX_BEHAVIOR_SCOPES, each hit paying a second stat, plus
-    // `_behavior_scopes` when `scopes` is omitted — pass `scopes`.
+    // so a root-only key cannot see Behat arriving in a package — stale forever
+    // in the common case, and widening only invalidates more often. Cost as a
+    // SHAPE, since the arithmetic was published wrong once: both name lists
+    // stat-ed per scope, bounded by _MAX_BEHAVIOR_SCOPES, each hit paying a
+    // second stat, plus `_behavior_scopes` when `scopes` is omitted.
     for (const scope of scopes ?? _behavior_scopes(project_root)) {
         const dir = scope === '.' ? project_root : path.join(project_root, scope);
         for (const name of names) {
@@ -692,13 +688,13 @@ function _jvm_runners(build: JvmBuild): RunnerResult[] {
 /**
  * .NET — the basis string, or `null` when nothing marks a .NET project.
  *
- * Mirrors the PHP gradation, which awards HIGH only for a NAMED runner: HIGH
+ * Mirrors the PHP gradation, awarding HIGH only for a NAMED runner: HIGH
  * needs a PROJECT file naming a TEST stack (`Microsoft.NET.Test.Sdk`, xunit,
- * nunit, mstest); a bare project or a solution is MEDIUM, the analogue of the
+ * nunit, mstest); a bare project or solution is MEDIUM, the analogue of the
  * bare manifest. That stops a bare non-test project raising the WHOLE
- * repository to HIGH. It does NOT keep the row out of `selected`:
- * `_apply_guard` has never read `confidence`, for any ecosystem — which is
- * why a marker with no project anywhere emits no row at all.
+ * repository to HIGH, but does NOT keep the row out of `selected` —
+ * `_apply_guard` has never read `confidence` — which is why a marker with no
+ * project anywhere emits no row.
  */
 function _dotnet_basis(root: string): { basis: string; confidence: string } | null {
     let names: string[];
@@ -711,8 +707,8 @@ function _dotnet_basis(root: string): { basis: string; confidence: string } | nu
     // A ROOT TARGET, not a target anywhere. `dotnet test` is NOT recursive:
     // with no project or solution in the working directory it fails MSB1003,
     // whatever sits below. So the row is gated on this listing, and a scope
-    // whose only .NET evidence is `global.json` or `Directory.Build.props` —
-    // an SDK pin, never a target — gets NO row. Confidence does not gate
+    // whose only .NET evidence is an SDK pin (`global.json`,
+    // `Directory.Build.props`) gets NO row — confidence does not gate
     // `selected`, so a row here would be a command that cannot run.
     const target = names.find((n) => _DOTNET_PROJECT_EXTS.includes(path.extname(n).toLowerCase()));
     if (target === undefined) {
@@ -758,19 +754,17 @@ export function resolve_behavior_runners(
     for (const scope of scopes ?? _behavior_scopes(project_root)) {
         const dir = scope === '.' ? project_root : path.join(project_root, scope);
         // Grouped by ECOSYSTEM: two ecosystems' behavior runners are a
-        // polyglot repository, not a conflict. A PHP app with a JS frontend —
-        // behat and cucumber-js — is the commonest shape there is, and
-        // `unknown` throws away both answers. Mutual exclusivity is what the
-        // refusal is for, and only two runners in ONE ecosystem are that.
+        // polyglot repository, not a conflict — a PHP app with a JS frontend
+        // is the commonest shape there is, and `unknown` throws both answers
+        // away. Only two runners in ONE ecosystem are mutually exclusive.
         const rows = _behavior_runners_in_scope(dir, scope);
         for (const ecosystem of _dictFromKeys(rows.map((r) => r.ecosystem))) {
             const found = rows.filter((r) => r.ecosystem === ecosystem);
             const names = [...new Set(found.map((r) => r.runner))].sort();
             if (names.length <= 1) {
-                // One answer per ecosystem, however many signals produced
-                // it. The `>1 row, 1 name` case is defensive and unreachable
-                // today, but a future branch emitting a label twice would
-                // otherwise refuse a runner against itself.
+                // One answer per ecosystem, however many signals produced it.
+                // The `>1 row, 1 name` case is unreachable today; without it a
+                // future branch emitting a label twice refuses it against itself.
                 out.push(found[0] as BehaviorRunnerResult);
                 continue;
             }
@@ -806,11 +800,10 @@ function _behavior_runners_in_scope(dir: string, scope: string): BehaviorRunnerR
     );
     if ('behat/behat' in php_deps || behat_config !== undefined) {
         // "in the composer manifest", NOT "in composer require": the literal
-        // reads as an install instruction to a grep that cannot tell it from a
-        // manifest SECTION, and this axis may never be mistaken for an
-        // adoption recommendation. And `vendor/bin/behat` exists only after a
-        // composer install, so a config-only scope gets the bare binary — the
-        // row is reported either way; the COMMAND is what changes.
+        // reads as an install instruction to a grep, and this axis may never be
+        // mistaken for an adoption recommendation. And `vendor/bin/behat`
+        // exists only after a composer install, so a config-only scope gets the
+        // bare binary — the row is reported either way; the COMMAND changes.
         const declared = 'behat/behat' in php_deps;
         const basis = declared
             ? 'behat/behat in the composer manifest'
@@ -833,8 +826,12 @@ function _behavior_runners_in_scope(dir: string, scope: string): BehaviorRunnerR
     );
     if ('@cucumber/cucumber' in js_deps || 'cucumber' in js_deps || cucumber_config !== undefined) {
         const dep = '@cucumber/cucumber' in js_deps ? '@cucumber/cucumber' : 'cucumber';
-        const basis = dep in js_deps ? `${dep} in package deps` : `${cucumber_config} present`;
-        row('js', 'cucumber-js', 'npx cucumber-js', basis);
+        // `npx` FETCHES when the package is absent, so on the config-only
+        // path it would let a detection-only axis install. Degrades like the
+        // behat and ruby rows.
+        const declared = dep in js_deps;
+        const basis = declared ? `${dep} in package deps` : `${cucumber_config} present`;
+        row('js', 'cucumber-js', declared ? 'npx cucumber-js' : 'cucumber-js', basis);
     }
 
     // Joined with a newline, like `_dotnet_project_text`: concatenated bare, a
@@ -873,11 +870,10 @@ function _behavior_runners_in_scope(dir: string, scope: string): BehaviorRunnerR
         row('jvm', 'cucumber-jvm', jvm.command, `cucumber in the ${jvm.tool} build file`);
     }
 
-    // Two rows, not an `else if`. The chain was a silent pick: this detector
-    // reads the CONCATENATED text of every project in a solution, so one
-    // Reqnroll project beside one SpecFlow project collapsed into a single
-    // HIGH row — the guess the refusal doctrine exists to prevent. Emitting
-    // both lets the per-ecosystem grouping refuse, as it does for python.
+    // Two rows, not an `else if`. The chain was a silent pick: this reads the
+    // CONCATENATED text of every project, so a Reqnroll project beside a
+    // SpecFlow one collapsed into one HIGH row — the guess the refusal exists
+    // to prevent. Two rows let the grouping refuse, as it does for python.
     const dotnet_text = _dotnet_project_text(dir);
     if (/\bReqnroll\b/i.test(dotnet_text)) {
         row('dotnet', 'reqnroll', 'dotnet test', 'Reqnroll in a project file');
@@ -960,8 +956,9 @@ const _MAX_BEHAVIOR_SCOPES = 200;
  * `behave` is an ordinary English verb, unlike every sibling token here, so a
  * bare `\bbehave\b` fires HIGH on a description or changelog line. Anchored to
  * a line-start declaration, terminated by a version specifier, a separator or
- * a `#` comment. Misses the PEP 621 array and inline-table forms — a missed
- * row, the cheap direction here.
+ * a `#` comment. Misses the SINGLE-LINE array form only — the multi-line
+ * array and the poetry inline table both match — a missed row either way,
+ * which is the cheap direction here.
  */
 const _PY_BEHAVE = /^[ \t]*["']?behave["']?[ \t]*(?:$|[=<>~!,;[#])/m;
 
@@ -1082,7 +1079,10 @@ export function _behavior_scopes(project_root: string): string[] {
         } else if (!g.includes('*')) {
             // Existence-checked; the exclusion already ran above the fork.
             try {
-                if (fs.statSync(path.join(project_root, g)).isDirectory()) {
+                // `lstatSync`, matching the glob branch's `Dirent.isDirectory()`:
+                // `statSync` follows a symlink, so one package was a scope when
+                // declared literally and skipped when matched by a glob.
+                if (fs.lstatSync(path.join(project_root, g)).isDirectory()) {
                     scopes.push(g);
                 }
             } catch {

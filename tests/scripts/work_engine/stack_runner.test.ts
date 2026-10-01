@@ -1133,6 +1133,23 @@ describe('stack/runner — behaviour-runner axis', () => {
         expect(found?.command).toBe('bundle exec rspec');
     });
 
+    it('a cucumber CONFIG alone does not promise `npx`', () => {
+        // R17 finding 2: `npx` FETCHES when the package is absent, so emitting
+        // it where nothing declares cucumber would let a detection-only axis
+        // install. The behat and ruby rows already degrade for this case; this
+        // one did not, and the no-adoption test matches fixed `npm i` /
+        // `npm install` substrings, so it structurally could not see `npx`.
+        write('cucumber.json', '{}');
+        const found = resolve_behavior_runners(tmp).find((r) => r.runner === 'cucumber-js');
+        expect(found?.command).toBe('cucumber-js');
+    });
+
+    it('a DECLARED cucumber dependency keeps `npx`', () => {
+        write('package.json', JSON.stringify({ devDependencies: { '@cucumber/cucumber': '^10' } }));
+        const found = resolve_behavior_runners(tmp).find((r) => r.runner === 'cucumber-js');
+        expect(found?.command).toBe('npx cucumber-js');
+    });
+
     it('an excluded glob PARENT yields no scopes', () => {
         // R16 finding 1: the exclusion ran on the glob CHILD and not on the
         // pattern, so `node_modules/*` still admitted what the literal form

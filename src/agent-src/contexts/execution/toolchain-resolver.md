@@ -116,6 +116,10 @@ The package manager is read from the lockfile (`pnpm-lock.yaml` → pnpm,
 `result.behavior_runners` is a **separate list** from `runners`: it reports
 which behavior runner each scope already owns, across the same ecosystems.
 
+- **`command` is relative to `scope_root`, not to the project root.** It is
+  built from files inside the scope (`vendor/bin/behat`, `./gradlew test`), so
+  a consumer runs it WITH `scope_root` as the working directory. Every NATIVE
+  `runners` command is root-relative; this axis is the exception.
 - **Per scope, never repository-wide.** Each row carries `scope_root` (the
   root plus every declared workspace package). A monorepo
   returns a row per owning package and none for the others; one answer would

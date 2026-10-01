@@ -30,9 +30,11 @@ respect it. Someone else can tell this happened by running that one command.
       schema case normalization, GHSA-9q9j-q6p8-xq58) and `hono` (moderate:
       `hono/jsx` renders plain strings unescaped in boundary components,
       GHSA-hxh3-vqpv-xpqv). Both are RUNTIME dependencies, which is why the
-      `--omit=dev` audit sees them. Establish whether this package imports
-      them directly or inherits them transitively — the answer decides
-      whether a bump is ours to make or an upstream wait.
+      `--omit=dev` audit sees them — but only **fastify** can trip
+      `--audit-level=high`; the hono finding is moderate and is in scope here
+      because it is in the same report, not because it reds the gate. Establish
+      whether this package imports them directly or inherits them transitively
+      — the answer decides whether a bump is ours to make or an upstream wait.
       verify: `npm ls fastify hono` names the dependency path for each.
 
 - [ ] **1.2 Decide whether either advisory can reach this package's code.**
