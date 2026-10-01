@@ -5,6 +5,15 @@ review_by: 2026-09-25
 
 # Road to an assurance benchmark — stub
 
+> **Arrivals:** 1 counted — latest `inbox-2026-10-b` (2026-10-01); earlier rounds were
+> not counted for this stub. That round's outcome-benchmark proposal folds here, as no
+> new file: (a) the corpus spans at least eight task classes; (b) where a neighbour
+> package offers a capability, the arms are native / neighbour direct / native plus
+> neighbour, judged by direction (`_lib/paired_verdict.ts`) with a pre-registered
+> threshold; (c) metrics stay separate — no weighted overall score. This stub's
+> `review_by` (2026-09-25) has lapsed; renewing it is the owner's call
+> (`road-to-leading-every-row` § Decisions D4).
+
 > **Class:** drain-run transfer. Created 2026-08-23 by the closure run of
 > [`road-to-agentic-engineering-assurance`](../archive/road-to-agentic-engineering-assurance.md),
 > whose Phase 8 this file carries in full. **Capability-gated, not demand-gated:**

@@ -33,6 +33,17 @@ capability_gap: >-
 ---
 # Road to adversarial verification and long runs
 
+> **Arrivals (auto-merge setting):** 2 (at least) - latest `inbox-2026-10-a`
+> (2026-10-01), where two of sixteen release reviews read the repository's
+> `allow_auto_merge: true` — enabled by this file's 2026-09-30 run to satisfy
+> `auto_merge_available` — as contrary to a standing owner instruction that GitHub
+> auto-merge stays off. ADR-268 § 3, owner-decided, names forge auto-merge the
+> default merge mechanism, so the two records disagree. **Owner question, posed
+> 2026-10-01:** pick one — (1) keep `allow_auto_merge: true` as ADR-268 § 3 states;
+> (2) set it back to `false`, record `auto_merge_available` as intentionally
+> disabled, and amend ADR-268 § 3 to the direct-merge path it already permits where
+> the forge exposes no auto-merge.
+
 > **Blocked on two dependencies AND on two blockers of its own, recorded 2026-09-10 by an
 > owner-delegated drain run under a 2/2 convergent AI council verdict.** Screened for
 > execution and left untouched — 0 of 30, no step started. The council required this file's

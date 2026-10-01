@@ -4,6 +4,12 @@ review_by: 2026-12-24
 ---
 # Stub: the opencode runtime probe
 
+> **Arrivals:** 13 (at least) - latest `inbox-2026-10-a` (2026-10-01), a status
+> series that counts this as its thirteenth unchanged baseline and adds one fact:
+> `host_lowering.yaml` carries no opencode row, so the probe would create the tenth
+> host row rather than flip a null. The count is the source's own; no new demand
+> arrived with it.
+
 > **Stub — not active work, and a DRAIN-RUN TRANSFER** in the sense
 > [`README.md`](README.md) § The two classes defines. **Capability-gated:** the
 > scope decision is made, the work is wanted, and the only thing missing is an
