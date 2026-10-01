@@ -17,7 +17,7 @@ tools and run the right one — instead of a per-stack command explosion.
 resolver went from 9 runners on one axis to 12 across two. The intermediate
 7,500 was a trap, not a constraint: the file measured 7,496, so any later
 edit of any size broke it, and the same sentence forbade raising it again.
-A ceiling set 0.05 % above its own artefact tells the next author only that
+A ceiling set 0.05 % above its own artifact tells the next author only that
 they may not write. This one leaves real headroom. The enforced ceiling is
 `check_depth_budget`'s 16,000.
 
@@ -75,10 +75,10 @@ container access, env, and parallelism (the architecture rule's
 The package manager is read from the lockfile (`pnpm-lock.yaml` → pnpm,
 `yarn.lock` → yarn, else npm).
 
-## 2b. Behaviour-runner axis — per scope, detection only
+## 2b. Behavior-runner axis — per scope, detection only
 
 `result.behavior_runners` is a **separate list** from `runners`: it reports
-which behaviour runner each scope already owns, across the same ecosystems.
+which behavior runner each scope already owns, across the same ecosystems.
 
 - **Per scope, never repository-wide.** Each row carries `scope_root` (the
   root plus every declared workspace package). A monorepo
@@ -128,9 +128,9 @@ e2e and slow stay out until their flag is passed.
 `write_config(root, result)` persists the resolved per-stack commands to
 `agents/runtime/state/toolchain.json` (best-effort; never raises). The
 config is keyed on the latest `mtime` across every scope's manifests and
-markers — not the root's alone, or a behaviour runner arriving in a workspace
+markers — not the root's alone, or a behavior runner arriving in a workspace
 package would never invalidate it. Same hook the frontend detector uses,
-widened to the scopes the behaviour axis reads.
+widened to the scopes the behavior axis reads.
 
 ## 6. What stays stack-locked
 
