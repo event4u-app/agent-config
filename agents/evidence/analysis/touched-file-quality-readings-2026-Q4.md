@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Touched-file quality — shadow readings, 2026-Q4
 
 Phase 2 step 2.1 of `road-to-touched-files-that-pass-their-own-tools`. Opened on
