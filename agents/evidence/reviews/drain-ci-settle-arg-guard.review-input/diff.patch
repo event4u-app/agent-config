@@ -1,0 +1,272 @@
+diff --git a/dist/agent-src/commands/roadmap/process-full.md b/dist/agent-src/commands/roadmap/process-full.md
+index eb279deab5dc3948d8df75b4af1935403751c681..601f89d31b1399454497a7f7ebbf17278846d0a1 100644
+--- a/dist/agent-src/commands/roadmap/process-full.md
++++ b/dist/agent-src/commands/roadmap/process-full.md
+@@ -165,7 +165,7 @@ command is a claim; a layer with one is a check.
+ | 1 | A targeted local RED, then GREEN | the test runner filtered to the failing name — `npm run test:ts -- <file>`, never the suite |
+ | 2 | Quality scoped to the changed surface | the type-checker and linter over the diff — `npm run typecheck`, the linter on changed files |
+ | 3 | Per-phase fast CI | `roadmap.quality_cadence: per_phase` (Phase 0.2) at each phase boundary |
+-| 4 | The final full required CI | `./scripts-run src/scripts/ci_settle <PR> --timeout 1700` — its LAST OUTPUT LINE is the verdict |
++| 4 | The final full required CI | `./scripts-run src/scripts/ci_settle <PR> --timeout-min 28`, run as a BACKGROUND job — its LAST OUTPUT LINE is the verdict |
+ | 5 | Forge branch protection | `agent-config doctor --json` → `forge_protection` (Phase 3.2), read from the forge |
+ | 6 | Final-head verification | `ci_settle`'s verdict line names the head; it must be the head that was pushed last |
+ 
+diff --git a/src/domains/meta/pack.yaml b/src/domains/meta/pack.yaml
+index 789380a9fb2a2f08d3e0f9b0aed42bcd008ee967..a98ba200e94e47fbcaddf58e4997cdfe199847a3 100644
+--- a/src/domains/meta/pack.yaml
++++ b/src/domains/meta/pack.yaml
+@@ -99,8 +99,8 @@ surface_tier: core
+ token_passport:
+   basis: chars/4
+   catalog_tokens: 3649
+-  commands_tokens: 240361
++  commands_tokens: 240367
+   other_tokens: 1298
+   rules_tokens: 65348
+-  total_tokens: 310656
++  total_tokens: 310662
+ trust_level_default: core
+diff --git a/src/domains/product-basic/roadmap/process-full/command.md b/src/domains/product-basic/roadmap/process-full/command.md
+index b50c7a48e121c3715ba53115e9f51ba1bbf54297..1495d7dfd7d0b1e76c9b9314ab17251a04507ff4 100644
+--- a/src/domains/product-basic/roadmap/process-full/command.md
++++ b/src/domains/product-basic/roadmap/process-full/command.md
+@@ -165,7 +165,7 @@ command is a claim; a layer with one is a check.
+ | 1 | A targeted local RED, then GREEN | the test runner filtered to the failing name — `npm run test:ts -- <file>`, never the suite |
+ | 2 | Quality scoped to the changed surface | the type-checker and linter over the diff — `npm run typecheck`, the linter on changed files |
+ | 3 | Per-phase fast CI | `roadmap.quality_cadence: per_phase` (Phase 0.2) at each phase boundary |
+-| 4 | The final full required CI | `./scripts-run src/scripts/ci_settle <PR> --timeout 1700` — its LAST OUTPUT LINE is the verdict |
++| 4 | The final full required CI | `./scripts-run src/scripts/ci_settle <PR> --timeout-min 28`, run as a BACKGROUND job — its LAST OUTPUT LINE is the verdict |
+ | 5 | Forge branch protection | `agent-config doctor --json` → `forge_protection` (Phase 3.2), read from the forge |
+ | 6 | Final-head verification | `ci_settle`'s verdict line names the head; it must be the head that was pushed last |
+ 
+diff --git a/src/scripts/ci_settle.ts b/src/scripts/ci_settle.ts
+index 8fa634799b5bb83b9616df1a420722ad92202f6c..cf4a68e2ea54937bb988d01f634be71945afa317 100644
+--- a/src/scripts/ci_settle.ts
++++ b/src/scripts/ci_settle.ts
+@@ -293,25 +293,103 @@ function sleepSync(seconds: number): void {
+     });
+ }
+ 
+-export function main(argv: readonly string[]): number {
+-    const positional = argv.filter((a) => !a.startsWith('--'));
++/** The only flags this waiter honours. Anything else is a caller mistake. */
++const KNOWN_FLAGS = ['--timeout-min', '--interval-sec'] as const;
++
++const USAGE =
++    'usage: ci_settle <pr> [--timeout-min N] [--interval-sec N]\n' +
++    `  default --timeout-min is ${String(FOREGROUND_CEILING_MIN)}, which fits inside one foreground Bash call (600 s cap).\n` +
++    '  a longer wait is a BACKGROUND job, not a bigger number — a foreground call past the cap is killed and reports nothing.\n';
++
++export type ParsedArgs =
++    | { kind: 'ok'; pr: string; timeoutMin: number; intervalSec: number }
++    | { kind: 'usage'; message: string };
++
++/**
++ * Parse argv, REFUSING anything this waiter would not honour.
++ *
++ * Refusal rather than a default is the whole point. The previous parser read
++ * its two knobs with `argv.indexOf(flag)` and filtered positionals on a leading
++ * `--`, so a caller who wrote the near-universal `--timeout 1700` got two
++ * silent substitutions at once: the unknown flag was ignored, and its value —
++ * carrying no dashes — survived as a second positional and was dropped. The
++ * wait then ran for the 9-minute default while the caller believed they had
++ * asked for 28, and the resulting `DID NOT SETTLE` read as a slow CI rather
++ * than as their own typo.
++ *
++ * That is the one failure a waiter must not have. Its entire product is a
++ * verdict somebody will act on, and a verdict produced under arguments the
++ * caller did not actually give is worse than no verdict, because it looks like
++ * one. So every unrecognised flag, every unusable value and every extra
++ * positional is a usage refusal, exit 2 — the code this tool already reserves
++ * for "no verdict is claimed".
++ *
++ * `--flag=value` is accepted beside `--flag value` because it is the other
++ * spelling a caller reaches for, and refusing it would trade one silent
++ * surprise for a noisy one with no safety gained.
++ */
++export function parseArgs(argv: readonly string[]): ParsedArgs {
++    const refuse = (why: string): ParsedArgs => ({ kind: 'usage', message: `ci_settle: ${why}\n${USAGE}` });
++
++    const positional: string[] = [];
++    const given = new Map<string, string>();
++
++    for (let i = 0; i < argv.length; i++) {
++        const a = argv[i] as string;
++        if (!a.startsWith('--')) {
++            positional.push(a);
++            continue;
++        }
++        const eq = a.indexOf('=');
++        const name = eq === -1 ? a : a.slice(0, eq);
++        if (!(KNOWN_FLAGS as readonly string[]).includes(name)) {
++            return refuse(
++                `unknown flag ${name}. This waiter spells its deadline --timeout-min (in MINUTES), not --timeout`,
++            );
++        }
++        if (given.has(name)) return refuse(`${name} given twice`);
++        if (eq !== -1) {
++            given.set(name, a.slice(eq + 1));
++            continue;
++        }
++        const v = argv[i + 1];
++        if (v === undefined || v.startsWith('--')) return refuse(`${name} needs a value`);
++        given.set(name, v);
++        i++;
++    }
++
+     const pr = positional[0];
+-    if (pr === undefined) {
+-        process.stderr.write(
+-            'usage: ci_settle <pr> [--timeout-min N] [--interval-sec N]\n' +
+-                `  default --timeout-min is ${String(FOREGROUND_CEILING_MIN)}, which fits inside one foreground Bash call (600 s cap).\n` +
+-                '  a longer wait is a BACKGROUND job, not a bigger number — a foreground call past the cap is killed and reports nothing.\n',
++    if (pr === undefined) return refuse('no PR number given');
++    if (positional.length > 1) {
++        return refuse(
++            `unexpected argument ${String(positional[1])} — a flag value must follow its flag, e.g. --timeout-min ${String(positional[1])}`,
+         );
+-        return 2;
+     }
+-    const num = (flag: string, dflt: number): number => {
+-        const i = argv.indexOf(flag);
+-        if (i === -1) return dflt;
+-        const v = argv[i + 1];
+-        const n = v === undefined ? NaN : parseInt(v, 10);
+-        return Number.isFinite(n) && n > 0 ? n : dflt;
++
++    const num = (flag: string, dflt: number): number | string => {
++        const v = given.get(flag);
++        if (v === undefined) return dflt;
++        if (!/^[0-9]+$/.test(v)) return `${flag} wants a whole number of ${flag === '--timeout-min' ? 'minutes' : 'seconds'}, got ${JSON.stringify(v)}`;
++        const n = parseInt(v, 10);
++        if (n <= 0) return `${flag} wants a positive number, got ${v}`;
++        return n;
+     };
++
+     const timeoutMin = num('--timeout-min', FOREGROUND_CEILING_MIN);
++    if (typeof timeoutMin === 'string') return refuse(timeoutMin);
++    const intervalSec = num('--interval-sec', 60);
++    if (typeof intervalSec === 'string') return refuse(intervalSec);
++
++    return { kind: 'ok', pr, timeoutMin, intervalSec };
++}
++
++export function main(argv: readonly string[]): number {
++    const parsed = parseArgs(argv);
++    if (parsed.kind === 'usage') {
++        process.stderr.write(parsed.message);
++        return 2;
++    }
++    const { pr, timeoutMin, intervalSec } = parsed;
+     if (timeoutMin > FOREGROUND_CEILING_MIN) {
+         // Said once, up front, rather than discovered when the call is killed:
+         // a truncated wait produces no line at all, so the warning has to come
+@@ -322,7 +400,6 @@ export function main(argv: readonly string[]): number {
+                 'the deadline and will report nothing — run it as a background job for a wait this long.\n',
+         );
+     }
+-    const intervalSec = num('--interval-sec', 60);
+ 
+     // Up front, because waiting nine minutes to learn the PR was merged before
+     // the wait began is the expensive way to find out.
+diff --git a/tests/scripts/ci_settle.test.ts b/tests/scripts/ci_settle.test.ts
+index 3a63127db1e4fb9292542377de8689d47cdac6b7..ba0c45cb22312fe2d78649f1870bd8ef70016aca 100644
+--- a/tests/scripts/ci_settle.test.ts
++++ b/tests/scripts/ci_settle.test.ts
+@@ -10,6 +10,7 @@ import { describe, expect, it } from 'vitest';
+ import {
+     classifyPoll,
+     classifyTarget,
++    parseArgs,
+     FOREGROUND_CEILING_MIN,
+     type RemoteTip,
+ } from '../../src/scripts/ci_settle.js';
+@@ -208,3 +209,88 @@ describe('classifyTarget', () => {
+         expect(classifyTarget(pr('open', sha), '', 0, found(sha)).kind).toBe('open');
+     });
+ });
++
++// The failure this block exists to prevent, measured 2026-10-01 on PR #2130:
++// the call was written `ci_settle 2130 --timeout 1700`. Every other waiting
++// tool spells that flag `--timeout`, this one spells it `--timeout-min`, and
++// the old parser did two silent things with the mistake rather than one. It
++// ignored the unknown flag, so the wait fell back to the 9-minute default; and
++// because `1700` carries no leading dashes it survived the positional filter,
++// so the stray value became `positional[1]` and vanished. The caller believed
++// they had asked for 28 minutes, got 9, and read the resulting
++// `DID NOT SETTLE` as a slow CI rather than as their own typo. A waiter whose
++// whole product is a trustworthy verdict must not accept an argument it does
++// not honour.
++describe('parseArgs', () => {
++    it('accepts the documented form', () => {
++        const r = parseArgs(['2130', '--timeout-min', '20', '--interval-sec', '30']);
++        expect(r.kind).toBe('ok');
++        if (r.kind !== 'ok') return;
++        expect(r.pr).toBe('2130');
++        expect(r.timeoutMin).toBe(20);
++        expect(r.intervalSec).toBe(30);
++    });
++
++    it('defaults both knobs when neither is given', () => {
++        const r = parseArgs(['2130']);
++        expect(r.kind).toBe('ok');
++        if (r.kind !== 'ok') return;
++        expect(r.timeoutMin).toBe(FOREGROUND_CEILING_MIN);
++        expect(r.intervalSec).toBe(60);
++    });
++
++    it('REFUSES an unknown flag instead of ignoring it — the measured case', () => {
++        const r = parseArgs(['2130', '--timeout', '1700']);
++        expect(r.kind).toBe('usage');
++        if (r.kind !== 'usage') return;
++        expect(r.message).toContain('--timeout');
++        expect(r.message).toContain('--timeout-min');
++    });
++
++    it('refuses any other unknown flag, not just the one that was measured', () => {
++        for (const flag of ['--wait', '--max-min', '--poll', '--timeoutmin']) {
++            const r = parseArgs(['2130', flag, '5']);
++            expect(r.kind, flag).toBe('usage');
++        }
++    });
++
++    it('refuses a second positional rather than swallowing it', () => {
++        const r = parseArgs(['2130', '1700']);
++        expect(r.kind).toBe('usage');
++        if (r.kind !== 'usage') return;
++        expect(r.message).toContain('1700');
++    });
++
++    it('refuses a flag value it cannot parse, rather than falling back to the default', () => {
++        for (const bad of ['abc', '', '-5', '0', '1.5min']) {
++            const r = parseArgs(['2130', '--timeout-min', bad]);
++            expect(r.kind, bad).toBe('usage');
++        }
++    });
++
++    it('refuses a flag given with no value at all', () => {
++        expect(parseArgs(['2130', '--timeout-min']).kind).toBe('usage');
++        expect(parseArgs(['2130', '--interval-sec']).kind).toBe('usage');
++    });
++
++    it('still refuses a missing PR, and says so', () => {
++        const r = parseArgs([]);
++        expect(r.kind).toBe('usage');
++        if (r.kind !== 'usage') return;
++        expect(r.message).toContain('usage: ci_settle');
++    });
++
++    it('accepts `--flag=value` as well, since that is the other spelling a caller reaches for', () => {
++        const r = parseArgs(['2130', '--timeout-min=20']);
++        expect(r.kind).toBe('ok');
++        if (r.kind !== 'ok') return;
++        expect(r.timeoutMin).toBe(20);
++    });
++
++    it('keeps a timeout above the foreground ceiling — it warns, it does not refuse', () => {
++        const r = parseArgs(['2130', '--timeout-min', '30']);
++        expect(r.kind).toBe('ok');
++        if (r.kind !== 'ok') return;
++        expect(r.timeoutMin).toBe(30);
++    });
++});
