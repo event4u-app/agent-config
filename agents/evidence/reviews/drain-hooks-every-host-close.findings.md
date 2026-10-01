@@ -1,6 +1,6 @@
 # Findings: drain-hooks-every-host-close
 <!-- completion-review: v1 | reviewed: 2026-10-01 | scope: b77418b4f8e8b771be3076d68fb4ede2103089174e2e18c1a9271ac3a609fd46 | diff: fc46660c1399722fa6906646b759ce87066e52d6 | reviewer: r2-fresh-subagent-drain-hooks-every-host-close | prompt_hash: 1b53cb005de9a316fd26be9ed42b1db5016330d1afb9de9b083d50755836e929 -->
-<!-- {"review-independence":{"review_independence":"multi-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"multi-pass","reviewers":["r2-fresh-subagent-drain-hooks-every-host-close","r2-round2","r2-round3","r2-round4","r2-round5","council/anthropic+openai-2026-10-01"]}} -->
+<!-- {"review-independence":{"review_independence":"multi-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-drain-hooks-every-host-close","r2-round2","r2-round3","r2-round4","r2-round5"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-10-01 -->
 
 <!-- context-manifest: v1
@@ -15,7 +15,13 @@ tools: [git-diff-branch-scoped, file-read-branch-paths]
 dispatched: 2026-10-01T03:43:41Z
 -->
 **Six rounds, each a fresh subagent with no implementation context, plus a
-two-provider council on the ratification question.** The rounds found **21
+two-provider council on the ratification question.** Assurance is declared
+`single-pass` rather than `independent`, and the distinction is load-bearing
+rather than modest: six rounds are six readings by the SAME model family, so
+they multiply coverage and not independence. The one cross-provider reading on
+this branch is the council's, and it answered the ratification question, not
+this one.
+ The rounds found **21
 defects, 3 of them high**; each round's findings were fixed and the next round
 ran against the result. The fifth round found no high and no medium findings; the sixth and final
 round returned **"the branch is sound"** with one low polish item, fixed in
