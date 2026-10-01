@@ -249,10 +249,60 @@ describe('3.1 — handing work back is reported', () => {
         expect(saidBy(applyRun(st))).not.toContain('carried nothing');
     });
 
-    it('3.1 deliberately does not change the outcome value', () => {
-        // Superseded by the 3.2 assertion once the flip lands; kept until then
-        // so the shadow release is a recorded state rather than an intention.
-        expect(applyRun(stateFor('S-b-all-flagged.json')).outcome).toBe('success');
+});
+
+describe('3.2 — the shadow is the outcome', () => {
+    const ALL = ['tab', 'disclosure toggle', 'subscribe submit', 'rule-draw', 'mark.svg'];
+
+    it('S-b is not SUCCESS after the flip', () => {
+        // Replaces `3.1 deliberately does not change the outcome value`, which
+        // the flip supersedes. 3.1's shadow shipped in `16.2.0` (the release
+        // `shadow-release-window` waited on), so the value moves now.
+        expect(applyRun(stateFor('S-b-all-flagged.json')).outcome).not.toBe('success');
+    });
+
+    it('the faithful arm still is SUCCESS — the false-red control', () => {
+        // The half that would make the flip worthless: a non-success outcome
+        // on a port that carried its work is a gate nobody can leave on.
+        expect(applyRun(stateFor('faithful.json')).outcome).toBe('success');
+    });
+
+    it('a port that flagged some but not all still succeeds', () => {
+        // Sensitivity: the flip inherits `carried_nothing`'s narrowness, so
+        // widening that predicate has to break this and not only the shadow
+        // line's own absence-assertion.
+        const st = stateFor('faithful.json');
+        const cov = (st.ticket['ui_apply'] as Json)['coverage'] as Json;
+        cov['honoured'] = ['tab', 'disclosure toggle'];
+        cov['translated'] = [];
+        cov['flagged'] = ['subscribe submit', 'rule-draw', 'mark.svg'];
+        expect(applyRun(st).outcome).toBe('success');
+    });
+
+    it('the halt enumerates every handed-back item id', () => {
+        const r = applyRun(stateFor('S-b-all-flagged.json'));
+        const said = saidBy(r);
+        for (const id of ALL) expect(said, `${id} not enumerated`).toContain(id);
+    });
+
+    it('the halt surfaces a numbered option — the dispatcher invariant', () => {
+        // `_validate_step_result` in `dispatcher.ts` throws on a BLOCKED or
+        // PARTIAL result with no questions, so a bare value change would fail
+        // at runtime rather than in this file. Asserted here so it fails here.
+        const r = applyRun(stateFor('S-b-all-flagged.json'));
+        expect(r.questions.length).toBeGreaterThan(0);
+        expect(r.questions.join('\n')).toMatch(/^> 1\. /m);
+    });
+
+    it('a fallback warning is not lost to the halt', () => {
+        // The containment warning is pushed before the carried-nothing check,
+        // so returning early could silently drop it. It rides in the message.
+        const st = stateFor('S-b-all-flagged.json');
+        const cov = (st.ticket['ui_apply'] as Json)['coverage'] as Json;
+        (cov['flagged'] as string[])[0] = 'tab — kept as a tablist';
+        const r = applyRun(st);
+        expect(r.outcome).not.toBe('success');
+        expect(r.message).toContain('matched only by containment');
     });
 });
 
