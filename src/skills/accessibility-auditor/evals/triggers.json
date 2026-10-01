@@ -1,7 +1,7 @@
 {
     "skill": "accessibility-auditor",
     "last_eval": "2026-10-01",
-    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-01 under road-to-corpus-refresh-cadence-shape 1.2a, which touched this skill's grounding corpus and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover the audit request in its explicit and implicit forms, including the German phrasing the skill's own description names. Near-misses are the three neighbours this skill's SKILL.md points at by name — token-level contrast fixes, structural landmark/heading fixes, and component inventory — each of which shares vocabulary with an a11y audit and is still somebody else's job. Counterexamples guard the 'accessible' homonym (permissions, not WCAG) and routine design-system work that mentions UI without asking anything of it.",
+    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-01 under road-to-corpus-refresh-cadence-shape 1.2a, which touched this skill's grounding corpus and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover the audit request in its explicit and implicit forms, including the German phrasing the skill's own description names. Near-misses are three neighbours that share vocabulary with an a11y audit and are still somebody else's job: token-level contrast fixes and structural landmark/heading fixes, which this skill's SKILL.md names explicitly (tailwind-engineer, ui-component-architect), plus component inventory (existing-ui-audit), which it does not name and which is included because it runs first over the same components. Counterexamples guard the 'accessible' homonym (permissions, not WCAG) and routine design-system work that mentions UI without asking anything of it.",
     "queries": [
         {
             "q": "review this screen for accessibility before we ship it",
@@ -45,7 +45,7 @@
             "q": "which button and input variants do we already have before I add another one?",
             "trigger": false,
             "class": "near-miss",
-            "note": "a UI inventory over the same components, with no standard to audit against → existing-ui-audit"
+            "note": "a UI inventory over the same components, with no standard to audit against → existing-ui-audit. Not named in this skill's SKILL.md, unlike the two near-misses above; included because it runs first over the same surface"
         },
         {
             "q": "make the staging dashboard accessible to the QA team",

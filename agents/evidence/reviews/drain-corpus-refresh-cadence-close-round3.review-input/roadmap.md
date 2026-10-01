@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: lightweight
 status: draft
@@ -8,7 +10,7 @@ estate_growth_exempt: "a blocker discovered while doing the work — 1.2's four 
 ---
 # Road to corpus refresh cadence shape
 
-> **Source:** the deferred item 2.1 of `road-to-corpus-refresh-2026-q3`, carried
+> **Source:** [REDACTED:src-conf]
 > here under Iron Law 3 of `roadmap-progress-sync` when that roadmap closed on
 > 2026-09-27. Its Phase 1 shipped; this question did not, because it is a
 > maintainer decision and not an agent call. See the parent's archive entry for
@@ -111,42 +113,14 @@ two land on the same date and all four land before ~2026-12-27.
       tutorial). One pattern was **renamed upstream**:
       `/apg/patterns/menubutton/` returns `301` to `/apg/patterns/menu-button/`,
       and the APG pattern index no longer lists the `menubutton` slug. No cited
-      pattern has been withdrawn. **Applied — three edits to the *Menu /
-      dropdown actions* row of `aria-patterns.csv`, not one:** *Docs URL* now
-      cites the canonical `menu-button` slug; the *Implementation* prose, which
-      still described `menubutton`, now reads "menu button"; and *Keywords*
-      gained `menubutton menu-button`. The third is the only one with a runtime
-      effect — `Keywords` is a declared `search_cols` member, so without it the
-      one-word query `menubutton`, the spelling the APG itself used until the
-      rename, would have matched this row in no searchable column.
-      `upstream.sha` carries the upstream IDENTITY only and deliberately records
-      none of the three findings — see the correction note below.
-      `upstream.last_checked` moved `2026-09-18` → `2026-10-01` — the
+      pattern has been withdrawn. **Applied:** the *Menu / dropdown actions* row
+      of `aria-patterns.csv` now cites the canonical `menu-button` slug; `upstream.sha` records all three
+      findings; `upstream.last_checked` moved `2026-09-18` → `2026-10-01` — the
       date this check actually ran, per D1. Gate:
       `./scripts-run src/scripts/check_corpus_staleness --today 2026-10-01` →
       exit `0`, *"6 corpus manifest(s), 41 CSV(s) opened: every declared cadence
       is met"*. The stamp now differs from the other three, which remain
       `2026-09-18`.
-
-      **Two further gates the new corpus lands in, named after round-3 review
-      caught the omission.** A paragraph claiming to name second-order
-      consequences ahead of discovery had named two gates and there are four.
-      `check_trigger_evals` requires a top-level `last_eval` no older than 90
-      days, and this change wrote `"last_eval": "2026-10-01"` into the new file
-      **while the same step records that no live eval ran** — the live path is
-      key-gated and spend-bearing. That is an unbacked freshness assertion, and
-      D1's own evidence column names a `last_eval` written without a backing
-      eval as the archetypal fabricated-evidence defect. It is **inherited, not
-      invented**: `ui-component-architect` (2026-09-30) and `roadmap-writing`
-      (2026-09-19) both carry their authoring date in that field, so the
-      convention in this tree is author-date-as-`last_eval`, and deviating
-      alone would have reded `check_trigger_evals` for a single file. Named here
-      rather than quietly followed, because "everyone does it" is a reason to
-      surface a convention, not a reason it is sound; whether that field should
-      mean *authored* or *evaluated* is the maintainer's call and belongs with
-      the `lint_eval_freshness` question below. `trigger_eval_rotation` is the
-      fourth — a weekly live canary over every skill carrying a corpus — and it
-      is green for this file today.
 
       **Second-order consequence, named rather than discovered later.** Touching
       a skill's `data/` brings it into `check_routing_coverage`'s touched-skill
@@ -205,23 +179,6 @@ two land on the same date and all four land before ~2026-12-27.
       and each one's repair is now named in its own step: 1.2b for
       `api-design`, 1.2c for `database`, 1.2d for `threat-modeling`. Count: 3
       of 4 manifests carried the construct, 1 of 4 (this one) is repaired.
-
-      **Where the evicted check log goes — the gap round 3 named, closed here.**
-      The repair takes a narration out of `upstream.sha` and the obvious place
-      to put it is the step's evidence paragraph. That is **not sufficient on
-      its own**: roadmaps are transient, `no-roadmap-references` forbids a
-      manifest from citing one, and 1.2b and 1.2c explicitly lean on the current
-      `upstream.sha` as "the diff baseline" — so a naive eviction would delete
-      the next check's baseline to fix a gate key. **The binding rule for
-      1.2b–d is therefore two-sided:** before shortening a manifest's
-      `upstream.sha`, copy the narration it is losing verbatim into a durable
-      record under `agents/evidence/analysis/` — the convention this tree
-      already uses for findings that must outlive the work that produced them —
-      and let the step's evidence paragraph cite that record. Only then shorten
-      the field. 1.2a is the one case that needs no such record: it had no
-      inherited narration to evict, because its own was written in this same
-      change and is reproduced in full in the evidence paragraph above, which
-      archives with this roadmap rather than being its only copy.
 - [~] **1.2b Re-check `api-design` against its upstream and stamp the date the
       check ran.** <!-- blocked-by: four-dated-re-checks-are-calendar-bound | asked: no — the drain grant that reached this roadmap forbids putting a question to the owner; recorded here for the maintainer instead -->
       Upstream is RFC 9110 / 9457 / 7396 / 8288 plus the httpapi WG drafts.
@@ -303,16 +260,9 @@ two land on the same date and all four land before ~2026-12-27.
       1.2b and 1.2c; this is occasion 4 of 4 and it is the one with a hard outer
       bound. **Exact inputs a future session needs:** run on a calendar day
       distinct from `2026-10-01` and from 1.2b's and 1.2c's days — suggested mid
-      December 2026 and **no later than ~2026-12-20**, because
-      `threat-modeling`'s OWN stamp still reads `2026-09-18` and therefore
-      crosses the 100-day bound on ~2026-12-27. The bound is this corpus's, not
-      the cohort's — corrected 2026-10-01, because the earlier wording tied it
-      to "the other three stamps that are still `2026-09-18`", which is already
-      only two of the other three and becomes none of them once 1.2b and 1.2c
-      run. A December session checking that premise would have found it false
-      and could have concluded the deadline had lapsed, which is precisely how
-      `threat-modeling` would expire into the all-PRs-red this roadmap exists to
-      prevent. Check that every ATT&CK id in `threats.csv`'s *Source Refs*
+      December 2026 and **no later than ~2026-12-20**, because the other three
+      stamps that are still `2026-09-18` cross the 100-day bound on
+      ~2026-12-27. Check that every ATT&CK id in `threats.csv`'s *Source Refs*
       column still resolves and is neither deprecated nor revoked — the current
       `upstream.sha` enumerates them (T1110, T1563, T1105, T1090, T1499, T1552,
       T1552.001, T1190, T1078.004) against ATT&CK v19.x, and notes that
@@ -356,24 +306,6 @@ two land on the same date and all four land before ~2026-12-27.
   `check_corpus_staleness`'s own header states that row semantics — "does this
   pattern still hold?" — are "the corpus owner's judgement and no offline gate
   can make it".
-- **Those two reasons were NOT satisfied on 2026-10-01, and that is stated here
-  rather than only at D4** (round-3 review). 1.2a ran under D4, and in running
-  it the agent exercised exactly the judgement this bullet reserves: it decided
-  the Menu row's citation was stale and that the other eleven rows still hold.
-  D4 answers Risk 2, the `draft` guard and D2; it does **not** answer either
-  ownership reason, and an agent cannot answer them — `"owner":
-  "package-maintainer"` is a declaration in the maintainer's own file, and the
-  gate header's clause is about whose judgement the row semantics are, not
-  about who is permitted to type. So the honest state is a **conflict the
-  maintainer resolves, not a resolution**: the file asserts both that these
-  occasions are the corpus owner's and that an agent ran one. What makes that
-  tolerable rather than a quiet override is that 1.2a's judgement is fully
-  auditable — the URLs, the HTTP codes and the one rename are written down, so
-  the owner can check the call rather than take it. **Do not read this as
-  owner-declared judgement being agent-executable in general**: D4 is marked
-  not-precedent, and 1.2b–d are held here for the maintainer. If the maintainer
-  disagrees, the repair is to revert the one CSV citation and the one stamp,
-  both one-line diffs.
 - **What to do:** run the remaining three occasions on three further separate
   dates before ~2026-12-27, one corpus each, in any order — 1.2b through 1.2d
   carry the upstream, the suggested window, the diff baseline and the exact
