@@ -256,7 +256,8 @@ export function runLearn(root: string, nowIso: string, budgetMs: number = BUDGET
     const intakeDir = path.join(root, 'agents', 'memory', 'intake');
     const outDir = path.join(root, 'agents', 'memory');
     // An absent intake directory is a zero-signal session, not an absent one.
-    const signals = fs.existsSync(intakeDir) ? readSignals(intakeDir) : [];
+    const haveIntake = fs.existsSync(intakeDir);
+    const signals = haveIntake ? readSignals(intakeDir) : [];
     const sidecar = buildSidecarFromSignals(signals, nowIso);
     const preferred = sidecar.lessons.filter((l) => l.verdict === 'preferred').length;
     appendDogfoodLine(root, {
@@ -266,7 +267,7 @@ export function runLearn(root: string, nowIso: string, budgetMs: number = BUDGET
         lessons_out: sidecar.lessons.length,
         preferred,
     });
-    if (!fs.existsSync(intakeDir)) return null;
+    if (!haveIntake) return null;
     if (Date.now() - started > budgetMs) return null; // over budget — skip the write
     if (sidecar.lessons.length === 0) return null;
     fs.writeFileSync(path.join(outDir, SIDECAR_NAME), `${JSON.stringify(sidecar, null, 2)}\n`, 'utf8');
