@@ -358,6 +358,16 @@ get there.
       `npx vitest run tests/scripts/work_engine/stack_runner.test.ts`, which
       prints the number at the commit you are standing on.
 
+      **AC-3 still reads `97 tests green`, deliberately, and it is the count
+      at AC-3 sign-off rather than the current one.** Gate R1 compares the
+      Acceptance-Criteria body against the blob at the commit that introduced
+      the current `risk-review` stamp, and that stamp is `YYYY-MM-DD`: a
+      SECOND substantive review on the same day cannot be expressed, so any
+      edit inside the AC body today reads as an unreviewed plan change. The
+      figure is corrected here, outside that body, rather than silently left
+      to look current. REVISIT-IF: the next review of this plan on a later
+      date, which can carry the edit, or a stamp with finer granularity.
+
       **The absence fixtures were seen red.** Neutralising the rspec guard
       (`if (false && …)`, so a Gemfile always emits rspec) fails exactly 1
       test — `rspec ABSENT: a Gemfile with no rspec signal emits NO rspec
@@ -620,8 +630,7 @@ All six verified 2026-10-01 at branch `drain/behavior-vocabulary-close`.
       All three present and asserted by name in the constants test. Presence
       and absence fixtures exist for each; the rspec absence fixture was seen
       red under a neutralised guard, failing exactly 1 test with no
-      collateral. `stack_runner.test.ts` green — count per the command in
-      step 3.1, not quoted here.
+      collateral. 97 tests green in `stack_runner.test.ts`.
 - [x] AC-4 — The behaviour-runner axis returns per-scope rows; a monorepo fixture
       returns more than one row and a conflict fixture returns a refusal naming
       both runners.
