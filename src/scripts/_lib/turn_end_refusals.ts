@@ -826,3 +826,159 @@ export function collectRefusalStats(workspaceRoot: string): RefusalStats {
     stats.byVersion = [...versions.values()].sort((a, b) => (a.version < b.version ? 1 : -1));
     return stats;
 }
+
+// ---------------------------------------------------------------------------
+// Q1 — the shadow rollup (step 2.2)
+// ---------------------------------------------------------------------------
+
+/**
+ * One layer's Q1 inputs, kept as counts so the ratio is computed where it is
+ * read rather than stored.
+ *
+ * SPLIT BY LAYER BEFORE DETECTOR, and that order is the shape's whole point
+ * rather than a presentation choice. A `stop_hook_active` retry follows ANY
+ * stop concern's block — not only this gate's — so pooling the two layers
+ * divides another concern's retries into this gate's refusals and calls the
+ * result a re-refusal share. `ShadowRecord.retries_observed` is keyed the same
+ * way so the denominator splits with the numerator; an independent review
+ * found the first version pooling the denominator, which left the per-layer
+ * ratio uncomputable even though every row already carried its `layer`.
+ */
+export interface ShadowLayerStats {
+    layer: ShadowLayer;
+    /**
+     * Retries observed on this layer across every readable record — the
+     * denominator, counting retries that came back CLEAN as well as refusing
+     * ones. A clean retry writes no row, so without this a zero numerator and
+     * "no retry happened" are the same empty list.
+     */
+    retries: number;
+    /** Shadow rows on this layer, by detector — the numerators. */
+    byDetector: DetectorCounts;
+    /**
+     * Rows on this layer, summed.
+     *
+     * MAY EXCEED `retries`, legitimately: one retry that would have been
+     * refused by two detectors writes two rows, and the demotion contract's
+     * attribution rule counts it once for each. A per-detector ratio stays
+     * within [0, 1]; this total is not a share and is printed as a count.
+     */
+    rows: number;
+}
+
+/**
+ * Rollup over every session's shadow record under a workspace.
+ *
+ * Two bounds travel with every number this carries. Both are properties of the
+ * instrument rather than of a particular reading, both are stated on
+ * `ShadowRecord`, and both are repeated here because a consumer reads this
+ * type and not that comment:
+ *
+ *   - A retry whose transcript is unreadable or oversized records NOTHING —
+ *     no row and no retry. The denominator shrinks with the numerator, so a
+ *     Q1 read off this is an UPPER bound rather than a point estimate.
+ *   - On a host that sends no `session_id`, every session shares one record
+ *     and one counter. `files` below then counts FILES and not sessions, and
+ *     a reader taking one for the other over-states the sample.
+ */
+export interface ShadowStats {
+    /**
+     * Shadow FILES parsed. Deliberately not named `sessions`: one file is one
+     * session only on a host that sends a `session_id`.
+     */
+    files: number;
+    /** Files present but unparseable. A non-zero value makes every rate a floor. */
+    unreadable: number;
+    /**
+     * Rows dropped to `SHADOW_MAX_ROWS`, summed. Non-zero means the row arrays
+     * are samples of their own sessions and every numerator is a floor.
+     */
+    dropped: number;
+    byLayer: ShadowLayerStats[];
+    earliest: string | null;
+    latest: string | null;
+}
+
+/** A zeroed rollup, DERIVED from `SHADOW_LAYERS` for the reason `emptyCounts` gives. */
+export function emptyShadowStats(): ShadowStats {
+    return {
+        files: 0,
+        unreadable: 0,
+        dropped: 0,
+        byLayer: SHADOW_LAYERS.map((layer) => ({
+            layer,
+            retries: 0,
+            byDetector: emptyCounts(),
+            rows: 0,
+        })),
+        earliest: null,
+        latest: null,
+    };
+}
+
+/**
+ * Aggregate every shadow record under a workspace.
+ *
+ * Reads through `parseShadowRecord`, never by hand: the gate writes these
+ * files, and a reader carrying its own idea of their shape is how a producer
+ * and a consumer drift apart — the exact seam the 2026-09-30 review round
+ * found uncrossed between the verification recorder and its classifier.
+ */
+export function collectShadowStats(workspaceRoot: string): ShadowStats {
+    const dir = refusalStateDir(workspaceRoot);
+    const stats = emptyShadowStats();
+    const byLayer = new Map(stats.byLayer.map((b) => [b.layer, b]));
+    let entries: string[];
+    try {
+        entries = fs.readdirSync(dir);
+    } catch {
+        return stats;
+    }
+    for (const name of entries) {
+        if (!name.endsWith(SHADOW_SUFFIX)) continue;
+        let rec: ShadowRecord | null = null;
+        try {
+            rec = parseShadowRecord(fs.readFileSync(path.join(dir, name), 'utf-8'));
+        } catch {
+            rec = null;
+        }
+        if (rec === null) {
+            stats.unreadable += 1;
+            continue;
+        }
+        stats.files += 1;
+        stats.dropped += rec.dropped;
+        for (const layer of SHADOW_LAYERS) {
+            const bucket = byLayer.get(layer);
+            if (bucket !== undefined) bucket.retries += rec.retries_observed[layer] ?? 0;
+        }
+        for (const row of rec.would_refuse_again) {
+            const bucket = byLayer.get(row.layer);
+            if (bucket === undefined) continue;
+            bucket.byDetector[row.detector] += 1;
+            bucket.rows += 1;
+        }
+        if (stats.earliest === null || rec.first_at < stats.earliest) stats.earliest = rec.first_at;
+        if (stats.latest === null || rec.last_at > stats.latest) stats.latest = rec.last_at;
+    }
+    return stats;
+}
+
+/**
+ * Q1 for one detector on one layer, or `null` when the layer observed no retry.
+ *
+ * `null` RATHER THAN ZERO on an empty denominator, and that distinction is why
+ * `retries_observed` exists at all: zero means "retries happened and this
+ * detector would not have refused any of them", a finding about the detector,
+ * while null means "nothing was observed", a finding about the sample.
+ * Collapsing them publishes the second as the first.
+ */
+export function q1For(
+    stats: ShadowStats,
+    layer: ShadowLayer,
+    detector: RefusalDetectorId,
+): number | null {
+    const bucket = stats.byLayer.find((b) => b.layer === layer);
+    if (bucket === undefined || bucket.retries === 0) return null;
+    return bucket.byDetector[detector] / bucket.retries;
+}

@@ -25,7 +25,8 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { measure } from '../../src/scripts/measure_turn_end_gate.js';
+import { measure, renderQ1 } from '../../src/scripts/measure_turn_end_gate.js';
+import { emptyShadowStats, type ShadowStats } from '../../src/scripts/_lib/turn_end_refusals.js';
 
 let store: string;
 
@@ -315,5 +316,82 @@ describe('the C-silent overlap ADR-277 argues from', () => {
         expect(c.untested_fires).toBe(1);
         expect(c.unverified_fires).toBe(1);
         expect(c.untested_c_silent).toBe(0);
+    });
+});
+
+describe('renderQ1 — step 2.2, the reader the contract was waiting on', () => {
+    function stats(over: Partial<ShadowStats> = {}): ShadowStats {
+        return { ...emptyShadowStats(), ...over };
+    }
+
+    function withLayer(
+        layer: 'stop_hook_active' | 'refused_turn',
+        retries: number,
+        rows: Partial<Record<string, number>>,
+    ): ShadowStats {
+        const s = emptyShadowStats();
+        const bucket = s.byLayer.find((b) => b.layer === layer)!;
+        bucket.retries = retries;
+        for (const [det, n] of Object.entries(rows)) {
+            bucket.byDetector[det as keyof typeof bucket.byDetector] = n!;
+            bucket.rows += n!;
+        }
+        s.files = 1;
+        return s;
+    }
+
+    it('prints an em dash, NEVER 0.0%, where the layer has no denominator', () => {
+        // The one way the null/zero distinction `q1For` maintains can be undone
+        // one line before a human reads it. Zero is a finding about the
+        // detector; the dash is a finding about the sample.
+        const out = renderQ1(withLayer('stop_hook_active', 2, { language: 0 }), '2026-10-01');
+        const refusedBlock = out.slice(out.indexOf('layer refused_turn'));
+        expect(refusedBlock).toContain('—');
+        expect(refusedBlock).not.toContain('0.0%');
+        // …while the layer that DID observe retries prints a real zero.
+        const stopBlock = out.slice(out.indexOf('layer stop_hook_active'), out.indexOf('layer refused_turn'));
+        expect(stopBlock).toContain('0.0%');
+    });
+
+    it('prints each layer separately and never a pooled share', () => {
+        const s = emptyShadowStats();
+        s.files = 1;
+        const stop = s.byLayer.find((b) => b.layer === 'stop_hook_active')!;
+        stop.retries = 4;
+        stop.byDetector.language = 1;
+        stop.rows = 1;
+        const refused = s.byLayer.find((b) => b.layer === 'refused_turn')!;
+        refused.retries = 4;
+        refused.byDetector.promissory = 2;
+        refused.rows = 2;
+        const out = renderQ1(s, '2026-10-01');
+        // 1/4 and 2/4, never the pooled 3/8 = 37.5%.
+        expect(out).toContain('25.0%');
+        expect(out).toContain('50.0%');
+        expect(out).not.toContain('37.5%');
+    });
+
+    it('refuses to report a zero when there is no record at all', () => {
+        // "No shadow record" and "every retry came back clean" are opposite
+        // readings. A report printing 0.0% across the board for the first is
+        // the inert-Q1 problem with a number painted over it.
+        const out = renderQ1(stats(), '2026-10-01');
+        expect(out).toContain('No shadow record');
+        expect(out).not.toContain('0.0%');
+    });
+
+    it('says every numerator is a floor when rows hit the per-session cap', () => {
+        const s = withLayer('stop_hook_active', 5, { language: 1 });
+        s.dropped = 7;
+        expect(renderQ1(s, '2026-10-01')).toContain('FLOOR');
+    });
+
+    it('publishes both instrument bounds beside the number', () => {
+        // The blocker `q1-shadow-reading-window` requires these two travel with
+        // the reading. A number published without them reads as a point
+        // estimate over sessions, and it is neither.
+        const out = renderQ1(withLayer('stop_hook_active', 3, { language: 1 }), '2026-10-01');
+        expect(out).toContain('UPPER bound');
+        expect(out).toContain('session_id');
     });
 });
