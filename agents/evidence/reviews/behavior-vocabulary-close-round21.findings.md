@@ -37,3 +37,14 @@ rounds as a reason to stop.
 **Re-bind (§ 2.7 path 1).** Fixing both findings moved the scope; every row is
 terminal, so the artefact is re-bound in place rather than archived as a closed
 round. What the reviewer read is the pre-fix state.
+
+**`fix-before-artifact`, and the verdict is correct.** The fixes (`62741f8c8`)
+were committed before this artefact (`84ed54ac7`), so contract § 2.5's ordering
+is violated and the gate says so. It is recorded here rather than engineered
+around: the round was dispatched by a session that then died, so by the time
+anyone could act on its findings the review had no committed artefact to
+precede them, and committing an empty skeleton first would have been the worse
+failure — a review in the record that never ran.
+
+The gate is `--advisory` in CI, so this does not block; that is why it can be
+stated plainly instead of being hidden by reordering history.
