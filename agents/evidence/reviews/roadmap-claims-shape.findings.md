@@ -30,6 +30,25 @@
 | 10 | low | src/scripts/check_verify_expectation_delta.ts:140 | A fenced Markdown example inside a roadmap containing the live `verify:` token can be convicted: the reader hands every added line carrying the token to the parser, which has no notion of a code fence. | accepted-risk | A line-oriented patch reader cannot see fence state without tracking it, and the sibling share reader (`closure_scan`'s `units()`) already owns fence exclusion for the estate-wide view. Recorded as a known false positive an author resolves by writing the example without the live token. |
 | 11 | low | src/scripts/check_estate_count.ts:600 | `blockScalar()` is not a YAML implementation: it treats `>` and `\|` alike and drops blank-line semantics. | accepted-risk | Correct for the one thing it is used for — reading a prose reason — and wrong for anything else, which is why it is local to `exemptionReason` rather than offered as a parser. The module says so in its own header. |
 
+## The §2.5 ordering is violated, and the gate says so
+
+`check_completion_review` reports `fix-before-artifact` on all eight `fixed`
+rows: the fix commit `23944d6a` predates this artefact's first-add commit. That
+is accurate and is not worked around. The review was commissioned after the
+branch was pushed, in answer to a prior round's objection, so the findings
+could not have been committed before the fixes they produced; and rewriting the
+history to reorder them is what `git-history-discipline` forbids.
+
+What §2.5 protects against is findings invented after the fact to match fixes
+already made. The committed prompt package is a stronger guarantee of that same
+property than the commit order would be: `prompt.md` is hashed into the marker
+above, so the questions are pinned and can be re-read, and the diff the
+reviewers saw is committed beside it. A reader who distrusts the ordering can
+check what was asked instead of taking the sequence on trust.
+
+The gate's CI invocation is `--advisory` and exits 0; the finding stands in its
+output rather than being suppressed.
+
 ## What the reviewers could not check
 
 The full workflow file, the surrounding gates, `parseVerifyClause`'s own
