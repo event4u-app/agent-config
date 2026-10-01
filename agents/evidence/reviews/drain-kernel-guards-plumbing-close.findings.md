@@ -1,15 +1,15 @@
 # Findings: drain/kernel-guards-plumbing-close
-<!-- completion-review: v1 | reviewed: 2026-10-01 | scope: 3787ca6d7220c20d8f39a05b86856bb6a0e8b2e80491a4b3fc61531892c19a93 | diff: 2accbecdf4cc4566ae9f4981bc1ac79b4a15c244 | reviewer: council/anthropic+openai-2026-10-01-kernel-guards-plumbing-close | author: claude-opus-5/drain-kernel-guards-plumbing-close-2026-10-01 -->
+<!-- completion-review: v1 | reviewed: 2026-10-01 | scope: 05a5c66fd5b953f117827dfe53fafde0fd9cba760a7ab79e4e2ca6273b875572 | diff: e72f99133ff1f604fafd23f352ce7071357f90f4 | reviewer: council/anthropic+openai-2026-10-01-kernel-guards-plumbing-close | author: claude-opus-5/drain-kernel-guards-plumbing-close-2026-10-01 -->
 
 <!-- evidence-type: completion-review -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 2accbecdf4cc4566ae9f4981bc1ac79b4a15c244
-  scope_hash: 3787ca6d7220c20d8f39a05b86856bb6a0e8b2e80491a4b3fc61531892c19a93
+  diff_sha: e72f99133ff1f604fafd23f352ce7071357f90f4
+  scope_hash: 05a5c66fd5b953f117827dfe53fafde0fd9cba760a7ab79e4e2ca6273b875572
   roadmap: agents/roadmaps/road-to-a-kernel-that-guards-its-plumbing.md
   roadmap_hash: b69214fb7272307bc86c72a459bbfcdf3de426a2eb245e541155bbf81d69b8fe
-  ac_hash: d796296a2844d268cc5bce189a3bbe51aaf174124de9e27727ad52d4043a7422
+  ac_hash: add0feae13d9c6f2863a9743def3d88840ecd7a5f51e80da3db416e017a982ca
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
 dispatched: 2026-10-01T01:30:00Z
@@ -102,6 +102,11 @@ forced by gates and neither touching a finding:
 2. **`check_estate_count`** red at `open_blockers` 46 → 47, so the roadmap's
    `estate_growth_exempt` claim was rewritten to cover the new blocker.
    Frontmatter prose.
+3. **`npm audit`** red in Static Checks on two advisories published mid-run
+   (`fastify`, `hono`), neither reachable from this diff — it touches no
+   dependency file and the lockfile is byte-identical to `main`'s. Recorded as
+   a stub under `agents/roadmaps/stubs/`, which is the second of the two
+   dispositions `fix-what-you-see` allows. New file, no reviewed code.
 
 Neither changes a behaviour the review examined, which is why the verdicts and
 the dispositions stand as written. Stated here rather than left to a reader
