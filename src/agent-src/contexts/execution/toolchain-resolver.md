@@ -79,7 +79,7 @@ mirrors the recoverable-error contract of the frontend `detect_stack`.
 | Go | `go.mod` present | go-test | `go test ./...` |
 | Rust | `Cargo.toml` present | cargo-test | `cargo test` |
 | Ruby | `rspec` gem in `Gemfile`/`gems.rb`, `.rspec`, `spec/spec_helper.rb` | rspec | `bundle exec rspec`, or bare `rspec` with no Gemfile |
-| JVM | `pom.xml`, `build.gradle[.kts]`, `settings.gradle[.kts]` | junit | `./mvnw`/`./gradlew test`, else `mvn`/`gradle test` |
+| JVM | `build.gradle[.kts]` / `settings.gradle[.kts]` by PRESENCE; `pom.xml` by CONTENT | junit | `./mvnw`/`./gradlew test`, else `mvn`/`gradle test` |
 | .NET | `*.sln[x]` or `*.csproj`/`*.fsproj`/`*.vbproj` **in the scope root** | dotnet-test | `dotnet test` |
 
 Each Ruby signal stands alone, and Ruby has **no MEDIUM default** (minitest is

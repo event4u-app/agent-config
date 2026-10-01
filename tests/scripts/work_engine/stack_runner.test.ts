@@ -663,6 +663,15 @@ describe('stack/runner — rspec, junit, dotnet-test', () => {
         expect(found?.command).toBe('bundle exec rspec');
     });
 
+    it('a DIRECTORY named like a project file is not a .NET target', () => {
+        // R19 finding 5: both .NET listings matched an extension over bare
+        // NAMES with no type check, while the sibling walk already filtered
+        // `isFile()`. A directory called `App.csproj` therefore read as a
+        // runnable target — and that row reaches `selected`.
+        write('App.csproj/placeholder.txt', 'not a project\n');
+        expect(labels(tmp)).not.toContain('dotnet-test');
+    });
+
     it('dotnet-test ABSENT: no project file and no .NET marker', () => {
         write('go.mod', 'module example.com/x\n');
         expect(labels(tmp)).not.toContain('dotnet-test');

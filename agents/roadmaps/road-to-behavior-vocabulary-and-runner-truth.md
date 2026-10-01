@@ -722,9 +722,10 @@ neither spends the ratchet early nor loses the trigger.
 
 ### Residue carried out of the review rounds
 
-Eighteen completion-review rounds produced 148 findings; 112 are fixed and 36
+Nineteen completion-review rounds produced 154 findings; 116 are fixed and 38
 are `accepted-risk`, each with a stated `revisit-if`. Nothing is `open`.
-Rounds 16, 17 and 18 carried no critical and no high.
+Rounds 16 through 19 carried no critical and no high; the last severity above
+medium was round 15.
 
 **The dominant defect class was never the code.** Four highs across rounds 2–4
 and roughly a third of everything else were this branch asserting something
@@ -862,6 +863,17 @@ it names the measurement it waits on rather than an estimate.
   recorded here and in the regenerating commit rather than in the artifacts.
   REVISIT-IF: either generator gains a provenance field, or a third consumer
   starts reading these numbers without the surrounding change.
+
+- **The cache key sees a marker ARRIVE, never a marker LEAVE.** It is a
+  `Math.max` over files that exist, so deleting the only signal of a
+  `behavior_runners` row (a scope's sole `behat.yml`, say) leaves the key
+  unchanged and `toolchain.json` keeps reporting a runner the scope no longer
+  owns. Round 19. Closing it means encoding absence as well as recency — a set
+  or count beside the max — which changes the serialized shape of
+  `toolchain.json` and every reader of it, so it belongs with the other
+  key-shape items here rather than in this branch. REVISIT-IF: the config
+  gains a schema, or a consumer reports a runner surviving the deletion of its
+  only signal.
 
 - **The native JS axis still reads peer and optional dependencies as
   ownership.** Round 12 stopped the BEHAVIOR axis doing it; `_js_runners` and

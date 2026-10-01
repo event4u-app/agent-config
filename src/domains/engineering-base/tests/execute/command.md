@@ -65,11 +65,17 @@ ask interactively, or emit `ambiguous_routing` in CI.
   `vendor/bin/phpunit`) → run **inside the PHP Docker container**
   (`docker compose exec -T <service> ...`); detect the service from
   `docker-compose.yml` / `compose.yaml` (see `rules/docker-commands.md`).
-- **Direct JS/Python/Go/Rust tool** → run on the host (or the relevant
-  container when the project containerises it).
+- **Every other direct tool** — JS, Python, Go, Rust, Ruby
+  (`bundle exec rspec`, or bare `rspec` with no Gemfile), JVM
+  (`./gradlew test` / `./mvnw test`), .NET (`dotnet test`) → run on the host,
+  or in the relevant container when the project containerises it. PHP is the
+  only ecosystem with a standing container rule.
+- **A behavior-axis command runs from its `scope_root`**, not the repository
+  root — see `contexts/execution/toolchain-resolver.md` § 2b.
 - If the user named a specific file or filter, pass it through the
-  resolved runner's native flag (`--filter=…` / a path for pest/phpunit,
-  a path/`-t` for vitest/jest, a node-id for pytest).
+  resolved runner's native flag: `--filter=…` or a path for pest/phpunit, a
+  path or `-t` for vitest/jest, a node-id for pytest, `-e`/a path for rspec,
+  `--tests`/`-Dtest=` for gradle/maven, `--filter` for `dotnet test`.
 - No specific test requested → run the resolved fast suite.
 
 ### 3. Analyze results
