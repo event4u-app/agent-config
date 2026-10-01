@@ -26,6 +26,16 @@ One seat read the branch directly; the other read the described delta plus what
 it could reach, and said so. The seat that read the tree found finding 2, which
 the other did not.
 
+**Contract §2.5 deviation, stated rather than worked around.** This artifact's
+first-add commit POSTDATES the fix commit it cites, and `check_completion_review`
+reports that for the rows it names. The ordering is real: the council round was
+run for the ratification gate, its findings were taken in one commit, and only
+then was it discovered that this surface wants the findings committed first.
+Re-landing the artifact under an earlier commit is precisely the backdating the
+gate says it detects, so it was not done. The check is advisory and passes; the
+deviation is here so a reader sees it rather than inferring compliance from
+silence.
+
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
 |---|----------|-----------|---------|--------|------------|
 | 1 | high | src/install/emit_host_rules_cli.ts:70-95 | A neighbour's rule file sharing one of our basenames is OVERWRITTEN before ownership is consulted. Both emit loops write the destination, and `cleanOwnedOnly` runs afterwards skipping every name in `valid` — so the collision case is unreachable by the cleanup pass by construction. The existing fixtures exercised stale FOREIGN names only; none called `emitCursor` or `emitWindsurf` with a current-name collision. | fixed | `mayWriteRuleFile` checks ownership BEFORE each write; the blocked count folds into the same `kept:` line. Four end-to-end fixtures go through the real emitters, because the write happens inside them and a helper-level test cannot prove the gate is consulted. Proven red by bypassing the gate — 1 failed / 23 passed. (`f1eaf3949`) |
