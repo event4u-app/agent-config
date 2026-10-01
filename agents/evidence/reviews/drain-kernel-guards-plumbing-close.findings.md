@@ -1,14 +1,14 @@
 # Findings: drain/kernel-guards-plumbing-close
-<!-- completion-review: v1 | reviewed: 2026-10-01 | scope: 00066ea69a21f3784b5d1f12031fc32364da9f2a57c576bad0059b750ce57d94 | diff: f9cb0207411e313f2b2a5c0aad0775c6a4d39d7e | reviewer: council/anthropic+openai-2026-10-01-kernel-guards-plumbing-close | author: claude-opus-5/drain-kernel-guards-plumbing-close-2026-10-01 -->
+<!-- completion-review: v1 | reviewed: 2026-10-01 | scope: 3787ca6d7220c20d8f39a05b86856bb6a0e8b2e80491a4b3fc61531892c19a93 | diff: 2accbecdf4cc4566ae9f4981bc1ac79b4a15c244 | reviewer: council/anthropic+openai-2026-10-01-kernel-guards-plumbing-close | author: claude-opus-5/drain-kernel-guards-plumbing-close-2026-10-01 -->
 
 <!-- evidence-type: completion-review -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: f9cb0207411e313f2b2a5c0aad0775c6a4d39d7e
-  scope_hash: 00066ea69a21f3784b5d1f12031fc32364da9f2a57c576bad0059b750ce57d94
+  diff_sha: 2accbecdf4cc4566ae9f4981bc1ac79b4a15c244
+  scope_hash: 3787ca6d7220c20d8f39a05b86856bb6a0e8b2e80491a4b3fc61531892c19a93
   roadmap: agents/roadmaps/road-to-a-kernel-that-guards-its-plumbing.md
-  roadmap_hash: 3cc111b8b56d4fad5549774b83b1ef53636cf44424fc71a81d1519657366e75d
+  roadmap_hash: b69214fb7272307bc86c72a459bbfcdf3de426a2eb245e541155bbf81d69b8fe
   ac_hash: d796296a2844d268cc5bce189a3bbe51aaf174124de9e27727ad52d4043a7422
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
@@ -85,6 +85,28 @@ ordering violation or need a status that is false. The content is unchanged.
 
   Fixed in `4100b5810` — the blocker's reset rule: a run naming an overrun ENDS the window rather than extending it, because the registered value was then wrong and a counter that keeps waiting turns a falsified bound into a patience problem
 
+
+## Re-bound after the review — what changed, and why none of it is a re-review
+
+Contract § 2.1 re-binds this artefact's `scope:` whenever the reviewed content
+moves, and § 2.5 says in as many words that editing it in place is expected
+rather than a violation. Two changes landed after the council answered, both
+forced by gates and neither touching a finding:
+
+1. **`check_source_size_budget`** red at 83 lines over the 1,500-line ceiling,
+   so the window surface moved out of `bench_hook_latency.ts` into
+   `src/scripts/_lib/concern_sla_window.ts`. A pure move with re-exports: every
+   symbol keeps its name and its import path, the 46 covering cases are
+   unchanged and green, and the only new code is a four-field `BoundedConcern`
+   interface declared so the dependency runs one way.
+2. **`check_estate_count`** red at `open_blockers` 46 → 47, so the roadmap's
+   `estate_growth_exempt` claim was rewritten to cover the new blocker.
+   Frontmatter prose.
+
+Neither changes a behaviour the review examined, which is why the verdicts and
+the dispositions stand as written. Stated here rather than left to a reader
+comparing two hashes — a silent re-bind is how a review of one tree comes to
+look like a review of another.
 
 ## What the reviewers explicitly did NOT find
 
