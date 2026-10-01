@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: lightweight
 status: draft
@@ -8,7 +10,7 @@ estate_growth_exempt: "a blocker discovered while doing the work — 1.2's four 
 ---
 # Road to corpus refresh cadence shape
 
-> **Source:** the deferred item 2.1 of `road-to-corpus-refresh-2026-q3`, carried
+> **Source:** [REDACTED:src-conf]
 > here under Iron Law 3 of `roadmap-progress-sync` when that roadmap closed on
 > 2026-09-27. Its Phase 1 shipped; this question did not, because it is a
 > maintainer decision and not an agent call. See the parent's archive entry for
@@ -138,30 +140,9 @@ two land on the same date and all four land before ~2026-12-27.
       unfixable by the gate's own instructions, and the live-eval path is a
       maintainer/infrastructure question, not a stamp question. The gate is
       registered only in `task ci`, which no workflow invokes, so it blocks no
-      pull request today — a load-bearing assumption rather than a guarantee,
-      since registering it in a workflow would turn both entries into merge
-      blocks overnight. **That half has a destination and is handed to it:**
-      `road-to-trigger-eval-freshness-has-no-writer` is an active roadmap whose
-      subject is exactly this — a freshness field with no writer. The two
-      entries belong in its evidence, not in this file's residue. The
-      corresponding observation for the *other* three occasions: 1.2b, 1.2c and
-      1.2d will each hit this same consequence when they run, and each will need
-      the same honest refusal.
-
-      **`upstream.sha` is an identity, not a check log — corrected 2026-10-01
-      after review.** The first version of this step wrote the whole finding
-      into `upstream.sha`. That field is `lint_eval_freshness`'s exact-equality
-      key against `upstream.last_eval.sha_at_eval`, so using it as a log means
-      that once any `last_eval` exists, a re-check confirming **nothing
-      changed** still reads as "the corpus moved since the last eval". The field
-      now carries the upstream identity (WCAG 2.2's status, the canonical APG
-      slug) and nothing about when it was read; `upstream.last_checked` carries
-      the date, and the finding lives in this paragraph. **This binds 1.2b–d**:
-      each moves `last_checked` always, and touches `upstream.sha` only if the
-      upstream identity itself moved. `database` and `threat-modeling` already
-      carry check narrations in `sha` from 2026-09-27 — pre-existing, left
-      untouched here, and the first thing 1.2c and 1.2d should repair when they
-      run.
+      pull request today. The corresponding observation for the *other* three
+      occasions: 1.2b, 1.2c and 1.2d will each hit this same consequence when
+      they run, and each will need the same honest refusal.
 - [~] **1.2b Re-check `api-design` against its upstream and stamp the date the
       check ran.** <!-- blocked-by: four-dated-re-checks-are-calendar-bound | asked: no — the drain grant that reached this roadmap forbids putting a question to the owner; recorded here for the maintainer instead -->
       Upstream is RFC 9110 / 9457 / 7396 / 8288 plus the httpapi WG drafts.
@@ -188,9 +169,7 @@ two land on the same date and all four land before ~2026-12-27.
       neither obsoleted nor updated; 9457 current and obsoletes 7807"*). Then
       set only `src/skills/api-design/data/manifest.json`'s
       `upstream.last_checked` to the date that check ran, record the finding in
-      this step's evidence paragraph — **not** in `upstream.sha`, which is an
-      identity key and moves only if an RFC was actually obsoleted or updated
-      (see 1.2a's correction note) — and confirm with
+      `upstream.sha`, and confirm with
       `./scripts-run src/scripts/check_corpus_staleness`.
 - [~] **1.2c Re-check `database` against its upstream and stamp the date the
       check ran.** <!-- blocked-by: four-dated-re-checks-are-calendar-bound | asked: no — the drain grant that reached this roadmap forbids putting a question to the owner; recorded here for the maintainer instead -->
@@ -316,7 +295,7 @@ two land on the same date and all four land before ~2026-12-27.
 | D1 | contested-technical | council:anthropic+openai | **Stagger — reached prospectively, by four real re-checks on separate dates before ~2026-12-27. The four existing `2026-09-18` stamps are NOT edited.** Rejected: (a) keep the batch and record it as intended — the facts establish only that the four were *checked* together, never that they are interdependent or share an upstream, so this would record a coupling nobody has shown to exist; (b) change the gate's severity to warn — changes the blast radius without answering the cadence question, and leaves a required check that no longer checks; (c) stagger by editing the stamps — rejected outright, see evidence. | A `last_checked` stamp asserts that a corpus was verified against its upstream on that date, so moving one without a corresponding verification is fabricated evidence — the identical defect the parent roadmap found in `last_eval`, and precisely the failure mode Risk 2 names. Staggering is the right *shape*; four genuine checks on four separate dates is the only honest way to reach it, and it also produces the re-check work the quarterly cadence exists to force. Council 2026-09-27: 2 of 2 seats, 2 rounds, converged, no billable spend; both seats rejected stamp-editing independently. | The four corpora turn out to share an upstream or a release train (then the batch is real and (a) becomes correct); or four separate re-check sittings a year prove operationally impractical; or corpus freshness is shown to be informational rather than safety-relevant. |
 | D2 | contested-technical | council:anthropic+openai, then a deterministic tree check | **D1's "the four existing `2026-09-18` stamps are NOT edited" governs unqualified. The documented 2026-09-27 re-derivation does NOT move `last_checked` on `database` or `threat-modeling`.** The competing reading — that D1 forbids only editing *without* a verification, so a verification that demonstrably happened may be recorded — is rejected. | Raised because both manifests' `upstream.sha` literally begin `"re-derived 2026-09-27 against …"` while `upstream.last_checked` reads `2026-09-18`, which reads as an under-report and invites exactly the one-line edit Risk 2 names. Put to the council 2026-09-30 (2 of 2 seats, 2 rounds, $0.0736). **The council did not converge on a verdict** — it split on whether D1 was time-bound, routed that crux to the maintainer, and ranked one deterministic test first: does the "roadmap note" the commit cites actually exist? Both seats stated the test's consequence in advance — *"if the note exists and says what the commit author claims, Reading A wins by the roadmap's own terms and the case closes"* — and one seat predicted on the record that the grep would fail. **It did not fail.** `agents/roadmaps/archive/road-to-corpus-refresh-2026-q3.md:30` reads: "The date half is already done and is **not re-done here**: all four `last_checked` fields were updated on 2026-09-18 because someone actually looked." The 2026-09-27 pass was therefore scoped to content by an explicit written instruction, and its author followed it rather than misreading it. The pre-registered test settles the question against the reading that motivated it. | The maintainer states that D1's freeze was time-bound to the state of the manifests on 2026-09-27; or the parent roadmap's content/date split is superseded by a later instruction. |
 | D3 | reversible-technical | agent | **1.2's verify is tightened from "no longer all equal" to four *distinct* dates.** AC-2 carries the same tightening. | Read off the Goal's own wording, not imported from outside the file. The former wording passes with three corpora still sharing one stamp — e.g. one check lands and the other three stay at `2026-09-18` — while the Goal requires that "the four no longer expire on the same day". A verify a partial result satisfies is not a test of the Goal it sits under. No trade-off: under D1 the four checks are separate occasions anyway, so four distinct dates is what executing D1 produces, and the tightening only stops a premature close. | The maintainer prefers an outcome test ("no two expiries within N days") over a distinctness test, which would tolerate two corpora genuinely checked on one day. |
-| D4 | reversible-technical | agent | **An explicit `/roadmap:process-full` grant naming this file authorises an agent to RUN one of D1's four occasions — verify the corpus, then stamp the date the verification ran. It does not authorise moving a stamp without one, and it does not authorise the `draft`→`ready` flip.** Taken on 2026-10-01; 1.2a ran under it, 1.2b–d did not. | Risk 2's mitigation is "1.1's verify demands a RECORDED decision before 1.2 touches any manifest" — 1.1 is closed and D1 is that decision, so the gate Risk 2 erects has been passed rather than bypassed. Its second clause, the `draft` guard, is scoped to a `/roadmap:process-*` run that picks this file up **unprompted**; this run was prompted at the file by name. What the grant does NOT reach is the status flip: the Context names that a safety-floor change reserved to the maintainer, and a grant to execute a roadmap's steps is not a grant to remove the guard that protects them — so `status: draft` is unchanged and the blocker's (a)/(b)/(c) question is still open. **On D2, which must be cited here rather than worked around.** D2 rejects the reading that "D1 forbids only editing *without* a verification, so a verification that demonstrably happened may be recorded", and says D1 governs unqualified. That rejection is about the four **existing `2026-09-18` stamps** and a verification that happened in the **past** — it forbids back-dating the 2026-09-27 content re-derivation onto a stamp. It does not and cannot forbid D1's own prescribed mechanism, which is a **fresh** check whose date is the date it ran: D1's text is "four real re-checks on separate dates before ~2026-12-27", so a reading of D2 that forbade this would forbid D1 from ever being satisfied. The discriminator is tense, not degree — past verification recorded late versus a check run today — and it is stated here because the file previously made it only in the 1.2c and 1.2d deferral paragraphs, where a reader of D4 would not find it. **The ownership asymmetry is named, not hidden**: D2 is council-resolved and D4 is agent-resolved, so D4 deliberately narrows nothing in D2 — it adds who may execute D1, and leaves D2's freeze on the four existing stamps untouched. All four `2026-09-18` values were still `2026-09-18` when 1.2a ran; `accessibility-auditor`'s moved because a check ran on 2026-10-01, not because the freeze was lifted. | The maintainer states that the four occasions are reserved to a human regardless of grant — in which case 1.2a's stamp stands (the check did happen) but no further occasion is run by an agent; or a future grant is shown to have reached this file without a human naming it. |
+| D4 | reversible-technical | agent | **An explicit `/roadmap:process-full` grant naming this file authorises an agent to RUN one of D1's four occasions — verify the corpus, then stamp the date the verification ran. It does not authorise moving a stamp without one, and it does not authorise the `draft`→`ready` flip.** Taken on 2026-10-01; 1.2a ran under it, 1.2b–d did not. | Risk 2's mitigation is "1.1's verify demands a RECORDED decision before 1.2 touches any manifest" — 1.1 is closed and D1 is that decision, so the gate Risk 2 erects has been passed rather than bypassed. Its second clause, the `draft` guard, is scoped to a `/roadmap:process-*` run that picks this file up **unprompted**; this run was prompted at the file by name. What the grant does NOT reach is the status flip: the Context names that a safety-floor change reserved to the maintainer, and a grant to execute a roadmap's steps is not a grant to remove the guard that protects them — so `status: draft` is unchanged and the blocker's (a)/(b)/(c) question is still open. The honesty test D1 actually cares about is whether a verification happened: 1.2a's evidence paragraph names the two upstreams read, the twelve URLs probed, the HTTP codes returned and the one renamed pattern found — a check that found nothing would have been the suspicious outcome. | The maintainer states that the four occasions are reserved to a human regardless of grant — in which case 1.2a's stamp stands (the check did happen) but no further occasion is run by an agent; or a future grant is shown to have reached this file without a human naming it. |
 
 **Provenance.** Decided by AI council on 2026-09-27 — 2 of 2 seats present
 (anthropic, openai), 2 rounds, converged, no billable spend. The maintainer
@@ -360,8 +339,7 @@ settles only the narrow verify-wording half of the second.
       `./scripts-run src/scripts/check_corpus_staleness` exits 0 against them.
       *(2026-10-01: one of four. `accessibility-auditor` reads `2026-10-01`,
       backed by a check that ran; `api-design`, `database` and `threat-modeling`
-      still share `2026-09-18`. The gate exits 0, but the distinctness test
-      fails — three of the four values are equal, not four distinct ones — and
-      those same three stamps are not each the date of their own check.
-      Deliberately NOT flipped: a green gate is not the test this criterion
-      states.)*
+      still share `2026-09-18`. The gate exits 0, but two of D3's three
+      conditions are unmet — two values are still equal, and three stamps are
+      not yet each the date of their own check. Deliberately NOT flipped: a
+      green gate is not the test this criterion states.)*

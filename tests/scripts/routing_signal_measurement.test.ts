@@ -3,7 +3,7 @@
  *
  * Four things need a guard, and only one of them is the number.
  *
- * 1. THE SEAL. The 18 holdout corpora frozen in
+ * 1. THE SEAL. The holdout corpora frozen in
  *    `agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md` must not
  *    be read by an analyzer authored in Phase 5. The loader skips them from the
  *    directory NAME, before any read, and the first block asserts that no case
