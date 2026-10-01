@@ -956,9 +956,16 @@ before the record is signed.
   watched is the stricter reading, and it costs the owner the hosts they actually use; the
   column makes the weaker guarantee visible instead of silent.
 - **Input now available, and deliberately NOT a resolution:**
-  `docs/contracts/hook-architecture-v1.md` § Kill switches enumerates all 28
-  `AGENT_CONFIG_*` switches the hook layer reads, with an owner class each
-  (`road-to-a-stop-that-holds` 1.4). That plan's 1.4 instructed an agent to resolve
+  `docs/contracts/hook-architecture-v1.md` § Kill switches enumerates every
+  `AGENT_CONFIG_*` switch the hook layer reads, with an owner class each
+  (`road-to-a-stop-that-holds` 1.4). **The count is deliberately not written
+  here any more.** It said 28, which was the dated reading of 2026-09-29; two
+  switches arrived by merge and `check_kill_switch_table` reports 30 == 30 as of
+  2026-10-01. The criterion that gate enforces is the EQUALITY, not the number,
+  and a number transcribed into a second file goes stale without anything
+  noticing — which is exactly what happened here and was caught by an
+  independent review rather than by a gate. Run the checker for today's figure.
+  That plan's 1.4 instructed an agent to resolve
   THIS blocker by pointing the `Resolved when` below at that table. **Refused, and
   the refusal is the finding**: the table inventories environment switches, while
   this blocker asks a maintainer to DECIDE the autonomy fallback for a host with no

@@ -41,6 +41,26 @@ capability_gap: none
 > per-step loop for a reversible operation, and it may not reverse the outcome. § 0 carries
 > the table that decides which of the two a proposed change is.
 
+> **STATE AS OF 2026-10-01 — read this before re-deriving anything below.** 4 done · 14
+> deferred `[~]` · 7 open-and-blocked `[ ]`. `scanOpenSteps` reads `{open: 0, blocked: 7}`.
+> **This file is not agent-executable, and that is a property of its subject rather than a
+> stall.** Every remaining step either edits a kernel rule behind a deny reproduced three times
+> at tool-call time, or widens the agent's own authority, or waits on a mechanism whose
+> construction would do one of those two. Three facts a later run should not re-measure from
+> scratch: the deny is live and was exercised this run rather than inspected; `LedgerState` is
+> a type with no writer, no reader and no file, which is what holds 3.1 → 4.3 → 1.7 → 4.1 in
+> that order; and `check_platform_anchor` went green again on 2026-09-28 after the 2026-09-14
+> regression, which restores a precondition and performs no retirement.
+> **The one step a future session should build FIRST is 4.3.** A gate that reds a typed op
+> lacking a grant only ever refuses, so it cannot produce a state weaker than today's and it is
+> in bounds for an agent to author — and Risk 1 wants it to exist *before* the floor narrows.
+> It needs 3.1's store and nothing else, and 3.1 needs one owner decision — *who may append to
+> the ledger, and what makes an append owner-attributable* — before it needs any code.
+> **The 14 `[~]` glyphs are deliberate and they block archival.** They were `[ ]` until
+> 2026-10-01, which meant the continuation ladder offered step 1.4 — the autonomy self-grant —
+> as the next action on every autonomous fire. Restoring any of them to `[ ]` without closing
+> the step re-opens that path.
+
 ## Goal
 
 One grant object — ADR-260's `{op, target, scope, granted_by, span, expires}` — governs every
@@ -121,6 +141,25 @@ moved, the corrected path is the one below.
       retiring it moves the whole weight of kernel immutability onto a CI gate whose
       independence rests on platform controls that are measurably absent. That gate is built in
       this change and currently reds, so the crossing is not available to this run.
+      **Evidence (2026-10-01) — still open, and the one input that moved does not open it.**
+      The anchor no longer reds: `check_platform_anchor --as-of 2026-10-01` exits 0 with
+      `PASS_WITH_ACCEPTED_RISK`, because the 2026-09-14 `required_review_thread_resolution`
+      regression was repaired on the forge on 2026-09-28 (ruleset version `51122772`). So the
+      sentence above — *"That gate is built in this change and currently reds"* — is no longer
+      current state, which is why this note exists.
+      **The crossing is still not available, for the reason that has held all along.** This
+      step's `Resolved when` is unchanged and both limbs were executed this run: no
+      maintainer-authored kernel commit exists on this branch, and
+      `block_kernel_rule_writes.ts` is still present (11,345 bytes) with its three
+      `pre_tool_use` bindings and its `concern_registry` entry intact. The deny was reproduced
+      against the real tool call, not inspected. A green anchor restores a precondition the
+      2026-09-10 council attached to the retirement; it does not perform the retirement, and
+      this file already records that the anchor in its post-ruling shape proves nothing about
+      independent review. Reading limb-1-green as *"the crossing is now available"* would be
+      the same letter-against-purpose move this step was written to forestall.
+      **The step stays `[ ]` rather than `[~]`** — unlike the Phase 2-6 deferrals, it carries a
+      `blocked-by:` marker, so `scanOpenSteps` already excludes it and the glyph is doing no
+      harm. Changing it would lose the blocker linkage for nothing.
 
 **Exit:** ADR-268 accepted — done — and the kernel crossing decided, which is the one open
 item. Phases 1-6 may run once 0.2 is chosen.
@@ -152,8 +191,17 @@ item. Phases 1-6 may run once 0.2 is chosen.
       *never act while asking* and the exact-object clause verbatim — a narrowed floor is
       still a floor. `enforced_by:` names the Phase 4.3 gate.
       verify: `grep -c 'this turn' src/rules/non-destructive-by-default.md` returns 0, and
-      `grep -c 'never act while asking' src/rules/non-destructive-by-default.md` still
+      `grep -ic 'never act while asking' src/rules/non-destructive-by-default.md` still
       returns at least 1.
+      **The verify clause was DEFECTIVE and is corrected here — 2026-10-01.** It used to read
+      `grep -c` without `-i`. The rule's own text is `**Never act while asking.**` at
+      `src/rules/non-destructive-by-default.md:41` — capitalised, because it opens a sentence —
+      so the lowercase pattern returns **0 at HEAD and would return 0 after a perfectly correct
+      edit too**. The clause was unsatisfiable as written and would have read as "the edit
+      deleted the clause it was told to keep". Measured both ways this run: `grep -c` returns
+      **0**, `grep -ic` returns **1**. Only the `-i` is added; the clause's meaning is
+      untouched. This is the one part of 1.1 an agent could fix, because it is a roadmap edit
+      and not a kernel-rule edit.
       **DENY REPRODUCED 2026-09-14, not assumed — this is the evidence the box stays `[ ]` on.**
       The edit was attempted for real: the `this turn` clause at `:26` was to be replaced by
       *"Triggers below require an object-bound grant covering the op"*. The `pre_tool_use`
@@ -163,6 +211,25 @@ item. Phases 1-6 may run once 0.2 is chosen.
       reached the file: `grep -c 'this turn'` still returns 1 and `git status` is clean of it.
       So the guard is live on this tree at tool-call time, and the five kernel steps are
       unreachable for an agent by construction rather than by policy.
+      **Evidence (2026-10-01). DENY REPRODUCED A THIRD TIME, on a tree where the guard's own
+      file has changed since the last reading — so this is not the same measurement twice.**
+      Against `origin/main` `9f2b9fb4a`, the same edit was put to the `Edit` tool: replace the
+      `this turn` clause at `:26` with *"Triggers below require an object-bound grant covering
+      the op"*. The `pre_tool_use` dispatcher refused it — `block-kernel-rule-writes: BLOCKED —
+      kernel rule non-destructive-by-default is immutable — tighten-only via the override
+      exception registry`, remediation naming a human action outside the agent session.
+      Nothing was written: `grep -c 'this turn'` returns **1** and `git status --short` is empty.
+      **What changed since 2026-09-14, and why it does not help.** The guard file is now
+      **11,345 bytes**, down from the 13,577 that reading measured — three commits touched it
+      (`b8a7037e3`, `70bc596b1`, `c271f27a8`), the last two of which ratify and correct its
+      docstring. Its REACH is unchanged: the header still names all nine kernel rules and still
+      denies the source tree plus every projection. `grep -c block-kernel-rule-writes
+      src/scripts/hook_manifest.yaml` returns **5** where the blocker's clause requires 0 —
+      the concern definition at `:198`, a comment at `:502`, and three `pre_tool_use` binding
+      lists at **`:1427`, `:1459`, `:1506`** (drifted again from the `:1390/:1422/:1469` of
+      2026-09-14). `concern_registry.ts` still registers it, now at **`:121`**. The manifest
+      keeps moving and the binding does not — the fourth consecutive reading to reach that
+      conclusion by executing the clause rather than reading the field.
 
 
 - [ ] <!-- blocked-by: kernel-guard-first-crossing | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question; the deny was reproduced on this tree and only a maintainer can retire it --> **1.2 `commit-policy.md`: the Iron Law becomes grant-shaped.** *Commit when a mission
@@ -178,7 +245,7 @@ item. Phases 1-6 may run once 0.2 is chosen.
       § Authoring-vs-implementation stays untouched — a roadmap landing must still not start
       its own execution, and that is a fence rather than a permission gate.
       verify: `grep -c 'Authoring vs. implementation' src/rules/scope-control.md` returns 1.
-- [ ] **1.4 `autonomous-execution.md`: the default flips and the opt-in detection goes.**
+- [~] **1.4 `autonomous-execution.md`: the default flips and the opt-in detection goes.**
       `personal.autonomy` ships `on`, `auto` resolves to `on` with a migration note. The
       task-scope fresh-confirmation section and the opt-in detection contexts are deleted.
       The N=3 block becomes a pointer to `execution.fix_loop_max`, owned by stem 3.
@@ -213,6 +280,37 @@ item. Phases 1-6 may run once 0.2 is chosen.
       authority-expanding and lands in NONE of them, so nothing would have stopped it. The
       restraint here is model-carried, not enforced — which is the honest description and an
       argument for widening that gate's scope rather than for trusting the next run.
+      **DEFERRED `[~]` 2026-10-01, and the glyph change is the point of this run's visit to this
+      step.** Measured first, then the reason. `grep -n 'autonomy:' src/config/agent-settings.template.yml`
+      returns `357:  autonomy: auto` — unflipped. Half (a)'s target is confirmed present a
+      second time (`fix_loop_max: 10` at `:789`), so the 2026-09-14 expiry note stands and (a)
+      remains writable. **(b) still holds the step, and this run refuses it rather than
+      deferring it for effort.** Flipping `personal.autonomy` from `auto` to `on` widens the
+      agent's own default authority; ADR-268 § 4 makes an authority-expanding edit inert until
+      a ratification artifact exists; and this is a non-interactive `process-full` run that can
+      put no question and carries no artifact. A run cannot both gain the authority and certify
+      the edit that grants it — the Iron Law 5.1 encodes by rejecting
+      `reviewed_by == implemented_by`.
+      **Why the box moved from `[ ]` to `[~]` — a live defect, measured, not argued.**
+      `scanOpenSteps` (`src/scripts/hooks/run_continuation_hook.ts:418`) reported
+      `{open: 14, blocked: 7}` on this file at `9f2b9fb4a`, and the step it returned as `next`
+      was **this one**. So every autonomous continuation fire on the estate's largest roadmap
+      was being handed, as its next action, the one edit in the file that widens the agent's
+      own authority — behind a restraint the step itself records as *model-carried, not
+      enforced*, with `check_kernel_edit_ratified` scoping to kernel rules and `block_*.ts` and
+      therefore not reaching it. `[ ]` plus a prose refusal is not a control; `[~]` is excluded
+      from `OPEN_BOX` by construction, so the ladder can no longer offer it. After this change
+      the file scans `{open: 0, blocked: 7}`.
+      **A `blocked-by:` marker was considered and rejected**, on this file's own stated rule: the
+      id must resolve to a declared blocker, no declared blocker holds this step, and inventing
+      one would grow `open_blockers` past what `estate_growth_exempt` describes while parking a
+      judgement call in `## Blockers`.
+      **What a future session needs to close it:** a ratification artifact under
+      `agents/evidence/ratifications/` whose `reviewed_by` is neither the proposer nor the
+      implementer, per `docs/contracts/ratification-artifact.md` — or an owner sentence
+      directing the flip. Half (a) may land in the same change; it must not land alone, because
+      deleting the opt-in detection contexts while the default is still `auto` leaves autonomy
+      with no path to ever turn on.
 - [ ] <!-- blocked-by: kernel-guard-first-crossing | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question; the deny was reproduced on this tree and only a maintainer can retire it --> **1.5 `ask-when-uncertain.md`: the philosophy line yields to ownership.** *One question
       too many beats one wrong assumption* is replaced by a pointer to the ownership routing
       table, and the nine vague-request triggers are scoped to chat without a mission.
@@ -223,7 +321,7 @@ item. Phases 1-6 may run once 0.2 is chosen.
       already answers is forbidden*. Body stays under 40 lines.
       verify: `wc -l src/rules/no-cheap-questions.md` is at most 40, and
       `./scripts-run src/scripts/check_always_budget` is green.
-- [ ] **1.7 `tool-safety.md` becomes consequence-aware.** Per ADR-260 § 3 decision 12, a
+- [~] **1.7 `tool-safety.md` becomes consequence-aware.** Per ADR-260 § 3 decision 12, a
       wildcard tool grant is a finding only where the wildcard can reach a typed op.
       verify: the three wildcard-grant findings in `src/scripts/lint_skill_frontmatter_safety.ts`
       demote to advisory for grants that reach no typed op, and stay blocking for grants that do.
@@ -237,10 +335,26 @@ item. Phases 1-6 may run once 0.2 is chosen.
       tree for it to read. Demoting the findings first and deriving reachability from prose
       would be the narrowed-floor-without-a-replacement shape this roadmap's own Risk 1 names.
       Order: 4.3 first, then this step.
+      **Evidence (2026-10-01) — DEFERRED `[~]`, refused on the floor and held on the order.**
+      Both halves re-measured rather than inherited. The prerequisite is still absent: `ls
+      src/scripts/check_typed_op_grant.ts` fails at `9f2b9fb4a`, so "reaches no typed op" is
+      still underivable from code and would have to be read off prose. And the edit itself is a
+      **deliberate widening of a safety floor** — its entire content is demoting three existing
+      wildcard-grant findings in `src/scripts/lint_skill_frontmatter_safety.ts` from blocking to
+      advisory. A non-interactive agent run demoting its own tool-grant findings, with no
+      replacement gate in the tree and no owner in the loop, is refused here on
+      `security-sensitive-stop` and on `lethal-trifecta-guard`: an over-broad tool grant is the
+      standing egress leg, and this step makes that leg cheaper to hold.
+      **Glyph moved `[ ]` → `[~]` for the same reason as 1.4** — the step was reachable by
+      `scanOpenSteps` as a `next` action, and a prose halt recorded three times in three
+      sessions is evidence the prose is not stopping anything.
+      **What a future session needs:** 4.3's gate and a persisted ledger behind it (3.1), so
+      reachability is computed rather than asserted — then the demotion is a mechanical
+      consequence rather than a judgement call, and it is in bounds for an agent to make.
 
 ## Phase 2 — Settings and the roadmap carry the grant
 
-- [ ] **2.1 A `delivery:` settings block, avoiding the three names D7 forbids.** `merge`
+- [~] **2.1 A `delivery:` settings block, avoiding the three names D7 forbids.** `merge`
       (`off` | `on-green`, default `off`), `wait_for_ci` (default `true`), `pr_topology`
       (`single` | `stacked`, default `single`). Resolvable user-global and per project;
       project overrides user; roadmap frontmatter overrides both. `stacked` is never chosen by
@@ -280,7 +394,26 @@ item. Phases 1-6 may run once 0.2 is chosen.
       (`docs/guidelines/agent-infra/layered-settings.md`) and none of them is a roadmap. This
       clause is new construction, not configuration, and it is what Phase 2.2 has to build
       before this box can close.
-- [ ] **2.2 Roadmap template accepts the block.** An optional `delivery:` frontmatter block;
+      **Evidence (2026-10-01) — both residuals re-measured and confirmed; DEFERRED `[~]`.**
+      Residual (a): `grep -n delivery src/scripts/_lib/agent_settings.ts` returns **nothing**,
+      so `delivery.*` is still outside `MERGEABLE_KEYS` and a user-global value is still
+      silently dropped; the docstring's *"Adding a key requires an ADR."* is live at `:264`.
+      Residual (b) is unchanged — no roadmap layer exists in the cascade.
+      **(a) is refused rather than merely unspent, and that is a change from how it read.** The
+      key it would unlock is `delivery.merge`, the merge-authority switch. Authoring the ADR
+      that unlocks it, inside a non-interactive `process-full` run that executes under this very
+      roadmap, is the shape `evaluator-independence` refuses and the shape 4.2 below already
+      refuses for a much smaller edit. That the key is Class C — `settings:set` genuinely
+      refuses it, re-verified this run — bounds the blast radius; it does not make the agent a
+      neutral party to the record that widens where merge authority may be configured.
+      **(b) is held on order, not refused.** It is honest construction, but its only consumer
+      is `delivery.*`, so building it before (a) produces a fifth cascade layer whose sole
+      purpose is to let a roadmap file turn on merging.
+      **What a future session needs:** an owner-directed or independently ratified ADR for the
+      `MERGEABLE_KEYS` addition — remembering it is **two** edits, `src/scripts/_lib/agent_settings.ts`
+      and `src/agent-src/templates/scripts/work_engine/_lib/agent_settings.ts`, with no parity
+      gate between them.
+- [~] **2.2 Roadmap template accepts the block.** An optional `delivery:` frontmatter block;
       a `## PR plan` section required if and only if `pr_topology: stacked`.
       verify: a fixture roadmap declaring `stacked` without `## PR plan` is rejected by the
       roadmap frontmatter lint, and one declaring `single` is accepted without it.
@@ -305,6 +438,12 @@ item. Phases 1-6 may run once 0.2 is chosen.
       and a gate that demands a `## PR plan` section for a frontmatter value nothing consumes
       enforces ceremony, not a contract. The right order is consumer first, gate second, and a
       later run should build both together rather than inheriting a validator with no subject.
+      **Evidence (2026-10-01) — DEFERRED `[~]` on order, 2026-09-13's reasoning re-confirmed
+      rather than inherited.** The consumer is still absent: 2.1's residual (b) has not moved,
+      so `pr_topology` is read by no code and a gate over it would enforce ceremony. The glyph
+      moves only so `scanOpenSteps` stops offering a step whose own body says it should not be
+      taken yet. **What a future session needs:** 2.1(b)'s cascade layer first, then this gate
+      in the same change, authored as a NEW gate for the reason stated above.
 - [x] **2.3 Correct the template's absolute sentence.** *No mode lifts a safety floor* is true
       for the eleven typed ops and false for pushes and non-prod merges; the sentence is
       rewritten to say which.
@@ -327,7 +466,7 @@ item. Phases 1-6 may run once 0.2 is chosen.
 
 ## Phase 3 — Persistence, interrupts, and WARN-op evidence
 
-- [ ] **3.1 The grant ledger gains `expires` and `revoked_by`.** A follow-up push, a CI fix, a
+- [~] **3.1 The grant ledger gains `expires` and `revoked_by`.** A follow-up push, a CI fix, a
       base sync, a conflict resolution or an unrelated owner question does not write to it.
       Revocation is an owner sentence naming the op or target, or a replacement mission.
       verify: fixture G1 — a mission grant survives three CI fixes and one base sync and is
@@ -349,13 +488,47 @@ item. Phases 1-6 may run once 0.2 is chosen.
       `gate_ledger.ts`, none of which is an authority-grant ledger. So the fields exist and the
       store does not, and G1/G12 remain unwritable. **Do not re-derive the pre-#2051 reading that
       no grant vocabulary exists in code — it does now.**
-- [ ] **3.2 `user-interrupt-priority.md` gains three interrupt classes.** A clarification is
+      **Evidence (2026-10-01) — the gap is re-measured and the step is REFUSED, not merely
+      deferred for effort.** Measured at `9f2b9fb4a`: `grep -rn LedgerState src --include "*.ts"`
+      returns exactly two hits — the `export interface LedgerState` at
+      `src/scripts/_lib/mission_record.ts:87` and a parameter at `:128`. No writer, no reader,
+      no file; unchanged from 2026-09-14. `ls src/scripts/_lib/` still shows
+      `asset_delivery_ledger.ts`, `billing_grant.ts` and `gate_ledger.ts`, none of them an
+      authority-grant ledger.
+      **Why this run refuses to build the store rather than treating it as ordinary
+      construction.** A persisted authority-grant ledger an agent session can write IS a
+      self-grant: whatever 4.3's gate later reads out of it, the same session can first write
+      into it — a gate whose grant side the candidate controls is exactly the head-controlled
+      enforcement path that refused 5.2's retirement 2/2 in round 2. The hazard is not the file
+      format; it is that persistence without an owner-bound write path converts *"the owner
+      said merge it"* into *"a row exists saying so"*. Building it unasked, in the run that
+      would be its first beneficiary, is out of bounds here.
+      **What a future session needs, and it is a design decision before it is code:** a written
+      answer to *who may append to the ledger, and what makes an append owner-attributable* —
+      ideally council-reviewed, since `ratification_artifact.ts` is this tree's existing
+      precedent for a record an agent may produce and may not self-certify. With that settled
+      the store is mechanical, and 4.3 then 1.7 unblock behind it in that order.
+- [~] **3.2 `user-interrupt-priority.md` gains three interrupt classes.** A clarification is
       incorporated and the run continues; a side task pauses the mission and the mission
       auto-resumes; only stop, replace or revoke changes mission state. An interrupt never
       revokes a grant, a delivery target or a closed decision.
       verify: fixture G11 — a side task mid-run is executed and the mission resumes with the
       grant intact and no *continue?* question emitted.
-- [ ] **3.3 WARN ops execute on evidence, never on a gate.** `branch-delete`, `pr-close` (a new
+      **Evidence (2026-10-01) — DEFERRED `[~]`, refused on the control it removes.** The target
+      is not a kernel member — the nine are `agent-authority`, `ask-when-uncertain`,
+      `commit-policy`, `direct-answers`, `language-and-tone`, `no-cheap-questions`,
+      `non-destructive-by-default`, `scope-control`, `verify-before-complete`, read this run
+      from the deny's own header — so `block_kernel_rule_writes` does not hold it and the file
+      is writable. It is refused for what the edit does: `user-interrupt-priority`'s Iron Law
+      is *STOP → run new task → ASK before resume*, and auto-resume deletes the ASK. That is a
+      human control over the agent's own continuation, removed by the agent, with no
+      ratification artifact and no owner in the loop.
+      It is also unverifiable today: G11 requires a mission whose grant survives the
+      interruption, and 3.1 establishes there is no store for a grant to survive in, so the
+      fixture cannot distinguish *resumed with the grant intact* from *resumed with no grant at
+      all*. **What a future session needs:** 3.1's persisted ledger, plus an independent
+      ratification of the ASK removal.
+- [~] **3.3 WARN ops execute on evidence, never on a gate.** `branch-delete`, `pr-close` (a new
       GitOp — the classifier has no such op today) and a history rewrite on unpushed work each
       require the triple recorded in the PR body or run log: superseded, no unique work lost,
       recoverable. Signals consulted are commit age, open PRs on the path, active branches,
@@ -363,7 +536,20 @@ item. Phases 1-6 may run once 0.2 is chosen.
       routes to the ladder.
       verify: fixture G13 — a fully superseded foreign PR closes with the triple recorded;
       fixture G14 — a foreign PR carrying unique work does not close and routes to the ladder.
-- [ ] **3.4 Rewrite the halt table.** The six halts of D10 become: a typed op without a grant
+      **Evidence (2026-10-01) — DEFERRED `[~]`, refused on what it converts.** The step moves
+      `branch-delete`, `pr-close` and a history rewrite from *gated* to *executes on evidence
+      the agent itself assembles*. The evidence triple — superseded, no unique work lost,
+      recoverable — is a judgement the acting run makes about its own next action, so the
+      control it replaces is a gate and the control it installs is self-assessment.
+      `scope-control` holds branch delete and PR close behind permission today, and
+      `non-destructive-by-default` holds the history rewrite; neither is lifted by prose.
+      Two of the three are also unreachable mechanically: `pr-close` is a **new** GitOp the
+      classifier has no case for, and the classifier has only measured since ADR-254, so adding
+      the op buys a label and no enforcement. **What a future session needs:** 3.1's ledger, so
+      "recoverable" is read from a store rather than asserted by the run that benefits — and an
+      owner or independent ratification for the gate→evidence conversion itself, which is the
+      part no amount of tooling makes agent-decidable.
+- [~] **3.4 Rewrite the halt table.** The six halts of D10 become: a typed op without a grant
       → one native ask naming the object, then continue; council-off → the second-model rung →
       owner confirmation of the agent's proposal; a security-sensitive surface → evidence plus
       a council record, continue unless a typed op is reached; scope discovery → the ownership
@@ -372,16 +558,42 @@ item. Phases 1-6 may run once 0.2 is chosen.
       stays and gains *retry count reached*.
       verify: `grep -c 'retry count reached' src/domains/product-basic/roadmap/process-full/command.md`
       returns 1, and the six-halt claim in that file is replaced rather than left contradicted.
+      **Evidence (2026-10-01) — DEFERRED `[~]`, refused on self-amendment of the halts this run
+      executes under.** The step rewrites `process-full`'s halt table so that five of six halts
+      become continues. This IS a `process-full` run; rewriting the conditions under which it
+      is required to stop, during the run those conditions bind, is the `evaluator-independence`
+      shape — and it is the same objection 4.2 below records for the much smaller act of
+      deleting one banner sentence.
+      It is also not yet writable on its own terms: three of the six replacements route to
+      machinery that does not exist. *"a typed op without a grant → one native ask"* needs
+      3.1's ledger to know whether a grant exists; *"the recovery ladder"* and *"the semantic
+      resolution ladder"* are named as destinations, and a halt rewritten to point at an absent
+      ladder is a halt deleted. **What a future session needs:** 3.1, then the two ladders as
+      real targets, then an owner-directed or independently ratified edit — authored by a run
+      that is not itself governed by the table it rewrites.
 
 ## Phase 4 — Merge delivery, decided
 
-- [ ] **4.1 Activate `/pr:merge` behind the ledger.** Forge auto-merge once required checks are
+- [~] **4.1 Activate `/pr:merge` behind the ledger.** Forge auto-merge once required checks are
       green and the merge state is clean, keeping ADR-239 § 4's `observed_head` re-read and the
       superseded-PR check. A direct merge only where the forge exposes no auto-merge and
       `doctor` recorded that. Without a grant: stop at green, clean and open, and say which.
       verify: fixture G5 grant plus green → merged; G6 grant plus red → the loop continues and
       nothing merges; G7 no grant → open-green.
-- [ ] **4.2 Retire the never-merges banner.** Delete it from `process-full` and from
+      **Evidence (2026-10-01) — DEFERRED `[~]`, refused and also unbuildable.** This is the
+      largest authority in the file: it turns merge from a thing the agent never does into a
+      thing it does when a ledger row says so. The ledger does not exist (3.1, re-measured this
+      run), so every fixture is undecidable — G5 and G7 differ only in whether a grant is
+      present, and with no store there is nothing to be present or absent. Building the merge
+      path first and the grant store afterwards would produce exactly the inversion this
+      roadmap's Risk 1 names, on the single op where it matters most.
+      Independent of the order, activating merge delivery is refused for this run on the same
+      ground as 1.4 and 3.1: an authorization an agent can write is not an authorization, and
+      this run would be the first beneficiary of the mechanism it was authoring.
+      **What a future session needs:** 3.1's ledger with an owner-bound write path, then this —
+      and note `delivery.merge` ships `off` at every level and is Class C, so even a built 4.1
+      stays inert until a human hand-edits it on.
+- [~] **4.2 Retire the never-merges banner.** Delete it from `process-full` and from
       `roadmap/next`, citing ADR-268 § 3 as the ruling the original text said was missing.
       Superseded evidence files gain a one-line supersession note rather than an edit.
       verify: `grep -c 'NEVER MERGES' src/domains/product-basic/roadmap/process-full/command.md`
@@ -397,7 +609,19 @@ item. Phases 1-6 may run once 0.2 is chosen.
       banner, whose own instruction reads *"You NEVER merge."* An agent removing the sentence
       that constrains it, in the same session it is constrained by it, is the shape
       `evaluator-independence` exists to refuse. This belongs in the PR that lands 4.1.
-- [ ] **4.3 A gate that reads the ledger, not a prompt.** `check_typed_op_grant.ts` reads the
+      **Evidence (2026-10-01) — DEFERRED `[~]`. The 2026-09-13 refusal is re-confirmed by a
+      second run that is in exactly the same position, which is itself the finding.**
+      `grep -c 'NEVER MERGES' src/domains/product-basic/roadmap/process-full/command.md`
+      returns **1** at `9f2b9fb4a`, so the banner stands. Both of the original reasons hold
+      and neither has weakened: 4.1 is still unbuilt (re-measured above), so deleting the
+      banner would leave `process-full` silent about merging while nothing gates a merge —
+      strictly worse than either end state; and the run that would delete it is, again, a
+      `process-full` run executing under the sentence *"You NEVER merge."*
+      That two independent runs two and a half weeks apart reached the same refusal by the same
+      reasoning is worth recording rather than re-deriving a third time: this step is not
+      waiting on effort or on evidence. It is waiting on a **different actor** — the PR that
+      lands 4.1, authored by a session not governed by the banner it removes.
+- [~] **4.3 A gate that reads the ledger, not a prompt.** `check_typed_op_grant.ts` reads the
       ledger and the diff; a typed op — a tag push, a release-workflow edit, a protection
       change, a secret-file write — without a matching object-bound grant is red. This is the
       `enforced_by` line Phase 1.1 promised.
@@ -412,6 +636,19 @@ item. Phases 1-6 may run once 0.2 is chosen.
       not exist would produce a gate whose grant side is always absent, i.e. one that either reds
       every typed op or passes everything. Order is unchanged and now has a named first item:
       3.1's persistence, then this gate, then 1.7.
+      **Evidence (2026-10-01) — DEFERRED `[~]` on order only. This is the one step in the file
+      an agent should WANT to build, and it still cannot.** `ls src/scripts/check_typed_op_grant.ts`
+      fails at `9f2b9fb4a` — unwritten. Unlike every other deferral here this step is not
+      refused: a gate that reds a typed op lacking a grant only ever REFUSES things, so it
+      cannot produce a state weaker than today's and it is squarely in bounds for an agent to
+      author. What stops it is its own specification — it reads *"the ledger and the diff"*, and
+      3.1 establishes this run that `LedgerState` is a type with no writer, no reader and no
+      file. A gate built against an absent store either reds every typed op or passes
+      everything, and a ratchet in either state teaches the tree to ignore it.
+      **What a future session needs:** 3.1's persisted ledger and nothing else. This gate is
+      the mechanical replacement Phase 1.1's `enforced_by:` line promises and Risk 1 demands
+      exists before the floor narrows — so it should be built FIRST among the unblocked work,
+      not last.
 - [x] **4.4 Dispose of `check_no_automerge_key.ts`.** Delete it deliberately, per its own
       text, or leave it and record why. It matches `delivery.merge` either way, so this is a
       hygiene decision and not a blocker.
@@ -534,16 +771,48 @@ item. Phases 1-6 may run once 0.2 is chosen.
       **This is K7 unhonoured on purpose.** The kill register forbids keeping the deny AND the
       gate. Two mechanisms is the interim the review forced, and it is the safe direction: the
       gate only ever refuses, so it cannot produce a state weaker than today's.
-- [ ] **5.3 Reclassify three owner-reserved rows.** In `decision-revisit-gate.md`, the rows
+      **Evidence (2026-10-01) — the shipped half still ships, the refused half is still
+      refused, and the round-2 defect is untouched.** Re-measured: the deny and all three
+      bindings are present (see `kernel-guard-first-crossing`'s 2026-10-01 entry), so K7 is
+      still unhonoured on purpose and two mechanisms still stand.
+      The round-2 refusal turned on the **enforcement path** being head-controlled — the
+      workflow file deciding whether the gate runs lives in the candidate branch — and closing
+      it needs a platform-anchored required check. That is still not available:
+      `grep -rc check_platform_anchor .github/workflows/*.yml | grep -v ':0'` returns only
+      `rule-backstops.yml:1`, and that hit is the comment recording the `administration: read`
+      scope refusal. The anchor going green again on 2026-09-28 changes the anchor's verdict,
+      not the path the refusal was about — a gate wired only pre-push is a control an
+      administrator may skip, which is the 2026-09-13 council's own sharpening of the point.
+      So the retirement is exactly where round 2 left it, and this run neither attempts nor
+      proposes it.
+- [~] **5.3 Reclassify three owner-reserved rows.** In `decision-revisit-gate.md`, the rows
       *changes the project's purpose*, *governance self-amendment* and *cannot be bounded from
       available evidence* become `ratification` rather than `owner`. The four Class-1 rows stay
       owner-reserved.
       verify: the rule's own table shows exactly three `ratification` rows and the Class-1 rows
       unchanged.
+      **Evidence (2026-10-01) — DEFERRED `[~]`, REFUSED outright. This is the most direct
+      self-grant in the file and it carries no blocker, so it was reachable.** The edit moves
+      three rows of `decision-revisit-gate`'s owner-reserved table — *changes the project's
+      purpose*, *governance self-amendment*, *cannot be bounded from available evidence* — from
+      `owner` to `ratification`. `ratification` is a mechanism agent sessions run; `owner` is a
+      human. So the step transfers authority over governance self-amendment FROM the owner TO
+      the agent layer, and the row it transfers includes governance self-amendment itself.
+      `decision-revisit-gate`'s own Iron Law forecloses an agent taking it: *"Governance
+      self-amendment — reopening authority, quorum, escalation, this set"* sits in the
+      owner-reserved column, and the rule states that no grade and no council agreement moves a
+      transition out of that column. The target is not a kernel member, so
+      `block_kernel_rule_writes` does not fire and nothing in the tree would have stopped this
+      edit — which is precisely why the refusal is recorded here rather than left to the next
+      run's judgement.
+      **What a future session needs:** an owner sentence. Not a council, not a ratification
+      artifact — ADR-268 § 4's mechanism cannot authorise its own expansion into the rows that
+      define who may authorise, and an artifact produced under the current table cannot
+      ratify changing that table.
 
 ## Phase 6 — A generated disposition inventory
 
-- [ ] **6.1 Generate, never hand-maintain, the disposition.**
+- [~] **6.1 Generate, never hand-maintain, the disposition.**
       `src/scripts/report_autonomy_disposition.ts` emits one row per rule, command, skill, ADR,
       gate and hook with `authority_effect`, `control_class`, whether it contains an ask, stop,
       permission or retry, its `disposition` and its `replacement`. Sources are
@@ -553,10 +822,46 @@ item. Phases 1-6 may run once 0.2 is chosen.
       may only fall.
       verify: the report regenerates byte-identically on two consecutive runs over the same
       SHA, and the ratchet entry exists in `gate-violation-baselines.json`.
-- [ ] **6.2 A convergence lint.** A command or skill that locally asks for permission on an
+      **Evidence (2026-10-01) — DEFERRED `[~]`, and the step SPLITS. One half is in bounds and
+      one is not, which is why the box could not close either way.** Sources confirmed present
+      this run: `src/scripts/ask_block_census.ts` (769 lines) and
+      `src/scripts/probe_unblocked_ask.ts` (412) both exist, and `OWNER_ROUTING` is at
+      `src/agent-src/scripts/stub_queue.ts:33`. `ls src/scripts/report_autonomy_disposition.ts`
+      fails — unwritten.
+      **The report half is in bounds.** It is a read-only measurement, it exits 0 whatever it
+      counts, and `ask_block_census` is the tree's own precedent for a frozen pinned artefact.
+      An agent may build it.
+      **The ratchet half is not, and it is the half the verify clause requires.** Registering
+      `legacy_human_gate` as a shrink-only entry in `gate-violation-baselines.json` installs a
+      one-way governance ratchet: once a human gate over the agent is removed it may not come
+      back, enforced in CI. That is a standing downward pressure on human control over the
+      agent, registered by the agent. Risk 5 of this file's own register names the adjacent
+      failure — a miscount reds every later change — but not this one, which is that the
+      direction is set by the beneficiary.
+      **The report's own `disposition` and `replacement` columns are the same problem one layer
+      down**, and that is why this run did not build even the in-bounds half unasked: those two
+      columns are not measurements, they are recommendations naming which human gates to retire
+      and what should replace them. Emitting that list, in a run executing under this roadmap,
+      is the shape 4.2 refuses for one sentence.
+      **What a future session needs:** an owner decision splitting the step — build the
+      inventory with `authority_effect` and `control_class` (measured) and leave `disposition`
+      and `replacement` to a human pass; and either an owner-registered ratchet or no ratchet,
+      with the verify clause amended to match whichever is chosen.
+- [~] **6.2 A convergence lint.** A command or skill that locally asks for permission on an
       operation the inventory classifies as normal execution is red.
       verify: a fixture command asking permission for a branch create reds the lint; the same
       command asking for a `tag_push` does not.
+      **Evidence (2026-10-01) — DEFERRED `[~]` on order and on direction.** The lint's subject
+      is *"an operation the inventory classifies as normal execution"*, and 6.1 establishes
+      this run that the inventory does not exist — so the lint has no classifier to consult and
+      its fixture cannot be written. That alone holds it.
+      The direction is the second reason and it outlives the ordering one: this gate reds a
+      command for **asking the user permission**. A lint that makes asking a human a CI failure
+      is the strongest form of the pressure 6.1's ratchet applies, and it would be authored by
+      the party that gains from fewer asks. **What a future session needs:** 6.1's inventory
+      with a human-reviewed `disposition` column — at which point the lint enforces a human's
+      classification rather than the agent's, which is a different mechanism wearing the same
+      name.
 
 ## Kill register
 
@@ -963,6 +1268,43 @@ item. Phases 1-6 may run once 0.2 is chosen.
   argument against retiring the kernel deny in favour of CI, since the control that noticed this
   is the one that runs pre-push and not the one that runs in a workflow.
 
+- **RE-MEASURED 2026-10-01 against `origin/main` `9f2b9fb4a` and the live forge — LIMB 1 HAS BEEN
+  REPAIRED. The 2026-09-14 regression is gone, and this is the first reading in four to move
+  FORWARD.** Do not carry the *"further from resolution than it was"* verdict above as current
+  state; it described 2026-09-14 and a forge edit two weeks later corrected it.
+  **Measured, pinned so the verdict is reproducible rather than wall-clock dependent:**
+  `./scripts-run src/scripts/check_platform_anchor --as-of 2026-10-01 --files src/rules/commit-policy.md`
+  exits **0** with `platform anchor PASS_WITH_ACCEPTED_RISK for event4u-app/agent-config` over
+  applicable active ruleset `17749383`. The `thread-resolution-missing` finding that made
+  2026-09-14 red is **absent**. (Read the exit code off the unpiped command, per the 2026-09-14
+  note — piping the gate into `tail` reports `tail`'s status.)
+  **The expectation still did not change; the forge changed back.**
+  `src/config/platform-anchor.json` is untouched at `b4beff026` and still carries
+  `required_review_thread_resolution: true` at `:9`. The repair is a single ruleset edit:
+  version **`51122772`, 2026-09-28T10:20:12+02:00**, the only version written since the
+  three-edit sequence of 2026-09-14. Read from the history payloads rather than inferred —
+  `…/rulesets/17749383/history/49599840` carries `required_review_thread_resolution: false`,
+  `…/history/51122772` carries `true`. So option **(1)** of the three-way fork this entry named
+  on 2026-09-14 is what happened: the setting was put back, no governance diff, no new waiver.
+  **What has NOT moved, and neither item is agent-dischargeable:**
+  - **Limb 2 — still half-met, still the PAT.** `grep -c check_platform_anchor
+    taskfiles/ci-fast.yml` returns **2**, so the pre-push half holds.
+    `grep -rc check_platform_anchor .github/workflows/*.yml | grep -v ':0'` returns exactly one
+    line, `rule-backstops.yml:1`, and that hit is the comment at `:697` recording the
+    `administration: read` scope refusal — not a step.
+  - **Item 2 — the unrehearsed recovery path — unchanged.** Measured, not inferred:
+    `bypass_actors: []`, `current_user_can_bypass: "never"`, `enforcement: "active"`. Still the
+    state both 2026-09-10 council seats declined to close, and nothing in this run rehearses a
+    recovery.
+  **The waiver is live and not lapsed:** `arr-2026-09-10-strict-status-checks` expires
+  **2026-12-09**, 69 days from this reading. A run finding this entry after that date must
+  re-measure rather than quote the pass — an expired waiver turns `PASS_WITH_ACCEPTED_RISK`
+  back into a finding.
+  **Net: limb 1 met, limb 2 half-met, item 2 open, so the blocker stays OPEN.** Both remaining
+  items are forge actions — a human-created repository secret and a human-rehearsed recovery
+  procedure — which an agent run can re-measure and cannot advance. That is all this
+  re-measurement did.
+
 ### blocker: kernel-guard-first-crossing
 - **Status:** open
 - **Owner:** maintainer
@@ -1032,6 +1374,41 @@ item. Phases 1-6 may run once 0.2 is chosen.
   contract. Nothing was written. So this blocker is no longer resting on a grep over a manifest —
   the control was exercised and refused, which is what *"Resolved when"* is really asking about.
   The alternative limb is still unmet: no maintainer-authored kernel commit on this branch.
+- **Re-verified 2026-10-01 against `origin/main` `9f2b9fb4a`. Both limbs unmet. The deny was
+  reproduced again, and this reading is not a copy of the last one — the guard's own file has
+  changed since.** Executed, not carried forward:
+  `ls -l src/scripts/hooks/block_kernel_rule_writes.ts` **succeeds** where the clause requires
+  it to fail, at **11,345 bytes** — down from the 13,577 measured on 2026-09-13 and 2026-09-14.
+  Three commits touched it in between (`b8a7037e3`, `70bc596b1`, `c271f27a8`), the latter two
+  ratifying and correcting its docstring, so the shrink is documentation and not reach: the
+  header still enumerates all nine kernel rules and still claims the source tree plus every
+  projection.
+  `grep -c block-kernel-rule-writes src/scripts/hook_manifest.yaml` returns **5** where the
+  clause requires 0 — the concern definition at `:198`, a comment at `:502`, and three
+  `pre_tool_use` binding lists at **`:1427`, `:1459`, `:1506`**, drifted again from the
+  `:1390/:1422/:1469` of 2026-09-14. `concern_registry.ts` still registers it, now at **`:121`**
+  (was `:120`, was `:119`). Fourth consecutive reading in which the manifest moves and the
+  binding does not.
+  **The deny was exercised, not inspected.** Step 1.1's own edit was put to the `Edit` tool
+  against the kernel rule and the `pre_tool_use` dispatcher returned `block-kernel-rule-writes:
+  BLOCKED`, naming the rule, the tighten-only remediation and the contract. Nothing was
+  written — `grep -c 'this turn'` returns 1 and `git status --short` is empty.
+  **One thing this run learned that the previous three did not, and it widens the blocker
+  slightly.** The guard also fires on **Bash** calls whose command text carries a kernel-rule
+  path in a write-ish argument shape: a read-only `grep -c … src/rules/non-destructive-by-default.md`
+  was refused by the same concern. That is the guard's documented conservatism
+  (*"literal shell-argument write shapes"*) rather than a defect, but it means a future session
+  verifying 1.1 must expect its own verify command to be denied — which is worth knowing before
+  it reads the denial as a failed edit.
+  The alternative limb is unmet as before: no maintainer-authored kernel commit on this branch,
+  and an agent cannot author one — the deny's design, not a gap in it.
+  **Relationship to the sibling blocker, restated because it moved this week.**
+  `ratification-platform-anchor`'s limb 1 was repaired on the forge on 2026-09-28 and now reads
+  `PASS_WITH_ACCEPTED_RISK` again. That does **not** advance this blocker, and the Recommendation
+  below still stands: the 2026-09-10 council tied the retirement to an anchor that proves
+  independent review, and the anchor in its post-ruling shape proves no such thing — a point the
+  2026-09-13 reviewing council sharpened from the other side. A green anchor is a precondition
+  that is once more satisfied; it is not the one the seats had in mind.
 
 ## Fixtures
 
