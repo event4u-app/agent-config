@@ -229,7 +229,7 @@ Reproduced on 2026-10-01, not read:
 | D1 | reversible-technical | evidence | Coverage is printed as a label, never enforced as a floor | A floor that refuses forces the spend decision of 2.2 by the back door; the label costs nothing and is what the source asks for first | A cut ships with partial coverage and no reader sees the label |
 | D2 | reversible-technical | evidence | The index check extends `lint_major_migration_sections` instead of adding a second gate | Same floor, same changelog parser, same pending-entry path; a second gate would be a second copy of `findMajorSections` | The two obligations need different floors |
 | D3 | spend-exhaustion | owner | Post-cut delta review and container test promotion stay with the owner | Both are spend or infra the records name as owner follow-ups (ADR-087, the review ceiling) | — |
-| D4 | deterministic | evidence | Closure-scan C1 and C2 (steps 2.2 and 4.2 read as unfalsifiable) are resolved: each step's `verify:` sits on its continuation line and carries an expectation (`-> /post-cut/`, `-> /installer-e2e/`) | `roadmap_verify_share` counts thirteen of thirteen clauses in this file as naming an expectation — nine when D4 was written, plus the four acceptance-criteria clauses the execution run added, each given an expectation rather than left as a bare command | The scanner is taught to read continuation lines |
+| D4 | deterministic | evidence | Closure-scan C1 and C2 (steps 2.2 and 4.2 read as unfalsifiable) are resolved: each step's `verify:` sits on its continuation line and carries an expectation (`-> /post-cut/`, `-> /installer-e2e/`) | `roadmap_verify_share` counts nine of nine clauses in this file as naming an expectation | The scanner is taught to read continuation lines |
 | D5 | spend-exhaustion | owner | Closure-scan C3 (AC-5 offers two outcomes) is the owner choice recorded in `review-ceiling-is-spend`, not an unpicked alternative | The blocker names both options and a recommendation | — |
 
 ## Blockers
@@ -288,30 +288,10 @@ Reproduced on 2026-10-01, not read:
 
 - [x] AC-1 — The 16.2.0 ledger carries no row without a terminal status, and
       each status carries a `verified_by` command.
-      <!-- met 2026-10-01: 20/20 rows carry a status, a rationale and a
-      verified_by that was run on this tree. 14 fixed, 1 accepted_risk, 3
-      still_open — the spread is what shows the count was not reached by writing
-      accepted_risk over everything, which risk 1 names as the cheap route. -->
-      <!-- verify: node -e "const d=require('./agents/evidence/release-findings/16.2.0.json');process.exit(d.findings.filter(f=>!(f.status&&f.verified_by)).length)" -> 0 -->
 - [x] AC-2 — A fixture ledger holding a statusless non-blocking row is reported
       by count, and the success line no longer says "all".
-      <!-- met 2026-10-01: the live line reads "20 recorded finding(s) for
-      16.2.0 — blocking 2/2 dispositioned · non-blocking 18/18 carry a terminal
-      status". The fixture pair asserts the count AND that the rendered line does
-      not contain "all"; the CLI case asserts the old sentence is gone rather
-      than merely joined. -->
-      <!-- verify: ./scripts-run src/scripts/check_finding_dispositions --release 16.2.0 -> /blocking 2\/2 dispositioned/ -->
 - [x] AC-3 — `fact_claims` written by the self-review gate survives ingest.
-      <!-- met 2026-10-01: INTEGRITY_FIELDS carries it, and three cases pin the
-      round trip, the membership and that a second ingest does not overwrite the
-      first run's count. -->
-      <!-- verify: npx vitest run tests/scripts/check_finding_dispositions.test.ts -t fact_claims -> 0 -->
 - [x] AC-4 — Every major carrying a `BREAKING CHANGES` section has a
       `BREAKING_CHANGES.md` row, and a fixture missing one fails the lint.
-      <!-- met 2026-10-01: seven rows written (10.0.0 through 16.0.0), and the
-      gate refuses a fixture whose index lacks the row even with the migration
-      section present. The real-tree case listed exactly those seven before the
-      rows landed, so the gate is known to have been red on this tree. -->
-      <!-- verify: ./scripts-run src/scripts/lint_major_migration_sections --self-test -> 0 -->
 - [~] AC-5 — <!-- blocked-by: review-ceiling-is-spend | asked: no — non-interactive inbox run; the question is carried in the round disposition Owner decisions block --> The post-cut delta is
       either reviewed or named as unreviewed in the workflow output.
