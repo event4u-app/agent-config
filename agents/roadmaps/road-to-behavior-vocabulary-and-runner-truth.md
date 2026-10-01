@@ -530,7 +530,36 @@ get there.
   `road-to-executable-specification-adapter`.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-29 | reviewer: agent -->
+<!-- risk-review: v1 | reviewed: 2026-10-01 | reviewer: agent -->
+
+Re-reviewed on execution. **All three risks materialised in some form, and the
+mitigations held in two of the three** — which is a better outcome than three
+risks that never fired, because it means the register was pointing at the
+right places.
+
+- **Risk 1 fired and its mitigation held.** The vocabulary does reach a
+  discriminator that decides owed-or-not and nothing more. 1.2 bounds the
+  promise in the shipped text, and rounds 5–7 tightened that sentence three
+  times to stop it claiming a routing mechanism the change does not build.
+  What the register did not anticipate: the corpus asserts should-trigger for
+  prompts that cannot trigger today, because the production routing condition
+  is the untouched `description`. That is now stated in the corpus itself.
+- **Risk 2 fired and its mitigation held.** Detection stayed detection: the
+  behaviour axis is a separate label set, asserted disjoint from
+  `KNOWN_RUNNERS`, unreachable from `selected`, and machine-checked against
+  install vocabulary. Nothing in eight review rounds found an adoption path.
+- **Risk 3 fired and the mitigation was the weaker half.** 2.1 was resolved by
+  fixing the binding, as the register intended — but round 6 found that
+  dropping `pest-testing` left the resolved-PHP branch with NO stack-guidance
+  route, which the register framed as a binary (edit the words vs fix the
+  binding) and which was neither. The load is now resolver-conditional. A
+  risk register that names two options can miss the third.
+
+**One risk the register should have carried and did not:** that the
+completion evidence would go stale against its own branch. Six figures across
+seven rounds — a budget, a test count twice, a term list, a word count twice,
+a token passport three times. It is the dominant defect class of this change
+and no row anticipated it.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
