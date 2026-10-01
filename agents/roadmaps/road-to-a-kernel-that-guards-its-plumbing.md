@@ -362,8 +362,14 @@ deny message names its own kill switch.
       two machine classes: three passes on the reference runner (GitHub
       ubuntu-latest, one Static Checks job — the gated `--gate --via-cli` run
       plus the two ungated runs, n=40 on `pre_tool_use` and n=20 on `stop`)
-      and three local `--runs 20` passes on darwin. Registered value is the
-      maximum observed, with no rounding and no safety factor: the margin is
+      and three local `--runs 20` passes on darwin, n=20 each. The FIRST
+      registration of these rows was WRONG — the ask probe was contaminating
+      its neighbours' samples, the contaminated values were higher on all nine
+      (`block-no-verify` 1.221 against 0.921 clean, `turn-end-gate` 2.126
+      against 1.587), i.e. the error pointed toward a LOOSER bound, which is
+      the direction nothing complains about. Re-derived from uncontaminated
+      runs on both classes; the budget file records the defect beside the
+      numbers. Registered value is the maximum observed, with no rounding and no safety factor: the margin is
       the `x 3` the consumer applies, and a factored value would put a guess
       inside a number whose purpose is to be measured. Ubuntu measured slower
       on all nine, so no darwin reading sets a bound.
@@ -381,14 +387,15 @@ deny message names its own kill switch.
       finite**: before it, "observed across a warn-only window" named no
       observer, so the window could not have ended with a reading behind it —
       only with the absence of a complaint. Local run after registration:
-      `warn-only window: 9 of 9 bounded, none over` — the first reading of the
-      window, and n=1.
+      `warn-only window: 9 of 9 bounded and measured, none over`. On the
+      reference runner, three CI passes after the isolation fix report the
+      same, so the window opens with readings rather than with a promise.
 
       **The spread that is the reason the wait is real.** The ubuntu/darwin
-      p95 ratio is not one number: `turn-end-gate` 6.04x, `block-speaking-inbox-dir`
-      4.97x, `one-question-per-ask` 4.41x, down to `block-plumbing-writes`
-      1.32x. A single factor taken from any one concern would be wrong for
-      another by up to 4.5x. Both measured classes are also faster than the
+      p95-max ratio is not one number: `turn-end-gate` 3.64x,
+      `one-question-per-ask` 3.03x, `block-speaking-inbox-dir` 2.98x, down to
+      `block-kernel-rule-writes` 1.14x. A single factor taken from any one
+      concern would be wrong for another by more than 3x. Both measured classes are also faster than the
       1 vCPU container `hardware_reference.floor` documents and does not
       enforce, so `sla_ms x 3` is validated against two fast classes and
       nothing else. That is precisely Risk 1 — reached one level above the
@@ -406,7 +413,8 @@ deny message names its own kill switch.
       too and pooled into one sink. It was visible in this report's own output
       — n per `pre_tool_use` concern went 20 → 40 the moment the probe landed
       — and went unread; the registered values above were re-derived from
-      uncontaminated runs after the fix. (MEDIUM) The summary line could call
+      uncontaminated runs after the fix, and every one of them moved DOWN.
+      (MEDIUM) The summary line could call
       an incomplete window clean, because the success marker counted off the
       REGISTERED total while `slaOverruns` skips a concern it could not
       measure. Both fixed with their own cases. The remaining findings — no
