@@ -815,10 +815,71 @@ export function concernSlaPass(
     // `one-question-per-ask`'s `tools:` filter means no number of `Read` runs
     // will ever produce a sample for it.
     //
-    // It rides on `pre_tool_use` because that is the slot the concern is bound
-    // to; it is a separate pass rather than a replacement because the default
-    // shape is what every OTHER concern's number must come from.
-    benchEvent('pre_tool_use', runs, workspace, 'bundle', sinkPath, false, ASK_PROBE);
+    // IT WRITES TO ITS OWN SINK, AND THAT IS THE WHOLE POINT OF THE SPLIT.
+    // The probe dispatches the whole `pre_tool_use` event, not one concern —
+    // only the manifest's `tools:` filter isolates the target, so every
+    // UNFILTERED concern on that slot runs under the ask payload too and emits
+    // a timing. Writing both passes to one sink pools them under the same
+    // `pre_tool_use` key, and the neighbours' p95 then describes a mixture of
+    // two payload shapes while the comment above claims their number comes
+    // from the default shape alone. Measured, not hypothesised: the sample
+    // count for every `pre_tool_use` concern went from n=20 to n=40 the moment
+    // the probe landed, which is the contamination showing up in the report's
+    // own output. Caught by an independent review, 2026-10-01.
+    //
+    // `mergeProbeSamples` then takes ONLY the target concern across. The
+    // neighbours' ask-shaped samples are measured and discarded, which is
+    // correct: they are a real cost of a payload shape the gated numbers do
+    // not model.
+    const probeSink = `${sinkPath}.probe`;
+    benchEvent('pre_tool_use', runs, workspace, 'bundle', probeSink, false, ASK_PROBE);
+    mergeProbeSamples(probeSink, sinkPath, PROBE_TARGET);
+}
+
+/**
+ * The one concern the ask probe exists to measure.
+ *
+ * Named rather than inferred from the `tools:` filter: a future concern added
+ * with an overlapping filter would be measured under a payload chosen for THIS
+ * one, and silently adopting it is the contamination above wearing a different
+ * shape.
+ */
+export const PROBE_TARGET = 'one-question-per-ask';
+
+/**
+ * Append only `target`'s samples from the probe sink onto the main sink.
+ *
+ * The probe sink is read and then left in place; it is a temp-dir file the
+ * caller owns. A read failure is not fatal — the probe is an observation, and
+ * a bench that dies because one auxiliary sink was unreadable converts a
+ * measurement into an outage, which is the posture `readConcernTimings`
+ * already takes one level down.
+ */
+export function mergeProbeSamples(probeSink: string, sinkPath: string, target: string): void {
+    let text: string;
+    try {
+        text = fs.readFileSync(probeSink, 'utf-8');
+    } catch {
+        return;
+    }
+    const keep: string[] = [];
+    for (const line of text.split('\n')) {
+        const trimmed = line.trim();
+        if (trimmed === '') continue;
+        let row: { concern?: unknown };
+        try {
+            row = JSON.parse(trimmed) as typeof row;
+        } catch {
+            continue;
+        }
+        if (row.concern === target) keep.push(trimmed);
+    }
+    if (keep.length === 0) return;
+    try {
+        fs.appendFileSync(sinkPath, `${keep.join('\n')}\n`, 'utf-8');
+    } catch {
+        /* the sink is an observation aid; losing it must not fail the bench */
+    }
 }
 
 /**
@@ -848,6 +909,35 @@ export interface SlaOverrun {
     p95_us: number;
     /** `sla_ms x 3`, in microseconds — the bound step 3.3 would apply. */
     bound_us: number;
+}
+
+/**
+ * What a run can actually say about the window — three counts, never one.
+ *
+ * `registered` is how many concerns carry a bound. `usable` is how many of
+ * those this run could compare against it. The gap is what an earlier version
+ * of the summary line silently dropped: it printed "none over" off `registered`,
+ * so a run that measured none of its bounded concerns read exactly like a run
+ * that measured all of them and found nothing. That is the same
+ * unknown-collapsed-into-fine failure `slaOverruns` refuses per row, one level
+ * up at the summary.
+ */
+export interface WindowState {
+    registered: number;
+    usable: number;
+    /** Registered but not comparable this run — unmeasured or malformed. */
+    unusable: number;
+}
+
+export function windowState(rows: readonly ConcernLatencyRow[]): WindowState {
+    let registered = 0;
+    let usable = 0;
+    for (const row of rows) {
+        if (row.sla_ms === null && !row.sla_malformed) continue;
+        registered += 1;
+        if (!row.sla_malformed && row.sla_ms !== null && row.p95_us !== null) usable += 1;
+    }
+    return { registered, usable, unusable: registered - usable };
 }
 
 export function slaOverruns(rows: readonly ConcernLatencyRow[]): SlaOverrun[] {
@@ -1245,15 +1335,28 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         // is not armed anywhere and a measurement that can red a build before
         // its bar is validated is Risk 1 of the owning roadmap.
         const overruns = slaOverruns(concernRows);
-        const registered = concernRows.filter((r) => r.sla_ms !== null && !r.sla_malformed).length;
-        if (registered === 0) {
+        const w = windowState(concernRows);
+        if (w.registered === 0) {
             process.stdout.write(
                 '  ℹ️  no `concern_sla_ms` registered — the warn-only window has not started.\n',
             );
+        } else if (overruns.length === 0 && w.unusable > 0) {
+            // NOT a clean run. A registered concern this pass could not time is
+            // an unknown, and `slaOverruns` skips it — so counting the SUCCESS
+            // marker off `registered` alone prints "none over" for a window
+            // that observed nothing about `unusable` of its bounded concerns.
+            // The same unknown-is-not-fine invariant `slaOverruns` keeps per
+            // row, kept here for the summary line. Caught by an independent
+            // review, 2026-10-01.
+            process.stdout.write(
+                `  ⚠️  warn-only window INCOMPLETE: ${w.usable} of ${w.registered} bounded ` +
+                    `concerns measured this run, ${w.unusable} unmeasured or malformed — ` +
+                    'no overrun seen, and this run does not count as clean.\n',
+            );
         } else if (overruns.length === 0) {
             process.stdout.write(
-                `  ✅  warn-only window: ${registered} of ${concernRows.length} bounded, ` +
-                    'none over `sla_ms × 3` on this run.\n',
+                `  ✅  warn-only window: ${w.usable} of ${concernRows.length} bounded and ` +
+                    'measured, none over `sla_ms × 3` on this run.\n',
             );
         } else {
             for (const o of overruns) {
