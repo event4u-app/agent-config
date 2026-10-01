@@ -45,7 +45,18 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import * as yaml from 'js-yaml';
+// `yaml`, not `js-yaml`, and the choice is about the BUNDLE rather than about
+// this file. Every concern is inlined into one `dist/hooks/dispatch.js` that
+// every dispatch loads, and this import was the only `js-yaml` one left on that
+// path while six other modules — `dispatch_hook.ts` and `host_lowering.ts`
+// among them — already pulled `yaml`. Measured on 2026-10-01 from the esbuild
+// metafile: `js-yaml` contributed 95,846 bytes (6.13 %) of a 1,564,211-byte
+// bundle, paid on every hook event, for one call site. The behavioural delta is
+// normalised in `parseSettingsDoc` below — three constraints, each MEASURED
+// against the old reader rather than read off documentation — and pinned both by
+// the characterization tests written before the swap and by a differential test
+// that runs BOTH readers over one corpus and asserts the same refusal set.
+import { parseDocument as parseYamlDocument } from 'yaml';
 
 import {
     buildSettingsClassIndex,
@@ -179,10 +190,64 @@ export function leafPaths(value: unknown, prefix = ''): Map<string, string> {
  * `null` is NOT "no keys changed" — the caller treats it as an unreadable
  * corpus and refuses, because a guard that allows whatever it cannot parse is
  * bypassed by making the file unparseable for one call.
+ *
+ * THE YAML READER IS CONSTRAINED, and all three constraints exist to keep the
+ * refusal set the same as `js-yaml`'s rather than to express a preference.
+ * Each was MEASURED against the old reader over a shared corpus, which the
+ * differential test re-runs; the equivalence is not argued from documentation.
+ *
+ *   · `schema: 'core'` + `resolveKnownTags: false` — WITHOUT THIS, THE SWAP
+ *     WOULD HAVE WEAKENED THE GUARD. `js-yaml` v5's default CORE schema does
+ *     not carry the YAML 1.1 tags, so `!!timestamp`, `!!binary`, `!!set`,
+ *     `!!omap`, `!!pairs` and any unknown `!custom` tag THREW — the document
+ *     was unparseable and the guard refused. The `yaml` package resolves them
+ *     by default, so the same document would have parsed and the guard would
+ *     have gone on to allow an edit it previously refused. Found by an
+ *     independent council review (openai/codex-default, 2026-10-01) and
+ *     confirmed by running both readers: six tagged inputs, `js-yaml` throws on
+ *     all six, default `yaml` returns a value for all six.
+ *   · A WARNING IS A REFUSAL. `yaml` reports an unresolvable tag as a warning
+ *     and keeps parsing where `js-yaml` throws, so treating warnings as success
+ *     would re-open the same hole one tag at a time. `parseDocument` is used
+ *     rather than `parse` precisely to see them.
+ *   · NULLISH IS UNPARSEABLE. `js-yaml` threw on an empty document and returned
+ *     `null` for a value-less one (`~`, `null`); both landed on refusal. `yaml`
+ *     returns `null` for all three instead of throwing on the first, so without
+ *     this collapse an EMPTIED settings file would arrive at the caller as a
+ *     parsed document with no keys — the one shape that turns "I cannot read
+ *     this" into "nothing changed".
+ *
+ *   · `merge: false` — PINNED, NOT FIXING AN OBSERVED DIFFERENCE. The `yaml`
+ *     package documents `merge` as defaulting to the document's YAML VERSION:
+ *     true for 1.1, false for 1.2. A second review round (openai/codex-default)
+ *     flagged that a `%YAML 1.1` directive could therefore re-enable merge
+ *     resolution past the schema pin, which would expose keys the old reader
+ *     left nested under a literal `<<`. Measured, and it does NOT reproduce
+ *     here — under `schema: 'core'` a `%YAML 1.1` document reads
+ *     `{"personal":{"<<":{…}}}` identically with and without this option, same
+ *     as `js-yaml`. It is set anyway because the cost is a word and the finding
+ *     named a real documented coupling between two options: a future default
+ *     cannot flip it silently. An option set without an observed failure behind
+ *     it is said so rather than implied.
+ *
+ * A merge key (`<<: *anchor`) was raised as a difference by the other seat and
+ * is NOT one: both readers leave `<<` literal at these versions, with and
+ * without a version directive. The same differential corpus pins both forms, so
+ * the question is settled by a reading rather than re-litigated from
+ * documentation next time.
  */
 export function parseSettingsDoc(text: string, rel: string): unknown | null {
+    if (rel.endsWith('.json')) {
+        try {
+            return (JSON.parse(text) as unknown) ?? null;
+        } catch {
+            return null;
+        }
+    }
     try {
-        return rel.endsWith('.json') ? (JSON.parse(text) as unknown) : yaml.load(text);
+        const doc = parseYamlDocument(text, { schema: 'core', resolveKnownTags: false, merge: false });
+        if (doc.errors.length > 0 || doc.warnings.length > 0) return null;
+        return (doc.toJS() as unknown) ?? null;
     } catch {
         return null;
     }

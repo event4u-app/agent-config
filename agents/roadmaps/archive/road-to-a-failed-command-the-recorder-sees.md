@@ -49,7 +49,7 @@ record at all.
 
 ## Phase 1 — Observe which event a failed call fires
 
-- [ ] **1.1 Capture the raw envelope of a failing Bash call.** In a scratch
+- [x] **1.1 Capture the raw envelope of a failing Bash call.** In a scratch
       project outside this repository, register a one-line hook on both
       `PostToolUse` and `PostToolUseFailure` that appends the event name and the
       envelope's keys to a file under `agents/runtime/tmp/`, run one session that
@@ -57,7 +57,7 @@ record at all.
       version (`claude --version`), date and both envelopes in
       `agents/evidence/analysis/failed-tool-call-event-<date>.md`.
       verify: `grep -c 'PostToolUse' agents/evidence/analysis/failed-tool-call-event-*.md` -> /^[1-9]/
-- [ ] **1.2 Pin the observed shape as a fixture.** Add the captured failing
+- [x] **1.2 Pin the observed shape as a fixture.** Add the captured failing
       envelope, keys only and secrets-free, under
       `tests/fixtures/hook-envelopes/claude-bash-failure.json`, and a test that
       feeds it to `before_complete_hook.ts` and asserts the record it writes. The
@@ -66,7 +66,7 @@ record at all.
 
 ## Phase 2 — Bind the recorder where the failure arrives
 
-- [ ] **2.1 Route the failure event to the existing concern list.** If 1.1
+- [x] **2.1 Route the failure event to the existing concern list.** If 1.1
       shows `PostToolUseFailure`, lower it onto the same canonical slot the
       recorder already uses rather than adding a canonical event: a
       `native_event_aliases` row in `hook_manifest.yaml:1598` plus the
@@ -76,20 +76,29 @@ record at all.
       council. If 1.1 shows the failure on `PostToolUse` after all, this step
       becomes finding why `_cap_runs` dropped it, with its own failing test.
       verify: `npx vitest run tests/hooks/before_complete_failure_envelope.test.ts` -> 0
-- [ ] **2.2 Prove the record end to end.** Re-run 1.1's failing session against
+- [x] **2.2 Prove the record end to end.** Re-run 1.1's failing session against
       the bound tree and confirm the session's witness file carries one record
       with `exit_code` non-zero and `exit_source` set.
-      verify: `grep -c '"exit_code":[1-9]' agents/state/verify-before-complete/*.json` -> /^[1-9]/
+      verify: `grep -c '"exit_code": [1-9]' agents/state/verify-before-complete/*.json` -> /^[1-9]/
+      <!-- The pattern as first written omitted the space the writer emits
+           (`"exit_code": 2`, pretty-printed), so it could not match a correct
+           record. Corrected to the writer's actual serialization — the same
+           assertion, not a weaker one. -->
+      run: one `npx tsc --noEmit <missing file>` session against this tree with
+      `hooks/hooks.json` as the bound settings. The witness carried exactly ONE
+      record: `exit_code: 2`, `exit_source: "error_prefix"`, `interrupted: false`
+      — which also settles Risk 2 end to end, since only one of the two events
+      fired for that call.
 
 ## Phase 3 — How often a verification leaves no usable record
 
-- [ ] **3.1 A read-only instrument-gap reporter.** Per host, over the witness
+- [x] **3.1 A read-only instrument-gap reporter.** Per host, over the witness
       files present: verification candidates seen → records written →
       `exit_code` available → verdict class (`PASS_EVIDENCE_OK`, `FAIL_EVIDENCE`,
       `INVALID_RUN` by reason). It prints the `INSTRUMENT_GAP_REASONS` share and
       refuses on an empty scan (`assertScanned`). Report-only — it gates nothing.
       verify: `npx vitest run tests/scripts/report_verification_record_coverage.test.ts` -> 0
-- [ ] **3.2 Publish one reading.** Run it on this checkout after 2.2 and write
+- [x] **3.2 Publish one reading.** Run it on this checkout after 2.2 and write
       the per-host table to `agents/evidence/analysis/verification-record-coverage-<date>.md`,
       naming hosts with zero records as unobserved, never as clean.
       verify: `grep -c 'instrument_gap' agents/evidence/analysis/verification-record-coverage-*.md` -> /^[1-9]/
@@ -118,6 +127,10 @@ record at all.
 | D2 | reversible-technical | agent | Alias onto the existing slot rather than add a canonical event | One slot, one concern list, no contract change to the canonical event set | The failure envelope carries fields the recorder cannot read through the same parser |
 | D3 | deterministic | evidence | Closure-scan C1 (contradictory) is the related roadmap's slug, not a contradiction in this plan | The match is the word in `road-to-host-claims-the-tree-contradicts` | — |
 | D4 | deterministic | evidence | Closure-scan C2 (step 3.2 read as a typed operation) is a tracked evidence file written inside this repository, not an external publish; no owner-reserved operation is involved | The step writes `agents/evidence/analysis/…` only | The step is changed to post outside the repository |
+| D5 | reversible-technical | evidence | D2's `revisit-if` fired and the answer is still the aliased slot: extend `_extract_exit_reading` in place rather than add a second parser or a canonical event | The observed failure envelope carries the status as a top-level `error` string (`Exit code N`, no `Error:` prefix) and spells the interrupt flag `is_interrupt`, none of which the scanned keys reach. Both are additive readings inside the one function; routing alone would have recorded `exit_code: null`, i.e. an instrument gap shaped like a fix | A host appears whose failure fields cannot be read without branching on the event name |
+| D6 | reversible-technical | agent | Iterate `native_event_aliases` when building the Claude hook matrix instead of inverting it | The inversion kept one native per canonical event, so binding `PostToolUseFailure` would silently have UNBOUND `PostToolUse` — a routing fix that is a routing regression, invisible to every pre-existing test | A host needs a per-native concern list rather than one list per canonical slot |
+| D7 | reversible-technical | agent | Record `platform` on the witness file | Phase 3 asks a per-host question and the witness answered it nowhere; without it every file reads `unattributed` and a host with no data is indistinguishable from a host with no gaps | The dispatcher stops putting a platform on the envelope |
+| D8 | reversible-technical | evidence | The alias is claude-only, not mirrored onto cowork | The pair was observed on claude and on no other host; an alias row asserting an unobserved host behaviour is the defect class the sibling roadmap exists to remove. Phase 3 reports cowork as `unobserved` rather than as covered | Cowork is probed and shows the same split |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-01 | reviewer: claude/host -->
@@ -130,10 +143,10 @@ record at all.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The native event a failed Bash call fires on claude is recorded from
+- [x] AC-1 — The native event a failed Bash call fires on claude is recorded from
       an observed session, with host version and date.
-- [ ] AC-2 — A failing verification command on claude leaves a run record with a
+- [x] AC-2 — A failing verification command on claude leaves a run record with a
       non-zero `exit_code`, and the fixture test for it is seen red before the
       binding and green after.
-- [ ] AC-3 — A per-host instrument-gap reading exists and names unobserved hosts
+- [x] AC-3 — A per-host instrument-gap reading exists and names unobserved hosts
       as unobserved.

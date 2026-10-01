@@ -42,6 +42,7 @@ import {
     strip_source_prefix,
 } from './_lib/agent_src.js';
 import { rewriteProjectedBodyLinks } from './_lib/guidelines_lane.js';
+import { render_windsurfrules, strip_frontmatter } from './_lib/windsurf_render.js';
 // Import-safety note: `project_thin_rules` guards its CLI entry
 // (`_isCliEntry()` before `process.exit(main())`), so importing it here is
 // side-effect-free. condense.ts is bundled into the installer, where a bare
@@ -778,15 +779,9 @@ function _filter_tool_dirs(mapping: Record<string, string>): Record<string, stri
     return out;
 }
 
-export function strip_frontmatter(content: string): string {
-    if (content.startsWith('---')) {
-        const end = content.indexOf('---', 3);
-        if (end !== -1) {
-            content = _lstripNewlines(content.slice(end + 3));
-        }
-    }
-    return content;
-}
+// Moved to `_lib/windsurf_render.ts` beside its one remaining caller here and
+// the census that renders through it; re-exported so every importer's path holds.
+export { strip_frontmatter };
 
 // ── Path rewriter (P1 of road-to-path-fixes.md) ───────────────────────────
 // Kept byte-identical to check_condensation.ts::_rewritePaths (the two MUST
@@ -1229,14 +1224,8 @@ export function generate_windsurfrules(): number {
     // on `.windsurf/rules`. Without this line removing the per-run filter regressed
     // it 13 → 113: the per-run filter had been covering it by accident.
     const rules = partition_rules_for_dir('.windsurf/rules', _scoped_rule_basenames());
-    const parts = ['# Auto-generated from dist/agent-src/rules/ — do not edit directly\n'];
-    for (const rule of rules) {
-        const p = path.join(MODULE_STATE.RULES_SOURCE, rule);
-        const content = strip_frontmatter(_readText(p));
-        parts.push(`---\n\n${_strip(content)}\n`);
-    }
     const output = path.join(MODULE_STATE.PROJECT_ROOT, '.windsurfrules');
-    _writeText(output, parts.join('\n') + '\n');
+    _writeText(output, render_windsurfrules(MODULE_STATE.RULES_SOURCE, rules));
     info(`  ✅  Generated .windsurfrules (${rules.length} rules)`);
     return rules.length;
 }

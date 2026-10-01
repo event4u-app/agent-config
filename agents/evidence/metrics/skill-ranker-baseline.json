@@ -1,39 +1,119 @@
 {
-  "schema": 1,
-  "_comment": "Phase 0.3 of road-to-skill-delivery-over-mcp \u2014 the incumbent ranker's hit rate, which did not exist before. Regenerate: ./scripts-run src/scripts/measure_skill_ranker_baseline --ranker <label> --commit <sha>. Phase 3.1 records a keyword-v2 row beside this one and is kept only if top3 does not regress.",
+  "schema": 3,
+  "_comment": "The incumbent skill ranker's measured hit rate. Regenerate: ./scripts-run src/scripts/measure_skill_ranker_baseline --corpus routing-matrix --commit <sha>. The top-level top1/top3 are the POWERED reading over the 390-row labelled routing matrix. The 26-prompt row under `underpowered_rows` is kept because deleting it would lose the record of what was published, not because it may be quoted — it may not.",
   "ranker": "keyword-v1",
-  "measured_at": "2026-08-23",
-  "commit": "53ac0adb4",
-  "commit_pinned_by_roadmap": "d1861bad",
+  "measured_at": "2026-10-01",
+  "commit": "a03f60c46",
   "skills_dir": "src/skills",
-  "skills_indexed": 294,
-  "top1": 0.615,
-  "top3": 0.769,
-  "corpus_lines": 499,
-  "corpus_lines_claimed_by_roadmap": 496,
-  "accuracy": {
-    "corpus_prompts": 26,
-    "top1": 0.615,
-    "top3": 0.769,
-    "misses": [
-      "canonical-01",
-      "canonical-02",
-      "canonical-05",
-      "canonical-06",
-      "content-01",
-      "content-02"
-    ],
-    "denominator_note": "tests/eval/corpus-dev.yaml + corpus-non-dev.yaml \u2014 the only expected-skill ground truth in this tree. Small; a single prompt moves each rate by ~4 points."
+  "skills_indexed": 299,
+  "top1": 0.208,
+  "top3": 0.338,
+  "headline": {
+    "corpus": "routing-matrix",
+    "slice": "all",
+    "corpus_prompts": 390,
+    "top1": 0.208,
+    "top1_ci95": {
+      "lower": 0.17,
+      "upper": 0.251
+    },
+    "top3": 0.338,
+    "top3_ci95": {
+      "lower": 0.293,
+      "upper": 0.387
+    },
+    "verdict": "measured",
+    "min_powered_n": 100,
+    "denominator_note": "tests/eval/routing-matrix/ rows whose expected_skills list is NON-EMPTY. A row with an empty list is a deliberate \"no skill expectation\" and is excluded from the denominator — never counted as a miss."
   },
+  "holdout": {
+    "_comment": "The partition every Phase-2 lift claim is read on (sliceForId in measure_skill_ranker_baseline.ts: FNV-1a of the case id, modulus 5). The sealed arm is UNDERPOWERED at 75 rows, and that is a property of the instrument rather than of any ranker: see the null below.",
+    "sealed_modulus": 5,
+    "sizes": {
+      "all": 390,
+      "tuning": 315,
+      "sealed": 75,
+      "sealed_modulus": 5
+    },
+    "tuning": {
+      "corpus_prompts": 315,
+      "top1": 0.219,
+      "top1_ci95": {
+        "lower": 0.177,
+        "upper": 0.268
+      },
+      "top3": 0.343,
+      "top3_ci95": {
+        "lower": 0.293,
+        "upper": 0.397
+      },
+      "verdict": "measured"
+    },
+    "sealed": {
+      "corpus_prompts": 75,
+      "top1": 0.16,
+      "top1_ci95": {
+        "lower": 0.094,
+        "upper": 0.259
+      },
+      "top3": 0.32,
+      "top3_ci95": {
+        "lower": 0.225,
+        "upper": 0.432
+      },
+      "verdict": "underpowered"
+    }
+  },
+  "underpowered_rows": [
+    {
+      "corpus": "corpus-dev + corpus-non-dev",
+      "corpus_prompts": 26,
+      "top1": 0.615,
+      "top1_ci95": {
+        "lower": 0.425,
+        "upper": 0.776
+      },
+      "top3": 0.769,
+      "top3_ci95": {
+        "lower": 0.579,
+        "upper": 0.89
+      },
+      "verdict": "underpowered",
+      "measured_at": "2026-08-23",
+      "commit": "53ac0adb4",
+      "may_not_be_quoted": "This is the 0.615 figure published as the ranker precision before a powered corpus existed. Its 95 % interval is 35 points wide and does not overlap the powered reading in either column. It is retained as a record, not as a figure."
+    }
+  ],
   "matrix_coverage": {
-    "corpus_prompts": 499,
-    "prompts_with_any_result": 495,
-    "mean_top_score": 19.98,
-    "note": "tests/eval/routing-matrix/ is labelled with the expected RULE, never a skill, so this arm carries no accuracy \u2014 only whether the ranker answers at all and how confident its top answer is. Its size is measured here, not assumed: the roadmap and five other sites still publish 496."
+    "corpus_prompts": 588,
+    "labelled_prompts": 390,
+    "unlabelled_prompts": 198,
+    "missing_label_key": 0,
+    "prompts_with_any_result": 583,
+    "mean_top_score": 19.89,
+    "note": "Coverage over EVERY matrix case, labelled or not: whether the ranker answers at all and how confident its top answer is. Accuracy over the labelled subset is the `accuracy` arm under `--corpus routing-matrix`. Size is measured here, never asserted: 496 and 499 are both published elsewhere and both stale."
   },
+  "history": [
+    {
+      "date": "2026-10-01",
+      "ranker": "keyword-v1",
+      "corpus": "routing-matrix",
+      "corpus_prompts": 390,
+      "top1": 0.208,
+      "top1_ci95": {
+        "lower": 0.17,
+        "upper": 0.251
+      },
+      "top3": 0.338,
+      "top3_ci95": {
+        "lower": 0.293,
+        "upper": 0.387
+      },
+      "default_changed": false,
+      "note": "Phase 3.1 recorded a NULL: no candidate configuration cleared the promotion bar, so the default is unchanged. The bar is the sealed slice's top-1 lower bound exceeding the baseline's upper bound (0.251); the best candidate (`idf`) reached a sealed lower bound of 0.104. See skill-ranker-confusion-2026-10-01.md for the configurations and the classes they could not separate."
+    }
+  ],
   "premise_defects_found_by_this_step": [
-    "The 496-line routing matrix is labelled with the expected RULE, never an expected skill, so no top-1/top-3 accuracy can be computed over it. top1/top3 above are measured against tests/eval/corpus-{dev,non-dev}.yaml, the only expected-skill ground truth in the tree (26 prompts).",
-    "496 is stale: the matrix holds 499 prompts at this commit. The figure is still published at src/scripts/hooks/skill_route_hook.ts:24 and :173, src/scripts/hook_manifest.yaml:618, src/config/hook-token-budget.json:71, and in this roadmap. Correcting those six sites is not in this roadmap's scope; the drift is recorded here so the number is not re-derived from 496 again.",
-    "The measurement runs against src/skills (292 SKILL.md). score_skill_relevance's own DEFAULT_SKILLS_DIR is .agent-src.uncondensed/skills, which is EMPTY in a normal checkout \u2014 a caller that takes the default silently ranks nothing."
+    "The 26-prompt top-1 of 0.615 was published as this ranker’s precision in this file’s own top-level `top1` until 2026-10-01, while the precision report that produced it already said it may not be quoted. A headline figure a sibling artifact forbids quoting is a defect in the file, not in the reader."
   ]
 }

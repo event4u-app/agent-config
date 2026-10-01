@@ -214,6 +214,13 @@ export const OUTPUT_KEYS: readonly string[] = [
   "toolResponse",
   "tool_result",
   "toolUseResult",
+  // The failure event's result body. A FAILING command on claude carries its
+  // stdout and stderr here and carries no `tool_response` at all, so without
+  // this line a failed `curl` of a hostile page would reach the model with
+  // nothing scanned — the one direction where the output is most likely to be
+  // attacker-shaped. Caught by this concern's own coverage test, which pins
+  // OUTPUT_KEYS as a superset of what the dispatcher serves.
+  "error",
   // Generic spellings accepted since this concern shipped.
   "output",
   "result",

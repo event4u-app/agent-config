@@ -1608,6 +1608,18 @@ native_event_aliases:
     Stop:              stop
     UserPromptSubmit:  user_prompt_submit
     PostToolUse:       post_tool_use
+    # A FAILING tool call does not fire `PostToolUse` at all — it fires
+    # `PostToolUseFailure`, which until now was bound to nothing, so the
+    # verification recorder never saw a red command and `verification_runs`
+    # could only ever hold passes. Observed on 2.1.286, three one-shot sessions,
+    # exactly one of the two events per call — not inferred from the event list.
+    # Lowered onto the SAME canonical slot rather than given a canonical event
+    # of its own: one slot, one concern list, no change to the event vocabulary.
+    # Deliberately claude-only. Cowork is Claude Code underneath and the rows
+    # below duplicate this vocabulary, but this pair was measured on claude and
+    # on no other host, and an alias row asserting a host behaviour nobody
+    # observed is the defect class this suite keeps finding in its own tables.
+    PostToolUseFailure: post_tool_use
     PreToolUse:        pre_tool_use
     PreCompact:        pre_compact
     # road-to-subagent-lifecycle-integrity Phase 1 Step 1. Both tokens were
