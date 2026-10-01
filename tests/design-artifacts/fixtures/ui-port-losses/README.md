@@ -37,7 +37,7 @@ release-notes panel, no project or company material.
 | id | Loss | The gate that should catch it | Why it does not today |
 |---|---|---|---|
 | S-a | The declared interaction `tab` is in no bucket. Its only match is inside the unrelated entry `table sort order — honoured`. | `coverage_gaps` (`apply.ts:190`) | Matching is substring containment, and `"table sort order".includes("tab")` is true. |
-| S-b | All five declared items sit in `flagged`. The port carried nothing. | the `run` outcome (`apply.ts:129`) | `coverage_gaps` is empty, and emptiness is the whole of what the outcome reads. |
+| S-b | All five declared items sit in `flagged`. The port carried nothing. | the `run` outcome — locate `_handed_back_line` and `carried_nothing` by name, never by line number | `coverage_gaps` is empty, and emptiness is the whole of what the outcome reads. |
 | S-c | A written file contains `Lorem ipsum`; `ui_apply.rendered` does not. | the placeholder scan (`apply.ts:268`) | The scan reads `envelope['rendered']` — the porter's report — not the files. |
 
 And one arm that is **not** a loss:
@@ -84,32 +84,36 @@ numbers are comparable rather than merely adjacent.
 |---|---|---|---|
 | Before, registered 2026-09-29 | `npx tsx tests/design-artifacts/fixtures/ui-port-losses/probe.ts` | `caught 0 of 3` | `0 false red(s), outcome=success` |
 | After, measured 2026-09-30 | `npx tsx tests/design-artifacts/fixtures/ui-port-losses/probe.ts` | `caught 3 of 3` | `0 false red(s), outcome=success` |
+| After the 3.2 flip, measured 2026-10-01 | `npx tsx tests/design-artifacts/fixtures/ui-port-losses/probe.ts` | `caught 3 of 3` | `0 false red(s), outcome=success` |
 
 ```
 $ npx tsx tests/design-artifacts/fixtures/ui-port-losses/probe.ts
 S-a  CATCH  outcome=blocked
-S-b  CATCH  outcome=success
+S-b  CATCH  outcome=blocked
 S-c  CATCH  outcome=blocked
 caught 3 of 3
 faithful arm: 0 false red(s), outcome=success
 ```
 
 **0 → 3 of 3, with zero false reds on the faithful arm.** Each planted loss now
-reaches the operator: S-a and S-c as a `blocked` halt naming the item and the
-file, S-b as the shadow line on an otherwise successful port.
+reaches the operator as a `blocked` halt: S-a naming the unaccounted item, S-c
+naming the written file, S-b naming every item the port handed back.
 
-**S-b's row is measured at the shadow state, and the number is invariant under
-the pending flip.** Phase 3.2 — the flip from `SUCCESS` to a non-success
-outcome — has not landed; it waits on a release carrying 3.1. That does not
-make the after-number provisional, and the claim is measured rather than
-argued: the flip was simulated locally (`_handed_back_line` non-null returning
-`Outcome.PARTIAL` with a question) and the identical command was re-run. The
-count and the false-red count are unchanged — `caught 3 of 3`,
-`0 false red(s)` — and the only difference anywhere in the output is S-b's
-outcome column reading `partial` instead of `success`. The probe asks whether
-the loss reached the operator, not which value carried it, so the flip moves
-the column and not the score. The simulation was reverted; `apply.ts` at this
-commit is the shadow implementation.
+**S-b's row moved off `success` on 2026-10-01, and the prediction made at the
+shadow state held.** Phase 3.2's flip has now landed — `carried_nothing` returns
+a `BLOCKED` halt from `_halt_carried_nothing` rather than a note on a successful
+outcome. The 2026-09-30 row above was measured at the shadow state and recorded
+a prediction: that the count and the false-red count are invariant under the
+flip and only S-b's outcome column moves. That prediction is now a measurement
+of the real implementation rather than of a local simulation, and it is
+confirmed — `caught 3 of 3` and `0 false red(s)` are unchanged across all three
+rows, and the one difference between the second and third rows is S-b reading
+`blocked` instead of `success`. The probe asks whether the loss reached the
+operator, not which value carried it, so the flip moves the column and not the
+score. (The simulation predicted `partial`; the landed flip uses `blocked`,
+which is the outcome the two sibling halts in the same file already return. The
+probe's predicates are value-agnostic, so the substitution changes nothing it
+measures.)
 
 ## The faithful arm's verdict — a null would have been an outcome
 
@@ -121,10 +125,11 @@ does not flip.*
 changes** — `0 false red(s), outcome=success`, identical to the before-run's
 `0 false red(s), outcome=success`, and identical again under the simulated
 3.2 flip. No red appeared that the before-run did not have, on any of the three
-measurements. The gates therefore tightened on the three planted losses without
+measurements, and a fourth measurement on 2026-10-01 against the landed flip
+agrees. The gates therefore tightened on the three planted losses without
 tightening on the arm that has nothing planted in it, which is the whole of
-what this arm was built to detect. Phase 3.2 is clear to flip on this criterion
-and is held only by its release window.
+what this arm was built to detect. Phase 3.2 was clear to flip on this
+criterion and has now flipped, its release window having opened with `16.2.0`.
 
 Stated so it cannot be read as a stronger result than it is: this is one
 faithful arm, not a false-positive rate. Risk 4 in the roadmap's register names
