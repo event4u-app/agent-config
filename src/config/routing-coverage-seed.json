@@ -10,11 +10,11 @@
     },
     "seed": {
         "rules": 0.9623,
-        "skills": 0.3411
+        "skills": 0.3445
     },
     "seed_provenance": {
         "rules": "102 covered of 106 routed rules on 2026-09-13; was 101 of 105 on 2026-09-08 and 94 of 105 (tier-1 21/24, tier-2 73/81) on 2026-08-25.",
-        "skills": "102 of 299 skills carry evals/triggers.json on 2026-09-30; was 101 on 2026-09-19 and 100 on 2026-08-30.",
+        "skills": "103 of 299 skills carry evals/triggers.json on 2026-10-01; was 102 on 2026-09-30, 101 on 2026-09-19 and 100 on 2026-08-30.",
         "finding": "The gap between the two seeds IS the roadmap defect D1, quantified. The rules surface is ~90% covered by a deterministic corpus that can fail a PR; the skills surface -- the one production routes on -- is 25%, covered only by a harness that is advisory only, never gating (rule_trigger_eval.ts:4)."
     },
     "history": [
@@ -66,6 +66,13 @@
             "from": 0.3378,
             "to": 0.3411,
             "reason": "road-to-a-component-taxonomy-we-follow-but-never-force authored one corpus file for `ui-component-architect` (101 -> 102 of 299). Not a sought gain: the branch edits that skill's placement section, and check_routing_coverage requires a corpus for every skill a diff touches, so the file is the gate's own remedy rather than a coverage push. Five should-trigger cases, one per shape the skill decides, and five near misses whose vocabulary overlaps hardest -- styling an existing component, inventorying what the project owns (existing-ui-audit, which runs first and feeds this one), a backend composition question, a prop rename, and general React knowledge with no component to shape. The seed rises so the gain cannot be given back silently; it may never be LOWERED. The two published measurements the 2026-09-19 entry names -- routing-body-signal-verdict.json and the measure_delivery_sets record -- are re-taken in the same change, for the reason that entry gives: the trigger corpus is their input."
+        },
+        {
+            "date": "2026-10-01",
+            "scope": "skills",
+            "from": 0.3411,
+            "to": 0.3445,
+            "reason": "road-to-corpus-refresh-cadence-shape step 1.2a authored one corpus file for `accessibility-auditor` (102 -> 103 of 299). Same shape as the 2026-09-30 entry and for the same reason: that step re-checked the skill's grounding corpus against WCAG 2.2 and the APG, which edited src/skills/accessibility-auditor/data/, and check_routing_coverage requires a corpus for every skill a diff touches. Ten cases -- five exemplars including the German phrasing the skill's own description names, three near-misses taken from the three neighbours SKILL.md points at by name (tailwind-engineer for token-level contrast, ui-component-architect for landmarks and heading order, existing-ui-audit for component inventory), and two counterexamples, one guarding the 'accessible' homonym. The seed rises so the gain cannot be given back silently; it may never be LOWERED. The two published measurements the 2026-09-19 entry names are re-taken in the same change, and so is the trigger-corpus holdout pin -- which this growth moves for the first time on the HOLDOUT side (18 -> 19), because sha256('accessibility-auditor')[0:2] is 0x2f = 47, below the ceiling of 51. That is recorded in the holdout artefact with its ordering claim explicitly scoped to the 18 originally sealed rows."
         }
     ]
 }

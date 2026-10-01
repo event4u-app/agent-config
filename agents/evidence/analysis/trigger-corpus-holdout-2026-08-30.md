@@ -15,8 +15,9 @@ a claim made here.
 ## The frozen set
 
 Every `src/skills/*/evals/triggers.json` present on this tree at the moment of
-freezing: **102 files**, 18 holdout and 84 train (100 at the freeze; see
-§ Growth 2026-09-19 and § Growth 2026-09-30).
+freezing: **103 files**, 19 holdout and 84 train (100 at the freeze; see
+§ Growth 2026-09-19, § Growth 2026-09-30 and § Growth 2026-10-01 — the last of
+which is the first growth on the **holdout** side and is scoped accordingly).
 
 ## The partition rule — deterministic, name-derived, no discretion
 
@@ -44,7 +45,7 @@ prevent.
 ## The set hash
 
 ```
-SET-SHA256  034f791e368565b08d4cbd7498ffa7d32b41b5e4c513ed948df0e9933addf90b
+SET-SHA256  7445c18aa73c966cbb3fd91318747af0f3454351cea4ff5137852d09148965ba
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for all
@@ -117,7 +118,7 @@ Because the bytes have not moved since a commit that precedes the first proposer
 commit, the re-pin changes which number is written down and changes nothing about
 what the number certifies.
 
-## Holdout — 18 files, sealed
+## Holdout — 19 files, sealed
 
 Sealed means: **no proposer, curator, or analyzer authored in Phase 5 may read
 these files, and no candidate may be selected against them.** Phase 4's cascade
@@ -126,6 +127,7 @@ open and which this file does not settle.
 
 | Skill | sha256 of `evals/triggers.json` |
 |---|---|
+| `accessibility-auditor` | `174b5e85f7e79000a12942718e0e99cb81ed5fcd19130dddf5256beb1fb89240` |
 | `analysis-autonomous-mode` | `b2498906765699c666097683f819e0bff816ff3e94b5bb684564e5b19e5e75c7` |
 | `authz-review` | `2dffacd346e8d656affa0af1ea56c7661e7b0c99e3a8ac2c92be50981b2c970c` |
 | `brand` | `43abaf7937a73ea8b041e18d977ce6a080b2226f6c0f49bb55cf59bc4545df36` |
@@ -318,6 +320,62 @@ corpus grows on either side and cannot on its own distinguish "grew on train"
 from "edited a frozen file". The per-row diff above is what distinguishes them,
 which is why this section carries it rather than only the new number. That
 section said a future growth owes the same check; this is that check.
+
+## Growth 2026-10-01 — the corpus gained one HOLDOUT file, and the seal's claim is now scoped
+
+```
+THE HOLDOUT GREW FOR THE FIRST TIME: 18 -> 19.
+ALL 18 ORIGINALLY SEALED ROWS ARE BYTE-IDENTICAL. THE RULE IS UNCHANGED.
+NO PRE-EXISTING HOLDOUT RESULT IS VOIDED, BECAUSE NO PRE-EXISTING HOLDOUT FILE WAS TOUCHED.
+THE 19TH ROW CARRIES NO PRE-DATING CLAIM. IT WAS SEALED TODAY, NOT BEFORE PHASE 5.
+```
+
+**What changed.** `road-to-corpus-refresh-cadence-shape` step 1.2a re-checked
+the `accessibility-auditor` grounding corpus against WCAG 2.2 and the APG. That
+edited `src/skills/accessibility-auditor/data/`, which put the skill into
+`check_routing_coverage`'s touched-skill scope, so
+`src/skills/accessibility-auditor/evals/triggers.json` was authored as that
+gate's remedy — ten cases, not a coverage push. The corpus is **103 files, 19
+holdout and 84 train**, and `SET-SHA256` is re-pinned to `7445c18a…` from
+`034f791e…`.
+
+**Recorded rather than re-pinned quietly**, per § The partition rule: *"A change
+is legal; a silent change is the compromise this step exists to prevent."*
+
+**Why this growth is not like the previous two.** 2026-09-19 and 2026-09-30 both
+landed on the `train` side, so each could say the holdout membership was
+unchanged. This one cannot: `sha256('accessibility-auditor')[0:2]` is `0x2f` =
+**47**, below the ceiling of 51, so the file lands in **holdout**. The partition
+rule chose it — nobody did — which is exactly the property the name-hash rule
+exists to provide, and it is worth noting that the rule placed a file in the
+sealed set at the moment it would have been most convenient to place it in train.
+
+**What provably did NOT change, checked rather than asserted.** Re-running this
+file's own reproduce recipe and diffing every row against the published tables
+leaves **exactly one** row absent from the artefact — `accessibility-auditor`.
+All 18 originally sealed holdout rows and all 84 train rows reproduce
+byte-for-byte:
+
+- the partition **rule** is untouched — ceiling 51, name-derived, no discretion;
+- no pre-existing holdout file's bytes moved, so no holdout result taken against
+  the original 18 is voided;
+- the realised split is now 19/103 = 18.4 % against the rule's 19.9 % target.
+
+**The ordering claim is SCOPED, not preserved — and this is the honest half.**
+AC-6 claims the holdout partition's content hash predates the first commit of
+any proposer capability. That claim holds, unchanged, for **the 18 rows sealed
+on 2026-08-30**: their bytes and their git history are untouched. It does **not**
+extend to the 19th row, which was authored on 2026-10-01 and therefore predates
+nothing. A future proposer evaluated against this holdout must either exclude
+`accessibility-auditor` or state that it is using a row whose seal is younger
+than the evaluation. Saying so is cheaper than letting a reader infer that a
+19-row holdout carries a claim only 18 rows can support.
+
+**The residual the 2026-09-19 and 2026-09-30 sections named is unchanged and was
+paid again.** `SET-SHA256` is computed over the undivided list, so it moves
+whenever the corpus grows on either side and cannot on its own distinguish
+"grew" from "edited a frozen file". The per-row diff above is what distinguishes
+them, which is why this section carries it rather than only the new number.
 
 ## What this freeze does NOT establish
 
