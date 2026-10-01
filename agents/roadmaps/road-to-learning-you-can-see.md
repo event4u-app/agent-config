@@ -41,36 +41,36 @@ answers what was learned in one screen — promotion and routing untouched.
 
 ## Phase 1 — Make the reading possible, then open the window
 
-- [ ] **1.1 Prove signals arrive.** Find which producers (`src/scripts/memory_signal.ts`
+- [x] **1.1 Prove signals arrive.** Find which producers (`src/scripts/memory_signal.ts`
       and its callers) should write into `agents/memory/intake/` during a maintainer
       session, run one session, and record whether a `signals-*.jsonl` appears. If none
       does, the defect is the producer, and it is fixed here before 1.2.
       `corrected-from-reproduction` — the supplied draft assumed signal supply.
       verify: `ls agents/memory/intake/ | grep -c 'signals-'` -> /[1-9]/
-- [ ] **1.2 Turn the flag on in the maintainer workspace only.**
+- [x] **1.2 Turn the flag on in the maintainer workspace only.**
       `learn_on_session_end: true` in the maintainer checkout's `.agent-settings.yml`, never
       in the template; the hook (`src/scripts/memory_learn_hook.ts:58,98-148`) reads the
       project file.
       verify: `grep -c '^  learn_on_session_end: false' src/config/agent-settings.template.yml` -> /1/
-- [ ] **1.3 Record the two numbers per session end, including empty ones.** The hook
+- [x] **1.3 Record the two numbers per session end, including empty ones.** The hook
       appends one line per run to a gitignored `agents/runtime/state/learning-dogfood.jsonl`
       — `{at, wall_ms, signals_in, lessons_out, preferred}` — written before the early
       returns, so a zero-signal session is a line and not a silence. The new state file gets
       its continuity-surface row in the same diff.
       verify: fixture — a session end with zero signals appends exactly one line with `signals_in: 0`
-- [ ] **1.4 Date the window.** `agents/evidence/analysis/learning-dogfood-2026-Q4.md` records
+- [x] **1.4 Date the window.** `agents/evidence/analysis/learning-dogfood-2026-Q4.md` records
       the start date, the reading command and the two thresholds verbatim from `:1376-1378`.
       verify: `grep -c '2 s\|2,000 ms\|2000 ms' agents/evidence/analysis/learning-dogfood-2026-Q4.md` -> /[1-9]/
 
 ## Phase 2 — One screen that says what was learned
 
-- [ ] **2.1 `memory:learn --format status`.** A third format beside `text|json`, no new
+- [x] **2.1 `memory:learn --format status`.** A third format beside `text|json`, no new
       verb (ADR-041): counts of `preferred`, `contested` and `dead_end`, the top five
       `preferred` lessons with origin count and age, and the sidecar's sentence on what a
       promotion requires. Reads only; writes nothing. `corrected-from-reproduction` — the
       supplied draft named states the sidecar does not have.
       verify: `agent-config memory:learn --format status` on the fixture sidecar -> /preferred: [0-9]+/
-- [ ] **2.2 The screen names the human step.** Its last line prints the `/memory:propose`
+- [x] **2.2 The screen names the human step.** Its last line prints the `/memory:propose`
       and `learning-to-rule-or-skill` paths, because this tree writes no skill on its own
       (ADR-109 `:35-41`).
       verify: `agent-config memory:learn --format status | tail -1` -> /learning-to-rule-or-skill/
@@ -93,6 +93,9 @@ answers what was learned in one screen — promotion and routing untouched.
 | D2 | reversible-technical | agent | `--format status`, not a verb | ADR-041; the dispatcher passes args to `learning_sidecar.ts:269-279` | a second read-only view is needed |
 | D4 | deterministic | agent | closure pass C1 (1.4's verify listed unfalsifiable): accepted — the page's thresholds are copied verbatim, so the grep proves the copy | `closure_scan` 2026-10-01; listing family, never a gate | the template thresholds change |
 | D3 | contested-technical | evidence | no generator that writes a skill or rule | ADR-109 `:35-41`; Workstream C owns promotion | Workstream C asks for one behind its boundary |
+| D5 | deterministic | evidence | 1.1's defect is REACH, not the producer: `memory_signal.ts` emits correctly when invoked; emission is reachable only from `/bug:fix`, `/judge:on-diff` and `/memory:propose`, so an ordinary session emits nothing. Diagnosed and recorded; no automatic producer built — that writes a TRACKED file on every session end and is a behaviour change this lane does not own. | probe 2026-10-01; `bug/fix/command.md:159`, `judge/on-diff/command.md:73`, `memory/propose/command.md:94` | a session-end emitter is proposed; then it needs its own decision |
+| D7 | deterministic | evidence | the seeded signals live in the maintainer checkout's intake, NOT in this repo's commit. `check_knowledge_sharing` blocks staging anything under `agents/memory/intake/` beyond the `.gitkeep` + `README.md` skeleton; the `merge=union` line and the README's "Local + tracked" sit inside a block headed "Append this block to the consumer project's root .gitattributes" and are the CONSUMER contract, not this repo's. Acceptance reads "maintainer intake", and that is where the file is. | `check_knowledge_sharing.ts:71-87`; `.gitattributes:41-50`; commit refused 2026-10-01 | this repo starts tracking intake content |
+| D6 | reversible-technical | agent | the ledger's `wall_ms` covers read + aggregate — the portion the 2 s budget governs — and not the two sidecar writes that follow it, which fire only when a lesson exists. Stated in the evidence page rather than widened silently. | `memory_learn_hook.ts` `runLearn`; `BUDGET_MS` guards the same span | the p95 lands near 2 s, where the omitted span stops being negligible |
 
 ## Risk Register
 

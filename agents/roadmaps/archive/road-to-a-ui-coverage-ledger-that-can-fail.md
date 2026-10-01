@@ -180,71 +180,56 @@ and by a pre-registered count of what today's gates catch, recorded before any g
       `handed_back.length === declared.length` to `> 0` → exactly the two absence-assertions
       failed (faithful arm, and flagged-some-but-not-all), 2 failed / 35 passed. Restored from
       `/tmp` copy after each, 37/37.
-- [ ] <!-- blocked-by: shadow-release-window | asked: no — autonomous process-full run, which reports once at the end and cannot put a question; the gate is an elapsed release tag, not a decision --> **3.2 Flip the shadow to a non-SUCCESS outcome**, with the affected item ids enumerated in
+- [x] **3.2 Flip the shadow to a non-SUCCESS outcome**, with the affected item ids enumerated in
       the message.
       verify: arm `S-b` is not `SUCCESS` after the flip; the faithful arm still is. The flip lands
       in its own change, after 3.1 has shipped one release.
-      **Held on `shadow-release-window`, promoted from prose to a structured blocker 2026-09-30.**
-      The release condition was recorded only in this step's own verify line, and the continuation
-      ladder reads the inline marker and nothing else — so every fresh run was being handed 3.2 as
-      its next executable step. The gate is unmet as a matter of fact:
-      `git tag --contains 2b6a0f551` prints nothing, and the newest tag `16.1.0` dates 2026-09-28
-      against 3.1's 2026-09-29, so no release carries the shadow.
-      · **D2's `revisit if` was probed this run and does NOT fire.** It reads "no caller is found
-      to branch on `SUCCESS` from this directive" — one is found. `dispatcher.ts` branches on the
-      value three ways: it skips a step already marked `SUCCESS` (`:140`), halts the run on
-      `BLOCKED` (`:181`), and returns `SUCCESS` as the run's own outcome (`:194`). The flip is
-      therefore the surface change D2 anticipated, and the shadow release stays load-bearing.
-      · **One thing the flip must carry, found while probing and recorded so the next run does
-      not rediscover it.** `dispatcher.ts:264` raises when a step returns `BLOCKED` or `PARTIAL`
-      with no questions, so the flip has to surface a numbered option, not just change a value —
-      it is a design change, not a one-line edit. (Separately, and not a requirement on the
-      flip: Phase 5's clearance criterion is already met — 5.2's verdict is no null, so nothing
-      but the release window holds this step.)
-      · **The marker's effect is measured, and it is partial — both halves corrected 2026-09-30
-      after the completion review caught the first version citing a function that cannot
-      produce the numbers it was credited with.** `parseBlockedByMarker`
-      (`src/scripts/_lib/blocked_by_marker.ts`) returns `{id, asked, reason}` for ONE marker; it
-      has no callers in production code and it never produced a `{done, open, blocked}` triple.
-      Only `id=shadow-release-window` and `asked=false` came from it. The counts come from two
-      different readers, and they disagree — which is the part worth having:
-      **`scanOpenSteps`** (`src/scripts/hooks/run_continuation_hook.ts:418`, the continuation
-      ladder, carrying its own private marker regex at `:223`) reads `{open: 0, blocked: 1}`
-      after this diff and `{open: 4, blocked: 0}` before it. That is the fix working, and the
-      ladder is the reader that was handing 3.2 out.
-      **`countRoadmap`** (`src/scripts/_lib/run_checkpoint.ts:93`, the checkpoint / resume /
-      supervise path) reads `{open: 1, done: 8}` after and `{open: 4, done: 5}` before — it does
-      **not** exclude a `blocked-by`-marked step, so on that path 3.2 is still `open` and still
-      the reported `next`, now with the raw marker text prefixed to it. So the honest claim is
-      narrower than the one first written here: the continuation ladder no longer hands out an
-      undoable step, and the checkpoint path still does. Closing that is a change to
-      `countRoadmap`, which is outside this roadmap's scope and is not smuggled in here.
-      The dashboard is unmoved either way, which is the point: the box stays `[ ]`, the roadmap
-      stays unarchivable, and only one machine reader's view of it changes.
-      · **Re-probed 2026-10-01 by an autonomous `process-full` run: the gate is still shut, and
-      the measurement half still reproduces at today's `main`.** `git tag --contains 2b6a0f551`
-      prints nothing after `git fetch origin --tags`, and the newest tag is still `16.1.0`
-      dating 2026-09-28 against 3.1's 2026-09-29 — three days passed and no release was cut, so
-      the hold is unchanged rather than merely unrechecked. The rest of the roadmap was
-      re-verified live at `origin/main` (`9f2b9fb4a`) instead of read off the 2026-09-30 notes:
-      `npx vitest run tests/scripts/work_engine/ui_port_losses.test.ts` → **22 passed**; the
-      probe → `caught 3 of 3`, `0 false red(s)`, with `S-b  CATCH  outcome=success` — the shadow
-      state exactly as recorded; `npx vitest run src/cli/commands/uiAudit.test.ts` → **17
-      passed**; and AC-1's pre-registration is confirmed inside the fixture's own first-add
-      commit `7b35b4c5c`, which carries `caught 0 of 3` before any gate changed. Nothing was
-      learned this run that moves the blocker's § *What to do* — those remain the exact inputs a
-      future session needs, and the box stays `[ ]` rather than `[~]` because `[~]` means the
-      work leaves this roadmap, which is false: it is in scope and waiting on an elapsed tag.
-      · **`apply.ts` has moved since 3.1 — recorded so the next session does not expect 3.1's
-      offsets when it reaches § *What to do* step 2.** The blocker's "byte-unchanged on this
-      branch" is still true of this branch, which touches no code; but the file is not frozen at
-      3.1's content — `7f8716240` and `0e30e4ac9` added `taxonomy_lines` to it (+40 lines, an
-      unrelated component-taxonomy feature). The three gates this roadmap governs are untouched
-      by that, and the probe above is the proof rather than the reading. `COVERAGE_BUCKETS` in
-      `uiAudit.ts` is byte-unchanged since 3.1 (`git diff 2b6a0f551 origin/main --
-      src/cli/commands/uiAudit.ts` names it nowhere), so AC-4 holds on exactly what it asks for.
-      What the next session should carry forward is only this: locate `_handed_back_line` by
-      name, never by the line numbers this roadmap quotes.
+      Done 2026-10-01, after `shadow-release-window` resolved. The release window opened: 3.1's
+      commit `2b6a0f551` is carried by tag `16.2.0`, cut 2026-10-01, so
+      `git tag --contains 2b6a0f551` now prints `16.2.0` where it printed nothing on 2026-09-30
+      and again earlier on 2026-10-01. That is the blocker's whole condition and it was re-run,
+      not read.
+      · **What landed.** `carried_nothing(report)` now returns `_halt_carried_nothing(state,
+      report, notes)` instead of pushing a note onto a `SUCCESS` result. The halt is
+      `Outcome.BLOCKED`, enumerates every id in `report.handed_back` one per line, and carries
+      three numbered options (continue / flag deliberately with a reason / abort). The numbered
+      options are the requirement the blocker recorded, not decoration: `_validate_step_result`
+      in `dispatcher.ts` throws on a `BLOCKED` or `PARTIAL` result with no questions, so a bare
+      value change would have failed at runtime rather than in a test.
+      · **Two shape decisions, both taken against the file's own precedent rather than invented.**
+      The halt returns *before* `_record_changes`, which is what `_halt_coverage` and
+      `_halt_placeholders` already do — a halt does not record changes. And the
+      containment-fallback warnings, which are pushed into `notes` before this check, ride in the
+      halt's message, so the early return drops no signal; that is asserted rather than intended.
+      `BLOCKED` was chosen over the `PARTIAL` the 2026-09-30 simulation used, for the same
+      reason: the two sibling halts in this file return `BLOCKED`, and the probe's predicates are
+      value-agnostic so the substitution changes nothing either measures.
+      · **Red first, then sensitivity.** The superseded `3.1 deliberately does not change the
+      outcome value` assertion failed on the edit with `expected 'blocked' not to be 'success'` —
+      the blocker predicted exactly this, and it is **replaced, not deleted**, by a new
+      `3.2 — the shadow is the outcome` block of five assertions. Sensitivity was then proven by
+      neutralising the flip back to the note-push: **3 failed / 24 passed**, and the three were
+      precisely the flip-dependent ones (outcome not success, the numbered option, the fallback
+      warning surviving). The other two are absence-controls that pass in both states by design —
+      they are the false-red half, and they are why the positive three exist. Restored from the
+      `/tmp` copy: **27/27**.
+      · **Measured after.** `npx tsx tests/design-artifacts/fixtures/ui-port-losses/probe.ts` →
+      `S-b CATCH outcome=blocked`, `caught 3 of 3`, `0 false red(s), outcome=success`. The count
+      and the false-red count are unchanged from the 2026-09-30 shadow-state row, and S-b's
+      outcome column is the only difference anywhere in the output — which is what that row
+      predicted under simulation, now confirmed against the real implementation. The fixture
+      README carries the third measurement row and says the prediction held.
+      · **AC-4 re-checked rather than assumed.** `COVERAGE_BUCKETS` is untouched and
+      `npx vitest run src/cli/commands/uiAudit.test.ts` is green at **17 tests**. The whole
+      `tests/scripts/work_engine/` directory is green at **900 tests / 91 files**, so the flip
+      breaks no other directive that reaches `apply`.
+      · **One thing deliberately not done, recorded so it is not read as an oversight.**
+      `AMBIGUITIES` in `apply.ts` stays at three entries and the new halt gets no fourth code.
+      `tests/scripts/work_engine/directives_ui_apply.test.ts` pins that length, and the
+      carried-nothing case belongs to the same coverage-report family as the existing
+      `apply_coverage_missing` — adding a code would have meant editing a pinning test this
+      roadmap's non-goals put out of reach for a gain that is documentation-only. A follow-up
+      that widens the catalogue is free to take it.
 
 ## Phase 4 — The placeholder scan reads the files
 
@@ -372,6 +357,20 @@ and by a pre-registered count of what today's gates catch, recorded before any g
 - AC-4 `COVERAGE_BUCKETS` is unchanged and the existing CLI/engine pinning test is still green.
 - AC-5 No skill, rule, command verb, hook or ledger format was added.
 
+**All five met, 2026-10-01**, each against a command run that day rather than against a note.
+AC-1 — the before-count `caught 0 of 3` sits in the fixture README and in the directory's
+first-add commit `7b35b4c5c`, so its ancestry is checkable and it predates every gate change.
+AC-2 — the last of the three closed with 3.2: S-a halts with a named item, S-c with a named
+file, and S-b now halts from `_halt_carried_nothing` instead of carrying a message on a
+`SUCCESS` outcome; each of the three was proven red before its fix in the same test file, and
+3.2's red is the superseded `3.1 deliberately does not change the outcome value` assertion.
+AC-3 — `0 false red(s), outcome=success` on the faithful arm, identical across all four
+measurements the README now records. AC-4 — `COVERAGE_BUCKETS` untouched,
+`npx vitest run src/cli/commands/uiAudit.test.ts` green at 17 tests. AC-5 — the diff touches
+`apply.ts` (and its `dist/` projection), one test file, this roadmap and the fixture README;
+no skill, rule, command verb, hook or ledger format, and `AMBIGUITIES` deliberately keeps its
+three entries.
+
 ## Risk Register
 
 <!-- risk-review: v1 | reviewed: 2026-09-29 | reviewer: agent -->
@@ -386,7 +385,7 @@ and by a pre-registered count of what today's gates catch, recorded before any g
 ## Blockers
 
 ### blocker: shadow-release-window
-- **Status:** open
+- **Status:** resolved 2026-10-01
 - **Owner:** maintainer
 - **Class:** 3 — human-only
 - **Blocks:** Phase 3 — step 3.2, and **AC-2 with it**. Phases 1, 2, 4 and 5 are closed and
@@ -429,6 +428,24 @@ and by a pre-registered count of what today's gates catch, recorded before any g
   Re-probed 2026-10-01 after `git fetch origin --tags`: still empty, same newest tag. The
   condition is executable in one command precisely so a later reader never has to trust this
   line's date — run it rather than read it.
+- **Resolved 2026-10-01.** Re-run after `git fetch origin --tags`, and the output is the
+  evidence rather than a reading of it:
+
+  ```
+  $ git tag --contains 2b6a0f551
+  16.2.0
+  ```
+
+  `16.2.0` was cut 2026-10-01 and carries 3.1's commit, so a release ships the shadow and the
+  window the whole blocker consisted of is open. Nothing was decided and nobody was asked:
+  the condition was factual, machine-verifiable in one command, and became true by an
+  ordinary release — which is exactly the clearance path § *Recommendation* named ("clear it
+  by doing nothing special"). Step 3.2 then ran as ordinary implementer work under this run's
+  own authority, § *What to do* steps 2–4 followed in order, and **AC-2 closes with it**: the
+  S-b planted loss is now caught by a named halt (`_halt_carried_nothing`, `BLOCKED`) rather
+  than by a message on a `SUCCESS` outcome, which is what AC-2 asked for and what the shadow
+  state fell short of. AC-1, AC-3, AC-4 and AC-5 were already met and were re-verified in the
+  same run — see 3.2's note for the test and probe numbers.
 
 > **Why class 3, with the capability test applied rather than assumed.** The agent can write
 > every line of 3.2 — the blocker is not the edit. It is the release, and a release cut is a

@@ -342,7 +342,9 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
   memory:check-proposal      Run the admission gate on a memory proposal
   memory:learn               Aggregate memory intake signals into the local learning
                              sidecar (read-only; --write to emit). Usage: memory:learn [--intake-dir DIR]
-                             [--out-dir DIR] [--now ISO] [--write] [--format text|json]
+                             [--out-dir DIR] [--now ISO] [--write] [--format text|json|status]
+                             --format status prints the one-screen human view (verdict counts,
+                             top preferred lessons, the hand-off); it refuses --write.
   analytics                  Local-only workspace analytics (emit|show|prune|migrate).
                              Usage: analytics show [--window 30d|7d|24h] · analytics prune
   knowledge                  Global knowledge-card store (list|show|trace|forget|promote|

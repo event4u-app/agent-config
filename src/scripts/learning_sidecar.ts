@@ -22,8 +22,15 @@
  * auto-promoted) — it NEVER mutates the curated YAML truths. Deterministic:
  * byte-stable for a fixed `now` + a fixed intake set.
  *
+ * `--format status` is the third, human-facing view (road-to-learning-you-can-
+ * see Phase 2): the verdict counts, the top `preferred` lessons with their
+ * corroboration and age, and the sentence saying what a promotion requires. It
+ * is a FORMAT and not a verb (decision D2 cites ADR-041) — `memory:learn`
+ * passes argv straight through, so a format needs no registry row — and it is
+ * read-only to the point of refusing `--write` rather than ignoring it.
+ *
  * Usage: learning_sidecar.ts [--intake-dir DIR] [--out-dir DIR] [--now ISO]
- *                            [--write] [--format text|json]
+ *                            [--write] [--format text|json|status]
  * Exit codes: 0 ok, 2 usage error, 3 internal error.
  */
 import { createHash } from 'node:crypto';
@@ -48,7 +55,11 @@ export const SCHEMA_VERSION = 1;
 export type Polarity = 'preferred' | 'dead_end';
 export type Verdict = 'preferred' | 'contested' | 'dead_end';
 
-interface Signal {
+/** The output formats. `status` is the one-screen human view (read-only). */
+export const FORMATS = ['text', 'json', 'status'] as const;
+export type Format = (typeof FORMATS)[number];
+
+export interface Signal {
     id: string;
     ts: string;
     tsMs: number;
@@ -226,9 +237,21 @@ export function aggregate(signals: readonly Signal[], nowMs: number): Lesson[] {
 }
 
 export function buildSidecar(intakeDir: string, nowIso: string): Sidecar {
+    return buildSidecarFromSignals(readSignals(intakeDir), nowIso);
+}
+
+/**
+ * The half of `buildSidecar` that does not read the disk.
+ *
+ * Split out for a caller that needs BOTH the input count and the output
+ * lessons from one pass — the session-end dogfood ledger records `signals_in`
+ * beside `lessons_out`, and reading the intake twice to get them would make the
+ * two numbers describe two different reads under the 2 s budget they exist to
+ * measure.
+ */
+export function buildSidecarFromSignals(signals: readonly Signal[], nowIso: string): Sidecar {
     const nowMs = _parseTsMs(nowIso) ?? 0;
-    const lessons = aggregate(readSignals(intakeDir), nowMs);
-    return { schema_version: SCHEMA_VERSION, generated_at: nowIso, lessons };
+    return { schema_version: SCHEMA_VERSION, generated_at: nowIso, lessons: aggregate(signals, nowMs) };
 }
 
 /** Render the human dead-ends + contested ledger. */
@@ -261,28 +284,112 @@ export function renderLessonsMd(sidecar: Sidecar): string {
     return L.join('\n');
 }
 
+/** How many `preferred` lessons the status screen lists before it stops. */
+export const STATUS_TOP_N = 5;
+
+/**
+ * The human step. Printed as the LAST line of the status screen, because this
+ * tree writes no rule and no skill on its own: a lesson becomes a durable
+ * artefact only when a person carries it through `/memory:propose` or the
+ * `learning-to-rule-or-skill` skill. A list of preferred lessons is one flag
+ * away from `--apply`, and naming the hand-off on every screen is the cheapest
+ * standing answer to "why is there no button".
+ */
+export const PROMOTION_HANDOFF =
+    'Promote by hand: /memory:propose · src/skills/learning-to-rule-or-skill/SKILL.md';
+
+/**
+ * One screen answering "what has this learned?" — verdict counts, the top
+ * `preferred` lessons with their corroboration and age, and what a promotion
+ * requires. READ ONLY by construction: it takes a built sidecar and returns a
+ * string, so there is no path from this function to the disk.
+ */
+export function renderStatus(sidecar: Sidecar): string {
+    const byVerdict: Record<Verdict, number> = { preferred: 0, contested: 0, dead_end: 0 };
+    for (const l of sidecar.lessons) byVerdict[l.verdict] += 1;
+
+    const nowMs = _parseTsMs(sidecar.generated_at) ?? 0;
+    const L: string[] = [];
+    L.push(`${PROG}: ${String(sidecar.lessons.length)} lesson(s) as of ${sidecar.generated_at}`);
+    L.push(
+        `preferred: ${String(byVerdict.preferred)} · ` +
+            `contested: ${String(byVerdict.contested)} · ` +
+            `dead-end: ${String(byVerdict.dead_end)}`,
+    );
+    L.push('');
+
+    const preferred = sidecar.lessons
+        .filter((l) => l.verdict === 'preferred')
+        .sort((a, b) => b.score - a.score || (a.path < b.path ? -1 : 1))
+        .slice(0, STATUS_TOP_N);
+    L.push(`Top ${String(STATUS_TOP_N)} preferred:`);
+    if (preferred.length === 0) {
+        L.push('  (none — a lesson needs corroboration before it appears here)');
+    } else {
+        preferred.forEach((l, i) => {
+            // Age is floored, so a lesson seen hours ago reads `0d old` rather
+            // than rounding up into a day it has not lived.
+            const ageDays = Math.max(0, Math.floor((nowMs - (_parseTsMs(l.last_ts) ?? nowMs)) / 86400000));
+            L.push(
+                `  ${String(i + 1)}. ${l.entry_type} @ ${l.path} — ` +
+                    `${String(l.corroborations)} origins, ${String(ageDays)}d old`,
+            );
+            L.push(`     ${l.body}`);
+        });
+    }
+    L.push('');
+    L.push(
+        `A lesson is promoted at ${String(MIN_CORROBORATIONS)} distinct origins, ` +
+            `weighted by a ${String(HALF_LIFE_DAYS)}-day half-life; nothing here promotes itself.`,
+    );
+    L.push(PROMOTION_HANDOFF);
+    return `${L.join('\n')}\n`;
+}
+
 export function main(argv: string[]): number {
     let intakeDir = path.join('agents', 'memory', 'intake');
     let outDir = path.join('agents', 'memory');
     let nowIso = '';
     let write = false;
-    let format: 'text' | 'json' = 'text';
+    let format: Format = 'text';
     for (let i = 0; i < argv.length; i++) {
         const a = argv[i] as string;
         if (a === '--intake-dir') intakeDir = argv[++i] ?? intakeDir;
         else if (a === '--out-dir') outDir = argv[++i] ?? outDir;
         else if (a === '--now') nowIso = argv[++i] ?? '';
         else if (a === '--write') write = true;
-        else if (a === '--format') format = (argv[++i] as 'text' | 'json') ?? 'text';
-        else if (a === '-h' || a === '--help') {
+        else if (a === '--format') {
+            const raw = argv[++i] ?? '';
+            // Validated rather than cast. With two formats an unknown value
+            // fell through to `text` and looked like it had worked; with three,
+            // a typo in `status` would silently print the one-line text form
+            // and a reader would take that for the screen they asked for.
+            if (!(FORMATS as readonly string[]).includes(raw)) {
+                process.stderr.write(
+                    `${PROG}: error: argument --format: invalid choice: '${raw}' ` +
+                        `(choose from ${FORMATS.map((f) => `'${f}'`).join(', ')})\n`,
+                );
+                return 2;
+            }
+            format = raw as Format;
+        } else if (a === '-h' || a === '--help') {
             process.stdout.write(
-                `usage: ${PROG} [--intake-dir DIR] [--out-dir DIR] [--now ISO] [--write] [--format text|json]\n`,
+                `usage: ${PROG} [--intake-dir DIR] [--out-dir DIR] [--now ISO] [--write] ` +
+                    `[--format ${FORMATS.join('|')}]\n`,
             );
             return 0;
         } else {
             process.stderr.write(`${PROG}: error: unknown argument ${a}\n`);
             return 2;
         }
+    }
+    if (format === 'status' && write) {
+        // Refused, not ignored. The acceptance criterion is that the screen
+        // leaves `git status` identical; ignoring the flag would honour that
+        // too, but it would do so silently, and a caller who asked for a write
+        // deserves to be told it did not happen.
+        process.stderr.write(`${PROG}: error: --format status is read-only; drop --write\n`);
+        return 2;
     }
     if (!nowIso) {
         // Deterministic by contract: refuse to guess `now` from the clock when
@@ -308,6 +415,10 @@ export function main(argv: string[]): number {
     }
     if (format === 'json') {
         process.stdout.write(JSON.stringify(sidecar, null, 2) + '\n');
+        return 0;
+    }
+    if (format === 'status') {
+        process.stdout.write(renderStatus(sidecar));
         return 0;
     }
     const byVerdict = { preferred: 0, contested: 0, dead_end: 0 };
