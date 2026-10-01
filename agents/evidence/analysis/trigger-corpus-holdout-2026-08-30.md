@@ -26,7 +26,11 @@ holdout  iff  sha256(<skill-directory-name>).digest()[0] < 51
 train    otherwise
 ```
 
-51/256 targets 19.9 %; the realised split is 18/100 = 18.0 %.
+51/256 targets 19.9 %. The realised split is not restated here (corrected
+2026-10-01): it read "18/100 = 18.0 %" in the present tense while the set was
+103 files and 19 holdout, which is the same count-drift the set-hash paragraph
+below corrects, surviving in the section that defines the rule. The live figure
+is in § The frozen set and in the most recent `## Growth` section.
 
 **Why a name hash and not a sample.** Risk 3 in the roadmap's register is *"the
 corpus becomes the overfitting vehicle — if the pipeline that optimises against
@@ -45,7 +49,7 @@ prevent.
 ## The set hash
 
 ```
-SET-SHA256  7445c18aa73c966cbb3fd91318747af0f3454351cea4ff5137852d09148965ba
+SET-SHA256  bb2df6f4fc870dfe94809add5e0e9cda264f1e8bff96b1db79d8081a1f14376e
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -64,14 +68,23 @@ each of them moved the hash and nobody moved the prose beside it. A number
 restated next to the thing it describes rots independently of it; the live
 count is in § The frozen set and is re-derived by the reproduce command below.
 
-**The same sweep was run over the rest of the file, and found one more**
-(round-2 review, 2026-10-01). The `## Train` heading still read "83 files"
-against a table of 84 rows — the identical construct, one partition over. Both
-partition headings now carry no count at all, so the live figures exist in
-exactly two places that cannot disagree: § The frozen set, and the reproduce
-recipe. Counts inside the dated `## Growth` sections below are left as written:
-those are historical statements about the set at that date, not claims about
-the current one, and freezing them is the point.
+**The same sweep was run over the rest of the file, and it took two passes to
+finish** (round-2 and round-4 review, 2026-10-01). The first pass found the
+`## Train` heading still reading "83 files" against a table of 84 rows, fixed
+it, and claimed the live figures now existed in "exactly two places that cannot
+disagree". That claim was itself false: § The partition rule still carried
+"the realised split is 18/100 = 18.0 %" in the present tense, three files and
+one partition member stale, and it is not inside a dated `## Growth` section so
+the carve-out below never covered it. Recorded as two passes rather than
+rewritten as one, because a sweep that declares itself complete and is not is
+the more interesting failure: the first pass swept the paragraph it was standing
+in and the heading beside it, and stopped at the section boundary.
+
+**The carve-out, unchanged:** counts inside the dated `## Growth` sections below
+are left as written. Those are historical statements about the set at that date,
+not claims about the current one, and freezing them is the point. The live
+figures are in § The frozen set and in the most recent `## Growth` section, and
+both are re-derivable from the reproduce recipe.
 
 **Reproduce:**
 
@@ -143,7 +156,7 @@ open and which this file does not settle.
 
 | Skill | sha256 of `evals/triggers.json` |
 |---|---|
-| `accessibility-auditor` | `174b5e85f7e79000a12942718e0e99cb81ed5fcd19130dddf5256beb1fb89240` |
+| `accessibility-auditor` | `b5fcf7cb0cd31df3e8ff02596fa989d3b0998e2e2630648b6c2f97694142c9f1` |
 | `analysis-autonomous-mode` | `b2498906765699c666097683f819e0bff816ff3e94b5bb684564e5b19e5e75c7` |
 | `authz-review` | `2dffacd346e8d656affa0af1ea56c7661e7b0c99e3a8ac2c92be50981b2c970c` |
 | `brand` | `43abaf7937a73ea8b041e18d977ce6a080b2226f6c0f49bb55cf59bc4545df36` |
@@ -352,7 +365,7 @@ edited `src/skills/accessibility-auditor/data/`, which put the skill into
 `check_routing_coverage`'s touched-skill scope, so
 `src/skills/accessibility-auditor/evals/triggers.json` was authored as that
 gate's remedy — ten cases, not a coverage push. The corpus is **103 files, 19
-holdout and 84 train**, and `SET-SHA256` is re-pinned to `7445c18a…` from
+holdout and 84 train**, and `SET-SHA256` is re-pinned to `bb2df6f4…` from
 `034f791e…`.
 
 **Recorded rather than re-pinned quietly**, per § The partition rule: *"A change
@@ -366,11 +379,33 @@ rule chose it — nobody did — which is exactly the property the name-hash rul
 exists to provide, and it is worth noting that the rule placed a file in the
 sealed set at the moment it would have been most convenient to place it in train.
 
-**What provably did NOT change, checked rather than asserted.** Re-running this
-file's own reproduce recipe and diffing every row against the published tables
-leaves **exactly one** row absent from the artefact — `accessibility-auditor`.
-All 18 originally sealed holdout rows and all 84 train rows reproduce
-byte-for-byte:
+**This section shipped a STALE PIN first, for the third time in this file's
+life, and the correction is recorded here rather than silently applied.** The
+first published values — row `174b5e85…`, `SET-SHA256 7445c18a…` — were computed
+from a snapshot of `accessibility-auditor/evals/triggers.json` taken before two
+later edits to that same file's `description` field in the same branch. The
+provenance was proved rather than guessed by the round-4 reviewer: dropping the
+new row from the computed list reproduces the OLD pin `034f791e…` exactly, and
+substituting the stale row hash reproduces the first-published `7445c18a…`
+exactly. The live values below are `b5fcf7cb…` and `bb2df6f4…`, and
+`tests/scripts/trigger_corpus_holdout_pin.test.ts` passes 5 of 5 against them.
+
+**This is the same defect as § Correction 2026-08-31**, where the commit that
+recorded the freeze also edited three of the files it was freezing. The shape
+recurs because the pin is computed by hand at one moment and the file keeps
+moving afterwards. **The standing repair, for whoever writes the next growth
+section:** `trigger_corpus_holdout_pin.test.ts` recomputes the whole recipe from
+the tree and asserts every row and the set hash. Run it as the LAST act before
+publishing a growth section, after the final edit to any corpus file in the
+change — not when the numbers are first computed. It caught this; it would have
+caught 2026-08-31; it is cheap and it is the only thing in this tree that can
+tell a stale pin from a compromised seal.
+
+**What provably did NOT change, checked rather than asserted — re-run against
+the committed bytes after the re-pin.** Re-running this file's own reproduce
+recipe and diffing every row against the published tables leaves **no**
+mismatched and **no** absent row. All 18 originally sealed holdout rows and all
+84 train rows reproduce byte-for-byte, and so does the 19th:
 
 - the partition **rule** is untouched — ceiling 51, name-derived, no discretion;
 - no pre-existing holdout file's bytes moved, so no holdout result taken against
