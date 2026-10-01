@@ -40,7 +40,11 @@
  *                     not a gate, so a CI job may run it with no egress.
  *   --fetch           Re-fetch every `docs_url` and compare. Exit 1 if any
  *                     digest CHANGED, 0 otherwise. This is the scheduled job's
- *                     read-only mode.
+ *                     read-only mode: it NEVER touches the working tree. The
+ *                     table is written by exactly one `writeFileSync` call and
+ *                     it sits inside `if (doWrite)`, so `--fetch` alone cannot
+ *                     reach it; `--write` without `--fetch` is refused outright
+ *                     (exit 2) rather than silently doing nothing.
  *   --fetch --write   The same, and write the result back into the YAML: fill a
  *                     null digest, and on a CHANGED digest also pull `expires`
  *                     back to the day before detection.
@@ -383,6 +387,18 @@ export async function main(argv: readonly string[]): Promise<number> {
         for (const f of findings) {
             const extra = f.state === 'unreachable' ? ` (${f.detail ?? 'unreadable'})` : '';
             process.stdout.write(`  ${STATE_ICON[f.state]} ${f.host}/${f.surface} — ${f.state}${extra}\n`);
+            // A drift line names everything needed to act on it without a
+            // second run: which page, what it hashed to before, what it hashes
+            // to now, and when that was seen. A bare "changed" sends the reader
+            // back to the terminal to find out what changed about what.
+            if (isDrift(f)) {
+                process.stdout.write(
+                    `       url:  ${f.url ?? '(none)'}\n` +
+                        `       was:  ${f.was ?? 'null'}\n` +
+                        `       now:  ${f.now ?? 'null'}\n` +
+                        `       seen: ${new Date().toISOString()}\n`,
+                );
+            }
         }
     }
 

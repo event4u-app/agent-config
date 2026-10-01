@@ -22,6 +22,7 @@ import {
     classify,
     dayBefore,
     digestOf,
+    main,
     watchable,
 } from '../../src/scripts/check_host_docs_digest.js';
 import { parseHostLowering } from '../../src/scripts/hooks/host_lowering.js';
@@ -154,6 +155,39 @@ describe('docs digest — unreachable establishes nothing', () => {
         const none = classify('cowork', 'any', null, null, null);
         expect(none.state).toBe('no-url');
         expect(applyFindings(SOURCE, [none], TODAY).text).toBe(SOURCE);
+    });
+});
+
+// Asked for by both ratification reviewers, independently: the scheduled job
+// runs `--fetch` with no `--write`, and the thing a reader most needs to be
+// sure of is that this cannot touch the repository. The guard has two halves
+// and both are checked here without a network call — the offline path, and the
+// refusal of `--write` without `--fetch`. (The `--fetch`-only path shares the
+// same single `writeFileSync`, which sits inside `if (doWrite)`.)
+describe('docs digest — a read-only run never touches the tree', () => {
+    let copy: string;
+
+    beforeEach(() => {
+        copy = path.join(tmp, 'host_lowering.yaml');
+        fs.writeFileSync(copy, SOURCE);
+    });
+
+    it('leaves the table untouched in the default offline report', async () => {
+        const code = await main(['--lowering', copy, '--quiet']);
+        expect(code).toBe(0);
+        expect(fs.readFileSync(copy, 'utf8')).toBe(SOURCE);
+    });
+
+    it('refuses `--write` without `--fetch` instead of silently writing nothing', async () => {
+        const code = await main(['--write', '--lowering', copy, '--quiet']);
+        expect(code).toBe(2);
+        expect(fs.readFileSync(copy, 'utf8')).toBe(SOURCE);
+    });
+
+    it('refuses an unknown flag rather than ignoring it', async () => {
+        // A silently-ignored flag is how `--lowering /nonexistent` once read the
+        // real configuration and reported green in a sibling gate.
+        expect(await main(['--not-a-flag'])).toBe(2);
     });
 });
 
