@@ -402,6 +402,21 @@ function _cap_runs(runs: unknown[]): unknown[] {
  */
 const _ERROR_EXIT_PREFIX = /^Error:\s*Exit code\s*(\d+)/i;
 
+/**
+ * The same statement without the `Error:` word, which is how the host words it
+ * on its FAILURE event.
+ *
+ * Measured 2026-10-01 on Claude Code 2.1.286: a failing `Bash` call fires
+ * `PostToolUseFailure`, whose envelope carries NO `tool_response` at all. The
+ * exit status is a top-level `error` string whose first line reads
+ * `Exit code N`, with the command's own diagnostics on the lines after it. The
+ * prefix above never matches that, so for as long as only the success event was
+ * bound this recorder could not have written a non-zero exit even once — which
+ * is exactly what 24 consecutive all-zero records on this host turned out to
+ * mean.
+ */
+const _BARE_EXIT_PREFIX = /^\s*Exit code\s*(\d+)/i;
+
 /** The status a post-tool payload actually reports, and HOW it reported it. */
 interface ExitReading {
   readonly code: number | null;
@@ -450,27 +465,91 @@ function _numeric_exit_field(obj: StateDict): number | null {
  * record path was inert — found by an independent review of the branch that
  * introduced it, against 1,077 real tool results.
  */
-function _extract_exit_reading(payload: StateDict): ExitReading {
+/**
+ * Did the HOST say this call failed, independently of anything in its text?
+ *
+ * Read from the native event name, which the host writes in two places and the
+ * agent in neither: `hook_event_name` inside the payload, and `native_event` on
+ * the dispatcher envelope. Either is authoritative; both are checked because a
+ * raw-payload invocation carries only the first and a synthesised envelope only
+ * the second.
+ *
+ * An explicit set of OBSERVED names, with a suffix match behind it as a declared
+ * fallback rather than as the primary rule. A reviewer called the suffix-only
+ * form a maintenance trap and was right about the direction: the set is what a
+ * reader checks against the manifest, and `PostToolUseFailure` is the one
+ * spelling this package has actually seen a host send.
+ *
+ * The fallback is kept, and keeping it is the deliberate half. A host whose
+ * failure event this tree has never observed is exactly the case where guessing
+ * wrong is cheapest in one direction and expensive in the other: a false
+ * positive costs a refusal to record a zero, a false negative costs a
+ * manufactured pass on a red run. So the set is the rule and the suffix is the
+ * safe default for a name nobody here has met yet.
+ */
+export const FAILURE_EVENT_NAMES: ReadonlySet<string> = new Set(["PostToolUseFailure"]);
+
+function _is_failure_event(payload: StateDict, envelope: StateDict): boolean {
+  for (const v of [payload["hook_event_name"], envelope["native_event"]]) {
+    if (typeof v !== "string" || v === "") continue;
+    if (FAILURE_EVENT_NAMES.has(v)) return true;
+    if (/failure$/i.test(v)) return true;
+  }
+  return false;
+}
+
+function _extract_exit_reading(payload: StateDict, failure_event = false): ExitReading {
+  // On an event the host itself named a FAILURE, a zero is never recorded —
+  // from any of the three readings. The host has already stated the call did not
+  // succeed, so a `0` arrived at by parsing its text would contradict the only
+  // authoritative thing in the envelope, and it would do so in the single most
+  // dangerous direction: manufacturing the strongest possible pass evidence out
+  // of a red run. `null` instead, which the classifier already treats as an
+  // instrument gap and never as a pass.
+  //
+  // Raised by an independent reviewer who asked what happens when a command's
+  // own error text begins `Exit code 0`. Nothing observed produces that, which
+  // is exactly why it is worth closing before something does.
+  const seal = (r: ExitReading): ExitReading =>
+    failure_event && r.code === 0 ? { code: null, source: null, interrupted: r.interrupted } : r;
+
   const direct = _numeric_exit_field(payload);
-  if (direct !== null) return { code: direct, source: "field", interrupted: false };
+  if (direct !== null) return seal({ code: direct, source: "field", interrupted: false });
+
+  // The FAILURE envelope, read before the success keys because it carries none
+  // of them: no `tool_response`, the status in a top-level `error` string, and
+  // the interrupt flag spelled `is_interrupt` rather than the nested
+  // `interrupted` below. Interruption is checked FIRST — a killed call is a
+  // statement about the kill and not a verdict on the work, so a host that
+  // sends both must not have its kill read as a failing exit.
+  const interrupted_top = payload["is_interrupt"] === true;
+  const err = payload["error"];
+  if (typeof err === "string") {
+    if (interrupted_top) return { code: null, source: null, interrupted: true };
+    const bare = _BARE_EXIT_PREFIX.exec(err) ?? _ERROR_EXIT_PREFIX.exec(err);
+    if (bare?.[1] !== undefined) {
+      return seal({ code: Number(bare[1]), source: "error_prefix", interrupted: false });
+    }
+  }
+  if (interrupted_top) return { code: null, source: null, interrupted: true };
 
   for (const key of ["tool_response", "toolResponse", "result", "output"]) {
     const v = payload[key];
     if (typeof v === "string") {
       const m = _ERROR_EXIT_PREFIX.exec(v);
       if (m?.[1] !== undefined) {
-        return { code: Number(m[1]), source: "error_prefix", interrupted: false };
+        return seal({ code: Number(m[1]), source: "error_prefix", interrupted: false });
       }
       continue;
     }
     if (v === null || typeof v !== "object" || Array.isArray(v)) continue;
     const obj = v as StateDict;
     const nested = _numeric_exit_field(obj);
-    if (nested !== null) return { code: nested, source: "field", interrupted: false };
+    if (nested !== null) return seal({ code: nested, source: "field", interrupted: false });
     if (obj["interrupted"] === true) return { code: null, source: null, interrupted: true };
     const hasStream = typeof obj["stdout"] === "string" || typeof obj["stderr"] === "string";
     if (obj["interrupted"] === false && hasStream) {
-      return { code: 0, source: "response_shape", interrupted: false };
+      return seal({ code: 0, source: "response_shape", interrupted: false });
     }
   }
   return _NO_EXIT;
@@ -504,10 +583,21 @@ function _extract_run_streams(payload: StateDict): { stdout: string; stderr: str
   }
   const topOut = payload["stdout"] ?? payload["output"];
   const topErr = payload["stderr"];
-  return {
-    stdout: typeof topOut === "string" ? topOut : "",
-    stderr: typeof topErr === "string" ? topErr : "",
-  };
+  if (typeof topOut === "string" || typeof topErr === "string") {
+    return {
+      stdout: typeof topOut === "string" ? topOut : "",
+      stderr: typeof topErr === "string" ? topErr : "",
+    };
+  }
+  // The failure envelope's one text field. Recorded as `stdout` because the
+  // host collapses both streams into it and says nothing about which was
+  // which — a recorder that split them would be inventing a fact — and because
+  // every parser in `verification_evidence` is line-anchored over stdout. The
+  // alternative, dropping it, would leave a red run recorded with its exit code
+  // and no reason, which is the half the reader actually needs.
+  const errText = payload["error"];
+  if (typeof errText === "string") return { stdout: errText, stderr: "" };
+  return { stdout: "", stderr: "" };
 }
 
 function _reset_turn(state: StateDict, session_id: string): StateDict {
@@ -557,6 +647,16 @@ function _update(state: StateDict, event: string, envelope: StateDict): StateDic
     state["ci_last"] = null;
     state = _reset_turn(state, session_id);
   }
+
+  // The host that wrote this file. Recorded because the instrument-gap reading
+  // is a PER-HOST question and the witness carried no answer to it: every
+  // coverage number had to be attributed by hand, and a file from an unknown
+  // host is indistinguishable from a host with nothing to report. Written on
+  // every update rather than once, so a file predating this field acquires it
+  // the first time the host touches it; until then a reader sees it absent,
+  // which is the honest reading and not a default.
+  const platform = envelope["platform"];
+  if (typeof platform === "string" && platform) state["platform"] = platform;
 
   let payload = envelope["payload"];
   if (!(typeof payload === "object" && payload !== null && !Array.isArray(payload))) {
@@ -668,7 +768,7 @@ function _update(state: StateDict, event: string, envelope: StateDict): StateDic
     // own count is short.
     if (cmd && mightBeVerification(cmd)) {
       const streams = _extract_run_streams(pl);
-      const exit = _extract_exit_reading(pl);
+      const exit = _extract_exit_reading(pl, _is_failure_event(pl, envelope));
       const runs = Array.isArray(state["verification_runs"])
         ? [...(state["verification_runs"] as unknown[])]
         : [];

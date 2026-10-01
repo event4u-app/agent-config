@@ -10800,15 +10800,11 @@ function build_claude_hook_matrix(manifest_path2) {
   const claude_events = (platforms["claude"] ?? {}) || {};
   const aliasesAll = manifest["native_event_aliases"] ?? {};
   const aliases = (aliasesAll["claude"] ?? {}) || {};
-  const ac_to_native = {};
-  for (const [native, ac] of Object.entries(aliases)) {
-    ac_to_native[String(ac)] = native;
-  }
   const matrix = {};
-  for (const [ac_event, concerns] of Object.entries(claude_events)) {
+  for (const [native, ac_raw] of Object.entries(aliases)) {
+    const ac_event = String(ac_raw);
+    const concerns = claude_events[ac_event];
     if (!concerns || Array.isArray(concerns) && concerns.length === 0) continue;
-    const native = ac_to_native[ac_event];
-    if (native === void 0) continue;
     const dispatchArgs = `--platform claude --event ${ac_event} --native-event ${native} --project-dir "$CLAUDE_PROJECT_DIR" --min-version ${String(hook_spec)}`;
     matrix[native] = `B=""; [ -f "$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js" ] && B="$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js"; [ -z "$B" ] && [ -f "$CLAUDE_PROJECT_DIR/dist/hooks/dispatch.js" ] && [ -f "$CLAUDE_PROJECT_DIR/src/scripts/hook_manifest.yaml" ] && B="$CLAUDE_PROJECT_DIR/dist/hooks/dispatch.js"; if [ -n "$B" ] && command -v node >/dev/null 2>&1; then exec node "$B" ${dispatchArgs}; fi; BIN="$CLAUDE_PROJECT_DIR/agent-config"; [ -x "$BIN" ] || BIN=agent-config; command -v "$BIN" >/dev/null 2>&1 || exit 0; "$BIN" dispatch:hook ${dispatchArgs}`;
   }
