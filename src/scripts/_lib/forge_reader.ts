@@ -261,11 +261,11 @@ export function originUrl(
  * different cause.
  */
 function readRulesets(repo: string, api: ForgeApi): RulesetDetail[] | null {
-    const paged = api.get(`repos/${repo}/rulesets`, true);
-    if (!Array.isArray(paged)) return null;
-    const list: unknown[] = paged.every((p) => Array.isArray(p))
-        ? (paged as unknown[][]).flat()
-        : paged;
+    // One flattener for the one `--paginate --slurp` contract. This read grew
+    // its own inline version first, which left two implementations of the same
+    // page shape free to drift apart.
+    const list = slurped(api.get(`repos/${repo}/rulesets`, true), 'rulesets');
+    if (list === null) return null;
     const out: RulesetDetail[] = [];
     for (const entry of list) {
         const id = asObject(entry)?.['id'];
@@ -305,18 +305,24 @@ function readRulesets(repo: string, api: ForgeApi): RulesetDetail[] | null {
  * partial list, for the reason {@link readRulesets} states.
  */
 function slurped(payload: unknown, key: string): unknown[] | null {
-    const pages = Array.isArray(payload) ? payload : [payload];
-    const out: unknown[] = [];
-    for (const page of pages) {
-        if (Array.isArray(page)) {
-            out.push(...page);
-            continue;
+    if (Array.isArray(payload)) {
+        // An array of pages, each itself an array — a list endpoint under
+        // `--slurp`.
+        if (payload.length > 0 && payload.every((p) => Array.isArray(p))) {
+            return (payload as unknown[][]).flat();
         }
-        const listed = asObject(page)?.[key];
-        if (!Array.isArray(listed)) return null;
-        out.push(...listed);
+        // An array of pages, each an object carrying the list under `key`.
+        if (payload.length > 0 && payload.every((p) => Array.isArray(asObject(p)?.[key]))) {
+            return payload.flatMap((p) => asObject(p)?.[key] as unknown[]);
+        }
+        // A flat list of items — what a list endpoint returns UNPAGINATED, and
+        // what `gh` emits when a single page is not wrapped. Kept because
+        // collapsing it into the page shapes above was what broke the flat
+        // case when the two flatteners were merged.
+        return payload;
     }
-    return out;
+    const listed = asObject(payload)?.[key];
+    return Array.isArray(listed) ? [...listed] : null;
 }
 
 function readDeployRestricted(repo: string, api: ForgeApi): boolean | null {

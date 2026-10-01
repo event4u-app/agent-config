@@ -243,9 +243,10 @@ agent-config doctor   # verifies PATH + plugin wiring
 block of `--json`, which asks the forge whether the default branch is protected,
 required checks exist, force-push is off, auto-merge is available, and
 deployments are restricted to the pipeline. It shells out to `gh api`: three
-calls plus one per repository ruleset and one per environment with custom
-branch policies — five on a repository like this one, more on a repository with
-more of either. Each call is capped at 10 s, and a 15 s budget bounds the read
+calls plus one per repository ruleset, plus one per environment that uses
+custom branch policies *and* does not already restrict to protected branches —
+five on a repository like this one, more on a repository with more rulesets or
+environments. Each call is capped at 10 s, and a 15 s budget bounds the read
 as a whole; a call is both admitted and *timed out* against whatever is left of
 it, so the total is a real ceiling rather than an advertised one.
 

@@ -30,6 +30,7 @@ import {
     liveForgeApi,
     originUrl,
     resolveForgeRepo,
+    type Runner,
 } from '../_lib/forge_reader.js';
 
 type Dict = Record<string, unknown>;
@@ -88,9 +89,9 @@ export function forgeProtectionJson(reading: ForgeReading, repo: string | null =
     // false on exactly the failed-live path the council condition names. The
     // earlier verification only ever exercised the opt-out switch and read it
     // as offline; the two are not the same path.
-    const named = repo === null || !readFromForge;
+    const anonymous = repo === null || !readFromForge;
     const name = (s: string): string =>
-        named ? s : s.replace(/\{owner\}\/\{repo\}/g, () => repo);
+        anonymous ? s : s.replace(/\{owner\}\/\{repo\}/g, () => repo);
     return {
         repository: readFromForge ? repo : null,
         rows: rows.map((r) => ({
@@ -113,28 +114,54 @@ export function forgeProtectionJson(reading: ForgeReading, repo: string | null =
  * running `gh api` and reading the mapper in a test. This is the wiring that
  * makes the named command answer for itself.
  *
- * **The offline behaviour Phase 3.2 argued for is unchanged**, which is why
- * this is an addition rather than a reversal of that note: every failure path
- * in `forgeReadingFor` — opt-out switch, no GitHub remote, no `gh`, no
+ * **This IS a reversal of Phase 3.2's module boundary, and the roadmap records
+ * the supersession.** An earlier draft of this comment argued the opposite —
+ * "an addition rather than a reversal" — which a 2/2 convergent council pass
+ * refuted: that note recorded two boundaries, `doctor` does not reach the
+ * network AND the reading is injected, and this reverses both. The refuted
+ * argument is corrected here rather than left standing, because a comment is
+ * what the next reader of this module finds first and is where a refuted
+ * reasoning would get reused.
+ *
+ * What survives is the AVAILABILITY property, which is narrower than the
+ * earlier claim and is the one the supersession rests on: every failure path in
+ * `forgeReadingFor` — opt-out switch, no GitHub remote, no `gh`, no
  * credentials, timeout, unparseable payload, a throw — returns the same
- * `UNREAD_FORGE` reading, so `doctor` offline prints exactly what it printed
- * before, including the source each unread row would have come from.
+ * `UNREAD_FORGE` reading, so offline the ROWS, their `source` templates and the
+ * action lines are what Phase 3.2 printed. Not the whole document: the block
+ * gained a top-level `repository` key, which is `null` on every such path. A
+ * consumer validating `forge_protection` against a closed schema sees that one
+ * added key; "prints exactly what it printed before" was too strong and is not
+ * claimed.
  *
  * `process.env` and the git remote are read HERE rather than inside the reader,
  * so the reader stays injectable and every branch above is reachable from a
  * test without spawning anything.
  */
-export function forgeProtectionJsonFor(root: string): Dict {
+export interface ForgeDeps {
+    readonly env?: Readonly<Record<string, string | undefined>>;
+    /** The subprocess runner for both `git` and `gh`. */
+    readonly run?: Runner;
+}
+
+export function forgeProtectionJsonFor(root: string, deps: ForgeDeps = {}): Dict {
+    // The composition root — budget, thunk, host and cwd wired together — had
+    // no seam and therefore no test, so the opt-out-before-spawn and host
+    // binding were asserted one layer down against fakes while a regression in
+    // the real wiring stayed invisible. `deps` is that seam; production passes
+    // nothing and gets `process.env` plus the real spawn.
+    const env = deps.env ?? process.env;
+    const run = deps.run;
     const remaining = budgetOf(FORGE_TOTAL_BUDGET_MS);
     const read = forgeReadingFor({
-        env: process.env,
+        env,
         // A thunk, so the opt-out short-circuits before `git` spawns.
-        resolveRepo: () => resolveForgeRepo(originUrl(root)),
+        resolveRepo: () => resolveForgeRepo(originUrl(root, run)),
         // Built from the RESOLVED target, so `gh` is addressed at the host and
         // directory the slug came from. The per-call ceiling is whatever is
         // left of the whole-read budget, so a call admitted near the deadline
         // cannot run past it.
-        apiFor: (t) => liveForgeApi(remaining, undefined, { host: t.host, cwd: root }),
+        apiFor: (t) => liveForgeApi(remaining, run, { host: t.host, cwd: root }),
         remaining,
     });
     return forgeProtectionJson(read.reading, read.repo);

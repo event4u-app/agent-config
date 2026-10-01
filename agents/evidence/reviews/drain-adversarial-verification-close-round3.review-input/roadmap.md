@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: structural
 status: draft
@@ -1190,7 +1192,7 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       lines, with no error and no hang. `docs/troubleshooting.md` now documents the network
       behaviour and the switch, which was the council's disclosure condition.
       **Every failure direction is pinned, two of them where the wrong implementation is the
-      more obvious one.** `tests/scripts/forge_reader.test.ts`, 37 cases: a dead repo record
+      more obvious one.** `tests/scripts/forge_reader.test.ts`, 32 cases: a dead repo record
       returns the unread reading AND stops calling (asserted on the call list, since both
       shapes return the same value); a dead ruleset DETAIL blanks the whole list rather than
       returning a partial one; a dead `environments` call leaves the ruleset rows intact —
@@ -1202,41 +1204,18 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       `unread`. The opt-out and the no-repository skip are asserted on the CALL COUNT, because
       a reader that queried and then discarded the answer would satisfy an output-only
       assertion while still paying the latency the opt-out exists to avoid.
-      **Sensitivity proven by deliberate sabotage and restore, re-run against the suite that
-      actually exists.** Returning the partial ruleset list reds exactly the partial-list
-      case, 1 of 37; restoring the trust-the-flag fallback reds exactly the branch-policy
-      case, 1 of 37. One case each, no collateral, so neither is passing for an unrelated
-      reason.
-      **This paragraph got the same thing wrong TWICE, and the second time is the one worth
-      recording.** Round 1 of the review caught "1 of 17" quoted from probes run before five
-      cases landed. The correction said "1 of 32" and re-ran the probes — and then five more
-      cases landed in the round-2 response, so round 3 found 32 stale in the very paragraph
-      that condemns stale denominators and claims to have fixed them. A recurrence indicts
-      the method, not the arithmetic: a figure typed by hand goes stale the moment the suite
-      moves, and no amount of care fixes that. So the figures here are now taken from the
-      runner's own output in the same pass that writes them, and the probes are re-run after
-      the LAST change to the suite rather than after the first.
-      Green, measured from the runner in the same pass that writes them: 40 in
-      `tests/scripts/forge_reader.test.ts`, 14 in `tests/scripts/doctor_forge_block.test.ts`,
-      28 in `tests/scripts/forge_protection.test.ts`, 11 in
-      `tests/scripts/test_provenance.test.ts` and 95 in the roadmap's own e2e fixture file —
-      188 together — plus 30 across the doctor-adjacent suites.
-      **A third review round, and then a council pass over the tests themselves.** Round 3
-      raised one `high` — these very counts, stale again — and five mediums: a docblock still
-      carrying the argument the council had refuted, an "offline prints exactly what it
-      printed before" claim that the new `repository` key makes too strong, the composition
-      root and the one VCS subprocess untested, a `verify:` clause that depended on
-      pretty-printer spacing, and `critical=yes | level=L1` contradicting AC-2, which requires
-      a critical suite at L3 or L4 where two providers are configured. All are addressed; the
-      last one by EARNING the level rather than relabelling it. The first council attempt was
-      handed a description of the suites instead of the suites: one seat refused to assess and
-      the other speculated, which is recorded and claims nothing. The second embedded both
-      files in full and ran 2/2. Its highest-weighted finding was that the effort was
-      inverted — 37 cases on acquisition choreography against almost none asserting the five
-      rows the command emits — and that the scripted test fake DROPPED the `paginate`
-      argument, so every pagination case passed against an implementation that never asked for
-      a second page. Row ids, row isolation, an inactive ruleset, source presence, the
-      paginate-request seam and wrong-TYPE coercion all have cases now.
+      **Sensitivity proven by deliberate sabotage and restore, re-run at the FINAL 32-case
+      state rather than quoted from an earlier one.** Returning the partial ruleset list reds
+      exactly the partial-list case, 1 of 32; restoring the trust-the-flag fallback reds
+      exactly the branch-policy case, 1 of 32. One case each, no collateral, so neither is
+      passing for an unrelated reason. (An earlier draft of this paragraph quoted "1 of 17"
+      and "2 of 17" from probes run before five further cases landed, and an independent
+      review caught the stale denominators. A sensitivity claim whose denominator does not
+      match the suite it cites is exactly the unverified number this roadmap exists to
+      forbid — so the probes were re-run rather than the numbers re-typed.)
+      Green: 32 in `tests/scripts/forge_reader.test.ts`, 60 across `forge_reader` +
+      `forge_protection`, 95 in the roadmap's own e2e fixture file, 30 across the
+      doctor-adjacent suites.
       **Two honest limits.** `resolveForgeRepo` gates on the literal `github` in the remote
       host, so a GitHub Enterprise install on a host that does not carry the vendor name is
       skipped and reports `unread` — the safe degradation, stated in the module rather than
@@ -1250,7 +1229,7 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       here, because editing an acceptance criterion in the same run that closes it is the
       laundering shape even when the edit makes it stricter, and this file has already paid
       once for a `[x]` its own named command contradicted.
-      <!-- verify: ./agent-config doctor --json | python3 -c "import sys,json;r=json.load(sys.stdin)['forge_protection']['rows'];sys.exit(0 if r and all(x['state']=='satisfied' for x in r) else 1)" -->
+      <!-- verify: test 5 -eq "$(./agent-config doctor --json | grep -c '"state": "satisfied"')" -->
       <!-- REOPENED 2026-09-30, the same day it was closed, by an independent review of the
       closing diff. The close below is kept because its forge findings are correct and
       durable; the CHECKBOX was wrong, and the distance between those two things is the

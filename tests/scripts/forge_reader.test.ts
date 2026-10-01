@@ -15,7 +15,7 @@
  * ruleset list, a non-boolean flag coerced to `false`.
  */
 
-// provenance: level=L1 | critical=yes | evidence=drain-adversarial-verification-close
+// provenance: level=L4 | critical=yes | evidence=test-quality-forge-reader-round2-2026-10-01
 //
 // `critical=yes` is a CORRECTION. The first marker read `critical=no`, which an
 // independent review called at least arguable and recorded without an argument:
@@ -24,11 +24,23 @@
 // for the owner's confirmation — and `evaluator-independence` names merge
 // control among the critical behaviours.
 //
-// `level=L1` is the honest ceiling and NOT L3/L4. Authorship was L0, this
-// session; what is independent is the VALIDATION — a fresh subagent reviewed
-// the diff blind and its 13 findings were folded in, which is another session
-// on the same model. Marking L4 because a two-provider council ran on the
-// DESIGN question would over-claim: the council never saw these tests.
+// `level=L4` was EARNED rather than relabelled, and the route matters because
+// the first attempt failed honestly. A third review round found `critical=yes`
+// at L1 contradicting AC-2, which requires critical tests at L3 or L4 where two
+// providers are configured — a closed criterion falsified by this diff. The
+// first council pass was given a DESCRIPTION of these files and one seat
+// correctly refused to assess while the other speculated; that pass is recorded
+// and claims nothing. The second embedded both suites in full (the bundle is
+// capped at 51,200 bytes, so the implementation was dropped and the tests kept)
+// and ran 2/2 with anthropic and openai.
+//
+// Its strongest finding is folded in rather than noted: the effort was
+// INVERTED — 37 cases on acquisition choreography against almost none asserting
+// the five rows this command actually emits. It also caught that the scripted
+// `api()` fake DROPPED the `paginate` argument, so the pagination cases passed
+// against an implementation that never asked for a second page, and that the
+// "non-boolean" case supplied a missing field rather than a wrong-typed one.
+// All three now have cases.
 
 import { describe, expect, it } from 'vitest';
 
@@ -86,12 +98,19 @@ const BRANCH_POLICIES = { total_count: 1, branch_policies: [{ name: 'main' }] };
 /** A scripted API. Records every path it was asked for, so "no call" is testable. */
 function api(
     table: Readonly<Record<string, unknown | null>>,
-): ForgeApi & { readonly calls: string[] } {
+): ForgeApi & { readonly calls: string[]; readonly paged: string[] } {
     const calls: string[] = [];
+    // The `paginate` argument was DROPPED by the first version of this fake, so
+    // the reader→adapter seam — whether `readForge` actually asks for the
+    // paginated form — was untested while the pagination cases passed. A fake
+    // that silently discards a parameter cannot witness it.
+    const paged: string[] = [];
     return {
         calls,
-        get(apiPath: string): unknown | null {
+        paged,
+        get(apiPath: string, paginate?: boolean): unknown | null {
             calls.push(apiPath);
+            if (paginate === true) paged.push(apiPath);
             return apiPath in table ? table[apiPath] : null;
         },
     };
@@ -159,6 +178,28 @@ describe('readForge — every failure degrades to unread, never to false', () =>
         expect(reading.allowAutoMerge).toBeNull();
     });
 
+    it('a WRONG-TYPE allow_auto_merge is unread, not just a missing one', () => {
+        // The case above supplies a MISSING field. A truthy string or a 1 is
+        // the shape that actually arrives from a loose serialiser, and it is
+        // the one where a coercing implementation reports `satisfied`.
+        for (const bad of ['true', 1, 'yes', {}]) {
+            const reading = readForge(
+                'o/r',
+                api({ ...FULL, 'repos/o/r': { default_branch: 'main', allow_auto_merge: bad } }),
+            );
+            expect(reading.allowAutoMerge).toBeNull();
+        }
+    });
+
+    it('a non-string default_branch is unread, never an empty branch name', () => {
+        const reading = readForge(
+            'o/r',
+            api({ ...FULL, 'repos/o/r': { default_branch: 42, allow_auto_merge: true } }),
+        );
+        expect(reading.defaultBranch).toBeNull();
+        expect(reading.allowAutoMerge).toBe(true); // independent field, still read
+    });
+
     it('a failed branch-policy read makes the row unread, never a trusted flag', () => {
         // CORRECTED after an independent review. The first version asserted
         // `true` here on the reasoning that falling back to the flag is the
@@ -214,6 +255,21 @@ describe('readForge — every failure degrades to unread, never to false', () =>
 });
 
 describe('pagination — the overstatement the unpaginated read allowed', () => {
+    it('ASKS for the paginated form on every list endpoint', () => {
+        // The consumption of pages was tested; the request for them was not,
+        // because the fake dropped the argument. An implementation that read
+        // page one and parsed it correctly passed every case here.
+        const a = api(FULL);
+        readForge('o/r', a);
+        expect(a.paged).toContain('repos/o/r/rulesets');
+        expect(a.paged).toContain('repos/o/r/environments');
+        expect(a.paged).toContain(
+            'repos/o/r/environments/github-pages/deployment-branch-policies',
+        );
+        // The single-object reads must NOT be paginated.
+        expect(a.paged).not.toContain('repos/o/r');
+    });
+
     it('reads every page of environments, not just the first', () => {
         // Unpaginated, `deployRestrictedFrom`'s `every()` ran over the visible
         // subset, so an unlisted unrestricted environment read as `satisfied`.
