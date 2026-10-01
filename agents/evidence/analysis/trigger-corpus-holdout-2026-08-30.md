@@ -60,7 +60,7 @@ prevent.
 ## The set hash
 
 ```
-SET-SHA256  c63c1030a3ab184b212548b3081f42f3babd6d6dad3362981c1c66fc36628ab8
+SET-SHA256  f6d6748183ab383cd13ccc76e3b0729d8e6b74f4c982ae1115505eb42e01758e
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -251,7 +251,10 @@ open and which this file does not settle.
 | `overbuild-review-lens` | `32ef2f64da160c5cbc5fef3b4e3d38d83e8f39b918ba4574e43e2f9256ae69f2` |
 | `php-coder` | `25950ef2e90e4055ba30de21b32204727dd953275a681f99ac60c5a59592be83` |
 | `playbook-authoring` | `e615f614da3c14439fca70f3477272a8323e579ac4961ce2ce83c3c0f099949b` |
+| `review-routing` | `9fd8b380be9addab50039ecba11ea668db0e57de27c57a65ca1b089acd3b8bcc` |
 | `schema-review` | `7c98b3409de8ebb6ef3ee999a46e9c07f69574809c42283b25d2ab384f6cd53f` |
+| `skill-improvement-pipeline` | `67e8594b0bbe6427ec2ad12d46e5910345725dd8ab8436b47a1bfa078a173135` |
+| `tailwind-engineer` | `7b925bfdaca4a4f315bea04c1ae63a9a98a4e6766d7ce951a7c1c56fbd2e5014` |
 | `threat-modeling` | `6bdb1d3b44939ac8f6ba78bb6145ca3bea91adb50991cd44bd700987adf903f2` |
 | `worktree-lifecycle` | `1cdde59eaaadc1cb7dfa1cd86d9852326c352a7dcd884dbcbaa414f36d176326` |
 
@@ -283,6 +286,7 @@ open and which this file does not settle.
 | `customer-research` | `be1760092dfc0e70006ac1313709d8acdd48a62b1e3b81f354590df95e23fbc6` |
 | `data-flow-mapper` | `535e42defa307b3a40d68cdcd6eeeef101c120d5c5c1b9740330199a5acc2203` |
 | `design-intelligence` | `81361d4cd038b77ae78ddc988e3fdc247b93112f217ed455ce9437ac3576ac21` |
+| `design-system-capture` | `afdefd4e0141ef85eb7277def08c84abf1bf4b9f30d7cbed32a4bc39039b23f6` |
 | `design-tokens` | `a39661a7b95f92c7f649d4a82b33c07be346053d4529ae7a6a9626609b30be40` |
 | `design-variations` | `ab58c78688a1f4f41cbbdd9c6302c3eea975bc2c25a565b67fcfb961cea9d590` |
 | `doc-coauthoring` | `025530a4b9bb40834cd9054c40e8c9518c55e55d2adcead638b1a8919d856f1b` |
@@ -526,6 +530,53 @@ paid again.** `SET-SHA256` is computed over the undivided list, so it moves
 whenever the corpus grows on either side and cannot on its own distinguish
 "grew" from "edited a frozen file". The per-row diff above is what distinguishes
 them, which is why this section carries it rather than only the new number.
+
+## Growth 2026-10-01b — four corpora, three of them HOLDOUT-side
+
+```
+THE CORPUS GREW BY FOUR. THREE OF THEM LANDED IN THE HOLDOUT.
+THE SEAL'S ORDERING CLAIM COVERS THE 18 ORIGINALLY SEALED ROWS AND NO OTHERS.
+THE THREE ADDED HERE ARE SEALED FROM NOW ON, NOT RETROACTIVELY.
+```
+
+**What changed.** `road-to-a-trunk-whose-own-gates-are-green` de-linked
+cross-pack references in four skills that shipped no routing corpus, and
+`check_routing_coverage` requires a corpus for every skill a diff touches — so
+the four files are the gate's own remedy rather than a coverage push, the same
+shape as the 2026-09-30 and 2026-10-01 entries above. Their four grandfather
+entries came off `trigger_eval_grandfather.json` in the same change.
+
+| Row | Partition | `sha256(name)[0:2]` | Now |
+|---|---|---|---|
+| `review-routing` | holdout | `0x29` = 41 | `9fd8b380…` |
+| `skill-improvement-pipeline` | holdout | `0x29` = 41 | `67e8594b…` |
+| `tailwind-engineer` | holdout | `0x2e` = 46 | `7b925bfd…` |
+| `design-system-capture` | train | `0x90` = 144 | `afdefd4e…` |
+
+Three fall below the ceiling of 51 and one does not; nothing was chosen, which
+is what a name-derived partition buys.
+
+**What the ordering claim does and does not cover.** The 2026-10-01 entry above
+already scoped it to the 18 originally sealed rows when `accessibility-auditor`
+became the 19th. These three make 22. The claim — that the sealed bytes predate
+the first proposer commit — is a statement about those 18 and is not extended
+here: a row authored today obviously does not predate a commit from 2026-08-31.
+What the seal means for them going forward is unchanged and immediate: no
+proposer, curator or analyzer may read them.
+
+**Both train-side measurements ARE re-taken here**, unlike the 2026-10-01 entry
+above, and the difference is the partition rather than the date.
+`design-system-capture` is train-side, so the train input moved and the
+obligation the 2026-09-19 entry sets applies in full:
+`routing-body-signal-verdict.json` and
+`delivery-set-measurement-2026-08-31.json` are both re-run in this change.
+`routing-coverage-seed.json` rises 0.3445 → 0.3579 with them.
+
+The stale-by-two-corpora condition the 2026-10-01 entry records for
+`delivery-set-result-2026-08-31.md` is NOT repaired here and is not inherited
+silently either: that is a prose record with its own re-take section, this
+change re-ran the JSON the test reads, and conflating the two is the error that
+entry was written to stop.
 
 ## What this freeze does NOT establish
 
