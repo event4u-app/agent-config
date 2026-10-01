@@ -83,5 +83,15 @@ jobs:
           npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
             || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
 
+      # Offline first, and this step is load-bearing beyond tidiness. It is the
+      # invocation `check_gate_coverage` spawns on every pull request to read
+      # this gate's `scanned:` floor — `src/config/gate-coverage.yml` pins
+      # `argv: []` to match it. Pinning the `--fetch` form instead would make
+      # every PR in the repository issue eight live vendor requests to learn a
+      # number that `reportScanned` emits before any fetch happens, and would
+      # put up to 8 x 30s of third-party latency inside a required check.
+      - name: Report the watch scope (offline, no egress)
+        run: ./scripts-run src/scripts/check_host_docs_digest
+
       - name: Re-fetch each host docs page and compare (read-only)
         run: ./scripts-run src/scripts/check_host_docs_digest --fetch

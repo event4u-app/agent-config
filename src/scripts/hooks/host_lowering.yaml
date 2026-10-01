@@ -49,10 +49,14 @@
 #                    ESTABLISHED for the row — recorded by a human-run fill,
 #                    never silently updated. On drift the watcher leaves it
 #                    alone and moves `expires` instead, so the field keeps
-#                    naming the body someone actually read. `docs_at` and
-#                    `docs_digest` are therefore ONE pair: one date, one body,
-#                    one establishment. `check_host_docs_digest --fetch`
-#                    re-reads the page and flags a difference.
+#                    naming the body someone actually read. It is NOT paired
+#                    with `docs_at`, and the committed rows prove why: all nine
+#                    carry `docs_at: 2026-09-29` while the eight digests were
+#                    taken 2026-10-01. The two answer different questions —
+#                    `docs_at` when a human read the page for the row's ANSWERS,
+#                    `docs_digest` which body the watcher is comparing against.
+#                    `check_host_docs_digest --fetch` re-reads and flags a
+#                    difference.
 #   slots            ORDERED. Bridge entries are written in this order, so the
 #                    order is part of the generated output and must not be
 #                    sorted. `native` may be a list where one slot has two

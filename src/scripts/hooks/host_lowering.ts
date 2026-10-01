@@ -62,13 +62,20 @@ export interface VerifiedBlock {
      * digest alone, so the field keeps pointing at the body someone actually
      * read while `expires` carries the alarm.
      *
-     * Two earlier wordings were wrong in opposite directions and both are
-     * named rather than quietly replaced. "As fetched on `docs_at`" was
-     * contradicted by the very first fill (digests taken 2026-10-01 against
-     * rows whose `docs_at` is 2026-09-29). "As fetched by the LAST digest run"
-     * was contradicted by the writer (after a drift the last run computed a
-     * different hash than the field holds). The pair that is actually true is
-     * `docs_at` + `docs_digest`: one date, one body, one establishment.
+     * Three earlier wordings were wrong and all three are named rather than
+     * quietly replaced, because each was corrected by evidence the next one
+     * then contradicted. "As fetched on `docs_at`" was refuted by the very
+     * first fill (digests taken 2026-10-01 against rows whose `docs_at` is
+     * 2026-09-29). "As fetched by the LAST digest run" was refuted by the
+     * writer (after a drift the last run computed a different hash than the
+     * field holds). "`docs_at` + `docs_digest` are ONE pair" was refuted by
+     * the same committed data as the first — stating it was a relapse, caught
+     * in review.
+     *
+     * The two fields are simply INDEPENDENT. `docs_at` dates a human reading
+     * the page for the row's ANSWERS; `docs_digest` names the body the watcher
+     * compares against. Nothing guarantees they were the same fetch, and no
+     * wording that implies they were can survive this table's own rows.
      *
      * Null where there is nothing to hash — a row whose `docs_url` is null —
      * and null is also the pre-fill state `check_host_docs_digest --fetch

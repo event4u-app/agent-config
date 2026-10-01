@@ -275,15 +275,15 @@ export function applyFindings(
         // A DRIFTED ROW KEEPS ITS RECORDED DIGEST. Two reasons, and the second
         // is the one that matters more.
         //
-        // 1. Provenance. The digest records a body a human ESTABLISHED, paired
-        //    with the `docs_at` of that establishment. Writing the new body's
-        //    hash while `docs_at` stays put makes the pair assert a reading
-        //    that never happened — a false statement in a table whose whole
-        //    purpose is that its statements are true, and a quiet form of
-        //    exactly the "adopts no upstream text" this module promises not to
-        //    do. (This comment used to quote the field's RETIRED definition,
-        //    "as fetched on `docs_at`", which the same file had already
-        //    corrected three paragraphs up. Caught in review.)
+        // 1. Provenance. The digest names the body a human ESTABLISHED for
+        //    this row. Silently replacing it with a body nobody read makes the
+        //    field assert an establishment that never happened — a false
+        //    statement in a table whose whole purpose is that its statements
+        //    are true, and a quiet form of exactly the "adopts no upstream
+        //    text" this module promises not to do. (Two earlier versions of
+        //    this comment were themselves wrong about the field's definition;
+        //    see `host_lowering.ts` for the three retired wordings and why
+        //    `docs_at` and `docs_digest` are independent rather than a pair.)
         // 2. The drift signal would erase itself. Overwriting the digest means
         //    the NEXT run compares new-against-new and reports `unchanged`, so
         //    a human who misses the one red week never learns the page moved.
@@ -427,6 +427,21 @@ function selfTest(): number {
     if (classify('h', 'any', 'u', 'd', null, 'GONE HTTP 404').state !== 'gone') problems.push('404 must be gone');
     if (classify('h', 'any', 'u', 'd', null, 'HTTP 503').state !== 'unreachable') problems.push('503 must be unreachable');
 
+    // A `gone` row writes nothing — the high finding of round 3, asserted here
+    // as well as in the vitest suite because this is the block the
+    // `no_canary_reason` cites as the negative control.
+    const deadRow = applyFindings(src, [classify('claude', 'any', 'u', 'old', null, 'GONE HTTP 404')], '2026-10-01');
+    if (deadRow.text !== src) problems.push('a gone row must not edit the table');
+    if (deadRow.written.length !== 0) problems.push('a gone row must write nothing');
+
+    // `written` vs `missed`: a row resolved but not writable must be REPORTED,
+    // not counted as recorded. The `no_canary_reason` credits this block with
+    // covering that direction, so it has to actually be here.
+    const noKey = src.replace(/\n\s+docs_digest: [0-9a-f]{64}/, '');
+    const missedRun = applyFindings(noKey, [classify('claude', 'any', 'u', null, 'body')], '2026-10-01');
+    if (missedRun.missed.join() !== 'claude/any') problems.push('a row with no digest key must be reported as missed');
+    if (missedRun.written.length !== 0) problems.push('a missed row must not count as written');
+
     for (const p of problems) process.stderr.write(`❌  ${p}\n`);
 
     // The pure-function checks above prove the DECISIONS. These prove the
@@ -534,8 +549,21 @@ export async function main(argv: readonly string[]): Promise<number> {
     };
     const tablePath = valueOf('--lowering') ?? HOST_LOWERING_PATH;
     const todayRaw = valueOf('--today');
-    if (todayRaw !== null && !/^\d{4}-\d{2}-\d{2}$/.test(todayRaw)) {
-        bad.push(`--today ${todayRaw} is not an ISO YYYY-MM-DD date`);
+    if (todayRaw !== null) {
+        // Shape AND validity. Shape alone accepted `2026-13-45`, which then
+        // built an `Invalid Date` in `dayBefore` and threw `RangeError` out of
+        // `toISOString()` — surfacing as a bare stack trace from the catch-all,
+        // which is the outcome this parser exists to prevent. Checked here, at
+        // the boundary, rather than defended against at every use.
+        const shapeOk = /^\d{4}-\d{2}-\d{2}$/.test(todayRaw);
+        const realDate = shapeOk && !Number.isNaN(new Date(`${todayRaw}T00:00:00Z`).getTime())
+            // `new Date('2026-02-31')` does NOT produce Invalid Date in every
+            // engine — it can roll over into March — so the round-trip is what
+            // actually rejects a non-existent day.
+            && new Date(`${todayRaw}T00:00:00Z`).toISOString().slice(0, 10) === todayRaw;
+        if (!realDate) {
+            bad.push(`--today ${todayRaw} is not a real ISO YYYY-MM-DD date`);
+        }
     }
     if (bad.length > 0) {
         for (const b of bad) process.stderr.write(`check_host_docs_digest: ${b}.\n`);
