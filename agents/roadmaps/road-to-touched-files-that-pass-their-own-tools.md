@@ -37,7 +37,7 @@ as verification.
 
 ## Phase 1 — Run it, record it, refuse nothing
 
-- [ ] **1.1 A pure `touched_file_quality` module over the resolver's real list.** The
+- [x] **1.1 A pure `touched_file_quality` module over the resolver's real list.** The
       list at `9bc8cd4` is `npx tsc --noEmit`, `npx eslint .`, `vendor/bin/phpstan analyse`,
       `vendor/bin/pint`, `ruff check`, `mypy .`, `go vet`, `cargo clippy` — no formatter.
       Rules: a command is run only if the resolver lists it; a command that writes files
@@ -48,20 +48,31 @@ as verification.
       code, first 20 output lines. `corrected-from-reproduction` — the supplied list
       named formatters and a "cheap" flag the resolver does not have.
       verify: `npx vitest run tests/scripts/touched_file_quality.test.ts` -> 0
-- [ ] **1.2 The stop concern calls it, off by default.** `verify-before-complete` gains
+- [x] **1.2 The stop concern calls it, off by default.** `verify-before-complete` gains
       `touched_file_quality: off | shadow | warn` (template default `off`); in `shadow` it
       writes `quality_runs[]` to the record at `agents/state/verify-before-complete/<sha>.json`
       (`before_complete_hook.ts:32`), defaulted in `_empty_state` (`:157-184`). Exit stays
-      0 on every path.
+      0 on every path. `corrected-from-reproduction` — the key is NOT seeded in
+      `_empty_state`: doing so would change the record shape of every install that never
+      opted in, which the first acceptance criterion forbids ("byte-identical to the base
+      ref"). The two instructions are in direct conflict and the criterion wins; the key is
+      written at stop and deleted at the turn boundary instead.
       verify: fixture — `shadow` with one failing check writes `quality_runs[0].exit=1` and the hook exits 0
-- [ ] **1.3 A quality run is not a verification.** `quality_runs` is a field the
+- [x] **1.3 A quality run is not a verification.** `quality_runs` is a field the
       classifier (`src/scripts/_lib/verification_command.ts`) never reads; a negative
       fixture pins that `npx tsc --noEmit` recorded by this module does not set
       `verified_this_turn`.
       verify: `npx vitest run tests/scripts -t 'quality run is not verification'` -> 0
-- [ ] **1.4 A latency reading under `shadow`.** The per-concern bench already measures
+- [x] **1.4 A latency reading under `shadow`.** The per-concern bench already measures
       `verify-before-complete` at default; add the `shadow` variant over a five-file
       TypeScript fixture and record its p95 before any default moves.
+      `corrected-from-reproduction` — it does not. `bench_hook_latency.perConcernRows` is
+      fed by `blockingConcerns()`, which filters the manifest to `severity: blocking`, and
+      `verify-before-complete` is `severity: advisory` — so there was no `default` row to
+      add a variant beside, and widening that filter would change what the report means for
+      its own consumer (per-concern timeouts). Measured instead by
+      `src/scripts/bench_touched_file_quality.ts`, which times the stop path's own
+      `collectTouchedFileQuality` over the fixture with a real installed `eslint`.
       verify: the bench output carries a `verify-before-complete` shadow row with a p95 in ms
 
 ## Phase 2 — Decide from the readings
@@ -69,8 +80,14 @@ as verification.
 - [ ] **2.1 One release of shadow readings, published.** Stops with edits, stops with at
       least one `quality_runs` entry, stops with a non-zero tool verdict, median wall time;
       `skipped:*` entries are counted separately and never as verdicts.
+      BLOCKED on a release carrying the instrumentation — no consumer can have run in
+      `shadow` before it ships, so the three stop-counters are necessarily zero. The page
+      exists with its counters defined and the measured latency median
+      (`agents/evidence/analysis/touched-file-quality-readings-2026-Q4.md`), and states
+      plainly that zero means not-yet-observed rather than observed-to-be-zero. Closing
+      this box needs the window, not another page.
       verify: `grep -c 'median' agents/evidence/analysis/touched-file-quality-readings-2026-Q4.md` -> /[1-9]/
-- [ ] **2.2 `warn` emits one advisory line naming the command and the file**, capped at
+- [x] **2.2 `warn` emits one advisory line naming the command and the file**, capped at
       200 bytes, never a block.
       verify: fixture — `warn` with a failing typecheck yields exactly one line ≤ 200 bytes and exit 0
 - [~] **2.3 Default `shadow` → `warn`.** Deferred: a shipped-default flip is an owner

@@ -108,7 +108,16 @@ export const BODY_CLASSES: readonly BodyClass[] = ["input", "result"] as const;
  */
 export const BODY_KEYS: Readonly<Record<BodyClass, readonly string[]>> = {
   input: ["tool_input", "toolInput"],
-  result: ["tool_response", "toolResponse", "tool_result", "toolUseResult"],
+  // `error` is a result body and is listed as one. On claude's
+  // `PostToolUseFailure` the failing call carries NO `tool_response` at all —
+  // the command's own stdout and stderr arrive here instead, under the first
+  // line stating the exit code. Until that event was bound this key reached no
+  // concern, so its absence from this list cost nothing; binding the event
+  // without adding it would have delivered raw command output in full to every
+  // concern on the slot, including the fourteen that never declared `result`.
+  // That is exactly the content this module exists to withhold, so the key
+  // belongs to the class whose semantics it has — not to an exception.
+  result: ["tool_response", "toolResponse", "tool_result", "toolUseResult", "error"],
 };
 
 export interface PayloadStub extends JsonObject {
