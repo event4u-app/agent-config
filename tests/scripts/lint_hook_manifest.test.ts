@@ -7,7 +7,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { lint } from "../../src/scripts/lint_hook_manifest.js";
+import { CONCERN_EFFECTS, lint } from "../../src/scripts/lint_hook_manifest.js";
 import { CONCERN_REGISTRY } from "../../src/scripts/hooks/concern_registry.js";
 import { _load_yaml } from "../../src/scripts/hooks/dispatch_hook.js";
 
@@ -40,6 +40,7 @@ concerns:
     script: src/scripts/session_canary_hook.ts
     args: []
     fail_closed: false
+    effect: context
 platforms:
   claude:
     session_start: [session-canary]
@@ -66,10 +67,12 @@ concerns:
     script: src/scripts/session_canary_hook.ts
     args: []
     fail_closed: false
+    effect: context
   delegation-nudge:
     script: src/scripts/hooks/delegation_nudge_hook.ts
     args: []
     fail_closed: false
+    effect: notification
 platforms:
   claude:
     session_start: [session-canary]
@@ -104,11 +107,11 @@ platforms:
 describe("lint_hook_manifest — nudge_rank uniqueness", () => {
   function withRanks(a: string, b: string): string {
     return TWO_CONCERNS.replace(
-      "  session-canary:\n    script: src/scripts/session_canary_hook.ts\n    args: []\n    fail_closed: false\n",
-      `  session-canary:\n    script: src/scripts/session_canary_hook.ts\n    args: []\n    fail_closed: false\n${a}`,
+      "  session-canary:\n    script: src/scripts/session_canary_hook.ts\n    args: []\n    fail_closed: false\n    effect: context\n",
+      `  session-canary:\n    script: src/scripts/session_canary_hook.ts\n    args: []\n    fail_closed: false\n    effect: context\n${a}`,
     ).replace(
-      "  delegation-nudge:\n    script: src/scripts/hooks/delegation_nudge_hook.ts\n    args: []\n    fail_closed: false\n",
-      `  delegation-nudge:\n    script: src/scripts/hooks/delegation_nudge_hook.ts\n    args: []\n    fail_closed: false\n${b}`,
+      "  delegation-nudge:\n    script: src/scripts/hooks/delegation_nudge_hook.ts\n    args: []\n    fail_closed: false\n    effect: notification\n",
+      `  delegation-nudge:\n    script: src/scripts/hooks/delegation_nudge_hook.ts\n    args: []\n    fail_closed: false\n    effect: notification\n${b}`,
     );
   }
 
@@ -144,8 +147,8 @@ describe("lint_hook_manifest — nudge_rank uniqueness", () => {
 describe("lint_hook_manifest — re_arm validation", () => {
   function withReArm(v: string): string {
     return TWO_CONCERNS.replace(
-      "  session-canary:\n    script: src/scripts/session_canary_hook.ts\n    args: []\n    fail_closed: false\n",
-      `  session-canary:\n    script: src/scripts/session_canary_hook.ts\n    args: []\n    fail_closed: false\n${v}`,
+      "  session-canary:\n    script: src/scripts/session_canary_hook.ts\n    args: []\n    fail_closed: false\n    effect: context\n",
+      `  session-canary:\n    script: src/scripts/session_canary_hook.ts\n    args: []\n    fail_closed: false\n    effect: context\n${v}`,
     );
   }
 
@@ -209,7 +212,7 @@ describe("lint_hook_manifest — red fixtures", () => {
     const p = fixtureManifest(
       VALID.replace(
         "platforms:",
-        `  onboarding-gate:\n    script: src/scripts/onboarding_gate_hook.ts\n    args: []\n    fail_closed: false\nplatforms:`,
+        `  onboarding-gate:\n    script: src/scripts/onboarding_gate_hook.ts\n    args: []\n    fail_closed: false\n    effect: notification\nplatforms:`,
       ),
     );
     expect(lint(p, false)).toBe(0);
@@ -245,5 +248,84 @@ describe("lint_hook_manifest — the shipped manifest", () => {
       missing,
       `bound concerns without an in-process registry entry (would fall back to the ~1.6s tsx spawn path): ${missing.join(", ")}`,
     ).toEqual([]);
+  });
+});
+
+describe("effect: — the census's field (Phase 2.2)", () => {
+  const withConcern = (body: string): string =>
+    VALID.replace(
+      "  session-canary:\n    script: src/scripts/session_canary_hook.ts\n    args: []\n    fail_closed: false\n    effect: context\n",
+      `  session-canary:\n    script: src/scripts/session_canary_hook.ts\n    args: []\n    fail_closed: false\n${body}`,
+    );
+
+  /** Run the linter and return its exit code with everything it wrote. */
+  function run(body: string): { code: number; text: string } {
+    const chunks: string[] = [];
+    const realErr = process.stderr.write.bind(process.stderr);
+    const realOut = process.stdout.write.bind(process.stdout);
+    const sink = (c: unknown): boolean => {
+      chunks.push(String(c));
+      return true;
+    };
+    process.stderr.write = sink as typeof process.stderr.write;
+    process.stdout.write = sink as typeof process.stdout.write;
+    try {
+      return { code: lint(fixtureManifest(withConcern(body)), false), text: chunks.join("") };
+    } finally {
+      process.stderr.write = realErr;
+      process.stdout.write = realOut;
+    }
+  }
+
+  it("rejects a concern with no effect at all", () => {
+    const r = run("");
+    expect(r.code).toBe(1);
+    expect(r.text).toMatch(/concerns\.session-canary: 'effect' must be one of/);
+  });
+
+  it("rejects a value outside the closed set", () => {
+    const r = run("    effect: vibes\n");
+    expect(r.code).toBe(1);
+    expect(r.text).toMatch(/'effect' must be one of/);
+    expect(r.text).toMatch(/"vibes"/);
+  });
+
+  it("rejects a misspelled key, which is the failure no unknown-key guard catches", () => {
+    const r = run("    effects: context\n");
+    expect(r.code).toBe(1);
+    expect(r.text).toMatch(/'effect' must be one of/);
+  });
+
+  it("rejects 'permission' on a concern that cannot refuse", () => {
+    const r = run("    severity: advisory\n    effect: permission\n");
+    expect(r.code).toBe(1);
+    expect(r.text).toMatch(/contradicts 'severity: advisory'/);
+  });
+
+  it("rejects a blocking concern that claims any other effect", () => {
+    const r = run("    severity: blocking\n    effect: notification\n");
+    expect(r.code).toBe(1);
+    expect(r.text).toMatch(/contradicts 'severity: blocking'/);
+  });
+
+  it("accepts a blocking concern declared as permission", () => {
+    const r = run("    severity: blocking\n    effect: permission\n");
+    expect(r.code).toBe(0);
+  });
+
+  it("the real manifest gives every concern an effect, and every blocking one 'permission'", () => {
+    const manifest = _load_yaml(REAL_MANIFEST) as {
+      concerns: Record<string, { severity?: string; effect?: string }>;
+    };
+    const names = Object.keys(manifest.concerns);
+    expect(names.length).toBe(62);
+    const missing = names.filter((n) => !CONCERN_EFFECTS.has(String(manifest.concerns[n].effect)));
+    expect(missing).toStrictEqual([]);
+    const mismatched = names.filter(
+      (n) =>
+        (manifest.concerns[n].severity === "blocking") !==
+        (manifest.concerns[n].effect === "permission"),
+    );
+    expect(mismatched).toStrictEqual([]);
   });
 });

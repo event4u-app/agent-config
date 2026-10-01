@@ -81,7 +81,7 @@ neighbour's effect visible; it cannot make it run after ours.
 
 ## Phase 2 — Count the neighbours and their effects
 
-- [ ] **2.1 `doctor neighbours`: one census, seven shape classes.** Read-only: (a) hook
+- [x] **2.1 `doctor neighbours`: one census, seven shape classes.** Read-only: (a) hook
       entries per event in every host hook file without our signature — event, matcher,
       command head only, timeout; (b) skills under `.claude/skills` and `~/.claude/skills`
       the lockfile does not claim — ours live in `~/.claude/skills` on a consumer, so root
@@ -91,32 +91,32 @@ neighbour's effect visible; it cannot make it run after ours.
       Each entry carries a qualified id `<origin>:<name>`, a sha256 digest and a shape class.
       No name is a constant in `src/`.
       verify: `agent-config doctor neighbours --json` on the fixture consumer -> /"hook_groups":\s*\[\{/ and /"instruction_sections"/
-- [ ] **2.2 Our concerns declare their effect; foreign effects read `unknown`.**
+- [x] **2.2 Our concerns declare their effect; foreign effects read `unknown`.**
       `hook_manifest.yaml` has no `effect:` field (grep count 0); add one to each of the 62
       concerns from `permission | context | verification | telemetry | memory |
       notification | formatting`, generated into `hooks/hooks.json` unchanged, and give
       `lint_hook_manifest` an enum check (it has no unknown-key guard today). A foreign
       entry's effect is `unknown` unless its output shape is observed.
       verify: `grep -c '^\s*effect:' src/scripts/hook_manifest.yaml` -> /62/
-- [ ] **2.3 Two deny-shaped warnings, worded as the host behaves.** `double-gate` fires
+- [x] **2.3 Two deny-shaped warnings, worded as the host behaves.** `double-gate` fires
       only when two entries on one event with overlapping matchers both carry `permission`
       (ours by field, the neighbour's by observation or `unknown`), and says "the host runs
       both; either deny applies" — never an order the host does not have. `shadowed` fires
       for a foreign skill whose name equals one of ours.
       verify: fixture — a foreign PreToolUse `Edit|Write` entry beside `block-no-verify` prints `double-gate`; beside a `context` concern prints nothing
-- [ ] **2.4 Liveness, not trust.** The census adds two lines: our hook group is bound
+- [x] **2.4 Liveness, not trust.** The census adds two lines: our hook group is bound
       **and** fired in the last session (read from `src/scripts/_lib/hook_effect_probe.ts`,
       the probe `hook_effect_doctor` already runs), and settings
       takeover — a foreign `model` or `env.CLAUDE_CODE_*` key, or our `hooks` key missing
       after our own install. A neighbour that removed this suite is then visible.
       verify: fixture — deleting our hook group from `settings.json` yields a `removed-after-install` line
-- [ ] **2.5 One environment label per host.** The census prints `controlled` (no foreign
+- [x] **2.5 One environment label per host.** The census prints `controlled` (no foreign
       effectful entry), `coordinated` (foreign effectful entries, all observed),
       `degraded` (a foreign `permission` or `unknown` effect on a slot we gate, or a foreign
       Stop entry), or `uncontrolled` (2.4 reports our group removed or unfired). The label
       is a report, never a refusal.
       verify: fixture — each of the four states is produced by one planted consumer
-- [ ] **2.6 The census links the existing `foreign` file listing.** `cmd_doctor.ts:624-657`
+- [x] **2.6 The census links the existing `foreign` file listing.** `cmd_doctor.ts:624-657`
       links to the census line rather than repeating paths; nothing is removed.
       verify: `agent-config doctor` output carries one `neighbours:` line with counts
 

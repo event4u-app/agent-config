@@ -43,6 +43,7 @@ concerns:
     args: [hook-dispatch]
     fail_closed: false
     severity: advisory
+    effect: telemetry
     needs_payload_bodies: [result]
   # Restore persisted memory session index (road-to-memory-retrieval-economy
   # P5). session_start only: the dispatcher forwards the returned `context`
@@ -56,6 +57,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: memory
   # One-shot handoff injection (road-to-agent-handoff-resume Phase 3).
   # session_start only: if `agent-config handoff` wrote
   # agents/runtime/state/handoff-context.md, inject it as spotlighted DATA
@@ -67,6 +69,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: context
   # Debounced since road-to-per-turn-hook-economy step 3.1 (D-3). It used to
   # re-shell the dashboard regenerator through tsx on EVERY roadmap write — a
   # cold tsx start per write, in exactly the roadmap-heavy workflow this repo
@@ -90,17 +93,20 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: formatting
     needs_payload_bodies: [input]
   onboarding-gate:
     script: src/scripts/onboarding_gate_hook.ts
     args: []
     fail_closed: false
     severity: advisory
+    effect: notification
   context-hygiene:
     script: src/scripts/context_hygiene_hook.ts
     args: []
     fail_closed: false
     severity: advisory
+    effect: telemetry
   # Phase 5 — Tier-1 hook for the verify-before-complete rule. Records
   # observable evidence of verification commands (tests, quality tools,
   # builds) into agents/state/verify-before-complete/<digest>.json — ONE FILE
@@ -120,6 +126,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: verification
     needs_payload_bodies: [input, result]
   # Phase 5 — Tier-1 hook for the minimal-safe-diff rule. Counts unique
   # files touched per turn into agents/runtime/state/minimal-safe-diff.json and
@@ -139,12 +146,14 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: verification
     needs_payload_bodies: [input]
   minimal-safe-diff:
     script: src/scripts/minimal_safe_diff_hook.ts
     args: []
     fail_closed: false
     severity: advisory
+    effect: verification
     needs_payload_bodies: [input]
   # road-to-security-pillar.md P3.2 — PostToolUse prompt-injection scanner.
   # Warn-in-context (exit 2), never blocks. Default-OFF: no-ops unless
@@ -170,6 +179,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: verification
     needs_payload_bodies: [input, result]
   # road-to-security-hardening Phase 3 — PreToolUse guard turning the
   # git-history-discipline Iron Law into a deterministic gate. Blocks
@@ -183,6 +193,7 @@ concerns:
     args: []
     fail_closed: true
     severity: blocking
+    effect: permission
     needs_payload_bodies: [input]
   # road-to-ai-employee-borrowings Phase 1 — kernel immutability Layer 1.
   # PreToolUse guard: DENIES Write/Edit/NotebookEdit (and cross-platform
@@ -200,6 +211,7 @@ concerns:
     args: []
     fail_closed: true
     severity: blocking
+    effect: permission
     needs_payload_bodies: [input]
   # road-to-a-kernel-that-guards-its-plumbing 1.2 — the build-output half of
   # "one mechanism per file class". PreToolUse guard: DENIES Write/Edit/
@@ -221,6 +233,7 @@ concerns:
     args: []
     fail_closed: true
     severity: blocking
+    effect: permission
     needs_payload_bodies: [input]
   # road-to-asked-not-parked Phase 5.1 — one question per structured-ask call.
   # PreToolUse guard: DENIES a call to a host's native question picker whose
@@ -250,6 +263,7 @@ concerns:
     args: []
     fail_closed: false
     severity: blocking
+    effect: permission
     tools: [AskUserQuestion, AskQuestion, UserQuestion, ask_user_question, ask_question, user_question]
     needs_payload_bodies: [input]
   # road-to-source-silence Phase 4.2 — the write-time half of source
@@ -272,6 +286,7 @@ concerns:
     args: []
     fail_closed: false
     severity: blocking
+    effect: permission
     needs_payload_bodies: [input]
   # road-to-renewal-leverage Phase 2 — "fix the code, not the config".
   # PreToolUse guard over the recorded allowlist-growth antipattern
@@ -288,6 +303,7 @@ concerns:
     args: []
     fail_closed: false
     severity: blocking
+    effect: permission
     needs_payload_bodies: [input]
   # token-saving Phase 3 — PreToolUse RTK-wrap nudge. DETERMINISTIC: keys off a
   # live `which rtk` probe (not the self-reported flag). When rtk is installed
@@ -302,6 +318,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: formatting
     needs_payload_bodies: [input]
   # road-to-anti-slop-detector Phase 3 — OPTIONAL PreToolUse anti-slop nudge.
   # Runs the lint_design_slop registry against about-to-be-written UI content
@@ -315,6 +332,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: verification
     needs_payload_bodies: [input]
   # road-to-frontend-power E1.1 / E1.2 / E1.3 — the DELIVERY carrier the 0.0 %
   # UI-write measurement never had. One script on two slots:
@@ -341,6 +359,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: notification
     needs_payload_bodies: [input]
   # `advisory`, and the code MATCHES the declaration rather than the prose.
   #
@@ -366,6 +385,7 @@ concerns:
     args: ['--slot', 'stop']
     fail_closed: false
     severity: advisory
+    effect: notification
   # road-to-frontend-skill-application Phase 4 — OPTIONAL PreToolUse UI-route
   # nudge. On a Write/Edit to a UI surface with no design consultation latched
   # this session, WARNS (exit 2) naming the route; a read or search touching a
@@ -381,6 +401,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: notification
     needs_payload_bodies: [input]
   # road-to-a-graph-that-is-shipped 1.2 — PreToolUse code-graph CONTEXT line,
   # replacing the ADR-124 Phase 4 nudge concern, whose hook was deleted in the
@@ -437,6 +458,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: telemetry
   # road-to-autonomous-auto-mode — the carrier for `token-efficiency` § One
   # command per Bash call. That rule is `type: auto`, so its triggers match the
   # PROMPT, and no prompt announces that the next tool call will be chained;
@@ -483,12 +505,14 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: notification
     needs_payload_bodies: [input]
   code-graph-context:
     script: src/scripts/hooks/code_graph_context_hook.ts
     args: []
     fail_closed: false
     severity: advisory
+    effect: context
     # Per-concern tool filter — the dispatcher skips this concern in-process on
     # any other tool. See `_concern_matches_tool` in hooks/dispatch_hook.ts for
     # the semantics (absent = every event, "*" = the same, non-tool events are
@@ -524,6 +548,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: memory
   # Phase 2 of road-to-hooks-actually-fire-in-consumers — session_start
   # gate that surfaces the marketplace-install-but-unscaffolded shape.
   # Writes .augment/.first-run-action-needed.md + one stderr line so
@@ -534,6 +559,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: notification
   # session-profile-activation Phase 1 — emits a one-line staleness notice
   # when a new session starts with a `runtime.active_packs` overlay carried
   # over from a previous session. Never resets (option a, explicit
@@ -543,6 +569,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: notification
   # Defense-in-depth twin of the update-command wrapper refresh
   # (cmd_upgrade / cmd_refresh). On session_start, re-stamps a stale
   # project-local ./agent-config wrapper from the canonical template so
@@ -553,6 +580,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: notification
   # road-to-install-path-convergence Phase 4 — duplicate-surface probe.
   # Reads src/config/surface-matrix.yml, existence-checks declared duplicate
   # classes, nudges ONCE per day (state: agents/runtime/state/
@@ -563,6 +591,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: telemetry
   # road-to-team-mode Phase 4 — managed Review-Gate circuit breaker.
   # Runs AFTER the plugin's own Stop gate: reads the persisted gate job
   # record, counts consecutive BLOCK verdicts per session, injects the
@@ -575,6 +604,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: verification
   # Reply-shape backstop for the direct-answers rule (reply-close): a PR
   # created THIS turn must end the reply as the literal last raw URL. This
   # PostToolUse hook fires right after a PR *create* (gh pr create, or a
@@ -587,6 +617,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: notification
     needs_payload_bodies: [input, result]
   # Push-settle reminder — the second half of "a push closes its own loop".
   # The pre-push hook answers "is this push safe to make"; nothing answered "is
@@ -602,6 +633,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: verification
     needs_payload_bodies: [input, result]
   # Language-mirror pin — carries the ONE fact the transcript cannot express:
   # which language the human actually typed. 47 skill/slash-command bodies were
@@ -615,6 +647,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: context
   # Git-authorization ledger — records which git ops the user's OWN WORDS
   # authorize this turn. Writes state only; never blocks.
   git-authorization:
@@ -622,6 +655,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: verification
   # The blocking half was REMOVED by owner decision on 2026-09-04 (ADR-254).
   # It refused authorizations the owner had in fact given: a guardrail sentence
   # inside an authorization ("never merge empty PRs") read as a withdrawal and
@@ -653,6 +687,7 @@ concerns:
     args: []
     fail_closed: false
     severity: blocking
+    effect: permission
     needs_payload_bodies: [input]
   # Canary injection — deterministic carrier for the
   # session-canary rule (greet-by-name at task start + reply-close markers
@@ -675,6 +710,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: context
   # Council-availability fact. Carries whether a council is configured and from
   # where, because the always-loaded layer refers to the council conditionally
   # and never says how to check. Measured 2026-08-08: an agent announced "kein
@@ -687,6 +723,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: verification
   # Org-telemetry disclosure (road-to-org-telemetry Phase 3.2; ADR-233 § D5).
   # `org-pack` is the only consent class in this suite granted by somebody
   # OTHER than the person it binds — an org administrator, once, for every
@@ -700,6 +737,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: notification
   # road-to-org-telemetry Phase 2 (step 2.1) — session-end Class-A flush.
   # Checks whether the outbound spool has bytes and, if so, spawns a DETACHED
   # sender and returns. It makes no network call in the session's own process,
@@ -728,6 +766,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: telemetry
   # Self-repair intake (road-to-self-repair Phase 1). Two slots, one queue:
   # user_prompt_submit opens a record when the user states the agent worked
   # wrongly and injects the open-queue line; stop runs the deterministic
@@ -739,6 +778,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: telemetry
   # Shared per-session register (road-to-parallel-session-coordination) — writes
   # this session into <git-common-dir>/agent-sessions/<session_id>.json so every
   # other worktree of the repo can see it, and on session_start injects the live
@@ -772,6 +812,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: telemetry
   # road-to-orchestrator-discipline-carriers Phase 3 (F6) — deterministic
   # PostToolUse orchestration-telemetry capture. Fires only on an Agent/Task
   # tool-use completion (the two observed subagent-dispatch tool names) and
@@ -784,6 +825,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: telemetry
     tools: [Agent, Task]
     needs_payload_bodies: [input, result]
   # road-to-org-telemetry Phase 1 (step 1.2) — Class-A usage capture. Fires
@@ -827,6 +869,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: telemetry
     # Provable from the hook's own source: the only branch surface is
     # `extractToolName(payload) !== SKILL_TOOL_NAME`.
     tools: [Skill]
@@ -873,6 +916,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: notification
     nudge_rank: 1
   # road-to-inbox-harvest-2026-08-d-runtime-skill-routing Phase 2 — binds the
   # deterministic task→skill ranker, which had shipped with ZERO production
@@ -896,6 +940,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: context
     nudge_rank: 2
   # road-to-trigger-delivered-rule-bodies Phase 1 — the DELIVERY twin of
   # `skill-route` above: same two slots, opposite payload policy. `skill-route`
@@ -934,6 +979,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: context
     needs_payload_bodies: [input]
   # road-to-orchestrator-discipline-carriers Phase 5 (F4-lite) — end-review
   # nudge. Fires ONLY when the session mutated tracked+untracked, non-doc
@@ -961,11 +1007,13 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: verification
   end-review-nudge:
     script: src/scripts/hooks/end_review_nudge_hook.ts
     args: []
     fail_closed: false
     severity: advisory
+    effect: notification
     # road-to-stop-gate-honesty step 3.1 — skipped on a refusal RETRY.
     # ARGUMENT, per concern as that step requires: the F2 fire gate is a
     # once-per-session marker, and this concern's own header records that a
@@ -1006,6 +1054,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: telemetry
   # road-to-conformance-round5 Phase 3 — the FIRST concern that can refuse a
   # turn-END. Round 5 measured the reason: both blocking carriers reached zero
   # violations, neither advisory carrier did, and 19 language violations
@@ -1039,6 +1088,7 @@ concerns:
     args: []
     fail_closed: false
     severity: blocking
+    effect: permission
   # Comment-discipline advisory — the write-time half of
   # `lint_code_comments`. Scans the TEXT JUST WRITTEN (Write ->
   # tool_input.content, Edit -> tool_input.new_string), never the file on
@@ -1059,6 +1109,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: verification
     tools: [Write, Edit]
     needs_payload_bodies: [input]
   # road-to-token-economy-cache Phase 5.1/5.2 — edit-shape advisory. Fires
@@ -1076,6 +1127,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: verification
     # Provable from the hook's own source: the only branch surface is
     # `toolName !== 'Write'` — same cheap-filter discipline as
     # `orchestration-record`'s [Agent, Task].
@@ -1097,6 +1149,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: verification
     # Provable from the hook's own source: READ_TOOLS ∪ WRITE_TOOLS.
     tools: [Read, Edit, Write]
     needs_payload_bodies: [input]
@@ -1131,6 +1184,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: memory
     # Provable from the hook's own source: the union of the `tools` sets on
     # RECALL_RULES — COMMAND_TOOLS (rules 1 and 4) ∪ EDIT_TOOLS (rules 2, 3).
     tools: [Bash, Edit, Write, MultiEdit, str-replace-editor, save-file, launch-process]
@@ -1154,6 +1208,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: notification
   # road-to-long-horizon-execution Phase 1 (H-1) — the stop slot's first
   # WORK-REMAINING concern. No-op unless this session claimed a roadmap
   # (`sessions:claim`) whose frontmatter says `execution.mode: autonomous`;
@@ -1179,6 +1234,7 @@ concerns:
     # mechanism was inert on the one verified host. `turn-end-gate` above sits
     # on the same slot and declares `blocking` for exactly this reason.
     severity: blocking
+    effect: permission
   # road-to-user-out-of-the-loop Phase 0 Step 1 — the interruption ledger.
   # Every Stop, classifies whether the turn that just ended put a synchronous
   # contact to the user and appends one `{run_id, turn, kind, class, roadmap}`
@@ -1204,6 +1260,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: telemetry
     # road-to-stop-gate-honesty step 3.1 — skipped on a refusal RETRY, and this
     # is the flag with the real saving.
     # ARGUMENT, per concern: `alreadyRecorded(ledgerPath, run_id, turn)` dedupes
@@ -1237,6 +1294,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: telemetry
   # road-to-inbox-harvest-2026-08-d-context-ledger Phase 1 Step 1.1 — the
   # tool-result byte counter. `hook-token-budget.json` registers the gap it
   # closes in its own words: bytes-into-context from tool RESULTS are
@@ -1261,6 +1319,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: telemetry
   # road-to-subagent-lifecycle-integrity Phase 3 Step 1 — spawn guard, SHADOW
   # ONLY, per docs/contracts/concern-activation-policy.md. On every Agent/Task
   # call it appends one `spawn_guard_shadow` line recording what a guard WOULD
@@ -1281,6 +1340,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: telemetry
     tools: [Agent, Task]
   # road-to-source-first-frontend Phase 3 Steps 1-2 — source-first gate, SHADOW
   # ONLY, per docs/contracts/concern-activation-policy.md. On every
@@ -1310,6 +1370,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: verification
     needs_payload_bodies: [input]
   # road-to-runtime-event-journal Phase 1 step 1.4 — the journal's hook binding
   # (AI council 2026-08-28, decision 3). `_lib/runtime_journal.ts` shipped bound
@@ -1353,6 +1414,7 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    effect: telemetry
 
 # Role axis (road-to-token-economy-dispatch Phase 2). The dispatcher reads
 # AGENT_CONFIG_SESSION_ROLE (resolved via _lib/session_role.ts — set ONLY by

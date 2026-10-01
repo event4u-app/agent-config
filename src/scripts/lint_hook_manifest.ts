@@ -52,6 +52,33 @@ const DEFAULT_MANIFEST = path.join(
 const HOOKS_DIR = path.join(REPO_ROOT, "src", "scripts", "hooks");
 const DEFAULT_HOST_LOWERING = path.join(HOOKS_DIR, "host_lowering.yaml");
 
+/**
+ * What a concern does to a turn — the closed set `effect:` draws from.
+ *
+ * Read by the neighbour census, which needs to say what sharing an event with
+ * a foreign entry actually risks. A foreign entry's effect is `unknown` unless
+ * its output shape has been observed: no host exposes another package's hook
+ * execution, so the honest default is that the neighbour's effect cannot be
+ * read off its registration.
+ *
+ * - `permission`   can refuse the thing it fires on
+ * - `context`      puts text in front of the model
+ * - `verification` checks a claim or a shape and reports what it found
+ * - `telemetry`    records state, a ledger, a counter
+ * - `memory`       reads or writes the memory layer
+ * - `notification` tells the human something and changes nothing else
+ * - `formatting`   reshapes a command or a generated file
+ */
+export const CONCERN_EFFECTS: ReadonlySet<string> = new Set([
+  "permission",
+  "context",
+  "verification",
+  "telemetry",
+  "memory",
+  "notification",
+  "formatting",
+]);
+
 // Canonical event vocabulary — keep in lock-step with
 // docs/contracts/hook-architecture-v1.md and dispatch_hook.EVENT_VOCABULARY.
 const EVENT_VOCABULARY: ReadonlySet<string> = new Set([
@@ -158,6 +185,32 @@ function _check_concerns(manifest: YamlObject, errors: string[]): Set<string> {
     }
     if (!_isFile(path.join(REPO_ROOT, script))) {
       errors.push(`concerns.${name}: script not found at '${script}'`);
+    }
+    // `effect:` — what this concern DOES to a turn, from a closed set. It is
+    // what lets the neighbour census say "a foreign entry shares this event
+    // with something of ours that can refuse" rather than only "two entries".
+    // Required and enum-checked, which is a stricter rule than the optional
+    // keys below for one reason: a concern with no effect, or with a
+    // misspelled one, would silently drop out of every double-gate comparison
+    // — the warning would stay quiet and read as "no conflict", which is the
+    // wrong answer rather than a missing one. There is no unknown-key guard
+    // on this mapping, so nothing else would catch `effects:`.
+    const effect = spec["effect"];
+    if (typeof effect !== "string" || !CONCERN_EFFECTS.has(effect)) {
+      errors.push(
+        `concerns.${name}: 'effect' must be one of ` +
+          `${[...CONCERN_EFFECTS].sort().join(" | ")} (got ${JSON.stringify(effect)})`,
+      );
+    } else if ((spec["severity"] === "blocking") !== (effect === "permission")) {
+      // The two fields answer the same question from different sides, so a
+      // disagreement is a mistake in one of them, never a shade of meaning:
+      // `blocking` is the dispatcher's word for "this can refuse" and
+      // `permission` is the census's.
+      errors.push(
+        `concerns.${name}: 'effect: ${effect}' contradicts ` +
+          `'severity: ${String(spec["severity"])}' — a concern that can refuse ` +
+          `is 'permission', and only those are 'blocking'`,
+      );
     }
     // `tools:` — the optional per-concern tool filter the dispatcher applies
     // in-process (`_concern_matches_tool`). Validated because the failure mode
