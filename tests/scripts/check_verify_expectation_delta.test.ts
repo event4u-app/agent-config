@@ -17,8 +17,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
-import { bareClausesIn, isPointer, VERIFY_ARROW_SOURCE } from '../../src/scripts/check_verify_expectation_delta.js';
-import { VERIFY_ARROW_SOURCE as GRAMMAR_SOURCE } from '../../src/scripts/_lib/verify_clause.js';
+import { addedClausesIn, bareClausesIn, isPointer, replay } from '../../src/scripts/check_verify_expectation_delta.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 
@@ -99,6 +98,26 @@ describe('check_verify_expectation_delta — the pointer carve-out', () => {
         }
     });
 
+    it('refuses an INVOCATION path, however it is spelled', () => {
+        // The review finding that narrowed the pattern: `./src/scripts/x.ts`
+        // ends in `.ts` and was exempted, while being exactly the shape a
+        // shebang-bearing script is run as in this tree.
+        expect(isPointer('./src/scripts/check_claims.ts')).toBe(false);
+        expect(isPointer('/usr/local/bin/thing.js')).toBe(false);
+        expect(isPointer('../tools/run.ts')).toBe(false);
+        // The relative, bare form stays a pointer — that is the measured shape.
+        expect(isPointer('src/scripts/check_claims.ts')).toBe(true);
+    });
+
+    it('refuses extensionless pointers, and that is a known gap rather than an oversight', () => {
+        // Pinned in the direction it FAILS, so widening the extension list is a
+        // deliberate act against a failing assertion. Widening it would buy
+        // these back and re-exempt the executable shapes above.
+        for (const p of ['Makefile', 'README', 'script.sh', 'docs/CLAIMS.md:12:4']) {
+            expect(isPointer(p), p).toBe(false);
+        }
+    });
+
     it('treats anything with a space as a command, however weak its exit status', () => {
         // The carve-out is about SHAPE, not about whether the author picked a
         // command that can fail. `cat docs/CLAIMS.md` is asked for an oracle
@@ -112,18 +131,80 @@ describe('check_verify_expectation_delta — the pointer carve-out', () => {
     });
 });
 
-describe('check_verify_expectation_delta — the grammar is single-sourced', () => {
-    it('re-exports the parser module constant rather than carrying a copy', () => {
-        expect(VERIFY_ARROW_SOURCE).toBe(GRAMMAR_SOURCE);
-    });
-
-    it('contains no second arrow regex in its own source', () => {
+describe('check_verify_expectation_delta — the grammar is not re-derived here', () => {
+    it('carries no arrow regex of its own, in either alternation order', () => {
         // The drift this pins: a gate that re-derived `->` would keep passing
         // its own tests while silently disagreeing with the parser about what an
         // expectation is, so a conforming clause would be refused and nobody
         // would learn why. Same guard the parser module asks for by name.
+        //
+        // HONEST SCOPE, on a review finding. This is a TEXT scan, so an
+        // equivalent regex spelled differently — a character class, escaped
+        // alternatives, two separate patterns — passes it. The earlier version
+        // of this block also asserted `VERIFY_ARROW_SOURCE === GRAMMAR_SOURCE`
+        // across a re-export, which compared two equal strings and established
+        // nothing about where either came from; the re-export is deleted rather
+        // than re-tested. What actually carries the property is structural: the
+        // gate asks `parseVerifyClause` whether a clause has an expectation and
+        // never inspects the arrow, so there is no second reader to drift.
         const src = fs.readFileSync(path.join(REPO_ROOT, 'src/scripts/check_verify_expectation_delta.ts'), 'utf-8');
         const body = src.replace(/^[\s\S]*?\n \*\/\n/, '');
         expect(body).not.toMatch(/\(\?:->\|→\)/);
+        expect(body).not.toMatch(/\(\?:→\|->\)/);
+    });
+
+    it('decides expectation-carrying clauses through the parser, both arrow spellings', () => {
+        // The behavioural half, which the text scan cannot give: the gate
+        // accepts the Unicode arrow it never mentions in its own source, which
+        // is only possible because the parser is what reads it.
+        expect(bareClausesIn(patch('agents/roadmaps/r.md', '      verify: `npx vitest run x` → 0'))).toEqual([]);
+        expect(bareClausesIn(patch('agents/roadmaps/r.md', '      verify: `npx vitest run x` -> 0'))).toEqual([]);
+    });
+});
+
+describe('check_verify_expectation_delta — the scan count describes the enforced set', () => {
+    it('counts the same parsed clauses the verdict is drawn from', () => {
+        // The defect: the reported count came from a line filter and the verdict
+        // from a parse, so a patch mixing prose, pointers and real clauses
+        // reported scanning more than it judged. A denominator that does not
+        // describe the enforced set is the false-denominator shape the
+        // gate-coverage manifest exists to prevent.
+        const mixed = patch(
+            'agents/roadmaps/r.md',
+            '      verify: `npx vitest run a`',
+            '      verify: `npx vitest run b` -> 0',
+            '      verify: `docs/CLAIMS.md`',
+            '      verify: a human reads the page',
+        );
+        const all = addedClausesIn(mixed);
+        // Prose carries no command, so it is not an added clause at all.
+        expect(all).toHaveLength(3);
+        expect(all.filter((c) => c.satisfied)).toHaveLength(2);
+        expect(bareClausesIn(mixed)).toHaveLength(1);
+    });
+
+    it('does not mistake an added line whose own content begins with ++ for a file header', () => {
+        // In a unified diff an added line reading `++ verify: …` is rendered
+        // `+++ verify: …`, and a `startsWith('+++')` test discarded it as
+        // metadata. Narrow in practice and wrong in principle: the reader
+        // claimed to parse a unified diff and was reading its first character.
+        const odd = [
+            'diff --git a/agents/roadmaps/r.md b/agents/roadmaps/r.md',
+            '--- a/agents/roadmaps/r.md',
+            '+++ b/agents/roadmaps/r.md',
+            '@@ -1,0 +2 @@',
+            '++ verify: `npx vitest run x`',
+        ].join('\n');
+        expect(bareClausesIn(odd)).toEqual([{ file: 'agents/roadmaps/r.md', command: 'npx vitest run x' }]);
+    });
+});
+
+describe('check_verify_expectation_delta — a failed git read is never a measurement', () => {
+    it('throws rather than returning an empty replay when the ref does not resolve', () => {
+        // The worst shape this gate could have: `replay()` ignoring a git
+        // failure prints a confident table of zeroes, and the gate's own header
+        // cites that table as the evidence for shipping it. A measurement that
+        // can silently measure nothing cannot justify the thing it measures.
+        expect(() => replay(REPO_ROOT, 5, 'refs/heads/no-such-ref-for-this-test')).toThrow(/failed/);
     });
 });

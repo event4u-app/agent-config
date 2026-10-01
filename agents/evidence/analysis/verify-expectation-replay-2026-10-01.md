@@ -99,6 +99,23 @@ refusal message names the regex form for exactly this reason; it cannot tell
 which form a clause needs, and a gate that guessed would be wrong seven times in
 49.
 
+## Re-measured after the completion review
+
+A council completion review of the implementation (2026-10-01, 2 of 2 seats)
+found six defects in the reader these numbers come from, three of which could
+have moved them: a YAML inline-comment bypass in the sibling exemption reader,
+`replay()` silently converting a git failure into a table of zeroes, and an
+added content line beginning `++` being discarded as a file header. All are
+fixed, and the replay was re-run against the same thirty merges afterwards:
+**145 / 96 / 8 / 41, 6 of 30 red — identical.** The defects were real and none
+of them was load-bearing for this measurement, which is worth recording in both
+halves rather than only the reassuring one.
+
+The pointer carve-out narrowed in the same pass: an invocation path
+(`./src/scripts/x.ts`) ends in `.ts` and was being exempted while being exactly
+the shape a shebang-bearing script is run as. None of the eight measured
+pointers is written that way, so the count did not move.
+
 ## What this grounds
 
 1. The false-positive share is 20%, under D2's withdrawal threshold, and

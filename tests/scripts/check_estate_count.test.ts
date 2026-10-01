@@ -657,6 +657,26 @@ describe('check_estate_count — unit surface', () => {
         );
     });
 
+    it('exemptionReason shape — a trailing YAML comment on the header is not a bypass', () => {
+        // The review finding. `>- # offset` failed the indicator test, fell
+        // through to the flat parser, and came back as the string
+        // `">- # offset"` — which the SHAPE rule then searched for a disposition
+        // word and found one, in the comment, over a body it never read. An
+        // exemption could pass by writing a disposition word in a YAML comment.
+        const commented = '---\nestate_offset_exempt: >- # a note for the reviewer\n  no disposition word here\n---\n# R\n';
+        expect(exemptionReason(commented)).toBe('no disposition word here');
+        expect(exemptionFindings([{ file: 'a.md', reason: exemptionReason(commented) as string }])).toHaveLength(1);
+        // Both legal indicator orders. `>2-` and `>-2` mean the same thing.
+        expect(exemptionReason('---\nestate_offset_exempt: >2-\n  archiving was rejected\n---\n# R\n')).toBe(
+            'archiving was rejected',
+        );
+        expect(exemptionReason('---\nestate_offset_exempt: |+\n  parking was rejected\n---\n# R\n')).toBe(
+            'parking was rejected',
+        );
+        // `>0` is not a legal indentation indicator and is not a block header.
+        expect(exemptionReason('---\nestate_offset_exempt: >0\n  body\n---\n# R\n')).toBe('>0');
+    });
+
     it('exemptionFindings shape — refuses a reason naming no rejected alternative', () => {
         expect(exemptionFindings([{ file: 'a.md', reason: 'lane 5 of road-to-leading-every-row' }])).toEqual([
             { file: 'a.md', kind: 'shapeless', twin: null, reason: 'lane 5 of road-to-leading-every-row' },
@@ -685,6 +705,13 @@ describe('check_estate_count — unit surface', () => {
         // `later` is only a disposition when it is the DIRECTORY. The bare word is
         // an adverb, and matching it would accept every reason containing "later".
         expect(exemptionFindings([{ file: 'a.md', reason: 'we will deal with this later' }])).toHaveLength(1);
+        // `parkour` is not `park`. A review finding: the stem `park\w*` matched
+        // it at a word boundary, so a reason saying nothing about dispositions
+        // passed on a word that is not one. `park` is enumerated, not stemmed.
+        expect(exemptionFindings([{ file: 'a.md', reason: 'this is a parkour of a roadmap' }])).toHaveLength(1);
+        for (const inflection of ['parked', 'parking', 'parks', 'unparked', 'unparking']) {
+            expect(exemptionFindings([{ file: 'a.md', reason: `it cannot be ${inflection} anywhere` }]), inflection).toEqual([]);
+        }
     });
 
     it('exemptionFindings shape — refuses a reason repeated verbatim across added files', () => {

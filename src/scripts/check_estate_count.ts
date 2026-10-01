@@ -654,7 +654,15 @@ function blockScalar(text: string, key: string): string | null {
         if (hm === null) continue;
         // Only the block indicators. A quoted or bare value is the flat form and
         // stays with the flat parser, which already handles it.
-        if (!/^[>|][-+]?\d*$/.test((hm[1] as string).trim())) return null;
+        //
+        // THE TRAILING COMMENT IS PART OF THE HEADER, and omitting it was a
+        // BYPASS rather than a parse gap. `estate_offset_exempt: >- # offset`
+        // failed this test, fell through to the flat parser, and came back as
+        // the string `">- # offset"` — which the shape rule then searched for a
+        // disposition word and found one, IN THE COMMENT, over a body it never
+        // read. The indicator may also be written `>2-` as well as `>-2`, so
+        // both orders are accepted; an indentation indicator is never `0`.
+        if (!/^[>|](?:[1-9][-+]?|[-+]?[1-9]?)(?:[ \t]+#.*)?$/.test((hm[1] as string).trim())) return null;
         const body: string[] = [];
         for (let j = i + 1; j < lines.length; j += 1) {
             const line = lines[j] as string;

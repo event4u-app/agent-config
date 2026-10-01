@@ -33,6 +33,18 @@
  * reasons: it almost always refers to closing WORK, not to disposing of a file,
  * so accepting it would make the check pass on a sentence that named nothing.
  *
+ * WHAT THIS DOES NOT DO, stated because a reviewer called it HIGH and the
+ * disagreement is worth recording rather than resolving silently. The cheapest
+ * string that passes is the single word `park`, and `park 1` / `park 2` are two
+ * distinct reasons to the duplicate rule. So this verifies that a disposition
+ * word APPEARS; it does not verify that the author thought about one, and no
+ * check can. The claim the gate's message makes is therefore "name what you
+ * rejected", which is what a word either does or does not do — not "explain
+ * yourself well", which is unjudgeable. A reason gamed down to one word is
+ * visible to a human reviewer in the diff, which is where the key's own stated
+ * purpose puts the real control; what this removes is the case where there was
+ * nothing to look at because the reason was free text nobody had read.
+ *
  * WHY ONE MODULE. Two readers consume this — the estate gate, which refuses,
  * and the measurement script, which reports. A second copy of the lemma list is
  * how a gate and its own evidence drift apart, and a drifted vocabulary fails
@@ -47,7 +59,13 @@
  */
 export const DISPOSITION_LEMMAS: readonly { readonly name: string; readonly source: string }[] = [
     { name: 'archive', source: String.raw`archiv\w*` },
-    { name: 'park', source: String.raw`unpark\w*|park\w*` },
+    // `park` is the one stem with a common false friend, and a reviewer named
+    // it: `park\w*` matches `parkour` at a word boundary, so a reason saying
+    // nothing about dispositions passes on a word that is not one. Enumerated
+    // instead of stemmed — the inflections this tree writes, and no more. Every
+    // other lemma keeps its stem; none of them has a false friend in English
+    // that could plausibly appear in a sentence about roadmap dispositions.
+    { name: 'park', source: String.raw`unpark(?:ed|ing|s)?\b|park(?:ed|ing|s)?\b` },
     { name: 'merge', source: String.raw`merg\w*` },
     { name: 'later', source: String.raw`later\/` },
     { name: 'offset', source: String.raw`offset\w*` },

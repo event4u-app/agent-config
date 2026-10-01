@@ -29,6 +29,13 @@ first, and the vocabulary the gate now refuses on is the one it uses.
 
 `stubs/` and `skipped/` carry none, so they are outside the scan.
 
+**Reading this on the merged tree gives 222, not 221, and the extra one is this
+roadmap.** The measurement was taken before the branch archived its own
+roadmap, which moved one file from the active tree into `archive/` without
+changing what any reason says. Stated rather than silently re-rounded: a
+population count that moves with the change measuring it is exactly the kind of
+figure that goes quietly wrong.
+
 ## Finding 1 — 38 of 221 reasons were unreadable to the gate
 
 `parse_frontmatter` (`src/agent-src/scripts/update_roadmap_progress.ts:269`) is

@@ -41,10 +41,16 @@
  * would change what `closure_scan` and the run-continuation hook see, and both
  * were measured on the current grammar.
  *
- * THE ARROW IS NOT RE-PARSED. {@link VERIFY_ARROW_SOURCE} is imported, never
- * copied: a second arrow regex is how a grammar and its gate drift, and a
- * drifted pair fails silently — an expectation simply stops being read and a
- * conforming clause is refused.
+ * THE ARROW IS NOT PARSED HERE AT ALL. This gate asks `parseVerifyClause`
+ * whether a clause carries an expectation and never looks at the arrow itself:
+ * a second arrow regex is how a grammar and its gate drift, and a drifted pair
+ * fails silently — an expectation simply stops being read and a conforming
+ * clause is refused. An earlier version re-exported `VERIFY_ARROW_SOURCE` so a
+ * test could assert equality with the parser's copy; a reviewer pointed out
+ * that comparing two equal STRINGS proves nothing about where either came
+ * from, and the re-export is gone. What is asserted instead is behavioural —
+ * the gate's verdict changes when the parser's grammar does, because the
+ * parser is the only thing that reads it.
  *
  * CLI:
  *   ./scripts-run src/scripts/check_verify_expectation_delta
@@ -61,7 +67,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { VERIFY_ARROW_SOURCE, parseVerifyClause } from './_lib/verify_clause.js';
+import { parseVerifyClause } from './_lib/verify_clause.js';
 import { resolveBaseRef } from './_lib/ratchet_base_ref.js';
 import { reportScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
@@ -82,8 +88,22 @@ const SELF_TEST_MIN_REJECT = 3;
  * One token, no whitespace, a source or document extension, optionally a
  * `:line` suffix. Measured at 8 of 49 bare clauses over thirty merges — a sixth
  * of what an uncarved gate would have fired on.
+ *
+ * THE INVOCATION PREFIX IS EXCLUDED, and that is a review finding rather than a
+ * refinement: `./src/scripts/check.ts` ends in `.ts` and this pattern exempted
+ * it, while being exactly the shape a shebang-bearing script is RUN as in this
+ * tree. A path written to be executed starts with `./` or `/`; a pointer is
+ * written relative and bare. That is a convention, not a proof — the honest
+ * statement is that this discriminates the shapes the tree actually contains
+ * and cannot infer intent in general.
+ *
+ * KNOWN AND NOT FIXED, because the fix is worse than the gap: `Makefile`,
+ * `README` and `script.sh` are pointers this refuses, and a path containing a
+ * space is a command by the rule above. Widening the extension list buys those
+ * and costs the executable-script direction again. Both directions are pinned
+ * by test so a later change to this pattern is deliberate.
  */
-const POINTER_RE = /^[^\s`]+\.(?:ts|tsx|js|mjs|cjs|md|json|ya?ml|html|txt|lock)(?::\d+)?$/i;
+const POINTER_RE = /^(?!\.{0,2}\/)[^\s`]+\.(?:ts|tsx|js|mjs|cjs|md|json|ya?ml|html|txt|lock)(?::\d+)?$/i;
 
 /** Does this clause body name something to RUN, as opposed to something to open? */
 export function isPointer(command: string): boolean {
@@ -97,39 +117,99 @@ export interface BareClause {
     readonly command: string;
 }
 
-function git(args: readonly string[], cwd: string): { ok: boolean; stdout: string } {
-    const res = spawnSync('git', [...args], { cwd, encoding: 'utf-8', maxBuffer: 64 * 1024 * 1024 });
-    return { ok: res.status === 0, stdout: res.stdout ?? '' };
+/** A git invocation that FAILED. Never collapsed into an empty-but-plausible read. */
+export class GitReadError extends Error {
+    constructor(args: readonly string[], stderr: string) {
+        super(`git ${args.join(' ')} failed: ${stderr.trim().split('\n')[0] ?? '(no stderr)'}`);
+        this.name = 'GitReadError';
+    }
 }
 
 /**
- * The bare clauses a unified patch ADDS.
+ * Run git, or throw.
+ *
+ * `{ ok: false, stdout: '' }` was the inherited shape and it is the wrong one
+ * HERE, because both readers below treat stdout as their whole corpus: a failed
+ * spawn, a missing ref or a `maxBuffer` overrun would have become "no merges"
+ * and "no clauses", and the replay would then print an authoritative-looking
+ * table of zeroes that the gate's own header cites as its evidence. A
+ * measurement that can silently measure nothing cannot justify the thing it
+ * measures. Throwing makes the failure reach an exit code.
+ */
+function git(args: readonly string[], cwd: string): string {
+    const res = spawnSync('git', [...args], { cwd, encoding: 'utf-8', maxBuffer: 64 * 1024 * 1024 });
+    if (res.error !== undefined || res.status !== 0) {
+        throw new GitReadError(args, res.stderr ?? res.error?.message ?? '');
+    }
+    return res.stdout ?? '';
+}
+
+/** One added clause, parsed once. The gate and its report read the same list. */
+export interface AddedClause {
+    readonly file: string;
+    readonly command: string;
+    /** The clause states an oracle — `-> 0` or `-> /regex/`. */
+    readonly hasExpectation: boolean;
+    /** The clause points at a file rather than naming something to run. */
+    readonly pointer: boolean;
+    /** States an oracle, or is exempt from stating one. The gate's predicate. */
+    readonly satisfied: boolean;
+}
+
+/**
+ * A unified-diff line that OPENS a file section — `+++ b/<path>`.
+ *
+ * Matched as the whole header rather than by a `+++` prefix, because an added
+ * CONTENT line whose own text begins with `++` is rendered `+++…` and a prefix
+ * test discards it as metadata. Narrow in practice and wrong in principle: this
+ * reader claimed to parse a unified diff and was reading its first character.
+ * `/dev/null` is the delete side and names no file.
+ */
+const FILE_HEADER_RE = /^\+\+\+ (?:b\/(.+)|\/dev\/null)$/;
+
+/**
+ * Every `verify:` clause a unified patch ADDS, each with its verdict.
+ *
+ * ONE parsed pass, deliberately. The count the gate reports and the set it
+ * convicts on used to be derived separately — a line filter for the first, a
+ * parse for the second — so a patch with ten `verify:` lines of which three
+ * were prose reported "scanned 10" while enforcing over 7. A scan count that
+ * does not describe the enforced set is the false-denominator shape this
+ * repository's gate-coverage manifest exists to prevent.
  *
  * Reads `+` lines only. A context line carrying a bare clause is a clause this
  * change did not write, and convicting on it would make flipping a checkbox two
  * lines above an unrelated verify line fail the author's change — the exact
  * collateral that turns a diff-scoped gate back into an estate-scoped one.
  */
-export function bareClausesIn(patch: string): BareClause[] {
-    const out: BareClause[] = [];
+export function addedClausesIn(patch: string): AddedClause[] {
+    const out: AddedClause[] = [];
     let file = '';
     for (const raw of patch.split('\n')) {
-        const fm = /^\+\+\+ b\/(.+)$/.exec(raw);
+        const fm = FILE_HEADER_RE.exec(raw);
         if (fm !== null) {
-            file = fm[1] as string;
+            file = fm[1] ?? '';
             continue;
         }
-        if (!raw.startsWith('+') || raw.startsWith('+++')) continue;
+        if (!raw.startsWith('+')) continue;
         const body = raw.slice(1);
         if (!body.includes('verify:')) continue;
         const clause = parseVerifyClause(body);
-        // No clause, or the prose (MANUAL) form — prose stays legal by design.
+        // No clause, or the prose (MANUAL) form — prose stays legal by design,
+        // and an unparseable line is not a clause this gate may convict on.
         if (clause === null || clause.command === null) continue;
-        if (clause.expect !== null) continue;
-        if (isPointer(clause.command)) continue;
-        out.push({ file, command: clause.command });
+        const hasExpectation = clause.expect !== null;
+        const pointer = isPointer(clause.command);
+        out.push({ file, command: clause.command, hasExpectation, pointer, satisfied: hasExpectation || pointer });
     }
     return out;
+}
+
+/** The subset that fails: a command, no expectation, not a pointer. */
+export function bareClausesIn(patch: string): BareClause[] {
+    return addedClausesIn(patch)
+        .filter((c) => !c.satisfied)
+        .map((c) => ({ file: c.file, command: c.command }));
 }
 
 export interface ReplayRow {
@@ -141,38 +221,44 @@ export interface Replay {
     readonly merges: number;
     readonly added: number;
     readonly withExpectation: number;
+    /** Exempted as pointers — reported separately, never folded into the above. */
+    readonly pointers: number;
     readonly bare: readonly BareClause[];
     readonly redMerges: readonly ReplayRow[];
 }
 
-/** Replay the proposed rule over the last `n` merges that touched the roadmaps. */
+/**
+ * Replay the proposed rule over the last `n` merges that touched the roadmaps.
+ *
+ * @throws {GitReadError} when any git read fails. Deliberate: this function's
+ * output is cited as the evidence for shipping the gate, and an evidence
+ * producer that returns zeroes when it could not read anything is worse than
+ * one that does not run.
+ */
 export function replay(repoRoot: string, n: number, ref = 'origin/main'): Replay {
     const list = git(
         ['log', '--merges', '--first-parent', ref, `--max-count=${String(n)}`, '--format=%h', '--', `${ROADMAPS_REL}/*.md`],
         repoRoot,
     );
-    const merges = list.stdout.split('\n').filter((s) => s.trim() !== '');
+    const merges = list.split('\n').filter((s) => s.trim() !== '');
     const bare: BareClause[] = [];
     const redMerges: ReplayRow[] = [];
     let added = 0;
     let withExpectation = 0;
+    let pointers = 0;
     for (const m of merges) {
         const patch = git(['diff', '--unified=0', `${m}^1`, m, '--', ROADMAPS_REL], repoRoot);
-        // Counted separately from `bareClausesIn` so the denominator is the real
-        // one: a report of "6 merges red" with no total is a number nobody can
-        // place.
-        for (const raw of patch.stdout.split('\n')) {
-            if (!raw.startsWith('+') || raw.startsWith('+++')) continue;
-            const clause = parseVerifyClause(raw.slice(1));
-            if (clause === null || clause.command === null) continue;
-            added += 1;
-            if (clause.expect !== null) withExpectation += 1;
-        }
-        const hits = bareClausesIn(patch.stdout);
+        // One parsed pass feeds both halves, so the denominator describes the
+        // same set the verdict is drawn from.
+        const clauses = addedClausesIn(patch);
+        added += clauses.length;
+        withExpectation += clauses.filter((c) => c.hasExpectation).length;
+        pointers += clauses.filter((c) => c.pointer).length;
+        const hits = clauses.filter((c) => !c.satisfied).map((c) => ({ file: c.file, command: c.command }));
         bare.push(...hits);
         if (hits.length > 0) redMerges.push({ merge: m, bare: hits.length });
     }
-    return { merges: merges.length, added, withExpectation, bare, redMerges };
+    return { merges: merges.length, added, withExpectation, pointers, bare, redMerges };
 }
 
 function repoRootFrom(start: string): string {
@@ -190,6 +276,7 @@ function renderReplay(rep: Replay): string {
     out.push(`${GATE} --replay: ${String(rep.merges)} merge(s) replayed`);
     out.push(`  added command-bearing clauses  ${String(rep.added)}`);
     out.push(`    with an expectation          ${String(rep.withExpectation)}`);
+    out.push(`    exempt as a file pointer     ${String(rep.pointers)}`);
     out.push(`    bare (this gate would fire)  ${String(rep.bare.length)}`);
     const share = rep.merges === 0 ? 0 : Math.round((rep.redMerges.length / rep.merges) * 100);
     out.push(`  merges that would go RED       ${String(rep.redMerges.length)} of ${String(rep.merges)} (${String(share)}%)`);
@@ -292,9 +379,23 @@ function selfTest(): number {
         {
             // The grandfathering half: an untouched bare clause at base must not
             // convict a change that added nothing.
+            //
+            // WHAT IT DOES NOT COVER, corrected on a review finding that the
+            // earlier wording here overstated: under `--unified=0` the unchanged
+            // `verify:` line does not appear in the patch at all, so this case
+            // does not exercise context-line handling and would stay green if
+            // that handling broke. The unit test `reads ADDED lines only` is
+            // what pins it. This case pins the weaker, still real property —
+            // that a change adding no clause is not convicted of the base's.
             name: 'a bare clause ALREADY at base, nothing added → accept',
             expect: 'accept',
             run: () => fixture({ base: '`cat notes.md`', added: [] }),
+        },
+        {
+            // An executable script is run, not opened, however it is spelled.
+            name: 'an added `./path/script.ts` → reject (an invocation is not a pointer)',
+            expect: 'reject',
+            run: () => fixture({ base: '`true` -> 0', added: ['`./src/scripts/check_claims.ts`'] }),
         },
     ];
     return runSelfTest({ gate: GATE, cases, minCases: SELF_TEST_MIN_CASES, minRejectCases: SELF_TEST_MIN_REJECT });
@@ -312,7 +413,19 @@ export function main(argv: string[] = process.argv.slice(2)): number {
             process.stderr.write(`usage: ${GATE} [--base <ref>] [--replay <n>] [--self-test]\n`);
             return 2;
         }
-        process.stdout.write(renderReplay(replay(repoRoot, n)));
+        try {
+            process.stdout.write(renderReplay(replay(repoRoot, n)));
+        } catch (err) {
+            if (err instanceof GitReadError) {
+                process.stderr.write(
+                    `❌  ${GATE} --replay: ${err.message}\n` +
+                        '    No table is printed. A replay that could not read its own history would\n' +
+                        '    otherwise print zeroes, and those zeroes are cited as this gate\'s evidence.\n',
+                );
+                return 2;
+            }
+            throw err;
+        }
         return 0;
     }
 
@@ -337,24 +450,29 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         return 2;
     }
 
-    const patch = git(['diff', '--unified=0', '--find-renames', `${ref}...HEAD`, '--', ROADMAPS_REL], repoRoot);
-    if (!patch.ok) {
-        process.stderr.write(`❌  ${GATE}: git diff against ${ref} failed — the change could not be read.\n`);
-        return 2;
+    let clauses: AddedClause[];
+    try {
+        clauses = addedClausesIn(git(['diff', '--unified=0', '--find-renames', `${ref}...HEAD`, '--', ROADMAPS_REL], repoRoot));
+    } catch (err) {
+        if (err instanceof GitReadError) {
+            process.stderr.write(`❌  ${GATE}: ${err.message}\n    The change could not be read, so nothing was checked.\n`);
+            return 2;
+        }
+        throw err;
     }
 
-    const bare = bareClausesIn(patch.stdout);
+    const bare = clauses.filter((c) => !c.satisfied);
     // The unit is the added CLAUSE, not the file: a change adding ten clauses to
     // one roadmap scanned ten things, and reporting "1 file" would understate
-    // what was read. An empty diff is a real answer here (nothing was added),
-    // never a dead scope, so the count is allowed to be zero.
-    const added = patch.stdout
-        .split('\n')
-        .filter((l) => l.startsWith('+') && !l.startsWith('+++') && l.includes('verify:')).length;
+    // what was read. It is the SAME list the verdict is drawn from, which it was
+    // not in the first version — a line filter counted prose and malformed lines
+    // the parser then dropped, so the gate reported scanning more than it judged.
+    // An empty diff is a real answer here (nothing was added), never a dead
+    // scope, so the count is allowed to be zero.
     try {
         reportScanned({
             gate: GATE,
-            scanned: added,
+            scanned: clauses.length,
             units: 'added verify clause(s)',
             roots: [ROADMAPS_REL],
             allowEmpty: 'a change that adds no verify clause has nothing to check',
@@ -391,9 +509,6 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     );
     return 1;
 }
-
-/** Keep the arrow grammar single-sourced; a copy here would drift silently. */
-export { VERIFY_ARROW_SOURCE };
 
 function isCliEntry(): boolean {
     const entry = process.argv[1];

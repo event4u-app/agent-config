@@ -1508,12 +1508,17 @@ gates:
       added, which is either a true positive (and the canary is indistinguishable
       from the thing it is meant to detect) or, once committed on main, invisible
       forever. The negative control is the gate's own `--self-test`, run as its
-      own CI step: 9 cases, 3 rejecting, covering an added bare clause, a bare
-      clause among expectation-carrying siblings, and a `cat` command that is
-      asked for an oracle despite a weak exit status — plus six ACCEPT cases
-      pinning the three things that must NOT fire (an expectation in either form,
-      the prose MANUAL form, a backticked file pointer, and a bare clause already
-      at base). Same class as check_estate_count's diff-scoped half.
+      own CI step: 10 cases, 4 rejecting — an added bare clause, a bare clause
+      among expectation-carrying siblings, a `cat` command asked for an oracle
+      despite a weak exit status, and an `./path/script.ts` invocation that the
+      pointer carve-out must NOT exempt — plus six ACCEPT cases pinning what must
+      not fire (an expectation in either form, the prose MANUAL form, a backticked
+      file pointer with and without a `:line` suffix, and a bare clause already at
+      base). One limit is stated rather than implied: the already-at-base case
+      does not exercise context-line handling, because under `--unified=0` the
+      unchanged clause does not appear in the patch at all; the unit test
+      `reads ADDED lines only` is what pins that. Same class as
+      check_estate_count's diff-scoped half.
 
   - id: check_static_parity
     argv: ["--quiet"]
