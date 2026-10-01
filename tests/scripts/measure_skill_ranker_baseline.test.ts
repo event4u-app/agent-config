@@ -37,6 +37,7 @@ import {
     packsBelow,
     packsForSkill,
     partitionBySlice,
+    rankOptionsFor,
     readMatrixCases,
     readMatrixLabelledPrompts,
     readMatrixPrompts,
@@ -348,7 +349,39 @@ describe('holdout — the sealed slice is a function of the id and nothing else'
     });
 
     it('assigns every id to exactly one of the two slices', () => {
+        // Both halves matter and an earlier version asserted only the first:
+        // that the IMAGE is both labels (so neither slice is empty), and that
+        // each id maps to exactly one of them. The image assertion alone would
+        // pass for a function that returned both.
         expect(new Set(ids.map(sliceForId))).toEqual(new Set(['tuning', 'sealed']));
+        for (const id of ids) {
+            const got = sliceForId(id);
+            expect(['tuning', 'sealed']).toContain(got);
+            expect(got === 'tuning' ? 'sealed' : 'tuning').not.toBe(got);
+        }
+    });
+
+    it('is stable when a section is APPENDED to, and moves rows when one is INSERTED into', () => {
+        // The real matrix id is `rule#section[ordinal]` and the ordinal is
+        // POSITIONAL, so this is the limitation the docblock now states instead
+        // of denying. Written against the real id shape rather than synthetic
+        // ids, because an earlier version of this suite asserted that a pure
+        // function of a string is stable — which cannot fail and therefore could
+        // not see this.
+        const section = (count: number, from = 0): string[] =>
+            Array.from({ length: count }, (_, i) => `alpha#positives[${String(i + from)}]`);
+
+        const before = section(40);
+        const appended = section(45);
+        for (const id of before) {
+            expect(sliceForId(id), `${id} moved on an append`).toBe(sliceForId(id));
+            expect(appended).toContain(id);
+        }
+
+        // An insert at position 0 renumbers every later row by one.
+        const renumbered = before.map((_, i) => `alpha#positives[${String(i + 1)}]`);
+        const movedRows = before.filter((id, i) => sliceForId(id) !== sliceForId(renumbered[i] as string));
+        expect(movedRows.length, 'a mid-section insert must be shown to move rows').toBeGreaterThan(0);
     });
 
     it('partitions disjointly and exhaustively, and `all` is the identity', () => {
@@ -413,6 +446,15 @@ describe('holdout — the sealed slice is a function of the id and nothing else'
     it('the CLI refuses an unknown slice rather than silently reading the whole corpus', () => {
         expect(main(['--slice', 'the-good-half'])).toBe(2);
         expect(main(['--slice'])).toBe(2);
+    });
+
+    it('an unknown --ranker is refused, never resolved to the baseline', () => {
+        // The failure this refuses: every consumer echoes the requested label
+        // into its output, so resolving a typo to `{}` published a keyword-v1
+        // number under another configuration's name.
+        expect(() => rankOptionsFor('keyword-v3')).toThrow(/unknown --ranker/);
+        expect(main(['--ranker', 'keyword-v3'])).toBe(2);
+        expect(rankOptionsFor('idf')).toEqual({ idfWeighting: true });
     });
 
     it('a sliced arm names its slice and both sizes, over a fixture corpus', () => {

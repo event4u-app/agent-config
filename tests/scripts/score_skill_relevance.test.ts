@@ -301,10 +301,21 @@ describe('candidate ranking signals — off by default, measurable alone', () =>
 describe('latency — per-prompt ranking cost against the pre_tool_use budget', () => {
     const BUDGET_FILE = path.join(REPO_ROOT, 'src', 'config', 'hook-latency-budget.json');
 
+    /**
+     * The 95th percentile, nearest-rank — and it needs enough samples to be one.
+     *
+     * At n = 12 `ceil(0.95 * n) - 1` is index 11, i.e. the MAXIMUM, which is the
+     * most outlier-sensitive statistic available and the opposite of what a
+     * flake-averse wall-clock check wants. RUNS below is set so the selected
+     * index is not the last.
+     */
     function p95(xs: readonly number[]): number {
         const s = [...xs].sort((a, b) => a - b);
         return s[Math.min(s.length - 1, Math.ceil(0.95 * s.length) - 1)] as number;
     }
+
+    /** 40 samples → index 37 of 40: a real percentile, and the artifact's n. */
+    const RUNS = 40;
 
     function measure(opts: Parameters<typeof rank>[2], runs: number): number {
         const prompts = [
@@ -346,7 +357,7 @@ describe('latency — per-prompt ranking cost against the pre_tool_use budget', 
         // this tree's own hook-latency gate is the one check that fails on a
         // loaded runner rather than on a diff, and a tight self-imposed bar here
         // would reproduce that defect in a unit test.
-        expect(measure({}, 12), 'keyword-v1 p95 ms').toBeLessThan(budget);
-        expect(measure({ idfWeighting: true }, 12), 'idf p95 ms').toBeLessThan(budget);
-    }, 60_000);
+        expect(measure({}, RUNS), 'keyword-v1 p95 ms').toBeLessThan(budget);
+        expect(measure({ idfWeighting: true }, RUNS), 'idf p95 ms').toBeLessThan(budget);
+    }, 120_000);
 });

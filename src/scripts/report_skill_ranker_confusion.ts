@@ -170,13 +170,25 @@ export function confusionPairs(readings: readonly RowReading[], limit = CONFUSIO
         const key = `${expected}\u0000${got}`;
         counts.set(key, (counts.get(key) ?? 0) + 1);
     }
-    return [...counts.entries()]
-        .map(([key, count]) => {
-            const [expected, got] = key.split('\u0000');
-            return { expected: expected as string, got: got as string, count };
-        })
-        .sort((a, b) => b.count - a.count || (a.expected < b.expected ? -1 : 1))
-        .slice(0, limit);
+    return (
+        [...counts.entries()]
+            .map(([key, count]) => {
+                const [expected, got] = key.split('\u0000');
+                return { expected: expected as string, got: got as string, count };
+            })
+            // A TOTAL order, so the table is reproducible. The earlier comparator
+            // tied on count and `expected` and then returned 1 for both argument
+            // orders — never 0 — which leaves equal rows in engine-defined order
+            // and quietly breaks the "regenerate every figure" claim this report
+            // opens with.
+            .sort(
+                (a, b) =>
+                    b.count - a.count ||
+                    (a.expected < b.expected ? -1 : a.expected > b.expected ? 1 : 0) ||
+                    (a.got < b.got ? -1 : a.got > b.got ? 1 : 0),
+            )
+            .slice(0, limit)
+    );
 }
 
 /** The deliberate `expected_skills: []` rows, partitioned by the same seal. */
@@ -195,7 +207,8 @@ export interface FalseActivation {
     empties: number;
     median_correct_hit_score: number;
     at_or_above_median: number;
-    share: number;
+    /** `null` when there is no threshold to compare against — see below. */
+    share: number | null;
     correct_hits: number;
 }
 
@@ -206,24 +219,39 @@ export interface FalseActivation {
  * which is the only threshold available that the ranker itself defines. A fixed
  * cutoff would be a number chosen here, and the question 1.3 asks is whether the
  * ranker's own confidence separates the two populations at all.
+ *
+ * WITH ZERO CORRECT HITS there is no such threshold, and the share is `null`
+ * rather than a number. Falling back to a median of 0 would count every empty as
+ * at-or-above it — every score is ≥ 0 — and print a 100 % false-activation rate
+ * indistinguishable from a measured one.
  */
 export function falseActivation(
     labelled: readonly RowReading[],
     emptyTopScores: readonly number[],
 ): FalseActivation {
-    const hits = labelled.filter((r) => r.rankOfExpected === 1).map((r) => r.topScore).sort((a, b) => a - b);
+    const hits = labelled
+        .filter((r) => r.rankOfExpected === 1)
+        .map((r) => r.topScore)
+        .sort((a, b) => a - b);
+    if (hits.length === 0) {
+        return {
+            empties: emptyTopScores.length,
+            median_correct_hit_score: 0,
+            at_or_above_median: 0,
+            share: null,
+            correct_hits: 0,
+        };
+    }
     const median =
-        hits.length === 0
-            ? 0
-            : hits.length % 2 === 1
-              ? (hits[(hits.length - 1) / 2] as number)
-              : ((hits[hits.length / 2 - 1] as number) + (hits[hits.length / 2] as number)) / 2;
+        hits.length % 2 === 1
+            ? (hits[(hits.length - 1) / 2] as number)
+            : ((hits[hits.length / 2 - 1] as number) + (hits[hits.length / 2] as number)) / 2;
     const over = emptyTopScores.filter((s) => s >= median).length;
     return {
         empties: emptyTopScores.length,
         median_correct_hit_score: median,
         at_or_above_median: over,
-        share: emptyTopScores.length ? round3(over / emptyTopScores.length) : 0,
+        share: emptyTopScores.length ? round3(over / emptyTopScores.length) : null,
         correct_hits: hits.length,
     };
 }
@@ -324,7 +352,9 @@ export function renderReport(opts: {
     L.push(`| correct top-1 hits the median is taken over | ${String(fa.correct_hits)} |`);
     L.push(`| median top score of a correct hit | ${String(fa.median_correct_hit_score)} |`);
     L.push(`| empties whose top score reaches that median | ${String(fa.at_or_above_median)} |`);
-    L.push(`| share | ${pct(fa.at_or_above_median, fa.empties)} |`);
+    L.push(
+        `| share | ${fa.share === null ? 'n/a — no correct top-1 hit, so no threshold' : pct(fa.at_or_above_median, fa.empties)} |`,
+    );
     L.push('');
     L.push('The threshold is the ranker\'s own median hit score rather than a cutoff chosen');
     L.push('here, because the question is whether the ranker\'s confidence separates the two');
@@ -361,9 +391,17 @@ export function main(argv: readonly string[]): number {
     const date = argv.includes('--date')
         ? (argv[argv.indexOf('--date') + 1] ?? new Date().toISOString().slice(0, 10))
         : new Date().toISOString().slice(0, 10);
-    process.stdout.write(
-        renderReport({ repo: REPO, skillsDir: SKILLS_DIR, ranker, slice: rawSlice as SliceName, date }),
-    );
+    let body: string;
+    try {
+        // An unknown label must not reach the renderer: the label is printed in
+        // the report's own title and in the regenerate command beside it, so a
+        // typo would publish one configuration's number under another's name.
+        body = renderReport({ repo: REPO, skillsDir: SKILLS_DIR, ranker, slice: rawSlice as SliceName, date });
+    } catch (err) {
+        process.stderr.write(`${(err as Error).message}\n`);
+        return 2;
+    }
+    process.stdout.write(body);
     return 0;
 }
 

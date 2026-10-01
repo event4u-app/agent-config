@@ -24,14 +24,13 @@
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { wilsonInterval } from './_lib/capture_rate.js';
 import {
     RANKER_LABELS,
     REPO,
     SKILLS_DIR,
     type SliceName,
-    measureAccuracy,
     partitionBySlice,
-    rankOptionsFor,
     readMatrixLabelledPrompts,
 } from './measure_skill_ranker_baseline.js';
 import { meanReciprocalRank, readRows } from './report_skill_ranker_confusion.js';
@@ -47,28 +46,45 @@ export interface SweepRow {
     mrr: number;
 }
 
+function round3(n: number): number {
+    return Math.round(n * 1000) / 1000;
+}
+
+function ci(successes: number, trials: number): { lower: number; upper: number } {
+    const raw = wilsonInterval(successes, trials);
+    return { lower: round3(raw.lower), upper: round3(raw.upper) };
+}
+
+/**
+ * Every configuration on both slices, ONE ranking pass per prompt.
+ *
+ * `rank()` re-globs and re-reads the whole SKILL.md catalogue on every call, so
+ * it is the dominant cost by a wide margin and ranking each prompt twice doubles
+ * the whole sweep. The earlier shape took top-1/top-3 from `measureAccuracy` and
+ * MRR from a second pass in `readRows`, which also derived the row set from two
+ * independent corpus reads — so a future divergence between them would have been
+ * silent rather than loud. All three rates now come off the same readings of the
+ * same rows.
+ */
 export function sweep(labels: readonly string[], repo = REPO, skillsDir = SKILLS_DIR): SweepRow[] {
     const whole = readMatrixLabelledPrompts(repo);
     const out: SweepRow[] = [];
     for (const label of labels) {
         for (const slice of ['tuning', 'sealed'] as const) {
-            const arm = measureAccuracy({
-                corpus: 'routing-matrix',
-                repo,
-                skillsDir,
-                rankOpts: rankOptionsFor(label),
-                slice,
-            });
-            const mrr = meanReciprocalRank(readRows(partitionBySlice(whole, slice), skillsDir, label));
+            const rows = partitionBySlice(whole, slice);
+            const readings = readRows(rows, skillsDir, label);
+            const n = readings.length;
+            const t1 = readings.filter((r) => r.rankOfExpected === 1).length;
+            const t3 = readings.filter((r) => r.rankOfExpected >= 1 && r.rankOfExpected <= 3).length;
             out.push({
                 label,
                 slice,
-                n: arm.corpus_prompts,
-                top1: arm.top1,
-                top1_ci95: arm.top1_ci95,
-                top3: arm.top3,
-                top3_ci95: arm.top3_ci95,
-                mrr: Math.round(mrr * 1000) / 1000,
+                n,
+                top1: n ? round3(t1 / n) : 0,
+                top1_ci95: ci(t1, n),
+                top3: n ? round3(t3 / n) : 0,
+                top3_ci95: ci(t3, n),
+                mrr: round3(meanReciprocalRank(readings)),
             });
         }
     }

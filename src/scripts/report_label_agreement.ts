@@ -35,7 +35,10 @@
  *
  * Usage:
  *     ./scripts-run src/scripts/report_label_agreement
- *     ./scripts-run src/scripts/report_label_agreement --ranker idf --json
+ *     ./scripts-run src/scripts/report_label_agreement --ranker idf
+ *
+ * Output is JSON on stdout, always — there is no second format and therefore no
+ * flag to pick one.
  */
 
 import * as fs from 'node:fs';
@@ -59,10 +62,25 @@ export const SECOND_SEAT_FILE = path.join('tests', 'eval', 'routing-matrix', 'se
 export type AgreementKind = 'exact' | 'overlap' | 'polarity';
 export const AGREEMENT_KINDS: readonly AgreementKind[] = ['exact', 'overlap', 'polarity'];
 
+/**
+ * The store, or `{}` when nobody has relabelled.
+ *
+ * A MALFORMED store is a third state and must not look like either of the other
+ * two: an empty object would read as "nobody has relabelled" and a raw
+ * `SyntaxError` out of `main` would bypass the message that distinguishes them.
+ */
 export function readSecondSeat(repo = REPO): Record<string, string[]> {
     const file = path.join(repo, SECOND_SEAT_FILE);
     if (!fs.existsSync(file)) return {};
-    return JSON.parse(fs.readFileSync(file, 'utf8')) as Record<string, string[]>;
+    const raw = fs.readFileSync(file, 'utf8');
+    try {
+        return JSON.parse(raw) as Record<string, string[]>;
+    } catch (err) {
+        throw new Error(
+            `report_label_agreement: ${SECOND_SEAT_FILE} is not valid JSON (${(err as Error).message}). ` +
+                'That is a corrupt store, NOT an empty one — the two must not be confused.',
+        );
+    }
 }
 
 export function agrees(a: readonly string[], b: readonly string[], kind: AgreementKind): boolean {
@@ -174,7 +192,13 @@ export function relabelledSliceCensus(repo = REPO): Record<string, number> {
 
 export function main(argv: readonly string[]): number {
     const ranker = argv.includes('--ranker') ? (argv[argv.indexOf('--ranker') + 1] ?? 'keyword-v1') : 'keyword-v1';
-    const report = measureAgreement({ ranker });
+    let report: AgreementReport;
+    try {
+        report = measureAgreement({ ranker });
+    } catch (err) {
+        process.stderr.write(`${(err as Error).message}\n`);
+        return 2;
+    }
     if (report.second_seat_rows === 0) {
         process.stderr.write(
             `report_label_agreement: no second-seat labels at ${SECOND_SEAT_FILE} — ` +

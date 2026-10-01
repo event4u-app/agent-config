@@ -128,9 +128,9 @@ above the row count — the same accounting the per-pack census uses.
 | `api-endpoint` | `ai-code-blindspots` | 1 |
 | `api-endpoint` | `api-design` | 1 |
 | `api-endpoint` | `api-testing` | 1 |
-| `async-python-patterns` | `skill-improvement-pipeline` | 1 |
 | `async-python-patterns` | `activation-design` | 1 |
 | `async-python-patterns` | `brand-audit` | 1 |
+| `async-python-patterns` | `skill-improvement-pipeline` | 1 |
 | `aws-infrastructure` | `ai-code-blindspots` | 1 |
 
 **The table above is the roadmap's first refuted premise, and it refutes it by
@@ -252,7 +252,7 @@ one name. Regenerate with `sweep_skill_ranker_signals`.
 | `keyword-v2` | sealed | 75 | 0.160 | 0.094 – 0.259 | 0.320 | 0.225 – 0.432 | 0.263 |
 | `when-to-use` | tuning | 315 | 0.206 | 0.165 – 0.254 | 0.362 | 0.311 – 0.416 | 0.317 |
 | `when-to-use` | sealed | 75 | 0.173 | 0.104 – 0.274 | 0.280 | 0.191 – 0.390 | 0.268 |
-| `headings` | tuning | 315 | 0.206 | 0.165 – 0.254 | 0.330 | 0.281 – 0.384 | 0.308 |
+| `headings` | tuning | 315 | 0.216 | 0.174 – 0.265 | 0.330 | 0.281 – 0.384 | 0.313 |
 | `headings` | sealed | 75 | 0.173 | 0.104 – 0.274 | 0.320 | 0.225 – 0.432 | 0.281 |
 | `idf` | tuning | 315 | 0.235 | 0.191 – 0.285 | 0.368 | 0.317 – 0.423 | 0.347 |
 | `idf` | sealed | 75 | 0.173 | 0.104 – 0.274 | 0.400 | 0.297 – 0.513 | 0.304 |
@@ -261,30 +261,46 @@ one name. Regenerate with `sweep_skill_ranker_signals`.
 
 Readings, in the order they matter:
 
-1. **`keyword-v2` is byte-identical to `keyword-v1` on both slices, to three
-   decimals, on every column.** Decision D1 held: folding trigger prose in is
-   null at n = 390 exactly as it was at n = 26. The re-measurement is now on a
-   denominator fifteen times larger and the answer did not move at all.
+1. **`keyword-v2` matches `keyword-v1` on top-1 and top-3, on both slices, to
+   three decimals.** The one column that differs is tuning MRR — 0.319 against
+   0.320 — i.e. folding trigger prose in promotes the expected skill by one
+   position on a single row out of 315 and changes no hit rate anywhere.
+   Decision D1 holds: trigger prose is null at n = 390 as it was at n = 26, now
+   on a denominator fifteen times larger. (An earlier draft of this line read
+   "byte-identical … on every column", which the table above it falsifies; the
+   conclusion was right and the stated basis was not.)
 2. **`idf` is the only configuration that moves every measure in the same
    direction on both slices.** Tuning top-1 0.219 → 0.235, top-3 0.343 → 0.368,
    MRR 0.319 → 0.347; sealed top-1 0.160 → 0.173, top-3 0.320 → 0.400, MRR
    0.263 → 0.304. It is the candidate, and § The null is why it is not promoted.
 3. **`when-to-use` and `headings` each move sealed top-1 up by exactly one row
-   (12/75 → 13/75) while moving tuning top-1 DOWN by four rows.** Step 2.2's
-   removal rule is "a flag that does not move the sealed-slice top-1 point
-   estimate is removed", and both move it, so both are kept under the rule as
-   written. Neither is a promotion candidate, and the rule should not be read as
-   saying otherwise: a one-row move on 75 rows against a four-row loss on 315 is
-   noise with a sign.
+   (12/75 → 13/75) while lowering tuning top-1** — by four rows for
+   `when-to-use`, by one for `headings`. Step 2.2's removal rule is "a flag that
+   does not move the sealed-slice top-1 point estimate is removed", and both move
+   it, so both are kept under the rule as written. Neither is a promotion
+   candidate, and the rule should not be read as saying otherwise: a one-row move
+   on 75 rows against a loss on 315 is noise with a sign.
 4. **`packs` was implemented, measured, and removed in the same change**, which
    is what the rule is for. Its sealed top-1 was 0.160 — the baseline, unmoved —
    and its tuning top-3 was slightly worse. The flag, its plumbing through the
    loader, and its `RankableSkill` field are gone; it survives only as this row.
-5. **The best two together is worse than the better one alone on top-1.**
-   `idf+when-to-use` has the highest sealed top-1 of any configuration (0.187)
-   and the highest tuning top-3 (0.406), but its sealed top-3 falls to 0.307 —
-   below the baseline's 0.320 — which step 3.1's "top-3 does not fall" clause
-   would refuse on its own.
+
+   **`keyword-v2` has identical sealed evidence and is NOT removed, and the
+   asymmetry needs its reason stated.** The rule reads "removed in the same
+   change", which scopes it to flags this change ADDS. `includeTriggers`
+   predates this roadmap: it is the archived MCP-delivery roadmap's keyword-v2,
+   a shipped option with a published null, and deleting it here would be an
+   unrelated removal of someone else's surface. It is retained as a measured
+   null, not as a candidate.
+5. **The best two together is worse than the better one alone on TUNING top-1,
+   and better on SEALED top-1 — which is why neither number is read alone.**
+   `idf+when-to-use` sits at tuning 0.229 against `idf`'s 0.235, and at sealed
+   0.187 against 0.173 — the highest sealed top-1 of any configuration, and the
+   highest tuning top-3 (0.406). Its sealed top-3 nevertheless falls to 0.307,
+   below the baseline's 0.320, which step 3.1's "top-3 does not fall" clause
+   refuses on its own. The slice has to be named every time a direction is
+   claimed; an earlier draft of this line omitted it and read as a verdict the
+   next clause contradicted.
 
 ### An independent reading of the body signal, landed the same day
 
@@ -350,6 +366,46 @@ Named, as step 3.1 requires:
   rows each). Only `analysis-workbench` has enough rows to be more than an
   anecdote, and nothing here explains it.
 
+### What two blind reviews changed in this report
+
+Both R2 completion reviews are committed under `agents/evidence/reviews/`. Three
+of their findings changed a measured figure or a stated claim here, and they are
+named rather than quietly absorbed:
+
+- **The seal is stable under APPEND, not under mid-section INSERT.** The matrix
+  id is `rule#section[ordinal]` and the ordinal is positional, so inserting or
+  deleting a prompt mid-section renumbers every later row in that section and
+  moves about one in five across the boundary. The partition's own doc block
+  claimed unqualified stability; it now states this, and a test pins the real id
+  shape instead of a synthetic one that could not fail. **The key is NOT changed
+  here**, deliberately: the Phase-2 signals were chosen by reading the tuning
+  rows of this partition, so re-drawing the boundary now would push ~20 % of
+  those rows into the sealed slice and contaminate the claims the seal exists to
+  protect. A content key (`rule|section|prompt`) is the right shape for the next
+  corpus version, applied when the corpus changes rather than after choosing on
+  it.
+- **The `headings` row moved.** The body extractor ended the `## When to use`
+  capture at any heading — including that section's own `###` subsections — and
+  treated a `## …` line inside a fenced code block as a real heading. These
+  skills are documentation and fence markdown samples routinely, so the flag was
+  partly indexing fence contents. Fixed to terminate at the same-or-higher level
+  and to ignore fenced regions, and the sweep re-run: `headings` tuning top-1
+  moved 0.206 → **0.216** and MRR 0.308 → 0.313. No other cell in the table
+  changed, and the null is unaffected.
+- **"Byte-identical on every column" was false**, by this report's own MRR
+  column. Reading 1 above now states what the table shows.
+
+Two further findings are recorded as accepted rather than fixed. Under
+`idfWeighting` a task term no skill carries takes the LARGEST weight, since
+`df = 0` maximises `ln(1 + N/(1+df))`; it enters every skill's denominator
+equally, so it cannot reorder two skills, but it does depress absolute scores and
+therefore shifts the balance against the fixed `+30` persona term. Changing it
+would require re-measuring `idf`, which is not warranted for a configuration that
+is not being promoted. And the archived roadmap keeps `status: ready`: 409 of the
+753 files already in `agents/roadmaps/archive/` carry exactly that, against four
+reading `archived`, so changing this one would make it the outlier rather than
+the example.
+
 ### The instrument's own limit, which is the more useful finding
 
 **The sealed slice holds 75 rows and is `underpowered` by this tree's own
@@ -384,6 +440,12 @@ Step 3.2. Per-prompt ranking cost, p95 over 40 in-process calls against the
 | `idf` | 10.6 ms | 12.0 ms | 6.9 % |
 | `when-to-use` | 16.4 ms | 20.1 ms | 11.5 % |
 | `idf+when-to-use` | 22.0 ms | 24.4 ms | 13.9 % |
+
+The committed check in `tests/scripts/score_skill_relevance.test.ts` measures
+over the same 40 samples, so the figure it asserts is the figure above. At a
+smaller n the "p95" index would select the maximum, which is the most
+outlier-sensitive statistic available and the opposite of what a wall-clock
+assertion wants — a review caught exactly that at n = 12 and it is fixed.
 
 **`idfWeighting` is free.** Its document-frequency pass runs over a catalogue the
 loader has already read, so it adds no I/O and the difference from the default is

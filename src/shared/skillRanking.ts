@@ -144,9 +144,11 @@ export interface RankOptions {
      * Weight each matched term by its inverse document frequency over the
      * catalogue, instead of counting every term alike.
      *
-     * Needs {@link TermStats}; without one the flag is inert rather than
-     * silently scoring something else, because a weighting that falls back to
-     * unweighted on a missing input is a configuration nobody can name.
+     * Needs {@link TermStats}. Setting it WITHOUT one throws, rather than
+     * quietly taking the unweighted branch: a weighting that falls back to
+     * unweighted on a missing input produces a baseline number under a
+     * configuration's name, which is the one failure the whole flag table
+     * exists to prevent.
      */
     idfWeighting?: boolean;
 }
@@ -177,10 +179,20 @@ export interface TermStats {
     skills: number;
 }
 
-export function buildTermStats(skills: readonly RankableSkill[], opts: RankOptions = {}): TermStats {
+/**
+ * @param termSets the per-skill term sets, in the same order as `skills`.
+ *   Required rather than derived, so the catalogue is tokenized ONCE per call
+ *   instead of once here and again at the scoring loop. Tokenizing ~300 skills
+ *   twice per prompt is invisible next to re-reading them from disk, which is
+ *   exactly why it would have stayed invisible.
+ */
+export function buildTermStats(
+    skills: readonly RankableSkill[],
+    termSets: readonly ReadonlySet<string>[],
+): TermStats {
     const df = new Map<string, number>();
-    for (const s of skills) {
-        for (const t of skillTerms(s, opts)) df.set(t, (df.get(t) ?? 0) + 1);
+    for (const terms of termSets) {
+        for (const t of terms) df.set(t, (df.get(t) ?? 0) + 1);
     }
     return { df, skills: skills.length };
 }
@@ -214,6 +226,12 @@ export function scoreSkill(
     opts: RankOptions = {},
     stats?: TermStats,
 ): number {
+    if (opts.idfWeighting && !stats) {
+        throw new Error(
+            'scoreSkill: idfWeighting is set but no TermStats was passed — scoring unweighted here ' +
+                'would publish a baseline number under the idf label. Build stats with buildTermStats.',
+        );
+    }
     if (taskTerms.size === 0) return 0;
     let overlap: number;
     if (opts.idfWeighting && stats) {
@@ -258,10 +276,12 @@ export function rankSkills(
     opts: RankOptions = {},
 ): RankedSkill[] {
     const taskTerms = tokenize(task);
-    const stats = opts.idfWeighting ? buildTermStats(skills, opts) : undefined;
+    const termSets = skills.map((s) => skillTerms(s, opts));
+    const stats = opts.idfWeighting ? buildTermStats(skills, termSets) : undefined;
     const rows: RankedSkill[] = [];
-    for (const skill of skills) {
-        const score = scoreSkill(taskTerms, skill, skillTerms(skill, opts), opts, stats);
+    for (let i = 0; i < skills.length; i += 1) {
+        const skill = skills[i] as RankableSkill;
+        const score = scoreSkill(taskTerms, skill, termSets[i] as ReadonlySet<string>, opts, stats);
         if (score > 0) rows.push({ name: skill.name, score, personas: [...(skill.personas ?? [])] });
     }
     rows.sort((a, b) => (b.score - a.score) || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));

@@ -219,7 +219,9 @@ export type SliceName = 'all' | 'tuning' | 'sealed';
 export const SLICE_NAMES: readonly SliceName[] = ['all', 'tuning', 'sealed'];
 
 /**
- * One row in twenty-five-and-a-bit — i.e. 20 % — goes to the sealed slice.
+ * One row in five — nominally 20 %, measured 19.2 % (75 of 390) on the live
+ * corpus, because a hash is not a shuffle and the exact count is a property of
+ * the ids.
  *
  * Stated as a modulus rather than a fraction because the partition has to be a
  * pure function of the id: a share applied to a shuffled list would move every
@@ -229,12 +231,27 @@ export const SLICE_NAMES: readonly SliceName[] = ['all', 'tuning', 'sealed'];
 export const SEALED_MODULUS = 5;
 
 /**
- * The slice one case id falls in — deterministic, order-independent, stable
- * under corpus growth.
+ * The slice one case id falls in — deterministic and order-independent.
  *
- * Keyed on the id and nothing else. Keying on the prompt text would move a row
- * across the boundary when a typo is fixed; keying on position would move every
- * row behind an insertion. The id is the one coordinate that survives both.
+ * STABILITY UNDER CORPUS CHANGE IS PARTIAL, and an earlier version of this block
+ * claimed otherwise. The matrix id is `rule#section[ordinal]` and the ordinal is
+ * POSITIONAL — it counts `- prompt:` entries within a section. So:
+ *
+ *   - APPENDING a prompt to the end of a section is stable: every existing row
+ *     keeps its ordinal, its id, and its side of the seal. This is the workflow
+ *     the matrix README documents, which is why the partition survives the
+ *     release-to-release growth the `history` array is for.
+ *   - INSERTING or DELETING mid-section renumbers every later row in THAT
+ *     section, which re-hashes them and moves roughly one in five across the
+ *     seal.
+ *
+ * A content key (`rule|section|prompt`) would close the second case and is the
+ * right shape for the next corpus version. It is deliberately NOT applied here:
+ * the signals in Phase 2 were chosen by reading the TUNING rows of this
+ * partition, so re-drawing the boundary now would move ~20 % of those rows into
+ * the sealed slice and silently contaminate the very claims the seal exists to
+ * protect. Changing a partition after choosing on it is worse than a partially
+ * stable partition, so the key moves when the corpus does, not before.
  */
 export function sliceForId(id: string): Exclude<SliceName, 'all'> {
     return fnv1a(id) % SEALED_MODULUS === 0 ? 'sealed' : 'tuning';
@@ -461,10 +478,15 @@ export function measureAccuracy(opts: {
  * is a comparison of two things under one name. Every entry past `keyword-v1`
  * is a candidate configuration under `road-to-a-ranker-that-routes` Phase 2,
  * each a single flag so it can be measured alone, plus the combinations the
- * same phase names. A label this table does not know measures `keyword-v1` —
- * the baseline — rather than throwing, because the two callers that resolve a
- * label are a report and a bench and neither should die on a typo while the
- * other reports a figure.
+ * same phase names.
+ *
+ * AN UNKNOWN LABEL THROWS. It used to resolve to `keyword-v1` — the baseline —
+ * which is the exact failure this table exists to prevent: every consumer
+ * echoes the requested label back into its output, so a typo published a
+ * BASELINE number under another configuration's name, in the report's own title
+ * and in the regenerate command it prints beside it. The two sibling parsers in
+ * this file refuse an unknown value and so does the sweep; the lenient branch
+ * was the inconsistent one.
  */
 export const RANKER_LABELS: Readonly<Record<string, RankOptions>> = {
     'keyword-v1': {},
@@ -475,8 +497,20 @@ export const RANKER_LABELS: Readonly<Record<string, RankOptions>> = {
     'idf+when-to-use': { idfWeighting: true, includeWhenToUse: true },
 };
 
+export class UnknownRankerLabel extends Error {
+    constructor(label: string) {
+        super(
+            `measure_skill_ranker_baseline: unknown --ranker ${label || '(nothing)'}; ` +
+                `known: ${Object.keys(RANKER_LABELS).join(' | ')}`,
+        );
+        this.name = 'UnknownRankerLabel';
+    }
+}
+
 export function rankOptionsFor(ranker: string): RankOptions {
-    return RANKER_LABELS[ranker] ?? {};
+    const opts = RANKER_LABELS[ranker];
+    if (opts === undefined) throw new UnknownRankerLabel(ranker);
+    return opts;
 }
 
 export function measure(opts: {
@@ -562,14 +596,17 @@ export function main(argv: readonly string[]): number {
     const commit = argv.includes('--commit') ? (argv[argv.indexOf('--commit') + 1] ?? 'unknown') : 'unknown';
     let corpus: CorpusName;
     let slice: SliceName;
+    let out: RankerBaseline;
     try {
         corpus = parseCorpus(argv);
         slice = parseSlice(argv);
+        // Inside the same guard as the two parsers above: an unknown --ranker is
+        // the same class of mistake and now gets the same exit code.
+        out = measure({ ranker, commit, corpus, slice });
     } catch (err) {
         process.stderr.write(`${(err as Error).message}\n`);
         return 2;
     }
-    const out = measure({ ranker, commit, corpus, slice });
     process.stdout.write(`${JSON.stringify(out, null, 2)}\n`);
     return 0;
 }

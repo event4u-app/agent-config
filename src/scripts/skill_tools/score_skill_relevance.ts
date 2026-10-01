@@ -188,14 +188,6 @@ export interface Skill {
     headingText: string[];
 }
 
-/**
- * The `## When to use` section, and every `##` / `###` heading, out of a body.
- *
- * Line-oriented and deliberately bounded: the section ends at the next heading
- * of the same or a higher level, so a skill whose whole file is one section
- * cannot put its entire procedure into the index under a flag whose name says
- * "when to use".
- */
 /** Everything after the frontmatter block, or the whole text when there is none. */
 export function _body_of(text: string): string {
     if (!text.startsWith('---')) return text;
@@ -204,19 +196,53 @@ export function _body_of(text: string): string {
     return text.slice(end + 4);
 }
 
+/**
+ * The `## When to use` section, and every `##` / `###` heading, out of a body.
+ *
+ * Line-oriented, and bounded in two ways that a first version got wrong in the
+ * same direction — it indexed something other than what this block describes,
+ * which makes a measurement of the FLAG a measurement of the PARSER:
+ *
+ *   - the section ends at the next heading of the SAME OR A HIGHER level, so a
+ *     `###` subsection of `## When to use` stays inside it. Ending at any
+ *     heading truncated the capture at the first subsection;
+ *   - a line inside a fenced code block is never a heading. These skills are
+ *     documentation and routinely fence markdown samples, so a `## …` line in a
+ *     fence was both harvested as a topic and used to terminate the section.
+ *
+ * Without the first bound a skill whose whole file is one section could still
+ * not put its procedure into an index whose flag says "when to use", because a
+ * sibling `##` ends it.
+ */
 export function _body_signals(body: string): { whenToUse: string; headings: string[] } {
-    const lines = body.split('\n');
     const headings: string[] = [];
     const when: string[] = [];
-    let inWhen = false;
-    for (const raw of lines) {
-        const h = /^(#{2,3})\s+(.*)$/.exec(raw.trimEnd());
-        if (h) {
-            headings.push((h[2] as string).trim());
-            inWhen = /^when to use\b/i.test((h[2] as string).trim());
+    let whenLevel = 0;
+    let fence: string | null = null;
+    for (const raw of body.split('\n')) {
+        const line = raw.trimEnd();
+        const f = /^\s*(`{3,}|~{3,})/.exec(line);
+        if (f) {
+            const mark = f[1] as string;
+            if (fence === null) fence = mark[0] as string;
+            else if (mark[0] === fence) fence = null;
+            if (whenLevel > 0) when.push(raw);
             continue;
         }
-        if (inWhen) when.push(raw);
+        if (fence !== null) {
+            if (whenLevel > 0) when.push(raw);
+            continue;
+        }
+        const h = /^(#{2,6})\s+(.*)$/.exec(line);
+        if (h) {
+            const level = (h[1] as string).length;
+            const title = (h[2] as string).trim();
+            if (level <= 3) headings.push(title);
+            if (whenLevel > 0 && level <= whenLevel) whenLevel = 0;
+            if (/^when to use\b/i.test(title)) whenLevel = level;
+            continue;
+        }
+        if (whenLevel > 0) when.push(raw);
     }
     return { whenToUse: when.join(' ').trim(), headings };
 }
@@ -335,14 +361,28 @@ function _rankable(skill: Skill): {
     };
 }
 
-function _score(taskTerms: Set<string>, skill: Skill, opts: RankOptions = {}, stats?: TermStats): number {
-    // Single-sourced in `src/shared/skillRanking.ts`. With no term-source flag
-    // set, `skill.terms` is already `tokenize(name + ' ' + description)` and the
-    // precomputed set is reused unchanged; a flag that widens the source
-    // re-derives the term set with that source folded in.
-    const rankable = _rankable(skill);
-    const terms = widensTermSource(opts) ? _sharedSkillTerms(rankable, opts) : skill.terms;
-    return scoreSkill(taskTerms, rankable, terms, opts, stats);
+/**
+ * The indexed term set for one skill.
+ *
+ * With no term-source flag set, `skill.terms` is already
+ * `tokenize(name + ' ' + description)` and the precomputed set is reused
+ * unchanged; a flag that widens the source re-derives it with that source
+ * folded in. Separated from `_score` so the caller can build each set ONCE and
+ * share it between the document-frequency pass and the scoring loop.
+ */
+function _terms(skill: Skill, opts: RankOptions): ReadonlySet<string> {
+    return widensTermSource(opts) ? _sharedSkillTerms(_rankable(skill), opts) : skill.terms;
+}
+
+function _score(
+    taskTerms: Set<string>,
+    skill: Skill,
+    terms: ReadonlySet<string>,
+    opts: RankOptions = {},
+    stats?: TermStats,
+): number {
+    // Single-sourced in `src/shared/skillRanking.ts`.
+    return scoreSkill(taskTerms, _rankable(skill), terms, opts, stats);
 }
 
 export type RankRow = [string, number, string[]];
@@ -357,10 +397,14 @@ export function rank(
 ): RankRow[] {
     const taskTerms = _tokenize(task);
     const skills = _load_skills_across(typeof skillsDir === 'string' ? [skillsDir] : skillsDir, opts);
-    const stats = opts.idfWeighting ? buildTermStats(skills.map(_rankable), opts) : undefined;
+    // ONE term set per skill, shared between the document-frequency pass and the
+    // scoring loop — the two used to tokenize the whole catalogue separately.
+    const termSets = skills.map((s) => _terms(s, opts));
+    const stats = opts.idfWeighting ? buildTermStats(skills.map(_rankable), termSets) : undefined;
     const rows: RankRow[] = [];
-    for (const s of skills) {
-        const score = _score(taskTerms, s, opts, stats);
+    for (let i = 0; i < skills.length; i += 1) {
+        const s = skills[i] as Skill;
+        const score = _score(taskTerms, s, termSets[i] as ReadonlySet<string>, opts, stats);
         if (score > 0) {
             rows.push([s.name, score, [...s.personas]]);
         }
