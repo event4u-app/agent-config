@@ -221,6 +221,30 @@ and by a pre-registered count of what today's gates catch, recorded before any g
       `countRoadmap`, which is outside this roadmap's scope and is not smuggled in here.
       The dashboard is unmoved either way, which is the point: the box stays `[ ]`, the roadmap
       stays unarchivable, and only one machine reader's view of it changes.
+      · **Re-probed 2026-10-01 by an autonomous `process-full` run: the gate is still shut, and
+      the measurement half still reproduces at today's `main`.** `git tag --contains 2b6a0f551`
+      prints nothing after `git fetch origin --tags`, and the newest tag is still `16.1.0`
+      dating 2026-09-28 against 3.1's 2026-09-29 — three days passed and no release was cut, so
+      the hold is unchanged rather than merely unrechecked. The rest of the roadmap was
+      re-verified live at `origin/main` (`9f2b9fb4a`) instead of read off the 2026-09-30 notes:
+      `npx vitest run tests/scripts/work_engine/ui_port_losses.test.ts` → **22 passed**; the
+      probe → `caught 3 of 3`, `0 false red(s)`, with `S-b  CATCH  outcome=success` — the shadow
+      state exactly as recorded; `npx vitest run src/cli/commands/uiAudit.test.ts` → **17
+      passed**; and AC-1's pre-registration is confirmed inside the fixture's own first-add
+      commit `7b35b4c5c`, which carries `caught 0 of 3` before any gate changed. Nothing was
+      learned this run that moves the blocker's § *What to do* — those remain the exact inputs a
+      future session needs, and the box stays `[ ]` rather than `[~]` because `[~]` means the
+      work leaves this roadmap, which is false: it is in scope and waiting on an elapsed tag.
+      · **`apply.ts` has moved since 3.1 — recorded so the next session does not expect 3.1's
+      offsets when it reaches § *What to do* step 2.** The blocker's "byte-unchanged on this
+      branch" is still true of this branch, which touches no code; but the file is not frozen at
+      3.1's content — `7f8716240` and `0e30e4ac9` added `taxonomy_lines` to it (+40 lines, an
+      unrelated component-taxonomy feature). The three gates this roadmap governs are untouched
+      by that, and the probe above is the proof rather than the reading. `COVERAGE_BUCKETS` in
+      `uiAudit.ts` is byte-unchanged since 3.1 (`git diff 2b6a0f551 origin/main --
+      src/cli/commands/uiAudit.ts` names it nowhere), so AC-4 holds on exactly what it asks for.
+      What the next session should carry forward is only this: locate `_handed_back_line` by
+      name, never by the line numbers this roadmap quotes.
 
 ## Phase 4 — The placeholder scan reads the files
 
@@ -402,6 +426,9 @@ and by a pre-registered count of what today's gates catch, recorded before any g
      replaced, not deleted.
 - **Resolved when:** `git tag --contains 2b6a0f551` prints at least one tag. Probed
   2026-09-30: empty — the newest tag `16.1.0` dates 2026-09-28 and 3.1 landed 2026-09-29.
+  Re-probed 2026-10-01 after `git fetch origin --tags`: still empty, same newest tag. The
+  condition is executable in one command precisely so a later reader never has to trust this
+  line's date — run it rather than read it.
 
 > **Why class 3, with the capability test applied rather than assumed.** The agent can write
 > every line of 3.2 — the blocker is not the edit. It is the release, and a release cut is a
