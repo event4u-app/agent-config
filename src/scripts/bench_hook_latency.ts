@@ -56,6 +56,30 @@ import { fileURLToPath } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
 import { build_claude_hook_matrix } from './_lib/claude_settings_hooks.js';
+// The per-concern SLA surface moved to its own module when this file crossed
+// the 1,500-line source ceiling (`check_source_size_budget`). Re-exported here
+// so every caller's import path is unchanged and the move is invisible outside
+// these two files.
+import {
+    ASK_PROBE,
+    mergeProbeSamples,
+    PROBE_TARGET,
+    slaOverruns,
+    type ToolShape,
+    windowState,
+} from './_lib/concern_sla_window.js';
+
+export {
+    ASK_PROBE,
+    mergeProbeSamples,
+    PROBE_TARGET,
+    slaOverruns,
+    windowState,
+    type BoundedConcern,
+    type SlaOverrun,
+    type ToolShape,
+    type WindowState,
+} from './_lib/concern_sla_window.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const BUNDLE = path.join(REPO_ROOT, 'dist', 'hooks', 'dispatch.js');
@@ -138,7 +162,7 @@ let PAYLOAD_BYTES = 0;
  */
 const TOOL_EVENTS: ReadonlySet<string> = new Set(['pre_tool_use', 'post_tool_use']);
 
-function syntheticPayload(event: string, workspace: string): string {
+function syntheticPayload(event: string, workspace: string, tool?: ToolShape): string {
     // Claude-shaped payload; concerns read tool_name/tool_input for
     // pre/post_tool_use. A plain Read is the common non-matching case —
     // the fast path consumers pay on every tool call.
@@ -146,8 +170,8 @@ function syntheticPayload(event: string, workspace: string): string {
         session_id: 'bench-hook-latency',
         cwd: workspace,
         hook_event_name: event,
-        tool_name: 'Read',
-        tool_input: { file_path: path.join(workspace, 'README.md') },
+        tool_name: tool?.tool_name ?? 'Read',
+        tool_input: tool?.tool_input ?? { file_path: path.join(workspace, 'README.md') },
     };
     if (PAYLOAD_BYTES > 0 && TOOL_EVENTS.has(event)) {
         // Filler with no JSON metacharacters, so the cost measured is
@@ -192,9 +216,10 @@ export function benchEvent(
     via: InvocationPath = 'bundle',
     timingsSink?: string,
     replay = true,
+    tool?: ToolShape,
 ): EventResult {
     const durations: number[] = [];
-    const payload = syntheticPayload(event, workspace);
+    const payload = syntheticPayload(event, workspace, tool);
     const command: [string, string[]] =
         via === 'cli'
             ? ['bash', ['-c', hooksJsonCommand(event)]]
@@ -765,6 +790,31 @@ export function concernSlaPass(
     for (const event of events) {
         benchEvent(event, runs, workspace, 'bundle', sinkPath, false);
     }
+    // One extra `pre_tool_use` pass under the ask-shaped probe, so the ninth
+    // blocking concern is measured rather than waived. See `ASK_PROBE`: every
+    // other blocking concern is reached by the default `Read` payload, and
+    // `one-question-per-ask`'s `tools:` filter means no number of `Read` runs
+    // will ever produce a sample for it.
+    //
+    // IT WRITES TO ITS OWN SINK, AND THAT IS THE WHOLE POINT OF THE SPLIT.
+    // The probe dispatches the whole `pre_tool_use` event, not one concern —
+    // only the manifest's `tools:` filter isolates the target, so every
+    // UNFILTERED concern on that slot runs under the ask payload too and emits
+    // a timing. Writing both passes to one sink pools them under the same
+    // `pre_tool_use` key, and the neighbours' p95 then describes a mixture of
+    // two payload shapes while the comment above claims their number comes
+    // from the default shape alone. Measured, not hypothesised: the sample
+    // count for every `pre_tool_use` concern went from n=20 to n=40 the moment
+    // the probe landed, which is the contamination showing up in the report's
+    // own output. Caught by an independent review, 2026-10-01.
+    //
+    // `mergeProbeSamples` then takes ONLY the target concern across. The
+    // neighbours' ask-shaped samples are measured and discarded, which is
+    // correct: they are a real cost of a payload shape the gated numbers do
+    // not model.
+    const probeSink = `${sinkPath}.probe`;
+    benchEvent('pre_tool_use', runs, workspace, 'bundle', probeSink, false, ASK_PROBE);
+    mergeProbeSamples(probeSink, sinkPath, PROBE_TARGET);
 }
 
 /** Render one row. `null` prints `not_measured` — never `0`. */
@@ -1144,6 +1194,43 @@ export function main(argv: string[] = process.argv.slice(2)): number {
                     'a concern bound to a slot this bench does not exercise, or skipped by its ' +
                     "`tools:` filter, has no sample. Reported as an absence, never as 0.\n",
             );
+        }
+        // The warn-only window step 3.3 names, read out loud. Observe-only: it
+        // reports and never changes the exit code, because the bound it checks
+        // is not armed anywhere and a measurement that can red a build before
+        // its bar is validated is Risk 1 of the owning roadmap.
+        const overruns = slaOverruns(concernRows);
+        const w = windowState(concernRows);
+        if (w.registered === 0) {
+            process.stdout.write(
+                '  ℹ️  no `concern_sla_ms` registered — the warn-only window has not started.\n',
+            );
+        } else if (overruns.length === 0 && w.unusable > 0) {
+            // NOT a clean run. A registered concern this pass could not time is
+            // an unknown, and `slaOverruns` skips it — so counting the SUCCESS
+            // marker off `registered` alone prints "none over" for a window
+            // that observed nothing about `unusable` of its bounded concerns.
+            // The same unknown-is-not-fine invariant `slaOverruns` keeps per
+            // row, kept here for the summary line. Caught by an independent
+            // review, 2026-10-01.
+            process.stdout.write(
+                `  ⚠️  warn-only window INCOMPLETE: ${w.usable} of ${w.registered} bounded ` +
+                    `concerns measured this run, ${w.unusable} unmeasured or malformed — ` +
+                    'no overrun seen, and this run does not count as clean.\n',
+            );
+        } else if (overruns.length === 0) {
+            process.stdout.write(
+                `  ✅  warn-only window: ${w.usable} of ${concernRows.length} bounded and ` +
+                    'measured, none over `sla_ms × 3` on this run.\n',
+            );
+        } else {
+            for (const o of overruns) {
+                process.stdout.write(
+                    `  ⚠️  warn-only window: ${o.concern} p95 ${(o.p95_us / 1000).toFixed(3)} ms ` +
+                        `is over its \`sla_ms × 3\` bound of ${(o.bound_us / 1000).toFixed(3)} ms — ` +
+                        'observe-only; step 3.3 must not flip to deny while this stands.\n',
+                );
+            }
         }
 
         // Breach re-measure (--gate only). A single p95 over the cap is not yet
