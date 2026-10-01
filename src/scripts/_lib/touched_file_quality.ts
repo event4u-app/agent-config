@@ -2,6 +2,15 @@
  * touched_file_quality — run the project's OWN quality commands, in shadow,
  * over the files a turn actually edited.
  *
+ * loss_class: ephemeral-lossy
+ *
+ * The one place this module shortens content is `advisoryLine`, whose 200-byte
+ * cap (roadmap 2.2) trims a summary it synthesised itself from `QualityRun[]`.
+ * The trimmed tail is not stored anywhere and is not meant to be: the runs are
+ * in-memory for one invocation, the line goes to stderr, and the verdict it
+ * summarises is reproduced by re-running the same resolver command. A recovery
+ * locator would promise a retrieval nothing performs.
+ *
  * `road-to-touched-files-that-pass-their-own-tools` Phase 1. The project already
  * computes a per-stack quality list — `resolve_toolchain().quality` in
  * `src/agent-src/templates/scripts/work_engine/stack/runner.ts` — and nothing at
