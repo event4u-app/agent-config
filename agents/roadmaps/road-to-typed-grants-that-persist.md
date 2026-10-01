@@ -152,8 +152,17 @@ item. Phases 1-6 may run once 0.2 is chosen.
       *never act while asking* and the exact-object clause verbatim — a narrowed floor is
       still a floor. `enforced_by:` names the Phase 4.3 gate.
       verify: `grep -c 'this turn' src/rules/non-destructive-by-default.md` returns 0, and
-      `grep -c 'never act while asking' src/rules/non-destructive-by-default.md` still
+      `grep -ic 'never act while asking' src/rules/non-destructive-by-default.md` still
       returns at least 1.
+      **The verify clause was DEFECTIVE and is corrected here — 2026-10-01.** It used to read
+      `grep -c` without `-i`. The rule's own text is `**Never act while asking.**` at
+      `src/rules/non-destructive-by-default.md:41` — capitalised, because it opens a sentence —
+      so the lowercase pattern returns **0 at HEAD and would return 0 after a perfectly correct
+      edit too**. The clause was unsatisfiable as written and would have read as "the edit
+      deleted the clause it was told to keep". Measured both ways this run: `grep -c` returns
+      **0**, `grep -ic` returns **1**. Only the `-i` is added; the clause's meaning is
+      untouched. This is the one part of 1.1 an agent could fix, because it is a roadmap edit
+      and not a kernel-rule edit.
       **DENY REPRODUCED 2026-09-14, not assumed — this is the evidence the box stays `[ ]` on.**
       The edit was attempted for real: the `this turn` clause at `:26` was to be replaced by
       *"Triggers below require an object-bound grant covering the op"*. The `pre_tool_use`
@@ -163,6 +172,25 @@ item. Phases 1-6 may run once 0.2 is chosen.
       reached the file: `grep -c 'this turn'` still returns 1 and `git status` is clean of it.
       So the guard is live on this tree at tool-call time, and the five kernel steps are
       unreachable for an agent by construction rather than by policy.
+      **Evidence (2026-10-01). DENY REPRODUCED A THIRD TIME, on a tree where the guard's own
+      file has changed since the last reading — so this is not the same measurement twice.**
+      Against `origin/main` `9f2b9fb4a`, the same edit was put to the `Edit` tool: replace the
+      `this turn` clause at `:26` with *"Triggers below require an object-bound grant covering
+      the op"*. The `pre_tool_use` dispatcher refused it — `block-kernel-rule-writes: BLOCKED —
+      kernel rule non-destructive-by-default is immutable — tighten-only via the override
+      exception registry`, remediation naming a human action outside the agent session.
+      Nothing was written: `grep -c 'this turn'` returns **1** and `git status --short` is empty.
+      **What changed since 2026-09-14, and why it does not help.** The guard file is now
+      **11,345 bytes**, down from the 13,577 that reading measured — three commits touched it
+      (`b8a7037e3`, `70bc596b1`, `c271f27a8`), the last two of which ratify and correct its
+      docstring. Its REACH is unchanged: the header still names all nine kernel rules and still
+      denies the source tree plus every projection. `grep -c block-kernel-rule-writes
+      src/scripts/hook_manifest.yaml` returns **5** where the blocker's clause requires 0 —
+      the concern definition at `:198`, a comment at `:502`, and three `pre_tool_use` binding
+      lists at **`:1427`, `:1459`, `:1506`** (drifted again from the `:1390/:1422/:1469` of
+      2026-09-14). `concern_registry.ts` still registers it, now at **`:121`**. The manifest
+      keeps moving and the binding does not — the fourth consecutive reading to reach that
+      conclusion by executing the clause rather than reading the field.
 
 
 - [ ] <!-- blocked-by: kernel-guard-first-crossing | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question; the deny was reproduced on this tree and only a maintainer can retire it --> **1.2 `commit-policy.md`: the Iron Law becomes grant-shaped.** *Commit when a mission
@@ -178,7 +206,7 @@ item. Phases 1-6 may run once 0.2 is chosen.
       § Authoring-vs-implementation stays untouched — a roadmap landing must still not start
       its own execution, and that is a fence rather than a permission gate.
       verify: `grep -c 'Authoring vs. implementation' src/rules/scope-control.md` returns 1.
-- [ ] **1.4 `autonomous-execution.md`: the default flips and the opt-in detection goes.**
+- [~] **1.4 `autonomous-execution.md`: the default flips and the opt-in detection goes.**
       `personal.autonomy` ships `on`, `auto` resolves to `on` with a migration note. The
       task-scope fresh-confirmation section and the opt-in detection contexts are deleted.
       The N=3 block becomes a pointer to `execution.fix_loop_max`, owned by stem 3.
@@ -213,6 +241,37 @@ item. Phases 1-6 may run once 0.2 is chosen.
       authority-expanding and lands in NONE of them, so nothing would have stopped it. The
       restraint here is model-carried, not enforced — which is the honest description and an
       argument for widening that gate's scope rather than for trusting the next run.
+      **DEFERRED `[~]` 2026-10-01, and the glyph change is the point of this run's visit to this
+      step.** Measured first, then the reason. `grep -n 'autonomy:' src/config/agent-settings.template.yml`
+      returns `357:  autonomy: auto` — unflipped. Half (a)'s target is confirmed present a
+      second time (`fix_loop_max: 10` at `:789`), so the 2026-09-14 expiry note stands and (a)
+      remains writable. **(b) still holds the step, and this run refuses it rather than
+      deferring it for effort.** Flipping `personal.autonomy` from `auto` to `on` widens the
+      agent's own default authority; ADR-268 § 4 makes an authority-expanding edit inert until
+      a ratification artifact exists; and this is a non-interactive `process-full` run that can
+      put no question and carries no artifact. A run cannot both gain the authority and certify
+      the edit that grants it — the Iron Law 5.1 encodes by rejecting
+      `reviewed_by == implemented_by`.
+      **Why the box moved from `[ ]` to `[~]` — a live defect, measured, not argued.**
+      `scanOpenSteps` (`src/scripts/hooks/run_continuation_hook.ts:418`) reported
+      `{open: 14, blocked: 7}` on this file at `9f2b9fb4a`, and the step it returned as `next`
+      was **this one**. So every autonomous continuation fire on the estate's largest roadmap
+      was being handed, as its next action, the one edit in the file that widens the agent's
+      own authority — behind a restraint the step itself records as *model-carried, not
+      enforced*, with `check_kernel_edit_ratified` scoping to kernel rules and `block_*.ts` and
+      therefore not reaching it. `[ ]` plus a prose refusal is not a control; `[~]` is excluded
+      from `OPEN_BOX` by construction, so the ladder can no longer offer it. After this change
+      the file scans `{open: 0, blocked: 7}`.
+      **A `blocked-by:` marker was considered and rejected**, on this file's own stated rule: the
+      id must resolve to a declared blocker, no declared blocker holds this step, and inventing
+      one would grow `open_blockers` past what `estate_growth_exempt` describes while parking a
+      judgement call in `## Blockers`.
+      **What a future session needs to close it:** a ratification artifact under
+      `agents/evidence/ratifications/` whose `reviewed_by` is neither the proposer nor the
+      implementer, per `docs/contracts/ratification-artifact.md` — or an owner sentence
+      directing the flip. Half (a) may land in the same change; it must not land alone, because
+      deleting the opt-in detection contexts while the default is still `auto` leaves autonomy
+      with no path to ever turn on.
 - [ ] <!-- blocked-by: kernel-guard-first-crossing | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question; the deny was reproduced on this tree and only a maintainer can retire it --> **1.5 `ask-when-uncertain.md`: the philosophy line yields to ownership.** *One question
       too many beats one wrong assumption* is replaced by a pointer to the ownership routing
       table, and the nine vague-request triggers are scoped to chat without a mission.
@@ -223,7 +282,7 @@ item. Phases 1-6 may run once 0.2 is chosen.
       already answers is forbidden*. Body stays under 40 lines.
       verify: `wc -l src/rules/no-cheap-questions.md` is at most 40, and
       `./scripts-run src/scripts/check_always_budget` is green.
-- [ ] **1.7 `tool-safety.md` becomes consequence-aware.** Per ADR-260 § 3 decision 12, a
+- [~] **1.7 `tool-safety.md` becomes consequence-aware.** Per ADR-260 § 3 decision 12, a
       wildcard tool grant is a finding only where the wildcard can reach a typed op.
       verify: the three wildcard-grant findings in `src/scripts/lint_skill_frontmatter_safety.ts`
       demote to advisory for grants that reach no typed op, and stay blocking for grants that do.
@@ -237,6 +296,22 @@ item. Phases 1-6 may run once 0.2 is chosen.
       tree for it to read. Demoting the findings first and deriving reachability from prose
       would be the narrowed-floor-without-a-replacement shape this roadmap's own Risk 1 names.
       Order: 4.3 first, then this step.
+      **Evidence (2026-10-01) — DEFERRED `[~]`, refused on the floor and held on the order.**
+      Both halves re-measured rather than inherited. The prerequisite is still absent: `ls
+      src/scripts/check_typed_op_grant.ts` fails at `9f2b9fb4a`, so "reaches no typed op" is
+      still underivable from code and would have to be read off prose. And the edit itself is a
+      **deliberate widening of a safety floor** — its entire content is demoting three existing
+      wildcard-grant findings in `src/scripts/lint_skill_frontmatter_safety.ts` from blocking to
+      advisory. A non-interactive agent run demoting its own tool-grant findings, with no
+      replacement gate in the tree and no owner in the loop, is refused here on
+      `security-sensitive-stop` and on `lethal-trifecta-guard`: an over-broad tool grant is the
+      standing egress leg, and this step makes that leg cheaper to hold.
+      **Glyph moved `[ ]` → `[~]` for the same reason as 1.4** — the step was reachable by
+      `scanOpenSteps` as a `next` action, and a prose halt recorded three times in three
+      sessions is evidence the prose is not stopping anything.
+      **What a future session needs:** 4.3's gate and a persisted ledger behind it (3.1), so
+      reachability is computed rather than asserted — then the demotion is a mechanical
+      consequence rather than a judgement call, and it is in bounds for an agent to make.
 
 ## Phase 2 — Settings and the roadmap carry the grant
 
