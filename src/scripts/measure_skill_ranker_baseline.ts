@@ -507,10 +507,20 @@ export class UnknownRankerLabel extends Error {
     }
 }
 
+/** Whether `label` is one of the table's OWN keys — never an inherited one. */
+export function isKnownRanker(label: string): boolean {
+    return Object.hasOwn(RANKER_LABELS, label);
+}
+
 export function rankOptionsFor(ranker: string): RankOptions {
-    const opts = RANKER_LABELS[ranker];
-    if (opts === undefined) throw new UnknownRankerLabel(ranker);
-    return opts;
+    // `Object.hasOwn`, not a truthiness check on the lookup: `RANKER_LABELS`
+    // is an object literal, so `constructor`, `toString` and `valueOf` resolve
+    // to inherited FUNCTIONS rather than to undefined. A plain `=== undefined`
+    // guard lets those three through, scores them as the baseline, and echoes
+    // the label into the report title — which is the whole defect this guard
+    // was added to close, surviving in its own fix.
+    if (!isKnownRanker(ranker)) throw new UnknownRankerLabel(ranker);
+    return RANKER_LABELS[ranker] as RankOptions;
 }
 
 export function measure(opts: {
@@ -523,8 +533,7 @@ export function measure(opts: {
 }): RankerBaseline {
     const repo = opts.repo ?? REPO;
     const skillsDir = opts.skillsDir ?? SKILLS_DIR;
-    // `keyword-v2` is Phase 3.1: the same formula with `triggers:` prose folded
-    // into each skill's term source. Any other label measures v1.
+    // Resolved through the one table, which throws on a label it does not know.
     const rankOpts: RankOptions = rankOptionsFor(opts.ranker);
     const corpus = opts.corpus ?? 'labelled';
     const accuracy = measureAccuracy({ corpus, repo, skillsDir, rankOpts, slice: opts.slice ?? 'all' });
@@ -579,6 +588,26 @@ function parseCorpus(argv: readonly string[]): CorpusName {
     return raw as CorpusName;
 }
 
+/**
+ * The `--ranker` value, or the baseline when the flag is absent.
+ *
+ * A PRESENT flag with no value after it is an error, not an omission — the
+ * sibling `--slice` has always refused that shape, and substituting the
+ * baseline for a malformed flag is the same silent-fallback defect one level
+ * up from the label table.
+ */
+export function parseRanker(argv: readonly string[]): string {
+    const i = argv.indexOf('--ranker');
+    if (i === -1) return 'keyword-v1';
+    const raw = argv[i + 1];
+    if (!raw || raw.startsWith('--')) {
+        throw new Error(
+            `measure_skill_ranker_baseline: --ranker expects one of ${Object.keys(RANKER_LABELS).join(' | ')}, got ${raw ?? '(nothing)'}`,
+        );
+    }
+    return raw;
+}
+
 export function parseSlice(argv: readonly string[]): SliceName {
     const i = argv.indexOf('--slice');
     if (i === -1) return 'all';
@@ -592,14 +621,15 @@ export function parseSlice(argv: readonly string[]): SliceName {
 }
 
 export function main(argv: readonly string[]): number {
-    const ranker = argv.includes('--ranker') ? (argv[argv.indexOf('--ranker') + 1] ?? 'keyword-v1') : 'keyword-v1';
     const commit = argv.includes('--commit') ? (argv[argv.indexOf('--commit') + 1] ?? 'unknown') : 'unknown';
     let corpus: CorpusName;
     let slice: SliceName;
+    let ranker: string;
     let out: RankerBaseline;
     try {
         corpus = parseCorpus(argv);
         slice = parseSlice(argv);
+        ranker = parseRanker(argv);
         // Inside the same guard as the two parsers above: an unknown --ranker is
         // the same class of mistake and now gets the same exit code.
         out = measure({ ranker, commit, corpus, slice });

@@ -46,6 +46,7 @@ import {
     type SliceName,
     SLICE_NAMES,
     packsForSkill,
+    parseRanker,
     partitionBySlice,
     rankOptionsFor,
     readMatrixCases,
@@ -313,9 +314,21 @@ export function renderReport(opts: {
     L.push(`| deliberate \`expected_skills: []\` rows in the same slice | ${String(empties.length)} |`);
     L.push(`| skills indexed | ${String(fs.readdirSync(opts.skillsDir).filter((s) => fs.existsSync(path.join(opts.skillsDir, s, 'SKILL.md'))).length)} |`);
     L.push('');
-    L.push('The sealed slice is **not** read here. A confusion class derived from rows a');
-    L.push('later lift is measured on would make that lift circular, which is the one');
-    L.push('failure a held-out partition exists to prevent.');
+    if (opts.slice === 'tuning') {
+        L.push('The sealed slice is **not** read here. A confusion class derived from rows a');
+        L.push('later lift is measured on would make that lift circular, which is the one');
+        L.push('failure a held-out partition exists to prevent.');
+    } else if (opts.slice === 'sealed') {
+        L.push('**This run READ the sealed slice.** That is legitimate for reporting a result');
+        L.push('on held-out rows and is NOT legitimate as an input to choosing what to change:');
+        L.push('a confusion class derived from these rows would make every later lift measured');
+        L.push('on them circular. Derive from the `tuning` run.');
+    } else {
+        L.push('**This run read BOTH slices.** A confusion class derived from it therefore');
+        L.push('includes the sealed rows, so it may not be used to choose what to change —');
+        L.push('that is the `tuning` run, and the seal only means something if the choosing');
+        L.push('never sees the other half.');
+    }
     L.push('');
     L.push('## The headline on this slice');
     L.push('');
@@ -352,9 +365,17 @@ export function renderReport(opts: {
     L.push(`| correct top-1 hits the median is taken over | ${String(fa.correct_hits)} |`);
     L.push(`| median top score of a correct hit | ${String(fa.median_correct_hit_score)} |`);
     L.push(`| empties whose top score reaches that median | ${String(fa.at_or_above_median)} |`);
-    L.push(
-        `| share | ${fa.share === null ? 'n/a — no correct top-1 hit, so no threshold' : pct(fa.at_or_above_median, fa.empties)} |`,
-    );
+    // TWO causes produce a null share and they are not the same answer: no
+    // correct hit means there is no threshold to compare against, no empty row
+    // means there is nothing to compare. Printing one reason for both would
+    // state something the `correct_hits` row beside it contradicts.
+    const shareCell =
+        fa.share !== null
+            ? pct(fa.at_or_above_median, fa.empties)
+            : fa.correct_hits === 0
+              ? 'n/a — no correct top-1 hit, so no threshold'
+              : 'n/a — no deliberate empties in this slice, so no denominator';
+    L.push(`| share | ${shareCell} |`);
     L.push('');
     L.push('The threshold is the ranker\'s own median hit score rather than a cutoff chosen');
     L.push('here, because the question is whether the ranker\'s confidence separates the two');
@@ -380,7 +401,6 @@ export function renderReport(opts: {
 }
 
 export function main(argv: readonly string[]): number {
-    const ranker = argv.includes('--ranker') ? (argv[argv.indexOf('--ranker') + 1] ?? 'keyword-v1') : 'keyword-v1';
     const rawSlice = argv.includes('--slice') ? argv[argv.indexOf('--slice') + 1] : 'tuning';
     if (!rawSlice || !SLICE_NAMES.includes(rawSlice as SliceName)) {
         process.stderr.write(
@@ -393,9 +413,11 @@ export function main(argv: readonly string[]): number {
         : new Date().toISOString().slice(0, 10);
     let body: string;
     try {
-        // An unknown label must not reach the renderer: the label is printed in
-        // the report's own title and in the regenerate command beside it, so a
-        // typo would publish one configuration's number under another's name.
+        // An unknown or missing label must not reach the renderer: the label is
+        // printed in the report's own title and in the regenerate command beside
+        // it, so a typo would publish one configuration's number under another's
+        // name. `parseRanker` is the same check `--slice` already had.
+        const ranker = parseRanker(argv);
         body = renderReport({ repo: REPO, skillsDir: SKILLS_DIR, ranker, slice: rawSlice as SliceName, date });
     } catch (err) {
         process.stderr.write(`${(err as Error).message}\n`);

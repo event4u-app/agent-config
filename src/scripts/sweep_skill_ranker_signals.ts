@@ -30,6 +30,7 @@ import {
     REPO,
     SKILLS_DIR,
     type SliceName,
+    isKnownRanker,
     partitionBySlice,
     readMatrixLabelledPrompts,
 } from './measure_skill_ranker_baseline.js';
@@ -107,7 +108,10 @@ export function main(argv: readonly string[]): number {
     const json = argv.includes('--json');
     const named = argv.filter((a) => !a.startsWith('--'));
     const labels = named.length > 0 ? named : Object.keys(RANKER_LABELS);
-    const unknown = labels.filter((l) => !(l in RANKER_LABELS));
+    // `isKnownRanker` (Object.hasOwn), not `in`: `in` walks the prototype chain,
+    // so `constructor` and `toString` would pass here while `Object.keys` below
+    // prints a set that does not contain them — two answers to one question.
+    const unknown = labels.filter((l) => !isKnownRanker(l));
     if (unknown.length > 0) {
         process.stderr.write(
             `sweep_skill_ranker_signals: unknown configuration(s) ${unknown.join(', ')}; ` +

@@ -218,18 +218,33 @@ export function _body_signals(body: string): { whenToUse: string; headings: stri
     const headings: string[] = [];
     const when: string[] = [];
     let whenLevel = 0;
-    let fence: string | null = null;
+    let fenceMark: string | null = null;
+    let fenceLen = 0;
     for (const raw of body.split('\n')) {
         const line = raw.trimEnd();
-        const f = /^\s*(`{3,}|~{3,})/.exec(line);
+        const f = /^\s*(`{3,}|~{3,})(.*)$/.exec(line);
         if (f) {
-            const mark = f[1] as string;
-            if (fence === null) fence = mark[0] as string;
-            else if (mark[0] === fence) fence = null;
-            if (whenLevel > 0) when.push(raw);
+            const run = f[1] as string;
+            const mark = run[0] as string;
+            if (fenceMark === null) {
+                fenceMark = mark;
+                fenceLen = run.length;
+                // The DELIMITER and its info string are not prose. Pushing them
+                // put the language tag of every fenced sample (`bash`, `yaml`)
+                // into the index, which is the parser leaking into the signal in
+                // the opposite direction from the truncation this block fixed.
+                continue;
+            }
+            // A closing fence has to be at least as long as the opening one and
+            // use the same marker; otherwise a ``` inside a ```` block would
+            // close it early.
+            if (mark === fenceMark && run.length >= fenceLen && (f[2] as string).trim() === '') {
+                fenceMark = null;
+                fenceLen = 0;
+            }
             continue;
         }
-        if (fence !== null) {
+        if (fenceMark !== null) {
             if (whenLevel > 0) when.push(raw);
             continue;
         }
@@ -239,6 +254,10 @@ export function _body_signals(body: string): { whenToUse: string; headings: stri
             const title = (h[2] as string).trim();
             if (level <= 3) headings.push(title);
             if (whenLevel > 0 && level <= whenLevel) whenLevel = 0;
+            // A SUBSECTION TITLE inside `## When to use` is part of that
+            // section's text. Skipping it indexed the prose under a `### Do NOT
+            // use when` while dropping the words that say what it is.
+            else if (whenLevel > 0) when.push(title);
             if (/^when to use\b/i.test(title)) whenLevel = level;
             continue;
         }

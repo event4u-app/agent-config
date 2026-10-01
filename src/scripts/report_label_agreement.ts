@@ -50,6 +50,7 @@ import {
     REPO,
     SKILLS_DIR,
     type LabelledPrompt,
+    parseRanker,
     rankOptionsFor,
     readMatrixLabelledPrompts,
     sliceForId,
@@ -191,10 +192,11 @@ export function relabelledSliceCensus(repo = REPO): Record<string, number> {
 }
 
 export function main(argv: readonly string[]): number {
-    const ranker = argv.includes('--ranker') ? (argv[argv.indexOf('--ranker') + 1] ?? 'keyword-v1') : 'keyword-v1';
     let report: AgreementReport;
     try {
-        report = measureAgreement({ ranker });
+        // Same check as `--slice` elsewhere: a present flag with no value is an
+        // error, never a silent substitution of the baseline.
+        report = measureAgreement({ ranker: parseRanker(argv) });
     } catch (err) {
         process.stderr.write(`${(err as Error).message}\n`);
         return 2;

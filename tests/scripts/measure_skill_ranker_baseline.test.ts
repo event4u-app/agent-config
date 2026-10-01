@@ -349,16 +349,16 @@ describe('holdout — the sealed slice is a function of the id and nothing else'
     });
 
     it('assigns every id to exactly one of the two slices', () => {
-        // Both halves matter and an earlier version asserted only the first:
-        // that the IMAGE is both labels (so neither slice is empty), and that
-        // each id maps to exactly one of them. The image assertion alone would
-        // pass for a function that returned both.
+        // Two halves: the IMAGE is both labels, so neither slice is empty; and
+        // the assignment is in the closed set, so nothing returns a third value
+        // or undefined. An earlier version asserted only the image, which would
+        // pass for a function that returned both — and the version after it
+        // "fixed" that with `expect(x === 'a' ? 'b' : 'a').not.toBe(x)`, which
+        // compares a value to its own negation and cannot fail either.
         expect(new Set(ids.map(sliceForId))).toEqual(new Set(['tuning', 'sealed']));
-        for (const id of ids) {
-            const got = sliceForId(id);
-            expect(['tuning', 'sealed']).toContain(got);
-            expect(got === 'tuning' ? 'sealed' : 'tuning').not.toBe(got);
-        }
+        const labels = new Set(ids.map(sliceForId));
+        expect([...labels].sort()).toEqual(['sealed', 'tuning']);
+        expect(ids.every((id) => (['tuning', 'sealed'] as string[]).includes(sliceForId(id)))).toBe(true);
     });
 
     it('is stable when a section is APPENDED to, and moves rows when one is INSERTED into', () => {
@@ -366,22 +366,29 @@ describe('holdout — the sealed slice is a function of the id and nothing else'
         // POSITIONAL, so this is the limitation the docblock now states instead
         // of denying. Written against the real id shape rather than synthetic
         // ids, because an earlier version of this suite asserted that a pure
-        // function of a string is stable — which cannot fail and therefore could
-        // not see this.
-        const section = (count: number, from = 0): string[] =>
-            Array.from({ length: count }, (_, i) => `alpha#positives[${String(i + from)}]`);
+        // function of a string is stable — which cannot fail.
+        const section = (count: number): string[] =>
+            Array.from({ length: count }, (_, i) => `alpha#positives[${String(i)}]`);
 
+        // APPEND: ids 0..39 survive verbatim when the section grows to 45, so
+        // the partition of the first 40 is unchanged. Compared as two computed
+        // maps rather than id-against-itself.
         const before = section(40);
         const appended = section(45);
+        const sliceOf = (list: string[]): Record<string, string> =>
+            Object.fromEntries(list.map((id) => [id, sliceForId(id)]));
+        const beforeMap = sliceOf(before);
+        const appendedMap = sliceOf(appended);
         for (const id of before) {
-            expect(sliceForId(id), `${id} moved on an append`).toBe(sliceForId(id));
-            expect(appended).toContain(id);
+            expect(appendedMap[id], `${id} changed slice on an append`).toBe(beforeMap[id]);
         }
 
-        // An insert at position 0 renumbers every later row by one.
+        // INSERT at position 0: every row's ordinal shifts by one, so each row's
+        // slice is now read off a DIFFERENT id. Some must move, or the seal
+        // would be stable in a way this corpus cannot deliver.
         const renumbered = before.map((_, i) => `alpha#positives[${String(i + 1)}]`);
-        const movedRows = before.filter((id, i) => sliceForId(id) !== sliceForId(renumbered[i] as string));
-        expect(movedRows.length, 'a mid-section insert must be shown to move rows').toBeGreaterThan(0);
+        const moved = before.filter((id, i) => beforeMap[id] !== sliceForId(renumbered[i] as string));
+        expect(moved.length, 'a mid-section insert must be shown to move rows').toBeGreaterThan(0);
     });
 
     it('partitions disjointly and exhaustively, and `all` is the identity', () => {
