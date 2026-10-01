@@ -873,11 +873,16 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
 
   **Fifth reading, 2026-10-01, and this one found something the four before it did not.** The
   grep this entry names returned a hit in the ACTIVE corpus that is not a self-reference:
-  `agents/roadmaps/road-to-a-ui-coverage-ledger-that-can-fail.md:188` — *"The release condition
-  was recorded only in this step's own verify line"*, on a step whose own verify reads *"the flip
-  lands in its own change, after 3.1 has shipped one release"*. That is a genuine
-  release-coupled intermediate state, authored independently of this roadmap, and it is the first
-  one to appear in the active corpus since this blocker was opened.
+  `road-to-a-ui-coverage-ledger-that-can-fail` — *"The release condition was recorded only in
+  this step's own verify line"*, on a step whose own verify reads *"the flip lands in its own
+  change, after 3.1 has shipped one release"*. That is a genuine release-coupled intermediate
+  state, authored independently of this roadmap, and it is the first one to appear in the
+  active corpus since this blocker was opened. (**Closed and archived later the same day** —
+  `16.2.0` carried the shadow, the `shadow-release-window` blocker resolved on its own one-command
+  condition, step 3.2 flipped, and the file moved to `agents/roadmaps/archive/`. The quoted prose
+  was rewritten by that close, so it is cited by slug rather than by a path and line that no
+  longer resolve. The reading below is unchanged by the close: what it measures is which
+  mechanism the author reached for, and that is settled whether or not the step has since run.)
   **It is NOT the live subject this blocker is waiting for, and the reason is the distinction
   step 1.3 wrote into rule 20.** A blocker stops EXECUTION; a hold stops PUBLICATION. That file's
   state must not *advance* until a release ships — it is perfectly safe to publish, and publishing
