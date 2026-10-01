@@ -186,6 +186,16 @@ export { readTurnRunState };
 // Detector E, extracted to `_lib` where its prose costs no ratchet debt.
 // Re-exported so every existing importer of this module is unchanged.
 import { detectDroppedDecision } from '../_lib/dropped_decision.js';
+// Step 3.2 of `road-to-a-graph-that-feeds-the-gate` — the shadow feeder. It
+// lives in `_lib` for the reason every other extraction here does: this file
+// sits against a 1,500-line shrink-only source budget, and the module it would
+// otherwise grow into is one a recall reading has to be able to open on its own.
+import {
+    appendFeederRow,
+    buildFeederRow,
+    graphUntestedVerdict,
+} from '../_lib/graph_feeder_record.js';
+import { type GraphState, graphState } from '../code_graph/detect.js';
 import { isVerificationCommand } from '../_lib/verification_command.js';
 // Round 8 — the record path detector C prefers over its own regex. The regex
 // reads a command's TEXT and `echo test` matches it; these read what the run
@@ -1277,6 +1287,54 @@ function runDetectors(inputs: DetectorInputs): Finding[] {
 }
 
 /**
+ * Write the graph feeder row for ONE stop (step 3.2).
+ *
+ * Called from both stop paths with the findings that path already computed, so
+ * the F verdict in the row is the SAME verdict the gate acted on — never a
+ * second evaluation written beside it, which is the shape
+ * `obligation_settle_hook.ts` names as measuring nothing.
+ *
+ * It changes no exit code, and the whole body is wrapped: a stop that crashed on
+ * its own instrument would be a new failure mode on a path that is supposed to
+ * cost nothing. The graph half is skipped outright unless the state is `fresh`
+ * or `edited` — an answer from an index that predates the change is not evidence
+ * about the change.
+ */
+function recordGraphFeeder(inputs: DetectorInputs, findings: readonly Finding[], layer: string): void {
+    if (is_replay_mode()) return;
+    try {
+        let state: GraphState;
+        try {
+            state = graphState(inputs.workspaceRoot);
+        } catch {
+            return;
+        }
+        // No graph at all is the silent case, exactly as it is for the context
+        // hook: a consumer who never builds one never grows this file.
+        if (state === 'absent') return;
+        const paths = inputs.toolCalls
+            .filter((c) => _EDIT_TOOLS.has(c.name) && c.path !== undefined)
+            .map((c) => c.path as string);
+        const f = findings.find((x) => x.detector === 'untested');
+        appendFeederRow(
+            inputs.workspaceRoot,
+            inputs.sessionKey,
+            buildFeederRow({
+                turn: inputs.turnOrdinal,
+                layer,
+                state,
+                fFired: f !== undefined,
+                fMode: f?.mode ?? null,
+                paths,
+                graph: graphUntestedVerdict(inputs.workspaceRoot, state, paths),
+            }),
+        );
+    } catch {
+        // An instrument is never a reason to change what the gate does.
+    }
+}
+
+/**
  * Record what this retry WOULD have been refused for, then let it end.
  *
  * Never changes a verdict: every caller returns `EXIT_ALLOW` whatever happens
@@ -1289,6 +1347,7 @@ function recordShadow(inputs: DetectorInputs, layer: ShadowLayer): void {
     if (is_replay_mode()) return;
     try {
         const findings = runDetectors(inputs);
+        recordGraphFeeder(inputs, findings, layer);
         const file = sessionShadowFile(inputs.workspaceRoot, inputs.sessionKey);
         let prev: ShadowRecord | null = null;
         try {
@@ -1361,6 +1420,10 @@ export function main(): number {
     // warranted"; there is no second, configurable notion of warranted layered
     // on top of it.
     const findings = runDetectors(inputs);
+    // The live verdict's own row. It is written BEFORE the branch below, so a
+    // turn the gate allows and a turn it refuses are both in the record — a
+    // recall reading needs the allowed turns as its negative arm.
+    recordGraphFeeder(inputs, findings, 'live');
     if (findings.length === 0) return EXIT_ALLOW;
 
     markRefusedTurn(
