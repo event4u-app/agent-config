@@ -212,6 +212,13 @@
             "reason": "Hook-injection benchmark output. Measurement, not state."
         },
         {
+            "id": "learning-dogfood.jsonl",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/memory_learn_hook.ts:191",
+            "reason": "One line per session-end learning run — wall time, signals in, lessons out. The two numbers the `memory.learn_on_session_end` flip condition names, recorded so a 30-day window can read a zero rather than a silence. Measurement about a session, never state a successor session reads: deleting it costs the window its history and costs no resume anything."
+        },
+        {
             "id": "injection-turn",
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",
