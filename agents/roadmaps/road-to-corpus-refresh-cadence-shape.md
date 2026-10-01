@@ -337,7 +337,8 @@ settles only the narrow verify-wording half of the second.
       `./scripts-run src/scripts/check_corpus_staleness` exits 0 against them.
       *(2026-10-01: one of four. `accessibility-auditor` reads `2026-10-01`,
       backed by a check that ran; `api-design`, `database` and `threat-modeling`
-      still share `2026-09-18`. The gate exits 0, but two of D3's three
-      conditions are unmet — two values are still equal, and three stamps are
-      not yet each the date of their own check. Deliberately NOT flipped: a
-      green gate is not the test this criterion states.)*
+      still share `2026-09-18`. The gate exits 0, but the distinctness test
+      fails — three of the four values are equal, not four distinct ones — and
+      those same three stamps are not each the date of their own check.
+      Deliberately NOT flipped: a green gate is not the test this criterion
+      states.)*
