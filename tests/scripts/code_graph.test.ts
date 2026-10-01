@@ -6,6 +6,7 @@
  * (golden-checksum), schema validation, and the structural no-network
  * guarantee. Integration tests load the real vendored WASM grammars.
  */
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -14,6 +15,8 @@ import { describe, expect, it } from 'vitest';
 
 import * as os from 'node:os';
 
+import { GRAPH_TOOLS } from '../../src/scripts/mcp_server/graph_tools.js';
+import type { BuiltinTool } from '../../src/scripts/mcp_server/tools.js';
 import { buildFromRepo, buildGraph, serializeGraph, type SourceFile } from '../../src/scripts/code_graph/build.js';
 import { pickSource, type SourceVerdict } from '../../src/scripts/code_graph/detect.js';
 import { extractFile } from '../../src/scripts/code_graph/extract.js';
@@ -318,5 +321,58 @@ describe('no-network guarantee (structural)', () => {
             const body = fs.readFileSync(path.join(CODE_GRAPH_DIR, f), 'utf-8');
             expect(forbidden.test(body), `${f} must not touch the network`).toBe(false);
         }
+    });
+});
+
+// ---------------------------------------------------------------------------
+// road-to-a-graph-that-feeds-the-gate — step 2.4
+// ---------------------------------------------------------------------------
+
+/**
+ * A consumer root that is a real repository, with its graph built AFTER the
+ * commit so the index starts level with HEAD.
+ *
+ * Real git metadata is the point: step 2.3 reads `edited` out of the porcelain
+ * status, so a tmpdir without a repository could only ever assert the fallback.
+ */
+async function committedConsumerRig(): Promise<string> {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-edited-'));
+    const run = (args: readonly string[]): void => {
+        execFileSync('git', ['-C', dir, ...args], { stdio: ['ignore', 'ignore', 'ignore'] });
+    };
+    run(['init', '-q', '-b', 'main']);
+    run(['config', 'user.email', 'fixture@example.com']);
+    run(['config', 'user.name', 'fixture']);
+    fs.mkdirSync(path.join(dir, 'src'));
+    fs.writeFileSync(path.join(dir, 'src', 'service.ts'), 'export function handle(x: string): string {\n    return x.trim();\n}\n');
+    run(['add', '-A']);
+    run(['commit', '-q', '-m', 'fixture']);
+    await buildFromRepo(dir, path.join(dir, 'agents/runtime/state/code-graph-v1.json'));
+    return dir;
+}
+
+describe('2.4 — the MCP answers carry the new state', () => {
+    it('reports staleness edited once an indexed file is changed in the working tree', async () => {
+        // The CLI `query` verb has no `--json`, so the MCP envelope is where the
+        // token is machine-readable at all. `graph_query` already prints
+        // `staleness`; what 2.3 added is a fourth value it can carry, and this
+        // is the fixture that the value actually reaches the wire.
+        const root = await committedConsumerRig();
+        const q = GRAPH_TOOLS['graph_query'];
+        expect(q).toBeDefined();
+
+        const before = await (q as BuiltinTool).handler({ symbol: 'src/service.ts#handle' }, root);
+        expect(before['status']).toBe('ok');
+        expect(before['staleness']).toBe('fresh');
+
+        fs.writeFileSync(
+            path.join(root, 'src', 'service.ts'),
+            'export function handle(x: string): string {\n    return x.trimStart();\n}\n',
+        );
+        const after = await (q as BuiltinTool).handler({ symbol: 'src/service.ts#handle' }, root);
+        expect(after['status']).toBe('ok');
+        expect(after['staleness']).toBe('edited');
+
+        fs.rmSync(root, { recursive: true, force: true });
     });
 });
