@@ -38,7 +38,7 @@ what this skill owns.
    imported observation.
 5. On the human's accept, persist the chosen fields into `DESIGN.md`. Where the
    consumer wants a token source of truth, hand the mapped DTCG fields to
-   [`brand-to-tokens`](../../brand-to-tokens/SKILL.md) / `design-tokens` to
+   `brand-to-tokens` / `design-tokens` to
    materialise `.tokens.json` — do not invent a parallel token format.
 
 **Two sources, one shape:**

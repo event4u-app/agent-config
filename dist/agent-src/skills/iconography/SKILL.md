@@ -42,7 +42,7 @@ execution:
    is the anti-pattern [`icon-consistency`](../../rules/icon-consistency.md)
    § What this gates names by name. Stop at the first rung that answers.
    1. **A brand token or brand guide that names an icon set** — authoritative,
-      stop here ([`brand-source-of-truth`](../../rules/brand-source-of-truth.md)).
+      stop here (`brand-source-of-truth`).
    2. **The set already in use in this project** — detected at the Inspect step
       of the Iconography floor below. One icon system per project; a second
       visual language is the defect, not a preference.
