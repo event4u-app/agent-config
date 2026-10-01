@@ -24,8 +24,16 @@
  *   invisible in a source review.
  * - `hooks/hooks.json` — the host binding file, written by `condense.ts` via
  *   `task sync`. A hand edit here silently unbinds a guard.
+ * - `src/scripts/hook_manifest.json` and `src/scripts/hooks/host_lowering.json`
+ *   — the compiled plumbing tables, written by `compile_hook_manifest`
+ *   (road-to-blocking-severities 2.2). These are the ones the RUNTIME actually
+ *   reads: `dispatch_hook._load_yaml` and `host_lowering.resolveTable` serve
+ *   the compiled body in preference to the YAML whenever its fingerprint
+ *   matches, so an edited table is what every host is told about which concern
+ *   runs and which slot can refuse, while the reviewed YAML beside it still
+ *   says something else.
  *
- * Both are matched under any parent directory, because a consumer install
+ * All four are matched under any parent directory, because a consumer install
  * carries them under its own project root rather than under this repository's.
  *
  * WHAT STILL PASSES, and why that is not a hole.
@@ -94,15 +102,35 @@ function _isObject(v: JsonValue | undefined): v is JsonObject {
 export const PLUMBING_BUILD_OUTPUTS: readonly string[] = [
     'dist/hooks/dispatch.js',
     'hooks/hooks.json',
+    'src/scripts/hook_manifest.json',
+    'src/scripts/hooks/host_lowering.json',
 ];
 
 /**
  * Where each output comes from, printed in the deny so the reader is told what
  * to run instead of only what not to do.
+ *
+ * road-to-blocking-severities 2.2 added the two compiled tables. They are the
+ * same KIND of file as the first two — written by a build, never by hand — and
+ * until this step they were refused by nothing, which mattered more here than
+ * it would have for an ordinary generated artefact: `dispatch_hook._load_yaml`
+ * and `host_lowering.resolveTable` both serve the compiled body IN PREFERENCE
+ * to the YAML whenever its fingerprint matches, so an edited JSON is what every
+ * host is told about which concern runs and which slot can refuse.
+ *
+ * Their YAML sources stay OUT of this set and keep carrying a ratification
+ * record instead — a hand edit there is legitimate and is exactly how the
+ * plumbing is maintained. The split is the one the guard's header already
+ * draws: a deny for files with no legitimate hand edit, a record for files
+ * whose hand edits are the point.
  */
 const REGENERATED_BY: Readonly<Record<string, string>> = {
     'dist/hooks/dispatch.js': 'npm run build:hooks',
     'hooks/hooks.json': 'task sync',
+    'src/scripts/hook_manifest.json':
+        './scripts-run src/scripts/compile_hook_manifest --table manifest',
+    'src/scripts/hooks/host_lowering.json':
+        './scripts-run src/scripts/compile_hook_manifest --table host-lowering',
 };
 
 // Keys across platforms that carry the tool's target file path.
