@@ -33,7 +33,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
-import { exemptionReason } from './check_estate_count.js';
+import { exemptionReason } from './_lib/estate_offsets.js';
 import { DISPOSITION_LEMMAS, lemmasNamed, namesDisposition, reasonKey } from './_lib/exemption_shape.js';
 import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
 

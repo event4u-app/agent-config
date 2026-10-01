@@ -36,12 +36,8 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, describe, expect, it } from 'vitest';
 
-import {
-    classifyDiff,
-    countEstate,
-    exemptionReason,
-    growthClaims,
-} from '../../src/scripts/check_estate_count.js';
+import { countEstate } from '../../src/scripts/check_estate_count.js';
+import { classifyDiff, exemptionReason, growthClaims } from '../../src/scripts/_lib/estate_offsets.js';
 import { exemptionFindings } from '../../src/scripts/_lib/exemption_shape.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
