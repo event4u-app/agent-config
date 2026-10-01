@@ -1482,6 +1482,27 @@ hooks:
   injection_scan:
     enabled: false
 
+  # Shadow quality pass over the files a turn edited
+  # (road-to-touched-files-that-pass-their-own-tools, Phase 1). Default `off`.
+  #
+  #   off     the recorder behaves exactly as it did before this key existed —
+  #           nothing spawns, no manifest is read, no new field is written.
+  #   shadow  at stop, the commands YOUR toolchain already resolves
+  #           (`npx eslint`, `vendor/bin/phpstan analyse`, `ruff check`, …) run
+  #           against the touched files and the result lands in `quality_runs[]`
+  #           in the per-session record. Nothing is emitted and nothing blocks.
+  #   warn    the same, plus ONE advisory line (≤ 200 bytes) naming the command
+  #           and the file when a check came back non-zero. Still exit 0 —
+  #           this hook is observability infra and never blocks.
+  #
+  # Three properties worth knowing before switching it on: a command that writes
+  # files runs only in its check form (`pint --test`) or not at all; a command
+  # with no per-file form (`tsc --noEmit`, `go vet ./...`) is skipped rather than
+  # run project-wide at every stop; and a recorded quality run is NEVER read as
+  # verification — `verified_this_turn` is unaffected by anything here.
+  verify_before_complete:
+    touched_file_quality: "off"   # quoted: bare `off` is boolean false in YAML 1.1
+
   # NOTE — `turn_end_gate` has no keys here any more. The stop-slot turn-end
   # gate is ALWAYS ARMED (2026-08-12); `hooks.turn_end_gate.*` was removed and
   # a leftover block warns once on stderr and is ignored. Whether it fires is
