@@ -104,7 +104,7 @@ allowed.
 
 **What changed on 2026-10-01, and what did not.** The paragraph above is
 unaltered and still describes the shipped gate: no turn is refused twice. What
-closed is the measurement, not the behaviour. Instrument 1 (the shadow read,
+closed is the measurement, not the behavior. Instrument 1 (the shadow read,
 `road-to-a-stop-that-holds` step 2.1) records on each retry which detectors
 *would* have fired, and instrument 2's first half — the reader, step 2.2 — now
 divides those rows by `retries_observed`:
