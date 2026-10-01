@@ -36,6 +36,7 @@ import {
     PACKAGE_MANAGER_BRANCHES,
     ToolchainResult,
     _behavior_scopes,
+    _pnpm_packages,
     _resolve_package_manager,
     resolve_behavior_runners,
     resolve_toolchain,
@@ -94,10 +95,11 @@ describe('stack/runner — module constants parity', () => {
     });
 
     it('KNOWN_RUNNERS carries the nine original labels plus the three natives', () => {
-        // The nine were the Python parity set. `rspec` / `junit` / `dotnet-test`
-        // were added because the set is the single source of truth the state
-        // schema and these tests validate against, and a repository with one of
-        // them was indistinguishable from one with no runner at all.
+        // The nine were the Python parity set. `rspec` / `junit` /
+        // `dotnet-test` were added because a repository carrying one of them
+        // was indistinguishable from one carrying no runner at all. What makes
+        // the set a source of truth rather than a claim is the membership test
+        // below, which binds it to what the resolver actually emits.
         expect([...KNOWN_RUNNERS].sort()).toEqual(
             [
                 'pest',
@@ -677,12 +679,17 @@ describe('stack/runner — behaviour-runner axis', () => {
         expect(byScope.get('pkg/clean')?.confidence).toBe(HIGH);
     });
 
-    it('the SAME runner matched by two signals is one answer, not a conflict', () => {
+    it('two behat signals collapse inside the branch, so one scope yields one row', () => {
+        // Named for what it exercises. The behat branch emits at most one row
+        // whichever signal matched, so this never reaches the dedupe guard in
+        // `resolve_behavior_runners` — that guard is defensive and unreachable
+        // as the detector stands, and no test here claims otherwise.
         write('composer.json', JSON.stringify({ 'require-dev': { 'behat/behat': '^3' } }));
         write('behat.yml', 'default:\n  suites: {}\n');
         const rows = resolve_behavior_runners(tmp);
         expect(rows).toHaveLength(1);
         expect(rows[0]?.runner).toBe('behat');
+        expect(rows[0]?.conflict).toEqual([]);
     });
 
     it('detects the python behaviour runner too', () => {
@@ -764,5 +771,141 @@ describe('stack/runner — behaviour-runner axis', () => {
         write('package.json', JSON.stringify({ workspaces: ['nope/*'] }));
         expect(() => resolve_behavior_runners(tmp)).not.toThrow();
         expect(resolve_behavior_runners(tmp)).toEqual([]);
+    });
+
+    it('a pnpm sibling sequence is NOT a workspace scope', () => {
+        // `onlyBuiltDependencies` and friends are ordinary sequences in a real
+        // pnpm-workspace.yaml. A reader that matched every `- item` line took
+        // `esbuild` for a package directory; with a top-level directory of
+        // that name it produced a `behavior_runners` row whose `scope_root`
+        // was not a workspace package at all.
+        write(
+            'pnpm-workspace.yaml',
+            "packages:\n  - 'apps/*'\nonlyBuiltDependencies:\n  - esbuild\npatchedDependencies:\n  - leftpad\n",
+        );
+        write('apps/shop/package.json', JSON.stringify({ devDependencies: { '@cucumber/cucumber': '^10' } }));
+        write('esbuild/composer.json', JSON.stringify({ 'require-dev': { 'behat/behat': '^3' } }));
+        const scopes = _behavior_scopes(tmp);
+        expect(scopes).toContain('apps/shop');
+        expect(scopes).not.toContain('esbuild');
+        expect(scopes).not.toContain('leftpad');
+        expect(resolve_behavior_runners(tmp).map((r) => r.scope_root)).toEqual(['apps/shop']);
+    });
+
+    it('_pnpm_packages reads only the packages key', () => {
+        const text =
+            '# comment\n' +
+            "packages:\n  - 'a/*'\n  - b\n" +
+            'onlyBuiltDependencies:\n  - esbuild\n' +
+            "packages:\n  - 'c'\n";
+        expect(_pnpm_packages(text)).toEqual(['a/*', 'b', 'c']);
+    });
+
+    it('behave needs a DECLARATION, not the English verb in prose', () => {
+        write('pyproject.toml', '[project]\ndescription = "documents how widgets behave under load"\n');
+        expect(resolve_behavior_runners(tmp)).toEqual([]);
+    });
+
+    it('behave is detected in both declaration shapes', () => {
+        write('pyproject.toml', '[tool.poetry.group.dev.dependencies]\nbehave = "^1.2"\n');
+        expect(resolve_behavior_runners(tmp).map((r) => r.runner)).toEqual(['behave']);
+    });
+
+    it('behave is detected from a requirements.txt line', () => {
+        write('requirements.txt', 'behave==1.2.6\n');
+        expect(resolve_behavior_runners(tmp).map((r) => r.runner)).toEqual(['behave']);
+    });
+
+    it('a pyproject with no trailing newline cannot fuse a token into requirements.txt', () => {
+        // Concatenated bare, these two produce `...pytest-bddbehave...` and a
+        // token present in neither file.
+        write('pyproject.toml', '[project]\nname = "x"');
+        write('requirements.txt', 'behave\n');
+        const runners = resolve_behavior_runners(tmp).map((r) => r.runner);
+        expect(runners).toEqual(['behave']);
+    });
+
+    it('cucumber-ruby is found through gems.rb, not only Gemfile', () => {
+        write('gems.rb', "source 'https://rubygems.org'\ngem 'cucumber'\n");
+        expect(resolve_behavior_runners(tmp).map((r) => r.runner)).toEqual(['cucumber-ruby']);
+    });
+
+    it('scope order is sorted, so the serialized row order is stable', () => {
+        write('package.json', JSON.stringify({ workspaces: ['pkg/*'] }));
+        for (const name of ['zeta', 'alpha', 'mid']) {
+            write(`pkg/${name}/composer.json`, JSON.stringify({ 'require-dev': { 'behat/behat': '^3' } }));
+        }
+        expect(resolve_behavior_runners(tmp).map((r) => r.scope_root)).toEqual([
+            'pkg/alpha',
+            'pkg/mid',
+            'pkg/zeta',
+        ]);
+    });
+});
+
+/**
+ * The membership binding. Without it `KNOWN_RUNNERS` and
+ * `KNOWN_BEHAVIOR_RUNNERS` are two set-equality assertions about themselves:
+ * nothing in the resolver reads either set, so a label emitted with a typo
+ * (`dotnet_test`, `cucumber_js`) or a detector branch added later would pass
+ * the whole suite while the declared source of truth silently stopped
+ * describing the emitter.
+ */
+describe('stack/runner — every emitted label is a declared label', () => {
+    /** One fixture per detector branch this module can take. */
+    const FIXTURES: ReadonlyArray<readonly [string, ReadonlyArray<readonly [string, string]>]> = [
+        ['php-pest', [['composer.json', JSON.stringify({ require: { 'pestphp/pest': '^2' } })]]],
+        ['php-phpunit', [['composer.json', JSON.stringify({ 'require-dev': { 'phpunit/phpunit': '^11' } })]]],
+        ['js-vitest', [['package.json', JSON.stringify({ devDependencies: { vitest: '^1' } })]]],
+        ['js-jest', [['package.json', JSON.stringify({ devDependencies: { jest: '^29' } })]]],
+        [
+            'js-e2e',
+            [['package.json', JSON.stringify({ devDependencies: { '@playwright/test': '^1', cypress: '^13' } })]],
+        ],
+        ['python', [['pyproject.toml', '[tool.pytest.ini_options]\n']]],
+        ['go', [['go.mod', 'module example.com/x\n']]],
+        ['rust', [['Cargo.toml', '[package]\nname = "x"\n']]],
+        ['ruby', [['Gemfile', "gem 'rspec'\ngem 'cucumber'\n"]]],
+        ['jvm', [['pom.xml', '<project><artifactId>junit</artifactId><dependency>io.cucumber</dependency></project>']]],
+        ['dotnet', [['App.csproj', '<Project><PackageReference Include="Reqnroll" /></Project>']]],
+        ['dotnet-specflow', [['App.csproj', '<Project><PackageReference Include="SpecFlow" /></Project>']]],
+        ['php-behat', [['composer.json', JSON.stringify({ 'require-dev': { 'behat/behat': '^3' } })]]],
+        ['js-cucumber', [['package.json', JSON.stringify({ devDependencies: { '@cucumber/cucumber': '^10' } })]]],
+        ['py-behave', [['requirements.txt', 'behave\n']]],
+        ['py-bdd', [['requirements.txt', 'pytest-bdd\n']]],
+    ];
+
+    it('no fixture emits a native label outside KNOWN_RUNNERS', () => {
+        const seen = new Set<string>();
+        for (const [, files] of FIXTURES) {
+            fs.rmSync(tmp, { recursive: true, force: true });
+            fs.mkdirSync(tmp, { recursive: true });
+            for (const [rel, body] of files) write(rel, body);
+            for (const r of resolve_toolchain(tmp, { include_e2e: true, include_slow: true }).runners) {
+                seen.add(r.runner);
+                expect(KNOWN_RUNNERS.has(r.runner)).toBe(true);
+            }
+        }
+        // The fixtures must actually reach the three added labels, or this
+        // test would pass over a corpus that never exercises them.
+        expect(seen).toContain('rspec');
+        expect(seen).toContain('junit');
+        expect(seen).toContain('dotnet-test');
+    });
+
+    it('no fixture emits a behaviour label outside KNOWN_BEHAVIOR_RUNNERS', () => {
+        const seen = new Set<string>();
+        for (const [, files] of FIXTURES) {
+            fs.rmSync(tmp, { recursive: true, force: true });
+            fs.mkdirSync(tmp, { recursive: true });
+            for (const [rel, body] of files) write(rel, body);
+            for (const r of resolve_behavior_runners(tmp)) {
+                seen.add(r.runner);
+                expect(KNOWN_BEHAVIOR_RUNNERS.has(r.runner)).toBe(true);
+            }
+        }
+        for (const label of ['behat', 'cucumber-js', 'cucumber-ruby', 'cucumber-jvm', 'behave', 'pytest-bdd', 'reqnroll', 'specflow']) {
+            expect(seen).toContain(label);
+        }
     });
 });

@@ -123,14 +123,43 @@ const _MANIFESTS = [
  *
  * .NET is the one ecosystem here whose marker has no fixed FILENAME — the
  * project file is `<whatever>.csproj`. That is why it is an extension list
- * scanned over the root rather than a `_MANIFESTS` entry, and why a
- * project-file-only .NET root contributes nothing to
- * {@link latest_manifest_mtime}: the cache key would have to glob to see it.
- * `global.json` / `Directory.Build.props` ARE in `_MANIFESTS`, so a root that
- * carries either is cache-invalidated normally. Stated rather than left for a
- * reader to discover from a stale cache.
+ * scanned over the root rather than a `_MANIFESTS` entry.
+ *
+ * **Residual cache gap, stated in full.** {@link latest_manifest_mtime} stats
+ * fixed NAMES across every scope, so three signals stay invisible to the cache
+ * key and only these three: a project-file-only .NET scope (`*.csproj` with no
+ * `global.json` / `Directory.Build.props`), a `*.gemspec`, and
+ * `features/support/env.rb`. Everything else the behaviour axis reads is a
+ * fixed name in `_MANIFESTS` or `_BEHAVIOR_MARKERS` and does move the key.
+ * Closing the rest would need the key to glob, which is a cost decision rather
+ * than an oversight — so it is written down instead of discovered from a stale
+ * cache.
  */
 const _DOTNET_PROJECT_EXTS = ['.sln', '.slnx', '.csproj', '.fsproj', '.vbproj'];
+
+/**
+ * Fixed-name files the BEHAVIOUR axis reads that `_MANIFESTS` does not cover.
+ *
+ * Kept beside `_MANIFESTS` rather than merged into it because the two are
+ * consulted at different scopes: `_MANIFESTS` names the root manifests whose
+ * presence selects an ecosystem, while these are markers the behaviour
+ * detector reads in EVERY scope. Both feed {@link latest_manifest_mtime} — see
+ * the cache-coverage note there for what still escapes it.
+ */
+const _BEHAVIOR_MARKERS = [
+    'pnpm-workspace.yaml',
+    'requirements.txt',
+    'gems.rb',
+    '.rspec',
+    'behat.yml',
+    'behat.yaml',
+    'behat.yml.dist',
+    'behat.dist.yml',
+    'cucumber.js',
+    'cucumber.cjs',
+    'cucumber.mjs',
+    'cucumber.json',
+];
 
 /** A heterogeneous JSON object, mirroring a Python `dict[str, object]`. */
 type Manifest = { [key: string]: unknown };
@@ -350,7 +379,7 @@ export function resolve_toolchain(
         _is_file(path.join(project_root, 'pytest.ini'));
     const has_go = _is_file(path.join(project_root, 'go.mod'));
     const has_cargo = _is_file(path.join(project_root, 'Cargo.toml'));
-    const gemfile_text = _read_text(path.join(project_root, 'Gemfile'));
+    const gemfile_text = _ruby_gemfile_text(project_root);
     const jvm = _jvm_build(project_root);
     const dotnet_basis = _dotnet_basis(project_root);
 
@@ -435,10 +464,21 @@ export function write_config(project_root: string, result: ToolchainResult): str
  */
 export function latest_manifest_mtime(project_root: string): number {
     const mtimes: number[] = [];
-    for (const name of _MANIFESTS) {
-        const p = path.join(project_root, name);
-        if (_is_file(p)) {
-            mtimes.push(_stat_mtime(p));
+    const names = [..._MANIFESTS, ..._BEHAVIOR_MARKERS];
+    // Every scope, not only the root: `behavior_runners` is part of the cached
+    // result, and it is derived from per-scope manifests. A key that stats the
+    // root alone cannot see Behat arriving in `packages/legacy`, so a persisted
+    // `toolchain.json` would keep reporting the old (usually empty) behaviour
+    // inventory until some unrelated ROOT manifest happened to be touched —
+    // stale forever in the common case. Widening a cache key is always safe in
+    // the direction that matters: it can only invalidate more often.
+    for (const scope of _behavior_scopes(project_root)) {
+        const dir = scope === '.' ? project_root : path.join(project_root, scope);
+        for (const name of names) {
+            const p = path.join(dir, name);
+            if (_is_file(p)) {
+                mtimes.push(_stat_mtime(p));
+            }
         }
     }
     return mtimes.length > 0 ? Math.max(...mtimes) : 0.0;
@@ -565,13 +605,27 @@ function _python_runners(pyproject_text: string): RunnerResult[] {
  * `rspec` would be a guess wearing a MEDIUM label. No signal → no row, which
  * is also what makes the absence fixture meaningful.
  */
+/**
+ * The Ruby dependency declaration, under either name Bundler accepts.
+ *
+ * `gems.rb` is Bundler's supported alternative to `Gemfile`; reading only the
+ * latter made a `gems.rb` project invisible to both the rspec and the
+ * cucumber-ruby branch.
+ */
+function _ruby_gemfile_text(dir: string): string {
+    return _read_text(path.join(dir, 'Gemfile')) || _read_text(path.join(dir, 'gems.rb'));
+}
+
 function _ruby_runners(root: string, gemfile_text: string): RunnerResult[] {
-    if (gemfile_text === '') {
-        return [];
-    }
     const dot_rspec = _is_file(path.join(root, '.rspec'));
     const spec_helper = _is_file(path.join(root, 'spec', 'spec_helper.rb'));
     const in_gemfile = /\brspec\b/.test(gemfile_text);
+    // No `Gemfile` precondition. An earlier version returned here whenever the
+    // Gemfile was absent, which made the two marker bases below unreachable in
+    // exactly the projects that have only markers: a Bundler project using
+    // `gems.rb`, or a gemspec-only gem shipping `.rspec` and
+    // `spec/spec_helper.rb`. Each of the three signals stands on its own, which
+    // is also what the contract table says.
     if (!in_gemfile && !dot_rspec && !spec_helper) {
         return [];
     }
@@ -634,7 +688,12 @@ function _jvm_runners(build: JvmBuild): RunnerResult[] {
 function _dotnet_basis(root: string): { basis: string; confidence: string } | null {
     let names: string[];
     try {
-        names = fs.readdirSync(root);
+        // SORTED: the basis string names the file that matched, and it is
+        // serialised into `toolchain.json`. An unsorted `readdirSync` makes
+        // that string depend on directory-entry order, which differs between
+        // filesystems and changes after a rename — so a config meant to be
+        // stable would churn for reasons unrelated to the repository.
+        names = fs.readdirSync(root).sort();
     } catch {
         names = [];
     }
@@ -691,7 +750,15 @@ export function resolve_behavior_runners(project_root: string): BehaviorRunnerRe
         }
         const names = [...new Set(found.map((r) => r.runner))].sort();
         if (names.length === 1) {
-            // Same runner matched by two signals — not a conflict, one answer.
+            // Defensive, and UNREACHABLE as the detector stands: every branch
+            // in `_behavior_runners_in_scope` pushes at most one row per label
+            // (one `if` each; reqnroll/specflow are `if`/`else if`), so two
+            // rows in one scope always carry two names. It is kept because a
+            // future branch that can emit the same label twice would otherwise
+            // produce a refusal naming one runner against itself — a worse
+            // failure than a redundant guard. No test claims to cover it;
+            // "the SAME runner matched by two signals" exercises the
+            // single-row path instead, which is the path that case has.
             out.push(found[0] as BehaviorRunnerResult);
             continue;
         }
@@ -767,11 +834,17 @@ function _behavior_runners_in_scope(dir: string, scope: string): BehaviorRunnerR
         );
     }
 
-    const py_text =
-        _read_text(path.join(dir, 'pyproject.toml')) + _read_text(path.join(dir, 'requirements.txt'));
-    if (/\bbehave\b/.test(py_text)) {
+    // Joined with a newline, like `_dotnet_project_text`. Concatenated bare,
+    // a `pyproject.toml` with no trailing newline fuses its last token to the
+    // first token of `requirements.txt`, and the regexes below then match
+    // against a token present in neither file.
+    const py_text = [
+        _read_text(path.join(dir, 'pyproject.toml')),
+        _read_text(path.join(dir, 'requirements.txt')),
+    ].join('\n');
+    if (_PY_BEHAVE.test(py_text)) {
         out.push(
-            new BehaviorRunnerResult('python', 'behave', 'behave', scope, HIGH, 'behave in the python manifest'),
+            new BehaviorRunnerResult('python', 'behave', 'behave', scope, HIGH, 'behave declared as a python dependency'),
         );
     }
     if (/\bpytest-bdd\b/.test(py_text)) {
@@ -787,7 +860,7 @@ function _behavior_runners_in_scope(dir: string, scope: string): BehaviorRunnerR
         );
     }
 
-    const gemfile = _read_text(path.join(dir, 'Gemfile'));
+    const gemfile = _ruby_gemfile_text(dir);
     if (/\bcucumber\b/.test(gemfile) || _is_file(path.join(dir, 'features', 'support', 'env.rb'))) {
         out.push(
             new BehaviorRunnerResult(
@@ -838,6 +911,7 @@ function _dotnet_project_text(dir: string): string {
         return '';
     }
     return names
+        .sort()
         .filter((n) => _DOTNET_PROJECT_EXTS.includes(path.extname(n).toLowerCase()))
         .map((n) => _read_text(path.join(dir, n)))
         .join('\n');
@@ -845,6 +919,61 @@ function _dotnet_project_text(dir: string): string {
 
 /** Hard ceiling on scopes scanned, so a pathological workspace glob cannot stall a turn. */
 const _MAX_BEHAVIOR_SCOPES = 200;
+
+/**
+ * `behave` DECLARED AS A DEPENDENCY, never merely mentioned.
+ *
+ * Every sibling signal in this detector is an unmistakable token —
+ * `behat/behat`, `@cucumber/cucumber`, `pytest-bdd`, `io.cucumber`,
+ * `Reqnroll`. `behave` is an ordinary English verb, so a bare `\bbehave\b`
+ * over the whole manifest fires HIGH on a description line, a comment or a
+ * changelog string. This anchors it to the two shapes a declaration actually
+ * takes: a `requirements.txt` line (`behave`, `behave==1.2.6`) and a
+ * pyproject/TOML assignment (`behave = "^1.2"`, `"behave",`), each at the
+ * start of its own line.
+ */
+const _PY_BEHAVE = /^[ \t]*["']?behave["']?[ \t]*(?:$|[=<>~!,;[])/m;
+
+/**
+ * The `packages:` sequence of a `pnpm-workspace.yaml`, and ONLY that key.
+ *
+ * The first version matched every `- item` line in the file, which is wrong in
+ * a way that reads as working: a real workspace file routinely carries sibling
+ * sequences — `onlyBuiltDependencies`, `neverBuiltDependencies`,
+ * `ignoredBuiltDependencies`, `patchedDependencies` — so `- esbuild` under
+ * `onlyBuiltDependencies` became the workspace scope `esbuild`. Usually that
+ * only burns reads and scope budget, but a repository with a top-level
+ * directory of that name gets a `behavior_runners` row whose `scope_root` is
+ * not a workspace package at all.
+ *
+ * A line-state reader rather than a YAML parse, because this module is leaf by
+ * contract and may not take a dependency: track whether the current top-level
+ * key is `packages`, and accept sequence items only while it is. Any
+ * column-0 key ends the section, which is what makes a sibling sequence
+ * invisible instead of merely unlikely.
+ */
+export function _pnpm_packages(text: string): string[] {
+    const out: string[] = [];
+    let inPackages = false;
+    for (const line of text.split('\n')) {
+        if (line.trim() === '' || /^\s*#/.test(line)) {
+            continue;
+        }
+        const key = /^([A-Za-z0-9_-]+)\s*:/.exec(line);
+        if (key) {
+            inPackages = key[1] === 'packages';
+            continue;
+        }
+        if (!inPackages) {
+            continue;
+        }
+        const item = /^\s+-\s*['"]?([^'"#]+?)['"]?\s*$/.exec(line);
+        if (item && item[1] !== undefined && item[1] !== '') {
+            out.push(item[1]);
+        }
+    }
+    return out;
+}
 
 /**
  * The scopes to scan: the root, plus each declared workspace package.
@@ -870,13 +999,7 @@ export function _behavior_scopes(project_root: string): string[] {
     } else if (_isDict(ws) && Array.isArray(ws['packages'])) {
         globs.push(...(ws['packages'] as unknown[]).filter((g): g is string => typeof g === 'string'));
     }
-    const pnpm = _read_text(path.join(project_root, 'pnpm-workspace.yaml'));
-    for (const line of pnpm.split('\n')) {
-        const m = /^\s*-\s*['"]?([^'"#]+?)['"]?\s*$/.exec(line);
-        if (m && m[1] !== undefined && m[1] !== '') {
-            globs.push(m[1]);
-        }
-    }
+    globs.push(..._pnpm_packages(_read_text(path.join(project_root, 'pnpm-workspace.yaml'))));
 
     const scopes = ['.'];
     for (const raw of globs) {
@@ -892,6 +1015,9 @@ export function _behavior_scopes(project_root: string): string[] {
             } catch {
                 continue;
             }
+            // SORTED, for the reason `_dotnet_basis` sorts: scope order
+            // becomes `behavior_runners` row order, which is serialised.
+            children.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
             for (const c of children) {
                 if (c.isDirectory()) {
                     scopes.push(`${parent}/${c.name}`);

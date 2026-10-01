@@ -13,9 +13,10 @@ tools and run the right one — instead of a per-stack command explosion.
 > pytest / go / cargo, not N per-stack variants. "Only genuine PHP-space
 > commands stay PHP-locked."
 
-**Size budget:** ≤ 7,000 chars — raised from 6,000 on 2026-10-01, when the
-resolver went from 9 runners on one axis to 12 across two. Shrink-only from
-here; the enforced ceiling is `check_depth_budget`'s 16,000.
+**Size budget:** ≤ 7,500 chars — raised from 6,000 on 2026-10-01, when the
+resolver went from 9 runners on one axis to 12 across two and the completion
+review corrected three table rows that understated what the code detects.
+Shrink-only from here; the enforced ceiling is `check_depth_budget`'s 16,000.
 
 ## 1. The resolver
 
@@ -49,12 +50,15 @@ mirrors the recoverable-error contract of the frontend `detect_stack`.
 | Python | `pytest` in pyproject / `pytest.ini` | pytest | `pytest` |
 | Go | `go.mod` present | go-test | `go test ./...` |
 | Rust | `Cargo.toml` present | cargo-test | `cargo test` |
-| Ruby | `rspec` in Gemfile / `.rspec` | rspec | `bundle exec rspec` |
-| JVM | `pom.xml` / `build.gradle[.kts]` | junit | `./mvnw test` · `./gradlew test` |
-| .NET | `*.csproj` / `*.sln` / `global.json` | dotnet-test | `dotnet test` |
+| Ruby | `rspec` in `Gemfile`/`gems.rb`, `.rspec`, or `spec/spec_helper.rb` | rspec | `bundle exec rspec` |
+| JVM | `pom.xml` / `build.gradle[.kts]` | junit | `./mvnw test` · `./gradlew test`, else `mvn test` · `gradle test` |
+| .NET | `*.csproj` / `*.sln` / `global.json` / `Directory.Build.props` | dotnet-test | `dotnet test` |
 
-Ruby has **no MEDIUM default**: minitest ships in the stdlib, so a Gemfile
-with no rspec signal emits no row rather than a guess.
+Each Ruby signal stands alone — no `Gemfile` precondition — and Ruby has **no
+MEDIUM default** (minitest is in the stdlib), so no signal means no row rather
+than a guess. JVM does default to `junit` at MEDIUM when the build file names
+no runner; .NET is HIGH on a project file, MEDIUM on the two markers alone. A
+wrapper wins where one exists, since it pins the build-tool version.
 
 **Task-runner wrappers win.** When the project root has a `Makefile`
 `test:` target, a `Taskfile.yml` `test:` task, or a `package.json`
@@ -68,19 +72,20 @@ The package manager is read from the lockfile (`pnpm-lock.yaml` → pnpm,
 ## 2b. Behaviour-runner axis — per scope, detection only
 
 `result.behavior_runners` is a **separate list** from `runners`: it reports
-which behaviour runner (behat / cucumber-js / cucumber-ruby / cucumber-jvm /
-behave / pytest-bdd / reqnroll / specflow) each scope already owns.
+which behaviour runner (behat, cucumber-js/-ruby/-jvm, behave, pytest-bdd,
+reqnroll, specflow) each scope already owns.
 
 - **Per scope, never repository-wide.** Each row carries `scope_root` (the
-  root plus every declared workspace package). A monorepo with a behaviour
-  runner in one package returns a row for that package and none for the
-  others; a single answer would erase which package owns it.
+  root plus every declared workspace package, read from
+  `package.json#workspaces` and `pnpm-workspace.yaml#packages`). A monorepo
+  returns a row per owning package and none for the others; one answer would
+  erase which package owns it.
 - **Two in one scope is a refusal, not a pick** — `runner: "unknown"` plus
   `conflict: [both names]`, the same refusal the frontend detector makes
   between two mutually exclusive workspaces.
 - **Detection, never adoption.** No row recommends installing anything, and
-  the axis is unreachable from `selected`: a behaviour suite the repository
-  owns is reported, never scheduled to run. Choosing one is an owner call.
+  the axis is unreachable from `selected`: a suite the repository owns is
+  reported, never run. Choosing one is an owner call.
 
 ## 3. Confidence tiers — declarative, shared with the non-interactive contract
 
@@ -111,6 +116,7 @@ tables:
 
 A polyglot repo (e.g. PHP + JS) selects one fast runner per ecosystem;
 e2e and slow stay out until their flag is passed.
+
 
 ## 5. Auto-generated project config
 
