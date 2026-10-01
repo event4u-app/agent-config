@@ -237,9 +237,30 @@ export function classifyPoll(stdout: string, stderr: string, status: number | nu
         return { kind: 'pending', total: rows.length, done };
     }
     const bad = new Set(['FAILURE', 'TIMED_OUT', 'CANCELLED', 'ACTION_REQUIRED', 'STARTUP_FAILURE']);
-    const failing = rows
-        .filter((r) => bad.has(String(r.conclusion).toUpperCase()))
-        .map((r) => String(r.name ?? '?'));
+    // A concurrency group that supersedes its own earlier run leaves TWO rows
+    // under one name: the superseded one CANCELLED, the one that counts
+    // SUCCESS. The forge reports that check green; this classifier reported the
+    // whole PR red, because CANCELLED sat in `bad` and nothing looked at the
+    // twin. Measured 2026-10-01 on PR #2135 (`lint commit subjects`), where the
+    // false red cost a run a diagnosis it did not owe.
+    //
+    // The reprieve is deliberately the narrowest one that fixes it: CANCELLED
+    // only, and only when a row of the SAME NAME concluded SUCCESS. A genuine
+    // cancellation — a human stopping a run, a timeout killing one — has no
+    // successful twin and stays failing. Widening this to every bad conclusion,
+    // or to CANCELLED unconditionally, would trade a false red for a false
+    // green, which is the worse error in a tool whose output is acted on.
+    const nameOf = (r: (typeof rows)[number]): string => String(r.name ?? '?');
+    const concl = (r: (typeof rows)[number]): string => String(r.conclusion).toUpperCase();
+    const succeeded = new Set(rows.filter((r) => concl(r) === 'SUCCESS').map(nameOf));
+    const failing = [
+        ...new Set(
+            rows
+                .filter((r) => bad.has(concl(r)))
+                .filter((r) => !(concl(r) === 'CANCELLED' && succeeded.has(nameOf(r))))
+                .map(nameOf),
+        ),
+    ];
     return { kind: 'settled', failing, total: rows.length };
 }
 

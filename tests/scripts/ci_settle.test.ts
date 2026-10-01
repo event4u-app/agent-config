@@ -381,3 +381,92 @@ describe('parseArgs — the branches the first round left untested', () => {
         expect(r.message).not.toContain('--timeout-min notes.txt');
     });
 });
+
+// Measured 2026-10-01 on PR #2135, whose rollup carried TWO rows named
+// `lint commit subjects` — one CANCELLED, one SUCCESS. A concurrency group had
+// superseded its own earlier run. `gh pr checks` reports that check SUCCESS;
+// this classifier reported the PR RED, because CANCELLED sat in the bad set
+// unconditionally and nothing looked at the twin.
+//
+// A false RED is the same defect class as a silently-shortened wait: a verdict
+// the caller cannot act on. It is the more expensive direction here, because a
+// red verdict sends an agent hunting a failure that does not exist — which is
+// exactly what it did, costing that run a diagnosis it did not owe.
+//
+// The narrow reading is the only safe one. A CANCELLED row is superseded ONLY
+// when another row of the SAME NAME concluded SUCCESS. A genuine cancellation —
+// a human stopping a run, a timeout killing one — has no successful twin and
+// must stay failing, or this fix trades a false red for a false green.
+describe('classifyPoll — a superseded duplicate is not a failure', () => {
+    it('does not fail on a CANCELLED row whose same-named twin succeeded', () => {
+        const s = classifyPoll(
+            roll([
+                { name: 'lint commit subjects', conclusion: 'CANCELLED' },
+                { name: 'lint commit subjects', conclusion: 'SUCCESS' },
+                { name: 'other', conclusion: 'SUCCESS' },
+            ]),
+            '',
+            0,
+        );
+        expect(s.kind).toBe('settled');
+        if (s.kind !== 'settled') return;
+        expect(s.failing).toEqual([]);
+    });
+
+    it('STILL fails a CANCELLED row with no successful twin — the false-green direction', () => {
+        const s = classifyPoll(
+            roll([
+                { name: 'cancelled alone', conclusion: 'CANCELLED' },
+                { name: 'other', conclusion: 'SUCCESS' },
+            ]),
+            '',
+            0,
+        );
+        expect(s.kind).toBe('settled');
+        if (s.kind !== 'settled') return;
+        expect(s.failing).toEqual(['cancelled alone']);
+    });
+
+    it('still fails a CANCELLED row whose twin also did not succeed', () => {
+        const s = classifyPoll(
+            roll([
+                { name: 'twice bad', conclusion: 'CANCELLED' },
+                { name: 'twice bad', conclusion: 'FAILURE' },
+            ]),
+            '',
+            0,
+        );
+        expect(s.kind).toBe('settled');
+        if (s.kind !== 'settled') return;
+        expect(s.failing).toContain('twice bad');
+    });
+
+    it('does not extend the reprieve to any other bad conclusion', () => {
+        for (const bad of ['FAILURE', 'TIMED_OUT', 'ACTION_REQUIRED', 'STARTUP_FAILURE']) {
+            const s = classifyPoll(
+                roll([
+                    { name: 'dup', conclusion: bad },
+                    { name: 'dup', conclusion: 'SUCCESS' },
+                ]),
+                '',
+                0,
+            );
+            expect(s.kind, bad).toBe('settled');
+            if (s.kind !== 'settled') continue;
+            expect(s.failing, bad).toContain('dup');
+        }
+    });
+
+    it('reports a superseded name once, not twice, when it does fail', () => {
+        const s = classifyPoll(
+            roll([
+                { name: 'dup', conclusion: 'CANCELLED' },
+                { name: 'dup', conclusion: 'FAILURE' },
+            ]),
+            '',
+            0,
+        );
+        if (s.kind !== 'settled') return;
+        expect(s.failing.filter((n) => n === 'dup')).toHaveLength(1);
+    });
+});
