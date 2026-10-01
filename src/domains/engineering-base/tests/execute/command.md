@@ -31,6 +31,8 @@ returns the runner(s) to invoke per ecosystem:
   phpunit (`vendor/bin/phpunit`).
 - **JS/TS** → vitest (`npx vitest run`) or jest (`npx jest`).
 - **Python** → pytest. **Go** → `go test ./...`. **Rust** → `cargo test`.
+- **Ruby** → rspec (`bundle exec rspec`). **JVM** → junit (`./gradlew test`,
+  `./mvnw test`). **.NET** → `dotnet test`.
 
 **The resolver is the only stack authority, and `skills:` deliberately names
 none.** The frontmatter used to bind `pest-testing` unconditionally, which

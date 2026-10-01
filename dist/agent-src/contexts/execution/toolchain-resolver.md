@@ -53,7 +53,7 @@ mirrors the recoverable-error contract of the frontend `detect_stack`.
 | Rust | `Cargo.toml` present | cargo-test | `cargo test` |
 | Ruby | `rspec` gem in `Gemfile`/`gems.rb`, `.rspec`, `spec/spec_helper.rb` | rspec | `bundle exec rspec` |
 | JVM | `pom.xml`, `build.gradle[.kts]`, `settings.gradle[.kts]` | junit | `./mvnw`/`./gradlew test`, else `mvn`/`gradle test` |
-| .NET | `*.csproj` / `*.sln` / `global.json` / `Directory.Build.props` | dotnet-test | `dotnet test` |
+| .NET | `*.sln[x]`, `*.csproj`/`*.fsproj`/`*.vbproj`, `global.json`, `Directory.Build.props` | dotnet-test | `dotnet test` |
 
 Each Ruby signal stands alone, and Ruby has **no MEDIUM default** (minitest is
 in the stdlib): no signal, no row. JVM defaults to `junit` at MEDIUM when the

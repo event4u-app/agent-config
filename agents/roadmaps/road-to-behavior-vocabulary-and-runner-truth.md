@@ -286,11 +286,15 @@ get there.
       One correction to this step's own premise, from round 2 of the
       completion review: the step calls the set "the single source of truth
       the state schema and tests validate against", quoting the module's
-      comment. **There is no state schema.** `agents/runtime/state/toolchain.json`
-      has none and no reader outside this module — verified, since the
-      reviewer's allowlist forbade the repo-wide check. The comment is
-      corrected in the same change, and the membership tests added for
-      round 1's finding 3 are what makes the remaining half of the claim true.
+      comment. **There is no state schema.** `grep -rln 'toolchain' src/scripts/schemas/`
+      returns nothing, and the only `toolchain.json` mentions outside this
+      module are the contract doc and an unrelated test-fixture string. Those
+      two greps were run by the implementing session, whose tool access is not
+      the reviewer's; the reviewer correctly recorded the question as
+      unverified rather than asserting it, which is what made it checkable at
+      all. The comment is corrected in the same change, and the membership
+      tests added for round 1's finding 3 are what makes the remaining half of
+      the claim true.
 
       - **rspec** (`ruby`) — `rspec` in the Gemfile, `.rspec`, or
         `spec/spec_helper.rb`; `bundle exec rspec`. **Deliberately no MEDIUM
@@ -298,13 +302,16 @@ get there.
         Ruby's stdlib, so a Gemfile with no rspec signal is most likely a
         minitest project and emitting `rspec` would be a guess wearing a
         confidence label. No signal → no row.
-      - **junit** (`jvm`) — `pom.xml` or `build.gradle[.kts]`; HIGH when the
-        build file names junit, MEDIUM when it does not (the same gradation
+      - **junit** (`jvm`) — `pom.xml`, `build.gradle[.kts]` or
+        `settings.gradle[.kts]`, tested for PRESENCE rather than content so an
+        empty root build file in a multi-project tree still counts; HIGH when
+        a build file names junit, MEDIUM when none does (the same gradation
         the PHP branch already uses). Wrapper-first like the existing
         `make test` rule: `./mvnw test` / `./gradlew test` when the wrapper
         exists, because the wrapper pins the build-tool version.
-      - **dotnet-test** (`dotnet`) — a `*.sln` / `*.csproj` / `*.fsproj` at
-        the root is HIGH; `global.json` or `Directory.Build.props` alone is
+      - **dotnet-test** (`dotnet`) — HIGH only when a project file NAMES a
+        test stack (`Microsoft.NET.Test.Sdk`, xunit, nunit, mstest); a bare
+        project or solution file, `global.json` or `Directory.Build.props` is
         MEDIUM. `.NET` is the one ecosystem whose marker has no fixed
         FILENAME, so it is an extension scan rather than a `_MANIFESTS`
         entry — and the consequence (a project-file-only root contributes
@@ -316,7 +323,11 @@ get there.
       label has a presence case AND an absence case, plus wrapper cases, a
       polyglot case asserting all three ecosystems in one root, and a case
       proving `--php` still narrows `selected` now that more ecosystems
-      exist. 93 tests green in that file (88 `it()` blocks, 6 of them parameterised by the suite's shared helpers).
+      exist. **96 tests green** in that file, and the figure reconciles: 91
+      literal `it()` blocks plus one `it.each` expanding to 5 cases. It has
+      been re-measured at each review round rather than carried forward — an
+      earlier version said 70, and then 93 with a parenthetical whose
+      arithmetic did not add up.
 
       **The absence fixtures were seen red.** Neutralising the rspec guard
       (`if (false && …)`, so a Gemfile always emits rspec) fails exactly 1
@@ -533,7 +544,7 @@ All six verified 2026-10-01 at branch `drain/behavior-vocabulary-close`.
       All three present and asserted by name in the constants test. Presence
       and absence fixtures exist for each; the rspec absence fixture was seen
       red under a neutralised guard, failing exactly 1 test with no
-      collateral. 93 tests green in `stack_runner.test.ts`.
+      collateral. 96 tests green in `stack_runner.test.ts`.
 - [x] AC-4 — The behaviour-runner axis returns per-scope rows; a monorepo fixture
       returns more than one row and a conflict fixture returns a refusal naming
       both runners.
@@ -607,6 +618,26 @@ all of which are cheap:
 The recommendation is 1: it preserves the condition under which registering
 the terms becomes worth its ratchet, and it is the only one of the three that
 neither spends the ratchet early nor loses the trigger.
+
+### Residue carried out of the review rounds
+
+Four completion-review rounds produced 49 findings; 44 are fixed and 5 are
+`accepted-risk` with a stated `revisit-if`. Two of those five are the same
+cost trade recorded twice, and one leaves a documentation sentence stale:
+
+- **`toolchain-resolver.md` § 5** still describes the cache key as a
+  root-manifest read that "is re-read cheaply". Since round 1 it stats the
+  manifests and behaviour markers across every scope, because a root-only key
+  could not see a behaviour runner arriving in a workspace package. The
+  sentence is accurate about the mechanism's purpose and stale about its
+  shape. Left for a follow-up rather than patched in round 4, because a fifth
+  content change moves the review scope again for a documentation nuance —
+  the regress is the reason, and naming it is better than absorbing it.
+- **Duplicate root-scope reads** (`_jvm_build`, `_ruby_gemfile_text`,
+  `_dotnet_project_text` each run once per axis) and the **standalone
+  `latest_manifest_mtime` cost** are accepted with `revisit-if` conditions in
+  the round-3 and round-4 artefacts: a profile showing either dominating a
+  resolve pass, or a caller invoking the probe per turn.
 
 `task roadmap-progress-check` exits 1 on this Iron-Law-3 notice and also names
 `road-to-host-claims-the-tree-contradicts.md` (8/8 done, 2 deferred), which

@@ -585,6 +585,18 @@ describe('stack/runner — rspec, junit, dotnet-test', () => {
         expect(found?.confidence).toBe(HIGH);
     });
 
+    it('a MEDIUM dotnet row still reaches `selected` — confidence is a signal, not a filter', () => {
+        // The assertion the earlier fixture was missing. `_apply_guard` reads
+        // `speed` and `php_only` and has never read `confidence`, for any
+        // ecosystem, so the downgrade narrows the REPOSITORY verdict and not
+        // the command list. Pinned so the comment cannot drift back into
+        // claiming a `selected` effect it does not have.
+        write('Api.csproj', '<Project Sdk="Microsoft.NET.Sdk" />');
+        const res = resolve_toolchain(tmp);
+        expect(res.confidence).toBe(MEDIUM);
+        expect(res.selected.map((r) => r.command)).toContain('dotnet test');
+    });
+
     it('dotnet-test PRESENT: a bare project file with NO test stack is MEDIUM', () => {
         // `_overall_confidence` is "some HIGH wins", so HIGH here used to raise
         // a whole repository and push `dotnet test` into `selected` — a command
@@ -753,14 +765,22 @@ describe('stack/runner — behaviour-runner axis', () => {
         expect(resolve_behavior_runners(tmp).map((r) => r.runner)).toEqual(['behave']);
     });
 
-    it('reqnroll wins over specflow when a project file names both', () => {
-        // Reqnroll is SpecFlow's maintained successor; a project mid-migration
-        // carries both strings, and the newer one is the one being run.
+    it('reqnroll and specflow together REFUSE, they do not resolve by precedence', () => {
+        // This asserted `['reqnroll']` and that was the defect. Reqnroll is
+        // SpecFlow's successor, so a mid-migration project naming both looks
+        // like a precedence question — but the detector reads the CONCATENATED
+        // text of every project in the scope, so it cannot tell that case from
+        // two sibling projects on different runners. Picking the newer label
+        // was a guess dressed as a rule, in the one ecosystem that reads
+        // across projects. Refusing names both and lets the owner settle it.
         write(
             'Tests.csproj',
             '<Project><PackageReference Include="Reqnroll" /><PackageReference Include="SpecFlow" /></Project>',
         );
-        expect(resolve_behavior_runners(tmp).map((r) => r.runner)).toEqual(['reqnroll']);
+        const rows = resolve_behavior_runners(tmp);
+        expect(rows).toHaveLength(1);
+        expect(rows[0]?.runner).toBe(BEHAVIOR_UNKNOWN);
+        expect(rows[0]?.conflict).toEqual(['reqnroll', 'specflow']);
     });
 
     it('the axis rides on to_config and never reaches `selected`', () => {
@@ -921,6 +941,25 @@ describe('stack/runner — behaviour-runner axis', () => {
         write('App.sln', 'Microsoft Visual Studio Solution File\n');
         write('src/App.Specs/App.Specs.csproj', '<Project><PackageReference Include="Reqnroll" /></Project>');
         expect(resolve_behavior_runners(tmp).map((r) => r.runner)).toEqual(['reqnroll']);
+    });
+
+    it('a .slnx solution descends exactly like a .sln', () => {
+        write('App.slnx', '<Solution />');
+        write('src/App.Specs/App.Specs.csproj', '<Project><PackageReference Include="Reqnroll" /></Project>');
+        expect(resolve_behavior_runners(tmp).map((r) => r.runner)).toEqual(['reqnroll']);
+    });
+
+    it('CONFLICT: reqnroll and specflow across one solution refuse, never pick', () => {
+        // `_dotnet_project_text` reads across the whole solution tree, so this
+        // is a conflict between two projects, not a mid-migration file.
+        write('App.sln', 'Microsoft Visual Studio Solution File\n');
+        write('src/A/A.csproj', '<Project><PackageReference Include="Reqnroll" /></Project>');
+        write('src/B/B.csproj', '<Project><PackageReference Include="SpecFlow" /></Project>');
+        const rows = resolve_behavior_runners(tmp);
+        expect(rows).toHaveLength(1);
+        expect(rows[0]?.runner).toBe(BEHAVIOR_UNKNOWN);
+        expect(rows[0]?.ecosystem).toBe('dotnet');
+        expect(rows[0]?.conflict).toEqual(['reqnroll', 'specflow']);
     });
 
     it('with NO solution at the root, a workspace package stays its own scope', () => {

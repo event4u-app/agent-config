@@ -27,7 +27,8 @@ tests in the framework the project actually uses, never a hard-coded one:
 
 - **PHP** → Pest (`pestphp/pest`) or PHPUnit.
 - **JS/TS** → Vitest or Jest. **Python** → pytest. **Go** → `testing`.
-  **Rust** → `#[test]`.
+  **Rust** → `#[test]`. **Ruby** → RSpec. **JVM** → JUnit.
+  **.NET** → `dotnet test`.
 
 **The resolver is the only stack authority, and `skills:` deliberately names
 none.** The frontmatter used to bind `pest-testing` unconditionally, so a
@@ -35,8 +36,11 @@ React-only repository loaded PHP testing guidance before reading the sentence
 above telling it not to. There is no per-stack skill to bind instead — `ls
 src/skills | grep -iE 'jest|vitest|pytest|rspec|junit'` is empty — and a static
 list cannot express a per-repository answer, so the binding drops to the
-stack-neutral pair and the stack skill, where one exists for the resolved
-runner, is loaded on the resolver's verdict rather than ahead of it.
+stack-neutral pair. Nothing replaces it: step 1 above is the only stack
+authority this command has, and no later step loads a skill by runner label.
+An earlier version of this paragraph claimed such a load existed; it does not,
+and the sibling `/tests execute` makes no equivalent claim for the same
+removal.
 
 Then read the existing tests under the project's test directory to match
 the style and conventions already in use (assertion shape, naming, fixtures).
@@ -104,7 +108,11 @@ funnel per changed behavior — enumerate first, write second:
 
 ### 7. Verify
 
-- Run the tests locally in the PHP container to make sure they pass.
+- Run the tests locally with the command step 1 resolved — the same runner the
+  tests were written for. Reach for a container only when the resolved stack
+  calls for one, exactly as `/tests execute` branches on the resolved tool
+  before reaching for Docker. This step used to say "in the PHP container"
+  unconditionally, which contradicted step 1 in the same file.
 - If a test fails, fix it — don't just delete it.
 
 ### Rules

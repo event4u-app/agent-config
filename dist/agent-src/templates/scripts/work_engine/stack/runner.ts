@@ -119,6 +119,12 @@ const _MANIFESTS = [
     'pom.xml',
     'build.gradle',
     'build.gradle.kts',
+    // `settings.gradle[.kts]` is a Gradle signal `_jvm_build` acts on, so it
+    // must be in the key: a settings-only multi-project root emits a junit row
+    // and would otherwise report `mtime: 0`, the greenfield sentinel, and
+    // never invalidate its cached config.
+    'settings.gradle',
+    'settings.gradle.kts',
     'global.json',
     'Directory.Build.props',
 ];
@@ -163,12 +169,15 @@ const _DOTNET_SCAN_DEPTH = 2;
 /** Ceiling on project files read per scope, once the descent is entered at all. */
 const _DOTNET_MAX_PROJECTS = 50;
 
+/** Solution extensions — named once, so the descent and its hit test agree. */
+const _DOTNET_SOLUTION_EXTS = ['.sln', '.slnx'];
+
 /** Does this scope hold a solution file? The precondition for descending. */
 function _has_dotnet_solution(dir: string): boolean {
     try {
         return fs
             .readdirSync(dir)
-            .some((n) => ['.sln', '.slnx'].includes(path.extname(n).toLowerCase()));
+            .some((n) => _DOTNET_SOLUTION_EXTS.includes(path.extname(n).toLowerCase()));
     } catch {
         return false;
     }
@@ -179,7 +188,9 @@ function _has_dotnet_solution(dir: string): boolean {
  *
  * Two lists rather than one because they are SOURCED differently, not because
  * they are consulted differently: `_MANIFESTS` is the set whose presence
- * selects an ecosystem, and this is the set the behaviour detector reads. The
+ * selects an ecosystem, and this is the rest of what the resolver reads —
+ * mostly behaviour markers, plus `.rspec`, which only the NATIVE ruby branch
+ * opens and which lives here because it has nowhere better to go. The
  * one place both are used — {@link latest_manifest_mtime} — concatenates them
  * and stats every name in every scope, so an earlier version of this note
  * claiming they are "consulted at different scopes" described a distinction
@@ -771,11 +782,18 @@ function _jvm_runners(build: JvmBuild): RunnerResult[] {
  * mstest), and a bare project or solution file is MEDIUM — it is the analogue
  * of the bare manifest, not of the named runner.
  *
- * This is not cosmetic. `_overall_confidence` is "some HIGH wins", so a bare
- * non-test project file used to raise a whole repository to HIGH and push
- * `dotnet test` into `selected` — a command that fails on a solution carrying
- * no test project. The Ruby branch in this same module refuses exactly this
- * class of guess.
+ * What the downgrade buys, stated exactly: `_overall_confidence` is "some
+ * HIGH wins", so a bare non-test project file no longer raises the WHOLE
+ * repository's confidence to HIGH, and the row's own `confidence` tells a
+ * caller the label is a heuristic.
+ *
+ * What it does NOT buy, because an earlier version of this comment claimed it
+ * and was wrong: the row still reaches `selected`. `_apply_guard` filters on
+ * `speed` and `php_only` only — it has never read `confidence`, for any
+ * ecosystem — so `dotnet test` is still offered on a solution that may carry
+ * no test project, exactly as a MEDIUM `phpunit` or `pytest` default is. A
+ * confidence-aware guard would change selection for every ecosystem at once
+ * and is not this change's to make.
  */
 function _dotnet_basis(root: string): { basis: string; confidence: string } | null {
     let names: string[];
@@ -994,12 +1012,20 @@ function _behavior_runners_in_scope(dir: string, scope: string): BehaviorRunnerR
         );
     }
 
+    // Two rows, not an `else if`. The chain was a silent pick: because
+    // `_dotnet_project_text` concatenates every project in a solution tree, a
+    // solution holding one Reqnroll project and one SpecFlow project collapsed
+    // to a single HIGH `reqnroll` row with an empty `conflict` — the exact
+    // guess the refusal doctrine exists to prevent, in the one ecosystem that
+    // reads across projects. Emitting both lets the per-ecosystem grouping in
+    // `resolve_behavior_runners` refuse, as it does for python.
     const dotnet_text = _dotnet_project_text(dir);
     if (/\bReqnroll\b/i.test(dotnet_text)) {
         out.push(
             new BehaviorRunnerResult('dotnet', 'reqnroll', 'dotnet test', scope, HIGH, 'Reqnroll in a project file'),
         );
-    } else if (/\bSpecFlow\b/i.test(dotnet_text)) {
+    }
+    if (/\bSpecFlow\b/i.test(dotnet_text)) {
         out.push(
             new BehaviorRunnerResult('dotnet', 'specflow', 'dotnet test', scope, HIGH, 'SpecFlow in a project file'),
         );
@@ -1050,9 +1076,13 @@ function _dotnet_project_text(dir: string): string {
                     return;
                 }
                 texts.push(_read_text(path.join(at, e.name)));
-                // A `.sln` names no packages, so finding one is not a reason to
-                // stop descending; a real project file is.
-                hit = hit || path.extname(e.name).toLowerCase() !== '.sln';
+                // A SOLUTION names no packages, so finding one is not a reason
+                // to stop descending; a real project file is. `.slnx` is a
+                // solution too — testing only `.sln` made an `App.slnx` root
+                // set `hit` on the solution itself and never descend, which
+                // disabled the HIGH tier and both .NET behaviour labels in
+                // exactly the layout the descent exists for.
+                hit = hit || !_DOTNET_SOLUTION_EXTS.includes(path.extname(e.name).toLowerCase());
             }
         }
         if (hit || !solution || depth >= _DOTNET_SCAN_DEPTH) {
