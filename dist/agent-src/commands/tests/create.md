@@ -5,7 +5,7 @@ pack: engineering-base
 visibility: internal
 cluster: tests
 sub: create
-skills: [test-case-discovery, pest-testing, quality-tools]
+skills: [test-case-discovery, quality-tools]
 description: Write meaningful tests for the current branch — stack-adaptive (pest / phpunit / vitest / jest / pytest / …)
 suggestion:
   eligible: false
@@ -27,7 +27,18 @@ tests in the framework the project actually uses, never a hard-coded one:
 
 - **PHP** → Pest (`pestphp/pest`) or PHPUnit.
 - **JS/TS** → Vitest or Jest. **Python** → pytest. **Go** → `testing`.
-  **Rust** → `#[test]`.
+  **Rust** → `#[test]`. **Ruby** → RSpec. **JVM** → JUnit.
+  **.NET** → `dotnet test`.
+
+**The resolver is the only stack authority, and `skills:` deliberately names
+no single-stack skill.** Binding `pest-testing` unconditionally made a
+React-only repository load PHP testing guidance before it reached the sentence
+above telling it not to, and a static list cannot express a per-repository
+answer. So the frontmatter keeps only stack-neutral skills and the load is
+**resolver-conditional**: once step 1 has named the runner, load the skill for
+THAT runner if one exists — `pest-testing` for pest, `laravel` for
+`php artisan test`, `playwright-testing` for playwright. Unconditional became
+conditional; it did not become nothing.
 
 Then read the existing tests under the project's test directory to match
 the style and conventions already in use (assertion shape, naming, fixtures).
@@ -95,7 +106,10 @@ funnel per changed behavior — enumerate first, write second:
 
 ### 7. Verify
 
-- Run the tests locally in the PHP container to make sure they pass.
+- Run the tests locally with the command step 1 resolved — the same runner the
+  tests were written for. Reach for a container only when the resolved stack
+  calls for one, exactly as `/tests execute` branches on the resolved tool
+  before reaching for Docker.
 - If a test fails, fix it — don't just delete it.
 
 ### Rules
