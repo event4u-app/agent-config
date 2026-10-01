@@ -474,14 +474,26 @@ function _numeric_exit_field(obj: StateDict): number | null {
  * raw-payload invocation carries only the first and a synthesised envelope only
  * the second.
  *
- * Matched on a `Failure` suffix rather than one literal name. The one observed
- * spelling is `PostToolUseFailure`; a host naming its own failure event
- * differently is caught by the suffix, and the cost of a false positive is
- * bounded to refusing to record a zero — never to recording one.
+ * An explicit set of OBSERVED names, with a suffix match behind it as a declared
+ * fallback rather than as the primary rule. A reviewer called the suffix-only
+ * form a maintenance trap and was right about the direction: the set is what a
+ * reader checks against the manifest, and `PostToolUseFailure` is the one
+ * spelling this package has actually seen a host send.
+ *
+ * The fallback is kept, and keeping it is the deliberate half. A host whose
+ * failure event this tree has never observed is exactly the case where guessing
+ * wrong is cheapest in one direction and expensive in the other: a false
+ * positive costs a refusal to record a zero, a false negative costs a
+ * manufactured pass on a red run. So the set is the rule and the suffix is the
+ * safe default for a name nobody here has met yet.
  */
+export const FAILURE_EVENT_NAMES: ReadonlySet<string> = new Set(["PostToolUseFailure"]);
+
 function _is_failure_event(payload: StateDict, envelope: StateDict): boolean {
   for (const v of [payload["hook_event_name"], envelope["native_event"]]) {
-    if (typeof v === "string" && /failure$/i.test(v)) return true;
+    if (typeof v !== "string" || v === "") continue;
+    if (FAILURE_EVENT_NAMES.has(v)) return true;
+    if (/failure$/i.test(v)) return true;
   }
   return false;
 }

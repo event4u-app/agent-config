@@ -28,7 +28,11 @@ import { beforeEach, afterEach, describe, expect, it } from 'vitest';
 
 import { parse as parseYaml } from 'yaml';
 
-import { run, statePathFor } from '../../src/scripts/before_complete_hook.js';
+import {
+    FAILURE_EVENT_NAMES,
+    run,
+    statePathFor,
+} from '../../src/scripts/before_complete_hook.js';
 import { build_claude_hook_matrix } from '../../src/scripts/_lib/claude_settings_hooks.js';
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
@@ -238,6 +242,14 @@ describe('parsing — the record carries the exit code', () => {
             );
             expect(runs(tmp)[0]?.['exit_code']).toBeNull();
         }
+    });
+
+    it('the observed failure event is named explicitly, and the manifest binds it', () => {
+        // The set is what a reader checks against the manifest; the suffix
+        // fallback below it covers a name this tree has never seen.
+        expect(FAILURE_EVENT_NAMES.has('PostToolUseFailure')).toBe(true);
+        const matrix = build_claude_hook_matrix(MANIFEST);
+        for (const name of FAILURE_EVENT_NAMES) expect(Object.keys(matrix)).toContain(name);
     });
 
     it('a non-zero on a failure event is recorded unchanged', () => {
