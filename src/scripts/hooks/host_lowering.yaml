@@ -87,7 +87,7 @@ hosts:
         verified:
           docs_at: 2026-09-29
           docs_url: https://code.claude.com/docs/en/hooks.md
-          docs_digest: null
+          docs_digest: 9dd68316c1111c118e3ddb82861ac6271a8cd164cee0d371b26165efff35fe88
           probe_at: 2026-09-06
           host_version: 2.1.263
           expires: 2027-09-06
@@ -117,7 +117,7 @@ hosts:
         verified:
           docs_at: 2026-09-29
           docs_url: https://docs.augmentcode.com/cli/hooks.md
-          docs_digest: null
+          docs_digest: e500823be8303717020c1823f670e06d100108f6e3ac4b8d12a46d91fd1898fa
           probe_at: null
           host_version: null
           expires: 2027-09-29
@@ -148,7 +148,7 @@ hosts:
         verified:
           docs_at: 2026-09-29
           docs_url: https://cursor.com/docs/hooks.md
-          docs_digest: null
+          docs_digest: 7294a2d63b19d79a5283c948afe174cba8b06a7585563d34a2c41b90f5df0d39
           probe_at: null
           host_version: null
           expires: 2027-09-29
@@ -180,7 +180,7 @@ hosts:
         verified:
           docs_at: 2026-09-29
           docs_url: https://docs.cline.bot/customization/hooks.md
-          docs_digest: null
+          docs_digest: ef87561721f4cb80fe6d682b6866d638a4952dd416d36cd5ab398426ce64084b
           probe_at: null
           host_version: null
           expires: 2027-09-29
@@ -205,7 +205,7 @@ hosts:
         verified:
           docs_at: 2026-09-29
           docs_url: https://docs.devin.ai/desktop/cascade/hooks.md
-          docs_digest: null
+          docs_digest: 460ffe7aa91998804920f6722c0153b9948eadd5edafa19582298475a19835a2
           probe_at: null
           host_version: null
           expires: 2027-09-29
@@ -231,7 +231,7 @@ hosts:
         verified:
           docs_at: 2026-09-29
           docs_url: https://geminicli.com/docs/hooks/reference.md
-          docs_digest: null
+          docs_digest: 06d37f2f66812ee78bb46c37a112203376f0bae4d3b8b44ac79d0bda4b86a118
           probe_at: null
           host_version: null
           expires: 2027-09-29
@@ -289,7 +289,7 @@ hosts:
         verified:
           docs_at: 2026-09-29
           docs_url: https://docs.github.com/en/copilot/concepts/agents/hooks.md
-          docs_digest: null
+          docs_digest: bfd40aa93ad62133efc17a50f189034f01594dc89a5d31a13a0c541d691acede
           probe_at: null
           host_version: null
           expires: 2027-09-29
@@ -320,7 +320,7 @@ hosts:
         verified:
           docs_at: 2026-09-29
           docs_url: https://developers.openai.com/codex/hooks.md
-          docs_digest: null
+          docs_digest: 724881d81f1a9fdb35ea42d4851a11b1f6606bbc6e9d2d05c1e8c466fc25c630
           probe_at: null
           host_version: null
           expires: 2027-09-29

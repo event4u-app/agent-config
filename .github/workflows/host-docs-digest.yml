@@ -1,0 +1,69 @@
+name: Host Docs Digest Watch
+
+# READ-ONLY watcher for the "a vendor rewrote its hooks contract and nothing
+# noticed" failure mode (road-to-hooks-on-every-host Phase 1.3).
+#
+# `src/scripts/hooks/host_lowering.yaml` records, per host, the page each row's
+# answers were read off and the sha256 of that page's body on the day it was
+# read. Without this job the only thing watching those pages is the row's own
+# `expires`, which is up to a year out — so a host could change its refusal
+# contract and every gate in this tree would stay green for months.
+#
+# WHAT THIS JOB DOES NOT DO, deliberately. It never writes to the table and it
+# never opens a pull request. A changed body is evidence that the page MOVED,
+# not a reading of what it now says, and the one thing this package must not do
+# is adopt upstream text automatically — that would turn a vendor's edit into
+# this package's claim without a human ever reading it. The job goes red; a
+# human reads the page; the row is re-established by hand with
+# `./scripts-run src/scripts/check_host_docs_digest --fetch --write`, which is
+# what moves `expires` and what carries its own ratification artifact (the
+# table is on `check_kernel_edit_ratified`'s plumbing list).
+#
+# So: red here means "go read a page", never "something is broken in this repo".
+#
+# Unreachable is not drift. `--strict-fetch` is deliberately NOT passed: a
+# flaky vendor host or a runner with no egress establishes nothing about the
+# page, and a watcher that cried wolf on every 503 would be muted within a
+# month. Unreachable rows are listed in the log and the job stays green.
+
+on:
+  schedule:
+    # Weekly, not daily. The rows carry year-long `expires` values and the
+    # signal this watches moves on the order of product releases, so a daily
+    # run would spend 7x the vendor requests for the same finding. Monday
+    # early-UTC so a drift is in front of a human at the start of a week.
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: host-docs-digest
+  cancel-in-progress: true
+
+jobs:
+  digest-watch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          ref: main
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # `./scripts-run` execs node_modules/.bin/tsx — without this the job dies
+      # at exit 127 and a real drift is indistinguishable from a broken runner.
+      - name: Install Node deps
+        run: |
+          npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
+            || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
+
+      - name: Re-fetch each host docs page and compare (read-only)
+        run: ./scripts-run src/scripts/check_host_docs_digest --fetch
