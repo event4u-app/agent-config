@@ -1092,15 +1092,33 @@ export function main(argv?: readonly string[]): number {
 function selfTest(): number {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'enforcement-matrix-'));
     const lowering = _read(ROOT, LOWERING_REL) ?? '';
-    const plant = (name: string, mutate: (region: string) => string): string => {
+    const manifest = _read(ROOT, MANIFEST_REL) ?? '';
+    /**
+     * Plant a fixture tree carrying BOTH generated regions.
+     *
+     * The manifest is copied in alongside the lowering table because the
+     * severity region is derived from the two together — without it
+     * `concernSlotAudit` reads nothing and every severity case would exercise
+     * an empty table, which is a fixture that cannot fail.
+     */
+    const plant = (
+        name: string,
+        mutate: (region: string) => string,
+        mutateSeverity: (region: string) => string = (r) => r,
+    ): string => {
         const dir = path.join(tmp, name);
         fs.mkdirSync(path.join(dir, path.dirname(LOWERING_REL)), { recursive: true });
+        fs.mkdirSync(path.join(dir, path.dirname(MANIFEST_REL)), { recursive: true });
         fs.mkdirSync(path.join(dir, path.dirname(DOC_REL)), { recursive: true });
         fs.writeFileSync(path.join(dir, LOWERING_REL), lowering, 'utf-8');
-        const region = renderRegion(parseHostLowering(lowering));
+        fs.writeFileSync(path.join(dir, MANIFEST_REL), manifest, 'utf-8');
+        const table = parseHostLowering(lowering);
+        const region = renderRegion(table);
+        const severity = renderSeverityRegion(concernSlotAudit(dir, table));
         fs.writeFileSync(
             path.join(dir, DOC_REL),
-            `# fixture\n\n${BEGIN_MARKER}\n${mutate(region)}\n${END_MARKER}\n`,
+            `# fixture\n\n${BEGIN_MARKER}\n${mutate(region)}\n${END_MARKER}\n\n` +
+                `${SEVERITY_BEGIN_MARKER}\n${mutateSeverity(severity)}\n${SEVERITY_END_MARKER}\n`,
             'utf-8',
         );
         return dir;
@@ -1111,9 +1129,44 @@ function selfTest(): number {
     try {
         return runSelfTest({
             gate: GATE,
-            minCases: 5,
-            minRejectCases: 4,
+            minCases: 8,
+            minRejectCases: 7,
             cases: [
+                // road-to-blocking-severities 1.2 — the two dishonesty classes
+                // the council asked to FAIL rather than report. Both are planted
+                // by hand, because a generator that could emit either is the bug
+                // these cases exist to catch, so a generated fixture could not
+                // demonstrate one.
+                {
+                    name: 'a published `refusal` on a slot whose block_exit is null is rejected',
+                    expect: 'reject',
+                    run: () =>
+                        run(
+                            plant('overstate', (r) => r, (s) =>
+                                s.replace('| `warning-only` |', '| `refusal` |'),
+                            ),
+                        ),
+                },
+                {
+                    name: 'a published `warning-only` on a slot with no lowering row is rejected',
+                    expect: 'reject',
+                    run: () =>
+                        run(
+                            plant('understate', (r) => r, (s) =>
+                                s.replace('| `unverified` |', '| `warning-only` |'),
+                            ),
+                        ),
+                },
+                {
+                    name: 'an enforcement value outside the closed vocabulary is rejected',
+                    expect: 'reject',
+                    run: () =>
+                        run(
+                            plant('enf-vocab', (r) => r, (s) =>
+                                s.replace('| `unverified` |', '| `advisory` |'),
+                            ),
+                        ),
+                },
                 {
                     name: 'a cell claiming `halt-by-state`, which nothing emits, is rejected',
                     expect: 'reject',
