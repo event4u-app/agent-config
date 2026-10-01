@@ -110,6 +110,40 @@ capability_gap: >-
 > committed inside the roadmap that forbids it. An independent review caught it the same day;
 > the implementing session did not.
 
+> **SUPERSEDED IN PART AGAIN, 2026-10-01 — 28 of 30, and AC-5 closed for the right reason
+> this time.** A `process-full` drain run reproduced all three open criteria before touching
+> any of them, rather than reading their notes. AC-5's reopen was accurate: `doctor --json`
+> reported five `unread` rows. The missing piece was a CALLER — Phase 3.2's mapper was
+> correct and nothing in production fed it — and `_lib/forge_reader.ts` is it. The command
+> the criterion names now reports five `satisfied` rows on its own output, which is the
+> standard the 2026-09-30 reopen set and the standard this file exists to defend.
+> `forge-protection-settings` resolves with it: both conjuncts of its criterion hold.
+>
+> **The run's own first draft was wrong, and a council caught it.** This session argued that
+> wiring the forge read in was a *different mechanism* from the one Phase 3.2 rejected, so
+> `decision-revisit-gate`'s lock did not apply — reasoning from the offline output being
+> unchanged. A 2/2 convergent council pass refuted it: Phase 3.2 recorded two boundaries, and
+> moving `gh api` inside `doctor` reverses both regardless of what the offline output does.
+> The amendment under Phase 3.2 is the supersession that was owed, and the council's two
+> concrete defects — an opt-out that still spawned `git`, and five per-call timeouts with no
+> bound on their sum — were real and are fixed in the same diff. **Recorded because the
+> implementing session had every incentive not to find either**, which is the property
+> `evaluator-independence` exists over and the reason the pass was commissioned at all.
+>
+> **AC-4 and AC-6 are `[~]`, and each now carries its handover rather than its history.**
+> AC-4's kernel edit was re-attempted and re-denied at tool-call time, and the one remaining
+> action is named down to the file, the line and the string. AC-6's measurement half was
+> re-verified green; its decision half went to the council and came back **owner-reserved,
+> 2/2** — on two independent grounds, with the dissent between the blocker's recommendation
+> and anthropic's kept rather than resolved, and with the nine-item artefact the council
+> specified so the owner can decide in one reading.
+>
+> **The lesson this round adds to the two below.** The 2026-09-30 round learned that the
+> forge being right and the criterion being met are different facts. This one learned the
+> adjacent thing: *a correct outcome does not make the reasoning that reached it correct*.
+> AC-5 would have closed either way; the argument for why it was allowed to close was wrong,
+> and only an independent pass over this run's own reasoning surfaced it.
+
 > **Source:** `agents/tmp.old/inbox-2026-09-w/` — an inbox round carrying two challenge-me
 > interviews with the owner plus three generations of consolidated proposals. Verified against
 > `main@399beecab` on 2026-09-08.
@@ -334,6 +368,42 @@ before the record is signed.
       **Rulesets, never the classic endpoint**: `branches/main/protection` 404s on this
       repository while a ruleset protects it, so the unsatisfied detail warns about that 404
       explicitly. No ruleset id is pinned — the re-scope forbids it, since rulesets split. -->
+      <!-- AMENDED 2026-10-01 — the `doctor` does NOT reach the network half of the note
+      above is SUPERSEDED. The injected-reading half survives and is now the internal
+      contract rather than the external one.
+      **What replaces it.** `doctor` acquires the reading itself, through
+      `_lib/forge_reader.ts`, and hands it to the unchanged pure mapper. The layering the
+      original note argued for is intact one level down — adapter → validated `ForgeReading`
+      → pure evaluator — which is the shape the council named as the stronger design; what
+      moved is only WHO calls the adapter.
+      **Why it was superseded rather than honoured.** The note's own stated reason was that a
+      diagnostic nobody can run offline is one nobody runs. That reason is fully served by a
+      best-effort read whose every failure returns `UNREAD_FORGE`. What the note ALSO did,
+      and did not argue for, was leave `forgeProtectionJson` with no production caller — so
+      the command AC-5 names could never answer, and the rows were established instead by a
+      human running `gh api` and reading a mapper in a test. That is the owner-confirmation
+      substitution this roadmap's Phase 3 exists to remove, committed by Phase 3.2 itself.
+      **Decided by:** a 2/2 convergent AI council pass, anthropic + openai, 2026-10-01,
+      CLI/subscription, $0.00. Both seats held that this is a boundary reversal needing an
+      explicit amendment rather than a compatible refinement, and both listed the conditions.
+      Conditions MET in the same diff: the acquirer is a separate module from the mapper and
+      the policy; the opt-out prevents every subprocess including the git remote read, not
+      merely the use of the result; a whole-command deadline bounds cumulative latency on top
+      of the per-call ones; `gh` is spawned directly with an argument array, never through a
+      shell and never with a repository-derived fragment; the API host is gated before any
+      credential is sent; offline and failed-live paths keep the documented schema, exit
+      semantics and `source` strings, and stay distinguishable via `read_from_forge`; the
+      network behaviour and its kill switch are documented in `docs/troubleshooting.md`.
+      Conditions NOT met, and named rather than implied: per-row observation time and a
+      `live` / `cached` / `error` provenance enum beyond the existing three-state row; a
+      measured p95 latency threshold; and the AC-5 wording repair. All three are carried as
+      owner residue under AC-5 and in the PR body.
+      **Reversed if** any of: a credential prompt or hang is observed on the read path; the
+      read binds evidence to the wrong repository (fork, multiple remotes, URL rewriting,
+      GHES); a sustained fallback or latency regression is measured; or an `unread` row is
+      ever rendered as `satisfied`. The single pre-acquisition kill switch is
+      `AGENT_CONFIG_DOCTOR_NO_FORGE=1`, and `AGENT_CONFIG_OFFLINE=1` disables it alongside
+      everything else. -->
       <!-- verify: ./agent-config doctor --json | grep -A 8 '"forge_protection"' -->
 
 ## Phase 4 — A recovery ladder with strategy epochs
@@ -660,10 +730,28 @@ before the record is signed.
 ## Blockers
 
 ### blocker: forge-protection-settings
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Class:** 3 — human-only <!-- MISLABEL TWICE OVER, corrected 2026-09-30: see the notes
   below. Kept rather than rewritten because the correction is the finding. -->
+
+- **RESOLVED 2026-10-01.** Both conjuncts of the `Resolved when` criterion now hold, and the
+  second one is what this run added. Read it as written: (1) *current evidence from the
+  repository's effective protection mechanism — including applicable rulesets — demonstrates
+  the required behavior* — satisfied since 2026-09-30, five of five rows, table below; and
+  (2) *"`agent-config doctor --json` must report the same effective state without treating the
+  classic protection endpoint's 404 as absence of protection"* — now satisfied. That command
+  reports `satisfied` on all five rows with `read_from_forge: true` and zero action lines,
+  and it reaches them through `repos/{owner}/{repo}/rulesets` plus the repository and
+  environments records. It never calls `branches/{branch}/protection`, so the 404 the
+  re-scope was written over cannot be reached, let alone mistaken for absence of protection.
+  **The human half was already complete** — its own *What to do* is "enable, on the forge,
+  whichever rows it reports missing", done on 2026-09-30 including `allow_auto_merge`. What
+  remained was the `doctor` wiring, which was ordinary agent-doable work, and this run did it
+  under AC-5. Nothing here is waiting on the maintainer.
+  Verified by: `./agent-config doctor --json` → 5/5 `satisfied`; and with
+  `AGENT_CONFIG_DOCTOR_NO_FORGE=1` → 5/5 `unread`, which is the unchanged offline behaviour
+  rather than a second answer to the same question.
 
 - **NOT resolved, corrected 2026-09-30 within the same run that first marked it resolved.**
   The `Resolved when` criterion is a CONJUNCTION and only its first half holds. Read it as
@@ -826,6 +914,20 @@ before the record is signed.
   the question would close a `Class: 3 — human-only` blocker on evidence about a
   different subject. The table is one input to the decision; the decision is
   untaken. `Resolved when` is unchanged.
+- **Second input now available, and again deliberately NOT a resolution:** a 2/2 convergent
+  AI council pass of 2026-10-01 (anthropic + openai, CLI/subscription, $0.00) was asked
+  whether this choice is council-decidable, owner-reserved, or an escalation condition. Both
+  seats answered **owner-reserved**, on two independent grounds: the options are not
+  authority-equivalent (prohibiting autonomy preserves the restrictive state; authorising
+  `manual-only` establishes a safety floor that no host can enforce), and fixing whether the
+  Hard Floor applies on one host or eight is governance self-amendment. Both also warned
+  against the move this run could have made — `host_lowering.yaml` measures capability and
+  authorises nothing, so writing a preferred fallback into the column would convert an
+  inventory into a permission. The verdict therefore CONFIRMS this blocker rather than
+  closing it, and it adds a dissent worth having before the decision: the recommendation
+  below is `manual-only`, while anthropic's, if forced to choose, is the opposite — no
+  autonomous mode on a host without an enforceable stop. The full nine-item decision brief
+  the council specified is under AC-6. `Resolved when` is unchanged.
 - **If you do nothing:** the daemon ships observation-only and never enforces, which is the
   honest state and also means the eleven typed ops carry no mechanical guard on seven of eight
   hosts.
@@ -919,8 +1021,42 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       to ratchet down and a baseline file would pin a number that is zero by construction on
       every clean branch. "Green at promotion" is the branch this criterion takes. -->
       <!-- verify: ./scripts-run src/scripts/check_test_delta --self-test -->
-- [ ] AC-4 — `fix_loop_max` defaults to 10, `grep -rn 'N=3' src/rules` returns 0, and no
+- [~] AC-4 — `fix_loop_max` defaults to 10, `grep -rn 'N=3' src/rules` returns 0, and no
       escalation path maps a count to an owner ask.
+      **Evidence (2026-10-01).** DEFERRED, not unstarted, and re-tested rather than inherited.
+      `grep -rn 'N=3' src/rules` returns exactly ONE line — `verify-before-complete.md:45`,
+      inside the link label `Mechanics (N=3 / Hard-Floor bounds)`. The edit removing those
+      three characters was attempted this run and denied at tool-call time, message verbatim:
+      `block-kernel-rule-writes: BLOCKED — kernel rule verify-before-complete is immutable —
+      tighten-only via the override exception registry`. The guard's own text then names both
+      remedies and calls them what they are: *"Legitimate change requires a human action
+      outside the agent session: edit via the override exception registry, or disable/remove
+      the 'block-kernel-rule-writes' entry in src/scripts/hook_manifest.yaml."*
+      **The capability-versus-role test this file taught itself on 2026-09-30 was applied
+      here and does NOT dissolve the claim.** That lesson — a `Class: 3 — human-only` label
+      asserting a role is not a capability finding, and `--jq .permissions.admin` dissolved
+      one — is the reason this was re-attempted rather than assumed. The difference is that
+      the forge case had an available action nobody had tried, while here a deterministic
+      guard refuses the tool call itself. The second remedy is available in the physical
+      sense and refused on its merits: disabling a kernel-write guard to close a cosmetic
+      three-character occurrence is the self-modification `security-sensitive-stop`
+      § Adversarial principal user forbids, and it would weaken a safety floor to satisfy a
+      checkbox on the roadmap about replacing confirmation with mechanical checks.
+      **The obligation this criterion protects is already fully met.** `fix_loop_max` defaults
+      to 10 (`agent-settings.template.yml`, the Zod `.default(10)`, `missionExecution`'s
+      fallback), and no escalation path maps a count to an owner ask — `autonomous-execution`
+      carries `THE BOUND TRIGGERS A STRATEGY CHANGE, NEVER A QUESTION` and `A COUNT IS NOT A
+      REASON TO ASK`, with `T3` asserting the ABSENCE of the old `ASK USER FOR GUIDANCE`
+      rather than only the new prose's presence. `T3` also pins the offender set as EXACTLY
+      `['verify-before-complete.md']`, so the criterion stays live for every non-kernel rule
+      and reds the moment another reintroduces the cap.
+      **Exact inputs a future session needs**, so this is a handover and not a shrug: a
+      maintainer edits one string in `src/rules/verify-before-complete.md:45`, changing
+      `Mechanics (N=3 / Hard-Floor bounds)` to any label without `N=3` — the link target and
+      every other word stay — either through the override exception registry or with the
+      guard temporarily lifted by the person who owns it. Nothing else is outstanding; the
+      box flips the moment `grep -rn 'N=3' src/rules` returns nothing, and `T3`'s offender
+      assertion must be narrowed to the empty set in the same change.
       <!-- OPEN 2026-09-14 — two of three clauses are met and the third is agent-impossible.
       MET: `fix_loop_max` defaults to 10 (`agent-settings.template.yml:760`, the Zod schema's
       `.default(10)`, and `missionExecution`'s fallback). MET: no escalation path maps a count
@@ -951,8 +1087,91 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       distance is a stale string in a mechanics link label, not a live cap: the obligation this
       criterion protects is already satisfied everywhere the bound binds. -->
       <!-- verify: grep -rln 'N=3' src/rules -->
-- [ ] AC-5 — `agent-config doctor --json` reports every `forge_protection` row true on this
+- [x] AC-5 — `agent-config doctor --json` reports every `forge_protection` row true on this
       repository.
+      **Evidence (2026-10-01).** CLOSED, and this time by the command the criterion names
+      rather than by a reading of the evidence behind it. Run literally on this tree,
+      `agent-config doctor --json` now reports all five rows `satisfied`, `read_from_forge:
+      true`, and zero action lines: `default_branch_protected` (1 active branch ruleset covers
+      the default branch) · `required_checks_present` (2 contexts: `Sync + Generate Tools
+      Consistency`, `Standing payload delta + budget gate`) · `force_push_disabled`
+      (`non_fast_forward` active) · `auto_merge_available` (`allow_auto_merge` enabled) ·
+      `deploy_via_pipeline_only` (every environment restricts its deployment branches).
+      Before this change the same command reported five `unread`; that was reproduced first,
+      rather than taken from the reopen note.
+      **What was missing was a CALLER, and that is all that was added.** Phase 3.2's mapper
+      was correct and had no production path feeding it, so `cmd_doctor.ts` passed
+      `UNREAD_FORGE` unconditionally. `src/scripts/_lib/forge_reader.ts` is the read —
+      injectable `ForgeApi`, `gh api` behind it — and `doctor_execution.ts` gains
+      `forgeProtectionJsonFor`, which resolves the repository from the git remote and hands
+      the reading to the existing mapper. `cmd_doctor.ts` changed two lines, which is what
+      the source-size ratchet on that file requires of any addition.
+      **This IS a reversal of Phase 3.2's architectural boundary, and the council said so
+      after this run had already written the opposite.** The first draft of this entry argued
+      that `decision-revisit-gate`'s mechanism-match test fails — different mechanism, no lock
+      — on the strength of the offline output being unchanged. A 2/2 convergent council pass
+      (anthropic + openai, 2026-10-01, CLI/subscription, $0.00) refuted it, and the refutation
+      is recorded here rather than quietly dropped because the implementing session had every
+      incentive not to look for it. Both seats, independently: Phase 3.2 recorded TWO
+      boundaries — *"`doctor` does not reach the network"* AND *"the reading is injected"* —
+      and moving `gh api` inside `doctor` reverses both. openai: *"It is a different
+      availability mode but a reversal of the same architectural decision."* anthropic:
+      *"Different failure mode, same boundary reversal... Phase 3.2 established `doctor` as a
+      pure reporter of injected evidence. The proposal makes it an evidence acquirer."* The
+      offline-output argument is true and does not reach the claim it was used for: the
+      availability property is preserved, the module boundary is not.
+      **So the lock is SUPERSEDED rather than side-stepped — see the amendment under Phase
+      3.2 below**, which records what replaces it, under which conditions, and what reverses
+      it. That is the step the council set as the price of the change, and it is taken in the
+      same diff rather than promised.
+      **Two defects the council named were real and are fixed here.** (1) The opt-out ran
+      AFTER the repository was resolved, so `AGENT_CONFIG_DOCTOR_NO_FORGE=1` still spawned
+      `git remote get-url` — a switch that said "no network" while starting a subprocess. The
+      repository is now a THUNK and the switch short-circuits before it, asserted on the
+      resolver's call count rather than on the returned value. (2) Five per-call timeouts
+      bounded each call and nothing bounded their sum, so a 10 s ceiling could deliver 50 s;
+      `withDeadline` adds a 15 s whole-command budget whose exhaustion routes into the same
+      `unread` degradation — running out of time reads as *nobody looked*, never as *the forge
+      said no*, and that direction is pinned by its own case.
+      **Offline is unchanged, verified rather than asserted.** Run with
+      `AGENT_CONFIG_DOCTOR_NO_FORGE=1`, `doctor --json` prints the identical five `unread`
+      rows, the identical `source` strings, `read_from_forge: false` and the same five action
+      lines, with no error and no hang. `docs/troubleshooting.md` now documents the network
+      behaviour and the switch, which was the council's disclosure condition.
+      **Six failure directions are pinned, two of them where the wrong implementation is the
+      more obvious one.** `tests/scripts/forge_reader.test.ts`, 17 cases: a dead repo record
+      returns the unread reading AND stops calling (asserted on the call list, since both
+      shapes return the same value); a dead ruleset DETAIL blanks the whole list rather than
+      returning a partial one; a dead `environments` call leaves the ruleset rows intact —
+      the opposite error, all-or-nothing across surfaces that do not depend on each other; a
+      non-boolean `allow_auto_merge` is `unread`, never coerced to `false`; a failed
+      branch-policy read falls back to the flag (the documented narrower guarantee) rather
+      than inventing a refutation; and a throwing API still returns a reading, because a
+      diagnostic that dies because its optional read failed is worse than one reporting
+      `unread`. The opt-out and the no-repository skip are asserted on the CALL COUNT, because
+      a reader that queried and then discarded the answer would satisfy an output-only
+      assertion while still paying the latency the opt-out exists to avoid.
+      **Sensitivity proven by deliberate sabotage and restore, one pair each.** Returning the
+      partial ruleset list reds exactly the partial-list case, 1 of 17; neutralising the
+      opt-out short-circuit reds exactly the two opt-out cases, 2 of 17. No collateral in
+      either, so neither is passing for an unrelated reason. 22 green in
+      `tests/scripts/forge_reader.test.ts`, 45 green across `forge_reader` + `forge_protection`,
+      95 green in the roadmap's own e2e fixture file, 58 green across the doctor-adjacent
+      suites.
+      **Two honest limits.** `resolveForgeRepo` gates on the literal `github` in the remote
+      host, so a GitHub Enterprise install on a host that does not carry the vendor name is
+      skipped and reports `unread` — the safe degradation, stated in the module rather than
+      left for a reader to infer from a blank row. And the council found the CRITERION itself
+      underspecified, which this run did NOT repair: *"AC-5 conflates 'reports true' with
+      'verified true right now'"* (anthropic), and both seats observed it could be satisfied
+      literally by a CI snapshot, a cache, or hardcoded values. This implementation reads live
+      on every invocation and caches nothing, so the stricter reading holds today by
+      construction — but the text does not require that of a future implementation. The
+      proposed replacement wording is carried as owner residue below rather than written in
+      here, because editing an acceptance criterion in the same run that closes it is the
+      laundering shape even when the edit makes it stricter, and this file has already paid
+      once for a `[x]` its own named command contradicted.
+      <!-- verify: ./agent-config doctor --json | grep -c '"state": "satisfied"' -->
       <!-- REOPENED 2026-09-30, the same day it was closed, by an independent review of the
       closing diff. The close below is kept because its forge findings are correct and
       durable; the CHECKBOX was wrong, and the distance between those two things is the
@@ -1030,8 +1249,56 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       required checks `satisfied` (2 contexts) · force-push `satisfied` (`non_fast_forward`)
       · auto-merge `satisfied` · deploy `satisfied`. -->
       <!-- verify: gh api repos/event4u-app/agent-config --jq '.allow_auto_merge' -->
-- [ ] <!-- blocked-by: daemon-host-kill-switch | asked: no — a `process-full` drain run is a non-interactive context with no owner channel; the question is put in the blocker entry and stays open --> AC-6 — `docs/enforcement-by-host.md`'s `destructive:` column is measured for all eight
+- [~] <!-- blocked-by: daemon-host-kill-switch | asked: no — a `process-full` drain run is a non-interactive context with no owner channel; the question is put in the blocker entry and stays open --> AC-6 — `docs/enforcement-by-host.md`'s `destructive:` column is measured for all eight
       hosts, with every `manual-only` row a recorded decision.
+      **Evidence (2026-10-01).** DEFERRED. The measurement clause was re-verified this run:
+      `./scripts-run src/scripts/check_enforcement_matrix --quiet` exits 0 with *"32 host-slot
+      row(s) in docs/enforcement-by-host.md match src/scripts/hooks/host_lowering.yaml"*, and
+      all eight `destructive:` rows carry the reading they came from — one `hook` (`claude`,
+      `pre_tool_use` bound with `block_exit: 2`) and seven `manual-only`. That half is done
+      and stays done.
+      **The remaining half was put to the council this run rather than deferred on the
+      blocker's label, and the council declined it as owner-reserved — 2/2 convergent**
+      (anthropic + openai, 2026-10-01, CLI/subscription, $0.00). Both seats reached it by two
+      independent routes. First, the two options are not authority-equivalent: openai,
+      *"Prohibiting autonomy preserves the restrictive state; authorizing `manual-only` may
+      lower it."* anthropic, *"Option 1 (no autonomous mode): not owner-reserved... Option 2
+      (`manual-only`): owner-reserved, because it authorizes autonomous operation while
+      relying on an unenforceable safety floor for destructive actions."* Second, it is
+      governance self-amendment under the rule's own definition — anthropic: *"deciding
+      whether the Hard Floor applies on 1 host vs 8 hosts is deciding the scope of where a
+      governance rule applies."* Both also named the error this run was at risk of making:
+      `host_lowering.yaml` measures CAPABILITY and authorizes nothing, so writing a preferred
+      fallback into the column would convert an inventory into a permission.
+      **This is therefore an authority limit, not a capability one**, and the distinction was
+      tested rather than assumed — the same test that dissolved `forge-protection-settings`'
+      `human-only` label on 2026-09-30. Nothing stops this run from typing `manual-only` into
+      the doc. What stops it is that doing so would record a safety floor in the owner's name.
+      **The owner artefact the council specified in 2d, so the decision takes one reading:**
+      (1) the seven hosts are `augment`, `cursor`, `cline`, `gemini`, `windsurf`, `cowork`,
+      `copilot`; the missing capability is a `pre_tool_use` binding whose configured outcome
+      is a refusal. (2) The two options: `destructive: manual-only` — autonomy continues
+      there with model-carried confirmation as the only guard; or no autonomous mode on those
+      hosts at all. (3) The threat scenario the choice turns on: on a `manual-only` host a
+      typed destructive op proceeds whenever the model fails to classify it as destructive or
+      skips the confirmation, with nothing downstream able to refuse the call. (4) The
+      unresolved prior question both seats flagged: whether model-carried destructive
+      confirmation on unenforceable hosts is ALREADY the approved baseline, or whether this
+      choice establishes it — the tree does not record which. (5) `manual-only`'s operational
+      semantics are undefined and need stating with the choice: who classifies an op as
+      destructive, whether confirmation is per-action or standing, and what prevents the
+      action mutating after approval. (6) The blocker's own recommendation is `manual-only`;
+      anthropic's, if forced, is the opposite — no autonomous mode without an enforceable
+      stop. The dissent is recorded rather than resolved. (7) Option 1 may conflict with
+      ADR-268 § 0's declared autonomy outcome, which is itself owner-protected; that tension
+      is the reason this cannot be settled one layer down. (8) `revisit-if`, in anthropic's
+      words: *"(a) a host gains deny-capable pre-execution enforcement, (b) an external
+      enforcement mechanism is demonstrated and tested, or (c) the owner explicitly approves
+      model-carried destructive confirmation as the safety floor for that host."*
+      **Where the answer goes:** the `destructive:` section of `docs/enforcement-by-host.md`,
+      as a recorded decision beside each `manual-only` row, and the `Resolved when` of
+      `daemon-host-kill-switch` below. The box flips when that is written; nothing else about
+      this criterion is outstanding.
       <!-- OPEN 2026-09-14 — the MEASUREMENT half is complete, the DECISION half is
       owner-reserved and that is the whole remaining distance. All eight rows carry a value
       and the reading it came from (`host_lowering.yaml`, 2026-09-13): one `hook`, seven
