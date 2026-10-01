@@ -44,7 +44,7 @@ prevent.
 ## The set hash
 
 ```
-SET-SHA256  034f791e368565b08d4cbd7498ffa7d32b41b5e4c513ed948df0e9933addf90b
+SET-SHA256  1f9e7de4cd4bb6275e801fabe3780c629f7dfd8cb3033f73c986facf18efd9b0
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for all
@@ -116,6 +116,38 @@ capability.
 Because the bytes have not moved since a commit that precedes the first proposer
 commit, the re-pin changes which number is written down and changes nothing about
 what the number certifies.
+
+## Re-pin 2026-10-01 — a TRAIN corpus grew; the seal did not move
+
+```
+ONE TRAIN ROW CHANGED. ZERO HOLDOUT ROWS CHANGED.
+THE SEAL AND THE ORDERING CLAIM ARE UNAFFECTED AND ARE RESTATED, NOT ASSUMED.
+```
+
+**What changed.** `road-to-behavior-vocabulary-and-runner-truth` rewrote
+`src/skills/test-case-discovery/evals/triggers.json` from 10 queries to 26, so
+that corpus's content hash moved and the set hash over all rows moved with it.
+
+| Row | Was | Now |
+|---|---|---|
+| `SET-SHA256` | `034f791e…` | `1f9e7de4…` |
+| `test-case-discovery` | `ab3208cc…` | `d3de03bc…` |
+
+**Why this does not touch the seal.** The partition is keyed on
+`sha256(<skill name>)`, never on the file's contents, so editing a corpus
+cannot move it across the boundary. `test-case-discovery` hashes to bucket
+**92**, against a `HOLDOUT_CEILING` of 51 — it is a **train** corpus and was
+one before this edit. Recomputing the recipe over the whole tree reports
+exactly one stale row, and **zero** of the 18 holdout rows are among them.
+
+**The ordering claim is untouched** rather than re-argued: it asserts that the
+holdout partition's content hash predates the first proposer commit, and no
+holdout byte moved here. What was re-pinned is the number that describes the
+train half of the same table.
+
+The guard that caught this is `tests/scripts/trigger_corpus_holdout_pin.test.ts`,
+which recomputes the recipe rather than trusting the published number — the
+check this file's 2026-08-31 correction exists because nobody had.
 
 ## Holdout — 18 files, sealed
 
@@ -226,7 +258,7 @@ open and which this file does not settle.
 | `spreadsheet-authoring` | `959466aba0e7f34aae0d8eb69ee427d94049627d905410b322045ac6be0a1599` |
 | `storybook-workshop` | `3aff4c3fddd06e0e265ca4afbb02cdbce16b000dd2d3fd6405504d015a1efd27` |
 | `supply-chain-intake` | `e61b2fcb6409cf0817ea8527a1fda3b1cdabb35e28264146a0d449991e9fe87c` |
-| `test-case-discovery` | `ab3208cc89e8c4c18c4ad4886e6a8893a184d801c57699f6037dbf2bc9d46ef3` |
+| `test-case-discovery` | `d3de03bcc1c284c27a460f9578f152034b977e1d3786c4717b468dd913d1771f` |
 | `typography-system` | `ab3dbde9a42077d682115a1707d6fa4686e5d3155eef0998f1e240b0b86bb73a` |
 | `ui-apply-generic` | `e3f02e3ba53fb96def30fca6752f400d15b6b63209072928bff9e239aaac7ec5` |
 | `ui-component-architect` | `a9b864a568aa32d2bccd96f524a69d24042f05cdd29b339d45bf9ff6b95b9da5` |
