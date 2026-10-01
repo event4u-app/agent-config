@@ -32,6 +32,7 @@
  *     ./scripts-run src/scripts/report_skill_ranker_confusion > out.md
  *     ./scripts-run src/scripts/report_skill_ranker_confusion --slice sealed
  *     ./scripts-run src/scripts/report_skill_ranker_confusion --ranker keyword-v2
+ *     ./scripts-run src/scripts/report_skill_ranker_confusion --date 2026-10-01
  */
 
 import * as path from 'node:path';
@@ -45,6 +46,7 @@ import {
     type SliceName,
     SLICE_NAMES,
     packsForSkill,
+    parseFlagValue,
     parseRanker,
     partitionBySlice,
     rankOptionsFor,
@@ -410,23 +412,22 @@ export function renderReport(opts: {
 }
 
 export function main(argv: readonly string[]): number {
-    const rawSlice = argv.includes('--slice') ? argv[argv.indexOf('--slice') + 1] : 'tuning';
-    if (!rawSlice || !SLICE_NAMES.includes(rawSlice as SliceName)) {
-        process.stderr.write(
-            `report_skill_ranker_confusion: --slice expects one of ${SLICE_NAMES.join(' | ')}, got ${rawSlice ?? '(nothing)'}\n`,
-        );
-        return 2;
-    }
-    const date = argv.includes('--date')
-        ? (argv[argv.indexOf('--date') + 1] ?? new Date().toISOString().slice(0, 10))
-        : new Date().toISOString().slice(0, 10);
     let body: string;
     try {
-        // An unknown or missing label must not reach the renderer: the label is
-        // printed in the report's own title and in the regenerate command beside
-        // it, so a typo would publish one configuration's number under another's
-        // name. `parseRanker` is the same check `--slice` already had.
+        // Every flag through the shared parsers, inside one guard. A typo or a
+        // missing value must not reach the renderer: the label is printed in the
+        // report's own title and in the regenerate command beside it, and the
+        // date is printed in its header, so a swallowed next-flag would publish
+        // one configuration's number under another's name or stamp `--slice` as
+        // the date. `parseSlice` is not reused here only because this tool's
+        // default is `tuning` rather than `all`; the legal set is the one
+        // shared constant, so the two cannot disagree about what is valid.
+        const rawSlice = parseFlagValue(argv, '--slice', 'tuning');
+        if (!SLICE_NAMES.includes(rawSlice as SliceName)) {
+            throw new Error(`--slice expects one of ${SLICE_NAMES.join(' | ')}, got ${rawSlice}`);
+        }
         const ranker = parseRanker(argv);
+        const date = parseFlagValue(argv, '--date', new Date().toISOString().slice(0, 10));
         body = renderReport({ repo: REPO, skillsDir: SKILLS_DIR, ranker, slice: rawSlice as SliceName, date });
     } catch (err) {
         process.stderr.write(`${(err as Error).message}\n`);

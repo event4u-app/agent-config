@@ -615,6 +615,26 @@ export function parseRanker(argv: readonly string[]): string {
     return raw;
 }
 
+/**
+ * A flag's value, or `fallback` when the flag is absent.
+ *
+ * A PRESENT flag followed by nothing — or by the next flag — is an error. Both
+ * `--commit` and `--date` are echoed verbatim into published artifacts (the
+ * baseline's provenance field, the confusion report's own header), so
+ * `--commit --ranker idf` silently publishing `--ranker` as the commit is the
+ * same silent-substitution class `parseRanker` was written to close, two flags
+ * over in the same two functions.
+ */
+export function parseFlagValue(argv: readonly string[], flag: string, fallback: string): string {
+    const i = argv.indexOf(flag);
+    if (i === -1) return fallback;
+    const raw = argv[i + 1];
+    if (!raw || raw.startsWith('--')) {
+        throw new Error(`${flag} expects a value, got ${raw ?? '(nothing)'}`);
+    }
+    return raw;
+}
+
 export function parseSlice(argv: readonly string[]): SliceName {
     const i = argv.indexOf('--slice');
     if (i === -1) return 'all';
@@ -628,15 +648,16 @@ export function parseSlice(argv: readonly string[]): SliceName {
 }
 
 export function main(argv: readonly string[]): number {
-    const commit = argv.includes('--commit') ? (argv[argv.indexOf('--commit') + 1] ?? 'unknown') : 'unknown';
     let corpus: CorpusName;
     let slice: SliceName;
     let ranker: string;
+    let commit: string;
     let out: RankerBaseline;
     try {
         corpus = parseCorpus(argv);
         slice = parseSlice(argv);
         ranker = parseRanker(argv);
+        commit = parseFlagValue(argv, '--commit', 'unknown');
         // Inside the same guard as the two parsers above: an unknown --ranker is
         // the same class of mistake and now gets the same exit code.
         out = measure({ ranker, commit, corpus, slice });

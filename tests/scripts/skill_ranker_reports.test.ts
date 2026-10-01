@@ -1,9 +1,18 @@
-// Tests for the three reporting tools added with the sealed-slice work:
-// report_skill_ranker_confusion, report_label_agreement, sweep_skill_ranker_signals.
+// Tests for the PURE REPORTING HELPERS added with the sealed-slice work, plus
+// the two prose decisions a generated report can get wrong.
 //
-// These produce the numbers a published evidence artifact quotes, so what is
-// worth guarding is not "does it divide" but the places a report can state
-// something its own data does not support:
+// Scope, stated because an earlier header overstated it: this file covers the
+// helpers in `report_skill_ranker_confusion` and `report_label_agreement`, the
+// body extractor they depend on, the slice-conditional prose `renderReport`
+// emits, and `sweep_skill_ranker_signals`' label guard. It does NOT cover the
+// end-to-end `sweep` run or `measureAgreement`, both of which read the live
+// 299-skill catalogue from disk — they are exercised by running the tools, and
+// pinning their output here would pin a hit rate, which is a measurement and
+// not a contract.
+//
+// These helpers produce the numbers a published evidence artifact quotes, so
+// what is worth guarding is not "does it divide" but the places a report can
+// state something its own data does not support:
 //
 //   1. a comparator that is not a total order — tied rows then come out in
 //      engine-defined order and the artifact's "regenerate every figure" claim
@@ -18,7 +27,11 @@
 // Fixture-derived throughout: every expectation is computed from constants
 // written here, never from the live corpus, so a corpus change cannot make a
 // stale number pass.
-import { describe, expect, it } from 'vitest';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
     agrees,
@@ -29,8 +42,11 @@ import {
     falseActivation,
     firstExpectedRank,
     meanReciprocalRank,
+    perPackTop1,
+    renderReport,
     type RowReading,
 } from '../../src/scripts/report_skill_ranker_confusion';
+import { main as sweepMain } from '../../src/scripts/sweep_skill_ranker_signals';
 import { _body_signals } from '../../src/scripts/skill_tools/score_skill_relevance';
 
 function reading(over: Partial<RowReading> = {}): RowReading {
@@ -283,5 +299,77 @@ describe('_body_signals — the bounds, asserted directly rather than through ra
         expect(got.whenToUse).not.toContain('leaked prose');
         // `#` is a document title, not a topic the ranker should index.
         expect(got.headings).toEqual(['When to use']);
+    });
+});
+
+describe('perPackTop1 — a total order, so the published table reproduces', () => {
+    let root: string;
+    beforeEach(() => {
+        root = fs.mkdtempSync(path.join(os.tmpdir(), 'ranker-reports-'));
+        for (const [name, pack] of [
+            ['alpha', 'one'],
+            ['beta', 'two'],
+            ['gamma', 'three'],
+        ] as const) {
+            const f = path.join(root, name, 'SKILL.md');
+            fs.mkdirSync(path.dirname(f), { recursive: true });
+            fs.writeFileSync(f, `---\nname: ${name}\ndescription: "d"\npacks:\n  - ${pack}\n---\n`);
+        }
+    });
+    afterEach(() => {
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('orders by top-1 ascending, then n descending, then pack name — and ties resolve', () => {
+        const rows: RowReading[] = [
+            { id: 'a', expected: ['alpha'], rankedFirst: 'x', topScore: 1, rankOfExpected: 2 },
+            { id: 'b', expected: ['beta'], rankedFirst: 'x', topScore: 1, rankOfExpected: 2 },
+            { id: 'c', expected: ['gamma'], rankedFirst: 'gamma', topScore: 1, rankOfExpected: 1 },
+        ];
+        const got = perPackTop1(rows, root);
+        expect(got.map((p) => p.pack)).toEqual(['one', 'two', 'three']);
+        // Feeding the same rows reversed must not change the order: the
+        // comparator used to return 1 for both argument orders on a full tie.
+        expect(perPackTop1([...rows].reverse(), root).map((p) => p.pack)).toEqual(got.map((p) => p.pack));
+    });
+});
+
+describe('renderReport — the slice sentence is derived, never hardcoded', () => {
+    const repo = path.resolve(__dirname, '..', '..');
+    const skillsDir = path.join(repo, 'src', 'skills');
+
+    // Guard #3 of this file's header. The generator used to say "the sealed
+    // slice is not read here" on EVERY run, including the `--slice sealed` one
+    // its own usage block documents — a published artifact asserting in prose
+    // the opposite of what its title says.
+    const render = (slice: 'tuning' | 'sealed' | 'all'): string =>
+        renderReport({ repo, skillsDir, ranker: 'keyword-v1', slice, date: '2026-10-01' });
+
+    it('says the sealed slice was NOT read only on the tuning run', () => {
+        expect(render('tuning')).toContain('The sealed slice is **not** read here');
+    }, 120_000);
+
+    it('says the sealed slice WAS read on the sealed run', () => {
+        const out = render('sealed');
+        expect(out).not.toContain('The sealed slice is **not** read here');
+        expect(out).toContain('READ the sealed slice');
+    }, 120_000);
+
+    it('names both slices on an `all` run', () => {
+        const out = render('all');
+        expect(out).not.toContain('The sealed slice is **not** read here');
+        expect(out).toContain('read BOTH slices');
+    }, 120_000);
+});
+
+describe('sweep — the label guard, which is the only thing a unit test can pin cheaply', () => {
+    it('refuses an unknown configuration rather than sweeping the baseline under its name', () => {
+        expect(sweepMain(['no-such-config'])).toBe(2);
+    });
+
+    it('refuses a prototype key, which `in` would have admitted', () => {
+        // `'constructor' in RANKER_LABELS` is true for any object literal.
+        expect(sweepMain(['constructor'])).toBe(2);
+        expect(sweepMain(['toString'])).toBe(2);
     });
 });

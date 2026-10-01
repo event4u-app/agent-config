@@ -1,9 +1,9 @@
 ---
 complexity: lightweight
-status: ready
+status: done
 execution:
   mode: autonomous
-estate_offset_exempt: "The skill ranker now has a powered measurement (top-1 0.208, n=390) and no roadmap that tries to move it: road-to-a-menu-whose-precision-is-measured built the instrument and closed on adoption, and the archived MCP-delivery roadmap's only ranker change measured null. Six of the round's sixteen reviews name ranker quality their first priority; parking or archiving an active roadmap to buy the slot would trade a measured gap for an unmeasured one."
+estate_offset_exempt: "SPENT 2026-10-01 — this roadmap is archived and the exemption it claimed is discharged, kept for the record rather than as a live claim. It read: the skill ranker now has a powered measurement (top-1 0.208, n=390) and no roadmap that tries to move it, so parking or archiving an active roadmap to buy the slot would trade a measured gap for an unmeasured one."
 relates:
   - slug: road-to-a-menu-whose-precision-is-measured
     relation: extends
