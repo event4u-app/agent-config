@@ -5,7 +5,10 @@ review_by: 2026-12-24
 
 # Stub: road to a subagent return gate
 
-> **Arrivals:** 26 (at least) - latest `inbox-2026-09-ab` (2026-09-29); earlier:
+> **Arrivals:** 27 (at least) - latest `inbox-2026-10-a` (2026-10-01), where one of
+> sixteen release reviews asks for producer enforcement until adoption nears the
+> whole population and another reads 26 arrivals as no reason to build without a
+> recorded false-done incident; earlier: `inbox-2026-09-ab` (2026-09-29),
 > `inbox-2026-09-aa` (2026-09-12), a round of
 > fourteen independent external reviews of which two reach this subject - and both
 > answer the posed question the same way: keep the parking, because the promotion

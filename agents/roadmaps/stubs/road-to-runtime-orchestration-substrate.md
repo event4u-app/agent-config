@@ -8,7 +8,11 @@ blocker_opened: 2026-08-27
 
 # Road to a runtime orchestration substrate — stub
 
-> **Arrivals:** 12 (at least) - latest `inbox-2026-09-ab` (2026-09-29); earlier:
+> **Arrivals:** 13 (at least) - latest `inbox-2026-10-a` (2026-10-01), where three of
+> sixteen release reviews name runtime-state convergence (a shared primitive over
+> mission, verification, continuity, refusal, obligation and design-pass state, or
+> an inventory of producer, consumer, truth type and retention per store) and one
+> reads every track here as conditional; earlier: `inbox-2026-09-ab` (2026-09-29),
 > `inbox-2026-09-aa` (2026-09-12), a round of
 > fourteen independent external reviews of which two reach this subject: one names a
 > shared runtime-state substrate as P0.2 over five named state owners (review baseline,

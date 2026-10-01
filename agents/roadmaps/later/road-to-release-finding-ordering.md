@@ -18,11 +18,19 @@ estate_growth_exempt: "Adds one later/ roadmap to receive the release-findings O
 ---
 # Road to the release-finding ordering guarantee
 
-> **Arrivals:** 3 (at least) - latest `inbox-2026-09-y` (2026-09-11). Counted as
+> **Arrivals:** 4 (at least) - latest `inbox-2026-10-a` (2026-10-01), a release review
+> asking that this leave `later/` because its `review_by` of 2026-09-20 has passed;
+> earlier: `inbox-2026-09-y` (2026-09-11). Counted as
 > distinct prior round directories under the consumed-inbox tree, which is gitignored -
 > so the count is machine-local and the ordering is the finding, not the exact figure.
 > Read `(at least)` strictly: a broad keyword sweep returns a larger set that includes
 > incidental mentions, so this is the subject-matched floor.
+
+> **Owner question, posed 2026-10-01 at the fourth arrival** — `review_by` passed on
+> 2026-09-20 and AC-2 still needs a synthetic `release/*` pull request no autonomous
+> run may open. Pick one: (1) authorize one synthetic `release/*` pull request so
+> AC-2 can be demonstrated; (2) move `review_by` with a reason naming what changes
+> by then; (3) cancel AC-2 and record why the ordering guarantee is not owed.
 
 > **Parked, not abandoned.** Created 2026-09-03 from `road-to-binding-findings`,
 > on a 2/2 AI-council verdict to partition rather than either weaken the
