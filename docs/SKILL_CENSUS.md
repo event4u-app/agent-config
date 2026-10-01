@@ -354,15 +354,15 @@ loads stay viable. Two implications for the leanness and presentation tracks:
 ## Trigger-corpus coverage by pack (road-to-a-menu-whose-precision-is-measured 2.1)
 
 Regenerate with `./scripts-run src/scripts/check_routing_coverage --census`. Measured
-2026-09-29; the ratio itself is ratcheted by `check_routing_coverage` and seeded in
+2026-10-01; the ratio itself is ratcheted by `check_routing_coverage` and seeded in
 `src/config/routing-coverage-seed.json`, so this table is the WHICH and that gate is
 the HOW MANY.
 
-Why a pack grouping and not a flat list: a flat list of 198 names is not actionable
+Why a pack grouping and not a flat list: a flat list of 197 names is not actionable
 by anyone, while a pack column is a unit one owner can take. A skill declaring several
 packs would appear under each, so the column counts CAN exceed the total; measured
-2026-09-29 they do not, because no skill in this tree declares more than one pack —
-the columns sum to exactly 198.
+2026-10-01 they do not, because no skill in this tree declares more than one pack —
+the columns sum to exactly 197.
 
 Nothing in CI compares this table with `--census` output, so it is a dated snapshot
 like the rest of this file and will drift as skills gain corpora. Regenerate it rather
@@ -372,13 +372,13 @@ The touched-skill scope of `check_routing_coverage` closes this table from the o
 end: a PR that CHANGES a skill listed here fails until that skill gains its corpus, so
 the list shrinks at the one moment the corpus is cheapest to write.
 
-Skills with no `evals/triggers.json`: **198 of 299**.
+Skills with no `evals/triggers.json`: **197 of 299**.
 
 | Pack | Uncovered | Skills |
 |---|---:|---|
 | `ai-video` | 6 | `character-consistency`, `motion-choreographer`, `pixar-storyteller`, `scene-expander`, `song-to-script`, `video-director` |
 | `analysis-workbench` | 3 | `decision-review`, `premortem`, `root-cause-frameworks` |
-| `engineering-base` | 59 | `accessibility-auditor`, `api-design`, `api-endpoint`, `api-testing`, `aws-infrastructure`, `conventional-commits-writing`, `dashboard-design`, `data-handling-judgment`, `database`, `deep-reading-analyst`, `defense-in-depth`, `dependency-upgrade`, `design-review`, `devcontainer`, `developer-like-execution`, `docker`, `error-handling-patterns`, `finishing-a-development-branch`, `form-handler`, `git-workflow`, `github-ci`, `grafana`, `merge-conflicts`, `migration-architect`, `mobile-e2e-strategy`, `multi-tenancy`, `openapi`, `performance`, `performance-analysis`, `playwright-architect`, `playwright-testing`, `privacy-review`, `project-analysis-core`, `project-analysis-hypothesis-driven`, `project-analyzer`, `quality-tools`, `receiving-code-review`, `requesting-code-review`, `risk-officer`, `secrets-management`, `security`, `sentry-integration`, `source-discovery`, `sql-writing`, `standards-from-config`, `systematic-debugging`, `tailwind-engineer`, `tech-debt-tracker`, `terraform`, `terragrunt`, `test-driven-development`, `test-performance`, `testing-anti-patterns`, `traefik`, `ui-component-architect`, `universal-project-analysis`, `using-git-worktrees`, `validate-feature-fit`, `verify-completion-evidence` |
+| `engineering-base` | 58 | `accessibility-auditor`, `api-design`, `api-endpoint`, `api-testing`, `aws-infrastructure`, `conventional-commits-writing`, `dashboard-design`, `data-handling-judgment`, `database`, `deep-reading-analyst`, `defense-in-depth`, `dependency-upgrade`, `design-review`, `devcontainer`, `developer-like-execution`, `docker`, `error-handling-patterns`, `finishing-a-development-branch`, `form-handler`, `git-workflow`, `github-ci`, `grafana`, `merge-conflicts`, `migration-architect`, `mobile-e2e-strategy`, `multi-tenancy`, `openapi`, `performance`, `performance-analysis`, `playwright-architect`, `playwright-testing`, `privacy-review`, `project-analysis-core`, `project-analysis-hypothesis-driven`, `project-analyzer`, `quality-tools`, `receiving-code-review`, `requesting-code-review`, `risk-officer`, `secrets-management`, `security`, `sentry-integration`, `source-discovery`, `sql-writing`, `standards-from-config`, `systematic-debugging`, `tailwind-engineer`, `tech-debt-tracker`, `terraform`, `terragrunt`, `test-driven-development`, `test-performance`, `testing-anti-patterns`, `traefik`, `universal-project-analysis`, `using-git-worktrees`, `validate-feature-fit`, `verify-completion-evidence` |
 | `finance-advanced` | 2 | `dcf-modeling`, `scenario-modeling` |
 | `finance-basic` | 3 | `forecasting`, `runway-cognition`, `unit-economics-modeling` |
 | `founder-strategy` | 6 | `build-buy-partner`, `fundraising-narrative`, `launch-readiness`, `market-entry-analysis`, `okr-tree-modeling`, `vision-articulation` |
