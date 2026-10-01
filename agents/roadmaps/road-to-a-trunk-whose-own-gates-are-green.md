@@ -41,12 +41,12 @@ Reproduced on 2026-10-01, all three read-only except where noted:
 
 ## Phase 1 — The 42 new cross-pack links
 
-- [ ] **1.1 List the 42 against the baseline.** Diff the current violation set
+- [x] **1.1 List the 42 against the baseline.** Diff the current violation set
       against the set at the commit that landed the 337 baseline, and write each
       new link with its source pack, target pack and introducing commit to
       `agents/evidence/analysis/pack-boundary-delta-<date>.md`.
       verify: `grep -c '^| ' agents/evidence/analysis/pack-boundary-delta-*.md` -> /^[1-9]/
-- [ ] **1.2 Fix each link at its source.** Per link: add the edge to the source
+- [x] **1.2 Fix each link at its source.** Per link: add the edge to the source
       pack's `requires` when the target is genuinely needed, retarget the link,
       or move the artefact — the three fixes the baseline note names. Raising the
       baseline is not one of them.
@@ -62,7 +62,7 @@ Reproduced on 2026-10-01, all three read-only except where noted:
 
 ## Phase 3 — The security lint runs where a PR sees it
 
-- [ ] **3.1 Wire `lint_workflow_security` into the consistency workflow.**
+- [x] **3.1 Wire `lint_workflow_security` into the consistency workflow.**
       Confirm from its source that it writes nothing, run it once locally to
       read its current verdict, fix any finding it raises in the same change,
       and add it as a step with a gate-coverage row.
@@ -94,6 +94,40 @@ Reproduced on 2026-10-01, all three read-only except where noted:
 - **If you do nothing:** the audit stays red on `main` and its 56-day limit
   keeps every reading of the trunk red.
 
+## Decisions
+
+Taken during execution on 2026-10-01 by the executing agent under ADR-237, with
+no council convened — neither crosses an owner-reserved line, and the one that
+does is left undecided below.
+
+1. **22 of the 42 were never drift, and the gate was corrected rather than the
+   tree.** `meta` is `always_on: true`, which the resolver seeds into every
+   projection, so a link into it cannot dangle — the premise the whole baseline
+   note rests on does not hold for it. The allow rule now reads `core` plus
+   every always-on pack. Alternatives: leave it and de-link 55 references into a
+   pack every consumer has (rejected — it would delete working navigation to
+   satisfy a false reading), or raise the baseline (forbidden by 1.2).
+   Revisit-if: a pack gains `always_on: true` for a reason other than being
+   present in every projection.
+2. **The remaining 33 were de-linked rather than given a `requires` edge.**
+   Every one runs from a base pack into a narrower one (`engineering-base` →
+   `react`, `meta` → `git`), so the edge would push the narrower pack into every
+   install of the base — risk register item 1, stated there as the thing not to
+   do. The artefact name stays as prose. Revisit-if: a de-linked pair ends up in
+   the same pack, at which point the link is legal again.
+3. **The workflow-security step is wired WITHOUT `--strict`.** Promoting the
+   council-locked severity model is a separate decision and stays unresolved in
+   `agents/evidence/analysis/workflow-security-net-degraded-decision.md`. What
+   the step buys today is that the audit runs on every pull request and that its
+   corpus carries a floor. Revisit-if: that decision is taken either way.
+4. **The `legal` orphan was NOT decided.** The blocker's `Resolved when` was
+   executed on 2026-10-01 and `audit_user_type_axis` still exits 1
+   (`declared=7 used=8 orphans=1`, baseline age 60 d against a 56 d limit), so
+   the blocker stays open. The gate offers a third route its own message
+   names — a `reaffirmed` block — and that route was deliberately not taken: the
+   56-day clock exists to force this decision, and resetting it is a weakening
+   of a recorded floor, which is owner-reserved. 2.1 and AC-2 stay deferred.
+
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-01 | reviewer: claude/host -->
 
@@ -104,6 +138,6 @@ Reproduced on 2026-10-01, all three read-only except where noted:
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `lint_pack_boundaries` exits 0 on `main` without a baseline raise.
+- [x] AC-1 — `lint_pack_boundaries` exits 0 on `main` without a baseline raise.
 - [~] AC-2 — <!-- blocked-by: legal-user-type-is-a-product-call | asked: no — non-interactive inbox run; the question is carried in the round disposition Owner decisions block --> `audit_user_type_axis` exits 0.
-- [ ] AC-3 — `lint_workflow_security` runs in a pull-request workflow.
+- [x] AC-3 — `lint_workflow_security` runs in a pull-request workflow.
