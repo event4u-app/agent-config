@@ -71,7 +71,18 @@ describe('lint_agent_security — the coverage floor can fail', () => {
         expect(classify(spec, spec.min_scanned, false).verdict).toBe('ok');
     });
 
-    it('the real tree sits above the floor — otherwise the row is red on arrival', () => {
+    // 30 s rather than the 10 s global default, which is the per-test escape
+    // `vitest.config.ts` names for exactly this case: "If CI still times out at
+    // 50%, the next move is a per-test timeout on the spawn-bound files — named
+    // here so it is not re-derived as a global raise." CI did still time out —
+    // twice on one head (2026-10-01, PR #2130), at 10145 ms and again on a
+    // rerun, against 3334 ms for the same case on a developer machine. This is
+    // the only case in the file that runs the gate over the REAL tree; its four
+    // siblings classify in memory and finish in milliseconds, so raising the
+    // global would have widened a wall-clock guard for four tests that do not
+    // need it. 30 s keeps roughly 3x headroom over the slowest observed CI run
+    // while still failing a genuine hang.
+    it('the real tree sits above the floor — otherwise the row is red on arrival', { timeout: 30_000 }, () => {
         const spec = load_manifest().find((s) => s.id === GATE_ID)!;
         const r = runInProc((argv: string[]) => main(argv), []);
         const scanned = parse_scanned(r.stdout + r.stderr);
