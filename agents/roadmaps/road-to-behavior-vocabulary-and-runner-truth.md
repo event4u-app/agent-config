@@ -601,7 +601,10 @@ size ceiling. A rule stated in the artifact it governs has nothing measuring
 it; the thing that actually caught each instance was a fresh reviewer
 re-deriving the number. The durable form is therefore not a better rule but a
 cheaper check: **state the command, not the output.** Both sites that quoted
-the test count now name `npx vitest run …` instead, and the two self-imposed
+the test count OUTSIDE the Acceptance-Criteria body now name
+`npx vitest run …` instead — AC-3 is a third site and still quotes it, held
+there by Gate R1's same-day block and disclosed at step 3.1 — and the two
+self-imposed
 size ceilings were deleted rather than raised a fourth time, which removes
 the figure instead of re-measuring it.
 
@@ -722,9 +725,9 @@ neither spends the ratchet early nor loses the trigger.
 
 ### Residue carried out of the review rounds
 
-Nineteen completion-review rounds produced 154 findings; 116 are fixed and 38
+Twenty completion-review rounds produced 158 findings; 119 are fixed and 39
 are `accepted-risk`, each with a stated `revisit-if`. Nothing is `open`.
-Rounds 16 through 19 carried no critical and no high; the last severity above
+Rounds 16 through 20 carried no critical and no high; the last severity above
 medium was round 15.
 
 **The dominant defect class was never the code.** Four highs across rounds 2–4
@@ -863,6 +866,18 @@ it names the measurement it waits on rather than an estimate.
   recorded here and in the regenerating commit rather than in the artifacts.
   REVISIT-IF: either generator gains a provenance field, or a third consumer
   starts reading these numbers without the surrounding change.
+
+- **Ruby, JVM and .NET contribute a runner and NO quality commands.** Picking
+  `rubocop`, a Spotless task or `dotnet format` is an adoption decision this
+  resolver has no standing to make, so the three ecosystems this change added
+  report a runner and an empty `quality`. Round 20 named the consequence,
+  which is silent: such a repository moved from `LOW` + empty `quality` — the
+  tier that makes a command ASK — to `HIGH` + empty `quality`, which a quality
+  pass can read as nothing to do. The CODE is unchanged and the SILENCE is
+  fixed: § 3 of the contract and the `ToolchainResult` docblock now say an
+  empty `quality` means none was RESOLVED, never that none is needed.
+  REVISIT-IF: a quality tool for any of the three becomes an owner decision
+  rather than a guess, or a consumer reports a quality pass passing silently.
 
 - **The cache key sees a marker ARRIVE, never a marker LEAVE.** It is a
   `Math.max` over files that exist, so deleting the only signal of a

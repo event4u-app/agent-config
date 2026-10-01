@@ -148,6 +148,17 @@ tables:
   asking (interactive) or `ambiguous_routing` (CI, per the
   non-interactive contract).
 
+**`confidence` is about the RUNNER, never about `quality`.** The three
+ecosystems this change added — ruby, jvm, dotnet — contribute a runner and NO
+quality commands, because picking `rubocop`, a Spotless task or
+`dotnet format` is an adoption decision this resolver has no standing to make.
+The consequence is worth stating because it is silent: a Ruby-, JVM- or
+.NET-only repository used to resolve `LOW` with an empty `quality`, which is
+the tier that makes a command ASK; it now resolves `HIGH` with an empty
+`quality`, which a quality pass can read as nothing to do. An empty `quality`
+means **no quality tool was resolved**, never **no quality step is needed** —
+a command that finds one should ask rather than report success.
+
 ## 4. Monorepo guard — fast by default, opt-in for the rest
 
 `resolve_toolchain` returns the full `runners` inventory **and** a

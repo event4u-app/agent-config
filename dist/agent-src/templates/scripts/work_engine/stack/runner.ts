@@ -26,8 +26,8 @@ import * as path from 'node:path';
  *
  * Single source of truth: the fixtures validate against this set without
  * re-deriving it, and a membership test binds it to what the resolver emits —
- * without that binding it would assert set-equality with itself. Nothing else
- * validates against it. Mirrors Python's `frozenset`.
+ * without that binding it would assert set-equality with itself. Mirrors
+ * Python's `frozenset`.
  */
 export const KNOWN_RUNNERS: ReadonlySet<string> = new Set([
     'pest',
@@ -48,10 +48,9 @@ export const KNOWN_RUNNERS: ReadonlySet<string> = new Set([
  * Every behavior-runner label the resolver can emit, plus the refusal.
  *
  * A **separate** set from {@link KNOWN_RUNNERS}: the two answer different
- * questions — *what runs this repository's tests* versus *does it already own
- * a tool that reads a specification* — and merging them would put a suite
- * nobody asked to run into `selected`. {@link BEHAVIOR_UNKNOWN} is the refusal
- * label, emitted when one scope carries two — a finding its owner settles.
+ * questions — *what runs the tests* versus *does this repository already own a
+ * tool that reads a specification* — and merging them would put a suite nobody
+ * asked to run into `selected`. {@link BEHAVIOR_UNKNOWN} is the refusal label.
  */
 export const BEHAVIOR_UNKNOWN = 'unknown';
 
@@ -111,7 +110,7 @@ const _MANIFESTS = [
  * **Residual cache gap.** {@link latest_manifest_mtime} stats fixed NAMES, so
  * a signal it does not list is invisible to the key: a project-only .NET
  * scope, `features/support/env.rb`, `spec/spec_helper.rb`, `setup.cfg`,
- * `pytest.ini` and the `mvnw` / `gradlew` wrappers. Known set, not closed.
+ * `pytest.ini` and the `mvnw` / `gradlew` wrappers. Known, not closed.
  */
 const _DOTNET_PROJECT_EXTS = ['.sln', '.slnx', '.csproj', '.fsproj', '.vbproj'];
 
@@ -180,8 +179,8 @@ type Wrappers = { [role: string]: string };
  *
  * `command` is the exact invocation (a wrapper like `make test` when one
  * exists, else the direct tool) and is ROOT-relative. `speed` is
- * {@link SPEED_FAST} / {@link SPEED_SLOW} / {@link SPEED_E2E}, which the
- * monorepo guard filters on. `basis` names the signal that matched.
+ * {@link SPEED_FAST} / {@link SPEED_SLOW} / {@link SPEED_E2E}; `basis` names
+ * the signal that matched.
  */
 export class RunnerResult {
     readonly ecosystem: string;
@@ -213,8 +212,8 @@ export class RunnerResult {
  *
  * **`command` is relative to `scope_root`, not the project root** — built from
  * files inside the scope (`vendor/bin/behat`, `./gradlew test`), so a consumer
- * runs it WITH `scope_root` as the working directory. Every native
- * {@link RunnerResult} command is root-relative; this axis is the exception.
+ * runs it WITH `scope_root` as the working directory. The native axis is
+ * root-relative; this one is the exception.
  *
  * {@link RunnerResult}'s fields plus `scope_root`, because the axis is
  * **per-scope, not a repository-wide scalar**: one answer would erase which
@@ -237,11 +236,12 @@ export class BehaviorRunnerResult {
 /**
  * Outcome of one toolchain-resolution pass over a project root.
  *
- * `runners` is the full inventory; `selected` what a command should run after
- * the flags + guard; `quality` the ordered lint commands per ecosystem;
- * `confidence` the overall tier (HIGH when ≥1 runner matched with no
- * cross-ecosystem conflict, LOW when nothing matched); `mtime` the
- * cache-invalidation key, as in {@link "./detect".StackResult}.
+ * `runners` is the full inventory; `selected` what a command runs after the
+ * flags + guard; `quality` the ordered lint commands per ecosystem;
+ * `confidence` the overall tier, about the RUNNER and never about `quality`
+ * (ruby, jvm and dotnet contribute a runner and no quality commands, so an
+ * empty `quality` means none was RESOLVED, not that none is needed — contract
+ * page § 3); `mtime` the cache key, as in {@link "./detect".StackResult}.
  */
 export class ToolchainResult {
     readonly ecosystems: readonly string[];

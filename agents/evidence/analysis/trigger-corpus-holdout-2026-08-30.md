@@ -454,8 +454,10 @@ not: `road-to-behavior-vocabulary-and-runner-truth` rewrote
 `src/skills/test-case-discovery/evals/triggers.json` on the **train** side in
 parallel — § Re-pin 2026-10-01 above — and the two landed in one merge. The set
 hash is computed over the undivided list, so it cannot be the value either
-branch measured alone; it is `67dd1f3f…`, published in § The set hash and
-recomputed by `trigger_corpus_holdout_pin.test.ts` over the merged tree. The row
+branch measured alone. It is whatever § The set hash publishes — not repeated
+here, because a value copied into prose is a value that goes stale on the next
+re-pin, which is what happened to this very sentence — and
+`trigger_corpus_holdout_pin.test.ts` recomputes it over the merged tree. The row
 counts in this section are unaffected (the train growth edited a file already in
 the set, it did not add one), and so is every per-row pin, including
 `accessibility-auditor`'s `b5fcf7cb…`. This is the fourth time a figure in this
@@ -483,8 +485,8 @@ later edits to that same file's `description` field in the same branch. The
 provenance was proved rather than guessed by the round-4 reviewer: dropping the
 new row from the computed list reproduces the OLD pin `034f791e…` exactly, and
 substituting the stale row hash reproduces the first-published `7445c18a…`
-exactly. The live row value below is `b5fcf7cb…`; the live set hash is
-`67dd1f3f…` after the merge reconciliation noted above, and
+exactly. The live row value below is `b5fcf7cb…`; the live SET hash is
+whatever § The set hash publishes, deliberately not repeated here, and
 `tests/scripts/trigger_corpus_holdout_pin.test.ts` passes 5 of 5 against them.
 
 **This is the same defect as § Correction 2026-08-31**, where the commit that
