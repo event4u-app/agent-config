@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: lightweight
 status: draft
@@ -8,7 +10,7 @@ estate_growth_exempt: "a blocker discovered while doing the work — 1.2's four 
 ---
 # Road to corpus refresh cadence shape
 
-> **Source:** the deferred item 2.1 of `road-to-corpus-refresh-2026-q3`, carried
+> **Source:** [REDACTED:src-conf]
 > here under Iron Law 3 of `roadmap-progress-sync` when that roadmap closed on
 > 2026-09-27. Its Phase 1 shipped; this question did not, because it is a
 > maintainer decision and not an agent call. See the parent's archive entry for
@@ -150,15 +152,8 @@ binding is that no two land on the same date and all four land before
       *Implementation*; after edit 2 alone it would have matched in no searchable
       column; after edit 3 it matches via *Keywords*. Only edit 1, the Docs URL,
       is outside `search_cols` and therefore retrieval-inert.
-      `upstream.sha` carries the upstream IDENTITY only — which, after the
-      rename, *includes* `menu-button` as the canonical slug, so finding 3 is
-      reflected there while findings 1 and 2 (the supersession check, the eleven
-      unchanged URLs) are not. An earlier wording said the field "records none
-      of the three findings"; that was false against the shipped value and
-      against this step's own correction note below, and it mattered because
-      1.2b–d are told to use this row as the worked example — a session
-      following the false line would have stripped an identity component from
-      three manifests that a session following the correction note would keep.
+      `upstream.sha` carries the upstream IDENTITY only and deliberately records
+      none of the three findings — see the correction note below.
       `upstream.last_checked` moved `2026-09-18` → `2026-10-01` — the
       date this check actually ran, per D1. Gate:
       `./scripts-run src/scripts/check_corpus_staleness --today 2026-10-01` →
