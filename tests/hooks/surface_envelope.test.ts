@@ -51,12 +51,19 @@ describe('hooks:status is untouched by the surface field', () => {
         // declared in the manifest). `surface` is not, and that is what this
         // test guards — the key set is pinned so a new field is a reviewed
         // edit rather than a leak.
+        //
+        // `blocking_enforcement` is the second such reviewed edit
+        // (road-to-blocking-severities 1.2): per slot that binds a `blocking`
+        // concern, what that host's slot can actually carry. It is derived from
+        // `host_lowering.yaml` and is NOT a surface claim — adding it here is
+        // the pin doing its job, not a hole in it.
         const matrix = collect(process.cwd(), { platforms: {} });
         for (const row of matrix.platforms) {
             expect(Object.keys(row).sort()).toEqual(
                 [
                     'ask',
                     'bindings',
+                    'blocking_enforcement',
                     'bridge_path',
                     'fallback_only',
                     'hint',

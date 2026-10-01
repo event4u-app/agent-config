@@ -270,6 +270,65 @@ code, for the same reason the estate and continuity ratchets report distance
 instead of gating on it: these bindings predate the check, and reddening the
 tree on them would punish whichever change added the reading.
 
+### What a `blocking` severity means where a refusal cannot land
+
+A concern's `severity` is a property of the **concern**; whether a refusal can
+leave a slot is a property of the **host slot**. The table below publishes both,
+side by side, and never folds them into one number.
+
+That separation is the decision, not an artefact of the layout. An AI council
+took the question on 2026-10-01 and both seats converged on publishing the
+effective picture rather than editing the manifest or dropping the binding — and
+one seat refused the phrase *effective severity* outright: severity has not
+changed, enforcement strength has, and a generated page that silently redefines
+the manifest's own vocabulary is worse than one that stays quiet. Hence two
+columns with two different names.
+
+Two values look similar and are not. **`warning-only`** says this package has a
+lowering row for the slot and that row's `block_exit` is null — the host is
+known not to refuse there. **`unverified`** says there is no row at all, which
+is never-looked rather than cannot: `host_lowering.yaml` states in its own
+header that an absence "does NOT mean the host cannot enforce". Publishing the
+first where only the second is established would turn a gap in our measurement
+into a claim about somebody else's product, and `check_enforcement_matrix`
+**fails** on a row that does, in either direction.
+
+A `blocking` concern on a slot that cannot refuse is not silent. It runs, and
+its verdict reaches the agent as a warning. What it does not do is stop the
+call, and that is the whole content of the right-hand column.
+
+<!-- BEGIN GENERATED: blocking-severity-by-binding -->
+Projected from `src/scripts/hook_manifest.yaml` (declared severity) and `src/scripts/hooks/host_lowering.yaml` (verified enforcement). **Two independent facts, never folded into one.**
+
+The manifest declares what a concern is *meant* to do; the lowering table records what the host slot it is bound on *can* do. A `blocking` concern on a slot that cannot refuse still runs and still warns — it is not silent, and it is not a refusal either. These columns say which.
+
+**21 binding(s) declare `blocking`: 9 refuse, 6 run and warn on a slot verified unable to refuse, 6 sit on a slot with no lowering row, 0 sit on a slot whose proof has lapsed.**
+
+| Host | Slot | Concern | Declared severity | Verified enforcement | What that means |
+|---|---|---|---|---|---|
+| `augment` | `pre_tool_use` | `block-config-weakening` | `blocking` | `warning-only` | the slot is bound and `block_exit` is null — it runs and warns, it cannot refuse |
+| `augment` | `pre_tool_use` | `block-kernel-rule-writes` | `blocking` | `warning-only` | the slot is bound and `block_exit` is null — it runs and warns, it cannot refuse |
+| `augment` | `pre_tool_use` | `block-no-verify` | `blocking` | `warning-only` | the slot is bound and `block_exit` is null — it runs and warns, it cannot refuse |
+| `augment` | `pre_tool_use` | `block-plumbing-writes` | `blocking` | `warning-only` | the slot is bound and `block_exit` is null — it runs and warns, it cannot refuse |
+| `augment` | `pre_tool_use` | `block-speaking-inbox-dir` | `blocking` | `warning-only` | the slot is bound and `block_exit` is null — it runs and warns, it cannot refuse |
+| `augment` | `pre_tool_use` | `evidence-independence` | `blocking` | `warning-only` | the slot is bound and `block_exit` is null — it runs and warns, it cannot refuse |
+| `claude` | `pre_tool_use` | `block-config-weakening` | `blocking` | `refusal` | the slot denies — the concern does what it declares |
+| `claude` | `pre_tool_use` | `block-kernel-rule-writes` | `blocking` | `refusal` | the slot denies — the concern does what it declares |
+| `claude` | `pre_tool_use` | `block-no-verify` | `blocking` | `refusal` | the slot denies — the concern does what it declares |
+| `claude` | `pre_tool_use` | `block-plumbing-writes` | `blocking` | `refusal` | the slot denies — the concern does what it declares |
+| `claude` | `pre_tool_use` | `block-speaking-inbox-dir` | `blocking` | `refusal` | the slot denies — the concern does what it declares |
+| `claude` | `pre_tool_use` | `evidence-independence` | `blocking` | `refusal` | the slot denies — the concern does what it declares |
+| `claude` | `pre_tool_use` | `one-question-per-ask` | `blocking` | `refusal` | the slot denies — the concern does what it declares |
+| `claude` | `stop` | `run-continuation` | `blocking` | `refusal` | the slot denies — the concern does what it declares |
+| `claude` | `stop` | `turn-end-gate` | `blocking` | `refusal` | the slot denies — the concern does what it declares |
+| `cowork` | `pre_tool_use` | `block-config-weakening` | `blocking` | `unverified` | no lowering row for this slot — nothing is bound natively, and nothing is established |
+| `cowork` | `pre_tool_use` | `block-kernel-rule-writes` | `blocking` | `unverified` | no lowering row for this slot — nothing is bound natively, and nothing is established |
+| `cowork` | `pre_tool_use` | `block-no-verify` | `blocking` | `unverified` | no lowering row for this slot — nothing is bound natively, and nothing is established |
+| `cowork` | `pre_tool_use` | `block-plumbing-writes` | `blocking` | `unverified` | no lowering row for this slot — nothing is bound natively, and nothing is established |
+| `cowork` | `pre_tool_use` | `block-speaking-inbox-dir` | `blocking` | `unverified` | no lowering row for this slot — nothing is bound natively, and nothing is established |
+| `cowork` | `pre_tool_use` | `evidence-independence` | `blocking` | `unverified` | no lowering row for this slot — nothing is bound natively, and nothing is established |
+<!-- END GENERATED: blocking-severity-by-binding -->
+
 ### Detector C's record path — is a failed exit visible, per host
 
 Detector C refuses a turn that edited a file and then verified nothing. It has

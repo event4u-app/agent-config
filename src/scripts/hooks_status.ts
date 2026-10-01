@@ -23,11 +23,14 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { enforcementFor } from "./check_enforcement_matrix.js";
 import {
   type JsonObject,
   type JsonValue,
   _load_yaml,
 } from "./hooks/dispatch_hook.js";
+import { loadHostLowering } from "./hooks/host_lowering.js";
+import { type SlotReading, readSlots } from "./report_enforcement_drift.js";
 
 // src/scripts/hooks_status.ts → parents[1] is the repo root (.../parents[2]
 // in the Python which lives one level deeper relative computation).
@@ -90,6 +93,18 @@ export interface PlatformRow {
    */
   ask: AskShape;
   bindings: Record<string, string[]>;
+  /**
+   * For each slot that binds at least one `blocking` concern, what that host's
+   * slot can actually carry — `refusal`, `warning-only`, `unverified` or
+   * `proof-expired` (road-to-blocking-severities 1.2).
+   *
+   * Slots with no blocking concern are ABSENT rather than present with a
+   * value, so a reader cannot mistake "nothing here claims to refuse" for a
+   * capability reading. Derived from `host_lowering.yaml`, never from the
+   * manifest: the manifest declares intent and only the lowering table records
+   * whether a refusal can land.
+   */
+  blocking_enforcement: Record<string, string>;
   hint: string | null;
 }
 
@@ -123,10 +138,79 @@ function _bridge_status(project_root: string, rel_path: string): string {
   return stat && stat.isFile() ? "installed" : "missing";
 }
 
+/**
+ * `severity` per concern, read off the manifest this report already loaded.
+ *
+ * `(undeclared)` is folded into "not blocking": this report publishes the
+ * enforcement of concerns that CLAIM to refuse, and a concern that claims
+ * nothing has nothing to reconcile. `lint_hook_manifest` is what refuses an
+ * undeclared severity; duplicating that judgement here would put two answers
+ * in the tree.
+ */
+function _severities(manifest: JsonObject): Map<string, string> {
+  const out = new Map<string, string>();
+  const concerns = manifest["concerns"];
+  if (!_isObject(concerns)) {
+    return out;
+  }
+  for (const [name, spec] of Object.entries(concerns)) {
+    const sev = _isObject(spec) ? spec["severity"] : undefined;
+    if (typeof sev === "string") {
+      out.set(name, sev);
+    }
+  }
+  return out;
+}
+
+/**
+ * What each slot carrying a `blocking` concern can actually do on this host.
+ *
+ * road-to-blocking-severities 1.2, the third surface. The decision and the
+ * vocabulary live in `check_enforcement_matrix`; this reads them rather than
+ * restating them, so the published document and this report cannot drift into
+ * two different answers to one question.
+ *
+ * Failure is SILENT and the field is simply absent. This is a read-only status
+ * report that the post-install smoke probe runs, and a malformed or missing
+ * lowering table must degrade it, never abort it — the gate is where a broken
+ * lowering table is supposed to fail.
+ */
+function _blocking_enforcement(
+  platform: string,
+  bindings: Record<string, string[]>,
+  severities: Map<string, string>,
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  let slots: SlotReading[];
+  try {
+    slots = readSlots(loadHostLowering(), platform).slots;
+  } catch {
+    return out;
+  }
+  const bySlot = new Map(slots.map((s) => [s.slot, s]));
+  for (const [event, concerns] of Object.entries(bindings)) {
+    if (!concerns.some((c) => severities.get(c) === "blocking")) {
+      continue;
+    }
+    const row = bySlot.get(event);
+    out[event] = enforcementFor(
+      row === undefined
+        ? "unlowerable"
+        : row.literal === null
+          ? "null-block"
+          : row.effective === null
+            ? "stale-proof"
+            : null,
+    );
+  }
+  return out;
+}
+
 /** Build the runtime matrix as a plain object — JSON-serialisable. */
 export function collect(project_root: string, manifest: JsonObject): StatusMatrix {
   const platformsRaw = manifest["platforms"];
   const platforms = _isObject(platformsRaw) ? platformsRaw : {};
+  const severities = _severities(manifest);
   const rows: PlatformRow[] = [];
   for (const platform of Object.keys(PLATFORM_BRIDGES)) {
     const [rel, hint] = PLATFORM_BRIDGES[platform] as [string, string];
@@ -148,6 +232,7 @@ export function collect(project_root: string, manifest: JsonObject): StatusMatri
     rows.push({
       platform,
       status,
+      blocking_enforcement: _blocking_enforcement(platform, bindings, severities),
       bridge_path: rel || null,
       fallback_only,
       ask,
@@ -159,6 +244,23 @@ export function collect(project_root: string, manifest: JsonObject): StatusMatri
   }
   return { schema_version: 1, platforms: rows };
 }
+
+/**
+ * One short line per enforcement value, for the table.
+ *
+ * `unverified` says what is MISSING, never what the host cannot do — the same
+ * wording discipline `docs/enforcement-by-host.md` carries, and the reason this
+ * report distinguishes the two values at all.
+ */
+const _ENFORCEMENT_NOTE: Record<string, string> = {
+  refusal: "the slot denies, so a blocking verdict stops the call",
+  "proof-expired":
+    "the slot can deny; this package's `verified` citation has lapsed",
+  "warning-only":
+    "`block_exit` is null here — they run and warn, they cannot refuse",
+  unverified:
+    "no lowering row for this slot — nothing bound natively, nothing established",
+};
 
 const _STATUS_MARKER: Record<string, string> = {
   installed: "✅ ",
@@ -199,6 +301,16 @@ export function _render_table(matrix: StatusMatrix): string {
     for (const event of Object.keys(row.bindings).sort()) {
       const concerns = row.bindings[event]?.join(", ") || "—";
       lines.push(`    ${event.padEnd(22)} → ${concerns}`);
+      // road-to-blocking-severities 1.2 — printed only where a concern on this
+      // slot DECLARES `blocking`, and worded so `unverified` never reads as a
+      // claim about the host.
+      const enforcement = row.blocking_enforcement[event];
+      if (enforcement !== undefined) {
+        lines.push(
+          `    ${" ".repeat(22)}   blocking concerns here: ${enforcement} — ` +
+            `${_ENFORCEMENT_NOTE[enforcement] ?? "see docs/enforcement-by-host.md"}`,
+        );
+      }
     }
     if (row.hint) {
       lines.push(`    hint: ${row.hint}`);

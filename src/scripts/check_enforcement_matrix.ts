@@ -77,6 +77,19 @@ export const LOWERING_REL = path.join('src', 'scripts', 'hooks', 'host_lowering.
 export const BEGIN_MARKER = '<!-- BEGIN GENERATED: enforcement-configured-by-slot -->';
 export const END_MARKER = '<!-- END GENERATED: enforcement-configured-by-slot -->';
 
+/**
+ * The second generated region: every `blocking` concern, with the enforcement
+ * the host it is bound on can actually carry.
+ *
+ * road-to-blocking-severities 1.2. Its own marker pair rather than an extra
+ * column in the first region, because the two tables have different units — the
+ * first is one row per host-SLOT, this is one row per host-slot-CONCERN — and
+ * merging them would make every host-slot row repeat once per concern bound to
+ * it.
+ */
+export const SEVERITY_BEGIN_MARKER = '<!-- BEGIN GENERATED: blocking-severity-by-binding -->';
+export const SEVERITY_END_MARKER = '<!-- END GENERATED: blocking-severity-by-binding -->';
+
 /** The command a drift failure tells the reader to run. Printed, never guessed at. */
 export const REGEN_COMMAND = `./scripts-run src/scripts/${GATE} --write`;
 
@@ -335,29 +348,198 @@ export function renderRegion(lowering: HostLowering): string {
     return out.join('\n');
 }
 
-/** Replace the block between the markers. Idempotent by construction. */
-export function spliceDoc(text: string, region: string): string {
-    const b = text.indexOf(BEGIN_MARKER);
-    const e = text.indexOf(END_MARKER);
+/**
+ * How each {@link VerifiedEnforcement} is worded in the published table.
+ *
+ * `unverified` and `warning-only` are worded so a reader cannot slide between
+ * them. Only `warning-only` says "cannot"; `unverified` says what is missing.
+ */
+export const ENFORCEMENT_TEXT: Readonly<Record<VerifiedEnforcement, string>> = {
+    refusal: 'the slot denies — the concern does what it declares',
+    'proof-expired': 'the slot can deny; this package’s `verified` citation has lapsed',
+    'warning-only': 'the slot is bound and `block_exit` is null — it runs and warns, it cannot refuse',
+    unverified: 'no lowering row for this slot — nothing is bound natively, and nothing is established',
+};
+
+/**
+ * The 1.2 region body: one row per `blocking` binding, two independent columns.
+ *
+ * Grouped by host and ordered as `concernSlotAudit` sorted it, so a
+ * regeneration is a no-op whenever nothing moved.
+ */
+export function renderSeverityRegion(audit: readonly HostConcernAudit[]): string {
+    const all = audit.flatMap((h) => h.blocking.map((b) => b));
+    const out: string[] = [];
+    out.push(
+        `Projected from \`${MANIFEST_REL}\` (declared severity) and \`${LOWERING_REL}\` ` +
+            '(verified enforcement). **Two independent facts, never folded into one.**',
+    );
+    out.push('');
+    out.push(
+        'The manifest declares what a concern is *meant* to do; the lowering table records ' +
+            'what the host slot it is bound on *can* do. A `blocking` concern on a slot that ' +
+            'cannot refuse still runs and still warns — it is not silent, and it is not a ' +
+            'refusal either. These columns say which.',
+    );
+    out.push('');
+    const byEnforcement = (e: VerifiedEnforcement): number =>
+        all.filter((b) => b.enforcement === e).length;
+    out.push(
+        `**${String(all.length)} binding(s) declare \`blocking\`: ` +
+            `${String(byEnforcement('refusal'))} refuse, ` +
+            `${String(byEnforcement('warning-only'))} run and warn on a slot verified unable to ` +
+            `refuse, ${String(byEnforcement('unverified'))} sit on a slot with no lowering row, ` +
+            `${String(byEnforcement('proof-expired'))} sit on a slot whose proof has lapsed.**`,
+    );
+    out.push('');
+    out.push('| Host | Slot | Concern | Declared severity | Verified enforcement | What that means |');
+    out.push('|---|---|---|---|---|---|');
+    for (const b of all) {
+        out.push(
+            `| \`${b.host}\` | \`${b.slot}\` | \`${b.concern}\` | \`${b.declared}\` | ` +
+                `\`${b.enforcement}\` | ${ENFORCEMENT_TEXT[b.enforcement]} |`,
+        );
+    }
+    if (all.length === 0) {
+        out.push('');
+        out.push('No concern in the manifest declares `blocking`.');
+    }
+    return out.join('\n');
+}
+
+/** Replace the block between one marker pair. Idempotent by construction. */
+function _splice(text: string, region: string, begin: string, end: string): string {
+    const b = text.indexOf(begin);
+    const e = text.indexOf(end);
     if (b === -1 || e === -1 || e < b) {
         throw new Error(
             `${GATE}: ${DOC_REL} is missing the generated-region markers ` +
-                `(${BEGIN_MARKER} … ${END_MARKER}). Restore them rather than hand-writing the ` +
+                `(${begin} … ${end}). Restore them rather than hand-writing the ` +
                 'table — the markers are what makes the region regenerable.',
         );
     }
-    return `${text.slice(0, b + BEGIN_MARKER.length)}\n${region}\n${text.slice(e)}`;
+    return `${text.slice(0, b + begin.length)}\n${region}\n${text.slice(e)}`;
+}
+
+/** Replace the block between the markers. Idempotent by construction. */
+export function spliceDoc(text: string, region: string): string {
+    return _splice(text, region, BEGIN_MARKER, END_MARKER);
+}
+
+/** Replace the blocking-severity region. Same contract as {@link spliceDoc}. */
+export function spliceSeverityDoc(text: string, region: string): string {
+    return _splice(text, region, SEVERITY_BEGIN_MARKER, SEVERITY_END_MARKER);
+}
+
+function _extract(text: string, begin: string, end: string): string | null {
+    const b = text.indexOf(begin);
+    const e = text.indexOf(end);
+    if (b === -1 || e === -1 || e < b) return null;
+    return text
+        .slice(b + begin.length, e)
+        .replace(/^\n/, '')
+        .replace(/\n$/, '');
 }
 
 /** The region body a committed document carries, or null when the markers are gone. */
 export function extractRegion(text: string): string | null {
-    const b = text.indexOf(BEGIN_MARKER);
-    const e = text.indexOf(END_MARKER);
-    if (b === -1 || e === -1 || e < b) return null;
-    return text
-        .slice(b + BEGIN_MARKER.length, e)
-        .replace(/^\n/, '')
-        .replace(/\n$/, '');
+    return _extract(text, BEGIN_MARKER, END_MARKER);
+}
+
+/** The blocking-severity region a committed document carries, or null. */
+export function extractSeverityRegion(text: string): string | null {
+    return _extract(text, SEVERITY_BEGIN_MARKER, SEVERITY_END_MARKER);
+}
+
+/** One published blocking-severity row, read off the committed region. */
+export interface CommittedSeverityCell {
+    readonly host: string;
+    readonly slot: string;
+    readonly concern: string;
+    readonly declared: string;
+    readonly enforcement: string;
+}
+
+/** Blocking-severity rows a committed region carries, in document order. */
+export function committedSeverityCells(region: string): CommittedSeverityCell[] {
+    const out: CommittedSeverityCell[] = [];
+    for (const line of region.split('\n')) {
+        if (!line.trim().startsWith('|')) continue;
+        const cells = splitMarkdownRow(line);
+        if (cells.length < 5) continue;
+        if (cells[0] === 'Host' || /^-+$/.test((cells[0] ?? '').trim())) continue;
+        const strip = (s: string): string => s.trim().replace(/^`|`$/g, '');
+        out.push({
+            host: strip(cells[0] ?? ''),
+            slot: strip(cells[1] ?? ''),
+            concern: strip(cells[2] ?? ''),
+            declared: strip(cells[3] ?? ''),
+            enforcement: strip(cells[4] ?? ''),
+        });
+    }
+    return out;
+}
+
+/**
+ * The 1.2 HARD gate: published enforcement claims the configuration refutes.
+ *
+ * This is the half the council asked to fail rather than report, and the
+ * distinction from the audit above is the reason it may. `concernSlotAudit`
+ * counts BINDINGS, a population with a legacy backlog this package did not
+ * create in one diff — failing on it would red the tree on history. These
+ * findings compare a GENERATED DOCUMENT against the configuration it is
+ * generated from, which has no backlog by construction: every row was written
+ * by the generator one command ago, so a disagreement is a hand edit or a
+ * generator bug and neither should ship.
+ *
+ * Both seats named the same two dishonesty classes, and both directions are
+ * checked because they fail in opposite ways:
+ *
+ *   - A row claiming `refusal` where the slot's `block_exit` is null, or where
+ *     there is no row at all, OVERSTATES the guarantee. A reader takes it as a
+ *     deterministic block and gets a warning.
+ *   - A row claiming `warning-only` where the lowering table has NO row for the
+ *     slot UNDERSTATES what is known: it asserts the host cannot refuse, which
+ *     is a host fact this package has not established and which
+ *     `host_lowering.yaml` explicitly disclaims. `unverified` is the honest
+ *     value there, and collapsing the two is how an absence of measurement
+ *     becomes a measurement.
+ *
+ * A value outside {@link VERIFIED_ENFORCEMENTS} is its own finding, for the
+ * same reason `unbackedOutcomes` rejects one: an invented category in a
+ * generated table looks exactly as authoritative as a real one.
+ */
+export function severityFindings(region: string, lowering: HostLowering): string[] {
+    const findings: string[] = [];
+    for (const cell of committedSeverityCells(region)) {
+        const label = `${cell.host}/${cell.slot}/${cell.concern}`;
+        if (!(VERIFIED_ENFORCEMENTS as readonly string[]).includes(cell.enforcement)) {
+            findings.push(
+                `${label}: \`${cell.enforcement}\` is not in the closed enforcement vocabulary ` +
+                    `(${VERIFIED_ENFORCEMENTS.map((e) => `\`${e}\``).join(' · ')}).`,
+            );
+            continue;
+        }
+        const row = readSlots(lowering, cell.host).slots.find(
+            (s: SlotReading) => s.slot === cell.slot,
+        );
+        if (cell.enforcement === 'refusal' && (row === undefined || row.literal === null)) {
+            findings.push(
+                `${label}: published \`refusal\`, but ${LOWERING_REL} carries ` +
+                    `${row === undefined ? 'no row for this slot' : '`block_exit: null`'} — a ` +
+                    'refusal has nowhere to go, so the published row overstates the guarantee.',
+            );
+            continue;
+        }
+        if (cell.enforcement === 'warning-only' && row === undefined) {
+            findings.push(
+                `${label}: published \`warning-only\`, which asserts this slot CANNOT refuse, ` +
+                    `but ${LOWERING_REL} carries no row for it at all. An absent row is ` +
+                    '`unverified`, never a host fact — the table says so in its own header.',
+            );
+        }
+    }
+    return findings;
 }
 
 /** Outcome cells a committed region carries, with their row label. */
@@ -472,6 +654,18 @@ export interface HostConcernAudit {
      * has nowhere to go.
      */
     readonly noDeny: readonly NullBlockBinding[];
+    /**
+     * EVERY binding on this host whose declared severity is `blocking`, with
+     * the enforcement its slot carries — including the ones that CAN refuse,
+     * which `noDeny` by construction never holds.
+     *
+     * Separate from `noDeny` rather than a filter over it, because the
+     * published table needs the complete picture: a reader who sees only the
+     * gaps cannot tell a host that refuses nowhere from a host with no blocking
+     * concerns at all, and those are the two readings the 1.2 table exists to
+     * keep apart.
+     */
+    readonly blocking: readonly BlockingBinding[];
 }
 
 /** Slots that carry a dispatcher verdict. `ask` is a UI affordance, not one. */
@@ -534,6 +728,7 @@ export function concernSlotAudit(root: string, lowering: HostLowering): HostConc
         const denySlots = reading.slots.filter((s: SlotReading) => s.literal !== null).length;
 
         const noDeny: NullBlockBinding[] = [];
+        const blocking: BlockingBinding[] = [];
         let boundSlots = 0;
         if (blockRaw !== null && typeof blockRaw === 'object') {
             for (const [slot, value] of Object.entries(blockRaw as Record<string, unknown>)) {
@@ -553,6 +748,21 @@ export function concernSlotAudit(root: string, lowering: HostLowering): HostConc
                           : row.effective === null
                             ? 'stale-proof'
                             : null;
+                // The 1.2 roster runs BEFORE the `reason === null` return, so a
+                // binding on a slot that CAN refuse is recorded here and
+                // nowhere else.
+                for (const concern of value) {
+                    if (typeof concern !== 'string') continue;
+                    const declared = severities.get(concern) ?? '(unknown concern)';
+                    if (declared !== 'blocking') continue;
+                    blocking.push({
+                        host,
+                        slot,
+                        concern,
+                        declared,
+                        enforcement: enforcementFor(reason),
+                    });
+                }
                 if (reason === null) continue;
                 for (const concern of value) {
                     if (typeof concern !== 'string') continue;
@@ -566,6 +776,9 @@ export function concernSlotAudit(root: string, lowering: HostLowering): HostConc
                 }
             }
         }
+        blocking.sort(
+            (a, b) => a.slot.localeCompare(b.slot) || a.concern.localeCompare(b.concern),
+        );
         const reasonRank = (r: NoDenyReason): number =>
             r === 'unlowerable' ? 0 : r === 'null-block' ? 1 : 2;
         const sevRank = (s: string): number => (s === 'blocking' ? 0 : s === 'advisory' ? 2 : 1);
@@ -582,9 +795,75 @@ export function concernSlotAudit(root: string, lowering: HostLowering): HostConc
             lowerableSlots: reading.slots.length,
             boundSlots,
             noDeny,
+            blocking,
         });
     }
     return out;
+}
+
+/**
+ * What a binding's host slot can actually carry, as a closed vocabulary.
+ *
+ * road-to-blocking-severities 1.2, option (a) as the council revised it on
+ * 2026-10-01 (2/2, both seats). The revision is in the NAMES and it is the
+ * whole point: the first draft called this the "effective severity", and the
+ * second seat refused that term — severity has not changed, enforcement
+ * strength has, and a generated document that silently redefines the
+ * manifest's own word is worse than one that says nothing. So a binding
+ * carries two independent facts, published side by side and never folded into
+ * one: the DECLARED severity, which is the concern's policy intent and belongs
+ * to `hook_manifest.yaml`, and the VERIFIED ENFORCEMENT below, which is the
+ * host slot's measured capability and belongs to `host_lowering.yaml`.
+ *
+ *   - `refusal`      — the slot's `block_exit` can deny and its `verified`
+ *                      proof is current. A `blocking` concern here does what
+ *                      it says.
+ *   - `warning-only` — a lowering row exists and its `block_exit` is null. The
+ *                      slot is wired, the concern runs, and its verdict cannot
+ *                      become a refusal. This is the only value that asserts
+ *                      the host CANNOT refuse, and it is backed by a row.
+ *   - `unverified`   — no lowering row for this slot on this host. Nothing is
+ *                      bound natively and nothing has been established.
+ *                      Deliberately NOT `warning-only`: `host_lowering.yaml`
+ *                      says in its own header that an absence "does NOT mean
+ *                      the host cannot enforce", and both council seats named
+ *                      collapsing the two the defect to avoid. The gate below
+ *                      fails a published row that collapses them.
+ *   - `proof-expired` — the literal `block_exit` can deny but this package's
+ *                      `verified` citation has lapsed. A statement about our
+ *                      provenance, never about the host.
+ *
+ * Order is strongest-first, matching {@link CONFIGURED_OUTCOMES}'s convention.
+ */
+export const VERIFIED_ENFORCEMENTS = [
+    'refusal',
+    'proof-expired',
+    'warning-only',
+    'unverified',
+] as const;
+
+export type VerifiedEnforcement = (typeof VERIFIED_ENFORCEMENTS)[number];
+
+/**
+ * The enforcement a {@link NoDenyReason} corresponds to; `null` means the slot
+ * can deny, which is the one case `concernSlotAudit` does not record a reason
+ * for.
+ */
+export function enforcementFor(reason: NoDenyReason | null): VerifiedEnforcement {
+    if (reason === null) return 'refusal';
+    if (reason === 'unlowerable') return 'unverified';
+    if (reason === 'null-block') return 'warning-only';
+    return 'proof-expired';
+}
+
+/** One concern declared `blocking`, with the enforcement its host slot carries. */
+export interface BlockingBinding {
+    readonly host: string;
+    readonly slot: string;
+    readonly concern: string;
+    /** Always `blocking` here — kept explicit so the published row carries both facts. */
+    readonly declared: string;
+    readonly enforcement: VerifiedEnforcement;
 }
 
 /** How each {@link NoDenyReason} is worded. `stale-proof` never says "cannot". */
@@ -672,19 +951,27 @@ export function main(argv?: readonly string[]): number {
     const ledger = new GateLedger(GATE);
     ledger.plan(built.rows.map((r) => `${r.host}/${r.slot}`));
     const region = renderRegion(lowering);
+    const audit = concernSlotAudit(root, lowering);
+    const severityRegion = renderSeverityRegion(audit);
 
     if (write) {
         let next: string;
         try {
-            next = spliceDoc(docText, region);
+            next = spliceSeverityDoc(spliceDoc(docText, region), severityRegion);
         } catch (exc) {
             process.stderr.write(`❌  ${String(exc)}\n`);
             return 2;
         }
         // The backing check runs BEFORE the write, so a generator bug cannot
         // put a phantom value into the document and then be caught by the
-        // check that same generator's output feeds.
-        const phantom = unbackedOutcomes(region, backedOutcomes(lowering));
+        // check that same generator's output feeds. The 1.2 severity check
+        // rides in the same position and for the same reason: a generator that
+        // could write `refusal` onto a null `block_exit` must be stopped at the
+        // write, not discovered by the next read-only run.
+        const phantom = [
+            ...unbackedOutcomes(region, backedOutcomes(lowering)),
+            ...severityFindings(severityRegion, lowering),
+        ];
         if (phantom.length > 0) {
             for (const f of phantom) process.stderr.write(`❌  ${GATE}: ${f}\n`);
             process.stderr.write(
@@ -718,12 +1005,29 @@ export function main(argv?: readonly string[]): number {
         return 2;
     }
 
+    const committedSeverity = extractSeverityRegion(docText);
+    if (committedSeverity === null) {
+        process.stderr.write(
+            `❌  ${GATE}: ${DOC_REL} has no blocking-severity region. The markers ` +
+                `${SEVERITY_BEGIN_MARKER} … ${SEVERITY_END_MARKER} are what make that table ` +
+                `regenerable; restore them and run \`${REGEN_COMMAND}\`.\n`,
+        );
+        return 2;
+    }
+
     const findings: string[] = [];
     findings.push(...unbackedOutcomes(committed, backedOutcomes(lowering)));
     findings.push(...built.contradictions);
+    findings.push(...severityFindings(committedSeverity, lowering));
     if (committed !== region) {
         findings.push(
             `${DOC_REL} § the generated region differs from what \`${LOWERING_REL}\` produces.`,
+        );
+    }
+    if (committedSeverity !== severityRegion) {
+        findings.push(
+            `${DOC_REL} § the blocking-severity region differs from what \`${MANIFEST_REL}\` ` +
+                `and \`${LOWERING_REL}\` produce.`,
         );
     }
 
@@ -755,7 +1059,7 @@ export function main(argv?: readonly string[]): number {
     // The concern-vs-slot audit prints on every read-only run, before the
     // verdict, so it is visible whether the row comparison passed or failed.
     // It never changes the exit code — see `concernSlotAudit`.
-    for (const line of renderConcernAudit(concernSlotAudit(root, lowering))) {
+    for (const line of renderConcernAudit(audit)) {
         process.stdout.write(`${line}\n`);
     }
 
