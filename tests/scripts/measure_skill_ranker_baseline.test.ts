@@ -344,16 +344,25 @@ describe('the live routing matrix carries its labels', () => {
 describe('holdout — the sealed slice is a function of the id and nothing else', () => {
     const ids = Array.from({ length: 2000 }, (_, i) => `rule-${String(i % 97)}#positives[${String(i)}]`);
 
-    it('is deterministic — the same id lands in the same slice every call', () => {
-        // Against a snapshot taken first, not against a second call in the same
-        // expression: `expect(f(x)).toBe(f(x))` is a self-comparison of a pure
-        // function and cannot fail, which is the shape this file's other
-        // comments condemn.
-        const sample = ids.slice(0, 200);
-        const first = sample.map(sliceForId);
-        const interleaved = ids.slice(200, 400).map(sliceForId);
-        expect(interleaved).toHaveLength(200);
-        expect(sample.map(sliceForId)).toEqual(first);
+    it('is deterministic — a PINNED vector, because nothing weaker can fail', () => {
+        // Hoisting one call into a variable does not make a pure-function
+        // identity falsifiable: `f(x)` against a stored `f(x)` is still the same
+        // expression over the same input, and passes for every implementation
+        // including a broken one. The only falsifiable form is a fixed
+        // id -> slice table, which a changed hash, modulus or key WILL break.
+        //
+        // This vector is the CONTRACT, not a convenience: the sealed slice must
+        // not move silently between releases, and these rows are what notices.
+        const pinned: [string, 'tuning' | 'sealed'][] = [
+            ['alpha#positives[0]', 'tuning'],
+            ['alpha#positives[1]', 'tuning'],
+            ['docker-commands#near_misses[0]', 'sealed'],
+            ['docker-commands#positives[0]', 'tuning'],
+            ['alpha#positives[10]', 'sealed'],
+        ];
+        for (const [id, want] of pinned) expect(sliceForId(id), id).toBe(want);
+        // Both labels appear above, so a function stuck on one of them fails here.
+        expect(new Set(pinned.map(([, s]) => s))).toEqual(new Set(['tuning', 'sealed']));
     });
 
     it('assigns every id to exactly one of the two slices', () => {

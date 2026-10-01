@@ -253,4 +253,35 @@ describe('_body_signals — the bounds, asserted directly rather than through ra
         expect(got.whenToUse).toBe('');
         expect(got.headings).toEqual(['Procedure']);
     });
+
+    it('a nested heading that also says "when to use" does not re-level the section', () => {
+        // The defect: assigning `whenLevel` unconditionally let a `###` whose
+        // own title starts with "when to use" overwrite the outer level 2 with
+        // 3, after which the NEXT sibling `###` closed the section early and
+        // everything from it to the real end was dropped.
+        const got = _body_signals(
+            [
+                '## When to use',
+                'outer prose',
+                '### When to use it on a monorepo',
+                'inner prose',
+                '### Another subsection',
+                'sibling prose',
+                '## Procedure',
+                'steps',
+            ].join('\n'),
+        );
+        expect(got.whenToUse).toContain('outer prose');
+        expect(got.whenToUse).toContain('inner prose');
+        expect(got.whenToUse).toContain('sibling prose');
+        expect(got.whenToUse).not.toContain('steps');
+    });
+
+    it('a level-1 heading closes the section — it is strictly higher', () => {
+        const got = _body_signals('## When to use\n\nalways\n\n# New Top Section\n\nleaked prose\n');
+        expect(got.whenToUse).toBe('always');
+        expect(got.whenToUse).not.toContain('leaked prose');
+        // `#` is a document title, not a topic the ranker should index.
+        expect(got.headings).toEqual(['When to use']);
+    });
 });

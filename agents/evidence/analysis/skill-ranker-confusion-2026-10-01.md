@@ -447,6 +447,16 @@ named rather than quietly absorbed:
   of what that section says the skill is for; what is not prose is the
   delimiter and its language tag, and those are what the fix excludes. The test
   suite pins the surviving behaviour rather than the sentence.
+
+  **Two further boundary defects in the same extractor came out of the fifth
+  round, and neither moved a number.** A nested heading whose own title began
+  "when to use" re-levelled the terminator from 2 to 3, so the next sibling
+  `###` closed the section early and silently dropped the rest; and a level-1
+  `#` heading was not treated as a heading at all, so it and everything after it
+  leaked into an open capture. Both are fixed and both are pinned by cases that
+  were shown to fail first. The sweep was re-run and **every cell is unchanged**,
+  which is the useful part: the `when-to-use` and `headings` figures published
+  above were not resting on either defect.
 - **"Byte-identical on every column" was false**, by this report's own MRR
   column. Reading 1 above now states what the table shows.
 

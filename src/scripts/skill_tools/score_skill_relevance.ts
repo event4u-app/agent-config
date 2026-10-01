@@ -248,17 +248,28 @@ export function _body_signals(body: string): { whenToUse: string; headings: stri
             if (whenLevel > 0) when.push(raw);
             continue;
         }
-        const h = /^(#{2,6})\s+(.*)$/.exec(line);
+        // `#{1,6}`, not `#{2,6}`: a level-1 heading is strictly HIGHER than the
+        // section and must close it. Matching only `##`+ let a `# New Section`
+        // and everything after it leak into an open capture.
+        const h = /^(#{1,6})\s+(.*)$/.exec(line);
         if (h) {
             const level = (h[1] as string).length;
             const title = (h[2] as string).trim();
-            if (level <= 3) headings.push(title);
-            if (whenLevel > 0 && level <= whenLevel) whenLevel = 0;
-            // A SUBSECTION TITLE inside `## When to use` is part of that
-            // section's text. Skipping it indexed the prose under a `### Do NOT
-            // use when` while dropping the words that say what it is.
-            else if (whenLevel > 0) when.push(title);
-            if (/^when to use\b/i.test(title)) whenLevel = level;
+            if (level >= 2 && level <= 3) headings.push(title);
+            if (whenLevel > 0 && level <= whenLevel) {
+                whenLevel = 0;
+            } else if (whenLevel > 0) {
+                // A SUBSECTION TITLE inside `## When to use` is part of that
+                // section's text. Skipping it indexed the prose under a `### Do
+                // NOT use when` while dropping the words that say what it is.
+                when.push(title);
+            }
+            // Only OPEN a section when none is open. Assigning unconditionally
+            // let a `### When to use it on a monorepo` overwrite the outer
+            // level 2 with 3, after which the next sibling `###` satisfied
+            // `level <= whenLevel` and closed the section early — silently
+            // dropping everything from that sibling to the real end.
+            if (whenLevel === 0 && /^when to use\b/i.test(title)) whenLevel = level;
             continue;
         }
         if (whenLevel > 0) when.push(raw);
