@@ -14,10 +14,21 @@ a claim made here.
 
 ## The frozen set
 
-Every `src/skills/*/evals/triggers.json` present on this tree at the moment of
-freezing: **103 files**, 19 holdout and 84 train (100 at the freeze; see
-§ Growth 2026-09-19, § Growth 2026-09-30 and § Growth 2026-10-01 — the last of
-which is the first growth on the **holdout** side and is scoped accordingly).
+The set is every `src/skills/*/evals/triggers.json` on the tree. It has two
+sizes and this sentence used to blur them into one, which made it the third
+instance of the count-drift its own sweep was chasing — it read "present at the
+moment of freezing: **103 files** … (100 at the freeze)", a freeze-time
+qualifier over a post-growth number with the freeze-time number in brackets
+beside it.
+
+- **At the freeze (2026-08-30): 100 files.** That is what AC-6's ordering claim
+  and § Correction 2026-08-31 are about.
+- **Now: 103 files, 19 holdout and 84 train.** Three growths since — see
+  § Growth 2026-09-19, § Growth 2026-09-30 and § Growth 2026-10-01, the last of
+  which is the first on the **holdout** side and is scoped accordingly.
+
+Both are re-derivable from the reproduce recipe below; the second is the one the
+tables and the set hash describe.
 
 ## The partition rule — deterministic, name-derived, no discretion
 
