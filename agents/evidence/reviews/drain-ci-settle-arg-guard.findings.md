@@ -1,12 +1,12 @@
 # Findings: drain-ci-settle-arg-guard
-<!-- completion-review: v1 | reviewed: 2026-10-01 | scope: 70f2302fcf7ddd1f4bcd1638162ef0d532dda4ba15b07f8aa9f2824a4f4cd421 | diff: 14815e5c2e3f2d4a36e052693e51fa68d2af8096 | reviewer: r2-fresh-subagent-drain-ci-settle-arg-guard | prompt_hash: 67895abbeb52771e5ea06832a95215aa4b96101d966531bdcfd3fa3d9b469c22 -->
+<!-- completion-review: v1 | reviewed: 2026-10-01 | scope: 5a1dce7e53cdd3fc48e407aed924ac023c75a17568da2bbd81cccdb09d2f6956 | diff: 03ecfba9af50f3f7f194ef930c9f49a6af242f7d | reviewer: r2-fresh-subagent-drain-ci-settle-arg-guard | prompt_hash: 67895abbeb52771e5ea06832a95215aa4b96101d966531bdcfd3fa3d9b469c22 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-drain-ci-settle-arg-guard"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-10-01 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 14815e5c2e3f2d4a36e052693e51fa68d2af8096
-  scope_hash: 70f2302fcf7ddd1f4bcd1638162ef0d532dda4ba15b07f8aa9f2824a4f4cd421
+  diff_sha: 03ecfba9af50f3f7f194ef930c9f49a6af242f7d
+  scope_hash: 5a1dce7e53cdd3fc48e407aed924ac023c75a17568da2bbd81cccdb09d2f6956
   roadmap: agents/roadmaps/road-to-host-claims-the-tree-contradicts.md
   roadmap_hash: f7c0a4e89879f2bf01ff2e9dd4758b3c12268c4198418d7d7ac67f673a318e22
   ac_hash: 8439c3410ee5d2255385153cb79564dabe632ef329bccaa73dcd89fc07284169
@@ -57,3 +57,12 @@ authored tree returns twelve mentions and exactly ONE naming a flag — the
 the command with no arguments. A reader who wants to re-run that sweep has the
 command; it is cheap and it is the only thing standing between this change and
 a caller it did not consider.
+
+**Re-bind 2026-10-01 (§ 2.7 path 1).** The four fixes moved the review scope
+from `70f2302f…` to `5a1dce7e…`, which is the normal re-bind case: the reviewed
+content was EXTENDED by the fixes the review asked for, never withdrawn. Every
+row is terminal, so the artefact is re-bound in place rather than archived as a
+closed round. What the reviewer actually read is the `70f2302f…` state — the
+guard before its own findings were closed — and that is the honest reading of
+this file: the findings are theirs, the fixes and the tests holding them are
+the implementing side's, and no second reviewer has seen the extended state.
