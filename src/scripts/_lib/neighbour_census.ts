@@ -31,6 +31,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { HOOK_SIGNATURES, entryCommands, isManagedEntry } from './host_hook_merge.js';
+import { scanText } from './secret_detector.js';
 import { readRecordedHashes } from '../../install/recordedOwnership.js';
 import { manifest_path } from './installed_tools.js';
 
@@ -123,7 +124,38 @@ function readJson(p: string): Record<string, unknown> | null {
     }
 }
 
-/** The program a command line runs, with every argument discarded. */
+/**
+ * The program a command line runs — a CLASSIFIER, not a disclosure.
+ *
+ * The census needs enough to tell one neighbour's hook from another's; it does
+ * not need to reproduce anything runnable. A hook command line can carry a
+ * token, and this output can end up in a committed report, so the rule is that
+ * only a plain program name survives and everything else collapses to
+ * `(redacted)`.
+ *
+ * Taking "the first token" was not enough, and an independent review supplied
+ * the three shapes that defeat it:
+ *
+ * - `TOKEN=sk-live-… ./hook` — the first token IS the secret, because a
+ *   leading environment assignment is not an argument.
+ * - `https://user:pass@host/hook` — the credential is inside the program.
+ * - `curl -H 'Auth: a;b' …` — splitting on `;` ignores quoting, so an
+ *   argument fragment gets promoted into the output.
+ *
+ * So: leading `VAR=…` assignments are dropped rather than reported, a program
+ * carrying userinfo or a query string is redacted whole, the result must look
+ * like a bare path or program name or it is redacted, and whatever survives all
+ * of that is passed through this repository's own `secret_detector` as the last
+ * gate. The shape clause makes the quoting case safe without a shell parser — a
+ * fragment promoted out of a quoted argument does not look like a program name;
+ * the detector catches the one case shape cannot, a credential whose characters
+ * are themselves a legal program name.
+ *
+ * The residual, stated rather than implied: a secret that is neither
+ * credential-shaped nor high-entropy and is the whole command is
+ * indistinguishable from a program of that name, by this or any classifier that
+ * does not know what the program is. The census does not claim otherwise.
+ */
 export function commandHead(command: string): string {
     const trimmed = command.trim();
     if (trimmed === '') return '';
@@ -131,7 +163,20 @@ export function commandHead(command: string): string {
     // package's own shape and a neighbour may use one too; take the program
     // after the last `;` so the head names what actually runs.
     const lastStatement = trimmed.split(';').pop() ?? trimmed;
-    return (lastStatement.trim().split(/\s+/)[0] ?? '').trim();
+    const tokens = lastStatement.trim().split(/\s+/).filter((t) => t !== '');
+    // Drop leading environment assignments — the value is the exact thing
+    // that must not be printed, and the program is whatever follows.
+    let i = 0;
+    while (i < tokens.length && /^[A-Za-z_][A-Za-z0-9_]*=/.test(tokens[i] ?? '')) i += 1;
+    const head = tokens[i] ?? '';
+    if (head === '') return '(redacted)';
+    // A bare program name or path, and nothing else: letters, digits and the
+    // punctuation a path uses. No `@`, no `?`, no `&`, no quote, so neither a
+    // credential-bearing URL nor a promoted argument fragment can pass.
+    if (!/^[A-Za-z0-9_./\\:-]+$/.test(head) || head.includes('@')) return '(redacted)';
+    // Last gate: a credential can be spelled like a program name, and shape
+    // alone cannot see that. The repo's own detector can.
+    return scanText(head).length === 0 ? head : '(redacted)';
 }
 
 /**

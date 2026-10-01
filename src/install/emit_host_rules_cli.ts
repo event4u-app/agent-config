@@ -48,6 +48,7 @@ import {
     WINDSURFRULES_HEADER,
     cleanOwnedOnly,
     keptLine,
+    mayWriteRuleFile,
     mayWriteWindsurfRules,
     ownedPaths,
 } from './host_rule_ownership.js';
@@ -70,14 +71,24 @@ function _ruleFiles(rulesDir: string): string[] {
 export function emitCursor(rulesDir: string, projectRoot: string): number {
     const targetDir = path.join(projectRoot, '.cursor', 'rules');
     const files = _ruleFiles(rulesDir);
+    const owned = ownedPaths(projectRoot);
     const valid = new Set<string>();
+    let blocked = 0;
     for (const src of files) {
         const name = `${path.basename(src, '.md')}.mdc`;
-        _emit_cursor_mdc(src, path.join(targetDir, name));
+        const target = path.join(targetDir, name);
+        // Ownership BEFORE the write: a neighbour's file under one of our
+        // names would otherwise be destroyed and then skipped by the cleanup
+        // pass, which only looks at names this run did not emit.
+        if (!mayWriteRuleFile(target, owned)) {
+            blocked += 1;
+            continue;
+        }
+        _emit_cursor_mdc(src, target);
         valid.add(name);
     }
-    const { kept } = cleanOwnedOnly(targetDir, valid, ownedPaths(projectRoot));
-    const line = keptLine(kept);
+    const { kept } = cleanOwnedOnly(targetDir, valid, owned);
+    const line = keptLine(kept + blocked);
     if (line !== null) process.stdout.write(`cursor: ${line}\n`);
     return files.length;
 }
@@ -87,13 +98,19 @@ export function emitWindsurf(rulesDir: string, projectRoot: string): number {
     const files = _ruleFiles(rulesDir);
     const owned = ownedPaths(projectRoot);
     const valid = new Set<string>();
+    let blocked = 0;
     for (const src of files) {
         const name = path.basename(src);
-        _emit_windsurf_rule(src, path.join(perRuleDir, name));
+        const target = path.join(perRuleDir, name);
+        if (!mayWriteRuleFile(target, owned)) {
+            blocked += 1;
+            continue;
+        }
+        _emit_windsurf_rule(src, target);
         valid.add(name);
     }
     const { kept } = cleanOwnedOnly(perRuleDir, valid, owned);
-    const line = keptLine(kept);
+    const line = keptLine(kept + blocked);
     if (line !== null) process.stdout.write(`windsurf: ${line}\n`);
 
     // Concatenated legacy surface — same format as the projection-path

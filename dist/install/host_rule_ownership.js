@@ -29,7 +29,8 @@
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { recordedHashesForRoot } from './recordedOwnership.js';
+import { sha256OfFile } from './fsPrimitives.js';
+import { classifyOwnership, recordedHashesForRoot } from './recordedOwnership.js';
 /** The first line every `.windsurfrules` this package generates carries. */
 export const WINDSURFRULES_HEADER = '# Auto-generated from .augment/rules/ — do not edit directly';
 /** Every file path beneath `full`, or `[full]` when it is a file. */
@@ -50,11 +51,27 @@ function filesUnder(full) {
     return out;
 }
 /**
+ * Is this exact file ours AND still carrying the bytes we wrote?
+ *
+ * The recorded digest is the point, not the path. A path-membership test
+ * answers "did we ever write here", which merges two materially different
+ * trees: a generated file still as we left it, and one the consumer has since
+ * edited. Deleting the second loses their work, and `recordedOwnership` exists
+ * to tell them apart — importing its map and then ignoring its hashes was the
+ * defect an independent review named here.
+ */
+function isUnchangedOurs(file, owned) {
+    const target = path.resolve(file);
+    if (!owned.has(target))
+        return false;
+    return classifyOwnership(owned.get(target), sha256OfFile(target)) === 'recorded-unchanged';
+}
+/**
  * Remove the stale entries of ours from `dir`, keeping everything else.
  *
- * An entry is removable only when the manifest claims every file it contains:
- * one unclaimed file inside a directory keeps the whole directory, because
- * removing it would take that file with it.
+ * An entry is removable only when every file it contains is ours AND
+ * unmodified: one unclaimed or edited file inside a directory keeps the whole
+ * directory, because removing it would take that file with it.
  */
 export function cleanOwnedOnly(dir, valid, owned) {
     let entries;
@@ -71,7 +88,7 @@ export function cleanOwnedOnly(dir, valid, owned) {
             continue;
         const full = path.join(dir, name);
         const contained = filesUnder(full);
-        const ours = contained.length > 0 && contained.every((f) => owned.has(path.resolve(f)));
+        const ours = contained.length > 0 && contained.every((f) => isUnchangedOurs(f, owned));
         if (!ours) {
             kept += 1;
             continue;
@@ -89,14 +106,19 @@ export function cleanOwnedOnly(dir, valid, owned) {
 /**
  * May this package write `.windsurfrules` at `target`?
  *
- * Yes when the file is absent, when it still carries the header this package
- * generates, or when the manifest claims the path. A file that is none of
- * those belongs to someone else and is left exactly as it is.
+ * Yes when the file is absent, or when it still carries the header this
+ * package generates. Nothing else.
+ *
+ * A manifest claim is deliberately NOT a second route in. The file is
+ * generated and overwritten on every install, so the header IS the ownership
+ * signal and it is content-derived: if the header is gone, something replaced
+ * the file, and "the manifest says we wrote here once" is exactly the stale
+ * fact that would let us overwrite a neighbour's replacement. An independent
+ * review caught that route open, with a fixture asserting it.
  */
 export function mayWriteWindsurfRules(target, owned) {
+    void owned;
     if (!fs.existsSync(target))
-        return true;
-    if (owned.has(path.resolve(target)))
         return true;
     let head;
     try {
@@ -107,6 +129,23 @@ export function mayWriteWindsurfRules(target, owned) {
         return false;
     }
     return head.trim() === WINDSURFRULES_HEADER;
+}
+/**
+ * May this package write a rule file at `target`?
+ *
+ * The cleanup pass is not enough on its own, and an independent review found
+ * the hole: `_cleanDir` skips every name this run just emitted, so a
+ * neighbour's `foo.mdc` that happens to share a basename with one of our
+ * rules was already OVERWRITTEN by the time ownership was consulted. The
+ * check has to run BEFORE the write, which is what this is for.
+ *
+ * Absent, or ours and unmodified → write. Anything else is someone's file or
+ * someone's edit, and is left exactly as it is.
+ */
+export function mayWriteRuleFile(target, owned) {
+    if (!fs.existsSync(target))
+        return true;
+    return isUnchangedOurs(target, owned);
 }
 /** The manifest's claimed paths for a consumer root; empty when none resolves. */
 export function ownedPaths(projectRoot) {

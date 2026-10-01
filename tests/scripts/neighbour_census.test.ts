@@ -50,8 +50,23 @@ afterEach(() => {
     }
 });
 
-/** A secret-shaped argument no output may ever carry. */
-const PLANTED_TOKEN = 'sk-live-NEVER-PRINT-THIS-ARGUMENT';
+/**
+ * A secret-shaped argument no output may ever carry.
+ *
+ * Deliberately HIGH-ENTROPY rather than a readable placeholder: a placeholder
+ * made of dictionary words is neither credential-shaped nor high-entropy, so
+ * it would have exercised the shape rules and silently skipped the
+ * `secret_detector` gate behind them — the fixture would have been testing
+ * less than it looked.
+ *
+ * Deliberately NOT a vendor-prefixed shape either, though that was the first
+ * attempt: a `sk_live_…` string is rejected by the remote's push protection
+ * even as a fixture, which is the correct behaviour and makes it unusable
+ * here. Random characters with no prefix are caught by the detector's entropy
+ * layer (`rule: entropy`), which is the layer this gate actually needs to
+ * exercise — the one that catches a credential nobody wrote a pattern for.
+ */
+const PLANTED_TOKEN = 'xK7pQm2vRt9wYz4Bn6Hj8Lc3Fd5Gs1Av';
 
 /**
  * An EMPTY user-scope root.
@@ -92,7 +107,7 @@ function plantedConsumer(): string {
     return root;
 }
 
-describe('commandHead — arguments never leave the command line', () => {
+describe('commandHead — a classifier, never a disclosure', () => {
     it('keeps the program and drops every argument', () => {
         expect(commandHead(`npx thing --token ${PLANTED_TOKEN}`)).toBe('npx');
     });
@@ -105,6 +120,59 @@ describe('commandHead — arguments never leave the command line', () => {
 
     it('answers empty for an empty command rather than inventing one', () => {
         expect(commandHead('   ')).toBe('');
+    });
+
+    // The three shapes an independent review supplied against the first
+    // version, which took "the first token" and called that safe.
+
+    it('drops a leading environment assignment — the first token IS the secret', () => {
+        expect(commandHead(`TOKEN=${PLANTED_TOKEN} ./hook`)).toBe('./hook');
+        expect(commandHead(`A=1 B=${PLANTED_TOKEN} /usr/bin/thing --x`)).toBe('/usr/bin/thing');
+    });
+
+    it('redacts a program carrying a credential in its URL', () => {
+        expect(commandHead('https://user:hunter2@example.test/hook')).toBe('(redacted)');
+        expect(commandHead('https://example.test/hook?token=abc')).toBe('(redacted)');
+    });
+
+    it('redacts a fragment promoted out of a quoted argument by the `;` split', () => {
+        // `split(';')` is not shell-aware, so a semicolon inside a quoted
+        // argument hands the tail to the head extractor. It cannot look like a
+        // program name, so it is redacted rather than printed.
+        expect(commandHead(`curl -H 'Auth: ${PLANTED_TOKEN};still-secret' https://x.test`)).toBe(
+            '(redacted)',
+        );
+    });
+
+    it('redacts an assignment-only command rather than printing the assignment', () => {
+        expect(commandHead(`TOKEN=${PLANTED_TOKEN}`)).toBe('(redacted)');
+    });
+
+    it('redacts a credential spelled like a program name — the shape gate cannot see that', () => {
+        expect(commandHead(PLANTED_TOKEN)).toBe('(redacted)');
+        expect(commandHead('Zm9vYmFyYmF6cXV4MTIzNDU2Nzg5MGFiY2RlZg')).toBe('(redacted)');
+    });
+
+    it('states its residual rather than claiming a guarantee it does not have', () => {
+        // A "secret" that is neither credential-shaped nor high-entropy and is
+        // the whole command is indistinguishable from a program of that name.
+        // Pinned so the limit is a known property rather than a surprise.
+        expect(commandHead('not-really-a-secret-just-words')).toBe('not-really-a-secret-just-words');
+    });
+
+    it('never returns anything containing the planted token, across every shape', () => {
+        const shapes = [
+            `TOKEN=${PLANTED_TOKEN} ./hook`,
+            `./hook --token ${PLANTED_TOKEN}`,
+            `https://u:${PLANTED_TOKEN}@x.test/h`,
+            `a;TOKEN=${PLANTED_TOKEN}`,
+            `curl -H 'A: ${PLANTED_TOKEN};b' x`,
+            `${PLANTED_TOKEN}`,
+            `/bin/sh -c "export K=${PLANTED_TOKEN}; run"`,
+        ];
+        for (const s of shapes) {
+            expect(commandHead(s), s).not.toContain(PLANTED_TOKEN);
+        }
     });
 });
 

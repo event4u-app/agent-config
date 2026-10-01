@@ -35,6 +35,28 @@
 # eight new concerns spread across eight events violate it zero times.
 #
 # `decision: rejected` is a first-class row. A recorded refusal is the point.
+#
+# `effect:` — what a concern DELIVERS to a turn, from a closed set. Read by the
+# neighbour census (`agent-config doctor neighbours`), which has to say what
+# sharing an event with another package's hook entry actually risks.
+#
+# The axis is OBSERVABLE DELIVERY, never primary purpose. An independent review
+# found the distinction load-bearing: a shadow concern whose purpose is
+# verification but which emits nothing and never blocks delivers a RECORD, so it
+# is `telemetry`. Classify by what a turn can tell happened.
+#
+#   permission    can REFUSE the thing it fires on. Equivalent to
+#                 `severity: blocking`, and `lint_hook_manifest` enforces the
+#                 equivalence in both directions. "Can refuse" is the whole
+#                 definition — it is not "decides authorization", so a gate that
+#                 refuses on a quality threshold is `permission` too.
+#   context       puts text in front of the model
+#   verification  checks a claim or a shape and REPORTS what it found
+#   telemetry     records state, a ledger, a counter
+#   memory        reads or writes the memory layer
+#   notification  tells the human something and changes nothing else
+#   formatting    reshapes a command or a generated file
+#
 schema_version: 1
 
 concerns:
@@ -1365,12 +1387,15 @@ concerns:
   # to advisory is pre-registered in the hook header.
   #
   # Never blocks, never warns: exit 0 on every path. fail_closed: false.
+  # `effect: telemetry`, not `verification`, and the script's own header is why:
+  # "it emits nothing to the model and it never blocks". A shadow concern
+  # records what a gate WOULD have said; recording is what it delivers.
   source-first-gate:
     script: src/scripts/hooks/source_first_gate_hook.ts
     args: []
     fail_closed: false
     severity: advisory
-    effect: verification
+    effect: telemetry
     needs_payload_bodies: [input]
   # road-to-runtime-event-journal Phase 1 step 1.4 — the journal's hook binding
   # (AI council 2026-08-28, decision 3). `_lib/runtime_journal.ts` shipped bound
