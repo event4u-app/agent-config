@@ -73,6 +73,13 @@ tasks:
       - task: sync
       - task: build-discovery
       - task: generate-tools
+      # The evidence temperature census, report-only on every release, with the
+      # files newly cold since the previous census named. The council that ruled
+      # on it (2026-10-01, 2/2) put the ceiling here on purpose: becoming cold
+      # triggers no move, no exclusion and no deletion, only a reading. `|| true`
+      # keeps that literal — a census that can fail a release is a gate, and the
+      # ruling was that no gate is warranted at 2.3% of the tree.
+      - ./scripts-run src/scripts/report_evidence_temperature --write --since latest --quiet || true
 
   clean-tools:
     silent: true

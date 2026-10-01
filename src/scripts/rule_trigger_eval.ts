@@ -51,6 +51,7 @@ import {
 } from './skill_trigger_eval.js';
 import { AnthropicFetchRouter, loadKeyFromFile } from './_lib/trigger_routers.js';
 import { RULES_MODE_FLOOR } from './_lib/trigger_eval_floors.js';
+import { fnv1a } from './_lib/fnv.js';
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(_HERE, '..', '..');
@@ -144,15 +145,14 @@ export interface RuleCase {
     expected: boolean;
 }
 
-/** FNV-1a 32-bit — deterministic sampling key (no Math.random). */
-export function fnv1a(s: string): number {
-    let h = 0x811c9dc5;
-    for (let i = 0; i < s.length; i += 1) {
-        h ^= s.charCodeAt(i);
-        h = Math.imul(h, 0x01000193) >>> 0;
-    }
-    return h >>> 0;
-}
+/**
+ * FNV-1a 32-bit — deterministic sampling key (no Math.random).
+ *
+ * Moved to `_lib/fnv.ts` when the held-out partition in
+ * `measure_skill_ranker_baseline` became its second caller; re-exported here
+ * because this module's own suite imports the name from this file.
+ */
+export { fnv1a };
 
 /**
  * Derive the eval suite from the routing-matrix fixtures: positive →
