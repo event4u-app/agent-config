@@ -242,6 +242,21 @@ describe('readForge — every failure degrades to unread, never to false', () =>
         expect(a.calls).toContain('repos/o/r/environments/prod%20eu/deployment-branch-policies');
     });
 
+    it('a non-string branch-policy name makes the row unread, not unsatisfied', () => {
+        // Filtering it away left an empty pattern list, which maps to `false`
+        // and renders a positive claim about the forge out of unparseable data.
+        const reading = readForge(
+            'o/r',
+            api({
+                ...FULL,
+                'repos/o/r/environments/github-pages/deployment-branch-policies': {
+                    branch_policies: [{ name: 'main' }, { name: 42 }],
+                },
+            }),
+        );
+        expect(reading.deployRestricted).toBeNull();
+    });
+
     it('a wildcard branch policy refutes the row', () => {
         const reading = readForge(
             'o/r',
@@ -576,6 +591,24 @@ describe('liveForgeApi — the adapter the degradation claim rests on', () => {
         };
         expect(liveForgeApi(() => 0, counting).get('x')).toBeNull();
         expect(ran).toBe(0);
+    });
+
+    it('always hands the runner an INTEGER timeout', () => {
+        // `budgetOf` reads `performance.now()`, which is fractional, and
+        // `spawnSync`'s `timeout` must be an integer. Unfloored, every call
+        // made once the remainder became the minimum threw ERR_OUT_OF_RANGE,
+        // was swallowed, and returned null — a read that degraded to `unread`
+        // without ever starting a subprocess.
+        const seen: number[] = [];
+        const rec: Runner = (_c, _a, timeoutMs) => {
+            seen.push(timeoutMs);
+            return { status: 0, stdout: '{}' };
+        };
+        for (const left of [9_999.7, 0.5, 4_321.000001, 10_000.9]) {
+            liveForgeApi(() => left, rec).get('x');
+        }
+        expect(seen.every((t) => Number.isInteger(t))).toBe(true);
+        expect(seen).toEqual([9_999, 0, 4_321, FORGE_CALL_TIMEOUT_MS]);
     });
 
     it('shortens the per-call timeout to whatever the budget has left', () => {

@@ -1,0 +1,2119 @@
+diff --git a/agents/evidence/analysis/test-quality-forge-reader-round2-2026-10-01.md b/agents/evidence/analysis/test-quality-forge-reader-round2-2026-10-01.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..85cfa6ecd45362b6adad4a36496da70c917eba67
+--- /dev/null
++++ b/agents/evidence/analysis/test-quality-forge-reader-round2-2026-10-01.md
+@@ -0,0 +1,70 @@
++<!-- evidence-type: v1 | type: current-binding | declared: 2026-10-01 -->
++
++# Test-quality validation — the forge-read suites
++
++The artefact the `provenance: level=L4` markers on `tests/scripts/forge_reader.test.ts` and
++`tests/scripts/doctor_forge_block.test.ts` cite. AC-2 requires `evidence` at L3/L4 on the
++stated ground that an unattributed claim of independence cannot be checked for the
++independence it claims — so this file exists to be checkable, not to be decorative.
++
++## What ran
++
++| | |
++|---|---|
++| Question | `agents/runtime/council/questions/test-quality-forge-reader-round2-2026-10-01.md` |
++| Seats | **anthropic** and **openai**, 2/2 present, quorum concluded |
++| Transport | CLI, subscription-authed; `$0.00` billed |
++| Date | 2026-10-01 |
++| Mode | `analysis`, depth `deep`, peer-review enabled |
++
++The question is the Phase 2.3 one, asked of evaluators that did not author the tests: *would
++these tests fail under plausible wrong implementations?* It asked for tautologies, assertions
++restating the implementation, missing boundary and error cases, over-mocking, expectations
++shaped to fit the code, and any test never shown red.
++
++The council transcript is not linked: `agents/runtime/council/` is gitignored and auto-pruned
++after the retention window, so a stable artifact may not cite a path there. The findings that
++mattered are reproduced below instead, which is the convention this repository already uses.
++
++## The first attempt failed honestly, and that is recorded rather than hidden
++
++The first pass was handed a *description* of the two suites instead of the suites. One seat
++refused to assess on exactly that ground — the question cannot be answered without the test
++code — and called out the other for producing a plausible-sounding reconstruction from the
++problem statement. **That pass establishes nothing and is cited for nothing.** The second
++pass embedded both files in full. The council bundle is capped at 51,200 bytes, so the
++implementation source was dropped and the tests kept; at 32,674 bytes it ran.
++
++## What the council found, and what was done about it
++
++1. **The effort was inverted.** The suites spent their cases on acquisition choreography —
++   budget, pagination, call order, offline identity — while the five rows `doctor --json`
++   actually emits, the user-visible trust boundary, were barely asserted: no case named the
++   row ids or their order, none falsified one input field to check row isolation, none
++   covered multiple rulesets with one inactive. *Folded in:* the `the five rows — the product
++   output itself` group in `doctor_forge_block.test.ts` — row ids and order, per-row
++   isolation, an inactive ruleset, source presence on every row.
++2. **The scripted `api()` fake dropped the `paginate` argument.** Consumption of pages was
++   tested; the *request* for them was not, so an implementation that read page one and parsed
++   it correctly passed every pagination case. *Folded in:* the fake records the flag, and a
++   case asserts the three list endpoints are asked for paginated while the single-object read
++   is not.
++3. **The "non-boolean" case supplied a MISSING field, not a wrong-typed one.** A truthy
++   string or a `1` is the shape a loose serialiser actually produces and the one where a
++   coercing implementation reports `satisfied`. *Folded in:* wrong-type cases over
++   `allow_auto_merge` and `default_branch`.
++4. **Substitution completeness.** The assertion proved no `{owner}` remained and that at
++   least one action carried the slug, not that the format was right. *Partly folded in:* the
++   row-source and action-line cases assert the `repos/<slug>/` shape.
++
++## The honest limit
++
++L4 means a multi-provider council participated as an **evaluator** on these suites and its
++findings were folded in. It does not mean the suites were independently **authored** — they
++were written by the implementing session, which is L0 authorship — and reading the marker as
++end-to-end independence would over-claim. The same limit is stated on the AC-2 artefact of
++2026-09-14 and is repeated here rather than assumed inherited.
++
++Four independent R2 review rounds over the same change are recorded separately under
++`agents/evidence/reviews/drain-adversarial-verification-close*.findings.md`; this file covers
++only the council pass over the tests.
+diff --git a/agents/roadmaps/road-to-adversarial-verification-and-long-runs.md b/agents/roadmaps/road-to-adversarial-verification-and-long-runs.md
+index 6d41987f51198692f0c53cc13642a2ef5a1433b4..672ca57b464522a4c5ad1f632cf0dec181ef0e4e 100644
+--- a/agents/roadmaps/road-to-adversarial-verification-and-long-runs.md
++++ b/agents/roadmaps/road-to-adversarial-verification-and-long-runs.md
+@@ -110,6 +110,40 @@ capability_gap: >-
+ > committed inside the roadmap that forbids it. An independent review caught it the same day;
+ > the implementing session did not.
+ 
++> **SUPERSEDED IN PART AGAIN, 2026-10-01 — 28 of 30, and AC-5 closed for the right reason
++> this time.** A `process-full` drain run reproduced all three open criteria before touching
++> any of them, rather than reading their notes. AC-5's reopen was accurate: `doctor --json`
++> reported five `unread` rows. The missing piece was a CALLER — Phase 3.2's mapper was
++> correct and nothing in production fed it — and `_lib/forge_reader.ts` is it. The command
++> the criterion names now reports five `satisfied` rows on its own output, which is the
++> standard the 2026-09-30 reopen set and the standard this file exists to defend.
++> `forge-protection-settings` resolves with it: both conjuncts of its criterion hold.
++>
++> **The run's own first draft was wrong, and a council caught it.** This session argued that
++> wiring the forge read in was a *different mechanism* from the one Phase 3.2 rejected, so
++> `decision-revisit-gate`'s lock did not apply — reasoning from the offline output being
++> unchanged. A 2/2 convergent council pass refuted it: Phase 3.2 recorded two boundaries, and
++> moving `gh api` inside `doctor` reverses both regardless of what the offline output does.
++> The amendment under Phase 3.2 is the supersession that was owed, and the council's two
++> concrete defects — an opt-out that still spawned `git`, and five per-call timeouts with no
++> bound on their sum — were real and are fixed in the same diff. **Recorded because the
++> implementing session had every incentive not to find either**, which is the property
++> `evaluator-independence` exists over and the reason the pass was commissioned at all.
++>
++> **AC-4 and AC-6 are `[~]`, and each now carries its handover rather than its history.**
++> AC-4's kernel edit was re-attempted and re-denied at tool-call time, and the one remaining
++> action is named down to the file, the line and the string. AC-6's measurement half was
++> re-verified green; its decision half went to the council and came back **owner-reserved,
++> 2/2** — on two independent grounds, with the dissent between the blocker's recommendation
++> and anthropic's kept rather than resolved, and with the nine-item artefact the council
++> specified so the owner can decide in one reading.
++>
++> **The lesson this round adds to the two below.** The 2026-09-30 round learned that the
++> forge being right and the criterion being met are different facts. This one learned the
++> adjacent thing: *a correct outcome does not make the reasoning that reached it correct*.
++> AC-5 would have closed either way; the argument for why it was allowed to close was wrong,
++> and only an independent pass over this run's own reasoning surfaced it.
++
+ > **Source:** `agents/tmp.old/inbox-2026-09-w/` — an inbox round carrying two challenge-me
+ > interviews with the owner plus three generations of consolidated proposals. Verified against
+ > `main@399beecab` on 2026-09-08.
+@@ -334,6 +368,94 @@ before the record is signed.
+       **Rulesets, never the classic endpoint**: `branches/main/protection` 404s on this
+       repository while a ruleset protects it, so the unsatisfied detail warns about that 404
+       explicitly. No ruleset id is pinned — the re-scope forbids it, since rulesets split. -->
++      <!-- AMENDED 2026-10-01 — the `doctor` does NOT reach the network half of the note
++      above is SUPERSEDED. The injected-reading half survives and is now the internal
++      contract rather than the external one.
++      **What replaces it.** `doctor` acquires the reading itself, through
++      `_lib/forge_reader.ts`, and hands it to the unchanged pure mapper. The layering the
++      original note argued for is intact one level down — adapter → validated `ForgeReading`
++      → pure evaluator — which is the shape the council named as the stronger design; what
++      moved is only WHO calls the adapter.
++      **Why it was superseded rather than honoured.** The note's own stated reason was that a
++      diagnostic nobody can run offline is one nobody runs. That reason is fully served by a
++      best-effort read whose every failure returns `UNREAD_FORGE`. What the note ALSO did,
++      and did not argue for, was leave `forgeProtectionJson` with no production caller — so
++      the command AC-5 names could never answer, and the rows were established instead by a
++      human running `gh api` and reading a mapper in a test. That is the owner-confirmation
++      substitution this roadmap's Phase 3 exists to remove, committed by Phase 3.2 itself.
++      **Decided by:** a 2/2 convergent AI council pass, anthropic + openai, 2026-10-01,
++      CLI/subscription, $0.00. Both seats held that this is a boundary reversal needing an
++      explicit amendment rather than a compatible refinement, and both listed the conditions.
++      Conditions MET in the same diff: the acquirer is a separate module from the mapper and
++      the policy; the opt-out prevents every subprocess including the git remote read, not
++      merely the use of the result; a whole-command deadline bounds cumulative latency on top
++      of the per-call ones, and a call is TIMED OUT against what is left of the budget rather
++      than only admitted against it; `gh` is spawned directly with an argument array, never
++      through a shell — an earlier draft of this line claimed "never with a repository-derived
++      fragment", which is false of every path (`repos/<repo>/…`) and was corrected after an
++      independent review, since a council condition logged as MET is not a place for an
++      approximate statement; the API host is gated before any credential is sent; the block
++      NAMES the repository it read and substitutes that slug into each row's `source`; offline
++      and failed-live paths keep the documented schema, exit semantics and `source` templates,
++      and stay distinguishable via `read_from_forge` and a null `repository`; the network
++      behaviour, its call-count formula and its kill switch are documented in
++      `docs/troubleshooting.md`.
++      Conditions NOT met, and named rather than implied: per-row observation time and a
++      `live` / `cached` / `error` provenance enum beyond the existing three-state row; a
++      measured p95 latency threshold; and the AC-5 wording repair. All three are carried as
++      owner residue under AC-5 and in the PR body.
++      **A SECOND independent round found 13 more, three of them `high`, and the sharpest one
++      refuted a sentence this entry had already written.** Round 1's fix made the block name
++      the repository it read — and the slug is resolved from the LOCAL git remote, which
++      answers with no network. So an ordinary offline run (GitHub remote present, no
++      connectivity, no opt-out) emitted a named repository and substituted sources while every
++      row was `unread`, making "offline output is what Phase 3.2 shipped" false on exactly the
++      failed-live path the council condition names. The earlier verification had only ever
++      exercised `AGENT_CONFIG_DOCTOR_NO_FORGE=1` and read it as offline; they are different
++      paths and only one was checked. `repository` is now reported only when at least one row
++      carries a real value, so the invariant is structural rather than a caller's promise, and
++      it is proven twice: a unit case asserting the two documents are byte-identical, and an
++      end-to-end run with a failing `gh` on `PATH` returning `repository: null`, five `unread`
++      rows and templated sources.
++      The other two `high` findings were both overstatement paths. The `environments` and
++      branch-policy reads were UNPAGINATED, so on a repository with more environments than one
++      page `deployRestrictedFrom`'s `every()` ran over the visible subset and an unlisted
++      unrestricted environment read as `satisfied` — while `readRulesets` guarded the identical
++      hazard one function up and said so. And `gh` was spawned with neither `cwd` nor
++      `--hostname` while the slug was resolved with `cwd: root`, so with `--project`/`--root`
++      set, or a GitHub Enterprise remote, the two halves of the read addressed different
++      repositories: `apiFor` is now a factory over the resolved target, which makes the host
++      binding structural. Also fixed: `ls-remote --get-url` in place of `remote get-url`, which
++      is blind to `url.insteadOf` rewriting — another condition this amendment names;
++      a slug character-set check, since the old pattern admitted `..`, `?` and `$&`, the last
++      being a `String.replace` control sequence; a per-environment call issued when
++      `protected_branches` already decided the row; and the ruleset fixture, which used a shape
++      production never produces, leaving the page-flattening branch dead in every case that
++      claimed to cover it.
++      **An independent R2 review of this diff found 13 defects and 12 are fixed here.** It was
++      dispatched through `dispatch_r2_reviewer`, so the reviewer's prompt was assembled
++      deterministically rather than written by the implementing session, and the package is
++      committed with the verdict. The one it ranked `high` is the one this amendment's own
++      reversal clause had already named and shipped no mitigation for: the rows described
++      whatever `origin` resolved to and the output never said which repository that was —
++      load-bearing the moment the read went live, in a fork, a mirror or a consumer install.
++      Two more were real overstatement paths: an unencoded environment name in the API path,
++      whose failed call silently became a TRUSTED flag and could report a wildcard policy as
++      `satisfied`; and a budget that bounded admission but not duration, while the doc and
++      the constant both called it a ceiling on the whole read. The remaining fixes correct a
++      comment describing a compatibility shim that was never written, an inverted "narrower
++      guarantee" reading, a `monotonic` claim over a steppable clock, `AGENT_CONFIG_OFFLINE`
++      semantics that disagreed with the rest of the binary, the stale sensitivity
++      denominators, a `verify:` clause that could not fail, and an untested live adapter. The
++      thirteenth — the suite's provenance marker — is answered rather than carried: it now
++      reads `critical=yes`, and the LEVEL went L1 → L4 two rounds later, earned by a council
++      pass over the suites themselves rather than relabelled. AC-5 carries that story.
++      **Reversed if** any of: a credential prompt or hang is observed on the read path; the
++      read binds evidence to the wrong repository (fork, multiple remotes, URL rewriting,
++      GHES); a sustained fallback or latency regression is measured; or an `unread` row is
++      ever rendered as `satisfied`. The single pre-acquisition kill switch is
++      `AGENT_CONFIG_DOCTOR_NO_FORGE=1`, and `AGENT_CONFIG_OFFLINE=1` disables it alongside
++      everything else. -->
+       <!-- verify: ./agent-config doctor --json | grep -A 8 '"forge_protection"' -->
+ 
+ ## Phase 4 — A recovery ladder with strategy epochs
+@@ -660,11 +782,29 @@ before the record is signed.
+ ## Blockers
+ 
+ ### blocker: forge-protection-settings
+-- **Status:** open
++- **Status:** resolved
+ - **Owner:** maintainer
+ - **Class:** 3 — human-only <!-- MISLABEL TWICE OVER, corrected 2026-09-30: see the notes
+   below. Kept rather than rewritten because the correction is the finding. -->
+ 
++- **RESOLVED 2026-10-01.** Both conjuncts of the `Resolved when` criterion now hold, and the
++  second one is what this run added. Read it as written: (1) *current evidence from the
++  repository's effective protection mechanism — including applicable rulesets — demonstrates
++  the required behavior* — satisfied since 2026-09-30, five of five rows, table below; and
++  (2) *"`agent-config doctor --json` must report the same effective state without treating the
++  classic protection endpoint's 404 as absence of protection"* — now satisfied. That command
++  reports `satisfied` on all five rows with `read_from_forge: true` and zero action lines,
++  and it reaches them through `repos/{owner}/{repo}/rulesets` plus the repository and
++  environments records. It never calls `branches/{branch}/protection`, so the 404 the
++  re-scope was written over cannot be reached, let alone mistaken for absence of protection.
++  **The human half was already complete** — its own *What to do* is "enable, on the forge,
++  whichever rows it reports missing", done on 2026-09-30 including `allow_auto_merge`. What
++  remained was the `doctor` wiring, which was ordinary agent-doable work, and this run did it
++  under AC-5. Nothing here is waiting on the maintainer.
++  Verified by: `./agent-config doctor --json` → 5/5 `satisfied`; and with
++  `AGENT_CONFIG_DOCTOR_NO_FORGE=1` → 5/5 `unread`, which is the unchanged offline behaviour
++  rather than a second answer to the same question.
++
+ - **NOT resolved, corrected 2026-09-30 within the same run that first marked it resolved.**
+   The `Resolved when` criterion is a CONJUNCTION and only its first half holds. Read it as
+   written: (1) current evidence from the effective protection mechanism demonstrates the
+@@ -826,6 +966,20 @@ before the record is signed.
+   the question would close a `Class: 3 — human-only` blocker on evidence about a
+   different subject. The table is one input to the decision; the decision is
+   untaken. `Resolved when` is unchanged.
++- **Second input now available, and again deliberately NOT a resolution:** a 2/2 convergent
++  AI council pass of 2026-10-01 (anthropic + openai, CLI/subscription, $0.00) was asked
++  whether this choice is council-decidable, owner-reserved, or an escalation condition. Both
++  seats answered **owner-reserved**, on two independent grounds: the options are not
++  authority-equivalent (prohibiting autonomy preserves the restrictive state; authorising
++  `manual-only` establishes a safety floor that no host can enforce), and fixing whether the
++  Hard Floor applies on one host or eight is governance self-amendment. Both also warned
++  against the move this run could have made — `host_lowering.yaml` measures capability and
++  authorises nothing, so writing a preferred fallback into the column would convert an
++  inventory into a permission. The verdict therefore CONFIRMS this blocker rather than
++  closing it, and it adds a dissent worth having before the decision: the recommendation
++  below is `manual-only`, while anthropic's, if forced to choose, is the opposite — no
++  autonomous mode on a host without an enforceable stop. The full nine-item decision brief
++  the council specified is under AC-6. `Resolved when` is unchanged.
+ - **If you do nothing:** the daemon ships observation-only and never enforces, which is the
+   honest state and also means the eleven typed ops carry no mechanical guard on seven of eight
+   hosts.
+@@ -919,8 +1073,42 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op 
+       to ratchet down and a baseline file would pin a number that is zero by construction on
+       every clean branch. "Green at promotion" is the branch this criterion takes. -->
+       <!-- verify: ./scripts-run src/scripts/check_test_delta --self-test -->
+-- [ ] AC-4 — `fix_loop_max` defaults to 10, `grep -rn 'N=3' src/rules` returns 0, and no
++- [~] AC-4 — `fix_loop_max` defaults to 10, `grep -rn 'N=3' src/rules` returns 0, and no
+       escalation path maps a count to an owner ask.
++      **Evidence (2026-10-01).** DEFERRED, not unstarted, and re-tested rather than inherited.
++      `grep -rn 'N=3' src/rules` returns exactly ONE line — `verify-before-complete.md:45`,
++      inside the link label `Mechanics (N=3 / Hard-Floor bounds)`. The edit removing those
++      three characters was attempted this run and denied at tool-call time, message verbatim:
++      `block-kernel-rule-writes: BLOCKED — kernel rule verify-before-complete is immutable —
++      tighten-only via the override exception registry`. The guard's own text then names both
++      remedies and calls them what they are: *"Legitimate change requires a human action
++      outside the agent session: edit via the override exception registry, or disable/remove
++      the 'block-kernel-rule-writes' entry in src/scripts/hook_manifest.yaml."*
++      **The capability-versus-role test this file taught itself on 2026-09-30 was applied
++      here and does NOT dissolve the claim.** That lesson — a `Class: 3 — human-only` label
++      asserting a role is not a capability finding, and `--jq .permissions.admin` dissolved
++      one — is the reason this was re-attempted rather than assumed. The difference is that
++      the forge case had an available action nobody had tried, while here a deterministic
++      guard refuses the tool call itself. The second remedy is available in the physical
++      sense and refused on its merits: disabling a kernel-write guard to close a cosmetic
++      three-character occurrence is the self-modification `security-sensitive-stop`
++      § Adversarial principal user forbids, and it would weaken a safety floor to satisfy a
++      checkbox on the roadmap about replacing confirmation with mechanical checks.
++      **The obligation this criterion protects is already fully met.** `fix_loop_max` defaults
++      to 10 (`agent-settings.template.yml`, the Zod `.default(10)`, `missionExecution`'s
++      fallback), and no escalation path maps a count to an owner ask — `autonomous-execution`
++      carries `THE BOUND TRIGGERS A STRATEGY CHANGE, NEVER A QUESTION` and `A COUNT IS NOT A
++      REASON TO ASK`, with `T3` asserting the ABSENCE of the old `ASK USER FOR GUIDANCE`
++      rather than only the new prose's presence. `T3` also pins the offender set as EXACTLY
++      `['verify-before-complete.md']`, so the criterion stays live for every non-kernel rule
++      and reds the moment another reintroduces the cap.
++      **Exact inputs a future session needs**, so this is a handover and not a shrug: a
++      maintainer edits one string in `src/rules/verify-before-complete.md:45`, changing
++      `Mechanics (N=3 / Hard-Floor bounds)` to any label without `N=3` — the link target and
++      every other word stay — either through the override exception registry or with the
++      guard temporarily lifted by the person who owns it. Nothing else is outstanding; the
++      box flips the moment `grep -rn 'N=3' src/rules` returns nothing, and `T3`'s offender
++      assertion must be narrowed to the empty set in the same change.
+       <!-- OPEN 2026-09-14 — two of three clauses are met and the third is agent-impossible.
+       MET: `fix_loop_max` defaults to 10 (`agent-settings.template.yml:760`, the Zod schema's
+       `.default(10)`, and `missionExecution`'s fallback). MET: no escalation path maps a count
+@@ -951,8 +1139,120 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op 
+       distance is a stale string in a mechanics link label, not a live cap: the obligation this
+       criterion protects is already satisfied everywhere the bound binds. -->
+       <!-- verify: grep -rln 'N=3' src/rules -->
+-- [ ] AC-5 — `agent-config doctor --json` reports every `forge_protection` row true on this
++- [x] AC-5 — `agent-config doctor --json` reports every `forge_protection` row true on this
+       repository.
++      **Evidence (2026-10-01).** CLOSED, and this time by the command the criterion names
++      rather than by a reading of the evidence behind it. Run literally on this tree,
++      `agent-config doctor --json` now reports all five rows `satisfied`, `read_from_forge:
++      true`, and zero action lines: `default_branch_protected` (1 active branch ruleset covers
++      the default branch) · `required_checks_present` (2 contexts: `Sync + Generate Tools
++      Consistency`, `Standing payload delta + budget gate`) · `force_push_disabled`
++      (`non_fast_forward` active) · `auto_merge_available` (`allow_auto_merge` enabled) ·
++      `deploy_via_pipeline_only` (every environment restricts its deployment branches).
++      Before this change the same command reported five `unread`; that was reproduced first,
++      rather than taken from the reopen note.
++      **What was missing was a CALLER, and that is all that was added.** Phase 3.2's mapper
++      was correct and had no production path feeding it, so `cmd_doctor.ts` passed
++      `UNREAD_FORGE` unconditionally. `src/scripts/_lib/forge_reader.ts` is the read —
++      injectable `ForgeApi`, `gh api` behind it — and `doctor_execution.ts` gains
++      `forgeProtectionJsonFor`, which resolves the repository from the git remote and hands
++      the reading to the existing mapper. `cmd_doctor.ts` changed two lines, which is what
++      the source-size ratchet on that file requires of any addition.
++      **This IS a reversal of Phase 3.2's architectural boundary, and the council said so
++      after this run had already written the opposite.** The first draft of this entry argued
++      that `decision-revisit-gate`'s mechanism-match test fails — different mechanism, no lock
++      — on the strength of the offline output being unchanged. A 2/2 convergent council pass
++      (anthropic + openai, 2026-10-01, CLI/subscription, $0.00) refuted it, and the refutation
++      is recorded here rather than quietly dropped because the implementing session had every
++      incentive not to look for it. Both seats, independently: Phase 3.2 recorded TWO
++      boundaries — *"`doctor` does not reach the network"* AND *"the reading is injected"* —
++      and moving `gh api` inside `doctor` reverses both. openai: *"It is a different
++      availability mode but a reversal of the same architectural decision."* anthropic:
++      *"Different failure mode, same boundary reversal... Phase 3.2 established `doctor` as a
++      pure reporter of injected evidence. The proposal makes it an evidence acquirer."* The
++      offline-output argument is true and does not reach the claim it was used for: the
++      availability property is preserved, the module boundary is not.
++      **So the lock is SUPERSEDED rather than side-stepped — see the amendment under Phase
++      3.2 below**, which records what replaces it, under which conditions, and what reverses
++      it. That is the step the council set as the price of the change, and it is taken in the
++      same diff rather than promised.
++      **Two defects the council named were real and are fixed here.** (1) The opt-out ran
++      AFTER the repository was resolved, so `AGENT_CONFIG_DOCTOR_NO_FORGE=1` still spawned
++      `git remote get-url` — a switch that said "no network" while starting a subprocess. The
++      repository is now a THUNK and the switch short-circuits before it, asserted on the
++      resolver's call count rather than on the returned value. (2) Five per-call timeouts
++      bounded each call and nothing bounded their sum, so a 10 s ceiling could deliver 50 s;
++      `withDeadline` adds a 15 s whole-command budget whose exhaustion routes into the same
++      `unread` degradation — running out of time reads as *nobody looked*, never as *the forge
++      said no*, and that direction is pinned by its own case.
++      **Offline is unchanged, verified rather than asserted.** Run with
++      `AGENT_CONFIG_DOCTOR_NO_FORGE=1`, `doctor --json` prints the identical five `unread`
++      rows, the identical `source` strings, `read_from_forge: false` and the same five action
++      lines, with no error and no hang. `docs/troubleshooting.md` now documents the network
++      behaviour and the switch, which was the council's disclosure condition.
++      **Every failure direction is pinned, two of them where the wrong implementation is the
++      more obvious one.** In `tests/scripts/forge_reader.test.ts`: a dead repo record
++      returns the unread reading AND stops calling (asserted on the call list, since both
++      shapes return the same value); a dead ruleset DETAIL blanks the whole list rather than
++      returning a partial one; a dead `environments` call leaves the ruleset rows intact —
++      the opposite error, all-or-nothing across surfaces that do not depend on each other; a
++      non-boolean `allow_auto_merge` is `unread`, never coerced to `false`; a failed
++      branch-policy read makes the row `unread` rather than trusting the flag; a spent budget
++      degrades the rows it did not reach; and a throwing API still returns a reading, because
++      a diagnostic that dies because its optional read failed is worse than one reporting
++      `unread`. The opt-out and the no-repository skip are asserted on the CALL COUNT, because
++      a reader that queried and then discarded the answer would satisfy an output-only
++      assertion while still paying the latency the opt-out exists to avoid.
++      **Sensitivity proven by deliberate sabotage and restore.** Returning the partial ruleset
++      list reds exactly the partial-list case and nothing else; restoring the trust-the-flag
++      fallback reds exactly the branch-policy case and nothing else. One named case each, zero
++      collateral, so neither is passing for an unrelated reason.
++      **This paragraph got the same thing wrong FOUR times, and the fix is structural rather
++      than another correction.** Review round 1 caught "1 of 17", quoted from probes run before
++      five cases landed. The correction said "1 of 32" and re-ran the probes; five more cases
++      landed in the round-2 response, so round 3 found 32 stale — raised as its single `high`,
++      in the very paragraph condemning stale denominators. The round-3 response said 37 and
++      promised to take every figure from the runner; three more cases landed in that same
++      response, and round 4 found 37 stale against a measured 40.
++      Four recurrences indict the METHOD, and the method was "write a denominator by hand".
++      A denominator tracks a moving suite and goes stale on the next commit, so the sensitivity
++      claim no longer carries one: *exactly this case, nothing else* is the property that
++      matters, it is what the probe actually establishes, and it cannot rot. Totals appear once
++      below, measured, and nowhere else.
++      Green, and this is the ONE place a count appears: **188** across
++      `forge_reader` (40), `doctor_forge_block` (14), `forge_protection` (28),
++      `test_provenance` (11) and the roadmap's own e2e fixture file (95), plus 30 across the
++      doctor-adjacent doctor suites. Measured by the runner in the pass that wrote this line.
++      **A third review round, and then a council pass over the tests themselves.** Round 3
++      raised one `high` — these very counts, stale again — and five mediums: a docblock still
++      carrying the argument the council had refuted, an "offline prints exactly what it
++      printed before" claim that the new `repository` key makes too strong, the composition
++      root and the one VCS subprocess untested, a `verify:` clause that depended on
++      pretty-printer spacing, and `critical=yes | level=L1` contradicting AC-2, which requires
++      a critical suite at L3 or L4 where two providers are configured. All are addressed; the
++      last one by EARNING the level rather than relabelling it. The first council attempt was
++      handed a description of the suites instead of the suites: one seat refused to assess and
++      the other speculated, which is recorded and claims nothing. The second embedded both
++      files in full and ran 2/2. Its highest-weighted finding was that the effort was
++      inverted — 37 cases on acquisition choreography against almost none asserting the five
++      rows the command emits — and that the scripted test fake DROPPED the `paginate`
++      argument, so every pagination case passed against an implementation that never asked for
++      a second page. Row ids, row isolation, an inactive ruleset, source presence, the
++      paginate-request seam and wrong-TYPE coercion all have cases now.
++      **Two honest limits.** `resolveForgeRepo` gates on the literal `github` in the remote
++      host, so a GitHub Enterprise install on a host that does not carry the vendor name is
++      skipped and reports `unread` — the safe degradation, stated in the module rather than
++      left for a reader to infer from a blank row. And the council found the CRITERION itself
++      underspecified, which this run did NOT repair: *"AC-5 conflates 'reports true' with
++      'verified true right now'"* (anthropic), and both seats observed it could be satisfied
++      literally by a CI snapshot, a cache, or hardcoded values. This implementation reads live
++      on every invocation and caches nothing, so the stricter reading holds today by
++      construction — but the text does not require that of a future implementation. The
++      proposed replacement wording is carried as owner residue below rather than written in
++      here, because editing an acceptance criterion in the same run that closes it is the
++      laundering shape even when the edit makes it stricter, and this file has already paid
++      once for a `[x]` its own named command contradicted.
++      <!-- verify: ./agent-config doctor --json | python3 -c "import sys,json;r=json.load(sys.stdin)['forge_protection']['rows'];sys.exit(0 if r and all(x['state']=='satisfied' for x in r) else 1)" -->
+       <!-- REOPENED 2026-09-30, the same day it was closed, by an independent review of the
+       closing diff. The close below is kept because its forge findings are correct and
+       durable; the CHECKBOX was wrong, and the distance between those two things is the
+@@ -1030,8 +1330,56 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op 
+       required checks `satisfied` (2 contexts) · force-push `satisfied` (`non_fast_forward`)
+       · auto-merge `satisfied` · deploy `satisfied`. -->
+       <!-- verify: gh api repos/event4u-app/agent-config --jq '.allow_auto_merge' -->
+-- [ ] <!-- blocked-by: daemon-host-kill-switch | asked: no — a `process-full` drain run is a non-interactive context with no owner channel; the question is put in the blocker entry and stays open --> AC-6 — `docs/enforcement-by-host.md`'s `destructive:` column is measured for all eight
++- [~] <!-- blocked-by: daemon-host-kill-switch | asked: no — a `process-full` drain run is a non-interactive context with no owner channel; the question is put in the blocker entry and stays open --> AC-6 — `docs/enforcement-by-host.md`'s `destructive:` column is measured for all eight
+       hosts, with every `manual-only` row a recorded decision.
++      **Evidence (2026-10-01).** DEFERRED. The measurement clause was re-verified this run:
++      `./scripts-run src/scripts/check_enforcement_matrix --quiet` exits 0 with *"32 host-slot
++      row(s) in docs/enforcement-by-host.md match src/scripts/hooks/host_lowering.yaml"*, and
++      all eight `destructive:` rows carry the reading they came from — one `hook` (`claude`,
++      `pre_tool_use` bound with `block_exit: 2`) and seven `manual-only`. That half is done
++      and stays done.
++      **The remaining half was put to the council this run rather than deferred on the
++      blocker's label, and the council declined it as owner-reserved — 2/2 convergent**
++      (anthropic + openai, 2026-10-01, CLI/subscription, $0.00). Both seats reached it by two
++      independent routes. First, the two options are not authority-equivalent: openai,
++      *"Prohibiting autonomy preserves the restrictive state; authorizing `manual-only` may
++      lower it."* anthropic, *"Option 1 (no autonomous mode): not owner-reserved... Option 2
++      (`manual-only`): owner-reserved, because it authorizes autonomous operation while
++      relying on an unenforceable safety floor for destructive actions."* Second, it is
++      governance self-amendment under the rule's own definition — anthropic: *"deciding
++      whether the Hard Floor applies on 1 host vs 8 hosts is deciding the scope of where a
++      governance rule applies."* Both also named the error this run was at risk of making:
++      `host_lowering.yaml` measures CAPABILITY and authorizes nothing, so writing a preferred
++      fallback into the column would convert an inventory into a permission.
++      **This is therefore an authority limit, not a capability one**, and the distinction was
++      tested rather than assumed — the same test that dissolved `forge-protection-settings`'
++      `human-only` label on 2026-09-30. Nothing stops this run from typing `manual-only` into
++      the doc. What stops it is that doing so would record a safety floor in the owner's name.
++      **The owner artefact the council specified in 2d, so the decision takes one reading:**
++      (1) the seven hosts are `augment`, `cursor`, `cline`, `gemini`, `windsurf`, `cowork`,
++      `copilot`; the missing capability is a `pre_tool_use` binding whose configured outcome
++      is a refusal. (2) The two options: `destructive: manual-only` — autonomy continues
++      there with model-carried confirmation as the only guard; or no autonomous mode on those
++      hosts at all. (3) The threat scenario the choice turns on: on a `manual-only` host a
++      typed destructive op proceeds whenever the model fails to classify it as destructive or
++      skips the confirmation, with nothing downstream able to refuse the call. (4) The
++      unresolved prior question both seats flagged: whether model-carried destructive
++      confirmation on unenforceable hosts is ALREADY the approved baseline, or whether this
++      choice establishes it — the tree does not record which. (5) `manual-only`'s operational
++      semantics are undefined and need stating with the choice: who classifies an op as
++      destructive, whether confirmation is per-action or standing, and what prevents the
++      action mutating after approval. (6) The blocker's own recommendation is `manual-only`;
++      anthropic's, if forced, is the opposite — no autonomous mode without an enforceable
++      stop. The dissent is recorded rather than resolved. (7) Option 1 may conflict with
++      ADR-268 § 0's declared autonomy outcome, which is itself owner-protected; that tension
++      is the reason this cannot be settled one layer down. (8) `revisit-if`, in anthropic's
++      words: *"(a) a host gains deny-capable pre-execution enforcement, (b) an external
++      enforcement mechanism is demonstrated and tested, or (c) the owner explicitly approves
++      model-carried destructive confirmation as the safety floor for that host."*
++      **Where the answer goes:** the `destructive:` section of `docs/enforcement-by-host.md`,
++      as a recorded decision beside each `manual-only` row, and the `Resolved when` of
++      `daemon-host-kill-switch` below. The box flips when that is written; nothing else about
++      this criterion is outstanding.
+       <!-- OPEN 2026-09-14 — the MEASUREMENT half is complete, the DECISION half is
+       owner-reserved and that is the whole remaining distance. All eight rows carry a value
+       and the reading it came from (`host_lowering.yaml`, 2026-09-13): one `hook`, seven
+diff --git a/docs/troubleshooting.md b/docs/troubleshooting.md
+index e036fc400f1c17311e66b70cd9a5adf5cfc3527f..d9152cfaf8f9f441479c0fdd16a2a2da17b9491f 100644
+--- a/docs/troubleshooting.md
++++ b/docs/troubleshooting.md
+@@ -237,6 +237,53 @@ npm install -g @event4u/agent-config
+ agent-config doctor   # verifies PATH + plugin wiring
+ ```
+ 
++### `doctor` is slow, or you need it to make no network calls
++
++`agent-config doctor` reads one thing from the network: the `forge_protection`
++block of `--json`, which asks the forge whether the default branch is protected,
++required checks exist, force-push is off, auto-merge is available, and
++deployments are restricted to the pipeline. It shells out to `gh api`: three
++calls plus one per repository ruleset, plus one per environment that uses
++custom branch policies *and* does not already restrict to protected branches —
++five on a repository like this one, more on a repository with more rulesets or
++environments. Each call is capped at 10 s, and a 15 s budget bounds the read
++as a whole; a call is both admitted and *timed out* against whatever is left of
++it, so the total is a real ceiling rather than an advertised one.
++
++Everything else in `doctor` is offline, and the forge read is **best-effort**:
++with no `gh`, no credentials, no network, a non-GitHub remote, or a spent
++budget, the rows report `unread` — each still naming the API call its value
++would have come from — and nothing else about the report changes. On a
++repository with many rulesets the budget is what stops the read, and the rows it
++did not reach stay `unread` rather than guessing.
++
++When the read succeeds, the block names the repository it read, as
++`repository`, and substitutes that slug into each row's `source`. That field is
++the one to check first: `doctor` resolves the repository from the project's
++`origin` remote, so in a fork, a clone pointed at a mirror, or a consumer
++install, the rows describe whatever `origin` names — which may not be the
++project you think you are standing in.
++
++`repository` is `null` and the sources stay templates whenever nothing was
++read — offline, without credentials, opted out, or after a spent budget. It is
++reported only when at least one row carries a real value, so a named repository
++always means somebody actually answered for it.
++
++To switch the read off entirely, before any subprocess starts:
++
++```bash
++AGENT_CONFIG_DOCTOR_NO_FORGE=1 agent-config doctor --json   # or AGENT_CONFIG_OFFLINE=1
++```
++
++Both are read as the literal `1`, which is the same contract `agent-config
++versions` and `agent-config update` already use for `AGENT_CONFIG_OFFLINE` —
++`=0` means *not* offline everywhere in the binary.
++
++Use it in CI, on an air-gapped machine, or when you want `doctor` to stay purely
++local. The rows then read `unread` rather than `false`: a row nobody looked at
++and a row the forge refuted are different repairs, and the block keeps them
++apart.
++
+ ### Project files look stale after a package update
+ 
+ Project-local projections are only rewritten on an explicit refresh:
+diff --git a/src/scripts/_cli/cmd_doctor.ts b/src/scripts/_cli/cmd_doctor.ts
+index d37243e966e088c018b1da9aa75d510636db48fb..103cd0ba7844c04ffaf2eabc292af0d4b5427ea8 100644
+--- a/src/scripts/_cli/cmd_doctor.ts
++++ b/src/scripts/_cli/cmd_doctor.ts
+@@ -114,7 +114,7 @@ import {
+     resolve_project_root,
+     type TraceRecord,
+ } from '../_lib/agent_settings.js';
+-import { executionJson, forgeProtectionJson, UNREAD_FORGE } from './doctor_execution.js';
++import { executionJson, forgeProtectionJsonFor } from './doctor_execution.js';
+ import { checkOfflineReadiness, trafficEnvironmentJson } from './doctor_network_posture.js';
+ import * as ai_council_clients from '../ai_council/clients.js';
+ import * as ai_council_config from '../ai_council/config.js';
+@@ -3062,7 +3062,7 @@ function _emit_json(
+     };
+     if (origin !== null) payload['project_root_origin'] = origin;
+     payload['execution'] = executionJson(() => iter_setting_overrides({ cwd: project_root }));
+-    payload['forge_protection'] = forgeProtectionJson(UNREAD_FORGE); // 3.2
++    payload['forge_protection'] = forgeProtectionJsonFor(String(project_root)); // 3.2 · AC-5
+     payload['traffic_environment'] = trafficEnvironmentJson(process.env);
+     if (checks !== null) {
+         payload['checks'] = checks;
+diff --git a/src/scripts/_cli/doctor_execution.ts b/src/scripts/_cli/doctor_execution.ts
+index baa1105ba276e79505aa680713f10fc26953c72c..7a06b4c2331d25b0ab5419080db9e239194609ca 100644
+--- a/src/scripts/_cli/doctor_execution.ts
++++ b/src/scripts/_cli/doctor_execution.ts
+@@ -23,6 +23,15 @@ import {
+     protectionActions,
+     type ForgeReading,
+ } from '../_lib/forge_protection.js';
++import {
++    FORGE_TOTAL_BUDGET_MS,
++    budgetOf,
++    forgeReadingFor,
++    liveForgeApi,
++    originUrl,
++    resolveForgeRepo,
++    type Runner,
++} from '../_lib/forge_reader.js';
+ 
+ type Dict = Record<string, unknown>;
+ 
+@@ -67,24 +76,93 @@ export function executionJson(overrides: () => OverrideStream): Dict {
+  * `actions` carries the human ACTION lines — the step's own words are that a
+  * missing row is a blocker entry and NOT a halt, so this reports and returns.
+  */
+-export function forgeProtectionJson(reading: ForgeReading): Dict {
++export function forgeProtectionJson(reading: ForgeReading, repo: string | null = null): Dict {
+     const rows = forgeProtectionRows(reading);
++    const readFromForge = rows.some((r) => r.state !== 'unread');
++    // **The slug is reported only when something was actually read, and that
++    // invariant is structural rather than a caller's promise.** The first
++    // version reported whatever the git remote resolved to, which is a LOCAL
++    // read that succeeds with no network — so an ordinary offline run (GitHub
++    // remote present, no connectivity, no opt-out) emitted a named repository
++    // and substituted sources while every row was `unread`. That made the
++    // claim this change rests on — offline output is what Phase 3.2 shipped —
++    // false on exactly the failed-live path the council condition names. The
++    // earlier verification only ever exercised the opt-out switch and read it
++    // as offline; the two are not the same path.
++    const anonymous = repo === null || !readFromForge;
++    const name = (s: string): string =>
++        anonymous ? s : s.replace(/\{owner\}\/\{repo\}/g, () => repo);
+     return {
++        repository: readFromForge ? repo : null,
+         rows: rows.map((r) => ({
+             id: r.id,
+             state: r.state,
+-            source: r.source,
++            source: name(r.source),
+             detail: r.detail,
+         })),
+-        actions: protectionActions(rows),
+-        read_from_forge: rows.some((r) => r.state !== 'unread'),
++        actions: protectionActions(rows).map(name),
++        read_from_forge: readFromForge,
+     };
+ }
+ 
+-/** The all-null reading: nothing was queried. */
+-export const UNREAD_FORGE: ForgeReading = {
+-    rulesets: null,
+-    defaultBranch: null,
+-    allowAutoMerge: null,
+-    deployRestricted: null,
+-};
++/**
++ * The block as `doctor` itself builds it — AC-5.
++ *
++ * Phase 3.2 left `forgeProtectionJson` with no production caller, so the
++ * command the criterion names reported five `unread` rows while the forge
++ * satisfied all five, and the rows were only ever established by a human
++ * running `gh api` and reading the mapper in a test. This is the wiring that
++ * makes the named command answer for itself.
++ *
++ * **This IS a reversal of Phase 3.2's module boundary, and the roadmap records
++ * the supersession.** An earlier draft of this comment argued the opposite —
++ * "an addition rather than a reversal" — which a 2/2 convergent council pass
++ * refuted: that note recorded two boundaries, `doctor` does not reach the
++ * network AND the reading is injected, and this reverses both. The refuted
++ * argument is corrected here rather than left standing, because a comment is
++ * what the next reader of this module finds first and is where a refuted
++ * reasoning would get reused.
++ *
++ * What survives is the AVAILABILITY property, which is narrower than the
++ * earlier claim and is the one the supersession rests on: every failure path in
++ * `forgeReadingFor` — opt-out switch, no GitHub remote, no `gh`, no
++ * credentials, timeout, unparseable payload, a throw — returns the same
++ * `UNREAD_FORGE` reading, so offline the ROWS, their `source` templates and the
++ * action lines are what Phase 3.2 printed. Not the whole document: the block
++ * gained a top-level `repository` key, which is `null` on every such path. A
++ * consumer validating `forge_protection` against a closed schema sees that one
++ * added key; "prints exactly what it printed before" was too strong and is not
++ * claimed.
++ *
++ * `process.env` and the git remote are read HERE rather than inside the reader,
++ * so the reader stays injectable and every branch above is reachable from a
++ * test without spawning anything.
++ */
++export interface ForgeDeps {
++    readonly env?: Readonly<Record<string, string | undefined>>;
++    /** The subprocess runner for both `git` and `gh`. */
++    readonly run?: Runner;
++}
++
++export function forgeProtectionJsonFor(root: string, deps: ForgeDeps = {}): Dict {
++    // The composition root — budget, thunk, host and cwd wired together — had
++    // no seam and therefore no test, so the opt-out-before-spawn and host
++    // binding were asserted one layer down against fakes while a regression in
++    // the real wiring stayed invisible. `deps` is that seam; production passes
++    // nothing and gets `process.env` plus the real spawn.
++    const env = deps.env ?? process.env;
++    const run = deps.run;
++    const remaining = budgetOf(FORGE_TOTAL_BUDGET_MS);
++    const read = forgeReadingFor({
++        env,
++        // A thunk, so the opt-out short-circuits before `git` spawns.
++        resolveRepo: () => resolveForgeRepo(originUrl(root, run)),
++        // Built from the RESOLVED target, so `gh` is addressed at the host and
++        // directory the slug came from. The per-call ceiling is whatever is
++        // left of the whole-read budget, so a call admitted near the deadline
++        // cannot run past it.
++        apiFor: (t) => liveForgeApi(remaining, run, { host: t.host, cwd: root }),
++        remaining,
++    });
++    return forgeProtectionJson(read.reading, read.repo);
++}
+diff --git a/src/scripts/_lib/forge_protection.ts b/src/scripts/_lib/forge_protection.ts
+index af98006ca2efa1651ee5518895d0b7ff63691214..5eebecc5d251b47f992aafa8567ab545fae2c4f4 100644
+--- a/src/scripts/_lib/forge_protection.ts
++++ b/src/scripts/_lib/forge_protection.ts
+@@ -73,6 +73,28 @@ export interface ForgeReading {
+     readonly deployRestricted: boolean | null;
+ }
+ 
++/**
++ * The all-null reading: nothing was queried.
++ *
++ * Lives here, beside {@link ForgeReading}, rather than in the `doctor` caller
++ * that first needed it — `_lib/forge_reader.ts` returns it on every failure
++ * path, and a second hand-written all-null literal is exactly the drift that
++ * makes "offline output is unchanged" an assertion instead of a fact.
++ *
++ * It MOVED from `_cli/doctor_execution.ts`, which no longer exports it in any
++ * form. Nothing broke, because nothing outside that file imported it — but an
++ * earlier draft of this comment claimed a re-export kept every caller in place,
++ * and no such shim was ever written. Corrected rather than quietly deleted: a
++ * comment describing a compatibility layer that does not exist is the next
++ * reader's false premise.
++ */
++export const UNREAD_FORGE: ForgeReading = {
++    rulesets: null,
++    defaultBranch: null,
++    allowAutoMerge: null,
++    deployRestricted: null,
++};
++
+ /**
+  * The two fields of an environment this row reads, as
+  * `GET repos/{owner}/{repo}/environments` returns them.
+diff --git a/src/scripts/_lib/forge_reader.ts b/src/scripts/_lib/forge_reader.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..0b49922c149026f6f05ad08685e9986b7801773b
+--- /dev/null
++++ b/src/scripts/_lib/forge_reader.ts
+@@ -0,0 +1,518 @@
++/**
++ * The live forge read behind `doctor --json`'s `forge_protection` block.
++ *
++ * `road-to-adversarial-verification-and-long-runs` AC-5. Phase 3.2 shipped a
++ * correct pure mapper (`forge_protection.ts`) and no production caller, so
++ * `agent-config doctor --json` — the command the criterion names — reported five
++ * `unread` rows while the forge satisfied all five. The rows were established by
++ * a human running `gh api` by hand and reading the mapper's output in a test.
++ * That is the exact substitution this roadmap's Phase 3 exists to forbid: a
++ * mechanical check replaced by a person's reading of the same evidence.
++ *
++ * **This IS a reversal of Phase 3.2's recorded decision, and the roadmap carries
++ * the supersession.** An earlier draft of this header argued the opposite — that
++ * `decision-revisit-gate`'s mechanism-match test fails, so no lock applies — and
++ * a 2/2 convergent council pass refuted it: that note recorded TWO boundaries,
++ * `doctor` does not reach the network AND the reading is injected, and moving
++ * `gh api` in here reverses both. The refuted reasoning is corrected rather than
++ * left standing, for the reason the sibling docblock gives: a module header is
++ * what the next reader meets first, so it is where a dead argument gets reused.
++ *
++ * What survives is the narrower AVAILABILITY property the supersession rests on:
++ * every failure path returns {@link UNREAD_FORGE}, so offline the rows, their
++ * `source` templates and the action lines are what Phase 3.2 printed — no error,
++ * no hang. Not the whole document: the block gained a top-level `repository`
++ * key, `null` on every such path.
++ *
++ * **The degradation is the load-bearing claim, so it is tested rather than
++ * asserted.** Six distinct failures — no repository, a dead repo record, a dead
++ * ruleset detail, a dead environments call, a non-boolean flag, a throwing API —
++ * each land on `unread` for the rows they touch and leave the others alone. Two
++ * of those directions have a more obvious wrong implementation than the right
++ * one, and both are pinned: a PARTIAL ruleset list (understates protection in
++ * one direction, overstates it in the other), and ALL-OR-NOTHING across surfaces
++ * that do not depend on each other (a dead environments call says nothing about
++ * whether a ruleset protects the branch).
++ *
++ * The network lives here; the judgement lives in `forge_protection.ts`. Both
++ * polarities stay testable offline because the API is injected.
++ */
++
++import { spawnSync } from 'node:child_process';
++
++import {
++    UNREAD_FORGE,
++    deployRestrictedFrom,
++    type EnvironmentPolicy,
++    type ForgeReading,
++} from './forge_protection.js';
++import type { RulesetDetail } from './platform_anchor.js';
++
++/**
++ * One forge API call. `null` on ANY failure — exit status, empty output,
++ * unparseable JSON, timeout, missing binary, missing credentials.
++ *
++ * Injected rather than imported so every failure above is reachable from a test
++ * without a network, which is what makes the degradation claim checkable.
++ */
++export interface ForgeApi {
++    get(apiPath: string, paginate?: boolean): unknown | null;
++}
++
++/**
++ * Per-call ceiling.
++ *
++ * A diagnostic that hangs is worse than one that reports `unread`: the reader
++ * learns nothing either way, and only one of the two costs them the terminal.
++ * Ten seconds is a stated default rather than a measured optimum — it is
++ * generous for a `gh api` round trip and short enough that five of them stay
++ * inside the patience budget of a command people run to get unstuck.
++ */
++export const FORGE_CALL_TIMEOUT_MS = 10_000;
++
++/** Ceiling on the one `git` spawn, which sits inside the whole-read budget. */
++export const GIT_REMOTE_TIMEOUT_MS = 2_000;
++
++/**
++ * Ceiling on the WHOLE read, not on one call.
++ *
++ * The call count is `3 + one per ruleset + one per environment carrying custom
++ * branch policies` — it is NOT a fixed five, and sizing the budget against a
++ * fixed five was the defect an independent review named. On a repository with
++ * many rulesets the budget is what stops the read, and the rows it did not
++ * reach report `unread`, which is the honest answer rather than a wrong one.
++ *
++ * Fifteen seconds is a stated default, not a measured optimum. It is enforced
++ * as a real ceiling rather than only at admission: {@link budgetOf} returns the
++ * milliseconds left, {@link liveForgeApi} takes that as its `timeoutFor` and
++ * caps each spawn at `min(FORGE_CALL_TIMEOUT_MS, remaining)`, and
++ * {@link withDeadline} refuses to dispatch once it reaches zero. So a call
++ * admitted near the deadline cannot run past it.
++ */
++export const FORGE_TOTAL_BUDGET_MS = 15_000;
++
++/**
++ * Environment switches that skip the read entirely, before any process spawns.
++ *
++ * Both are read as the literal `1`, which is the contract `cmd_versions.ts` and
++ * `cmd_update.ts` already use for `AGENT_CONFIG_OFFLINE`. Accepting any
++ * non-empty value here would give one variable two opposite meanings inside one
++ * binary — `AGENT_CONFIG_OFFLINE=0` would mean online to `update` and offline
++ * to `doctor` — and the surprising direction is the one a user reads as "off".
++ */
++export const NO_FORGE_ENV = ['AGENT_CONFIG_DOCTOR_NO_FORGE', 'AGENT_CONFIG_OFFLINE'] as const;
++
++/** `true` when a switch in {@link NO_FORGE_ENV} is set to the literal `1`. */
++export function forgeReadDisabled(env: Readonly<Record<string, string | undefined>>): boolean {
++    return NO_FORGE_ENV.some((k) => env[k] === '1');
++}
++
++function asObject(v: unknown): Record<string, unknown> | null {
++    return v !== null && typeof v === 'object' && !Array.isArray(v)
++        ? (v as Record<string, unknown>)
++        : null;
++}
++
++/** What a spawn returns, narrowed to the two fields this module reads. */
++export interface SpawnResult {
++    readonly status: number | null;
++    readonly stdout?: string | undefined;
++}
++
++/** A subprocess runner. Injected so every failure branch is testable offline. */
++export type Runner = (
++    cmd: string,
++    args: readonly string[],
++    timeoutMs: number,
++    cwd?: string,
++) => SpawnResult;
++
++const defaultRunner: Runner = (cmd, args, timeoutMs, cwd) =>
++    spawnSync(cmd, [...args], {
++        encoding: 'utf8',
++        timeout: timeoutMs,
++        maxBuffer: 32 * 1024 * 1024,
++        ...(cwd === undefined ? {} : { cwd }),
++    });
++
++/** The repository to read, and the host it lives on. */
++export interface ForgeTarget {
++    readonly host: string;
++    readonly slug: string;
++}
++
++/**
++ * The live `gh api` caller.
++ *
++ * `timeoutFor` returns the ceiling for THIS call, so the whole-read budget can
++ * shorten it. A fixed per-call timeout is what let a call admitted just inside
++ * the budget run well past it — the budget checked admission and nothing
++ * checked duration.
++ *
++ * `--paginate --slurp` needs `gh` 2.43 or newer. On an older client the call
++ * fails and the rulesets read blanks, which lands on `unread` rather than on a
++ * wrong answer — the degradation this module guarantees, reached by a cause it
++ * cannot name. Stated here because nothing else in the diff documents it.
++ */
++export function liveForgeApi(
++    timeoutFor: () => number = () => FORGE_CALL_TIMEOUT_MS,
++    run: Runner = defaultRunner,
++    where: { readonly host?: string; readonly cwd?: string } = {},
++): ForgeApi {
++    // **`gh` is addressed at the host and directory the SLUG came from.** The
++    // slug is resolved with `cwd: root`, and a `gh` spawned with neither
++    // inherits the process cwd and gh's default host — so with `--project`,
++    // `--root` or `AGENT_CONFIG_PROJECT_ROOT` pointing elsewhere, or with a
++    // GitHub Enterprise remote, the two halves of the read addressed two
++    // different repositories and a same-named repo elsewhere produced a
++    // confident verdict about somebody else's project.
++    const hostArgs =
++        where.host === undefined || where.host.toLowerCase() === 'github.com'
++            ? []
++            : ['--hostname', where.host];
++    return {
++        get(apiPath: string, paginate = false): unknown | null {
++            const budget = timeoutFor();
++            if (budget <= 0) return null;
++            const args = paginate
++                ? ['api', '--paginate', '--slurp', ...hostArgs, apiPath]
++                : ['api', ...hostArgs, apiPath];
++            let r: SpawnResult;
++            try {
++                r = run('gh', args, Math.min(FORGE_CALL_TIMEOUT_MS, budget), where.cwd);
++            } catch {
++                return null;
++            }
++            if (r.status !== 0 || typeof r.stdout !== 'string' || r.stdout.trim() === '') {
++                return null;
++            }
++            try {
++                return JSON.parse(r.stdout) as unknown;
++            } catch {
++                return null;
++            }
++        },
++    };
++}
++
++/**
++ * `owner/repo` from a git remote URL, or `null`.
++ *
++ * **Host-gated on purpose.** `gh api` speaks GitHub, so attempting it against a
++ * GitLab or Bitbucket remote buys a doomed subprocess on every `doctor` run and
++ * returns the same `unread` the skip returns for free. The gate is the literal
++ * `github` in the host, which covers `github.com` and the usual GitHub
++ * Enterprise naming. A GHES install on a host that does not carry the vendor
++ * name is skipped and reports `unread` — the safe degradation, and stated here
++ * rather than left for a reader to discover from a blank row.
++ */
++export function resolveForgeRepo(originUrl: string | null): ForgeTarget | null {
++    if (originUrl === null || originUrl.trim() === '') return null;
++    const url = originUrl.trim();
++    const m = /^(?:[A-Za-z][A-Za-z0-9+.-]*:\/\/)?(?:[^@/]+@)?([^/:]+)[:/]([^/:]+\/[^/]+?)(?:\.git)?$/.exec(
++        url,
++    );
++    const host = m?.[1];
++    const slug = m?.[2];
++    if (host === undefined || slug === undefined) return null;
++    if (!host.toLowerCase().includes('github')) return null;
++    // The slug is interpolated into an API path and used as a replacement
++    // string, so its character set is checked rather than assumed. The previous
++    // pattern admitted `$`, `?`, `#` and `..` — one of those is a path
++    // traversal and another is a `String.replace` control sequence.
++    if (!/^[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+$/.test(slug)) return null;
++    if (slug.split('/').some((seg) => seg === '.' || seg === '..')) return null;
++    return { host, slug };
++}
++
++/**
++ * The repository's `origin` URL, or `null`.
++ *
++ * Timed out like every other spawn here. It was the one subprocess in the
++ * module with no ceiling and it ran before the budget was even constructed, so
++ * a wedged `git` sat entirely outside a read that advertised a total ceiling.
++ */
++export function originUrl(
++    root: string,
++    run: Runner = defaultRunner,
++    timeoutMs = GIT_REMOTE_TIMEOUT_MS,
++): string | null {
++    let r: SpawnResult;
++    try {
++        // `ls-remote --get-url` APPLIES `url.<base>.insteadOf` rewrites and still
++        // makes no network call; `remote get-url` returns the configured URL
++        // verbatim. The difference matters in the unsafe direction: a
++        // github.com-shaped URL rewritten onto another host would otherwise be
++        // accepted and the read attributed to the wrong repository — which is a
++        // condition the Phase 3.2 amendment names as reversing it.
++        r = run('git', ['ls-remote', '--get-url', 'origin'], timeoutMs, root);
++    } catch {
++        return null;
++    }
++    if (r.status !== 0 || typeof r.stdout !== 'string') return null;
++    const out = r.stdout.trim();
++    // With no such remote, `ls-remote --get-url` echoes the name back.
++    return out === '' || out === 'origin' ? null : out;
++}
++
++/**
++ * Every ruleset, with its detail, or `null`.
++ *
++ * The listing endpoint returns summaries without `rules`, so each is fetched
++ * individually — and a single failed detail read blanks the WHOLE list rather
++ * than returning what was collected. Same contract as the sibling anchor
++ * source, for the same reason it states: a subset understates the effective
++ * protection in one direction and overstates it in the other, and neither is a
++ * verdict worth recording. `--paginate --slurp` because the listing pages at 30
++ * and a silently truncated reading is that same partial verdict wearing a
++ * different cause.
++ */
++function readRulesets(repo: string, api: ForgeApi): RulesetDetail[] | null {
++    // One flattener for the one `--paginate --slurp` contract. This read grew
++    // its own inline version first, which left two implementations of the same
++    // page shape free to drift apart.
++    const list = slurped(api.get(`repos/${repo}/rulesets`, true), 'rulesets');
++    if (list === null) return null;
++    const out: RulesetDetail[] = [];
++    for (const entry of list) {
++        const id = asObject(entry)?.['id'];
++        if (typeof id !== 'number') return null;
++        const detail = api.get(`repos/${repo}/rulesets/${String(id)}`);
++        if (asObject(detail) === null) return null;
++        out.push(detail as RulesetDetail);
++    }
++    return out;
++}
++
++/**
++ * Flatten a `--paginate --slurp` payload down to one list.
++ *
++ * `--slurp` yields an array of PAGES. Each page is either a bare array (a list
++ * endpoint) or an object carrying the list under `key` (`environments`,
++ * `branch_policies`). `null` when the shape is not one of those — never a
++ * partial list, for the reason {@link readRulesets} states.
++ */
++function slurped(payload: unknown, key: string): unknown[] | null {
++    if (Array.isArray(payload)) {
++        // An array of pages, each itself an array — a list endpoint under
++        // `--slurp`.
++        if (payload.length > 0 && payload.every((p) => Array.isArray(p))) {
++            return (payload as unknown[][]).flat();
++        }
++        // An array of pages, each an object carrying the list under `key`.
++        if (payload.length > 0 && payload.every((p) => Array.isArray(asObject(p)?.[key]))) {
++            return payload.flatMap((p) => asObject(p)?.[key] as unknown[]);
++        }
++        // A flat list of items — what a list endpoint returns UNPAGINATED, and
++        // what `gh` emits when a single page is not wrapped. Kept because
++        // collapsing it into the page shapes above was what broke the flat
++        // case when the two flatteners were merged.
++        return payload;
++    }
++    const listed = asObject(payload)?.[key];
++    return Array.isArray(listed) ? [...listed] : null;
++}
++
++/**
++ * Whether every environment restricts its deployment branches, or `null`.
++ *
++ * The custom-policy NAMES live behind a second call per environment, and a
++ * policy pattern of `*` restricts nothing whatever the flag says. A failed
++ * names read therefore makes the whole row `unread`, and that is a CORRECTION:
++ * the first draft fell back to trusting the flag, which `deployRestrictedFrom`
++ * calls the guarantee that WAS NOT CHECKED — the weaker reading, not the
++ * narrower one. An independent review followed the consequence through: an
++ * environment whose real policy is `*` would then report `satisfied`, which is
++ * the overstatement direction this module says it never takes, and it would be
++ * indistinguishable in the output from a genuine restriction. A read that
++ * failed is a read nobody made, so it lands where every other unmade read
++ * lands.
++ *
++ * The environment name is URL-ENCODED into the path. GitHub admits spaces and
++ * other path-unsafe characters in an environment name, and an unencoded name
++ * is exactly how the failed-read branch above gets reached by accident.
++ */
++function readDeployRestricted(repo: string, api: ForgeApi): boolean | null {
++    // PAGINATED. Unpaginated, a repository with more environments than one page
++    // returns a subset, `deployRestrictedFrom`'s `every()` runs over what it can
++    // see, and an unlisted unrestricted environment reads as `satisfied` — the
++    // overstatement direction this module says it never takes. `readRulesets`
++    // guards the identical hazard one function up.
++    const envsRaw = slurped(api.get(`repos/${repo}/environments`, true), 'environments');
++    if (envsRaw === null) return null;
++    const envs: EnvironmentPolicy[] = [];
++    const patternsByEnv: Record<string, readonly string[]> = {};
++    for (const raw of envsRaw) {
++        const env = asObject(raw);
++        const name = env?.['name'];
++        if (typeof name !== 'string') return null;
++        const policy = asObject(env?.['deployment_branch_policy']);
++        // Each flag is OMITTED rather than set to `undefined` when the payload
++        // did not carry it as a boolean. `deployRestrictedFrom` distinguishes
++        // absent from false, so writing a non-boolean through as `undefined`
++        // under `exactOptionalPropertyTypes` would be a type error here and a
++        // silent "the forge said no" one rung down.
++        envs.push({
++            name,
++            deployment_branch_policy:
++                policy === null
++                    ? null
++                    : {
++                          ...(typeof policy['protected_branches'] === 'boolean'
++                              ? { protected_branches: policy['protected_branches'] }
++                              : {}),
++                          ...(typeof policy['custom_branch_policies'] === 'boolean'
++                              ? { custom_branch_policies: policy['custom_branch_policies'] }
++                              : {}),
++                      },
++        });
++        if (policy?.['custom_branch_policies'] !== true) continue;
++        // `protected_branches` already decides the row for this environment —
++        // `deployRestrictedFrom` short-circuits on it before consulting the
++        // pattern map — so the extra call would spend budget on an answer that
++        // cannot change the verdict, and degrade the row to `unread` if it
++        // failed.
++        if (policy['protected_branches'] === true) continue;
++        const names = api.get(
++            `repos/${repo}/environments/${encodeURIComponent(name)}/deployment-branch-policies`,
++            true,
++        );
++        const listed = slurped(names, 'branch_policies');
++        // A read that failed is a read nobody made — `unread`, never a trusted
++        // flag. Trusting it here is how a wildcard policy reports `satisfied`.
++        if (listed === null) return null;
++        patternsByEnv[name] = listed
++            .map((p) => asObject(p)?.['name'])
++            .filter((n): n is string => typeof n === 'string');
++    }
++    return deployRestrictedFrom(envs, patternsByEnv);
++}
++
++/**
++ * Read the four fields the mapper consumes.
++ *
++ * The repository record is first and GATES the rest: it carries two of the four
++ * fields, and the other two are meaningless without the default branch it
++ * names. A reader that kept going after it failed would spend calls on answers
++ * it could not use, so this one returns immediately — asserted by a test over
++ * the call list rather than over the returned value, since both shapes return
++ * the same reading.
++ */
++export function readForge(repo: string, api: ForgeApi): ForgeReading {
++    const record = asObject(api.get(`repos/${repo}`));
++    if (record === null) return UNREAD_FORGE;
++    const branch = record['default_branch'];
++    const autoMerge = record['allow_auto_merge'];
++    return {
++        defaultBranch: typeof branch === 'string' && branch !== '' ? branch : null,
++        // Never coerced: a flag the payload did not carry as a boolean is a flag
++        // nobody read, and `unread` is the state reserved for exactly that.
++        allowAutoMerge: typeof autoMerge === 'boolean' ? autoMerge : null,
++        rulesets: readRulesets(repo, api),
++        deployRestricted: readDeployRestricted(repo, api),
++    };
++}
++
++/**
++ * Wrap an API in a whole-command budget.
++ *
++ * **Per-call timeouts bound each call and nothing bounds their sum.** Five
++ * calls at a ten-second ceiling can take fifty seconds without any one of them
++ * misbehaving, so the advertised ceiling is not the one a user experiences.
++ * This adds the missing deadline, and it does so by returning `null` once the
++ * budget is spent — which routes straight into the `unread` degradation the
++ * rest of this module already guarantees. Running out of time therefore reads
++ * as *nobody looked*, never as *the forge said no*; that direction is the one
++ * that matters and it is pinned by a test.
++ */
++export function withDeadline(api: ForgeApi, remaining: () => number): ForgeApi {
++    return {
++        get(apiPath: string, paginate?: boolean): unknown | null {
++            return remaining() <= 0 ? null : api.get(apiPath, paginate);
++        },
++    };
++}
++
++/**
++ * Milliseconds left of a budget of `ms`, never below zero.
++ *
++ * The clock is `performance.now`, which is monotonic. `Date.now` is wall-clock
++ * and steppable: an NTP correction backwards silently extends the budget past
++ * its stated ceiling and one forwards expires it early. The word was in the
++ * first draft's comment while the implementation used the steppable clock.
++ */
++export function budgetOf(
++    ms: number,
++    now: () => number = () => performance.now(),
++): () => number {
++    const until = now() + ms;
++    return () => Math.max(0, until - now());
++}
++
++/** What {@link forgeReadingFor} needs. Every field injectable, so no test spawns. */
++export interface ForgeReadRequest {
++    readonly env: Readonly<Record<string, string | undefined>>;
++    /**
++     * Resolve the repository — a THUNK rather than a value, so the opt-out can
++     * run before it. Resolving reads the git remote, which is a subprocess; an
++     * opt-out that only skipped the API calls would still spawn `git` to work
++     * out a repository it was never going to use, and "this switch makes no
++     * network calls" would be true of the HTTP traffic and false of the claim
++     * a reader takes from it.
++     */
++    readonly resolveRepo: () => ForgeTarget | null;
++    /**
++     * Build the API for the resolved target.
++     *
++     * A FACTORY rather than a ready API, so the host and working directory the
++     * slug came from necessarily reach `gh`. Handing in a pre-built client was
++     * how the two halves of the read came to address different repositories.
++     */
++    readonly apiFor: (target: ForgeTarget) => ForgeApi;
++    /** Milliseconds left. Defaults to a {@link FORGE_TOTAL_BUDGET_MS} budget. */
++    readonly remaining?: () => number;
++}
++
++/**
++ * A reading plus the repository it came from.
++ *
++ * **The slug travels with the rows, and leaving it out was the review's one
++ * high finding.** The moment the read went live, *which repository* stopped
++ * being obvious: `origin` may point at a fork, a mirror, or — in a consumer
++ * install — somebody else's project entirely, and five rows reading `satisfied`
++ * say nothing about whose branch is protected. For a block whose own header
++ * calls an unstated provenance the guess it exists to refuse, that was the one
++ * fact the provenance omitted. `null` when nothing was read.
++ */
++export interface ForgeRead {
++    readonly repo: string | null;
++    readonly reading: ForgeReading;
++}
++
++/**
++ * The production entry: read the forge, or return the unread reading.
++ *
++ * Three skips happen BEFORE any process spawns — an opt-out switch, the general
++ * offline switch, and an unresolvable repository — and each is asserted on the
++ * CALL LIST rather than on the return value, because a reader that queried and
++ * then discarded would satisfy an output-only assertion while still paying the
++ * latency the opt-out exists to avoid.
++ *
++ * The `catch` is not defensive padding. `doctor` is the command people run when
++ * something is already wrong; a diagnostic that dies because its own optional
++ * read threw is strictly worse than one reporting `unread`.
++ */
++export function forgeReadingFor(req: ForgeReadRequest): ForgeRead {
++    if (forgeReadDisabled(req.env)) return { repo: null, reading: UNREAD_FORGE };
++    // The budget is built BEFORE the repository is resolved, because resolving
++    // spawns `git` and a budget that starts after it does not bound it.
++    const remaining = req.remaining ?? budgetOf(FORGE_TOTAL_BUDGET_MS);
++    try {
++        const target = req.resolveRepo();
++        if (target === null) return { repo: null, reading: UNREAD_FORGE };
++        const reading = readForge(target.slug, withDeadline(req.apiFor(target), remaining));
++        return { repo: target.slug, reading };
++    } catch {
++        return { repo: null, reading: UNREAD_FORGE };
++    }
++}
+diff --git a/tests/scripts/doctor_forge_block.test.ts b/tests/scripts/doctor_forge_block.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..08e0b2d5392c0925a99a46f0834085c3fbb59a91
+--- /dev/null
++++ b/tests/scripts/doctor_forge_block.test.ts
+@@ -0,0 +1,246 @@
++/**
++ * The `forge_protection` block as `doctor --json` emits it —
++ * `road-to-adversarial-verification-and-long-runs` AC-5.
++ *
++ * The layer the two review rounds kept finding defects in, and the one that had
++ * no test at all: the slug substitution and the `repository` field happen HERE,
++ * while the only assertions covering them sat one layer down on
++ * `forgeReadingFor`'s return value.
++ *
++ * The load-bearing case is the OFFLINE-WITH-A-REMOTE one. A git remote resolves
++ * with no network, so an ordinary offline run reaches this function with a
++ * non-null slug and an all-unread reading. The first implementation reported
++ * that slug and substituted it into every source — which made the claim this
++ * whole change rests on, that offline output is what Phase 3.2 shipped, false
++ * on exactly the path it was supposed to cover. The earlier verification only
++ * ever exercised the opt-out switch and read it as offline; they are different
++ * paths and only one of them was checked.
++ */
++
++// provenance: level=L4 | critical=yes | evidence=test-quality-forge-reader-round2-2026-10-01
++//
++// L4 by a 2/2 council pass (anthropic + openai) over both suites in full, whose
++// highest-weighted finding was that the five rows this file exists to cover
++// were barely asserted at all — metadata validated, data assumed. The row-id,
++// row-isolation, inactive-ruleset and source-presence cases below are that
++// finding folded in. See the sibling suite's marker for the full route,
++// including the first pass that was given a description instead of the code and
++// correctly declined to judge it.
++
++import { describe, expect, it } from 'vitest';
++
++import {
++    forgeProtectionJson,
++    forgeProtectionJsonFor,
++} from '../../src/scripts/_cli/doctor_execution.js';
++import { originUrl, type Runner } from '../../src/scripts/_lib/forge_reader.js';
++import { UNREAD_FORGE, type ForgeReading } from '../../src/scripts/_lib/forge_protection.js';
++import type { RulesetDetail } from '../../src/scripts/_lib/platform_anchor.js';
++
++const RULESET: RulesetDetail = {
++    id: 1,
++    target: 'branch',
++    enforcement: 'active',
++    conditions: { ref_name: { include: ['~DEFAULT_BRANCH'] } },
++    rules: [
++        { type: 'non_fast_forward' },
++        {
++            type: 'required_status_checks',
++            parameters: { required_status_checks: [{ context: 'CI' }] },
++        },
++    ],
++};
++
++const LIVE: ForgeReading = {
++    rulesets: [RULESET],
++    defaultBranch: 'main',
++    allowAutoMerge: true,
++    deployRestricted: true,
++};
++
++type Block = {
++    repository: string | null;
++    read_from_forge: boolean;
++    rows: { id: string; state: string; source: string }[];
++    actions: string[];
++};
++
++const block = (r: ForgeReading, repo: string | null): Block =>
++    forgeProtectionJson(r, repo) as unknown as Block;
++
++// provenance: level=L4 | critical=yes | evidence=test-quality-forge-reader-round2-2026-10-01
++describe('the five rows — the product output itself', () => {
++    // The council pass weighted this highest: the suites spent their effort on
++    // acquisition choreography while the rows `doctor --json` actually emits —
++    // the user-visible trust boundary — were barely asserted. Metadata was
++    // thoroughly checked and the data was assumed correct.
++    it('emits exactly the five rows, by id and in order', () => {
++        expect(block(LIVE, 'o/r').rows.map((r) => r.id)).toEqual([
++            'default_branch_protected',
++            'required_checks_present',
++            'force_push_disabled',
++            'auto_merge_available',
++            'deploy_via_pipeline_only',
++        ]);
++    });
++
++    it('isolates each row — one falsified input moves one row and no other', () => {
++        // Row isolation was never checked, so a mapper that let one input bleed
++        // into a neighbouring row passed. Each case below flips exactly one
++        // field and asserts exactly one state changes.
++        const states = (r: ForgeReading): string[] => block(r, 'o/r').rows.map((x) => x.state);
++        const base = states(LIVE);
++        expect(base).toEqual(Array<string>(5).fill('satisfied'));
++
++        const cases: [string, ForgeReading, number][] = [
++            ['auto-merge', { ...LIVE, allowAutoMerge: false }, 3],
++            ['deploy', { ...LIVE, deployRestricted: false }, 4],
++        ];
++        for (const [, reading, idx] of cases) {
++            const got = states(reading);
++            expect(got[idx]).toBe('unsatisfied');
++            expect(got.filter((s) => s !== 'satisfied')).toHaveLength(1);
++        }
++    });
++
++    it('an inactive ruleset does not protect the branch', () => {
++        const inactive: ForgeReading = {
++            ...LIVE,
++            rulesets: [{ ...RULESET, enforcement: 'evaluate' }],
++        };
++        const rows = block(inactive, 'o/r').rows;
++        expect(rows[0]?.state).toBe('unsatisfied');
++        expect(rows[2]?.state).toBe('unsatisfied');
++    });
++
++    it('every row carries a non-empty source, satisfied or not', () => {
++        for (const r of [...block(LIVE, 'o/r').rows, ...block(UNREAD_FORGE, null).rows]) {
++            expect(r.source.length).toBeGreaterThan(0);
++        }
++    });
++});
++
++// provenance: level=L4 | critical=yes | evidence=test-quality-forge-reader-round2-2026-10-01
++describe('originUrl — the only VCS subprocess', () => {
++    const run = (r: { status: number | null; stdout?: string }): Runner => () => r;
++
++    it('uses the rewrite-aware form and the project root', () => {
++        const seen: { args: string[]; cwd?: string }[] = [];
++        const rec: Runner = (_c, args, _t, cwd) => {
++            seen.push({ args: [...args], ...(cwd === undefined ? {} : { cwd }) });
++            return { status: 0, stdout: 'git@github.com:o/r.git\n' };
++        };
++        expect(originUrl('/root', rec)).toBe('git@github.com:o/r.git');
++        // `remote get-url` ignores `url.insteadOf`; `ls-remote --get-url` applies it.
++        expect(seen[0]?.args).toEqual(['ls-remote', '--get-url', 'origin']);
++        expect(seen[0]?.cwd).toBe('/root');
++    });
++
++    it('is null on a non-zero exit, a non-string stdout, or a throw', () => {
++        expect(originUrl('/root', run({ status: 1, stdout: 'x' }))).toBeNull();
++        expect(originUrl('/root', run({ status: 0 }))).toBeNull();
++        expect(
++            originUrl('/root', () => {
++                throw new Error('no git');
++            }),
++        ).toBeNull();
++    });
++
++    it('is null when git echoes the remote name back', () => {
++        // With no such remote, `ls-remote --get-url` prints `origin` — a
++        // sentinel that would otherwise parse as a repository called origin.
++        expect(originUrl('/root', run({ status: 0, stdout: 'origin\n' }))).toBeNull();
++        expect(originUrl('/root', run({ status: 0, stdout: '   \n' }))).toBeNull();
++    });
++});
++
++// provenance: level=L4 | critical=yes | evidence=test-quality-forge-reader-round2-2026-10-01
++describe('the repository field', () => {
++    it('names the repository when something was actually read', () => {
++        const b = block(LIVE, 'o/r');
++        expect(b.repository).toBe('o/r');
++        expect(b.read_from_forge).toBe(true);
++        expect(b.rows[0]?.source).toContain('repos/o/r/');
++        expect(b.rows.every((row) => !row.source.includes('{owner}'))).toBe(true);
++    });
++
++    it('reports NO repository offline, even when a slug resolved from the local remote', () => {
++        // The high finding. `git` answers offline, so the slug is present while
++        // every row is unread — and reporting it made the output differ from
++        // the offline output Phase 3.2 shipped, which is the property the whole
++        // change rests on.
++        const b = block(UNREAD_FORGE, 'o/r');
++        expect(b.repository).toBeNull();
++        expect(b.read_from_forge).toBe(false);
++        expect(b.rows.every((row) => row.state === 'unread')).toBe(true);
++        expect(b.rows[0]?.source).toContain('{owner}/{repo}');
++    });
++
++    it('is byte-identical offline whether or not a slug resolved', () => {
++        // The claim, asserted rather than described: the opt-out path and the
++        // failed-live path produce the same document.
++        expect(JSON.stringify(block(UNREAD_FORGE, 'o/r'))).toBe(
++            JSON.stringify(block(UNREAD_FORGE, null)),
++        );
++    });
++
++    it('substitutes into the action lines too, not only the rows', () => {
++        const partial: ForgeReading = { ...LIVE, allowAutoMerge: false };
++        const b = block(partial, 'o/r');
++        expect(b.actions.some((a) => a.includes('repos/o/r'))).toBe(true);
++        expect(b.actions.every((a) => !a.includes('{owner}'))).toBe(true);
++    });
++
++    it('is the composition root, and it is wired end to end', () => {
++        // The budget, the resolve thunk, the host and the cwd are assembled
++        // HERE, and that assembly had no seam and therefore no test — the
++        // opt-out and the host binding were asserted one layer down against
++        // fakes while a regression in the real wiring stayed invisible.
++        const calls: { cmd: string; args: string[]; cwd?: string }[] = [];
++        const run: Runner = (cmd, args, _t, cwd) => {
++            calls.push({ cmd, args: [...args], ...(cwd === undefined ? {} : { cwd }) });
++            if (cmd === 'git') return { status: 0, stdout: 'git@github.acme.com:o/r.git\n' };
++            if (args.includes('repos/o/r')) {
++                return { status: 0, stdout: JSON.stringify({ default_branch: 'main' }) };
++            }
++            return { status: 1, stdout: '' };
++        };
++        const b = forgeProtectionJsonFor('/some/root', { env: {}, run }) as unknown as Block;
++
++        // The slug came from `/some/root`, so `gh` is addressed there too...
++        expect(calls[0]?.cmd).toBe('git');
++        expect(calls[0]?.cwd).toBe('/some/root');
++        const gh = calls.filter((c) => c.cmd === 'gh');
++        expect(gh.length).toBeGreaterThan(0);
++        expect(gh.every((c) => c.cwd === '/some/root')).toBe(true);
++        // ...and at the GHES host the remote named, not gh's default.
++        expect(gh.every((c) => c.args.includes('--hostname'))).toBe(true);
++        expect(gh.every((c) => c.args.includes('github.acme.com'))).toBe(true);
++        // Nothing was satisfied, so nothing is named.
++        expect(b.repository).toBeNull();
++    });
++
++    it('spawns nothing at all when the opt-out is set', () => {
++        let spawned = 0;
++        const run: Runner = () => {
++            spawned += 1;
++            return { status: 0, stdout: '' };
++        };
++        const b = forgeProtectionJsonFor('/some/root', {
++            env: { AGENT_CONFIG_DOCTOR_NO_FORGE: '1' },
++            run,
++        }) as unknown as Block;
++        expect(spawned).toBe(0);
++        expect(b.read_from_forge).toBe(false);
++        expect(b.repository).toBeNull();
++    });
++
++    it('treats a dollar sequence in the slug as literal text', () => {
++        // `String.replace` reads `$&` in the REPLACEMENT as a control sequence.
++        // `resolveForgeRepo` refuses such a slug, so this is the second line of
++        // defence rather than the only one — which is why it is asserted here
++        // instead of being argued from the validator.
++        const b = block(LIVE, 'o/$&');
++        expect(b.rows[0]?.source).toContain('repos/o/$&/');
++    });
++});
+diff --git a/tests/scripts/forge_reader.test.ts b/tests/scripts/forge_reader.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..6795b3f811de4cb69b29fc0edf6fc19e74808b85
+--- /dev/null
++++ b/tests/scripts/forge_reader.test.ts
+@@ -0,0 +1,607 @@
++/**
++ * The live forge read behind `doctor --json` —
++ * `road-to-adversarial-verification-and-long-runs` AC-5.
++ *
++ * Phase 3.2 shipped a correct pure mapper with no production caller, so
++ * `agent-config doctor --json` reported five `unread` rows while the forge
++ * satisfied all five. This module is the caller. The load-bearing property is
++ * NOT "it reads the forge" — it is that every way the read can fail degrades to
++ * exactly the `unread` output Phase 3.2 already produced, because that is the
++ * whole argument for the read being safe to make by default.
++ *
++ * Each case below drives a direction the reader could plausibly have got wrong,
++ * and several pin a direction where the WRONG implementation is the more
++ * obvious one: an all-or-nothing failure across independent surfaces, a partial
++ * ruleset list, a non-boolean flag coerced to `false`.
++ */
++
++// provenance: level=L4 | critical=yes | evidence=test-quality-forge-reader-round2-2026-10-01
++//
++// `critical=yes` is a CORRECTION. The first marker read `critical=no`, which an
++// independent review called at least arguable and recorded without an argument:
++// this suite underwrites whether branch protection, required checks and
++// force-push are reported satisfied — the mechanical check ADR-268 § 3 trades
++// for the owner's confirmation — and `evaluator-independence` names merge
++// control among the critical behaviours.
++//
++// `level=L4` was EARNED rather than relabelled, and the route matters because
++// the first attempt failed honestly. A third review round found `critical=yes`
++// at L1 contradicting AC-2, which requires critical tests at L3 or L4 where two
++// providers are configured — a closed criterion falsified by this diff. The
++// first council pass was given a DESCRIPTION of these files and one seat
++// correctly refused to assess while the other speculated; that pass is recorded
++// and claims nothing. The second embedded both suites in full (the bundle is
++// capped at 51,200 bytes, so the implementation was dropped and the tests kept)
++// and ran 2/2 with anthropic and openai.
++//
++// Its strongest finding is folded in rather than noted: the effort was
++// INVERTED — 37 cases on acquisition choreography against almost none asserting
++// the five rows this command actually emits. It also caught that the scripted
++// `api()` fake DROPPED the `paginate` argument, so the pagination cases passed
++// against an implementation that never asked for a second page, and that the
++// "non-boolean" case supplied a missing field rather than a wrong-typed one.
++// All three now have cases.
++
++import { describe, expect, it } from 'vitest';
++
++import {
++    FORGE_CALL_TIMEOUT_MS,
++    budgetOf,
++    forgeReadingFor,
++    liveForgeApi,
++    readForge,
++    resolveForgeRepo,
++    withDeadline,
++    type ForgeApi,
++    type ForgeTarget,
++    type Runner,
++    type SpawnResult,
++} from '../../src/scripts/_lib/forge_reader.js';
++import { UNREAD_FORGE } from '../../src/scripts/_lib/forge_protection.js';
++
++/** The live shape of this repository's own payloads, read 2026-09-30. */
++const REPO_RECORD = { default_branch: 'main', allow_auto_merge: true };
++// `--paginate --slurp` yields an array of PAGES. The first fixture was the flat
++// `[{id}]`, which production never produces, so the flatten branch was dead in
++// every case that claimed to cover the ruleset read. Both shapes are now
++// exercised: this one, and the flat form in its own case below.
++const RULESET_SUMMARY = [[{ id: 17749383 }]];
++const RULESET_DETAIL = {
++    id: 17749383,
++    target: 'branch',
++    enforcement: 'active',
++    conditions: { ref_name: { include: ['~DEFAULT_BRANCH'] } },
++    rules: [
++        {
++            type: 'required_status_checks',
++            parameters: {
++                required_status_checks: [
++                    { context: 'Sync + Generate Tools Consistency' },
++                    { context: 'Standing payload delta + budget gate' },
++                ],
++            },
++        },
++        { type: 'non_fast_forward' },
++    ],
++};
++const ENVIRONMENTS = {
++    total_count: 1,
++    environments: [
++        {
++            name: 'github-pages',
++            deployment_branch_policy: { protected_branches: false, custom_branch_policies: true },
++        },
++    ],
++};
++const BRANCH_POLICIES = { total_count: 1, branch_policies: [{ name: 'main' }] };
++
++/** A scripted API. Records every path it was asked for, so "no call" is testable. */
++function api(
++    table: Readonly<Record<string, unknown | null>>,
++): ForgeApi & { readonly calls: string[]; readonly paged: string[] } {
++    const calls: string[] = [];
++    // The `paginate` argument was DROPPED by the first version of this fake, so
++    // the reader→adapter seam — whether `readForge` actually asks for the
++    // paginated form — was untested while the pagination cases passed. A fake
++    // that silently discards a parameter cannot witness it.
++    const paged: string[] = [];
++    return {
++        calls,
++        paged,
++        get(apiPath: string, paginate?: boolean): unknown | null {
++            calls.push(apiPath);
++            if (paginate === true) paged.push(apiPath);
++            return apiPath in table ? table[apiPath] : null;
++        },
++    };
++}
++
++const FULL: Readonly<Record<string, unknown | null>> = {
++    'repos/o/r': REPO_RECORD,
++    'repos/o/r/rulesets': RULESET_SUMMARY,
++    'repos/o/r/rulesets/17749383': RULESET_DETAIL,
++    'repos/o/r/environments': ENVIRONMENTS,
++    'repos/o/r/environments/github-pages/deployment-branch-policies': BRANCH_POLICIES,
++};
++
++// provenance: level=L4 | critical=yes | evidence=test-quality-forge-reader-round2-2026-10-01
++describe('readForge — the happy path', () => {
++    it('reads all four fields from the live payload shapes', () => {
++        const reading = readForge('o/r', api(FULL));
++        expect(reading.defaultBranch).toBe('main');
++        expect(reading.allowAutoMerge).toBe(true);
++        expect(reading.rulesets).toHaveLength(1);
++        expect(reading.deployRestricted).toBe(true);
++    });
++});
++
++// provenance: level=L4 | critical=yes | evidence=test-quality-forge-reader-round2-2026-10-01
++describe('readForge — every failure degrades to unread, never to false', () => {
++    it('a failed repository record yields the all-unread reading', () => {
++        const reading = readForge('o/r', api({}));
++        expect(reading).toEqual(UNREAD_FORGE);
++    });
++
++    it('stops calling once the repository record fails', () => {
++        // The repo record carries two of the four fields and gates the rest, so
++        // a reader that keeps going after it fails spends calls it cannot use.
++        const a = api({});
++        readForge('o/r', a);
++        expect(a.calls).toEqual(['repos/o/r']);
++    });
++
++    it('a failed ruleset DETAIL blanks the whole list rather than returning a partial one', () => {
++        // The plausible wrong implementation keeps the rulesets it managed to
++        // read. A subset understates protection in one direction and overstates
++        // it in the other, so neither is a verdict worth recording.
++        const reading = readForge(
++            'o/r',
++            api({ ...FULL, 'repos/o/r/rulesets/17749383': null }),
++        );
++        expect(reading.rulesets).toBeNull();
++        expect(reading.defaultBranch).toBe('main');
++    });
++
++    it('a failed environments read leaves the ruleset rows intact', () => {
++        // The opposite plausible error: all-or-nothing across surfaces that do
++        // not depend on each other. A missing environments call says nothing
++        // about whether a ruleset protects the branch.
++        const reading = readForge('o/r', api({ ...FULL, 'repos/o/r/environments': null }));
++        expect(reading.deployRestricted).toBeNull();
++        expect(reading.rulesets).toHaveLength(1);
++        expect(reading.allowAutoMerge).toBe(true);
++    });
++
++    it('a non-boolean allow_auto_merge is unread, never coerced to false', () => {
++        const reading = readForge(
++            'o/r',
++            api({ ...FULL, 'repos/o/r': { default_branch: 'main' } }),
++        );
++        expect(reading.allowAutoMerge).toBeNull();
++    });
++
++    it('a WRONG-TYPE allow_auto_merge is unread, not just a missing one', () => {
++        // The case above supplies a MISSING field. A truthy string or a 1 is
++        // the shape that actually arrives from a loose serialiser, and it is
++        // the one where a coercing implementation reports `satisfied`.
++        for (const bad of ['true', 1, 'yes', {}]) {
++            const reading = readForge(
++                'o/r',
++                api({ ...FULL, 'repos/o/r': { default_branch: 'main', allow_auto_merge: bad } }),
++            );
++            expect(reading.allowAutoMerge).toBeNull();
++        }
++    });
++
++    it('a non-string default_branch is unread, never an empty branch name', () => {
++        const reading = readForge(
++            'o/r',
++            api({ ...FULL, 'repos/o/r': { default_branch: 42, allow_auto_merge: true } }),
++        );
++        expect(reading.defaultBranch).toBeNull();
++        expect(reading.allowAutoMerge).toBe(true); // independent field, still read
++    });
++
++    it('a failed branch-policy read makes the row unread, never a trusted flag', () => {
++        // CORRECTED after an independent review. The first version asserted
++        // `true` here on the reasoning that falling back to the flag is the
++        // "narrower guarantee" — it is the opposite. `deployRestrictedFrom`
++        // calls the flag-only path the guarantee that WAS NOT CHECKED, so an
++        // environment whose real policy is `*` would report `satisfied`: the
++        // overstatement direction this module claims it never takes, and
++        // indistinguishable in the output from a real restriction.
++        const reading = readForge(
++            'o/r',
++            api({
++                ...FULL,
++                'repos/o/r/environments/github-pages/deployment-branch-policies': null,
++            }),
++        );
++        expect(reading.deployRestricted).toBeNull();
++    });
++
++    it('url-encodes the environment name into the policy path', () => {
++        // An unencoded name with a space fails the call, which — before the
++        // correction above — silently became a trusted flag. Encoding is what
++        // stops that branch being reached by accident.
++        const a = api({
++            ...FULL,
++            'repos/o/r/environments': {
++                environments: [
++                    {
++                        name: 'prod eu',
++                        deployment_branch_policy: { custom_branch_policies: true },
++                    },
++                ],
++            },
++            'repos/o/r/environments/prod%20eu/deployment-branch-policies': {
++                branch_policies: [{ name: 'main' }],
++            },
++        });
++        expect(readForge('o/r', a).deployRestricted).toBe(true);
++        expect(a.calls).toContain('repos/o/r/environments/prod%20eu/deployment-branch-policies');
++    });
++
++    it('a wildcard branch policy refutes the row', () => {
++        const reading = readForge(
++            'o/r',
++            api({
++                ...FULL,
++                'repos/o/r/environments/github-pages/deployment-branch-policies': {
++                    branch_policies: [{ name: '*' }],
++                },
++            }),
++        );
++        expect(reading.deployRestricted).toBe(false);
++    });
++});
++
++// provenance: level=L4 | critical=yes | evidence=test-quality-forge-reader-round2-2026-10-01
++describe('pagination — the overstatement the unpaginated read allowed', () => {
++    it('ASKS for the paginated form on every list endpoint', () => {
++        // The consumption of pages was tested; the request for them was not,
++        // because the fake dropped the argument. An implementation that read
++        // page one and parsed it correctly passed every case here.
++        const a = api(FULL);
++        readForge('o/r', a);
++        expect(a.paged).toContain('repos/o/r/rulesets');
++        expect(a.paged).toContain('repos/o/r/environments');
++        expect(a.paged).toContain(
++            'repos/o/r/environments/github-pages/deployment-branch-policies',
++        );
++        // The single-object reads must NOT be paginated.
++        expect(a.paged).not.toContain('repos/o/r');
++    });
++
++    it('reads every page of environments, not just the first', () => {
++        // Unpaginated, `deployRestrictedFrom`'s `every()` ran over the visible
++        // subset, so an unlisted unrestricted environment read as `satisfied`.
++        const reading = readForge(
++            'o/r',
++            api({
++                ...FULL,
++                'repos/o/r/environments': [
++                    { environments: [ENVIRONMENTS.environments[0]] },
++                    { environments: [{ name: 'wide', deployment_branch_policy: null }] },
++                ],
++            }),
++        );
++        expect(reading.deployRestricted).toBe(false);
++    });
++
++    it('reads every page of branch policies', () => {
++        const reading = readForge(
++            'o/r',
++            api({
++                ...FULL,
++                'repos/o/r/environments/github-pages/deployment-branch-policies': [
++                    { branch_policies: [{ name: 'main' }] },
++                    { branch_policies: [{ name: '*' }] },
++                ],
++            }),
++        );
++        expect(reading.deployRestricted).toBe(false);
++    });
++
++    it('accepts the unpaginated page shape too', () => {
++        const reading = readForge(
++            'o/r',
++            api({ ...FULL, 'repos/o/r/rulesets': [{ id: 17749383 }] }),
++        );
++        expect(reading.rulesets).toHaveLength(1);
++    });
++
++    it('skips the policy call when protected_branches already decides the row', () => {
++        const a = api({
++            ...FULL,
++            'repos/o/r/environments': {
++                environments: [
++                    {
++                        name: 'github-pages',
++                        deployment_branch_policy: {
++                            protected_branches: true,
++                            custom_branch_policies: true,
++                        },
++                    },
++                ],
++            },
++        });
++        expect(readForge('o/r', a).deployRestricted).toBe(true);
++        expect(
++            a.calls.some((c) => c.includes('deployment-branch-policies')),
++        ).toBe(false);
++    });
++});
++
++// provenance: level=L4 | critical=yes | evidence=test-quality-forge-reader-round2-2026-10-01
++describe('resolveForgeRepo', () => {
++    it('refuses a slug carrying path or replacement-pattern characters', () => {
++        // The slug is interpolated into an API path AND used as a `replace`
++        // replacement, where `$&` and `$1` are control sequences.
++        expect(resolveForgeRepo('https://github.com/o/..')).toBeNull();
++        expect(resolveForgeRepo('https://github.com/o/r$&x')).toBeNull();
++        expect(resolveForgeRepo('https://github.com/o/r?x')).toBeNull();
++    });
++
++    it('reads owner/repo from the ssh and https forms', () => {
++        expect(resolveForgeRepo('git@github.com:event4u-app/agent-config.git')).toEqual({
++            host: 'github.com',
++            slug: 'event4u-app/agent-config',
++        });
++        expect(resolveForgeRepo('https://github.com/event4u-app/agent-config')).toEqual({
++            host: 'github.com',
++            slug: 'event4u-app/agent-config',
++        });
++    });
++
++    it('refuses a remote on a host that is not GitHub-shaped', () => {
++        // `gh api` speaks GitHub. Spawning it against a GitLab remote buys a
++        // doomed process on every `doctor` run; the row is `unread` either way.
++        expect(resolveForgeRepo('git@gitlab.com:o/r.git')).toBeNull();
++        expect(resolveForgeRepo('https://bitbucket.org/o/r.git')).toBeNull();
++    });
++
++    it('accepts a GitHub Enterprise host carrying the vendor name', () => {
++        expect(resolveForgeRepo('https://github.acme.com/o/r.git')).toEqual({
++            host: 'github.acme.com',
++            slug: 'o/r',
++        });
++    });
++
++    it('is null for an absent or unparseable remote', () => {
++        expect(resolveForgeRepo(null)).toBeNull();
++        expect(resolveForgeRepo('')).toBeNull();
++        expect(resolveForgeRepo('not-a-remote')).toBeNull();
++    });
++});
++
++// provenance: level=L4 | critical=yes | evidence=test-quality-forge-reader-round2-2026-10-01
++describe('forgeReadingFor — the opt-out', () => {
++    /** A target resolver that records whether it ran at all. */
++    function resolver(
++        slug: string | null,
++    ): (() => ForgeTarget | null) & { ran: () => number } {
++        let n = 0;
++        const f = (): ForgeTarget | null => {
++            n += 1;
++            return slug === null ? null : { host: 'github.com', slug };
++        };
++        return Object.assign(f, { ran: () => n });
++    }
++
++    /** Hand every request the same scripted api, whatever target resolved. */
++    const give = (a: ForgeApi) => () => a;
++
++    it('reads the forge when nothing opts out, and names the repository it read', () => {
++        // The slug travels WITH the rows. Five rows reading `satisfied` say
++        // nothing about whose branch is protected when `origin` may be a fork,
++        // a mirror, or somebody else's project in a consumer install.
++        const a = api(FULL);
++        const read = forgeReadingFor({ env: {}, resolveRepo: resolver('o/r'), apiFor: give(a) });
++        expect(read.reading.defaultBranch).toBe('main');
++        expect(read.repo).toBe('o/r');
++        expect(a.calls.length).toBeGreaterThan(0);
++    });
++
++    it('reports no repository on every path that read nothing', () => {
++        const a = api(FULL);
++        expect(forgeReadingFor({ env: {}, resolveRepo: resolver(null), apiFor: give(a) }).repo).toBeNull();
++        expect(
++            forgeReadingFor({
++                env: { AGENT_CONFIG_OFFLINE: '1' },
++                resolveRepo: resolver('o/r'),
++                apiFor: give(a),
++            }).repo,
++        ).toBeNull();
++    });
++
++    it('reads a switch as the literal 1, matching the rest of the CLI', () => {
++        // `cmd_versions` and `cmd_update` both test `=== '1'` for
++        // AGENT_CONFIG_OFFLINE. Accepting any non-empty value here gave one
++        // variable two opposite meanings in one binary: `=0` meant online
++        // there and offline here, and the surprising direction is the one a
++        // user reads as "off".
++        const a = api(FULL);
++        const read = forgeReadingFor({
++            env: { AGENT_CONFIG_OFFLINE: '0' },
++            resolveRepo: resolver('o/r'),
++            apiFor: give(a),
++        });
++        expect(read.repo).toBe('o/r');
++        expect(a.calls.length).toBeGreaterThan(0);
++    });
++
++    it('makes NO call when the environment opts out', () => {
++        // Asserting the call COUNT rather than the returned reading: a reader
++        // that queried the forge and then discarded the answer would satisfy an
++        // output-only assertion while still paying the latency the opt-out
++        // exists to avoid.
++        const a = api(FULL);
++        const reading = forgeReadingFor({
++            env: { AGENT_CONFIG_DOCTOR_NO_FORGE: '1' },
++            resolveRepo: resolver('o/r'),
++            apiFor: give(a),
++        });
++        expect(reading.reading).toEqual(UNREAD_FORGE);
++        expect(a.calls).toEqual([]);
++    });
++
++    it('the opt-out runs before the repository is even resolved', () => {
++        // The council's 1b condition, in one assertion: an opt-out that only
++        // skips the API calls still spawns `git remote get-url` to work out a
++        // repository it will not use. "No network" has to mean no subprocess at
++        // all, or the switch does not say what it claims.
++        const r = resolver('o/r');
++        const a = api(FULL);
++        forgeReadingFor({ env: { AGENT_CONFIG_DOCTOR_NO_FORGE: '1' }, resolveRepo: r, apiFor: give(a) });
++        expect(r.ran()).toBe(0);
++        expect(a.calls).toEqual([]);
++    });
++
++    it('honours the general offline switch too', () => {
++        const a = api(FULL);
++        expect(
++            forgeReadingFor({
++                env: { AGENT_CONFIG_OFFLINE: '1' },
++                resolveRepo: resolver('o/r'),
++                apiFor: give(a),
++            }).reading,
++        ).toEqual(UNREAD_FORGE);
++        expect(a.calls).toEqual([]);
++    });
++
++    it('makes NO call when no repository resolves', () => {
++        const a = api(FULL);
++        expect(forgeReadingFor({ env: {}, resolveRepo: resolver(null), apiFor: give(a) }).reading).toEqual(
++            UNREAD_FORGE,
++        );
++        expect(a.calls).toEqual([]);
++    });
++
++    it('never throws when the api throws', () => {
++        // A diagnostic that dies because its optional read failed is worse than
++        // one that reports `unread`.
++        const thrower: ForgeApi = {
++            get() {
++                throw new Error('gh exploded');
++            },
++        };
++        expect(
++            forgeReadingFor({ env: {}, resolveRepo: resolver('o/r'), apiFor: give(thrower) }).reading,
++        ).toEqual(UNREAD_FORGE);
++    });
++
++    it('never throws when resolving the repository throws', () => {
++        const boom = (): ForgeTarget | null => {
++            throw new Error('git exploded');
++        };
++        expect(forgeReadingFor({ env: {}, resolveRepo: boom, apiFor: give(api(FULL)) }).reading).toEqual(
++            UNREAD_FORGE,
++        );
++    });
++});
++
++// provenance: level=L4 | critical=yes | evidence=test-quality-forge-reader-round2-2026-10-01
++describe('withDeadline — the whole-read budget', () => {
++    // The council's 1b condition: per-call timeouts bound each call and nothing
++    // bounds their SUM, so the advertised ceiling can be exceeded several times
++    // over without any single call misbehaving.
++    it('passes calls through while the budget holds', () => {
++        const a = api(FULL);
++        expect(readForge('o/r', withDeadline(a, () => 5_000)).defaultBranch).toBe('main');
++    });
++
++    it('a budget exhausted before the first call yields the unread reading', () => {
++        const a = api(FULL);
++        expect(readForge('o/r', withDeadline(a, () => 0))).toEqual(UNREAD_FORGE);
++        expect(a.calls).toEqual([]);
++    });
++
++    it('a budget exhausted mid-read degrades the unreached rows to unread, never to false', () => {
++        // The direction that matters: a partially spent budget must not be able
++        // to turn "we ran out of time" into "the forge says no".
++        let n = 0;
++        const a = api(FULL);
++        const reading = readForge(
++            'o/r',
++            withDeadline(a, () => {
++                n += 1;
++                return n > 1 ? 0 : 5_000; // the repo record goes through; nothing after it.
++            }),
++        );
++        expect(reading.defaultBranch).toBe('main');
++        expect(reading.rulesets).toBeNull();
++        expect(reading.deployRestricted).toBeNull();
++    });
++
++    it('budgetOf counts down and floors at zero', () => {
++        let t = 1_000;
++        const left = budgetOf(100, () => t);
++        expect(left()).toBe(100);
++        t = 1_050;
++        expect(left()).toBe(50);
++        t = 9_999;
++        expect(left()).toBe(0); // never negative, so `<= 0` is the only check needed.
++    });
++});
++
++// provenance: level=L4 | critical=yes | evidence=test-quality-forge-reader-round2-2026-10-01
++describe('liveForgeApi — the adapter the degradation claim rests on', () => {
++    // Previously the only non-injectable code in the module and untested, while
++    // every branch in it feeds the "every failure degrades to unread" promise.
++    const ok = (stdout: string) => (): SpawnResult => ({ status: 0, stdout });
++
++    it('parses a successful call', () => {
++        expect(liveForgeApi(() => 5_000, ok('{"a":1}')).get('repos/o/r')).toEqual({ a: 1 });
++    });
++
++    it('returns null on a non-zero exit, empty stdout, or unparseable JSON', () => {
++        expect(liveForgeApi(() => 5_000, () => ({ status: 1, stdout: '{}' })).get('x')).toBeNull();
++        expect(liveForgeApi(() => 5_000, ok('   ')).get('x')).toBeNull();
++        expect(liveForgeApi(() => 5_000, ok('not json')).get('x')).toBeNull();
++    });
++
++    it('returns null when the spawn itself throws', () => {
++        const boom: Runner = () => {
++            throw new Error('ENOENT: gh not installed');
++        };
++        expect(liveForgeApi(() => 5_000, boom).get('x')).toBeNull();
++    });
++
++    it('makes no call at all once the budget is gone', () => {
++        let ran = 0;
++        const counting: Runner = () => {
++            ran += 1;
++            return { status: 0, stdout: '{}' };
++        };
++        expect(liveForgeApi(() => 0, counting).get('x')).toBeNull();
++        expect(ran).toBe(0);
++    });
++
++    it('shortens the per-call timeout to whatever the budget has left', () => {
++        // The defect this closes: a call admitted at t=14.9s still ran its own
++        // full 10s ceiling, so the "whole read" budget bounded admission and
++        // not duration.
++        const seen: number[] = [];
++        const recording: Runner = (_c, _a, timeoutMs) => {
++            seen.push(timeoutMs);
++            return { status: 0, stdout: '{}' };
++        };
++        liveForgeApi(() => 250, recording).get('x');
++        liveForgeApi(() => 99_000, recording).get('x');
++        expect(seen).toEqual([250, FORGE_CALL_TIMEOUT_MS]);
++    });
++
++    it('asks for the paginated form only when told to', () => {
++        const seen: string[][] = [];
++        const recording: Runner = (_c, args) => {
++            seen.push([...args]);
++            return { status: 0, stdout: '[]' };
++        };
++        const a = liveForgeApi(() => 5_000, recording);
++        a.get('repos/o/r/rulesets', true);
++        a.get('repos/o/r');
++        expect(seen[0]).toEqual(['api', '--paginate', '--slurp', 'repos/o/r/rulesets']);
++        expect(seen[1]).toEqual(['api', 'repos/o/r']);
++    });
++});

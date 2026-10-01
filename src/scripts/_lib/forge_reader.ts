@@ -179,7 +179,15 @@ export function liveForgeApi(
                 : ['api', ...hostArgs, apiPath];
             let r: SpawnResult;
             try {
-                r = run('gh', args, Math.min(FORGE_CALL_TIMEOUT_MS, budget), where.cwd);
+                // FLOORED to an integer. `budgetOf` reads `performance.now()`,
+                // which is fractional, and `spawnSync`'s `timeout` must be an
+                // integer — so once enough of the budget had elapsed for the
+                // remainder to become the minimum, every call threw
+                // `ERR_OUT_OF_RANGE`, was swallowed by the catch below, and
+                // returned `null`. The read degraded to `unread` with no
+                // subprocess ever started, which looks exactly like a forge
+                // that would not answer.
+                r = run('gh', args, Math.floor(Math.min(FORGE_CALL_TIMEOUT_MS, budget)), where.cwd);
             } catch {
                 return null;
             }
@@ -381,9 +389,18 @@ function readDeployRestricted(repo: string, api: ForgeApi): boolean | null {
         // A read that failed is a read nobody made — `unread`, never a trusted
         // flag. Trusting it here is how a wildcard policy reports `satisfied`.
         if (listed === null) return null;
-        patternsByEnv[name] = listed
-            .map((p) => asObject(p)?.['name'])
-            .filter((n): n is string => typeof n === 'string');
+        const patterns = listed.map((p) => asObject(p)?.['name']);
+        // A non-string pattern name makes the row `unread`, not `false`.
+        // Filtering it away silently left an EMPTY pattern list, which
+        // `deployRestrictedFrom` maps to `false` — so the row would render
+        // "at least one environment accepts a deployment from any branch",
+        // a positive claim about the forge derived from data nobody could
+        // parse. Every sibling field here already takes the null route: a
+        // non-string environment name, a non-numeric ruleset id, a non-boolean
+        // `allow_auto_merge`. A confirmed-empty list is a different input and
+        // keeps its own `false`.
+        if (patterns.some((n) => typeof n !== 'string')) return null;
+        patternsByEnv[name] = patterns as string[];
     }
     return deployRestrictedFrom(envs, patternsByEnv);
 }
