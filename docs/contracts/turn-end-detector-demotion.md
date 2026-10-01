@@ -75,18 +75,14 @@ whose immediate retry is refused again *by the same detector*. It is the
 satisfiability signal: a high share means the model could not satisfy the
 detector.
 
-**Its operational denominator is `retries_observed[layer]`, not a count of
-refusals**, and the substitution is stated here rather than left to the reader of
-the instrument. The definition above counts *eligible initial refusals*; the
-shadow record counts *retries observed on an allow path*, which is the same
-population seen from the other side and the only one a shadow read can see —
-a retry that came back clean leaves no row and would otherwise be invisible to
-the denominator. The two differ wherever a retry occurred without this gate
-having refused, which is precisely why the layer split below is mandatory.
+**Both halves of that definition are conditioned on the detector** — *a
+detector's* refusals, refused again *by the same detector* — and that is the
+clause the instrument below cannot yet satisfy.
 
 ```
-AN OBSERVED RE-REFUSAL IS STILL ZERO BY CONSTRUCTION. Q1 IS MEASURED ON THE
-SHADOW READ INSTEAD, AND THE TWO ARE NOT THE SAME QUANTITY.
+AN OBSERVED RE-REFUSAL IS STILL ZERO BY CONSTRUCTION.
+THE SHADOW READ MEASURES A DIFFERENT, RETRY-CONDITIONED SHARE.
+THAT SHARE IS NOT Q1 AND MAY NOT BE READ AGAINST THE BARS BELOW.
 ```
 
 Verified in `turn_end_gate_hook.ts main()`: two independent layers return
@@ -102,41 +98,64 @@ stops a second refusal, even on a NEW reply"*, whose fixture is a retry that
 **still promises** and is asserted to pass. A genuine re-refusal is proven
 allowed.
 
-**What changed on 2026-10-01, and what did not.** The paragraph above is
-unaltered and still describes the shipped gate: no turn is refused twice. What
-closed is the measurement, not the behavior. Instrument 1 (the shadow read,
+**What changed on 2026-10-01, what did not, and the correction that followed on
+the same day.** The paragraph above is unaltered and still describes the shipped
+gate: no turn is refused twice. Instrument 1 (the shadow read,
 `road-to-a-stop-that-holds` step 2.1) records on each retry which detectors
-*would* have fired, and instrument 2's first half — the reader, step 2.2 — now
-divides those rows by `retries_observed`:
+*would* have fired, and a reader now divides those rows by `retries_observed`:
 
 ```
 ./scripts-run src/scripts/measure_turn_end_gate --q1 [--workspace <dir>]
 ```
 
 `renderQ1` in `src/scripts/measure_turn_end_gate.ts`, over
-`collectShadowStats` / `q1For` in `src/scripts/_lib/turn_end_refusals.ts`.
+`collectShadowStats` / `retryConditionedShare` in
+`src/scripts/_lib/turn_end_refusals.ts`.
 
-So **Q1's bars below are registered and readable.** The word *inert* is retired
-here because it is no longer true, and three constraints replace it rather than
-being left implied:
+**That reader does not print Q1, and this file said for several hours that it
+did.** An independent review caught it before the change landed. The honest
+statement replaces both the old word *inert* and the overstatement that replaced
+it:
 
-- **Q1 is a counterfactual share, not an observed one.** It answers *would this
-  detector have refused the retry*, never *did it*. A bar crossed on this number
-  authorises the study the rule above describes; it does not license reading the
-  gate as having refused anyone twice.
-- **Grouped by layer first, then by detector.** A `stop_hook_active` retry
-  follows any stop concern's block, not only this gate's, so a pooled share
-  divides another concern's retries into this gate's refusals.
-- **Every share is an upper bound.** A retry whose transcript is unreadable or
-  oversized records neither a row nor a retry, and on a host sending no
-  `session_id` one record pools several sessions. Both bounds print with the
-  number and belong in any sentence quoting it.
+- **Q1 is no longer unmeasurable BY CONSTRUCTION.** The re-entrancy argument
+  above — a turn is refused at most once, so a re-refusal cannot be observed —
+  is answered by the shadow read, which records the counterfactual without
+  refusing anyone. That half is genuinely closed and the word *inert* is retired
+  on it.
+- **The bars below are still not readable**, for a different and narrower
+  reason: the shipped reader conditions on the retry, not on the detector. It
+  divides *rows where detector D would fire* by *every retry observed on the
+  layer*, whatever refusal produced it. Q1 divides *rows where D fires after D's
+  own refusal* by *D's own refusals*.
+- **The two disagree in direction and neither bounds the other.** Ten retries on
+  a layer, nine after `verification` refusals and one after a `language`
+  refusal, with one `language` row: Q1 for B is 1/1 = 100 %, bar crossed; the
+  shipped reader prints 1/10 = 10 %, bar not crossed. The numerator runs the
+  other way too, since a `language` row on a retry that followed a
+  `verification` refusal counts in one and not the other.
+- **The obstacle is the producer, and it is one field.** `ShadowRecord` carries
+  no originating detector: `retries_observed` is keyed by layer alone, a row
+  records only what *would* fire, and the session's `RefusalRecord` holds
+  whole-session counts rather than a per-turn origin. Recording the originating
+  detector on the shadow row makes the registered Q1 computable; nothing else
+  does.
+- **Three detectors are not reported at all.** `runDetectors` skips A, D and F
+  when a dispatch is open and the shadow record carries no dispatch flag, so
+  those retries would enter their denominators as observations of silence nobody
+  made. The attribution clause below already forbids it; `renderQ1` prints
+  `censored` for all three. That too needs a producer field to close.
+- **Every share is an upper bound**, on top of all of the above. A retry whose
+  transcript is unreadable or oversized records neither a row nor a retry, and
+  on a host sending no `session_id` one record pools several sessions. Both
+  bounds print with the number.
 
 Registering the bar before the instrument existed was deliberate and is worth
-keeping visible now that it has paid: the satisfiability question is the one
-that decides whether a high-friction detector is broken or load-bearing, and
+keeping visible now that half of it has paid: the satisfiability question is the
+one that decides whether a high-friction detector is broken or load-bearing, and
 dropping it would have left the standard resting on friction alone — which the
-rule above forbids.
+rule above forbids. What the registration also bought is this correction: the
+bars were specific enough that a reader could tell a near-miss quantity from the
+registered one, which a vaguer standard would have absorbed silently.
 
 **Q2 — median refusals per affected session.** The median taken across sessions
 **in which that detector fired at least once**, never across all sessions. The
@@ -156,19 +175,29 @@ elsewhere. Q2 is measurable today from `RefusalRecord.counts`
   `findings[0].detector` alone and a session refused nine times read as one.)
 - A retry aborted for an unrelated reason is **censored**, not counted as a
   success.
-- **A turn that ran with a dispatch open is censored for A and D**, in both
-  quantities. Those two detectors did not run, so the turn is not an observation
-  of them not firing — counting it as one biases their Q2 denominators downward
-  and would read a configuration fact as an exposure fact. B and C are unaffected
-  and take that turn normally. A rollup that cannot tell a dispatch-suppressed
-  turn from a clean one may not report Q2 for A or D at all.
+- **A turn that ran with a dispatch open is censored for A, D and F**, in both
+  quantities. Those detectors did not run, so the turn is not an observation
+  of them not firing — counting it as one biases their denominators downward
+  and would read a configuration fact as an exposure fact. B, C and E are
+  unaffected and take that turn normally. A rollup that cannot tell a
+  dispatch-suppressed turn from a clean one may not report that detector at all.
+
+  **This clause said "A and D" until 2026-10-01 and the set was wrong**, which
+  an independent review found by reading the gate rather than this paragraph.
+  `runDetectors` in `turn_end_gate_hook.ts` gates **three** detectors on
+  `dispatchOpen` — A, D and F — and § The six detectors above has said so in its
+  fourth column since F landed on 2026-09-11. This paragraph simply predates F
+  and was never revisited. `DISPATCH_CENSORED_DETECTORS` in
+  `src/scripts/_lib/turn_end_refusals.ts` is now the single set both the gate's
+  reader and this clause are checked against, so the next detector to change
+  sides cannot leave the two disagreeing silently.
 - A refusal is *eligible* only if it was recorded under a version that stamps
   `agent_config_version`. The 36 legacy records are `(unrecorded)` and are
   excluded from both quantities.
 
 ## The bars
 
-| Detector | Q1 re-refusal share (readable 2026-10-01) | Q2 median per affected session |
+| Detector | Q1 re-refusal share (not yet readable — see above) | Q2 median per affected session |
 |---|---:|---:|
 | A `promissory` | ≥ 30 % | ≥ 3 |
 | B `language` | ≥ 20 % | ≥ 2 |
@@ -234,20 +263,23 @@ interchangeable would hide those judgements rather than remove them.
 one conjunctive clause over both quantities, it was unfalsifiable by
 construction — it required Q1 shares, which this file declared unmeasurable until
 an instrument that did not ship here landed, so the only escape from five bars
-to one could never open. **Both instruments have since landed (2026-09-30 and
-2026-10-01) and the Q1 half below is now reachable**; the split stays, because a
-condition that was once unfalsifiable is not made sound by the gap closing —
-either half must still be able to fire alone.
+to one could never open. **The producer landed 2026-09-30 and a reader landed
+2026-10-01, but the Q1 half below is still not reachable**: the reader computes a
+retry-conditioned share rather than Q1 (§ The two quantities). The split stays,
+and the reason it was right is now demonstrated rather than argued — the Q2 half
+has been live throughout while the Q1 half moved from unmeasurable-by-
+construction to blocked-on-one-producer-field without ever becoming readable.
 
 - **On Q2 alone, and it stands today:** two or more detectors reach their floors
   and their Q2 medians sit within ±1 of each other → the architectural argument is
   refuted *for those detectors* and their bars merge. It does not need all five,
   and it does not need D, whose floor is currently unreachable.
-- **On Q1, contingency discharged 2026-10-01:** both instruments have landed and
-  Q1 is readable, so this half is live on the same terms as the Q2 half — all
-  five shares within ±10 points collapses the bars to one. It fires on a
-  reading that clears the sample floor below, never on the first record to
-  appear.
+- **On Q1, still contingent, and the contingency is narrower than it was:** the
+  re-entrancy obstacle is gone, and what remains is one producer field (the
+  originating detector on a shadow row). Once Q1 is computable, all five shares
+  within ±10 points collapses the bars to one. It will fire on a reading that
+  clears the sample floor below, never on the first record to appear — and never
+  on the retry-conditioned share, which is a different quantity.
 
 Either half fires alone. Naming the contingency is the point: a revisit condition
 that silently depends on unbuilt instrumentation is an aspiration wearing a
@@ -410,12 +442,12 @@ have been refused for, so Q1's obstacle is a missing reader while this valve's
 is still the cap itself. A shadow row is not a refusal and cannot reach three
 of them.
 
-## The two instruments — one landed, one half-landed
+## The two instruments — one landed, one partly built, neither finished
 
 Both are named so the standard is falsifiable rather than aspirational. The
-first shipped 2026-09-30; the second's **Q1 half** shipped 2026-10-01 and its
-**Q2 rollup half has not**. Q1 is no longer inert — a producer without a reader
-was not a measurement, and the reader now exists.
+first shipped 2026-09-30, incomplete in one field. The second has a reader as of
+2026-10-01 which computes a **neighbouring quantity, not Q1**, and no Q2 rollup
+at all. Q1 is no longer unmeasurable by construction; it is also not measured.
 
 1. **A shadow read on the allow path — SHIPPED 2026-09-30**
    (`road-to-a-stop-that-holds` step 2.1). On layers 1 and 2 the gate runs the
@@ -436,27 +468,43 @@ was not a measurement, and the reader now exists.
    because an empty row list cannot otherwise be told apart from "no retry
    happened", which are opposite readings of the same file.
 
-   **Q1 became readable on 2026-10-01**, when its reader shipped as the first
-   half of instrument 2 (`road-to-a-stop-that-holds` step 2.2). Shipping the
-   producer alone did not do it — a numerator nothing prints is not a number —
-   and the sentence is kept in this order because the gap between the two dates
-   is the whole lesson.
-2. **A per-detector rollup over eligible records.** Split into two halves by
-   what has actually landed, rather than reported as one unshipped instrument:
+   **TWO FIELDS THIS RECORD IS MISSING, both found on 2026-10-01 by reading it
+   against a reader rather than against its own description.** Neither is a
+   defect in what step 2.1 built; both are the difference between a producer
+   that supports a measurement and one that supports *this* measurement.
 
-   **The Q1 half — SHIPPED 2026-10-01.** `measure_turn_end_gate --q1` divides
-   `would_refuse_again` rows by `retries_observed`, grouped by layer and then by
-   detector, through `collectShadowStats` / `q1For`. It prints `—` and never
-   `0.0%` where a layer observed no retry, and publishes both instrument bounds
-   beside the number.
+   - **The originating detector.** A row says which detector *would* fire; it
+     never says which refusal produced the retry. Without that, no denominator
+     can be conditioned on a detector, and Q1's definition conditions both of
+     its halves on one. This is the single field that makes Q1 computable.
+   - **`dispatch_open`.** `runDetectors` skips A, D and F when a dispatch is
+     open, and `recordShadow` increments `retries_observed` anyway. A rollup
+     therefore cannot tell a suppressed retry from a clean one for those three,
+     which the attribution clause above forbids reporting.
+2. **A per-detector rollup over eligible records.** Split by what has actually
+   landed, rather than reported as one unshipped instrument:
 
-   **The Q2 half — NOT SHIPPED.** It would report Q2 with its
+   **A READER SHIPPED 2026-10-01, AND IT DOES NOT PRINT Q1.**
+   `measure_turn_end_gate --q1` divides `would_refuse_again` rows by
+   `retries_observed`, grouped by layer and then by detector, through
+   `collectShadowStats` / `retryConditionedShare`. That is the
+   **retry-conditioned share**, which § The two quantities shows is a different
+   quantity from Q1 that disagrees with it in direction. It prints `—` and never
+   `0.0%` where a layer observed no retry, prints `censored` for A, D and F, and
+   publishes both instrument bounds and the workspace it read beside the number.
+   It is a real instrument over the shadow corpus and it is **not** the one this
+   standard's bars are written against.
+
+   **THE Q1 ROLLUP — NOT SHIPPED**, and blocked on instrument 1's first missing
+   field rather than on reader work.
+
+   **THE Q2 ROLLUP — NOT SHIPPED.** It would report Q2 with its
    affected-session denominator and its sample-floor status per detector, so a
    reading is a command's output rather than a hand count. It carries three
    further obligations from the sections above, none of them optional: the
    **cumulative count that survives pruning** (without it condition 1 is
    unreachable for A and D), the **dispatch-suppressed turn count** beside any D
-   zero (without it that zero is uninterpretable), and A/D censoring for
+   zero (without it that zero is uninterpretable), and A/D/F censoring for
    dispatch-suppressed turns.
 
 ### Who owns them — named, because the honest answer is nobody
@@ -479,16 +527,25 @@ noticed at re-read time:
   qualification. The correction is recorded at the roadmap itself.
 
 The honest description of this standard, restated 2026-10-01 against what has
-landed: **bars registered, both quantities readable, neither yet read over a
-sample that clears its floor.** That is worth more than an unregistered gate, and
-it is still less than a working kill standard — the obstacle moved from "no
-instrument" to "no sample", which is progress and is not the same as done. Both
-halves belong in any sentence that cites this file.
+landed: **bars registered; Q2 reachable for exactly one detector; Q1 no longer
+unmeasurable by construction but still not computed, blocked on one producer
+field; a neighbouring retry-conditioned share now printable and explicitly not
+bar-comparable.** That is worth more than an unregistered gate and it is still
+less than a working kill standard. Every clause belongs in any sentence that
+cites this file.
 
-The previous wording — *"one quantity inert, one reachable for exactly one
-detector"* — is kept here rather than overwritten, because it was accurate from
-2026-08-18 to 2026-10-01 and a reader meeting a citation of it from that window
-should be able to find it rather than conclude the file was always optimistic.
+Two earlier wordings are kept rather than overwritten, because each was accurate
+in its window and a reader meeting a citation from that window should be able to
+find it rather than conclude the file was always wrong:
+
+- *"one quantity inert, one reachable for exactly one detector"* — accurate
+  2026-08-18 to 2026-10-01.
+- *"bars registered, both quantities readable"* — written on 2026-10-01 and
+  **wrong when written**, corrected the same day by an independent review. It
+  mistook a reader that prints a neighbouring quantity for a reader of Q1. It is
+  recorded because this file's whole subject is the difference between a
+  registered standard and a satisfied one, and the fastest way to lose that
+  distinction is to quietly fix the one time this file lost it itself.
 
 ## Was this pre-registration blind?
 
@@ -536,11 +593,18 @@ valve needs three *actual* refusals and the cap allows one, which no shadow row
 can reach. The "for the same reason" clause joining them is the part that was
 wrong, and it parted company on 2026-09-30.
 
+**And the first finding has partly survived its own overturning**, which is the
+2026-10-01 correction in one line. Q1 is not unmeasurable *by construction* — a
+shadow read answers that. It is still unmeasurable *today*, because the record
+the shadow read writes does not carry the originating detector its definition
+conditions on. The 2026-08 finding named the wrong obstacle and reached the
+right verdict, and both halves of that are worth keeping.
+
 ## See also
 
 - [`concern-activation-policy`](concern-activation-policy.md) — the ladder, the generic reverse triggers, and the `would_fire` shadow mechanism instrument 1 applies.
 - [`hook-architecture-v1`](hook-architecture-v1.md) — the dispatcher contract, and which hosts carry a `stop` slot at all.
 - `src/scripts/hooks/turn_end_gate_hook.ts` — the gate, its five detectors, and the two re-entrancy layers Q1 dies on.
-- `src/scripts/_lib/turn_end_refusals.ts` — `DETECTOR_IDS`, `RefusalRecord`, and the counts Q2 is read from; also `ShadowRecord`, `collectShadowStats` and `q1For`, which Q1 is read from.
-- `src/scripts/measure_turn_end_gate.ts` — `renderQ1`, the reader this standard waited on from 2026-08-18 to 2026-10-01. `--q1` prints it without a transcript corpus.
+- `src/scripts/_lib/turn_end_refusals.ts` — `DETECTOR_IDS`, `RefusalRecord`, and the counts Q2 is read from; also `ShadowRecord`, `collectShadowStats`, `DISPATCH_CENSORED_DETECTORS` and `retryConditionedShare` — the last of which is NOT Q1 and says so in its own docstring.
+- `src/scripts/measure_turn_end_gate.ts` — `renderQ1`, the shadow-corpus reader. `--q1` prints the retry-conditioned share without a transcript corpus, and states in its header that it is not bar-comparable.
 - [`condensation-default-kill-criterion`](condensation-default-kill-criterion.md) — the sibling shape: one feature's kill criterion, pre-registered with its decision table.

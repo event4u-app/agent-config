@@ -21,12 +21,13 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
     DETECTOR_IDS,
+    DISPATCH_CENSORED_DETECTORS,
     REFUSAL_STATE_MAX_AGE_DAYS,
     SHADOW_LAYERS,
     collectRefusalStats,
     collectShadowStats,
     countsOf,
-    q1For,
+    retryConditionedShare,
     deriveSessionKey,
     emptyCounts,
     foldRefusal,
@@ -458,11 +459,11 @@ describe('Q1 — the shadow rollup (step 2.2)', () => {
             retries_observed: { stop_hook_active: 4, refused_turn: 4 },
         });
         const stats = collectShadowStats(root);
-        expect(q1For(stats, 'stop_hook_active', 'language')).toBeCloseTo(0.25, 10);
-        expect(q1For(stats, 'refused_turn', 'promissory')).toBeCloseTo(0.5, 10);
+        expect(retryConditionedShare(stats, 'stop_hook_active', 'language')).toBeCloseTo(0.25, 10);
+        expect(retryConditionedShare(stats, 'refused_turn', 'promissory')).toBeCloseTo(0.5, 10);
         // Cross terms are zero, not the pooled 3/8 a layer-blind reader prints.
-        expect(q1For(stats, 'refused_turn', 'language')).toBe(0);
-        expect(q1For(stats, 'stop_hook_active', 'promissory')).toBe(0);
+        expect(retryConditionedShare(stats, 'refused_turn', 'language')).toBe(0);
+        expect(retryConditionedShare(stats, 'stop_hook_active', 'promissory')).toBe(0);
     });
 
     it('returns null on an empty denominator and zero on an empty numerator', () => {
@@ -472,8 +473,8 @@ describe('Q1 — the shadow rollup (step 2.2)', () => {
         // the first, which is the reading `retries_observed` exists to prevent.
         writeShadow('s1', shadow({ retries_observed: { stop_hook_active: 3, refused_turn: 0 } }));
         const stats = collectShadowStats(root);
-        expect(q1For(stats, 'stop_hook_active', 'language')).toBe(0);
-        expect(q1For(stats, 'refused_turn', 'language')).toBeNull();
+        expect(retryConditionedShare(stats, 'stop_hook_active', 'language')).toBe(0);
+        expect(retryConditionedShare(stats, 'refused_turn', 'language')).toBeNull();
     });
 
     it('sums retries and rows across sessions', () => {
@@ -495,7 +496,7 @@ describe('Q1 — the shadow rollup (step 2.2)', () => {
         });
         const stats = collectShadowStats(root);
         expect(stats.files).toBe(2);
-        expect(q1For(stats, 'stop_hook_active', 'verification')).toBeCloseTo(0.5, 10);
+        expect(retryConditionedShare(stats, 'stop_hook_active', 'verification')).toBeCloseTo(0.5, 10);
         expect(stats.earliest).toBe('2026-09-28T10:00:00.000Z');
         expect(stats.latest).toBe('2026-09-30T10:00:00.000Z');
     });
@@ -515,8 +516,8 @@ describe('Q1 — the shadow rollup (step 2.2)', () => {
         const bucket = stats.byLayer.find((b) => b.layer === 'stop_hook_active')!;
         expect(bucket.rows).toBe(2);
         expect(bucket.retries).toBe(1);
-        expect(q1For(stats, 'stop_hook_active', 'language')).toBe(1);
-        expect(q1For(stats, 'stop_hook_active', 'promissory')).toBe(1);
+        expect(retryConditionedShare(stats, 'stop_hook_active', 'language')).toBe(1);
+        expect(retryConditionedShare(stats, 'stop_hook_active', 'promissory')).toBe(1);
     });
 
     it('reads REFUSAL records as nothing, and shadow records as nothing but shadow', () => {
@@ -560,7 +561,55 @@ describe('Q1 — the shadow rollup (step 2.2)', () => {
         expect(stats.files).toBe(0);
         expect(stats.byLayer.map((b) => b.layer)).toEqual([...SHADOW_LAYERS]);
         for (const layer of SHADOW_LAYERS) {
-            for (const id of DETECTOR_IDS) expect(q1For(stats, layer, id)).toBeNull();
+            for (const id of DETECTOR_IDS) expect(retryConditionedShare(stats, layer, id)).toBeNull();
         }
+    });
+});
+
+describe('Q1 rollup — the 2026-10-01 review round', () => {
+    function writeShadow2(sessionId: string, rec: Record<string, unknown>): void {
+        const file = sessionShadowFile(root, deriveSessionKey(sessionId));
+        fs.mkdirSync(path.dirname(file), { recursive: true });
+        fs.writeFileSync(file, `${JSON.stringify(rec, null, 2)}\n`);
+    }
+
+    it('does not let an ABSENT timestamp win the earliest comparison', () => {
+        // m1. `parseShadowRecord` coerces a missing `first_at` to `''`, and
+        // `'' < '<any ISO stamp>'` is true, so a record lacking the field used
+        // to take the window start and the report printed an empty start beside
+        // a real end. An absent timestamp is not an earlier one.
+        writeShadow2('s1', {
+            would_refuse_again: [],
+            retries_observed: { stop_hook_active: 1, refused_turn: 0 },
+            dropped: 0,
+            last_at: '2026-09-30T10:00:00.000Z',
+        });
+        writeShadow2('s2', {
+            would_refuse_again: [],
+            retries_observed: { stop_hook_active: 1, refused_turn: 0 },
+            dropped: 0,
+            first_at: '2026-09-28T10:00:00.000Z',
+            last_at: '2026-09-29T10:00:00.000Z',
+        });
+        const stats = collectShadowStats(root);
+        expect(stats.files).toBe(2);
+        expect(stats.earliest).toBe('2026-09-28T10:00:00.000Z');
+        expect(stats.latest).toBe('2026-09-30T10:00:00.000Z');
+    });
+
+    it('names exactly the three detectors an open dispatch suppresses', () => {
+        // M2. `runDetectors` skips these three when a dispatch is open and the
+        // shadow record carries no dispatch flag, so their denominators would
+        // absorb silences nobody observed. Pinned as a SET rather than checked
+        // at the render layer, because the gate is where the suppression lives
+        // and a drift between the two is invisible in the output.
+        expect([...DISPATCH_CENSORED_DETECTORS].sort()).toEqual(
+            ['completion', 'promissory', 'untested'],
+        );
+        // …and the three that are NOT censored are the three the gate runs
+        // unconditionally. If a detector moves sides in the gate, this is the
+        // line that should stop being true.
+        const reported = DETECTOR_IDS.filter((d) => !DISPATCH_CENSORED_DETECTORS.has(d));
+        expect([...reported].sort()).toEqual(['language', 'pending-decision', 'verification']);
     });
 });
